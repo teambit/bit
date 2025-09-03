@@ -1,41 +1,18 @@
-import React, { useMemo, useEffect } from 'react';
-import type { ItemType } from '@teambit/design.inputs.selectors.multi-select';
-import { MultiSelect } from '@teambit/design.inputs.selectors.multi-select';
+import React, { useMemo, useEffect, useState } from 'react';
+import classNames from 'classnames';
 import type { ComponentModel } from '@teambit/component';
 import { ComponentID } from '@teambit/component';
-import { ComponentUrl } from '@teambit/component.modules.component-url';
-import classNames from 'classnames';
-import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { Tooltip } from '@teambit/design.ui.tooltip';
-import { Link as BaseLink } from '@teambit/base-react.navigation.link';
-import type {
-  ComponentFilterCriteria,
-  ComponentFilterRenderProps,
-} from '@teambit/component.ui.component-filters.component-filter-context';
+import type { ComponentFilterRenderProps } from '@teambit/component.ui.component-filters.component-filter-context';
 import {
   useComponentFilter,
   useComponentFilters,
   runAllFilters,
 } from '@teambit/component.ui.component-filters.component-filter-context';
-
+import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
+import { Dropdown, ButtonsPlugin } from '@teambit/design.inputs.dropdown';
+import { EnvsPlaceholder, EnvsDropdownItem } from './dropdown-item';
+import type { EnvsFilterCriteria, EnvFilterEnvState, ItemType } from './types';
 import styles from './envs-filter.module.scss';
-
-// @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
-const Link = BaseLink as any;
-
-type EnvFilterEnvState = {
-  active: boolean;
-  icon?: string;
-  displayName: string;
-  id: string;
-  description: string;
-  componentId: ComponentID;
-};
-export type EnvFilterState = {
-  envsState: Map<string, EnvFilterEnvState>;
-  dropdownState: boolean;
-};
-export type EnvsFilterCriteria = ComponentFilterCriteria<EnvFilterState>;
 
 export const EnvsFilter: EnvsFilterCriteria = {
   id: 'envs',
@@ -105,19 +82,15 @@ const deriveEnvsFilterState = (components: ComponentModel[]) => {
 function envsFilter({ components, className, lanes }: ComponentFilterRenderProps) {
   const [filters = []] = useComponentFilters() || [];
   const filtersExceptEnv = filters.filter((filter) => filter.id !== EnvsFilter.id);
-
   const filteredComponents = useMemo(
     () => runAllFilters(filtersExceptEnv, { components, lanes }),
     [JSON.stringify(filtersExceptEnv), lanes?.viewedLane?.id.toString()]
   );
-
   const envsFilterState = deriveEnvsFilterState(filteredComponents);
-
   const filterContext = useComponentFilter(EnvsFilter.id, envsFilterState);
-
   const envs = envsFilterState.envsState;
-
   const [currentFilter, updateFilter] = filterContext || [];
+  const [open, setOpen] = useState(false);
 
   /**
    * this will not work if other filters in a single re-render
@@ -173,70 +146,26 @@ function envsFilter({ components, className, lanes }: ComponentFilterRenderProps
       currentState.state.dropdownState = false;
       return currentState;
     });
-  };
-
-  const onDropdownToggled = (event, open) => {
-    updateFilter?.((currentState) => {
-      currentState.state.dropdownState = open;
-      return currentState;
-    });
+    setOpen(false);
   };
 
   return (
     <div className={classNames(styles.envsFilterContainer, className)}>
-      <MultiSelect
-        itemsList={selectList}
-        placeholder={<EnvsPlaceholder />}
-        onSubmit={onSubmit}
-        onCheck={onCheck}
-        onClear={onClear}
-        onChange={onDropdownToggled}
-        open={!!currentFilter?.state.dropdownState}
-        dropdownBorder={false}
-        className={styles.envFilterDropdownContainer}
-        dropClass={styles.envFilterDropdown}
-      />
+      <Dropdown
+        open={open}
+        onClickOutside={() => setOpen(false)}
+        placeholderContent={<EnvsPlaceholder onClick={() => setOpen(!open)} />}
+        bottomPlugin={<ButtonsPlugin onClear={onClear} onSubmit={onSubmit} submitClassName={styles.doneButton} />}
+        className={classNames(styles.envFilterDropdown)}
+        dropClass={classNames(styles.envFilterDropdown)}
+        position="bottom"
+      >
+        {selectList.map((option, index) => (
+          <CheckboxItem key={index} checked={option.checked} onInputChanged={(e) => onCheck(option.value, e)}>
+            {option.element}
+          </CheckboxItem>
+        ))}
+      </Dropdown>
     </div>
-  );
-}
-
-function EnvsPlaceholder() {
-  return (
-    <div className={styles.filterIcon}>
-      <img src="https://static.bit.dev/bit-icons/env.svg" />
-      <span className={styles.filterIconLabel}>Environments</span>
-      <div className={styles.dropdownArrow}>
-        <img src="https://static.bit.dev/bit-icons/fat-arrow-down.svg" />
-      </div>
-    </div>
-  );
-}
-
-function EnvsDropdownItem({ displayName, icon, description, componentId, id }: EnvFilterEnvState) {
-  return (
-    <Tooltip
-      placement="right"
-      content={
-        <Link
-          className={styles.envLink}
-          href={ComponentUrl.toUrl(componentId, { includeVersion: false })}
-          external={true}
-        >
-          {id}
-        </Link>
-      }
-    >
-      <div className={styles.envDropdownItemContainer}>
-        <div className={styles.envDropdownItem}>
-          <Ellipsis>{displayName}</Ellipsis>
-          <div className={styles.envDropdownItemIconContainer}>
-            <img className={styles.envDropdownItemIcon} src={icon}></img>
-          </div>
-        </div>
-        <div className={styles.description}>
-          <Ellipsis className={styles.descriptionText}>{description}</Ellipsis>
-        </div>
-      </div>
-    </Tooltip>
   );
 }
