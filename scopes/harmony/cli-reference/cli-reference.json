@@ -2118,6 +2118,11 @@
         "",
         "include-deprecated",
         "when importing with patterns, include deprecated components (default to exclude them)"
+      ],
+      [
+        "",
+        "lane-only",
+        "when using wildcards on a lane, only import components that exist on the lane (never from main)"
       ]
     ],
     "description": "import components from their remote scopes to the local workspace",
