@@ -60,7 +60,8 @@ export class CheckTypesCmd implements Command {
 
   private async runDiagnosticOnTsServer(isJson: boolean, pattern: string, all: boolean) {
     if (!this.workspace) throw new OutsideWorkspaceError();
-    const components = await this.workspace.getComponentsByUserInput(all, pattern);
+    // If pattern is provided, don't pass the all flag - the pattern should take precedence
+    const components = await this.workspace.getComponentsByUserInput(pattern ? false : all, pattern);
     const files = this.typescript.getSupportedFilesForTsserver(components);
     await this.typescript.initTsserverClientFromWorkspace(
       {

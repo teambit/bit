@@ -89,7 +89,12 @@ export class TestCmd implements Command {
       return scopeName ? `${scopeName}/${pattern}` : pattern;
     };
     const patternWithScope = getPatternWithScope();
-    const components = await this.workspace.getComponentsByUserInput(unmodified, patternWithScope, true);
+    // If pattern is provided, don't pass the unmodified flag as "all" - the pattern should take precedence
+    const components = await this.workspace.getComponentsByUserInput(
+      patternWithScope ? false : unmodified,
+      patternWithScope,
+      true
+    );
     if (!components.length) {
       const data = chalk.bold(`no components found to test.
 use "--unmodified" flag to test all components or specify the ids to test.
@@ -164,7 +169,12 @@ otherwise, only new and modified components will be tested`);
       return pattern;
     };
     const patternWithScope = getPatternWithScope();
-    const components = await this.workspace.getComponentsByUserInput(unmodified, patternWithScope, true);
+    // If pattern is provided, don't pass the unmodified flag as "all" - the pattern should take precedence
+    const components = await this.workspace.getComponentsByUserInput(
+      patternWithScope ? false : unmodified,
+      patternWithScope,
+      true
+    );
     if (!components.length) {
       this.logger.info(`no components found to test.
   use "--unmodified" flag to test all components or specify the ids to test.

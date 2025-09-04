@@ -266,6 +266,37 @@ describe('build command', function () {
       expect(output).to.have.string('Total 1 components to build');
     });
   });
+
+  describe('build with --unmodified flag and component pattern', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      // Create 2 independent components (not related to each other)
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile('comp2/index.js', 'module.exports = function comp2() { return "comp2"; }');
+      helper.command.add('comp2');
+      helper.command.tagAllWithoutBuild();
+    });
+    it('should only build the specified component when using --unmodified with a component pattern', () => {
+      const output = helper.command.build('comp1 --unmodified');
+
+      // Should include comp1 since it was specified
+      expect(output).to.have.string('comp1');
+
+      // Should NOT include comp2, even with --unmodified flag
+      expect(output).to.not.have.string('comp2');
+
+      expect(output).to.have.string('Total 1 components to build');
+    });
+    it('should build both components when using --unmodified without a pattern', () => {
+      const output = helper.command.build('--unmodified');
+
+      // Should include both components
+      expect(output).to.have.string('comp1');
+      expect(output).to.have.string('comp2');
+
+      expect(output).to.have.string('Total 2 components to build');
+    });
+  });
 });
 
 function getNodeEnvExtension() {
