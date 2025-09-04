@@ -130,7 +130,8 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
     this.logger.setStatusLine('build');
     const start = process.hrtime();
-    const components = await this.workspace.getComponentsByUserInput(unmodified, pattern, true);
+    // If pattern is provided, don't pass the unmodified flag as "all" - the pattern should take precedence
+    const components = await this.workspace.getComponentsByUserInput(pattern ? false : unmodified, pattern, true);
     if (!components.length) {
       return chalk.bold(
         `no components found to build. use "--unmodified" flag to build all components or specify the ids to build, otherwise, only new and modified components will be built`

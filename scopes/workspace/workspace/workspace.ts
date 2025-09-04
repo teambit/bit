@@ -1114,6 +1114,9 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
    * some commands such as build/test needs to run also on the dependents.
    */
   async getComponentsByUserInput(all?: boolean, pattern?: string, includeDependents = false): Promise<Component[]> {
+    if (all && pattern) {
+      throw new BitError('Cannot use both "all" flag and component pattern simultaneously. Use either --all/--unmodified for all components, or specify component pattern.');
+    }
     if (all) {
       return this.list();
     }
