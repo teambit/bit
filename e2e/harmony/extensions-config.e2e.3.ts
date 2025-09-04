@@ -1,11 +1,10 @@
 import chai, { expect } from 'chai';
+import assertArrays from 'chai-arrays';
 
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { ComponentNotFound } from '@teambit/legacy.scope';
-
-chai.use(require('chai-fs'));
-
-const assertArrays = require('chai-arrays');
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 chai.use(assertArrays);
 

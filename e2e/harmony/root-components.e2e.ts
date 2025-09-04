@@ -4,8 +4,9 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('app root components', function () {
   let helper: Helper;

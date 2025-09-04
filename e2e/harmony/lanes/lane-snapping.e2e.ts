@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import { AUTO_SNAPPED_MSG } from '@teambit/legacy.constants';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit lane snapping and tagging', function () {
   this.timeout(0);

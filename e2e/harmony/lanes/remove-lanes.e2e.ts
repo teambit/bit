@@ -3,8 +3,8 @@ import { DEFAULT_LANE } from '@teambit/lane-id';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('remove lanes', function () {
   this.timeout(0);

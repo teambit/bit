@@ -2,8 +2,8 @@ import chai, { expect } from 'chai';
 import * as path from 'path';
 
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit move command', function () {
   this.timeout(0);

@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { Helper, DEFAULT_OWNER, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('publish functionality', function () {
   this.timeout(0);

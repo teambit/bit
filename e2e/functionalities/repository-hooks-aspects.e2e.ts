@@ -1,8 +1,9 @@
 import chai, { expect } from 'chai';
+import chaiFs from 'chai-fs';
 
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)('repository-hooks-aspects', function () {
   this.timeout(0);

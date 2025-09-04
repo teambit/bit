@@ -3,8 +3,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('compile extension', function () {
   this.timeout(0);

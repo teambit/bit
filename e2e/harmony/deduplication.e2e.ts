@@ -2,8 +2,8 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)('deduplication', function () {
   let npmCiRegistry: NpmCiRegistry;
