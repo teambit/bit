@@ -61,7 +61,7 @@ import type { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog, Lane } from '@teambit/objects';
 import type { JsonVinyl } from '@teambit/component.sources';
 import { SourceFile, DataToPersist, PackageJsonFile } from '@teambit/component.sources';
-import { ScopeComponentsImporter } from '@teambit/legacy.scope';
+import { ScopeComponentsImporter, VersionNotFoundOnFS } from '@teambit/legacy.scope';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { isHash } from '@teambit/component-version';
@@ -1114,6 +1114,9 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
    * some commands such as build/test needs to run also on the dependents.
    */
   async getComponentsByUserInput(all?: boolean, pattern?: string, includeDependents = false): Promise<Component[]> {
+    if (all && pattern) {
+      throw new BitError('Cannot use both "all" flag and component pattern simultaneously. Use either --all/--unmodified for all components, or specify component pattern.');
+    }
     if (all) {
       return this.list();
     }
@@ -2199,10 +2202,20 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
     // We need to load the env component with the slot and extensions to get the env manifest of the parent
     // already resolved
-    const envComponent = await this.get(resolvedEnvComponentId, undefined, true, true, {
-      executeLoadSlot: true,
-      loadExtensions: true,
-    });
+    let envComponent: Component;
+    try {
+      envComponent = await this.get(resolvedEnvComponentId, undefined, true, true, {
+        executeLoadSlot: true,
+        loadExtensions: true,
+      });
+    } catch (error) {
+      // If component not found in workspace (e.g. during bit new with extends), try remote
+      if (error instanceof VersionNotFoundOnFS || (error as any).name === 'VersionNotFoundOnFS') {
+        envComponent = await this.scope.getRemoteComponent(resolvedEnvComponentId);
+      } else {
+        throw error;
+      }
+    }
 
     // TODO: caching this
     const alreadyResolved = this.envs.getEnvManifest(envComponent);
