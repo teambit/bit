@@ -63,7 +63,7 @@ import type { JsonVinyl } from '@teambit/component.sources';
 import { SourceFile, DataToPersist, PackageJsonFile } from '@teambit/component.sources';
 import { ScopeComponentsImporter, VersionNotFoundOnFS } from '@teambit/legacy.scope';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
-import { ScopeNotFoundOrDenied, getRemoteByName } from '@teambit/scope.remotes';
+import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { isHash } from '@teambit/component-version';
 import type { GlobalConfigMain } from '@teambit/global-config';
 import { ComponentConfigFile } from './component-config-file';
