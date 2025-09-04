@@ -2208,7 +2208,6 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     } catch (error) {
       // If component not found in workspace (e.g. during bit new with extends), try remote
       if (error instanceof VersionNotFoundOnFS || (error as any).name === 'VersionNotFoundOnFS') {
-        // this.logger.debug(`env ${resolvedEnvComponentId} not found in workspace, trying remote`);
         envComponent = await this.scope.getRemoteComponent(resolvedEnvComponentId);
       } else {
         throw error;
