@@ -2178,36 +2178,6 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return comp.id.toString();
   }
 
-  /**
-   * Get env manifest from remote component when it's not found locally.
-   * This is needed for extends resolution during bit new.
-   */
-  private async getEnvManifestFromRemote(componentId: ComponentID): Promise<EnvJsonc> {
-    try {
-      const remote = await getRemoteByName(componentId.scope as string, this.consumer);
-      const consumerComponent = await remote.show(componentId);
-      
-      if (!consumerComponent) {
-        throw new BitError(`Component ${componentId.toString()} not found in remote`);
-      }
-      
-      // Look for env.jsonc file in the component files
-      const envJson = consumerComponent.files.find((file) => {
-        return file.relative === 'env.jsonc' || file.relative === 'env.json';
-      });
-      
-      if (!envJson) {
-        throw new BitError(`unable to find env.jsonc file in ${componentId.toString()}`);
-      }
-      
-      const envManifest: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
-      return envManifest;
-    } catch (error) {
-      this.logger.debug(`Failed to get env manifest from remote for ${componentId.toString()}: ${error}`);
-      throw error;
-    }
-  }
-
   async resolveEnvManifest(envId: string, envExtendsDeps: LegacyDependency[] = []): Promise<EnvJsonc> {
     if (this.aspectLoader.isCoreEnv(envId)) return {};
 
@@ -2238,8 +2208,8 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     } catch (error) {
       // If component not found in workspace (e.g. during bit new with extends), try remote
       if (error instanceof VersionNotFoundOnFS || (error as any).name === 'VersionNotFoundOnFS') {
-        this.logger.debug(`env ${resolvedEnvComponentId} not found in workspace, trying remote`);
-        return await this.getEnvManifestFromRemote(resolvedEnvComponentId);
+        // this.logger.debug(`env ${resolvedEnvComponentId} not found in workspace, trying remote`);
+        envComponent = await this.scope.getRemoteComponent(resolvedEnvComponentId);
       } else {
         throw error;
       }
