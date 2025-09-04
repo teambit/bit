@@ -66,7 +66,7 @@ export class APIReferenceUI {
     this.apiNodeRendererSlot.register(apiNodeRenderers);
   }
 
-  apiNodeRenderers = defaultNodeRenderers;
+  apiNodeRenderers: APINodeRenderer[] = defaultNodeRenderers;
 
   static async provider(
     [componentUI, codeUI, workspaceUI]: [ComponentUI, CodeUI, WorkspaceUI],
