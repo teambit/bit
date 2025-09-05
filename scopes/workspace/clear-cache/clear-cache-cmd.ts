@@ -4,7 +4,7 @@ import type { ClearCacheMain } from './clear-cache.main.runtime';
 
 export default class ClearCacheCmd implements Command {
   name = 'clear-cache';
-  description = "clears Bit's cache from current working machine";
+  description = 'remove cached data to resolve stale data issues';
   group = 'system';
   extendedDescription: string;
   alias = 'cc';
@@ -14,9 +14,12 @@ export default class ClearCacheCmd implements Command {
   helpUrl = 'reference/workspace/clearing-cache';
 
   constructor(private clearCache: ClearCacheMain) {
-    this.extendedDescription = `The following gets removed by this command:
+    this.extendedDescription = `clears various caches that Bit uses to improve performance. useful when experiencing stale data issues or
+unexpected behavior. this command removes:
 1) components cache on the filesystem (mainly the dependencies graph and docs)
-2) scope's index file, which maps the component-id:object-hash`;
+2) scope's index file, which maps the component-id:object-hash
+
+note: this cache has minimal impact on disk space. to free significant disk space, use "bit capsule delete --all" to remove build capsules.`;
   }
 
   async report(arg, { remote }: { remote?: string }): Promise<string> {

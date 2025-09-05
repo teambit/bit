@@ -3,7 +3,7 @@ import { getBitVersion } from '@teambit/bit.get-bit-version';
 
 export class VersionCmd implements Command {
   name = 'version';
-  description = 'shows bit version';
+  description = 'display the installed Bit version';
   alias = '';
   loader = false;
   group = 'system';
