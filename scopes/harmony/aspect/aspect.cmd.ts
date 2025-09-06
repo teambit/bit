@@ -264,7 +264,10 @@ ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
 export class AspectCmd implements Command {
   name = 'aspect <sub-command>';
   alias = '';
-  description = 'manage aspects';
+  description = 'manage component aspects and their configurations';
+  extendedDescription = `aspects provide functionality and tools for components throughout their development lifecycle.
+primarily useful for inspecting aspect assignments and configurations with "bit aspect get".
+rarely used for manual aspect management as most aspects are configured automatically.`;
   options = [];
   group = 'component-config';
   commands: Command[] = [];

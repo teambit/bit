@@ -52,6 +52,7 @@ export class CliCmd implements Command {
   loader = false;
   group = 'system';
   options = [] as CommandOptions;
+  private = true;
 
   constructor(private cliMain: CLIMain) {}
 

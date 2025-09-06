@@ -17,7 +17,10 @@ type ListFlags = {
 
 export class ListCmd implements Command {
   name = 'list [remote-scope]';
-  description = 'list components on a workspace or a remote scope (with flag).';
+  description = 'display components in workspace or remote scope';
+  extendedDescription = `shows components in the current workspace by default, or from a specified remote scope.
+supports filtering by scope, namespace, and various display options.
+use --outdated to highlight components that have newer versions available.`;
   group = 'info-analysis';
   helpUrl = 'reference/reference/cli-reference#list';
   alias = 'ls';

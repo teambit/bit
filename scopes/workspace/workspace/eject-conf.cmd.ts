@@ -14,10 +14,12 @@ type EjectConfOptionsCLI = {
 
 export default class EjectConfCmd implements Command {
   name = 'eject-conf <pattern>';
-  description = 'eject components configuration (create a `component.json` file)';
-  extendedDescription = `note this can be reversed at any time by snapping/tagging changes and deleting the component.json file \n${PATTERN_HELP(
-    'eject-conf'
-  )}`;
+  description = 'create component.json configuration files for components';
+  extendedDescription = `generates component.json files containing component-specific configuration that overrides workspace defaults.
+useful for customizing individual component settings. alternatively, use commands like "bit env set", "bit deps set", or "bit aspect set".
+can be reversed by deleting the component.json file and snapping/tagging the changes.
+
+${PATTERN_HELP('eject-conf')}`;
   alias = '';
   group = 'component-config';
   options = [

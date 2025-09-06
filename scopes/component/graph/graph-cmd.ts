@@ -20,8 +20,10 @@ export type GraphOpt = {
 
 export class GraphCmd implements Command {
   name = 'graph [id]';
-  description = "generate an SVG image file with the components' dependencies graph";
-  extendedDescription: 'black arrow is a runtime dependency. red arrow is either dev or peer';
+  description = 'visualize component dependencies as a graph image';
+  extendedDescription = `generates an SVG (or PNG) image showing component dependency relationships.
+black arrows represent runtime dependencies, red arrows show dev or peer dependencies.
+by default shows only workspace components; use --include-dependencies for full dependency tree.`;
   group = 'info-analysis';
   alias = '';
   options = [

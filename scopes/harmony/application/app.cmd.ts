@@ -31,7 +31,10 @@ export class AppListCmd implements Command {
 
 export class AppCmd implements Command {
   name = 'app [sub-command]';
-  description = 'Manages apps';
+  description = 'manage application components';
+  extendedDescription = `applications are components that create deployable, runnable applications like React apps or Node.js servers.
+list available apps in the workspace and inspect their configurations.
+use "bit run" to start an application locally.`;
   helpUrl = 'docs/getting-started/composing/create-apps';
   alias = 'apps';
   group = 'run-serve';

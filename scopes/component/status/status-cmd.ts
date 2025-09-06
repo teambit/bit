@@ -50,9 +50,11 @@ type StatusJsonResults = {
 
 export class StatusCmd implements Command {
   name = 'status';
-  description = 'present the current status of components in the workspace, including indication of detected issues';
+  description = 'show workspace component status and issues';
   group = 'info-analysis';
-  extendedDescription: string;
+  extendedDescription = `displays the current state of all workspace components including new, modified, staged, and problematic components.
+identifies blocking issues that prevent tagging/snapping and provides warnings with --warnings flag.
+essential for understanding workspace health before versioning components.`;
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],

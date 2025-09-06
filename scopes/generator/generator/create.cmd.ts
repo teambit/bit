@@ -15,7 +15,9 @@ export type CreateOptions = BaseComponentTemplateOptions & {
 
 export class CreateCmd implements Command {
   name = 'create <template-name> <component-names...>';
-  description = 'create a new component (source files and config) using a template.';
+  description = 'scaffold new component(s) from a template (sources, config, and env)';
+  extendedDescription =
+    "Generates one or more components from a chosen template with ready-to-use source files, configuration, and environment. Use it to quickly scaffold consistent components across your workspace. Run 'bit templates' to discover available templates.";
   alias = '';
   loader = true;
   helpUrl = 'reference/starters/create-starter';

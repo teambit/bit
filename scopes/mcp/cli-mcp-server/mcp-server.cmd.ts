@@ -10,8 +10,10 @@ export type McpStartCmdOptions = {
 
 export class McpServerCmd implements Command {
   name = 'mcp-server [sub-command]';
-  description =
-    'Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.';
+  description = 'start Model Context Protocol server for AI assistants';
+  extendedDescription = `enables AI assistants and other tools to interact with Bit via the Model Context Protocol.
+provides a standardized interface for AI agents to execute Bit commands and access component information.
+allows writing custom instructions and rules to guide AI agents in their interactions with Bit.`;
   alias = '';
   group = 'advanced';
   loader = false;

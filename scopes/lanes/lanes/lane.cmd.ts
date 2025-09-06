@@ -674,7 +674,10 @@ export class LaneFetchCmd implements Command {
 
 export class LaneCmd implements Command {
   name = 'lane [sub-command]';
-  description = 'manage lanes - if no sub-command is used, runs "bit lane list"';
+  description = 'manage lanes for parallel development';
+  extendedDescription = `lanes allow isolated development of features without affecting main branch components.
+create, switch between, and merge lanes to coordinate parallel work across teams.
+without a sub-command, lists all available lanes.`;
   alias = 'l';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],

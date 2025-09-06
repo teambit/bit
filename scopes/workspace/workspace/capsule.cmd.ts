@@ -207,11 +207,10 @@ export class CapsuleDeleteCmd implements Command {
 
 export class CapsuleCmd implements Command {
   name = 'capsule';
-  description = 'manage capsules';
-  extendedDescription = `a capsule is a directory containing the component code, isolated from the workspace.
-normally, capsules are created during the build process, the component files are copied and the packages are installed
-via the configured package-manager. the purpose is to compile/test them in isolation to make sure they will work for
-other users after publishing/exporting them.`;
+  description = 'manage isolated component environments';
+  extendedDescription = `capsules are temporary isolated directories containing component code and dependencies.
+automatically created during build processes to compile and test components in isolation.
+ensures components work independently before publishing, similar to how they'll be consumed.`;
   alias = '';
   group = 'advanced';
   commands: Command[] = [];

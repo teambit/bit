@@ -6,7 +6,7 @@ import { statesFilter } from './filter';
 export class PatternCommand implements Command {
   name = 'pattern <pattern>';
   alias = '';
-  description = 'list the component ids matching the given pattern';
+  description = 'test and validate component patterns';
   extendedDescription = `this command helps validating a pattern before using it in other commands.
 NOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes.
 a pattern can be a simple component-id or component-name. e.g. 'ui/button'.
