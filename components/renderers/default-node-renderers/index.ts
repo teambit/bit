@@ -15,8 +15,9 @@ import { typeArrayRenderer } from '@teambit/api-reference.renderers.type-array';
 import { tupleTypeRenderer } from '@teambit/api-reference.renderers.tuple-type';
 import { thisRenderer } from '@teambit/api-reference.renderers.this';
 import { decoratorRenderer } from '@teambit/api-reference.renderers.decorator';
+import type { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 
-export const defaultNodeRenderers = [
+export const defaultNodeRenderers: APINodeRenderer[] = [
   classRenderer,
   interfaceRenderer,
   typeRenderer,
