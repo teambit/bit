@@ -122,6 +122,11 @@ export class CapsuleListCmd implements Command {
   ) {}
 
   async report() {
+    if (!this.workspace && !this.scope) {
+      throw new Error(`This command requires a Bit workspace or scope.
+To initialize a workspace: bit init`);
+    }
+
     const { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir, scopeCapsulesRootDir } = this.getCapsulesRootDirs();
     const listWs = workspaceCapsulesRootDir ? await this.isolator.list(workspaceCapsulesRootDir) : undefined;
     const listScope = await this.isolator.list(scopeAspectsCapsulesRootDir);
@@ -148,6 +153,11 @@ export class CapsuleListCmd implements Command {
   }
 
   async json() {
+    if (!this.workspace && !this.scope) {
+      throw new Error(`This command requires a Bit workspace or scope.
+To initialize a workspace: bit init`);
+    }
+
     const rootDirs = this.getCapsulesRootDirs();
     const listWs = rootDirs.workspaceCapsulesRootDir
       ? await this.isolator.list(rootDirs.workspaceCapsulesRootDir)
