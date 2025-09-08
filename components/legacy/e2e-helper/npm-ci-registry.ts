@@ -108,18 +108,15 @@ export class NpmCiRegistry {
       email: 'ci@ci.com',
     });
     // Set npm configuration using environment variables for better compatibility with capsules
-    // Modern npm versions work better with NPM_CONFIG_ environment variables than global config
-    process.env[`NPM_CONFIG_${this.ciDefaultScope.replace('@', '_').replace('/', '_')}_REGISTRY`] = this.ciRegistry;
-    process.env[
-      `NPM_CONFIG_${this.ciRegistry.replace('http://', '___').replace(':', '_').replace('/', '_')}_AUTHTOKEN`
-    ] = token;
+    // Use correct npm environment variable format for modern npm versions
+    process.env[`NPM_CONFIG_${this.ciDefaultScope}:registry`] = this.ciRegistry;
+    process.env[`NPM_CONFIG_${this.ciRegistry.replace('http:', '')}/:_authtoken`] = token;
     if (this.helper.debugMode) console.log('default user has been added successfully to Verdaccio');
   }
 
   _registerScopes(scopes: string[] = ['@ci']) {
     scopes.forEach((scope) => {
-      const envVarName = `NPM_CONFIG_${scope.replace('@', '_').replace('/', '_')}_REGISTRY`;
-      process.env[envVarName] = this.ciRegistry;
+      process.env[`NPM_CONFIG_${scope}:registry`] = this.ciRegistry;
     });
   }
 
