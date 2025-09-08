@@ -1,7 +1,7 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import open from 'open';
 import { ejectTemplate } from '@teambit/eject';
-import { WILDCARD_HELP, COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
 import { isEmpty } from 'lodash';
 import type { ExportMain, ExportResult } from './export.main.runtime';
