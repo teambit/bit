@@ -1,39 +1,19 @@
 @import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 .versionDropdown {
-  height: 100%;
-
-  > div {
-    height: 100%;
-    display: flex;
-    align-items: center;
-  }
-
   .menu {
     padding: 0;
     right: 0;
-    // top: 43px;
     font-size: var(--bit-p-xs);
-    border-radius: 6px;
+    border-radius: 8px;
     z-index: $modal-z-index;
     border: 1px solid var(--border-medium-color, #ededed);
   }
 }
 
-.title {
-  padding: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
-}
-
-.titleContainer {
-  margin-bottom: 2px;
-}
-
 .versionContainerRoot {
   max-height: 240px;
   overflow-y: scroll;
-  padding-bottom: 8px;
   position: relative;
 }
 
@@ -75,6 +55,7 @@
   .versionName {
     padding: 0px 8px;
     min-width: fit-content;
+    text-transform: capitalize;
   }
 }
 
@@ -135,6 +116,11 @@
 
 .versionMenuContainer {
   display: initial;
+  padding: 0 8px;
+
+  &.loading {
+    padding: 0;
+  }
 
   &.hide {
     display: none;

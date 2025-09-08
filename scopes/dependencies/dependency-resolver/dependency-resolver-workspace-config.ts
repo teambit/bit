@@ -221,5 +221,5 @@ export interface DependencyResolverWorkspaceConfig {
    */
   componentRangePrefix?: ComponentRangePrefix;
 
-  externalPackageManager?: boolean
+  externalPackageManager?: boolean;
 }
