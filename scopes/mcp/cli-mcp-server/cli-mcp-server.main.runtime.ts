@@ -22,6 +22,7 @@ import fetch from 'node-fetch';
 import { McpSetupCmd } from './setup-cmd';
 import { McpRulesCmd } from './rules-cmd';
 import type { SetupOptions, RulesOptions } from '@teambit/mcp.mcp-config-writer';
+import { getRemoteComponentWithDetails } from './remote-component-utils';
 import { McpConfigWriter } from '@teambit/mcp.mcp-config-writer';
 
 interface CommandFilterOptions {
@@ -781,36 +782,31 @@ export class CliMcpServerMain {
   private registerRemoteComponentDetailsTool(server: McpServer) {
     const toolName = 'bit_remote_component_details';
     const description =
-      'Get detailed information about a remote component including basic info and its public API schema. Combines the functionality of show and schema commands for remote components.';
+      'Get detailed information about a remote component including basic info, docs, usage examples, and public API schema. Uses global scope to provide comprehensive component details.';
     const schema: Record<string, any> = {
       cwd: z.string().describe('Path to workspace directory'),
       componentName: z.string().describe('Component name or component ID to get details for'),
-      includeSchema: z.boolean().optional().describe('Include component public API schema (default: true)'),
+      includeSchema: z.boolean().optional().describe('Include component public API schema (default: false)'),
     };
 
     server.tool(toolName, description, schema, async (params: any) => {
       try {
-        const { componentName, includeSchema = true, cwd } = params;
+        const { componentName, includeSchema = false, cwd } = params;
 
-        // Get basic component information using show command via direct execution
-        const showArgs = ['show', componentName, '--remote', '--legacy'];
-        const showResult = await this.runBit(showArgs, cwd);
+        // Get enhanced details using remote.show()
+        const result = await getRemoteComponentWithDetails(componentName);
 
-        const result: any = {
-          componentInfo: showResult.content[0].text,
-        };
-
-        // Get schema information if requested
+        // Add schema if requested
         if (includeSchema) {
           try {
             const schemaArgs = ['schema', componentName, '--remote'];
             const schemaResult = await this.runBit(schemaArgs, cwd);
-            result.schema = schemaResult.content[0].text;
+            result.publicAPI = schemaResult.content[0].text;
           } catch (schemaError) {
             this.logger.warn(
               `[MCP-DEBUG] Failed to get schema for ${componentName}: ${(schemaError as Error).message}`
             );
-            result.schemaError = `Failed to retrieve schema: ${(schemaError as Error).message}`;
+            result.publicAPI = `Error fetching schema: ${(schemaError as Error).message}`;
           }
         }
 
@@ -941,26 +937,119 @@ export class CliMcpServerMain {
   private registerComponentDetailsTool(server: McpServer) {
     const toolName = 'bit_component_details';
     const description =
-      'Get detailed information about a specific component including basic info and optionally its public API schema';
+      'Get detailed information about multiple components in parallel. Supports batch requests for efficient component discovery. Limited to 5 components max to prevent context overload.';
     const schema: Record<string, any> = {
       cwd: z.string().describe('Path to workspace directory'),
-      componentName: z.string().describe('Component name or component ID to get details for'),
+      componentIds: z
+        .array(z.string())
+        .describe(
+          'Array of component IDs to get details for. Limited to 5 components max. Examples: ["acme.design/ui/button", "acme.design/forms/input", "teambit.base-ui/navigation/link"]'
+        ),
       includeSchema: z.boolean().optional().describe('Include component public API schema (default: false)'),
     };
 
     server.tool(toolName, description, schema, async (params: any) => {
       try {
-        const includeSchema = params.includeSchema === true;
-        const componentName = params.componentName;
+        // Validate that componentIds parameter is provided and valid
+        if (!params.componentIds || !Array.isArray(params.componentIds) || params.componentIds.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'Error: componentIds parameter must be provided as a non-empty array of component IDs. Example: ["acme.design/ui/button", "acme.design/forms/input"]',
+              },
+            ],
+          };
+        }
 
-        // Get component details using IDE API with includeSchema parameter
-        const ideApiResult = await this.callBitServerIDEAPI(
-          'getCompDetails',
-          [componentName, includeSchema],
-          params.cwd
+        const includeSchema = params.includeSchema === true;
+        const componentIds = params.componentIds;
+
+        // Check limit of 5 components to prevent context overload
+        const maxComponents = 5;
+
+        if (componentIds.length > maxComponents) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error: Too many components requested. Maximum allowed is ${maxComponents} components, but ${componentIds.length} were requested. Please reduce the number of components in your request.`,
+              },
+            ],
+          };
+        }
+
+        // Execute component detail requests in parallel
+        this.logger.debug(
+          `[MCP-DEBUG] Fetching details for ${componentIds.length} component(s) in parallel: ${componentIds.join(', ')}`
         );
 
-        return this.formatAsCallToolResult(ideApiResult);
+        const detailPromises = componentIds.map(async (componentId: string) => {
+          try {
+            const result = await this.callBitServerIDEAPI('getCompDetails', [componentId, includeSchema], params.cwd);
+            return {
+              componentId,
+              success: true,
+              details: result,
+            };
+          } catch (error) {
+            this.logger.warn(
+              `[MCP-DEBUG] Failed to get details for component "${componentId}": ${(error as Error).message}`
+            );
+            return {
+              componentId,
+              success: false,
+              error: (error as Error).message,
+            };
+          }
+        });
+
+        const detailResults = await Promise.all(detailPromises);
+
+        // Process and consolidate results
+        const successfulResults = detailResults.filter((r) => r.success);
+        const failedResults = detailResults.filter((r) => !r.success);
+
+        if (successfulResults.length === 0) {
+          let message = 'Failed to get details for any components';
+          if (failedResults.length > 0) {
+            message += '\n\nErrors:';
+            failedResults.forEach((r) => {
+              message += `\n- "${r.componentId}": ${r.error}`;
+            });
+          }
+          return { content: [{ type: 'text', text: message }] };
+        }
+
+        // Build the response
+        const response: any = {
+          summary: {
+            requested: componentIds.length,
+            successful: successfulResults.length,
+            failed: failedResults.length,
+            includeSchema,
+          },
+          components: {},
+        };
+
+        // Add successful component details
+        successfulResults.forEach((result) => {
+          response.components[result.componentId] = result.details;
+        });
+
+        // Add failed components info if any
+        if (failedResults.length > 0) {
+          response.failures = {};
+          failedResults.forEach((result) => {
+            response.failures[result.componentId] = result.error;
+          });
+        }
+
+        this.logger.debug(
+          `[MCP-DEBUG] Component details fetched: ${successfulResults.length} successful, ${failedResults.length} failed`
+        );
+
+        return this.formatAsCallToolResult(response);
       } catch (error) {
         this.logger.error(`[MCP-DEBUG] Error in bit_component_details tool: ${(error as Error).message}`);
         return this.formatErrorAsCallToolResult(error as Error, 'getting component details');
@@ -1442,8 +1531,29 @@ export class CliMcpServerMain {
     await McpConfigWriter.writeRulesFile(editor, rulesOptions);
   }
 
-  async getRulesContent(consumerProject: boolean = false): Promise<string> {
-    return McpConfigWriter.getDefaultRulesContent(consumerProject);
+  async getRulesContent(consumerProject: boolean = false, forceStandard: boolean = false): Promise<string> {
+    return McpConfigWriter.getDefaultRulesContent(consumerProject, process.cwd(), forceStandard);
+  }
+
+  /**
+   * Get the path to the rules file based on editor type and scope
+   */
+  getRulesFilePath(editor: string, isGlobal: boolean, workspaceDir?: string): string {
+    const editorLower = editor.toLowerCase();
+
+    if (editorLower === 'vscode') {
+      return McpConfigWriter.getVSCodePromptsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'cursor') {
+      return McpConfigWriter.getCursorPromptsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'roo') {
+      return McpConfigWriter.getRooCodePromptsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'cline') {
+      return McpConfigWriter.getClinePromptsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'claude-code') {
+      return McpConfigWriter.getClaudeCodePromptsPath(isGlobal, workspaceDir);
+    }
+
+    throw new Error(`Editor "${editor}" is not supported yet for rules files.`);
   }
 
   static slots = [];

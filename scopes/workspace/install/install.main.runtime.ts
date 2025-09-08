@@ -174,6 +174,7 @@ export class InstallMain {
         // For explicit "bit install" commands, show the prompt
         await this.handleExternalPackageManagerPrompt();
       } else {
+        await this.writeDependenciesToPackageJson();
         this.logger.console(
           chalk.yellow(
             'Installation was skipped due to external package manager configuration. Please run your package manager to install dependencies.'
@@ -222,6 +223,17 @@ export class InstallMain {
     await this.ipcEvents.publishIpcEvent('onPostInstall');
 
     return res;
+  }
+
+  async writeDependenciesToPackageJson(): Promise<void> {
+    const installer = this.dependencyResolver.getInstaller({});
+    const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy();
+    await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
+    const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, {
+      dedupe: true,
+    });
+    const { dependencies, devDependencies } = componentsAndManifests.manifests[this.workspace.path];
+    return this.workspace.writeDependenciesToPackageJson({ ...devDependencies, ...dependencies });
   }
 
   registerPreLink(fn: PreLink) {
@@ -905,9 +917,7 @@ export class InstallMain {
     };
   }
 
-  private async _getEnvManifests(
-    workspaceDeps: Record<string, string>
-  ): Promise<Record<string, ProjectManifest>> {
+  private async _getEnvManifests(workspaceDeps: Record<string, string>): Promise<Record<string, ProjectManifest>> {
     const envs = await this._getAllUsedEnvIds();
     return Object.fromEntries(
       await Promise.all(

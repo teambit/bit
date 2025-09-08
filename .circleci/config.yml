@@ -584,11 +584,13 @@ jobs:
 
   # ========== Bit CI Jobs ==========
   bit_pr:
+    # uncomment in case this job fails with "Killed".
+    # resource_class: 2xlarge
     resource_class: xlarge
     <<: *defaults
     environment:
       # BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=15000
+      NODE_OPTIONS: --max-old-space-size=30000
     steps:
       - attach_workspace:
           at: ./
@@ -606,6 +608,8 @@ jobs:
           path: ~/Library/Caches/Bit/logs
 
   bit_merge:
+    # uncomment in case this job fails with "Killed".
+    # resource_class: 2xlarge
     resource_class: xlarge
     <<: *defaults
     environment:
@@ -638,7 +642,7 @@ jobs:
           # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 3 ${BIT_CI_MERGE_EXTRA_FLAGS}'
           no_output_timeout: '50m'
           environment:
-            NODE_OPTIONS: --max-old-space-size=32000
+            NODE_OPTIONS: --max-old-space-size=30000
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 

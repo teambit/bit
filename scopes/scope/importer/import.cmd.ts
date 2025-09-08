@@ -41,6 +41,7 @@ type ImportFlags = {
   trackOnly?: boolean;
   includeDeprecated?: boolean;
   writeDeps?: 'package.json' | 'workspace.jsonc';
+  laneOnly?: boolean;
 };
 
 export class ImportCmd implements Command {
@@ -133,6 +134,11 @@ export class ImportCmd implements Command {
       'do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap',
     ],
     ['', 'include-deprecated', 'when importing with patterns, include deprecated components (default to exclude them)'],
+    [
+      '',
+      'lane-only',
+      'when using wildcards on a lane, only import components that exist on the lane (never from main)',
+    ],
   ] as CommandOptions;
   loader = true;
   remoteOp = true;
@@ -233,6 +239,7 @@ export class ImportCmd implements Command {
       trackOnly = false,
       includeDeprecated = false,
       writeDeps,
+      laneOnly = false,
     }: ImportFlags
   ): Promise<ImportResult> {
     if (dependentsDryRun) {
@@ -294,6 +301,7 @@ export class ImportCmd implements Command {
       trackOnly,
       includeDeprecated,
       writeDeps,
+      laneOnly,
     };
     return this.importer.import(importOptions, this._packageManagerArgs);
   }

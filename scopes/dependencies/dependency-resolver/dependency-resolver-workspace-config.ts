@@ -220,4 +220,6 @@ export interface DependencyResolverWorkspaceConfig {
    * set this to the desired range symbol.
    */
   componentRangePrefix?: ComponentRangePrefix;
+
+  externalPackageManager?: boolean;
 }

@@ -1,102 +1,47 @@
 # Bit CLI MCP Server
 
-The Bit CLI MCP Server provides a [Model Context Protocol (MCP)](https://github.com/modelcontextprotocol/mcp) interface to Bit's command-line functionality, enabling programmatic access to Bit workspace and component management operations. This server exposes Bit CLI commands as MCP tools, making it possible to automate, script, or integrate Bit operations with other tools and platforms.
+The Bit CLI MCP Server provides a [Model Context Protocol (MCP)](https://github.com/modelcontextprotocol/mcp) interface to Bit's command-line functionality. It acts as a bridge between MCP clients (such as VS Code, AI tools, or your own applications) and the Bit CLI, enabling programmatic access to Bit workspace and component management operations.
 
-## Overview
+## Setup
 
-This server acts as a bridge between MCP clients (such as VS Code, AI tools, or your own applications) and the Bit CLI. It leverages the Bit server API for efficient communication and provides both individual CLI command tools and specialized composite tools for common workflows. The server automatically manages a Bit server instance in the background for optimal performance.
+### Installation
 
-## Installation
-
-### Prerequisites
-
-- Node.js (v18 or later recommended)
-- Bit CLI installed and available in your PATH
-
-### Getting Started
-
-The Bit CLI MCP Server is included with Bit. If you have Bit installed, you can run the server using:
-
-```
-bit mcp-server start
-```
-
-## Usage
-
-### Command-Line Options
-
-```
-bit mcp-server start [options]
-```
-
-Options:
-
-- `--consumer-project`: For non-Bit workspaces that only consume Bit component packages. Enables only "bit_remote_search" and "bit_remote_component_details" tools and automatically adds the "--remote" flag to relevant commands.
-- `--include-additional <commands>`: Add specific commands to the available tools (comma-separated list)
-
-### Integrating with IDEs
-
-The easiest way to integrate the MCP server with your IDE is to use the `setup` command:
+The Bit CLI MCP Server is included with Bit. To set it up with your IDE, run:
 
 ```bash
 # Basic setup for VS Code (default)
 bit mcp-server setup
-```
 
-This will automatically configure your VS Code settings to use the Bit MCP server. See the [Automatic Setup](#automatic-integration-setup) section below for more options.
+# Other supported editors
+bit mcp-server setup [vscode|cursor|windsurf|roo|cline|claude-code]
 
-### Automatic Integration Setup
-
-The **recommended way** to integrate the MCP server with your IDE is using the `setup` command:
-
-```bash
-bit mcp-server setup [vscode|cursor|windsurf|roo|cline|claude-code] [options]
-```
-
-This command automatically configures the MCP server settings in your chosen editor. If no editor is specified, it defaults to VS Code.
-
-#### Supported Editors
-
-- **VS Code**: `bit mcp-server setup vscode` (or just `bit mcp-server setup`)
-- **Cursor**: `bit mcp-server setup cursor`
-- **Windsurf**: `bit mcp-server setup windsurf`
-- **Roo Code**: `bit mcp-server setup roo`
-- **Cline**: `bit mcp-server setup cline`
-- **Claude Code**: `bit mcp-server setup claude-code`
-
-#### Configuration Options
-
-- `--global`: Apply configuration globally (user settings) instead of workspace settings
-- `--consumer-project`: Configure for consumer projects
-- `--include-additional <commands>`: Add specific commands to the available tools
-
-#### Examples
-
-```bash
-# Basic VS Code setup (workspace level)
-bit mcp-server setup
-
-# Global setup for Cursor
-bit mcp-server setup cursor --global
-
-# Setup with consumer project mode
+# For consumer projects (non-Bit workspaces that only consume Bit components)
 bit mcp-server setup --consumer-project
-
-# Setup for Claude Code (creates .mcp.json file)
-bit mcp-server setup claude-code
-
-# Global setup for Claude Code
-bit mcp-server setup claude-code --global
 ```
 
-#### Manual Configuration
+#### Recommended Setup Steps
 
-If you need to manually configure the settings, here's how to set up VS Code MCP integration:
+After installation, consider these helpful setup steps:
 
-**For workspace-specific configuration:**
+1. **For new workspaces**: Set your default scope so the search tool knows which organization to search:
 
-1. Create a `.vscode/mcp.json` file in your workspace folder
-2. Add the following configuration:
+   ```bash
+   bit scope set <your-org.your-scope>
+   ```
+
+2. **Generate rules/instructions** (if you haven't already):
+
+   ```bash
+   bit mcp-server rules
+   ```
+
+   This provides the AI agent with comprehensive guidance about Bit and MCP server functionality.
+
+3. **VS Code users**: Make sure to select "agent" mode instead of "ask" mode in the chat interface. For first-time users, open the command palette and search for "MCP: List servers" to find and start the Bit server.
+
+### Manual Configuration
+
+For IDEs not supported by the automatic setup, add this MCP server configuration:
 
 ```json
 {
@@ -110,94 +55,40 @@ If you need to manually configure the settings, here's how to set up VS Code MCP
 }
 ```
 
-**For global configuration:**
+### Configuration Options
 
-1. Open VS Code settings (JSON) by pressing `Ctrl + Shift + P` (or `Cmd + Shift + P` on macOS) and typing `Preferences: Open Settings (JSON)`
-2. Add the following configuration:
+- `--global`: Apply configuration globally (user settings) instead of workspace settings
+- `--consumer-project`: For non-Bit workspaces that only consume Bit components as packages
+- `--include-additional <commands>`: Add specific commands to the available tools (comma-separated list)
 
-```json
-{
-  "mcp": {
-    "servers": {
-      "bit-cli": {
-        "type": "stdio",
-        "command": "bit",
-        "args": ["mcp-server", "start"]
-      }
-    }
-  }
-}
-```
+## Usage
 
-#### Claude Code Setup
+### Running the Server
 
-Claude Code uses `.mcp.json` files for MCP server configuration. The setup command creates these files automatically:
-
-**Workspace Configuration:**
+To manually start the server:
 
 ```bash
-bit mcp-server setup claude-code
+bit mcp-server start [options]
 ```
 
-This creates a `.mcp.json` file in your project root:
+Options:
 
-```json
-{
-  "mcpServers": {
-    "bit": {
-      "command": "bit",
-      "args": ["mcp-server", "start"]
-    }
-  }
-}
-```
+- `--consumer-project`: For non-Bit workspaces that only consume Bit component packages
+- `--include-additional <commands>`: Add specific commands to the available tools (comma-separated list)
 
-**Global Configuration:**
+### Generating AI Rules
+
+Create instruction files for AI assistants:
 
 ```bash
-bit mcp-server setup claude-code --global
+bit mcp-server rules [vscode|cursor|windsurf|roo|cline|claude-code] [options]
 ```
 
-This creates/updates the global configuration file:
+Options:
 
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-- **Linux**: `~/.config/claude/claude_desktop_config.json`
-
-**Important**: After setup, restart Claude Code for the MCP server to be available.
-
-**Claude Code Rules:**
-
-To provide Bit-specific guidance to Claude Code, use the rules command:
-
-```bash
-bit mcp-server rules claude-code
-```
-
-This creates `.claude/bit.md` with Bit instructions. To integrate with your existing `CLAUDE.md`, add:
-
-```markdown
-@.claude/bit.md
-```
-
-This approach ensures your existing `CLAUDE.md` file is never overwritten.
-
-### Programmatic Usage
-
-```javascript
-import { McpClient } from '@modelcontextprotocol/sdk/client';
-
-async function example() {
-  const client = await McpClient.spawn('bit', ['mcp-server', 'start']);
-
-  // Call a Bit CLI tool via MCP
-  const result = await client.callTool('bit_status', { cwd: '/path/to/workspace' });
-  console.log(result.content[0].text);
-
-  // Close the connection when done
-  await client.close();
-}
-```
+- `--global`: Write rules to global configuration
+- `--consumer-project`: Generate rules for consumer projects
+- `--print`: Print rules content to screen
 
 ## Available Tools
 
@@ -205,165 +96,22 @@ The Bit CLI MCP Server operates in two modes and provides several specialized to
 
 ### Default Mode
 
-In default mode, the server exposes a minimal set of essential tools focused on core functionality. This ensures optimal performance and safety:
+In default mode, the server exposes a minimal set of essential tools focused on core functionality:
 
-- **Always Available Tools:**
-
-  - `bit_remote_search`: Search for components in remote scopes
-  - `bit_workspace_info`: Get comprehensive workspace information including status, components list, apps, templates, and dependency graph
-  - `bit_component_details`: Get detailed information about a specific component including basic info and optionally its public API schema
-  - `bit_create`: Create a new component (source files and config) using a template with proper argument validation and documentation
-  - `bit_query`: Execute read-only Bit commands that safely inspect workspace and component state without making modifications
-  - `bit_execute`: Execute any Bit command, including those that modify workspace or repository state (use with caution)
-  - `bit_commands_list`: Get all available Bit commands with descriptions and groups (for command discovery)
-  - `bit_command_help`: Get detailed help for a specific Bit command including syntax, arguments, flags, and usage examples
+- `bit_remote_search`: Search for components with automatic organization detection from workspace's defaultScope (e.g., "teambit" from "teambit.defender"). Executes multiple queries in parallel and deduplicates results. Use arrays of related terms or synonyms for better results.
+- `bit_workspace_info`: Get comprehensive workspace information by combining multiple data sources (status, components, apps, templates, dependency graph). Includes current lane information.
+- `bit_component_details`: Get detailed information about multiple components in parallel (up to 5 max to prevent context overload). Includes documentation from .docs.mdx files, example usage from composition files, and optionally the component's public API schema with exported functions/types. Returns partial results with detailed failure information if some components fail.
+- `bit_create`: Create components using templates with batch support. Supports multiple component names in single call and extensive configuration options (namespace, scope, environment). Validates template existence and prevents conflicts.
+- `bit_query`: Execute read-only Bit commands from a curated whitelist of safe commands (status, list, show, info, diff, log, graph, etc.). Prevents accidental workspace modifications.
+- `bit_execute`: Execute any Bit command including those that modify workspace state. Use with caution as it allows all operations including destructive ones.
+- `bit_commands_list`: Get all available Bit commands with descriptions, grouping, and subcommand discovery for comprehensive command exploration.
+- `bit_command_help`: Get detailed help for specific commands including arguments metadata, flag types, usage examples, and subcommand relationships.
 
 > **Command Discovery vs. Command Help**: Use `bit_commands_list` to discover what commands are available in Bit, then use `bit_command_help` with a specific command name to get detailed usage information including arguments, flags, and examples.
 
 ### Consumer Project Mode (--consumer-project)
 
-This mode is designed for applications or projects that are not Bit workspaces but need to consume or work with Bit components as packages. It provides a minimal set of tools focused on component discovery and information:
+For projects that consume Bit components as packages but aren't Bit workspaces:
 
-- `bit_remote_search`: Search for components in remote scopes
-- `bit_remote_component_details`: Get detailed information about a remote component including basic info and its public API schema (combines the functionality of show and schema commands)
-
-In this mode:
-
-1. You don't need a Bit workspace initialization
-2. Only these 2 tools are available (no workspace-specific tools)
-3. The `--remote` flag is automatically added to component detail queries
-4. The `cwd` parameter is still required but can be any directory (not necessarily a Bit workspace)
-5. You can still add additional tools with the `--include-additional` flag
-
-## Tool Parameters
-
-All tools accept a `cwd` parameter specifying the workspace path. Additional parameters vary by command.
-
-### bit_remote_search
-
-Search for multiple components in parallel for efficient discovery:
-
-```json
-{
-  "queries": ["input", "button", "validation"],
-  "cwd": "/path/to/workspace"
-}
-```
-
-**Parameters:**
-
-- `queries` (required): Array of search terms. Use either variations/synonyms of one component type (`["btn", "button"]`) or different components needed for a task (`["table", "pagination", "filter"]`)
-- `cwd` (optional): Path to workspace directory
-- `owners` (optional): Filter by specific owners (auto-extracted from workspace.jsonc if not provided)
-- `skipAutoOwner` (optional): Disable automatic owner extraction
-
-**Examples:**
-
-- Form components: `["input", "button", "validation", "dropdown"]`
-- Layout components: `["header", "navigation", "footer"]`
-- Data display: `["table", "pagination", "filter", "sort"]`
-- Button variations: `["button", "btn", "click"]`
-
-### bit_create
-
-Create a new component with template-based generation:
-
-```json
-{
-  "templateName": "react",
-  "componentNames": ["ui/button", "ui/input"],
-  "namespace": "components",
-  "scope": "my-org.my-scope",
-  "cwd": "/path/to/workspace"
-}
-```
-
-**Parameters:**
-
-- `templateName` (required): The template for generating the component (run `bit templates` for available templates)
-- `componentNames` (required): Array of component names to generate
-- `cwd` (required): Path to workspace directory
-- `namespace` (optional): Sets the component's namespace and nested dirs inside the scope
-- `scope` (optional): Sets the component's scope-name (uses default-scope if not provided)
-- `aspect` (optional): Aspect-id of the template (helpful when multiple aspects use the same template name)
-- `template` (optional): Env-id of the template (alias for --aspect)
-- `path` (optional): Relative path in the workspace (default: `<scope>/<namespace>/<name>`)
-- `env` (optional): Set the component's environment (overrides env from variants and template)
-- `force` (optional): Replace existing files at the target location
-
-**Examples:**
-
-- Single React component: `{"templateName": "react", "componentNames": ["ui/button"], "cwd": "/path/to/workspace"}`
-- Multiple components with namespace: `{"templateName": "node", "componentNames": ["utils/is-string", "utils/is-number"], "namespace": "utilities", "cwd": "/path/to/workspace"}`
-- Component with custom scope: `{"templateName": "mdx", "componentNames": ["docs/getting-started"], "scope": "my-org.docs", "cwd": "/path/to/workspace"}`
-
-## Custom Tool Selection
-
-To customize the available tools:
-
-```
-# Add specific tools to the available tools
-bit mcp-server start --include-additional "build,lint,format,schema"
-
-# For consumer projects (non-Bit workspaces)
-bit mcp-server start --consumer-project
-
-# Add specific tools to the consumer project set
-bit mcp-server start --consumer-project --include-additional "deps,get,preview"
-```
-
-### Writing AI Assistant Rules
-
-The MCP server provides a `rules` command to create instruction files for AI assistants:
-
-```bash
-bit mcp-server rules [vscode|cursor|windsurf|roo|cline|claude-code] [options]
-```
-
-This command creates rules/instructions markdown files that provide guidance to AI assistants on how to effectively use the Bit MCP server and follow best practices when working with Bit components.
-
-#### Supported Editors
-
-- **VS Code**: `bit mcp-server rules vscode` (or just `bit mcp-server rules`)
-- **Cursor**: `bit mcp-server rules cursor`
-- **Windsurf**: `bit mcp-server rules windsurf`
-- **Roo Code**: `bit mcp-server rules roo`
-- **Cline**: `bit mcp-server rules cline`
-- **Claude Code**: `bit mcp-server rules claude-code`
-
-#### Configuration Options
-
-- `--global`: Write rules to global configuration (default: workspace-specific)
-- `--print`: Print rules content to screen instead of writing to file
-- `--consumer-project`: Generate rules for consumer projects that only use Bit components as packages
-
-#### Examples
-
-```bash
-# Basic VS Code rules (workspace level)
-bit mcp-server rules
-
-# Global rules for Cursor
-bit mcp-server rules cursor --global
-
-# Consumer project rules for VS Code
-bit mcp-server rules --consumer-project
-
-# Claude Code rules (creates .claude/bit.md)
-bit mcp-server rules claude-code
-
-# Global Claude Code rules
-bit mcp-server rules claude-code --global
-
-# Global rules for Cline (macOS only)
-bit mcp-server rules cline --global
-
-# Workspace-specific rules for Cline
-bit mcp-server rules cline
-
-# Print rules content to screen for manual setup
-bit mcp-server rules --print
-
-# Print consumer project content for Windsurf (requires manual addition to .windsurfrules)
-bit mcp-server rules windsurf --print --consumer-project
-```
+- `bit_remote_search`: Search for components across all organizations available to the logged-in user (requires `bit login`). Executes multiple queries in parallel and deduplicates results.
+- `bit_remote_component_details`: Get comprehensive remote component information by combining show and schema commands. Gracefully handles schema failures while providing basic component details.
