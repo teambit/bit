@@ -82,7 +82,9 @@ describe('Filesystem read count', function () {
         const isCI = process.env.CI || process.env.CIRCLECI;
         const maxTimeInSeconds = isCI ? 3 : 2;
         // On Mac M1, as of 2025/03/03, it takes 500ms.
-        console.log(`bit status load time in milliseconds: ${Math.floor(timeInMs)} (max allowed: ${maxTimeInSeconds}s)`);
+        console.log(
+          `bit status load time in milliseconds: ${Math.floor(timeInMs)} (max allowed: ${maxTimeInSeconds}s)`
+        );
         expect(timeInSeconds).to.be.lessThan(maxTimeInSeconds);
       });
     });

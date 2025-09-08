@@ -484,18 +484,20 @@ export class Component {
       overrides: new ComponentOverrides(overrides),
       deprecated: deprecated || false,
       schema,
-      extensions: extensions ? ExtensionDataList.fromArray(
-        extensions.map((ext: any) => {
-          const { extensionId, name: extName, config = {}, data = {} } = ext;
-          return new ExtensionDataEntry(
-            undefined, // legacyId
-            extensionId, // extensionId
-            extName, // name
-            config, // rawConfig
-            data // data
-          );
-        })
-      ) : new ExtensionDataList(),
+      extensions: extensions
+        ? ExtensionDataList.fromArray(
+            extensions.map((ext: any) => {
+              const { extensionId, name: extName, config = {}, data = {} } = ext;
+              return new ExtensionDataEntry(
+                undefined, // legacyId
+                extensionId, // extensionId
+                extName, // name
+                config, // rawConfig
+                data // data
+              );
+            })
+          )
+        : new ExtensionDataList(),
     });
   }
 

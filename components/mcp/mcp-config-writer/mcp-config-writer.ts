@@ -526,7 +526,7 @@ export class McpConfigWriter {
 
     // Get base rules content
     const baseRulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
-    
+
     // Add VS Code frontmatter
     const vscodeRulesContent = `---
 applyTo: '**'
@@ -551,7 +551,7 @@ ${baseRulesContent}`;
 
     // Get base rules content
     const baseRulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
-    
+
     // Add Cursor frontmatter
     const cursorRulesContent = `---
 description: Bit MCP Agent Instructions
@@ -594,7 +594,7 @@ ${baseRulesContent}`;
 
     // Get base rules content
     const baseRulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
-    
+
     // Add Cline frontmatter
     const clineRulesContent = `---
 description: Bit MCP Agent Instructions

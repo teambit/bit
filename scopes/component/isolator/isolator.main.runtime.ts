@@ -1436,9 +1436,10 @@ export class IsolatorMain {
       }
 
       const isPublished = component.get('teambit.pkg/pkg')?.config?.packageJson?.publishConfig;
-      const canBeInstalled = host.isExported(component.id)
-        && (remotes.isHub(component.id.scope) || isPublished)
-        && component.buildStatus === 'succeed';
+      const canBeInstalled =
+        host.isExported(component.id) &&
+        (remotes.isHub(component.id.scope) || isPublished) &&
+        component.buildStatus === 'succeed';
 
       if (canBeInstalled) {
         this.logger.debug(`[OPTIMIZATION] Excluding unmodified exported dependency: ${componentIdStr}`);

@@ -406,7 +406,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
 
     await pMapSeries(idsWithWildcard, async (idStr: string) => {
       const existingOnLanes = await this.workspace.filterIdsFromPoolIdsByPattern(idStr, remoteLaneIds, false);
-      
+
       if (this.options.laneOnly) {
         // When --lane-only is specified, import only components that exist on the lane, never from main
         bitIds.push(...existingOnLanes);
@@ -414,11 +414,11 @@ if you just want to get a quick look into this snap, create a new workspace and 
         // New default behavior: Import from both lane and main
         // Get all components matching the pattern from main
         const idsFromRemote = await this.lister.getRemoteCompIdsByWildcards(idStr, this.options.includeDeprecated);
-        
+
         // Prefer lane versions where they exist, use main versions for the rest
-        const laneIds = new Set(existingOnLanes.map(id => id.toStringWithoutVersion()));
-        const mainOnlyIds = idsFromRemote.filter(id => !laneIds.has(id.toStringWithoutVersion()));
-        
+        const laneIds = new Set(existingOnLanes.map((id) => id.toStringWithoutVersion()));
+        const mainOnlyIds = idsFromRemote.filter((id) => !laneIds.has(id.toStringWithoutVersion()));
+
         bitIds.push(...existingOnLanes, ...mainOnlyIds);
       }
     });
