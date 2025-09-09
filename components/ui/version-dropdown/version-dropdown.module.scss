@@ -15,6 +15,7 @@
   max-height: 240px;
   overflow-y: scroll;
   position: relative;
+  padding-bottom: 8px;
 }
 
 .versionRow {
@@ -30,6 +31,8 @@
 
   &.localVersion {
     border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
   }
 
   .versionTimestamp {
@@ -111,16 +114,20 @@
 
   > div {
     padding: 8px 0px;
+    border-radius: 0px;
+    &:first-child {
+      border-top-left-radius: 7px;
+      border-top-right-radius: 7px;
+    }
+    &:last-child {
+      border-bottom-left-radius: 7px;
+      border-bottom-right-radius: 7px;
+    }
   }
 }
 
 .versionMenuContainer {
   display: initial;
-  padding: 0 8px;
-
-  &.loading {
-    padding: 0;
-  }
 
   &.hide {
     display: none;
