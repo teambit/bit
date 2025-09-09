@@ -98,6 +98,10 @@
   overflow-x: auto;
   margin-top: 8px;
 
+  &.withoutLocal {
+    padding-top: 8px;
+  }
+
   .tab {
     font-weight: bold;
     padding-top: 4px;

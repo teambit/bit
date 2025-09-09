@@ -304,7 +304,7 @@ function _VersionMenu({
           </div>
         </MenuLinkItem>
       )}
-      <div className={classNames(multipleTabs && styles.tabs)}>
+      <div className={classNames(multipleTabs && styles.tabs, !localVersion && styles.withoutLocal)}>
         {multipleTabs &&
           tabs.map(({ name }, index) => {
             return (
