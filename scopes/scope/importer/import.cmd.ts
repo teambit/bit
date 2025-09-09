@@ -46,7 +46,7 @@ type ImportFlags = {
 
 export class ImportCmd implements Command {
   name = 'import [component-patterns...]';
-  description = 'import components from their remote scopes to the local workspace';
+  description = 'bring components from remote scopes into your workspace';
   helpUrl = 'reference/components/importing-components';
   arguments = [
     {
@@ -55,7 +55,9 @@ export class ImportCmd implements Command {
         'component IDs or component patterns (separated by space). Use patterns to import groups of components using a common scope or namespace. E.g., "utils/*" (wrap with double quotes)',
     },
   ];
-  extendedDescription: string;
+  extendedDescription = `brings component source files from remote scopes into your workspace and installs their dependencies as packages.
+supports pattern matching for bulk imports, merge strategies for handling conflicts, and various optimization options.
+without arguments, fetches all workspace components' latest versions from their remote scopes.`;
   group = 'collaborate';
   alias = '';
   options = [

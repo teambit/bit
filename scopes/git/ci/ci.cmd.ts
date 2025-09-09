@@ -4,7 +4,9 @@ import type { Workspace } from '@teambit/workspace';
 
 export class CiCmd implements Command {
   name = 'ci <sub-command>';
-  description = 'CI commands';
+  description = 'continuous integration commands for automated workflows';
+  extendedDescription =
+    'provides commands designed for use in CI/CD pipelines with Git workflows to automate component development tasks like verification, pull request handling, and deployment preparation.';
   group = 'collaborate';
 
   options: CommandOptions = [];

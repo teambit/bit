@@ -8,7 +8,10 @@ import type { TypescriptMain } from '../typescript.main.runtime';
 
 export class CheckTypesCmd implements Command {
   name = 'check-types [component-pattern]';
-  description = 'check typescript types';
+  description = 'validate TypeScript type correctness';
+  extendedDescription = `checks for TypeScript type errors in component files, similar to running tsc.
+by default only checks new and modified components. use --all to check all components.
+useful for catching type issues before tagging, snapping or building components.`;
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   alias = '';
   group = 'testing';

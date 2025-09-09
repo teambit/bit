@@ -13,11 +13,12 @@ import type { Logger } from '@teambit/logger';
 export class InitCmd implements Command {
   name = 'init [path]';
   skipWorkspace = true;
-  description = 'create or reinitialize an empty workspace';
+  description = 'initialize a Bit workspace in an existing project';
   helpUrl = 'reference/workspace/creating-workspaces/?new_existing_project=1';
   group = 'workspace-setup';
-  extendedDescription =
-    'if the current directory is already a workspace, it validates that bit files are correct and rewrite them if needed.';
+  extendedDescription = `creates Bit configuration files in an existing project directory to start tracking components.
+if already a workspace, validates and repairs Bit files as needed.
+supports various reset options to recover from corrupted state or restart from scratch.`;
   alias = '';
   loadAspects = false;
   options = [

@@ -292,6 +292,9 @@ export class DependenciesUsageCmd implements Command {
   ];
   group = 'dependencies';
   description = 'find components that use the specified dependency';
+  extendedDescription = `searches workspace components to find which ones depend on the specified package or component.
+useful for understanding dependency usage before removing packages or when refactoring components.
+supports both exact version matching and package name patterns.`;
   alias = '';
   options = [['', 'depth <number>', 'max display depth of the dependency graph']] as CommandOptions;
 
@@ -317,7 +320,8 @@ export class WhyCmd extends DependenciesUsageCmd {
 export class DependenciesCmd implements Command {
   name = 'deps <sub-command>';
   alias = 'dependencies';
-  description = 'manage dependencies';
+  description = 'manage component dependencies';
+  extendedDescription = `configure and analyze component dependencies with sub-commands for setting, removing, and inspecting dependency relationships.`;
   options = [];
   group = 'dependencies';
   commands: Command[] = [];
@@ -336,11 +340,14 @@ export class SetPeerCmd implements Command {
     { name: 'component-id', description: 'the component to set as always peer' },
     {
       name: 'range',
-      description: 'the default range to use for the componnent, when added to peerDependencies',
+      description: 'the default range to use for the component, when added to peerDependencies',
     },
   ];
   group = 'dependencies';
-  description = 'set a component as always peer';
+  description = 'configure component to always be installed as peer dependency';
+  extendedDescription = `marks a component to always be treated as a peer dependency when used by other components.
+useful for shared libraries that should be provided by the consuming application.
+the specified version range will be used when adding this component as a peer dependency.`;
   alias = '';
   options = [];
 
@@ -356,7 +363,9 @@ export class UnsetPeerCmd implements Command {
   name = 'unset-peer <component-id>';
   arguments = [{ name: 'component-id', description: 'the component to unset as always peer' }];
   group = 'dependencies';
-  description = 'unset a component as always peer';
+  description = 'remove always-peer configuration from component';
+  extendedDescription = `removes the always-peer marking from a component, allowing it to be installed as a regular dependency.
+reverses the effect of 'bit set-peer' command. the component will be treated normally in dependency resolution.`;
   alias = '';
   options = [];
 

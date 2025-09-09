@@ -21,9 +21,10 @@ type WatchCmdOpts = {
 
 export class WatchCommand implements Command {
   name = 'watch';
-  description = 'automatically recompile modified components (on save)';
-  extendedDescription = `by default, the watcher doesn't use polling, to keep the CPU idle.
-if this doesn't work well for you, run "bit config set watch_use_polling true" to use polling.`;
+  description = 'watch and compile components on file changes';
+  extendedDescription = `monitors component files for changes and automatically recompiles them using their environment's configured compiler.
+enables immediate feedback during development by keeping components compiled as you work.
+by default uses file system events (not polling) to minimize CPU usage - enable polling with "bit config set watch_use_polling true" if needed.`;
   helpUrl = 'reference/compiling/compiler-overview';
   alias = '';
   group = 'component-development';

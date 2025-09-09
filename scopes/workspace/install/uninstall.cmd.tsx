@@ -4,7 +4,9 @@ import type { InstallMain } from './install.main.runtime';
 
 export default class UninstallCmd implements Command {
   name = 'uninstall [packages...]';
-  description = 'uninstall dependencies';
+  description = 'remove dependencies from workspace';
+  extendedDescription = `removes specified packages from workspace.jsonc dependency policy and runs install to update node_modules.`;
+  arguments = [{ name: 'packages...', description: 'list of package names to remove from workspace dependencies' }];
   alias = 'un';
   group = 'dependencies';
   options = [] as CommandOptions;

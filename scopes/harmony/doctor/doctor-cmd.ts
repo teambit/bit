@@ -14,7 +14,10 @@ type Flags = {
 
 export class DoctorCmd implements Command {
   name = 'doctor [diagnosis-name]';
-  description = 'diagnose a bit workspace';
+  description = 'diagnose and troubleshoot workspace issues';
+  extendedDescription = `runs comprehensive health checks on your workspace to detect and report configuration problems, 
+missing dependencies, corrupted data, and other issues that may affect workspace functionality.
+can generate diagnostic reports and workspace archives for debugging and support purposes.`;
   group = 'system';
   alias = '';
   loadAspects = false;

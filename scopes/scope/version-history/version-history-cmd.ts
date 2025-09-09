@@ -9,9 +9,13 @@ import { catVersionHistory } from './cat-version-history';
 export class VersionHistoryCmd implements Command {
   name = 'version-history <sub-command>';
   alias = 'vh';
-  description = 'manage the version-history of components';
+  description = 'manage component version history data structures';
+  extendedDescription = `tools for building and maintaining the internal version history data that tracks component evolution and relationships.
+includes commands to rebuild corrupted version history, generate visual graphs, and inspect version relationships.
+mainly used for debugging and repair purposes when version history data becomes corrupted.`;
   options = [];
   group = 'version-control';
+  private = true;
   commands: Command[] = [];
 
   async report([unrecognizedSubcommand]: [string]) {
@@ -48,7 +52,8 @@ export class VersionHistoryBuildCmd implements Command {
     ['', 'delete-existing', 'delete the existing version history before building it'],
     ['', 'remote <scope>', 'make the change on the remote scope'],
   ] as CommandOptions;
-  group = 'info-analysis';
+  group = 'version-control';
+  private = true;
 
   constructor(private versionHistoryMain: VersionHistoryMain) {}
 
@@ -91,8 +96,9 @@ export class VersionHistoryGraphCmd implements Command {
     ],
     ['', 'limit <number>', 'limit the number of nodes in the graph (starting from the heads)'],
   ] as CommandOptions;
-  group = 'info-analysis';
+  group = 'version-control';
   commands: Command[] = [];
+  private = true;
 
   constructor(private versionHistoryMain: VersionHistoryMain) {}
 
@@ -141,8 +147,9 @@ export class VersionHistoryShowCmd implements Command {
     ['s', 'short-hash', 'show only 9 chars of the hash'],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
-  group = 'info-analysis';
+  group = 'version-control';
   commands: Command[] = [];
+  private = true;
 
   constructor(private versionHistoryMain: VersionHistoryMain) {}
 
