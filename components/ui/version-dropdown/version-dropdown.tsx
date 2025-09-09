@@ -271,7 +271,7 @@ function _VersionMenu({
           showDetails={showVersionDetails}
           onVersionClicked={onVersionClicked}
           {...version}
-        ></VersionInfo>
+        />
       );
     },
     [activeTab, currentVersion, latestVersion, showVersionDetails, currentLane?.id.toString(), showTab]
@@ -289,7 +289,7 @@ function _VersionMenu({
   }, [activeTab]);
 
   return (
-    <div {...rest} className={classNames(styles.versionMenuContainer, loading && styles.loading, !open && styles.hide)}>
+    <div {...rest} className={classNames(styles.versionMenuContainer, !open && styles.hide)}>
       {loading && <LineSkeleton count={6} className={styles.loader} />}
       {!loading && localVersion && (
         <MenuLinkItem
