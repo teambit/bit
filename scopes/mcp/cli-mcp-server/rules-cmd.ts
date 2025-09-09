@@ -88,7 +88,7 @@ export class McpRulesCmd implements Command {
 
       return chalk.green(
         `✓ Successfully wrote ${editorName} Bit MCP rules file (${scope})\n` +
-        `  File written to: ${chalk.cyan(rulesPath)}`
+          `  File written to: ${chalk.cyan(rulesPath)}`
       );
     } catch (error) {
       const editorName = this.mcpServerMain.getEditorDisplayName(editor);

@@ -136,7 +136,11 @@ without arguments, fetches all workspace components' latest versions from their 
       'do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap',
     ],
     ['', 'include-deprecated', 'when importing with patterns, include deprecated components (default to exclude them)'],
-    ['', 'lane-only', 'when using wildcards on a lane, only import components that exist on the lane (never from main)'],
+    [
+      '',
+      'lane-only',
+      'when using wildcards on a lane, only import components that exist on the lane (never from main)',
+    ],
   ] as CommandOptions;
   loader = true;
   remoteOp = true;

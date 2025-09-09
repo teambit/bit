@@ -1409,13 +1409,15 @@ as an alternative, you can use "+" to keep the same version installed in the wor
    * - direct URL specifiers to the public npm registry.
    *   E.g.: https://registry.npmjs.org/is-odd/-/is-odd-0.1.0.tgz)
    */
-  isValidVersionSpecifier (spec: string): boolean {
-    return parseBareSpecifier(
-      spec,
-      'pkgname', // This argument is the package but we don't need it
-      'latest',
-      'https://registry.npmjs.org/'
-    ) != null;
+  isValidVersionSpecifier(spec: string): boolean {
+    return (
+      parseBareSpecifier(
+        spec,
+        'pkgname', // This argument is the package but we don't need it
+        'latest',
+        'https://registry.npmjs.org/'
+      ) != null
+    );
   }
 
   /**

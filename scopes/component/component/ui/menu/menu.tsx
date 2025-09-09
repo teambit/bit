@@ -372,8 +372,8 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
         currentVersion={currentVersion}
         latestVersion={latest}
         currentLane={viewedLane}
-        className={className}
-        menuClassName={styles.componentVersionMenu}
+        className={classnames(styles.versionDropdown, className)}
+        menuClassName={isWorkspace ? styles.componentVersionMenuWorkspace : styles.componentVersionMenu}
         getActiveTabIndex={dropdownOptions?.getActiveTabIndex}
         showVersionDetails={dropdownOptions?.showVersionDetails}
       />
