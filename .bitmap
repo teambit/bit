@@ -2261,69 +2261,6 @@
             "teambit.node/envs/node-babel-mocha@0.1.21": {}
         }
     },
-<<<<<<< HEAD
-    "utils/code-editor-options": {
-        "name": "utils/code-editor-options",
-        "scope": "teambit.api-reference",
-        "version": "0.0.16",
-        "mainFile": "index.ts",
-        "rootDir": "components/utils/code-editor-options",
-        "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.21": {}
-        }
-    },
-    "utils/copy-schema-node": {
-        "name": "utils/copy-schema-node",
-        "scope": "teambit.api-reference",
-        "version": "0.0.45",
-        "mainFile": "index.ts",
-        "rootDir": "components/utils/copy-schema-node",
-        "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.21": {}
-        }
-    },
-    "utils/custom-prism-syntax-highlighter-theme": {
-        "name": "utils/custom-prism-syntax-highlighter-theme",
-        "scope": "teambit.api-reference",
-        "version": "0.0.16",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/utils/custom-prism-syntax-highlighter-theme",
-        "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.21": {}
-        }
-    },
-    "utils/group-schema-node-by-signature": {
-        "name": "utils/group-schema-node-by-signature",
-        "scope": "teambit.api-reference",
-        "version": "0.0.45",
-        "mainFile": "index.ts",
-        "rootDir": "components/utils/group-schema-node-by-signature",
-        "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.21": {}
-        }
-    },
-    "utils/schema-node-signature-transform": {
-        "name": "utils/schema-node-signature-transform",
-        "scope": "teambit.api-reference",
-        "version": "0.0.47",
-        "mainFile": "index.ts",
-        "rootDir": "components/utils/schema-node-signature-transform",
-        "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.21": {}
-        }
-    },
-    "utils/sort-api-nodes": {
-        "name": "utils/sort-api-nodes",
-        "scope": "teambit.api-reference",
-        "version": "0.0.52",
-        "mainFile": "index.ts",
-        "rootDir": "components/utils/sort-api-nodes",
-        "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.21": {}
-        }
-    },
-=======
->>>>>>> origin/master
     "variants": {
         "name": "variants",
         "scope": "teambit.workspace",
