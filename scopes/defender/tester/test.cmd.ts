@@ -23,7 +23,7 @@ export class TestCmd implements Command {
   name = 'test [component-pattern]';
   description = 'run component tests';
   extendedDescription = `executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.).
-by default only runs tests for new and modified components - use --unmodified to test all components.
+by default only runs tests for new and modified components. use --unmodified to test all components.
 supports watch mode, coverage reporting, and debug mode for development workflows.`;
   helpUrl = 'reference/testing/tester-overview';
   arguments = [
