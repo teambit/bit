@@ -3,8 +3,9 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('all custom envs are compiled during installation', function () {
   let helper: Helper;
@@ -56,7 +57,7 @@ describe('all custom envs are compiled during installation', function () {
       `${helper.scopes.remoteWithoutOwner}/comp/comp.ts`,
       `
 import isOdd from 'is-odd';
-
+import chaiFs from 'chai-fs';
 export function comp() {
   console.log(isOdd(17));
 }

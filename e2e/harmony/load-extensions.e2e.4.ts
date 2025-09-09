@@ -1,6 +1,7 @@
 import stripAnsi from 'strip-ansi';
 import chai, { expect } from 'chai';
 import path from 'path';
+import assertArrays from 'chai-arrays';
 
 import {
   UNABLE_TO_LOAD_EXTENSION,
@@ -9,10 +10,8 @@ import {
 import { CannotLoadExtension } from '../../scopes/harmony/aspect-loader/exceptions';
 // TODO: think about how to change this require or move this tests
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-
-const assertArrays = require('chai-arrays');
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 chai.use(assertArrays);
 

@@ -5,11 +5,11 @@ import * as path from 'path';
 import { CURRENT_BITMAP_SCHEMA, SCHEMA_FIELD, InvalidBitMap } from '@teambit/legacy.bit-map';
 import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-const assertArrays = require('chai-arrays');
+import chaiFs from 'chai-fs';
+import assertArrays from 'chai-arrays';
 
 chai.use(assertArrays);
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('run bit init', function () {
   this.timeout(0);

@@ -2,8 +2,8 @@ import chai, { expect } from 'chai';
 
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { OutdatedIndexJson } from '@teambit/legacy.scope';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('scope components index mechanism', function () {
   this.timeout(0);

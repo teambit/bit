@@ -2,8 +2,8 @@ import chai from 'chai';
 import path from 'path';
 import { ParentDirTracked, AddingIndividualFiles } from '@teambit/tracker';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('add command on Harmony', function () {
   this.timeout(0);

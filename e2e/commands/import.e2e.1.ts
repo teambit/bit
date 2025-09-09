@@ -2,12 +2,13 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
+import assertArrays from 'chai-arrays';
+import chaiString from 'chai-string';
 
-chai.use(require('chai-fs'));
-const assertArrays = require('chai-arrays');
-
+chai.use(chaiFs);
 chai.use(assertArrays);
-chai.use(require('chai-string'));
+chai.use(chaiString);
 
 describe('bit import', function () {
   this.timeout(0);

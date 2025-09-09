@@ -1,11 +1,13 @@
 import fs from 'fs-extra';
 import path from 'path';
 import chai, { expect } from 'chai';
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
 
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+chai.use(chaiFs);
+chai.use(chaiString);
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)('dependencies in scope aspect capsules', function () {
   this.timeout(0);

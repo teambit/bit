@@ -4,10 +4,11 @@ import { DEPS_GRAPH } from '@teambit/harmony.modules.feature-toggle';
 import { addDistTag } from '@pnpm/registry-mock';
 import path from 'path';
 import chai, { expect } from 'chai';
+import chaiFs from 'chai-fs';
 import yaml from 'js-yaml';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)('dependencies graph data', function () {
   this.timeout(0);

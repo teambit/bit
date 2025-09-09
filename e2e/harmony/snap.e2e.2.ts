@@ -5,8 +5,8 @@ import { HASH_SIZE, AUTO_SNAPPED_MSG, FILE_CHANGES_CHECKOUT_MSG } from '@teambit
 import { ComponentsPendingMerge } from '@teambit/legacy.consumer';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
 import { MergeConflictOnRemote } from '@teambit/legacy.scope';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit snap command', function () {
   this.timeout(0);

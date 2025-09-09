@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import { difference } from 'lodash';
+import * as _ from 'lodash';
 
 const MAX_FILES_READ = 1050;
 const MAX_FILES_READ_STATUS = 1500;
@@ -115,11 +115,11 @@ function printDiffFromLastSnapshot(cmdOutput: string) {
   const fromLastSnapshotLines = fromLastSnapshot.split('\n');
   const { linesFromBitInstallation, otherLines } = getLinesFromBitInstallation(cmdOutput);
   console.log('********** the following files are new ***************************');
-  difference(linesFromBitInstallation, fromLastSnapshotLines).forEach((line) => console.log(line));
+  _.difference(linesFromBitInstallation, fromLastSnapshotLines).forEach((line) => console.log(line));
   console.log('******************************************************************');
 
   console.log('********** the following files are old ***************************');
-  difference(fromLastSnapshotLines, linesFromBitInstallation).forEach((line) => console.log(line));
+  _.difference(fromLastSnapshotLines, linesFromBitInstallation).forEach((line) => console.log(line));
   console.log('******************************************************************');
 
   console.log('********** the following files are not from bit-installation *****');

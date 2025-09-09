@@ -1,7 +1,8 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('Mocha Tester', function () {
   this.timeout(0);
@@ -109,7 +110,7 @@ describe('Mocha Tester', function () {
         'comp1/foo.spec.ts',
         `import { addOne } from './foo';
 import { expect } from 'chai';
-
+import chaiFs from 'chai-fs';
 describe('addOne', () => {
   it('should add one', () => {
     const result = addOne(1);

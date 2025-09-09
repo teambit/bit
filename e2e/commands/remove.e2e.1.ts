@@ -4,8 +4,8 @@ import * as path from 'path';
 import { Extensions } from '@teambit/legacy.constants';
 
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit remove command', function () {
   this.timeout(0);

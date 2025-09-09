@@ -7,8 +7,8 @@ import { getAnotherInstallRequiredOutput } from '@teambit/install';
 import chai, { expect } from 'chai';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('install command', function () {
   this.timeout(0);

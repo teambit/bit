@@ -1,12 +1,13 @@
 import chai, { expect } from 'chai';
 import chalk from 'chalk';
 import path from 'path';
+import chaiFs from 'chai-fs';
 import { uniq } from 'lodash';
 import { Extensions } from '@teambit/legacy.constants';
 import { SchemaName } from '@teambit/legacy.consumer-component';
 import { Helper } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('tag components on Harmony', function () {
   this.timeout(0);
