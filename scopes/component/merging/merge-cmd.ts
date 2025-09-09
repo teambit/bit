@@ -22,14 +22,15 @@ import type { ConfigStoreMain } from '@teambit/config-store';
 
 export class MergeCmd implements Command {
   name = 'merge [component-pattern]';
-  description = 'merge changes of the remote head into local - auto-snaps all merged components';
+  description = 'merge diverged component history when local and remote have different versions';
   helpUrl = 'reference/components/merging-changes';
   group = 'version-control';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
-  extendedDescription = `merge changes of the remote head into local when they are diverged. when on a lane, merge the remote head of the lane into the local
-and creates snaps for merged components that have diverged, on the lane.
-if no ids are specified, all pending-merge components will be merged. (run "bit status" to list them).
-optionally use '--abort' to revert the last merge. to revert a lane merge, use "bit lane merge-abort" command.`;
+  extendedDescription = `resolves diverged component history when both local and remote have created different snaps/tags from the same base version.
+if no component pattern is specified, all pending-merge components will be merged (run 'bit status' to list them).
+'bit status' will show diverged components and suggest either merging or resetting local changes.
+preferred approach: use 'bit reset' to remove local versions, then 'bit checkout head' to get remote versions.
+for lane-to-lane merging, use 'bit lane merge' instead.`;
   alias = '';
   options = [
     ['', 'ours', 'DEPRECATED. use --auto-merge-resolve. in case of a conflict, keep the local modification'],

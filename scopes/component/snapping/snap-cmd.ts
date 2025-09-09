@@ -17,8 +17,10 @@ import type { ConfigStoreMain } from '@teambit/config-store';
 
 export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
-  description = 'create an immutable and exportable component snapshot (non-release version)';
-  extendedDescription: string;
+  description = 'create immutable component snapshots for development versions';
+  extendedDescription = `creates snapshots with hash-based versions for development and testing. snapshots are immutable and exportable.
+by default snaps only new and modified components. use for development iterations before creating semantic version tags.
+snapshots maintain component history and enable collaboration without formal releases.`;
   group = 'version-control';
   arguments = [
     {
