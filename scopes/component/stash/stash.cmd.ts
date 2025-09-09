@@ -115,7 +115,9 @@ export class StashLoadCmd implements Command {
 
 export class StashCmd implements Command {
   name = 'stash <sub-command>';
-  description = 'stash modified components';
+  description = 'temporarily save and restore component changes';
+  extendedDescription = `temporarily stores modified component files without creating versions.
+allows saving work-in-progress changes and switching context, then restoring changes later.`;
   group = 'version-control';
   options = [
     ['p', 'pattern', COMPONENT_PATTERN_HELP],

@@ -477,9 +477,9 @@ describe('bit import', function () {
     it('should write dependencies to package.json', () => {
       const pkgJson = helper.fs.readJsonFile('package.json');
       expect(pkgJson.dependencies['is-odd']).to.eq('2.0.0');
-    })
+    });
     it('should not run installation', () => {
       expect(helper.fs.exists('node_modules/is-odd')).to.eq(false);
-    })
+    });
   });
 });

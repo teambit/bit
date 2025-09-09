@@ -5,7 +5,10 @@ import { getEmptyTableWithoutStyle } from './log-cmd';
 
 export class BlameCmd implements Command {
   name = 'blame <filepath>';
-  description = 'EXPERIMENTAL. per line, show who and when was the last to modify it';
+  description = 'EXPERIMENTAL. show line-by-line authorship and modification history';
+  extendedDescription = `displays who last modified each line of a file and when the change was made.
+tracks line-level changes across component versions.
+shows author, date, version hash, and optionally commit messages for each line.`;
   group = 'version-control';
   alias = '';
   options = [['m', 'include-message', 'show the commit message']] as CommandOptions;

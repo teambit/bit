@@ -95,7 +95,6 @@ export class CliMcpServerMain {
     return this._http;
   }
 
-
   private async getBitServerPort(cwd: string, skipValidatePortFlag = false): Promise<number | undefined> {
     try {
       const args = ['cli-server-port'];

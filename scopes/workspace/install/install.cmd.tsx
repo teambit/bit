@@ -36,9 +36,10 @@ const recurringInstallFlagName = 'recurring-install';
 
 export default class InstallCmd implements Command {
   name = 'install [packages...]';
-  description = 'installs workspace dependencies';
-  extendedDescription =
-    'when no package is specified, all workspace dependencies are installed and all workspace components are imported.';
+  description = 'install workspace dependencies';
+  extendedDescription = `installs workspace dependencies and prepares the workspace for development.
+when packages are specified, adds them to workspace.jsonc policy and installs. when no packages specified, installs existing dependencies.
+automatically imports components, compiles components, links to node_modules, and writes config files.`;
   helpUrl = 'reference/dependencies/dependency-installation';
   arguments = [{ name: 'packages...', description: 'a list of packages to install (separated by spaces)' }];
   alias = 'in';

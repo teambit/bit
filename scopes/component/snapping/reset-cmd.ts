@@ -1,12 +1,12 @@
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { BASE_DOCS_DOMAIN, COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { SnappingMain } from './snapping.main.runtime';
 
 export default class ResetCmd implements Command {
   name = 'reset [component-pattern]';
-  description = 'revert tagged or snapped versions for component(s)';
+  description = 'revert local tags and snaps to previous versions';
   arguments = [
     {
       name: 'component-pattern',
@@ -14,7 +14,9 @@ export default class ResetCmd implements Command {
     },
   ];
   group = 'version-control';
-  extendedDescription = `${BASE_DOCS_DOMAIN}components/tags#undoing-a-tag`;
+  extendedDescription = `removes local component versions (tags/snaps) that haven't been exported yet.
+by default reverts all local versions. use --head to revert only the latest version.
+useful for undoing mistakes before exporting. exported versions cannot be reset.`;
   alias = '';
   options = [
     ['a', 'all', 'revert all unexported tags/snaps for all components'],

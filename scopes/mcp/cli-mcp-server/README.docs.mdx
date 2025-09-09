@@ -24,14 +24,17 @@ bit mcp-server setup --consumer-project
 After installation, consider these helpful setup steps:
 
 1. **For new workspaces**: Set your default scope so the search tool knows which organization to search:
+
    ```bash
    bit scope set <your-org.your-scope>
    ```
 
 2. **Generate rules/instructions** (if you haven't already):
+
    ```bash
    bit mcp-server rules
    ```
+
    This provides the AI agent with comprehensive guidance about Bit and MCP server functionality.
 
 3. **VS Code users**: Make sure to select "agent" mode instead of "ask" mode in the chat interface. For first-time users, open the command palette and search for "MCP: List servers" to find and start the Bit server.
@@ -69,6 +72,7 @@ bit mcp-server start [options]
 ```
 
 Options:
+
 - `--consumer-project`: For non-Bit workspaces that only consume Bit component packages
 - `--include-additional <commands>`: Add specific commands to the available tools (comma-separated list)
 
@@ -81,10 +85,10 @@ bit mcp-server rules [vscode|cursor|windsurf|roo|cline|claude-code] [options]
 ```
 
 Options:
+
 - `--global`: Write rules to global configuration
 - `--consumer-project`: Generate rules for consumer projects
 - `--print`: Print rules content to screen
-
 
 ## Available Tools
 
@@ -111,4 +115,3 @@ For projects that consume Bit components as packages but aren't Bit workspaces:
 
 - `bit_remote_search`: Search for components across all organizations available to the logged-in user (requires `bit login`). Executes multiple queries in parallel and deduplicates results.
 - `bit_remote_component_details`: Get comprehensive remote component information by combining show and schema commands. Gracefully handles schema failures while providing basic component details.
-

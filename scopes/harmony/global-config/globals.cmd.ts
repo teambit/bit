@@ -7,7 +7,9 @@ import type { GlobalConfigMain } from './global-config.main.runtime';
 
 export class GlobalsCmd implements Command {
   name = 'globals';
-  description = `list all globals`;
+  description = 'display global directories and paths used by Bit';
+  extendedDescription = `shows all global directories including cache, logs, and config locations used by Bit across your system.
+useful for debugging and understanding where Bit stores data.`;
   group = 'system';
   helpUrl = 'reference/config/config-files';
   alias = '';
@@ -26,7 +28,7 @@ export class GlobalsCmd implements Command {
       })
       .join('\n');
 
-    const title = `the following globals are used by Bit. to change the global root dir, use "${CACHE_GLOBALS_ENV}" env variable`;
+    const title = `the following global directories are used by Bit. to change the global root directory, set the "${CACHE_GLOBALS_ENV}" environment variable`;
 
     return `${title}\n\n${values}`;
   }

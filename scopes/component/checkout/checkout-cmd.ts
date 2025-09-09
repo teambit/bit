@@ -32,13 +32,14 @@ export class CheckoutCmd implements Command {
   description = 'switch between component versions or remove local changes';
   helpUrl = 'reference/components/merging-changes#checkout-snaps-to-the-working-directory';
   group = 'version-control';
-  extendedDescription = `
-\`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version
-\`bit checkout head [component-pattern]\` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all
-\`bit checkout head~x [component-pattern]\` => go backward x generations from the head and checkout to that version
-\`bit checkout latest [component-pattern]\` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all
-\`bit checkout reset [component-pattern]\` => remove local modifications from the specified ids (or all components when --all is used). also, if a component dir is deleted from the filesystem, it'll be restored
-when on a lane, "checkout head" only checks out components on this lane. to update main components, run "bit lane merge main"`;
+  extendedDescription = `checkout components to specified versions or remove local changes. most commonly used as 'bit checkout head' to get latest versions.
+the <to> argument accepts these values:
+- head: checkout to last snap/tag (most common usage)
+- specific version: checkout to exact version (e.g. 'bit checkout 1.0.5 component-name')
+- head~x: go back x generations from head (e.g. 'head~2' for two versions back)
+- latest: checkout to latest semver tag
+- reset: remove local modifications and restore original files (also restores deleted component directories)
+when on lanes, 'checkout head' only affects lane components. to update main components, run 'bit lane merge main'.`;
   alias = 'U';
   options = [
     [

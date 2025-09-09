@@ -41,7 +41,10 @@ export type JsonFormatResults = {
 
 export class FormatCmd implements Command {
   name = 'format [component-pattern]';
-  description = 'format components in the development workspace';
+  description = 'auto-format component source code';
+  extendedDescription = `formats component files using the formatter configured by each component's environment (Prettier, etc.).
+by default formats all components. use --changed to format only new and modified components.
+supports check mode to verify formatting without making changes.`;
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   group = 'testing';
   helpUrl = 'reference/formatting/formatter-overview';
