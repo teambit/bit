@@ -4,7 +4,10 @@ import type { CloudMain } from './cloud.main.runtime';
 
 export class LogoutCmd implements Command {
   name = 'logout';
-  description = 'log the CLI out of Bit';
+  description = 'sign out of Bit Cloud and clear authentication tokens';
+  extendedDescription = `removes stored authentication tokens and signs out of Bit Cloud.
+clears local credentials while preserving .npmrc configurations.
+use this to switch between accounts or when authentication tokens expire.`;
   group = 'auth';
   alias = '';
   options = [];

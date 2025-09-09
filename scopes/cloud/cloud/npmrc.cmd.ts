@@ -90,7 +90,10 @@ Modification: ${chalk.green(conflict.modifications)}`
 
 export class NpmrcCmd implements Command {
   name = 'npmrc [sub-command]';
-  description = 'manage npmrc file with scope, registry, and token information from bit.cloud';
+  description = 'configure .npmrc file with Bit Cloud registry and authentication settings';
+  extendedDescription = `manages .npmrc configuration for seamless package installation from Bit Cloud registries.
+automatically configures scoped registries and authentication tokens for your workspace components.
+provides sub-commands for generating, updating, and managing npm registry configurations.`;
   group = 'auth';
   alias = '';
   options = [];
