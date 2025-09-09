@@ -3,6 +3,7 @@ import { addUser, REGISTRY_MOCK_PORT, start as startRegistryMock, prepare } from
 import type { ChildProcess } from 'child_process';
 import { fetch } from '@pnpm/fetch';
 import fs from 'fs-extra';
+import execa from 'execa';
 import * as path from 'path';
 
 import type { Helper } from './e2e-helper';
@@ -107,16 +108,15 @@ export class NpmCiRegistry {
       password: 'secret',
       email: 'ci@ci.com',
     });
-    // Set npm configuration using environment variables for better compatibility with capsules
-    // Use correct npm environment variable format for modern npm versions
-    process.env[`NPM_CONFIG_${this.ciDefaultScope}:registry`] = this.ciRegistry;
-    process.env[`NPM_CONFIG_${this.ciRegistry.replace('http:', '')}/:_authtoken`] = token;
+    execa.sync('npm', ['config', 'set', `${this.ciDefaultScope}:registry=${this.ciRegistry}`]);
+    execa.sync('npm', ['config', 'set', `${this.ciRegistry.replace('http://', '//')}/:_authToken=${token}`]);
     if (this.helper.debugMode) console.log('default user has been added successfully to Verdaccio');
   }
 
+  // TODO: improve this to only write it to project level npmrc instead of global one
   _registerScopes(scopes: string[] = ['@ci']) {
     scopes.forEach((scope) => {
-      process.env[`NPM_CONFIG_${scope}:registry`] = this.ciRegistry;
+      this.helper.command.runCmd(`npm config set ${scope}:registry ${this.ciRegistry}`);
     });
   }
 
