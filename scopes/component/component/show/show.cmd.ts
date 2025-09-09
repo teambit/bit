@@ -12,7 +12,7 @@ import { isLikelyPackageName, resolveComponentIdFromPackageName } from '@teambit
 
 export class ShowCmd implements Command {
   name = 'show <component-name>';
-  description = "display component metadata, dependencies, and configuration";
+  description = 'display component metadata, dependencies, and configuration';
   extendedDescription = `shows detailed information about a component including its version, dependencies, environment, and other metadata.
 note: to see file changes made in a specific version, use "bit diff <component> <version> --parent".`;
   alias = '';

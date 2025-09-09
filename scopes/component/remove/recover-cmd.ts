@@ -11,7 +11,8 @@ export type RecoverOptions = {
 export class RecoverCmd implements Command {
   name = 'recover <component-name>';
   description = 'restore soft-deleted components';
-  extendedDescription = 'reverses the soft-deletion of components marked with "bit delete", restoring them to their previous state. works for both local and remote soft-deleted components.';
+  extendedDescription =
+    'reverses the soft-deletion of components marked with "bit delete", restoring them to their previous state. works for both local and remote soft-deleted components.';
   group = 'collaborate';
   options = [
     ['x', 'skip-dependency-installation', 'do not install packages in case of importing components'],
