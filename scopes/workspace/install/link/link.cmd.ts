@@ -22,9 +22,11 @@ type LinkCommandOpts = {
 export class LinkCommand implements Command {
   name = 'link [component-names...]';
   alias = '';
-  description = 'create links in the node_modules directory, to core aspects and to components in the workspace';
+  description = 'create links between components and node_modules';
+  extendedDescription = `creates links in node_modules for workspace components and core aspects, enabling import resolution.
+automatically links all workspace components and Bit's core aspects to their respective package names.
+useful for development when components need to reference each other or when debugging linking issues.`;
   helpUrl = 'reference/workspace/component-links';
-  extendedDescription: string;
   group = 'dependencies';
   private = false;
   arguments = [{ name: 'component-names...', description: 'names or IDs of the components to link' }];
