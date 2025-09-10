@@ -1,6 +1,7 @@
 import type { CLIMain } from '@teambit/cli';
 import { CLIParser, YargsExitWorkaround } from '@teambit/cli';
 import fs from 'fs-extra';
+import path from 'path';
 import chalk from 'chalk';
 import type { Route, Request, Response } from '@teambit/express';
 import type { Logger } from '@teambit/logger';
@@ -32,8 +33,23 @@ export class CLIRawRoute implements Route {
     async (req: Request, res: Response) => {
       const { command, pwd, envBitFeatures, ttyPath, isPty } = req.body;
       this.logger.debug(`cli-raw server: got request for ${command}`);
-      if (pwd && !pwd.startsWith(process.cwd())) {
-        throw new Error(`bit-server is running on a different directory. bit-server: ${process.cwd()}, pwd: ${pwd}`);
+
+      // Validate pwd parameter to prevent path traversal
+      if (pwd) {
+        const resolvedPwd = path.resolve(pwd);
+        const currentDir = process.cwd();
+        if (!resolvedPwd.startsWith(currentDir)) {
+          throw new Error(`Invalid pwd parameter. bit-server: ${currentDir}, pwd: ${pwd}`);
+        }
+      }
+
+      // Validate ttyPath parameter to prevent path traversal
+      if (ttyPath) {
+        // ttyPath should be a legitimate terminal device path (e.g., /dev/ttys000, /dev/pts/0)
+        // Validate it's a device path and doesn't contain traversal sequences
+        if (ttyPath.includes('..') || !(ttyPath.startsWith('/dev/') || ttyPath.startsWith('/proc/'))) {
+          throw new Error(`Invalid ttyPath parameter. Must be a legitimate terminal device path.`);
+        }
       }
       // there are 3 methods to interact with bit-server: 1) SSE, 2) TTY, 3) PTY. See server-commander.ts for more info.
       const isSSE = !ttyPath && !isPty;
