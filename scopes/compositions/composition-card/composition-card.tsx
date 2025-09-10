@@ -13,6 +13,7 @@ export type CompositionCardProps = {
   openCompositionLink?: string;
   previewClass?: string;
   queryParams?: string | string[];
+  sandbox?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export const CompositionCard = React.memo(_CompositionCard);
@@ -24,6 +25,7 @@ function _CompositionCard({
   openCompositionLink,
   previewClass,
   queryParams,
+  sandbox,
   ...rest
 }: CompositionCardProps) {
   const Composition = React.useMemo(() => {
@@ -38,9 +40,10 @@ function _CompositionCard({
         viewport={1280}
         queryParams={queryParams}
         previewName="compositions"
+        sandbox={sandbox}
       />
     );
-  }, [composition.identifier, component.id.toString(), previewClass]);
+  }, [composition.identifier, component.id.toString(), previewClass, sandbox]);
 
   return (
     <div key={composition.identifier} {...rest} className={classnames(styles.compositionCard, className)}>

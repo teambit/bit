@@ -140,11 +140,15 @@ export function Overview({
                 component={component}
                 style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
               />
-              {component.preview?.onlyOverview && !isLoading && <CompositionGallery component={component} />}
+              {component.preview?.onlyOverview && !isLoading && (
+                <CompositionGallery component={component} sandbox={sandboxValue} />
+              )}
             </>
           ) : (
             <>
-              {component.preview?.onlyOverview && !isLoading && <CompositionGallery component={component} />}
+              {component.preview?.onlyOverview && !isLoading && (
+                <CompositionGallery component={component} sandbox={sandboxValue} />
+              )}
               <ComponentPreview
                 onLoad={onPreviewLoad}
                 previewName="overview"
