@@ -14,7 +14,7 @@ export class ShowCmd implements Command {
   name = 'show <component-name>';
   description = 'display component metadata, dependencies, and configuration';
   extendedDescription = `shows detailed information about a component including its version, dependencies, environment, and other metadata.
-note: to see file changes made in a specific version, use "bit diff <component> <version> --parent".`;
+note: to see file changes made in a specific version, use \`bit diff <component> <version> --parent\`.`;
   alias = '';
   group = 'info-analysis';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
