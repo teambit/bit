@@ -15,7 +15,7 @@
     "description": "EXPERIMENTAL. enters bit cli program and generates commands list",
     "extendedDescription": "",
     "group": "system",
-    "private": false,
+    "private": true,
     "commands": [
       {
         "name": "generate",
@@ -54,8 +54,8 @@
         "show internal commands"
       ]
     ],
-    "description": "shows help",
-    "extendedDescription": "",
+    "description": "display available commands and usage information",
+    "extendedDescription": "shows a categorized list of all available Bit commands with brief descriptions. use `bit <command> --help` for detailed help on specific commands.",
     "group": "system",
     "private": false
   },
@@ -69,7 +69,7 @@
         "return the version in json format"
       ]
     ],
-    "description": "shows bit version",
+    "description": "display the installed Bit version",
     "extendedDescription": "",
     "group": "system",
     "private": false
@@ -78,8 +78,8 @@
     "name": "config",
     "alias": "",
     "options": [],
-    "description": "config management",
-    "extendedDescription": "https://bit.dev/reference/config/bit-config",
+    "description": "manage Bit configuration settings",
+    "extendedDescription": "view and modify Bit configuration at different levels: global, workspace, or scope.\nconfigurations control various aspects of Bit including user settings, registries, and feature flags.\nuse environment variables prefixed with BIT_CONFIG_ for temporary overrides.\nhttps://bit.dev/reference/config/bit-config",
     "group": "system",
     "private": false,
     "commands": [
@@ -165,8 +165,8 @@
         "json format"
       ]
     ],
-    "description": "list all globals",
-    "extendedDescription": "",
+    "description": "display global directories and paths used by Bit",
+    "extendedDescription": "shows all global directories including cache, logs, and config locations used by Bit across your system.\nuseful for debugging and understanding where Bit stores data.",
     "group": "system",
     "private": false
   },
@@ -174,8 +174,8 @@
     "name": "system <sub-command>",
     "alias": "",
     "options": [],
-    "description": "system operations",
-    "extendedDescription": "",
+    "description": "access system-level operations and debugging tools",
+    "extendedDescription": "provides commands for system-level operations including viewing and tailing debug logs.\nuseful for troubleshooting issues and monitoring Bit's internal operations in real-time.",
     "group": "system",
     "private": false,
     "commands": [
@@ -209,8 +209,8 @@
         "see globally configured remotes"
       ]
     ],
-    "description": "manage set of tracked bit scope(s)",
-    "extendedDescription": "",
+    "description": "manage remote scopes for self-hosted environments",
+    "extendedDescription": "configure connections to self-hosted remote scopes via HTTP or file protocol.\nnote: this command is only needed for self-hosted scopes. when using bit.cloud, remote scopes are automatically configured.\nremotes are bare scopes that store exported components and enable collaboration across teams.",
     "group": "collaborate",
     "private": false,
     "commands": [
@@ -306,8 +306,8 @@
         "legacy-only. compare current file system component to its latest tagged version [default=latest]"
       ]
     ],
-    "description": "display the component's essential information",
-    "extendedDescription": "",
+    "description": "display component metadata, dependencies, and configuration",
+    "extendedDescription": "shows detailed information about a component including its version, dependencies, environment, and other metadata.\nnote: to see file changes made in a specific version, use `bit diff <component> <version> --parent`.",
     "group": "info-analysis",
     "private": false,
     "arguments": [
@@ -321,8 +321,8 @@
     "name": "envs",
     "alias": "env",
     "options": [],
-    "description": "list all components maintained by the workspace and their corresponding envs",
-    "extendedDescription": "",
+    "description": "show components and their assigned environments",
+    "extendedDescription": "displays a table showing each workspace component and its corresponding environment.\nenvironments control how components are built, tested, linted, and deployed.",
     "group": "component-config",
     "private": false,
     "commands": [
@@ -503,8 +503,8 @@
         "name of the ui root to use, e.g. \"teambit.scope/scope\" or \"teambit.workspace/workspace\""
       ]
     ],
-    "description": "run the ui/development server",
-    "extendedDescription": "",
+    "description": "launch the Bit development server",
+    "extendedDescription": "starts the local development server providing a UI to browse, preview, and interact with components.\nworks in both workspaces and scopes. opens automatically in your browser at http://localhost:3000 (or specified port).\nincludes hot module reloading for development.",
     "group": "run-serve",
     "private": false,
     "arguments": [
@@ -563,8 +563,8 @@
         "json format"
       ]
     ],
-    "description": "generate an SVG image file with the components' dependencies graph",
-    "extendedDescription": "",
+    "description": "visualize component dependencies as a graph image",
+    "extendedDescription": "generates an SVG (or PNG) image showing component dependency relationships.\nblack arrows represent runtime dependencies, red arrows show dev or peer dependencies.\nby default shows only workspace components; use --include-dependencies for full dependency tree.",
     "group": "info-analysis",
     "private": false,
     "remoteOp": true
@@ -573,8 +573,8 @@
     "name": "scope <sub-command>",
     "alias": "",
     "options": [],
-    "description": "manage the scope-name for components",
-    "extendedDescription": "",
+    "description": "manage component scope names and assignments",
+    "extendedDescription": "configure scope assignments for components including setting default scopes and renaming existing scopes.\nscopes determine where components are stored and published, forming the first part of component IDs.\nessential for organizing components and managing component namespaces across teams.",
     "group": "component-config",
     "private": false,
     "commands": [
@@ -787,8 +787,8 @@
         "override file if exist"
       ]
     ],
-    "description": "eject components configuration (create a `component.json` file)",
-    "extendedDescription": "note this can be reversed at any time by snapping/tagging changes and deleting the component.json file \nyou can use a `<pattern>` for multiple component ids, such as `bit eject-conf \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
+    "description": "create component.json configuration files for components",
+    "extendedDescription": "generates component.json files containing component-specific configuration that overrides workspace defaults.\nuseful for customizing individual component settings. alternatively, use commands like \"bit env set\", \"bit deps set\", or \"bit aspect set\".\ncan be reversed by deleting the component.json file and snapping/tagging the changes.\n\nyou can use a `<pattern>` for multiple component ids, such as `bit eject-conf \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
     "group": "component-config",
     "private": false
   },
@@ -802,8 +802,8 @@
         "json format"
       ]
     ],
-    "description": "manage capsules",
-    "extendedDescription": "a capsule is a directory containing the component code, isolated from the workspace.\nnormally, capsules are created during the build process, the component files are copied and the packages are installed\nvia the configured package-manager. the purpose is to compile/test them in isolation to make sure they will work for\nother users after publishing/exporting them.",
+    "description": "manage isolated component environments",
+    "extendedDescription": "capsules are temporary isolated directories containing component code and dependencies.\nautomatically created during build processes to compile and test components in isolation.\nensures components work independently before publishing, similar to how they'll be consumed.",
     "group": "advanced",
     "private": false,
     "commands": [
@@ -941,7 +941,7 @@
         "return the output as JSON"
       ]
     ],
-    "description": "list the component ids matching the given pattern",
+    "description": "test and validate component patterns",
     "extendedDescription": "this command helps validating a pattern before using it in other commands.\nNOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes.\na pattern can be a simple component-id or component-name. e.g. 'ui/button'.\na pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes.\nto enter multiple patterns, separate them by a comma, e.g. 'ui/*, lib/*'\nto exclude, use '!'. e.g. 'ui/**, !ui/button'\nthe matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch).\n\nto filter by a state or attribute, prefix the pattern with \"$\". e.g. '$deprecated', '$modified'.\nlist of supported states: [new, modified, deprecated, deleted, snappedOnMain, softTagged, codeModified, localOnly].\nto filter by multi-params state/attribute, separate the params with \":\", e.g. '$env:teambit.react/react'.\nlist of supported multi-params states: [env].\nto match a state and another criteria, use \" AND \" keyword. e.g. '$modified AND teambit.workspace/** AND $env:teambit.react/react'.\n",
     "group": "info-analysis",
     "private": false,
@@ -972,8 +972,8 @@
     "name": "local-only <sub-command>",
     "alias": "",
     "options": [],
-    "description": "manage local-only components, which reside only in the workspace and are not snapped/tagged",
-    "extendedDescription": "",
+    "description": "manage components that exist only in the workspace",
+    "extendedDescription": "controls components that are excluded from versioning (snap/tag) and exporting operations.\nlocal-only components are useful for workspace-specific tools, configs, or temporary components.\nthese components remain in the workspace but won't be shared or versioned.",
     "group": "component-config",
     "private": false,
     "commands": [
@@ -1058,8 +1058,8 @@
         "filter components by their namespace (a logical grouping within a scope, e.g., 'ui', '*/ui')"
       ]
     ],
-    "description": "list components on a workspace or a remote scope (with flag).",
-    "extendedDescription": "",
+    "description": "display components in workspace or remote scope",
+    "extendedDescription": "shows components in the current workspace by default, or from a specified remote scope.\nsupports filtering by scope, namespace, and various display options.\nuse --outdated to highlight components that have newer versions available.",
     "group": "info-analysis",
     "private": false,
     "remoteOp": true,
@@ -1069,8 +1069,8 @@
     "name": "ws-config <sub-command>",
     "alias": "workspace-config",
     "options": [],
-    "description": "manage workspace config files",
-    "extendedDescription": "",
+    "description": "generate IDE configuration files",
+    "extendedDescription": "writes configuration files (tsconfig.json, eslintrc.js, etc.) to your workspace for better IDE support.\nautomatically generates configs based on your components' environments and settings.\nuseful for enabling proper IntelliSense, linting, and type-checking in your IDE.",
     "group": "workspace-tools",
     "private": false,
     "commands": [
@@ -1186,8 +1186,8 @@
         "enter a Semver range to deprecate specific versions. see https://www.npmjs.com/package/semver#ranges for the range syntax"
       ]
     ],
-    "description": "deprecate a component",
-    "extendedDescription": "",
+    "description": "mark a component as deprecated to discourage its use",
+    "extendedDescription": "marks a component as deprecated locally, then after snap/tag and export it becomes deprecated in the remote scope.\noptionally specify a replacement component or deprecate only specific version ranges.\ndeprecated components remain available but display warnings when installed or imported.",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
@@ -1203,8 +1203,8 @@
     "name": "undeprecate <id>",
     "alias": "",
     "options": [],
-    "description": "undeprecate a deprecated component (local/remote)",
-    "extendedDescription": "",
+    "description": "remove the deprecation status from a component",
+    "extendedDescription": "reverses the deprecation of a component, removing warnings and allowing normal use again.",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
@@ -1214,8 +1214,8 @@
     "name": "git <sub-command>",
     "alias": "",
     "options": [],
-    "description": "perform git operations",
-    "extendedDescription": "",
+    "description": "Git utilities for Bit repositories",
+    "extendedDescription": "provides specialized Git utilities for handling Bit-specific files and conflicts.\nincludes tools for setting up merge drivers for bitmap files and resolving conflicts during Git merges.\nessential for properly handling Bit's internal files when working with Git repositories.",
     "group": "workspace-tools",
     "private": false,
     "commands": [
@@ -1285,8 +1285,8 @@
         "output as json format"
       ]
     ],
-    "description": "track one or more directories as new components",
-    "extendedDescription": "Learn the recommended workflow for tracking directories as components, in the link below.",
+    "description": "track existing directory contents as new components in the workspace",
+    "extendedDescription": "Registers one or more directories as Bit components without changing your files. Each provided path becomes a component root tracked by Bit.",
     "group": "component-development",
     "private": false
   },
@@ -1330,8 +1330,8 @@
         "replace existing files at the target location"
       ]
     ],
-    "description": "create a new component (source files and config) using a template.",
-    "extendedDescription": "",
+    "description": "scaffold new component(s) from a template (sources, config, and env)",
+    "extendedDescription": "Generates one or more components from a chosen template with ready-to-use source files, configuration, and environment. Use it to quickly scaffold consistent components across your workspace. Run 'bit templates' to discover available templates.",
     "group": "component-development",
     "private": false,
     "arguments": [
@@ -1383,8 +1383,8 @@
         "return templates in json format"
       ]
     ],
-    "description": "list available templates for \"bit create\" and \"bit new\"",
-    "extendedDescription": "list components templates when inside bit-workspace (for bit-create), otherwise, list workspace templates (for bit-new)",
+    "description": "list available templates for creating components and workspaces",
+    "extendedDescription": "Lists available templates. Inside a workspace it shows component templates for 'bit create'; outside a workspace it shows workspace templates for 'bit new'.",
     "group": "component-development",
     "private": false
   },
@@ -1438,8 +1438,8 @@
         "create the new workspace in current directory (default is to create a new directory, inside the current dir)"
       ]
     ],
-    "description": "create a new workspace from a template",
-    "extendedDescription": "",
+    "description": "create a new Bit workspace from a template",
+    "extendedDescription": "initializes a new Bit workspace with pre-configured settings, environments, and optionally starter components.\ntemplates provide different setups for React, Angular, Node.js, or custom development workflows.\ninstalls dependencies and configures the workspace for immediate development.",
     "group": "workspace-setup",
     "private": false,
     "arguments": [
@@ -1493,8 +1493,8 @@
         "trigger recompilation of the specified component regardless of what changed. helpful when this comp-id must be a bundle"
       ]
     ],
-    "description": "automatically recompile modified components (on save)",
-    "extendedDescription": "by default, the watcher doesn't use polling, to keep the CPU idle.\nif this doesn't work well for you, run \"bit config set watch_use_polling true\" to use polling.",
+    "description": "watch and compile components on file changes",
+    "extendedDescription": "monitors component files for changes and automatically recompiles them using their environment's configured compiler.\nenables immediate feedback during development by keeping components compiled as you work.\nby default uses file system events (not polling) to minimize CPU usage - enable polling with \"bit config set watch_use_polling true\" if needed.",
     "group": "component-development",
     "private": false
   },
@@ -1583,8 +1583,8 @@
         "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
       ]
     ],
-    "description": "run set of tasks for build.",
-    "extendedDescription": "by default, only new and modified components are built.\nthe build takes place in an isolated directories on the filesystem (called \"capsules\"). the component files are copied to these directories\nand the package-manager installs the dependencies in the capsules root. once done, the build pipeline is running.\nbecause this process can take a while on a large workspace, some flags are available to shorten the process. See the example section for more info.\n  ",
+    "description": "run build pipeline tasks in isolated environments",
+    "extendedDescription": "executes the complete build pipeline including compilation, testing, linting, and other tasks defined by component environments.\nthe build takes place in isolated directories called \"capsules\" where component files are copied and dependencies are installed via the package manager.\nby default processes only new and modified components - use --unmodified to build all components.\nbecause this process can take a while on large workspaces, various flags are available to optimize the process - see examples for debugging workflows.",
     "group": "component-development",
     "private": false,
     "arguments": [
@@ -1629,8 +1629,8 @@
         "download the files to the specified dir"
       ]
     ],
-    "description": "list and download component artifacts",
-    "extendedDescription": "artifacts are created on isolated capsules during tag or snap commands.\nexample of artifacts are dists files generated by a compiler, a JUnit.xml file generated by a tester\nand a package.tgz file generated by pkg aspect.\n",
+    "description": "view and download build artifacts",
+    "extendedDescription": "displays artifacts created during the build pipeline in isolated capsules during tag or snap operations.\nartifacts include compiled files, test reports, package files, and other build outputs generated by various tasks.\nuse --out-dir to download artifacts locally for inspection or deployment purposes.",
     "group": "testing",
     "private": false,
     "arguments": [
@@ -1675,8 +1675,8 @@
         "the arguments passing to the app. for example, --args=\"--a=1 --b\". don't forget to use quotes to wrap the value to escape special characters."
       ]
     ],
-    "description": "locally run an app component (independent of bit's dev server)",
-    "extendedDescription": "",
+    "description": "start an application component locally",
+    "extendedDescription": "runs application components in their own development server, separate from the \"bit start\" UI.\napps are components that create deployable applications (React apps, Node.js servers, etc.).\nwhen no app name is specified, automatically detects and runs the app if only one exists in the workspace.",
     "group": "run-serve",
     "private": false,
     "arguments": [
@@ -1690,8 +1690,8 @@
     "name": "app [sub-command]",
     "alias": "apps",
     "options": [],
-    "description": "Manages apps",
-    "extendedDescription": "",
+    "description": "manage application components",
+    "extendedDescription": "applications are components that create deployable, runnable applications like React apps or Node.js servers.\nlist available apps in the workspace and inspect their configurations.\nuse \"bit run\" to start an application locally.",
     "group": "run-serve",
     "private": false,
     "commands": [
@@ -1745,8 +1745,8 @@
             "the arguments passing to the app. for example, --args=\"--a=1 --b\". don't forget to use quotes to wrap the value to escape special characters."
           ]
         ],
-        "description": "locally run an app component (independent of bit's dev server)",
-        "extendedDescription": "",
+        "description": "start an application component locally",
+        "extendedDescription": "runs application components in their own development server, separate from the \"bit start\" UI.\napps are components that create deployable applications (React apps, Node.js servers, etc.).\nwhen no app name is specified, automatically detects and runs the app if only one exists in the workspace.",
         "group": "run-serve",
         "private": false,
         "arguments": [
@@ -1788,8 +1788,8 @@
         "EXPERIMENTAL. generate d.ts files for typescript components (hurts performance)"
       ]
     ],
-    "description": "compile components in the workspace",
-    "extendedDescription": "",
+    "description": "transpile component source files",
+    "extendedDescription": "compiles TypeScript, JSX, and other source files into JavaScript using the compiler configured by each component's environment.\noutputs compiled files to node_modules/component-package-name/dist for consumption by other components.\nautomatically triggered by \"bit watch\", \"bit start\", or IDE extensions, but can be run manually for debugging.",
     "group": "component-development",
     "private": false,
     "arguments": [
@@ -1874,8 +1874,8 @@
         "dependencies are not written to node_modules. Only the lockfile is updated"
       ]
     ],
-    "description": "installs workspace dependencies",
-    "extendedDescription": "when no package is specified, all workspace dependencies are installed and all workspace components are imported.",
+    "description": "install workspace dependencies",
+    "extendedDescription": "installs workspace dependencies and prepares the workspace for development.\nwhen packages are specified, adds them to workspace.jsonc policy and installs. when no packages specified, installs existing dependencies.\nautomatically imports components, compiles components, links to node_modules, and writes config files.",
     "group": "dependencies",
     "private": false,
     "arguments": [
@@ -1889,10 +1889,16 @@
     "name": "uninstall [packages...]",
     "alias": "un",
     "options": [],
-    "description": "uninstall dependencies",
-    "extendedDescription": "",
+    "description": "remove dependencies from workspace",
+    "extendedDescription": "removes specified packages from workspace.jsonc dependency policy and runs install to update node_modules.",
     "group": "dependencies",
-    "private": false
+    "private": false,
+    "arguments": [
+      {
+        "name": "packages...",
+        "description": "list of package names to remove from workspace dependencies"
+      }
+    ]
   },
   {
     "name": "update [package-patterns...]",
@@ -1924,8 +1930,8 @@
         "update to the newest version respecting semver"
       ]
     ],
-    "description": "update dependencies. By default, dependencies are updated to the highest semver compatible versions.",
-    "extendedDescription": "",
+    "description": "update workspace dependencies to newer versions",
+    "extendedDescription": "updates dependencies in workspace.jsonc to newer versions and runs install to apply changes.\nby default, updates to highest semver-compatible versions. use --major, --minor, or --patch for specific version types.\nsupports glob patterns to update specific packages. prompts for confirmation unless --yes is specified.",
     "group": "dependencies",
     "private": false,
     "arguments": [
@@ -1975,8 +1981,8 @@
         "show only a summary of component links instead of listing all components"
       ]
     ],
-    "description": "create links in the node_modules directory, to core aspects and to components in the workspace",
-    "extendedDescription": "",
+    "description": "create links between components and node_modules",
+    "extendedDescription": "creates links in node_modules for workspace components and core aspects, enabling import resolution.\nautomatically links all workspace components and Bit's core aspects to their respective package names.\nuseful for development when components need to reference each other or when debugging linking issues.",
     "group": "dependencies",
     "private": false,
     "arguments": [
@@ -1990,8 +1996,8 @@
     "name": "move <current-component-dir> <new-component-dir>",
     "alias": "mv",
     "options": [],
-    "description": "move a component to a different filesystem path",
-    "extendedDescription": "(note: this does NOT affect the component's name or scope, just its location in the workspace)",
+    "description": "relocate a component to a different directory",
+    "extendedDescription": "moves component files to a new location within the workspace and updates the .bitmap tracking.\nonly changes the filesystem location - does not affect the component's name, scope, or ID.\nuseful for reorganizing workspace structure or following new directory conventions.",
     "group": "component-development",
     "private": false,
     "arguments": [
@@ -2125,8 +2131,8 @@
         "when using wildcards on a lane, only import components that exist on the lane (never from main)"
       ]
     ],
-    "description": "import components from their remote scopes to the local workspace",
-    "extendedDescription": "",
+    "description": "bring components from remote scopes into your workspace",
+    "extendedDescription": "brings component source files from remote scopes into your workspace and installs their dependencies as packages.\nsupports pattern matching for bulk imports, merge strategies for handling conflicts, and various optimization options.\nwithout arguments, fetches all workspace components' latest versions from their remote scopes.",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
@@ -2197,8 +2203,8 @@
         "skip confirmation"
       ]
     ],
-    "description": "remove component(s) from the local workspace",
-    "extendedDescription": "to mark components as deleted on the remote scope, use \"bit delete\".",
+    "description": "untrack components from the workspace",
+    "extendedDescription": "removes components from the local workspace only - stops tracking them in .bitmap and deletes their files by default.\ndoes not affect remote scopes - to delete components from remotes, use \"bit delete\" instead.\nuse --keep-files to preserve component files while only removing the tracking.",
     "group": "component-development",
     "private": false,
     "remoteOp": true,
@@ -2256,8 +2262,8 @@
         "comma-separated list of snap hashes to mark as deleted (e.g. --snaps \"hash1,hash2,hash3\")"
       ]
     ],
-    "description": "mark components as deleted on the remote",
-    "extendedDescription": "to remove components from your local workspace only, use \"bit remove\" command.\nthis command marks the components as deleted, and after snap/tag and export they will be marked as deleted from the remote scope as well.\nunless the '--hard' flag is used (not recommended!), in which case, the component will be deleted from the remote scope immediately.\n",
+    "description": "soft-delete components from remote scopes",
+    "extendedDescription": "marks components as deleted so they won't be visible on remote scopes after export.\ncomponents remain recoverable using \"bit recover\" unless --hard is used (permanent deletion, not recommended).\nto remove components from your local workspace only, use \"bit remove\" instead.",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
@@ -2284,8 +2290,8 @@
         "do not write config files (such as eslint, tsconfig, prettier, etc...)"
       ]
     ],
-    "description": "recover component(s) soft-deleted from the workspace, or a remote scope",
-    "extendedDescription": "",
+    "description": "restore soft-deleted components",
+    "extendedDescription": "reverses the soft-deletion of components marked with \"bit delete\", restoring them to their previous state. works for both local and remote soft-deleted components.",
     "group": "collaborate",
     "private": false
   },
@@ -2340,7 +2346,7 @@
       ]
     ],
     "description": "switch between component versions or remove local changes",
-    "extendedDescription": "\n`bit checkout <version> [component-pattern]` => checkout the specified ids (or all components when --all is used) to the specified version\n`bit checkout head [component-pattern]` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all\n`bit checkout head~x [component-pattern]` => go backward x generations from the head and checkout to that version\n`bit checkout latest [component-pattern]` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all\n`bit checkout reset [component-pattern]` => remove local modifications from the specified ids (or all components when --all is used). also, if a component dir is deleted from the filesystem, it'll be restored\nwhen on a lane, \"checkout head\" only checks out components on this lane. to update main components, run \"bit lane merge main\"",
+    "extendedDescription": "checkout components to specified versions or remove local changes. most commonly used as 'bit checkout head' to get latest versions.\nthe `<to>` argument accepts these values:\n- head: checkout to last snap/tag (most common usage)\n- specific version: checkout to exact version (e.g. 'bit checkout 1.0.5 component-name')\n- head~x: go back x generations from head (e.g. 'head~2' for two versions back)\n- latest: checkout to latest semver tag\n- reset: remove local modifications and restore original files (also restores deleted component directories)\nwhen on lanes, 'checkout head' only affects lane components. to update main components, run 'bit lane merge main'.",
     "group": "version-control",
     "private": false,
     "arguments": [
@@ -2369,8 +2375,8 @@
         "do not install packages of the imported components"
       ]
     ],
-    "description": "replace the current component files by the specified version, leave the version intact",
-    "extendedDescription": "",
+    "description": "replace component files with specified version while preserving current version",
+    "extendedDescription": "replaces component source files with files from the specified version but keeps the current component version.\nuseful for reverting file changes without changing the component's version history. different from checkout which changes the version.",
     "group": "version-control",
     "private": false,
     "arguments": [
@@ -2409,8 +2415,8 @@
         "keep the component files in the workspace intact"
       ]
     ],
-    "description": "remove component from the workspace and install it instead as a regular npm package.",
-    "extendedDescription": "By default the component files will be removed from the workspace",
+    "description": "remove component from workspace and install it as npm package",
+    "extendedDescription": "converts workspace components to external npm packages by removing them from .bitmap and installing via package manager.\nby default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency.\nuseful for components that no longer need active development in current workspace.",
     "group": "dependencies",
     "private": false,
     "arguments": [
@@ -2490,8 +2496,8 @@
         "show output in json format"
       ]
     ],
-    "description": "export components from the workspace to remote scopes",
-    "extendedDescription": "bit export => export all staged snaps/tags of components to their remote scope. if checked out to a lane, export the lane as well\n  `bit export [pattern...]` => export components included by the pattern to their remote scope (we recommend not using a pattern in\n    most scenarios so that all changes are exported simultaneously)\n  you can use a pattern for multiple ids, such as bit export \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
+    "description": "upload components to remote scopes",
+    "extendedDescription": "uploads staged versions (snaps/tags) to remote scopes, making them available for consumption by other workspaces.\nwithout arguments, exports all staged components. when on a lane, exports the lane as well.\nexporting is the final step after development and versioning to share components with your team.",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
@@ -2506,8 +2512,8 @@
     "name": "deps <sub-command>",
     "alias": "dependencies",
     "options": [],
-    "description": "manage dependencies",
-    "extendedDescription": "",
+    "description": "manage component dependencies",
+    "extendedDescription": "configure and analyze component dependencies with sub-commands for setting, removing, and inspecting dependency relationships.",
     "group": "dependencies",
     "private": false,
     "commands": [
@@ -2703,7 +2709,7 @@
           ]
         ],
         "description": "find components that use the specified dependency",
-        "extendedDescription": "",
+        "extendedDescription": "searches workspace components to find which ones depend on the specified package or component.\nuseful for understanding dependency usage before removing packages or when refactoring components.\nsupports both exact version matching and package name patterns.",
         "group": "dependencies",
         "private": false,
         "arguments": [
@@ -2742,7 +2748,7 @@
       ]
     ],
     "description": "find components that use the specified dependency",
-    "extendedDescription": "",
+    "extendedDescription": "searches workspace components to find which ones depend on the specified package or component.\nuseful for understanding dependency usage before removing packages or when refactoring components.\nsupports both exact version matching and package name patterns.",
     "group": "dependencies",
     "private": false,
     "arguments": [
@@ -2756,8 +2762,8 @@
     "name": "set-peer <component-id> <range>",
     "alias": "",
     "options": [],
-    "description": "set a component as always peer",
-    "extendedDescription": "",
+    "description": "configure component to always be installed as peer dependency",
+    "extendedDescription": "marks a component to always be treated as a peer dependency when used by other components.\nuseful for shared libraries that should be provided by the consuming application.\nthe specified version range will be used when adding this component as a peer dependency.",
     "group": "dependencies",
     "private": false,
     "arguments": [
@@ -2767,7 +2773,7 @@
       },
       {
         "name": "range",
-        "description": "the default range to use for the componnent, when added to peerDependencies"
+        "description": "the default range to use for the component, when added to peerDependencies"
       }
     ]
   },
@@ -2775,8 +2781,8 @@
     "name": "unset-peer <component-id>",
     "alias": "",
     "options": [],
-    "description": "unset a component as always peer",
-    "extendedDescription": "",
+    "description": "remove always-peer configuration from component",
+    "extendedDescription": "removes the always-peer marking from a component, allowing it to be installed as a regular dependency.\nreverses the effect of 'bit set-peer' command. the component will be treated normally in dependency resolution.",
     "group": "dependencies",
     "private": false,
     "arguments": [
@@ -2796,8 +2802,8 @@
         "return the dependents in JSON format"
       ]
     ],
-    "description": "show dependents of the given component",
-    "extendedDescription": "",
+    "description": "show components that depend on the specified component",
+    "extendedDescription": "displays components from both workspace and scope that depend on the specified component.\nuseful for understanding impact before making changes to a component or when planning refactoring.\nshows both direct and transitive dependents organized by their origin (workspace vs scope).",
     "group": "dependencies",
     "private": false,
     "arguments": [
@@ -2952,8 +2958,8 @@
         "UNSUPPORTED YET. in case a component is checked out to an older version, tag it without changing the head"
       ]
     ],
-    "description": "create an immutable and exportable component snapshot, tagged with a release version.",
-    "extendedDescription": "if no patterns are provided, it will tag all new and modified components.\nif patterns are entered, you can specify a version per pattern using \"@\" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major",
+    "description": "create immutable component snapshots with semantic version tags",
+    "extendedDescription": "creates tagged versions using semantic versioning (semver) for component releases. tags are immutable and exportable.\nby default tags all new and modified components. supports version specification per pattern using \"@\" (e.g. foo@1.0.0, bar@minor).\nuse for official releases. for development versions, use 'bit snap' instead.",
     "group": "version-control",
     "private": false,
     "remoteOp": true,
@@ -3050,8 +3056,8 @@
         "UNSUPPORTED YET. in case a component is checked out to an older version, snap it without changing the head"
       ]
     ],
-    "description": "create an immutable and exportable component snapshot (non-release version)",
-    "extendedDescription": "",
+    "description": "create immutable component snapshots for development versions",
+    "extendedDescription": "creates snapshots with hash-based versions for development and testing. snapshots are immutable and exportable.\nby default snaps only new and modified components. use for development iterations before creating semantic version tags.\nsnapshots maintain component history and enable collaboration without formal releases.",
     "group": "version-control",
     "private": false,
     "arguments": [
@@ -3091,8 +3097,8 @@
         "reset only components that were never exported"
       ]
     ],
-    "description": "revert tagged or snapped versions for component(s)",
-    "extendedDescription": "https://bit.dev/components/tags#undoing-a-tag",
+    "description": "revert local tags and snaps to previous versions",
+    "extendedDescription": "removes local component versions (tags/snaps) that haven't been exported yet.\nby default reverts all local versions. use --head to revert only the latest version.\nuseful for undoing mistakes before exporting. exported versions cannot be reset.",
     "group": "version-control",
     "private": false,
     "arguments": [
@@ -3166,8 +3172,8 @@
         "return the results in json format"
       ]
     ],
-    "description": "test components in the workspace. by default only runs tests for new and modified components",
-    "extendedDescription": "",
+    "description": "run component tests",
+    "extendedDescription": "executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.).\nby default only runs tests for new and modified components. use --unmodified to test all components.\nsupports watch mode, coverage reporting, and debug mode for development workflows.",
     "group": "testing",
     "private": false,
     "arguments": [
@@ -3197,8 +3203,8 @@
         "show tables instead of plain text for dependencies diff"
       ]
     ],
-    "description": "show the diff between the components' current source files and config, and their latest snapshot or tag",
-    "extendedDescription": "",
+    "description": "compare component changes between versions or against the current workspace",
+    "extendedDescription": "shows a detailed diff of component files, dependencies, and configuration changes. \nby default, compares workspace changes against the latest version. specify versions to compare historical changes.\nsupports pattern matching to filter components and various output formats for better readability.",
     "group": "info-analysis",
     "private": false,
     "arguments": [
@@ -3302,8 +3308,8 @@
         "override the default message for the auto snap"
       ]
     ],
-    "description": "merge changes of the remote head into local - auto-snaps all merged components",
-    "extendedDescription": "merge changes of the remote head into local when they are diverged. when on a lane, merge the remote head of the lane into the local\nand creates snaps for merged components that have diverged, on the lane.\nif no ids are specified, all pending-merge components will be merged. (run \"bit status\" to list them).\noptionally use '--abort' to revert the last merge. to revert a lane merge, use \"bit lane merge-abort\" command.",
+    "description": "merge diverged component history when local and remote have different versions",
+    "extendedDescription": "resolves diverged component history when both local and remote have created different snaps/tags from the same base version.\nif no component pattern is specified, all pending-merge components will be merged (run 'bit status' to list them).\n'bit status' will show diverged components and suggest either merging or resetting local changes.\npreferred approach: use 'bit reset' to remove local versions, then 'bit checkout head' to get remote versions.\nfor lane-to-lane merging, use 'bit lane merge' instead.",
     "group": "version-control",
     "private": false,
     "arguments": [
@@ -3343,8 +3349,8 @@
         "list only lanes that haven't been merged"
       ]
     ],
-    "description": "manage lanes - if no sub-command is used, runs \"bit lane list\"",
-    "extendedDescription": "",
+    "description": "manage lanes for parallel development",
+    "extendedDescription": "lanes allow isolated development of features without affecting main branch components.\ncreate, switch between, and merge lanes to coordinate parallel work across teams.\nwithout a sub-command, lists all available lanes.",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
@@ -4128,8 +4134,8 @@
         "do not check for circular dependencies to get the results quicker"
       ]
     ],
-    "description": "present the current status of components in the workspace, including indication of detected issues",
-    "extendedDescription": "",
+    "description": "show workspace component status and issues",
+    "extendedDescription": "displays the current state of all workspace components including new, modified, staged, and problematic components.\nidentifies blocking issues that prevent tagging/snapping and provides warnings with --warnings flag.\nessential for understanding workspace health before versioning components.",
     "group": "info-analysis",
     "private": false
   },
@@ -4168,8 +4174,8 @@
     "name": "ci <sub-command>",
     "alias": "",
     "options": [],
-    "description": "CI commands",
-    "extendedDescription": "",
+    "description": "continuous integration commands for automated workflows",
+    "extendedDescription": "provides commands designed for use in CI/CD pipelines with Git workflows to automate component development tasks like verification, pull request handling, and deployment preparation.",
     "group": "collaborate",
     "private": false,
     "commands": [
@@ -4319,8 +4325,8 @@
         "For non-Bit workspaces that only consume Bit component packages. Enables only \"schema\", \"show\", and \"remote_search\" tools"
       ]
     ],
-    "description": "Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.",
-    "extendedDescription": "",
+    "description": "start Model Context Protocol server for AI assistants",
+    "extendedDescription": "enables AI assistants and other tools to interact with Bit via the Model Context Protocol.\nprovides a standardized interface for AI agents to execute Bit commands and access component information.\nallows writing custom instructions and rules to guide AI agents in their interactions with Bit.",
     "group": "advanced",
     "private": false,
     "commands": [
@@ -4458,8 +4464,8 @@
         "relevant for --archive. exclude .bit or .git/bit from the archive file"
       ]
     ],
-    "description": "diagnose a bit workspace",
-    "extendedDescription": "",
+    "description": "diagnose and troubleshoot workspace issues",
+    "extendedDescription": "runs comprehensive health checks on your workspace to detect and report configuration problems, \nmissing dependencies, corrupted data, and other issues that may affect workspace functionality.\ncan generate diagnostic reports and workspace archives for debugging and support purposes.",
     "group": "system",
     "private": false
   },
@@ -4548,8 +4554,8 @@
         "skip interactive mode for Git repositories"
       ]
     ],
-    "description": "create or reinitialize an empty workspace",
-    "extendedDescription": "if the current directory is already a workspace, it validates that bit files are correct and rewrite them if needed.",
+    "description": "initialize a Bit workspace in an existing project",
+    "extendedDescription": "creates Bit configuration files in an existing project directory to start tracking components.\nif already a workspace, validates and repairs Bit files as needed.\nsupports various reset options to recover from corrupted state or restart from scratch.",
     "group": "workspace-setup",
     "private": false,
     "skipWorkspace": true
@@ -4558,10 +4564,10 @@
     "name": "version-history <sub-command>",
     "alias": "vh",
     "options": [],
-    "description": "manage the version-history of components",
-    "extendedDescription": "",
+    "description": "manage component version history data structures",
+    "extendedDescription": "tools for building and maintaining the internal version history data that tracks component evolution and relationships.\nincludes commands to rebuild corrupted version history, generate visual graphs, and inspect version relationships.\nmainly used for debugging and repair purposes when version history data becomes corrupted.",
     "group": "version-control",
-    "private": false,
+    "private": true,
     "commands": [
       {
         "name": "graph <component-id>",
@@ -4595,8 +4601,8 @@
         ],
         "description": "generate a graph of the version history of a component and save as an SVG file",
         "extendedDescription": "",
-        "group": "info-analysis",
-        "private": false
+        "group": "version-control",
+        "private": true
       },
       {
         "name": "show <component-id>",
@@ -4615,8 +4621,8 @@
         ],
         "description": "show the version-history of a component",
         "extendedDescription": "",
-        "group": "info-analysis",
-        "private": false
+        "group": "version-control",
+        "private": true
       },
       {
         "name": "build <component-pattern>",
@@ -4645,8 +4651,8 @@
         ],
         "description": "rebuild the version history of a component. helpful when it got corrupted for some reason",
         "extendedDescription": "",
-        "group": "info-analysis",
-        "private": false,
+        "group": "version-control",
+        "private": true,
         "arguments": [
           {
             "name": "component-pattern",
@@ -4686,8 +4692,8 @@
         "message to be attached to the stashed components"
       ]
     ],
-    "description": "stash modified components",
-    "extendedDescription": "",
+    "description": "temporarily save and restore component changes",
+    "extendedDescription": "temporarily stores modified component files without creating versions.\nallows saving work-in-progress changes and switching context, then restoring changes later.",
     "group": "version-control",
     "private": false,
     "commands": [
@@ -4772,8 +4778,8 @@
         "return the component schema in json format"
       ]
     ],
-    "description": "extracts and displays the API schema (types, functions, classes, interfaces) of the specified component/s.",
-    "extendedDescription": "Extracts TypeScript definitions to provide a comprehensive view of a component's public API.\nShows detailed information about exported elements including classes, interfaces, functions, types, and enums with their respective signatures and documentation.\n\nyou can use a `<pattern>` for multiple component ids, such as `bit schema \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
+    "description": "display component API schema and type definitions",
+    "extendedDescription": "extracts and displays the public API structure of components including types, functions, classes, and interfaces.\nshows detailed type information, function signatures, and JSDoc documentation for exported elements.\nuseful for understanding component interfaces and generating documentation.\n\nyou can use a `<pattern>` for multiple component ids, such as `bit schema \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
     "group": "info-analysis",
     "private": false
   },
@@ -4817,8 +4823,8 @@
         "json format"
       ]
     ],
-    "description": "show components(s) version history",
-    "extendedDescription": "",
+    "description": "display component version history",
+    "extendedDescription": "shows chronological history of component versions including tags and snaps with metadata.\ndisplays commit messages, authors, dates, and version information. supports both local and remote component logs.\nuse various format options for compact or detailed views of version history.",
     "group": "version-control",
     "private": false,
     "remoteOp": true,
@@ -4840,8 +4846,8 @@
         "show each log entry in one line"
       ]
     ],
-    "description": "EXPERIMENTAL. show file history",
-    "extendedDescription": "",
+    "description": "EXPERIMENTAL. display history of changes to a specific file",
+    "extendedDescription": "shows version history for a specific file within component versions.\ntracks file-level changes across component snaps and tags.\ndisplays file modifications, hashes, and associated commit information.",
     "group": "version-control",
     "private": false,
     "arguments": [
@@ -4861,8 +4867,8 @@
         "show the commit message"
       ]
     ],
-    "description": "EXPERIMENTAL. per line, show who and when was the last to modify it",
-    "extendedDescription": "",
+    "description": "EXPERIMENTAL. show line-by-line authorship and modification history",
+    "extendedDescription": "displays who last modified each line of a file and when the change was made.\ntracks line-level changes across component versions.\nshows author, date, version hash, and optionally commit messages for each line.",
     "group": "version-control",
     "private": false,
     "arguments": [
@@ -4962,8 +4968,8 @@
     "name": "refactor <sub-command>",
     "alias": "",
     "options": [],
-    "description": "source code refactoring / codemod",
-    "extendedDescription": "",
+    "description": "automatically refactor component source code",
+    "extendedDescription": "performs automated code transformations and refactoring operations across components.\ncurrently supports updating import/require statements when component names or dependencies change.\nuseful for maintaining code consistency after renaming or restructuring components.",
     "group": "workspace-tools",
     "private": false,
     "commands": [
@@ -5023,8 +5029,8 @@
         "DEPRECATE. use --no-browser instead"
       ]
     ],
-    "description": "log in to Bit cloud",
-    "extendedDescription": "",
+    "description": "authenticate with Bit Cloud for component publishing and collaboration",
+    "extendedDescription": "opens browser to authenticate with Bit Cloud (bit.cloud) and obtain access token for publishing components.\nautomatically updates .npmrc file with registry configuration and authentication token for seamless package publishing.\nsupports custom cloud domains, CI/machine authentication, and manual token refresh options.",
     "group": "auth",
     "private": false,
     "remoteOp": true,
@@ -5034,8 +5040,8 @@
     "name": "logout",
     "alias": "",
     "options": [],
-    "description": "log the CLI out of Bit",
-    "extendedDescription": "",
+    "description": "sign out of Bit Cloud and clear authentication tokens",
+    "extendedDescription": "removes stored authentication tokens and signs out of Bit Cloud.\nclears local credentials while preserving .npmrc configurations.\nuse this to switch between accounts or when authentication tokens expire.",
     "group": "auth",
     "private": false,
     "skipWorkspace": true
@@ -5044,8 +5050,8 @@
     "name": "whoami",
     "alias": "",
     "options": [],
-    "description": "display the currently logged in user",
-    "extendedDescription": "",
+    "description": "display the currently authenticated Bit Cloud user",
+    "extendedDescription": "shows the username of the currently logged in Bit Cloud account.\nverifies authentication status with the cloud service and displays the active username.\nuseful for confirming authentication before publishing or when switching between accounts.",
     "group": "auth",
     "private": false,
     "skipWorkspace": true
@@ -5054,8 +5060,8 @@
     "name": "npmrc [sub-command]",
     "alias": "",
     "options": [],
-    "description": "manage npmrc file with scope, registry, and token information from bit.cloud",
-    "extendedDescription": "",
+    "description": "configure .npmrc file with Bit Cloud registry and authentication settings",
+    "extendedDescription": "manages .npmrc configuration for seamless package installation from Bit Cloud registries.\nautomatically configures scoped registries and authentication tokens for your workspace components.\nprovides sub-commands for generating, updating, and managing npm registry configurations.",
     "group": "auth",
     "private": false,
     "skipWorkspace": true,
@@ -5093,8 +5099,8 @@
         "clear memory cache from a remote scope"
       ]
     ],
-    "description": "clears Bit's cache from current working machine",
-    "extendedDescription": "The following gets removed by this command:\n1) components cache on the filesystem (mainly the dependencies graph and docs)\n2) scope's index file, which maps the component-id:object-hash",
+    "description": "remove cached data to resolve stale data issues",
+    "extendedDescription": "clears various caches that Bit uses to improve performance. useful when experiencing stale data issues or\nunexpected behavior. this command removes:\n1) components cache on the filesystem (mainly the dependencies graph and docs)\n2) scope's index file, which maps the component-id:object-hash\n\nnote: this cache has minimal impact on disk space. to free significant disk space, use \"bit capsule delete --all\" to remove build capsules.",
     "group": "system",
     "private": false,
     "skipWorkspace": true
@@ -5139,8 +5145,8 @@
         "relative path in the workspace to place new component in. by default, the directory of the new component is from your workspace's \"defaultScope\" value"
       ]
     ],
-    "description": "rename component. if exported, create a new component and delete the original component. otherwise just renames current component",
-    "extendedDescription": "",
+    "description": "change a component name",
+    "extendedDescription": "renames a component and optionally refactors dependent code to use the new name.\nfor exported components: creates a new component with the new name and marks the original as deleted.\nfor local components: simply renames the existing component in place.",
     "group": "component-development",
     "private": false,
     "remoteOp": true,
@@ -5206,8 +5212,8 @@
         "use ast to transform files instead of regex"
       ]
     ],
-    "description": "create a new component forked from an existing one (copies source files and configs)",
-    "extendedDescription": "",
+    "description": "create a new component by copying from an existing one",
+    "extendedDescription": "duplicates an existing component's source files and configuration to create a new independent component.\nuseful for creating variations or starting development from a similar component.\nautomatically handles import/require statement updates and provides refactoring options.",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
@@ -5243,8 +5249,8 @@
         "return the output in json format"
       ]
     ],
-    "description": "check typescript types",
-    "extendedDescription": "",
+    "description": "validate TypeScript type correctness",
+    "extendedDescription": "checks for TypeScript type errors in component files, similar to running tsc.\nby default only checks new and modified components. use --all to check all components.\nuseful for catching type issues before tagging, snapping or building components.",
     "group": "testing",
     "private": false,
     "arguments": [
@@ -5258,8 +5264,8 @@
     "name": "aspect <sub-command>",
     "alias": "",
     "options": [],
-    "description": "manage aspects",
-    "extendedDescription": "",
+    "description": "manage component aspects and their configurations",
+    "extendedDescription": "aspects provide functionality and tools for components throughout their development lifecycle.\nprimarily useful for inspecting aspect assignments and configurations with \"bit aspect get\".\nrarely used for manual aspect management as most aspects are configured automatically.",
     "group": "component-config",
     "private": false,
     "commands": [
@@ -5466,8 +5472,8 @@
         "return the format results in json format"
       ]
     ],
-    "description": "format components in the development workspace",
-    "extendedDescription": "",
+    "description": "auto-format component source code",
+    "extendedDescription": "formats component files using the formatter configured by each component's environment (Prettier, etc.).\nby default formats all components. use --changed to format only new and modified components.\nsupports check mode to verify formatting without making changes.",
     "group": "testing",
     "private": false,
     "arguments": [
@@ -5502,8 +5508,8 @@
         "return the lint results in json format"
       ]
     ],
-    "description": "lint components in the development workspace",
-    "extendedDescription": "",
+    "description": "analyze component code for issues and style violations",
+    "extendedDescription": "runs linters configured by each component's environment (ESLint, etc.) to check for code quality issues.\nby default lints all components. use --changed to lint only new and modified components.\nsupports automatic fixing of certain issues with --fix flag.",
     "group": "testing",
     "private": false,
     "arguments": [
@@ -5512,5 +5518,65 @@
         "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
+  },
+  {
+    "name": "sign [component...]",
+    "alias": "",
+    "options": [
+      [
+        "",
+        "multiple",
+        "DEPRECATED. this is now the default. sign components from multiple scopes"
+      ],
+      [
+        "",
+        "always-succeed",
+        "exit with code 0 even though the build failed"
+      ],
+      [
+        "",
+        "push",
+        "export the updated objects to the original scopes once done"
+      ],
+      [
+        "",
+        "lane <lane-id>",
+        "helps to fetch the components from the lane scope (relevant for --multiple)"
+      ],
+      [
+        "",
+        "rebuild",
+        "allow signing components whose buildStatus is successful for testing purposes"
+      ],
+      [
+        "",
+        "original-scope",
+        "sign components from the original scope. works only when all components are from the same scope"
+      ],
+      [
+        "",
+        "save-locally",
+        "save the signed components locally on the bare-scope for debugging purposes"
+      ],
+      [
+        "",
+        "loose",
+        "allow sign to succeed even if tasks like tests or lint fail"
+      ],
+      [
+        "",
+        "reuse-capsules",
+        "avoid deleting the capsules root-dir before starting the build"
+      ],
+      [
+        "",
+        "tasks <string>",
+        "build the specified task(s) only. for multiple tasks, separate by a comma and wrap with quotes.\nspecify the task-name (e.g. \"TypescriptCompiler\") or the task-aspect-id (e.g. teambit.compilation/compiler)"
+      ]
+    ],
+    "description": "complete the build process for components",
+    "extendedDescription": "a new bare-scope needs to be created and it will import the components to this scope first",
+    "group": "dot-bit",
+    "private": false
   }
 ]

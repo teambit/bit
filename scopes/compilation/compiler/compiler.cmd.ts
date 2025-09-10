@@ -11,7 +11,7 @@ export class CompileCmd implements Command {
   name = 'compile [component-names...]';
   description = 'transpile component source files';
   extendedDescription = `compiles TypeScript, JSX, and other source files into JavaScript using the compiler configured by each component's environment.
-outputs compiled files to node_modules/<component-package-name>/dist for consumption by other components.
+outputs compiled files to node_modules/component-package-name/dist for consumption by other components.
 automatically triggered by "bit watch", "bit start", or IDE extensions, but can be run manually for debugging.`;
   helpUrl = 'reference/compiling/compiler-overview';
   arguments = [

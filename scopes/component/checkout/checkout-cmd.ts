@@ -33,7 +33,7 @@ export class CheckoutCmd implements Command {
   helpUrl = 'reference/components/merging-changes#checkout-snaps-to-the-working-directory';
   group = 'version-control';
   extendedDescription = `checkout components to specified versions or remove local changes. most commonly used as 'bit checkout head' to get latest versions.
-the <to> argument accepts these values:
+the \`<to>\` argument accepts these values:
 - head: checkout to last snap/tag (most common usage)
 - specific version: checkout to exact version (e.g. 'bit checkout 1.0.5 component-name')
 - head~x: go back x generations from head (e.g. 'head~2' for two versions back)
