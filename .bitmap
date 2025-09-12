@@ -26,7 +26,7 @@
     "api-server": {
         "name": "api-server",
         "scope": "teambit.harmony",
-        "version": "1.0.754",
+        "version": "1.0.755",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/api-server"
     },
@@ -215,7 +215,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "1.12.122",
+        "version": "1.12.123",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -502,7 +502,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.767",
+        "version": "2.0.768",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
