@@ -86,6 +86,20 @@ commands:
       - run: '<<parameters.bin_name>> config set hub_domain <<parameters.env>>.bit.dev'
       - run: '<<parameters.bin_name>> config set package-manager.cache /home/circleci/package-manager-cache'
 
+  # Optimize node_modules size for BVM distributions
+  optimize_node_modules:
+    parameters:
+      platform:
+        default: ''
+        type: string
+    steps:
+      - run:
+          name: optimize node_modules size<<# parameters.platform >> for <<parameters.platform>><</parameters.platform>>
+          command: >
+            cd bit-${BIT_VERSION} &&
+            node ../bit/scripts/cleanup-node-modules.js ./node_modules &&
+            echo "Node modules optimized successfully<<# parameters.platform >> for <<parameters.platform>><</parameters.platform>>"
+
   # NPM setup
   bit_global_for_npm:
     steps:
@@ -707,6 +721,7 @@ jobs:
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
             pnpm add @teambit/bit --os=linux --cpu=x64
+      - optimize_node_modules
       - run:
           name: copy lockfile
           command: mkdir lockfile && cp bit-${BIT_VERSION}/pnpm-lock.yaml lockfile
@@ -719,6 +734,8 @@ jobs:
           command: >
             cd bit-${BIT_VERSION} &&
             pnpm install --os=linux --cpu=arm64
+      - optimize_node_modules:
+          platform: arm64
       - compress_bit
       - run:
           name: move to linux-arm64 folder
@@ -760,6 +777,7 @@ jobs:
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
             pnpm add @teambit/bit --os=darwin --cpu=x64
+      - optimize_node_modules
       - compress_bit
       - run:
           name: move to macos folder
@@ -769,6 +787,8 @@ jobs:
           command: >
             cd bit-${BIT_VERSION} &&
             pnpm install --os=darwin --cpu=arm64
+      - optimize_node_modules:
+          platform: arm64
       - compress_bit
       - run:
           name: move to macos-arm64 folder
@@ -809,6 +829,7 @@ jobs:
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
             pnpm add @teambit/bit --os=win32 --cpu=x64
+      - optimize_node_modules
       - compress_bit
       - run:
           name: move to windows folder
