@@ -40,6 +40,8 @@ const config = {
   dryRun: process.argv.includes('--dry-run'),
   // Set to true to keep source maps (useful for debugging)
   keepSourceMaps: process.argv.includes('--keep-source-maps'),
+  // Set to true to keep only @teambit source maps (for debugging Bit's own code)
+  keepTeambitMaps: process.argv.includes('--keep-teambit-maps'),
   // Set to true for verbose output
   verbose: process.argv.includes('--verbose'),
 };
@@ -149,11 +151,15 @@ function cleanupMonacoEditor(nodeModulesPath) {
 // Source maps cleanup - removes .map files
 function cleanupSourceMaps(nodeModulesPath) {
   if (config.keepSourceMaps) {
-    console.log('\n🗺️  Keeping source maps (--keep-source-maps flag set)');
+    console.log('\n🗺️  Keeping all source maps (--keep-source-maps flag set)');
     return;
   }
 
-  console.log('\n🗺️  Removing source maps...');
+  if (config.keepTeambitMaps) {
+    console.log('\n🗺️  Removing source maps (keeping @teambit maps)...');
+  } else {
+    console.log('\n🗺️  Removing source maps...');
+  }
 
   let mapSize = 0;
   let mapCount = 0;
@@ -174,6 +180,11 @@ function cleanupSourceMaps(nodeModulesPath) {
               removeMapFiles(filePath);
             }
           } else if (file.endsWith('.map')) {
+            // If keepTeambitMaps is set, skip @teambit source maps
+            if (config.keepTeambitMaps && filePath.includes('/node_modules/@teambit/')) {
+              return; // Skip @teambit source maps
+            }
+
             mapSize += stats.size;
             mapCount++;
 
@@ -259,23 +270,29 @@ Usage: node cleanup-node-modules.js [path-to-node_modules] [options]
 
 Options:
   --dry-run         Show what would be deleted without actually deleting
-  --keep-source-maps Keep .map files (useful for debugging)
+  --keep-source-maps Keep all .map files (useful for debugging)
+  --keep-teambit-maps Keep only @teambit .map files (for debugging Bit's code)
   --verbose         Show detailed output
   --help           Show this help message
 
 Examples:
-  node cleanup-node-modules.js                    # Clean ./node_modules
+  node cleanup-node-modules.js                    # Clean ./node_modules (removes all source maps)
   node cleanup-node-modules.js /path/to/node_modules  # Clean specific path
   node cleanup-node-modules.js --dry-run          # Preview what would be deleted
-  node cleanup-node-modules.js --keep-source-maps # Keep source maps for debugging
+  node cleanup-node-modules.js --keep-source-maps # Keep all source maps for debugging
+  node cleanup-node-modules.js --keep-teambit-maps # Keep only @teambit source maps
 
 This script safely removes:
   1. Duplicate monaco-editor builds (dev, esm, min-maps folders) ~64MB
      - Keeps the 'min' folder for production use
-  2. Source map files (*.map) unless --keep-source-maps is used ~52MB
-     - Source maps are useful for debugging but not needed in production
+  2. Source map files (*.map):
+     - Default: Removes all source maps ~124MB (14,697 files)
+     - --keep-teambit-maps: Removes only non-@teambit maps ~41MB (7,749 files)
+     - --keep-source-maps: Keeps all source maps 0MB
 
-Expected space savings: ~130MB
+Expected space savings: 
+  - Default mode: ~189MB
+  - With --keep-teambit-maps: ~165MB
 Safe for production use - only removes non-essential files.
 `);
   process.exit(0);
