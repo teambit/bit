@@ -155,42 +155,47 @@ function cleanupSourceMaps(nodeModulesPath) {
 
   console.log('\n🗺️  Removing source maps...');
 
-  try {
-    // Use find command to locate all .map files efficiently
-    const findCommand = `find "${nodeModulesPath}" -name "*.map" -type f 2>/dev/null`;
-    const result = execSync(findCommand, { encoding: 'utf8' });
-    const mapFiles = result
-      .trim()
-      .split('\n')
-      .filter((line) => line.length > 0);
+  let mapSize = 0;
+  let mapCount = 0;
 
-    let mapSize = 0;
-    let mapCount = 0;
+  // Recursively find and remove .map files
+  function removeMapFiles(dir) {
+    try {
+      const files = fs.readdirSync(dir);
 
-    for (const mapFile of mapFiles) {
-      try {
-        const stats = fs.statSync(mapFile);
-        mapSize += stats.size;
+      for (const file of files) {
+        const filePath = path.join(dir, file);
+        try {
+          const stats = fs.statSync(filePath);
 
-        if (!config.dryRun) {
-          fs.unlinkSync(mapFile);
-        } else {
-          log(`[DRY RUN] Would delete: ${mapFile} (${formatBytes(stats.size)})`);
+          if (stats.isDirectory()) {
+            // Skip .git and other version control directories
+            if (!['.git', '.svn', '.hg'].includes(file)) {
+              removeMapFiles(filePath);
+            }
+          } else if (file.endsWith('.map')) {
+            mapSize += stats.size;
+            mapCount++;
+
+            if (!config.dryRun) {
+              fs.unlinkSync(filePath);
+            }
+            // Don't log individual files in dry-run, too verbose
+          }
+        } catch {
+          // Skip files we can't access
         }
-        mapCount++;
-      } catch {
-        // Skip files we can't access or delete
       }
+    } catch {
+      // Skip directories we can't read
     }
-
-    totalSaved += mapSize;
-    filesDeleted += mapCount;
-    console.log(
-      `  ${config.dryRun ? 'Would remove' : 'Removed'} ${mapCount} source map files (${formatBytes(mapSize)})`
-    );
-  } catch {
-    console.log('  No source maps found or error occurred');
   }
+
+  removeMapFiles(nodeModulesPath);
+
+  totalSaved += mapSize;
+  filesDeleted += mapCount;
+  console.log(`  ${config.dryRun ? 'Would remove' : 'Removed'} ${mapCount} source map files (${formatBytes(mapSize)})`);
 }
 
 // Main execution
