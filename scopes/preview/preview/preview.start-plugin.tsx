@@ -1,13 +1,21 @@
 import { flatten } from 'lodash';
-import { BundlerMain, ComponentServer } from '@teambit/bundler';
-import { PubsubMain } from '@teambit/pubsub';
-import { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
-import { Workspace } from '@teambit/workspace';
+import type { BundlerMain, ComponentServer } from '@teambit/bundler';
+import {
+  BundlerAspect,
+  ComponentServerStartedEvent,
+  ComponentsServerStartedEvent,
+  NewDevServersCreatedEvent,
+} from '@teambit/bundler';
+import type { PubsubMain } from '@teambit/pubsub';
+import type { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
+import type { Workspace } from '@teambit/workspace';
 import { SubscribeToEvents } from '@teambit/preview.cli.dev-server-events-listener';
 import { SubscribeToWebpackEvents } from '@teambit/preview.cli.webpack-events-listener';
 import { CompilationInitiator } from '@teambit/compiler';
-import { Logger } from '@teambit/logger';
-import { CheckTypes, WatcherMain } from '@teambit/watcher';
+import type { Logger } from '@teambit/logger';
+import type { WatcherMain } from '@teambit/watcher';
+import { CheckTypes } from '@teambit/watcher';
+import type { GraphqlMain } from '@teambit/graphql';
 import chalk from 'chalk';
 
 type ServerState = {
@@ -16,32 +24,121 @@ type ServerState = {
   errors?: Error[];
   warnings?: Error[];
   results?: any[];
+  isStarted?: boolean;
+  isCompilationDone?: boolean;
+  isPendingPublish?: boolean;
 };
 
 type ServerStateMap = Record<string, ServerState>;
 
 export class PreviewStartPlugin implements StartPlugin {
+  previewServers: ComponentServer[] = [];
+  serversState: ServerStateMap = {};
+  serversMap: Record<string, ComponentServer> = {};
+  private pendingServers: Map<string, ComponentServer> = new Map();
+
   constructor(
     private workspace: Workspace,
     private bundler: BundlerMain,
     private ui: UiMain,
     private pubsub: PubsubMain,
     private logger: Logger,
-    private watcher: WatcherMain
-  ) {}
+    private watcher: WatcherMain,
+    private graphql: GraphqlMain
+  ) {
+    this.pubsub.sub(BundlerAspect.id, async (event) => {
+      if (event.type === NewDevServersCreatedEvent.TYPE) {
+        await this.onNewDevServersCreated(event.componentsServers);
+      }
+      if (event.type === ComponentsServerStartedEvent.TYPE) {
+        await this.onComponentServerStarted(event.componentsServer);
+      }
+    });
+  }
 
-  previewServers: ComponentServer[] = [];
-  serversState: ServerStateMap = {};
-  serversMap: Record<string, ComponentServer> = {};
+  async onComponentServerStarted(componentServer: ComponentServer) {
+    const startedEnvId = componentServer.context.envRuntime.id;
+    this.serversMap[startedEnvId] = componentServer;
+    const wasPending = this.pendingServers.has(startedEnvId);
+    this.pendingServers.delete(startedEnvId);
+
+    this.serversState[startedEnvId] = {
+      ...this.serversState[startedEnvId],
+      isStarted: true,
+    };
+
+    const index = this.previewServers.findIndex((s) => s.context.envRuntime.id === startedEnvId);
+    if (index >= 0) {
+      this.previewServers[index] = componentServer;
+    } else {
+      this.previewServers.push(componentServer);
+    }
+
+    const uiServer = this.ui.getUIServer();
+    if (uiServer) {
+      uiServer.addComponentServerProxy(componentServer);
+
+      if (wasPending) {
+        if (this.serversState[startedEnvId]?.isCompilationDone) {
+          await this.publishServerStarted(componentServer);
+        } else {
+          this.serversState[startedEnvId] = {
+            ...this.serversState[startedEnvId],
+            isPendingPublish: true,
+          };
+          this.logger.console(
+            `Server ${startedEnvId} started but waiting for compilation to complete before publishing event.`
+          );
+        }
+      }
+    }
+  }
+
+  private async publishServerStarted(server: ComponentServer) {
+    await this.graphql.pubsub.publish(ComponentServerStartedEvent, {
+      componentServers: server,
+    });
+  }
+
+  async onNewDevServersCreated(servers: ComponentServer[]) {
+    for (const server of servers) {
+      const envId = server.context.envRuntime.id;
+      this.pendingServers.set(envId, server);
+
+      this.serversState[envId] = {
+        isCompiling: false,
+        isReady: false,
+        isStarted: false,
+        isCompilationDone: false,
+        isPendingPublish: false,
+      };
+
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        server.listen();
+      } catch (err) {
+        this.logger.error(`failed to start server for ${envId}`, err);
+      }
+    }
+  }
 
   async initiate(options: StartPluginOptions) {
     this.listenToDevServers(options.showInternalUrls);
-
     const components = await this.workspace.getComponentsByUserInput(!options.pattern, options.pattern);
     // TODO: logic for creating preview servers must be refactored to this aspect from the DevServer aspect.
     const previewServers = await this.bundler.devServer(components);
     previewServers.forEach((server) => {
-      this.serversMap[server.context.envRuntime.id] = server;
+      const envId = server.context.envRuntime.id;
+      this.serversMap[envId] = server;
+
+      this.serversState[envId] = {
+        isCompiling: false,
+        isReady: false,
+        isStarted: false,
+        isCompilationDone: false,
+        isPendingPublish: false,
+      };
+
       // DON'T add wait! this promise never resolves, so it would stop the start process!
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       server.listen();
@@ -104,9 +201,12 @@ export class PreviewStartPlugin implements StartPlugin {
   }
 
   private handleOnStartCompiling(id: string) {
-    this.serversState[id] = { isCompiling: true };
+    this.serversState[id] = {
+      ...this.serversState[id],
+      isCompiling: true,
+    };
     const spinnerId = getSpinnerId(id);
-    const text = getSpinnerCompilingMessage(this.serversMap[id]);
+    const text = getSpinnerCompilingMessage(this.serversMap[id] || this.pendingServers.get(id));
     const exists = this.logger.multiSpinner.spinners[spinnerId];
     if (!exists) {
       this.logger.multiSpinner.add(spinnerId, { text });
@@ -115,12 +215,14 @@ export class PreviewStartPlugin implements StartPlugin {
 
   private handleOnDoneCompiling(id: string, results, showInternalUrls?: boolean) {
     this.serversState[id] = {
+      ...this.serversState[id],
       isCompiling: false,
       isReady: true,
+      isCompilationDone: true,
       errors: results.errors,
       warnings: results.warnings,
     };
-    const previewServer = this.serversMap[id];
+    const previewServer = this.serversMap[id] || this.pendingServers.get(id);
     const spinnerId = getSpinnerId(id);
     const spinner = this.logger.multiSpinner.spinners[spinnerId];
     if (spinner && spinner.isActive()) {
@@ -141,6 +243,15 @@ export class PreviewStartPlugin implements StartPlugin {
 
     const noneAreCompiling = Object.values(this.serversState).every((x) => !x.isCompiling);
     if (noneAreCompiling) this.setReady();
+    if (this.serversState[id]?.isPendingPublish) {
+      const server = this.serversMap[id];
+      if (server) {
+        this.serversState[id].isPendingPublish = false;
+        this.publishServerStarted(server).catch((err) => {
+          this.logger.error(`failed to publish server started event for ${server.context.envRuntime.id}`, err);
+        });
+      }
+    }
   }
 
   private setReady: () => void;

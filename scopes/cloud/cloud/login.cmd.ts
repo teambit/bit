@@ -1,14 +1,17 @@
 import chalk from 'chalk';
 import yesno from 'yesno';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { isEmpty } from 'lodash';
 import { BitError } from '@teambit/bit-error';
-import { CloudMain } from './cloud.main.runtime';
+import type { CloudMain } from './cloud.main.runtime';
 
 export class LoginCmd implements Command {
   name = 'login';
-  description = 'log in to Bit cloud';
-  group = 'general';
+  description = 'authenticate with Bit Cloud for component publishing and collaboration';
+  extendedDescription = `opens browser to authenticate with Bit Cloud (bit.cloud) and obtain access token for publishing components.
+automatically updates .npmrc file with registry configuration and authentication token for seamless package publishing.
+supports custom cloud domains, CI/machine authentication, and manual token refresh options.`;
+  group = 'auth';
   alias = '';
   options = [
     ['', 'skip-config-update', 'skip writing to the .npmrc file'],
@@ -67,10 +70,10 @@ export class LoginCmd implements Command {
     }
 
     if (refreshToken) {
-      this.cloud.logout();
+      await this.cloud.logout();
     }
 
-    const isLoggedIn = this.cloud.isLoggedIn();
+    const isLoggedIn = await this.cloud.isLoggedIn();
 
     if (isLoggedIn) {
       this.cloud.logger.clearStatusLine();
@@ -81,7 +84,7 @@ export class LoginCmd implements Command {
       if (!ok) {
         return chalk.green(`Logged in as ${this.cloud.getUsername()}`);
       }
-      this.cloud.logout();
+      await this.cloud.logout();
     }
 
     const result = await this.cloud.login(

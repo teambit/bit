@@ -1,21 +1,23 @@
-import { flatten } from 'lodash';
-import { ExpressMain } from '@teambit/express';
-import { GraphqlMain } from '@teambit/graphql';
-import { Logger } from '@teambit/logger';
-import express, { Express } from 'express';
+import type { ExpressMain } from '@teambit/express';
+import type { GraphqlMain } from '@teambit/graphql';
+import type { Logger } from '@teambit/logger';
+import type { Express } from 'express';
+import express from 'express';
 import fallback from 'express-history-api-fallback';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { stripTrailingChar } from '@teambit/toolbox.string.strip-trailing-char';
-import { Server } from 'http';
+import type { Server } from 'http';
 import httpProxy from 'http-proxy';
 import { join } from 'path';
 import webpack from 'webpack';
-import WebpackDevServer, { Configuration as WdsConfiguration } from 'webpack-dev-server';
+import type { Configuration as WdsConfiguration } from 'webpack-dev-server';
+import WebpackDevServer from 'webpack-dev-server';
+import type { ComponentServer } from '@teambit/bundler';
 import { createSsrMiddleware } from './ssr-middleware';
-import { StartPlugin } from './start-plugin';
-import { ProxyEntry, UIRoot } from './ui-root';
+import type { StartPlugin } from './start-plugin';
+import type { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
-import { UiMain } from './ui.main.runtime';
+import type { UiMain } from './ui.main.runtime';
 
 import { devConfig } from './webpack/webpack.dev.config';
 
@@ -42,6 +44,10 @@ export type StartOptions = {
 };
 
 export class UIServer {
+  private _app: Express;
+  private _server: Server;
+  private _proxyRoutes = new Set<string>();
+
   constructor(
     private graphql: GraphqlMain,
     private expressExtension: ExpressMain,
@@ -93,6 +99,141 @@ export class UIServer {
     return Promise.all([this.startPromise, ...this.plugins.map((x) => x?.whenReady)]);
   }
 
+  addComponentServerProxy(server: ComponentServer): void {
+    const envId = server.context.envRuntime.id;
+    const previewRoute = `/preview/${envId}`;
+    const hmrRoute = `/_hmr/${envId}`;
+
+    const entries = [
+      {
+        context: [previewRoute],
+        target: `http://${this.host}:${server.port}`,
+      },
+      {
+        context: [hmrRoute],
+        target: `ws://${this.host}:${server.port}`,
+        ws: true,
+      },
+    ];
+
+    if (this._proxyRoutes.has(previewRoute) || this._proxyRoutes.has(hmrRoute)) {
+      this.logger.debug(`Routes for environment ${envId} already exist, skipping`);
+      return;
+    }
+
+    try {
+      const dynamicProxy = httpProxy.createProxyServer();
+
+      dynamicProxy.on('error', (e) => {
+        this.logger.error(e.message);
+      });
+
+      const wsHandler = (req, socket, head) => {
+        try {
+          const reqUrl = req.url?.replace(/\?.+$/, '') || '';
+          const path = stripTrailingChar(reqUrl, '/');
+
+          const entry = entries.find(
+            (proxy) =>
+              proxy.ws &&
+              proxy.context.some((item) => {
+                const itemPath = stripTrailingChar(item, '/');
+                return path === itemPath || path.startsWith(itemPath);
+              })
+          );
+
+          if (!entry) {
+            return;
+          }
+
+          dynamicProxy.ws(req, socket, head, { target: entry.target });
+        } catch (err: any) {
+          this.logger.error(`WebSocket handling error for ${envId}: ${err.message}`);
+        }
+      };
+
+      try {
+        this._server.on('upgrade', wsHandler);
+      } catch (err: any) {
+        this.logger.error(`Failed to register WebSocket handler for ${envId}: ${err.message}`);
+      }
+
+      const router = express.Router();
+
+      router.use((req, res) => {
+        try {
+          const originalUrl = req.originalUrl;
+          this.logger.debug(`Proxying request to ${envId}: ${originalUrl}`);
+          req.url = originalUrl;
+          dynamicProxy.web(req, res, { target: entries[0].target });
+        } catch (err: any) {
+          this.logger.error(`Error in component router for ${envId}: ${err.message}`);
+          if (!res.headersSent) {
+            res.status(502).send(`Component server proxy error: ${err.message}`);
+          }
+        }
+      });
+
+      entries.forEach((entry) => {
+        entry.context.forEach((route) => {
+          try {
+            this.logger.debug(`Setting up dynamic HTTP route: ${route}/* -> ${entry.target}`);
+            this._proxyRoutes.add(route);
+            this._app.use(route, router);
+
+            // Move it to the beginning of the stack for priority
+            try {
+              const stack = this._app._router.stack;
+              const lastMiddleware = stack.pop();
+              if (lastMiddleware) {
+                stack.unshift(lastMiddleware);
+              }
+            } catch (stackErr: any) {
+              this.logger.error(`Error manipulating middleware stack: ${stackErr.message}`);
+            }
+          } catch (routeErr: any) {
+            this.logger.error(`Error setting up route ${route}: ${routeErr.message}`);
+          }
+        });
+      });
+    } catch (err: any) {
+      this.logger.error(`Failed to set up component proxy for ${envId}: ${err.message}`);
+    }
+  }
+
+  private async configureProxy(app: Express, server: Server) {
+    const proxyServer = httpProxy.createProxyServer();
+    proxyServer.on('error', (e) => {
+      this.logger.error(e.message);
+    });
+
+    server.on('upgrade', (req, socket, head) => {
+      const reqUrl = req.url?.replace(/\?.+$/, '') || '';
+      const path = stripTrailingChar(reqUrl, '/');
+      const proxyEntries = this.getProxyFromPlugins();
+      const entry = proxyEntries.find((proxy) => proxy.context.some((item) => item === stripTrailingChar(path, '/')));
+      if (!entry) {
+        return;
+      }
+      proxyServer.ws(req, socket, head, {
+        target: entry.target,
+      });
+    });
+
+    const proxyEntries = this.getProxyFromPlugins();
+    proxyEntries.forEach((entry) => {
+      entry.context.forEach((route) => {
+        this._proxyRoutes.add(route);
+        app.use(`${route}/*`, (req, res) => {
+          req.url = req.originalUrl;
+          proxyServer.web(req, res, entry);
+        });
+      });
+    });
+
+    this._app = app;
+    this._server = server;
+  }
   /**
    * start a UI server.
    */
@@ -103,29 +244,18 @@ export class UIServer {
     const root = bundleUiRoot || defaultRoot;
     this.logger.debug(`UiServer, start from ${root}`);
     const server = await this.graphql.createServer({ app });
-
-    // set up proxy, for things like preview, e.g. '/preview/teambit.react/react'
     await this.configureProxy(app, server);
-
-    // pass through files from public /folder:
-    // setting `index: false` so index.html will be served by the fallback() middleware
     app.use(express.static(root, { index: false }));
-
     const port = await Port.getPortFromRange(portRange || [3100, 3200]);
-
     await this.setupServerSideRendering({ root, port, app });
-
-    // in any and all other cases, serve index.html.
-    // No any other endpoints past this will execute
     app.use(fallback('index.html', { root }));
-
     server.listen(port);
     this._port = port;
 
     // important: we use the string of the following message for the http.e2e.ts. if you change the message,
     // please make sure you change the `HTTP_SERVER_READY_MSG` const.
-    this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${port}`);
-
+    const readyMessage = `UI server of ${this.uiRootExtension} is listening to port ${port}`;
+    this.logger.info(readyMessage);
     this.setReady();
   }
 
@@ -149,32 +279,6 @@ export class UIServer {
     this.logger.debug('[ssr] serving for "*"');
   }
 
-  private async configureProxy(app: Express, server: Server) {
-    const proxServer = httpProxy.createProxyServer();
-    proxServer.on('error', (e) => this.logger.error(e.message));
-    const proxyEntries = await this.getProxyFromPlugins();
-
-    // TODO - should use https://github.com/chimurai/http-proxy-middleware
-    server.on('upgrade', function (req, socket, head) {
-      const entry = proxyEntries.find((proxy) =>
-        proxy.context.some((item) => item === stripTrailingChar(req.url as string, '/'))
-      );
-      if (!entry) return;
-      proxServer.ws(req, socket, head, {
-        target: entry.target,
-      });
-    });
-
-    proxyEntries.forEach((entry) => {
-      entry.context.forEach((route) => {
-        app.use(`${route}/*`, (req, res) => {
-          req.url = req.originalUrl;
-          proxServer.web(req, res, entry);
-        });
-      });
-    });
-  }
-
   /**
    * start a UI dev server.
    */
@@ -184,9 +288,8 @@ export class UIServer {
     const expressAppPort = this._port;
 
     const config = await this.getDevConfig();
-    const compiler = webpack(config);
+    const compiler = webpack(config as any);
     const devServerConfig = await this.getDevServerConfig(devServerPort, expressAppPort, config.devServer);
-    // @ts-ignore in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
     const devServer = new WebpackDevServer(devServerConfig, compiler);
 
     await devServer.start();
@@ -198,16 +301,27 @@ export class UIServer {
     return Port.getPortFromRange(portRange || [3100, 3200]);
   }
 
-  private async getProxyFromPlugins(): Promise<ProxyEntry[]> {
-    const proxiesByPlugin = this.plugins.map((plugin) => {
+  private getProxyFromPlugins() {
+    const proxiesByPlugin = this.plugins.flatMap((plugin) => {
       return plugin.getProxy ? plugin.getProxy() : [];
     });
-
-    return flatten(await Promise.all(proxiesByPlugin));
+    return proxiesByPlugin;
   }
 
   private async getProxy(port = 4000) {
-    const proxyEntries = await this.getProxyFromPlugins();
+    const proxyEntries = this.getProxyFromPlugins();
+    const catchAllProxies: ProxyEntry[] = [
+      {
+        context: ['/preview'],
+        target: `http://${this.host}:${port}`,
+        changeOrigin: true,
+      },
+      {
+        context: ['/_hmr'],
+        target: `ws://${this.host}:${port}`,
+        ws: true,
+      },
+    ];
 
     const gqlProxies: ProxyEntry[] = [
       {
@@ -221,8 +335,7 @@ export class UIServer {
         ws: true,
       },
     ];
-
-    return gqlProxies.concat(proxyEntries);
+    return gqlProxies.concat(proxyEntries).concat(catchAllProxies);
   }
 
   private async getDevServerConfig(

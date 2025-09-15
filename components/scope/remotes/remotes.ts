@@ -1,24 +1,28 @@
-import { groupBy, prop } from 'ramda';
-import { forEach } from 'lodash';
+import { groupBy, forEach, get } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import pMap from 'p-map';
-import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
+import type { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
+import { CURRENT_FETCH_SCHEMA } from '@teambit/legacy.scope-api';
 import { GlobalRemotes } from './global-remotes';
 import { logger } from '@teambit/legacy.logger';
-import { Scope, ScopeNotFound } from '@teambit/legacy.scope';
-import { DependencyGraph } from '@teambit/legacy.dependency-graph';
+import type { Scope as LegacyScope } from '@teambit/legacy.scope';
+import { ScopeNotFound } from '@teambit/legacy.scope';
+import type { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import { prependBang } from '@teambit/legacy.utils';
 import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
 import { PrimaryOverloaded } from './exceptions';
 import { Remote } from './remote';
 import remoteResolver from './remote-resolver/remote-resolver';
 import { UnexpectedNetworkError } from '@teambit/scope.network';
-import { ObjectItemsStream } from '@teambit/scope.objects';
+import type { ObjectItemsStream } from '@teambit/objects';
 import { ScopeNotFoundOrDenied } from './exceptions/scope-not-found-or-denied';
 
 export class Remotes extends Map<string, Remote> {
-  constructor(remotes: [string, Remote][] = []) {
+  constructor(
+    remotes: [string, Remote][] = [],
+    protected thisScope?: LegacyScope
+  ) {
     super(remotes);
   }
 
@@ -29,11 +33,11 @@ export class Remotes extends Map<string, Remote> {
     return this.forEach((remote) => remote.validate());
   }
 
-  async resolve(scopeName: string, thisScope?: Scope | undefined): Promise<Remote> {
+  async resolve(scopeName: string): Promise<Remote> {
     const remote = super.get(scopeName);
     if (remote) return Promise.resolve(remote);
-    const scopeHost = await remoteResolver(scopeName, thisScope);
-    return new Remote(scopeHost, scopeName, undefined, thisScope?.name);
+    const scopeHost = await remoteResolver(scopeName, this.thisScope);
+    return new Remote(scopeHost, scopeName, undefined, this.thisScope?.name);
   }
 
   isHub(scope: string): boolean {
@@ -43,7 +47,6 @@ export class Remotes extends Map<string, Remote> {
 
   async fetch(
     idsGroupedByScope: { [scopeName: string]: string[] }, // option.type determines the id: component-id/lane-id/object-id (hash)
-    thisScope: Scope,
     options: Partial<FETCH_OPTIONS> = {},
     context?: Record<string, any>
   ): Promise<{ [remoteName: string]: ObjectItemsStream }> {
@@ -66,7 +69,7 @@ export class Remotes extends Map<string, Remote> {
       Object.keys(idsGroupedByScope),
       async (scopeName) => {
         try {
-          const remote = await this.resolve(scopeName, thisScope);
+          const remote = await this.resolve(scopeName);
           const objectsStream = await remote.fetch(idsGroupedByScope[scopeName], fetchOptions, context);
           objectsStreamPerRemote[scopeName] = objectsStream;
           return objectsStream;
@@ -107,11 +110,11 @@ ${failedScopesErr.join('\n')}`);
     return objectsStreamPerRemote;
   }
 
-  async latestVersions(ids: ComponentID[], thisScope: Scope): Promise<ComponentID[]> {
+  async latestVersions(ids: ComponentID[]): Promise<ComponentID[]> {
     const groupedIds = this._groupByScopeName(ids);
 
     const promises = Object.entries(groupedIds).map(([scopeName, scopeIds]) =>
-      this.resolve(scopeName, thisScope).then((remote) => remote.latestVersions(scopeIds))
+      this.resolve(scopeName).then((remote) => remote.latestVersions(scopeIds))
     );
 
     const components = await Promise.all(promises);
@@ -125,10 +128,10 @@ ${failedScopesErr.join('\n')}`);
    * entire scope graph. however, when asking for multiple ids in the same scope, which is more
    * likely to happen, it'll harm the performance.
    */
-  async scopeGraphs(ids: ComponentID[], thisScope: Scope): Promise<DependencyGraph[]> {
+  async scopeGraphs(ids: ComponentID[]): Promise<DependencyGraph[]> {
     const groupedIds = this._groupByScopeName(ids);
     const graphsP = Object.keys(groupedIds).map(async (scopeName) => {
-      const remote = await this.resolve(scopeName, thisScope);
+      const remote = await this.resolve(scopeName);
       const dependencyGraph = await remote.graph();
       dependencyGraph.setScopeName(scopeName);
       return dependencyGraph;
@@ -137,8 +140,8 @@ ${failedScopesErr.join('\n')}`);
   }
 
   _groupByScopeName(ids: ComponentID[]) {
-    const byScope = groupBy(prop('scope'));
-    return byScope(ids) as { [scopeName: string]: ComponentID[] };
+    const byScope = groupBy(ids, (id) => get(id, 'scope'));
+    return byScope as { [scopeName: string]: ComponentID[] };
   }
 
   toPlainObject() {
@@ -173,10 +176,10 @@ ${failedScopesErr.join('\n')}`);
     return Remotes.load(remotes);
   }
 
-  static load(remotes: { [key: string]: string }, thisScope?: Scope): Remotes {
+  static load(remotes: { [key: string]: string }, thisScope?: LegacyScope): Remotes {
     const models = [];
 
-    if (!remotes) return new Remotes();
+    if (!remotes) return new Remotes(undefined, thisScope);
 
     forEach(remotes, (name, host) => {
       const remote = Remote.load(name, host, thisScope);
@@ -184,6 +187,6 @@ ${failedScopesErr.join('\n')}`);
       models.push([remote.name, remote]);
     });
 
-    return new Remotes(models);
+    return new Remotes(models, thisScope);
   }
 }

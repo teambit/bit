@@ -1,5 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
-import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
+import type { Node, Edge } from '@teambit/graph.cleargraph';
+import { Graph } from '@teambit/graph.cleargraph';
 import type { DependenciesInfo } from '@teambit/legacy.dependency-graph';
 import GraphLib from 'graphlib';
 import { uniq } from 'lodash';
@@ -150,7 +151,7 @@ export class ComponentIdGraph extends Graph<ComponentID, DepEdgeType> {
   /**
    * overrides the super class to eliminate non-seeders components
    */
-  findCycles(graph?: this, includeDeps = false): string[][] {
+  findCycles(graph = this, includeDeps = false): string[][] {
     const cycles = super.findCycles(graph);
     // reverse the order to show a more intuitive cycle order. from the dependent to the dependency.
     cycles.forEach((cycle) => cycle.reverse());

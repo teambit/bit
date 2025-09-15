@@ -1,13 +1,15 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { logger } from '@teambit/legacy.logger';
-import { Scope, MissingObjects } from '@teambit/legacy.scope';
-import { Ref, Lane, Source } from '@teambit/scope.objects';
+import type { Scope } from '@teambit/legacy.scope';
+import { MissingObjects } from '@teambit/legacy.scope';
+import type { Lane, Source } from '@teambit/objects';
+import { Ref } from '@teambit/objects';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { ArtifactVinyl } from './artifact';
 import { compact } from 'lodash';
 

@@ -1,8 +1,9 @@
-import ts, { Node, ObjectLiteralExpression } from 'typescript';
+import type { Node, ObjectLiteralExpression } from 'typescript';
+import ts from 'typescript';
 import pMapSeries from 'p-map-series';
 import { ObjectLiteralExpressionSchema, UnImplementedSchema } from '@teambit/semantics.entities.semantic-schema';
 import type { SchemaExtractorContext } from '../schema-extractor-context';
-import { SchemaTransformer } from '../schema-transformer';
+import type { SchemaTransformer } from '../schema-transformer';
 
 export class ObjectLiteralExpressionTransformer implements SchemaTransformer {
   predicate(node: Node) {

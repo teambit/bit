@@ -1,6 +1,7 @@
 import { H1 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
-import React, { HTMLAttributes, useMemo } from 'react';
+import type { HTMLAttributes } from 'react';
+import React, { useMemo } from 'react';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 import { createElement } from 'react-syntax-highlighter';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
@@ -9,7 +10,7 @@ import markDownSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/ma
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { useLocation, useNavigate } from '@teambit/base-react.navigation.link';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import { DependencyType } from '@teambit/code.ui.queries.get-component-code';
+import type { DependencyType } from '@teambit/code.ui.queries.get-component-code';
 import { ComponentID } from '@teambit/component';
 import { useCoreAspects } from '@teambit/harmony.ui.hooks.use-core-aspects';
 import styles from './code-view.module.scss';
@@ -22,6 +23,7 @@ export type CodeViewProps = {
   loading?: boolean;
   codeSnippetClassName?: string;
   dependencies?: DependencyType[];
+  host?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
 SyntaxHighlighter.registerLanguage('md', markDownSyntax);
@@ -112,6 +114,7 @@ export function CodeView({
   codeSnippetClassName,
   loading: loadingFromProps,
   dependencies,
+  host = 'teambit.scope/scope',
 }: CodeViewProps) {
   const depsByPackageName = new Map<string, DependencyType>(
     (dependencies || []).map((dep) => [(dep.packageName || dep.id).toString(), dep])
@@ -120,7 +123,8 @@ export function CodeView({
   const { fileContent: downloadedFileContent, loading: loadingFileContent } = useFileContent(
     componentId,
     currentFile,
-    !!currentFileContent
+    !!currentFileContent,
+    host
   );
   const loading = loadingFromProps || loadingFileContent;
   const location = useLocation();
@@ -138,6 +142,8 @@ export function CodeView({
     if (langFromFileEnding === 'scss' || langFromFileEnding === 'sass') return 'css';
     if (langFromFileEnding === 'mdx') return 'md';
     if (langFromFileEnding === 'vue') return 'html';
+    if (langFromFileEnding === 'cjs' || langFromFileEnding === 'mjs') return 'js';
+    if (langFromFileEnding === 'cts' || langFromFileEnding === 'mts') return 'ts';
 
     return langFromFileEnding;
   }, [fileContent]);

@@ -1,37 +1,38 @@
 import { BitError } from '@teambit/bit-error';
-import { LaneId } from '@teambit/lane-id';
+import type { LaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { ComponentsPendingMerge, Consumer } from '@teambit/legacy.consumer';
-import { Lane, ModelComponent, Version } from '@teambit/scope.objects';
+import type { Consumer } from '@teambit/legacy.consumer';
+import { ComponentsPendingMerge } from '@teambit/legacy.consumer';
+import type { Lane, ModelComponent, Version } from '@teambit/objects';
 import { getLatestVersionNumber, pathNormalizeToLinux, hasWildcard } from '@teambit/legacy.utils';
-import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
-import { applyModifiedVersion } from '@teambit/checkout';
+import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { MergeStrategy, MergeResultsThreeWay, FilesStatus } from '@teambit/component.modules.merge-helper';
 import {
+  applyModifiedVersion,
   FileStatus,
   getMergeStrategyInteractive,
   MergeOptions,
   threeWayMerge,
-  MergeStrategy,
-  MergeResultsThreeWay,
-  FilesStatus,
-} from '@teambit/merging';
-import {
-  multipleVersionDependenciesToConsumer,
-  VersionDependencies,
-  ScopeComponentsImporter,
-  Scope,
-} from '@teambit/legacy.scope';
-import { GraphMain } from '@teambit/graph';
-import { Workspace } from '@teambit/workspace';
-import { ComponentWriterMain, ComponentWriterResults, ManyComponentsWriterParams } from '@teambit/component-writer';
+} from '@teambit/component.modules.merge-helper';
+import type { VersionDependencies, Scope } from '@teambit/legacy.scope';
+import { multipleVersionDependenciesToConsumer, ScopeComponentsImporter } from '@teambit/legacy.scope';
+import type { GraphMain } from '@teambit/graph';
+import type { Workspace } from '@teambit/workspace';
+import type {
+  ComponentWriterMain,
+  ComponentWriterResults,
+  ManyComponentsWriterParams,
+} from '@teambit/component-writer';
 import { LATEST_VERSION } from '@teambit/component-version';
-import { EnvsMain } from '@teambit/envs';
+import type { EnvsMain } from '@teambit/envs';
 import { compact, difference, fromPairs } from 'lodash';
-import { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
-import { Logger } from '@teambit/logger';
+import type { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
+import type { Logger } from '@teambit/logger';
 import { DependentsGetter } from './dependents-getter';
-import { ListerMain, NoIdMatchWildcard } from '@teambit/lister';
+import type { ListerMain } from '@teambit/lister';
+import { NoIdMatchWildcard } from '@teambit/lister';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 
 const BEFORE_IMPORT_ACTION = 'importing components';
 
@@ -64,6 +65,8 @@ export type ImportOptions = {
   trackOnly?: boolean;
   includeDeprecated?: boolean;
   isLaneFromRemote?: boolean; // whether the `lanes.lane` object is coming directly from the remote.
+  writeDeps?: 'package.json' | 'workspace.jsonc';
+  laneOnly?: boolean; // when on a lane, only import components that exist on the lane (preserves legacy behavior)
 };
 type ComponentMergeStatus = {
   component: Component;
@@ -253,7 +256,7 @@ export default class ImportComponents {
     return filtered;
   }
 
-  async _fetchDivergeData(components: Component[]) {
+  private async _fetchDivergeData(components: Component[]) {
     if (this.options.objectsOnly) {
       // no need for it when importing objects only. if it's enabled, in case when on a lane and a non-lane
       // component is in bitmap using an older version, it throws "getDivergeData: unable to find Version X of Y"
@@ -261,8 +264,9 @@ export default class ImportComponents {
     }
     await Promise.all(
       components.map(async (component) => {
+        const fromWorkspace = this.workspace.getIdIfExist(component.id);
         const modelComponent = await this.scope.getModelComponent(component.id);
-        await modelComponent.setDivergeData(this.scope.objects, undefined, false);
+        await modelComponent.setDivergeData(this.scope.objects, undefined, false, fromWorkspace);
         this.divergeData.push(modelComponent);
       })
     );
@@ -365,9 +369,8 @@ if you just want to get a quick look into this snap, create a new workspace and 
    * consider the following use cases:
    * 1) no ids were provided. it should import all the lanes components objects AND main components objects
    * (otherwise, if main components are not imported and are missing, then bit-status complains about it)
-   * 2) ids are provided with wildcards. we assume the user wants only the ids that are available on the lane.
-   * because a user may entered "bit import scope/*" and this scope has many component on the lane and many not on the lane.
-   * we want to bring only the components on the lane.
+   * 2) ids are provided with wildcards. by default, imports from both lane and main (lane versions preferred).
+   * if --lane-only flag is specified, import only components that exist on the lane.
    * 3) ids are provided without wildcards. here, the user knows exactly what's needed and it's ok to get the ids from
    * main if not found on the lane.
    */
@@ -403,13 +406,20 @@ if you just want to get a quick look into this snap, create a new workspace and 
 
     await pMapSeries(idsWithWildcard, async (idStr: string) => {
       const existingOnLanes = await this.workspace.filterIdsFromPoolIdsByPattern(idStr, remoteLaneIds, false);
-      // in case the wildcard contains components from the lane, the user wants to import only them. not from main.
-      // otherwise, if the wildcard translates to main components only, it's ok to import from main.
-      if (existingOnLanes.length) {
+
+      if (this.options.laneOnly) {
+        // When --lane-only is specified, import only components that exist on the lane, never from main
         bitIds.push(...existingOnLanes);
       } else {
+        // New default behavior: Import from both lane and main
+        // Get all components matching the pattern from main
         const idsFromRemote = await this.lister.getRemoteCompIdsByWildcards(idStr, this.options.includeDeprecated);
-        bitIds.push(...idsFromRemote);
+
+        // Prefer lane versions where they exist, use main versions for the rest
+        const laneIds = new Set(existingOnLanes.map((id) => id.toStringWithoutVersion()));
+        const mainOnlyIds = idsFromRemote.filter((id) => !laneIds.has(id.toStringWithoutVersion()));
+
+        bitIds.push(...existingOnLanes, ...mainOnlyIds);
       }
     });
 
@@ -423,8 +433,9 @@ if you just want to get a quick look into this snap, create a new workspace and 
 
   private async getBitIdsForNonLanes() {
     const bitIds: ComponentID[] = [];
-    await Promise.all(
-      this.options.ids.map(async (idStr: string) => {
+    await pMapPool(
+      this.options.ids,
+      async (idStr: string) => {
         if (hasWildcard(idStr)) {
           let ids: ComponentID[] = [];
           try {
@@ -433,6 +444,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
             if (err instanceof NoIdMatchWildcard) {
               this.logger.consoleWarning(err.message);
             } else {
+              this.logger.error(`failed getting the list of components by the wildcard ${idStr}`);
               throw err;
             }
           }
@@ -441,7 +453,8 @@ if you just want to get a quick look into this snap, create a new workspace and 
           const id = await this.getIdFromStr(idStr);
           bitIds.push(id);
         }
-      })
+      },
+      { concurrency: 30 }
     );
 
     this.logger.setStatusLine(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
@@ -659,13 +672,8 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
     const existingBitMapBitId = this.consumer.bitMap.getComponentId(component.id, { ignoreVersion: true });
     const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
     const currentlyUsedVersion = existingBitMapBitId.version;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);
-    const otherComponent: Version = await componentModel.loadVersion(
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      component.id.version,
-      this.consumer.scope.objects
-    );
+    const otherComponent: Version = await componentModel.loadVersion(component.id.version, this.consumer.scope.objects);
     const mergeResults = await threeWayMerge({
       scope: this.consumer.scope,
       otherComponent,
@@ -698,7 +706,6 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
       const filesStatus = {};
       // don't write the files to the filesystem, only bump the bitmap version.
       files.forEach((file) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
       });
       this.consumer.bitMap.updateComponentId(component.id);
@@ -709,7 +716,6 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
       const filesStatus = {};
       // the local changes will be overridden (as if the user entered --override flag for this component)
       files.forEach((file) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
       });
       return filesStatus;
@@ -802,6 +808,7 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
       skipWritingToFs: this.options.trackOnly,
       shouldUpdateWorkspaceConfig: true,
       reasonForBitmapChange: 'import',
+      writeDeps: this.options.writeDeps,
     };
     return this.componentWriter.writeMany(manyComponentsWriterOpts);
   }

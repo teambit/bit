@@ -3,7 +3,7 @@ import rightpad from 'pad-right';
 import { table } from 'table';
 import type { Alignment } from 'table';
 import { componentToPrintableForDiff, getDiffBetweenObjects, prettifyFieldName } from '@teambit/legacy.component-diff';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { show } from './legacy-show';
 import paintDocumentation from './docs-template';
 import { compact } from 'lodash';
@@ -55,7 +55,6 @@ export function reportLegacy({
     };
     const componentFromFileSystem = makeComponentReadable(component);
     if (component.scopesList) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentFromFileSystem.scopesList = component.scopesList;
     }
     const componentFromModel = componentModel ? makeComponentReadable(componentModel) : undefined;
@@ -84,7 +83,6 @@ function paintComponent(component: ConsumerComponent, componentModel: ConsumerCo
 
   function paintWithoutCompare() {
     const printableComponent = componentToPrintableForDiff(component);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     printableComponent.scopesList = (component.scopesList || []).map((s) => s.name).join('\n');
     const fields = getFields();
     const rows = compact(
@@ -94,20 +92,17 @@ function paintComponent(component: ConsumerComponent, componentModel: ConsumerCo
         const title = prettifyFieldName(field);
         if (!printableComponent[field]) return null;
 
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         arr.push(c.cyan(title));
         if (!printableComponent[field]) return null;
 
         if (printableComponent[field]) {
           if (printableComponent[field] instanceof Array) {
             arr.push(
-              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
               printableComponent[field]
                 .map((str) => calculatePadRightLength(str, COLUMN_WIDTH))
                 .join(' ')
                 .trim()
             );
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           } else arr.push(printableComponent[field]);
         }
         return arr;
@@ -121,7 +116,6 @@ function paintComponent(component: ConsumerComponent, componentModel: ConsumerCo
   function paintWithCompare() {
     if (!componentModel) throw new Error('paintWithCompare, componentModel must be defined');
     const printableOriginalComponent = componentToPrintableForDiff(component);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     printableOriginalComponent.id += ' [file system]';
     const printableComponentToCompare = componentToPrintableForDiff(componentModel);
 
@@ -170,6 +164,7 @@ function paintComponent(component: ConsumerComponent, componentModel: ConsumerCo
   function getFields() {
     const fields = [
       'id',
+      'packageName',
       'compiler',
       'tester',
       'language',

@@ -1,11 +1,12 @@
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import path from 'path';
+import chaiString from 'chai-string';
 
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('multiple compilers - babel and typescript', function () {
   this.timeout(0);
@@ -20,7 +21,7 @@ describe('multiple compilers - babel and typescript', function () {
     describe('compile simple ts component', () => {
       let distDir;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
 
         // add a new env that compiles with Babel
         const envName = helper.env.setBabelWithTsHarmony();
@@ -86,7 +87,7 @@ describe('multiple compilers - babel and typescript', function () {
   describe('different envs in the dependency graph', () => {
     let buildOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponentsTS(4);
       const babelEnv = helper.env.setBabelWithTsHarmony();
       helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/${babelEnv}`);

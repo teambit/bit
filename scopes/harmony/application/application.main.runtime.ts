@@ -1,18 +1,28 @@
-import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { MainRuntime, CLIAspect } from '@teambit/cli';
 import { compact, flatten, head } from 'lodash';
-import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
-import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import type { SlotRegistry, Harmony } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
-import { WatcherAspect, WatcherMain } from '@teambit/watcher';
-import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { ComponentAspect, ComponentMain, ComponentID, Component } from '@teambit/component';
-import { ApplicationType } from './application-type';
-import { Application } from './application';
-import { DeploymentProvider } from './deployment-provider';
+import type { WatcherMain } from '@teambit/watcher';
+import { WatcherAspect } from '@teambit/watcher';
+import type { BuilderMain } from '@teambit/builder';
+import { BuilderAspect } from '@teambit/builder';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { ComponentMain, ComponentID, Component } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import type { ApplicationType } from './application-type';
+import type { Application } from './application';
+import type { DeploymentProvider } from './deployment-provider';
 import { AppNotFound } from './exceptions';
 import { ApplicationAspect } from './application.aspect';
 import { AppsBuildTask } from './build-application.task';
@@ -134,6 +144,7 @@ export class ApplicationMain {
    */
   async loadAllAppsAsAspects(poolIds?: ComponentID[]): Promise<ComponentID[]> {
     const apps = await this.listAppsComponents(poolIds);
+    if (!apps.length) return [];
     // do not load apps that their env was not loaded yet. their package-json may not be up to date. e.g. it could be
     // cjs, when the env needs it as esm. once it is loaded, node.js saved the package.json in the cache with no way to
     // refresh it.
@@ -192,9 +203,17 @@ export class ApplicationMain {
    * if poolIds is provided, it will load only the apps that are part of the pool.
    */
   async listAppsComponents(poolIds?: ComponentID[]): Promise<Component[]> {
+    const host = this.workspace || this.componentAspect.getHost();
+    if (!host) return [];
     const components = poolIds
-      ? await this.componentAspect.getHost().getMany(poolIds)
-      : await this.componentAspect.getHost().list();
+      ? this.workspace
+        ? await this.workspace.getMany(poolIds, {
+            loadExtensions: true,
+            executeLoadSlot: true,
+            loadSeedersAsAspects: true,
+          })
+        : await host.getMany(poolIds)
+      : await host.list();
     const appTypesPatterns = this.getAppPatterns();
     const appsComponents = components.filter((component) => this.hasAppTypePattern(component, appTypesPatterns));
     return appsComponents;
@@ -362,6 +381,7 @@ export class ApplicationMain {
     errors?: Error[];
     isOldApi: boolean;
   }> {
+    await this.workspace.setComponentPathsRegExps();
     options = this.computeOptions(options);
     const app = this.getAppOrThrow(appName);
     const context = await this.createAppContext(app.name, options.port, options.args);
@@ -510,7 +530,7 @@ export class ApplicationMain {
       harmony
     );
     appService.registerAppType = application.registerAppType.bind(application);
-    const appCmd = new AppCmd();
+    const appCmd = new AppCmd(application);
     appCmd.commands = [new AppListCmd(application), new RunCmd(application, logger)];
     aspectLoader.registerPlugins([new AppPlugin(appSlot)]);
     builder.registerBuildTasks([new AppsBuildTask(application)]);

@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react';
-import { ComponentModel } from '@teambit/component';
+import type { ComponentModel } from '@teambit/component';
 
 export type EnvIconProps = { component: ComponentModel } & React.HTMLAttributes<HTMLImageElement>;
 

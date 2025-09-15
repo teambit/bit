@@ -1,33 +1,30 @@
-import ts, { Node, SourceFile, SyntaxKind } from 'typescript';
+import type { Node, SourceFile } from 'typescript';
+import ts, { SyntaxKind } from 'typescript';
 import { getTsconfig } from 'get-tsconfig';
-import { SchemaExtractor, SchemaExtractorOptions } from '@teambit/schema';
-import { TsserverClient } from '@teambit/ts-server';
+import type { SchemaExtractor, SchemaExtractorOptions } from '@teambit/schema';
+import type { TsserverClient } from '@teambit/ts-server';
 import type { Workspace } from '@teambit/workspace';
-import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
-import {
-  SchemaNode,
-  APISchema,
-  ModuleSchema,
-  UnImplementedSchema,
-  IgnoredSchema,
-} from '@teambit/semantics.entities.semantic-schema';
-import { Component } from '@teambit/component';
-import { AbstractVinyl } from '@teambit/component.sources';
-import { EnvContext } from '@teambit/envs';
-import { Formatter } from '@teambit/formatter';
-import { Logger } from '@teambit/logger';
-import { AspectLoaderAspect, AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
-import { ScopeMain } from '@teambit/scope';
+import type { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { SchemaNode, ModuleSchema } from '@teambit/semantics.entities.semantic-schema';
+import { APISchema, UnImplementedSchema, IgnoredSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { Component } from '@teambit/component';
+import type { AbstractVinyl } from '@teambit/component.sources';
+import type { EnvContext } from '@teambit/envs';
+import type { Formatter } from '@teambit/formatter';
+import type { Logger } from '@teambit/logger';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect, getCoreAspectPackageName } from '@teambit/aspect-loader';
+import type { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { compact, flatten } from 'lodash';
-import { TypescriptMain } from './typescript.main.runtime';
+import type { TypescriptMain } from './typescript.main.runtime';
 import { TransformerNotFound } from './exceptions';
 import { SchemaExtractorContext } from './schema-extractor-context';
-import { Identifier } from './identifier';
+import type { Identifier } from './identifier';
 import { IdentifierList } from './identifier-list';
-import { ExtractorOptions } from './extractor-options';
+import type { ExtractorOptions } from './extractor-options';
 import { TypescriptAspect } from './typescript.aspect';
-import { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
+import type { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
 
 export class TypeScriptExtractor implements SchemaExtractor {
   constructor(
@@ -100,11 +97,10 @@ export class TypeScriptExtractor implements SchemaExtractor {
 
   async computeInternalModules(context: SchemaExtractorContext, internalFiles: AbstractVinyl[]) {
     if (internalFiles.length === 0) return [];
-
     const internals = compact(
       await Promise.all(
         [...context.internalIdentifiers.entries()].map(async ([filePath]) => {
-          const file = internalFiles.find((internalFile) => internalFile.path === filePath);
+          const file = context.findFileInComponent(filePath);
           if (!file) return undefined;
           const fileAst = this.parseSourceFile(file);
           const moduleSchema = (await this.computeSchema(fileAst, context)) as ModuleSchema;
@@ -242,7 +238,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
       const rootPath = tsMain.workspace?.path || tsMain.scope.path || '';
 
       const schemaTransformersFromOptions = options.schemaTransformers || [];
-      const schemaTransformersFromAspect = flatten(Array.from(tsMain.schemaTransformerSlot.values()));
+      const schemaTransformersFromAspect = tsMain.getAllTransformers();
 
       const apiTransformersFromOptions = options.apiTransformers || [];
       const apiTransformersFromAspect = flatten(Array.from(tsMain.apiTransformerSlot.values()));

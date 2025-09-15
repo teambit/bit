@@ -1,17 +1,12 @@
-import { Component } from '@teambit/component';
+import type { Component } from '@teambit/component';
 import pMapSeries from 'p-map-series';
-import type { ArtifactObject } from '@teambit/component.sources';
-import { ComponentID } from '@teambit/component-id';
-import { Scope } from '@teambit/legacy.scope';
-import { ArtifactVinyl } from '@teambit/component.sources';
-import { FsArtifact } from './fs-artifact';
+import type { ArtifactObject, ArtifactVinyl } from '@teambit/component.sources';
+import type { ComponentID } from '@teambit/component-id';
+import type { Scope } from '@teambit/legacy.scope';
+import type { FsArtifact } from './fs-artifact';
 import { Artifact } from './artifact';
-import {
-  ArtifactStorageResolver,
-  FileStorageResolver,
-  WholeArtifactStorageResolver,
-  DefaultResolver,
-} from '../storage';
+import type { ArtifactStorageResolver, FileStorageResolver, WholeArtifactStorageResolver } from '../storage';
+import { DefaultResolver } from '../storage';
 
 export type ResolverMap<T extends Artifact> = { [key: string]: T[] };
 

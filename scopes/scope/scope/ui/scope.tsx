@@ -1,4 +1,5 @@
-import React, { useReducer, ComponentType, ReactNode } from 'react';
+import type { ComponentType, ReactNode } from 'react';
+import React, { useReducer } from 'react';
 import 'reset-css';
 import classNames from 'classnames';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
@@ -8,7 +9,8 @@ import { Corner } from '@teambit/ui-foundation.ui.corner';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { TopBar } from '@teambit/ui-foundation.ui.top-bar';
-import { Composer, ComponentTuple } from '@teambit/base-ui.utils.composer';
+import type { ComponentTuple } from '@teambit/base-ui.utils.composer';
+import { Composer } from '@teambit/base-ui.utils.composer';
 import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import { Route } from 'react-router-dom';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
@@ -17,7 +19,7 @@ import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
 import type { ScopeModel } from '@teambit/scope.models.scope-model';
 import { ScopeOverview } from './scope-overview';
 import styles from './scope.module.scss';
-import { ScopeUI, ScopeBadgeSlot, ScopeContextType, CornerSlot, OverviewLineSlot } from '../scope.ui.runtime';
+import type { ScopeUI, ScopeBadgeSlot, ScopeContextType, CornerSlot, OverviewLineSlot } from '../scope.ui.runtime';
 
 export type ScopeProps = {
   routeSlot: RouteSlot;
@@ -80,6 +82,7 @@ export function Scope({
               if (CornerOverride) return <CornerOverride />;
               return <Corner name={scope.name} className={styles.whiteCorner} />;
             }}
+            // @ts-ignore - getting an error of "Types have separate declarations of a private property 'registerFn'." for some reason after upgrading teambit.harmony/harmony from 0.4.6 to 0.4.7
             menu={menuSlot}
           />
 

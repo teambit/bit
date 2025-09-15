@@ -1,24 +1,25 @@
 import isBuiltinModule from 'is-builtin-module';
 import path from 'path';
 import { uniq, compact, flatten, head, omit } from 'lodash';
-import { Stats } from 'fs';
+import type { Stats } from 'fs';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
 import { findCurrentBvmDir } from '@teambit/bvm.path';
-import { ComponentMap, Component, ComponentID, ComponentMain } from '@teambit/component';
-import { Logger } from '@teambit/logger';
-import { PathAbsolute } from '@teambit/toolbox.path.path';
+import type { ComponentMap, Component, ComponentID, ComponentMain } from '@teambit/component';
+import type { Logger } from '@teambit/logger';
+import type { PathAbsolute } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { BitError } from '@teambit/bit-error';
-import { EnvsMain } from '@teambit/envs';
-import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
+import type { EnvsMain } from '@teambit/envs';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 import {
   MainAspectNotLinkable,
   RootDirNotDefined,
   CoreAspectLinkError,
   NonAspectCorePackageLinkError,
 } from './exceptions';
-import { DependencyResolverMain } from './dependency-resolver.main.runtime';
+import type { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
 /**
  * context of the linking process.
@@ -62,6 +63,11 @@ export type LinkingOptions = {
    * Link deps which should be linked to the env
    */
   linkDepsResolvedFromEnv?: boolean;
+
+  /**
+   * non-core packages to link. provided by addPackagesToLink slot of the deps-resolver aspect
+   */
+  additionalPackagesToLink?: string[];
 };
 
 const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
@@ -102,6 +108,10 @@ export type LinkResults = {
   resolvedFromEnvLinks?: DepsLinkedToEnvResult[];
   nestedDepsInNmLinks?: NestedNMDepsLinksResult[];
   linkToDirResults?: LinkToDirResult[];
+  /**
+   * non-core packages to link. provided by addPackagesToLink slot of the deps-resolver aspect
+   */
+  slotOriginatedLinks?: LinkDetail[];
 };
 
 type NestedModuleFolderEntry = {
@@ -153,6 +163,9 @@ export class DependencyLinker {
     }
     if (linkResults.teambitLegacyLink) {
       localLinks.push(this.linkDetailToLocalDepEntry(linkResults.teambitLegacyLink));
+    }
+    if (linkResults.slotOriginatedLinks) {
+      localLinks.push(...linkResults.slotOriginatedLinks.map((l) => this.linkDetailToLocalDepEntry(l)));
     }
     if (linkResults.resolvedFromEnvLinks) {
       linkResults.resolvedFromEnvLinks.forEach((link) => {
@@ -229,6 +242,9 @@ export class DependencyLinker {
       ...result,
       ...(await this.linkCoreAspectsAndLegacy(finalRootDir, componentIds, linkingOpts)),
     };
+    const registeredPackages = this.linkingOptions?.additionalPackagesToLink || [];
+    result.slotOriginatedLinks = registeredPackages.map((pkgName) => this.linkNonCorePackages(finalRootDir, pkgName));
+
     if (!this.linkingContext?.inCapsule) {
       this.logger.consoleSuccess(outputMessage, startTime);
     }
@@ -307,6 +323,8 @@ export class DependencyLinker {
     }
 
     if (mainAspectPath) {
+      // the following line links @teambit/legacy to the workspace node_modules. at this point, we removed all
+      // @teambit/legacy occurrences from the repo but others/external repos still have it.
       result.teambitLegacyLink = this.linkNonAspectCorePackages(rootDir, 'legacy', mainAspectPath);
       result.harmonyLink = this.linkNonAspectCorePackages(rootDir, 'harmony', mainAspectPath);
     }
@@ -638,6 +656,16 @@ export class DependencyLinker {
   private _getPkgPathFromCurrentBitDir(packageName: string): string | undefined {
     if (!this._currentBitDir) return undefined;
     return path.join(this._currentBitDir, 'node_modules', packageName);
+  }
+
+  private linkNonCorePackages(rootDir: string, packageName: string): LinkDetail {
+    const target = path.join(rootDir, 'node_modules', packageName);
+    const fromDirBvm = this._getPkgPathFromCurrentBitDir(packageName);
+    if (fromDirBvm) {
+      return { packageName, from: fromDirBvm, to: target };
+    }
+    const fromDirBitRepo = getDistDirForDevEnv(packageName);
+    return { packageName, from: fromDirBitRepo, to: target };
   }
 
   private linkNonAspectCorePackages(rootDir: string, name: string, mainAspectPath: string): LinkDetail | undefined {

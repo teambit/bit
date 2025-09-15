@@ -1,6 +1,7 @@
 import { ComponentID } from '@teambit/component';
 import chalk from 'chalk';
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 
 export type PlainTypeRefSchema = {
@@ -45,6 +46,10 @@ export class TypeRefSchema extends SchemaNode {
   ) {
     super();
     this.componentId = componentId;
+  }
+
+  getNodes(): SchemaNode[] {
+    return this.typeArgs || [];
   }
 
   withTypeArgs(typeArgs: SchemaNode[]) {

@@ -1,30 +1,41 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import { Analytics } from '@teambit/legacy.analytics';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import pMapSeries from 'p-map-series';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { ComponentWriterMain } from '@teambit/component-writer';
+import { ComponentWriterAspect } from '@teambit/component-writer';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { ScopeComponentsImporter } from '@teambit/legacy.scope';
 import { importAllArtifactsFromLane } from '@teambit/component.sources';
-import { InstallAspect, InstallMain } from '@teambit/install';
-import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import { Lane } from '@teambit/scope.objects';
+import type { InstallMain } from '@teambit/install';
+import { InstallAspect } from '@teambit/install';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { Lane } from '@teambit/objects';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
-import { GraphAspect, GraphMain } from '@teambit/graph';
+import type { GraphMain } from '@teambit/graph';
+import { GraphAspect } from '@teambit/graph';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { BitError } from '@teambit/bit-error';
 import { ImportCmd } from './import.cmd';
 import { ImporterAspect } from './importer.aspect';
 import { FetchCmd } from './fetch-cmd';
-import ImportComponents, { ImportOptions, ImportResult } from './import-components';
-import { ListerAspect, ListerMain } from '@teambit/lister';
+import type { ImportOptions, ImportResult } from './import-components';
+import ImportComponents from './import-components';
+import type { ListerMain } from '@teambit/lister';
+import { ListerAspect } from '@teambit/lister';
 
 export class ImporterMain {
   constructor(
@@ -151,7 +162,10 @@ export class ImporterMain {
       );
     }
     this.logger.setStatusLine('fetching objects...');
-    if (!this.workspace) throw new OutsideWorkspaceError();
+    if (!this.workspace) {
+      const importedIds = await this.fetchUsingScope(ids, lanes, components, fromOriginalScope, allHistory);
+      return { importedIds };
+    }
     const consumer = this.workspace.consumer;
 
     if (lanes) {
@@ -211,6 +225,89 @@ export class ImporterMain {
 
       return [];
     }
+  }
+
+  /**
+   * fetch objects similar to the fetch method but without workspace dependency.
+   * can be used outside of workspace context.
+   */
+  async fetchUsingScope(
+    ids: string[],
+    lanes: boolean,
+    components: boolean,
+    fromOriginalScope: boolean,
+    allHistory = false
+  ): Promise<ComponentID[]> {
+    this.logger.setStatusLine('fetching objects...');
+    if (!ids.length) {
+      throw new BitError('please specify the IDs of the objects you want to fetch');
+    }
+    if (lanes) {
+      const remoteLaneIds = ids.map((id) => LaneId.parse(id));
+      const scopeComponentImporter = this.scope.legacyScope.scopeImporter;
+      const lanesToFetch = await scopeComponentImporter.importLanes(remoteLaneIds);
+      return this.fetchLanesUsingScope(lanesToFetch);
+    }
+    if (components) {
+      return this.fetchComponentsUsingScope(ids, fromOriginalScope, allHistory);
+    }
+    throw new BitError(
+      `please provide the type of objects you would like to pull, the options are --components and --lanes`
+    );
+  }
+
+  private async fetchLanesUsingScope(lanes: Lane[]): Promise<ComponentID[]> {
+    const resultsPerLane = await pMapSeries(lanes, async (lane) => {
+      this.logger.setStatusLine(`fetching lane ${lane.name}`);
+      const importResults = await this.scope.legacyScope.scopeImporter.importMany({
+        ids: lane.toComponentIds(),
+        lane,
+        reason: `for fetching lane ${lane.id()}`,
+      });
+      const { mergeLane } = await this.scope.legacyScope.sources.mergeLane(lane, true);
+      const isRemoteLaneEqualsToMergedLane = lane.isEqual(mergeLane);
+      await this.scope.legacyScope.lanes.saveLane(mergeLane, {
+        saveLaneHistory: !isRemoteLaneEqualsToMergedLane,
+        laneHistoryMsg: 'fetch (merge from remote)',
+      });
+      const results = importResults.map((result) => result.component.id);
+      this.logger.consoleSuccess();
+      return results;
+    });
+
+    return resultsPerLane.flat();
+  }
+
+  private async fetchComponentsUsingScope(
+    ids: string[],
+    fromOriginalScope: boolean,
+    allHistory: boolean
+  ): Promise<ComponentID[]> {
+    const componentIds = await this.scope.resolveMultipleComponentIds(ids);
+    const componentIdsList = ComponentIdList.fromArray(componentIds);
+    const scopeImporter = this.scope.legacyScope.scopeImporter;
+
+    await scopeImporter.importWithoutDeps(componentIdsList.toVersionLatest(), {
+      cache: false,
+      includeVersionHistory: true,
+      fetchHeadIfLocalIsBehind: !allHistory,
+      collectParents: allHistory,
+      ignoreMissingHead: true,
+      reason: `for fetching components`,
+    });
+
+    const results = fromOriginalScope
+      ? await scopeImporter.importManyFromOriginalScopes(componentIdsList)
+      : await scopeImporter.importMany({
+          ids: componentIdsList,
+          ignoreMissingHead: true,
+          preferDependencyGraph: true,
+          reFetchUnBuiltVersion: true,
+          throwForSeederNotFound: false,
+          reason: 'for fetching components dependencies',
+        });
+
+    return results.map((c) => c.component.id);
   }
 
   private createImportComponents(importOptions: ImportOptions) {

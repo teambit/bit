@@ -1,10 +1,4 @@
-/* eslint-disable import/first */
-process.on('uncaughtException', (err) => {
-  // eslint-disable-next-line no-console
-  console.error('uncaughtException', err);
-  process.exit(1);
-});
-
+import { runBit } from './run-bit';
 import fs from 'fs';
 import gracefulFs from 'graceful-fs';
 // monkey patch fs module to avoid EMFILE error (especially when running watch operation)

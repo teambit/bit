@@ -1,28 +1,39 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ConsumerNotFound } from '@teambit/legacy.consumer';
-import { ImporterAspect, ImporterMain } from '@teambit/importer';
+import type { ImporterMain } from '@teambit/importer';
+import { ImporterAspect } from '@teambit/importer';
 import { compact } from 'lodash';
 import { hasWildcard } from '@teambit/legacy.utils';
 import { BitError } from '@teambit/bit-error';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { IssuesClasses } from '@teambit/component-issues';
-import { IssuesAspect, IssuesMain } from '@teambit/issues';
+import type { IssuesMain } from '@teambit/issues';
+import { IssuesAspect } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
 import { NoHeadNoVersion } from '@teambit/legacy.scope';
-import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import { deleteComponentsFiles } from './delete-component-files';
 import { RemoveCmd } from './remove-cmd';
-import { RemoveComponentsResult, removeComponents, removeComponentsFromNodeModules } from './remove-components';
+import type { RemoveComponentsResult } from './remove-components';
+import { removeComponents, removeComponentsFromNodeModules } from './remove-components';
 import { RemoveAspect } from './remove.aspect';
 import { RemoveFragment } from './remove.fragment';
-import { RecoverCmd, RecoverOptions } from './recover-cmd';
+import type { RecoverOptions } from './recover-cmd';
+import { RecoverCmd } from './recover-cmd';
 import { DeleteCmd } from './delete-cmd';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { ListerAspect, ListerMain } from '@teambit/lister';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { ListerMain } from '@teambit/lister';
+import { ListerAspect } from '@teambit/lister';
 import chalk from 'chalk';
 
 const BEFORE_REMOVE = 'removing components';
@@ -37,9 +48,13 @@ export type RemoveInfo = {
    * Semver range to mark specific versions as deleted
    */
   range?: string;
+  /**
+   * Array of snap hashes to mark as deleted
+   */
+  snaps?: string[];
 };
 
-export type DeleteOpts = { updateMain?: boolean; range?: string };
+export type DeleteOpts = { updateMain?: boolean; range?: string; snaps?: string[] };
 
 export class RemoveMain {
   constructor(
@@ -103,10 +118,13 @@ export class RemoveMain {
     return results;
   }
 
-  private async markRemoveComps(componentIds: ComponentID[], { updateMain, range }: DeleteOpts): Promise<Component[]> {
+  private async markRemoveComps(
+    componentIds: ComponentID[],
+    { updateMain, range, snaps }: DeleteOpts
+  ): Promise<Component[]> {
     const allComponentsToMarkDeleted = await this.workspace.getMany(componentIds);
 
-    const componentsToDeleteFromFs = range ? [] : allComponentsToMarkDeleted;
+    const componentsToDeleteFromFs = range || snaps ? [] : allComponentsToMarkDeleted;
     const componentsIdsToDeleteFromFs = ComponentIdList.fromArray(componentsToDeleteFromFs.map((c) => c.id));
     await removeComponentsFromNodeModules(
       this.workspace.consumer,
@@ -118,9 +136,10 @@ export class RemoveMain {
     // the reason is that if we set it to true, then, the component is considered as "deleted" for *all* versions.
     // remember that this config is always passed to the next version and if we set removed: true, it'll be copied
     // to the next version even when that version is not in the range.
-    const config: RemoveInfo = { removed: !range };
+    const config: RemoveInfo = { removed: !(range || snaps) };
     if (updateMain) config.removeOnMain = true;
     if (range) config.range = range;
+    if (snaps && snaps.length) config.snaps = snaps;
     componentIds.forEach((compId) => this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, config));
     await this.workspace.bitMap.write('delete');
     await deleteComponentsFiles(this.workspace.consumer, componentsIdsToDeleteFromFs);
@@ -213,7 +232,7 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
       const compId = bitMapEntry.id;
       const comp = await this.workspace.get(compId);
       const removeInfo = await this.getRemoveInfo(comp);
-      if (!removeInfo.removed && !removeInfo.range) {
+      if (!removeInfo.removed && !removeInfo.range && !removeInfo.snaps) {
         return false;
       }
       await setAsRemovedFalse(compId);
@@ -271,10 +290,15 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
       const currentTag = component.getTag();
       return Boolean(currentTag && semver.satisfies(currentTag.version, data.range));
     };
+    const isDeletedBySnaps = () => {
+      if (!data?.snaps || !component.id.version) return false;
+      return data.snaps.includes(component.id.version);
+    };
 
     return {
-      removed: data?.removed || isDeletedByRange() || false,
+      removed: data?.removed || isDeletedByRange() || isDeletedBySnaps() || false,
       range: data?.range,
+      snaps: data?.snaps,
     };
   }
 
@@ -340,19 +364,37 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
   }
 
   async addRemovedDependenciesIssues(components: Component[]) {
+    const workspacePolicyManifest = this.depResolver.getWorkspacePolicyManifest();
+    const workspaceDependencies = {
+      ...workspacePolicyManifest.dependencies,
+      ...workspacePolicyManifest.peerDependencies,
+    };
+    const installedDeps = Object.keys(workspaceDependencies);
     await pMapSeries(components, async (component) => {
-      await this.addRemovedDepIssue(component);
+      await this.addRemovedDepIssue(component, installedDeps);
     });
   }
 
-  private async addRemovedDepIssue(component: Component) {
+  private async addRemovedDepIssue(component: Component, installedDeps: string[]) {
     const dependencies = this.depResolver.getComponentDependencies(component);
     const removedDependencies: ComponentID[] = [];
     let removedEnv: ComponentID | undefined;
+
     await Promise.all(
       dependencies.map(async (dep) => {
         const isRemoved = await this.isRemovedByIdWithoutLoadingComponent(dep.componentId);
         if (!isRemoved) return;
+
+        // a component can be deleted from the workspace and installed as a package in different version.
+        // normally, this is happening when checked out to a lane and a component is deleted from the lane.
+        // the user still wants to use it but not as part of the lane.
+        const packageName = dep.getPackageName();
+        const isAvailableAsInstalledPackage = installedDeps.includes(packageName);
+        const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(dep.componentId);
+        if (bitmapEntry && isAvailableAsInstalledPackage && bitmapEntry.version !== dep.version) {
+          return;
+        }
+
         const isEnv = await this.isEnvByIdWithoutLoadingComponent(dep.componentId);
         if (isEnv) {
           removedEnv = dep.componentId;

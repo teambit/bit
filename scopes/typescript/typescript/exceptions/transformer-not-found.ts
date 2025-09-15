@@ -1,6 +1,7 @@
-import ts, { Node } from 'typescript';
-import { Component } from '@teambit/component';
-import { Location } from '@teambit/semantics.entities.semantic-schema';
+import type { Node } from 'typescript';
+import ts from 'typescript';
+import type { Component } from '@teambit/component';
+import type { Location } from '@teambit/semantics.entities.semantic-schema';
 
 export class TransformerNotFound extends Error {
   constructor(

@@ -1,19 +1,19 @@
 import fs from 'fs-extra';
 import groupArray from 'group-array';
 import partition from 'lodash.partition';
-import { Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
 import { ComponentIdList } from '@teambit/component-id';
 import { compact, isEmpty } from 'lodash';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, LATEST_BIT_VERSION } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import { logger } from '@teambit/legacy.logger';
 import { Http } from '@teambit/scope.network';
-import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
+import { Remotes } from '@teambit/scope.remotes';
 import { deleteComponentsFiles } from './delete-component-files';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import { RemovedObjects } from '@teambit/legacy.scope';
+import type { RemovedObjects } from '@teambit/legacy.scope';
 import pMapSeries from 'p-map-series';
-import { Consumer } from '@teambit/legacy.consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { getNodeModulesPathOfComponent } from '@teambit/pkg.modules.component-package-name';
 import { RemovedLocalObjects } from './removed-local-objects';
@@ -77,7 +77,7 @@ async function removeRemote(
   force: boolean
 ): Promise<RemovedObjects[]> {
   const groupedBitsByScope = groupArray(bitIds, 'scope');
-  const remotes = workspace ? await getScopeRemotes(workspace.scope.legacyScope) : await Remotes.getGlobalRemotes();
+  const remotes = workspace ? await workspace.scope.getRemoteScopes() : await Remotes.getGlobalRemotes();
   const shouldGoToCentralHub = remotes.shouldGoToCentralHub(Object.keys(groupedBitsByScope));
   if (shouldGoToCentralHub) {
     const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
@@ -88,7 +88,7 @@ async function removeRemote(
   }
   const context = {};
   const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
-    const resolvedRemote = await remotes.resolve(key, workspace?.scope.legacyScope);
+    const resolvedRemote = await remotes.resolve(key);
     const idsStr = groupedBitsByScope[key].map((id) => id.toStringWithoutVersion());
     return resolvedRemote.deleteMany(idsStr, force, context);
   });
@@ -147,7 +147,7 @@ If you understand the risks and wish to proceed with the removal, please use the
     }
   }
   const idsToRemove = force ? bitIds : nonModifiedComponents;
-  const componentsList = new ComponentsList(consumer);
+  const componentsList = new ComponentsList(workspace);
   const newComponents = (await componentsList.listNewComponents(false)) as ComponentIdList;
   const idsToRemoveFromScope = ComponentIdList.fromArray(
     idsToRemove.filter((id) => !newComponents.hasWithoutVersion(id))
@@ -171,6 +171,7 @@ If you understand the risks and wish to proceed with the removal, please use the
       await removeComponentsFromNodeModules(consumer, removedComponents);
       await consumer.cleanFromBitMap(idsToCleanFromWorkspace);
       await workspace.cleanFromConfig(idsToCleanFromWorkspace);
+      await workspace.removeFromStagedConfig(idsToCleanFromWorkspace);
     }
   }
   return new RemovedLocalObjects(

@@ -1,5 +1,5 @@
 import Table from 'cli-table';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { catScope } from './cat-scope';
 
 type Flags = { full?: boolean; json?: boolean; jsonExtra?: boolean };
@@ -10,6 +10,7 @@ export class CatScopeCmd implements Command {
   private = true;
   loader = false;
   alias = '';
+  group = 'advanced';
   options = [
     ['f', 'full', 'show all of the objects in the scope (except "Source")'],
     ['j', 'json', 'print the objects as a json format'],

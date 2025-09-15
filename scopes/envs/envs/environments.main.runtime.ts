@@ -1,26 +1,33 @@
-import { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
+import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import pLocate from 'p-locate';
 import { parse } from 'comment-json';
-import { SourceFile } from '@teambit/component.sources';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
+import type { SourceFile } from '@teambit/component.sources';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { IssuesAspect, IssuesMain } from '@teambit/issues';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { IssuesMain } from '@teambit/issues';
+import { IssuesAspect } from '@teambit/issues';
 import type { EnvJsoncPatterns } from '@teambit/dev-files';
 import pMapSeries from 'p-map-series';
 import { IssuesClasses } from '@teambit/component-issues';
-import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { Harmony, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import type { AspectDefinition } from '@teambit/aspect-loader';
-import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy.extension-data';
+import type { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { head, uniq } from 'lodash';
-import { WorkerAspect, WorkerMain } from '@teambit/worker';
+import type { WorkerMain } from '@teambit/worker';
+import { WorkerAspect } from '@teambit/worker';
 import { ComponentID } from '@teambit/component-id';
-import { EnvService } from './services';
-import { Environment } from './environment';
+import type { EnvService } from './services';
+import type { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
 import { environmentsSchema } from './environments.graphql';
 import { EnvRuntime, Runtime } from './runtime';
@@ -340,7 +347,7 @@ export class EnvsMain {
 
     if (!envJson) return undefined;
 
-    const object: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true);
+    const object: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
     if (!object.extends) return object;
     const resolvedObject = await this.recursivelyMergeWithParentManifest(object, envExtendsDeps);
 
@@ -368,7 +375,7 @@ export class EnvsMain {
       merged = { ...merged, ...oneMerged };
     }
     // This is important to make sure we won't keep the extends from the child
-    delete child.extends;
+    delete merged.extends;
     // Take extends specifically from the parent so we can propagate it to the next parent
     if (parent.extends) {
       merged.extends = parent.extends;
@@ -541,8 +548,8 @@ export class EnvsMain {
     const envDef = this.getEnvFromComponent(envComponent);
     if (!envDef) return undefined;
 
-    const rawServices = this.getServices(envDef);
-    const services = rawServices.toObject();
+    const rawServices = await this.getServices(envDef);
+    const services = await rawServices.toObject();
     // const selfDescriptor = (await this.getEnvDescriptorFromEnvDef(envDef)) || {};
     const selfDescriptor = await this.getEnvDescriptorFromEnvDef(envDef);
 
@@ -827,6 +834,20 @@ export class EnvsMain {
     return finalId;
   }
 
+  validateEnvId(ext: ExtensionDataEntry) {
+    if (!ext.config?.env || !ext.data?.id || ext.config.env === ext.data.id) return;
+    let errorMsg: string;
+    if (ext.data.id === DEFAULT_ENV) {
+      errorMsg = `the env id "${ext.data.id}" is set to the default env (${DEFAULT_ENV}) in the aspect data, but it is set to "${ext.config.env}" in the aspect config.
+this may indicate that the env was not loaded properly. try running "bit install" to ensure the env is correctly loaded.
+to explicitly set the default env, use "bit env set" command.`;
+    } else {
+      errorMsg = `env id "${ext.data.id}" is different from the id in the envs aspect config "${ext.config.env}".
+if needed, use "bit env set" command to align the env id`;
+    }
+    return { errorMsg, minBitVersion: '1.9.82' };
+  }
+
   /**
    * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .calculateEnv() instead!)
    */
@@ -1029,27 +1050,31 @@ export class EnvsMain {
   /**
    * get list of services enabled on an env.
    */
-  getServices(env: EnvDefinition): EnvServiceList {
+  async getServices(env: EnvDefinition): Promise<EnvServiceList> {
     const allServices = this.servicesRegistry.toArray();
     const services: [string, EnvService<any>][] = [];
-    allServices.forEach(([id, currentServices]) => {
-      currentServices.forEach((service) => {
-        try {
-          if (this.implements(env, service)) {
-            services.push([id, service]);
-          }
-        } catch {
-          this.logger.warn(`failed loading service ${id} for env ${env.id}`);
-        }
-      });
-    });
+    await Promise.all(
+      allServices.map(async ([id, currentServices]) => {
+        await Promise.all(
+          currentServices.map(async (service) => {
+            try {
+              if (await this.implements(env, service)) {
+                services.push([id, service]);
+              }
+            } catch {
+              this.logger.warn(`failed loading service ${id} for env ${env.id}`);
+            }
+          })
+        );
+      })
+    );
     return new EnvServiceList(env, services);
   }
 
-  implements(env: EnvDefinition, service: EnvService<any>) {
+  async implements(env: EnvDefinition, service: EnvService<any>) {
     // TODO: remove this after refactoring everything and remove getDescriptor from being optional.
     if (!service.getDescriptor) return false;
-    return !!service.getDescriptor(env);
+    return !!(await service.getDescriptor(env));
   }
 
   /**
@@ -1199,7 +1224,7 @@ export class EnvsMain {
     const envsCmd = new EnvsCmd(envs, component);
     envsCmd.commands = [new ListEnvsCmd(envs, component), new GetEnvCmd(envs, component)];
     cli.register(envsCmd);
-    graphql.register(environmentsSchema(envs));
+    graphql.register(() => environmentsSchema(envs));
     return envs;
   }
 }

@@ -1,7 +1,7 @@
 import { logger } from '@teambit/legacy.logger';
 import { MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import { ModelComponent } from '@teambit/scope.objects';
+import type { ModelComponent, Repository } from '@teambit/objects';
 
 /**
  * the base component to save is the existingComponent because it might contain local data that
@@ -15,7 +15,8 @@ export class ModelComponentMerger {
     private incomingComponent: ModelComponent,
     private isImport: boolean,
     private isIncomingFromOrigin: boolean, // import: incoming from original scope. export: component belong to current scope
-    private existingHeadIsMissingInIncomingComponent?: boolean // needed for export only
+    private existingHeadIsMissingInIncomingComponent?: boolean, // needed for export only
+    private repo?: Repository
   ) {
     this.isExport = !this.isImport;
   }
@@ -26,17 +27,27 @@ export class ModelComponentMerger {
    */
   async merge(): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
     logger.debug(`model-component-merger.merge component ${this.incomingComponent.id()}`);
-    this.throwComponentNeedsUpdateIfNeeded();
+    await this.throwComponentNeedsUpdateIfNeeded();
     const locallyChanged = this.existingComponent.isLocallyChangedRegardlessOfLanes();
-    this.throwMergeConflictIfNeeded(locallyChanged);
+    await this.throwMergeConflictIfNeeded(locallyChanged);
     this.replaceTagHashIfDifferentOnIncoming();
     this.moveTagToOrphanedIfNotExistOnOrigin();
     this.addNonExistTagFromIncoming();
     this.addOrphanedVersionFromIncoming();
     this.setHead(locallyChanged);
     this.deleteOrphanedVersionsOnExport();
+    this.mergeDetachedHeads();
 
     return { mergedComponent: this.existingComponent, mergedVersions: this.mergedVersions };
+  }
+
+  private async isDeletedInOrigin() {
+    const result = this.repo && this.isExport ? await this.existingComponent.isRemoved(this.repo) : false;
+    return Boolean(result);
+  }
+
+  private mergeDetachedHeads() {
+    this.existingComponent.detachedHeads.merge(this.incomingComponent.detachedHeads, this.isImport);
   }
 
   private deleteOrphanedVersionsOnExport() {
@@ -54,7 +65,7 @@ export class ModelComponentMerger {
     }
   }
 
-  private throwMergeConflictIfNeeded(locallyChanged: boolean) {
+  private async throwMergeConflictIfNeeded(locallyChanged: boolean) {
     if (!this.isIncomingFromOrigin) {
       return; // if it's not from origin, the tag is not going to save in "versions" anyway.
     }
@@ -63,19 +74,26 @@ export class ModelComponentMerger {
       return;
     }
     if (!this.incomingComponent.compatibleWith(this.existingComponent, this.isImport)) {
+      const isDeleted = this.existingHeadIsMissingInIncomingComponent && (await this.isDeletedInOrigin());
       const conflictVersions = this.incomingComponent.diffWith(this.existingComponent, this.isImport);
-      throw new MergeConflict(this.incomingComponent.id(), conflictVersions);
+      throw new MergeConflict(this.incomingComponent.id(), conflictVersions, isDeleted);
     }
   }
 
-  private throwComponentNeedsUpdateIfNeeded() {
+  private async throwComponentNeedsUpdateIfNeeded() {
     if (
       this.isExport &&
       this.existingHeadIsMissingInIncomingComponent &&
       this.incomingComponent.compatibleWith(this.existingComponent, this.isImport) // otherwise, it should throw MergeConflict below
     ) {
+      const isDeleted = await this.isDeletedInOrigin();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      throw new ComponentNeedsUpdate(this.incomingComponent.id(), this.existingComponent.head!.toString());
+      throw new ComponentNeedsUpdate(
+        this.incomingComponent.id(),
+        this.existingComponent.head!.toString(),
+        undefined,
+        isDeleted
+      );
     }
   }
 

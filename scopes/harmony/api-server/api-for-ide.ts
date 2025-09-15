@@ -1,29 +1,43 @@
 import path from 'path';
 import fs from 'fs-extra';
 import filenamify from 'filenamify';
-import { CompFiles, Workspace, FilesStatus } from '@teambit/workspace';
-import { PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy.utils';
+import type { CompFiles, Workspace, FilesStatus } from '@teambit/workspace';
+import type { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy.utils';
+import { pathJoinLinux } from '@teambit/legacy.utils';
 import pMap from 'p-map';
-import { SnappingMain } from '@teambit/snapping';
-import { LanesMain } from '@teambit/lanes';
-import { InstallMain } from '@teambit/install';
-import { ExportMain } from '@teambit/export';
-import { CheckoutMain } from '@teambit/checkout';
-import { ApplyVersionResults } from '@teambit/merging';
-import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
-import { LaneLog } from '@teambit/scope.objects';
-import { ComponentCompareMain } from '@teambit/component-compare';
-import { GeneratorMain } from '@teambit/generator';
+import type { SnappingMain } from '@teambit/snapping';
+import type { LanesMain } from '@teambit/lanes';
+import type { InstallMain } from '@teambit/install';
+import type { ExportMain } from '@teambit/export';
+import type { CheckoutMain } from '@teambit/checkout';
+import type { ApplyVersionResults } from '@teambit/component.modules.merge-helper';
+import type { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
+import type { LaneLog } from '@teambit/objects';
+import type { ComponentCompareMain } from '@teambit/component-compare';
+import type {
+  GenerateResult,
+  GeneratorMain,
+  PromptOption,
+  PromptResults,
+  TemplateDescriptor,
+} from '@teambit/generator';
 import { getParsedHistoryMetadata } from '@teambit/legacy.consumer';
-import { RemovedObjects } from '@teambit/legacy.scope';
-import { RemoveMain } from '@teambit/remove';
+import type { RemovedObjects } from '@teambit/legacy.scope';
+import type { RemoveMain } from '@teambit/remove';
 import { compact, uniq } from 'lodash';
-import { ConfigMain } from '@teambit/config';
+import type { ConfigMain } from '@teambit/config';
 import { LANE_REMOTE_DELIMITER, LaneId } from '@teambit/lane-id';
-import { ApplicationMain } from '@teambit/application';
-import { DeprecationMain } from '@teambit/deprecation';
-import { EnvsMain } from '@teambit/envs';
+import type { ApplicationMain } from '@teambit/application';
+import type { DeprecationMain } from '@teambit/deprecation';
+import type { EnvsMain } from '@teambit/envs';
 import fetch from 'node-fetch';
+import type { GraphMain } from '@teambit/graph';
+import type { ScopeMain } from '@teambit/scope';
+import { ComponentNotFound } from '@teambit/scope';
+import type { ComponentMain } from '@teambit/component';
+import type { SchemaMain } from '@teambit/schema';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
+import type { Logger } from '@teambit/logger';
 
 const FILES_HISTORY_DIR = 'files-history';
 const ENV_ICONS_DIR = 'env-icons';
@@ -92,7 +106,12 @@ export class APIForIDE {
     private config: ConfigMain,
     private application: ApplicationMain,
     private deprecation: DeprecationMain,
-    private envs: EnvsMain
+    private envs: EnvsMain,
+    private graph: GraphMain,
+    private scope: ScopeMain,
+    private component: ComponentMain,
+    private schema: SchemaMain,
+    private logger: Logger
   ) {}
 
   async logStartCmdHistory(op: string) {
@@ -284,6 +303,24 @@ export class APIForIDE {
     return { dirAbs, filesRelative };
   }
 
+  async getGraphIdsAsSVG(id?: string, opts: { includeLocalOnly?: boolean } = {}): Promise<string> {
+    const compId = id ? await this.workspace.resolveComponentId(id) : undefined;
+    const visualGraph = await this.graph.getVisualGraphIds(compId ? [compId] : undefined, opts);
+    const svg = await visualGraph.getAsSVGString();
+    if (!svg) throw new Error('failed to render the graph');
+    return svg;
+  }
+
+  async getWorkspaceDependencies(): Promise<{ [pkgName: string]: string }> {
+    const allDeps = await this.workspace.getAllDedupedDirectDependencies();
+    const allDepsObj = {};
+    for (const dep of allDeps) {
+      allDepsObj[dep.name] = dep.currentRange;
+    }
+
+    return allDepsObj;
+  }
+
   async getCompFilesDirPathFromLastSnap(id: string): Promise<{ [relativePath: string]: string }> {
     const compId = await this.workspace.resolveComponentId(id);
     if (!compId.hasVersion()) return {}; // it's a new component.
@@ -376,7 +413,7 @@ export class APIForIDE {
     this.workspace.clearAllComponentsCache();
   }
 
-  async install(options = {}) {
+  async install(options = {}, packages?: string[]) {
     const opts = {
       optimizeReportForNonTerminal: true,
       dedupe: true,
@@ -385,7 +422,7 @@ export class APIForIDE {
       ...options,
     };
 
-    return this.installer.install(undefined, opts);
+    return this.installer.install(packages, opts);
   }
 
   async export() {
@@ -408,12 +445,25 @@ export class APIForIDE {
     return this.adjustCheckoutResultsToIde(results);
   }
 
-  async getTemplates() {
+  async importObjectsIfOutdatedAgainstBitmap(): Promise<void> {
+    return this.workspace.importObjectsIfOutdatedAgainstBitmap();
+  }
+
+  async getTemplates(): Promise<TemplateDescriptor[]> {
     const templates = await this.generator.listTemplates();
     return templates;
   }
 
-  async createComponent(templateName: string, idIncludeScope: string) {
+  async getPromptOptionsForTemplate(templateName: string): Promise<PromptOption[] | undefined> {
+    const template = await this.generator.getTemplateWithId(templateName);
+    return template.template.promptOptions?.();
+  }
+
+  async createComponent(
+    templateName: string,
+    idIncludeScope: string,
+    promptResults?: PromptResults
+  ): Promise<GenerateResult[]> {
     if (!idIncludeScope.includes('/')) {
       throw new Error('id should include the scope name');
     }
@@ -422,7 +472,8 @@ export class APIForIDE {
       [nameSplit.join('/')],
       templateName,
       { scope },
-      { optimizeReportForNonTerminal: true }
+      { optimizeReportForNonTerminal: true },
+      promptResults
     );
   }
 
@@ -534,8 +585,11 @@ export class APIForIDE {
     return results;
   }
 
-  getCurrentLaneName(): string {
-    return this.workspace.getCurrentLaneId().name;
+  getCurrentLaneName(includeScope = false): string {
+    const currentLaneId = this.workspace.getCurrentLaneId();
+    if (!includeScope) return currentLaneId.name;
+    if (currentLaneId.isDefault()) return currentLaneId.name;
+    return currentLaneId.toString();
   }
 
   async tagOrSnap(message = '') {
@@ -553,6 +607,121 @@ export class APIForIDE {
     const params = { message, build: false };
     const results = await this.snapping.snap(params);
     return (results?.snappedComponents || []).map((c) => c.id.toString());
+  }
+
+  async getCompDetails(id: string, includeSchema = false) {
+    this.logger.debug(`getCompDetails(${id}, ${includeSchema})`);
+    const compId = await this.workspace.resolveComponentId(id);
+    const existsLocally = this.workspace.hasId(compId);
+    const getComp = async () => {
+      if (existsLocally) {
+        return this.workspace.get(compId);
+      }
+      const comp = await this.scope.get(compId);
+      if (comp) return comp;
+      throw new ComponentNotFound(compId);
+    };
+    const comp = await getComp();
+
+    const fragments = this.component.getShowFragments();
+    const titlesToInclude = ['id', 'env', 'package name', 'files', 'dev files', 'deprecated'];
+    const showResults: Record<string, any> = {};
+    await Promise.all(
+      fragments.map(async (fragment) => {
+        const result = fragment.json ? await fragment.json(comp) : undefined;
+        if (!result || !titlesToInclude.includes(result.title)) return;
+        if (result.title === 'deprecated' && !result.json.isDeprecate) return; // skip if not deprecated
+        showResults[result.title] = result.json;
+      })
+    );
+
+    const deps = comp.getDependencies();
+    showResults.dependencies = deps.map((dep) => {
+      const pkg = dep.getPackageName?.() || dep.id;
+      const pkgWithVer = `${pkg}@${dep.version}`;
+      const compIdStr = dep.type === 'component' ? `, component-id: ${dep.id}` : '';
+      return `${pkgWithVer} (lifecycle: ${dep.lifecycle}, type: ${dep.type}, source: ${dep.source}${compIdStr})`;
+    });
+
+    if (includeSchema) {
+      try {
+        const schema = existsLocally
+          ? await this.schema.getSchema(comp)
+          : await this.schema.getSchemaFromRemote(comp.id.toString());
+        showResults.publicAPI = schema.toStringPerType();
+      } catch (error) {
+        // If schema fails, add error info instead of crashing
+        showResults.publicAPI = `Error fetching schema: ${(error as Error).message}`;
+      }
+    }
+
+    // Add docs content if available from teambit.docs/docs aspect
+    try {
+      const docsAspectFiles = showResults['dev files']?.[`teambit.docs/docs`];
+      if (docsAspectFiles && Array.isArray(docsAspectFiles) && docsAspectFiles.length > 0) {
+        showResults.docs = {};
+        docsAspectFiles.forEach((relativePath: string) => {
+          const file = comp.filesystem.files.find((f) => f.relative === relativePath);
+          if (file) {
+            showResults.docs[relativePath] = file.contents.toString();
+          }
+        });
+      }
+    } catch (error) {
+      // If docs extraction fails, add error info but don't crash
+      showResults.docs = `Error fetching docs: ${(error as Error).message}`;
+    }
+
+    // Add usage examples from teambit.compositions/compositions aspect
+    try {
+      const compositionsAspectFiles = showResults['dev files']?.[`teambit.compositions/compositions`];
+      if (compositionsAspectFiles && Array.isArray(compositionsAspectFiles) && compositionsAspectFiles.length > 0) {
+        showResults.usageExamples = {};
+        compositionsAspectFiles.forEach((relativePath: string) => {
+          const file = comp.filesystem.files.find((f) => f.relative === relativePath);
+          if (file) {
+            const fileContent = file.contents.toString();
+            showResults.usageExamples[relativePath] = fileContent;
+          }
+        });
+      }
+    } catch (error) {
+      // If composition extraction fails, add error info but don't crash
+      showResults.usageExamples = `Error fetching usage examples: ${(error as Error).message}`;
+    }
+
+    showResults.url = ComponentUrl.toUrl(compId, { includeVersion: false });
+
+    // Add component location status
+    // Check if component exists as a package by looking it up in the pnpm lock file
+    const packageName = comp.getPackageName();
+    let componentLocation: string;
+
+    if (existsLocally) {
+      const compDir = this.workspace.componentDir(compId, { ignoreVersion: true }, { relative: true });
+      componentLocation = `exists locally in the workspace at '${compDir}'`;
+    } else {
+      let isInstalledAsPackage = false;
+
+      try {
+        const lockFilePath = path.join(this.workspace.path, 'node_modules', '.pnpm', 'lock.yaml');
+        if (await fs.pathExists(lockFilePath)) {
+          const lockFileContent = await fs.readFile(lockFilePath, 'utf8');
+          // Check if the package name exists in the lock file
+          isInstalledAsPackage = lockFileContent.includes(packageName);
+        }
+      } catch (error) {
+        this.logger.warn(`Error checking package existence for ${packageName}: ${(error as Error).message}`);
+        // If error occurs during package check, default to false
+        isInstalledAsPackage = false;
+      }
+
+      componentLocation = isInstalledAsPackage ? 'installed as a package' : 'a remote component';
+    }
+
+    showResults.componentLocation = componentLocation;
+
+    return showResults;
   }
 }
 

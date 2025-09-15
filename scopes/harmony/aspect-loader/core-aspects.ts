@@ -49,9 +49,9 @@ function resolveFromBvmDir(packageName: string): string | undefined {
   return undefined;
 }
 
-function getAspectDirFromPath(id: string, pathsToResolveAspects?: string[]): string {
+function getAspectDirFromPath(id: string, pathsToResolveAspects?: string[], isCore = true): string {
   const aspectName = getCoreAspectName(id);
-  const packageName = getCoreAspectPackageName(id);
+  const packageName = isCore ? getCoreAspectPackageName(id) : getNonCorePackageName(id);
 
   if (pathsToResolveAspects && pathsToResolveAspects.length) {
     const fromPaths = resolveFromPaths(packageName, aspectName, pathsToResolveAspects);
@@ -66,12 +66,12 @@ function getAspectDirFromPath(id: string, pathsToResolveAspects?: string[]): str
   throw new Error(`unable to find ${aspectName}`);
 }
 
-export function getAspectDir(id: string): string {
+export function getAspectDir(id: string, isCore = true): string {
   const aspectName = getCoreAspectName(id);
   let dirPath;
 
   try {
-    dirPath = getAspectDirFromPath(id);
+    dirPath = getAspectDirFromPath(id, undefined, isCore);
   } catch {
     dirPath = resolve(__dirname, '../..', aspectName, 'dist');
   }
@@ -126,21 +126,8 @@ export function getAspectDirFromBvm(id: string, bvmDirOptions?: BvmDirOptions): 
   return getAspectDirFromPath(id, [versionDir]);
 }
 
-// function getCoreAspectDirFromPath(resolvedModulesPath: string): string {
-//   if (!resolvedModulesPath.includes('@teambit')) {
-//     throw new Error(`unable to find core aspect in ${resolvedModulesPath}`);
-//   }
-//   let currentDir = resolvedModulesPath;
-//   let parentDir = dirname(currentDir);
-//   while (basename(parentDir) !== '@teambit') {
-//     currentDir = parentDir;
-//     parentDir = dirname(currentDir);
-//   }
-//   return currentDir;
-// }
-
-export function getAspectDistDir(id: string) {
-  const aspectDir = getAspectDir(id);
+export function getAspectDistDir(id: string, isCore = true) {
+  const aspectDir = getAspectDir(id, isCore);
   // When running from bundle there won't be a dist folder
   return resolve(`${aspectDir}/dist`);
 }
@@ -154,6 +141,17 @@ export function getCoreAspectName(id: string): string {
 export function getCoreAspectPackageName(id: string): string {
   const aspectName = getCoreAspectName(id);
   return `@teambit/${aspectName}`;
+}
+
+/**
+ * naive conversion without loading the component. if a component has a custom-package-name, it won't work.
+ * id for example: 'org.frontend/ui/button'
+ * convert it to package-name, for example: '@org/frontend.ui.button'
+ */
+function getNonCorePackageName(id: string): string {
+  const [scope, ...name] = id.split('/');
+  const aspectName = name.join('.');
+  return `@${scope.replace('.', '/')}.${aspectName}`;
 }
 
 export async function getAspectDef(aspectName: string, runtime?: string) {

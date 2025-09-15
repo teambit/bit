@@ -1,6 +1,6 @@
-import { BuildContext } from '@teambit/builder';
-import { Component } from '@teambit/component';
-import { LinterContext } from './linter-context';
+import type { BuildContext } from '@teambit/builder';
+import type { Component } from '@teambit/component';
+import type { LinterContext } from './linter-context';
 
 export type ComponentLintResult = {
   /**
@@ -128,7 +128,7 @@ export type LintResults = {
   /**
    * total errors count of the component (from all of the components).
    */
-  totalErrorCount: number;
+  totalErrorCount?: number;
   /**
    * total fatal errors count of the component (from all of the components).
    */
@@ -144,23 +144,41 @@ export type LintResults = {
   /**
    * total warning count of the component (from all of the components).
    */
-  totalWarningCount: number;
+  totalWarningCount?: number;
 
-  totalComponentsWithErrorCount: number;
+  totalComponentsWithErrorCount?: number;
   totalComponentsWithFatalErrorCount?: number;
   totalComponentsWithFixableErrorCount?: number;
   totalComponentsWithFixableWarningCount?: number;
-  totalComponentsWithWarningCount: number;
+  totalComponentsWithWarningCount?: number;
 
   /**
    * whether all the linted components is clean (have no issues at all)
    */
-  isClean: boolean;
+  isClean?: boolean;
 
   errors: Error[];
 };
 
 export interface Linter {
   id: string;
+  /**
+   * serialized config of the linter.
+   */
+  displayConfig?(): string;
+
+  /**
+   * returns the version of the current linter instance (e.g. '4.0.1').
+   */
+  version?(): string | Promise<string>;
+
+  /**
+   * returns the display name of the current linter instance (e.g. 'ESlint')
+   */
+  displayName?: string;
+
+  /**
+   * lint the given component.
+   */
   lint(context: LinterContext, buildContext?: BuildContext): Promise<LintResults>;
 }

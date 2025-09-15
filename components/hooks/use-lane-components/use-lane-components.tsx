@@ -1,7 +1,7 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
 import { ComponentID, ComponentModel, componentOverviewFields } from '@teambit/component';
-import { LaneId } from '@teambit/lane-id';
+import type { LaneId } from '@teambit/lane-id';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { compact } from 'lodash';
 
@@ -47,6 +47,7 @@ export type UseLaneComponentsResult = {
 };
 
 export function useLaneComponents(laneId?: LaneId): UseLaneComponentsResult {
+  // @ts-ignore - remove once graphql versions are aligned (see #8753)
   const { data, loading } = useDataQuery(GET_LANE_COMPONENTS, {
     variables: { ids: [laneId?.toString()], skipList: laneId?.isDefault() },
     skip: !laneId,

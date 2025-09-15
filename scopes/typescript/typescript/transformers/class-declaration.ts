@@ -5,14 +5,22 @@ import {
   UnresolvedSchema,
   ExpressionWithTypeArgumentsSchema,
 } from '@teambit/semantics.entities.semantic-schema';
-import ts, { Node, ClassDeclaration } from 'typescript';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
+import type { Node, ClassDeclaration } from 'typescript';
+import ts from 'typescript';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
 import { Identifier } from '../identifier';
 
 export class ClassDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {
-    return node.kind === ts.SyntaxKind.ClassDeclaration;
+    if (node.kind !== ts.SyntaxKind.ClassDeclaration) {
+      return false;
+    }
+    const classNode = node as ClassDeclaration;
+    if (!classNode.members || (classNode.members as any).isMissingList) {
+      return false;
+    }
+    return true;
   }
 
   // @todo: in case of `export default class` the class has no name.

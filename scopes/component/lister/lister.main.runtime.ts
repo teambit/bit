@@ -1,9 +1,13 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { ComponentID } from '@teambit/component-id';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { ComponentID } from '@teambit/component-id';
 import { ConsumerNotFound } from '@teambit/legacy.consumer';
-import { getRemoteByName, Remote } from '@teambit/scope.remotes';
+import type { Remote } from '@teambit/scope.remotes';
+import { getRemoteByName } from '@teambit/scope.remotes';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { BitError } from '@teambit/bit-error';
 import { ListCmd } from './list.cmd';
@@ -64,14 +68,18 @@ export class ListerMain {
   async localList(
     showAll = false,
     showRemoteVersion = false,
-    namespacesUsingWildcards?: string
+    namespacesUsingWildcards?: string,
+    scopeName?: string
   ): Promise<ListScopeResult[]> {
     if (!this.workspace) {
       throw new ConsumerNotFound();
     }
     this.logger.setStatusLine(BEFORE_LOCAL_LIST);
-    const componentsList = new ComponentsList(this.workspace.consumer);
-    const results = await componentsList.listAll(showRemoteVersion, showAll, namespacesUsingWildcards);
+    const componentsList = new ComponentsList(this.workspace);
+    let results = await componentsList.listAll(showRemoteVersion, showAll, namespacesUsingWildcards);
+    if (scopeName) {
+      results = results.filter((result) => result.id.scope === scopeName);
+    }
     return this.sortListScopeResults(results);
   }
 

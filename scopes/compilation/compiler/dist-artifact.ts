@@ -1,4 +1,4 @@
-import { AbstractVinyl } from '@teambit/component.sources';
+import type { AbstractVinyl } from '@teambit/component.sources';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 
 export class DistArtifact {

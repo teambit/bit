@@ -114,7 +114,8 @@ export class Port {
 
   static getPortFromRange(range: number[] | number, usedPort?: number[]) {
     const port = new Port();
-    const portsRange = typeof range === 'number' ? [range] : port.makeRange(range[0], range[1]);
+    const portsRange =
+      typeof range === 'number' ? port.makeRange(range, range + 100) : port.makeRange(range[0], range[1]);
     return port.get({ port: portsRange, usedPort });
   }
 }

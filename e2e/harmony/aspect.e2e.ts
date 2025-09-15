@@ -2,8 +2,8 @@ import { UNABLE_TO_LOAD_EXTENSION } from '@teambit/aspect-loader';
 import chai, { expect } from 'chai';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('aspect', function () {
   this.timeout(0);
@@ -16,7 +16,7 @@ describe('aspect', function () {
   });
   describe('run bit aspect set then generate component.json', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.setAspect('comp1', Extensions.forking, { configKey: 'configVal' });
       helper.command.ejectConf('comp1');
@@ -41,7 +41,7 @@ describe('aspect', function () {
   });
   describe('aspect loading failures', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
+      helper.scopeHelper.setWorkspaceWithRemoteScope({ addRemoteScopeAsDefaultScope: false });
       helper.command.create('bit-aspect', 'my-aspect');
       helper.workspaceJsonc.addKeyVal('my-scope/my-aspect', {});
     });
@@ -63,7 +63,7 @@ describe('aspect', function () {
   describe('bit aspect update command', () => {
     let output: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.create('bit-aspect', 'my-aspect');
       helper.command.compile();
       helper.command.install();
@@ -74,7 +74,7 @@ describe('aspect', function () {
       helper.command.tagWithoutBuild('my-aspect', '--unmodified --skip-auto-tag');
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
 
@@ -113,7 +113,7 @@ describe('aspect', function () {
   });
   describe('bit aspect unset command', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.create('bit-aspect', 'my-aspect');
       helper.command.compile();
       helper.command.install();

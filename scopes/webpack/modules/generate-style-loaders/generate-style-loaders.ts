@@ -1,6 +1,7 @@
 type PreProcessOptions = {
   resolveUrlLoaderPath: string;
   preProcessorPath: string;
+  options?: any;
 };
 
 export type GenerateStyleLoadersOptions = {
@@ -36,17 +37,20 @@ export function generateStyleLoaders(options: GenerateStyleLoadersOptions) {
     },
   ].filter(Boolean);
   if (options.preProcessOptions) {
+    const additionalOptions = options.preProcessOptions?.options || {};
     loaders.push(
       {
         loader: options.preProcessOptions.resolveUrlLoaderPath,
         options: {
           sourceMap: options.shouldUseSourceMap,
+          ...additionalOptions,
         },
       },
       {
         loader: options.preProcessOptions.preProcessorPath,
         options: {
           sourceMap: true,
+          ...additionalOptions,
         },
       }
     );

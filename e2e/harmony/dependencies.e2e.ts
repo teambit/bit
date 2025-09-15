@@ -1,7 +1,6 @@
 import { IssuesClasses } from '@teambit/component-issues';
 import { expect } from 'chai';
-import { Helper } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 describe('dependencies', function () {
   let helper: Helper;
@@ -18,7 +17,7 @@ describe('dependencies', function () {
     let beforeImport: string;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setupDefault();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -26,10 +25,10 @@ describe('dependencies', function () {
       helper.fixtures.populateComponents(3);
       helper.command.tagAllComponents();
       helper.command.export();
-      afterExport = helper.scopeHelper.cloneLocalScope();
-      helper.scopeHelper.reInitLocalScope();
+      afterExport = helper.scopeHelper.cloneWorkspace();
+      helper.scopeHelper.reInitWorkspace();
       npmCiRegistry.setResolver();
-      beforeImport = helper.scopeHelper.cloneLocalScope();
+      beforeImport = helper.scopeHelper.cloneWorkspace();
     });
     after(() => {
       npmCiRegistry.destroy();
@@ -51,7 +50,7 @@ describe('dependencies', function () {
     });
     describe('import with --fetch-deps', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeImport);
+        helper.scopeHelper.getClonedWorkspace(beforeImport);
         helper.command.importComponent('comp1', '--fetch-deps');
       });
       it('should bring not only the imported component, but also its dependencies', () => {
@@ -61,12 +60,12 @@ describe('dependencies', function () {
     });
     describe('a dependency is both in the workspace and set with deps-set', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(afterExport);
+        helper.scopeHelper.getClonedWorkspace(afterExport);
         helper.fixtures.populateComponents(3, undefined, 'v2');
         helper.command.tagAllComponents();
         helper.command.export();
 
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         npmCiRegistry.setResolver();
 
         helper.command.importComponent('comp1', '-x');
@@ -85,7 +84,7 @@ describe('dependencies', function () {
   });
   describe('new dependent using exported dependency', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild('comp2');
       helper.command.export();
@@ -107,7 +106,7 @@ describe('dependencies', function () {
   });
   describe('ignoring a dependency using // @bit-ignore', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponentsTS(1);
       helper.fs.outputFile('comp1/index.ts', `import lodash from 'lodash';`);
       helper.command.addComponent('comp1');
@@ -138,13 +137,35 @@ const isPositive = require('is-positive');
   });
   describe('a file-dependency exists with a different extension', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.outputFile('comp1/index.ts', `export const foo = 'foo';`);
       helper.fs.outputFile('comp1/bar.cjs', `import { foo } from './index.js';`);
       helper.command.addComponent('comp1');
     });
     it('should not show an issue of missing-files because the file could exist later in the dist', () => {
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingDependenciesOnFs.name);
+    });
+  });
+  describe('changing files to be dev-files from env.jsonc', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.env.setEmptyEnv();
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile('comp1/some.content.tsx', `import lodash from 'lodash';`);
+      helper.command.setEnv('comp1', 'empty-env');
+      helper.command.install(undefined, { a: '' });
+      helper.command.status(); // makes sure the comp is loaded and its deps are in the filesystem cache.
+      helper.fs.outputFile(
+        'empty-env/env.jsonc',
+        JSON.stringify({ patterns: { contents: ['**/*.content.tsx'] } }, null, 2)
+      );
+    });
+    // previously, it was needed to run `bit cc` to see lodash as dev. it was showing as a realtime dep.
+    it('should clear all components caches and show the dep as a dev-dep', () => {
+      const depsData = helper.command.getCompDepsDataFromData('comp1');
+      const lodash = depsData.find((d) => d.id === 'lodash');
+      expect(lodash).to.exist;
+      expect(lodash?.lifecycle).to.equal('dev');
     });
   });
 });

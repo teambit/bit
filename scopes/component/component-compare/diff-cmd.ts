@@ -1,14 +1,17 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { DiffResults, outputDiffResults } from '@teambit/legacy.component-diff';
-import { ComponentCompareMain } from './component-compare.main.runtime';
+import type { DiffResults } from '@teambit/legacy.component-diff';
+import { outputDiffResults } from '@teambit/legacy.component-diff';
+import type { ComponentCompareMain } from './component-compare.main.runtime';
 
 export class DiffCmd implements Command {
   name = 'diff [component-pattern] [version] [to-version]';
-  group = 'development';
-  description =
-    "show the diff between the components' current source files and config, and their latest snapshot or tag";
+  group = 'info-analysis';
+  description = 'compare component changes between versions or against the current workspace';
+  extendedDescription = `shows a detailed diff of component files, dependencies, and configuration changes. 
+by default, compares workspace changes against the latest version. specify versions to compare historical changes.
+supports pattern matching to filter components and various output formats for better readability.`;
   helpUrl = 'docs/components/merging-changes#compare-component-snaps';
   arguments = [
     {
@@ -17,15 +20,17 @@ export class DiffCmd implements Command {
     },
     {
       name: 'version',
-      description: 'specific version to compare against',
+      description: `the base version to compare from. if omitted, compares the workspace's current files to the component's latest version.`,
     },
     {
       name: 'to-version',
-      description: 'specific version to compare to',
+      description: `the target version to compare against "version".
+if both "version" and "to-version" are provided, compare those two versions directly (ignoring the workspace).`,
     },
   ];
   alias = '';
   options = [
+    ['p', 'parent', 'compare the specified "version" to its immediate parent instead of comparing to the current one'],
     ['v', 'verbose', 'show a more verbose output where possible'],
     ['t', 'table', 'show tables instead of plain text for dependencies diff'],
   ] as CommandOptions;
@@ -38,6 +43,10 @@ export class DiffCmd implements Command {
       cmd: "diff '$codeModified' ",
       description: 'show diff only for components with modified files. ignore config changes',
     },
+    {
+      cmd: 'diff foo 0.0.2 --parent',
+      description: 'compare "foo@0.0.2" to its parent version. showing what changed in 0.0.2',
+    },
   ];
   loader = true;
 
@@ -45,11 +54,12 @@ export class DiffCmd implements Command {
 
   async report(
     [pattern, version, toVersion]: [string, string, string],
-    { verbose = false, table = false }: { verbose?: boolean; table: boolean }
+    { verbose = false, table = false, parent }: { verbose?: boolean; table: boolean; parent?: boolean }
   ) {
     const diffResults: DiffResults[] = await this.componentCompareMain.diffByCLIValues(pattern, version, toVersion, {
       verbose,
       table,
+      parent,
     });
     if (!diffResults.length) {
       return chalk.yellow('there are no modified components to diff');

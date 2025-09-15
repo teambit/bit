@@ -1,25 +1,27 @@
 import chalk from 'chalk';
-import { ComponentID } from '@teambit/component-id';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ComponentID } from '@teambit/component-id';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
-import { GlobalConfigMain } from '@teambit/global-config';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import {
   NOTHING_TO_SNAP_MSG,
   AUTO_SNAPPED_MSG,
   COMPONENT_PATTERN_HELP,
   CFG_FORCE_LOCAL_BUILD,
 } from '@teambit/legacy.constants';
-import { Logger } from '@teambit/logger';
-import { SnappingMain, SnapResults } from './snapping.main.runtime';
+import type { Logger } from '@teambit/logger';
+import type { SnappingMain, SnapResults } from './snapping.main.runtime';
 import { outputIdsIfExists } from './tag-cmd';
-import { BasicTagSnapParams } from './tag-model-component';
+import type { BasicTagSnapParams } from './version-maker';
+import type { ConfigStoreMain } from '@teambit/config-store';
 
 export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
-  description = 'create an immutable and exportable component snapshot (non-release version)';
-  extendedDescription: string;
-  group = 'development';
+  description = 'create immutable component snapshots for development versions';
+  extendedDescription = `creates snapshots with hash-based versions for development and testing. snapshots are immutable and exportable.
+by default snaps only new and modified components. use for development iterations before creating semantic version tags.
+snapshots maintain component history and enable collaboration without formal releases.`;
+  group = 'version-control';
   arguments = [
     {
       name: 'component-pattern',
@@ -52,6 +54,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       'skip the snap pipeline. this will for instance skip packing and publishing component version for install, and app deployment',
     ],
     ['', 'ignore-build-errors', 'proceed to snap pipeline even when build pipeline fails'],
+    ['', 'loose', 'allow snap --build to succeed even if tasks like tests or lint fail'],
     ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
     [
       'i',
@@ -65,13 +68,18 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       'fail-fast',
       'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
+    [
+      '',
+      'detach-head',
+      'UNSUPPORTED YET. in case a component is checked out to an older version, snap it without changing the head',
+    ],
   ] as CommandOptions;
   loader = true;
 
   constructor(
     private snapping: SnappingMain,
     private logger: Logger,
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {}
 
   async report(
@@ -90,6 +98,8 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       rebuildDepsGraph,
       unmodified = false,
       failFast = false,
+      detachHead,
+      loose = false,
     }: {
       unmerged?: boolean;
       editor?: string;
@@ -100,7 +110,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       failFast?: boolean;
     } & BasicTagSnapParams
   ) {
-    build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
+    build = this.configStore.getConfigBoolean(CFG_FORCE_LOCAL_BUILD) || Boolean(build);
     const disableTagAndSnapPipelines = disableSnapPipeline;
     if (!message && !editor) {
       this.logger.consoleWarning(
@@ -123,56 +133,60 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       rebuildDepsGraph,
       unmodified,
       exitOnFirstFailedTask: failFast,
+      detachHead,
+      loose,
     });
 
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
-    const { snappedComponents, autoSnappedResults, warnings, newComponents, laneName, removedComponents }: SnapResults =
-      results;
-    const changedComponents = snappedComponents.filter((component) => {
-      return (
-        !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id)
-      );
-    });
-    const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
-    const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
+    return snapResultOutput(results);
+  }
+}
 
-    const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
-    const snapExplanation = `\n(use "bit export" to push these components to a remote")
+export function snapResultOutput(results: SnapResults): string {
+  const { snappedComponents, autoSnappedResults, warnings, newComponents, laneName, removedComponents }: SnapResults =
+    results;
+  const changedComponents = snappedComponents.filter((component) => {
+    return !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id);
+  });
+  const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
+  const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
+
+  const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
+  const snapExplanation = `\n(use "bit export" to push these components to a remote")
 (use "bit reset --all" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)`;
 
-    const compInBold = (id: ComponentID) => {
-      const version = id.hasVersion() ? `@${id.version}` : '';
-      return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
-    };
+  const compInBold = (id: ComponentID) => {
+    const version = id.hasVersion() ? `@${id.version}` : '';
+    return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
+  };
 
-    const outputComponents = (comps: ConsumerComponent[]) => {
-      return comps
-        .map((component) => {
-          let componentOutput = `     > ${compInBold(component.id)}`;
-          const autoTag = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
-          if (autoTag.length) {
-            const autoTagComp = autoTag.map((a) => compInBold(a.component.id));
-            componentOutput += `\n       ${AUTO_SNAPPED_MSG} (${autoTagComp.length} total):
-            ${autoTagComp.join('\n            ')}`;
-          }
-          return componentOutput;
-        })
-        .join('\n');
-    };
+  const outputComponents = (comps: ConsumerComponent[]) => {
+    return comps
+      .map((component) => {
+        let componentOutput = `     > ${compInBold(component.id)}`;
+        const autoTag = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
+        if (autoTag.length) {
+          const autoTagComp = autoTag.map((a) => compInBold(a.component.id));
+          componentOutput += `\n       ${AUTO_SNAPPED_MSG} (${autoTagComp.length} total):
+          ${autoTagComp.join('\n            ')}`;
+        }
+        return componentOutput;
+      })
+      .join('\n');
+  };
 
-    const outputIfExists = (label, explanation, components) => {
-      if (!components.length) return '';
-      return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
-    };
-    const laneStr = laneName ? ` on "${laneName}" lane` : '';
+  const outputIfExists = (label, explanation, components) => {
+    if (!components.length) return '';
+    return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
+  };
+  const laneStr = laneName ? ` on "${laneName}" lane` : '';
 
-    return (
-      outputIfExists('new components', 'first version for components', addedComponents) +
-      outputIfExists('changed components', 'components that got a version bump', changedComponents) +
-      outputIdsIfExists('removed components', removedComponents) +
-      warningsOutput +
-      chalk.green(`\n${snappedComponents.length + autoTaggedCount} component(s) snapped${laneStr}`) +
-      snapExplanation
-    );
-  }
+  return (
+    outputIfExists('new components', 'first version for components', addedComponents) +
+    outputIfExists('changed components', 'components that got a version bump', changedComponents) +
+    outputIdsIfExists('removed components', removedComponents) +
+    warningsOutput +
+    chalk.green(`\n${snappedComponents.length + autoTaggedCount} component(s) snapped${laneStr}`) +
+    snapExplanation
+  );
 }

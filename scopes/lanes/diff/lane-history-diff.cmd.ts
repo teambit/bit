@@ -1,11 +1,11 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { ScopeMain } from '@teambit/scope';
-import { Workspace } from '@teambit/workspace';
-import { ComponentCompareMain } from '@teambit/component-compare';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ScopeMain } from '@teambit/scope';
+import type { Workspace } from '@teambit/workspace';
+import type { ComponentCompareMain } from '@teambit/component-compare';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { LaneDiffGenerator } from './lane-diff-generator';
 import { BitError } from '@teambit/bit-error';
-import { LanesMain } from '@teambit/lanes';
+import type { LanesMain } from '@teambit/lanes';
 
 export class LaneHistoryDiffCmd implements Command {
   name = 'history-diff <from-history-id> <to-history-id>';

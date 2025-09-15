@@ -1,9 +1,8 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../../npm-ci-registry';
-import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)('never built dependencies', function () {
   this.timeout(0);
@@ -12,7 +11,7 @@ chai.use(require('chai-fs'));
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -47,7 +46,7 @@ chai.use(require('chai-fs'));
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes({
+      helper.scopeHelper.setWorkspaceWithRemoteScope({
         yarnRCConfig: {
           unsafeHttpWhitelist: ['localhost'],
         },

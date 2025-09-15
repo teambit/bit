@@ -1,35 +1,43 @@
-import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
-import { BundlerAspect, BundlerMain } from '@teambit/bundler';
-import { CLIAspect, MainRuntime, CLIMain, CommandList, Command } from '@teambit/cli';
+import type { BundlerMain } from '@teambit/bundler';
+import { BundlerAspect } from '@teambit/bundler';
+import type { CLIMain, CommandList, Command } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { ComponentAspect } from '@teambit/component';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { Slot, Harmony, SlotRegistry } from '@teambit/harmony';
-import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { UIAspect, UiMain } from '@teambit/ui';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { Harmony, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { IsolatorMain } from '@teambit/isolator';
+import { IsolatorAspect } from '@teambit/isolator';
+import type { LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { UiMain } from '@teambit/ui';
+import { UIAspect } from '@teambit/ui';
 import { VariantsAspect } from '@teambit/variants';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
+import type { GlobalConfigMain } from '@teambit/global-config';
+import { GlobalConfigAspect } from '@teambit/global-config';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { ComponentMain, Component } from '@teambit/component';
 import type { VariantsMain } from '@teambit/variants';
-import { Consumer, loadConsumerIfExist } from '@teambit/legacy.consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
+import { loadConsumerIfExist } from '@teambit/legacy.consumer';
 import type { ComponentConfigLoadOptions } from '@teambit/legacy.consumer-config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import {
-  ComponentLoadOptions,
-  ComponentLoader as LegacyComponentLoader,
-  ConsumerComponent,
-} from '@teambit/legacy.consumer-component';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentLoadOptions } from '@teambit/legacy.consumer-component';
+import { ComponentLoader as LegacyComponentLoader, ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ComponentID } from '@teambit/component-id';
 import { EXT_NAME } from './constants';
-import { OnComponentAdd, OnComponentChange, OnComponentRemove, OnComponentLoad } from './on-component-events';
+import type { OnComponentAdd, OnComponentChange, OnComponentRemove, OnComponentLoad } from './on-component-events';
 import { WorkspaceAspect } from './workspace.aspect';
 import EjectConfCmd from './eject-conf.cmd';
-import { WorkspaceExtConfig } from './types';
+import type { WorkspaceExtConfig } from './types';
 import { Workspace } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
@@ -43,9 +51,10 @@ import { UseCmd } from './use.cmd';
 import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
 import { UnuseCmd } from './unuse.cmd';
 import { LocalOnlyCmd, LocalOnlyListCmd, LocalOnlySetCmd, LocalOnlyUnsetCmd } from './commands/local-only-cmd';
+import type { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store';
 
 export type WorkspaceDeps = [
-  PubsubMain,
   CLIMain,
   ScopeMain,
   ComponentMain,
@@ -59,6 +68,7 @@ export type WorkspaceDeps = [
   AspectLoaderMain,
   EnvsMain,
   GlobalConfigMain,
+  ConfigStoreMain,
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -84,7 +94,6 @@ export type OnRootAspectAddedSlot = SlotRegistry<OnRootAspectAdded>;
 export class WorkspaceMain {
   static runtime = MainRuntime;
   static dependencies = [
-    PubsubAspect,
     CLIAspect,
     ScopeAspect,
     ComponentAspect,
@@ -98,6 +107,7 @@ export class WorkspaceMain {
     AspectLoaderAspect,
     EnvsAspect,
     GlobalConfigAspect,
+    ConfigStoreAspect,
   ];
   static slots = [
     Slot.withType<OnComponentLoad>(),
@@ -111,7 +121,6 @@ export class WorkspaceMain {
   ];
   static async provider(
     [
-      pubsub,
       cli,
       scope,
       component,
@@ -125,6 +134,7 @@ export class WorkspaceMain {
       aspectLoader,
       envs,
       globalConfig,
+      configStore,
     ]: WorkspaceDeps,
     config: WorkspaceExtConfig,
     [
@@ -163,7 +173,6 @@ export class WorkspaceMain {
     // TODO: get the 'workspace' name in a better way
     const logger = loggerExt.createLogger(EXT_NAME);
     const workspace = new Workspace(
-      pubsub,
       config,
       consumer,
       scope,
@@ -172,7 +181,6 @@ export class WorkspaceMain {
       variants,
       aspectLoader,
       logger,
-      undefined,
       harmony,
       onComponentLoadSlot,
       onComponentChangeSlot,
@@ -184,8 +192,11 @@ export class WorkspaceMain {
       onRootAspectAddedSlot,
       graphql,
       onBitmapChangeSlot,
-      onWorkspaceConfigChangeSlot
+      onWorkspaceConfigChangeSlot,
+      configStore
     );
+
+    configStore.addStore('workspace', workspace.getConfigStore());
 
     const configMergeFile = workspace.getConflictMergeFile();
     await configMergeFile.loadIfNeeded();
@@ -240,15 +251,14 @@ export class WorkspaceMain {
       // This component from scope here are only used for merging the extensions with the workspace components
       const componentFromScope = await workspace.scope.get(componentId);
       const { extensions } = await workspace.componentExtensions(componentId, componentFromScope, undefined, loadOpts);
-      const defaultScope = await workspace.componentDefaultScope(componentId);
+      const defaultScope = componentId.scope;
 
       const extensionsWithLegacyIdsP = extensions.map(async (extension) => {
-        const legacyEntry = extension.clone();
-        if (legacyEntry.extensionId) {
-          legacyEntry.newExtensionId = legacyEntry.extensionId;
+        if (extension.extensionId) {
+          extension.newExtensionId = extension.extensionId;
         }
 
-        return legacyEntry;
+        return extension;
       });
       const extensionsWithLegacyIds = await Promise.all(extensionsWithLegacyIdsP);
 
@@ -258,12 +268,11 @@ export class WorkspaceMain {
       };
     });
 
-    const workspaceSchema = getWorkspaceSchema(workspace, graphql);
     ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
     ui.registerPreStart(async () => {
       return workspace.setComponentPathsRegExps();
     });
-    graphql.register(workspaceSchema);
+    graphql.register(() => getWorkspaceSchema(workspace, graphql));
     const capsuleCmd = getCapsulesCommands(isolator, scope, workspace);
     const commands: CommandList = [
       new EjectConfCmd(workspace),

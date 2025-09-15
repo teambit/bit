@@ -1,10 +1,10 @@
-import { ComponentIdList } from '@teambit/component-id';
-import { Scope } from '@teambit/legacy.scope';
+import type { ComponentIdList } from '@teambit/component-id';
+import type { Scope } from '@teambit/legacy.scope';
 import { logger } from '@teambit/legacy.logger';
 import { saveObjects } from '@teambit/export';
-import { Lane } from '@teambit/scope.objects';
-import { AuthData } from '@teambit/scope.network';
-import { Action } from './action';
+import type { Lane } from '@teambit/objects';
+import type { AuthData } from '@teambit/scope.network';
+import type { Action } from './action';
 
 type Options = { clientId: string };
 

@@ -1,20 +1,23 @@
 /* eslint-disable complexity */
 import { PackageJsonValidator as PJV } from '@teambit/pkg.package-json.validator';
-import R from 'ramda';
+import { forEach, isEmpty } from 'lodash';
 import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentIdList } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { isSnap, isTag } from '@teambit/component-version';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
 import { SchemaName, Dependencies, DEPENDENCIES_TYPES } from '@teambit/legacy.consumer-component';
 import { getArtifactsFiles, PackageJsonFile } from '@teambit/component.sources';
 import { componentOverridesForbiddenFields, nonPackageJsonFields } from '@teambit/legacy.consumer-config';
-import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
-import { PathLinux, isValidPath } from '@teambit/legacy.utils';
+import type { ExtensionDataEntry } from '@teambit/legacy.extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { PathLinux } from '@teambit/legacy.utils';
+import { isValidPath } from '@teambit/legacy.utils';
 import { validateType } from './validate-type';
 import VersionInvalid from './exceptions/version-invalid';
-import { Version } from '@teambit/scope.objects';
+import type { Version } from '@teambit/objects';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.
@@ -54,7 +57,7 @@ export function validateVersionInstance(version: Version): void {
 
   const _validatePackageDependencies = (packageDependencies) => {
     validateType(message, packageDependencies, 'packageDependencies', 'object');
-    R.forEachObjIndexed(_validatePackageDependency, packageDependencies);
+    forEach(packageDependencies, _validatePackageDependency);
   };
   const validateFile = (file, field: 'file' | 'dist-file' | 'artifact') => {
     validateType(message, file, field, 'object');
@@ -126,6 +129,13 @@ export function validateVersionInstance(version: Version): void {
       validateNoDuplicateExtensionEntry(extensions);
       extensions.map(_validateExtension);
       validateArtifacts(extensions);
+      const result = ExtensionDataList.validateBeforePersistHook?.(extensions);
+      if (result) {
+        if (!version.bitVersion || lt(version.bitVersion, result.minBitVersion)) {
+          return;
+        }
+        throw new VersionInvalid(`${message} ${result.errorMsg}`);
+      }
     }
   };
 
@@ -202,7 +212,7 @@ export function validateVersionInstance(version: Version): void {
   // be running
   const allDependenciesIds = version.getDependenciesIdsExcludeExtensions();
   const depsDuplications = allDependenciesIds.findDuplicationsIgnoreVersion();
-  if (!R.isEmpty(depsDuplications)) {
+  if (!isEmpty(depsDuplications)) {
     const duplicationStr = Object.keys(depsDuplications)
       .map(
         (id) => `"${id}" shows as the following: ${depsDuplications[id].map((depId) => depId.toString()).join(', ')} `
@@ -298,7 +308,7 @@ ${duplicationStr}`);
       }
     });
     fieldsForSchemaCheckNotEmpty.forEach((field) => {
-      if (version[field] && !R.isEmpty(version[field])) {
+      if (version[field] && !isEmpty(version[field])) {
         throw new VersionInvalid(
           `${message}, the ${field} field is cannot have values according to schema "${schema}"`
         );

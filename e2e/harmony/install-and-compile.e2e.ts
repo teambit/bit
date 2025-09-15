@@ -2,16 +2,16 @@
 // import fs from 'fs';
 import chai, { expect } from 'chai';
 import path from 'path';
-import { Helper } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('all custom envs are compiled during installation', function () {
   let helper: Helper;
   function prepare() {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
 
     helper.env.setCustomNewEnv(
       'node-based-env',
@@ -57,7 +57,7 @@ describe('all custom envs are compiled during installation', function () {
       `${helper.scopes.remoteWithoutOwner}/comp/comp.ts`,
       `
 import isOdd from 'is-odd';
-
+import chaiFs from 'chai-fs';
 export function comp() {
   console.log(isOdd(17));
 }
@@ -104,7 +104,7 @@ export function comp() {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -131,7 +131,7 @@ export function comp() {
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.setupDefault();
       helper.command.create('react', 'comp1', '--env teambit.react/react');
@@ -152,7 +152,7 @@ describe('skipping compilation on install', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.fixtures.populateComponents(1, true, '', false); // don't compile
     helper.command.install(undefined, { skipCompile: true });
   });

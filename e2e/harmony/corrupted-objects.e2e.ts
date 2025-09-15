@@ -1,9 +1,8 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-
-const assertArrays = require('chai-arrays');
+import chaiFs from 'chai-fs';
+import assertArrays from 'chai-arrays';
+chai.use(chaiFs);
 
 chai.use(assertArrays);
 
@@ -18,7 +17,7 @@ describe('objects in scope are corrupted', function () {
   });
   describe('objects are empty, which are invalid zlib', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.command.export();

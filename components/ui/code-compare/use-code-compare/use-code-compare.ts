@@ -1,5 +1,5 @@
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 
 export type UseCodeCompareProps = {
@@ -38,12 +38,14 @@ export function useCodeCompare({ fileName }: UseCodeCompareProps): UseCodeCompar
   const { fileContent: downloadedCompareFileContent, loading: loadingDownloadedCompareFileContent } = useFileContent(
     compareId,
     fileName,
-    componentCompareContext?.hidden || loadingFromContext || !!codeCompareDataForFile?.compareContent
+    componentCompareContext?.hidden || loadingFromContext || !!codeCompareDataForFile?.compareContent,
+    comparingLocalChanges ? 'teambit.workspace/workspace' : 'teambit.scope/scope'
   );
   const { fileContent: downloadedBaseFileContent, loading: loadingDownloadedBaseFileContent } = useFileContent(
     baseId,
     fileName,
-    componentCompareContext?.hidden || loadingFromContext || !!codeCompareDataForFile?.baseContent
+    componentCompareContext?.hidden || loadingFromContext || !!codeCompareDataForFile?.baseContent,
+    'teambit.scope/scope'
   );
   const loading =
     loadingFromContext ||

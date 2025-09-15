@@ -1,6 +1,6 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { CheckoutMain } from './checkout.main.runtime';
+import type { CheckoutMain } from './checkout.main.runtime';
 import { CheckoutCmd } from './checkout-cmd';
 
 export class RevertCmd implements Command {
@@ -15,8 +15,10 @@ export class RevertCmd implements Command {
       description: "permitted values: [main, specific-version]. 'main' - head version on main.",
     },
   ];
-  description = 'replace the current component files by the specified version, leave the version intact';
-  group = 'development';
+  description = 'replace component files with specified version while preserving current version';
+  extendedDescription = `replaces component source files with files from the specified version but keeps the current component version.
+useful for reverting file changes without changing the component's version history. different from checkout which changes the version.`;
+  group = 'version-control';
   alias = '';
   options = [
     ['v', 'verbose', 'showing verbose output for inspection'],

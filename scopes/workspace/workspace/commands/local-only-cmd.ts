@@ -1,8 +1,8 @@
 /* eslint max-classes-per-file: 0 */
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { Command, CommandOptions } from '@teambit/cli';
-import { Workspace } from '../workspace';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { Workspace } from '../workspace';
 
 export class LocalOnlySetCmd implements Command {
   name = 'set <component-pattern>';
@@ -71,8 +71,11 @@ export class LocalOnlyListCmd implements Command {
 
 export class LocalOnlyCmd implements Command {
   name = 'local-only <sub-command>';
-  description = 'manage local-only components, which reside only in the workspace and are not snapped/tagged';
-  group = 'development';
+  description = 'manage components that exist only in the workspace';
+  extendedDescription = `controls components that are excluded from versioning (snap/tag) and exporting operations.
+local-only components are useful for workspace-specific tools, configs, or temporary components.
+these components remain in the workspace but won't be shared or versioned.`;
+  group = 'component-config';
   alias = '';
   commands: Command[] = [];
   options = [] as CommandOptions;

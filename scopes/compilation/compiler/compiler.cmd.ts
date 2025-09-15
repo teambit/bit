@@ -1,15 +1,18 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
 import type { PubsubMain } from '@teambit/pubsub';
 import chalk from 'chalk';
 import prettyTime from 'pretty-time';
 import { formatCompileResults } from './output-formatter';
-import { WorkspaceCompiler, CompileOptions, BuildResult } from './workspace-compiler';
+import type { WorkspaceCompiler, CompileOptions, BuildResult } from './workspace-compiler';
 import { CompilationInitiator } from './types';
 
 export class CompileCmd implements Command {
   name = 'compile [component-names...]';
-  description = 'compile components in the workspace';
+  description = 'transpile component source files';
+  extendedDescription = `compiles TypeScript, JSX, and other source files into JavaScript using the compiler configured by each component's environment.
+outputs compiled files to node_modules/component-package-name/dist for consumption by other components.
+automatically triggered by "bit watch", "bit start", or IDE extensions, but can be run manually for debugging.`;
   helpUrl = 'reference/compiling/compiler-overview';
   arguments = [
     {
@@ -18,7 +21,7 @@ export class CompileCmd implements Command {
     },
   ];
   alias = '';
-  group = 'development';
+  group = 'component-development';
   options = [
     ['c', 'changed', 'compile only new and modified components'],
     ['v', 'verbose', 'show more data, such as, dist paths'],
@@ -61,7 +64,6 @@ export class CompileCmd implements Command {
 
   async json([components]: [string[]], compilerOptions: CompileOptions) {
     compilerOptions.deleteDistDir = true;
-    // @ts-ignore
     const compileResults = await this.compile.compileComponents(components, {
       ...compilerOptions,
       initiator: CompilationInitiator.CmdJson,

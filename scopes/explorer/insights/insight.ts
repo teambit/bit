@@ -1,5 +1,5 @@
-import { Component } from '@teambit/component';
-import { RunInsightOptions } from './insight-manager';
+import type { Component } from '@teambit/component';
+import type { RunInsightOptions } from './insight-manager';
 
 export type InsightMetaData = {
   name: string;

@@ -1,19 +1,26 @@
-import { Harmony } from '@teambit/harmony';
-import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
-import { TsConfigSourceFile } from 'typescript';
-import { TsCompilerOptionsWithoutTsConfig, TypescriptAspect, TypescriptMain } from '@teambit/typescript';
-import { ApplicationAspect, ApplicationMain } from '@teambit/application';
+import type { Harmony } from '@teambit/harmony';
+import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { TsConfigSourceFile } from 'typescript';
+import type { TsCompilerOptionsWithoutTsConfig, TypescriptMain } from '@teambit/typescript';
+import { TypescriptAspect } from '@teambit/typescript';
+import type { ApplicationMain } from '@teambit/application';
+import { ApplicationAspect } from '@teambit/application';
 import { merge } from 'lodash';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import { MainRuntime } from '@teambit/cli';
-import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
-import { BuildTask } from '@teambit/builder';
+import type { GeneratorMain } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator';
+import type { BuildTask } from '@teambit/builder';
 import { ComponentID } from '@teambit/component-id';
-import { WorkerAspect, WorkerMain } from '@teambit/worker';
-import { Compiler } from '@teambit/compiler';
-import { PackageJsonProps } from '@teambit/pkg';
-import { EnvsAspect, EnvsMain, EnvTransformer, Environment, EnvContext } from '@teambit/envs';
-import { ReactAspect, ReactEnv, ReactMain, UseTypescriptModifiers } from '@teambit/react';
+import type { WorkerMain } from '@teambit/worker';
+import { WorkerAspect } from '@teambit/worker';
+import type { Compiler } from '@teambit/compiler';
+import type { PackageJsonProps } from '@teambit/pkg';
+import type { EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
+import { EnvsAspect, EnvContext } from '@teambit/envs';
+import type { ReactEnv, ReactMain, UseTypescriptModifiers } from '@teambit/react';
+import { ReactAspect } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
 import { getTemplates } from './node.templates';
@@ -181,7 +188,7 @@ export class NodeMain {
     application.registerAppType(nodeAppType);
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerAspect, workerMain, harmony);
-      generator.registerComponentTemplate(getTemplates(envContext));
+      generator.registerComponentTemplate(() => getTemplates(envContext));
     }
     return new NodeMain(react, tsAspect, nodeEnv, envs);
   }

@@ -1,15 +1,13 @@
 import chalk from 'chalk';
 import moment from 'moment';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
-import type { BitBaseEvent, PubsubMain } from '@teambit/pubsub';
-import { OnComponentEventResult, Workspace } from '@teambit/workspace';
+import type { OnComponentEventResult, Workspace } from '@teambit/workspace';
 import { ComponentID } from '@teambit/component-id';
-import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
-import { EventMessages, RootDirs, WatchOptions } from './watcher';
+import type { EventMessages, RootDirs, WatchOptions } from './watcher';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 import { CheckTypes } from './check-types';
-import { WatcherMain } from './watcher.main.runtime';
+import type { WatcherMain } from './watcher.main.runtime';
 
 type WatchCmdOpts = {
   verbose?: boolean;
@@ -23,12 +21,13 @@ type WatchCmdOpts = {
 
 export class WatchCommand implements Command {
   name = 'watch';
-  description = 'automatically recompile modified components (on save)';
-  extendedDescription = `by default, the watcher doesn't use polling, to keep the CPU idle.
-if this doesn't work well for you, run "bit config set watch_use_polling true" to use polling.`;
+  description = 'watch and compile components on file changes';
+  extendedDescription = `monitors component files for changes and automatically recompiles them using their environment's configured compiler.
+enables immediate feedback during development by keeping components compiled as you work.
+by default uses file system events (not polling) to minimize CPU usage - enable polling with "bit config set watch_use_polling true" if needed.`;
   helpUrl = 'reference/compiling/compiler-overview';
   alias = '';
-  group = 'development';
+  group = 'component-development';
   options = [
     ['v', 'verbose', 'show all watch events and compiler verbose output'],
     ['', 'skip-pre-compilation', 'skip compilation step before starting to watch'],
@@ -55,35 +54,15 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
     /**
      * logger extension.
      */
-    private pubsub: PubsubMain,
-
-    /**
-     * logger extension.
-     */
     private logger: Logger,
 
     /**
      * watcher extension.
      */
     private watcher: WatcherMain
-  ) {
-    this.registerToEvents();
-  }
+  ) {}
 
-  private registerToEvents() {
-    this.pubsub.sub(CompilerAspect.id, this.eventsListener);
-  }
-
-  private eventsListener = (event: BitBaseEvent<any>) => {
-    switch (event.type) {
-      case CompilerErrorEvent.TYPE:
-        this.logger.console(`Watcher error ${event.data.error}, 'error'`);
-        break;
-      default:
-    }
-  };
-
-  async report(cliArgs: [], watchCmdOpts: WatchCmdOpts) {
+  async wait(cliArgs: [], watchCmdOpts: WatchCmdOpts) {
     const { verbose, checkTypes, import: importIfNeeded, skipImport, trigger } = watchCmdOpts;
     if (importIfNeeded) {
       this.logger.consoleWarning('the "--import" flag is deprecated and is now the default behavior');
@@ -103,7 +82,6 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
       }
     };
     const watchOpts: WatchOptions = {
-      msgs: getMessages(this.logger),
       verbose,
       compile: true,
       preCompile: !watchCmdOpts.skipPreCompilation,
@@ -112,9 +90,9 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
       import: !skipImport,
       trigger: trigger ? ComponentID.fromString(trigger) : undefined,
       generateTypes: watchCmdOpts.generateTypes,
+      preImport: !skipImport,
     };
-    await this.watcher.watch(watchOpts);
-    return 'watcher terminated';
+    await this.watcher.watch(watchOpts, getMessages(this.logger));
   }
 }
 

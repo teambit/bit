@@ -22,7 +22,7 @@ describe('basic flow with dependencies', function () {
   });
   describe('after adding components', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
     });
     describe('bit status', () => {
@@ -38,7 +38,7 @@ describe('basic flow with dependencies', function () {
         expectComponentsToBeSortedAlphabetically(output);
       });
     });
-    it('bit list --scope should not show any component', () => {
+    it('bit list --local-scope should not show any component', () => {
       const output = helper.command.listLocalScope();
       expect(output).to.have.string('found 0 components');
     });

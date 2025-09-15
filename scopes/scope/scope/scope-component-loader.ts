@@ -1,11 +1,14 @@
-import { Component, ComponentFS, ComponentID, Config, Snap, State, Tag, TagMap } from '@teambit/component';
+import type { ComponentID } from '@teambit/component';
+import { Component, ComponentFS, Config, Snap, State, Tag, TagMap } from '@teambit/component';
 import pMapSeries from 'p-map-series';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { SemVer } from 'semver';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { VERSION_ZERO, Ref, ModelComponent, Version } from '@teambit/scope.objects';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ModelComponent, Version } from '@teambit/objects';
+import { VERSION_ZERO, Ref } from '@teambit/objects';
 import { BitError } from '@teambit/bit-error';
-import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import type { ScopeMain } from './scope.main.runtime';
 
 export class ScopeComponentLoader {
@@ -25,7 +28,7 @@ export class ScopeComponentLoader {
       return fromCache;
     }
     const idStr = id.toString();
-    this.logger.debug(`ScopeComponentLoader.get, loading ${idStr}`);
+    this.logger.trace(`ScopeComponentLoader.get, loading ${idStr}`);
     const legacyId = id;
     let modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id);
     // import if missing
@@ -85,13 +88,16 @@ export class ScopeComponentLoader {
   /**
    * get a component from a remote without importing it
    */
-  async getRemoteComponent(id: ComponentID): Promise<Component> {
+  async getRemoteComponent(id: ComponentID, fromMain = false): Promise<Component> {
     const compImport = this.scope.legacyScope.scopeImporter;
     const objectList = await compImport.getRemoteComponent(id);
     // it's crucial to add all objects to the Repository cache. otherwise, later, when it asks
     // for the consumerComponent from the legacyScope, it won't work.
     objectList?.getAll().forEach((obj) => this.scope.legacyScope.objects.setCache(obj));
-    const consumerComponent = await this.scope.legacyScope.getConsumerComponent(id);
+    const modelComponent = await this.scope.legacyScope.getModelComponent(id);
+    const headAsTag = modelComponent.getHeadAsTagIfExist();
+    const idToLoad = fromMain && headAsTag ? id.changeVersion(headAsTag) : id;
+    const consumerComponent = await this.scope.legacyScope.getConsumerComponent(idToLoad);
     return this.getFromConsumerComponent(consumerComponent);
   }
 

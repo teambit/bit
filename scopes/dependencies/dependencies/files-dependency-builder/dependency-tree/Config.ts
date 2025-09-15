@@ -45,7 +45,6 @@ export default function Config(options) {
     throw new Error('directory not given');
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (this.filter && typeof this.filter !== 'function') {
     throw new Error('filter must be a function');
   }
@@ -53,7 +52,6 @@ export default function Config(options) {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   debug(`given filename: ${this.filename}`);
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   this.filename = path.resolve(process.cwd(), this.filename);
 

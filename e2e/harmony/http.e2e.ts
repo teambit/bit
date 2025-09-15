@@ -18,7 +18,7 @@ import { HttpHelper } from '../http-helper';
   describe('export lane', () => {
     before(async () => {
       httpHelper = new HttpHelper(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.command.createLane();
@@ -64,13 +64,13 @@ import { HttpHelper } from '../http-helper';
   describe('export with deleted components', () => {
     before(async () => {
       httpHelper = new HttpHelper(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
@@ -101,14 +101,14 @@ import { HttpHelper } from '../http-helper';
     let scopeAfterExport: string;
     before(async () => {
       httpHelper = new HttpHelper(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
       exportOutput = helper.command.export();
-      scopeAfterExport = helper.scopeHelper.cloneLocalScope();
+      scopeAfterExport = helper.scopeHelper.cloneWorkspace();
     });
     after(() => {
       httpHelper.killHttp();
@@ -130,7 +130,7 @@ import { HttpHelper } from '../http-helper';
     describe('bit import', () => {
       let importOutput;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteHttpScope();
         importOutput = helper.command.importComponent('comp1');
       });
@@ -140,7 +140,7 @@ import { HttpHelper } from '../http-helper';
     });
     describe('bit remove --remote', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterExport);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterExport);
       });
       it('should show descriptive error when removing component that has dependents', () => {
         const output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/comp2`);

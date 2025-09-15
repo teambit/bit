@@ -1,17 +1,17 @@
 // eslint-disable-next-line max-classes-per-file
 import chalk from 'chalk';
-import { MergeStrategy } from '@teambit/merging';
-import { Command, CommandOptions } from '@teambit/cli';
-import { CheckoutProps } from '@teambit/checkout';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { CheckoutProps } from '@teambit/checkout';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
-import { StashMain } from './stash.main.runtime';
+import type { StashMain } from './stash.main.runtime';
 
 export class StashSaveCmd implements Command {
   name = 'save';
   alias = 's';
   description = 'stash modified components';
-  group = 'development';
+  group = 'version-control';
   options = [
     ['p', 'pattern', COMPONENT_PATTERN_HELP],
     [
@@ -45,7 +45,7 @@ export class StashSaveCmd implements Command {
 export class StashListCmd implements Command {
   name = 'list';
   description = 'list stash';
-  group = 'development';
+  group = 'version-control';
   options = [] as CommandOptions;
   loader = true;
 
@@ -70,7 +70,7 @@ export class StashLoadCmd implements Command {
   name = 'load [stash-id]';
   alias = 'pop';
   description = 'apply the changes according to the stash. if no stash-id provided, it loads the latest stash';
-  group = 'development';
+  group = 'version-control';
   options = [
     [
       'r',
@@ -115,8 +115,10 @@ export class StashLoadCmd implements Command {
 
 export class StashCmd implements Command {
   name = 'stash <sub-command>';
-  description = 'stash modified components';
-  group = 'development';
+  description = 'temporarily save and restore component changes';
+  extendedDescription = `temporarily stores modified component files without creating versions.
+allows saving work-in-progress changes and switching context, then restoring changes later.`;
+  group = 'version-control';
   options = [
     ['p', 'pattern', COMPONENT_PATTERN_HELP],
     ['m', 'message <string>', 'message to be attached to the stashed components'],

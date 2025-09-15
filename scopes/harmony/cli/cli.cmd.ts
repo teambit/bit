@@ -6,8 +6,9 @@ import { loadConsumerIfExist } from '@teambit/legacy.consumer';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import readline from 'readline';
 import { CLIParser } from './cli-parser';
-import { CLIMain } from './cli.main.runtime';
-import { GenerateCommandsDoc, GenerateOpts } from './generate-doc-md';
+import type { CLIMain } from './cli.main.runtime';
+import type { GenerateOpts } from './generate-doc-md';
+import { GenerateCommandsDoc } from './generate-doc-md';
 
 export class CliGenerateCmd implements Command {
   name = 'generate';
@@ -24,6 +25,7 @@ export class CliGenerateCmd implements Command {
     ['', 'docs', 'generate the cli-reference.docs.mdx file'],
     ['j', 'json', 'output the commands info as JSON'],
   ] as CommandOptions;
+  private = true;
 
   constructor(private cliMain: CLIMain) {}
 
@@ -32,8 +34,7 @@ export class CliGenerateCmd implements Command {
       return `---
 description: 'Bit command synopses. Bit version: ${getBitVersion()}'
 labels: ['cli', 'mdx', 'docs']
----
-      `;
+---`;
     }
     return new GenerateCommandsDoc(this.cliMain.commands, { metadata }).generate();
   }
@@ -49,8 +50,9 @@ export class CliCmd implements Command {
   alias = '';
   commands: Command[] = [];
   loader = false;
-  group = 'general';
+  group = 'system';
   options = [] as CommandOptions;
+  private = true;
 
   constructor(private cliMain: CLIMain) {}
 

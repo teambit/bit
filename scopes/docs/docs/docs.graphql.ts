@@ -1,6 +1,6 @@
 import { gql } from 'graphql-tag';
-import { Component } from '@teambit/component';
-import { DocsMain } from './docs.main.runtime';
+import type { Component } from '@teambit/component';
+import type { DocsMain } from './docs.main.runtime';
 
 export function docsSchema(docs: DocsMain) {
   return {

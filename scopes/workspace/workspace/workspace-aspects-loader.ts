@@ -1,17 +1,11 @@
 import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy.constants';
-import { GlobalConfigMain } from '@teambit/global-config';
 import findRoot from 'find-root';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
-import { Graph } from '@teambit/graph.cleargraph';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { ExtensionManifest, Harmony, Aspect } from '@teambit/harmony';
-import {
-  AspectDefinition,
-  AspectLoaderMain,
-  AspectResolver,
-  getAspectDef,
-  ResolvedAspect,
-} from '@teambit/aspect-loader';
+import type { Graph } from '@teambit/graph.cleargraph';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { ExtensionManifest, Harmony, Aspect } from '@teambit/harmony';
+import type { AspectDefinition, AspectLoaderMain, AspectResolver, ResolvedAspect } from '@teambit/aspect-loader';
+import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
 import fs from 'fs-extra';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
@@ -20,23 +14,24 @@ import { ComponentID } from '@teambit/component-id';
 import { ComponentNotFound } from '@teambit/legacy.scope';
 import pMapSeries from 'p-map-series';
 import { difference, compact, groupBy, partition } from 'lodash';
-import { Consumer } from '@teambit/legacy.consumer';
-import { Component, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
-import { ScopeMain } from '@teambit/scope';
-import { Logger } from '@teambit/logger';
+import type { Consumer } from '@teambit/legacy.consumer';
+import type { Component, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
+import type { ScopeMain } from '@teambit/scope';
+import type { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
-import { EnvsMain } from '@teambit/envs';
-import { ConfigMain } from '@teambit/config';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ShouldLoadFunc } from './build-graph-from-fs';
+import type { EnvsMain } from '@teambit/envs';
+import type { ConfigMain } from '@teambit/config';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { ShouldLoadFunc } from './build-graph-from-fs';
 import type { Workspace } from './workspace';
-import {
+import type {
   OnAspectsResolve,
   OnAspectsResolveSlot,
   OnRootAspectAdded,
   OnRootAspectAddedSlot,
 } from './workspace.main.runtime';
-import { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
+import type { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
+import type { ConfigStoreMain } from '@teambit/config-store';
 
 export type GetConfiguredUserAspectsPackagesOptions = {
   externalsOnly?: boolean;
@@ -62,7 +57,7 @@ export class WorkspaceAspectsLoader {
     private envs: EnvsMain,
     private dependencyResolver: DependencyResolverMain,
     private logger: Logger,
-    private globalConfig: GlobalConfigMain,
+    private configStore: ConfigStoreMain,
     private harmony: Harmony,
     private onAspectsResolveSlot: OnAspectsResolveSlot,
     private onRootAspectAddedSlot: OnRootAspectAddedSlot,
@@ -102,7 +97,7 @@ export class WorkspaceAspectsLoader {
     // generate a random callId to be able to identify the call from the logs
     const callId = Math.floor(Math.random() * 1000);
     const loggerPrefix = `[${callId}] loadAspects,`;
-    this.logger.profile(`[${callId}] workspace.loadAspects`);
+    this.logger.profileTrace(`[${callId}] workspace.loadAspects`);
     this.logger.info(`${loggerPrefix} loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts, null, 2)}`);
@@ -115,7 +110,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       notLoadedIds = nonLocalAspects.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     }
     if (!notLoadedIds.length) {
-      this.logger.profile(`[${callId}] workspace.loadAspects`);
+      this.logger.profileTrace(`[${callId}] workspace.loadAspects`);
       return [];
     }
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -181,7 +176,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, undefined, { throwOnError });
     const manifestIds = manifests.map((manifest) => manifest.id);
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
-    this.logger.profile(`[${callId}] workspace.loadAspects`);
+    this.logger.profileTrace(`[${callId}] workspace.loadAspects`);
     return compact(manifestIds.concat(scopeAspectIds));
   }
 
@@ -417,12 +412,12 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   }
 
   shouldUseHashForCapsules(): boolean {
-    return !this.globalConfig.getSync(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR);
+    return !this.configStore.getConfig(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR);
   }
 
   getCapsulePath() {
     const defaultPath = this.workspace.path;
-    return this.globalConfig.getSync(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR) || defaultPath;
+    return this.configStore.getConfig(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR) || defaultPath;
   }
 
   private logFoundWorkspaceVsScope(loggerPrefix: string, workspaceIds: ComponentID[], nonWorkspaceIds: ComponentID[]) {

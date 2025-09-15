@@ -1,14 +1,14 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit checkout command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.reInitLocalScope();
+    helper.scopeHelper.reInitWorkspace();
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -16,13 +16,13 @@ describe('bit checkout command', function () {
   describe('component with a non-exist package dependency which triggers the package-manager to fail', () => {
     let afterExport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.dependenciesSet('comp1', 'bit-non-exist-pkg@1.0.0');
       helper.command.tagAllWithoutBuild('--ignore-issues="*"');
       helper.command.tagAllWithoutBuild('--unmodified --ignore-issues="*"');
       helper.command.export();
-      afterExport = helper.scopeHelper.cloneLocalScope();
+      afterExport = helper.scopeHelper.cloneWorkspace();
     });
     describe('bit checkout', () => {
       it('should not throw, instead, should show the error in the output', () => {
@@ -35,7 +35,7 @@ describe('bit checkout command', function () {
     });
     describe('bit switch', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(afterExport);
+        helper.scopeHelper.getClonedWorkspace(afterExport);
         helper.command.createLane();
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
       });
@@ -47,7 +47,7 @@ describe('bit checkout command', function () {
     });
     describe('bit import', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
       });
       it('should not throw', () => {

@@ -7,13 +7,13 @@ import { logger } from '@teambit/legacy.logger';
 import { InvalidIndexJson } from '@teambit/legacy.scope';
 import { ModelComponent, Symlink } from '../models';
 import Lane from '../models/lane';
-import BitObject from './object';
-import Ref from './ref';
+import type BitObject from './object';
+import type Ref from './ref';
 import { difference } from 'lodash';
 
 const COMPONENTS_INDEX_FILENAME = 'index.json';
 
-interface IndexItem {
+export interface IndexItem {
   hash: string;
   toIdentifierString(): string;
 }
@@ -57,10 +57,16 @@ type Index = { [IndexType.components]: ComponentItem[]; [IndexType.lanes]: LaneI
 export class ScopeIndex {
   indexPath: string;
   index: Index;
-  writeIndexMutex = new Mutex();
+  _writeIndexMutex?: Mutex;
   constructor(indexPath: string, index: Index = { [IndexType.components]: [], [IndexType.lanes]: [] }) {
     this.indexPath = indexPath;
     this.index = index;
+  }
+  get writeIndexMutex() {
+    if (!this._writeIndexMutex) {
+      this._writeIndexMutex = new Mutex();
+    }
+    return this._writeIndexMutex;
   }
   static async load(basePath: string): Promise<ScopeIndex> {
     const indexPath = this._composePath(basePath);
@@ -105,7 +111,6 @@ export class ScopeIndex {
   }
 
   getHashes(indexType: IndexType): string[] {
-    // @ts-ignore how to tell TS that all this.index.prop are array?
     return this.index[indexType].map((indexItem: IndexItem) => indexItem.hash);
   }
   getHashesByQuery(indexType: IndexType, filter: Function): string[] {

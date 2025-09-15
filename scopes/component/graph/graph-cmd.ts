@@ -1,109 +1,147 @@
 import chalk from 'chalk';
-import os from 'os';
-import * as path from 'path';
 import GraphLib from 'graphlib';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
-import { generateRandomStr } from '@teambit/toolbox.string.random';
-import { ConsumerNotFound, Consumer, loadConsumerIfExist } from '@teambit/legacy.consumer';
-import { DependencyGraph, VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
+import type { GraphConfig } from '@teambit/legacy.dependency-graph';
+import { VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
 import { getRemoteByName } from '@teambit/scope.remotes';
-import { ComponentMain } from '@teambit/component';
+import type { ComponentMain } from '@teambit/component';
+import type { GraphMain } from './graph.main.runtime';
 
-type GraphOpt = {
-  image?: string;
+export type GraphOpt = {
   remote?: string;
-  allVersions?: boolean;
   layout?: string;
+  cycles?: boolean;
+  png?: boolean;
   json?: boolean;
+  includeLocalOnly?: boolean;
+  includeDependencies?: boolean;
 };
 
 export class GraphCmd implements Command {
   name = 'graph [id]';
-  description = "generate an image file with the workspace components' dependencies graph";
-  extendedDescription: 'black arrow is a runtime dependency. red arrow is either dev or peer';
-  group = 'discover';
+  description = 'visualize component dependencies as a graph image';
+  extendedDescription = `generates an SVG (or PNG) image showing component dependency relationships.
+black arrows represent runtime dependencies, red arrows show dev or peer dependencies.
+by default shows only workspace components; use --include-dependencies for full dependency tree.`;
+  group = 'info-analysis';
   alias = '';
   options = [
-    ['i', 'image <image>', 'image path and format. use one of the following extensions: [gif, png, svg, pdf]'],
     ['r', 'remote [remoteName]', 'remote name (name is optional, leave empty when id is specified)'],
-    ['', 'all-versions', 'enter all components versions into the graph, not only latest'],
     [
       '',
       'layout <name>',
       'GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]',
     ],
+    ['', 'png', 'save the graph as a png file instead of svg. requires "graphviz" to be installed'],
+    ['', 'cycles', 'generate a graph of cycles only'],
+    [
+      '',
+      'include-local-only',
+      'DEPRECATED: include only the components in the workspace (or local scope). This is now the default behavior.',
+    ],
+    [
+      '',
+      'include-dependencies',
+      'include all dependencies recursively, not just workspace (or local scope) components',
+    ],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
   remoteOp = true;
 
-  constructor(private componentAspect: ComponentMain) {}
+  constructor(
+    private componentAspect: ComponentMain,
+    private graph: GraphMain
+  ) {}
 
-  async report([id]: [string], { remote, allVersions, layout, image }: GraphOpt): Promise<string> {
-    const consumer = await loadConsumerIfExist();
-    if (!consumer && !remote) throw new ConsumerNotFound();
+  async report([id]: [string], graphOpts: GraphOpt): Promise<string> {
+    const { remote, layout, png, includeLocalOnly, includeDependencies } = graphOpts;
+    const host = this.componentAspect.getHost();
 
-    const graph = await this.generateGraph(consumer, id, remote, allVersions);
+    const getVisualGraph = async (): Promise<VisualDependencyGraph> => {
+      if (remote) {
+        const config: GraphConfig = {};
+        if (layout) config.layout = layout;
+        const graph = await this.generateGraphFromRemote(remote, id);
+        return VisualDependencyGraph.loadFromGraphlib(graph, config);
+      }
+      const compId = id ? await host.resolveComponentId(id) : undefined;
+      const compIds = compId ? [compId] : undefined;
 
-    const config = {};
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (layout) config.layout = layout;
-    const visualDependencyGraph = await VisualDependencyGraph.loadFromGraphlib(graph, config);
+      // New logic: local-only is now the default behavior
+      // includeDependencies flag overrides this to show all dependencies
+      const modifiedOpts = {
+        ...graphOpts,
+        includeLocalOnly: includeDependencies ? false : includeLocalOnly !== false, // true by default unless includeDependencies is used
+      };
 
-    image = image || path.join(os.tmpdir(), `${generateRandomStr()}.png`);
-    const result = await visualDependencyGraph.image(image);
+      return this.graph.getVisualGraphIds(compIds, modifiedOpts);
+    };
+
+    const visualDependencyGraph = await getVisualGraph();
+    const result = await visualDependencyGraph.render(png ? 'png' : 'svg');
 
     return chalk.green(`image created at ${result}`);
   }
 
-  private async generateGraph(
-    consumer?: Consumer,
-    id?: string,
-    remote?: string,
-    allVersions?: boolean
-  ): Promise<GraphLib.Graph> {
-    if (!consumer && !remote) throw new ConsumerNotFound();
-    const getBitId = (): ComponentID | undefined => {
-      if (!id) return undefined;
-      if (remote) return ComponentID.fromString(id); // user used --remote so we know it has a scope
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return consumer.getParsedId(id);
-    };
-    const bitId = getBitId();
-    if (remote) {
-      if (id) {
-        // @ts-ignore scope must be set as it came from a remote
-        const scopeName: string = typeof remote === 'string' ? remote : bitId.scope;
-        const remoteScope = await getRemoteByName(scopeName, consumer);
-        const componentDepGraph = await remoteScope.graph(bitId);
-        return componentDepGraph.graph;
-      }
-      if (typeof remote !== 'string') {
-        throw new Error('please specify remote scope name or enter an id');
-      }
-      const remoteScope = await getRemoteByName(remote, consumer);
-      const componentDepGraph = await remoteScope.graph();
-      return componentDepGraph.graph;
-    }
+  async json([id]: [string], graphOpts: GraphOpt) {
+    const { remote, includeLocalOnly, includeDependencies } = graphOpts;
+    const host = this.componentAspect.getHost();
+    if (!remote) {
+      // For JSON output, we need to manually filter if needed
+      // Since getGraphIds doesn't accept the same options as getVisualGraphIds
+      const shouldIncludeLocalOnly = includeDependencies ? false : includeLocalOnly !== false;
 
-    const onlyLatest = !allVersions;
-    // @ts-ignore consumer must be set here
-    const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(consumer, onlyLatest);
-    const dependencyGraph = new DependencyGraph(workspaceGraph);
-    if (id) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const componentGraph = dependencyGraph.getSubGraphOfConnectedComponents(bitId);
-      const componentDepGraph = new DependencyGraph(componentGraph);
-      return componentDepGraph.graph;
+      const graph = await this.graph.getGraphIds(id ? [await host.resolveComponentId(id)] : undefined);
+
+      let filteredGraph = graph;
+      if (shouldIncludeLocalOnly) {
+        // Filter to only include local components
+        const list = await host.listIds();
+        const listStr = list.map((compId) => compId.toString());
+        filteredGraph = graph.successorsSubgraph(listStr, {
+          nodeFilter: (node) => listStr.includes(node.id),
+          edgeFilter: (edge) => listStr.includes(edge.targetId) && listStr.includes(edge.sourceId),
+        });
+      }
+
+      const jsonGraph = filteredGraph.toJson();
+      if (jsonGraph.nodes) {
+        jsonGraph.nodes = jsonGraph.nodes.map((node) => node.id);
+      }
+      return jsonGraph;
     }
-    return dependencyGraph.graph;
+    const graph = await this.generateGraphFromRemote(remote!, id);
+    return GraphLib.json.write(graph);
   }
 
-  async json([id]: [string], { remote, allVersions }: GraphOpt) {
-    const consumer = await loadConsumerIfExist();
-    if (!consumer && !remote) throw new ConsumerNotFound();
+  /**
+   *
+   * @returns Workspace if it exists, otherwise undefined.
+   * the reason to not add it here as a type is to avoid circular dependency issues.
+   */
+  private getWorkspaceIfExist(): any {
+    try {
+      return this.componentAspect.getHost('teambit.workspace/workspace');
+    } catch {
+      return undefined;
+    }
+  }
 
-    const graph = await this.generateGraph(consumer, id, remote, allVersions);
-    return GraphLib.json.write(graph);
+  private async generateGraphFromRemote(remote: string | boolean, id?: string): Promise<GraphLib.Graph> {
+    const workspace = this.getWorkspaceIfExist();
+    const compId = id ? ComponentID.fromString(id) : undefined;
+    if (compId) {
+      const scopeName: string = typeof remote === 'string' ? remote : compId.scope;
+      const remoteScope = await getRemoteByName(scopeName, workspace?.consumer);
+      const componentDepGraph = await remoteScope.graph(compId);
+      return componentDepGraph.graph;
+    }
+    if (typeof remote !== 'string') {
+      throw new Error('please specify remote scope name or enter an id');
+    }
+    const remoteScope = await getRemoteByName(remote, workspace?.consumer);
+    const componentDepGraph = await remoteScope.graph();
+    return componentDepGraph.graph;
   }
 }

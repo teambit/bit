@@ -1,23 +1,23 @@
-import { AnyFS } from '@teambit/any-fs';
+import type { AnyFS } from '@teambit/any-fs';
 import { capitalize } from '@teambit/toolbox.string.capitalize';
-import { SemVer } from 'semver';
-import { ComponentID } from '@teambit/component-id';
+import type { SemVer } from 'semver';
+import type { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { BuildStatus } from '@teambit/legacy.constants';
-import { ComponentLog } from '@teambit/scope.objects';
+import type { BuildStatus } from '@teambit/legacy.constants';
+import type { ComponentLog } from '@teambit/objects';
 import type { DependencyList } from '@teambit/dependency-resolver';
 import { slice } from 'lodash';
-import { ComponentFactory } from './component-factory';
-import ComponentFS from './component-fs';
+import type { ComponentFactory } from './component-factory';
+import type ComponentFS from './component-fs';
 // import { NothingToSnap } from './exceptions';
-import { Config as ComponentConfig } from './config';
+import type { Config as ComponentConfig } from './config';
 // eslint-disable-next-line import/no-cycle
-import { Snap } from './snap';
-import { State } from './state';
+import type { Snap } from './snap';
+import type { State } from './state';
 import { TagMap } from './tag-map';
-import { Tag } from './tag';
+import type { Tag } from './tag';
 import { CouldNotFindLatest } from './exceptions';
-import { IComponent, RawComponentMetadata } from './component-interface';
+import type { IComponent, RawComponentMetadata } from './component-interface';
 // import { Author } from './types';
 
 type SnapsIterableOpts = {

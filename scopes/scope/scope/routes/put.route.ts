@@ -1,7 +1,8 @@
-import { Route, Verb, Request, Response } from '@teambit/express';
-import { ObjectList } from '@teambit/scope.objects';
+import type { Route, Request, Response } from '@teambit/express';
+import { Verb } from '@teambit/express';
+import { ObjectList } from '@teambit/objects';
 import { put } from '@teambit/legacy.scope-api';
-import { OnPostPutSlot, ScopeMain } from '../scope.main.runtime';
+import type { OnPostPutSlot, ScopeMain } from '../scope.main.runtime';
 
 export class PutRoute implements Route {
   constructor(

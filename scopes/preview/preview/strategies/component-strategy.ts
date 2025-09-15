@@ -1,26 +1,28 @@
 import { join, resolve, basename, dirname } from 'path';
 import { existsSync, mkdirpSync } from 'fs-extra';
-import { Component } from '@teambit/component';
-import { ComponentID } from '@teambit/component-id';
+import type { Component } from '@teambit/component';
+import type { ComponentID } from '@teambit/component-id';
 import { flatten, isEmpty, chunk } from 'lodash';
-import { Compiler } from '@teambit/compiler';
+import type { Compiler } from '@teambit/compiler';
 import type { AbstractVinyl } from '@teambit/component.sources';
 import type { Capsule } from '@teambit/isolator';
-import { CAPSULE_ARTIFACTS_DIR, ComponentResult } from '@teambit/builder';
+import type { ArtifactDefinition, ComponentResult } from '@teambit/builder';
+import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import { BitError } from '@teambit/bit-error';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import type { BundlerResult, BundlerContext, Asset, BundlerEntryMap, EntriesAssetsMap, Target } from '@teambit/bundler';
-import { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
+import type { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
 import type { PreviewDefinition } from '../preview-definition';
 import type { ComponentPreviewMetaData, PreviewMain } from '../preview.main.runtime';
 import { generateComponentLink } from './generate-component-link';
 import { PreviewOutputFileNotFound } from '../exceptions';
 
-export const PREVIEW_CHUNK_SUFFIX = 'preview';
-export const COMPONENT_CHUNK_SUFFIX = 'component';
-export const PREVIEW_CHUNK_FILENAME_SUFFIX = `${PREVIEW_CHUNK_SUFFIX}.js`;
-export const COMPONENT_CHUNK_FILENAME_SUFFIX = `${COMPONENT_CHUNK_SUFFIX}.js`;
+export const PREVIEW_GLOBAL_NAME_SUFFIX = 'preview';
+export const PREVIEW_CHUNK_SUFFIX = 'preview-chunk';
+export const COMPONENT_CHUNK_SUFFIX = 'component-chunk';
+export const PREVIEW_CHUNK_FILENAME_SUFFIX = 'preview.js';
+export const COMPONENT_CHUNK_FILENAME_SUFFIX = 'component.js';
 
 export const COMPONENT_STRATEGY_SIZE_KEY_NAME = 'size';
 export const COMPONENT_STRATEGY_ARTIFACT_NAME = 'preview-component';
@@ -133,7 +135,12 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
     const chunks = {
       componentPreview: this.getComponentChunkId(component.id, 'preview'),
-      component: context.splitComponentBundle ? component.id.toStringWithoutVersion() : undefined,
+      component: context.splitComponentBundle ? this.getComponentChunkId(component.id, 'component') : undefined,
+    };
+
+    const libNames = {
+      componentPreview: this.getComponentChunkGlobalName(component.id, 'preview'),
+      component: context.splitComponentBundle ? this.getComponentChunkGlobalName(component.id, 'component') : undefined,
     };
 
     const entries = {
@@ -147,11 +154,11 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
         ),
         import: componentPreviewPath,
         dependOn: chunks.component,
-        library: { name: chunks.componentPreview, type: 'umd' },
+        library: { name: libNames.componentPreview, type: 'umd' },
       },
     };
 
-    if (chunks.component) {
+    if (chunks.component && libNames.component) {
       entries[chunks.component] = {
         filename: this.getComponentChunkFileName(
           component.id.toString({
@@ -162,7 +169,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
         ),
         dependOn: undefined,
         import: componentPath,
-        library: { name: chunks.component, type: 'umd' },
+        library: { name: libNames.component, type: 'umd' },
       };
     }
 
@@ -172,8 +179,16 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
   private getComponentChunkId(componentId: ComponentID, type: 'component' | 'preview') {
     const id =
       type === 'component'
-        ? componentId.toStringWithoutVersion()
+        ? `${componentId.toStringWithoutVersion()}-${COMPONENT_CHUNK_SUFFIX}`
         : `${componentId.toStringWithoutVersion()}-${PREVIEW_CHUNK_SUFFIX}`;
+    return id;
+  }
+
+  private getComponentChunkGlobalName(componentId: ComponentID, type: 'component' | 'preview') {
+    const id =
+      type === 'component'
+        ? componentId.toStringWithoutVersion()
+        : `${componentId.toStringWithoutVersion()}-${PREVIEW_GLOBAL_NAME_SUFFIX}`;
     return id;
   }
 
@@ -226,7 +241,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
   ): Asset[] | undefined {
     if (!assets) return undefined;
 
-    const componentEntryId = component.id.toStringWithoutVersion();
+    const componentEntryId = this.getComponentChunkId(component.id, 'component');
     const componentPreviewEntryId = this.getComponentChunkId(component.id, 'preview');
     const componentFiles = entriesAssetsMap[componentEntryId]?.assets || [];
     const componentAuxiliaryFiles = entriesAssetsMap[componentEntryId]?.auxiliaryAssets || [];
@@ -249,7 +264,8 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     result: BundlerResult,
     component: Component
   ): ComponentPreviewMetaData {
-    const componentEntryId = component.id.toStringWithoutVersion();
+    const componentEntryId = this.getComponentChunkId(component.id, 'component');
+
     if (!result?.entriesAssetsMap || !result?.entriesAssetsMap[componentEntryId]) {
       return {};
     }
@@ -334,7 +350,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     return componentsResults;
   }
 
-  private getArtifactDef() {
+  private getArtifactDef(): ArtifactDefinition[] {
     // eslint-disable-next-line @typescript-eslint/prefer-as-const
     // const env: 'env' = 'env';
     // const rootDir = this.getDirName(context);
@@ -342,8 +358,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     return [
       {
         name: COMPONENT_STRATEGY_ARTIFACT_NAME,
-        globPatterns: ['**'],
-        rootDir: this.getArtifactDirectory(),
+        globPatterns: [this.getArtifactDirectory()],
         // context: env,
       },
     ];
@@ -361,8 +376,8 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
   private getPaths(context: ComputeTargetsContext, component: Component, files: AbstractVinyl[]) {
     const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
     if (!capsule) return [];
-    const compiler: Compiler = context.env.getCompiler();
-    return files.map((file) => join(capsule.path, compiler.getDistPathBySrcPath(file.relative)));
+    const compiler: Compiler = context.env.getCompiler?.();
+    return files.map((file) => join(capsule.path, compiler?.getDistPathBySrcPath(file.relative) || file.relative));
   }
 
   private getComponentOutputPath(capsule: Capsule, context: ComputeTargetsContext) {

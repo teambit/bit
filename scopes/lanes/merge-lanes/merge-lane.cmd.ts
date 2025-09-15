@@ -1,11 +1,12 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
-import { mergeReport, MergeStrategy } from '@teambit/merging';
-import { GlobalConfigMain } from '@teambit/global-config';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
+import { mergeReport } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import { removeTemplate } from '@teambit/remove';
-import { MergeLanesMain } from './merge-lanes.main.runtime';
+import type { MergeLanesMain } from './merge-lanes.main.runtime';
+import type { ConfigStoreMain } from '@teambit/config-store';
 
 export class MergeLaneCmd implements Command {
   name = 'merge <lane> [pattern]';
@@ -63,6 +64,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     ['', 'no-snap', 'do not pass snaps from the other lane even for non-diverged components (see command description)'],
     ['', 'tag', 'auto-tag all lane components after merging into main (or tag-merge in case of snap-merge)'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
+    ['', 'loose', 'relevant for --build, to allow build to succeed even if tasks like tests or lint fail'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
     ['', 'no-squash', 'relevant for merging lanes into main, which by default squashes all lane snaps'],
@@ -95,6 +97,11 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       'exclude-non-lane-comps',
       'when merging main into a lane, exclude workspace components that are not on the lane (by default all workspace components are merged)',
     ],
+    [
+      '',
+      'detach-head',
+      'UNSUPPORTED YET. for each component, find the divergent point from main and merge to that point. do not change the head',
+    ],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -102,7 +109,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
 
   constructor(
     private mergeLanes: MergeLanesMain,
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {}
 
   async report(
@@ -128,6 +135,8 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       ignoreConfigChanges,
       verbose = false,
       excludeNonLaneComps = false,
+      detachHead,
+      loose = false,
     }: {
       ours?: boolean;
       theirs?: boolean;
@@ -149,9 +158,11 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       ignoreConfigChanges?: boolean;
       verbose?: boolean;
       excludeNonLaneComps?: boolean;
+      detachHead?: boolean;
+      loose?: boolean;
     }
   ): Promise<string> {
-    build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
+    build = this.configStore.getConfigBoolean(CFG_FORCE_LOCAL_BUILD) || Boolean(build);
     if (ours || theirs) {
       throw new BitError(
         'the "--ours" and "--theirs" flags are deprecated. use "--auto-merge-resolve" instead. see "bit lane merge --help" for more information'
@@ -203,6 +214,8 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       ignoreConfigChanges,
       includeDeps,
       excludeNonLaneComps,
+      detachHead,
+      loose,
     });
 
     const mergeResult = mergeReport({ ...mergeResults, configMergeResults, verbose });

@@ -1,14 +1,14 @@
 import retry from 'async-retry';
 import { GraphQLClient, gql } from 'graphql-request';
 import { InvalidScopeName, isValidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
-import { getSync } from '@teambit/legacy.global-config';
+import { getConfig } from '@teambit/config-store';
 import { CFG_HUB_DOMAIN_KEY, DEFAULT_HUB_DOMAIN, CFG_USER_TOKEN_KEY, getSymphonyUrl } from '@teambit/legacy.constants';
-import { Scope } from '@teambit/legacy.scope';
+import type { Scope } from '@teambit/legacy.scope';
 import { getAuthHeader, getFetcherWithAgent } from '@teambit/scope.network';
 import { logger } from '@teambit/legacy.logger';
 import { ScopeNotFoundOrDenied } from '../exceptions/scope-not-found-or-denied';
 
-const hubDomain = getSync(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;
+const hubDomain = getConfig(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;
 const symphonyUrl = getSymphonyUrl();
 
 type ResolverFunction = (scopeName: string, thisScopeName?: string, token?: string) => Promise<string>;
@@ -29,9 +29,9 @@ const SCOPE_GET = gql`
 // comment this out once on production
 async function getScope(name: string) {
   if (scopeCache[name]) return scopeCache[name];
-  const token = getSync(CFG_USER_TOKEN_KEY);
+  const token = getConfig(CFG_USER_TOKEN_KEY);
   const headers = token ? getAuthHeader(token) : {};
-  const graphQlUrl = `https://${symphonyUrl}/graphql`;
+  const graphQlUrl = `${symphonyUrl}/graphql`;
   const graphQlFetcher = await getFetcherWithAgent(graphQlUrl);
   const client = new GraphQLClient(graphQlUrl, { headers, fetch: graphQlFetcher });
 
@@ -85,7 +85,7 @@ const hubResolver = async (scopeName) => {
 };
 
 const remoteResolver = (scopeName: string, thisScope?: Scope): Promise<string> => {
-  const token = getSync(CFG_USER_TOKEN_KEY);
+  const token = getConfig(CFG_USER_TOKEN_KEY);
   const resolverPath = thisScope?.scopeJson.resolverPath;
   let resolverFunction: ResolverFunction;
   if (!resolverPath) {

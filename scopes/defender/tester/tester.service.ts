@@ -1,14 +1,22 @@
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { resolve } from 'path';
-import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
+import type {
+  EnvService,
+  ExecutionContext,
+  EnvDefinition,
+  Env,
+  EnvContext,
+  ServiceTransformationMap,
+} from '@teambit/envs';
 import { ComponentMap } from '@teambit/component';
-import { Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
 import highlight from 'cli-highlight';
-import { PubSubEngine } from 'graphql-subscriptions';
-import { DevFilesMain } from '@teambit/dev-files';
-import { Tester, Tests, CallbackFn } from './tester';
+import type { PubSubEngine } from 'graphql-subscriptions';
+import type { DevFilesMain } from '@teambit/dev-files';
+import type { Tester, CallbackFn } from './tester';
+import { Tests } from './tester';
 import { TesterAspect } from './tester.aspect';
-import { TesterOptions } from './tester.main.runtime';
+import type { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
 
 const chalk = require('chalk');
@@ -97,6 +105,9 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
   }
 
   async run(context: ExecutionContext, options: TesterOptions): Promise<Tests> {
+    if (!context.env.getTester) {
+      return new Tests([]);
+    }
     const tester: Tester = context.env.getTester();
     const specFiles = ComponentMap.as(context.components, (component) => {
       return detectTestFiles(component, this.devFiles);

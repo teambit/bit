@@ -1,11 +1,11 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { ClearCacheMain } from './clear-cache.main.runtime';
+import type { ClearCacheMain } from './clear-cache.main.runtime';
 
 export default class ClearCacheCmd implements Command {
   name = 'clear-cache';
-  description = "clears Bit's cache from current working machine";
-  group = 'general';
+  description = 'remove cached data to resolve stale data issues';
+  group = 'system';
   extendedDescription: string;
   alias = 'cc';
   options = [['r', 'remote <remote-name>', 'clear memory cache from a remote scope']] as CommandOptions;
@@ -14,10 +14,12 @@ export default class ClearCacheCmd implements Command {
   helpUrl = 'reference/workspace/clearing-cache';
 
   constructor(private clearCache: ClearCacheMain) {
-    this.extendedDescription = `The following gets removed by this command:
-1) V8 compiled code (generated the first time Bit is loaded by v8-compile-cache package)
-2) components cache on the filesystem (mainly the dependencies graph and docs)
-3) scope's index file, which maps the component-id:object-hash`;
+    this.extendedDescription = `clears various caches that Bit uses to improve performance. useful when experiencing stale data issues or
+unexpected behavior. this command removes:
+1) components cache on the filesystem (mainly the dependencies graph and docs)
+2) scope's index file, which maps the component-id:object-hash
+
+note: this cache has minimal impact on disk space. to free significant disk space, use "bit capsule delete --all" to remove build capsules.`;
   }
 
   async report(arg, { remote }: { remote?: string }): Promise<string> {

@@ -1,4 +1,4 @@
-import { ComponentID } from '@teambit/component';
+import type { ComponentID } from '@teambit/component';
 
 /**
  * BaseComponentTemplateOptions describes the foundational properties for components.
@@ -52,6 +52,10 @@ export interface BaseComponentTemplateOptions {
    * namespace of the component.
    */
   namespace?: string;
+  /**
+   * when a template implements the promptOptions function, this object will be populated with the user responses.
+   */
+  promptResults?: PromptResults;
 }
 
 /**
@@ -143,8 +147,37 @@ export interface ComponentTemplateOptions {
   installMissingDependencies?: boolean;
 }
 
+/**
+ * PromptOption is shown to the user before calling the generateFiles function.
+ * The prompt is using enquirer under the hood. see https://www.npmjs.com/package/enquirer.
+ * Examples:
+ * - input: {name: 'name', message: 'enter your name', type: 'input'}
+ * - confirm: {name: 'isHappy', message: 'are you happy?', type: 'confirm'}
+ * - select: {name: 'color', message: 'pick a color', type: 'select', choices: ['red', 'blue', 'green']}
+ */
+export type PromptOption = {
+  name: string;
+  message: string;
+  type: 'input' | 'confirm' | 'select';
+  choices?: string[]; // for select type
+  skip?: (previousResults: PromptResults) => boolean; // skip this prompt if this function returns true
+};
+
+/**
+ * PromptResults is the result of the user input received from the promptOptions.
+ * The key is the name of the prompt option and the value is the user input.
+ * in case the prompt-option is of type 'confirm', the value will be a boolean.
+ */
+export type PromptResults = Record<string, string | boolean>;
+
 export interface ComponentTemplate extends ComponentTemplateOptions {
   name: string;
+
+  /**
+   * in case the template requires user input, this function will be called to prompt the user.
+   * the results will be passed to the generateFiles function.
+   */
+  promptOptions?: () => PromptOption[];
 
   /**
    * template function for generating the file of a certain component.,
@@ -160,3 +193,5 @@ export interface ComponentTemplate extends ComponentTemplateOptions {
    */
   config?: ComponentConfig | ((context: ConfigContext) => ComponentConfig);
 }
+
+export type GetComponentTemplates = () => ComponentTemplate[];

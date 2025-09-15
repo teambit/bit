@@ -1,18 +1,21 @@
 // eslint-disable-next-line max-classes-per-file
 import chalk from 'chalk';
 import yn from 'yn';
-import { ScopeMain } from '@teambit/scope';
-import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
+import type { ScopeMain } from '@teambit/scope';
+import type { LaneId } from '@teambit/lane-id';
+import { DEFAULT_LANE } from '@teambit/lane-id';
 import { checkoutOutput } from '@teambit/checkout';
-import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { Command, CommandOptions } from '@teambit/cli';
-import { LaneData, serializeLaneData } from '@teambit/legacy.scope';
+import type { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError } from '@teambit/workspace';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { LaneData } from '@teambit/legacy.scope';
+import { serializeLaneData } from '@teambit/legacy.scope';
 import { BitError } from '@teambit/bit-error';
 import { approveOperation } from '@teambit/legacy.cli.prompts';
 import { COMPONENT_PATTERN_HELP, DEFAULT_CLOUD_DOMAIN } from '@teambit/legacy.constants';
-import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
-import { SwitchCmd } from './switch.cmd';
-import { FetchCmd } from '@teambit/importer';
+import type { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
+import type { SwitchCmd } from './switch.cmd';
+import type { FetchCmd } from '@teambit/importer';
 
 type LaneOptions = {
   details?: boolean;
@@ -272,6 +275,7 @@ export class CatLaneHistoryCmd implements Command {
   alias = 'clh';
   options = [] as CommandOptions;
   loader = true;
+  group = 'advanced';
 
   constructor(private lanes: LanesMain) {}
 
@@ -317,6 +321,7 @@ if you want to fork the lane from a certain point in history, use "lane checkout
   alias = '';
   options = [
     ['x', 'skip-dependency-installation', 'do not install dependencies of the checked out components'],
+    ['j', 'json', 'return the revert result in json format'],
   ] as CommandOptions;
   loader = true;
 
@@ -326,37 +331,137 @@ if you want to fork the lane from a certain point in history, use "lane checkout
     const result = await this.lanes.revertHistory(historyId, opts);
     return checkoutOutput(result, {}, `successfully reverted according to history-id: ${historyId}`);
   }
+
+  async json([historyId]: [string], opts: LaneCheckoutOpts) {
+    const result = await this.lanes.revertHistory(historyId, opts);
+    return {
+      components: result.components?.map((component) => ({
+        id: component.id.toString(),
+        filesStatus: Object.entries(component.filesStatus || {}).reduce(
+          (acc, [filePath, status]) => {
+            acc[filePath] = status;
+            return acc;
+          },
+          {} as Record<string, string>
+        ),
+      })),
+      removedComponents: result.removedComponents?.map((id) => id.toString()),
+      addedComponents: result.addedComponents?.map((id) => id.toString()),
+      newComponents: result.newComponents?.map((id) => id.toString()),
+      failedComponents: result.failedComponents?.map((component) => ({
+        id: component.id.toString(),
+        unchangedMessage: component.unchangedMessage,
+        unchangedLegitimately: component.unchangedLegitimately,
+      })),
+      leftUnresolvedConflicts: result.leftUnresolvedConflicts,
+      newFromLane: result.newFromLane,
+      newFromLaneAdded: result.newFromLaneAdded,
+      version: result.version,
+      resolvedComponents: result.resolvedComponents?.map((component) => component.id.toString()),
+      abortedComponents: result.abortedComponents?.map((component) => ({
+        id: component.id.toString(),
+        filesStatus: Object.entries(component.filesStatus || {}).reduce(
+          (acc, [filePath, status]) => {
+            acc[filePath] = status;
+            return acc;
+          },
+          {} as Record<string, string>
+        ),
+      })),
+      installationError: result.installationError?.message,
+      compilationError: result.compilationError?.message,
+      mergeSnapError: result.mergeSnapError?.message,
+      mergeSnapResults: result.mergeSnapResults
+        ? {
+            snappedComponents: result.mergeSnapResults.snappedComponents?.map((component) => component.id.toString()),
+            removedComponents: result.mergeSnapResults.removedComponents?.toStringArray(),
+            exportedIds: result.mergeSnapResults.exportedIds?.map((id) => id.toString()),
+          }
+        : null,
+      workspaceConfigUpdateResult: result.workspaceConfigUpdateResult
+        ? {
+            logs: result.workspaceConfigUpdateResult.logs,
+          }
+        : undefined,
+      historyId,
+    };
+  }
 }
 
 export class LaneHistoryCmd implements Command {
   name = 'history [lane-name]';
   description = 'EXPERIMENTAL. show lane history, default to the current lane';
+  extendedDescription = `list from the oldest to the newest history items`;
   alias = '';
-  options = [['', 'id <string>', 'show a specific history item']] as CommandOptions;
+  options = [
+    ['', 'id <string>', 'show a specific history item'],
+    ['j', 'json', 'return the lane history in json format'],
+  ] as CommandOptions;
   loader = true;
 
   constructor(private lanes: LanesMain) {}
 
-  async report([laneName]: [string], { id }: { id?: string }): Promise<string> {
+  private async getHistoryData(laneName?: string, id?: string) {
     const laneId = laneName ? await this.lanes.parseLaneId(laneName) : this.lanes.getCurrentLaneId();
     if (!laneId || laneId.isDefault()) throw new BitError(`unable to show history of the default lane (main)`);
     await this.lanes.importLaneHistory(laneId);
     const laneHistory = await this.lanes.getLaneHistory(laneId);
     const history = laneHistory.getHistory();
+
     if (id) {
       const historyItem = history[id];
       if (!historyItem) throw new Error(`history id ${id} was not found`);
-      const date = new Date(parseInt(historyItem.log.date)).toLocaleString();
+      return { historyItem, id, history, singleItem: true };
+    }
+
+    return { history, singleItem: false };
+  }
+
+  private getDateString(date: string) {
+    return new Date(parseInt(date)).toLocaleString();
+  }
+
+  async report([laneName]: [string], { id }: { id?: string }): Promise<string> {
+    const { history, historyItem, singleItem } = await this.getHistoryData(laneName, id);
+
+    if (singleItem && historyItem) {
+      const date = this.getDateString(historyItem.log.date);
       const message = historyItem.log.message;
       return `${id} ${date} ${historyItem.log.username} ${message}\n\n${historyItem.components.join('\n')}`;
     }
+
     const items = Object.keys(history).map((uuid) => {
-      const historyItem = history[uuid];
-      const date = new Date(parseInt(historyItem.log.date)).toLocaleString();
-      const message = historyItem.log.message;
-      return `${uuid} ${date} ${historyItem.log.username} ${message}`;
+      const item = history[uuid];
+      const date = this.getDateString(item.log.date);
+      const message = item.log.message;
+      return `${uuid} ${date} ${item.log.username} ${message}`;
     });
     return items.join('\n');
+  }
+
+  async json([laneName]: [string], { id }: { id?: string }) {
+    const { history, historyItem, id: historyId, singleItem } = await this.getHistoryData(laneName, id);
+
+    if (singleItem && historyItem) {
+      return {
+        id: historyId,
+        date: historyItem.log.date,
+        username: historyItem.log.username,
+        message: historyItem.log.message,
+        components: historyItem.components,
+      };
+    }
+
+    return Object.keys(history).map((uuid) => {
+      const item = history[uuid];
+      return {
+        id: uuid,
+        date: item.log.date,
+        username: item.log.username,
+        message: item.log.message,
+        components: item.components,
+      };
+    });
   }
 }
 
@@ -518,6 +623,7 @@ export class LaneImportCmd implements Command {
       'pattern <component-pattern>',
       'import only components from the lane that fit the specified component-pattern to the workspace. works only when the workspace is empty',
     ],
+    ['', 'branch', 'create and checkout a new git branch named after the lane'],
   ] as CommandOptions;
   loader = true;
 
@@ -525,9 +631,17 @@ export class LaneImportCmd implements Command {
 
   async report(
     [lane]: [string],
-    { skipDependencyInstallation = false, pattern }: { skipDependencyInstallation: boolean; pattern?: string }
+    {
+      skipDependencyInstallation = false,
+      pattern,
+      branch = false,
+    }: {
+      skipDependencyInstallation: boolean;
+      pattern?: string;
+      branch?: boolean;
+    }
   ): Promise<string> {
-    return this.switchCmd.report([lane], { skipDependencyInstallation, pattern });
+    return this.switchCmd.report([lane], { skipDependencyInstallation, pattern, branch });
   }
 }
 
@@ -560,7 +674,10 @@ export class LaneFetchCmd implements Command {
 
 export class LaneCmd implements Command {
   name = 'lane [sub-command]';
-  description = 'manage lanes - if no sub-command is used, runs "bit lane list"';
+  description = 'manage lanes for parallel development';
+  extendedDescription = `lanes allow isolated development of features without affecting main branch components.
+create, switch between, and merge lanes to coordinate parallel work across teams.
+without a sub-command, lists all available lanes.`;
   alias = 'l';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],

@@ -7,7 +7,8 @@ import { compact, set } from 'lodash';
 import { Mutex } from 'async-mutex';
 import { PREVIOUS_DEFAULT_LANE, REMOTE_REFS_DIR } from '@teambit/legacy.constants';
 import { glob } from '@teambit/legacy.utils';
-import { Ref, LaneComponent, Lane, ModelComponent } from '@teambit/scope.objects';
+import type { LaneComponent, Lane, ModelComponent } from '@teambit/objects';
+import { Ref } from '@teambit/objects';
 import { logger } from '@teambit/legacy.logger';
 
 type Lanes = { [laneName: string]: LaneComponent[] };
@@ -19,9 +20,15 @@ export class RemoteLanes {
   basePath: string;
   private remotes: { [remoteName: string]: Lanes } = {};
   private changed: { [remoteName: string]: { [laneName: string]: boolean } } = {};
-  writeMutex = new Mutex();
+  private _writeMutex?: Mutex;
   constructor(scopePath: string) {
     this.basePath = path.join(scopePath, REMOTE_REFS_DIR);
+  }
+  get writeMutex() {
+    if (!this._writeMutex) {
+      this._writeMutex = new Mutex();
+    }
+    return this._writeMutex;
   }
   async addEntry(remoteLaneId: LaneId, componentId: ComponentID, head?: Ref) {
     if (!remoteLaneId) throw new TypeError('addEntry expects to get remoteLaneId');

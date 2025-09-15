@@ -2,38 +2,44 @@ import pFilter from 'p-filter';
 import fs, { pathExists } from 'fs-extra';
 import path from 'path';
 import { getRootComponentDir, linkPkgsToRootComponents } from '@teambit/workspace.root-components';
-import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
-import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
+import type { CompilerMain } from '@teambit/compiler';
+import { CompilerAspect, CompilationInitiator } from '@teambit/compiler';
+import type { CLIMain, CommandList } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
-import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
+import yesno from 'yesno';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { compact, mapValues, omit, uniq, intersection, groupBy } from 'lodash';
-import { ProjectManifest } from '@pnpm/types';
-import { GenerateResult, GeneratorAspect, GeneratorMain } from '@teambit/generator';
+import type { ProjectManifest } from '@pnpm/types';
+import type { GenerateResult, GeneratorMain } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { ApplicationMain, ApplicationAspect } from '@teambit/application';
-import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
-import { Component, ComponentID, ComponentMap } from '@teambit/component';
+import type { ApplicationMain } from '@teambit/application';
+import { ApplicationAspect } from '@teambit/application';
+import type { VariantsMain } from '@teambit/variants';
+import { VariantsAspect } from '@teambit/variants';
+import type { Component } from '@teambit/component';
+import { ComponentID, ComponentMap } from '@teambit/component';
+import { PackageJsonFile } from '@teambit/component.sources';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
-import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { type DependenciesGraph } from '@teambit/scope.objects';
-import {
-  CodemodResult,
-  linkToNodeModulesWithCodemod,
-  NodeModulesLinksResult,
-} from '@teambit/workspace.modules.node-modules-linker';
-import { EnvsMain, EnvsAspect } from '@teambit/envs';
-import { IpcEventsAspect, IpcEventsMain } from '@teambit/ipc-events';
+import type { Harmony, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import { type DependenciesGraph } from '@teambit/objects';
+import type { CodemodResult, NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
+import { linkToNodeModulesWithCodemod } from '@teambit/workspace.modules.node-modules-linker';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { IpcEventsMain } from '@teambit/ipc-events';
+import { IpcEventsAspect } from '@teambit/ipc-events';
 import { IssuesClasses } from '@teambit/component-issues';
-import {
+import type {
   GetComponentManifestsOptions,
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
   DependencyInstaller,
-  DependencyResolverAspect,
   PackageManagerInstallOptions,
-  ComponentDependency,
-  VariantPolicyConfigObject,
   WorkspacePolicyEntry,
   LinkingOptions,
   LinkResults,
@@ -42,12 +48,21 @@ import {
   WorkspacePolicy,
   UpdatedComponent,
 } from '@teambit/dependency-resolver';
-import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { IssuesAspect, IssuesMain } from '@teambit/issues';
+import { DependencyResolverAspect, ComponentDependency } from '@teambit/dependency-resolver';
+import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { IssuesMain } from '@teambit/issues';
+import { IssuesAspect } from '@teambit/issues';
 import { snapToSemver } from '@teambit/component-package-version';
-import { AspectDefinition, AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
+import type { AspectDefinition, AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import hash from 'object-hash';
+import type { BundlerMain } from '@teambit/bundler';
+import { BundlerAspect } from '@teambit/bundler';
+import type { UiMain } from '@teambit/ui';
+import { UIAspect } from '@teambit/ui';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
@@ -69,10 +84,12 @@ export type WorkspaceLinkResults = {
 
 export type WorkspaceInstallOptions = {
   addMissingDeps?: boolean;
+  skipUnavailable?: boolean;
   addMissingPeers?: boolean;
   lifecycleType?: WorkspaceDependencyLifecycleType;
   dedupe?: boolean;
   import?: boolean;
+  showExternalPackageManagerPrompt?: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
   updateExisting?: boolean;
@@ -149,8 +166,27 @@ export class InstallMain {
    * @memberof Workspace
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions): Promise<ComponentMap<string>> {
+    // Check if external package manager mode is enabled
+    const workspaceConfig = this.workspace.getWorkspaceConfig();
+    const depResolverExtConfig = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');
+    if (depResolverExtConfig?.config.externalPackageManager) {
+      if (options?.showExternalPackageManagerPrompt) {
+        // For explicit "bit install" commands, show the prompt
+        await this.handleExternalPackageManagerPrompt();
+      } else {
+        await this.writeDependenciesToPackageJson();
+        this.logger.console(
+          chalk.yellow(
+            'Installation was skipped due to external package manager configuration. Please run your package manager to install dependencies.'
+          )
+        );
+        return new ComponentMap(new Map());
+      }
+    }
+
     // set workspace in install context
     this.workspace.inInstallContext = true;
+    this.workspace.inInstallAfterPmContext = false;
     if (packages && packages.length) {
       await this._addPackages(packages, options);
     }
@@ -187,6 +223,17 @@ export class InstallMain {
     await this.ipcEvents.publishIpcEvent('onPostInstall');
 
     return res;
+  }
+
+  async writeDependenciesToPackageJson(): Promise<void> {
+    const installer = this.dependencyResolver.getInstaller({});
+    const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy();
+    await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
+    const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, {
+      dedupe: true,
+    });
+    const { dependencies, devDependencies } = componentsAndManifests.manifests[this.workspace.path];
+    return this.workspace.writeDependenciesToPackageJson({ ...devDependencies, ...dependencies });
   }
 
   registerPreLink(fn: PreLink) {
@@ -259,15 +306,22 @@ export class InstallMain {
     }
     this.logger.debug(`installing the following packages: ${packages.join()}`);
     const resolver = await this.dependencyResolver.getVersionResolver();
-    const resolvedPackagesP = packages.map((packageName) =>
-      resolver.resolveRemoteVersion(packageName, {
-        rootDir: this.workspace.path,
-      })
-    );
+    const resolvedPackagesP = packages.map(async (packageName) => {
+      try {
+        return await resolver.resolveRemoteVersion(packageName, {
+          rootDir: this.workspace.path,
+        });
+      } catch (error: unknown) {
+        if (options?.skipUnavailable) {
+          return;
+        }
+        throw error;
+      }
+    });
     const resolvedPackages = await Promise.all(resolvedPackagesP);
     const newWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
     resolvedPackages.forEach((resolvedPackage) => {
-      if (resolvedPackage.version) {
+      if (resolvedPackage?.version) {
         const versionWithPrefix = this.dependencyResolver.getVersionWithSavePrefix({
           version: resolvedPackage.version,
           overridePrefix: options?.savePrefix,
@@ -293,7 +347,7 @@ export class InstallMain {
     const pm = this.dependencyResolver.getPackageManager();
     this.logger.console(
       `installing dependencies in workspace using ${pm?.name} (${chalk.cyan(
-        this.dependencyResolver.getPackageManagerName()
+        this.dependencyResolver.packageManagerName
       )})`
     );
     this.logger.debug(`installing dependencies in workspace with options`, options);
@@ -321,6 +375,7 @@ export class InstallMain {
       {
         ...calcManifestsOpts,
         addMissingDeps: options?.addMissingDeps,
+        skipUnavailable: options?.skipUnavailable,
         linkedRootDeps,
       }
     );
@@ -349,7 +404,7 @@ export class InstallMain {
     const compDirMap = await this.getComponentsDirectory([]);
     let installCycle = 0;
     let hasMissingLocalComponents = true;
-    const forceTeambitHarmonyLink = !this.dependencyResolver.hasHarmonyInRootPolicy();
+    const forcedHarmonyVersion = this.dependencyResolver.harmonyVersionInRootPolicy();
     /* eslint-disable no-await-in-loop */
     do {
       // In case there are missing local components,
@@ -365,10 +420,11 @@ export class InstallMain {
         {
           linkedDependencies,
           installTeambitBit: false,
-          forceTeambitHarmonyLink,
+          forcedHarmonyVersion,
         },
         pmInstallOptions
       );
+      this.workspace.inInstallAfterPmContext = true;
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
       const oldNonLoadedEnvs = this.setOldNonLoadedEnvs();
@@ -419,7 +475,14 @@ export class InstallMain {
     if (!options?.lockfileOnly && !options?.skipPrune) {
       // We clean node_modules only after the last install.
       // Otherwise, we might load an env from a location that we later remove.
-      await installer.pruneModules(this.workspace.path);
+      try {
+        await installer.pruneModules(this.workspace.path);
+        // Ignoring the error here as it's not critical and we don't want to fail the install process
+      } catch (err: any) {
+        this.logger.error(`failed running pnpm prune with error`, err);
+      }
+      // After pruning we need reload moved envs, as during the pruning the old location might be deleted
+      await this.reloadMovedEnvs();
     }
     // this is now commented out because we assume we don't need it anymore.
     // even when the env was not loaded before and it is loaded now, it should be fine because the dependencies-data
@@ -472,6 +535,13 @@ export class InstallMain {
       return !regularPathExists || !resolvedPathExists;
     });
     const idsToLoad = movedEnvs.map((env) => env.id);
+    const componentIdsToLoad = idsToLoad.map((id) => ComponentID.fromString(id));
+    await this.reloadEnvs(componentIdsToLoad);
+  }
+
+  private async reloadRegisteredEnvs() {
+    const allEnvs = this.envs.getAllRegisteredEnvs();
+    const idsToLoad = compact(allEnvs.map((env) => env.id));
     const componentIdsToLoad = idsToLoad.map((id) => ComponentID.fromString(id));
     await this.reloadEnvs(componentIdsToLoad);
   }
@@ -616,6 +686,7 @@ export class InstallMain {
     installer: DependencyInstaller,
     options: GetComponentsAndManifestsOptions & {
       addMissingDeps?: boolean;
+      skipUnavailable?: boolean;
       linkedRootDeps: Record<string, string>;
     }
   ): Promise<{ componentsAndManifests: ComponentsAndManifests; mergedRootPolicy: WorkspacePolicy }> {
@@ -637,7 +708,9 @@ export class InstallMain {
         rootDeps.add((manifest as ProjectManifest).name!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
       }
     });
-    const addedNewPkgs = await this._addMissingPackagesToRootPolicy(rootDeps);
+    const addedNewPkgs = await this._addMissingPackagesToRootPolicy(rootDeps, {
+      skipUnavailable: options?.skipUnavailable,
+    });
     if (!addedNewPkgs) {
       return { componentsAndManifests, mergedRootPolicy };
     }
@@ -836,22 +909,15 @@ export class InstallMain {
   ): Promise<Record<string, ProjectManifest>> {
     const nonRootManifests = Object.values(manifests).filter(({ name }) => name !== 'workspace');
     const workspaceDeps = this.dependencyResolver.getWorkspaceDepsOfBitRoots(nonRootManifests);
-    const workspaceDepsMeta = Object.keys(workspaceDeps).reduce((acc, depName) => {
-      acc[depName] = { injected: true };
-      return acc;
-    }, {});
-    const envManifests = await this._getEnvManifests(workspaceDeps, workspaceDepsMeta);
-    const appManifests = await this._getAppManifests(manifests, workspaceDeps, workspaceDepsMeta);
+    const envManifests = await this._getEnvManifests(workspaceDeps);
+    const appManifests = await this._getAppManifests(manifests, workspaceDeps);
     return {
       ...envManifests,
       ...appManifests,
     };
   }
 
-  private async _getEnvManifests(
-    workspaceDeps: Record<string, string>,
-    workspaceDepsMeta: Record<string, { injected: true }>
-  ): Promise<Record<string, ProjectManifest>> {
+  private async _getEnvManifests(workspaceDeps: Record<string, string>): Promise<Record<string, ProjectManifest>> {
     const envs = await this._getAllUsedEnvIds();
     return Object.fromEntries(
       await Promise.all(
@@ -864,7 +930,6 @@ export class InstallMain {
                 ...workspaceDeps,
                 ...(await this._getEnvPackage(envId)),
               },
-              dependenciesMeta: workspaceDepsMeta,
               installConfig: {
                 hoistingLimits: 'workspaces',
               },
@@ -905,8 +970,7 @@ export class InstallMain {
 
   private async _getAppManifests(
     manifests: Record<string, ProjectManifest>,
-    workspaceDeps: Record<string, string>,
-    workspaceDepsMeta: Record<string, { injected: true }>
+    workspaceDeps: Record<string, string>
   ): Promise<Record<string, ProjectManifest>> {
     return Object.fromEntries(
       compact(
@@ -924,10 +988,6 @@ export class InstallMain {
                   ...(await this._getEnvDependencies(envId)),
                   ...appManifest.dependencies,
                   ...workspaceDeps,
-                },
-                dependenciesMeta: {
-                  ...appManifest.dependenciesMeta,
-                  ...workspaceDepsMeta,
                 },
                 installConfig: {
                   hoistingLimits: 'workspaces',
@@ -960,9 +1020,8 @@ export class InstallMain {
     patterns?: string[];
     all: boolean;
   }): Promise<ComponentMap<string> | null> {
-    const componentPolicies = await this._getComponentsWithDependencyPolicies();
-    const variantPatterns = this.variants.raw();
-    const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
+    const componentPolicies = await this.workspace.getComponentsWithDependencyPolicies();
+    const variantPoliciesByPatterns = this.workspace.variantPatternsToDepPolicesDict();
     const components = await this.workspace.list();
     const outdatedPkgs = await this.dependencyResolver.getOutdatedPkgsFromPolicies({
       rootDir: this.workspace.path,
@@ -996,7 +1055,7 @@ export class InstallMain {
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgsToUpdate, {
       variantPoliciesByPatterns,
     });
-    await this._updateVariantsPolicies(variantPatterns, updatedVariants);
+    await this._updateVariantsPolicies(updatedVariants);
     await this._updateComponentsConfig(updatedComponents);
     await this.workspace._reloadConsumer();
     return this._installModules({ dedupe: true });
@@ -1014,33 +1073,6 @@ export class InstallMain {
     });
   }
 
-  private async _getComponentsWithDependencyPolicies() {
-    const allComponentIds = this.workspace.listIds();
-    const componentPolicies = [] as Array<{ componentId: ComponentID; policy: any }>;
-    (
-      await Promise.all<ComponentConfigFile | undefined>(
-        allComponentIds.map((componentId) => this.workspace.componentConfigFile(componentId))
-      )
-    ).forEach((componentConfigFile, index) => {
-      if (!componentConfigFile) return;
-      const depResolverConfig = componentConfigFile.aspects.get(DependencyResolverAspect.id);
-      if (!depResolverConfig) return;
-      const componentId = allComponentIds[index];
-      componentPolicies.push({ componentId, policy: depResolverConfig.config.policy });
-    });
-    return componentPolicies;
-  }
-
-  private _variantPatternsToDepPolicesDict(variantPatterns: Patterns): Record<string, VariantPolicyConfigObject> {
-    const variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject> = {};
-    for (const [variantPattern, extensions] of Object.entries(variantPatterns)) {
-      if (extensions[DependencyResolverAspect.id]?.policy) {
-        variantPoliciesByPatterns[variantPattern] = extensions[DependencyResolverAspect.id]?.policy;
-      }
-    }
-    return variantPoliciesByPatterns;
-  }
-
   private async _updateComponentsConfig(updatedComponents: UpdatedComponent[]) {
     if (updatedComponents.length === 0) return;
     await Promise.all(
@@ -1054,7 +1086,8 @@ export class InstallMain {
     await this.workspace.bitMap.write('update (dependencies)');
   }
 
-  private async _updateVariantsPolicies(variantPatterns: Record<string, any>, updateVariantPolicies: string[]) {
+  private async _updateVariantsPolicies(updateVariantPolicies: string[]) {
+    const variantPatterns = this.variants.raw();
     for (const variantPattern of updateVariantPolicies) {
       this.variants.setExtension(
         variantPattern,
@@ -1155,8 +1188,7 @@ export class InstallMain {
    * so no reason to try to install them (it will fail)
    */
   private async generateFilterFnForDepsFromLocalRemote() {
-    // TODO: once scope create a new API for this, replace it with the new one
-    const remotes = await this.workspace.scope._legacyRemotes();
+    const remotes = await this.workspace.scope.getRemoteScopes();
     const reg = await this.dependencyResolver.getRegistries();
     const packageScopes = Object.keys(reg.scopes);
     return (dependencyList: DependencyList): DependencyList => {
@@ -1239,6 +1271,8 @@ export class InstallMain {
     GeneratorAspect,
     WorkspaceConfigFilesAspect,
     AspectLoaderAspect,
+    BundlerAspect,
+    UIAspect,
   ];
 
   static runtime = MainRuntime;
@@ -1258,6 +1292,8 @@ export class InstallMain {
       generator,
       wsConfigFiles,
       aspectLoader,
+      bundler,
+      ui,
     ]: [
       DependencyResolverMain,
       Workspace,
@@ -1272,6 +1308,8 @@ export class InstallMain {
       GeneratorMain,
       WorkspaceConfigFilesMain,
       AspectLoaderMain,
+      BundlerMain,
+      UiMain,
     ],
     _,
     [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot],
@@ -1299,8 +1337,8 @@ export class InstallMain {
       if (eventName !== 'onPostInstall') return;
       logger.debug('got onPostInstall event, clear workspace and all components cache');
       await workspace.clearCache();
-      await pMapSeries(postInstallSlot.values(), (fn) => fn());
       await installExt.reloadMovedEnvs();
+      await pMapSeries(postInstallSlot.values(), (fn) => fn());
     });
     if (issues) {
       issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));
@@ -1318,8 +1356,98 @@ export class InstallMain {
       workspace.registerOnRootAspectAdded(installExt.onRootAspectAddedSubscriber.bind(installExt));
       workspace.registerOnComponentChange(installExt.onComponentChange.bind(installExt));
     }
+
+    installExt.registerPostInstall(async () => {
+      if (!ui.getUIServer()) {
+        return;
+      }
+      const components = await workspace.list();
+      await bundler.addNewDevServers(components);
+    });
     cli.register(...commands);
     return installExt;
+  }
+
+  private async handleExternalPackageManagerPrompt(): Promise<void> {
+    this.logger.clearStatusLine();
+
+    // Display a colorful and informative message
+    this.logger.console(chalk.cyan('\n📦 External Package Manager Mode Detected'));
+    this.logger.console(chalk.gray('Your workspace is configured to use external package managers (npm, yarn, pnpm).'));
+    this.logger.console(chalk.gray('Running "bit install" is not available in this mode.\n'));
+
+    const question = chalk.bold(
+      "Would you like to switch to Bit's package manager for dependency management? [yes(y)/no(n)]"
+    );
+    const shouldSwitchToBitPM = await yesno({ question });
+
+    if (!shouldSwitchToBitPM) {
+      throw new Error(
+        'External package manager mode is enabled. Please use your preferred package manager (npm, yarn, pnpm) to install dependencies instead of "bit install".'
+      );
+    }
+
+    // User chose to switch to Bit's package manager
+    await this.disableExternalPackageManagerMode();
+  }
+
+  private async disableExternalPackageManagerMode(): Promise<void> {
+    try {
+      // Get the workspace config
+      const workspaceConfig = this.workspace.getWorkspaceConfig();
+
+      // Remove externalPackageManager property and restore default settings
+      const depResolverExt = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');
+      if (depResolverExt?.config.externalPackageManager) {
+        delete depResolverExt.config.externalPackageManager;
+      }
+      if (depResolverExt) {
+        depResolverExt.config.rootComponent = true;
+      }
+
+      // Enable workspace config write
+      const workspaceConfigFilesExt = workspaceConfig.extensions.findExtension(
+        'teambit.workspace/workspace-config-files'
+      );
+      if (workspaceConfigFilesExt) {
+        workspaceConfigFilesExt.config.enableWorkspaceConfigWrite = true;
+      }
+
+      // Remove postInstall script from package.json (preserve user's existing scripts)
+      await this.removePostInstallScript();
+
+      // Write the updated config
+      await workspaceConfig.write();
+
+      this.logger.console(chalk.green('✓ Successfully switched to Bit package manager mode'));
+    } catch (error) {
+      this.logger.console(chalk.red('✗ Failed to switch to Bit package manager mode'));
+      throw error;
+    }
+  }
+
+  private async removePostInstallScript(): Promise<void> {
+    try {
+      const packageJsonFile = await PackageJsonFile.load(this.workspace.path);
+
+      if (!packageJsonFile.fileExist) {
+        return;
+      }
+
+      // Only remove our specific postInstall script, preserve user's custom scripts
+      if (packageJsonFile.packageJsonObject.scripts?.postinstall === 'bit link && bit compile') {
+        delete packageJsonFile.packageJsonObject.scripts.postinstall;
+
+        // Clean up empty scripts object
+        if (Object.keys(packageJsonFile.packageJsonObject.scripts).length === 0) {
+          delete packageJsonFile.packageJsonObject.scripts;
+        }
+
+        await packageJsonFile.write();
+      }
+    } catch {
+      this.logger.console(chalk.yellow('⚠ Warning: Could not remove postInstall script from package.json'));
+    }
   }
 }
 

@@ -1,12 +1,11 @@
 import mapSeries from 'p-map-series';
-import { pickBy } from 'lodash';
-import R from 'ramda';
-import { ComponentID } from '@teambit/component-id';
+import { pickBy, isEmpty } from 'lodash';
+import type { ComponentID } from '@teambit/component-id';
 import { logger } from '@teambit/legacy.logger';
-import { ConsumerComponent as Component, ComponentLoadOptions } from '@teambit/legacy.consumer-component';
-import { PackageJsonFile } from '@teambit/component.sources';
+import type { ConsumerComponent as Component, ComponentLoadOptions } from '@teambit/legacy.consumer-component';
+import type { PackageJsonFile } from '@teambit/component.sources';
 import AbstractConfig from './abstract-config';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 
 export type ComponentConfigLoadOptions = Pick<ComponentLoadOptions, 'loadExtensions' | 'originatedFromHarmony'>;
 
@@ -43,7 +42,7 @@ export class ComponentConfig extends AbstractConfig {
     const superObject = super.toPlainObject();
     const componentObject = superObject;
     const isPropDefaultOrEmpty = (val, key) => {
-      if (key === 'overrides') return !R.isEmpty(val);
+      if (key === 'overrides') return !isEmpty(val);
       return true;
     };
     return pickBy(componentObject, isPropDefaultOrEmpty);
@@ -84,7 +83,7 @@ export class ComponentConfig extends AbstractConfig {
     id: ComponentID,
     loadOpts?: ComponentConfigLoadOptions
   ): Promise<any[]> {
-    logger.debugAndAddBreadCrumb('componentConfigLoad', `running on load event for component ${id.toString()}`);
+    logger.trace(`componentConfigLoad, running on load event for component ${id.toString()}`);
     try {
       const res = await mapSeries(Object.keys(subscribers), async (extId: string) => {
         const func = subscribers[extId];

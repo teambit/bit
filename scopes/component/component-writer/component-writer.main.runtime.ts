@@ -1,30 +1,32 @@
 import { MainRuntime } from '@teambit/cli';
-import { ComponentID } from '@teambit/component-id';
-import { CompilerAspect, CompilerMain } from '@teambit/compiler';
-import { InstallAspect, InstallMain } from '@teambit/install';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import type { ComponentID } from '@teambit/component-id';
+import type { CompilerMain } from '@teambit/compiler';
+import { CompilerAspect } from '@teambit/compiler';
+import type { InstallMain } from '@teambit/install';
+import { InstallAspect } from '@teambit/install';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import { uniq } from 'lodash';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
-import { MoverAspect, MoverMain } from '@teambit/mover';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import {
-  isDir,
-  isDirEmptySync,
-  PathLinuxRelative,
-  pathNormalizeToLinux,
-  PathOsBasedAbsolute,
-} from '@teambit/legacy.utils';
-import { ComponentMap } from '@teambit/legacy.bit-map';
+import type { MoverMain } from '@teambit/mover';
+import { MoverAspect } from '@teambit/mover';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { PathLinuxRelative, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { isDir, isDirEmptySync, pathNormalizeToLinux } from '@teambit/legacy.utils';
+import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
 import { DataToPersist } from '@teambit/component.sources';
-import { ConfigMergerAspect, ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
-import { MergeStrategy } from '@teambit/merging';
-import { Consumer } from '@teambit/legacy.consumer';
-import ComponentWriter, { ComponentWriterProps } from './component-writer';
+import type { ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
+import { ConfigMergerAspect } from '@teambit/config-merger';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
+import type { Consumer } from '@teambit/legacy.consumer';
+import type { ComponentWriterProps } from './component-writer';
+import ComponentWriter from './component-writer';
 import { ComponentWriterAspect } from './component-writer.aspect';
 
 export interface ManyComponentsWriterParams {
@@ -41,6 +43,7 @@ export interface ManyComponentsWriterParams {
   reasonForBitmapChange?: string; // optional. will be written in the bitmap-history-metadata
   shouldUpdateWorkspaceConfig?: boolean; // whether it should update dependencies policy (or leave conflicts) in workspace.jsonc
   mergeStrategy?: MergeStrategy; // needed for workspace.jsonc conflicts
+  writeDeps?: 'package.json' | 'workspace.jsonc';
 }
 
 export type ComponentWriterResults = {
@@ -73,13 +76,18 @@ export class ComponentWriterMain {
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
     let workspaceConfigUpdateResult: WorkspaceConfigUpdateResult | undefined;
+    if (opts.writeDeps) {
+      await this.workspace.writeDependencies(opts.writeDeps);
+    }
     if (opts.shouldUpdateWorkspaceConfig) {
       workspaceConfigUpdateResult = await this.configMerge.updateDepsInWorkspaceConfig(
         opts.components,
         opts.mergeStrategy
       );
     }
-    if (!opts.skipDependencyInstallation) {
+    if (this.workspace.externalPackageManagerIsUsed()) {
+      await this.installer.writeDependenciesToPackageJson();
+    } else if (!opts.skipDependencyInstallation) {
       installationError = await this.installPackagesGracefully(
         opts.components.map(({ id }) => id),
         opts.skipWriteConfigFiles
@@ -252,7 +260,7 @@ export class ComponentWriterMain {
       const componentMap = this.consumer.bitMap.getComponentIfExist(component.id, {
         ignoreVersion: true,
       });
-      this.throwErrorWhenDirectoryNotEmpty(this.consumer.toAbsolutePath(componentRootDir), componentMap, opts);
+      this.throwErrorWhenDirectoryNotEmpty(componentRootDir, componentMap, opts);
       return {
         existingComponentMap: componentMap,
       };
@@ -288,7 +296,7 @@ to move all component files to a different directory, run bit remove and then bi
     }
   }
   private throwErrorWhenDirectoryNotEmpty(
-    componentDir: PathOsBasedAbsolute,
+    componentDirRelative: PathOsBasedAbsolute,
     componentMap: ComponentMap | null | undefined,
     opts: ManyComponentsWriterParams
   ) {
@@ -299,15 +307,24 @@ to move all component files to a different directory, run bit remove and then bi
     // if writeToPath specified and that directory is already used for that component, it's ok to override
     if (opts.writeToPath && componentMap && componentMap.rootDir && componentMap.rootDir === opts.writeToPath) return;
 
-    if (fs.pathExistsSync(componentDir)) {
-      if (!isDir(componentDir)) {
-        throw new BitError(`unable to import to ${componentDir} because it's a file`);
-      }
-      if (!isDirEmptySync(componentDir) && opts.throwForExistingDir) {
+    const componentDir = this.consumer.toAbsolutePath(componentDirRelative);
+    if (!fs.pathExistsSync(componentDir)) return;
+    if (!componentMap) {
+      const compInTheSameDir = this.consumer.bitMap.getComponentIdByRootPath(componentDirRelative);
+      if (compInTheSameDir) {
         throw new BitError(
-          `unable to import to ${componentDir}, the directory is not empty. use --override flag to delete the directory and then import`
+          `unable to import to ${componentDir}, the directory is already used by ${compInTheSameDir.toString()}.
+either use --path to specify a different directory or modify "defaultDirectory" prop in the workspace.jsonc file to "{scopeId}/{name}"`
         );
       }
+    }
+    if (!isDir(componentDir)) {
+      throw new BitError(`unable to import to ${componentDir} because it's a file`);
+    }
+    if (!isDirEmptySync(componentDir) && opts.throwForExistingDir) {
+      throw new BitError(
+        `unable to import to ${componentDir}, the directory is not empty. use --override flag to delete the directory and then import`
+      );
     }
   }
 

@@ -6,6 +6,7 @@ import { SsrStyles, removeSsrStyles } from './ssr-styles';
 import { FullHeightStyle } from './full-height-style';
 
 export const LOAD_EVENT = '_DOM_LOADED_';
+export const ERROR_EVENT = '_ERROR_OCCURRED_';
 
 export type Assets = Partial<{
   /** page title */

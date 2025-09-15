@@ -1,7 +1,7 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { ComponentID } from '@teambit/component';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ComponentID } from '@teambit/component';
 import chalk from 'chalk';
-import { GeneratorMain } from './generator.main.runtime';
+import type { GeneratorMain } from './generator.main.runtime';
 import type { BaseComponentTemplateOptions } from './component-template';
 
 /**
@@ -15,7 +15,9 @@ export type CreateOptions = BaseComponentTemplateOptions & {
 
 export class CreateCmd implements Command {
   name = 'create <template-name> <component-names...>';
-  description = 'create a new component (source files and config) using a template.';
+  description = 'scaffold new component(s) from a template (sources, config, and env)';
+  extendedDescription =
+    "Generates one or more components from a chosen template with ready-to-use source files, configuration, and environment. Use it to quickly scaffold consistent components across your workspace. Run 'bit templates' to discover available templates.";
   alias = '';
   loader = true;
   helpUrl = 'reference/starters/create-starter';
@@ -36,7 +38,7 @@ export class CreateCmd implements Command {
       description: "creates a component named 'ui/button' using the 'react' template",
     },
     {
-      cmd: 'bit create node utils/is-string utils/is-number --aspect teambit.node/node',
+      cmd: 'bit create module utils/is-string utils/is-number --aspect teambit.node/node',
       description:
         "creates two components, 'utils/is-string' and 'utils/is-number' using the 'node' template from the 'node' aspect(env)",
     },
@@ -51,7 +53,7 @@ export class CreateCmd implements Command {
         "creates a component named 'ui/button' from the teambit.react/react-env env and sets it to use the 'community-react' env. \n(the template's default env is 'teambit.react/react-env').",
     },
   ];
-  group = 'development';
+  group = 'component-development';
   options = [
     ['n', 'namespace <string>', `sets the component's namespace and nested dirs inside the scope`],
     ['s', 'scope <string>', `sets the component's scope-name. if not entered, the default-scope will be used`],

@@ -1,17 +1,17 @@
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { flatten } from 'lodash';
-import { Consumer } from '@teambit/legacy.consumer';
-import { Component, ComponentID } from '@teambit/component';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { Consumer } from '@teambit/legacy.consumer';
+import type { Component, ComponentID } from '@teambit/component';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ComponentIdList } from '@teambit/component-id';
-import { Lane } from '@teambit/scope.objects';
+import type { Lane } from '@teambit/objects';
 import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
 import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
 import compact from 'lodash.compact';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
-import { Workspace } from './workspace';
+import type { Workspace } from './workspace';
 
 export type ShouldLoadFunc = (id: ComponentID) => Promise<boolean>;
 

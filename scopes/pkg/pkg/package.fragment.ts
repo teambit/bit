@@ -1,5 +1,5 @@
-import { Component, ShowFragment } from '@teambit/component';
-import { PkgMain } from './pkg.main.runtime';
+import type { Component, ShowFragment } from '@teambit/component';
+import type { PkgMain } from './pkg.main.runtime';
 
 export class PackageFragment implements ShowFragment {
   constructor(private pkg: PkgMain) {}

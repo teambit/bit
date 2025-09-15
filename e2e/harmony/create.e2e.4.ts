@@ -3,8 +3,8 @@ import { OutsideWorkspaceError } from '@teambit/workspace';
 import path from 'path';
 import os from 'os';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('create extension', function () {
   this.timeout(0);
@@ -24,7 +24,7 @@ describe('create extension', function () {
   });
   describe('with --namespace flag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.create('bit-aspect', 'my-aspect', '--namespace ui');
     });
     it('should create the directories properly', () => {
@@ -41,7 +41,7 @@ describe('create extension', function () {
   });
   describe('name with namespace as part of the name', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.create('bit-aspect', 'ui/my-aspect');
     });
     it('should create the directories properly', () => {
@@ -58,7 +58,7 @@ describe('create extension', function () {
   });
   describe('name with namespace as part of the name and namespace flag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.create('bit-aspect', 'ui/my-aspect', '--namespace another/level');
     });
     it('should create the directories properly', () => {
@@ -75,7 +75,7 @@ describe('create extension', function () {
   });
   describe('when a component already exist on that dir', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.create('bit-aspect', 'my-aspect');
     });
     it('should throw an error', () => {
@@ -88,7 +88,7 @@ describe('create extension', function () {
   });
   describe('when an error is thrown during the add/track phase', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       expect(() => helper.command.create('bit-aspect', 'myAspect')).to.throw(
         'component names can only contain alphanumeric, lowercase characters'
       );
@@ -100,7 +100,7 @@ describe('create extension', function () {
   });
   describe('with an invalid scope-name', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
     });
     it('should throw InvalidScopeName error', () => {
       expect(() => helper.command.create('bit-aspect', 'my-aspect', '--scope ui/')).to.throw('"ui/" is invalid');
@@ -108,7 +108,7 @@ describe('create extension', function () {
   });
   describe('with --scope flag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
+      helper.scopeHelper.setWorkspaceWithRemoteScope({ addRemoteScopeAsDefaultScope: false });
       helper.workspaceJsonc.addDefaultScope('my-scope');
       helper.command.create('bit-aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
     });
@@ -138,7 +138,7 @@ describe('create extension', function () {
   });
   describe('with env defined inside the aspect-template different than the variants', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
       helper.command.create('bit-aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
     });
@@ -150,7 +150,7 @@ describe('create extension', function () {
   });
   describe('with env defined inside the aspect-template when there is no variant', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.create('bit-aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
     });
     it('should set the env according to the template env', () => {
@@ -161,7 +161,7 @@ describe('create extension', function () {
   });
   describe('from an inner dir', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.createNewDirectoryInLocalWorkspace('inner-dir');
     });
     it('should not throw', () => {
@@ -172,6 +172,21 @@ describe('create extension', function () {
         path.join(helper.scopes.localPath, 'inner-dir')
       );
       expect(() => cmd).to.not.throw();
+    });
+  });
+  describe('external package manager mode', () => {
+    before(() => {
+      // create a new workspace that uses an external package manager
+      helper.scopeHelper.cleanWorkspace();
+      helper.command.init('--external-package-manager');
+      helper.command.create('module', 'simple');
+    });
+    it('should write dependencies to package.json', () => {
+      const pkgJson = helper.fs.readJsonFile('package.json');
+      expect(pkgJson.dependencies.eslint != null).to.eq(true);
+    });
+    it('should not run installation', () => {
+      expect(helper.fs.exists('node_modules/eslint')).to.eq(false);
     });
   });
 });

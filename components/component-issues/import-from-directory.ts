@@ -1,4 +1,5 @@
-import { ComponentIssue, StringsPerFilePath } from './component-issue';
+import type { StringsPerFilePath } from './component-issue';
+import { ComponentIssue } from './component-issue';
 
 export class ImportFromDirectory extends ComponentIssue {
   description = 'relative import from a directory';

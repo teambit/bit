@@ -1,9 +1,16 @@
-import { EnvContext, EnvHandler } from '@teambit/envs';
-import { PackageJsonProps } from './pkg.main.runtime';
+import type { EnvContext, EnvHandler } from '@teambit/envs';
+import type { Component } from '@teambit/component';
+import type { PackageJsonProps } from './pkg.main.runtime';
+
+export type ModifyPackageJsonFunc = (
+  component: Component,
+  packageJsonObject: PackageJsonProps
+) => Promise<PackageJsonProps>;
 
 export type PackageGeneratorOptions = {
   packageJson: PackageJsonProps;
   npmIgnore?: string[];
+  modifyPackageJson?: ModifyPackageJsonFunc;
 };
 
 /**
@@ -12,9 +19,10 @@ export type PackageGeneratorOptions = {
  */
 export class PackageGenerator {
   constructor(
+    private context: EnvContext,
     private _packageJson: PackageJsonProps = {},
     private _npmIgnore: string[] = [],
-    private context: EnvContext
+    private _modifyPackageJson?: ModifyPackageJsonFunc
   ) {}
 
   get packageJsonProps() {
@@ -25,9 +33,13 @@ export class PackageGenerator {
     return this._npmIgnore;
   }
 
+  get modifyPackageJson(): ModifyPackageJsonFunc | undefined {
+    return this._modifyPackageJson;
+  }
+
   static from(options: PackageGeneratorOptions): EnvHandler<PackageGenerator> {
     return (context: EnvContext) => {
-      return new PackageGenerator(options.packageJson, options.npmIgnore, context);
+      return new PackageGenerator(context, options.packageJson, options.npmIgnore, options.modifyPackageJson);
     };
   }
 }

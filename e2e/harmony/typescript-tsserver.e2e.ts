@@ -1,10 +1,12 @@
 import { loadBit } from '@teambit/bit';
-import { TsserverClient } from '@teambit/ts-server';
-import { TypescriptAspect, TypescriptMain } from '@teambit/typescript';
+import type { TsserverClient } from '@teambit/ts-server';
+import type { TypescriptMain } from '@teambit/typescript';
+import { TypescriptAspect } from '@teambit/typescript';
 import chai, { expect } from 'chai';
+import chaiFs from 'chai-fs';
 import { Helper } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('TsServer component', function () {
   this.timeout(0);
@@ -18,7 +20,7 @@ describe('TsServer component', function () {
   describe('tsserver', () => {
     let tsServer: TsserverClient;
     before(async () => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponentsTS(1);
       helper.fs.outputFile(
         'comp1/index.ts',

@@ -2,14 +2,13 @@ import objectHash from 'object-hash';
 import json from 'comment-json';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { compact, uniq } from 'lodash';
-import R from 'ramda';
+import { compact, uniq, differenceWith, isEmpty, isString, unionWith, get } from 'lodash';
 import { LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
+import type { BitIdStr } from '@teambit/legacy-bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
-import type { Consumer } from '@teambit/legacy.consumer';
 import {
   AUTO_GENERATED_MSG,
   AUTO_GENERATED_STAMP,
@@ -19,23 +18,16 @@ import {
   BITMAP_PREFIX_MESSAGE,
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import {
-  pathJoinLinux,
-  pathNormalizeToLinux,
+import type {
   PathLinux,
   PathLinuxRelative,
   PathOsBased,
   PathOsBasedAbsolute,
   PathOsBasedRelative,
 } from '@teambit/toolbox.path.path';
-import {
-  ComponentMap,
-  ComponentMapFile,
-  Config,
-  PathChange,
-  getFilesByDir,
-  getGitIgnoreHarmony,
-} from './component-map';
+import { pathJoinLinux, pathNormalizeToLinux } from '@teambit/toolbox.path.path';
+import type { ComponentMapFile, Config, PathChange } from './component-map';
+import { ComponentMap, getFilesByDir, getGitIgnoreHarmony } from './component-map';
 import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
@@ -135,11 +127,11 @@ export class BitMap {
   }
 
   isEmpty() {
-    return R.isEmpty(this.components);
+    return isEmpty(this.components);
   }
 
   static mergeContent(rawContent: string, otherRawContent: string, opts: MergeOptions = {}): string {
-    const parsed = json.parse(rawContent, undefined, true);
+    const parsed = json.parse(rawContent, undefined, true) || {};
     const parsedOther = json.parse(otherRawContent, undefined, true);
     const merged = {};
     if (opts.mergeStrategy === 'ours') {
@@ -165,14 +157,12 @@ export class BitMap {
     return result;
   }
 
-  static async load(consumer: Consumer): Promise<BitMap> {
-    const dirPath: PathOsBasedAbsolute = consumer.getPath();
+  static async load(dirPath: PathOsBasedAbsolute, defaultScope: string): Promise<BitMap> {
     const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
     const mapFileContent = BitMap.loadRawSync(dirPath);
     if (!mapFileContent || !currentLocation) {
       return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA);
     }
-    const defaultScope = consumer.config.defaultScope;
     const bitMap = BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath, defaultScope);
     await bitMap.loadFiles();
 
@@ -296,9 +286,11 @@ export class BitMap {
     });
   }
 
-  resetLaneComponentsToNew() {
+  resetLaneComponentsToNew(): ComponentID[] {
+    const changedIds: ComponentID[] = [];
     this.components = this.components.map((component) => {
       if (component.isAvailableOnCurrentLane) return component;
+      changedIds.push(component.id);
       return new ComponentMap({
         id: component.id.changeVersion(undefined).changeScope(component.scope || (component.defaultScope as string)),
         mainFile: component.mainFile,
@@ -309,6 +301,10 @@ export class BitMap {
         onLanesOnly: false,
       });
     });
+    if (changedIds.length) {
+      this.markAsChanged();
+    }
+    return changedIds;
   }
 
   private throwForDuplicateRootDirs(componentsJson: Record<string, any>) {
@@ -585,7 +581,7 @@ export class BitMap {
    * search for a similar id in the bitmap and return the full BitId
    */
   getExistingBitId(id: BitIdStr, shouldThrow = true, searchWithoutScopeInProvidedId = false): ComponentID | undefined {
-    if (!R.is(String, id)) {
+    if (!isString(id)) {
       throw new TypeError(`BitMap.getExistingBitId expects id to be a string, instead, got ${typeof id}`);
     }
 
@@ -634,7 +630,7 @@ export class BitMap {
   _areFilesArraysEqual(filesA: ComponentMapFile[], filesB: ComponentMapFile[]): boolean {
     if (filesA.length !== filesB.length) return false;
     const cmp = (x, y) => x.relativePath === y.relativePath;
-    const diff = R.differenceWith(cmp, filesA, filesB);
+    const diff = differenceWith(filesA, filesB, cmp);
     if (!diff.length) return true;
     return false;
   }
@@ -643,7 +639,7 @@ export class BitMap {
    * add files from filesB that are not in filesA
    */
   mergeFilesArray(filesA: ComponentMapFile[], filesB: ComponentMapFile[]): ComponentMapFile[] {
-    return R.unionWith(R.eqBy(R.prop('relativePath')), filesA, filesB);
+    return unionWith(filesA, filesB, (file1, file2) => get(file1, 'relativePath') === get(file2, 'relativePath'));
   }
 
   addComponent({
@@ -866,8 +862,12 @@ export class BitMap {
     return caseSensitive ? this.paths[componentPath] : this.pathsLowerCase[componentPath.toLowerCase()];
   }
 
+  getComponentIdByRootPath(componentPath: PathLinux): ComponentID | undefined {
+    return this.components.find((component) => component.rootDir === componentPath)?.id;
+  }
+
   _populateAllPaths() {
-    if (R.isEmpty(this.paths)) {
+    if (isEmpty(this.paths)) {
       this.components.forEach((component) => {
         component.files.forEach((file) => {
           const relativeToConsumer = component.rootDir
@@ -893,13 +893,12 @@ export class BitMap {
 
   getAllTrackDirs() {
     if (!this.allTrackDirs) {
-      this.allTrackDirs = {};
+      const allTrackDirs = {};
       this.components.forEach((component) => {
         const trackDir = component.getRootDir();
-        if (!trackDir) return;
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.allTrackDirs[trackDir] = component.id;
+        allTrackDirs[trackDir] = component.id;
       });
+      this.allTrackDirs = allTrackDirs;
     }
     return this.allTrackDirs;
   }

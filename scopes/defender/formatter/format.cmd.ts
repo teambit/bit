@@ -1,14 +1,15 @@
-import { TimerResponse, Timer } from '@teambit/toolbox.time.timer';
+import type { TimerResponse } from '@teambit/toolbox.time.timer';
+import { Timer } from '@teambit/toolbox.time.timer';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { Command, CommandOptions } from '@teambit/cli';
-import { ComponentFactory, ComponentID } from '@teambit/component';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ComponentFactory, ComponentID } from '@teambit/component';
 import chalk from 'chalk';
-import { EnvsExecutionResult } from '@teambit/envs';
-import { Workspace } from '@teambit/workspace';
+import type { EnvsExecutionResult } from '@teambit/envs';
+import type { Workspace } from '@teambit/workspace';
 import { compact, flatten } from 'lodash';
-import { FormatterMain } from './formatter.main.runtime';
-import { ComponentFormatResult, FormatResults, FileFormatResult } from './formatter';
-import { FormatterOptions } from './formatter-context';
+import type { FormatterMain } from './formatter.main.runtime';
+import type { ComponentFormatResult, FormatResults, FileFormatResult } from './formatter';
+import type { FormatterOptions } from './formatter-context';
 
 export type FormatCmdOptions = {
   changed?: boolean;
@@ -40,9 +41,12 @@ export type JsonFormatResults = {
 
 export class FormatCmd implements Command {
   name = 'format [component-pattern]';
-  description = 'format components in the development workspace';
+  description = 'auto-format component source code';
+  extendedDescription = `formats component files using the formatter configured by each component's environment (Prettier, etc.).
+by default formats all components. use --changed to format only new and modified components.
+supports check mode to verify formatting without making changes.`;
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
-  group = 'development';
+  group = 'testing';
   helpUrl = 'reference/formatting/formatter-overview';
   options = [
     ['c', 'changed', 'format only new and modified components'],

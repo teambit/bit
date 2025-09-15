@@ -4,21 +4,22 @@ import Vinyl from 'vinyl';
 import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { MainRuntime } from '@teambit/cli';
-import { Component } from '@teambit/component';
-import { TrackerAspect, TrackerMain } from '@teambit/tracker';
-import { PathLinuxRelative, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import type { Component } from '@teambit/component';
+import type { TrackerMain } from '@teambit/tracker';
+import { TrackerAspect } from '@teambit/tracker';
+import type { PathLinuxRelative, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { isDirEmpty } from '@teambit/toolbox.fs.is-dir-empty';
 import { ComponentID } from '@teambit/component-id';
-import { Harmony } from '@teambit/harmony';
-import { WorkspaceAspect, Workspace, WorkspaceComponentLoadOptions } from '@teambit/workspace';
-import { PkgAspect } from '@teambit/pkg';
-import { RenamingAspect } from '@teambit/renaming';
+import type { Harmony } from '@teambit/harmony';
+import type { Workspace, WorkspaceComponentLoadOptions } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
 import { EnvsAspect } from '@teambit/envs';
 import { NewComponentHelperAspect } from './new-component-helper.aspect';
 import { incrementPathRecursively } from '@teambit/component-writer';
+import { Extensions } from '@teambit/legacy.constants';
 
-const aspectsConfigToIgnore: string[] = [PkgAspect.id, RenamingAspect.id];
+const aspectsConfigToIgnore: string[] = [Extensions.pkg, Extensions.renaming];
 type File = { path: string; content: string };
 
 export class NewComponentHelperMain {
@@ -137,6 +138,10 @@ export class NewComponentHelperMain {
     await this.workspace.triggerOnComponentAdd(targetId, { compile: options?.compile ?? true }, options?.loadOptions);
   }
 
+  /**
+   * @deprecated
+   * not needed anymore.
+   */
   async writeAndAddNewCompFromFiles(
     files: File[],
     targetId: ComponentID,
@@ -189,7 +194,7 @@ export class NewComponentHelperMain {
     return results;
   }
 
-  private async throwForExistingPath(targetPath: string) {
+  async throwForExistingPath(targetPath: string) {
     try {
       const stat = await fs.stat(targetPath);
       if (!stat.isDirectory()) {

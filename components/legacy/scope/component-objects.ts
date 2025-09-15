@@ -1,5 +1,6 @@
 import { toBase64ArrayBuffer } from '@teambit/legacy.utils';
-import { ModelComponent, BitObject } from '@teambit/scope.objects';
+import type { ModelComponent } from '@teambit/objects';
+import { BitObject } from '@teambit/objects';
 
 export class ComponentObjects {
   component: Buffer;

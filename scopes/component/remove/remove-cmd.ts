@@ -1,24 +1,26 @@
 import chalk from 'chalk';
 import yesno from 'yesno';
-import { Command, CommandOptions } from '@teambit/cli';
-import { Workspace } from '@teambit/workspace';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { RemovedLocalObjects } from './removed-local-objects';
-import { RemoveMain } from './remove.main.runtime';
+import type { RemovedLocalObjects } from './removed-local-objects';
+import type { RemoveMain } from './remove.main.runtime';
 import { removeTemplate } from './remove-template';
 
 export class RemoveCmd implements Command {
   name = 'remove <component-pattern>';
-  description = 'remove component(s) from the local workspace';
-  extendedDescription = `to mark components as deleted on the remote scope, use "bit delete".`;
+  description = 'untrack components from the workspace';
+  extendedDescription = `removes components from the local workspace only - stops tracking them in .bitmap and deletes their files by default.
+does not affect remote scopes - to delete components from remotes, use "bit delete" instead.
+use --keep-files to preserve component files while only removing the tracking.`;
   arguments = [
     {
       name: 'component-pattern',
       description: COMPONENT_PATTERN_HELP,
     },
   ];
-  group = 'collaborate';
+  group = 'component-development';
   helpUrl = 'reference/components/removing-components';
   skipWorkspace = true;
   alias = 'rm';

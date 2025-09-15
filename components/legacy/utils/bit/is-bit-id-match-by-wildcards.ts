@@ -1,5 +1,5 @@
-import R from 'ramda';
-import { ComponentID } from '@teambit/component-id';
+import { isString } from 'lodash';
+import type { ComponentID } from '@teambit/component-id';
 
 export function isBitIdMatchByWildcards(bitId: ComponentID, idsWithWildcard: string[] | string): boolean {
   if (!Array.isArray(idsWithWildcard)) idsWithWildcard = [idsWithWildcard];
@@ -13,7 +13,7 @@ export function isBitIdMatchByWildcards(bitId: ComponentID, idsWithWildcard: str
 }
 
 function getRegex(idWithWildcard) {
-  if (!R.is(String, idWithWildcard)) {
+  if (!isString(idWithWildcard)) {
     throw new TypeError(`filterComponentsByWildcard expects idWithWildcard to be string, got ${typeof idWithWildcard}`);
   }
   const rule = idWithWildcard.replace(/\*/g, '.*');

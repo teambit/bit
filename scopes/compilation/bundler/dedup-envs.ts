@@ -1,4 +1,4 @@
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { ExecutionContext } from '@teambit/envs';
 
 type GroupIdContextMap = Record<string, ExecutionContext[]>;
@@ -52,6 +52,11 @@ function getEnvId(context: ExecutionContext, dedicatedServers?: string[]): strin
 
   if (dedicatedServers?.includes(id)) {
     return context.id;
+  }
+
+  // Happen for envs that are not implementing preview
+  if (!context.env?.getDevEnvId) {
+    return undefined;
   }
 
   return context.env?.getDevEnvId(context);

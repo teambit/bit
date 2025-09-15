@@ -1,8 +1,8 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
-import { ModelComponent } from '@teambit/scope.objects';
+import type { ModelComponent } from '@teambit/objects';
 import { compact } from 'lodash';
-import { Workspace } from './workspace';
+import type { Workspace } from './workspace';
 
 export const statesFilter = [
   'new',

@@ -1,7 +1,7 @@
-import { Command } from '@teambit/cli';
+import type { Command } from '@teambit/cli';
 import { PATTERN_HELP, COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
-import { Workspace } from '../workspace';
+import type { Workspace } from '../workspace';
 import { installAfterEnvChangesMsg } from './envs-set.cmd';
 
 export class EnvsUnsetCmd implements Command {
@@ -14,7 +14,7 @@ export class EnvsUnsetCmd implements Command {
     },
   ];
   options = [];
-  group = 'development';
+  group = 'component-config';
   extendedDescription = `keep in mind that this doesn't remove envs that are set via variants.
 in only removes envs that appear in the .bitmap file, which were previously configured via "bit env set".
 the purpose of this command is to reset previously assigned envs to either allow variants configure the env or use the base node env.

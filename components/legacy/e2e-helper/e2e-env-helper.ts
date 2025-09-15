@@ -1,11 +1,12 @@
 import * as path from 'path';
 import { getRootComponentDir } from '@teambit/workspace.root-components';
-import CommandHelper from './e2e-command-helper';
-import ExtensionsHelper from './e2e-extensions-helper';
-import FixtureHelper, { GenerateEnvJsoncOptions } from './e2e-fixtures-helper';
-import FsHelper from './e2e-fs-helper';
-import ScopeHelper from './e2e-scope-helper';
-import ScopesData from './e2e-scopes';
+import type CommandHelper from './e2e-command-helper';
+import type ExtensionsHelper from './e2e-extensions-helper';
+import type { GenerateEnvJsoncOptions } from './e2e-fixtures-helper';
+import type FixtureHelper from './e2e-fixtures-helper';
+import type FsHelper from './e2e-fs-helper';
+import type ScopeHelper from './e2e-scope-helper';
+import type ScopesData from './e2e-scopes';
 
 type SetCustomEnvOpts = {
   skipInstall?: boolean;
@@ -141,6 +142,18 @@ export default class EnvHelper {
     this.command.install();
     this.command.compile();
     return EXTENSIONS_BASE_FOLDER;
+  }
+
+  setEmptyEnv() {
+    this.fs.outputFile(
+      'empty-env/empty-env.bit-env.ts',
+      `export class EmptyEnv {}
+export default new EmptyEnv();
+`
+    );
+    this.fs.outputFile('empty-env/index.ts', `export { EmptyEnv } from './empty-env.bit-env';`);
+    this.command.addComponent('empty-env');
+    this.command.setEnv('empty-env', 'teambit.envs/env');
   }
 
   setCustomEnv(extensionsBaseFolder = 'node-env', options: SetCustomEnvOpts = {}): string {

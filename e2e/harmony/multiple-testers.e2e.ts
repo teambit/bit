@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('multi testers', function () {
   this.timeout(0);
@@ -19,7 +19,7 @@ describe('multi testers', function () {
     let envId;
     let envName;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       compName = helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
       helper.fs.outputFile(

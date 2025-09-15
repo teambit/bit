@@ -1,29 +1,40 @@
 import ts from 'typescript';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Compiler } from '@teambit/compiler';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
-import { PackageJsonProps } from '@teambit/pkg';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Compiler } from '@teambit/compiler';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { SchemaExtractor, SchemaMain } from '@teambit/schema';
+import { SchemaAspect } from '@teambit/schema';
+import type { PackageJsonProps } from '@teambit/pkg';
 import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { Workspace } from '@teambit/workspace';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import pMapSeries from 'p-map-series';
-import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
+import type { TsserverClientOpts } from '@teambit/ts-server';
+import { TsserverClient } from '@teambit/ts-server';
 import { TypescriptCompiler } from '@teambit/typescript.typescript-compiler';
-import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
-import { WatcherAspect, WatcherMain, WatchOptions } from '@teambit/watcher';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import type { WatcherMain, WatchOptions } from '@teambit/watcher';
+import { WatcherAspect } from '@teambit/watcher';
 import type { Component, ComponentID } from '@teambit/component';
-import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { ScopeMain, ScopeAspect } from '@teambit/scope';
+import type { BuilderMain } from '@teambit/builder';
+import { BuilderAspect } from '@teambit/builder';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 import { flatten } from 'lodash';
 import { TypeScriptExtractor } from './typescript.extractor';
-import { TypeScriptCompilerOptions } from './compiler-options';
+import type { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
 import { TypeScriptParser } from './typescript.parser';
-import { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
+import type { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
 import { SchemaTransformerPlugin } from './schema-transformer.plugin';
 import {
   ExportDeclarationTransformer,
@@ -75,7 +86,7 @@ import { RemoveTypesTask } from './remove-types-task';
 
 export type TsMode = 'build' | 'dev';
 
-export type SchemaTransformerSlot = SlotRegistry<SchemaTransformer[]>;
+export type SchemaTransformerSlot = SlotRegistry<() => SchemaTransformer[]>;
 export type APITransformerSlot = SlotRegistry<SchemaNodeTransformer[]>;
 
 export type TsConfigTransformContext = {
@@ -137,7 +148,7 @@ export class TypescriptMain {
     return this.tsServer;
   }
 
-  registerSchemaTransformer(transformers: SchemaTransformer[]) {
+  registerSchemaTransformer(transformers: () => SchemaTransformer[]) {
     this.schemaTransformerSlot.register(transformers);
     return this;
   }
@@ -228,6 +239,12 @@ export class TypescriptMain {
     return esmTransformer;
   }
 
+  getAllTransformers(): SchemaTransformer[] {
+    const transformersFunc = Array.from(this.schemaTransformerSlot.values());
+    // backward compatibility for transformers that are not wrapped with a function (bit < 1.9.80)
+    return transformersFunc.map((transformer) => (Array.isArray(transformer) ? transformer : transformer())).flat();
+  }
+
   /**
    * create an instance of a typescript semantic schema extractor.
    */
@@ -238,7 +255,7 @@ export class TypescriptMain {
     schemaTransformers: SchemaTransformer[] = [],
     apiTransformers: SchemaNodeTransformer[] = []
   ): SchemaExtractor {
-    const schemaTransformersFromSlot = flatten(Array.from(this.schemaTransformerSlot.values()));
+    const schemaTransformersFromSlot = this.getAllTransformers();
     const apiTransformersFromSlot = flatten(Array.from(this.apiTransformerSlot.values()));
 
     const allSchemaTransformers = schemaTransformers.concat(schemaTransformersFromSlot);
@@ -359,7 +376,7 @@ export class TypescriptMain {
       envs,
       aspectLoader
     );
-    tsMain.registerSchemaTransformer([
+    tsMain.registerSchemaTransformer(() => [
       new ExportDeclarationTransformer(),
       new ExportAssignmentTransformer(),
       new FunctionLikeTransformer(),

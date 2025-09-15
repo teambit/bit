@@ -3,7 +3,8 @@ import { ComponentModel } from '@teambit/component';
 import useLatest from '@react-hook/latest';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
-import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import type { ComponentIdObj } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 
 import { Workspace } from './workspace-model';
 
@@ -114,6 +115,17 @@ const COMPONENT_SUBSCRIPTION_REMOVED = gql`
   }
 `;
 
+const COMPONENT_SERVER_STARTED = gql`
+  subscription OnComponentServerStarted {
+    componentServerStarted {
+      env
+      url
+      host
+      basePath
+    }
+  }
+`;
+
 export function useWorkspace(options: UseWorkspaceOptions = {}) {
   const { data, subscribeToMore, ...rest } = useDataQuery(WORKSPACE);
   const optionsRef = useLatest(options);
@@ -169,7 +181,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     const unSubCompRemoved = subscribeToMore({
       document: COMPONENT_SUBSCRIPTION_REMOVED,
       updateQuery: (prev, { subscriptionData }) => {
-        const idsToRemove: ComponentIdObj[] | undefined = subscriptionData.data?.componentRemoved?.componentIds;
+        const idsToRemove: ComponentIdObj[] | undefined = subscriptionData?.data?.componentRemoved?.componentIds;
         if (!idsToRemove || idsToRemove.length === 0) return prev;
 
         // side effect - trigger observers
@@ -187,12 +199,45 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
       },
     });
 
-    // TODO - sub to component removal
+    const unSubServerStarted = subscribeToMore({
+      document: COMPONENT_SERVER_STARTED,
+      updateQuery: (prev, { subscriptionData }) => {
+        const update = subscriptionData.data;
+        if (!update) return prev;
+
+        const serverInfo = update.componentServerStarted;
+        if (!serverInfo || serverInfo.length === 0) return prev;
+
+        const updatedComponents = prev.workspace.components.map((component) => {
+          if (component.env?.id === serverInfo[0].env) {
+            return {
+              ...component,
+              server: {
+                env: serverInfo[0].env,
+                url: serverInfo[0].url,
+                host: serverInfo[0].host,
+                basePath: serverInfo[0].basePath,
+              },
+            };
+          }
+          return component;
+        });
+
+        return {
+          ...prev,
+          workspace: {
+            ...prev.workspace,
+            components: updatedComponents,
+          },
+        };
+      },
+    });
 
     return () => {
       unSubCompAddition();
       unSubCompChange();
       unSubCompRemoved();
+      unSubServerStarted();
     };
   }, [optionsRef]);
 

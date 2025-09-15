@@ -8,8 +8,8 @@ import { GLOBAL_CONFIG, GLOBAL_LOGS } from '@teambit/legacy.constants';
 import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambit/legacy.logger';
 import { loader } from '@teambit/legacy.loader';
 
-const RECOMMENDED_NODE_VERSIONS = '>=20.0.0 <23.0.0';
-const SUPPORTED_NODE_VERSIONS = '>=16.0.0 <23.0.0';
+const RECOMMENDED_NODE_VERSIONS = '>=20.0.0 <25.0.0';
+const SUPPORTED_NODE_VERSIONS = '>=16.0.0 <25.0.0';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -21,7 +21,7 @@ require('regenerator-runtime/runtime');
 process.on('unhandledRejection', async (err: any) => handleUnhandledRejection(err));
 
 const originalEmit = process.emit;
-// @ts-expect-error - TS complains about the return type of originalEmit.apply
+// @ts-ignore - TS complains about the return type of originalEmit.apply
 process.emit = function (name, data) {
   // --------------------------------------------
 

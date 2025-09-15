@@ -1,10 +1,13 @@
 import React from 'react';
-import { CompositionsAspect, CompositionsUI } from '@teambit/compositions';
+import type { CompositionsUI } from '@teambit/compositions';
+import { CompositionsAspect } from '@teambit/compositions';
 import { UIRuntime } from '@teambit/ui';
-import { TesterAspect, TesterUI } from '@teambit/tester';
+import type { TesterUI } from '@teambit/tester';
+import { TesterAspect } from '@teambit/tester';
 import { AddingTests } from '@teambit/react.instructions.react.adding-tests';
 import { AddingCompositions } from '@teambit/react.instructions.react.adding-compositions';
-import { APIReferenceAspect, APIReferenceUI } from '@teambit/api-reference';
+import type { APIReferenceUI } from '@teambit/api-reference';
+import { APIReferenceAspect } from '@teambit/api-reference';
 import { reactRenderer } from '@teambit/api-reference.renderers.react';
 
 import { ReactAspect } from './react.aspect';
@@ -25,7 +28,7 @@ export class ReactUI {
       return <AddingCompositions />;
     });
 
-    apiUI.registerSchemaClass(ReactSchema);
+    apiUI.registerSchemaClasses(() => [ReactSchema]);
     apiUI.registerAPINodeRenderer([reactRenderer]);
 
     compositionsUI.registerMenuWidget({

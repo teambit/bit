@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('init command on Harmony', function () {
   this.timeout(0);
@@ -15,7 +15,7 @@ describe('init command on Harmony', function () {
   });
   describe('init --reset-new', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -35,7 +35,7 @@ describe('init command on Harmony', function () {
   // previously, it would consider the ".git" directory as the scope-path
   describe('delete "objects" dir from the scope after initiating with git', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope({ initGit: true });
+      helper.scopeHelper.reInitWorkspace({ initGit: true });
       helper.scopeHelper.reInitRemoteScope();
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.setupDefault();
@@ -55,7 +55,7 @@ describe('init command on Harmony', function () {
   });
   describe('when workspace.jsonc exist, but not .bitmap nor .bit', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fs.deletePath('.bit');
       helper.fs.deletePath('.bitmap');
     });
@@ -66,7 +66,7 @@ describe('init command on Harmony', function () {
   });
   describe('workspace.jsonc is missing', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fs.deletePath('workspace.jsonc');
     });
     it('bit init should fix it', () => {

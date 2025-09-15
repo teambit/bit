@@ -1,18 +1,8 @@
 import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
-import {
-  ClassSchema,
-  EnumSchema,
-  ExportSchema,
-  FunctionLikeSchema,
-  InterfaceSchema,
-  ModuleSchema,
-  TypeRefSchema,
-  TypeSchema,
-  UnresolvedSchema,
-  VariableLikeSchema,
-} from './schemas';
-import { SchemaLocation, SchemaNode } from './schema-node';
+import { ExportSchema, ModuleSchema } from './schemas';
+import type { SchemaLocation } from './schema-node';
+import { SchemaNode } from './schema-node';
 import { TagName } from './schemas/docs/tag';
 import { SchemaRegistry } from './schema-registry';
 
@@ -67,32 +57,33 @@ export class APISchema extends SchemaNode {
 
   toStringPerType() {
     const title = chalk.inverse(`API Schema of ${this.componentId.toString()}\n`);
-    const getSection = (ClassObj, sectionName: string) => {
-      const objects = this.module.exports.filter((exp) => {
-        if (ExportSchema.isExportSchema(exp)) {
-          return exp.exportNode instanceof ClassObj;
-        }
-        return exp instanceof ClassObj;
-      });
-      if (!objects.length) {
-        return '';
-      }
 
-      return `${chalk.green.bold(sectionName)}\n${objects.map((c) => c.toString({ color: true })).join('\n')}\n\n`;
-    };
+    const exportGroups = this.module.exports.reduce(
+      (acc, exp) => {
+        const node = ExportSchema.isExportSchema(exp) ? exp.exportNode : exp;
 
-    return (
-      title +
-      getSection(ModuleSchema, 'Namespaces') +
-      getSection(ClassSchema, 'Classes') +
-      getSection(InterfaceSchema, 'Interfaces') +
-      getSection(FunctionLikeSchema, 'Functions') +
-      getSection(VariableLikeSchema, 'Variables') +
-      getSection(TypeSchema, 'Types') +
-      getSection(EnumSchema, 'Enums') +
-      getSection(TypeRefSchema, 'TypeReferences') +
-      getSection(UnresolvedSchema, 'Unresolved')
+        const displayName = node.displaySchemaName;
+
+        (acc[displayName] = acc[displayName] || []).push(exp);
+        return acc;
+      },
+      {} as { [key: string]: SchemaNode[] }
     );
+
+    const sortedDisplayNames = Object.keys(exportGroups).sort();
+
+    if (sortedDisplayNames.length === 0) {
+      return title;
+    }
+
+    const sections = sortedDisplayNames.map((displayName) => {
+      const exports = exportGroups[displayName];
+      const sectionBody = exports.map((c) => c.toString({ color: true })).join('\n');
+
+      return `${chalk.green.bold(displayName)}\n${sectionBody}`;
+    });
+
+    return title + sections.join('\n\n') + '\n\n';
   }
 
   toFullSignature(options: { showDocs?: boolean; showTitles?: boolean } = { showDocs: true }): string {

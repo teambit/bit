@@ -1,10 +1,9 @@
 import fs from 'fs-extra';
 import * as path from 'path';
-import R from 'ramda';
-import { compact, isEmpty } from 'lodash';
+import { compact, isEmpty, sortBy } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
-import { BitIdStr } from '@teambit/legacy-bit-id';
+import type { BitIdStr } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import { Analytics } from '@teambit/legacy.analytics';
 import {
@@ -18,34 +17,32 @@ import {
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import { NoHeadNoVersion, Scope, ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
-import { Lane, ModelComponent, Version } from '@teambit/scope.objects';
+import type { Lane, ModelComponent } from '@teambit/objects';
+import { Version } from '@teambit/objects';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import format from 'string-format';
-import {
+import type {
   PathAbsolute,
   PathLinuxRelative,
   PathOsBased,
   PathOsBasedAbsolute,
   PathOsBasedRelative,
   PathRelative,
-  parseScope,
 } from '@teambit/legacy.utils';
-import { BitMap, NextVersion } from '@teambit/legacy.bit-map';
-import {
-  ConsumerComponent as Component,
-  Dependencies,
-  ComponentLoader,
-  ComponentLoadOptions,
-  LoadManyResult,
-} from '@teambit/legacy.consumer-component';
+import { parseScope } from '@teambit/legacy.utils';
+import type { NextVersion } from '@teambit/legacy.bit-map';
+import { BitMap } from '@teambit/legacy.bit-map';
+import type { Dependencies, ComponentLoadOptions, LoadManyResult } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent as Component, ComponentLoader } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile } from '@teambit/component.sources';
-import { LegacyWorkspaceConfig, ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
+import type { ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
+import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound } from './exceptions';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
-import { FsCache } from '@teambit/workspace.modules.fs-cache';
+import type { FsCache } from '@teambit/workspace.modules.fs-cache';
 
 type ConsumerProps = {
   projectPath: string;
@@ -58,11 +55,8 @@ type ConsumerProps = {
 const BITMAP_HISTORY_DIR_NAME = 'bitmap-history';
 const BITMAP_HISTORY_METADATA_FILE_NAME = 'bitmap-history-metadata.txt';
 
-/**
- * @todo: change the class name to Workspace
- */
 export default class Consumer {
-  projectPath: PathOsBased;
+  projectPath: PathOsBasedAbsolute;
   created: boolean;
   config: ILegacyWorkspaceConfig;
   scope: Scope;
@@ -85,7 +79,7 @@ export default class Consumer {
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
   async setBitMap() {
-    this.bitMap = await BitMap.load(this);
+    this.bitMap = await BitMap.load(this.getPath(), this.config.defaultScope);
   }
 
   setPackageJson(packageJson: PackageJsonFile) {
@@ -181,7 +175,7 @@ export default class Consumer {
     return this;
   }
 
-  getPath(): PathOsBased {
+  getPath(): PathOsBasedAbsolute {
     return this.projectPath;
   }
 
@@ -242,14 +236,6 @@ export default class Consumer {
       if (err instanceof ComponentNotFound || err instanceof NoHeadNoVersion) return undefined;
       throw err;
     });
-  }
-
-  async loadAllVersionsOfComponentFromModel(id: ComponentID): Promise<Component[]> {
-    const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
-    const componentsP = modelComponent.listVersions().map(async (versionNum) => {
-      return modelComponent.toConsumerComponent(versionNum, this.scope.name, this.scope.objects);
-    });
-    return Promise.all(componentsP);
   }
 
   async loadComponentFromModelImportIfNeeded(id: ComponentID, throwIfNotExist = true): Promise<Component> {
@@ -323,6 +309,21 @@ export default class Consumer {
 
       sortProperties(version);
 
+      // align files properties between model and filesystem.
+      // the reason is that "name" and "test" props became deprecated. we don't want discrepancies between the
+      // model and the filesystem related to these two props. they should not make a component modified. we simply
+      // don't care about them anymore.
+      const filesFromFs = version.files;
+      const filesFromModel = componentFromModel.files;
+      filesFromFs.forEach((fileFromFs) => {
+        const fileFromModel = filesFromModel.find((file) => file.relativePath === fileFromFs.relativePath);
+        if (!fileFromModel) {
+          return;
+        }
+        fileFromFs.name = fileFromModel.name;
+        fileFromFs.test = fileFromModel.test;
+      });
+
       // prefix your command with "BIT_LOG=*" to see the actual id changes
       if (process.env.BIT_LOG && componentFromModel.calculateHash().hash !== version.calculateHash().hash) {
         console.log('-------------------componentFromModel------------------------'); // eslint-disable-line no-console
@@ -338,8 +339,8 @@ export default class Consumer {
     function sortProperties(version) {
       // sort the files by 'relativePath' because the order can be changed when adding or renaming
       // files in bitmap, which affects later on the model.
-      version.files = R.sortBy(R.prop('relativePath'), version.files);
-      componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+      version.files = sortBy(version.files, 'relativePath');
+      componentFromModel.files = sortBy(componentFromModel.files, 'relativePath');
       version.dependencies.sort();
       version.devDependencies.sort();
       version.packageDependencies = sortObjectByKeys(version.packageDependencies);
@@ -375,8 +376,8 @@ export default class Consumer {
     componentFromFileSystem.log = componentFromModel.log; // in order to convert to Version object
     const { version } = await this.scope.sources.consumerComponentToVersion(componentFromFileSystem);
 
-    version.files = R.sortBy(R.prop('relativePath'), version.files);
-    componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+    version.files = sortBy(version.files, 'relativePath');
+    componentFromModel.files = sortBy(componentFromModel.files, 'relativePath');
     return JSON.stringify(version.files) !== JSON.stringify(componentFromModel.files);
   }
 
@@ -456,6 +457,9 @@ export default class Consumer {
     await Scope.reset(this.scope.path, true);
   }
 
+  /**
+   * components that were created on the lane and considered as non-available on main are reset to be new components.
+   */
   async resetLaneNew() {
     this.bitMap.resetLaneComponentsToNew();
     this.bitMap.laneId = undefined;
@@ -586,7 +590,7 @@ export default class Consumer {
 
   async onDestroy(reasonForBitmapChange?: string) {
     await this.cleanTmpFolder();
-    await this.scope.scopeJson.writeIfChanged(this.scope.path);
+    await this.scope.scopeJson.writeIfChanged();
     await this.writeBitMap(reasonForBitmapChange);
   }
 }

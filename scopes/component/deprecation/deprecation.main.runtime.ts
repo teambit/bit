@@ -1,18 +1,25 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
-import { ComponentMain, ComponentAspect, Component, ComponentID } from '@teambit/component';
-import { ScopeMain, ScopeAspect } from '@teambit/scope';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { ComponentIdObj } from '@teambit/component-id';
+import type { ComponentMain, Component } from '@teambit/component';
+import { ComponentAspect, ComponentID } from '@teambit/component';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { ComponentIdObj } from '@teambit/component-id';
 import { DeprecationAspect } from './deprecation.aspect';
 import { deprecationSchema } from './deprecation.graphql';
 import { DeprecationFragment } from './deprecation.fragment';
 import { DeprecateCmd } from './deprecate-cmd';
 import { UndeprecateCmd } from './undeprecate-cmd';
-import { IssuesAspect, IssuesMain } from '@teambit/issues';
+import type { IssuesMain } from '@teambit/issues';
+import { IssuesAspect } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { compact } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
 
@@ -179,7 +186,7 @@ export class DeprecationMain {
     issues.registerAddComponentsIssues(deprecation.addDeprecatedDependenciesIssues.bind(deprecation));
     cli.register(new DeprecateCmd(deprecation), new UndeprecateCmd(deprecation));
     componentAspect.registerShowFragments([new DeprecationFragment(deprecation)]);
-    graphql.register(deprecationSchema(deprecation));
+    graphql.register(() => deprecationSchema(deprecation));
 
     return deprecation;
   }

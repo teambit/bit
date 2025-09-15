@@ -1,24 +1,36 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import pMapSeries from 'p-map-series';
-import { LaneId } from '@teambit/lane-id';
-import { IssuesClasses, IssuesList } from '@teambit/component-issues';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { LanesAspect, LanesMain } from '@teambit/lanes';
+import type { LaneId } from '@teambit/lane-id';
+import type { IssuesList } from '@teambit/component-issues';
+import { IssuesClasses } from '@teambit/component-issues';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
+import type { LanesMain } from '@teambit/lanes';
+import { LanesAspect } from '@teambit/lanes';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Component, InvalidComponent } from '@teambit/component';
-import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { Component, InvalidComponent } from '@teambit/component';
+import type { RemoveMain } from '@teambit/remove';
+import { RemoveAspect } from '@teambit/remove';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ComponentsPendingImport } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import { ModelComponent } from '@teambit/scope.objects';
-import { InsightsAspect, InsightsMain } from '@teambit/insights';
-import { SnapsDistance } from '@teambit/component.snap-distance';
-import { IssuesAspect, IssuesMain } from '@teambit/issues';
+import type { ModelComponent } from '@teambit/objects';
+import type { InsightsMain } from '@teambit/insights';
+import { InsightsAspect } from '@teambit/insights';
+import type { SnapsDistance } from '@teambit/component.snap-distance';
+import type { IssuesMain } from '@teambit/issues';
+import { IssuesAspect } from '@teambit/issues';
 import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
-import { MiniStatusCmd, MiniStatusOpts } from './mini-status-cmd';
-import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
-import { MergingAspect, MergingMain } from '@teambit/merging';
+import type { MiniStatusOpts } from './mini-status-cmd';
+import { MiniStatusCmd } from './mini-status-cmd';
+import type { LoggerMain, Logger } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { MergingMain } from '@teambit/merging';
+import { MergingAspect } from '@teambit/merging';
+import type { StatusFormatterOptions } from './status-formatter';
+import { formatStatusOutput } from './status-formatter';
 
 type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
 const BEFORE_STATUS = 'fetching status';
@@ -80,8 +92,8 @@ export class StatusMain {
     const { components: allComps, invalidComponents: allInvalidComponents } =
       await this.workspace.listWithInvalid(loadOpts);
     const consumer = this.workspace.consumer;
-    const laneObj = await consumer.getCurrentLaneObject();
-    const componentsList = new ComponentsList(consumer);
+    const laneObj = await this.workspace.getCurrentLaneObject();
+    const componentsList = new ComponentsList(this.workspace);
     const newComponents: ConsumerComponent[] = (await componentsList.listNewComponents(
       true,
       loadOpts
@@ -90,9 +102,11 @@ export class StatusMain {
     const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
     await this.addRemovedStagedIfNeeded(stagedComponents);
     const stagedComponentsWithVersions = await pMapSeries(stagedComponents, async (stagedComp) => {
-      const versions = await stagedComp.getLocalTagsOrHashes(consumer.scope.objects);
+      const id = stagedComp.toComponentId();
+      const fromWorkspace = this.workspace.getIdIfExist(id);
+      const versions = await stagedComp.getLocalTagsOrHashes(consumer.scope.objects, fromWorkspace);
       return {
-        id: stagedComp.toComponentId(),
+        id,
         versions,
       };
     });
@@ -192,11 +206,17 @@ export class StatusMain {
     return { modified, newComps, compWithIssues };
   }
 
+  async formatStatusOutput(
+    statusResult: StatusResult,
+    formatterOptions: StatusFormatterOptions = {}
+  ): Promise<{ data: string; code: number }> {
+    return formatStatusOutput(statusResult, formatterOptions);
+  }
+
   private async addRemovedStagedIfNeeded(stagedComponents: ModelComponent[]) {
     const removedStagedIds = await this.remove.getRemovedStaged();
     if (!removedStagedIds.length) return;
-    const removedStagedBitIds = removedStagedIds.map((id) => id);
-    const nonExistsInStaged = removedStagedBitIds.filter(
+    const nonExistsInStaged = removedStagedIds.filter(
       (id) => !stagedComponents.find((c) => c.toComponentId().isEqualWithoutVersion(id))
     );
     if (!nonExistsInStaged.length) return;
@@ -212,7 +232,7 @@ export class StatusMain {
       components.map(async (component) => {
         const comp = component.state._consumer as ConsumerComponent;
         if (!comp.modelComponent) return;
-        await comp.modelComponent.setDivergeData(this.workspace.scope.legacyScope.objects, false);
+        await comp.modelComponent.setDivergeData(this.workspace.scope.legacyScope.objects, false, undefined, comp.id);
         const divergeData = comp.modelComponent.getDivergeData();
         if (divergeData.err) {
           invalidComponents.push({ id: component.id, err: divergeData.err });

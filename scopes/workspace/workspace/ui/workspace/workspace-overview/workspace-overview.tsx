@@ -4,7 +4,7 @@ import { EmptyWorkspace } from '@teambit/workspace.ui.empty-workspace';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { ComponentID } from '@teambit/component-id';
-import { ComponentModel } from '@teambit/component';
+import type { ComponentModel } from '@teambit/component';
 import { useCloudScopes } from '@teambit/cloud.hooks.use-cloud-scopes';
 import { ScopeID } from '@teambit/scopes.scope-id';
 import { compact } from 'lodash';
@@ -72,6 +72,14 @@ export function useCardPlugins({
   compModelsById: Map<string, ComponentModel>;
   showPreview?: boolean;
 }): ComponentCardPluginType<PluginProps>[] {
+  const serverUrlsSignature = React.useMemo(() => {
+    const serversCount = Array.from(compModelsById.values())
+      .filter((comp) => comp.server?.url)
+      .map((comp) => comp.server?.url)
+      .join(',');
+    return serversCount;
+  }, [compModelsById]);
+
   const plugins = React.useMemo(
     () => [
       {
@@ -105,7 +113,7 @@ export function useCardPlugins({
       },
       new LinkPlugin(),
     ],
-    [compModelsById.size]
+    [compModelsById.size, serverUrlsSignature, showPreview]
   );
 
   return plugins;

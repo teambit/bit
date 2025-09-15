@@ -1,7 +1,7 @@
 import { flatten } from 'lodash';
 
-import { ServiceExecutionResult } from '../services';
-import { EnvResult } from './runtime';
+import type { ServiceExecutionResult } from '../services';
+import type { EnvResult } from './runtime';
 
 export class EnvsExecutionResult<T extends ServiceExecutionResult> {
   constructor(readonly results: EnvResult<T>[]) {}

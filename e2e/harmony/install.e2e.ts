@@ -5,11 +5,10 @@ import { addDistTag } from '@pnpm/registry-mock';
 import { IssuesClasses } from '@teambit/component-issues';
 import { getAnotherInstallRequiredOutput } from '@teambit/install';
 import chai, { expect } from 'chai';
-import { Helper } from '@teambit/legacy.e2e-helper';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-
-chai.use(require('chai-fs'));
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('install command', function () {
   this.timeout(0);
@@ -24,7 +23,7 @@ describe('install command', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -49,7 +48,7 @@ describe('install command', function () {
     let envName;
     let output;
     before(async () => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       envName = helper.env.setCustomEnv('env-add-dependencies', { skipCompile: true, skipInstall: true });
       envId = `${helper.scopes.remote}/${envName}`;
@@ -57,7 +56,7 @@ describe('install command', function () {
       helper.extensions.addExtensionToVariant('*', envId);
       // Clean the node_modules as we want to run tests when node_modules is empty
       fs.rmdirSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
-      wsEmptyNM = helper.scopeHelper.cloneLocalScope(IS_WINDOWS);
+      wsEmptyNM = helper.scopeHelper.cloneWorkspace(IS_WINDOWS);
     });
     describe('without --recurring-install', () => {
       before(async () => {
@@ -85,7 +84,7 @@ describe('install command', function () {
     });
     describe('with --recurring-install', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(wsEmptyNM);
+        helper.scopeHelper.getClonedWorkspace(wsEmptyNM);
         output = helper.command.install(undefined, { 'recurring-install': '' });
       });
       // Skip for now, I don't know think it is relevant anymore (the warning is not shown anymore which is expected)
@@ -105,7 +104,7 @@ describe('install generator configured envs', function () {
   let helper: Helper;
   before(async () => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     const generatorConfig = {
       envs: ['teambit.react/react-env', 'teambit.react/react'],
     };
@@ -128,7 +127,7 @@ describe('install generator configured envs', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -156,7 +155,7 @@ describe('install generator configured envs', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -194,7 +193,7 @@ describe('install new dependencies', function () {
   describe('using pnpm', () => {
     before(() => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       helper.command.install('is-positive@~1.0.0 is-odd@3.0.0 is-even@1 is-negative semver@2.0.0-beta');
       workspaceJsonc = helper.workspaceJsonc.read();
@@ -234,7 +233,7 @@ describe('install new dependencies', function () {
   describe('using yarn', () => {
     before(() => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
       helper.command.install('is-positive@~1.0.0 is-odd@1.0.0 is-even@1 is-negative');
       workspaceJsonc = helper.workspaceJsonc.read();
@@ -271,7 +270,7 @@ describe('named install', function () {
   let workspaceJsonc;
   before(() => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
     helper.command.install('is-positive@1.0.0');
     helper.command.install('is-positive');
@@ -293,7 +292,7 @@ describe('install with --lockfile-only', function () {
   let workspaceJsonc;
   before(() => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
     helper.command.install('is-positive@^1.0.0 --lockfile-only');
     workspaceJsonc = helper.workspaceJsonc.read();
@@ -311,5 +310,104 @@ describe('install with --lockfile-only', function () {
   });
   it('should not write dependencies to node_modules', () => {
     expect(fs.existsSync(path.join(helper.fixtures.scopes.localPath, 'node_modules/is-positive'))).to.equal(false);
+  });
+});
+
+describe('comment preservation during install', function () {
+  this.timeout(0);
+  let helper: Helper;
+  let workspaceConfigAfter: string;
+  before(() => {
+    helper = new Helper();
+    helper.scopeHelper.reInitWorkspace();
+
+    // Create workspace.jsonc with comments
+    const workspaceJsoncWithComments = `/**
+ * this is the main configuration file of your bit workspace.
+ * for full documentation, please see: https://bit.dev/reference/workspace/workspace-json
+ **/
+{
+  "$schema": "https://static.bit.dev/teambit/schemas/schema.json",
+  /**
+   * main configuration of the Bit workspace.
+   **/
+  "teambit.workspace/workspace": {
+    /**
+     * the name of the component workspace. used for development purposes.
+     **/
+    "name": "68621823",
+    /**
+     * set the icon to be shown on the Bit server.
+     **/
+    "icon": "https://static.bit.dev/brands/bit-logo-min.png",
+    /**
+     * default directory to place a component during \`bit import\` and \`bit create\`.
+     * the following placeholders are available:
+     * name - component name includes namespace, e.g. 'ui/button'.
+     * scopeId - full scope-id includes the owner, e.g. 'teambit.compilation'.
+     * scope - scope name only, e.g. 'compilation'.
+     * owner - owner name in bit.dev, e.g. 'teambit'.
+     **/
+    "defaultDirectory": "{scope}/{name}",
+    /**
+     * default scope for all components in workspace.
+     **/
+    "defaultScope": "my-scope",
+    "resolveAspectsFromNodeModules": true,
+    "resolveEnvsFromRoots": true
+  },
+  /**
+  * Enable generator templates by uncommenting the desired environments below.
+  * These generators scaffold components for Node, React, Vue, and Angular.
+  * After uncommenting, run \`bit install\` to make them available in your workspace.
+  * Explore more dev environments at: https://bit.dev/docs/getting-started/composing/dev-environments
+  **/
+  "teambit.generator/generator": {
+    "envs": [
+      // "bitdev.node/node-env",
+      // "bitdev.react/react-env",
+      // "bitdev.vue/vue-env",
+      // "bitdev.angular/angular-env"
+      // "bitdev.symphony/envs/symphony-env"
+    ]
+  },
+  /**
+   * main configuration for component dependency resolution.
+   **/
+  "teambit.dependencies/dependency-resolver": {
+    "policy": {
+      "dependencies": {},
+      "peerDependencies": {}
+    },
+    "linkCoreAspects": true,
+    "packageManager": "teambit.dependencies/pnpm",
+    "rootComponents": true,
+    "engineStrict": true,
+    // Some comments.
+    "packageImportMethod": "copy"
+  },
+  "teambit.workspace/workspace-config-files": {
+    "enableWorkspaceConfigWrite": true
+  }
+}`;
+    helper.fs.outputFile('workspace.jsonc', workspaceJsoncWithComments);
+
+    // Install a dependency which should preserve comments
+    helper.command.install('lodash');
+    workspaceConfigAfter = helper.fs.readFile('workspace.jsonc');
+  });
+  after(() => {
+    helper.scopeHelper.destroy();
+  });
+  it('should preserve comments in workspace.jsonc when installing a new dependency', () => {
+    expect(workspaceConfigAfter).to.include('// Some comments.');
+  });
+  it('should preserve block comments in workspace.jsonc', () => {
+    expect(workspaceConfigAfter).to.include('/**');
+    expect(workspaceConfigAfter).to.include('main configuration for component dependency resolution');
+  });
+  it('should have added the lodash dependency to policy', () => {
+    // Simply check if the lodash dependency is present in the text
+    expect(workspaceConfigAfter).to.include('"lodash":');
   });
 });

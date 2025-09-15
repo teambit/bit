@@ -1,23 +1,26 @@
-import ts, { TsConfigSourceFile } from 'typescript';
+import type { TsConfigSourceFile } from 'typescript';
+import ts from 'typescript';
 import { tmpdir } from 'os';
-import { Component } from '@teambit/component';
-import { ESLint as ESLintLib } from 'eslint';
+import type { Component } from '@teambit/component';
+import type { ESLint as ESLintLib } from 'eslint';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import { BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
+import type { BuildTask } from '@teambit/builder';
+import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import { merge, cloneDeep } from 'lodash';
-import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
-import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
+import type { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
+import type { PreviewStrategyName } from '@teambit/preview';
+import { COMPONENT_PREVIEW_STRATEGY_NAME } from '@teambit/preview';
 import { PrettierConfigWriter, PrettierFormatter } from '@teambit/defender.prettier-formatter';
-import {
-  PrettierConfigMutator,
+import type {
   PrettierConfigTransformContext,
   PrettierConfigTransformer,
 } from '@teambit/defender.prettier.config-mutator';
+import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
 import { TypescriptConfigWriter } from '@teambit/typescript.typescript-compiler';
 import { EslintConfigWriter, ESLintLinter } from '@teambit/defender.eslint-linter';
 import type { ESLintOptions } from '@teambit/defender.eslint-linter';
-import { CompilerMain } from '@teambit/compiler';
-import {
+import type { CompilerMain } from '@teambit/compiler';
+import type {
   BuilderEnv,
   CompilerEnv,
   DependenciesEnv,
@@ -31,27 +34,23 @@ import {
 } from '@teambit/envs';
 import { JestTask, JestTester, jestWorkerPath } from '@teambit/defender.jest-tester';
 import type { JestWorker } from '@teambit/defender.jest-tester';
-import { PackageJsonProps, PkgMain } from '@teambit/pkg';
-import { Tester, TesterMain } from '@teambit/tester';
-import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
-import type { TypeScriptCompilerOptions } from '@teambit/typescript';
-import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
-import { Workspace } from '@teambit/workspace';
-import {
-  EslintConfigMutator,
-  EslintConfigTransformContext,
-  EslintConfigTransformer,
-} from '@teambit/defender.eslint.config-mutator';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { Linter, LinterContext } from '@teambit/linter';
-import { Formatter, FormatterContext } from '@teambit/formatter';
+import type { PackageJsonProps, PkgMain } from '@teambit/pkg';
+import type { Tester, TesterMain } from '@teambit/tester';
+import type { TsConfigTransformer, TypescriptMain, TypeScriptCompilerOptions } from '@teambit/typescript';
+import type { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
+import type { Workspace } from '@teambit/workspace';
+import type { EslintConfigTransformContext, EslintConfigTransformer } from '@teambit/defender.eslint.config-mutator';
+import { EslintConfigMutator } from '@teambit/defender.eslint.config-mutator';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { Linter, LinterContext } from '@teambit/linter';
+import type { Formatter, FormatterContext } from '@teambit/formatter';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import type { ComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
-import { SchemaExtractor } from '@teambit/schema';
-import { join } from 'path';
+import type { SchemaExtractor } from '@teambit/schema';
+import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
-import { Logger } from '@teambit/logger';
-import { ConfigWriterEntry } from '@teambit/workspace-config-files';
+import type { Logger } from '@teambit/logger';
+import type { ConfigWriterEntry } from '@teambit/workspace-config-files';
 
 // ensure reactEnv depends on compositions-app
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -79,7 +78,6 @@ import type { DevFilesMain } from '@teambit/dev-files';
 export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
-const eslintConfig = require('./eslint/eslintrc');
 const prettierConfig = require('./prettier/prettier.config');
 
 // TODO: move to be taken from the key mode of compiler context
@@ -299,6 +297,7 @@ export class ReactEnv
     const tsconfigPath = require.resolve('./typescript/tsconfig.json');
 
     // resolve all plugins from the react environment.
+    const eslintConfig = require('./eslint/eslintrc');
     const mergedOptions = this.getEslintOptions(eslintConfig, __dirname, context);
     const configMutator = new EslintConfigMutator(mergedOptions);
     const transformerContext: EslintConfigTransformContext = { fix: !!context.fix };
@@ -498,7 +497,7 @@ export class ReactEnv
   }
 
   getNpmIgnore() {
-    return [`${CAPSULE_ARTIFACTS_DIR}/`];
+    return [`${CAPSULE_ARTIFACTS_DIR}/*`];
   }
 
   /**

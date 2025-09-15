@@ -1,10 +1,11 @@
-import { Route, Verb, Request, Response } from '@teambit/express';
+import type { Route, Request, Response } from '@teambit/express';
+import { Verb } from '@teambit/express';
 import { fetch } from '@teambit/legacy.scope-api';
-import { ObjectList } from '@teambit/scope.objects';
-import { Logger } from '@teambit/logger';
+import { ObjectList } from '@teambit/objects';
+import type { Logger } from '@teambit/logger';
 // @ts-ignore
 import { pipeline } from 'stream/promises';
-import { ScopeMain } from '../scope.main.runtime';
+import type { ScopeMain } from '../scope.main.runtime';
 
 export class FetchRoute implements Route {
   constructor(

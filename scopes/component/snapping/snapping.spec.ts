@@ -1,26 +1,30 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { Harmony } from '@teambit/harmony';
+import type { Harmony } from '@teambit/harmony';
 import { loadAspect, loadManyAspects } from '@teambit/harmony.testing.load-aspect';
+import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import {
   mockWorkspace,
   mockBareScope,
   destroyWorkspace,
-  WorkspaceData,
   setWorkspaceConfig,
 } from '@teambit/workspace.testing.mock-workspace';
 import { IssuesAspect } from '@teambit/issues';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { ExportAspect, ExportMain } from '@teambit/export';
-import { CompilerAspect, CompilerMain } from '@teambit/compiler';
-import { ComponentID } from '@teambit/component-id';
-import { Ref, Version } from '@teambit/scope.objects';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { ExportMain } from '@teambit/export';
+import { ExportAspect } from '@teambit/export';
+import type { CompilerMain } from '@teambit/compiler';
+import { CompilerAspect } from '@teambit/compiler';
+import type { ComponentID } from '@teambit/component-id';
+import type { Version } from '@teambit/objects';
+import { Ref } from '@teambit/objects';
 import { mockComponents } from '@teambit/component.testing.mock-components';
-import { SnappingMain } from './snapping.main.runtime';
+import type { SnapDataPerCompRaw, SnappingMain } from './snapping.main.runtime';
 import { SnappingAspect } from './snapping.aspect';
-import { SnapDataPerCompRaw } from './snap-from-scope.cmd';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 
 describe('Snapping aspect', function () {
   this.timeout(0);

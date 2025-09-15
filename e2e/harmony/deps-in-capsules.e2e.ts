@@ -1,12 +1,13 @@
 import fs from 'fs-extra';
 import path from 'path';
 import chai, { expect } from 'chai';
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
 
-import { Helper } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+chai.use(chaiFs);
+chai.use(chaiString);
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)('dependencies in scope aspect capsules', function () {
   this.timeout(0);
@@ -18,7 +19,7 @@ chai.use(require('chai-string'));
   let npmCiRegistry: NpmCiRegistry;
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.workspaceJsonc.setPackageManager();
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();
@@ -32,7 +33,7 @@ chai.use(require('chai-string'));
     helper.command.tagAllComponents();
     helper.command.export();
 
-    helper.scopeHelper.reInitLocalScope();
+    helper.scopeHelper.reInitWorkspace();
     helper.scopeHelper.addRemoteScope();
     helper.workspaceJsonc.setupDefault();
   });
@@ -40,7 +41,7 @@ chai.use(require('chai-string'));
     let nodeEnv1CapsuleDir: string;
     let nodeEnv2CapsuleDir: string;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('capsuleSelfReference', true);
       helper.scopeHelper.addRemoteScope();
@@ -78,7 +79,7 @@ chai.use(require('chai-string'));
     let nodeEnv1CapsuleDir: string;
     let nodeEnv2CapsuleDir: string;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('capsuleSelfReference', true);
       helper.scopeHelper.addRemoteScope();
@@ -114,7 +115,7 @@ chai.use(require('chai-string'));
   });
   describe('using Yarn with isolatedCapsules set to false', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('isolatedCapsules', false);
       helper.scopeHelper.addRemoteScope();

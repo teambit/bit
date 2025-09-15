@@ -1,5 +1,5 @@
 import { parse } from 'comment-json';
-import { DependencyDetector, FileContext } from '@teambit/dependency-resolver';
+import type { DependencyDetector, FileContext } from '@teambit/dependency-resolver';
 
 export class EnvJsoncDetector implements DependencyDetector {
   isSupported(context: FileContext): boolean {
@@ -7,7 +7,7 @@ export class EnvJsoncDetector implements DependencyDetector {
   }
 
   detect(source: string): string[] {
-    const parsed = parse(source);
+    const parsed = parse(source) as Record<string, any>;
     if (!parsed.extends) return [];
     return [parsed.extends];
   }

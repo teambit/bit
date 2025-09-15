@@ -1,7 +1,7 @@
-import { ComponentID } from '@teambit/component';
-import { EdgeModel, GraphModel, NodeModel } from '../query';
+import type { ComponentID } from '@teambit/component';
+import type { EdgeModel, GraphModel, NodeModel } from '../query';
 import { CompareGraphModel } from './compare-graph-model';
-import { CompareNodeModel } from './compare-node-model';
+import type { CompareNodeModel } from './compare-node-model';
 
 const toShortId = (node: NodeModel) => node.componentId.toStringWithoutVersion();
 

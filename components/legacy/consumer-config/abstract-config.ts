@@ -1,10 +1,9 @@
 import fs from 'fs-extra';
 import * as path from 'path';
-import { pickBy } from 'lodash';
-import R from 'ramda';
+import { pickBy, isEqual } from 'lodash';
 import { BitIds } from '@teambit/legacy-bit-id';
 import { DEFAULT_EXTENSIONS, DEFAULT_LANGUAGE, PACKAGE_JSON } from '@teambit/legacy.constants';
-import { PathLinux, PathOsBased } from '@teambit/legacy.utils';
+import type { PathLinux, PathOsBased } from '@teambit/legacy.utils';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 
 export type EnvFile = {
@@ -44,7 +43,7 @@ export default class AbstractConfig {
     const isPropDefaultOrNull = (val, key) => {
       if (!val) return false;
       if (key === 'lang') return val !== DEFAULT_LANGUAGE;
-      if (key === 'extensions') return !R.equals(val, DEFAULT_EXTENSIONS);
+      if (key === 'extensions') return !isEqual(val, DEFAULT_EXTENSIONS);
       return true;
     };
 

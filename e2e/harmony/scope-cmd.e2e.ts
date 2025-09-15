@@ -2,8 +2,8 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit scope command', function () {
   this.timeout(0);
@@ -17,11 +17,11 @@ describe('bit scope command', function () {
   describe('bit scope fork', () => {
     let output: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       output = helper.command.forkScope(helper.scopes.remote, 'org.scope');
     });
@@ -39,7 +39,7 @@ describe('bit scope command', function () {
   });
   describe('bit scope rename', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.renameScope(helper.scopes.remote, 'new-scope');
     });
@@ -63,7 +63,7 @@ describe('bit scope command', function () {
   });
   describe('bit scope rename --refactor', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
+      helper.scopeHelper.setWorkspaceWithRemoteScope({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponents(3);
       helper.workspaceJsonc.addKeyVal('my-scope/comp2', {});
       helper.command.renameScope('my-scope', helper.scopes.remote, '--refactor');
@@ -81,7 +81,7 @@ describe('bit scope command', function () {
   });
   describe('bit scope rename, some components are exported some are new', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.tagWithoutBuild('comp3', '--skip-auto-tag');
       helper.command.export();
@@ -115,7 +115,7 @@ describe('bit scope command', function () {
   });
   describe('bit scope rename-owner', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.addDefaultScope('old-org.my-scope');
       helper.fixtures.populateComponents(2);
       helper.command.setScope('old-org.my-scope1', 'comp1');
@@ -150,18 +150,18 @@ describe('bit scope command', function () {
   });
   describe('bit scope fork when the paths of two components conflicting', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.fs.outputFile('comp1/ui/index.js');
       helper.command.addComponent('comp1/ui', '--id comp1/ui');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
     });
     it('should not throw an error about a component is nested in another component dir', () => {

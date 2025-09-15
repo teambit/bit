@@ -13,8 +13,7 @@
 import memoize from 'memoizee';
 import pMapSeries from 'p-map-series';
 import { HeadNotFound, ParentNotFound, VersionNotFound } from '@teambit/legacy.scope';
-import type { VersionParents, ModelComponent, Version } from '@teambit/scope.objects';
-import { Ref, Repository } from '@teambit/scope.objects';
+import type { VersionParents, ModelComponent, Version, Ref, Repository } from '@teambit/objects';
 
 export type VersionInfo = {
   ref: Ref;

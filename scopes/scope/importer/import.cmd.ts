@@ -1,19 +1,20 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { compact, uniq } from 'lodash';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import {
   installationErrorOutput,
   compilationErrorOutput,
   getWorkspaceConfigUpdateOutput,
   FileStatus,
   MergeOptions,
-  MergeStrategy,
-} from '@teambit/merging';
-import { ComponentIdList, ComponentID } from '@teambit/component-id';
+} from '@teambit/component.modules.merge-helper';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { immutableUnshift } from '@teambit/legacy.utils';
-import { ImporterMain } from './importer.main.runtime';
-import { ImportOptions, ImportDetails, ImportStatus, ImportResult } from './import-components';
+import type { ImporterMain } from './importer.main.runtime';
+import type { ImportOptions, ImportDetails, ImportStatus, ImportResult } from './import-components';
 
 type ImportFlags = {
   path?: string;
@@ -39,11 +40,13 @@ type ImportFlags = {
   fetchDeps?: boolean;
   trackOnly?: boolean;
   includeDeprecated?: boolean;
+  writeDeps?: 'package.json' | 'workspace.jsonc';
+  laneOnly?: boolean;
 };
 
 export class ImportCmd implements Command {
   name = 'import [component-patterns...]';
-  description = 'import components from their remote scopes to the local workspace';
+  description = 'bring components from remote scopes into your workspace';
   helpUrl = 'reference/components/importing-components';
   arguments = [
     {
@@ -52,7 +55,9 @@ export class ImportCmd implements Command {
         'component IDs or component patterns (separated by space). Use patterns to import groups of components using a common scope or namespace. E.g., "utils/*" (wrap with double quotes)',
     },
   ];
-  extendedDescription: string;
+  extendedDescription = `brings component source files from remote scopes into your workspace and installs their dependencies as packages.
+supports pattern matching for bulk imports, merge strategies for handling conflicts, and various optimization options.
+without arguments, fetches all workspace components' latest versions from their remote scopes.`;
   group = 'collaborate';
   alias = '';
   options = [
@@ -122,10 +127,20 @@ export class ImportCmd implements Command {
     ],
     [
       '',
+      'write-deps <workspace.jsonc|package.json>',
+      'write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions',
+    ],
+    [
+      '',
       'track-only',
       'do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap',
     ],
     ['', 'include-deprecated', 'when importing with patterns, include deprecated components (default to exclude them)'],
+    [
+      '',
+      'lane-only',
+      'when using wildcards on a lane, only import components that exist on the lane (never from main)',
+    ],
   ] as CommandOptions;
   loader = true;
   remoteOp = true;
@@ -225,6 +240,8 @@ export class ImportCmd implements Command {
       fetchDeps = false,
       trackOnly = false,
       includeDeprecated = false,
+      writeDeps,
+      laneOnly = false,
     }: ImportFlags
   ): Promise<ImportResult> {
     if (dependentsDryRun) {
@@ -285,6 +302,8 @@ export class ImportCmd implements Command {
       fetchDeps,
       trackOnly,
       includeDeprecated,
+      writeDeps,
+      laneOnly,
     };
     return this.importer.import(importOptions, this._packageManagerArgs);
   }

@@ -1,7 +1,11 @@
-import { PathAbsolute } from '@teambit/toolbox.path.path';
+import type { PathAbsolute } from '@teambit/toolbox.path.path';
 import pLimit from 'p-limit';
 
-import { PackageManager, PackageManagerResolveRemoteVersionOptions, ResolvedPackageVersion } from './package-manager';
+import type {
+  PackageManager,
+  PackageManagerResolveRemoteVersionOptions,
+  ResolvedPackageVersion,
+} from './package-manager';
 
 const DEFAULT_REMOTE_RESOLVE_VERSIONS = {
   fetchToCache: true,

@@ -1,14 +1,16 @@
-import React, { HTMLAttributes, useMemo, useRef, useState, ComponentType, useEffect } from 'react';
+import type { HTMLAttributes, ComponentType } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
-import { DiffOnMount, Monaco } from '@monaco-editor/react';
-import { FileIconSlot } from '@teambit/code';
+import type { DiffOnMount, Monaco } from '@monaco-editor/react';
+import type { FileIconSlot } from '@teambit/code';
 import flatten from 'lodash.flatten';
 import classNames from 'classnames';
-import { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
+import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
-import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
+import type { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { CodeCompareEditor, useCodeCompareEditor } from '../code-compare-editor';
-import { CodeCompareEditorSettings, EditorViewMode } from '../code-compare-editor-settings';
+import type { EditorViewMode } from '../code-compare-editor-settings';
+import { CodeCompareEditorSettings } from '../code-compare-editor-settings';
 import { CodeCompareNavigation } from '../code-compare-navigation';
 import { useCodeCompare } from '../use-code-compare';
 
@@ -263,7 +265,7 @@ export function CodeCompareView({
       <CodeCompareEditor
         DiffEditor={DiffEditor}
         language={language}
-        modifiedPath={modifiedPath}
+        modifiedPath={`${modifiedPath}${componentCompareContext?.compare?.hasLocalChanges ? '-local' : ''}`}
         originalPath={originalPath}
         originalFileContent={originalFileContent}
         modifiedFileContent={modifiedFileContent}

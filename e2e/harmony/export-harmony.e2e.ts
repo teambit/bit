@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { ExportMissingVersions, ServerIsBusy } from '@teambit/legacy.scope';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('export functionality on Harmony', function () {
   this.timeout(0);
@@ -15,7 +15,7 @@ describe('export functionality on Harmony', function () {
   });
   describe('export, re-init the remote scope, tag and export', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -34,7 +34,7 @@ describe('export functionality on Harmony', function () {
   });
   describe('export, tag and export', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -64,7 +64,7 @@ describe('export functionality on Harmony', function () {
     let anotherRemote;
     let exportOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       anotherRemote = scopeName;
       helper.scopeHelper.addRemoteScope(scopePath);
@@ -141,7 +141,7 @@ describe('export functionality on Harmony', function () {
       let beforeExportClone;
       before(() => {
         // simulate the same workspace the persist failed.
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope(remote1Path);
         helper.scopeHelper.addRemoteScope(remote2Path);
 
@@ -154,7 +154,7 @@ describe('export functionality on Harmony', function () {
         helper.command.linkAndRewire();
         helper.command.compile();
         helper.command.tagAllWithoutBuild();
-        beforeExportClone = helper.scopeHelper.cloneLocalScope();
+        beforeExportClone = helper.scopeHelper.cloneWorkspace();
       });
       describe('running bit export --resume <export-id>', () => {
         let exportOutput: string;
@@ -175,7 +175,7 @@ describe('export functionality on Harmony', function () {
         before(() => {
           helper.scopeHelper.getClonedScope(remote1Clone, remote1Path);
           helper.scopeHelper.getClonedScope(remote2Clone, remote2Path);
-          helper.scopeHelper.getClonedLocalScope(beforeExportClone);
+          helper.scopeHelper.getClonedWorkspace(beforeExportClone);
         });
         it('should throw ServerIsBusy error', () => {
           const err = new ServerIsBusy(2, exportId);
@@ -188,7 +188,7 @@ describe('export functionality on Harmony', function () {
         before(() => {
           helper.scopeHelper.getClonedScope(remote1Clone, remote1Path);
           helper.scopeHelper.getClonedScope(remote2Clone, remote2Path);
-          helper.scopeHelper.getClonedLocalScope(beforeExportClone);
+          helper.scopeHelper.getClonedWorkspace(beforeExportClone);
           helper.command.resumeExport(exportId, [remote1Name]);
           exportOutput = helper.command.export(`--resume ${exportId}`);
         });
@@ -200,7 +200,7 @@ describe('export functionality on Harmony', function () {
     });
     describe('from different workspace, by running bit resume-export <export-id> <remotes...>', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.getClonedScope(remote1Clone, remote1Path);
         helper.scopeHelper.getClonedScope(remote2Clone, remote2Path);
         helper.scopeHelper.addRemoteScope(remote1Path);
@@ -249,7 +249,7 @@ describe('export functionality on Harmony', function () {
   // in this test, VersionHistory never got built (coz there was not any import).
   describe('when version history is out of date', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.createLane('lane-a');
       helper.fixtures.populateComponents(1, false);
       helper.command.snapAllComponentsWithoutBuild();

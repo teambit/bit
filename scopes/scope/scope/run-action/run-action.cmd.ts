@@ -1,5 +1,5 @@
 import { runAction } from './run-action';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 
 export class RunActionCmd implements Command {
   name = 'run-action <action-name> <remote> <options>';
@@ -8,6 +8,7 @@ export class RunActionCmd implements Command {
   alias = '';
   options = [] as CommandOptions;
   loadAspects = false;
+  group = 'advanced';
 
   async report([actionName, remote, options]: [string, string, string]) {
     const optionsParsed = JSON.parse(options);

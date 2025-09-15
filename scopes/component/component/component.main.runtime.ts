@@ -1,21 +1,28 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { ExpressAspect, ExpressMain, Route } from '@teambit/express';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { ComponentID } from '@teambit/component-id';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { ExpressMain, Route } from '@teambit/express';
+import { ExpressAspect } from '@teambit/express';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { ComponentID } from '@teambit/component-id';
 import { flatten, orderBy } from 'lodash';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { ComponentFactory } from './component-factory';
+import type { LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
 import { componentSchema } from './component.graphql';
-import { ComponentRoute, RegisteredComponentRoute } from './component.route';
+import type { RegisteredComponentRoute } from './component.route';
+import { ComponentRoute } from './component.route';
 import { AspectList } from './aspect-list';
 import { HostNotFound } from './exceptions';
-import { AspectEntry } from './aspect-entry';
+import type { AspectEntry } from './aspect-entry';
+import type { ShowFragment } from './show';
 import {
   ShowCmd,
-  ShowFragment,
   NameFragment,
   MainFileFragment,
   IDFragment,
@@ -29,6 +36,7 @@ export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 export type ShowFragmentSlot = SlotRegistry<ShowFragment[]>;
 
 export class ComponentMain {
+  dependencyResolver: DependencyResolverMain;
   constructor(
     /**
      * slot for component hosts to register.
@@ -171,7 +179,7 @@ export class ComponentMain {
       new FilesFragment(),
       new ExtensionsFragment(),
     ]);
-    graphql.register(componentSchema(componentExtension));
+    graphql.register(() => componentSchema(componentExtension));
 
     return componentExtension;
   }

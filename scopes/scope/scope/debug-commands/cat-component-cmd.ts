@@ -1,5 +1,5 @@
 import { catComponent } from './cat-component';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 
 export class CatComponentCmd implements Command {
   name = 'cat-component [id]';
@@ -11,6 +11,7 @@ export class CatComponentCmd implements Command {
     ['j', 'json', 'json format'],
   ] as CommandOptions;
   loadAspects = false;
+  group = 'advanced';
 
   async report([id]: [string]) {
     const result = await catComponent(id);

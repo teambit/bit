@@ -1,13 +1,14 @@
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
-import { DependenciesEnv, PackageEnv, PipeServiceModifier, PipeServiceModifiersMap } from '@teambit/envs';
-import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
-import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
-import { ReactMain } from '@teambit/react';
-import { Tester } from '@teambit/tester';
-import { BuildTask } from '@teambit/builder';
-import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
-import { SchemaExtractor } from '@teambit/schema';
-import { TsConfigSourceFile } from 'typescript';
+import type { DependenciesEnv, PackageEnv, PipeServiceModifier, PipeServiceModifiersMap } from '@teambit/envs';
+import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
+import type { ReactMain } from '@teambit/react';
+import type { Tester } from '@teambit/tester';
+import type { BuildTask } from '@teambit/builder';
+import type { PreviewStrategyName } from '@teambit/preview';
+import { COMPONENT_PREVIEW_STRATEGY_NAME } from '@teambit/preview';
+import type { SchemaExtractor } from '@teambit/schema';
+import type { TsConfigSourceFile } from 'typescript';
 import { join } from 'path';
 
 export const NodeEnvType = 'node';
@@ -24,14 +25,34 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
 
   icon = 'https://static.bit.dev/extensions-icons/nodejs.svg';
 
-  getDependencies(): VariantPolicyConfigObject {
+  getDependencies(): EnvPolicyConfigObject {
     return {
+      // dependencies: {
+      //   react: '-',
+      //   'react-dom': '-',
+      // },
       devDependencies: {
+        // react: '-',
+        // 'react-dom': '-',
         '@types/jest': '26.0.20',
-        '@types/node': '12.20.4',
-        // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
-        '@babel/runtime': '7.20.0',
+        '@types/node': '22.10.5',
       },
+      peers: [
+        {
+          name: 'react',
+          /* the version to be installed and used by the env */
+          version: '^17.0.0',
+          /* the range of versions this env's components are compatible with */
+          supportedRange: '^17.0.0 || ^18.0.0 || ^19.0.0',
+        },
+        {
+          name: 'react-dom',
+          /* the version to be installed and used by the env */
+          version: '^17.0.0',
+          /* the range of versions this env's components are compatible with */
+          supportedRange: '^17.0.0 || ^18.0.0 || ^19.0.0',
+        },
+      ],
     };
   }
 

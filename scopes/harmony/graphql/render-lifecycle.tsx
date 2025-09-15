@@ -1,4 +1,5 @@
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React from 'react';
 // Calling getMarkupFromTree instead of getDataFromTree so we can control the render function
 // This is required since upgrade to @apollo/client v3.6.9 because otherwise the ssr is not working since
 // webpack is not bundling the react-dom/server
@@ -70,12 +71,12 @@ export class GraphqlRenderPlugins implements SSR.RenderPlugin<RenderContext, { s
 
   private _client: ApolloClient<NormalizedCacheObject> | undefined = undefined;
 
-  browserInit = ({ state }: { state?: NormalizedCacheObject } = {}) => {
+  browserInit = ({ state }: { state?: NormalizedCacheObject } = {}, { host }: { host?: string } = {}) => {
     const { location } = window;
     const isInsecure = location.protocol === 'http:';
     const wsUrl = `${isInsecure ? 'ws:' : 'wss:'}//${location.host}/subscriptions`;
 
-    const client = this.graphqlUI.createClient('/graphql', { state, subscriptionUri: wsUrl });
+    const client = this.graphqlUI.createClient('/graphql', { state, subscriptionUri: wsUrl, host });
     this._client = client;
 
     return { client };

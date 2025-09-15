@@ -1,27 +1,20 @@
 import mapSeries from 'p-map-series';
 import { compact, partition, property, sortBy } from 'lodash';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { logger } from '@teambit/legacy.logger';
-import { Remotes, Remote, getScopeRemotes } from '@teambit/scope.remotes';
+import type { Remotes, Remote } from '@teambit/scope.remotes';
+import { getScopeRemotes } from '@teambit/scope.remotes';
+import type { MergeResult, Scope } from '@teambit/legacy.scope';
 import {
-  MergeResult,
   PersistFailed,
-  Scope,
   ComponentNeedsUpdate,
   ComponentNotFound,
   MergeConflict,
   MergeConflictOnRemote,
 } from '@teambit/legacy.scope';
-import {
-  Lane,
-  Version,
-  ModelComponent,
-  VersionHistory,
-  LaneHistory,
-  Ref,
-  BitObjectList,
-  ObjectList,
-} from '@teambit/scope.objects';
+import type { Lane, ModelComponent, VersionHistory, LaneHistory, BitObjectList, ObjectList } from '@teambit/objects';
+import { Version, Ref } from '@teambit/objects';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '@teambit/scope.remote-actions';
 import { loader } from '@teambit/legacy.loader';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
@@ -226,10 +219,14 @@ export async function mergeObjects(
   ] as ComponentNeedsUpdate[];
   const componentsWithConflicts = errors.filter((result) => result instanceof MergeConflict) as MergeConflict[];
   if (componentsWithConflicts.length || componentsNeedUpdate.length) {
-    const idsAndVersions = componentsWithConflicts.map((c) => ({ id: c.id, versions: c.versions }));
+    const idsAndVersions = componentsWithConflicts.map((c) => ({
+      id: c.id,
+      versions: c.versions,
+      isDeleted: c.isDeleted,
+    }));
     const idsAndVersionsWithConflicts = sortBy(idsAndVersions, property('id'));
     const idsOfNeedUpdateComps = sortBy(
-      componentsNeedUpdate.map((c) => ({ id: c.id, lane: c.lane })),
+      componentsNeedUpdate.map((c) => ({ id: c.id, lane: c.lane, isDeleted: c.isDeleted })),
       property('id')
     );
     scope.objects.clearObjectsFromCache(); // just in case this error is caught. we don't want to persist anything by mistake.
@@ -375,7 +372,7 @@ export async function persistRemotes(manyObjectsPerRemote: RemotesForPersist[], 
 
 export async function resumeExport(scope: Scope, exportId: string, remotes: string[]): Promise<string[]> {
   const scopeRemotes: Remotes = await getScopeRemotes(scope);
-  const remotesObj = await Promise.all(remotes.map((r) => scopeRemotes.resolve(r, scope)));
+  const remotesObj = await Promise.all(remotes.map((r) => scopeRemotes.resolve(r)));
   const remotesForPersist: RemotesForPersist[] = remotesObj.map((remote) => ({ remote }));
   await validateRemotes(remotesObj, exportId);
   await persistRemotes(remotesForPersist, exportId);

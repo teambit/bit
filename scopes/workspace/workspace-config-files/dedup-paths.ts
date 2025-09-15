@@ -1,18 +1,26 @@
 import { invertBy, uniq } from 'lodash';
 import { dirname } from 'path';
-import { PathLinuxRelative } from '@teambit/toolbox.path.path';
-import { CompPathExtendingHashMap, EnvCompsDirsMap } from './workspace-config-files.main.runtime';
-import { ExtendingConfigFilesMap } from './writers';
+import type { PathLinuxRelative } from '@teambit/toolbox.path.path';
+import type { CompPathExtendingHashMap, EnvCompsDirsMap } from './workspace-config-files.main.runtime';
+import type { ExtendingConfigFilesMap } from './writers';
 
 export type DedupedPaths = Array<{
   fileHash: string;
   paths: string[];
 }>;
 
-function getAllPossibleDirsFromPaths(paths: PathLinuxRelative[]): PathLinuxRelative[] {
+function getAllPossibleDirsFromPaths(
+  paths: PathLinuxRelative[],
+  componentsRootDir?: PathLinuxRelative
+): PathLinuxRelative[] {
   const dirs = paths.map((p) => getAllParentsDirOfPath(p)).flat();
-  dirs.push('.'); // add the root dir
-  return uniq(dirs);
+  const uniqueDirs = uniq(dirs);
+  if (!componentsRootDir) {
+    uniqueDirs.push('.'); // add the root dir
+    return uniqueDirs;
+  }
+  const filteredDirs = uniqueDirs.filter((d) => d.startsWith(componentsRootDir));
+  return uniq(filteredDirs);
 }
 
 function getAllParentsDirOfPath(p: PathLinuxRelative): PathLinuxRelative[] {
@@ -64,14 +72,14 @@ export function buildCompPathExtendingHashMap(
  */
 export function dedupePaths(
   extendingConfigFilesMap: ExtendingConfigFilesMap,
-  envCompsDirsMap: EnvCompsDirsMap
+  envCompsDirsMap: EnvCompsDirsMap,
+  componentsRootDir: string | undefined
 ): DedupedPaths {
   const rootDir = '.';
 
   const compPathExtendingHashMap = buildCompPathExtendingHashMap(extendingConfigFilesMap, envCompsDirsMap);
   const allPaths = Object.keys(compPathExtendingHashMap);
-  const allPossibleDirs = getAllPossibleDirsFromPaths(allPaths);
-
+  const allPossibleDirs = getAllPossibleDirsFromPaths(allPaths, componentsRootDir);
   const allPathsPerFileHash: { [path: string]: string | null } = {}; // null when parent-dir has same amount of comps per env.
 
   const calculateBestFileForDir = (dir: string) => {

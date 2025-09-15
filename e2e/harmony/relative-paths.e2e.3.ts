@@ -2,8 +2,8 @@ import chai, { expect } from 'chai';
 import * as path from 'path';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('relative paths flow (components requiring each other by relative paths)', function () {
   this.timeout(0);
@@ -17,7 +17,7 @@ describe('relative paths flow (components requiring each other by relative paths
   describe('adding directories and using relative-paths', () => {
     let appOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       appOutput = helper.fixtures.populateComponents(2, false);
     });
     it('bit status should show it as an invalid component', () => {
@@ -65,7 +65,7 @@ describe('relative paths flow (components requiring each other by relative paths
         describe('should work after importing to another workspace', () => {
           before(() => {
             helper.command.export();
-            helper.scopeHelper.reInitLocalScope();
+            helper.scopeHelper.reInitWorkspace();
             helper.scopeHelper.addRemoteScope();
             helper.command.importComponent('*');
           });

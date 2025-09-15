@@ -1,15 +1,20 @@
-import React, { useContext, ComponentType, useState } from 'react';
+/* eslint-disable complexity */
+import type { ComponentType } from 'react';
+import React, { useContext, useState } from 'react';
 import classNames from 'classnames';
 import { flatten } from 'lodash';
 // import { Icon } from '@teambit/design.elements.icon';
 // import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
-import { ComponentPreview, ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
+import type { ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
+import { ComponentPreview, SandboxPermissionsAggregator } from '@teambit/preview.ui.component-preview';
 // import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { CompositionGallery, CompositionGallerySkeleton } from '@teambit/compositions.panels.composition-gallery';
 import { useThemePicker } from '@teambit/base-react.themes.theme-switcher';
+import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
+import type { UsePreviewSandboxSlot } from '@teambit/compositions';
 import { ReadmeSkeleton } from './readme-skeleton';
 import styles from './overview.module.scss';
 
@@ -38,9 +43,17 @@ export type OverviewProps = {
   previewProps?: Partial<ComponentPreviewProps>;
   getEmptyState?: () => ComponentType | undefined;
   TaggedAPI?: React.ComponentType<{ componentId: string }>;
+  usePreviewSandboxSlot?: UsePreviewSandboxSlot;
 };
 
-export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyState, TaggedAPI }: OverviewProps) {
+export function Overview({
+  titleBadges,
+  overviewOptions,
+  previewProps,
+  getEmptyState,
+  TaggedAPI,
+  usePreviewSandboxSlot,
+}: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
   const theme = useThemePicker();
@@ -54,9 +67,10 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
   const defaultLoadingState = React.useMemo(() => {
     return isScaling && !includesEnvTemplate;
   }, [isScaling, includesEnvTemplate]);
-
+  const { isMinimal } = useWorkspaceMode();
   const [isLoading, setLoading] = useState(defaultLoadingState);
-
+  const previewSandboxHooks = usePreviewSandboxSlot?.values() ?? [];
+  const [sandboxValue, setSandboxValue] = useState('');
   const iframeQueryParams = `onlyOverview=${component.preview?.onlyOverview || 'false'}&skipIncludes=${
     component.preview?.skipIncludes || component.preview?.onlyOverview
   }`;
@@ -86,6 +100,11 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
       className={classNames(styles.overviewWrapper, isLoading && styles.noOverflow)}
       key={`${component.id.toString()}`}
     >
+      <SandboxPermissionsAggregator
+        hooks={previewSandboxHooks}
+        onSandboxChange={setSandboxValue}
+        component={component}
+      />
       {showHeader && (
         <ComponentOverview
           className={classNames(styles.componentOverviewBlock, !isScaling && styles.legacyPreview)}
@@ -106,19 +125,45 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
               <CompositionGallerySkeleton compositionsLength={Math.min(component.compositions.length, 3)} />
             </ReadmeSkeleton>
           )}
-          <ComponentPreview
-            onLoad={onPreviewLoad}
-            previewName="overview"
-            pubsub={true}
-            queryParams={[iframeQueryParams, themeParams, overviewPropsValues?.queryParams || '']}
-            viewport={null}
-            fullContentHeight
-            disableScroll={true}
-            {...rest}
-            component={component}
-            style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
-          />
-          {component.preview?.onlyOverview && !isLoading && <CompositionGallery component={component} />}
+          {!isMinimal ? (
+            <>
+              <ComponentPreview
+                onLoad={onPreviewLoad}
+                previewName="overview"
+                pubsub={true}
+                queryParams={[iframeQueryParams, themeParams, overviewPropsValues?.queryParams || '']}
+                viewport={null}
+                fullContentHeight
+                disableScroll={true}
+                sandbox={sandboxValue}
+                {...rest}
+                component={component}
+                style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
+              />
+              {component.preview?.onlyOverview && !isLoading && (
+                <CompositionGallery component={component} sandbox={sandboxValue} />
+              )}
+            </>
+          ) : (
+            <>
+              {component.preview?.onlyOverview && !isLoading && (
+                <CompositionGallery component={component} sandbox={sandboxValue} />
+              )}
+              <ComponentPreview
+                onLoad={onPreviewLoad}
+                previewName="overview"
+                pubsub={true}
+                queryParams={[iframeQueryParams, themeParams, overviewPropsValues?.queryParams || '']}
+                viewport={null}
+                fullContentHeight
+                disableScroll={true}
+                sandbox={sandboxValue}
+                {...rest}
+                component={component}
+                style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
+              />
+            </>
+          )}
           {component.preview?.onlyOverview && !isLoading && TaggedAPI && (
             <TaggedAPI componentId={component.id.toString()} />
           )}

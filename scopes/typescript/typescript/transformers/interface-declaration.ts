@@ -1,12 +1,14 @@
-import ts, { Node, InterfaceDeclaration, SyntaxKind } from 'typescript';
+import type { Node, InterfaceDeclaration } from 'typescript';
+import type ts from 'typescript';
+import { SyntaxKind } from 'typescript';
 import pMapSeries from 'p-map-series';
 import {
   ExpressionWithTypeArgumentsSchema,
   InterfaceSchema,
   UnresolvedSchema,
 } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
 import { Identifier } from '../identifier';
 
 export class InterfaceDeclarationTransformer implements SchemaTransformer {

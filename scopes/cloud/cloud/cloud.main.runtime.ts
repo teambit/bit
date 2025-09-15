@@ -1,16 +1,19 @@
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { CLIAspect, CLIMain, MainRuntime, globalFlags } from '@teambit/cli';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime, globalFlags } from '@teambit/cli';
 import { v4 } from 'uuid';
 import chalk from 'chalk';
 import os from 'os';
 import open from 'open';
-import * as http from 'http';
-import { Express } from 'express';
-import { GetScopesGQLResponse } from '@teambit/cloud.models.cloud-scope';
-import { CloudUser, CloudUserAPIResponse } from '@teambit/cloud.models.cloud-user';
+import type * as http from 'http';
+import type { Express } from 'express';
+import type { GetScopesGQLResponse } from '@teambit/cloud.models.cloud-scope';
+import type { CloudUser, CloudUserAPIResponse } from '@teambit/cloud.models.cloud-user';
 import { ScopeDescriptor } from '@teambit/scopes.scope-descriptor';
 import { ScopeID } from '@teambit/scopes.scope-id';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import {
   getCloudDomain,
   DEFAULT_HUB_DOMAIN,
@@ -27,20 +30,26 @@ import {
   DEFAULT_CLOUD_DOMAIN,
   CFG_CLOUD_DOMAIN_KEY,
 } from '@teambit/legacy.constants';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 import { fetchWithAgent as fetch } from '@teambit/scope.network';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { ExpressAspect, ExpressMain } from '@teambit/express';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { ExpressMain } from '@teambit/express';
+import { ExpressAspect } from '@teambit/express';
 import { execSync } from 'child_process';
-import { UIAspect, UiMain } from '@teambit/ui';
+import type { UiMain } from '@teambit/ui';
+import { UIAspect } from '@teambit/ui';
 import { cloudSchema } from './cloud.graphql';
 import { CloudAspect } from './cloud.aspect';
 import { LoginCmd } from './login.cmd';
 import { LogoutCmd } from './logout.cmd';
 import { WhoamiCmd } from './whoami.cmd';
 import { NpmrcCmd, NpmrcGenerateCmd } from './npmrc.cmd';
+import type { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store';
 
 export interface CloudWorkspaceConfig {
   cloudDomain: string;
@@ -108,7 +117,7 @@ export class CloudMain {
     public express: ExpressMain,
     public workspace: Workspace,
     public scope: ScopeMain,
-    public globalConfig: GlobalConfigMain,
+    public configStore: ConfigStoreMain,
     public onSuccessLoginSlot: OnSuccessLoginSlot
   ) {}
 
@@ -274,7 +283,8 @@ export class CloudMain {
           reject(err);
         });
 
-      expressApp.get('/', (req, res) => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      expressApp.get('/', async (req, res) => {
         this.logger.debug('cloud.authListener', 'received request', req.query);
         try {
           const { clientId: clientIdFromReq, redirectUri, username: usernameFromReq } = req.query;
@@ -287,8 +297,8 @@ export class CloudMain {
             res.status(400).send('Invalid token format');
             return res;
           }
-          this.globalConfig.setSync(CFG_USER_TOKEN_KEY, token);
-          if (username) this.globalConfig.setSync(CFG_USER_NAME_KEY, username);
+          await this.configStore.setConfig(CFG_USER_TOKEN_KEY, token);
+          if (username) await this.configStore.setConfig(CFG_USER_NAME_KEY, username);
 
           const existing = this.authListenerByPort.get(port) ?? {};
           this.authListenerByPort.set(port, {
@@ -300,7 +310,7 @@ export class CloudMain {
           });
 
           const onLoggedInFns = this.onSuccessLoginSlot.values();
-          const updatedConfigs = this.updateGlobalConfigOnLogin(cloudDomain);
+          const updatedConfigs = await this.updateGlobalConfigOnLogin(cloudDomain);
 
           if (!skipConfigUpdate) {
             this.updateNpmConfig({ authToken: token as string, username: username as string })
@@ -382,14 +392,14 @@ export class CloudMain {
     return this.config.loginPort || CloudMain.DEFAULT_PORT;
   }
 
-  isLoggedIn(): boolean {
-    return Boolean(this.getAuthToken());
+  async isLoggedIn(): Promise<boolean> {
+    const currentUser = await this.getCurrentUser();
+    return Boolean(currentUser);
   }
 
   getAuthToken() {
-    this.globalConfig.invalidateCache();
     const processToken = globalFlags.token;
-    const token = processToken || this.globalConfig.getSync(CFG_USER_TOKEN_KEY);
+    const token = processToken || this.configStore.getConfig(CFG_USER_TOKEN_KEY);
     if (!token) return null;
 
     return token;
@@ -402,7 +412,7 @@ export class CloudMain {
   }
 
   getUsername(): string | undefined {
-    return this.globalConfig.getSync(CFG_USER_NAME_KEY);
+    return this.configStore.getConfig(CFG_USER_NAME_KEY);
   }
 
   private ensureHttps(url: string): string {
@@ -448,9 +458,9 @@ export class CloudMain {
     );
   }
 
-  logout() {
-    this.globalConfig.delSync(CFG_USER_TOKEN_KEY);
-    this.globalConfig.delSync(CFG_USER_NAME_KEY);
+  async logout() {
+    await this.configStore.delConfig(CFG_USER_TOKEN_KEY);
+    await this.configStore.delConfig(CFG_USER_NAME_KEY);
   }
 
   setRedirectUrl(redirectUrl: string) {
@@ -466,7 +476,7 @@ export class CloudMain {
   }
 
   private globalConfigsToUpdateOnLogin(domain?: string): Record<string, string | undefined> {
-    const currentCloudDomain = this.globalConfig.getSync(CFG_CLOUD_DOMAIN_KEY);
+    const currentCloudDomain = this.configStore.getConfig(CFG_CLOUD_DOMAIN_KEY);
     const res = {};
     if (!domain || domain === DEFAULT_CLOUD_DOMAIN) {
       if (currentCloudDomain && currentCloudDomain !== DEFAULT_CLOUD_DOMAIN) {
@@ -480,16 +490,16 @@ export class CloudMain {
     return res;
   }
 
-  private updateGlobalConfigOnLogin(domain?: string) {
+  private async updateGlobalConfigOnLogin(domain?: string) {
     const configsToUpdate = this.globalConfigsToUpdateOnLogin(domain);
 
-    Object.entries(configsToUpdate).forEach(([key, value]) => {
+    for await (const [key, value] of Object.entries(configsToUpdate)) {
       if (value) {
-        this.globalConfig.setSync(key, value);
+        await this.configStore.setConfig(key, value);
       } else {
-        this.globalConfig.delSync(key);
+        await this.configStore.delConfig(key);
       }
-    });
+    }
     // Refresh the config after updating
     clearCachedUrls();
     this.config = CloudMain.calculateConfig();
@@ -514,12 +524,13 @@ export class CloudMain {
     if (defaultCloudDomain) {
       cloudDomain = DEFAULT_CLOUD_DOMAIN;
     }
+    const isLoggedIn = await this.isLoggedIn();
     return new Promise((resolve, reject) => {
-      if (this.isLoggedIn()) {
+      if (isLoggedIn) {
         resolve({
           isAlreadyLoggedIn: true,
-          username: this.globalConfig.getSync(CFG_USER_NAME_KEY),
-          token: this.globalConfig.getSync(CFG_USER_TOKEN_KEY),
+          username: this.configStore.getConfig(CFG_USER_NAME_KEY),
+          token: this.configStore.getConfig(CFG_USER_TOKEN_KEY),
         });
         return;
       }
@@ -602,7 +613,7 @@ export class CloudMain {
   static PRESET_ORGS = ['bitdev', 'teambit', 'bitdesign', 'frontend', 'backend'];
 
   async getCloudScopes(scopes: string[]): Promise<ScopeDescriptor[]> {
-    const remotes = await this.scope._legacyRemotes();
+    const remotes = await this.scope.getRemoteScopes();
     const filteredScopesToFetch = scopes.filter((scope) => {
       return ScopeID.isValid(scope) && remotes.isHub(scope);
     });
@@ -642,8 +653,7 @@ export class CloudMain {
   }
 
   async fetchFromSymphonyViaGQL<T>(query: string, variables?: Record<string, any>): Promise<T | null> {
-    if (!this.isLoggedIn()) return null;
-    const graphqlUrl = `https://${this.getCloudApi()}${CloudMain.GRAPHQL_ENDPOINT}`;
+    const graphqlUrl = `${this.getCloudApi()}${CloudMain.GRAPHQL_ENDPOINT}`;
     const body = JSON.stringify({
       query,
       variables,
@@ -689,7 +699,7 @@ export class CloudMain {
     ExpressAspect,
     WorkspaceAspect,
     ScopeAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
     CLIAspect,
     UIAspect,
   ];
@@ -697,13 +707,13 @@ export class CloudMain {
   static defaultConfig: CloudWorkspaceConfig = CloudMain.calculateConfig();
 
   static async provider(
-    [loggerMain, graphql, express, workspace, scope, globalConfig, cli, ui]: [
+    [loggerMain, graphql, express, workspace, scope, configStore, cli, ui]: [
       LoggerMain,
       GraphqlMain,
       ExpressMain,
       Workspace,
       ScopeMain,
-      GlobalConfigMain,
+      ConfigStoreMain,
       CLIMain,
       UiMain,
     ],
@@ -711,7 +721,7 @@ export class CloudMain {
     [onSuccessLoginSlot]: [OnSuccessLoginSlot]
   ) {
     const logger = loggerMain.createLogger(CloudAspect.id);
-    const cloudMain = new CloudMain(config, logger, express, workspace, scope, globalConfig, onSuccessLoginSlot);
+    const cloudMain = new CloudMain(config, logger, express, workspace, scope, configStore, onSuccessLoginSlot);
     const loginCmd = new LoginCmd(cloudMain, 8889);
     const logoutCmd = new LogoutCmd(cloudMain);
     const whoamiCmd = new WhoamiCmd(cloudMain);
@@ -719,7 +729,7 @@ export class CloudMain {
     const npmrc = new NpmrcCmd();
     npmrc.commands = [npmrcGenerateCmd];
     cli.register(loginCmd, logoutCmd, whoamiCmd, npmrc);
-    graphql.register(cloudSchema(cloudMain));
+    graphql.register(() => cloudSchema(cloudMain));
     if (workspace) {
       ui.registerOnStart(async () => {
         await cloudMain.setupAuthListener();

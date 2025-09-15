@@ -1,27 +1,40 @@
 import { BitError } from '@teambit/bit-error';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { importTransformer, exportTransformer } from '@teambit/typescript';
-import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
-import { ComponentDependency, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ComponentConfig } from '@teambit/generator';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { ComponentDependency, DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { ComponentConfig } from '@teambit/generator';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
 import { isHash } from '@teambit/component-version';
-import { InstallAspect, InstallMain } from '@teambit/install';
-import { ComponentID, ComponentIdObj, ComponentIdList } from '@teambit/component-id';
-import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-component-helper';
-import { PkgAspect, PkgMain } from '@teambit/pkg';
-import { RefactoringAspect, MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace, WorkspaceComponentLoadOptions } from '@teambit/workspace';
+import type { InstallMain } from '@teambit/install';
+import { InstallAspect } from '@teambit/install';
+import type { ComponentIdObj } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { NewComponentHelperMain } from '@teambit/new-component-helper';
+import { NewComponentHelperAspect } from '@teambit/new-component-helper';
+import type { PkgMain } from '@teambit/pkg';
+import { PkgAspect } from '@teambit/pkg';
+import type { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
+import { RefactoringAspect } from '@teambit/refactoring';
+import type { Workspace, WorkspaceComponentLoadOptions } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import { snapToSemver } from '@teambit/component-package-version';
 import { uniqBy } from 'lodash';
 import pMapSeries from 'p-map-series';
 import { parse } from 'semver';
-import { ForkCmd, ForkOptions } from './fork.cmd';
+import type { ForkOptions } from './fork.cmd';
+import { ForkCmd } from './fork.cmd';
 import { ForkingAspect } from './forking.aspect';
 import { ForkingFragment } from './forking.fragment';
 import { forkingSchema } from './forking.graphql';
-import { ScopeForkCmd, ScopeForkOptions } from './scope-fork.cmd';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import type { ScopeForkOptions } from './scope-fork.cmd';
+import { ScopeForkCmd } from './scope-fork.cmd';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 
 export type ForkInfo = {
   forkedFrom: ComponentID;
@@ -69,7 +82,7 @@ export class ForkingMain {
   async fork(sourceId: string, targetId?: string, options?: ForkOptions): Promise<ComponentID> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const sourceCompId = await this.workspace.resolveComponentId(sourceId);
-    const exists = this.workspace.exists(sourceCompId);
+    const exists = this.workspace.hasId(sourceCompId, { ignoreVersion: true });
     if (exists) {
       const existingInWorkspace = await this.workspace.get(sourceCompId);
       return this.forkExistingInWorkspace(existingInWorkspace, targetId, options);
@@ -414,7 +427,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
       pkg
     );
     cli.register(new ForkCmd(forkingMain));
-    graphql.register(forkingSchema(forkingMain));
+    graphql.register(() => forkingSchema(forkingMain));
     componentMain.registerShowFragments([new ForkingFragment(forkingMain)]);
 
     const scopeCommand = cli.getCommand('scope');

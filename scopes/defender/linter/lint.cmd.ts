@@ -1,14 +1,15 @@
-import { TimerResponse, Timer } from '@teambit/toolbox.time.timer';
+import type { TimerResponse } from '@teambit/toolbox.time.timer';
+import { Timer } from '@teambit/toolbox.time.timer';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { Command, CommandOptions } from '@teambit/cli';
-import { ComponentFactory, ComponentID } from '@teambit/component';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ComponentFactory, ComponentID } from '@teambit/component';
 import chalk from 'chalk';
-import { EnvsExecutionResult } from '@teambit/envs';
-import { Workspace } from '@teambit/workspace';
+import type { EnvsExecutionResult } from '@teambit/envs';
+import type { Workspace } from '@teambit/workspace';
 import { compact, flatten, groupBy, omit } from 'lodash';
-import { LinterMain } from './linter.main.runtime';
-import { ComponentLintResult, LintResults } from './linter';
-import { FixTypes, LinterOptions } from './linter-context';
+import type { LinterMain } from './linter.main.runtime';
+import type { ComponentLintResult, LintResults } from './linter';
+import type { FixTypes, LinterOptions } from './linter-context';
 
 export type LintCmdOptions = {
   changed?: boolean;
@@ -41,10 +42,13 @@ export type JsonLintResults = {
 
 export class LintCmd implements Command {
   name = 'lint [component-pattern]';
-  description = 'lint components in the development workspace';
+  description = 'analyze component code for issues and style violations';
+  extendedDescription = `runs linters configured by each component's environment (ESLint, etc.) to check for code quality issues.
+by default lints all components. use --changed to lint only new and modified components.
+supports automatic fixing of certain issues with --fix flag.`;
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   helpUrl = 'reference/linting/linter-overview';
-  group = 'development';
+  group = 'testing';
   options = [
     ['c', 'changed', 'lint only new and modified components'],
     ['f', 'fix', 'automatically fix problems'],

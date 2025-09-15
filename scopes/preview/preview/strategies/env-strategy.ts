@@ -2,16 +2,16 @@ import { join, resolve } from 'path';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import { flatten } from 'lodash';
 import { ComponentMap } from '@teambit/component';
-import { Compiler } from '@teambit/compiler';
-import { AbstractVinyl } from '@teambit/component.sources';
-import { Capsule } from '@teambit/isolator';
-import { ComponentResult } from '@teambit/builder';
-import { BundlerContext, BundlerHtmlConfig, BundlerResult } from '@teambit/bundler';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { PkgMain } from '@teambit/pkg';
+import type { Compiler } from '@teambit/compiler';
+import type { AbstractVinyl } from '@teambit/component.sources';
+import type { Capsule } from '@teambit/isolator';
+import type { ArtifactDefinition, ComponentResult } from '@teambit/builder';
+import type { BundlerContext, BundlerHtmlConfig, BundlerResult } from '@teambit/bundler';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { PkgMain } from '@teambit/pkg';
 import type { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
-import { PreviewDefinition } from '../preview-definition';
-import { PreviewMain } from '../preview.main.runtime';
+import type { PreviewDefinition } from '../preview-definition';
+import type { PreviewMain } from '../preview.main.runtime';
 import { html } from '../bundler/html-template';
 
 export const ENV_STRATEGY_ARTIFACT_NAME = 'preview';
@@ -86,7 +86,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     };
   }
 
-  private getArtifactDef(context: ComputeTargetsContext) {
+  private getArtifactDef(context: ComputeTargetsContext): ArtifactDefinition[] {
     // eslint-disable-next-line @typescript-eslint/prefer-as-const
     const env: 'env' = 'env';
     const rootDir = this.getDirName(context);
@@ -94,8 +94,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     return [
       {
         name: ENV_STRATEGY_ARTIFACT_NAME,
-        globPatterns: ['public/**'],
-        rootDir,
+        globPatterns: [`${rootDir}/public`],
         context: env,
       },
     ];
@@ -111,8 +110,8 @@ export class EnvBundlingStrategy implements BundlingStrategy {
   }
 
   private getPaths(context: ComputeTargetsContext, files: AbstractVinyl[], capsule: Capsule) {
-    const compiler: Compiler = context.env.getCompiler();
-    return files.map((file) => join(capsule.path, compiler.getDistPathBySrcPath(file.relative)));
+    const compiler: Compiler = context.env.getCompiler?.();
+    return files.map((file) => join(capsule.path, compiler?.getDistPathBySrcPath(file.relative) || file.relative));
   }
 
   private async computePaths(

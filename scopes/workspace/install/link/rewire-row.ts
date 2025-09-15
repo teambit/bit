@@ -1,4 +1,4 @@
-import { CodemodResult } from '@teambit/workspace.modules.node-modules-linker';
+import type { CodemodResult } from '@teambit/workspace.modules.node-modules-linker';
 import chalk from 'chalk';
 
 type RewireRowProps = {
@@ -13,5 +13,5 @@ export function RewireRow({ legacyCodemodResults }: RewireRowProps) {
 
   return `rewired ${chalk.cyan(totalComps.toString())} components and total of ${chalk.cyan(
     totalFiles.toString()
-  )} files\n`;
+  )} files`;
 }

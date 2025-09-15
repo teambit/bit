@@ -1,19 +1,26 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { Harmony } from '@teambit/harmony';
+import type { Harmony } from '@teambit/harmony';
 import { loadAspect, loadManyAspects } from '@teambit/harmony.testing.load-aspect';
-import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { SnappingAspect, SnappingMain } from '@teambit/snapping';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { ExportAspect, ExportMain } from '@teambit/export';
-import { LaneId } from '@teambit/lane-id';
-import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import type { RemoveMain } from '@teambit/remove';
+import { RemoveAspect } from '@teambit/remove';
+import type { SnappingMain } from '@teambit/snapping';
+import { SnappingAspect } from '@teambit/snapping';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { ExportMain } from '@teambit/export';
+import { ExportAspect } from '@teambit/export';
+import type { LaneId } from '@teambit/lane-id';
+import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { LanesAspect } from './lanes.aspect';
-import { LanesMain } from './lanes.main.runtime';
-import { MergeLanesAspect, MergeLanesMain } from '@teambit/merge-lanes';
+import type { LanesMain } from './lanes.main.runtime';
+import type { MergeLanesMain } from '@teambit/merge-lanes';
+import { MergeLanesAspect } from '@teambit/merge-lanes';
+import { GraphqlAspect, type GraphqlMain } from '@teambit/graphql';
 
 describe('LanesAspect', function () {
   this.timeout(0);
@@ -42,15 +49,17 @@ describe('LanesAspect', function () {
     let lanes: LanesMain;
     let snapping: SnappingMain;
     let workspaceData: WorkspaceData;
+    let harmony: Harmony;
     before(async () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
-      snapping = await loadAspect(SnappingAspect, workspacePath);
+      harmony = await loadManyAspects([SnappingAspect, ExportAspect, LanesAspect, WorkspaceAspect], workspacePath);
+      snapping = harmony.get(SnappingAspect.id);
       await snapping.tag({ ids: ['comp1'], build: false, ignoreIssues: 'MissingManuallyConfiguredPackages' });
-      const exporter: ExportMain = await loadAspect(ExportAspect, workspacePath);
+      const exporter: ExportMain = harmony.get(ExportAspect.id);
       await exporter.export();
-      lanes = await loadAspect(LanesAspect, workspacePath);
+      lanes = harmony.get(LanesAspect.id);
       await lanes.createLane('stage');
       await modifyMockedComponents(workspacePath, 'v2');
       const result = await snapping.snap({
@@ -92,6 +101,7 @@ describe('LanesAspect', function () {
   });
 
   describe('laneDiff', () => {
+    let harmony: Harmony;
     let lanes: LanesMain;
     let snapping: SnappingMain;
     let workspaceData: WorkspaceData;
@@ -99,11 +109,12 @@ describe('LanesAspect', function () {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
-      snapping = await loadAspect(SnappingAspect, workspacePath);
+      harmony = await loadManyAspects([SnappingAspect, ExportAspect, LanesAspect, WorkspaceAspect], workspacePath);
+      snapping = harmony.get(SnappingAspect.id);
       await snapping.tag({ ids: ['comp1'], build: false });
-      const exporter: ExportMain = await loadAspect(ExportAspect, workspacePath);
+      const exporter: ExportMain = harmony.get(ExportAspect.id);
       await exporter.export();
-      lanes = await loadAspect(LanesAspect, workspacePath);
+      lanes = harmony.get(LanesAspect.id);
       await lanes.createLane('stage');
       const result = await snapping.snap({ pattern: 'comp1', build: false, unmodified: true });
       // intermediate step, make sure it is snapped
@@ -457,6 +468,41 @@ describe('LanesAspect', function () {
       const workspace: Workspace = harmony.get(WorkspaceAspect.id);
       const ids = workspace.listIds();
       expect(ids.length).to.equal(1);
+    });
+  });
+});
+
+/**
+ * TODO: this should not be here. It belongs to the GraphQL aspect.
+ * The reason it was moved here is that otherwise, it forms circular dependencies.
+ * we should think of a better way to handle this.
+ */
+describe('GraphQL Aspect', function () {
+  this.timeout(0);
+
+  describe('getSchemas and getSchema APIs', () => {
+    let graphql: GraphqlMain;
+    let workspaceData: WorkspaceData;
+    before(async () => {
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      const harmony = await loadManyAspects([WorkspaceAspect, GraphqlAspect, LanesAspect], workspacePath);
+      graphql = harmony.get<GraphqlMain>(GraphqlAspect.id);
+    });
+    after(async () => {
+      await destroyWorkspace(workspaceData);
+    });
+    it('should bring the schemas when calling getSchemas API', async () => {
+      const schemas = graphql.getSchemas([LanesAspect.id]);
+      expect(schemas).to.be.an('array');
+      expect(schemas).to.have.lengthOf(1);
+      expect(schemas[0]).to.be.an('object');
+      expect(schemas[0]).to.not.be.an('function');
+    });
+    it('should bring the schemas when calling getSchema API', async () => {
+      const schema = graphql.getSchema(LanesAspect.id);
+      expect(schema).to.be.an('object');
+      expect(schema).to.not.be.an('function');
     });
   });
 });

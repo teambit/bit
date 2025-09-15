@@ -1,9 +1,11 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
-import { Logger } from '@teambit/logger';
+import type { Command, CommandOptions } from '@teambit/cli';
+import packageNameValidate from 'validate-npm-package-name';
+import type { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
+import type { Logger } from '@teambit/logger';
 import chalk from 'chalk';
-import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { InstallMain, WorkspaceInstallOptions } from './install.main.runtime';
+import type { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError } from '@teambit/workspace';
+import type { InstallMain, WorkspaceInstallOptions } from './install.main.runtime';
 
 type InstallCmdOptions = {
   type: WorkspaceDependencyLifecycleType;
@@ -15,6 +17,7 @@ type InstallCmdOptions = {
   updateExisting: boolean;
   savePrefix: string;
   addMissingDeps: boolean;
+  skipUnavailable: boolean;
   addMissingPeers: boolean;
   noOptional: boolean;
   recurringInstall: boolean;
@@ -33,13 +36,14 @@ const recurringInstallFlagName = 'recurring-install';
 
 export default class InstallCmd implements Command {
   name = 'install [packages...]';
-  description = 'installs workspace dependencies';
-  extendedDescription =
-    'when no package is specified, all workspace dependencies are installed and all workspace components are imported.';
+  description = 'install workspace dependencies';
+  extendedDescription = `installs workspace dependencies and prepares the workspace for development.
+when packages are specified, adds them to workspace.jsonc policy and installs. when no packages specified, installs existing dependencies.
+automatically imports components, compiles components, links to node_modules, and writes config files.`;
   helpUrl = 'reference/dependencies/dependency-installation';
   arguments = [{ name: 'packages...', description: 'a list of packages to install (separated by spaces)' }];
   alias = 'in';
-  group = 'development';
+  group = 'dependencies';
   options = [
     ['t', 'type [lifecycleType]', '"runtime" (default) or "peer" (dev is not a valid option)'],
     ['u', 'update', 'update all dependencies to latest version according to their semver range'],
@@ -54,6 +58,7 @@ export default class InstallCmd implements Command {
     ['', 'skip-compile', 'do not compile components'],
     ['', 'skip-write-config-files', 'do not write config files (such as eslint, tsconfig, prettier, etc...)'],
     ['a', 'add-missing-deps', 'install all missing dependencies'],
+    ['', 'skip-unavailable', 'when adding missing dependencies, skip those that are not found in the regisry'],
     ['', 'add-missing-peers', 'install all missing peer dependencies'],
     [
       '',
@@ -85,6 +90,30 @@ export default class InstallCmd implements Command {
         `--update-existing is deprecated, please omit it. "bit install" will update existing dependencies by default`
       );
     }
+
+    const validPackages = await Promise.all(
+      packages.map(async (pkg) => {
+        const pkgName = extractPackageName(pkg);
+        if (packageNameValidate(pkgName).validForNewPackages) {
+          return pkg;
+        }
+        // if this is a component-id, find the package name and use it instead.
+        try {
+          // Check if it's not a package name (doesn't start with @)
+          if (!pkgName.startsWith('@')) {
+            // Try to resolve it as a component ID
+            const componentId = await this.workspace.resolveComponentId(pkg);
+            // Get the package name for this component
+            const component = await this.workspace.get(componentId);
+            const componentPackageName = this.workspace.componentPackageName(component);
+            return componentPackageName;
+          }
+        } catch {
+          // If component resolution fails, fall through to original error
+        }
+        throw new Error(`the package name "${pkgName}" is invalid. please provide a valid package name.`);
+      })
+    );
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     const installOpts: WorkspaceInstallOptions = {
       lifecycleType: options.addMissingPeers ? 'peer' : options.type,
@@ -93,6 +122,7 @@ export default class InstallCmd implements Command {
       updateExisting: true,
       savePrefix: options.savePrefix,
       addMissingDeps: options.addMissingDeps,
+      skipUnavailable: options.skipUnavailable,
       addMissingPeers: options.addMissingPeers,
       compile: !options.skipCompile,
       includeOptionalDeps: !options.noOptional,
@@ -100,8 +130,9 @@ export default class InstallCmd implements Command {
       updateAll: options.update,
       recurringInstall: options.recurringInstall,
       lockfileOnly: options.lockfileOnly,
+      showExternalPackageManagerPrompt: true,
     };
-    const components = await this.install.install(packages, installOpts);
+    const components = await this.install.install(validPackages, installOpts);
     const endTime = Date.now();
     const oldNonLoadedEnvs = this.install.getOldNonLoadedEnvs();
     return formatOutput({
@@ -149,4 +180,30 @@ export function getAnotherInstallRequiredOutput(recurringInstall = false, oldNon
 
   const msg = `${firstPart}${suggestRecurringInstall}\n${envsStr}\n${docsLink}`;
   return chalk.yellow(msg);
+}
+
+function extractPackageName(packageString: string): string {
+  if (!packageString) return '';
+
+  // Handle https and git protocols. We don't allow "file" protocol here. It won't work for the consumer.
+  const allowedPrefixes = ['https://', 'git:', 'git+ssh://', 'git+https://'];
+  if (allowedPrefixes.some((prefix) => packageString.startsWith(prefix))) {
+    return packageString;
+  }
+
+  // If it's a scoped package
+  if (packageString.startsWith('@')) {
+    // Find the second '@' (first is for scope, second is for version/tag)
+    const atIndex = packageString.indexOf('@', 1);
+    if (atIndex === -1) return packageString;
+    const possibleVersion = packageString.slice(atIndex + 1);
+    // If the part after the second '@' contains a slash, it's not a version/tag
+    if (possibleVersion.includes('/')) return packageString;
+    return packageString.slice(0, atIndex);
+  }
+
+  // For unscoped packages, split at the last '@'
+  const lastAtIndex = packageString.lastIndexOf('@');
+  if (lastAtIndex <= 0) return packageString;
+  return packageString.slice(0, lastAtIndex);
 }

@@ -1,7 +1,7 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import formatDiagnosesList from './diagnosis-list-template';
 import formatDiagnosesResult from './doctor-results-template';
-import { DoctorMain, DoctorOptions } from './doctor.main.runtime';
+import type { DoctorMain, DoctorOptions } from './doctor.main.runtime';
 
 type Flags = {
   list?: boolean;
@@ -14,8 +14,11 @@ type Flags = {
 
 export class DoctorCmd implements Command {
   name = 'doctor [diagnosis-name]';
-  description = 'diagnose a bit workspace';
-  group = 'general';
+  description = 'diagnose and troubleshoot workspace issues';
+  extendedDescription = `runs comprehensive health checks on your workspace to detect and report configuration problems, 
+missing dependencies, corrupted data, and other issues that may affect workspace functionality.
+can generate diagnostic reports and workspace archives for debugging and support purposes.`;
+  group = 'system';
   alias = '';
   loadAspects = false;
   options = [

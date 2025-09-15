@@ -46,7 +46,7 @@ import fetch from 'node-fetch';
 import net from 'net';
 import fs from 'fs-extra';
 import { exec, execSync } from 'child_process';
-import { join, dirname } from 'path';
+import { join } from 'path';
 import os from 'os';
 import EventSource from 'eventsource';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
@@ -58,6 +58,7 @@ import { getPidByPort, getSocketPort } from './server-forever';
 const CMD_SERVER_PORT = 'cli-server-port';
 const CMD_SERVER_PORT_DELETE = 'cli-server-port-delete';
 const CMD_SERVER_SOCKET_PORT = 'cli-server-socket-port';
+const SKIP_PORT_VALIDATION_ARG = '--skip-port-validation';
 
 class ServerPortFileNotFound extends Error {
   constructor(filePath: string) {
@@ -291,7 +292,8 @@ Please run the command "bit server-forever" first to start the server.`)
 
   private async getExistingUsedPort(): Promise<number> {
     const port = await this.getExistingPort();
-    const isPortInUse = await this.isPortInUseForCurrentDir(port);
+    const shouldSkipPortValidation = process.argv.includes(SKIP_PORT_VALIDATION_ARG);
+    const isPortInUse = shouldSkipPortValidation ? true : await this.isPortInUseForCurrentDir(port);
     if (!isPortInUse) {
       await this.deleteServerPortFile();
       throw new ServerIsNotRunning(port);
@@ -374,7 +376,7 @@ function execCommand(cmd: string): Promise<string> {
  *
  * On Linux: readlink /proc/<pid>/cwd
  * On macOS: lsof -p <pid> and parse line with 'cwd'
- * On Windows: Attempt with wmic (not guaranteed)
+ * On Windows: forget about it. tried with wmic, didn't went well.
  */
 async function getCwdByPid(pid: string): Promise<string | null> {
   const platform = os.platform();
@@ -394,29 +396,6 @@ async function getCwdByPid(pid: string): Promise<string | null> {
       // The last part should be the directory path
       return parts[parts.length - 1] || null;
     } else if (platform === 'win32') {
-      // On Windows, we can try wmic:
-      // wmic process where "ProcessId=<pid>" get CommandLine,ExecutablePath
-      // CommandLine or ExecutablePath might give hints.
-      // This is not guaranteed to give the original working directory, as Windows doesn't expose it easily.
-      const output = await execCommand(`wmic process where "ProcessId=${pid}" get ExecutablePath /format:list`);
-      // Output looks like:
-      // ExecutablePath=C:\path\to\executable.exe
-      const line = output.split('\n').find((l) => l.startsWith('ExecutablePath='));
-      if (line) {
-        const exePath = line.split('=')[1].trim();
-        // Guess: the working directory might be the directory containing the executable
-        return dirname(exePath);
-      }
-      // If no executable path, try CommandLine
-      const cmdOutput = await execCommand(`wmic process where "ProcessId=${pid}" get CommandLine /format:list`);
-      const cmdLine = cmdOutput.split('\n').find((l) => l.startsWith('CommandLine='));
-      if (cmdLine) {
-        const command = cmdLine.split('=')[1].trim();
-        // Attempt a guess: if command is a full path, take its directory
-        if (command.includes('\\')) {
-          return dirname(command.split(' ')[0]);
-        }
-      }
       return null;
     } else {
       throw new Error(`Platform ${platform} not supported`);

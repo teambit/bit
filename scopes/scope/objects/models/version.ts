@@ -3,24 +3,27 @@ import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
 import { v4 } from 'uuid';
-import { BuildStatus, DEFAULT_BUNDLE_FILENAME, Extensions } from '@teambit/legacy.constants';
+import type { BuildStatus } from '@teambit/legacy.constants';
+import { DEFAULT_BUNDLE_FILENAME, Extensions } from '@teambit/legacy.constants';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import {
   isSchemaSupport,
   SchemaFeature,
   SchemaName,
   Dependencies,
   Dependency,
-  ConsumerComponent,
 } from '@teambit/legacy.consumer-component';
 import { getRefsFromExtensions, SourceFile } from '@teambit/component.sources';
-import { ComponentOverridesData } from '@teambit/legacy.consumer-config';
+import type { ComponentOverridesData } from '@teambit/legacy.consumer-config';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { Doclet } from '@teambit/semantics.doc-parser';
 import { logger } from '@teambit/legacy.logger';
-import { getStringifyArgs, PathLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
+import type { PathLinux } from '@teambit/legacy.utils';
+import { getStringifyArgs, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
-import { BitObject, Ref, Repository } from '../objects';
-import { ObjectItem } from '../objects/object-list';
+import type { Repository } from '../objects';
+import { BitObject, Ref } from '../objects';
+import type { ObjectItem } from '../objects/object-list';
 import { BitIdCompIdError, VersionInvalid, validateVersionInstance } from '@teambit/legacy.scope';
 import Source from './source';
 import { DependenciesGraph } from './dependencies-graph';
@@ -67,11 +70,8 @@ export type VersionProps = {
   flattenedEdges?: DepEdge[];
   flattenedEdgesRef?: Ref;
   dependenciesGraphRef?: Ref;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies?: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devPackageDependencies?: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   peerPackageDependencies?: { [key: string]: string };
   bindingPrefix: string;
   schema?: string;
@@ -120,7 +120,6 @@ export default class Version extends BitObject {
    * (around August 2023 should be safe)
    */
   private flattenedEdges: DepEdge[];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies: { [key: string]: string };
   devPackageDependencies: { [key: string]: string };
   peerPackageDependencies: { [key: string]: string };
@@ -412,6 +411,11 @@ export default class Version extends BitObject {
       type: depEdgeObj.type,
     };
   }
+  /**
+   * until 1.9.86, we used depEdgeToObject.
+   * this one makes this object much much smaller (for 604 edges, it's now 143KB, with the array format it's 6KB!)
+   * this format has been supported (but not used) since v1.6.97.
+   */
   static depEdgeToArray(depEdge: DepEdge): Record<string, any> {
     return [depEdge.source.toString(), depEdge.target.toString(), depEdge.type];
   }
@@ -425,8 +429,6 @@ export default class Version extends BitObject {
   }
   static flattenedEdgeToSource(flattenedEdges?: DepEdge[]): Source | undefined {
     if (!flattenedEdges) return undefined;
-    // @todo: around August 2024, uncomment this line and delete the next one.
-    // it'll make this object much much smaller (for 604 edges, it's now 143KB, with the array format it's 6KB!)
     // const flattenedEdgesObj = flattenedEdges.map((f) => Version.depEdgeToArray(f));
     const flattenedEdgesObj = flattenedEdges.map((f) => Version.depEdgeToObject(f));
     const flattenedEdgesBuffer = Buffer.from(JSON.stringify(flattenedEdgesObj));
@@ -464,6 +466,8 @@ export default class Version extends BitObject {
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),
         flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toObject()),
+        // @todo: uncomment this in the future, once all remotes are updated to support the backward compatibility.
+        // flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toString()),
         flattenedEdges: this.flattenedEdgesRef ? undefined : this.flattenedEdges.map((f) => Version.depEdgeToObject(f)),
         flattenedEdgesRef: this.flattenedEdgesRef?.toString(),
         dependenciesGraphRef: this.dependenciesGraphRef?.toString(),
@@ -521,10 +525,10 @@ export default class Version extends BitObject {
       dependencies,
       devDependencies,
       flattenedDependencies,
+      flattenedDevDependencies,
       flattenedEdges,
       flattenedEdgesRef,
       dependenciesGraphRef,
-      flattenedDevDependencies,
       devPackageDependencies,
       peerPackageDependencies,
       packageDependencies,
@@ -569,15 +573,18 @@ export default class Version extends BitObject {
       });
     };
 
-    const _getFlattenedDependencies = (deps = []): ComponentID[] => {
+    // Accept both string[] and object[] for backward compatibility
+    const parseFlattenedDeps = (deps = []): ComponentID[] => {
+      if (!deps.length) return [];
+      if (typeof deps[0] === 'string') return deps.map((dep) => ComponentID.fromString(dep));
       return deps.map((dep) => ComponentID.fromObject(dep));
     };
 
     const _groupFlattenedDependencies = () => {
       // support backward compatibility. until v15, there was both flattenedDependencies and
       // flattenedDevDependencies. since then, these both were grouped to one flattenedDependencies
-      const flattenedDeps = _getFlattenedDependencies(flattenedDependencies);
-      const flattenedDevDeps = _getFlattenedDependencies(flattenedDevDependencies);
+      const flattenedDeps = parseFlattenedDeps(flattenedDependencies);
+      const flattenedDevDeps = parseFlattenedDeps(flattenedDevDependencies);
       return ComponentIdList.fromArray([...flattenedDeps, ...flattenedDevDeps]);
     };
 
@@ -689,7 +696,6 @@ export default class Version extends BitObject {
       files: files.map(parseFile),
       bindingPrefix: component.bindingPrefix,
       log: component.log as Log,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       docs: component.docs,
       dependencies: component.dependencies.get(),
       devDependencies: component.devDependencies.get(),
@@ -703,7 +709,6 @@ export default class Version extends BitObject {
       flattenedEdgesRef: flattenedEdges?.hash(),
       schema: component.schema,
       overrides: component.overrides.componentOverridesData,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageJsonChangedProps: component.packageJsonChangedProps,
       extensions: component.extensions,
       buildStatus: component.buildStatus,

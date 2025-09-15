@@ -4,7 +4,6 @@ export type { UpdatedComponent } from './apply-updates';
 export type { RawComponentState, ComponentsManifestsMap, RegistriesMap } from './types';
 export { WorkspaceManifest, ComponentManifest } from './manifest';
 export type { CreateFromComponentsOptions, ManifestDependenciesObject } from './manifest';
-export { Registries, Registry } from './registry';
 export type {
   InstallationContext,
   PackageImportMethod,
@@ -15,7 +14,11 @@ export type {
   CalcDepsGraphOptions,
   ComponentIdByPkgName,
 } from './package-manager';
-export type { DependencyResolverWorkspaceConfig, NodeLinker } from './dependency-resolver-workspace-config';
+export type {
+  DependencyResolverWorkspaceConfig,
+  NodeLinker,
+  ComponentRangePrefix,
+} from './dependency-resolver-workspace-config';
 export type {
   DependencyResolverMain,
   DependencyResolverVariantConfig,
@@ -26,7 +29,13 @@ export type {
   ProxyConfig as PackageManagerProxyConfig,
   NetworkConfig as PackageManagerNetworkConfig,
 } from './dependency-resolver.main.runtime';
-export { DependencyList, BaseDependency, ComponentDependency, KEY_NAME_BY_LIFECYCLE_TYPE } from './dependencies';
+export {
+  DependencyList,
+  BaseDependency,
+  ComponentDependency,
+  KEY_NAME_BY_LIFECYCLE_TYPE,
+  COMPONENT_DEP_TYPE,
+} from './dependencies';
 export type {
   DependencyLifecycleType,
   WorkspaceDependencyLifecycleType,
@@ -49,6 +58,7 @@ export type {
   SerializedVariantPolicy,
   WorkspacePolicyConfigKeysNames,
   EnvPolicyConfigObject,
+  VariantPolicyConfigArr,
 } from './policy';
 export { DependencyLinker } from './dependency-linker';
 export type {
@@ -62,10 +72,10 @@ export type {
 } from './dependency-linker';
 export { DependencyInstaller } from './dependency-installer';
 export type { GetComponentManifestsOptions, InstallOptions, InstallArgs } from './dependency-installer';
-export type { DependencyDetector, FileContext } from './dependency-detector';
 export type { DependencySource, VariantPolicyEntry } from './policy/variant-policy/variant-policy';
-export type { OutdatedPkg } from './get-all-policy-pkgs';
+export type { OutdatedPkg, CurrentPkg } from './get-all-policy-pkgs';
 export { extendWithComponentsFromDir } from './extend-with-components-from-dir';
 export { isRange } from './manifest/deduping/hoist-dependencies';
 export type { DependencyEnv } from './dependency-env';
+export { DetectorHook, DependencyDetector, FileContext } from './detector-hook';
 export { DependencyResolverAspect as default, DependencyResolverAspect };

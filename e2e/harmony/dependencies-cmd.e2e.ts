@@ -1,8 +1,7 @@
 import { IssuesClasses } from '@teambit/component-issues';
 import { expect } from 'chai';
 import { Extensions } from '@teambit/legacy.constants';
-import { Helper } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 describe('bit dependencies command', function () {
   let helper: Helper;
@@ -16,7 +15,7 @@ describe('bit dependencies command', function () {
   describe('bit deps get', () => {
     describe('running the command on a new component', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.fixtures.populateComponents(1);
       });
       it('should not throw an error saying the id is missing from the graph', () => {
@@ -27,7 +26,7 @@ describe('bit dependencies command', function () {
   describe('bit deps set', () => {
     describe('adding prod dep', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(3);
         helper.command.dependenciesSet('comp1', 'lodash@3.3.1');
       });
@@ -64,7 +63,7 @@ describe('bit dependencies command', function () {
     });
     describe('adding multiple deps', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.fixtures.populateComponents(1);
         helper.command.dependenciesSet('comp1', 'lodash@3.3.1 ramda@0.0.27');
       });
@@ -90,7 +89,7 @@ describe('bit dependencies command', function () {
     });
     describe('adding scoped package', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.fixtures.populateComponents(1);
         helper.command.dependenciesSet('comp1', '@scoped/button@3.3.1');
       });
@@ -101,7 +100,7 @@ describe('bit dependencies command', function () {
     });
     describe('adding prod dep, tagging then adding devDep', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.dependenciesSet('comp1', 'lodash@3.3.1');
         helper.command.tagAllWithoutBuild();
@@ -114,7 +113,7 @@ describe('bit dependencies command', function () {
     });
     describe('adding itself as a dep', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.fixtures.populateComponents(1);
         helper.command.tagAllWithoutBuild();
         const pkgName = helper.general.getPackageNameByCompName('comp1', false);
@@ -129,7 +128,7 @@ describe('bit dependencies command', function () {
       let npmCiRegistry: NpmCiRegistry;
       before(async () => {
         helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.workspaceJsonc.setupDefault();
         npmCiRegistry = new NpmCiRegistry(helper);
         await npmCiRegistry.init();
@@ -148,7 +147,7 @@ describe('bit dependencies command', function () {
       });
       describe('adding a component dependency when it is not installed locally', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope({ disableMissingManuallyConfiguredPackagesIssue: false });
+          helper.scopeHelper.reInitWorkspace({ disableMissingManuallyConfiguredPackagesIssue: false });
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('comp1');
           helper.command.dependenciesSet('comp1', `${helper.general.getPackageNameByCompName('bar/foo')}@0.0.1`);
@@ -171,9 +170,9 @@ describe('bit dependencies command', function () {
     describe('removing a component', () => {
       let beforeRemove: string;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
+        helper.scopeHelper.setWorkspaceWithRemoteScope({ addRemoteScopeAsDefaultScope: false });
         helper.fixtures.populateComponents(2);
-        beforeRemove = helper.scopeHelper.cloneLocalScope();
+        beforeRemove = helper.scopeHelper.cloneWorkspace();
       });
       it('should support component-id syntax', () => {
         const output = helper.command.dependenciesRemove('comp1', 'comp2');
@@ -182,7 +181,7 @@ describe('bit dependencies command', function () {
         expect(showConfig.config.policy.dependencies).to.deep.equal({ '@my-scope/comp2': '-' });
       });
       it('should support package-name syntax', () => {
-        helper.scopeHelper.getClonedLocalScope(beforeRemove);
+        helper.scopeHelper.getClonedWorkspace(beforeRemove);
         helper.command.dependenciesRemove('comp1', '@my-scope/comp2');
         const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
         expect(showConfig.config.policy.dependencies).to.deep.equal({ '@my-scope/comp2': '-' });
@@ -191,7 +190,7 @@ describe('bit dependencies command', function () {
   });
   describe('bit deps remove - when other deps were set previously before tag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.dependenciesSet('comp1', 'ramda@0.20.0 lodash@3.3.1');
       helper.command.tagWithoutBuild();
@@ -205,7 +204,7 @@ describe('bit dependencies command', function () {
   describe('bit deps unset', () => {
     describe('one dep was specifically set and one dep was auto-detected', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.fs.writeFile('comp1/index.js', `import lodash from 'lodash';`);
         helper.npm.addFakeNpmPackage('lodash', '3.3.1');
@@ -239,7 +238,7 @@ describe('bit dependencies command', function () {
   describe('bit deps usage', () => {
     describe('finding a dependnecy', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.command.install('is-odd@3.0.1');
       });
       it('should return paths to subdependency', () => {

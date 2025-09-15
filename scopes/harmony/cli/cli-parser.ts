@@ -1,7 +1,7 @@
 import didYouMean from 'didyoumean';
-// import yargs from 'yargs';
-import { Command } from './command';
-import { GroupsType } from './command-groups';
+import yargs from 'yargs';
+import type { Command } from './command';
+import type { GroupsType } from './command-groups';
 import { compact } from 'lodash';
 import { loadConsumerIfExist } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
@@ -11,8 +11,8 @@ import { getCommandId } from './get-command-id';
 import { formatHelp } from './help';
 import { GLOBAL_GROUP, STANDARD_GROUP, YargsAdapter } from './yargs-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
-import { OnCommandStartSlot } from './cli.main.runtime';
-import { CommandRunner } from './command-runner';
+import type { OnCommandStartSlot } from './cli.main.runtime';
+import type { CommandRunner } from './command-runner';
 import { YargsExitWorkaround } from './exceptions/yargs-exit-workaround';
 
 // Using require instead of import because of this issue:

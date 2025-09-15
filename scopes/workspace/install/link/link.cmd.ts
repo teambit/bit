@@ -1,10 +1,11 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { Logger } from '@teambit/logger';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { Logger } from '@teambit/logger';
 import { timeFormat } from '@teambit/toolbox.time.time-format';
+import { compact } from 'lodash';
 import chalk from 'chalk';
-import { Workspace } from '@teambit/workspace';
-import { InstallMain, WorkspaceLinkOptions, WorkspaceLinkResults } from '../install.main.runtime';
-import { ComponentListLinks } from './component-list-links';
+import type { Workspace } from '@teambit/workspace';
+import type { InstallMain, WorkspaceLinkOptions, WorkspaceLinkResults } from '../install.main.runtime';
+import { ComponentListLinks, packageListLinks } from './component-list-links';
 import { CoreAspectsLinks } from './core-aspects-links';
 import { NestedComponentLinksLinks } from './nested-deps-in-nm-links';
 import { RewireRow } from './rewire-row';
@@ -16,14 +17,17 @@ type LinkCommandOpts = {
   target: string;
   skipFetchingObjects?: boolean;
   peers?: boolean;
+  compSummary?: boolean;
 };
 export class LinkCommand implements Command {
   name = 'link [component-names...]';
   alias = '';
-  description = 'create links in the node_modules directory, to core aspects and to components in the workspace';
+  description = 'create links between components and node_modules';
+  extendedDescription = `creates links in node_modules for workspace components and core aspects, enabling import resolution.
+automatically links all workspace components and Bit's core aspects to their respective package names.
+useful for development when components need to reference each other or when debugging linking issues.`;
   helpUrl = 'reference/workspace/component-links';
-  extendedDescription: string;
-  group = 'development';
+  group = 'dependencies';
   private = false;
   arguments = [{ name: 'component-names...', description: 'names or IDs of the components to link' }];
   options = [
@@ -37,6 +41,7 @@ export class LinkCommand implements Command {
     ],
     ['', 'skip-fetching-objects', 'skip fetch missing objects from remotes before linking'],
     ['', 'peers', 'link peer dependencies of the components too'],
+    ['', 'comp-summary', 'show only a summary of component links instead of listing all components'],
   ] as CommandOptions;
 
   constructor(
@@ -69,7 +74,12 @@ export class LinkCommand implements Command {
       coreAspectsLinks: coreAspectsLinksWithMainAspect,
       verbose: opts.verbose,
     });
-    const compsLinks = ComponentListLinks({ componentListLinks: linkResults.legacyLinkResults, verbose: opts.verbose });
+    const nonCorePackagesLinks = packageListLinks(linkResults.slotOriginatedLinks);
+    const compsLinks = ComponentListLinks({
+      componentListLinks: linkResults.legacyLinkResults,
+      verbose: opts.verbose,
+      compSummary: opts.compSummary,
+    });
     const rewireRow = RewireRow({ legacyCodemodResults: linkResults.legacyLinkCodemodResults });
     const nestedLinks = NestedComponentLinksLinks({
       nestedDepsInNmLinks: linkResults.nestedDepsInNmLinks,
@@ -77,7 +87,16 @@ export class LinkCommand implements Command {
     });
     const targetLinks = linkToDir(linkResults.linkToDirResults);
     const footer = `Finished. ${timeDiff}`;
-    return `${title}\n${coreLinks}\n${compsLinks}\n${rewireRow}${nestedLinks}${targetLinks}${footer}`;
+    return compact([
+      title,
+      coreLinks,
+      nonCorePackagesLinks,
+      compsLinks,
+      rewireRow,
+      nestedLinks,
+      targetLinks,
+      footer,
+    ]).join('\n');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

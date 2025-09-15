@@ -1,13 +1,13 @@
-import { PluginDefinition } from '@teambit/aspect-loader';
-import { Harmony } from '@teambit/harmony';
+import type { PluginDefinition } from '@teambit/aspect-loader';
+import type { Harmony } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component';
-import { WorkerMain } from '@teambit/worker';
+import type { WorkerMain } from '@teambit/worker';
 import { MainRuntime } from '@teambit/cli';
-import { LoggerMain } from '@teambit/logger';
+import type { LoggerMain } from '@teambit/logger';
 import { flatten } from 'lodash';
 import { ServiceHandlerContext as EnvContext } from './services/service-handler-context';
-import { Env } from './env-interface';
-import { EnvsRegistry, ServicesRegistry } from './environments.main.runtime';
+import type { Env } from './env-interface';
+import type { EnvsRegistry, ServicesRegistry } from './environments.main.runtime';
 
 export class EnvPlugin implements PluginDefinition {
   constructor(
@@ -37,8 +37,6 @@ export class EnvPlugin implements PluginDefinition {
       return { ...acc, ...currTransformer };
     }, {});
 
-    if (!env.preview && !env.compiler) return undefined;
-
     return {
       ...transformers,
       name: env.name,
@@ -56,7 +54,6 @@ export class EnvPlugin implements PluginDefinition {
 
   register(object: any, aspect: { id: string }) {
     const env = this.transformToLegacyEnv(aspect.id, object);
-    if (!env) return undefined;
     // This is required when we call it manually and the aspect id fn return the wrong
     // id
     // We call the set directly because when we call it manually during install

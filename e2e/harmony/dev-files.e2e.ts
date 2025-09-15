@@ -1,8 +1,9 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('dev files', function () {
   this.timeout(0);
@@ -21,7 +22,7 @@ describe('dev files', function () {
     const ENV_NAME = 'dev-files-env';
     const COMP_NAME = 'custom-dev-files';
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager();
       envName = helper.env.setCustomEnv(ENV_NAME);
       envId = `${helper.scopes.remote}/${envName}`;

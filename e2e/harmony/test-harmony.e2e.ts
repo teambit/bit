@@ -1,7 +1,8 @@
 import chai, { expect } from 'chai';
+import chaiFs from 'chai-fs';
 import { Helper } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('test command on Harmony', function () {
   this.timeout(0);
@@ -14,7 +15,7 @@ describe('test command on Harmony', function () {
   });
   describe('component with an empty test file', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.js');
     });

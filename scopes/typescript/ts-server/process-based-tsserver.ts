@@ -13,13 +13,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as cp from 'child_process';
 import * as readline from 'readline';
-import { Logger } from '@teambit/logger';
-import { Readable, Writable } from 'stream';
+import type { Logger } from '@teambit/logger';
+import type { Readable, Writable } from 'stream';
 import * as decoder from 'string_decoder';
 import type ts from 'typescript/lib/tsserverlibrary';
 import tempy from 'tempy';
-import { CancellationToken } from 'vscode-jsonrpc';
-import { CommandTypes } from './tsp-command-types';
+import type { CancellationToken } from 'vscode-jsonrpc';
+import type { CommandTypes } from './tsp-command-types';
 import { Deferred } from './utils';
 
 export interface TspClientOptions {

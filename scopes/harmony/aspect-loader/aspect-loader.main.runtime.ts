@@ -1,5 +1,4 @@
 import { join, resolve, extname } from 'path';
-import { NativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 import esmLoader from '@teambit/node.utils.esm-loader';
 // import findRoot from 'find-root';
 import { readdirSync, existsSync } from 'fs-extra';
@@ -7,19 +6,23 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
 import { MainRuntime } from '@teambit/cli';
-import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
+import type { ExtensionManifest, Harmony, SlotRegistry } from '@teambit/harmony';
+import { Aspect, Slot } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
-import type { LoggerMain } from '@teambit/logger';
-import { Component, FilterAspectsOptions } from '@teambit/component';
-import { Logger, LoggerAspect } from '@teambit/logger';
-import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
+import type { LoggerMain, Logger } from '@teambit/logger';
+import type { Component, FilterAspectsOptions } from '@teambit/component';
+import { LoggerAspect } from '@teambit/logger';
+import type { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { replaceFileExtToJs } from '@teambit/compilation.modules.babel-compiler';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
 import mapSeries from 'p-map-series';
 import { difference, compact, flatten, intersection, uniqBy, some, isEmpty, isObject } from 'lodash';
-import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
-import { PluginDefinition } from './plugin-definition';
+import type { AspectDefinitionProps } from './aspect-definition';
+import { AspectDefinition } from './aspect-definition';
+import type { PluginDefinition } from './plugin-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from './constants';
 import { isEsmModule } from './is-esm-module';
@@ -280,6 +283,7 @@ export class AspectLoaderMain {
   }
 
   private _coreAspects: Aspect[] = [];
+  private _nonCoreAspects: Aspect[] = [];
 
   get coreAspects() {
     return this._coreAspects;
@@ -295,9 +299,23 @@ export class AspectLoaderMain {
     return this;
   }
 
-  getCoreAspectIds() {
+  setNonCoreAspects(aspects: Aspect[]) {
+    this._nonCoreAspects = aspects;
+    return this;
+  }
+
+  getCoreAspectIds(): string[] {
     const ids = this.coreAspects.map((aspect) => aspect.id);
     return ids.concat(this._reserved);
+  }
+
+  /**
+   * bit aspects that are not core aspects
+   * normally coming from a composition over teambit.harmony/bit and are passed to loadBit as "additionalAspects".
+   * these are *not* user aspects. they're not in workspaces created by users. they're part of bit installation.
+   */
+  getNonCoreAspectIds(): string[] {
+    return this._nonCoreAspects.map((aspect) => aspect.id);
   }
 
   /**
@@ -318,7 +336,9 @@ export class AspectLoaderMain {
 
   getUserAspects(): string[] {
     const coreAspectIds = this.getCoreAspectIds();
-    return difference(this.harmony.extensionsIds, coreAspectIds);
+    const nonCoreAspectIds = this.getNonCoreAspectIds();
+    const nonUserAspectIds = [...coreAspectIds, ...nonCoreAspectIds];
+    return difference(this.harmony.extensionsIds, nonUserAspectIds);
   }
 
   async getCoreAspectDefs(runtimeName?: string) {
@@ -511,7 +531,6 @@ export class AspectLoaderMain {
   }
 
   async loadEsm(path: string) {
-    NativeCompileCache.uninstall();
     return esmLoader(path);
   }
 
@@ -785,9 +804,18 @@ export class AspectLoaderMain {
         res[manifest.id] = localAspect;
         return manifest;
       }
-      // eslint-disable-next-line global-require, import/no-dynamic-require
       const module = require(dirPath);
       const manifest = module.default || module;
+      const mainRuntime = this.findRuntime(dirPath, 'main');
+      if (mainRuntime) {
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        const mainRuntimeModule = require(join(dirPath, 'dist', mainRuntime));
+        const mainRuntimeManifest = mainRuntimeModule.default || mainRuntimeModule;
+        // manifest has the "id" prop. the mainRuntimeManifest doesn't have it normally.
+        mainRuntimeManifest.id = manifest.id;
+        res[mainRuntimeManifest.id] = localAspect;
+        return mainRuntimeManifest;
+      }
       res[manifest.id] = localAspect;
       return manifest;
     });
@@ -855,7 +883,7 @@ export class AspectLoaderMain {
       pluginSlot
     );
 
-    graphql.register(aspectLoaderSchema(aspectLoader));
+    graphql.register(() => aspectLoaderSchema(aspectLoader));
     aspectLoader.registerPlugins([envs.getEnvPlugin()]);
 
     return aspectLoader;

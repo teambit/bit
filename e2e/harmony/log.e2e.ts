@@ -12,11 +12,11 @@ describe('log', function () {
   });
   describe('logging with global --log flag', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
     });
     it('should log successfully', () => {
       const output = helper.command.runCmd('bit status --log');
-      expect(output).to.have.string('ComponentLoader, loading consumer-components from the file-system');
+      expect(output).to.have.string('[*] started a new command: "status"');
     });
   });
 });

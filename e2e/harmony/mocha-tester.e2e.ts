@@ -1,7 +1,8 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('Mocha Tester', function () {
   this.timeout(0);
@@ -14,9 +15,9 @@ describe('Mocha Tester', function () {
   });
   describe('component that use Mocha as a tester', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
-      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env@0.0.42');
+      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env');
       helper.command.install();
     });
     describe('component without any test file', () => {
@@ -95,9 +96,9 @@ describe('Mocha Tester', function () {
   });
   describe('typescript component', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponentsTS(1);
-      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env@0.0.42');
+      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env');
       helper.command.install();
       helper.fs.outputFile(
         'comp1/foo.ts',
@@ -109,7 +110,7 @@ describe('Mocha Tester', function () {
         'comp1/foo.spec.ts',
         `import { addOne } from './foo';
 import { expect } from 'chai';
-
+import chaiFs from 'chai-fs';
 describe('addOne', () => {
   it('should add one', () => {
     const result = addOne(1);

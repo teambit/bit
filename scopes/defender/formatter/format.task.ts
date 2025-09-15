@@ -1,5 +1,5 @@
-import { BuildTask, BuiltTaskResult, BuildContext, ComponentResult } from '@teambit/builder';
-import { Formatter } from './formatter';
+import type { BuildTask, BuiltTaskResult, BuildContext, ComponentResult } from '@teambit/builder';
+import type { Formatter } from './formatter';
 
 export class FormatTask implements BuildTask {
   constructor(
@@ -8,6 +8,12 @@ export class FormatTask implements BuildTask {
   ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
+    if (!context.env.getFormatter) {
+      return {
+        componentsResults: [],
+      };
+    }
+
     const formatter: Formatter = context.env.getFormatter();
     // TODO: add option to select between check and format here
     const results = await formatter.check(context);

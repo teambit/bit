@@ -2,9 +2,9 @@ import fs from 'fs-extra';
 import glob from 'glob';
 import * as path from 'path';
 
-import CommandHelper from './e2e-command-helper';
-import ScopeHelper from './e2e-scope-helper';
-import ScopesData from './e2e-scopes';
+import type CommandHelper from './e2e-command-helper';
+import type ScopeHelper from './e2e-scope-helper';
+import type ScopesData from './e2e-scopes';
 
 export default class GitHelper {
   scopes: ScopesData;
@@ -23,8 +23,12 @@ export default class GitHelper {
     const hookPath = path.join(this.scopes.localPath, '.git', 'hooks', hookName);
     return fs.outputFileSync(hookPath, content);
   }
-  initNewGitRepo() {
-    return this.command.runCmd('git init');
+  initNewGitRepo(setTestUser = false) {
+    this.command.runCmd('git init');
+    if (setTestUser) {
+      this.addGitConfig('user.name', 'Test User');
+      this.addGitConfig('user.email', 'test@example.com');
+    }
   }
 
   addGitConfig(key: string, val: string, location = 'local') {
@@ -44,7 +48,7 @@ export default class GitHelper {
         fs.removeSync(path.join(this.scopes.localPath, dir));
       }
     });
-    this.scopeHelper.initWorkspace();
+    this.command.init();
   }
   mimicGitCloneLocalProjectHarmony(cloneWithComponentsFiles = true) {
     fs.removeSync(path.join(this.scopes.localPath, '.bit'));
@@ -56,6 +60,6 @@ export default class GitHelper {
         fs.removeSync(path.join(this.scopes.localPath, dir));
       }
     });
-    this.scopeHelper.initWorkspace();
+    this.command.init();
   }
 }

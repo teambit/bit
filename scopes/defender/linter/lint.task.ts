@@ -1,9 +1,9 @@
 import path from 'path';
-import { BuildTask, BuiltTaskResult, BuildContext, ComponentResult } from '@teambit/builder';
+import type { BuildTask, BuiltTaskResult, BuildContext, ComponentResult } from '@teambit/builder';
 import { ComponentMap } from '@teambit/component';
-import { CapsuleList } from '@teambit/isolator';
-import { Linter } from './linter';
-import { LinterContext } from './linter-context';
+import type { CapsuleList } from '@teambit/isolator';
+import type { Linter } from './linter';
+import type { LinterContext } from './linter-context';
 
 export class LintTask implements BuildTask {
   constructor(
@@ -12,6 +12,9 @@ export class LintTask implements BuildTask {
   ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
+    if (!context.env.getLinter) {
+      return { componentsResults: [] };
+    }
     const linter: Linter = context.env.getLinter();
     const rootDir = context.capsuleNetwork.capsulesRootDir;
     const componentsDirMap = this.getComponentsDirectory(rootDir, context.capsuleNetwork.originalSeedersCapsules);

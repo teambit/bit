@@ -1,42 +1,41 @@
 import parsePackageName from 'parse-package-name';
-import {
-  extendWithComponentsFromDir,
+import type { Registries, Registry } from '@teambit/pkg.entities.registry';
+import type {
   InstallationContext,
   DependencyResolverMain,
   PackageManager,
   PackageManagerInstallOptions,
   PackageImportMethod,
-  Registries,
-  Registry,
   PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
 } from '@teambit/dependency-resolver';
+import { extendWithComponentsFromDir } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
-import { ComponentMap } from '@teambit/component';
+import type { ComponentMap } from '@teambit/component';
 import fs from 'fs-extra';
 import { join, relative } from 'path';
+import type { IdentHash, Descriptor, ResolveOptions } from '@yarnpkg/core';
 import {
   Workspace,
   Project,
   Configuration,
   structUtils,
-  IdentHash,
-  Descriptor,
   Cache,
   StreamReport,
-  ResolveOptions,
   LightReport,
   WorkspaceResolver,
 } from '@yarnpkg/core';
 import { getPluginConfiguration } from '@yarnpkg/cli';
-import { npath, PortablePath } from '@yarnpkg/fslib';
-import { parseSyml, stringifySyml, Resolution } from '@yarnpkg/parsers';
+import type { PortablePath } from '@yarnpkg/fslib';
+import { npath } from '@yarnpkg/fslib';
+import type { Resolution } from '@yarnpkg/parsers';
+import { parseSyml, stringifySyml } from '@yarnpkg/parsers';
 import npmPlugin from '@yarnpkg/plugin-npm';
 import { parseOverrides } from '@pnpm/parse-overrides';
-import { ProjectManifest } from '@pnpm/types';
+import type { ProjectManifest } from '@pnpm/types';
 import { omit, mapValues, pickBy } from 'lodash';
 import { homedir } from 'os';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import versionSelectorType from 'version-selector-type';
 import YAML from 'yaml';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
@@ -264,13 +263,13 @@ export class YarnPackageManager implements PackageManager {
 
     ws.manifest.name = ident;
 
-    // @ts-expect-error: It's ok to initialize it now, even if it's readonly (setup is called right after construction)
+    // @ts-ignore: It's ok to initialize it now, even if it's readonly (setup is called right after construction)
     ws.locator = structUtils.makeLocator(ident, ws.reference);
 
-    // @ts-expect-error: It's ok to initialize it now, even if it's readonly (setup is called right after construction)
+    // @ts-ignore: It's ok to initialize it now, even if it's readonly (setup is called right after construction)
     ws.anchoredDescriptor = structUtils.makeDescriptor(ws.locator, `${WorkspaceResolver.protocol}${ws.relativeCwd}`);
 
-    // @ts-expect-error: It's ok to initialize it now, even if it's readonly (setup is called right after construction)
+    // @ts-ignore: It's ok to initialize it now, even if it's readonly (setup is called right after construction)
     ws.anchoredLocator = structUtils.makeLocator(ws.locator, `${WorkspaceResolver.protocol}${ws.relativeCwd}`);
   }
 
@@ -515,7 +514,7 @@ function convertOverridesToResolutions(
       from: override.parentPkg ? toYarnResolutionSelector(override.parentPkg) : undefined,
       descriptor: toYarnResolutionSelector(override.targetPkg),
     },
-    reference: override.newPref,
+    reference: override.newBareSpecifier,
   }));
 }
 

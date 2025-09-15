@@ -2,8 +2,8 @@ import chai, { expect } from 'chai';
 import * as path from 'path';
 
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('dynamic namespaces', function () {
   this.timeout(0);
@@ -22,7 +22,7 @@ describe('dynamic namespaces', function () {
       let catComp;
 
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fs.createFile('bar', 'foo.js');
         const addOutput = helper.command.addComponent('bar', { i: componentName });
         expect(addOutput).to.have.string('added');
@@ -54,7 +54,7 @@ describe('dynamic namespaces', function () {
       describe('after import', () => {
         before(() => {
           helper.command.export();
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent(componentName);
         });
@@ -67,13 +67,13 @@ describe('dynamic namespaces', function () {
   });
   describe('import a component with same id string as a local different component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.createFile('foo', 'foo.js');
       helper.command.addComponent('foo', { i: 'foo' });
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.fs.createFile('bar', 'foo.js');
       helper.command.addComponent('bar', { i: `${helper.scopes.remote}/foo` });

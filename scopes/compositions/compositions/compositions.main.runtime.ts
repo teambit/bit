@@ -1,15 +1,23 @@
 import { MainRuntime } from '@teambit/cli';
-import { AspectData, Component, ComponentMap, IComponent } from '@teambit/component';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { ComponentLoadOptions } from '@teambit/legacy.consumer-component';
-import { AbstractVinyl } from '@teambit/component.sources';
-import { PreviewAspect, PreviewMain } from '@teambit/preview';
-import { SchemaAspect, SchemaMain } from '@teambit/schema';
+import type { AspectData, Component, IComponent } from '@teambit/component';
+import { ComponentMap } from '@teambit/component';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { DevFilesMain } from '@teambit/dev-files';
+import { DevFilesAspect } from '@teambit/dev-files';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { ComponentLoadOptions } from '@teambit/legacy.consumer-component';
+import type { AbstractVinyl } from '@teambit/component.sources';
+import type { PreviewMain } from '@teambit/preview';
+import { PreviewAspect } from '@teambit/preview';
+import type { SchemaMain } from '@teambit/schema';
+import { SchemaAspect } from '@teambit/schema';
 import { matchPatterns, splitPatterns } from '@teambit/toolbox.path.match-patterns';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { join } from 'path';
 import { Composition } from './composition';
 import { CompositionsAspect } from './compositions.aspect';
@@ -98,7 +106,6 @@ export class CompositionsMain {
     if (!entry) return [];
     const compositions = entry.data.compositions;
     if (!compositions) return [];
-
     return Composition.fromArray(compositions);
   }
 
@@ -197,7 +204,7 @@ export class CompositionsMain {
     // TODO: use the docs implementation to allow component specific pattern
     devFiles.registerDevPattern(compositions.getDevPatternToRegister());
 
-    graphql.register(compositionsSchema(compositions));
+    graphql.register(() => compositionsSchema(compositions));
     preview.registerDefinition(new CompositionPreviewDefinition(compositions));
 
     if (workspace) {

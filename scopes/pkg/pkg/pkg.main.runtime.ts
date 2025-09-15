@@ -1,24 +1,37 @@
 import { compact, omit } from 'lodash';
 import { join } from 'path';
 import fs from 'fs-extra';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { ComponentAspect, Component, ComponentMain, IComponent, Snap } from '@teambit/component';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Component, ComponentMain, IComponent, Snap } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { IsolatorMain } from '@teambit/isolator';
+import { IsolatorAspect } from '@teambit/isolator';
+import type { LoggerMain, Logger } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import { BuilderMain, BuilderAspect } from '@teambit/builder';
+import type { BuilderMain } from '@teambit/builder';
+import { BuilderAspect } from '@teambit/builder';
 import { BitError } from '@teambit/bit-error';
 import { snapToSemver } from '@teambit/component-package-version';
 import { IssuesClasses } from '@teambit/component-issues';
-import { AbstractVinyl } from '@teambit/component.sources';
-import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packer';
+import type { AbstractVinyl } from '@teambit/component.sources';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { PackOptions, PackResult } from './packer';
+import { Packer, TAR_FILE_ARTIFACT_NAME } from './packer';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
 import { PkgAspect } from './pkg.aspect';
@@ -155,7 +168,7 @@ export class PkgMain {
     componentAspect.registerShowFragments([new PackageFragment(pkg)]);
     dependencyResolver.registerDependencyFactories([new PackageDependencyFactory()]);
 
-    graphql.register(pkgSchema(pkg));
+    graphql.register(() => pkgSchema(pkg));
     envs.registerService(new PkgService());
 
     componentAspect.registerRoute([new PackageRoute(pkg)]);
@@ -167,8 +180,8 @@ export class PkgMain {
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher, envs);
     // dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
     builder.registerBuildTasks([preparePackagesTask]);
-    builder.registerTagTasks([packTask, publishTask]);
-    builder.registerSnapTasks([packTask]);
+    builder.registerTagTasks([preparePackagesTask, packTask, publishTask]);
+    builder.registerSnapTasks([preparePackagesTask, packTask, publishTask]);
 
     const calcPkgOnLoad = async (component: Component) => {
       const data = await pkg.mergePackageJsonProps(component);
@@ -322,8 +335,12 @@ export class PkgMain {
   async mergePackageJsonProps(component: Component): Promise<PackageJsonProps> {
     let newProps: PackageJsonProps = {};
     const mergeToNewProps = (otherProps: PackageJsonProps) => {
+      // Deep clone otherProps to prevent shared object references between components.
+      // Without this, nested objects (like exports) can be unintentionally shared across different components,
+      // causing modifications to one component's package.json to leak into others.
+      const otherPropsCloned = JSON.parse(JSON.stringify(otherProps));
       const files = [...(newProps.files || []), ...(otherProps.files || [])];
-      const merged = { ...newProps, ...otherProps };
+      const merged = { ...newProps, ...otherPropsCloned };
       if (files.length) merged.files = files;
       return merged;
     };
@@ -491,7 +508,12 @@ export class PkgMain {
     packageJsonObject: Record<string, any>
   ): Promise<Record<string, any>> {
     const newProps = this.getPackageJsonModifications(component);
-    return Object.assign(packageJsonObject, newProps);
+    const pkgJsonObj = Object.assign(packageJsonObject, newProps);
+    const env = this.envs.getOrCalculateEnv(component).env;
+    if (env.modifyPackageJson) {
+      return env.modifyPackageJson(component, pkgJsonObj);
+    }
+    return pkgJsonObj;
   }
 }
 

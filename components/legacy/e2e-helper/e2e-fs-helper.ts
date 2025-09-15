@@ -1,13 +1,13 @@
 import fs from 'fs-extra';
-import chai, { expect } from 'chai';
+import { use, expect } from 'chai';
 import glob from 'glob';
 import * as path from 'path';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
-import * as fixtures from './fixtures/fixtures';
+import * as fixtures from './fixtures';
 import { ensureAndWriteJson } from './e2e-helper';
-import ScopesData from './e2e-scopes';
+import type ScopesData from './e2e-scopes';
 
-chai.use(require('chai-fs'));
+use(require('chai-fs'));
 
 export default class FsHelper {
   scopes: ScopesData;

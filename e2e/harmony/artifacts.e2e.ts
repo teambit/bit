@@ -1,8 +1,9 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('bit artifacts command', function () {
   this.timeout(0);
@@ -15,7 +16,7 @@ describe('bit artifacts command', function () {
   });
   describe('staged component that was never exported', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
     });
@@ -28,7 +29,7 @@ describe('bit artifacts command', function () {
   });
   describe('running the command on a snap', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.command.snapAllComponents();
     });

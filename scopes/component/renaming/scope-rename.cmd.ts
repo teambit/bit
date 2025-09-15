@@ -1,6 +1,6 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { RenameResult, RenamingMain } from './renaming.main.runtime';
+import type { RenameResult, RenamingMain } from './renaming.main.runtime';
 
 export class ScopeRenameCmd implements Command {
   name = 'rename <current-scope-name> <new-scope-name>';
@@ -22,7 +22,7 @@ as a result of this change`;
     ],
     ['', 'deprecate', 'for exported components, instead of deleting the original components, deprecating them'],
   ] as CommandOptions;
-  group = 'development';
+  group = 'component-config';
 
   constructor(private renaming: RenamingMain) {}
 

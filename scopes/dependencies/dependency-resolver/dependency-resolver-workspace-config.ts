@@ -1,8 +1,10 @@
-import { PeerDependencyRules } from '@pnpm/types';
-import { WorkspacePolicyConfigObject } from './policy';
-import { PackageImportMethod } from './package-manager';
+import type { PeerDependencyRules } from '@pnpm/types';
+import type { WorkspacePolicyConfigObject } from './policy';
+import type { PackageImportMethod } from './package-manager';
 
 export type NodeLinker = 'hoisted' | 'isolated';
+
+export type ComponentRangePrefix = '~' | '^' | '+' | '-';
 
 export interface DependencyResolverWorkspaceConfig {
   policy: WorkspacePolicyConfigObject;
@@ -11,7 +13,7 @@ export interface DependencyResolverWorkspaceConfig {
    * and 'librarian'. our recommendation is use 'librarian' which reduces package duplicates
    * and totally removes the need of a 'node_modules' directory in your project.
    */
-  packageManager: string;
+  packageManager?: string;
 
   /**
    * A proxy server for out going network requests by the package manager
@@ -208,4 +210,16 @@ export interface DependencyResolverWorkspaceConfig {
    * Tells pnpm to automatically install peer dependencies. It is true by default.
    */
   autoInstallPeers?: boolean;
+
+  /**
+   * By default, Bit saves component dependencies with exact versions (pinned) in the package.json,
+   * even if the dependency-resolver policy specifies a version range.
+   *
+   * To preserve the range defined in the policy, set this value to "+".
+   * To apply a predefined range ("~" or "^") to other component dependencies not covered by the policy,
+   * set this to the desired range symbol.
+   */
+  componentRangePrefix?: ComponentRangePrefix;
+
+  externalPackageManager?: boolean;
 }

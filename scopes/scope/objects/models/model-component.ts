@@ -6,19 +6,20 @@ import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { BitId } from '@teambit/legacy-bit-id';
 import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '@teambit/legacy.constants';
-import { ConsumerComponent, SchemaName, Dependencies, Dependency } from '@teambit/legacy.consumer-component';
+import type { Dependencies, Dependency } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent, SchemaName } from '@teambit/legacy.consumer-component';
 import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
 import { ComponentOverrides, getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import { getLatestVersion, validateVersion } from '@teambit/pkg.modules.semver-helper';
+import type { SnapsDistance } from '@teambit/component.snap-distance';
 import {
-  SnapsDistance,
   getDivergeData,
   getAllVersionParents,
   getAllVersionsInfo,
@@ -36,19 +37,21 @@ import {
   errorIsTypeOfMissingObject,
   BitIdCompIdError,
 } from '@teambit/legacy.scope';
-import { Repository, BitObject, Ref } from '../objects';
-import Lane from './lane';
+import type { Repository } from '../objects';
+import { BitObject, Ref } from '../objects';
+import type Lane from './lane';
 import ScopeMeta from './scopeMeta';
-import Source from './source';
-import Version from './version';
-import VersionHistory, { VersionParents } from './version-history';
-import { ObjectItem } from '../objects/object-list';
+import type Source from './source';
+import type Version from './version';
+import type { VersionParents } from './version-history';
+import VersionHistory from './version-history';
+import type { ObjectItem } from '../objects/object-list';
 import type { Scope } from '@teambit/legacy.scope';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { DetachedHeads } from './detach-heads';
 
 type State = {
   versions?: {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     [version: string]: {
       local?: boolean; // whether a component was changed locally
     };
@@ -65,6 +68,9 @@ export type AddVersionOpts = {
    * (this prop takes affect only when the component is checked out to an older version)
    */
   setHeadAsParent?: boolean;
+
+  detachHead?: boolean;
+  overrideHead?: boolean;
 };
 
 type Versions = { [version: string]: Ref };
@@ -84,6 +90,7 @@ export type ComponentProps = {
   scopesList?: ScopeListItem[];
   head?: Ref;
   schema?: string | undefined;
+  detachedHeads?: DetachedHeads;
 };
 
 export const VERSION_ZERO = '0.0.0';
@@ -93,7 +100,6 @@ export const VERSION_ZERO = '0.0.0';
  * with 'Component' in their headers. see object-registrar.types()
  */
 // TODO: FIX me .parser
-// @ts-ignore
 export default class Component extends BitObject {
   scope: string;
   name: string;
@@ -134,8 +140,9 @@ export default class Component extends BitObject {
   laneId?: LaneId; // doesn't get saved in the scope.
   laneDataIsPopulated = false; // doesn't get saved in the scope, used to improve performance of loading the lane data
   schema: string | undefined;
+  detachedHeads: DetachedHeads;
   private divergeData?: SnapsDistance;
-  private populateVersionHistoryMutex = new Mutex();
+  private _populateVersionHistoryMutex?: Mutex;
   constructor(props: ComponentProps) {
     super();
     if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
@@ -153,6 +160,14 @@ export default class Component extends BitObject {
     this.scopesList = props.scopesList || [];
     this.head = props.head;
     this.schema = props.schema;
+    this.detachedHeads = props.detachedHeads || new DetachedHeads();
+  }
+
+  private get populateVersionHistoryMutex() {
+    if (!this._populateVersionHistoryMutex) {
+      this._populateVersionHistoryMutex = new Mutex();
+    }
+    return this._populateVersionHistoryMutex;
   }
 
   get versionArray(): Ref[] {
@@ -282,7 +297,7 @@ export default class Component extends BitObject {
   }
 
   /**
-   * on main - it checks local-head vs remote-head.
+   * on main - it checks local-head (or .bitmap version if given) vs remote-head.
    * on lane - it checks local-head on lane vs remote-head on lane.
    * however, to get an accurate `divergeData.snapsOnSourceOnly`, the above is not enough.
    * for example, comp-a@snap-x from lane-a is merged into lane-b. we don't want this snap-x to be "local", because
@@ -292,16 +307,24 @@ export default class Component extends BitObject {
    * is found there, it'll stop the traversal and not mark it as remote.
    * in this example, during the merge, lane-a was fetched, and the remote-ref of this lane has snap-x as the head.
    */
-  async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
+  async setDivergeData(repo: Repository, throws = true, fromCache = true, workspaceId?: ComponentID): Promise<void> {
     if (!this.divergeData || !fromCache) {
       const remoteHead = (this.laneId ? this.calculatedRemoteHeadWhenOnLane : this.remoteHead) || null;
+      // this is for detach-head scenario. it can happen on main only. we want to compare against the .bitmap
+      // version (which is the detached head) and not the actual head.
+      const workspaceVersion = !this.isOnLane() && workspaceId?.hasVersion() ? workspaceId.version : null;
       this.divergeData = await getDivergeData({
         repo,
         modelComponent: this,
         targetHead: remoteHead,
+        sourceHead: workspaceVersion ? this.getRef(workspaceVersion) : undefined,
         throws,
       });
     }
+  }
+
+  isOnLane(): boolean {
+    return Boolean(this.laneHeadLocal || this.laneHeadLocal === null);
   }
 
   /**
@@ -443,7 +466,10 @@ export default class Component extends BitObject {
     }
     await this.setDivergeData(repo, false);
     const divergeData = this.getDivergeData();
-    return divergeData.isTargetAhead() ? remoteHead.toString() : latestLocally;
+    if (divergeData.isTargetAhead()) {
+      return this.getTagOfRefIfExists(remoteHead) || remoteHead.toString();
+    }
+    return latestLocally;
   }
 
   async getRefOfAncestor(repo: Repository, generationsToGoBack: number): Promise<Ref> {
@@ -543,6 +569,7 @@ export default class Component extends BitObject {
     const headVersion = head ? ((await repo.load(head)) as unknown as Version) : undefined;
     const removeAspect = headVersion?.extensions.findCoreExtension(Extensions.remove);
     const removeRange = removeAspect?.config.range;
+    const removeSnaps = removeAspect?.config.snaps || [];
     const deprecationAspect = headVersion?.extensions.findCoreExtension(Extensions.deprecation);
     const deprecationRange = deprecationAspect?.config.range;
 
@@ -558,7 +585,9 @@ export default class Component extends BitObject {
         hash: getRef(versionInfo.ref),
         parents: versionInfo.parents.map((parent) => getRef(parent)),
         onLane: versionInfo.onLane,
-        deleted: versionInfo.tag && removeRange && semver.satisfies(versionInfo.tag, removeRange),
+        deleted:
+          (versionInfo.tag && removeRange && semver.satisfies(versionInfo.tag, removeRange)) ||
+          (!versionInfo.tag && removeSnaps.includes(versionInfo.ref.toString())),
         deprecated: versionInfo.tag && deprecationRange && semver.satisfies(versionInfo.tag, deprecationRange),
         hidden: versionInfo.version?.hidden,
       };
@@ -575,7 +604,6 @@ export default class Component extends BitObject {
   collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
     return Promise.all(
       this.listVersions().map((versionNum) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return this.toConsumerComponent(versionNum, this.scope, repo);
       })
     );
@@ -644,13 +672,17 @@ export default class Component extends BitObject {
     return hasSameVersions;
   }
 
+  // eslint-disable-next-line complexity
   addVersion(
     version: Version,
     versionToAdd: string,
     lane?: Lane,
     previouslyUsedVersion?: string,
-    { addToUpdateDependentsInLane, setHeadAsParent }: AddVersionOpts = {}
+    { addToUpdateDependentsInLane, setHeadAsParent, detachHead, overrideHead }: AddVersionOpts = {}
   ): string {
+    if (detachHead && overrideHead) {
+      throw new Error(`addVersion expects either detachHead or overrideHead to be true, not both`);
+    }
     if (lane) {
       if (isTag(versionToAdd)) {
         throw new BitError(
@@ -687,6 +719,7 @@ export default class Component extends BitObject {
     }
     // user on main
     const head = this.getHead();
+    const parent = previouslyUsedVersion ? this.getRef(previouslyUsedVersion) : null;
     if (
       head &&
       head.toString() !== versionToAdd &&
@@ -697,11 +730,20 @@ export default class Component extends BitObject {
       // if this is a hash and it's the same hash as the current head, adding it as a parent
       // results in a parent and a version has the same hash.
       // @todo: fix it in a more elegant way
-      const parent = previouslyUsedVersion ? this.getRef(previouslyUsedVersion) : null;
       const parentToSet = setHeadAsParent ? head : parent;
       version.addAsOnlyParent(parentToSet || head);
     }
-    this.setHead(version.hash());
+    if (parent && head && !parent.isEqual(head) && !overrideHead) {
+      if (detachHead) this.detachedHeads.setHead(version.hash());
+      else
+        throw new Error(`unable to add a new version for "${this.id()}" on main.
+this version started from an older version (${previouslyUsedVersion}), and not from the head (${head}).
+if this is done intentionally, please re-run with --detach-head (or --override-head if available).
+otherwise, please run "bit checkout head" to be up to date, then snap/tag your changes.`);
+    } else {
+      this.setHead(version.hash());
+      this.detachedHeads.clearCurrent();
+    }
     if (isTag(versionToAdd)) {
       this.setVersion(versionToAdd, version.hash());
     }
@@ -710,9 +752,16 @@ export default class Component extends BitObject {
   }
 
   version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1, preReleaseId?: string): string {
-    // if (preRelease) releaseType = 'prerelease';
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const increment = (ver: string) => semver.inc(ver, releaseType, undefined, preReleaseId)!;
+    const increment = (ver: string) => {
+      try {
+        // don't use "semver.inc" function, it'll swallow the error and return null.
+        const incResult = new semver.SemVer(ver).inc(releaseType, preReleaseId);
+        return incResult.version;
+      } catch (err: any) {
+        throw new Error(`unable to increment version "${ver}" with releaseType "${releaseType}" and preReleaseId "${preReleaseId}".
+Error from "semver": ${err.message}`);
+      }
+    };
 
     const latest = this.latestVersion();
     if (!latest) {
@@ -785,6 +834,7 @@ export default class Component extends BitObject {
       bindingPrefix: this.bindingPrefix,
       remotes: this.scopesList,
       schema: this.schema,
+      detachedHeads: this.detachedHeads.toObject(),
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.local) componentObject.local = this.local;
@@ -817,12 +867,13 @@ export default class Component extends BitObject {
   async collectVersionsObjects(
     repo: Repository,
     versions: string[],
-    throwForMissingLocalArtifacts = false
+    throwForMissingLocalArtifacts = false,
+    workspaceId?: ComponentID
   ): Promise<ObjectItem[]> {
     const refsWithoutArtifacts: Ref[] = [];
     const artifactsRefs: Ref[] = [];
     const artifactsRefsFromExportedVersions: Ref[] = [];
-    const locallyChangedVersions = await this.getLocalTagsOrHashes(repo);
+    const locallyChangedVersions = await this.getLocalTagsOrHashes(repo, workspaceId);
     const locallyChangedHashes = locallyChangedVersions.map((v) =>
       isTag(v) ? this.versionsIncludeOrphaned[v].hash : v
     );
@@ -978,10 +1029,14 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     if (removeAspect.config.removed) {
       return true;
     }
-    if (specificVersion && removeAspect.config.range) {
-      const tag = this.getTag(specificVersion);
-      if (!tag) return false; // it's a snap. "range" doesn't support snaps. only semver.
-      return semver.satisfies(tag, removeAspect.config.range);
+    if (specificVersion) {
+      if (removeAspect.config.range) {
+        const tag = this.getTag(specificVersion);
+        if (tag) return semver.satisfies(tag, removeAspect.config.range);
+      }
+      if (removeAspect.config.snaps && Array.isArray(removeAspect.config.snaps)) {
+        return removeAspect.config.snaps.includes(specificVersion);
+      }
     }
     return false;
   }
@@ -1031,7 +1086,6 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     // @todo: this is weird. why the scopeMeta would be taken from the current scope and not he component scope?
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
-    // @ts-ignore
     const [files, scopeMeta] = await Promise.all([filesP, scopeMetaP]);
 
     const extensions = version.extensions.clone();
@@ -1141,19 +1195,14 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return localVersions.includes(tag);
   }
 
-  async hasLocalVersion(repo: Repository, version: string): Promise<boolean> {
-    const localVersions = await this.getLocalTagsOrHashes(repo);
-    return localVersions.includes(version);
-  }
-
-  async getLocalTagsOrHashes(repo: Repository): Promise<string[]> {
-    const localHashes = await this.getLocalHashes(repo);
+  async getLocalTagsOrHashes(repo: Repository, workspaceId?: ComponentID): Promise<string[]> {
+    const localHashes = await this.getLocalHashes(repo, workspaceId);
     if (!localHashes.length) return [];
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
-  async getLocalHashes(repo: Repository): Promise<Ref[]> {
-    await this.setDivergeData(repo);
+  async getLocalHashes(repo: Repository, workspaceId?: ComponentID): Promise<Ref[]> {
+    await this.setDivergeData(repo, undefined, undefined, workspaceId);
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnSourceOnly;
     if (!localHashes.length) return [];
@@ -1172,10 +1221,11 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
    * whether the component was locally changed, either by adding a new snap/tag or by merging
    * components from different lanes.
    */
-  async isLocallyChanged(repo: Repository, lane?: Lane | null): Promise<boolean> {
+  async isLocallyChanged(repo: Repository, lane?: Lane | null, workspaceId?: ComponentID): Promise<boolean> {
     if (lane) await this.populateLocalAndRemoteHeads(repo, lane);
-    await this.setDivergeData(repo);
-    return this.getDivergeData().isSourceAhead();
+    await this.setDivergeData(repo, undefined, undefined, workspaceId);
+    const divergeData = this.getDivergeData();
+    return divergeData.isSourceAhead();
   }
 
   async getVersionHistory(repo: Repository): Promise<VersionHistory> {
@@ -1286,6 +1336,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       scopesList: rawComponent.remotes,
       head: rawComponent.head ? Ref.from(rawComponent.head) : undefined,
       schema: rawComponent.schema || (rawComponent.head ? SchemaName.Harmony : SchemaName.Legacy),
+      detachedHeads: DetachedHeads.fromObject(rawComponent.detachedHeads),
     });
   }
 

@@ -7,29 +7,26 @@ import { compact, groupBy, isEmpty, unionBy, uniq } from 'lodash';
 import format from 'string-format';
 import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID } from '@teambit/component-id';
-import { BitIdStr, BitId } from '@teambit/legacy-bit-id';
+import type { BitIdStr } from '@teambit/legacy-bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { PACKAGE_JSON, VERSION_DELIMITER, AUTO_GENERATED_STAMP } from '@teambit/legacy.constants';
-import {
-  BitMap,
-  ComponentMap,
-  ComponentMapFile,
-  Config,
-  getIgnoreListHarmony,
-  MissingMainFile,
-} from '@teambit/legacy.bit-map';
+import type { BitMap, ComponentMapFile, Config } from '@teambit/legacy.bit-map';
+import { ComponentMap, getIgnoreListHarmony, MissingMainFile } from '@teambit/legacy.bit-map';
 import { DuplicateIds, EmptyDirectory, ExcludedMainFile, MainFileIsDir, NoFiles, PathsNotExist } from './exceptions';
 import { AddingIndividualFiles } from './exceptions/adding-individual-files';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
 import { ParentDirTracked } from './exceptions/parent-dir-tracked';
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
-import { Consumer } from '@teambit/legacy.consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { BitError } from '@teambit/bit-error';
 import { logger } from '@teambit/legacy.logger';
-import { glob, isDir, pathNormalizeToLinux, PathLinux, PathLinuxRelative, PathOsBased } from '@teambit/legacy.utils';
+import type { PathLinux, PathLinuxRelative, PathOsBased } from '@teambit/legacy.utils';
+import { glob, isDir, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
-import { Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
 import determineMainFile from './determine-main-file';
+import type { ResolvedTrackData } from './tracker.main.runtime';
 
 export type AddResult = { id: ComponentID; files: ComponentMapFile[] };
 export type Warnings = {
@@ -39,7 +36,6 @@ export type Warnings = {
 };
 export type AddActionResults = { addedComponents: AddResult[]; warnings: Warnings };
 export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: tests/{PARENT}/{FILE_NAME}
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 type PathsStats = { [PathOsBased]: { isDir: boolean } };
 export type AddedComponent = {
@@ -86,7 +82,6 @@ export default class AddComponents {
   override: boolean; // (default = false) replace the files array or only add files.
   trackDirFeature: boolean | null | undefined;
   warnings: Warnings;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   ignoreList: string[];
   gitIgnore: any;
   addedComponents: AddResult[];
@@ -112,6 +107,60 @@ export default class AddComponents {
     this.defaultScope = addProps.defaultScope;
     this.config = addProps.config;
     this.shouldHandleOutOfSync = addProps.shouldHandleOutOfSync;
+  }
+
+  async add(): Promise<AddActionResults> {
+    this.ignoreList = await this.getIgnoreList();
+    this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
+
+    let componentPathsStats: PathsStats = {};
+
+    const resolvedComponentPathsWithoutGitIgnore = (
+      await Promise.all(this.componentPaths.map((componentPath) => glob(componentPath)))
+    ).flat();
+
+    const resolvedComponentPathsWithGitIgnore = this.gitIgnore.filter(resolvedComponentPathsWithoutGitIgnore);
+    // Run diff on both arrays to see what was filtered out because of the gitignore file
+    // this is not the same as "lodash.difference".
+    const diff = arrayDiff(resolvedComponentPathsWithGitIgnore, resolvedComponentPathsWithoutGitIgnore);
+
+    if (!resolvedComponentPathsWithoutGitIgnore.length) {
+      throw new PathsNotExist(this.componentPaths);
+    }
+    if (resolvedComponentPathsWithGitIgnore.length) {
+      componentPathsStats = validatePaths(resolvedComponentPathsWithGitIgnore);
+    } else {
+      throw new NoFiles(diff);
+    }
+    Object.keys(componentPathsStats).forEach((compPath) => {
+      if (!componentPathsStats[compPath].isDir) {
+        throw new AddingIndividualFiles(compPath);
+      }
+    });
+    if (Object.keys(componentPathsStats).length > 1 && this.id) {
+      throw new BitError(
+        `the --id flag (${this.id}) is used for a single component only, however, got ${this.componentPaths.length} paths`
+      );
+    }
+    // if a user entered multiple paths and entered an id, he wants all these paths to be one component
+    // conversely, if a user entered multiple paths without id, he wants each dir as an individual component
+    const isMultipleComponents = Object.keys(componentPathsStats).length > 1;
+    if (isMultipleComponents) {
+      await this.addMultipleComponents(componentPathsStats);
+    } else {
+      logger.debugAndAddBreadCrumb('add-components', 'adding one component');
+      // when a user enters more than one directory, he would like to keep the directories names
+      // so then when a component is imported, it will write the files into the original directories
+      const addedOne = await this.addOneComponent(Object.keys(componentPathsStats)[0]);
+      await this._removeNamespaceIfNotNeeded([addedOne]);
+      if (addedOne.files.length) {
+        const addedResult = await this.addOrUpdateComponentInBitMap(addedOne);
+        if (addedResult) this.addedComponents.push(addedResult);
+      }
+    }
+    await this.linkComponents(this.addedComponents.map((item) => item.id));
+    Analytics.setExtraData('num_components', this.addedComponents.length);
+    return { addedComponents: this.addedComponents, warnings: this.warnings };
   }
 
   /**
@@ -225,7 +274,6 @@ export default class AddComponents {
     if (this.trackDirFeature) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this.bitMap._areFilesArraysEqual(foundComponentFromBitMap.files, componentFiles)) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return foundComponentFromBitMap;
       }
     }
@@ -393,7 +441,6 @@ you can add the directory these files are located at and it'll change the root d
           }
           files.push({
             relativePath: pathNormalizeToLinux(generatedFile),
-            test: false,
             name: path.basename(generatedFile),
           });
           mainFile = generatedFile;
@@ -415,7 +462,6 @@ you can add the directory these files are located at and it'll change the root d
       }
       files.push({
         relativePath: pathNormalizeToLinux(mainFileRelativeToConsumer),
-        test: false,
         name: path.basename(mainFileRelativeToConsumer),
       });
       return mainFileRelativeToConsumer;
@@ -447,7 +493,7 @@ you can add the directory these files are located at and it'll change the root d
     }
     const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath);
     this._throwForOutsideConsumer(relativeComponentPath);
-    this.throwForExistingParentDir(relativeComponentPath);
+    throwForExistingParentDir(this.bitMap, relativeComponentPath);
     const matches = await glob(path.join(relativeComponentPath, '**'), {
       cwd: this.consumer.getPath(),
       nodir: true,
@@ -503,60 +549,6 @@ you can add the directory these files are located at and it'll change the root d
   async getIgnoreList(): Promise<string[]> {
     const consumerPath = this.consumer.getPath();
     return getIgnoreListHarmony(consumerPath);
-  }
-
-  async add(): Promise<AddActionResults> {
-    this.ignoreList = await this.getIgnoreList();
-    this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
-
-    let componentPathsStats: PathsStats = {};
-
-    const resolvedComponentPathsWithoutGitIgnore = (
-      await Promise.all(this.componentPaths.map((componentPath) => glob(componentPath)))
-    ).flat();
-    this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
-
-    const resolvedComponentPathsWithGitIgnore = this.gitIgnore.filter(resolvedComponentPathsWithoutGitIgnore);
-    // Run diff on both arrays to see what was filtered out because of the gitignore file
-    const diff = arrayDiff(resolvedComponentPathsWithGitIgnore, resolvedComponentPathsWithoutGitIgnore);
-
-    if (!resolvedComponentPathsWithoutGitIgnore.length) {
-      throw new PathsNotExist(this.componentPaths);
-    }
-    if (resolvedComponentPathsWithGitIgnore.length) {
-      componentPathsStats = validatePaths(resolvedComponentPathsWithGitIgnore);
-    } else {
-      throw new NoFiles(diff);
-    }
-    Object.keys(componentPathsStats).forEach((compPath) => {
-      if (!componentPathsStats[compPath].isDir) {
-        throw new AddingIndividualFiles(compPath);
-      }
-    });
-    if (Object.keys(componentPathsStats).length > 1 && this.id) {
-      throw new BitError(
-        `the --id flag (${this.id}) is used for a single component only, however, got ${this.componentPaths.length} paths`
-      );
-    }
-    // if a user entered multiple paths and entered an id, he wants all these paths to be one component
-    // conversely, if a user entered multiple paths without id, he wants each dir as an individual component
-    const isMultipleComponents = Object.keys(componentPathsStats).length > 1;
-    if (isMultipleComponents) {
-      await this.addMultipleComponents(componentPathsStats);
-    } else {
-      logger.debugAndAddBreadCrumb('add-components', 'adding one component');
-      // when a user enters more than one directory, he would like to keep the directories names
-      // so then when a component is imported, it will write the files into the original directories
-      const addedOne = await this.addOneComponent(Object.keys(componentPathsStats)[0]);
-      await this._removeNamespaceIfNotNeeded([addedOne]);
-      if (addedOne.files.length) {
-        const addedResult = await this.addOrUpdateComponentInBitMap(addedOne);
-        if (addedResult) this.addedComponents.push(addedResult);
-      }
-    }
-    await this.linkComponents(this.addedComponents.map((item) => item.id));
-    Analytics.setExtraData('num_components', this.addedComponents.length);
-    return { addedComponents: this.addedComponents, warnings: this.warnings };
   }
 
   async linkComponents(ids: ComponentID[]) {
@@ -654,23 +646,23 @@ you can add the directory these files are located at and it'll change the root d
       throw new PathOutsideConsumer(relativeToConsumerPath);
     }
   }
+}
 
-  private throwForExistingParentDir(relativeToConsumerPath: PathOsBased) {
-    const isParentDir = (parent: string) => {
-      const relative = path.relative(parent, relativeToConsumerPath);
-      return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
-    };
-    this.bitMap.components.forEach((componentMap) => {
-      if (!componentMap.rootDir) return;
-      if (isParentDir(componentMap.rootDir)) {
-        throw new ParentDirTracked(
-          componentMap.rootDir,
-          componentMap.id.toStringWithoutVersion(),
-          relativeToConsumerPath
-        );
-      }
-    });
-  }
+function throwForExistingParentDir(bitMap: BitMap, relativeToConsumerPath: PathOsBased) {
+  const isParentDir = (parent: string) => {
+    const relative = path.relative(parent, relativeToConsumerPath);
+    return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
+  };
+  bitMap.components.forEach((componentMap) => {
+    if (!componentMap.rootDir) return;
+    if (isParentDir(componentMap.rootDir)) {
+      throw new ParentDirTracked(
+        componentMap.rootDir,
+        componentMap.id.toStringWithoutVersion(),
+        relativeToConsumerPath
+      );
+    }
+  });
 }
 
 /**
@@ -725,4 +717,42 @@ function calculateFileInfo(relativePath: string): { PARENT: string; FILE_NAME: s
 async function isAutoGeneratedFile(filePath: PathOsBased): Promise<boolean> {
   const line = await firstline(filePath);
   return line.includes(AUTO_GENERATED_STAMP);
+}
+
+export async function addMultipleFromResolvedTrackData(
+  workspace: Workspace,
+  trackData: ResolvedTrackData[]
+): Promise<ComponentID[]> {
+  const bitMap = workspace.consumer.bitMap;
+  const ignoreList = await getIgnoreListHarmony(workspace.path);
+  const gitIgnore = ignore().add(ignoreList);
+  const componentMaps = trackData.map((data) => {
+    const { rootDir, files, componentName, defaultScope, mainFile, config } = data;
+    if (path.isAbsolute(rootDir)) throw new BitError(`path is absolute, got ${rootDir}`);
+    throwForExistingParentDir(bitMap, rootDir);
+
+    const filtered = gitIgnore.filter(files);
+    if (!filtered.length) {
+      throw new NoFiles(files);
+    }
+
+    const componentFiles = filtered.map((match: PathOsBased) => {
+      return { relativePath: pathNormalizeToLinux(match), name: path.basename(match) };
+    });
+
+    const componentMap = bitMap.addComponent({
+      componentId: ComponentID.fromObject({ name: componentName }, defaultScope),
+      files: componentFiles,
+      defaultScope,
+      config,
+      mainFile,
+      rootDir,
+    });
+    return componentMap;
+  });
+
+  const allIds = componentMaps.map((c) => c.id);
+  await linkToNodeModulesByIds(workspace, allIds);
+
+  return allIds;
 }

@@ -1,9 +1,9 @@
 import type { Logger } from '@teambit/logger';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ApplicationType } from '@teambit/application';
-import { ReactAppOptions } from './react-app-options';
+import type { ApplicationType } from '@teambit/application';
+import type { ReactAppOptions } from './react-app-options';
 import { ReactApp } from './react.application';
-import { ReactEnv } from '../../react.env';
+import type { ReactEnv } from '../../react.env';
 
 export class ReactAppType implements ApplicationType<ReactAppOptions> {
   constructor(
@@ -22,7 +22,6 @@ export class ReactAppType implements ApplicationType<ReactAppOptions> {
       this.reactEnv,
       this.logger,
       this.dependencyResolver,
-      options.prerender,
       options.bundler,
       options.ssrBundler,
       options.devServer,

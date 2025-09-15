@@ -1,16 +1,8 @@
 import pMap from 'p-map';
 import { logger } from '@teambit/legacy.logger';
-import {
-  Ref,
-  Lane,
-  LaneHistory,
-  ModelComponent,
-  ScopeMeta,
-  Source,
-  Version,
-  VersionHistory,
-} from '@teambit/scope.objects';
-import Scope, { GarbageCollectorOpts } from './scope';
+import { Ref, Lane, LaneHistory, ModelComponent, ScopeMeta, Source, Version, VersionHistory } from '@teambit/objects';
+import type { GarbageCollectorOpts } from './scope';
+import type Scope from './scope';
 import { getAllVersionsInfo } from '@teambit/component.snap-distance';
 import pMapSeries from 'p-map-series';
 import { compact, uniq } from 'lodash';
@@ -81,6 +73,11 @@ export async function collectGarbage(thisScope: Scope, opts: GarbageCollectorOpt
 
   await pMapSeries(compsOfThisScope, async (comp) => {
     await processComponent(comp, comp.head, true);
+    const detachedHeads = comp.detachedHeads.getAllHeads();
+    if (!detachedHeads.length) return;
+    await pMapSeries(detachedHeads, async (head) => {
+      await processComponent(comp, head, true);
+    });
   });
 
   logger.console(`[*] completed processing local components. total ${refsWhiteList.size} refs in the white list`);

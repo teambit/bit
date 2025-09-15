@@ -1,10 +1,11 @@
 import chai, { expect } from 'chai';
 import { IssuesClasses } from '@teambit/component-issues';
+import chaiString from 'chai-string';
 
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('multiple envs', function () {
   this.timeout(0);
@@ -17,7 +18,7 @@ describe('multiple envs', function () {
   });
   describe('env in the variants and env in the .bitmap', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       const reactEnv = 'teambit.react/react';
       helper.extensions.addExtensionToVariant('*', reactEnv);
@@ -37,7 +38,7 @@ describe('multiple envs', function () {
   });
   describe('env in the variants global (*) and env in the variants more specific', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       const reactEnv = 'teambit.react/react';
       helper.extensions.addExtensionToVariant('*', reactEnv);

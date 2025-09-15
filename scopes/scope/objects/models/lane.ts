@@ -5,16 +5,17 @@ import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { isSnap } from '@teambit/component-version';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
-import { Scope } from '@teambit/legacy.scope';
+import type { Scope } from '@teambit/legacy.scope';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, PREVIOUS_DEFAULT_LANE } from '@teambit/legacy.constants';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { hasVersionByRef } from '@teambit/component.snap-distance';
-import { BitObject, Ref, Repository } from '../objects';
-import Version from './version';
-import * as globalConfig from '@teambit/legacy.global-config';
+import type { Repository } from '../objects';
+import { BitObject, Ref } from '../objects';
+import type Version from './version';
+import { getConfig } from '@teambit/config-store';
 
 export type Log = { date: string; username?: string; email?: string; profileImage?: string };
 
@@ -134,8 +135,8 @@ export default class Lane extends BitObject {
   ) {
     const log = {
       date: Date.now().toString(),
-      username: bitCloudUser?.username || globalConfig.getSync(CFG_USER_NAME_KEY),
-      email: bitCloudUser?.email || globalConfig.getSync(CFG_USER_EMAIL_KEY),
+      username: bitCloudUser?.username || getConfig(CFG_USER_NAME_KEY),
+      email: bitCloudUser?.email || getConfig(CFG_USER_EMAIL_KEY),
       profileImage: bitCloudUser?.profileImage,
     };
     const lane = new Lane({ name, scope, hash: sha1(v4()), log, forkedFrom, schema: CURRENT_LANE_SCHEMA });

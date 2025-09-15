@@ -1,6 +1,5 @@
-import { GlobalConfigMain } from '@teambit/global-config';
 import mapSeries from 'p-map-series';
-import { Lane } from '@teambit/scope.objects';
+import type { Lane } from '@teambit/objects';
 import { existsSync } from 'fs-extra';
 import { join } from 'path';
 import {
@@ -10,19 +9,20 @@ import {
   CFG_USE_DATED_CAPSULES,
   CFG_CACHE_LOCK_ONLY_CAPSULES,
 } from '@teambit/legacy.constants';
-import { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
-import { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
-import { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
+import type { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
+import type { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
+import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { compact, uniq, difference, groupBy, defaultsDeep } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
-import { ExtensionManifest, Aspect } from '@teambit/harmony';
-import { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
-import { Logger } from '@teambit/logger';
-import { EnvsMain } from '@teambit/envs';
-import { NodeLinker } from '@teambit/dependency-resolver';
+import type { ExtensionManifest, Aspect } from '@teambit/harmony';
+import type { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
+import type { Logger } from '@teambit/logger';
+import type { EnvsMain } from '@teambit/envs';
+import type { NodeLinker } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
-import { ScopeMain } from './scope.main.runtime';
+import type { ScopeMain } from './scope.main.runtime';
+import type { ConfigStoreMain } from '@teambit/config-store';
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
 
@@ -39,7 +39,7 @@ export class ScopeAspectsLoader {
     private envs: EnvsMain,
     private isolator: IsolatorMain,
     private logger: Logger,
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {}
 
   async loadAspects(
@@ -257,7 +257,6 @@ needed-for: ${neededFor || '<unknown>'}`);
     const compiledCode = (
       await Promise.all(
         component.filesystem.files.flatMap(async (file) => {
-          // @ts-ignore - we know it's not null, we have throw error above if yes
           if (!compiler.isFileSupported(file.path)) {
             return [
               {
@@ -266,9 +265,7 @@ needed-for: ${neededFor || '<unknown>'}`);
               },
             ] as TranspileFileOutputOneFile[];
           }
-          // @ts-ignore - we know it's not null, we have throw error above if yes
           if (compiler.transpileFile) {
-            // @ts-ignore - we know it's not null, we have throw error above if yes
             return compiler.transpileFile(file.contents.toString('utf8'), {
               filePath: file.path,
               componentDir: capsule.path,
@@ -282,7 +279,6 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     await Promise.all(
       compact(compiledCode).map((compiledFile) => {
-        // @ts-ignore - we know it's not null, we have throw error above if yes
         const path = compiler.getDistPathBySrcPath(compiledFile.outputPath);
         return capsule?.outputFile(path, compiledFile.outputText);
       })
@@ -354,13 +350,13 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   shouldUseDatedCapsules(): boolean {
-    const globalConfig = this.globalConfig.getSync(CFG_USE_DATED_CAPSULES);
+    const globalConfig = this.configStore.getConfig(CFG_USE_DATED_CAPSULES);
     // @ts-ignore
     return globalConfig === true || globalConfig === 'true';
   }
 
   shouldCacheLockFileOnly(): boolean {
-    const globalConfig = this.globalConfig.getSync(CFG_CACHE_LOCK_ONLY_CAPSULES);
+    const globalConfig = this.configStore.getConfig(CFG_CACHE_LOCK_ONLY_CAPSULES);
     // @ts-ignore
     return globalConfig === true || globalConfig === 'true';
   }
@@ -368,16 +364,16 @@ needed-for: ${neededFor || '<unknown>'}`);
   getAspectCapsulePath() {
     const defaultPath = `${this.scope.path}-aspects`;
     if (this.scope.isGlobalScope) {
-      return this.globalConfig.getSync(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR) || defaultPath;
+      return this.configStore.getConfig(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR) || defaultPath;
     }
-    return this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR) || defaultPath;
+    return this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR) || defaultPath;
   }
 
   shouldUseHashForCapsules(): boolean {
     if (this.scope.isGlobalScope) {
-      return !this.globalConfig.getSync(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR);
+      return !this.configStore.getConfig(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR);
     }
-    return !this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR);
+    return !this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR);
   }
 
   getAspectsPackageManager(): string | undefined {

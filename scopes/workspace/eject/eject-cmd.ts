@@ -1,13 +1,15 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { Workspace } from '@teambit/workspace';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { Workspace } from '@teambit/workspace';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { ejectTemplate } from './eject-template';
-import { EjectMain } from './eject.main.runtime';
+import type { EjectMain } from './eject.main.runtime';
 
 export class EjectCmd implements Command {
   name = 'eject <component-pattern>';
-  description = 'remove component from the workspace and install it instead as a regular npm package.';
-  extendedDescription = 'By default the component files will be removed from the workspace';
+  description = 'remove component from workspace and install it as npm package';
+  extendedDescription = `converts workspace components to external npm packages by removing them from .bitmap and installing via package manager.
+by default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency.
+useful for components that no longer need active development in current workspace.`;
   helpUrl = 'reference/components/exporting-components#ejecting-components';
   arguments = [
     {
@@ -27,7 +29,7 @@ export class EjectCmd implements Command {
     ['', 'keep-files', 'keep the component files in the workspace intact'],
   ] as CommandOptions;
   loader = true;
-  group = 'development';
+  group = 'dependencies';
 
   constructor(
     private ejectMain: EjectMain,

@@ -1,19 +1,24 @@
 import mapSeries from 'p-map-series';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentIdList } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 import * as path from 'path';
-import { ComponentIssue } from '@teambit/component-issues';
-import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { ComponentIssue } from '@teambit/component-issues';
+import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { BIT_MAP } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { ModelComponent, VERSION_ZERO } from '@teambit/scope.objects';
+import type { ModelComponent } from '@teambit/objects';
+import { VERSION_ZERO } from '@teambit/objects';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { getLastModifiedPathsTimestampMs } from '@teambit/toolbox.fs.last-modified';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import { Component, InvalidComponent } from './consumer-component';
-import { Consumer, ComponentsPendingImport } from '@teambit/legacy.consumer';
+import type { InvalidComponent } from './consumer-component';
+import { Component } from './consumer-component';
+import type { Consumer } from '@teambit/legacy.consumer';
+import { ComponentsPendingImport } from '@teambit/legacy.consumer';
 import { FsCache } from '@teambit/workspace.modules.fs-cache';
-import { ComponentMap } from '@teambit/legacy.bit-map';
+import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { loader } from '@teambit/legacy.loader';
 
 export type ComponentLoadOptions = {
@@ -116,9 +121,7 @@ export class ComponentLoader {
     throwOnFailure = true,
     loadOpts?: ComponentLoadOptions
   ): Promise<LoadManyResult> {
-    logger.debugAndAddBreadCrumb('ComponentLoader', 'loading consumer-components from the file-system, ids: {ids}', {
-      ids: ids.toString(),
-    });
+    logger.trace(`ComponentLoader, loading consumer-components from the file-system, ids: ${ids.toString()}`);
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
       { loadExtensions: true, executeLoadSlot: true },
       loadOpts || {}
@@ -142,10 +145,8 @@ export class ComponentLoader {
         idsToProcess.push(idWithVersion);
       }
     });
-    logger.debugAndAddBreadCrumb(
-      'ComponentLoader',
-      `the following ${alreadyLoadedComponents.length} components have been already loaded, get them from the cache. {idsStr}`,
-      { idsStr: alreadyLoadedComponents.map((c) => c.id.toString()).join(', ') }
+    logger.trace(
+      `ComponentLoader, the following ${alreadyLoadedComponents.length} components have been already loaded, get them from the cache. ${alreadyLoadedComponents.map((c) => c.id.toString()).join(', ')}`
     );
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents, removedComponents };
     const storeInCache = loadOptsWithDefaults?.storeInCache ?? true;
@@ -166,9 +167,7 @@ export class ComponentLoader {
           if (storeInCache) {
             this.componentsCache.set(component.id.toString(), component);
           }
-          logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
-            id: component.id.toString(),
-          });
+          logger.trace(`ComponentLoader', 'Finished loading the component "${component.id.toString()}"`);
           allComponents.push(component);
         }
       },

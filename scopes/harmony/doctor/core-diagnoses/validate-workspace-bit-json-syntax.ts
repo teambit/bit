@@ -1,6 +1,7 @@
 import { loadConsumer } from '@teambit/legacy.consumer';
 import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
-import Diagnosis, { ExamineBareResult } from '../diagnosis';
+import type { ExamineBareResult } from '../diagnosis';
+import Diagnosis from '../diagnosis';
 
 export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
   name = "validate workspace's bit config";

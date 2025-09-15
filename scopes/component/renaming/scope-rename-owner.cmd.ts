@@ -1,6 +1,6 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { RenamingMain } from './renaming.main.runtime';
+import type { RenamingMain } from './renaming.main.runtime';
 import { renameScopeOutput } from './scope-rename.cmd';
 
 export class ScopeRenameOwnerCmd implements Command {
@@ -18,7 +18,7 @@ export class ScopeRenameOwnerCmd implements Command {
     ],
     ['', 'ast', 'use ast to transform files instead of regex'],
   ] as CommandOptions;
-  group = 'development';
+  group = 'component-config';
 
   constructor(private renaming: RenamingMain) {}
 

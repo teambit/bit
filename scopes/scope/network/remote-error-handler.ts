@@ -22,9 +22,10 @@ export function remoteErrorHandler(code: number, parsedError: Record<string, any
     case 130:
       return new PermissionDenied(remotePath);
     case 131: {
-      const idsWithConflicts = parsedError && parsedError.idsAndVersions ? parsedError.idsAndVersions : [];
+      const idsAndVersionsWithConflicts =
+        parsedError && parsedError.idsAndVersionsWithConflicts ? parsedError.idsAndVersionsWithConflicts : [];
       const idsNeedUpdate = parsedError && parsedError.idsNeedUpdate ? parsedError.idsNeedUpdate : [];
-      return new MergeConflictOnRemote(idsWithConflicts, idsNeedUpdate);
+      return new MergeConflictOnRemote(idsAndVersionsWithConflicts, idsNeedUpdate);
     }
     case 132:
       return new CustomError(parsedError && parsedError.message ? parsedError.message : err);

@@ -1,31 +1,34 @@
-import { PubsubMain } from '@teambit/pubsub';
+import type { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
-import { dirname, basename } from 'path';
+import { dirname, basename, join, sep } from 'path';
 import { compact, difference, partition } from 'lodash';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BIT_MAP, CFG_WATCH_USE_POLLING, WORKSPACE_JSONC } from '@teambit/legacy.constants';
-import { Consumer } from '@teambit/legacy.consumer';
+import type { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { BIT_MAP, WORKSPACE_JSONC } from '@teambit/legacy.constants';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
-import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import mapSeries from 'p-map-series';
 import chalk from 'chalk';
-import { ChildProcess } from 'child_process';
+import type { ChildProcess } from 'child_process';
 import { UNMERGED_FILENAME } from '@teambit/legacy.scope';
-import chokidar, { FSWatcher } from 'chokidar';
-import { ComponentMap } from '@teambit/legacy.bit-map';
-import { CompilationInitiator } from '@teambit/compiler';
+import type { FSWatcher } from 'chokidar';
+import chokidar from 'chokidar';
+import type { ComponentMap } from '@teambit/legacy.bit-map';
+import type { Workspace, OnComponentEventResult } from '@teambit/workspace';
 import {
   WorkspaceAspect,
-  Workspace,
-  OnComponentEventResult,
   OnComponentChangeEvent,
   OnComponentAddEvent,
   OnComponentRemovedEvent,
 } from '@teambit/workspace';
-import { CheckTypes } from './check-types';
-import { WatcherMain } from './watcher.main.runtime';
+import type { CheckTypes } from './check-types';
+import type { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
+import type { Event } from '@parcel/watcher';
+import ParcelWatcher from '@parcel/watcher';
+import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: ComponentID; componentIds: ComponentID[] };
 
@@ -48,42 +51,52 @@ export type OnFileEventFunc = (
 ) => void;
 
 export type WatchOptions = {
-  msgs?: EventMessages;
-  initiator?: CompilationInitiator;
+  initiator?: any; // the real type is CompilationInitiator, however it creates a circular dependency with the compiler aspect.
   verbose?: boolean; // print watch events to the console. (also ts-server events if spawnTSServer is true)
   spawnTSServer?: boolean; // needed for check types and extract API/docs.
   checkTypes?: CheckTypes; // if enabled, the spawnTSServer becomes true.
   preCompile?: boolean; // whether compile all components before start watching
   compile?: boolean; // whether compile modified/added components during watch process
-  import?: boolean; // whether import objects when .bitmap got version changes
+  import?: boolean; // whether import objects during watch when .bitmap got version changes
+  preImport?: boolean; // whether import objects before starting the watch process in case .bitmap is more updated than local scope.
   generateTypes?: boolean; // whether generate d.ts files for typescript files during watch process (hurts performance)
   trigger?: ComponentID; // trigger onComponentChange for the specified component-id. helpful when this comp must be a bundle, and needs to be recompile on any dep change.
 };
 
 export type RootDirs = { [dir: PathLinux]: ComponentID };
 
+type WatcherType = 'chokidar' | 'parcel';
+
 const DEBOUNCE_WAIT_MS = 100;
 type PathLinux = string; // ts fails when importing it from @teambit/legacy/dist/utils/path.
 
 export class Watcher {
-  private fsWatcher: FSWatcher;
+  private watcherType: WatcherType = 'parcel';
+  private chokidarWatcher: FSWatcher;
   private changedFilesPerComponent: { [componentId: string]: string[] } = {};
   private watchQueue = new WatchQueue();
   private bitMapChangesInProgress = false;
-  private ipcEventsDir: string;
+  private ipcEventsDir: PathOsBasedAbsolute;
   private rootDirs: RootDirs = {};
   private verbose = false;
   private multipleWatchers: WatcherProcessData[] = [];
   private logger: Logger;
+  private workspacePathLinux: string;
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
     private watcherMain: WatcherMain,
-    private options: WatchOptions
+    private options: WatchOptions,
+    private msgs?: EventMessages
   ) {
     this.ipcEventsDir = this.watcherMain.ipcEvents.eventsDir;
     this.verbose = this.options.verbose || false;
     this.logger = this.watcherMain.logger;
+    this.workspacePathLinux = pathNormalizeToLinux(this.workspace.path);
+
+    if (process.env.BIT_WATCHER_USE_CHOKIDAR === 'true' || process.env.BIT_WATCHER_USE_CHOKIDAR === '1') {
+      this.watcherType = 'chokidar';
+    }
   }
 
   get consumer(): Consumer {
@@ -91,25 +104,51 @@ export class Watcher {
   }
 
   async watch() {
-    const { msgs, ...watchOpts } = this.options;
     await this.setRootDirs();
     const componentIds = Object.values(this.rootDirs);
-    await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
-    await this.createWatcher();
-    const watcher = this.fsWatcher;
-    msgs?.onStart(this.workspace);
+    await this.watcherMain.triggerOnPreWatch(componentIds, this.options);
+    await this.watcherMain.watchScopeInternalFiles();
+    this.watcherType === 'parcel' ? await this.watchParcel() : await this.watchChokidar();
+  }
 
-    await this.workspace.scope.watchScopeInternalFiles();
+  private async watchParcel() {
+    this.msgs?.onStart(this.workspace);
+    try {
+      await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), {
+        ignore: ['**/node_modules/**', '**/package.json'],
+      });
+    } catch (err: any) {
+      if (err.message.includes('Error starting FSEvents stream')) {
+        throw new Error(`Failed to start the watcher: ${err.message}
+This is usually caused by too many watchers running in the same workspace (e.g., bit-watch, bit-start, bit-run, or VSCode with the Bit plugin).
+Try closing the other watchers and re-running the command.
+
+In general, if you're using "bit start" or "bit run", you don't need to run "bit watch" as well.
+Similarly, if you're using VSCode with the Bit extension, you can enable "Compile on Change" instead of running a watcher manually.
+
+If the issue persists, please refer to the Watchman troubleshooting guide:
+https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-register_with_server-error-f2d_register_rpc--null--21`);
+      }
+    }
+    this.msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
+    this.logger.clearStatusLine();
+  }
+
+  private async watchChokidar() {
+    await this.createChokidarWatcher();
+    const watcher = this.chokidarWatcher;
+    const msgs = this.msgs;
+    msgs?.onStart(this.workspace);
 
     return new Promise((resolve, reject) => {
       if (this.verbose) {
         // @ts-ignore
-        if (msgs?.onAll) watcher.on('all', msgs?.onAll);
+        if (msgs?.onAll) watcher.on('all', msgs.onAll);
       }
       watcher.on('ready', () => {
         msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
         if (this.verbose) {
-          const watched = this.fsWatcher.getWatched();
+          const watched = this.chokidarWatcher.getWatched();
           const totalWatched = Object.values(watched).flat().length;
           logger.console(
             `${chalk.bold('the following files are being watched:')}\n${JSON.stringify(watched, null, 2)}`
@@ -192,10 +231,14 @@ export class Watcher {
       }
       if (dirname(filePath) === this.ipcEventsDir) {
         const eventName = basename(filePath);
-        if (eventName !== 'onPostInstall' && eventName !== 'onPostObjectsPersist') {
-          this.watcherMain.logger.warn(`eventName ${eventName} is not recognized, please handle it`);
+        if (eventName === 'onNotifySSE') {
+          const content = await fs.readFile(filePath, 'utf8');
+          this.logger.debug(`Watcher, onNotifySSE ${content}`);
+          const parsed = JSON.parse(content);
+          sendEventsToClients(parsed.event, parsed);
+        } else {
+          await this.watcherMain.ipcEvents.triggerGotEvent(eventName as any);
         }
-        await this.watcherMain.ipcEvents.triggerGotEvent(eventName as any);
         return { results: [], files: [filePath] };
       }
       if (filePath.endsWith(WORKSPACE_JSONC)) {
@@ -442,28 +485,68 @@ export class Watcher {
     return this.findRootDirByFilePathRecursively(parentDir);
   }
 
-  private async createWatcher() {
-    const usePollingConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_POLLING);
-    const usePolling = usePollingConf === 'true';
-    const workspacePathLinux = pathNormalizeToLinux(this.workspace.path);
-    const ignoreLocalScope = (pathToCheck: string) => {
-      if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
-      return (
-        pathToCheck.startsWith(`${workspacePathLinux}/.git/`) || pathToCheck.startsWith(`${workspacePathLinux}/.bit/`)
-      );
-    };
-    this.fsWatcher = chokidar.watch(this.workspace.path, {
-      ignoreInitial: true,
-      // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
-      // (windows-style backslashes are converted to forward slashes)
-      ignored: ['**/node_modules/**', '**/package.json', ignoreLocalScope],
-      usePolling,
-      // useFsEvents,
-      persistent: true,
-    });
+  private shouldIgnoreFromLocalScopeChokidar(pathToCheck: string) {
+    if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
+    return (
+      pathToCheck.startsWith(`${this.workspacePathLinux}/.git/`) ||
+      pathToCheck.startsWith(`${this.workspacePathLinux}/.bit/`)
+    );
+  }
+
+  private shouldIgnoreFromLocalScopeParcel(pathToCheck: string) {
+    if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
+    return (
+      pathToCheck.startsWith(join(this.workspace.path, '.git') + sep) ||
+      pathToCheck.startsWith(join(this.workspace.path, '.bit') + sep)
+    );
+  }
+
+  private async createChokidarWatcher() {
+    const chokidarOpts = await this.watcherMain.getChokidarWatchOptions();
+    // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
+    // (windows-style backslashes are converted to forward slashes)
+    chokidarOpts.ignored = [
+      '**/node_modules/**',
+      '**/package.json',
+      this.shouldIgnoreFromLocalScopeChokidar.bind(this),
+    ];
+    this.chokidarWatcher = chokidar.watch(this.workspace.path, chokidarOpts);
     if (this.verbose) {
-      logger.console(`${chalk.bold('chokidar.options:\n')} ${JSON.stringify(this.fsWatcher.options, undefined, 2)}`);
+      logger.console(
+        `${chalk.bold('chokidar.options:\n')} ${JSON.stringify(this.chokidarWatcher.options, undefined, 2)}`
+      );
     }
+  }
+
+  private async onParcelWatch(err: Error | null, allEvents: Event[]) {
+    const events = allEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
+    if (!events.length) {
+      return;
+    }
+
+    const msgs = this.msgs;
+    if (this.verbose) {
+      if (msgs?.onAll) events.forEach((event) => msgs.onAll(event.type, event.path));
+    }
+    if (err) {
+      if (!err.message.includes('Events were dropped by the FSEvents client')) {
+        // the message above shows up too many times and it doesn't affect the watcher.
+        msgs?.onError(err);
+      }
+      // don't throw on other errors, just log them.
+      // for example, when running "bit install" on a big project, it might error out with:
+      // "Error: Events were dropped by the FSEvents client. File system must be re-scanned."
+      // but it still works for the future events.
+    }
+    const startTime = new Date().getTime();
+    await mapSeries(events, async (event) => {
+      const { files, results, debounced, irrelevant, failureMsg } = await this.handleChange(event.path);
+      if (debounced || irrelevant) {
+        return;
+      }
+      const duration = new Date().getTime() - startTime;
+      msgs?.onChange(files, results, this.verbose, duration, failureMsg);
+    });
   }
 
   private async setRootDirs() {

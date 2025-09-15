@@ -1,11 +1,12 @@
 import path from 'path';
 import glob from 'glob';
-import { ServerIsBusy, Scope } from '@teambit/legacy.scope';
+import type { Scope } from '@teambit/legacy.scope';
+import { ServerIsBusy } from '@teambit/legacy.scope';
 import { PENDING_OBJECTS_DIR } from '@teambit/legacy.constants';
 import { mergeObjects } from '@teambit/export';
-import { Action } from './action';
+import type { Action } from './action';
 import { logger } from '@teambit/legacy.logger';
-import { BitObjectList } from '@teambit/scope.objects';
+import type { BitObjectList } from '@teambit/objects';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
 
 type Options = { clientId: string; isResumingExport: boolean };

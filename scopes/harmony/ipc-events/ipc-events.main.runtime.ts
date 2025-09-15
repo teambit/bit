@@ -1,13 +1,16 @@
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import pMapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import path from 'path';
 import fs from 'fs-extra';
 import { IpcEventsAspect } from './ipc-events.aspect';
 
-type EventName = 'onPostInstall' | 'onPostObjectsPersist';
+type EventName = 'onPostInstall' | 'onPostObjectsPersist' | 'onNotifySSE';
 
 type GotEvent = (eventName: EventName) => Promise<void>;
 type GotEventSlot = SlotRegistry<GotEvent>;
@@ -15,19 +18,19 @@ type GotEventSlot = SlotRegistry<GotEvent>;
 const EVENTS_DIR = 'events';
 
 /**
- * imagine you have multiple processes running in the background, such as `bit watch`, `bit start`, `bit server`.
- * the user is running `bit install` from the cli, how do you let these processes know that the installation is complete?
- * `bit start` for instance could use ths info to clear the "component issues" of the components that were missing packages.
+ * You might have several processes running in the background (for example, bit watch, bit start, or bit server).
+ * When the user runs `bit install`, these processes need to be notified that the installation has completed. One reason
+ * is that "bit start" in the workspace could remove component-issues related to missing dependencies.
  *
- * this class provides a mechanism to achieve this by writing the event into the filesystem (`.bit/events/event-name`),
- * while each one of the processes has a watcher in the background watch this file. once they got the data from the watcher,
- * they can act upon it.
+ * To achieve this, an event file is written to the filesystem (e.g., .bit/events/<event-name>), and each background
+ * process has a file watcher monitoring these event files. When an event file is created or updated, they can act upon it.
  *
- * in the previous example, when the user is running `bit install`, the install aspect runs `this.publishIpcEvent` to
- * write `.bit/events/onPostInstall` to the filesystem. then, the watcher of `bit start` process got a notification
- * that this file has changed/added and it runs `triggerGotEvent` to run all aspects registered to its gotEventSlot.
- * the installer in turn is registered to this slot and once its function is triggered, it check whether the eventName
- * is onPostInstall and then triggers its own OnPostInstall slot.
+ * For instance, when the user runs bit install, the “install” aspect calls publishIpcEvent, which writes
+ * `.bit/events/onPostInstall`. The "bit start" process (along with others) detects the file change and invokes
+ * `ipcEvents.triggerGotEvent()`. Any aspect subscribed to the gotEventSlot then runs its logic. In this example, the
+ * installer aspect is subscribed, so when it recognizes the onPostInstall event, it triggers its own OnPostInstall slot.
+ *
+ * @see ./example-diagram.md for a visual representation of the above.
  */
 export class IpcEventsMain {
   constructor(
@@ -57,6 +60,15 @@ export class IpcEventsMain {
     const filename = path.join(this.eventsDir, eventName);
     const content = data ? JSON.stringify(data, undefined, 2) : '';
     await fs.outputFile(filename, content);
+  }
+
+  /**
+   * This is helpful when all we want is to notify the watchers that a new event has been written to the filesystem.
+   * It doesn't require the watchers to register to GotEventSlot. The watchers always listen to this onNotifySSE event,
+   * and once they get it, they simply send a server-send-event to the clients.
+   */
+  async publishIpcOnNotifySseEvent(event: string, data?: Record<string, any>) {
+    await this.publishIpcEvent('onNotifySSE', { event, data });
   }
 
   get eventsDir() {

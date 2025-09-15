@@ -1,40 +1,31 @@
 import { BitError } from '@teambit/bit-error';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { isHash } from '@teambit/component-version';
 import pMap from 'p-map';
 import { BuildStatus } from '@teambit/legacy.constants';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
-import { ComponentObjects } from '../component-objects';
+import type { ComponentObjects } from '../component-objects';
+import type { VersionInfo } from '@teambit/component.snap-distance';
 import {
   getAllVersionHashes,
   getAllVersionsInfo,
   getSubsetOfVersionParents,
   getVersionParentsFromVersion,
-  VersionInfo,
   getDivergeData,
 } from '@teambit/component.snap-distance';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import {
-  ModelComponent,
-  Source,
-  Symlink,
-  Version,
-  Repository,
-  BitObject,
-  ComponentProps,
-  Ref,
-  Lane,
-  LaneComponent,
-} from '@teambit/scope.objects';
-import Scope from '../scope';
+import type { Source, Repository, BitObject, ComponentProps, Lane, LaneComponent } from '@teambit/objects';
+import { ModelComponent, Symlink, Version, Ref } from '@teambit/objects';
+import type Scope from '../scope';
 import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import { InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { compact } from 'lodash';
 
 export type ComponentTree = {
@@ -422,6 +413,8 @@ please either remove the component (bit remove) or remove the lane.`);
       throw new Error(`fatal: "head" prop was removed from "${component.id()}", although it has versions`);
     }
 
+    component.detachedHeads.removeLocalHeads(versionsRefs);
+
     if (component.versionArray.length || component.hasHead() || component.laneHeadLocal) {
       objectRepo.add(component); // add the modified component object
     } else {
@@ -502,6 +495,7 @@ please either remove the component (bit remove) or remove the lane.`);
     const existingHeadIsMissingInIncomingComponent = Boolean(
       incomingComp.hasHead() &&
         existingComponentHead &&
+        !incomingComp.detachedHeads.getCurrent() &&
         !hashesOfHistoryGraph.find((ref) => ref.isEqual(existingComponentHead))
     );
     // currently it'll always be true. later, we might want to support exporting
@@ -512,7 +506,8 @@ please either remove the component (bit remove) or remove the lane.`);
       incomingComp,
       false,
       isIncomingFromOrigin,
-      existingHeadIsMissingInIncomingComponent
+      existingHeadIsMissingInIncomingComponent,
+      this.scope.objects
     );
     const { mergedComponent, mergedVersions } = await modelComponentMerger.merge();
     if (existingComponentHead || mergedComponent.hasHead()) {

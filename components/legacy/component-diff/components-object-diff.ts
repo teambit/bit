@@ -1,16 +1,17 @@
 import arrayDifference from 'array-difference';
 import tempy from 'tempy';
 import chalk from 'chalk';
-import { ComponentIdList } from '@teambit/component-id';
+import type { ComponentIdList } from '@teambit/component-id';
 import Table from 'cli-table';
 import normalize from 'normalize-path';
 import diff from 'object-diff';
-import R from 'ramda';
-import { compact } from 'lodash';
+import { compact, find, get, isEmpty, isNil, union } from 'lodash';
 import { lt, gt } from 'semver';
-import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { DiffOptions, FieldsDiff, getOneFileDiff } from './components-diff';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
+import type { DiffOptions, FieldsDiff } from './components-diff';
+import { getOneFileDiff } from './components-diff';
 
 type ConfigDiff = {
   fieldName: string;
@@ -26,13 +27,13 @@ type DepDiff = {
 export function componentToPrintableForDiff(component: Component): Record<string, any> {
   const obj: Record<string, any> = {};
   const parsePackages = (packages: Record<string, string>): string[] | null => {
-    return !R.isEmpty(packages) && !R.isNil(packages)
+    return !isEmpty(packages) && !isNil(packages)
       ? Object.keys(packages).map((key) => `${key}@${packages[key]}`)
       : null;
   };
 
   const parseExtensions = (extensions?: ExtensionDataList) => {
-    if (!extensions || R.isEmpty(extensions)) return null;
+    if (!extensions || isEmpty(extensions)) return null;
     return extensions.toConfigArray().map((extension) => extension.id);
   };
 
@@ -63,6 +64,12 @@ export function componentToPrintableForDiff(component: Component): Record<string
   const overrides = component.overrides.componentOverridesData;
 
   obj.id = component.id._legacy.toStringWithoutScope();
+  obj.packageName = componentIdToPackageName({
+    id: component.id,
+    bindingPrefix,
+    defaultScope: component.id.scope,
+    extensions: extensions || new ExtensionDataList(),
+  });
   obj.language = lang;
   obj.bindingPrefix = bindingPrefix;
   obj.mainFile = mainFile ? normalize(mainFile) : null;
@@ -80,11 +87,12 @@ export function componentToPrintableForDiff(component: Component): Record<string
   obj.peerDependencies = peerPackageDependencies.length ? peerPackageDependencies : undefined;
 
   obj.files =
-    files && !R.isEmpty(files) && !R.isNil(files)
+    files && !isEmpty(files) && !isNil(files)
       ? files.filter((file) => !file.test).map((file) => normalize(file.relative))
       : null;
+
   obj.specs =
-    files && !R.isEmpty(files) && !R.isNil(files) && R.find(R.propEq('test', true))(files)
+    files && !isEmpty(files) && !isNil(files) && find(files, (file) => get(file, 'test') === true)
       ? files.filter((file) => file.test).map((file) => normalize(file.relative))
       : null;
   obj.extensions = parseExtensions(extensions);
@@ -102,7 +110,7 @@ export function prettifyFieldName(field: string): string {
 
 function comparator(a, b) {
   if (a instanceof Array && b instanceof Array) {
-    return R.isEmpty(arrayDifference(a, b));
+    return isEmpty(arrayDifference(a, b));
   }
   return a === b;
 }
@@ -176,7 +184,7 @@ export async function diffBetweenComponentsObjects(
     if (!verbose) return [];
     const dependenciesLeft = componentLeft.getAllDependencies();
     const dependenciesRight = componentRight.getAllDependencies();
-    if (R.isEmpty(dependenciesLeft) || R.isEmpty(dependenciesRight)) return [];
+    if (isEmpty(dependenciesLeft) || isEmpty(dependenciesRight)) return [];
     return dependenciesLeft.reduce((acc, dependencyLeft) => {
       const idStr = dependencyLeft.id.toString();
       const dependencyRight = dependenciesRight.find((dep) => dep.id.isEqual(dependencyLeft.id));
@@ -186,7 +194,7 @@ export async function diffBetweenComponentsObjects(
       const title =
         titleLeft(fieldName, leftVersion, rightVersion) + chalk.bold(titleRight(fieldName, leftVersion, rightVersion));
       const getValue = (fieldValue: Record<string, any>, left: boolean) => {
-        if (R.isEmpty(fieldValue)) return '';
+        if (isEmpty(fieldValue)) return '';
         const sign = left ? '-' : '+';
         const jsonOutput = JSON.stringify(fieldValue, null, `${sign} `);
         return `${jsonOutput}\n`;
@@ -249,7 +257,7 @@ export async function diffBetweenComponentsObjects(
   const packageDependenciesOutput = (fieldName: string): string | null => {
     const dependenciesLeft = componentLeft[fieldName];
     const dependenciesRight = componentRight[fieldName];
-    if (R.isEmpty(dependenciesLeft) && R.isEmpty(dependenciesRight)) return null;
+    if (isEmpty(dependenciesLeft) && isEmpty(dependenciesRight)) return null;
     const diffsLeft = Object.keys(dependenciesLeft).reduce<DepDiff[]>((acc, dependencyName) => {
       const dependencyLeft = dependenciesLeft[dependencyName];
       const dependencyRight = dependenciesRight[dependencyName];
@@ -283,7 +291,7 @@ export async function diffBetweenComponentsObjects(
   const componentDependenciesOutput = (fieldName: string): string | null => {
     const dependenciesLeft: ComponentIdList = componentLeft.depsIdsGroupedByType[fieldName];
     const dependenciesRight: ComponentIdList = componentRight.depsIdsGroupedByType[fieldName];
-    if (R.isEmpty(dependenciesLeft) && R.isEmpty(dependenciesRight)) return null;
+    if (isEmpty(dependenciesLeft) && isEmpty(dependenciesRight)) return null;
     const diffsLeft = dependenciesLeft.reduce<DepDiff[]>((acc, dependencyLeft) => {
       const dependencyRight = dependenciesRight.searchWithoutVersion(dependencyLeft);
       if (dependencyRight && dependencyLeft.isEqual(dependencyRight)) return acc;
@@ -336,7 +344,7 @@ export async function diffBetweenComponentsObjects(
     ...getAllDepsOutput(),
   ];
 
-  return R.isEmpty(allDiffs) ? undefined : allDiffs;
+  return isEmpty(allDiffs) ? undefined : allDiffs;
 }
 
 async function getExtensionsConfigOutput(componentLeft: Component, componentRight: Component): Promise<ConfigDiff[]> {
@@ -347,7 +355,7 @@ async function getExtensionsConfigOutput(componentLeft: Component, componentRigh
 
   // const mutualIds = R.intersection(rightExtensionsIds, rightExtensionsIds);
   // const onlyOnOneIds = R.symmetricDifference(leftExtensionsIds, rightExtensionsIds);
-  const allIds = R.union(leftExtensionsIds, rightExtensionsIds);
+  const allIds = union(leftExtensionsIds, rightExtensionsIds);
 
   const allIdsOutput = await Promise.all(
     allIds.map((extId) => {

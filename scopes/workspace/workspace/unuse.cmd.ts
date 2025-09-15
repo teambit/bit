@@ -1,16 +1,17 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { Workspace } from './workspace';
+import type { Workspace } from './workspace';
 
 export class UnuseCmd implements Command {
   name = 'unuse <component-id>';
-  group = 'collaborate';
+  group = 'workspace-setup';
   description = 'unset aspects in the workspace config (opposite of "use" command)';
   arguments = [{ name: 'component-id', description: 'the component ID of the aspect' }];
   alias = '';
   options = [] as CommandOptions;
   loader = true;
   remoteOp = true;
+  private = true;
 
   constructor(private workspace: Workspace) {}
 

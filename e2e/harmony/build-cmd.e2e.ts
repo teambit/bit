@@ -1,13 +1,18 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
 import { loadBit } from '@teambit/bit';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { BuilderMain, BuilderAspect } from '@teambit/builder';
-import { Helper } from '@teambit/legacy.e2e-helper';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { BuilderMain } from '@teambit/builder';
+import { BuilderAspect } from '@teambit/builder';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import { specFileFailingFixture } from './jest-fixtures';
 
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('build command', function () {
   this.timeout(0);
@@ -23,7 +28,7 @@ describe('build command', function () {
   // the second by the mdx-env.
   describe('an mdx dependency of a react env', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.command.create('mdx', 'my-mdx', '--env teambit.mdx/mdx');
       helper.env.setCustomEnv('custom-react-env');
       const importStatement = `import { MyMdx } from '@${helper.scopes.remote}/my-mdx';\n`;
@@ -49,24 +54,24 @@ describe('build command', function () {
   describe('list tasks', () => {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
     });
-    it('should list the publish task in the tagPipeline but not in the snapPipeline', async () => {
+    it('should list the publish task in the tagPipeline and in the snapPipeline', async () => {
       const harmony = await loadBit(helper.scopes.localPath);
       const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
       const compId = await workspace.resolveComponentId('comp1');
       const component = await workspace.get(compId);
       const builder = harmony.get<BuilderMain>(BuilderAspect.id);
       const tasks = builder.listTasks(component);
-      expect(tasks.snapTasks).to.not.include('teambit.pkg/pkg:PublishComponents');
+      expect(tasks.snapTasks).to.include('teambit.pkg/pkg:PublishComponents');
       expect(tasks.tagTasks).to.include('teambit.pkg/pkg:PublishComponents');
     });
   });
 
   describe('registering the publish task for the snap pipeline in a new-custom env', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+      helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.env.setCustomEnv();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('node-env/node-env.extension.ts', getNodeEnvExtension());
@@ -88,12 +93,12 @@ describe('build command', function () {
   describe('dist file is deleted from the remote', () => {
     let errorOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
 
@@ -118,7 +123,7 @@ describe('build command', function () {
 
   describe('3 components use 3 different envs', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.setEnv('comp1', 'teambit.harmony/aspect');
       helper.command.setEnv('comp2', 'teambit.react/react');
@@ -129,6 +134,169 @@ describe('build command', function () {
     it('should indicate when executing a build task on a dependency', () => {
       const output = helper.command.build();
       expect(output).to.have.string('[dependency] (node)');
+    });
+  });
+
+  describe('bit build with --loose flag', () => {
+    describe('component with a failing test', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.fixtures.populateComponents(1);
+        helper.fs.outputFile('comp1/comp1.spec.ts', specFileFailingFixture());
+      });
+      it('bit build --loose should not throw and show the failing test but indicate build success', () => {
+        const output = helper.command.build(undefined, '--loose', true);
+        expect(output).to.have.string('task "teambit.defender/tester:JestTest" has failed'); // Should still show the failing task
+        expect(output).to.have.string('should fail'); // Should still show the failing test
+        expect(output).to.have.string('build succeeded'); // But build should succeed
+      });
+    });
+    describe('component with a compilation error', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.fixtures.populateComponents(1);
+        // Create a TypeScript file with a compilation error
+        helper.fs.outputFile('comp1/comp1.ts', 'export function invalidFunction(): string { return 123; }');
+        helper.fs.outputFile('comp1/index.ts', 'export { invalidFunction } from "./comp1";');
+      });
+      it('bit build --loose should still throw an error for compilation errors', () => {
+        expect(() => helper.command.build(undefined, '--loose')).to.throw();
+      });
+    });
+  });
+
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'optimized capsule creation for exported dependencies',
+    () => {
+      let npmCiRegistry: NpmCiRegistry;
+      before(async () => {
+        helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        npmCiRegistry = new NpmCiRegistry(helper);
+        await npmCiRegistry.init();
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+
+        // Create 3 dependent components: comp1 -> comp2 -> comp3
+        helper.fixtures.populateComponents(3);
+
+        // Tag and export all components (this will publish them to local registry)
+        helper.command.tagAllComponents();
+        helper.command.export();
+
+        // Only modify comp2 to trigger rebuild
+        helper.fs.appendFile('comp2/index.js', '\n// modification to comp2');
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      it('should only create capsules for modified components and their dependents, not for unmodified exported dependencies', () => {
+        helper.command.build();
+
+        // comp1 and comp2 should have capsules since comp1 depends on modified comp2
+        const comp1Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp1@0.0.1`);
+        const comp2Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp2@0.0.1`);
+        expect(comp1Capsule).to.be.a.directory();
+        expect(comp2Capsule).to.be.a.directory();
+
+        // comp3 should NOT have a capsule since it's an unmodified exported dependency
+        // Instead, comp3 should be available as a package in the capsule node_modules
+        expect(() => helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp3@0.0.1`)).to.throw();
+
+        // comp3 should be available as a package in the root of node_modules
+        const comp2NodeModules = path.join(
+          comp2Capsule,
+          '..',
+          'node_modules',
+          helper.general.getPackageNameByCompName('comp3', true)
+        );
+        expect(comp2NodeModules).to.be.a.directory();
+      });
+    }
+  );
+  describe('optimized capsule creation for exported dependencies for self hosting', () => {
+    before(async () => {
+      helper = new Helper();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      // Only modify comp2 to trigger rebuild
+      helper.fs.appendFile('comp2/index.js', '\n// modification to comp2');
+    });
+    it('should create capsules not only for modified components and their dependents, but also for unmodified exported dependencies', () => {
+      helper.command.build();
+
+      // comp1 and comp2 should have capsules since comp1 depends on modified comp2
+      const comp1Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp1@0.0.1`);
+      const comp2Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp2@0.0.1`);
+      const comp3Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp3@0.0.1`);
+      expect(comp1Capsule).to.be.a.directory();
+      expect(comp2Capsule).to.be.a.directory();
+      expect(comp3Capsule).to.be.a.directory();
+    });
+  });
+
+  describe('build should only include workspace components and direct dependents', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      // Create 3 components: comp1 -> comp2 -> comp3 (comp1 uses comp2, comp2 uses comp3)
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // Create a new workspace and import only comp1 and comp3 (not comp2)
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp1', '-x');
+      helper.command.importComponent('comp3');
+      helper.npm.addFakeNpmPackage(`@${helper.scopes.remote}/comp2`, '0.0.1', true);
+
+      // Modify comp3 to trigger a build
+      helper.fs.appendFile(path.join(helper.scopes.remote, 'comp3/index.js'), '\n// modification to comp3');
+    });
+    it('should only include modified component (comp3) in build, not its dependents through non-workspace components', () => {
+      const output = helper.command.build();
+
+      // Should include comp3 since it was modified
+      expect(output).to.have.string('comp3');
+
+      // Should NOT include comp1, even though comp1 depends on comp2 which depends on comp3,
+      // because comp2 is not in the workspace (it's an external dependency)
+      expect(output).to.not.have.string('comp1');
+
+      expect(output).to.have.string('Total 1 components to build');
+    });
+  });
+
+  describe('build with --unmodified flag and component pattern', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      // Create 2 independent components (not related to each other)
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile('comp2/index.js', 'module.exports = function comp2() { return "comp2"; }');
+      helper.command.add('comp2');
+      helper.command.tagAllWithoutBuild();
+    });
+    it('should only build the specified component when using --unmodified with a component pattern', () => {
+      const output = helper.command.build('comp1 --unmodified');
+
+      // Should include comp1 since it was specified
+      expect(output).to.have.string('comp1');
+
+      // Should NOT include comp2, even with --unmodified flag
+      expect(output).to.not.have.string('comp2');
+
+      expect(output).to.have.string('Total 1 components to build');
+    });
+    it('should build both components when using --unmodified without a pattern', () => {
+      const output = helper.command.build('--unmodified');
+
+      // Should include both components
+      expect(output).to.have.string('comp1');
+      expect(output).to.have.string('comp2');
+
+      expect(output).to.have.string('Total 2 components to build');
     });
   });
 });

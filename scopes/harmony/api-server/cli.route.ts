@@ -1,9 +1,9 @@
-import { CLIMain } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
 import prettyTime from 'pretty-time';
-import { Route, Request, Response } from '@teambit/express';
-import { Logger } from '@teambit/logger';
+import type { Route, Request, Response } from '@teambit/express';
+import type { Logger } from '@teambit/logger';
 import { camelCase } from 'lodash';
-import { APIForIDE } from './api-for-ide';
+import type { APIForIDE } from './api-for-ide';
 
 /**
  * example usage:

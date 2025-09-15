@@ -1,15 +1,15 @@
 import chalk from 'chalk';
-import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import { Command, CommandOptions } from '@teambit/cli';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ComponentIdList, ComponentID } from '@teambit/component-id';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { DEFAULT_BIT_RELEASE_TYPE, COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
-import { GlobalConfigMain } from '@teambit/global-config';
 import { IssuesClasses } from '@teambit/component-issues';
-import { ReleaseType } from 'semver';
+import type { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
-import { Logger } from '@teambit/logger';
-import { TagResults, SnappingMain } from './snapping.main.runtime';
-import { BasicTagParams } from './tag-model-component';
+import type { Logger } from '@teambit/logger';
+import type { TagResults, SnappingMain } from './snapping.main.runtime';
+import type { BasicTagParams } from './version-maker';
+import type { ConfigStoreMain } from '@teambit/config-store';
 
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
 export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
@@ -24,6 +24,7 @@ export const tagCmdOptions = [
     'editor [editor]',
     'open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
   ],
+  ['', 'versions-file <path>', 'path to a file containing component versions. format: "component-id: version"'],
   ['v', 'ver <version>', 'tag with the given version'],
   ['l', 'increment <level>', `options are: [${RELEASE_TYPES.join(', ')}], default to patch`],
   ['', 'prerelease-id <id>', 'prerelease identifier (e.g. "dev" to get "1.0.0-dev.1")'],
@@ -62,17 +63,19 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
 [${Object.keys(IssuesClasses).join(', ')}]
 to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
   ],
-  [
-    'I',
-    'ignore-newest-version',
-    'allow tagging even when the component has newer versions e.g. for hotfixes (default = false)',
-  ],
+  ['I', 'ignore-newest-version', 'allow tagging even when the component has newer versions e.g. for hotfixes.'],
   [
     '',
     'fail-fast',
     'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
   ],
   ['b', 'build', 'locally run the build pipeline (i.e. not via rippleCI) and complete the tag'],
+  ['', 'loose', 'allow tag --build to succeed even if tasks like tests or lint fail'],
+  [
+    '',
+    'detach-head',
+    'UNSUPPORTED YET. in case a component is checked out to an older version, tag it without changing the head',
+  ],
 ] as CommandOptions;
 
 export type TagParams = {
@@ -90,14 +93,17 @@ export type TagParams = {
   incrementBy?: number;
   failFast?: boolean;
   disableTagPipeline?: boolean;
+  loose?: boolean;
+  versionsFile?: string;
 } & Partial<BasicTagParams>;
 
 export class TagCmd implements Command {
   name = 'tag [component-patterns...]';
-  group = 'development';
-  description = 'create an immutable and exportable component snapshot, tagged with a release version.';
-  extendedDescription = `if no patterns are provided, it will tag all new and modified components.
-if patterns are entered, you can specify a version per pattern using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major`;
+  group = 'version-control';
+  description = 'create immutable component snapshots with semantic version tags';
+  extendedDescription = `creates tagged versions using semantic versioning (semver) for component releases. tags are immutable and exportable.
+by default tags all new and modified components. supports version specification per pattern using "@" (e.g. foo@1.0.0, bar@minor).
+use for official releases. for development versions, use 'bit snap' instead.`;
   arguments = [
     {
       name: 'component-patterns...',
@@ -114,7 +120,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
   constructor(
     private snapping: SnappingMain,
     private logger: Logger,
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {}
 
   // eslint-disable-next-line complexity
@@ -123,6 +129,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
       message = '',
       ver,
       editor = '',
+      versionsFile,
       snapped = false,
       unmerged = false,
       ignoreIssues,
@@ -138,6 +145,8 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
       rebuildDepsGraph,
       failFast = false,
       incrementBy = 1,
+      detachHead,
+      loose = false,
     } = options;
 
     if (!message && !persist && !editor) {
@@ -149,7 +158,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
 
     const disableTagAndSnapPipelines = disableTagPipeline;
     let build = options.build;
-    build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
+    build = this.configStore.getConfigBoolean(CFG_FORCE_LOCAL_BUILD) || Boolean(build);
     if (persist) {
       if (persist === true) build = true;
       else if (persist === 'skip-build') build = false;
@@ -171,6 +180,7 @@ To undo local tag use the "bit reset" command.`
       snapped,
       unmerged,
       editor,
+      versionsFile,
       message,
       releaseType,
       preReleaseId,
@@ -189,6 +199,8 @@ To undo local tag use the "bit reset" command.`
       incrementBy,
       version: ver,
       failFast,
+      detachHead,
+      loose,
     };
 
     const results = await this.snapping.tag(params);

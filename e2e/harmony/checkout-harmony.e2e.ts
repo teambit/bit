@@ -7,8 +7,8 @@ import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { NewerVersionFound } from '@teambit/legacy.consumer';
 import { Helper, FileStatusWithoutChalk } from '@teambit/legacy.e2e-helper';
 import { Extensions, FILE_CHANGES_CHECKOUT_MSG } from '@teambit/legacy.constants';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 const barFooV1 = "module.exports = function foo() { return 'got foo'; };";
 const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
@@ -26,7 +26,7 @@ describe('bit checkout command', function () {
   });
   describe('for non existing component', () => {
     it('show an error saying the component was not found', () => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       const useFunc = () => helper.command.runCmd('bit checkout 1.0.0 utils/non-exist');
       const error = new MissingBitMapComponent('utils/non-exist');
       helper.general.expectToThrow(useFunc, error);
@@ -34,7 +34,7 @@ describe('bit checkout command', function () {
   });
   describe('after the component was created', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo(barFooV1);
       helper.fixtures.addComponentBarFoo();
     });
@@ -115,12 +115,12 @@ describe('bit checkout command', function () {
     let outputV2: string;
     let localScope: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       outputV2 = helper.fixtures.populateComponents(3, undefined, 'v2');
       helper.command.tagAllWithoutBuild();
-      localScope = helper.scopeHelper.cloneLocalScope();
+      localScope = helper.scopeHelper.cloneWorkspace();
     });
     it('as an intermediate step, make sure all components have v2', () => {
       const result = helper.command.runCmd('node app.js');
@@ -162,7 +162,7 @@ describe('bit checkout command', function () {
     });
     describe('missing the latest Version object from the filesystem', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         helper.command.export();
         helper.command.checkout('0.0.1 --all');
 
@@ -180,7 +180,7 @@ describe('bit checkout command', function () {
   });
   describe('when the current version has new files', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
@@ -196,7 +196,7 @@ describe('bit checkout command', function () {
   });
   describe('when the component is modified and a file was changed in the checked out version', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fs.outputFile('bar/index.js', "console.log('v1');");
       helper.fs.outputFile('bar/foo.txt', 'v1');
       helper.command.addComponent('bar');
@@ -215,18 +215,18 @@ describe('bit checkout command', function () {
     let scopeAfterFirstVersion: string;
     let scopeBeforeCheckout: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/foo.ts');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      scopeAfterFirstVersion = helper.scopeHelper.cloneLocalScope();
+      scopeAfterFirstVersion = helper.scopeHelper.cloneWorkspace();
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.2
       helper.command.export();
-      helper.scopeHelper.getClonedLocalScope(scopeAfterFirstVersion);
+      helper.scopeHelper.getClonedWorkspace(scopeAfterFirstVersion);
       helper.command.import();
       helper.fs.deletePath('comp1/foo.ts');
-      scopeBeforeCheckout = helper.scopeHelper.cloneLocalScope();
+      scopeBeforeCheckout = helper.scopeHelper.cloneWorkspace();
     });
     describe('bit checkout head', () => {
       before(() => {
@@ -239,7 +239,7 @@ describe('bit checkout command', function () {
     });
     describe('bit checkout reset', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeBeforeCheckout);
+        helper.scopeHelper.getClonedWorkspace(scopeBeforeCheckout);
         helper.command.checkoutReset('comp1 --skip-dependency-installation');
       });
       it('should re-create the file', () => {
@@ -251,16 +251,16 @@ describe('bit checkout command', function () {
   describe('when a file was added in the new version (and not exists locally)', () => {
     let afterFirstExport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      afterFirstExport = helper.scopeHelper.cloneLocalScope();
+      afterFirstExport = helper.scopeHelper.cloneWorkspace();
       helper.fs.outputFile('comp1/foo.ts');
       helper.command.compile();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.scopeHelper.getClonedLocalScope(afterFirstExport);
+      helper.scopeHelper.getClonedWorkspace(afterFirstExport);
       helper.command.import();
       helper.command.checkoutHead('--all');
     });
@@ -272,14 +272,14 @@ describe('bit checkout command', function () {
   describe('modified component with conflicts', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo(`${barFooV1}\n`);
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.fixtures.createComponentBarFoo(`${barFooV2}\n`);
       helper.fixtures.tagComponentBarFoo();
       helper.fixtures.createComponentBarFoo(`${barFooV3}\n`);
-      localScope = helper.scopeHelper.cloneLocalScope();
+      localScope = helper.scopeHelper.cloneWorkspace();
     });
     describe('using manual strategy', () => {
       let output;
@@ -329,7 +329,7 @@ describe('bit checkout command', function () {
     describe('using theirs strategy', () => {
       let output;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--auto-merge-resolve theirs');
       });
       it('should indicate that the file has updated', () => {
@@ -355,7 +355,7 @@ describe('bit checkout command', function () {
     describe('using ours strategy', () => {
       let output;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--auto-merge-resolve ours');
       });
       it('should indicate that the version was switched', () => {
@@ -383,9 +383,9 @@ describe('bit checkout command', function () {
     describe('when new files are added', () => {
       let scopeWithAddedFile;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         helper.fs.outputFile('bar/foo2.js');
-        scopeWithAddedFile = helper.scopeHelper.cloneLocalScope();
+        scopeWithAddedFile = helper.scopeHelper.cloneWorkspace();
       });
       describe('using manual strategy', () => {
         let output;
@@ -403,7 +403,7 @@ describe('bit checkout command', function () {
       describe('using theirs strategy', () => {
         let output;
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(scopeWithAddedFile);
+          helper.scopeHelper.getClonedWorkspace(scopeWithAddedFile);
           output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--auto-merge-resolve theirs');
         });
         it('should indicate that the new file was removed', () => {
@@ -417,7 +417,7 @@ describe('bit checkout command', function () {
       describe('using ours strategy', () => {
         let output;
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(scopeWithAddedFile);
+          helper.scopeHelper.getClonedWorkspace(scopeWithAddedFile);
           output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--auto-merge-resolve ours');
         });
         it('should indicate that the new file was not changed', () => {
@@ -432,17 +432,17 @@ describe('bit checkout command', function () {
   describe('checkout-head when the local head is not up to date', () => {
     let localHeadScope: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, false, 'v2');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      localHeadScope = helper.scopeHelper.cloneLocalScope();
+      localHeadScope = helper.scopeHelper.cloneWorkspace();
       helper.fixtures.populateComponents(1, false, 'v3');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.scopeHelper.getClonedLocalScope(localHeadScope);
+      helper.scopeHelper.getClonedWorkspace(localHeadScope);
       helper.command.checkout('0.0.1 --all');
       helper.command.checkoutHead();
     });
@@ -453,12 +453,12 @@ describe('bit checkout command', function () {
   });
   describe('sync new components', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
-      const scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
+      const scopeBeforeTag = helper.scopeHelper.cloneWorkspace();
       helper.command.tagWithoutBuild('comp2');
       helper.command.export();
-      helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+      helper.scopeHelper.getClonedWorkspace(scopeBeforeTag);
 
       // intermediate step, make sure they're both new.
       const status = helper.command.statusJson();
@@ -475,7 +475,7 @@ describe('bit checkout command', function () {
   });
   describe('checkout latest vs head', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.2
@@ -504,16 +504,16 @@ describe('bit checkout command', function () {
     let firstSnap: string;
     let secondSnap: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.snapAllComponentsWithoutBuild();
       firstSnap = helper.command.getHead('comp1');
       helper.command.export();
-      const afterFirstSnap = helper.scopeHelper.cloneLocalScope();
+      const afterFirstSnap = helper.scopeHelper.cloneWorkspace();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       secondSnap = helper.command.getHead('comp1');
       helper.command.export();
-      helper.scopeHelper.getClonedLocalScope(afterFirstSnap);
+      helper.scopeHelper.getClonedWorkspace(afterFirstSnap);
       helper.command.checkoutLatest('-x');
     });
     it('should checkout to the head', () => {
@@ -524,14 +524,14 @@ describe('bit checkout command', function () {
   });
   describe('checkout to a version that does not exist locally', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, false, 'v2');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponentWithoutInstall('comp1');
     });
@@ -545,7 +545,7 @@ describe('bit checkout command', function () {
   describe('modified component without conflicts', () => {
     let beforeCheckout: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/index.js', '// first line\n\n');
       helper.command.tagAllWithoutBuild();
@@ -554,7 +554,7 @@ describe('bit checkout command', function () {
       helper.command.export();
       helper.command.checkoutVersion('0.0.1', 'comp1', '-x');
       helper.fs.appendFile('comp1/index.js', '// second line\n');
-      beforeCheckout = helper.scopeHelper.cloneLocalScope();
+      beforeCheckout = helper.scopeHelper.cloneWorkspace();
     });
     it('without any flag should merge successfully', () => {
       helper.command.checkoutHead('comp1', '-x');
@@ -564,7 +564,7 @@ describe('bit checkout command', function () {
 // second line`);
     });
     it('with --force-ours flag, should keep the file as is', () => {
-      helper.scopeHelper.getClonedLocalScope(beforeCheckout);
+      helper.scopeHelper.getClonedWorkspace(beforeCheckout);
       helper.command.checkoutHead('comp1', '-x --force-ours');
       const file = helper.fs.readFile('comp1/index.js');
       expect(file).to.include(`// first line
@@ -572,7 +572,7 @@ describe('bit checkout command', function () {
 // second line`);
     });
     it('with --force-theirs flag, should write the files according to the head', () => {
-      helper.scopeHelper.getClonedLocalScope(beforeCheckout);
+      helper.scopeHelper.getClonedWorkspace(beforeCheckout);
       helper.command.checkoutHead('comp1', '-x --force-theirs');
       const file = helper.fs.readFile('comp1/index.js');
       expect(file).to.include(`// first line modified
@@ -582,7 +582,7 @@ describe('bit checkout command', function () {
   describe('checkout head with deps having different versions than workspace.jsonc', () => {
     let beforeCheckout: string;
     const initWsWithVer = (ver: string, checkoutFlags = '') => {
-      helper.scopeHelper.getClonedLocalScope(beforeCheckout);
+      helper.scopeHelper.getClonedWorkspace(beforeCheckout);
       helper.workspaceJsonc.addPolicyToDependencyResolver({
         dependencies: {
           'lodash.get': ver,
@@ -593,11 +593,11 @@ describe('bit checkout command', function () {
     };
 
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      beforeCheckout = helper.scopeHelper.cloneLocalScope();
+      beforeCheckout = helper.scopeHelper.cloneWorkspace();
 
       helper.fs.outputFile('comp1/foo.js', `const get = require('lodash.get'); console.log(get);`);
       helper.workspaceJsonc.addPolicyToDependencyResolver({
@@ -644,7 +644,7 @@ describe('bit checkout command', function () {
   });
   describe('checkout reset with changes in component.json', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -664,7 +664,7 @@ describe('bit checkout command', function () {
   describe('checkout with a short hash', () => {
     let snap1: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.snapAllComponentsWithoutBuild();
       snap1 = helper.command.getHead('comp1');
@@ -678,6 +678,39 @@ describe('bit checkout command', function () {
     });
     it('bit status should not throw an error', () => {
       expect(() => helper.command.status()).to.not.throw();
+    });
+  });
+  describe('checkout main component when on a lane', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.createLane('dev');
+      helper.command.checkoutVersion('0.0.1', 'comp1', '-x');
+    });
+    it('should checkout the component successfully', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.1');
+    });
+  });
+  describe('checkout reset of main component when on a lane and the component-dir is deleted', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('dev');
+      helper.fs.deletePath('comp1');
+      helper.command.checkoutReset('--all');
+    });
+    it('should re-write the component', () => {
+      expect(path.join(helper.scopes.localPath, 'comp1')).to.be.a.directory();
+    });
+    it('status should not have invalid components', () => {
+      const status = helper.command.statusJson();
+      expect(status.invalidComponents).to.have.lengthOf(0);
     });
   });
 });

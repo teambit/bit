@@ -10,9 +10,9 @@ import {
   PEER_DEP_LIFECYCLE_TYPE,
   RUNTIME_DEP_LIFECYCLE_TYPE,
 } from '../../dependencies/constants';
-import { DependencyLifecycleType, SemverVersion, PackageName } from '../../dependencies';
-import { DedupedDependencies, DedupedDependenciesPeerConflicts } from './dedupe-dependencies';
-import { PackageNameIndex, PackageNameIndexItem, PackageNameIndexComponentItem } from './index-by-dep-id';
+import type { DependencyLifecycleType, SemverVersion, PackageName } from '../../dependencies';
+import type { DedupedDependencies, DedupedDependenciesPeerConflicts } from './dedupe-dependencies';
+import type { PackageNameIndex, PackageNameIndexItem, PackageNameIndexComponentItem } from './index-by-dep-id';
 
 type ItemsGroupedByRangeOrVersion = {
   ranges: PackageNameIndexComponentItem[];
@@ -450,7 +450,7 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexComponentItem[]): Ite
 export function isRange(version: string, compIdStr: string) {
   const validRange = semver.validRange(version);
   if (!validRange) {
-    if (!isHash(version) && !version.startsWith('workspace:')) {
+    if (!isHash(version) && !version.startsWith('workspace:') && !version.startsWith('npm:')) {
       throw new Error(
         `fatal: the version "${version}" originated from a dependent "${compIdStr}" is invalid semver range and not a hash`
       );

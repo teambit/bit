@@ -2,8 +2,8 @@ import path from 'path';
 import { globalBitTempDir } from '@teambit/defender.fs.global-bit-temp-dir';
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('linking to a target', function () {
   this.timeout(0);
@@ -11,7 +11,7 @@ describe('linking to a target', function () {
   let targetDir: string;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.fixtures.populateComponents(1);
     targetDir = globalBitTempDir();
     helper.command.link(`--target=${targetDir}`);
@@ -27,7 +27,7 @@ describe('linking to a target including peers', function () {
   let targetDir: string;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.command.create('react', 'button', '--env teambit.react/react');
     helper.command.install();
     targetDir = globalBitTempDir();

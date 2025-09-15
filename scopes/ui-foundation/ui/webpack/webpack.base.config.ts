@@ -1,5 +1,6 @@
 import { merge } from 'lodash';
-import webpack, { Configuration } from 'webpack';
+import type { Configuration } from 'webpack';
+import webpack from 'webpack';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
@@ -105,6 +106,7 @@ export default function createWebpackConfig(
           '@teambit/component.ui.component-compare.context'
         ),
         '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
+        '@teambit/base-ui.graph.tree.recursive-tree': require.resolve('@teambit/base-ui.graph.tree.recursive-tree'),
       },
       fallback: {
         module: false,

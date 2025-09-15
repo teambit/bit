@@ -2,39 +2,34 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import fs from 'fs-extra';
 import { v4 } from 'uuid';
 import * as path from 'path';
-import R from 'ramda';
+import { flatten } from 'lodash';
 import { IssuesList } from '@teambit/component-issues';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
-import {
-  getCloudDomain,
-  BIT_WORKSPACE_TMP_DIRNAME,
-  BuildStatus,
-  DEFAULT_LANGUAGE,
-  Extensions,
-} from '@teambit/legacy.constants';
-import { Doclet, parser as docsParser } from '@teambit/semantics.doc-parser';
+import type { BuildStatus } from '@teambit/legacy.constants';
+import { getCloudDomain, BIT_WORKSPACE_TMP_DIRNAME, DEFAULT_LANGUAGE, Extensions } from '@teambit/legacy.constants';
+import type { Doclet } from '@teambit/semantics.doc-parser';
+import { parser as docsParser } from '@teambit/semantics.doc-parser';
 import { logger } from '@teambit/legacy.logger';
-import { Version, DepEdge, Log, ScopeListItem, DependenciesGraph, ModelComponent } from '@teambit/scope.objects';
-import { pathNormalizeToLinux, PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import type { Version, DepEdge, Log, ScopeListItem, DependenciesGraph, ModelComponent } from '@teambit/objects';
+import type { PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
-import { ComponentMap } from '@teambit/legacy.bit-map';
+import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { IgnoredDirectory } from './exceptions/ignored-directory';
-import { Dist, License, SourceFile, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
-import {
-  ComponentConfig,
-  ComponentConfigLoadOptions,
-  ComponentOverrides,
-  getBindingPrefixByDefaultScope,
-} from '@teambit/legacy.consumer-config';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { ComponentOutOfSync, ComponentsPendingImport, Consumer } from '@teambit/legacy.consumer';
-import { FsCache } from '@teambit/workspace.modules.fs-cache';
+import type { Dist, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
+import { License, SourceFile } from '@teambit/component.sources';
+import type { ComponentConfigLoadOptions } from '@teambit/legacy.consumer-config';
+import { ComponentConfig, ComponentOverrides, getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
+import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy.extension-data';
+import type { Consumer } from '@teambit/legacy.consumer';
+import { ComponentOutOfSync, ComponentsPendingImport } from '@teambit/legacy.consumer';
+import type { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';
 import { ComponentNotFoundInPath } from './exceptions/component-not-found-in-path';
 import MainFileRemoved from './exceptions/main-file-removed';
-import { ComponentLoadOptions } from './component-loader';
+import type { ComponentLoadOptions } from './component-loader';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -135,6 +130,12 @@ export class Component {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist: DataToPersist;
   scopesList: ScopeListItem[] | undefined;
+  /**
+   * important! in case you set this prop after the component was created, make sure to set also the aspects in Harmony component.
+   * e.g.
+   * component.state.aspects = await this.scope.createAspectListFromExtensionDataList(extensions);
+   * component.state.aspects = await this.workspace.createAspectList(extensions);
+   */
   extensions: ExtensionDataList = new ExtensionDataList();
   _capsuleDir?: string; // @todo: remove this. use CapsulePaths once it's public and available
   buildStatus?: BuildStatus;
@@ -338,7 +339,7 @@ export class Component {
   }
 
   getAllDependenciesIds(): ComponentIdList {
-    const allDependencies = R.flatten(Object.values(this.depsIdsGroupedByType));
+    const allDependencies = flatten(Object.values(this.depsIdsGroupedByType));
     return ComponentIdList.fromArray(allDependencies);
   }
 
@@ -461,6 +462,7 @@ export class Component {
       overrides,
       deprecated,
       schema,
+      extensions,
     } = object;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Component({
@@ -482,6 +484,20 @@ export class Component {
       overrides: new ComponentOverrides(overrides),
       deprecated: deprecated || false,
       schema,
+      extensions: extensions
+        ? ExtensionDataList.fromArray(
+            extensions.map((ext: any) => {
+              const { extensionId, name: extName, config = {}, data = {} } = ext;
+              return new ExtensionDataEntry(
+                undefined, // legacyId
+                extensionId, // extensionId
+                extName, // name
+                config, // rawConfig
+                data // data
+              );
+            })
+          )
+        : new ExtensionDataList(),
     });
   }
 
@@ -539,7 +555,7 @@ export class Component {
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
     const docsP = _getDocsForFiles(files, consumer.componentFsCache);
     const docs = await Promise.all(docsP);
-    const flattenedDocs = docs ? R.flatten(docs) : [];
+    const flattenedDocs = docs ? flatten(docs) : [];
     // probably componentConfig.defaultScope is not needed. try to remove it.
     // once we changed BitId to ComponentId, the defaultScope is always part of the id.
     const defaultScope = id.hasScope() ? componentConfig.defaultScope : id.scope;
@@ -584,12 +600,10 @@ async function getLoadedFiles(
     logger.error(`rethrowing an error of ${componentMap.noFilesError.message}`);
     throw componentMap.noFilesError;
   }
-  await componentMap.trackDirectoryChangesHarmony(consumer);
+  await componentMap.trackDirectoryChangesHarmony(consumer.getPath());
   const sourceFiles = componentMap.files.map((file) => {
     const filePath = path.join(bitDir, file.relativePath);
-    const sourceFile = SourceFile.load(filePath, bitDir, consumer.getPath(), {
-      test: file.test,
-    });
+    const sourceFile = SourceFile.load(filePath, bitDir, consumer.getPath(), { test: file.test || false });
     return sourceFile;
   });
   const filePaths = componentMap.getAllFilesPaths();

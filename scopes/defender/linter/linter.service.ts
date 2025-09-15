@@ -1,12 +1,20 @@
 import chalk from 'chalk';
 import { defaults } from 'lodash';
-import { EnvService, ExecutionContext, EnvDefinition, ServiceTransformationMap, EnvContext, Env } from '@teambit/envs';
-import { Workspace } from '@teambit/workspace';
+import type {
+  EnvService,
+  ExecutionContext,
+  EnvDefinition,
+  ServiceTransformationMap,
+  EnvContext,
+  Env,
+} from '@teambit/envs';
+import type { Workspace } from '@teambit/workspace';
 import highlight from 'cli-highlight';
-import { Component, ComponentMap } from '@teambit/component';
-import { Linter, LintResults } from './linter';
-import { LinterContext, LinterOptions } from './linter-context';
-import { LinterConfig } from './linter.main.runtime';
+import type { Component } from '@teambit/component';
+import { ComponentMap } from '@teambit/component';
+import type { Linter, LintResults } from './linter';
+import type { LinterContext, LinterOptions } from './linter-context';
+import type { LinterConfig } from './linter.main.runtime';
 
 type LinterTransformationMap = ServiceTransformationMap & {
   getLinter: () => Linter;
@@ -23,13 +31,22 @@ export class LinterService implements EnvService<LintResults> {
   async run(context: ExecutionContext, options: LinterOptions): Promise<LintResults> {
     const mergedOpts = this.optionsWithDefaults(options);
     const linterContext = this.mergeContext(mergedOpts, context);
-    const linter: Linter = this.getLinter(context, options);
+    const linter = this.getLinter(context, options);
+    if (!linter) {
+      return {
+        results: [],
+        errors: [],
+      };
+    }
 
     const results = await linter.lint(linterContext);
     return results;
   }
 
-  getLinter(context: ExecutionContext, options: LinterOptions): Linter {
+  getLinter(context: ExecutionContext, options: LinterOptions): Linter | undefined {
+    if (!context.env.getLinter) {
+      return undefined;
+    }
     const mergedOpts = this.optionsWithDefaults(options);
     const linterContext = this.mergeContext(mergedOpts, context);
     const linter: Linter = context.env.getLinter(linterContext);
@@ -65,8 +82,8 @@ export class LinterService implements EnvService<LintResults> {
     );
   }
 
-  render(env: EnvDefinition) {
-    const descriptor = this.getDescriptor(env);
+  async render(env: EnvDefinition) {
+    const descriptor = await this.getDescriptor(env);
     const name = `${chalk.green('configured linter:')} ${descriptor?.id} (${descriptor?.displayName} @ ${
       descriptor?.version
     })`;
@@ -85,7 +102,7 @@ export class LinterService implements EnvService<LintResults> {
     };
   }
 
-  getDescriptor(env: EnvDefinition) {
+  async getDescriptor(env: EnvDefinition) {
     if (!env.env.getLinter) return undefined;
     const mergedOpts = this.optionsWithDefaults({});
     const linterContext = this.mergeContext(mergedOpts);
@@ -95,7 +112,7 @@ export class LinterService implements EnvService<LintResults> {
       id: linter.id,
       icon: linter.icon,
       config: linter.displayConfig ? linter.displayConfig() : undefined,
-      version: linter.version ? linter.version() : '?',
+      version: linter.version ? await linter.version() : '?',
       displayName: linter.displayName ? linter.displayName : '?',
     };
   }

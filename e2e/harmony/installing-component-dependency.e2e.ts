@@ -1,8 +1,7 @@
 import { expect } from 'chai';
 import path from 'path';
 import { Extensions } from '@teambit/legacy.constants';
-import { Helper } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)('installing a component dependency', function () {
   this.timeout(0);
@@ -11,7 +10,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
   let npmCiRegistry: NpmCiRegistry;
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();
@@ -27,7 +26,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
     helper.command.tagComponent('comp2', undefined, '--unmodified');
     helper.command.export();
 
-    helper.scopeHelper.reInitLocalScope();
+    helper.scopeHelper.reInitWorkspace();
     helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
     helper.scopeHelper.addRemoteScope();
     helper.workspaceJsonc.setupDefault();

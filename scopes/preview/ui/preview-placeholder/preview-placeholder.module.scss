@@ -4,6 +4,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
+  width: 100%;
   color: #c7c7c7;
   pointer-events: auto;
   > span:first-child {
@@ -75,4 +76,19 @@
   height: 100%;
   z-index: 100;
   cursor: pointer;
+}
+
+.skeletonContainer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  color: var(--skeleton-color, #e0e0e0);
+  opacity: 0.7;
+}
+
+.skeletonBlock {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  display: block;
 }

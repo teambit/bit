@@ -1,14 +1,15 @@
 import { resolve, join } from 'path';
-import { ExecutionContext } from '@teambit/envs';
-import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
-import { Bundler, BundlerContext, BundlerMain, Target } from '@teambit/bundler';
-import { Compiler } from '@teambit/compiler';
-import { ComponentMap } from '@teambit/component';
-import { Capsule } from '@teambit/isolator';
-import { AbstractVinyl } from '@teambit/component.sources';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { Logger } from '@teambit/logger';
-import { PreviewMain } from './preview.main.runtime';
+import type { ExecutionContext } from '@teambit/envs';
+import type { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
+import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
+import type { Bundler, BundlerContext, BundlerMain, Target } from '@teambit/bundler';
+import type { Compiler } from '@teambit/compiler';
+import type { ComponentMap } from '@teambit/component';
+import type { Capsule } from '@teambit/isolator';
+import type { AbstractVinyl } from '@teambit/component.sources';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { Logger } from '@teambit/logger';
+import type { PreviewMain } from './preview.main.runtime';
 
 export const PREVIEW_TASK_NAME = 'GeneratePreview';
 export class PreviewTask implements BuildTask {
@@ -34,6 +35,10 @@ export class PreviewTask implements BuildTask {
   // readonly dependencies = [CompilerAspect.id];
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
+    if (!context.env.getBundler) {
+      return { componentsResults: [] };
+    }
+
     const defs = this.preview.getDefs();
     const url = `/preview/${context.envRuntime.id}`;
     const bundlingStrategy = this.preview.getBundlingStrategy(context.env);
@@ -77,9 +82,9 @@ export class PreviewTask implements BuildTask {
     moduleMap: ComponentMap<AbstractVinyl[]>,
     context: BuildContext
   ): ComponentMap<string[]> {
-    const compiler: Compiler = context.env.getCompiler(context);
+    const compiler: Compiler = context.env.getCompiler?.(context);
     return moduleMap.map((files) => {
-      return files.map((file) => join(capsule.path, compiler.getDistPathBySrcPath(file.relative)));
+      return files.map((file) => join(capsule.path, compiler?.getDistPathBySrcPath(file.relative) || file.relative));
     });
   }
 }

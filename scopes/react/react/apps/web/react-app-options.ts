@@ -1,11 +1,7 @@
-import { Bundler, DevServer } from '@teambit/bundler';
-import { WebpackConfigTransformer } from '@teambit/webpack';
+import type { Bundler, DevServer } from '@teambit/bundler';
+import type { WebpackConfigTransformer } from '@teambit/webpack';
 
-import { ReactDeployContext } from './deploy-context';
-import { WebpackPrerenderSPAOptions } from './plugins/prerender';
-
-/** https://github.com/Tofandel/prerenderer */
-export type ReactAppPrerenderOptions = WebpackPrerenderSPAOptions;
+import type { ReactDeployContext } from './deploy-context';
 
 export type ReactAppOptions = {
   /**
@@ -42,14 +38,6 @@ export type ReactAppOptions = {
    * set webpack transformers
    */
   webpackTransformers?: WebpackConfigTransformer[];
-
-  /**
-   * decide whether to prerender your app. accepts an array of routes. if none, prerender would not apply.
-   *  e.g ['/plugins', '/learn', '/docs/quick-start]
-   * You can also pass a configuration for the proxy, please refer here: https://github.com/webpack/docs/wiki/webpack-dev-server#proxy
-   *
-   */
-  prerender?: ReactAppPrerenderOptions;
 
   /**
    * deploy function.

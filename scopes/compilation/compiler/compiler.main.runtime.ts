@@ -1,29 +1,45 @@
 import * as path from 'path';
 import fs from 'fs-extra';
-import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
-import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import type { BuilderMain } from '@teambit/builder';
+import { BuilderAspect } from '@teambit/builder';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { IssuesClasses } from '@teambit/component-issues';
-import { IssuesAspect, IssuesMain } from '@teambit/issues';
-import { Component } from '@teambit/component';
+import type { IssuesMain } from '@teambit/issues';
+import { IssuesAspect } from '@teambit/issues';
+import type { Component } from '@teambit/component';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
-import { WatcherAspect, WatcherMain } from '@teambit/watcher';
-import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
-import { ComponentID } from '@teambit/component-id';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
-import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
-import { UIAspect, UiMain } from '@teambit/ui';
-import { Workspace, WorkspaceAspect, WorkspaceComponentLoadOptions } from '@teambit/workspace';
+import type { WatcherMain } from '@teambit/watcher';
+import { WatcherAspect } from '@teambit/watcher';
+import type { EnvsMain, ExecutionContext } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { ComponentID } from '@teambit/component-id';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { GeneratorMain } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator';
+import type { PubsubMain } from '@teambit/pubsub';
+import { PubsubAspect } from '@teambit/pubsub';
+import type { UiMain } from '@teambit/ui';
+import { UIAspect } from '@teambit/ui';
+import type { Workspace, WorkspaceComponentLoadOptions } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { BundlerMain } from '@teambit/bundler';
+import { BundlerAspect } from '@teambit/bundler';
 import { CompilerAspect } from './compiler.aspect';
 import { CompileCmd } from './compiler.cmd';
 import { CompilerService } from './compiler.service';
 import { CompilerTask } from './compiler.task';
 import { DistArtifact } from './dist-artifact';
 import { DistArtifactNotFound } from './exceptions';
-import { CompilationInitiator, Compiler } from './types';
-import { CompileOptions, WorkspaceCompiler } from './workspace-compiler';
+import type { Compiler } from './types';
+import { CompilationInitiator } from './types';
+import type { CompileOptions } from './workspace-compiler';
+import { WorkspaceCompiler } from './workspace-compiler';
 import { compilerTemplate } from './templates/compiler';
 
 export class CompilerMain {
@@ -37,7 +53,7 @@ export class CompilerMain {
     private compilerService: CompilerService
   ) {}
 
-  getCompiler(context: ExecutionContext): Compiler {
+  getCompiler(context: ExecutionContext): Compiler | undefined {
     return this.compilerService.getCompiler(context);
   }
 
@@ -126,6 +142,7 @@ export class CompilerMain {
     DependencyResolverAspect,
     WatcherAspect,
     IssuesAspect,
+    BundlerAspect,
   ];
 
   static async provider([
@@ -141,6 +158,7 @@ export class CompilerMain {
     dependencyResolver,
     watcher,
     issues,
+    bundler,
   ]: [
     CLIMain,
     Workspace,
@@ -154,6 +172,7 @@ export class CompilerMain {
     DependencyResolverMain,
     WatcherMain,
     IssuesMain,
+    BundlerMain,
   ]) {
     const logger = loggerMain.createLogger(CompilerAspect.id);
     const compilerService = new CompilerService();
@@ -183,6 +202,16 @@ export class CompilerMain {
       issues.registerAddComponentsIssues(compilerMain.addMissingDistsIssue.bind(compilerMain));
     }
     if (generator) generator.registerComponentTemplate([compilerTemplate]);
+
+    bundler.registerOnPreDevServerCreated(async (newCompsWithoutDevServer) => {
+      logger.debug(
+        `Compiling ${newCompsWithoutDevServer.length} components: ${newCompsWithoutDevServer.map((c) => c.id.toString()).join(', ')} before dev server creation`
+      );
+      await compilerMain.compileOnWorkspace(
+        newCompsWithoutDevServer.map((c) => c.id),
+        { initiator: CompilationInitiator.PreDevServer }
+      );
+    });
 
     return compilerMain;
   }

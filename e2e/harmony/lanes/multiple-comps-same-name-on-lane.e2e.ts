@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('lane with multiple components with the same name but different scope-name', function () {
   this.timeout(0);
@@ -10,7 +10,7 @@ describe('lane with multiple components with the same name but different scope-n
   let anotherRemotePath: string;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
     anotherRemote = scopeName;
     anotherRemotePath = scopePath;
@@ -20,7 +20,7 @@ describe('lane with multiple components with the same name but different scope-n
     helper.command.snapAllComponentsWithoutBuild();
     helper.command.export();
 
-    helper.scopeHelper.reInitLocalScope();
+    helper.scopeHelper.reInitWorkspace();
     helper.scopeHelper.addRemoteScope();
     helper.scopeHelper.addRemoteScope(scopePath);
     helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
@@ -30,7 +30,7 @@ describe('lane with multiple components with the same name but different scope-n
     helper.command.snapAllComponentsWithoutBuild();
     helper.command.export();
 
-    helper.scopeHelper.reInitLocalScope();
+    helper.scopeHelper.reInitWorkspace();
     helper.scopeHelper.addRemoteScope();
     helper.scopeHelper.addRemoteScope(scopePath);
     // this bring the lane-object with two components: comp1 and comp2 of `helper.scopes.remote`.
@@ -49,7 +49,7 @@ describe('lane with multiple components with the same name but different scope-n
   });
   describe('importing the lane into a new workspace without excluding any component', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.scopeHelper.addRemoteScope(anotherRemotePath);
     });
@@ -66,7 +66,7 @@ describe('lane with multiple components with the same name but different scope-n
   });
   describe('importing the lane into a new workspace by excluding one of the duplicate names', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
     });
     it('should import successfully', () => {

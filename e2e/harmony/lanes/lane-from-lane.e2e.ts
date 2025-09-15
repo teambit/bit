@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit lane command', function () {
   this.timeout(0);
@@ -16,7 +16,7 @@ describe('bit lane command', function () {
   describe('main => lane-a => lane-b, so laneB branched from laneA', () => {
     let beforeSwitchingBack;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       // main
       helper.fs.outputFile('utils/is-type/is-type.js', fixtures.isType);
       helper.command.addComponent('utils/is-type', { i: 'utils/is-type' });
@@ -41,7 +41,7 @@ describe('bit lane command', function () {
       helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
 
-      beforeSwitchingBack = helper.scopeHelper.cloneLocalScope();
+      beforeSwitchingBack = helper.scopeHelper.cloneWorkspace();
     });
     it('lane-a should not contain components from main', () => {
       const lane = helper.command.showOneLaneParsed('lane-a');
@@ -81,7 +81,7 @@ describe('bit lane command', function () {
     });
     describe('checking out from lane-b to main', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeSwitchingBack);
+        helper.scopeHelper.getClonedWorkspace(beforeSwitchingBack);
         helper.command.switchLocalLane('main');
       });
       it('bit list should only show main components', () => {
@@ -98,7 +98,7 @@ describe('bit lane command', function () {
     });
     describe('switching to lane-a then to main', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeSwitchingBack);
+        helper.scopeHelper.getClonedWorkspace(beforeSwitchingBack);
         helper.command.switchLocalLane('lane-a');
         helper.command.switchLocalLane('main');
       });
@@ -120,20 +120,20 @@ describe('bit lane command', function () {
     let firstSnap: string;
     let secondSnap: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.createLane('lane-a');
       helper.fixtures.populateComponents(1, false);
       helper.command.snapAllComponentsWithoutBuild();
       firstSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
       helper.command.export();
-      outOfDateState = helper.scopeHelper.cloneLocalScope();
+      outOfDateState = helper.scopeHelper.cloneWorkspace();
 
       helper.fixtures.populateComponents(1, false, 'v2');
       helper.command.snapAllComponentsWithoutBuild();
       secondSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
       helper.command.export();
 
-      helper.scopeHelper.getClonedLocalScope(outOfDateState);
+      helper.scopeHelper.getClonedWorkspace(outOfDateState);
       helper.command.import();
       // intermediate step to make sure the lane is out-of-date
       const status = helper.command.statusJson();
@@ -149,7 +149,7 @@ describe('bit lane command', function () {
   });
   describe('creating a lane from a lane when it has staged components', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.createLane('lane-a');
       helper.fixtures.populateComponents(1, false);
       helper.command.snapAllComponentsWithoutBuild();
@@ -164,7 +164,7 @@ describe('bit lane command', function () {
   });
   describe("fork a lane when the default-scope is different than the original lane's scope", () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.createLane('lane-a');
       helper.fixtures.populateComponents(1, false);
       helper.command.snapAllComponentsWithoutBuild();

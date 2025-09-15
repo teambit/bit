@@ -1,14 +1,14 @@
-import { Component } from '@teambit/component';
+import { realpathSync, existsSync } from 'fs';
+import type { Component } from '@teambit/component';
 import esmLoader from '@teambit/node.utils.esm-loader';
-import { NativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import pMapSeries from 'p-map-series';
 import { setExitOnUnhandledRejection } from '@teambit/cli';
 import { Aspect } from '@teambit/harmony';
-import { PluginDefinition } from './plugin-definition';
+import type { PluginDefinition } from './plugin-definition';
 import { isEsmModule } from './is-esm-module';
 import { Plugin } from './plugin';
-import { OnAspectLoadErrorHandler } from './aspect-loader.main.runtime';
+import type { OnAspectLoadErrorHandler } from './aspect-loader.main.runtime';
 
 export type PluginMap = { [filePath: string]: PluginDefinition };
 
@@ -55,11 +55,20 @@ export class Plugins {
   }
 
   async loadModule(path: string) {
-    NativeCompileCache.uninstall();
-    const module = await esmLoader(path, true);
+    const exists = existsSync(path);
+    // We manually resolve the path to avoid issues with symlinks
+    // the require.resolve and import inside the esmLoader will sometime uses cached resolved paths
+    // which lead to errors about file not found as it's trying to load the file from the wrong path
+    // In case the path not exists we don't need to resolve it (it will throw an error)
+    const realPath = exists ? realpathSync(path) : path;
+    const resolvedPathFromRealPath = require.resolve(realPath);
+    const module = await esmLoader(realPath, true);
     const defaultModule = module.default;
+    if (!defaultModule) {
+      throw new Error(`Failed to load plugin. Ensure you use "export default" in your index.ts file.\nPath: ${path}`);
+    }
     defaultModule.__path = path;
-    defaultModule.__resolvedPath = require.resolve(path);
+    defaultModule.__resolvedPath = resolvedPathFromRealPath;
     return defaultModule;
   }
 

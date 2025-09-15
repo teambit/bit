@@ -4,11 +4,11 @@ import chai, { expect } from 'chai';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Extensions, IS_WINDOWS } from '@teambit/legacy.constants';
-import { Helper } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('custom env', function () {
   this.timeout(0);
@@ -21,7 +21,7 @@ describe('custom env', function () {
   });
   describe('non existing env', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.extensions.addExtensionToVariant('*', 'company.scope/envs/fake-env');
     });
@@ -36,7 +36,7 @@ describe('custom env', function () {
     let envId;
     let envName;
     before(async () => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       envName = helper.env.setCustomEnv(undefined, { skipCompile: true, skipInstall: true });
       envId = `${helper.scopes.remote}/${envName}`;
@@ -64,14 +64,14 @@ describe('custom env', function () {
     let envId;
     let envName;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager();
       envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(3);
       helper.extensions.addExtensionToVariant('*', envId);
       helper.command.compile();
-      wsAllNew = helper.scopeHelper.cloneLocalScope(IS_WINDOWS);
+      wsAllNew = helper.scopeHelper.cloneWorkspace(IS_WINDOWS);
     });
     describe('tag', () => {
       before(() => {
@@ -96,7 +96,7 @@ describe('custom env', function () {
     });
     describe('untag', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(wsAllNew);
+        helper.scopeHelper.getClonedWorkspace(wsAllNew);
         helper.command.tagAllWithoutBuild();
       });
       // previously it used to throw "error: component "node-env@0.0.1" was not found."
@@ -106,7 +106,7 @@ describe('custom env', function () {
     });
     describe('out-of-sync scenario where the id is changed during the process', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(wsAllNew);
+        helper.scopeHelper.getClonedWorkspace(wsAllNew);
         helper.command.tagAllWithoutBuild();
         const bitMapBeforeExport = helper.bitMap.read();
         helper.command.export();
@@ -119,7 +119,7 @@ describe('custom env', function () {
   });
   describe('change an env after tag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager();
       const envName = helper.env.setCustomEnv();
       const envId = `${helper.scopes.remote}/${envName}`;
@@ -137,7 +137,7 @@ describe('custom env', function () {
   describe('change an env after tag2 and then change it back to the custom-env in the workspace', () => {
     let envId;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager();
       const envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
@@ -163,7 +163,7 @@ describe('custom env', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -185,7 +185,7 @@ describe('custom env', function () {
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       // Clean the capsule dir to make sure it's empty before we continue
       const scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
       if (fs.pathExistsSync(scopeAspectsCapsulesRootDir)) {
@@ -229,7 +229,7 @@ describe('custom env', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -241,7 +241,7 @@ describe('custom env', function () {
       helper.command.tagAllComponents('--unmodified');
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.setupDefault();
     });
@@ -266,7 +266,7 @@ describe('custom env', function () {
 
     describe('set up the env using bit env set without a version', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', envId);
@@ -278,7 +278,7 @@ describe('custom env', function () {
     });
     describe('set up the env using bit env set with a version', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', `${envId}@0.0.2`);
@@ -291,7 +291,7 @@ describe('custom env', function () {
     });
     describe('set up the env using bit create --env with a version', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.create('starter', 'comp1', `--env ${envId}@0.0.1`);
       });
@@ -303,7 +303,7 @@ describe('custom env', function () {
     });
     describe('set up the env and then unset it', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', `${envId}@0.0.1`);
@@ -317,7 +317,7 @@ describe('custom env', function () {
     });
     describe('set up the env and then replace it with another env without mentioning the version', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', `${envId}@0.0.1`);
@@ -332,7 +332,7 @@ describe('custom env', function () {
     });
     describe('set up the same env with two different versions, then replace with another env', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.fixtures.populateComponents(2);
         helper.command.setEnv('comp1', `${envId}@0.0.1`);
@@ -349,7 +349,7 @@ describe('custom env', function () {
     });
     describe('tag and change the env version', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+        helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
         helper.scopeHelper.addRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', `${envId}@0.0.1`);
@@ -363,7 +363,7 @@ describe('custom env', function () {
     });
     describe('snapping the env on the lane and then deleting it', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.createLane();
@@ -384,7 +384,7 @@ describe('custom env', function () {
     });
     describe('missing modules in the env capsule', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.workspaceJsonc.setupDefault();
         helper.fixtures.populateComponents(1);
@@ -405,7 +405,7 @@ describe('custom env', function () {
     });
     describe('core-env was set in previous tag and another non-core env is set now', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.workspaceJsonc.setupDefault();
         helper.fixtures.populateComponents(1);
@@ -426,7 +426,7 @@ describe('custom env', function () {
   describe('when the env is tagged and set in workspace.jsonc without exporting it', () => {
     before(() => {
       // important! don't disable the preview.
-      helper.scopeHelper.setNewLocalAndRemoteScopes({ disablePreview: false });
+      helper.scopeHelper.setWorkspaceWithRemoteScope({ disablePreview: false });
       const envName = helper.env.setCustomEnv();
       const envId = `${helper.scopes.remote}/${envName}`;
       helper.extensions.addExtensionToWorkspace(envId);
@@ -441,13 +441,13 @@ describe('custom env', function () {
   describe('when the env is exported to a remote scope and is not exist locally', () => {
     let envId: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       const envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.fixtures.populateComponents(1);
     });
@@ -459,7 +459,7 @@ describe('custom env', function () {
   describe('custom-env is 0.0.2 on the workspace, but comp1 is using it in the model with 0.0.1', () => {
     let envId: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       const envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
@@ -488,7 +488,7 @@ describe('custom env', function () {
   });
   describe('rename custom env', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       const envName = helper.env.setCustomEnv();
       const envId = `${helper.scopes.remote}/${envName}`;
@@ -502,7 +502,7 @@ describe('custom env', function () {
   });
   describe('tag custom env then env-set the comp uses it to another non-core env', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       const envName = helper.env.setCustomEnv();
       const envId = `${helper.scopes.remote}/${envName}`;
@@ -520,7 +520,7 @@ describe('custom env', function () {
   // all its aspects, including the env.
   describe.skip('circular dependencies between an env and a component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.env.setCustomEnv();
       // const envName = helper.env.setCustomEnv();
       // const envId = `${helper.scopes.remote}/${envName}`;
@@ -533,7 +533,7 @@ describe('custom env', function () {
   });
   describe('ejecting conf when current env exists locally', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.env.setCustomEnv();
       helper.fixtures.populateComponents(1, false);
       helper.command.setEnv('comp1', 'node-env');
@@ -545,6 +545,86 @@ describe('custom env', function () {
       const compJson = helper.componentJson.read('comp1');
       expect(compJson.extensions).to.have.property(`${helper.scopes.remote}/node-env`);
       expect(compJson.extensions).to.not.have.property(`${helper.scopes.remote}/node-env@0.0.1`);
+    });
+  });
+  describe('an empty env. nothing is configured, not even a compiler', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.env.setEmptyEnv();
+
+      helper.fixtures.populateComponents(1, false);
+      helper.command.setEnv('comp1', 'empty-env');
+
+      fs.removeSync(path.join(helper.scopes.localPath, 'node_modules'));
+      helper.command.install();
+    });
+    it('bit compile should not compile the component', () => {
+      const output = helper.command.compile();
+      expect(output).to.not.have.string('comp1');
+    });
+    it('should not create dist dir in the node_modules', () => {
+      const dir = path.join(helper.scopes.localPath, 'node_modules', helper.scopes.remote, 'comp1/dist');
+      expect(dir).to.not.be.a.path();
+    });
+    it('bit build should not fail', () => {
+      const output = helper.command.build();
+      expect(output).to.have.string('build succeeded');
+    });
+    it('bit format should not show an error', () => {
+      const output = helper.command.format();
+      expect(output).to.not.have.string('failed');
+    });
+    it('bit lint should not show an error', () => {
+      const output = helper.command.lint();
+      expect(output).to.not.have.string('failed');
+    });
+    it('bit test should not show an error', () => {
+      const output = helper.command.test();
+      expect(output).to.not.have.string('failed');
+    });
+  });
+  describe('custom env with invalid env.jsonc', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.workspaceJsonc.setPackageManager();
+      const envName = helper.env.setCustomEnv();
+      const envId = `${helper.scopes.remote}/${envName}`;
+      helper.fixtures.populateComponents(1);
+      helper.command.setEnv('comp1', envId);
+    });
+    it('should throw a descriptive error when a policy entry is not an object', () => {
+      helper.fs.outputFile(
+        'node-env/env.jsonc',
+        `{
+  "policy": {
+    "dev": [
+      "lodash"
+    ]
+  }
+}`
+      );
+      const output = helper.general.runWithTryCatch('bit status');
+      expect(output).to.have.string(
+        'error: failed validating the env.jsonc file. policy.dev entry must be an object, got type "string" value: "lodash"'
+      );
+    });
+    it('should throw a descriptive error when a policy entry object has no "version" field', () => {
+      helper.fs.outputFile(
+        'node-env/env.jsonc',
+        `{
+  "policy": {
+    "dev": [
+      {
+        "name": "lodash"
+      }
+    ]
+  }
+}`
+      );
+      const output = helper.general.runWithTryCatch('bit status');
+      expect(output).to.have.string(
+        'error: failed validating the env.jsonc file. policy.dev entry must have a "version" property'
+      );
     });
   });
 });

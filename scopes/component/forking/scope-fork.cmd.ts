@@ -1,7 +1,7 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
-import { ForkingMain } from './forking.main.runtime';
+import type { ForkingMain } from './forking.main.runtime';
 
 export type ScopeForkOptions = {
   ast?: boolean;
@@ -29,7 +29,7 @@ export class ScopeForkCmd implements Command {
     ['', 'ast', 'use ast to transform files instead of regex'],
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
   ] as CommandOptions;
-  group = 'development';
+  group = 'component-config';
 
   constructor(private forking: ForkingMain) {}
 

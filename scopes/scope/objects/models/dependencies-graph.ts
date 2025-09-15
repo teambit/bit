@@ -1,14 +1,15 @@
 import semver from 'semver';
-import { PackageInfo } from '@pnpm/lockfile.types';
+import type { LockfilePackageInfo } from '@pnpm/lockfile.types';
 import * as dp from '@pnpm/dependency-path';
 
 export type PackagesMap = Map<string, PackageAttributes>;
 
-export type PackageAttributes = PackageInfo & {
+export type PackageAttributes = LockfilePackageInfo & {
   component?: {
     scope: string;
     name: string;
   };
+  requiresBuild?: boolean;
 };
 
 export type DependencyEdge = {
@@ -31,7 +32,7 @@ export type DependencyNeighbour = {
   lifecycle?: 'runtime' | 'dev';
 };
 
-const DEPENDENCIES_GRAPH_SCHEMA_VERSION = '1.0';
+const DEPENDENCIES_GRAPH_SCHEMA_VERSION = '2.0';
 
 export class DependenciesGraph {
   static ROOT_EDGE_ID = '.';

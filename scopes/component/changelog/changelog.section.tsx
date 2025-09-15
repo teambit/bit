@@ -1,7 +1,7 @@
 import React from 'react';
-import { Section } from '@teambit/component';
+import type { Section } from '@teambit/component';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
-import { ChangeLogUI } from './changelog.ui.runtime';
+import type { ChangeLogUI } from './changelog.ui.runtime';
 
 export class ChangelogSection implements Section {
   constructor(private ui: ChangeLogUI) {}
@@ -15,6 +15,7 @@ export class ChangelogSection implements Section {
     href: '~changelog',
     children: <MenuWidgetIcon icon="changelog" tooltipContent="Change log" />,
     displayName: 'Change log',
+    hideInMinimalMode: true,
   };
   order = 40;
 }

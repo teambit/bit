@@ -1,5 +1,5 @@
-import { Asset } from '@teambit/bundler';
-import { Logger } from '@teambit/logger';
+import type { Asset } from '@teambit/bundler';
+import type { Logger } from '@teambit/logger';
 import { serverError } from '@teambit/ui-foundation.ui.pages.static-error';
 import { browserFromExpress } from '@teambit/react.rendering.ssr';
 import type { HtmlAssets, SsrSession } from '@teambit/react.rendering.ssr';

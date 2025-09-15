@@ -1,14 +1,15 @@
 import React, { useContext } from 'react';
-import { ComponentsDrawer, ComponentFiltersSlot, DrawerWidgetSlot } from '@teambit/component.ui.component-drawer';
+import type { ComponentFiltersSlot, DrawerWidgetSlot } from '@teambit/component.ui.component-drawer';
+import { ComponentsDrawer } from '@teambit/component.ui.component-drawer';
 import { ComponentView, NamespaceTreeNode, ScopePayload, ScopeTreeNode } from '@teambit/ui-foundation.ui.side-bar';
 import type { PayloadType } from '@teambit/ui-foundation.ui.side-bar';
-import { TreeNode as TreeNodeType, TreeNodeProps } from '@teambit/design.ui.tree';
+import type { TreeNode as TreeNodeType, TreeNodeProps } from '@teambit/design.ui.tree';
 import { useLanes as defaultUseLanesHook } from '@teambit/lanes.hooks.use-lanes';
 import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
-import { ComponentModel } from '@teambit/component';
+import type { ComponentModel } from '@teambit/component';
 import { useScope, ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
-import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
-import { SidebarSlot } from './scope.ui.runtime';
+import type { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import type { SidebarSlot } from './scope.ui.runtime';
 
 export type ScopeDrawerProps = {
   treeWidgets: SidebarSlot;

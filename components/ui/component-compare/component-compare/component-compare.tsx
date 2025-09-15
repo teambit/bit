@@ -1,25 +1,20 @@
 /* eslint-disable react/destructuring-assignment */
 /* eslint-disable react/require-default-props */
-import React, { useContext, useMemo, HTMLAttributes } from 'react';
+import type { HTMLAttributes } from 'react';
+import React, { useContext, useMemo } from 'react';
 import classnames from 'classnames';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import {
-  CollapsibleMenuNav,
-  ComponentContext,
-  ComponentDescriptorContext,
-  ComponentID,
-  NavPlugin,
-  useComponent,
-} from '@teambit/component';
+import type { LegacyComponentLog } from '@teambit/legacy-component-log';
+import type { ComponentID, NavPlugin } from '@teambit/component';
+import { CollapsibleMenuNav, ComponentContext, ComponentDescriptorContext, useComponent } from '@teambit/component';
 import { ComponentCompareContext } from '@teambit/component.ui.component-compare.context';
 import { useComponentCompareQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare';
-import {
+import type {
   FileCompareResult,
   FieldCompareResult,
 } from '@teambit/component.ui.component-compare.models.component-compare-model';
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-compare.version-picker';
-import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
+import type { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import type {
@@ -256,7 +251,7 @@ function RenderCompareScreen(
 // eslint-disable-next-line complexity
 export function ComponentCompare(props: ComponentCompareProps) {
   const {
-    host,
+    host: hostFromProps,
     baseId: baseIdFromProps,
     compareId: compareIdFromProps,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -283,13 +278,17 @@ export function ComponentCompare(props: ComponentCompareProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useContext(ComponentDescriptorContext);
   const location = useLocation();
-  const isWorkspace = host === 'teambit.workspace/workspace';
-
+  const isWorkspace = hostFromProps === 'teambit.workspace/workspace';
+  const compareHost =
+    isWorkspace && !location?.search.includes('version') && !compareIdFromProps && component.logs?.length === 0
+      ? hostFromProps
+      : 'teambit.scope/scope';
+  const host = 'teambit.scope/scope';
   const {
     component: compareComponent,
     loading: loadingCompare,
     componentDescriptor: compareComponentDescriptor,
-  } = useComponent(host, compareIdOverride?.toString() || compareIdFromProps?.toString(), {
+  } = useComponent(compareHost, compareIdOverride?.toString() || compareIdFromProps?.toString(), {
     skip: hidden || (!compareIdFromProps && !compareIdOverride),
     customUseComponent,
     logFilters: {
@@ -352,7 +351,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   }, [compare?.id.toString()]);
 
   const skipComponentCompareQuery =
-    hidden || compareIsLocalChanges || base?.id.version?.toString() === compare?.id.version?.toString();
+    hidden || (base?.id.version?.toString() === compare?.id.version?.toString() && !compareIsLocalChanges);
 
   const { loading: compCompareLoading, componentCompareData } = useComponentCompareQuery(
     base?.id.toString(),

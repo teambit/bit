@@ -3,8 +3,8 @@ import { DEFAULT_LANE } from '@teambit/lane-id';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('remove lanes', function () {
   this.timeout(0);
@@ -17,7 +17,7 @@ describe('remove lanes', function () {
   });
   describe('switching to a new lane and snapping', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponents();
       helper.command.export();
@@ -41,7 +41,7 @@ describe('remove lanes', function () {
       let beforeRemove;
       before(() => {
         helper.command.switchLocalLane(DEFAULT_LANE);
-        beforeRemove = helper.scopeHelper.cloneLocalScope(IS_WINDOWS);
+        beforeRemove = helper.scopeHelper.cloneWorkspace(IS_WINDOWS);
       });
       describe('then removing without --force flag', () => {
         let output;
@@ -68,7 +68,7 @@ describe('remove lanes', function () {
       describe('removing with --force flag and the full id', () => {
         let output;
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(beforeRemove);
+          helper.scopeHelper.getClonedWorkspace(beforeRemove);
           output = helper.command.removeLane(`${helper.scopes.remote}/dev --force`);
         });
         it('should remove the lane successfully', () => {
@@ -78,7 +78,7 @@ describe('remove lanes', function () {
       describe('merge the lane, then remove without --force', () => {
         let output;
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(beforeRemove);
+          helper.scopeHelper.getClonedWorkspace(beforeRemove);
           helper.command.mergeLane('dev');
           output = helper.command.removeLane('dev');
         });
@@ -90,7 +90,7 @@ describe('remove lanes', function () {
   });
   describe('removing a remote lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.createLane();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponentsWithoutBuild();

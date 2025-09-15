@@ -2,16 +2,16 @@
 import pMapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
-import { ComponentMain, ComponentFactory, Component } from '@teambit/component';
-import { EnvsMain } from './environments.main.runtime';
+import type { ComponentMain, ComponentFactory, Component } from '@teambit/component';
+import type { EnvsMain } from './environments.main.runtime';
 
 export class ListEnvsCmd implements Command {
   name = 'list';
   description = 'list all envs currently used in the workspace';
   options = [];
-  group = 'development';
+  group = 'component-config';
 
   constructor(
     private envs: EnvsMain,
@@ -46,7 +46,7 @@ export class GetEnvCmd implements Command {
       'show information about the specific services only. for multiple services, separate by a comma and wrap with quotes',
     ],
   ] as CommandOptions;
-  group = 'development';
+  group = 'component-config';
 
   constructor(
     private envs: EnvsMain,
@@ -59,7 +59,7 @@ export class GetEnvCmd implements Command {
     const env = this.envs.getEnv(component);
     const envRuntime = await this.envs.createEnvironment([component]);
     const envExecutionContext = envRuntime.getEnvExecutionContext();
-    const services = this.envs.getServices(env);
+    const services = await this.envs.getServices(env);
     const allP = services.services.map(async ([serviceId, service]) => {
       if (servicesArr && !servicesArr.includes(serviceId)) return null;
       const serviceTitle = chalk.cyan.bold.underline(serviceId);
@@ -86,9 +86,11 @@ export class GetEnvCmd implements Command {
 export class EnvsCmd implements Command {
   name = 'envs';
   alias = 'env';
-  description = 'list all components maintained by the workspace and their corresponding envs';
+  description = 'show components and their assigned environments';
+  extendedDescription = `displays a table showing each workspace component and its corresponding environment.
+environments control how components are built, tested, linted, and deployed.`;
   options = [];
-  group = 'development';
+  group = 'component-config';
   commands: Command[] = [];
 
   // private showNonLoadedEnvsWarning = false;

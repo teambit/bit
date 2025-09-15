@@ -2,10 +2,13 @@ import execa from 'execa';
 import tempy from 'tempy';
 import os from 'os';
 import fs from 'fs-extra';
-import { Graph } from 'graphlib';
-import graphviz, { Digraph } from 'graphviz';
+import type { Graph } from 'graphlib';
+import { Digraph, Subgraph, Node, Edge, toDot } from 'ts-graphviz';
+// @ts-ignore
+// eslint-disable-next-line import/no-unresolved
+import { toFile } from 'ts-graphviz/adapter';
 import { instance } from '@viz-js/viz';
-import { Graph as ClearGraph } from '@teambit/graph.cleargraph';
+import type { Graph as ClearGraph } from '@teambit/graph.cleargraph';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import * as path from 'path';
 import { logger } from '@teambit/legacy.logger';
@@ -21,19 +24,15 @@ const defaultConfig: GraphConfig = {
 };
 
 export class VisualDependencyGraph {
-  graphlib: Graph;
-  graph: Digraph;
-  config: GraphConfig;
-  constructor(graphlib: Graph, graph: Digraph, config: GraphConfig) {
-    this.graph = graph;
-    this.graphlib = graphlib;
-    this.config = config;
-  }
+  constructor(
+    public graph: Digraph,
+    public config: GraphConfig
+  ) {}
 
   static async loadFromGraphlib(graphlib: Graph, config: GraphConfig = {}): Promise<VisualDependencyGraph> {
     const mergedConfig = Object.assign({}, defaultConfig, config);
-    const graph: Digraph = VisualDependencyGraph.buildDependenciesGraph(graphlib, mergedConfig);
-    return new VisualDependencyGraph(graphlib, graph, mergedConfig);
+    const graph: Digraph = VisualDependencyGraph.buildDependenciesGraph(graphlib);
+    return new VisualDependencyGraph(graph, mergedConfig);
   }
 
   static async loadFromClearGraph(
@@ -47,32 +46,53 @@ export class VisualDependencyGraph {
       mergedConfig,
       markIds
     );
-    // @ts-ignore
-    return new VisualDependencyGraph(clearGraph, graph, mergedConfig);
+    return new VisualDependencyGraph(graph, mergedConfig);
+  }
+
+  static async loadFromMultipleClearGraphs(
+    clearGraphs: ClearGraph<any, any>[],
+    config: GraphConfig = {},
+    markIds?: string[]
+  ): Promise<VisualDependencyGraph> {
+    const mergedConfig = { ...defaultConfig, ...config };
+    const mainGraph = new Digraph('G');
+
+    clearGraphs.forEach((clearGraph, idx) => {
+      const subGraph = new Subgraph(`cluster_cycle_${idx}`);
+      mainGraph.addSubgraph(subGraph);
+      subGraph.set('label', `Cycle #${idx + 1}`);
+
+      VisualDependencyGraph.loadFromClearGraphIntoGraphViz(clearGraph, subGraph as any as Digraph, config, markIds);
+    });
+
+    return new VisualDependencyGraph(mainGraph, mergedConfig);
   }
 
   /**
    * Creates the graphviz graph
    */
-  static buildDependenciesGraph(graphlib: Graph, config: GraphConfig): Digraph {
-    const graph = graphviz.digraph('G');
-
-    if (config.graphVizPath) {
-      graph.setGraphVizPath(config.graphVizPath);
-    }
-
+  static buildDependenciesGraph(graphlib: Graph): Digraph {
+    const graph = new Digraph('G');
     const nodes = graphlib.nodes();
     const edges = graphlib.edges();
 
+    const digraphNodes = nodes.map((node) => new Node(node));
+    digraphNodes.forEach((node) => graph.addNode(node));
+    const digraphNodesObj = digraphNodes.reduce((acc, node) => {
+      acc[node.id] = node;
+      return acc;
+    }, {});
+
     nodes.forEach((node) => {
-      graph.addNode(node);
+      graph.addNode(new Node(node));
     });
     edges.forEach((edge) => {
       const edgeType = graphlib.edge(edge);
-      const vizEdge = graph.addEdge(edge.v, edge.w);
+      const digraphEdge = new Edge([digraphNodesObj[edge.v], digraphNodesObj[edge.w]]);
       if (edgeType !== 'dependencies') {
-        setEdgeColor(vizEdge, 'red');
+        digraphEdge.attributes.set('color', 'red');
       }
+      graph.addEdge(digraphEdge);
     });
 
     return graph;
@@ -83,16 +103,20 @@ export class VisualDependencyGraph {
     config: GraphConfig,
     markIds?: string[]
   ): Digraph {
-    const graph = graphviz.digraph('G');
+    const graph = new Digraph('G');
+    return VisualDependencyGraph.loadFromClearGraphIntoGraphViz(clearGraph, graph, config, markIds);
+  }
 
-    if (config.graphVizPath) {
-      graph.setGraphVizPath(config.graphVizPath);
-    }
-
+  static loadFromClearGraphIntoGraphViz(
+    clearGraph: ClearGraph<any, any>,
+    graph: Digraph,
+    config: GraphConfig = {},
+    markIds?: string[]
+  ): Digraph {
     const nodes = clearGraph.nodes;
     const edges = clearGraph.edges;
 
-    nodes.forEach((node) => {
+    const digraphNodes = nodes.map((node) => {
       const attr = node.attr;
 
       const props: any = {
@@ -105,12 +129,17 @@ export class VisualDependencyGraph {
       if (typeof attr === 'object' && (attr.tag || attr.pointers)) {
         const tag = attr.tag ? ` (${attr.tag})` : '';
         const pointers = attr.pointers ? `<BR/><B>${attr.pointers.join(', ')}</B>` : '';
-        // the "!" prefix enables the "html-like" syntax
-        props.label = `!${node.id}${tag}${pointers}`;
+        // the "<>" wrap enables the "html-like" syntax
+        props.label = `<${node.id}${tag}${pointers}>`;
       }
 
-      graph.addNode(node.id, props);
+      return new Node(node.id, props);
     });
+    digraphNodes.forEach((node) => graph.addNode(node));
+    const digraphNodesObj = digraphNodes.reduce((acc, node) => {
+      acc[node.id] = node;
+      return acc;
+    }, {});
     edges.forEach((edge) => {
       const edgeType = edge.attr;
       const getLabel = () => {
@@ -118,9 +147,10 @@ export class VisualDependencyGraph {
         if (edgeType === 'parent') return undefined;
         return edgeType;
       };
-      const vizEdge = graph.addEdge(edge.sourceId, edge.targetId, { label: getLabel() });
+      const vizEdge = new Edge([digraphNodesObj[edge.sourceId], digraphNodesObj[edge.targetId]], { label: getLabel() });
       const color = config.colorPerEdgeType?.[edgeType];
-      setEdgeColor(vizEdge, color);
+      if (color) setEdgeColor(vizEdge, color);
+      graph.addEdge(vizEdge);
     });
 
     return graph;
@@ -150,6 +180,25 @@ export class VisualDependencyGraph {
     return file;
   }
 
+  async getAsSVGString(): Promise<string | undefined> {
+    const dot = this.dot();
+    const viz = await instance();
+    const result = viz.render(dot, { format: 'svg' });
+    if (result.errors.length) {
+      throw new Error(
+        `failed to render the graph, errors:\n${result.errors.map((e) => `${e.level}: ${e.message}`).join('\n')}`
+      );
+    }
+    return result.output;
+  }
+
+  /**
+   * @returns the file path of the rendered image.
+   */
+  async render(format: string = 'svg'): Promise<string> {
+    return format === 'png' || format === 'gif' ? this.image() : this.renderUsingViz(format);
+  }
+
   /**
    * Creates an image from the module dependency graph.
    * @param  {String} imagePath
@@ -157,34 +206,24 @@ export class VisualDependencyGraph {
    */
   async image(imagePath: string = this.getTmpFilename()): Promise<string> {
     await checkGraphvizInstalled();
-    const options: Record<string, any> = createGraphvizOptions(this.config);
     const type: string = path.extname(imagePath).replace('.', '') || 'png';
-    options.type = type;
 
-    const outputP: Promise<Buffer> = new Promise((resolve, reject) => {
-      this.graph.output(options, resolve, (code, out, err) => {
-        logger.debug('Error during viz graph output function');
-        logger.debug(code, out, err);
-        reject(new Error(err));
-      });
-    });
+    const dot = this.dot();
+    await toFile(dot, imagePath, { format: type });
 
-    const image = await outputP;
-    await fs.writeFile(imagePath, image);
-    return path.resolve(imagePath);
+    return imagePath;
   }
 
   /**
    * Return the module dependency graph as DOT output.
-   * @return {dot}
    */
-  dot() {
+  dot(): string {
     const { G, E, N } = createGraphvizOptions(this.config);
-    Object.keys(G).forEach((key) => this.graph.set(key, G[key]));
-    Object.keys(E).forEach((key) => this.graph.setEdgeAttribut(key, E[key]));
-    Object.keys(N).forEach((key) => this.graph.setNodeAttribut(key, N[key]));
+    this.graph.graph(G);
+    this.graph.edge(E);
+    this.graph.node(N);
 
-    return this.graph.to_dot();
+    return toDot(this.graph);
   }
 }
 
@@ -193,8 +232,8 @@ export class VisualDependencyGraph {
  * @param  {Object} edge
  * @param  {String} color
  */
-function setEdgeColor(edge, color) {
-  edge.set('color', color);
+function setEdgeColor(edge: Edge, color: string) {
+  edge.attributes.set('color', color);
 }
 
 /**

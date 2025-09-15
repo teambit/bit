@@ -1,16 +1,21 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { VisualDependencyGraph, GraphConfig } from '@teambit/legacy.dependency-graph';
+import type { GraphConfig } from '@teambit/legacy.dependency-graph';
+import { VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
 import chalk from 'chalk';
-import { VersionHistoryMain } from './version-history.main.runtime';
+import type { VersionHistoryMain } from './version-history.main.runtime';
 import { catVersionHistory } from './cat-version-history';
 
 export class VersionHistoryCmd implements Command {
   name = 'version-history <sub-command>';
   alias = 'vh';
-  description = 'manage the version-history of components';
+  description = 'manage component version history data structures';
+  extendedDescription = `tools for building and maintaining the internal version history data that tracks component evolution and relationships.
+includes commands to rebuild corrupted version history, generate visual graphs, and inspect version relationships.
+mainly used for debugging and repair purposes when version history data becomes corrupted.`;
   options = [];
-  group = 'info';
+  group = 'version-control';
+  private = true;
   commands: Command[] = [];
 
   async report([unrecognizedSubcommand]: [string]) {
@@ -47,7 +52,8 @@ export class VersionHistoryBuildCmd implements Command {
     ['', 'delete-existing', 'delete the existing version history before building it'],
     ['', 'remote <scope>', 'make the change on the remote scope'],
   ] as CommandOptions;
-  group = 'info';
+  group = 'version-control';
+  private = true;
 
   constructor(private versionHistoryMain: VersionHistoryMain) {}
 
@@ -88,9 +94,11 @@ export class VersionHistoryGraphCmd implements Command {
       'layout <name>',
       'GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]',
     ],
+    ['', 'limit <number>', 'limit the number of nodes in the graph (starting from the heads)'],
   ] as CommandOptions;
-  group = 'info';
+  group = 'version-control';
   commands: Command[] = [];
+  private = true;
 
   constructor(private versionHistoryMain: VersionHistoryMain) {}
 
@@ -101,19 +109,31 @@ export class VersionHistoryGraphCmd implements Command {
       mark,
       png,
       layout,
+      limit,
     }: {
       shortHash?: boolean;
       mark?: string;
       png?: boolean;
       layout?: string;
+      limit?: number;
     }
   ) {
-    const graphHistory = await this.versionHistoryMain.generateGraph(id, shortHash);
+    const graphHistory = await this.versionHistoryMain.generateGraph(id, shortHash, limit);
     const markIds = mark ? mark.split(',').map((node) => node.trim()) : undefined;
     const config: GraphConfig = { colorPerEdgeType };
     if (layout) config.layout = layout;
     const visualDependencyGraph = await VisualDependencyGraph.loadFromClearGraph(graphHistory, config, markIds);
-    return png ? visualDependencyGraph.image() : visualDependencyGraph.renderUsingViz();
+
+    try {
+      return await visualDependencyGraph.render(png ? 'png' : 'svg');
+    } catch (err) {
+      if (err instanceof RangeError) {
+        throw new Error(
+          'failed to render the graph, the graph is too big. try to limit the number of nodes by using "--limit" flag'
+        );
+      }
+      throw err;
+    }
   }
 }
 
@@ -127,8 +147,9 @@ export class VersionHistoryShowCmd implements Command {
     ['s', 'short-hash', 'show only 9 chars of the hash'],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
-  group = 'info';
+  group = 'version-control';
   commands: Command[] = [];
+  private = true;
 
   constructor(private versionHistoryMain: VersionHistoryMain) {}
 

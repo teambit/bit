@@ -1,9 +1,11 @@
 import Spinnies from 'dreidels';
 import { loader } from '@teambit/legacy.loader';
-import { logger, IBitLogger } from '@teambit/legacy.logger';
+import type { IBitLogger } from '@teambit/legacy.logger';
+import { logger } from '@teambit/legacy.logger';
 import chalk from 'chalk';
 import { platform } from 'os';
-import { ConsoleOnStart, LongProcessLogger } from './long-process-logger';
+import type { ConsoleOnStart } from './long-process-logger';
+import { LongProcessLogger } from './long-process-logger';
 
 export class Logger implements IBitLogger {
   private spinnies?: Spinnies;
@@ -139,6 +141,13 @@ export class Logger implements IBitLogger {
 
   profile(id: string, console?: boolean) {
     logger.profile(id, console);
+  }
+
+  /**
+   * by default, the "profile" writes the message as "info". use this method to write it as "trace".
+   */
+  profileTrace(id: string) {
+    logger.profile(id, false, 'trace');
   }
 
   /**

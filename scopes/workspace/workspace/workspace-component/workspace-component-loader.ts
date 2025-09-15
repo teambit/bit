@@ -2,26 +2,27 @@ import pMap from 'p-map';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import { Component, ComponentFS, Config, InvalidComponent, State, TagMap } from '@teambit/component';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { Component, InvalidComponent } from '@teambit/component';
+import { ComponentFS, Config, State, TagMap } from '@teambit/component';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import mapSeries from 'p-map-series';
 import { compact, fromPairs, groupBy, pick, uniq, uniqBy } from 'lodash';
-import {
-  ComponentNotFoundInPath,
-  ConsumerComponent,
-  ComponentLoadOptions as LegacyComponentLoadOptions,
-  Dependencies,
-} from '@teambit/legacy.consumer-component';
+import type { ComponentLoadOptions as LegacyComponentLoadOptions } from '@teambit/legacy.consumer-component';
+import { ComponentNotFoundInPath, ConsumerComponent, Dependencies } from '@teambit/legacy.consumer-component';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ComponentNotFound } from '@teambit/legacy.scope';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { Logger } from '@teambit/logger';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { Logger } from '@teambit/logger';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
-import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import { AspectLoaderMain } from '@teambit/aspect-loader';
-import { Workspace } from '../workspace';
+import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import type { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 import { MergeConfigConflict } from '../exceptions/merge-config-conflict';
 
@@ -121,7 +122,7 @@ export class WorkspaceComponentLoader {
       return { components: [], invalidComponents: [] };
     }
     const callId = Math.floor(Math.random() * 1000); // generate a random callId to be able to identify the call from the logs
-    this.logger.profile(`getMany-${callId}`);
+    this.logger.profileTrace(`getMany-${callId}`);
     this.logger.setStatusLine(`loading ${ids.length} component(s)`);
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
       // We don't want to load extension or execute the load slot at this step
@@ -167,7 +168,7 @@ export class WorkspaceComponentLoader {
       (comp) =>
         idsWithEmptyStrs.includes(comp.id.toString()) || idsWithEmptyStrs.includes(comp.id.toStringWithoutVersion())
     );
-    this.logger.profile(`getMany-${callId}`);
+    this.logger.profileTrace(`getMany-${callId}`);
     this.logger.clearStatusLine();
     return { components: requestedComponents, invalidComponents };
   }
@@ -180,9 +181,9 @@ export class WorkspaceComponentLoader {
     if (!ids?.length) return { components: [], invalidComponents: [] };
 
     const workspaceScopeIdsMap: WorkspaceScopeIdsMap = await this.groupAndUpdateIds(ids);
-    this.logger.profile('buildLoadGroups');
+    this.logger.profileTrace('buildLoadGroups');
     const groupsToHandle = await this.buildLoadGroups(workspaceScopeIdsMap);
-    this.logger.profile('buildLoadGroups');
+    this.logger.profileTrace('buildLoadGroups');
     // prefix your command with "BIT_LOG=*" to see the detailed groups
     if (process.env.BIT_LOG) {
       printGroupsToHandle(groupsToHandle, this.logger);
@@ -191,12 +192,12 @@ export class WorkspaceComponentLoader {
       await mapSeries(groupsToHandle, async (group, index) => {
         const { scopeIds, workspaceIds, aspects, core, seeders, envs } = group;
         const groupDesc = `getMany-${callId} group ${index + 1}/${groupsToHandle.length} - ${loadGroupToStr(group)}`;
-        this.logger.profile(groupDesc);
+        this.logger.profileTrace(groupDesc);
         if (!workspaceIds.length && !scopeIds.length) {
           throw new Error('getAndLoadSlotOrdered - group has no ids to load');
         }
         const res = await this.getAndLoadSlot(workspaceIds, scopeIds, { ...loadOpts, core, seeders, aspects, envs });
-        this.logger.profile(groupDesc);
+        this.logger.profileTrace(groupDesc);
         // We don't want to return components that were not asked originally (we do want to load them)
         if (!group.seeders) return undefined;
         return res;
@@ -245,7 +246,7 @@ export class WorkspaceComponentLoader {
     wsIds.forEach((id) => {
       const idStr = id.toString();
       const fromCache = this.componentsExtensionsCache.get(idStr);
-      if (!fromCache || !fromCache.extensions) {
+      if (!fromCache || !fromCache.envId) {
         return;
       }
       const envId = fromCache.envId;
@@ -305,6 +306,23 @@ export class WorkspaceComponentLoader {
       ...layeredExtGroups,
       { ids: groupedByIsExtOfAnother.false || [], core: false, aspects: false, seeders: true, envs: false },
     ];
+
+    // This is a special use case mostly for the bit core repo
+    const envsOfCoreAspectEnv = ['teambit.harmony/envs/core-aspect-env', 'teambit.harmony/envs/core-aspect-env-jest'];
+    const coreAspectEnvGroup = { ids: [], core: true, aspects: true, seeders: true, envs: true };
+    layeredEnvsGroups.forEach((group) => {
+      const filteredIds = group.ids.filter((id) => envsOfCoreAspectEnv.includes(id.toStringWithoutVersion()));
+      if (filteredIds.length) {
+        // @ts-ignore
+        coreAspectEnvGroup.ids.push(...filteredIds);
+      }
+    });
+    if (coreAspectEnvGroup.ids.length) {
+      // enter first in the list
+      groupsToHandle.unshift(coreAspectEnvGroup);
+    }
+    // END of bit repo special use case
+
     const groupsByWsScope = groupsToHandle.map((group) => {
       if (!group.ids?.length) return undefined;
       const groupedByWsScope = groupBy(group.ids, (id) => {
@@ -394,17 +412,17 @@ export class WorkspaceComponentLoader {
       return !loadOpts.idsToNotLoadAsAspects?.includes(ext.stringId);
     });
     if (loadOpts.loadExtensions) {
-      this.logger.profile('loadComponentsExtensions');
+      this.logger.profileTrace('loadComponentsExtensions');
       await this.workspace.loadComponentsExtensions(filteredMergeExtensions);
-      this.logger.profile('loadComponentsExtensions');
+      this.logger.profileTrace('loadComponentsExtensions');
     }
     let wsComponentsWithAspects = workspaceComponents;
     // if (loadOpts.seeders) {
-    this.logger.profile('executeLoadSlot');
+    this.logger.profileTrace('executeLoadSlot');
     wsComponentsWithAspects = await pMapPool(workspaceComponents, (component) => this.executeLoadSlot(component), {
       concurrency: concurrentComponentsLimit(),
     });
-    this.logger.profile('executeLoadSlot');
+    this.logger.profileTrace('executeLoadSlot');
     await this.warnAboutMisconfiguredEnvs(wsComponentsWithAspects);
     // }
 
@@ -413,7 +431,7 @@ export class WorkspaceComponentLoader {
     // It's important to load the workspace components as aspects here
     // otherwise the envs from the workspace won't be loaded at time
     // so we will get wrong dependencies from component who uses envs from the workspace
-    this.logger.profile('loadCompsAsAspects');
+    this.logger.profileTrace('loadCompsAsAspects');
     if (loadOpts.loadSeedersAsAspects || (loadOpts.core && loadOpts.aspects)) {
       await this.loadCompsAsAspects(workspaceComponents.concat(scopeComponents), {
         loadApps: true,
@@ -424,7 +442,7 @@ export class WorkspaceComponentLoader {
         idsToNotLoadAsAspects: loadOpts.idsToNotLoadAsAspects,
       });
     }
-    this.logger.profile('loadCompsAsAspects');
+    this.logger.profileTrace('loadCompsAsAspects');
 
     return { components: withAspects, invalidComponents };
   }
@@ -564,7 +582,7 @@ export class WorkspaceComponentLoader {
     workspaceIds.forEach((id) => {
       idsIndex[id.toString()] = id;
     });
-    this.logger.profile('consumer.loadComponents');
+    this.logger.profileTrace('consumer.loadComponents');
     const {
       components: legacyComponents,
       invalidComponents: legacyInvalidComponents,
@@ -574,7 +592,7 @@ export class WorkspaceComponentLoader {
       false,
       loadOptsWithDefaults
     );
-    this.logger.profile('consumer.loadComponents');
+    this.logger.profileTrace('consumer.loadComponents');
     const allLegacyComponents = legacyComponents.concat(removedComponents);
     legacyInvalidComponents.forEach((invalidComponent) => {
       const entry = { id: idsIndex[invalidComponent.id.toString()], err: invalidComponent.error };
@@ -921,6 +939,9 @@ export class WorkspaceComponentLoader {
       packageName: this.dependencyResolver.calcPackageName(component),
       dependencies: dependenciesList.serialize(),
       policy: policy.serialize(),
+      componentRangePrefix: this.dependencyResolver.calcComponentRangePrefixByConsumerComponent(
+        component.state._consumer
+      ),
     };
 
     // Make sure we are adding the envs / deps data first because other on load events might depend on it

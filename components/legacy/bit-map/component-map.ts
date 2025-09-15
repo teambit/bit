@@ -1,8 +1,8 @@
 import * as path from 'path';
 import globby from 'globby';
 import ignore from 'ignore';
-import R from 'ramda';
-import { ComponentID } from '@teambit/component-id';
+import { pickBy, isNil, sortBy, isEmpty } from 'lodash';
+import type { ComponentID } from '@teambit/component-id';
 import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '@teambit/legacy.constants';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
@@ -13,26 +13,30 @@ import {
   getBitIgnoreFile,
   getGitIgnoreFile,
 } from '@teambit/git.modules.ignore-file-reader';
-import {
+import type {
   PathLinux,
   PathLinuxRelative,
-  PathOsBased,
+  PathOsBasedAbsolute,
   PathOsBasedRelative,
-  pathJoinLinux,
-  pathNormalizeToLinux,
-  pathRelativeLinux,
 } from '@teambit/toolbox.path.path';
+import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/toolbox.path.path';
 import { removeInternalConfigFields } from '@teambit/legacy.extension-data';
-import { Consumer } from '@teambit/legacy.consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
 import { IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
 
 export type ComponentMapFile = {
-  name: string;
   relativePath: PathLinux;
-  test: boolean;
+  /**
+   * @deprecated should be safe to remove around August 2025
+   * you can easily get it by running `path.basename(relativePath)`
+   */
+  name?: string;
+  /**
+   * @deprecated should be safe to remove around August 2025
+   */
+  test?: boolean;
 };
 
 export type NextVersion = {
@@ -49,7 +53,6 @@ export type ComponentMapData = {
   defaultScope?: string;
   mainFile: PathLinux;
   rootDir: PathLinux;
-  trackDir?: PathLinux;
   wrapDir?: PathLinux;
   exported?: boolean;
   onLanesOnly?: boolean;
@@ -67,11 +70,6 @@ export class ComponentMap {
   defaultScope?: string;
   mainFile: PathLinux;
   rootDir: PathLinux;
-  // reason why trackDir and not re-use rootDir is because using rootDir requires all paths to be
-  // relative to rootDir for consistency, then, when saving into the model changing them back to
-  // be relative to consumer-root. (we can't save in the model relative to rootDir, otherwise the
-  // dependencies paths won't work).
-  trackDir: PathLinux | undefined; // relevant for AUTHORED only when a component was added as a directory, used for tracking changes in that dir
   wrapDir: PathLinux | undefined; // a wrapper directory needed when a user adds a package.json file to the component root so then it won't collide with Bit generated one
   // wether the compiler / tester are detached from the workspace global configuration
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -100,7 +98,6 @@ export class ComponentMap {
     defaultScope,
     mainFile,
     rootDir,
-    trackDir,
     wrapDir,
     onLanesOnly,
     localOnly,
@@ -113,7 +110,6 @@ export class ComponentMap {
     this.defaultScope = defaultScope;
     this.mainFile = mainFile;
     this.rootDir = rootDir;
-    this.trackDir = trackDir;
     this.wrapDir = wrapDir;
     this.onLanesOnly = onLanesOnly;
     this.localOnly = localOnly;
@@ -127,7 +123,7 @@ export class ComponentMap {
   }
 
   toPlainObject(): Record<string, any> {
-    let res = {
+    let res: Record<string, any> = {
       name: this.name,
       scope: this.scope,
       version: this.version,
@@ -135,7 +131,6 @@ export class ComponentMap {
       defaultScope: this.defaultScope,
       mainFile: this.mainFile,
       rootDir: this.rootDir,
-      trackDir: this.trackDir,
       wrapDir: this.wrapDir,
       exported: this.exported,
       onLanesOnly: this.onLanesOnly || null, // if false, change to null so it won't be written
@@ -144,10 +139,8 @@ export class ComponentMap {
       localOnly: this.localOnly || null, // if false, change to null so it won't be written
       config: this.configToObject(),
     };
-    const notNil = (val) => {
-      return !R.isNil(val);
-    };
-    res = R.filter(notNil, res);
+
+    res = pickBy(res, (value) => !isNil(value));
     return res;
   }
 
@@ -204,16 +197,6 @@ export class ComponentMap {
       file.relativePath = newPath;
     });
     this.rootDir = newRootDir;
-    this.trackDir = undefined; // if there is trackDir, it's not needed anymore.
-  }
-
-  addRootDirToDistributedFiles(rootDir: PathOsBased) {
-    this.files.forEach((file) => {
-      file.relativePath = file.name;
-    });
-    this.rootDir = pathNormalizeToLinux(rootDir);
-    this.mainFile = path.basename(this.mainFile);
-    this.validate();
   }
 
   updateDirLocation(dirFrom: PathOsBasedRelative, dirTo: PathOsBasedRelative): PathChange[] {
@@ -258,21 +241,6 @@ export class ComponentMap {
     return this.files.map((file) => file.relativePath);
   }
 
-  getFilesGroupedByBeingTests(): { allFiles: string[]; nonTestsFiles: string[]; testsFiles: string[] } {
-    const allFiles = [];
-    const nonTestsFiles = [];
-    const testsFiles = [];
-    this.files.forEach((file: ComponentMapFile) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      allFiles.push(file.relativePath);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (file.test) testsFiles.push(file.relativePath);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      else nonTestsFiles.push(file.relativePath);
-    });
-    return { allFiles, nonTestsFiles, testsFiles };
-  }
-
   /**
    * this.rootDir is not defined for author. instead, the current workspace is the rootDir
    * also, for imported environments (compiler/tester) components the rootDir is empty
@@ -297,13 +265,13 @@ export class ComponentMap {
    * if the component dir has changed since the last tracking, re-scan the component-dir to get the
    * updated list of the files
    */
-  async trackDirectoryChangesHarmony(consumer: Consumer): Promise<void> {
+  async trackDirectoryChangesHarmony(consumerPath: PathOsBasedAbsolute): Promise<void> {
     const trackDir = this.rootDir;
     if (!trackDir) {
       return;
     }
-    const gitIgnore = await getGitIgnoreHarmony(consumer.getPath());
-    this.files = await getFilesByDir(trackDir, consumer.getPath(), gitIgnore);
+    const gitIgnore = await getGitIgnoreHarmony(consumerPath);
+    this.files = await getFilesByDir(trackDir, consumerPath, gitIgnore);
   }
 
   updateNextVersion(nextVersion: NextVersion) {
@@ -346,7 +314,7 @@ export class ComponentMap {
   }
 
   sort() {
-    this.files = R.sortBy(R.prop('relativePath'), this.files);
+    this.files = sortBy(this.files, 'relativePath');
   }
 
   clone() {
@@ -381,7 +349,7 @@ export class ComponentMap {
       }
     });
     const foundMainFile = this.files.find((file) => file.relativePath === this.mainFile);
-    if (!foundMainFile || R.isEmpty(foundMainFile)) {
+    if (!foundMainFile || isEmpty(foundMainFile)) {
       throw new ValidationError(`${errorMessage} mainFile ${this.mainFile} is not in the files list.
 if you renamed the mainFile, please re-add the component with the "--main" flag pointing to the correct main-file`);
     }

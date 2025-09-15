@@ -1,6 +1,7 @@
 import { configBaseFactory } from '@teambit/react.webpack.react-webpack';
 
-import { Configuration, ProvidePlugin } from 'webpack';
+import type { Configuration } from 'webpack';
+import { ProvidePlugin } from 'webpack';
 import { merge } from 'webpack-merge';
 import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
@@ -9,10 +10,8 @@ export function createWebpackConfig(outputDir: string, entryFile: string): Confi
   const baseConfig = configBaseFactory(true);
   const preBundleConfig = createPreBundleConfig(outputDir, entryFile);
 
-  // @ts-ignore that's an issue because of different types/webpack version
   const combined = merge(baseConfig, preBundleConfig);
 
-  // @ts-ignore that's an issue because of different types/webpack version
   return combined;
 }
 

@@ -1,22 +1,26 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import { loadConsumerIfExist } from '@teambit/legacy.consumer';
 import { VersionHistoryAspect } from './version-history.aspect';
+import type { BuildOptions, ShowOptions } from './version-history-cmd';
 import {
-  BuildOptions,
-  ShowOptions,
   VersionHistoryBuildCmd,
   VersionHistoryCmd,
   VersionHistoryGraphCmd,
   VersionHistoryShowCmd,
 } from './version-history-cmd';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { VersionHistoryGraph, Ref, ModelComponent, VersionHistory } from '@teambit/scope.objects';
+import type { VersionHistoryGraph, ModelComponent, VersionHistory } from '@teambit/objects';
+import { Ref } from '@teambit/objects';
 import { ExternalActions } from '@teambit/legacy.scope-api';
 import { BuildVersionHistoryAction } from './build-version-history-action';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import { compact } from 'lodash';
 import { CatVersionHistoryCmd } from './cat-version-history-cmd';
 
@@ -106,7 +110,7 @@ export class VersionHistoryMain {
     return versionHistory;
   }
 
-  async generateGraph(id: string, shortHash?: boolean): Promise<VersionHistoryGraph> {
+  async generateGraph(id: string, shortHash?: boolean, limit?: number): Promise<VersionHistoryGraph> {
     const compId = await this.scope.resolveComponentId(id);
     const modelComponent = (await this.scope.getBitObjectModelComponent(compId, true)) as ModelComponent;
     const repo = this.scope.legacyScope.objects;
@@ -123,7 +127,7 @@ export class VersionHistoryMain {
       laneHeads[hash].push(lane);
     });
 
-    return versionHistory.getGraph(modelComponent, laneHeads, shortHash);
+    return versionHistory.getGraph(modelComponent, laneHeads, shortHash, limit);
   }
 
   async buildOnRemote(

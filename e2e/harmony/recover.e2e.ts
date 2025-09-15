@@ -1,9 +1,10 @@
 import { IssuesClasses } from '@teambit/component-issues';
 import chai, { expect } from 'chai';
+import chaiFs from 'chai-fs';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { Extensions } from '@teambit/legacy.constants';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('bit recover command', function () {
   this.timeout(0);
@@ -16,12 +17,12 @@ describe('bit recover command', function () {
   });
   describe('recover before snapping', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild();
       helper.command.export();
 
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
       helper.command.recover('comp2');
       helper.command.link();
     });
@@ -39,12 +40,12 @@ describe('bit recover command', function () {
   });
   describe('recover after snapping', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild();
       helper.command.export();
 
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.tagAllWithoutBuild();
       helper.command.recover(`${helper.scopes.remote}/comp2`);
@@ -68,17 +69,17 @@ describe('bit recover command', function () {
   });
   describe('export the soft-remove component, start a new workspace and recover from there', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild();
       helper.command.export();
 
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.recover(`${helper.scopes.remote}/comp2`);
     });
@@ -95,17 +96,17 @@ describe('bit recover command', function () {
   });
   describe('import soft-removed component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild();
       helper.command.export();
 
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp2', '-x');
     });
@@ -134,7 +135,7 @@ describe('bit recover command', function () {
   describe('recover on a lane', () => {
     describe('recover before snapping', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.command.createLane();
         helper.fixtures.populateComponents(2);
         helper.command.snapAllComponentsWithoutBuild();
@@ -160,7 +161,7 @@ describe('bit recover command', function () {
     });
     describe('recover after snapping', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.command.createLane();
         helper.fixtures.populateComponents(2);
         helper.command.snapAllComponentsWithoutBuild();
@@ -190,7 +191,7 @@ describe('bit recover command', function () {
     });
     describe('export the soft-remove component, start a new workspace and recover from there', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.command.createLane();
         helper.fixtures.populateComponents(2);
         helper.command.snapAllComponentsWithoutBuild();
@@ -201,7 +202,7 @@ describe('bit recover command', function () {
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
 
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.importLane(`dev`, '-x');
         helper.command.recover(`${helper.scopes.remote}/comp2`);
@@ -220,19 +221,19 @@ describe('bit recover command', function () {
   });
   describe('remove after recovering', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild();
       helper.command.export();
 
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.tagAllWithoutBuild();
       helper.command.recover(`${helper.scopes.remote}/comp2`);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
     });
     it('bit show should show the component as removed', () => {
       const removeData = helper.command.showAspectConfig('comp2', Extensions.remove);
@@ -241,7 +242,7 @@ describe('bit recover command', function () {
   });
   describe('remove in one lane, recover in other lane, then merged to the first lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.createLane('lane-a');
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
@@ -272,7 +273,7 @@ describe('bit recover command', function () {
   });
   describe('remove in one lane, recover in an empty lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.createLane('lane-a');
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
@@ -290,20 +291,20 @@ describe('bit recover command', function () {
   describe('recover diverged component before snapping', () => {
     let beforeDiverge: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagWithoutBuild();
       helper.command.export();
-      beforeDiverge = helper.scopeHelper.cloneLocalScope();
+      beforeDiverge = helper.scopeHelper.cloneWorkspace();
 
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
 
-      helper.scopeHelper.getClonedLocalScope(beforeDiverge);
+      helper.scopeHelper.getClonedWorkspace(beforeDiverge);
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.import();
 
-      helper.command.softRemoveComponent('comp1');
+      helper.command.deleteComponent('comp1');
     });
     it('should not throw', () => {
       expect(() => helper.command.recover('comp1')).not.to.throw();

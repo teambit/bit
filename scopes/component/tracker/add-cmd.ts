@@ -1,10 +1,10 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import * as path from 'path';
 import { BitError } from '@teambit/bit-error';
-import { PathLinux, PathOsBased } from '@teambit/legacy.utils';
-import { AddActionResults, Warnings } from './add-components';
-import { TrackerMain } from './tracker.main.runtime';
+import type { PathLinux, PathOsBased } from '@teambit/legacy.utils';
+import type { AddActionResults, Warnings } from './add-components';
+import type { TrackerMain } from './tracker.main.runtime';
 
 type AddFlags = {
   id: string | null | undefined;
@@ -22,9 +22,10 @@ type AddResults = {
 
 export class AddCmd implements Command {
   name = 'add [path...]';
-  description = 'Add any subset of files to be tracked as a component(s).';
-  group = 'development';
-  extendedDescription = 'Learn the recommended workflow for tracking directories as components, in the link below.';
+  description = 'track existing directory contents as new components in the workspace';
+  group = 'component-development';
+  extendedDescription =
+    'Registers one or more directories as Bit components without changing your files. Each provided path becomes a component root tracked by Bit.';
   helpUrl = 'reference/workspace/component-directory';
   alias = 'a';
   options = [

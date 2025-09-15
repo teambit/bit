@@ -1,20 +1,22 @@
 import open from 'open';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
 // import { Logger } from '@teambit/logger';
 // import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
-import { ComponentID } from '@teambit/component-id';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { reportLegacy, actionLegacy } from './legacy-show/show-legacy-cmd';
-import { ComponentMain } from '../component.main.runtime';
+import type { ComponentMain } from '../component.main.runtime';
+import { isLikelyPackageName, resolveComponentIdFromPackageName } from '@teambit/pkg.modules.component-package-name';
 
 export class ShowCmd implements Command {
   name = 'show <component-name>';
-  description = "display the component's essential information";
+  description = 'display component metadata, dependencies, and configuration';
+  extendedDescription = `shows detailed information about a component including its version, dependencies, environment, and other metadata.
+note: to see file changes made in a specific version, use \`bit diff <component> <version> --parent\`.`;
   alias = '';
-  group = 'info';
+  group = 'info-analysis';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
   options = [
     ['j', 'json', 'return the component data in json format'],
@@ -35,26 +37,47 @@ export class ShowCmd implements Command {
 
   private async getComponent(idStr: string, remote: boolean) {
     if (remote) {
-      const id = ComponentID.fromString(idStr); // user used --remote so we know it has a scope
       const host = this.component.getHostIfExist('teambit.scope/scope');
-      if (!host)
+      if (!host) {
         throw new Error(`error: the current directory is not a workspace nor a scope. the full "bit show" is not supported.
 to see the legacy bit show, please use "--legacy" flag`);
+      }
       if (!host.getRemoteComponent) {
         throw new Error('Component Host does not implement getRemoteComponent()');
       }
+      const id = await host.resolveComponentId(idStr);
       const component = await host.getRemoteComponent(id);
       return component;
     }
     const host = this.component.getHost();
+    if (!host) {
+      throw new Error(
+        'Could not find a workspace or scope. Consider using --remote or run inside a valid workspace or scope.'
+      );
+    }
     const id = await host.resolveComponentId(idStr);
     const component = await host.get(id);
     if (!component) throw new MissingBitMapComponent(idStr);
     return component;
   }
 
+  private async resolveIdWithoutWorkspace(id: string): Promise<string> {
+    if (isLikelyPackageName(id)) {
+      try {
+        const compId = await resolveComponentIdFromPackageName(id, this.component.dependencyResolver);
+        return compId.toString();
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw new Error(`${errorMessage}.
+If this is a component, Please use a valid component ID instead.`);
+      }
+    }
+    return id;
+  }
+
   async useLegacy(id: string, json = false, remote = false, compare = false) {
-    const showData = await actionLegacy([id], {
+    const resolvedId = await this.resolveIdWithoutWorkspace(id);
+    const showData = await actionLegacy([resolvedId], {
       json,
       remote,
       compare,

@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import { AUTO_TAGGED_MSG } from '@teambit/snapping';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('auto tagging functionality', function () {
   this.timeout(0);
@@ -18,14 +18,14 @@ describe('auto tagging functionality', function () {
     let tagOutput;
     let beforeSecondTag: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
 
       helper.fs.appendFile('comp3/index.js');
       const statusOutput = helper.command.runCmd('bit status');
       expect(statusOutput).to.have.string('components pending auto-tag');
-      beforeSecondTag = helper.scopeHelper.cloneLocalScope();
+      beforeSecondTag = helper.scopeHelper.cloneWorkspace();
       tagOutput = helper.command.tagWithoutBuild('comp3');
     });
     it('should auto tag the dependencies and the nested dependencies', () => {
@@ -77,7 +77,7 @@ describe('auto tagging functionality', function () {
     });
     describe('with --skip-auto-tag', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeSecondTag);
+        helper.scopeHelper.getClonedWorkspace(beforeSecondTag);
         tagOutput = helper.command.tagWithoutBuild('comp3', '--skip-auto-tag');
       });
       it('should not auto tag the dependencies', () => {
@@ -96,7 +96,7 @@ describe('auto tagging functionality', function () {
   describe('with cyclic dependencies', () => {
     let scopeBeforeTag;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.createFile('bar/a', 'a.js', 'require("../b/b")');
       helper.fs.createFile('bar/b', 'b.js', 'require("../c/c")');
       helper.fs.createFile('bar/c', 'c.js', 'require("../a/a"); console.log("I am C v1")');
@@ -105,7 +105,7 @@ describe('auto tagging functionality', function () {
       helper.command.tagAllWithoutBuild('--ignore-issues="CircularDependencies"');
       helper.fs.createFile('bar/c', 'c.js', 'require("../a/a"); console.log("I am C v2")');
       helper.command.linkAndRewire();
-      scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
+      scopeBeforeTag = helper.scopeHelper.cloneWorkspace();
     });
     it('bit status should recognize the auto tag pending components', () => {
       const output = helper.command.statusJson();
@@ -177,7 +177,7 @@ describe('auto tagging functionality', function () {
       // see https://github.com/teambit/bit/issues/2034 for the issue this test for
       let tagOutput: string;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+        helper.scopeHelper.getClonedWorkspace(scopeBeforeTag);
         tagOutput = helper.command.tagAllWithoutBuild('--ignore-issues="CircularDependencies" --ver 2.0.0');
       });
       it('should auto tag all dependents', () => {
@@ -248,7 +248,7 @@ describe('auto tagging functionality', function () {
   });
   describe('with same component as direct and indirect dependent (A in: A => B => C, A => C)', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.createFile('bar/a', 'a.js', 'require("../b/b"); require("../c/c");');
       helper.fs.createFile('bar/b', 'b.js', 'require("../c/c")');
       helper.fs.createFile('bar/c', 'c.js', 'console.log("I am C v1")');
@@ -257,7 +257,7 @@ describe('auto tagging functionality', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('"bar/*"');
 

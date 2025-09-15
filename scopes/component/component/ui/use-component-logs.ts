@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { ComponentLogsResult, Filters } from './use-component.model';
+import type { ComponentLogsResult, Filters } from './use-component.model';
 import { GET_COMPONENT_WITH_LOGS } from './use-component.fragments';
 import { ComponentError } from './component-error';
 import { getOffsetValue } from './use-component.utils';

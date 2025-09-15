@@ -1,32 +1,22 @@
 import React from 'react';
 import { flatten } from 'lodash';
-import { ComponentAspect, ComponentUI } from '@teambit/component';
+import type { ComponentUI } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
 import { APIRefPage } from '@teambit/api-reference.sections.api-reference-page';
 import { APIRefSection } from '@teambit/api-reference.sections.api-reference-section';
-import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
-import { classRenderer } from '@teambit/api-reference.renderers.class';
-import { interfaceRenderer } from '@teambit/api-reference.renderers.interface';
-import { typeRenderer } from '@teambit/api-reference.renderers.type';
-import { functionRenderer } from '@teambit/api-reference.renderers.function';
-import { enumRenderer } from '@teambit/api-reference.renderers.enum';
-import { variableRenderer } from '@teambit/api-reference.renderers.variable';
-import { unresolvedRenderer } from '@teambit/api-reference.renderers.unresolved';
-import { typeRefRenderer } from '@teambit/api-reference.renderers.type-ref';
-import { typeUnionRenderer } from '@teambit/api-reference.renderers.type-union';
-import { typeIntersectionRenderer } from '@teambit/api-reference.renderers.type-intersection';
-import { typeLiteralRenderer } from '@teambit/api-reference.renderers.type-literal';
-import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
-import { inferenceTypeRenderer } from '@teambit/api-reference.renderers.inference-type';
-import { typeArrayRenderer } from '@teambit/api-reference.renderers.type-array';
-import { thisRenderer } from '@teambit/api-reference.renderers.this';
+import type { Harmony, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { defaultNodeRenderers } from '@teambit/api-reference.renderers.default-node-renderers';
 import { APIRefRenderersProvider } from '@teambit/api-reference.hooks.use-api-renderers';
-import { decoratorRenderer } from '@teambit/api-reference.renderers.decorator';
-import { SchemaNodeConstructor, SchemaRegistry, Schemas } from '@teambit/semantics.entities.semantic-schema';
-import { CodeAspect, CodeUI } from '@teambit/code';
+import type { SchemaNodeConstructor } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaRegistry, Schemas } from '@teambit/semantics.entities.semantic-schema';
+import type { CodeUI } from '@teambit/code';
+import { CodeAspect } from '@teambit/code';
 import { TaggedExports } from '@teambit/tagged-exports';
-import { WorkspaceAspect, WorkspaceUI } from '@teambit/workspace';
+import type { WorkspaceUI } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 
 import { APIReferenceAspect } from './api-reference.aspect';
 
@@ -60,36 +50,23 @@ export class APIReferenceUI {
     );
   };
 
+  /**
+   * @deprecated use registerSchemaClasses instead
+   * registerSchemaClasses is better for performance as it lazy-loads the schemas.
+   */
   registerSchemaClass(schema: SchemaNodeConstructor) {
     SchemaRegistry.register(schema);
   }
 
-  getSchemaClasses() {
-    return SchemaRegistry.schemas;
+  registerSchemaClasses(getSchemas: () => SchemaNodeConstructor[]) {
+    SchemaRegistry.registerGetSchemas(getSchemas);
   }
 
   registerAPINodeRenderer(apiNodeRenderers: APINodeRenderer[]) {
     this.apiNodeRendererSlot.register(apiNodeRenderers);
   }
 
-  apiNodeRenderers: APINodeRenderer[] = [
-    classRenderer,
-    typeRenderer,
-    interfaceRenderer,
-    variableRenderer,
-    functionRenderer,
-    enumRenderer,
-    unresolvedRenderer,
-    typeRefRenderer,
-    typeIntersectionRenderer,
-    typeUnionRenderer,
-    parameterRenderer,
-    typeLiteralRenderer,
-    inferenceTypeRenderer,
-    typeArrayRenderer,
-    thisRenderer,
-    decoratorRenderer,
-  ];
+  apiNodeRenderers: APINodeRenderer[] = defaultNodeRenderers;
 
   static async provider(
     [componentUI, codeUI, workspaceUI]: [ComponentUI, CodeUI, WorkspaceUI],
@@ -105,9 +82,8 @@ export class APIReferenceUI {
     componentUI.registerNavigation(apiReferenceSection.navigationLink, apiReferenceSection.order);
     componentUI.registerRoute(apiReferenceSection.route);
     // register all default schema classes
-    Object.values(Schemas).forEach((Schema) => {
-      apiReferenceUI.registerSchemaClass(Schema);
-    });
+    apiReferenceUI.registerSchemaClasses(() => Object.values(Schemas));
+
     return apiReferenceUI;
   }
 }

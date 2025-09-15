@@ -1,34 +1,49 @@
-import { Harmony } from '@teambit/harmony';
-import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import type { Harmony } from '@teambit/harmony';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import type { LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { BuilderMain } from '@teambit/builder';
+import { BuilderAspect } from '@teambit/builder';
 import { compact, merge } from 'lodash';
-import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain, EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { EnvContext, Environment, EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
-import { ReactAspect, ReactEnv, ReactMain } from '@teambit/react';
-import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Environment, EnvsMain, EnvTransformer } from '@teambit/envs';
+import { EnvContext, EnvsAspect } from '@teambit/envs';
+import type { ReactEnv, ReactMain } from '@teambit/react';
+import { ReactAspect } from '@teambit/react';
+import type { GeneratorMain } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator';
 import { ComponentID } from '@teambit/component-id';
-import { AspectList } from '@teambit/component';
-import { WorkerAspect, WorkerMain } from '@teambit/worker';
-import { WorkspaceAspect, ExtensionsOrigin, Workspace } from '@teambit/workspace';
-import { CompilerAspect, CompilerMain } from '@teambit/compiler';
+import type { AspectList } from '@teambit/component';
+import type { WorkerMain } from '@teambit/worker';
+import { WorkerAspect } from '@teambit/worker';
+import type { ExtensionsOrigin, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { CompilerMain } from '@teambit/compiler';
+import { CompilerAspect } from '@teambit/compiler';
 import { AspectAspect } from './aspect.aspect';
 import { AspectEnv } from './aspect.env';
 import { CoreExporterTask } from './core-exporter.task';
 import { babelConfig } from './babel/babel-config';
+import type { SetAspectOptions } from './aspect.cmd';
 import {
   AspectCmd,
   GetAspectCmd,
   ListAspectCmd,
+  ListCoreAspectCmd,
   SetAspectCmd,
-  SetAspectOptions,
   UnsetAspectCmd,
   UpdateAspectCmd,
 } from './aspect.cmd';
 import { getTemplates } from './aspect.templates';
-import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
+import type { DevFilesMain } from '@teambit/dev-files';
+import { DevFilesAspect } from '@teambit/dev-files';
+import type { ValidateBeforePersistResult } from '@teambit/legacy.extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 
 export type AspectSource = { aspectName: string; source: string; level: string };
 
@@ -36,7 +51,9 @@ export class AspectMain {
   constructor(
     readonly aspectEnv: AspectEnv,
     private envs: EnvsMain,
-    private workspace: Workspace
+    private workspace: Workspace,
+    private aspectLoader: AspectLoaderMain,
+    private depsResolver: DependencyResolverMain
   ) {}
 
   /**
@@ -60,6 +77,10 @@ export class AspectMain {
       })
     );
     return results;
+  }
+
+  listCoreAspects(): string[] {
+    return this.aspectLoader.getCoreAspectIds();
   }
 
   get babelConfig() {
@@ -206,6 +227,23 @@ export class AspectMain {
     });
   }
 
+  /**
+   * currently, it validates envs/envs only. If needed for other aspects, create a slot, let aspects register to it,
+   * then call the validation of all aspects from here.
+   */
+  validateAspectsBeforePersist(extensionDataList: ExtensionDataList): ValidateBeforePersistResult {
+    const envExt = extensionDataList.findCoreExtension(EnvsAspect.id);
+    if (envExt) {
+      const result = this.envs.validateEnvId(envExt);
+      if (result) return result;
+    }
+    const depResolverExt = extensionDataList.findCoreExtension(DependencyResolverAspect.id);
+    if (depResolverExt) {
+      const result = this.depsResolver.validateAspectData(depResolverExt.data as any);
+      if (result) return result;
+    }
+  }
+
   static runtime = MainRuntime;
   static dependencies = [
     ReactAspect,
@@ -219,10 +257,24 @@ export class AspectMain {
     LoggerAspect,
     WorkerAspect,
     DevFilesAspect,
+    DependencyResolverAspect,
   ];
 
   static async provider(
-    [react, envs, builder, aspectLoader, compiler, generator, workspace, cli, loggerMain, workerMain, devFilesMain]: [
+    [
+      react,
+      envs,
+      builder,
+      aspectLoader,
+      compiler,
+      generator,
+      workspace,
+      cli,
+      loggerMain,
+      workerMain,
+      devFilesMain,
+      depResolver,
+    ]: [
       ReactMain,
       EnvsMain,
       BuilderMain,
@@ -234,6 +286,7 @@ export class AspectMain {
       LoggerMain,
       WorkerMain,
       DevFilesMain,
+      DependencyResolverMain,
     ],
     config,
     slots,
@@ -254,18 +307,21 @@ export class AspectMain {
     envs.registerEnv(aspectEnv);
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerMain, workerMain, harmony);
-      generator.registerComponentTemplate(getTemplates(envContext));
+      generator.registerComponentTemplate(() => getTemplates(envContext));
     }
-    const aspectMain = new AspectMain(aspectEnv as AspectEnv, envs, workspace);
+    const aspectMain = new AspectMain(aspectEnv as AspectEnv, envs, workspace, aspectLoader, depResolver);
     const aspectCmd = new AspectCmd();
     aspectCmd.commands = [
       new ListAspectCmd(aspectMain),
+      new ListCoreAspectCmd(aspectMain),
       new GetAspectCmd(aspectMain),
       new SetAspectCmd(aspectMain),
       new UnsetAspectCmd(aspectMain),
       new UpdateAspectCmd(aspectMain),
     ];
     cli.register(aspectCmd);
+
+    ExtensionDataList.validateBeforePersistHook = aspectMain.validateAspectsBeforePersist.bind(aspectMain);
 
     return aspectMain;
   }

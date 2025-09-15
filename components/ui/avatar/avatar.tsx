@@ -1,5 +1,6 @@
 import React from 'react';
-
+import type { AccountDescriptor } from '@teambit/accounts.account-descriptor';
+import type { Placement as TooltipPlacement } from '@teambit/design.ui.tooltip';
 import { DefaultAvatar } from './default-avatar';
 import { OrgAvatar } from './org-avatar';
 import { UserAvatar } from './user-avatar';
@@ -18,24 +19,26 @@ export type AccountObj = {
 };
 
 type AvatarProps = {
-  account: AccountObj;
-  size: number;
+  account?: AccountDescriptor;
+  size?: number;
   imageSize?: number;
   fontSize?: number;
   className?: string;
   imgClassName?: string;
   showTooltip?: boolean;
+  tooltipPlacement?: TooltipPlacement;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export default function Avatar(props: AvatarProps) {
-  const { account } = props;
+export function Avatar({ account, ...rest }: AvatarProps) {
+  if (!account) return <DefaultAvatar {...rest} />;
+  const { type, name, displayName, image } = account;
+  const accountObj: AccountObj = {
+    name,
+    displayName,
+    profileImage: image,
+  };
 
-  switch (account.accountType) {
-    case AccountTypes.user:
-      return <UserAvatar {...props} />;
-    case AccountTypes.org:
-      return <OrgAvatar {...props} />;
-    default:
-      return <DefaultAvatar {...props} />;
-  }
+  if (type === 'user') return <UserAvatar account={accountObj} {...rest} />;
+  if (type === 'org') return <OrgAvatar account={accountObj} {...rest} />;
+  return <DefaultAvatar {...rest} />;
 }

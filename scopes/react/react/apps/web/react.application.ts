@@ -1,24 +1,23 @@
 import { readFileSync } from 'fs';
 import { join, resolve, basename } from 'path';
-import { Application, AppContext, AppBuildContext, AppResult, ApplicationInstance } from '@teambit/application';
+import type { Application, AppContext, AppBuildContext, AppResult, ApplicationInstance } from '@teambit/application';
 import type { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { ComponentMap } from '@teambit/component';
 import type { Logger } from '@teambit/logger';
-import { DependencyResolverMain, WorkspacePolicy } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { WorkspacePolicy } from '@teambit/dependency-resolver';
 import compact from 'lodash.compact';
-import { WebpackConfigTransformer } from '@teambit/webpack';
+import type { WebpackConfigTransformer } from '@teambit/webpack';
 import { BitError } from '@teambit/bit-error';
-import { ReactEnv } from '../../react.env';
-import { prerenderPlugin } from './plugins';
-import { ReactAppBuildResult } from './react-build-result';
+import type { ReactEnv } from '../../react.env';
+import type { ReactAppBuildResult } from './react-build-result';
 import { html } from '../../webpack';
-import { ReactDeployContext } from './deploy-context';
+import type { ReactDeployContext } from './deploy-context';
 import { computeResults } from './compute-results';
 import { clientConfig, ssrConfig, calcOutputPath, ssrBuildConfig, buildConfig } from './webpack/webpack.app.ssr.config';
 import { addDevServer, setOutput, replaceTerserPlugin, setDevServerClient } from './webpack/mutators';
 import { createExpressSsr, loadSsrApp, parseAssets } from './ssr/ssr-express';
-import { WebpackPrerenderSPAOptions } from './plugins/prerender';
 
 export class ReactApp implements Application {
   constructor(
@@ -29,7 +28,6 @@ export class ReactApp implements Application {
     private reactEnv: ReactEnv,
     private logger: Logger,
     private dependencyResolver: DependencyResolverMain,
-    readonly prerender?: WebpackPrerenderSPAOptions,
     readonly bundler?: Bundler,
     readonly ssrBundler?: Bundler,
     readonly devServer?: DevServer,
@@ -128,7 +126,6 @@ export class ReactApp implements Application {
         },
       ],
 
-      // @ts-ignore
       capsuleNetwork: undefined,
       previousTasksResults: [],
     });
@@ -157,7 +154,6 @@ export class ReactApp implements Application {
         },
       ],
 
-      // @ts-ignore
       capsuleNetwork: undefined,
       previousTasksResults: [],
     });
@@ -257,11 +253,7 @@ export class ReactApp implements Application {
     const bundlerContext = await this.getBuildContext(context, { outputPath });
     const transformers: WebpackConfigTransformer[] = compact([
       (configMutator) => configMutator.merge(buildConfig({ outputPath: join(outputPath, this.dir) })),
-      (config) => {
-        if (this.prerender) config.addPlugin(prerenderPlugin(this.prerender));
-        return config;
-      },
-      replaceTerserPlugin({ prerender: !!this.prerender }),
+      replaceTerserPlugin(),
       ...this.transformers,
     ]);
 
@@ -278,7 +270,7 @@ export class ReactApp implements Application {
     const bundlerContext = await this.getBuildContext(context, { outputPath });
     const transformers: WebpackConfigTransformer[] = compact([
       (configMutator) => configMutator.merge(ssrBuildConfig({ outputPath: join(outputPath, this.ssrDir) })),
-      replaceTerserPlugin({ prerender: !!this.prerender }),
+      replaceTerserPlugin(),
       ...this.transformers,
     ]);
 

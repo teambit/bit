@@ -1,13 +1,22 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { ComponentMain, ComponentAspect, ComponentID } from '@teambit/component';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { GetGraphOpts, GraphBuilder } from './graph-builder';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { ComponentMain, ComponentID } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import { compact, intersection } from 'lodash';
+import type { GetGraphOpts } from './graph-builder';
+import { GraphBuilder } from './graph-builder';
 import { graphSchema } from './graph.graphql';
 import { GraphAspect } from './graph.aspect';
+import type { GraphOpt } from './graph-cmd';
 import { GraphCmd } from './graph-cmd';
-import { ComponentGraph } from './component-graph';
-import { ComponentIdGraph } from './component-id-graph';
+import type { ComponentGraph } from './component-graph';
+import type { ComponentIdGraph } from './component-id-graph';
+import type { GraphConfig } from '@teambit/legacy.dependency-graph';
+import { VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
 
 export class GraphMain {
   constructor(
@@ -28,6 +37,57 @@ export class GraphMain {
     return graphBuilder.getGraphIds(ids, opts);
   }
 
+  /**
+   * this visual graph-ids can render the graph as a SVG/png and other formats.
+   */
+  async getVisualGraphIds(ids?: ComponentID[], opts: GraphOpt = {}): Promise<VisualDependencyGraph> {
+    this.logger.setStatusLine('loading graph');
+    const { layout, includeLocalOnly, cycles } = opts;
+    const graphVizOpts: GraphConfig = {};
+    if (layout) graphVizOpts.layout = layout;
+    const graphIdsAll = await this.getGraphIds(ids);
+
+    const host = this.componentAspect.getHost();
+    const list = await host.listIds();
+    const idsWithVersion = await this.getIdsWithVersions(ids);
+    const listStr = list.map((id) => id.toString());
+    const graphIds = includeLocalOnly
+      ? graphIdsAll.successorsSubgraph(idsWithVersion || listStr, {
+          nodeFilter: (node) => listStr.includes(node.id),
+          edgeFilter: (edge) => listStr.includes(edge.targetId) && listStr.includes(edge.sourceId),
+        })
+      : graphIdsAll;
+    this.logger.setStatusLine('rendering graph');
+    if (cycles) {
+      return this.getVisualCyclesFromGraph(graphIds, idsWithVersion, graphVizOpts);
+    }
+    return VisualDependencyGraph.loadFromClearGraph(graphIds, graphVizOpts, idsWithVersion);
+  }
+
+  private async getVisualCyclesFromGraph(
+    graphIds: ComponentIdGraph,
+    idsWithVersion?: string[],
+    graphVizOpts: GraphConfig = {}
+  ): Promise<VisualDependencyGraph> {
+    const cyclesGraph = graphIds.findCycles();
+    const multipleCycles = cyclesGraph.map((cycle) => {
+      if (idsWithVersion && intersection(idsWithVersion, cycle).length < 1) return undefined;
+      return graphIds.subgraph(cycle, {
+        nodeFilter: (node) => cycle.includes(node.id),
+        edgeFilter: (edge) => cycle.includes(edge.targetId),
+      });
+    });
+    return VisualDependencyGraph.loadFromMultipleClearGraphs(compact(multipleCycles), graphVizOpts, idsWithVersion);
+  }
+
+  private async getIdsWithVersions(ids?: ComponentID[]): Promise<string[] | undefined> {
+    const host = this.componentAspect.getHost();
+    if (!ids) return undefined;
+    const comps = await host.getMany(ids);
+    if (comps.length) return comps.map((comp) => comp.id.toString());
+    return undefined;
+  }
+
   static slots = [];
   static dependencies = [GraphqlAspect, ComponentAspect, CLIAspect, LoggerAspect];
   static runtime = MainRuntime;
@@ -40,10 +100,10 @@ export class GraphMain {
     const logger = loggerMain.createLogger(GraphAspect.id);
 
     const graphBuilder = new GraphBuilder(componentAspect);
-    graphql.register(graphSchema(graphBuilder, componentAspect));
+    graphql.register(() => graphSchema(graphBuilder, componentAspect));
 
     const graphMain = new GraphMain(componentAspect, logger);
-    cli.register(new GraphCmd(componentAspect));
+    cli.register(new GraphCmd(componentAspect, graphMain));
 
     return graphMain;
   }

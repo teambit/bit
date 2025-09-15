@@ -1,8 +1,9 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('readme env', function () {
   this.timeout(0);
@@ -16,7 +17,7 @@ describe('readme env', function () {
   describe('set readme env', () => {
     let docFile;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.docs.mdx');
       helper.command.setEnv('comp1', 'teambit.mdx/readme');

@@ -1,12 +1,11 @@
 import chai, { expect } from 'chai';
 import { isEmpty } from 'lodash';
+import assertArrays from 'chai-arrays';
 
 import { AlreadyExistsError } from '../../scopes/workspace/workspace/component-config-file/exceptions';
 import { Helper, GeneralHelper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-
-const assertArrays = require('chai-arrays');
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 chai.use(assertArrays);
 
@@ -21,7 +20,7 @@ describe('component config', function () {
   });
   describe('eject config', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+      helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
     });
@@ -143,7 +142,7 @@ describe('component config', function () {
     let output;
     let configuredExtensions;
     before(() => {
-      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+      helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateExtensions(5);
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();

@@ -1,18 +1,22 @@
 import rimraf from 'rimraf';
 import { v4 } from 'uuid';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
 import { compact, flatten, isEqual, pick } from 'lodash';
-import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
-import { Component, ComponentMap, ComponentAspect } from '@teambit/component';
-import type { ComponentMain, ComponentFactory } from '@teambit/component';
+import { isFeatureEnabled, DISABLE_CAPSULE_OPTIMIZATION } from '@teambit/harmony.modules.feature-toggle';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import { ComponentMap, ComponentAspect } from '@teambit/component';
+import type { ComponentMain, ComponentFactory, Component } from '@teambit/component';
 import { getComponentPackageVersion, snapToSemver } from '@teambit/component-package-version';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
-import { GraphAspect, GraphMain } from '@teambit/graph';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import {
-  DependencyResolverAspect,
+import type { GraphMain } from '@teambit/graph';
+import { GraphAspect } from '@teambit/graph';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type {
   DependencyResolverMain,
   LinkingOptions,
   LinkDetail,
@@ -20,16 +24,20 @@ import {
   InstallOptions,
   DependencyList,
   ComponentDependency,
-  KEY_NAME_BY_LIFECYCLE_TYPE,
   PackageManagerInstallOptions,
   NodeLinker,
 } from '@teambit/dependency-resolver';
-import { Logger, LoggerAspect, LoggerMain, LongProcessLogger } from '@teambit/logger';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Scope, Scope as LegacyScope } from '@teambit/legacy.scope';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
+import { DependencyResolverAspect, KEY_NAME_BY_LIFECYCLE_TYPE } from '@teambit/dependency-resolver';
+import type { Logger, LoggerMain, LongProcessLogger } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
+import type { Scope, Scope as LegacyScope } from '@teambit/legacy.scope';
+import type { GlobalConfigMain } from '@teambit/global-config';
+import { GlobalConfigAspect } from '@teambit/global-config';
 import { DEPENDENCIES_FIELDS, PACKAGE_JSON, CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR } from '@teambit/legacy.constants';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { AbstractVinyl, ArtifactVinyl } from '@teambit/component.sources';
 import {
   PackageJsonFile,
   ArtifactFiles,
@@ -37,15 +45,15 @@ import {
   getArtifactFilesByExtension,
   getArtifactFilesExcludeExtension,
   importMultipleDistsArtifacts,
-  AbstractVinyl,
-  ArtifactVinyl,
   DataToPersist,
   RemovePath,
 } from '@teambit/component.sources';
-import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { type DependenciesGraph } from '@teambit/scope.objects';
+import { type DependenciesGraph } from '@teambit/objects';
+
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
 import path, { basename } from 'path';
@@ -56,6 +64,8 @@ import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
+import type { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store';
 
 export type ListResults = {
   capsules: string[];
@@ -241,6 +251,12 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * Root dir of capsulse cache (used mostly to copy lock file if used with cache lock file only option)
    */
   cacheCapsulesDir?: string;
+
+  /**
+   * Generate a lockfile from the dependencies graph stored in the model
+   * and generate a dependency graph from the lockfile in the capsule.
+   */
+  useDependenciesGraph?: boolean;
 };
 
 type GetCapsuleDirOpts = Pick<
@@ -279,6 +295,7 @@ export class IsolatorMain {
     GlobalConfigAspect,
     AspectLoaderAspect,
     CLIAspect,
+    ConfigStoreAspect,
   ];
   static slots = [Slot.withType<CapsuleTransferFn>()];
   static defaultConfig = {};
@@ -287,7 +304,7 @@ export class IsolatorMain {
   _movedLockFiles = new Set(); // cache moved lock files to avoid show warning about them
 
   static async provider(
-    [dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader, cli]: [
+    [dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader, cli, configStore]: [
       DependencyResolverMain,
       LoggerMain,
       ComponentMain,
@@ -295,6 +312,7 @@ export class IsolatorMain {
       GlobalConfigMain,
       AspectLoaderMain,
       CLIMain,
+      ConfigStoreMain,
     ],
     _config,
     [capsuleTransferSlot]: [CapsuleTransferSlot]
@@ -308,7 +326,8 @@ export class IsolatorMain {
       cli,
       globalConfig,
       aspectLoader,
-      capsuleTransferSlot
+      capsuleTransferSlot,
+      configStore
     );
     return isolator;
   }
@@ -320,7 +339,8 @@ export class IsolatorMain {
     private cli: CLIMain,
     private globalConfig: GlobalConfigMain,
     private aspectLoader: AspectLoaderMain,
-    private capsuleTransferSlot: CapsuleTransferSlot
+    private capsuleTransferSlot: CapsuleTransferSlot,
+    private configStore: ConfigStoreMain
   ) {}
 
   // TODO: the legacy scope used for the component writer, which then decide if it need to write the artifacts and dists
@@ -391,8 +411,18 @@ export class IsolatorMain {
         return undefined;
       })
     );
-    const existingComps = await host.getMany(compact(existingCompsIds));
-    return existingComps;
+    const componentsToInclude = compact(existingCompsIds);
+    let filteredComps = await host.getMany(componentsToInclude);
+
+    // Optimization: exclude unmodified exported dependencies from capsule creation
+    if (!isFeatureEnabled(DISABLE_CAPSULE_OPTIMIZATION)) {
+      filteredComps = await this.filterUnmodifiedExportedDependencies(filteredComps, seeders, host);
+      this.logger.debug(
+        `[OPTIMIZATION] Before filtering: ${componentsToInclude.length}. After filtering: ${filteredComps.length} components remaining`
+      );
+    }
+
+    return filteredComps;
   }
 
   private registerMoveCapsuleOnProcessExit(
@@ -619,6 +649,12 @@ export class IsolatorMain {
     }
 
     const config = { installPackages: true, ...opts };
+    if (opts.getExistingAsIs && !(await fs.pathExists(capsulesDir))) {
+      this.logger.console(
+        `💡 Capsules directory not found: ${capsulesDir}. Automatically setting getExistingAsIs to false.`
+      );
+      opts.getExistingAsIs = false;
+    }
     if (opts.emptyRootDir) {
       await fs.emptyDir(capsulesDir);
     }
@@ -697,9 +733,9 @@ export class IsolatorMain {
           })
         );
       } else {
-        const dependenciesGraph = await legacyScope?.getDependenciesGraphByComponentIds(
-          capsuleList.getAllComponentIDs()
-        );
+        const dependenciesGraph = opts.useDependenciesGraph
+          ? await legacyScope?.getDependenciesGraphByComponentIds(capsuleList.getAllComponentIDs())
+          : undefined;
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
@@ -708,7 +744,7 @@ export class IsolatorMain {
           packageManager: opts.packageManager,
           dependenciesGraph,
         });
-        if (dependenciesGraph == null) {
+        if (opts.useDependenciesGraph && dependenciesGraph == null) {
           // If the graph was not present in the model, we use the just created lockfile inside the capsules
           // to populate the graph.
           await this.addDependenciesGraphToComponents(capsuleList, components, capsulesDir);
@@ -821,7 +857,7 @@ export class IsolatorMain {
       packageManagerConfigRootDir: isolateInstallOptions.packageManagerConfigRootDir,
       resolveVersionsFromDependenciesOnly: true,
       linkedDependencies: opts.linkedDependencies,
-      forceTeambitHarmonyLink: !this.dependencyResolver.hasHarmonyInRootPolicy(),
+      forcedHarmonyVersion: this.dependencyResolver.harmonyVersionInRootPolicy(),
       excludeExtensionsDependencies: true,
       dedupeInjectedDeps: true,
       dependenciesGraph: opts.dependenciesGraph,
@@ -1044,7 +1080,7 @@ export class IsolatorMain {
       const month = date.getMonth() < 12 ? date.getMonth() + 1 : 1;
       const dateDir = `${date.getFullYear()}-${month}-${date.getDate()}`;
       const defaultDatedBaseDir = 'dated-capsules';
-      const datedBaseDir = this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR) || defaultDatedBaseDir;
+      const datedBaseDir = this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR) || defaultDatedBaseDir;
       let hashDir;
       const finalDatedDirId = getCapsuleDirOpts.datedDirId;
       if (finalDatedDirId && this._datedHashForName.has(finalDatedDirId)) {
@@ -1166,7 +1202,8 @@ export class IsolatorMain {
         const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
         const entry = dep.toManifest();
         if (entry) {
-          manifest[keyName][entry.packageName] = keyName === 'peerDependencies' ? dep.versionRange : version;
+          manifest[keyName][entry.packageName] =
+            dep.versionRange && dep.versionRange !== '+' ? dep.versionRange : version;
         }
       });
       await Promise.all(promises);
@@ -1204,11 +1241,7 @@ export class IsolatorMain {
     clonedFiles.forEach((file) => file.updatePaths({ newBase: writeToPath }));
     dataToPersist.removePath(new RemovePath(writeToPath));
     clonedFiles.map((file) => dataToPersist.addFile(file));
-    const packageJson = this.preparePackageJsonToWrite(
-      component,
-      writeToPath,
-      ids // this.ignoreBitDependencies,
-    );
+    const packageJson = this.preparePackageJsonToWrite(component, writeToPath, ids);
     if (!legacyComp.id.hasVersion()) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       packageJson.addOrUpdateProperty('version', semver.inc(legacyComp.version!, 'prerelease') || '0.0.1-0');
@@ -1268,21 +1301,26 @@ export class IsolatorMain {
   private preparePackageJsonToWrite(
     component: Component,
     bitDir: string,
-    ignoreBitDependencies: ComponentIdList | boolean = true
+    componentDepsToIgnore: ComponentIdList
   ): PackageJsonFile {
     const legacyComp: ConsumerComponent = component.state._consumer;
+    const compDeps = this.dependencyResolver.getComponentDependencies(component);
     this.logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}.`);
     const getBitDependencies = (dependencies: ComponentIdList) => {
-      if (ignoreBitDependencies === true) return {};
       return dependencies.reduce((acc, depId: ComponentID) => {
-        if (Array.isArray(ignoreBitDependencies) && ignoreBitDependencies.searchWithoutVersion(depId)) return acc;
+        if (componentDepsToIgnore.searchWithoutVersion(depId)) {
+          return acc;
+        }
+        const fromDepsResolver = compDeps.find((dep) => dep.componentId.isEqualWithoutVersion(depId));
+        const versionWithRange = fromDepsResolver?.versionRange;
+
         const packageDependency = depId.version;
         const packageName = componentIdToPackageName({
           ...legacyComp,
           id: depId,
           isDependency: true,
         });
-        acc[packageName] = packageDependency;
+        acc[packageName] = versionWithRange || packageDependency;
         return acc;
       }, {});
     };
@@ -1356,6 +1394,64 @@ export class IsolatorMain {
       artifactsVinylFlattened.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
     }
     return artifactsVinylFlattened;
+  }
+
+  /**
+   * Filter out unmodified exported dependencies to optimize capsule creation.
+   * These dependencies can be installed as packages instead of creating capsules.
+   */
+  private async filterUnmodifiedExportedDependencies(
+    components: Component[],
+    seederIds: ComponentID[],
+    host: ComponentFactory
+  ): Promise<Component[]> {
+    this.logger.debug(`filterUnmodifiedExportedDependencies: filtering ${components.length} components`);
+
+    const scope = this.componentAspect.getHost('teambit.scope/scope');
+    // @ts-ignore it's there, but we can't have the type of ScopeMain here to not create a circular dependency
+    const remotes = await scope.getRemoteScopes();
+
+    const filtered: Component[] = [];
+
+    for (const component of components) {
+      const componentIdStr = component.id.toString();
+      const isSeeder = seederIds.some((seederId) => component.id.isEqual(seederId, { ignoreVersion: true }));
+
+      if (isSeeder) {
+        // Always include seeders (modified components and their dependents)
+        filtered.push(component);
+        continue;
+      }
+      // For dependencies, check if they are exported and unmodified
+
+      // Check if component is modified
+      // Normally, when running "bit build" with no args, only the seeders are modified, so this check is not needed.
+      // However, when running "bit build comp1", comp1 might have modified dependencies. we want to include them.
+      // In terms of performance, I checked on a big workspace, it costs zero time, because the modification data is cached.
+      const isModified = await component.isModified();
+      if (isModified) {
+        // Always include modified components
+        filtered.push(component);
+        continue;
+      }
+
+      const isPublished = component.get('teambit.pkg/pkg')?.config?.packageJson?.publishConfig;
+      const canBeInstalled =
+        host.isExported(component.id) &&
+        (remotes.isHub(component.id.scope) || isPublished) &&
+        component.buildStatus === 'succeed';
+
+      if (canBeInstalled) {
+        this.logger.debug(`[OPTIMIZATION] Excluding unmodified exported dependency: ${componentIdStr}`);
+      } else {
+        filtered.push(component);
+      }
+    }
+
+    this.logger.debug(
+      `filterUnmodifiedExportedDependencies: kept ${filtered.length} out of ${components.length} components`
+    );
+    return filtered;
   }
 }
 

@@ -1,10 +1,10 @@
 import chalk from 'chalk';
 import tempy from 'tempy';
-import R from 'ramda';
-import { ComponentID } from '@teambit/component-id';
+import { uniq } from 'lodash';
+import type { ComponentID } from '@teambit/component-id';
 import { diffFiles } from './diff-files';
-import { PathOsBased } from '@teambit/toolbox.path.path';
-import { SourceFile } from '@teambit/component.sources';
+import type { PathOsBased } from '@teambit/toolbox.path.path';
+import type { SourceFile } from '@teambit/component.sources';
 
 export type DiffStatus = 'MODIFIED' | 'UNCHANGED' | 'NEW' | 'DELETED';
 
@@ -30,6 +30,7 @@ export type DiffOptions = {
   verbose?: boolean; // whether show internal components diff, such as sourceRelativePath
   formatDepsAsTable?: boolean; // show dependencies output as table
   color?: boolean; // pass this option to git to return a colorful diff, default = true.
+  compareToParent?: boolean; // compare to the parent (previous) version
 };
 
 export async function getOneFileDiff(
@@ -66,7 +67,7 @@ export async function getFilesDiff(
 ): Promise<FileDiff[]> {
   const filesAPaths = filesA.map((f) => f[fileNameAttribute]);
   const filesBPaths = filesB.map((f) => f[fileNameAttribute]);
-  const allPaths = R.uniq(filesAPaths.concat(filesBPaths));
+  const allPaths = uniq(filesAPaths.concat(filesBPaths));
   const fileALabel = filesAVersion === filesBVersion ? `${filesAVersion} original` : filesAVersion;
   const fileBLabel = filesAVersion === filesBVersion ? `${filesBVersion} modified` : filesBVersion;
   const filesDiffP = allPaths.map(async (relativePath) => {

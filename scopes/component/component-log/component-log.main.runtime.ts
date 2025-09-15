@@ -1,14 +1,18 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
-import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
+import type { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import path from 'path';
 import moment from 'moment';
 import pMap from 'p-map';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import { compact } from 'lodash';
 import pMapSeries from 'p-map-series';
-import { Ref, Source, Version } from '@teambit/scope.objects';
-import { pathNormalizeToLinux, PathOsBased, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
+import type { Source, Version } from '@teambit/objects';
+import { Ref } from '@teambit/objects';
+import type { PathOsBased, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { getFilesDiff } from '@teambit/legacy.component-diff';
 import chalk from 'chalk';
 import { getRemoteByName } from '@teambit/scope.remotes';
@@ -74,7 +78,12 @@ export class ComponentLogMain {
     }
     if (!this.workspace) throw new OutsideWorkspaceError();
     const componentId = await this.workspace.resolveComponentId(id);
-    if (!componentId.hasVersion()) return []; // component is new
+    if (!componentId.hasVersion()) {
+      const inWs = this.workspace.getIdIfExist(componentId);
+      if (inWs && !inWs.hasVersion()) {
+        return []; // component is new
+      }
+    }
     const logs = await this.workspace.scope.getLogs(componentId, shortHash, undefined, true);
     logs.forEach((log) => {
       log.date = log.date ? moment(new Date(parseInt(log.date))).format('YYYY-MM-DD HH:mm:ss') : undefined;

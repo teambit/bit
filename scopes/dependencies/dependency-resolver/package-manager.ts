@@ -1,10 +1,10 @@
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
-import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
-import { ComponentID, ComponentMap } from '@teambit/component';
-import { type DependenciesGraph } from '@teambit/scope.objects';
-import { Registries } from './registry';
-import { DepsFilterFn } from './manifest';
-import { NetworkConfig, ProxyConfig } from './dependency-resolver.main.runtime';
+import type { PeerDependencyRules, ProjectManifest, DependencyManifest } from '@pnpm/types';
+import type { ComponentID, ComponentMap } from '@teambit/component';
+import { type DependenciesGraph } from '@teambit/objects';
+import type { Registries } from '@teambit/pkg.entities.registry';
+import type { DepsFilterFn } from './manifest';
+import type { NetworkConfig, ProxyConfig } from './dependency-resolver.main.runtime';
 
 export { PeerDependencyIssuesByProjects };
 
@@ -134,6 +134,8 @@ export type PackageManagerInstallOptions = {
   returnListOfDepsRequiringBuild?: boolean;
 
   dependenciesGraph?: DependenciesGraph;
+
+  forcedHarmonyVersion?: string;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -144,12 +146,14 @@ export type ResolvedPackageVersion = {
   wantedRange?: string;
   isSemver: boolean;
   resolvedVia?: string;
+  manifest?: DependencyManifest;
 };
 
 export type PackageManagerResolveRemoteVersionOptions = {
   rootDir: string;
   cacheRootDir?: string;
   packageManagerConfigRootDir?: string;
+  fullMetadata?: boolean;
   // fetchToCache?: boolean;
   // update?: boolean;
 };

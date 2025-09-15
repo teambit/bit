@@ -1,21 +1,40 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import path from 'path';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { PathOsBasedRelative, PathOsBasedAbsolute, PathLinuxRelative } from '@teambit/legacy.utils';
 import { AddCmd } from './add-cmd';
-import AddComponents, { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
+import type { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
+import AddComponents, { addMultipleFromResolvedTrackData } from './add-components';
 import { TrackerAspect } from './tracker.aspect';
 
 export type TrackResult = { files: string[]; warnings: Warnings; componentId: ComponentID };
 
+/**
+ * this is for "bit add", where some data, such as "componentName" are not necessarily known
+ */
 export type TrackData = {
   rootDir: PathOsBasedRelative | PathOsBasedAbsolute; // path relative to the workspace or absolute path
   componentName?: string; // if empty, it'll be generated from the path
   mainFile?: string; // if empty, attempts will be made to guess the best candidate
   defaultScope?: string; // can be entered as part of "bit create" command, helpful for out-of-sync logic
+  config?: { [aspectName: string]: any }; // config specific to this component, which overrides variants of workspace.jsonc
+};
+
+/**
+ * this is for commands where we know all the data to enter into .bitmap, such as defaultScope, componentName and files.
+ */
+export type ResolvedTrackData = {
+  rootDir: PathLinuxRelative; // path relative to the workspace
+  componentName: string;
+  mainFile: string;
+  files: string[]; // component files relative to the component rootDir
+  defaultScope: string;
   config?: { [aspectName: string]: any }; // config specific to this component, which overrides variants of workspace.jsonc
 };
 
@@ -50,6 +69,10 @@ export class TrackerMain {
     const addedComponent = result.addedComponents[0];
     const files = addedComponent?.files.map((f) => f.relativePath) || [];
     return { files, warnings: result.warnings, componentId: result.addedComponents[0].id };
+  }
+
+  async trackMany(manyTrackData: ResolvedTrackData[]): Promise<ComponentID[]> {
+    return addMultipleFromResolvedTrackData(this.workspace, manyTrackData);
   }
 
   async addForCLI(addProps: AddProps): Promise<AddActionResults> {
@@ -109,8 +132,7 @@ export class TrackerMain {
    * otherwise, it is self-hosted
    */
   private async isHostedByBit(scopeName: string): Promise<boolean> {
-    // TODO: once scope create a new API for this, replace it with the new one
-    const remotes = await this.workspace.scope._legacyRemotes();
+    const remotes = await this.workspace.scope.getRemoteScopes();
     return remotes.isHub(scopeName);
   }
 

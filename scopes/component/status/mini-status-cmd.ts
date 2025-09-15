@@ -1,8 +1,8 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import chalk from 'chalk';
-import { StatusMain } from './status.main.runtime';
+import type { StatusMain } from './status.main.runtime';
 
 export type MiniStatusOpts = {
   showIssues?: boolean;
@@ -20,8 +20,9 @@ this command only checks source code changes, it doesn't check for config/aspect
       description: COMPONENT_PATTERN_HELP,
     },
   ];
-  group = 'development';
+  group = 'info-analysis';
   alias = 'ms';
+  private = true;
   options = [
     ['', 'show-issues', 'show component issues (slows down the command)'],
     [

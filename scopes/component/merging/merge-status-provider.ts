@@ -1,18 +1,25 @@
-import { Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
 import mapSeries from 'p-map-series';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
-import { getDivergeData, SnapsDistance } from '@teambit/component.snap-distance';
-import { Lane, ModelComponent, Version, Ref } from '@teambit/scope.objects';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
+import type { LaneId } from '@teambit/lane-id';
+import { DEFAULT_LANE } from '@teambit/lane-id';
+import type { SnapsDistance } from '@teambit/component.snap-distance';
+import { getDivergeData } from '@teambit/component.snap-distance';
+import type { Lane, ModelComponent, Version, Ref } from '@teambit/objects';
 import { NoCommonSnap, Tmp } from '@teambit/legacy.scope';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { ImporterMain } from '@teambit/importer';
-import { Logger } from '@teambit/logger';
-import { compact } from 'lodash';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ImporterMain } from '@teambit/importer';
+import type { Logger } from '@teambit/logger';
+import { compact, isEqual } from 'lodash';
 import { ComponentConfigMerger } from '@teambit/config-merger';
-import { ScopeMain } from '@teambit/scope';
-import { threeWayMerge, MergeStrategy } from './merge-version';
-import { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } from './merging.main.runtime';
+import type { ScopeMain } from '@teambit/scope';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
+import { threeWayMerge } from '@teambit/component.modules.merge-helper';
+import type { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } from './merging.main.runtime';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { BuilderAspect } from '@teambit/builder';
 
 export type MergeStatusProviderOptions = {
   resolveUnrelated?: MergeStrategy;
@@ -20,6 +27,14 @@ export type MergeStatusProviderOptions = {
   ignoreConfigChanges?: boolean;
   shouldSquash?: boolean;
   handleTargetAheadAsDiverged?: boolean;
+  detachHead?: boolean;
+  shouldMergeAspectsData?: boolean;
+};
+
+type ConflictedDataAspects = { [extId: string]: string }; // extId => reason
+
+export type DataMergeResult = {
+  conflictedAspects?: ConflictedDataAspects;
 };
 
 export const compIsAlreadyMergedMsg = 'component is already merged';
@@ -133,6 +148,12 @@ other:   ${otherLaneHead.toString()}`);
     );
     const configMergeResult = configMerger.merge();
 
+    const dataMergeResult = this.mergeExtensionsData(
+      currentComponent.extensions,
+      baseComponent.extensions,
+      otherComponent.extensions
+    );
+
     const mergeResults = await threeWayMerge({
       scope: this.scope.legacyScope,
       otherComponent,
@@ -147,7 +168,64 @@ other:   ${otherLaneHead.toString()}`);
       mergeResults,
       divergeData,
       configMergeResult,
+      dataMergeResult,
     };
+  }
+
+  private mergeExtensionsData(
+    currentExtensions: ExtensionDataList,
+    baseExtensions: ExtensionDataList,
+    otherExtensions: ExtensionDataList
+  ): DataMergeResult {
+    if (!this.options.shouldMergeAspectsData) {
+      return {};
+    }
+    const conflictedAspects: { [extId: string]: string } = {}; // extId => reason
+    // these aspects handled separately
+    const aspectsToSkip = [DependencyResolverAspect.id, BuilderAspect.id];
+    currentExtensions.forEach((currentExtension) => {
+      if (aspectsToSkip.includes(currentExtension.stringId)) {
+        return;
+      }
+      const baseExtension = baseExtensions.findExtension(currentExtension.idWithoutVersion, true);
+      const otherExtension = otherExtensions.findExtension(currentExtension.idWithoutVersion, true);
+      if (!otherExtension) {
+        conflictedAspects[currentExtension.stringId] = 'missing in other';
+        return;
+      }
+      // check whether the version is different.
+      if (currentExtension.extensionId?.version !== otherExtension.extensionId?.version) {
+        if (baseExtension?.extensionId?.version === otherExtension.extensionId?.version) {
+          // ext version has changed in current. we're good.
+          return;
+        }
+        conflictedAspects[currentExtension.stringId] =
+          `version changed. base: ${baseExtension?.extensionId?.version}, other: ${otherExtension.extensionId?.version}`;
+        return;
+      }
+      if (isEqual(currentExtension.data, otherExtension.data)) return;
+      if (!baseExtension) {
+        conflictedAspects[currentExtension.stringId] = 'no base-version. conflicted in data';
+        return;
+      }
+      if (isEqual(baseExtension.data, otherExtension.data)) {
+        return; // changed in current. leave it.
+      }
+      if (isEqual(baseExtension.data, currentExtension.data)) {
+        // changed in other. copy it.
+        currentExtension.data = otherExtension.data;
+        return;
+      }
+      // changed in both. conflict.
+      conflictedAspects[currentExtension.stringId] = 'conflicted in data since base-version';
+    });
+    otherExtensions.forEach((otherExtension) => {
+      if (!currentExtensions.findExtension(otherExtension.idWithoutVersion, true)) {
+        conflictedAspects[otherExtension.stringId] = 'missing in current';
+      }
+    });
+
+    return { conflictedAspects };
   }
 
   private returnUnmerged(
@@ -299,6 +377,17 @@ other:   ${otherLaneHead.toString()}`);
         componentOnOther,
         divergeData
       );
+    }
+    if (this.options.detachHead && divergeData.commonSnapBeforeDiverge) {
+      // just override with the model data
+      const commonSnapId = id.changeVersion(divergeData.commonSnapBeforeDiverge.toString());
+      const commonSnapComp = await this.scope.legacyScope.getConsumerComponent(commonSnapId);
+      return {
+        ...componentStatus,
+        currentComponent: commonSnapComp,
+        componentFromModel: componentOnOther,
+        divergeData,
+      };
     }
     if (!divergeData.isDiverged()) {
       if (divergeData.isSourceAhead()) {

@@ -1,10 +1,14 @@
 import chalk from 'chalk';
 import { relative } from 'path';
-import { OneConfigWriterIdResult, WriteConfigFilesResult, WriteResults } from '../workspace-config-files.main.runtime';
+import type {
+  OneConfigWriterIdResult,
+  WriteConfigFilesResult,
+  WriteResults,
+} from '../workspace-config-files.main.runtime';
 import type { WriteConfigCmdFlags } from '../ws-config.cmd';
 import { formatCleanOutput } from './format-clean-output';
 import { SUMMARY, WRITE_TITLE } from './write-outputs-texts';
-import {
+import type {
   EnvsWrittenExtendingConfigFile,
   EnvsWrittenExtendingConfigFiles,
   EnvsWrittenRealConfigFile,

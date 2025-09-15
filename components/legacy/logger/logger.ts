@@ -1,31 +1,26 @@
-/**
- * leave the Winston for now to get the file-rotation we're missing from Pino and the "profile"
- * functionality.
- * also, Winston should start BEFORE Pino. otherwise, Pino starts creating the debug.log file first
- * and it throws an error if the file doesn't exists on Docker/CI.
- */
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
 import { serializeError } from 'serialize-error';
 import format from 'string-format';
-import { Logger as PinoLogger, Level } from 'pino';
+import type { Logger as PinoLogger } from 'pino';
+import { Level } from 'pino';
 import yn from 'yn';
 import pMapSeries from 'p-map-series';
 
 import { Analytics } from '@teambit/legacy.analytics';
-import { getSync } from '@teambit/legacy.global-config';
+import { getConfig } from '@teambit/config-store';
 import { defaultErrorHandler } from '@teambit/cli';
-import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS } from '@teambit/legacy.constants';
-import { getWinstonLogger } from './winston-logger';
+import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS, DEBUG_LOG } from '@teambit/legacy.constants';
 import { getPinoLogger } from './pino-logger';
 import { Profiler } from './profiler';
 import { loader } from '@teambit/legacy.loader';
+import { rotateLogDaily } from './rotate-log-daily';
 
 export { Level as LoggerLevel };
 
 const jsonFormat =
-  yn(getSync(CFG_LOG_JSON_FORMAT), { default: false }) || yn(process.env.JSON_LOGS, { default: false });
+  yn(getConfig(CFG_LOG_JSON_FORMAT), { default: false }) || yn(process.env.JSON_LOGS, { default: false });
 
 export const shouldDisableLoader = yn(process.env.BIT_DISABLE_SPINNER);
 export const shouldDisableConsole =
@@ -37,8 +32,7 @@ const DEFAULT_LEVEL = 'debug';
 
 const logLevel = getLogLevel();
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { winstonLogger, createExtensionLogger } = getWinstonLogger(logLevel, jsonFormat);
+rotateLogDaily(DEBUG_LOG);
 
 const { pinoLogger, pinoLoggerConsole, pinoSSELogger } = getPinoLogger(logLevel, jsonFormat);
 
@@ -173,11 +167,11 @@ class BitLogger implements IBitLogger {
    * [2020-12-04 16:24:46.100 -0500] INFO	 (31641): loadingComponent: 14ms. (total repeating 14ms)
    * [2020-12-04 16:24:46.110 -0500] INFO	 (31641): loadingComponent: 18ms. (total repeating 32ms)
    */
-  profile(id: string, console?: boolean) {
+  profile(id: string, console?: boolean, level: Level = 'info') {
     const msg = this.profiler.profile(id);
     if (!msg) return;
     const fullMsg = `${id}: ${msg}`;
-    console || this.shouldConsoleProfiler ? this.console(fullMsg) : this.info(fullMsg);
+    console || this.shouldConsoleProfiler ? this.console(fullMsg) : this[level](fullMsg);
   }
 
   registerOnBeforeExitFn(fn: Function) {
@@ -193,7 +187,9 @@ class BitLogger implements IBitLogger {
     const isSuccess = code === 0;
     const level = isSuccess ? 'info' : 'error';
     if (cliOutput) {
-      this.logger.info(`[+] CLI-OUTPUT: ${cliOutput}`);
+      if (commandName === 'schema')
+        this.logger.info(`[+] CLI-OUTPUT: <output-is-truncated-for-this-command-it-can-be-too-long>`);
+      else this.logger.info(`[+] CLI-OUTPUT: ${cliOutput}`);
     }
     const msg = isSuccess
       ? `[*] the command "${commandName}" has been completed successfully`
@@ -290,7 +286,7 @@ class BitLogger implements IBitLogger {
 const logger = new BitLogger(pinoLogger);
 
 export const printWarning = (msg: string) => {
-  const cfgNoWarnings = getSync(CFG_NO_WARNINGS);
+  const cfgNoWarnings = getConfig(CFG_NO_WARNINGS);
   if (cfgNoWarnings !== 'true') {
     // eslint-disable-next-line no-console
     console.log(chalk.yellow(`Warning: ${msg}`));
@@ -349,7 +345,7 @@ export function getLevelFromArgv(argv: string[]): Level | undefined {
 
 function getLogLevel(): Level {
   const defaultLevel = 'debug';
-  const level = getSync(CFG_LOG_LEVEL) || defaultLevel;
+  const level = getConfig(CFG_LOG_LEVEL) || defaultLevel;
   if (isLevel(level)) return level;
   const levelsStr = LEVELS.join(', ');
   // eslint-disable-next-line no-console
@@ -370,26 +366,6 @@ export function writeLogToScreen(levelOrPrefix = '') {
   if (levelOrPrefix === 'profile') {
     logger.shouldConsoleProfiler = true;
   }
-  // @todo: implement
-  // const prefixes = levelOrPrefix.split(',');
-  // const filterPrefix = winston.format((info) => {
-  //   if (isLevel) return info;
-  //   if (prefixes.some((prefix) => info.message.startsWith(prefix))) return info;
-  //   return false;
-  // });
-  // logger.logger.add(
-  //   new winston.transports.Console({
-  //     level: isLevel ? levelOrPrefix : 'info',
-  //     format: winston.format.combine(
-  //       filterPrefix(),
-  //       winston.format.metadata(),
-  //       winston.format.errors({ stack: true }),
-  //       winston.format.printf((info) => `${info.message} ${getMetadata(info)}`)
-  //     ),
-  //   })
-  // );
 }
-
-export { createExtensionLogger };
 
 export default logger;

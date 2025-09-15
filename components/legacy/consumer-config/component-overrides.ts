@@ -1,15 +1,14 @@
-import R from 'ramda';
-import { pickBy } from 'lodash';
-import { ComponentID } from '@teambit/component-id';
+import { pickBy, keys, isEmpty, cloneDeep, get, merge } from 'lodash';
+import type { ComponentID } from '@teambit/component-id';
 import {
   MANUALLY_ADD_DEPENDENCY,
   MANUALLY_REMOVE_DEPENDENCY,
   OVERRIDE_COMPONENT_PREFIX,
   DEPENDENCIES_FIELDS,
 } from '@teambit/legacy.constants';
-import { SourceFile } from '@teambit/component.sources';
+import type { SourceFile } from '@teambit/component.sources';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { ConsumerComponent, Dependency } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent, Dependency } from '@teambit/legacy.consumer-component';
 
 export type ConsumerOverridesOfComponent = ComponentOverridesData & {
   extensions?: Record<string, any>;
@@ -38,7 +37,7 @@ export type ComponentOverridesData = DependenciesOverridesData & {
 type OverridesLoadRegistry = { [extId: string]: Function };
 
 export class ComponentOverrides {
-  private overrides: ConsumerOverridesOfComponent;
+  protected overrides: ConsumerOverridesOfComponent;
   constructor(overrides: ConsumerOverridesOfComponent | null | undefined) {
     this.overrides = overrides || {};
   }
@@ -104,21 +103,21 @@ export class ComponentOverrides {
 
   static loadFromScope(overridesFromModel: ComponentOverridesData | null | undefined = {}) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new ComponentOverrides(R.clone(overridesFromModel), {});
+    return new ComponentOverrides(cloneDeep(overridesFromModel), {});
   }
 
   get componentOverridesData() {
     const isNotSystemField = (val, field) => !overridesBitInternalFields.includes(field);
-    return R.pickBy(isNotSystemField, this.overrides);
+    return pickBy(this.overrides, isNotSystemField);
   }
 
   get componentOverridesPackageJsonData() {
     const isPackageJsonField = (val, field) => !nonPackageJsonFields.includes(field);
-    return R.pickBy(isPackageJsonField, this.overrides);
+    return pickBy(this.overrides, isPackageJsonField);
   }
 
   getEnvByType(envType): string | Record<string, any> | undefined {
-    return R.path(['env', envType], this.overrides);
+    return get(this.overrides, ['env', envType]);
   }
 
   getComponentDependenciesWithVersion(): Record<string, any> {
@@ -147,14 +146,17 @@ export class ComponentOverrides {
     return ver !== MANUALLY_ADD_DEPENDENCY && ver !== MANUALLY_REMOVE_DEPENDENCY;
   }
   getIgnored(field: string): string[] {
-    return R.keys(R.filter((dep) => dep === MANUALLY_REMOVE_DEPENDENCY, this.overrides[field] || {}));
+    const filtered = pickBy(this.overrides[field] || {}, (dep) => {
+      return dep === MANUALLY_REMOVE_DEPENDENCY;
+    });
+    return keys(filtered);
   }
   getIgnoredPackages(field: string): string[] {
     const ignoredRules = this.getIgnored(field);
     return ignoredRules;
   }
   clone(): ComponentOverrides {
-    return new ComponentOverrides(R.clone(this.overrides));
+    return new ComponentOverrides(cloneDeep(this.overrides));
   }
 }
 
@@ -166,7 +168,7 @@ export class ComponentOverrides {
  */
 function mergeExtensionsOverrides(configs: DependenciesOverridesData[]): any {
   return configs.reduce((prev, curr) => {
-    return R.mergeDeepLeft(prev, curr);
+    return merge(cloneDeep(curr), prev);
   }, {});
 }
 
@@ -190,7 +192,7 @@ async function runOnLoadOverridesEvent(
   });
   const extensionsAddedOverrides = await Promise.all(extensionsAddedOverridesP);
   let extensionsConfigModificationsObject = mergeExtensionsOverrides(extensionsAddedOverrides);
-  const filterFunc = (val) => !R.isEmpty(val);
+  const filterFunc = (val) => !isEmpty(val);
   extensionsConfigModificationsObject = pickBy(extensionsConfigModificationsObject, filterFunc);
   return extensionsConfigModificationsObject;
 }

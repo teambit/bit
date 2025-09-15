@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('component with package.json as a file of the component', function () {
   this.timeout(0);
@@ -14,7 +14,7 @@ describe('component with package.json as a file of the component', function () {
   });
   describe('bit version >= 14.8.0 should ignore package.json files altogether', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fs.outputFile('bar/package.json');
       helper.fs.outputFile('bar/foo.js');
       helper.command.addComponent('bar');

@@ -1,12 +1,12 @@
-import React, { useMemo, ComponentType, ReactNode } from 'react';
+import type { ComponentType, ReactNode } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { CompositionsAspect, ComponentComposition, Composition } from '@teambit/compositions';
 import { H3, H5 } from '@teambit/design.ui.heading';
 import { capitalize } from '@teambit/toolbox.string.capitalize';
-import { Icon } from '@teambit/evangelist.elements.icon';
-import { ComponentModel } from '@teambit/component';
-import { ComponentDescriptor } from '@teambit/component-descriptor';
+import type { ComponentModel } from '@teambit/component';
+import type { ComponentDescriptor } from '@teambit/component-descriptor';
+import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { DocsAspect } from '@teambit/docs';
-
 import styles from './preview-placeholder.module.scss';
 
 export function getCompositions(component: ComponentDescriptor) {
@@ -14,7 +14,6 @@ export function getCompositions(component: ComponentDescriptor) {
   if (!entry) return [];
   const compositions = entry.data.compositions;
   if (!compositions) return [];
-
   return Composition.fromArray(compositions);
 }
 
@@ -50,11 +49,22 @@ export function PreviewPlaceholder({
   const compositions = component?.compositions;
   const description = componentDescriptor && getDescription(componentDescriptor);
   const displayName = componentDescriptor && getDisplayName(componentDescriptor);
+  const serverUrl = component?.server?.url;
+
+  const prevServerUrlRef = useRef(serverUrl);
+  const [forceRender, setForceRender] = React.useState(0);
+
+  useEffect(() => {
+    if (prevServerUrlRef.current !== serverUrl && shouldShowPreview) {
+      prevServerUrlRef.current = serverUrl;
+      setForceRender((prev) => prev + 1);
+    }
+  }, [serverUrl, shouldShowPreview]);
 
   const selectedPreview = useMemo(() => {
     if (!shouldShowPreview || !component) return undefined;
     return selectDefaultComposition(component);
-  }, [component, shouldShowPreview]);
+  }, [component, shouldShowPreview, forceRender]);
 
   if (!component || !componentDescriptor) return null;
 
@@ -71,21 +81,31 @@ export function PreviewPlaceholder({
       </Container>
     );
   }
+
   const name = component.id.toString();
 
-  if (component.buildStatus === 'pending')
+  if (!serverUrl || (!shouldShowPreview && component.buildStatus === 'pending'))
     return (
       <div className={styles.previewPlaceholder} data-tip="" data-for={name}>
-        <Icon of="Ripple-processing" />
-        <div>Processing preview</div>
+        <div className={styles.skeletonContainer}>
+          <BlockSkeleton lines={12} className={styles.skeletonBlock} />
+        </div>
       </div>
     );
 
   return (
-    <>
-      <ComponentComposition component={component} composition={selectedPreview} pubsub={false} />
+    <div key={`${name}-${serverUrl}-${forceRender}`}>
+      <ComponentComposition
+        component={component}
+        composition={selectedPreview}
+        pubsub={false}
+        includeEnv={true}
+        loading={'lazy'}
+        viewport={1280}
+        queryParams={'disableCta=true'}
+      />
       <div className={styles.previewOverlay} />
-    </>
+    </div>
   );
 }
 
@@ -93,6 +113,5 @@ const PREVIEW_COMPOSITION_SUFFIX = 'Preview';
 
 function selectDefaultComposition(component: ComponentModel) {
   const { compositions } = component;
-
   return compositions.find((x) => x.identifier.endsWith(PREVIEW_COMPOSITION_SUFFIX));
 }

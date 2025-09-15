@@ -1,14 +1,14 @@
 import chalk from 'chalk';
 import rightpad from 'pad-right';
 import { capitalize } from 'lodash';
-import { GroupsType } from './command-groups';
-import { CommandList } from './cli.main.runtime';
+import type { GroupsType } from './command-groups';
+import type { CommandList } from './cli.main.runtime';
 import { getCommandId } from './get-command-id';
 
 const SPACE = ' ';
 const TITLE_LEFT_SPACES_NUMBER = 2;
 const COMMAND_LEFT_SPACES_NUMBER = 4;
-const NAME_WITH_SPACES_LENGTH = 15;
+const NAME_WITH_SPACES_LENGTH = 16;
 
 type HelpProps = {
   [groupName: string]: GroupContent;
@@ -76,5 +76,6 @@ ${chalk.yellow(`bit documentation: https://bit.dev/`)}`;
 }
 
 function getFooter(): string {
-  return `${chalk.yellow("please use 'bit <command> --help' for more information and guides on specific commands.")}`;
+  return chalk.yellow(`use 'bit <command> --help' for more information and guides on specific commands.
+use 'bit --internal' to show advanced commands.`);
 }

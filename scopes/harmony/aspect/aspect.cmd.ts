@@ -1,10 +1,10 @@
 // eslint-disable-next-line max-classes-per-file
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { CLITable } from '@teambit/cli-table';
 import chalk from 'chalk';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { AspectMain } from './aspect.main.runtime';
+import type { AspectMain } from './aspect.main.runtime';
 
 export class ListAspectCmd implements Command {
   name = 'list [pattern]';
@@ -16,7 +16,7 @@ export class ListAspectCmd implements Command {
     },
   ];
   options = [['d', 'debug', 'show the origins where the aspects were taken from']] as CommandOptions;
-  group = 'development';
+  group = 'info-analysis';
 
   constructor(private aspect: AspectMain) {}
 
@@ -36,6 +36,28 @@ export class ListAspectCmd implements Command {
     });
     const table = new CLITable([], rows);
     return table.render();
+  }
+}
+
+export class ListCoreAspectCmd implements Command {
+  name = 'list-core';
+  description = 'list all core aspects';
+  arguments = [
+    {
+      name: 'pattern',
+      description: COMPONENT_PATTERN_HELP,
+    },
+  ];
+  options = [['j', 'json', 'format as json']] as CommandOptions;
+  group = 'info-analysis';
+
+  constructor(private aspect: AspectMain) {}
+
+  async report() {
+    return this.aspect.listCoreAspects().join('\n');
+  }
+  async json() {
+    return this.aspect.listCoreAspects();
   }
 }
 
@@ -61,7 +83,7 @@ export class SetAspectCmd implements Command {
   options = [
     ['m', 'merge', 'merge with an existing config if exits. (by default, it replaces overlapping existing configs)'],
   ] as CommandOptions;
-  group = 'development';
+  group = 'component-config';
 
   constructor(private aspect: AspectMain) {}
 
@@ -100,7 +122,7 @@ export class UpdateAspectCmd implements Command {
     },
   ];
   options = [];
-  group = 'development';
+  group = 'component-config';
 
   constructor(private aspect: AspectMain) {}
 
@@ -132,7 +154,7 @@ export class UnsetAspectCmd implements Command {
     },
   ];
   options = [];
-  group = 'development';
+  group = 'component-config';
 
   constructor(private aspect: AspectMain) {}
 
@@ -157,7 +179,7 @@ export class GetAspectCmd implements Command {
     ['d', 'debug', 'show the origins where the aspects were taken from'],
     ['j', 'json', 'format as json'],
   ] as CommandOptions;
-  group = 'development';
+  group = 'info-analysis';
 
   constructor(private aspect: AspectMain) {}
 
@@ -242,9 +264,12 @@ ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
 export class AspectCmd implements Command {
   name = 'aspect <sub-command>';
   alias = '';
-  description = 'manage aspects';
+  description = 'manage component aspects and their configurations';
+  extendedDescription = `aspects provide functionality and tools for components throughout their development lifecycle.
+primarily useful for inspecting aspect assignments and configurations with "bit aspect get".
+rarely used for manual aspect management as most aspects are configured automatically.`;
   options = [];
-  group = 'development';
+  group = 'component-config';
   commands: Command[] = [];
 
   async report([unrecognizedSubcommand]: [string]) {

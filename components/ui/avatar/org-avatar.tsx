@@ -1,7 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
 import { addAvatarQueryParams } from '@teambit/toolbox.url.add-avatar-query-params';
-import { AccountObj } from './avatar';
+import type { AccountObj } from './avatar';
 import styles from './styles.module.scss';
 
 export type OrgAvatarProps = {
@@ -31,7 +31,7 @@ export function OrgAvatar({
   return (
     <div
       className={classNames(styles.default, styles.avatar, className)}
-      style={{ width: `${size}px`, height: `${size}px` }}
+      style={{ minWidth: `${size}px`, width: `${size}px`, height: `${size}px` }}
       {...rest}
     >
       {profileImageWithParams && (

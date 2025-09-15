@@ -1,10 +1,11 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { Logger } from '@teambit/logger';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { Logger } from '@teambit/logger';
 import prettyTime from 'pretty-time';
-import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError } from '@teambit/workspace';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
-import { BuilderMain } from './builder.main.runtime';
+import type { BuilderMain } from './builder.main.runtime';
 import { IssuesClasses } from '@teambit/component-issues';
 
 type BuildOpts = {
@@ -24,16 +25,16 @@ type BuildOpts = {
   includeSnap?: boolean;
   includeTag?: boolean;
   ignoreIssues?: string;
+  loose?: boolean;
 };
 
 export class BuilderCmd implements Command {
   name = 'build [component-pattern]';
-  description = 'run set of tasks for build.';
-  extendedDescription = `by default, only new and modified components are built.
-the build takes place in an isolated directories on the filesystem (called "capsules"). the component files are copied to these directories
-and the package-manager installs the dependencies in the capsules root. once done, the build pipeline is running.
-because this process can take a while on a large workspace, some flags are available to shorten the process. See the example section for more info.
-  `;
+  description = 'run build pipeline tasks in isolated environments';
+  extendedDescription = `executes the complete build pipeline including compilation, testing, linting, and other tasks defined by component environments.
+the build takes place in isolated directories called "capsules" where component files are copied and dependencies are installed via the package manager.
+by default processes only new and modified components - use --unmodified to build all components.
+because this process can take a while on large workspaces, various flags are available to optimize the process - see examples for debugging workflows.`;
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   examples = [
     {
@@ -48,7 +49,7 @@ the "--rewrite" flag ensures the component files are fresh, and the "--tasks" en
   ];
   helpUrl = 'reference/build-pipeline/builder-overview';
   alias = '';
-  group = 'development';
+  group = 'component-development';
   options = [
     ['u', 'unmodified', 'include unmodified components (by default, only new and modified components are built)'],
     ['d', 'dev', 'run the pipeline in dev mode'],
@@ -69,6 +70,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       'list tasks of an env or a component-id for each one of the pipelines: build, tag and snap',
     ],
     ['', 'skip-tests', 'skip running component tests during build process'],
+    ['', 'loose', 'allow build to succeed even if tasks like tests or lint fail'],
     [
       '',
       'skip-tasks <string>',
@@ -115,6 +117,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       includeSnap,
       includeTag,
       ignoreIssues,
+      loose = false,
     }: BuildOpts
   ): Promise<string> {
     if (rewrite && !reuseCapsules) throw new Error('cannot use --rewrite without --reuse-capsules');
@@ -126,7 +129,8 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
     this.logger.setStatusLine('build');
     const start = process.hrtime();
-    const components = await this.workspace.getComponentsByUserInput(unmodified, pattern, true);
+    // If pattern is provided, don't pass the unmodified flag as "all" - the pattern should take precedence
+    const components = await this.workspace.getComponentsByUserInput(pattern ? false : unmodified, pattern, true);
     if (!components.length) {
       return chalk.bold(
         `no components found to build. use "--unmodified" flag to build all components or specify the ids to build, otherwise, only new and modified components will be built`
@@ -163,12 +167,12 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     );
     this.logger.console(`build output can be found in path: ${envsExecutionResults.capsuleRootDir}`);
     const duration = prettyTime(process.hrtime(start));
-    const succeedOrFailed = envsExecutionResults.hasErrors() ? 'failed' : 'succeeded';
+    const succeedOrFailed = envsExecutionResults.hasErrors(loose) ? 'failed' : 'succeeded';
     const msg = `build ${succeedOrFailed}. completed in ${duration}.`;
-    if (envsExecutionResults.hasErrors()) {
+    if (envsExecutionResults.hasErrors(loose)) {
       this.logger.consoleFailure(msg);
     }
-    envsExecutionResults.throwErrorsIfExist();
+    envsExecutionResults.throwErrorsIfExist(loose);
     return chalk.green(msg);
   }
 

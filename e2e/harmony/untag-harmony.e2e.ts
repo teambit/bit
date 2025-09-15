@@ -1,7 +1,8 @@
 import chai, { expect } from 'chai';
+import chaiFs from 'chai-fs';
 import { Helper } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('untag components on Harmony', function () {
   this.timeout(0);
@@ -14,7 +15,7 @@ describe('untag components on Harmony', function () {
   });
   describe('when an old version is missing from the scope', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       const v1Head = helper.command.getHead('comp1');
@@ -34,7 +35,7 @@ describe('untag components on Harmony', function () {
   });
   describe('untagging multiple versions', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.1
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.2
@@ -47,7 +48,7 @@ describe('untag components on Harmony', function () {
   });
   describe('untagging multiple versions when the new head is exported', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.1
       helper.command.export();

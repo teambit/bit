@@ -2,8 +2,8 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('binary files', function () {
   this.timeout(0);
@@ -18,7 +18,7 @@ describe('binary files', function () {
     let pngSize;
     let destPngFile;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
@@ -51,7 +51,7 @@ describe('binary files', function () {
     let pngSize;
     let destPngFile;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
@@ -71,7 +71,7 @@ describe('binary files', function () {
     });
     describe('after importing the file', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo', '--path components/bar/foo');
       });

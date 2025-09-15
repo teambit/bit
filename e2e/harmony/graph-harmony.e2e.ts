@@ -1,11 +1,14 @@
 import chai, { expect } from 'chai';
-import { ScopeMain, ScopeAspect } from '@teambit/scope';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 import { loadBit } from '@teambit/bit';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import { ModelComponent, Version, objectListToGraph, IdGraph } from '@teambit/scope.objects';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import type { IdGraph } from '@teambit/objects';
+import { ModelComponent, Version, objectListToGraph } from '@teambit/objects';
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('graph aspect', function () {
   this.timeout(0);
@@ -19,7 +22,7 @@ describe('graph aspect', function () {
   describe('tag a few components', () => {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
     });

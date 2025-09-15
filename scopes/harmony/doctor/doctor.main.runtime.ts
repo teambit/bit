@@ -1,24 +1,26 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import path from 'path';
 import fs from 'fs-extra';
 import os from 'os';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import Stream from 'stream';
+import type Stream from 'stream';
 import tar from 'tar-stream';
 import tarFS from 'tar-fs';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '@teambit/legacy.constants';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
-import { getWorkspaceInfo, WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
-import Diagnosis, { ExamineResult } from './diagnosis';
+import type { WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
+import type { ExamineResult } from './diagnosis';
+import type Diagnosis from './diagnosis';
 import DoctorRegistrar from './doctor-registrar';
 import registerCoreAndExtensionsDiagnoses from './doctor-registrar-builder';
 import { compact } from 'lodash';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
 import { getExt } from '@teambit/toolbox.fs.extension-getter';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
-import * as globalConfig from '@teambit/legacy.global-config';
+import { getConfig } from '@teambit/config-store';
 import { getNpmVersion } from './core-diagnoses/validate-npm-exec';
 import { getYarnVersion } from './core-diagnoses/validate-yarn-exec';
 import { DiagnosisNotFound } from './exceptions/diagnosis-not-found';
@@ -26,7 +28,8 @@ import { MissingDiagnosisName } from './exceptions/missing-diagnosis-name';
 
 import { DoctorAspect } from './doctor.aspect';
 import { DoctorCmd } from './doctor-cmd';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import chalk from 'chalk';
 
 // run specific check
@@ -228,12 +231,16 @@ export class DoctorMain {
       const isGit = fileName.startsWith(`.git${path.sep}`);
       const isLocalScope =
         fileName.startsWith(`.bit${path.sep}`) || fileName.startsWith(`.git${path.sep}bit${path.sep}`);
-      if (excludeLocalScope && isLocalScope) return true;
+      if (excludeLocalScope && isLocalScope) {
+        const scopeDirsToExclude = ['objects', 'cache', 'tmp'];
+        if (scopeDirsToExclude.some((dir) => fileName.includes(`${path.sep}${dir}${path.sep}`))) return true;
+      }
       if (isGit && !isLocalScope) return true;
       return false;
     };
 
-    const myPack = tarFS.pack('.', {
+    const workspaceRoot = consumerInfo?.path || '.';
+    const myPack = tarFS.pack(workspaceRoot, {
       ignore,
       finalize: false,
       finish: packExamineResults,
@@ -258,8 +265,8 @@ export class DoctorMain {
   }
 
   private _getUserDetails(): string {
-    const name = globalConfig.getSync(CFG_USER_NAME_KEY) || '';
-    const email = globalConfig.getSync(CFG_USER_EMAIL_KEY) || '';
+    const name = getConfig(CFG_USER_NAME_KEY) || '';
+    const email = getConfig(CFG_USER_EMAIL_KEY) || '';
     return `${name}<${email}>`;
   }
 

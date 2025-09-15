@@ -1,4 +1,4 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { catVersionHistory } from './cat-version-history';
 
 export class CatVersionHistoryCmd implements Command {
@@ -11,6 +11,7 @@ export class CatVersionHistoryCmd implements Command {
     // json is also the default for this command. it's only needed to suppress the logger.console
     ['j', 'json', 'json format'],
   ] as CommandOptions;
+  group = 'advanced';
 
   async report([id]: [string]) {
     const result = await catVersionHistory(id);

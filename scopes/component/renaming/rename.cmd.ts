@@ -1,6 +1,6 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
-import { RenamingMain } from './renaming.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { RenamingMain } from './renaming.main.runtime';
 
 export type RenameOptions = {
   scope?: string;
@@ -13,8 +13,10 @@ export type RenameOptions = {
 
 export class RenameCmd implements Command {
   name = 'rename <current-name> <new-name>';
-  description =
-    'rename component. if exported, create a new component and delete the original component. otherwise just renames current component';
+  description = 'change a component name';
+  extendedDescription = `renames a component and optionally refactors dependent code to use the new name.
+for exported components: creates a new component with the new name and marks the original as deleted.
+for local components: simply renames the existing component in place.`;
   helpUrl = 'reference/components/renaming-components';
   arguments = [
     {
@@ -26,7 +28,7 @@ export class RenameCmd implements Command {
       description: "the new component name (without its scope name. use --scope to define the new component's scope)",
     },
   ];
-  group = 'collaborate';
+  group = 'component-development';
   skipWorkspace = true;
   alias = '';
   options = [

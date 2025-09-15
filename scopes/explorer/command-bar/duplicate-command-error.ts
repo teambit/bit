@@ -1,5 +1,5 @@
 import { BitError } from '@teambit/bit-error';
-import { CommandId } from './types';
+import type { CommandId } from './types';
 
 export class DuplicateCommandError extends BitError {
   constructor(commandId: CommandId) {

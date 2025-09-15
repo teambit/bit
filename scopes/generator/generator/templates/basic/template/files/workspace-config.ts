@@ -1,5 +1,5 @@
 import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
-import { WorkspaceContext } from '../../../../workspace-template';
+import type { WorkspaceContext } from '../../../../workspace-template';
 
 export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
   const configParsed = await getWorkspaceConfigTemplateParsed();
@@ -10,7 +10,7 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
     ...packageManagerDefaultConfig,
     policy: {
       dependencies: {
-        '@types/node': '16.18.44',
+        '@types/node': '22.10.5',
         '@types/jest': '29.5.4',
       },
     },

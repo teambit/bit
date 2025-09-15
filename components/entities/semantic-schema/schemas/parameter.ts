@@ -1,9 +1,14 @@
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 
 export class ParameterSchema<T extends SchemaNode = SchemaNode> extends SchemaNode {
   readonly type: T;
   readonly objectBindingNodes?: SchemaNode[];
+
+  getNodes(): SchemaNode[] {
+    return [this.type, ...(this.objectBindingNodes || [])];
+  }
 
   constructor(
     readonly location: SchemaLocation,
@@ -18,7 +23,6 @@ export class ParameterSchema<T extends SchemaNode = SchemaNode> extends SchemaNo
     super();
     this.type = type;
     this.objectBindingNodes = objectBindingNodes;
-    this.isSpread = isSpread;
   }
 
   toString() {

@@ -1,5 +1,6 @@
 import chalk from 'chalk';
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 import { ParameterSchema } from './parameter';
 import { DocSchema } from './docs';
 import { TagName } from './docs/tag';
@@ -24,6 +25,7 @@ export class FunctionLikeSchema extends SchemaNode {
   readonly params: ParameterSchema[];
   readonly doc?: DocSchema;
   readonly signature?: string | undefined;
+  readonly displaySchemaName = 'Functions';
 
   constructor(
     readonly location: SchemaLocation,

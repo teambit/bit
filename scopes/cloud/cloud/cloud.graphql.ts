@@ -1,7 +1,7 @@
 import { gql } from 'graphql-tag';
-import { Schema } from '@teambit/graphql';
-import { ScopeDescriptor } from '@teambit/scopes.scope-descriptor';
-import { CloudMain } from './cloud.main.runtime';
+import type { Schema } from '@teambit/graphql';
+import type { ScopeDescriptor } from '@teambit/scopes.scope-descriptor';
+import type { CloudMain } from './cloud.main.runtime';
 
 export function cloudSchema(cloud: CloudMain): Schema {
   return {
@@ -55,7 +55,7 @@ export function cloudSchema(cloud: CloudMain): Schema {
       },
       Mutation: {
         logout: async () => {
-          cloud.logout();
+          await cloud.logout();
           return true;
         },
         setRedirectUrl: async (_, { redirectUrl }: { redirectUrl: string }) => {

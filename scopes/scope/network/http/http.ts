@@ -1,22 +1,26 @@
 import { ClientError, gql, GraphQLClient } from 'graphql-request';
+import { isNil } from 'lodash';
 import nodeFetch from '@pnpm/node-fetch';
 import retry from 'async-retry';
 import readLine from 'readline';
-import HttpAgent from 'agentkeepalive';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type HttpAgent from 'agentkeepalive';
+import type { ComponentIdList } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import { SocksProxyAgent } from 'socks-proxy-agent';
-import { HttpProxyAgent } from 'http-proxy-agent';
+import type { SocksProxyAgent } from 'socks-proxy-agent';
+import type { HttpProxyAgent } from 'http-proxy-agent';
 import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { LaneId } from '@teambit/lane-id';
-import { getAgent, AgentOptions } from '@teambit/toolbox.network.agent';
-import { ListScopeResult } from '@teambit/legacy.component-list';
-import { Network } from '../network';
+import type { AgentOptions } from '@teambit/toolbox.network.agent';
+import { getAgent } from '@teambit/toolbox.network.agent';
+import type { ListScopeResult } from '@teambit/legacy.component-list';
+import type { Network } from '../network';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import { LaneData, ScopeDescriptor, RemovedObjects } from '@teambit/legacy.scope';
+import type { LaneData, ScopeDescriptor } from '@teambit/legacy.scope';
+import { RemovedObjects } from '@teambit/legacy.scope';
 import { globalFlags } from '@teambit/cli';
-import { getSync, list } from '@teambit/legacy.global-config';
+import { getConfig, listConfig } from '@teambit/config-store';
 import {
   CFG_HTTPS_PROXY,
   CFG_PROXY,
@@ -44,8 +48,9 @@ import {
   CENTRAL_BIT_HUB_URL_IMPORTER_V2,
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { ObjectItemsStream, ObjectList, ComponentLog } from '@teambit/scope.objects';
-import { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
+import type { ObjectItemsStream, ComponentLog } from '@teambit/objects';
+import { ObjectList } from '@teambit/objects';
+import type { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
 import { remoteErrorHandler } from '../remote-error-handler';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
@@ -119,14 +124,15 @@ export class Http implements Network {
 
   static getToken() {
     const processToken = globalFlags.token;
-    const token = processToken || getSync(CFG_USER_TOKEN_KEY);
+    const token = processToken || getConfig(CFG_USER_TOKEN_KEY);
     if (!token) return null;
+    logger.debug(`Http, found a token`);
 
     return token;
   }
 
   static async getProxyConfig(checkProxyUriDefined = true): Promise<ProxyConfig> {
-    const obj = await list();
+    const obj = listConfig();
     const httpProxy = obj[CFG_PROXY];
     const httpsProxy = obj[CFG_HTTPS_PROXY] ?? obj[CFG_PROXY];
 
@@ -143,19 +149,24 @@ export class Http implements Network {
   }
 
   static async getNetworkConfig(): Promise<NetworkConfig> {
-    const obj = await list();
+    const obj = listConfig();
+
+    const getAsNumber = (key: string): number | undefined => {
+      const val = obj[key];
+      return isNil(val) ? undefined : Number(val);
+    };
 
     // Reading strictSSL from both network.strict-ssl and network.strict_ssl for backward compatibility.
     const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj['network.strict_ssl'] ?? obj[CFG_PROXY_STRICT_SSL];
     const networkConfig = {
-      fetchRetries: obj[CFG_FETCH_RETRIES] ?? 5,
-      fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR] ?? 10,
-      fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT] ?? 1000,
-      fetchRetryMaxtimeout: obj[CFG_FETCH_RETRY_MAXTIMEOUT] ?? 60000,
-      fetchTimeout: obj[CFG_FETCH_TIMEOUT] ?? 60000,
+      fetchRetries: getAsNumber(CFG_FETCH_RETRIES) ?? 5,
+      fetchRetryFactor: getAsNumber(CFG_FETCH_RETRY_FACTOR) ?? 10,
+      fetchRetryMintimeout: getAsNumber(CFG_FETCH_RETRY_MINTIMEOUT) ?? 1000,
+      fetchRetryMaxtimeout: getAsNumber(CFG_FETCH_RETRY_MAXTIMEOUT) ?? 60000,
+      fetchTimeout: getAsNumber(CFG_FETCH_TIMEOUT) ?? 60000,
       localAddress: obj[CFG_LOCAL_ADDRESS],
-      maxSockets: obj[CFG_MAX_SOCKETS] ?? 15,
-      networkConcurrency: obj[CFG_NETWORK_CONCURRENCY] ?? 16,
+      maxSockets: getAsNumber(CFG_MAX_SOCKETS) ?? 15,
+      networkConcurrency: getAsNumber(CFG_NETWORK_CONCURRENCY) ?? 16,
       strictSSL: typeof strictSSL === 'string' ? strictSSL === 'true' : strictSSL,
       ca: obj[CFG_NETWORK_CA] ?? obj[CFG_PROXY_CA],
       cafile: obj[CFG_NETWORK_CA_FILE] ?? obj[CFG_PROXY_CA_FILE],
@@ -255,26 +266,39 @@ export class Http implements Network {
     errors: { [scopeName: string]: string };
     metadata?: { jobs?: string[] };
   }> {
-    const route = 'api/put';
-    logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
-    const pack = objectList.toTar();
-    const opts = this.addAgentIfExist({
-      method: 'post',
-      body: pack,
-      headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
-    });
-    const res = await _fetch(`${this.url}/${route}`, opts);
-    logger.debug(
-      `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
+    const { results, response } = await retry(
+      async () => {
+        const route = 'api/put';
+        logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
+        const pack = objectList.toTar();
+        const opts = this.addAgentIfExist({
+          method: 'post',
+          body: pack,
+          headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
+        });
+        const _response = await _fetch(`${this.url}/${route}`, opts);
+        logger.debug(
+          `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${_response.status} statusText ${_response.statusText}`
+        );
+
+        // @ts-ignore TODO: need to fix this
+        const _results = await this.readPutCentralStream(_response.body);
+        return { results: _results, response: _response };
+      },
+      {
+        retries: 3,
+        minTimeout: 5000,
+        onRetry: (e: any) => {
+          logger.debug(`failed to export with error: ${e?.message || ''}`);
+        },
+      }
     );
 
-    // @ts-ignore TODO: need to fix this
-    const results = await this.readPutCentralStream(res.body);
     if (!results.data) throw new Error(`HTTP results are missing "data" property`);
     if (results.data.isError) {
       throw new UnexpectedNetworkError(results.message);
     }
-    await this.throwForNonOkStatus(res);
+    await this.throwForNonOkStatus(response);
     return results.data;
   }
 
@@ -384,7 +408,6 @@ export class Http implements Network {
     // const res = await fetch(urlToFetch, opts);
     logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
-    // @ts-ignore TODO: need to fix this
     const objectListReadable = ObjectList.fromTarToObjectStream(res.body);
 
     return objectListReadable;
@@ -667,6 +690,124 @@ export class Http implements Network {
     }));
   }
 
+  private async searchWithSuggest(
+    queryStr: string
+  ): Promise<{ components?: string[]; lanes?: string[]; organizations?: string[]; scopes?: string[] }> {
+    const SEARCH = gql`
+      query SUGGEST($queryStr: String, $limit: Int, $attributes: String) {
+        suggest(queryStr: $queryStr, limit: $limit, attributes: $attributes) {
+          queryString
+          suggestions {
+            searchTypeName
+            entries {
+              id
+            }
+          }
+        }
+      }
+    `;
+
+    try {
+      const res = await this.graphClientRequest(SEARCH, Verb.READ, { queryStr });
+      if (!res.suggest?.suggestions) {
+        return {};
+      }
+
+      const suggestions = res.suggest.suggestions;
+      const components = suggestions.find((r) => r.searchTypeName === 'component')?.entries?.map((e) => e.id);
+      const lanes = suggestions.find((r) => r.searchTypeName === 'lane')?.entries?.map((e) => e.id);
+      const organizations = suggestions.find((r) => r.searchTypeName === 'organization')?.entries?.map((e) => e.id);
+      const scopes = suggestions.find((r) => r.searchTypeName === 'scope')?.entries?.map((e) => e.id);
+
+      return { components, lanes, organizations, scopes };
+    } catch (error: any) {
+      logger.error(`Error in searchWithSuggest: ${error.message}`);
+      return {};
+    }
+  }
+
+  async search(
+    queryStr: string,
+    owners?: string[]
+  ): Promise<{ components?: string[]; lanes?: string[]; organizations?: string[]; scopes?: string[] }> {
+    // Always use searchComponents query for consistency
+    const SEARCH_COMPONENTS = gql`
+      query SearchComponents($query: ComponentSearchQuery) {
+        searchComponents(query: $query) {
+          results {
+            componentDescriptor {
+              id
+            }
+          }
+        }
+      }
+    `;
+
+    // Prepare the query, including owners filter if provided
+    const query: any = {
+      queryString: queryStr,
+      limit: 20,
+    };
+
+    // Add owners filter only if provided
+    if (owners?.length) {
+      query.filters = {
+        owners: {
+          list: owners,
+          operator: 'or',
+        },
+      };
+    }
+
+    try {
+      const res = await this.graphClientRequest(SEARCH_COMPONENTS, Verb.READ, { query });
+
+      // Extract component IDs from the response
+      const components = res.searchComponents?.results?.map((r) => r.componentDescriptor.id) || [];
+
+      return { components };
+    } catch (error: any) {
+      // Log error and fall back to suggest as a last resort
+      logger.error(`Error using searchComponents query: ${error.message}`);
+      return this.searchWithSuggest(queryStr);
+    }
+  }
+
+  async getSchema(
+    id: string,
+    skipInternals: boolean = true
+  ): Promise<{
+    __schema: string;
+    location: any;
+    module: {
+      __schema: string;
+      location: any;
+      exports: Array<any>;
+      internals: any[];
+    };
+    internals: any[];
+    componentId: {
+      scope: string;
+      name: string;
+      version: string;
+    };
+    taggedModuleExports: any[];
+  }> {
+    const GET_SCHEMA = gql`
+      query GetComponentSchema($componentId: String!, $skipInternals: Boolean) {
+        getHost {
+          getSchema(id: $componentId, skipInternals: $skipInternals)
+        }
+      }
+    `;
+    const res = await this.graphClientRequest(GET_SCHEMA, Verb.READ, {
+      componentId: id,
+      skipInternals,
+    });
+
+    return res.getHost.getSchema;
+  }
+
   async hasObjects(hashes: string[]): Promise<string[]> {
     const HAS_OBJECTS = gql`
       query hasObjects($hashes: [String!]) {
@@ -683,6 +824,7 @@ export class Http implements Network {
   private getHeaders(headers: { [key: string]: string } = {}) {
     const authHeader = this.token ? getAuthHeader(this.token) : {};
     const localScope = this.localScopeName ? { 'x-request-scope': this.localScopeName } : {};
+    const customOrigin = process.env.__CUSTOM_ORIGIN ? { 'x-custom-origin': process.env.__CUSTOM_ORIGIN } : {};
     const clientVersion = this.getClientVersion() || 'unknown';
     if (clientVersion === 'unknown') {
       // Ignore the error, we don't want to fail the request if we can't get the client version
@@ -692,6 +834,7 @@ export class Http implements Network {
       headers,
       authHeader,
       localScope,
+      customOrigin,
       { connection: 'keep-alive' },
       { 'x-client-version': clientVersion }
     );

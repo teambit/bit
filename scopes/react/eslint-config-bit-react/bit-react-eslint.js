@@ -1,7 +1,7 @@
 const configs = require('eslint-plugin-mdx/lib/configs');
 
 module.exports = {
-  extends: ['plugin:jest/recommended', 'plugin:import/recommended', 'plugin:react-hooks/recommended'],
+  extends: ['plugin:jest/recommended', 'plugin:react-hooks/recommended'],
   plugins: ['jest', 'import'],
   settings: {
     'mdx/code-blocks': false,
@@ -22,7 +22,11 @@ module.exports = {
   overrides: [
     {
       files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.mjs'],
-      extends: [require.resolve('eslint-config-airbnb-typescript'), require.resolve('eslint-config-prettier')],
+      extends: [
+        'eslint:recommended',
+        'plugin:@typescript-eslint/recommended',
+        require.resolve('eslint-config-prettier'),
+      ],
       parser: require.resolve('@typescript-eslint/parser'),
 
       parserOptions: {
@@ -40,29 +44,53 @@ module.exports = {
       },
 
       rules: {
-        'no-useless-constructor': 'off',
-        '@typescript-eslint/no-useless-constructor': 'off',
-        '@typescript-eslint/camelcase': 'off',
-        'import/no-extraneous-dependencies': 'off',
-        'import/prefer-default-export': 'off',
+        '@typescript-eslint/no-unused-vars': 'warn',
+        'no-nested-ternary': 'warn',
+        'react/self-closing-comp': 'warn',
+        'object-shorthand': 'warn',
+        'react/jsx-boolean-value': 'warn',
+        'react/button-has-type': 'off',
         'react/jsx-props-no-spreading': 'off',
         'react/no-array-index-key': 'off',
         'react/prop-types': 'off',
         'react/require-default-props': 'off',
-        'trailing-comma': 'off',
-        '@typescript-eslint/comma-dangle': 'off',
-        'object-curly-newline': 'off',
         'react/react-in-jsx-scope': 'off',
-        'class-methods-use-this': 'off',
-        'arrow-body-style': 'off',
-        'prefer-arrow-callback': 'off',
-        'no-underscore-dangle': 'off',
-        // Disable the rule because this causes issues in case there are multiple eslint versions
-        // on the process, as it depends on some outer context.
-        // this should be solve once upgrading to @typescript-eslint/eslint-plugin v6
-        // see more details here -
-        // https://stackoverflow.com/questions/76457373/cannot-read-properties-of-undefined-reading-gettokens-occurred-while-linting
-        '@typescript-eslint/no-empty-function': 'off',
+
+        // ------------------------------------------------------------
+        // MIGRATION: eslint-config-airbnb-typescript -> eslint:recommended + @typescript-eslint/recommended
+        // Re-enable previously enforced Airbnb rules to reduce churn.
+        // These were active under Airbnb but are not included by the new presets.
+        // ------------------------------------------------------------
+        '@typescript-eslint/no-implied-eval': 'error',
+        'no-shadow': 'off', // must disable the base rule as it can report incorrect errors
+        '@typescript-eslint/no-shadow': 'error',
+        '@typescript-eslint/return-await': 'error', // default is 'in-try-catch'. (in try/catch it must use 'await', otherwise, it must not use await)
+
+        // ------------------------------------------------------------
+        // MIGRATION: Disable rules newly enabled by eslint:recommended
+        // and @typescript-eslint/recommended to avoid sudden breakage.
+        // Turn them back on gradually per project needs.
+        // ------------------------------------------------------------
+        '@typescript-eslint/ban-ts-comment': 'off',
+        '@typescript-eslint/ban-types': 'off',
+        '@typescript-eslint/no-var-requires': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
+
+        // ------------------------------------------------------------
+        // These rules newly enabled by @typescript-eslint/recommended,
+        // but probably won't break much.
+        // Feel free to uncomment them to turn them off.
+        // ------------------------------------------------------------
+        // '@typescript-eslint/no-duplicate-enum-values': 'off',
+        // '@typescript-eslint/no-extra-non-null-assertion': 'off',
+        // '@typescript-eslint/no-misused-new': 'off',
+        // '@typescript-eslint/no-namespace': 'off',
+        // '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
+        // '@typescript-eslint/no-this-alias': 'off',
+        // '@typescript-eslint/no-unnecessary-type-constraint': 'off',
+        // '@typescript-eslint/no-unsafe-declaration-merging': 'off',
+        // '@typescript-eslint/prefer-as-const': 'off',
+        // '@typescript-eslint/triple-slash-reference': 'off',
       },
     },
     {

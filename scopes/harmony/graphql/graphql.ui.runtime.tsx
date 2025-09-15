@@ -1,8 +1,9 @@
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React from 'react';
 import { UIRuntime } from '@teambit/ui';
 
 import { InMemoryCache, ApolloClient, ApolloLink, HttpLink, createHttpLink } from '@apollo/client';
-import type { NormalizedCacheObject } from '@apollo/client';
+import type { DefaultOptions, NormalizedCacheObject } from '@apollo/client';
 import { WebSocketLink } from '@apollo/client/link/ws';
 import { onError } from '@apollo/client/link/error';
 
@@ -25,13 +26,30 @@ type ClientOptions = {
   state?: NormalizedCacheObject;
   /** endpoint for websocket connections */
   subscriptionUri?: string;
+  /** host extension id (workspace or scope). Used to configure the client */
+  host?: string;
 };
 
 export class GraphqlUI {
-  createClient(uri: string, { state, subscriptionUri }: ClientOptions = {}) {
+  createClient(uri: string, { state, subscriptionUri, host }: ClientOptions = {}) {
+    const defaultOptions: DefaultOptions | undefined =
+      host === 'teambit.workspace/workspace'
+        ? {
+            query: {
+              fetchPolicy: 'network-only',
+            },
+            watchQuery: {
+              fetchPolicy: 'network-only',
+            },
+            mutate: {
+              fetchPolicy: 'network-only',
+            },
+          }
+        : undefined;
     const client = new ApolloClient({
       link: this.createLink(uri, { subscriptionUri }),
       cache: this.createCache({ state }),
+      defaultOptions,
     });
 
     return client;

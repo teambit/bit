@@ -2,7 +2,7 @@ import * as path from 'path';
 import { homedir, platform } from 'os';
 
 import type { PathOsBased } from '@teambit/toolbox.path.path';
-import { getSync } from '@teambit/legacy.global-config';
+import { getConfig } from '@teambit/config-store';
 
 export const IS_WINDOWS = platform() === 'win32';
 
@@ -158,7 +158,7 @@ export const DEFAULT_CLOUD_DOMAIN = 'bit.cloud';
 let resolvedCloudDomain;
 export const getCloudDomain = (): string => {
   if (resolvedCloudDomain) return resolvedCloudDomain;
-  resolvedCloudDomain = getSync(CFG_CLOUD_DOMAIN_KEY) || DEFAULT_CLOUD_DOMAIN;
+  resolvedCloudDomain = getConfig(CFG_CLOUD_DOMAIN_KEY) || DEFAULT_CLOUD_DOMAIN;
   return resolvedCloudDomain;
 };
 
@@ -186,16 +186,19 @@ export const clearCachedUrls = () => {
 
 export const getSymphonyUrl = (): string => {
   if (resolvedSymphonyUrl) return resolvedSymphonyUrl;
-  const fromConfig = getSync(CFG_SYMPHONY_URL_KEY);
+  const fromConfig = getConfig(CFG_SYMPHONY_URL_KEY);
   if (fromConfig) {
-    resolvedSymphonyUrl = fromConfig;
+    resolvedSymphonyUrl = fromConfig.startsWith('http') ? fromConfig : `https://${fromConfig}`;
     return resolvedSymphonyUrl;
   }
   const cloudDomain = getCloudDomain();
-  resolvedSymphonyUrl =
+  const symphonyUrlWithoutProtocol =
     cloudDomain === DEFAULT_CLOUD_DOMAIN
       ? `${SYMPHONY_URL_PREFIX_V2}${cloudDomain}`
       : `${SYMPHONY_URL_PREFIX}${cloudDomain}`;
+  resolvedSymphonyUrl = symphonyUrlWithoutProtocol.startsWith('http')
+    ? symphonyUrlWithoutProtocol
+    : `https://${symphonyUrlWithoutProtocol}`;
   return resolvedSymphonyUrl;
 };
 
@@ -207,13 +210,13 @@ export const CFG_WATCH_USE_FS_EVENTS = 'watch_use_fsevents';
 export const CFG_FORCE_LOCAL_BUILD = 'force_local_build';
 
 export const getLoginUrl = (domain?: string): string => {
-  const finalDomain = domain || getSync(CFG_CLOUD_DOMAIN_LOGIN_KEY) || getCloudDomain();
+  const finalDomain = domain || getConfig(CFG_CLOUD_DOMAIN_LOGIN_KEY) || getCloudDomain();
   const url = `https://${finalDomain}/bit-login`;
   return url;
 };
 
 export const getRegistryUrl = (domain?: string): string => {
-  const fromConfig = getSync(CFG_REGISTRY_URL_KEY);
+  const fromConfig = getConfig(CFG_REGISTRY_URL_KEY);
   if (fromConfig) {
     return fromConfig;
   }
@@ -222,7 +225,7 @@ export const getRegistryUrl = (domain?: string): string => {
   return url;
 };
 
-export const SYMPHONY_GRAPHQL = `https://${getSymphonyUrl()}/graphql`;
+export const SYMPHONY_GRAPHQL = `${getSymphonyUrl()}/graphql`;
 
 export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/`;
 
@@ -238,10 +241,10 @@ export const DEFAULT_REGISTRY_URL = `${DEFAULT_REGISTRY_URL_PREFIX}${DEFAULT_CLO
 
 export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_WEB_DOMAIN}`;
 
-export const CENTRAL_BIT_HUB_URL = `https://${getSymphonyUrl()}/exporter`;
+export const CENTRAL_BIT_HUB_URL = `${getSymphonyUrl()}/exporter`;
 
 // export const CENTRAL_BIT_HUB_URL_IMPORTER = `http://localhost:5001/importer/api/fetch`;
-export const CENTRAL_BIT_HUB_URL_IMPORTER = `https://${getSymphonyUrl()}/importer/api/fetch`;
+export const CENTRAL_BIT_HUB_URL_IMPORTER = `${getSymphonyUrl()}/importer/api/fetch`;
 export const CENTRAL_BIT_HUB_URL_IMPORTER_V2 = `https://api.v2.bit.cloud/importer/api/fetch`;
 
 export const CENTRAL_BIT_HUB_NAME = getCloudDomain();
@@ -290,7 +293,6 @@ export const BITMAP_PREFIX_MESSAGE = `/**
  */
 export const INIT_COMMAND = 'init';
 
-export const ENV_VARIABLE_CONFIG_PREFIX = 'BIT_CONFIG_';
 /**
  * bit global config keys
  */
@@ -529,11 +531,15 @@ export enum Extensions {
   compiler = 'teambit.compilation/compiler',
   envs = 'teambit.envs/envs',
   builder = 'teambit.pipelines/builder',
+  tester = 'teambit.defender/tester',
   deprecation = 'teambit.component/deprecation',
   forking = 'teambit.component/forking',
   renaming = 'teambit.component/renaming',
   lanes = 'teambit.lanes/lanes',
   remove = 'teambit.component/remove',
+  workspace = 'teambit.workspace/workspace',
+  typescript = 'teambit.typescript/typescript',
+  aspect = 'teambit.harmony/aspect',
 }
 
 export enum BuildStatus {

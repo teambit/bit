@@ -1,12 +1,14 @@
 import chalk from 'chalk';
-import { Command } from '@teambit/cli';
-import { PathChangeResult } from '@teambit/legacy.bit-map';
-import { MoverMain } from './mover.main.runtime';
+import type { Command } from '@teambit/cli';
+import type { PathChangeResult } from '@teambit/legacy.bit-map';
+import type { MoverMain } from './mover.main.runtime';
 
 export class MoveCmd implements Command {
   name = 'move <current-component-dir> <new-component-dir>';
-  description = 'move a component to a different filesystem path';
-  extendedDescription = `(note: this does NOT affect the component's name or scope, just its location in the workspace)`;
+  description = 'relocate a component to a different directory';
+  extendedDescription = `moves component files to a new location within the workspace and updates the .bitmap tracking.
+only changes the filesystem location - does not affect the component's name, scope, or ID.
+useful for reorganizing workspace structure or following new directory conventions.`;
   helpUrl = 'reference/workspace/moving-components';
   arguments = [
     {
@@ -18,7 +20,7 @@ export class MoveCmd implements Command {
       description: "the new directory (relative to the workspace root) to create and move the component's files to",
     },
   ];
-  group = 'development';
+  group = 'component-development';
   alias = 'mv';
   loader = true;
   options = [];

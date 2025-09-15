@@ -1,18 +1,18 @@
 /* eslint-disable complexity */
-import React, { IframeHTMLAttributes, useState, useRef, useEffect } from 'react';
+import type { IframeHTMLAttributes } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import classNames from 'classnames';
 import { compact } from 'lodash';
 import { connectToChild } from 'penpal';
 import { usePubSubIframe } from '@teambit/pubsub';
-import { ComponentModel } from '@teambit/component';
-import { LOAD_EVENT } from '@teambit/ui-foundation.ui.rendering.html';
+import type { ComponentModel } from '@teambit/component';
+import { ERROR_EVENT, LOAD_EVENT } from '@teambit/ui-foundation.ui.rendering.html';
 import { toPreviewUrl } from './urls';
 import { computePreviewScale } from './compute-preview-scale';
 import { useIframeContentHeight } from './use-iframe-content-height';
 import styles from './preview.module.scss';
 
 export type OnPreviewLoadProps = { height?: string; width?: string };
-
 // omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
 export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'src' | 'referrerPolicy'> {
   /**
@@ -76,6 +76,16 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
    * is preview being rendered in full height and should fit view height to content.
    */
   fullContentHeight?: boolean;
+
+  /**
+   * propagate error to the parent window from the iframe
+   */
+  propagateError?: boolean;
+
+  /**
+   * custom error handler for preview errors
+   */
+  onPreviewError?: (errorData: any) => void;
 }
 
 /**
@@ -96,10 +106,11 @@ export function ComponentPreview({
   fullContentHeight = false,
   onLoad,
   style,
+  sandbox,
+  propagateError,
+  onPreviewError,
   ...rest
 }: ComponentPreviewProps) {
-  const host = component.host;
-  const sandbox = host === 'teambit.scope/scope' ? 'allow-scripts allow-same-origin' : undefined;
   const [heightIframeRef, iframeHeight] = useIframeContentHeight({ skip: false, viewport });
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [width, setWidth] = useState(0);
@@ -107,6 +118,7 @@ export function ComponentPreview({
   const containerRef = useRef<HTMLDivElement>(null);
   const isScaling = component.preview?.isScaling;
   const currentRef = isScaling ? iframeRef : heightIframeRef;
+  const [forceVisible, setForceVisible] = useState(false);
   // @ts-ignore (https://github.com/frenic/csstype/issues/156)
   // const height = iframeHeight || style?.height;
   usePubSubIframe(pubsub ? currentRef : undefined);
@@ -114,16 +126,43 @@ export function ComponentPreview({
   // pubsubContext?.connect(iframeHeight);
 
   useEffect(() => {
-    const handleLoad = (event) => {
-      if (event.data && (event.data.event === LOAD_EVENT || event.data.event === 'webpackInvalid')) {
+    const handleMessage = (event) => {
+      if ((event.data && event.data.event === LOAD_EVENT) || (event.data && event.data.event === 'webpackInvalid')) {
         onLoad && onLoad(event);
       }
+
+      if (event.data && (event.data.event === ERROR_EVENT || event.data.event === 'AI_FIX_REQUEST')) {
+        const errorData = event.data.payload;
+        onPreviewError?.(errorData);
+        setForceVisible(true);
+        if (propagateError && window.parent && window !== window.parent) {
+          try {
+            window.parent.postMessage(
+              {
+                event: event.data.event,
+                payload: {
+                  ...errorData,
+                  forwardedFrom: {
+                    component: component.id,
+                    preview: previewName,
+                  },
+                },
+              },
+              '*'
+            );
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('failed to propagate error to parent', err);
+          }
+        }
+      }
     };
-    window.addEventListener('message', handleLoad);
+
+    window.addEventListener('message', handleMessage);
     return () => {
-      window.removeEventListener('message', handleLoad);
+      window.removeEventListener('message', handleMessage);
     };
-  }, []);
+  }, [component.id.toString(), onLoad, propagateError, onPreviewError]);
 
   useEffect(() => {
     if (!iframeRef.current) return;
@@ -165,14 +204,14 @@ export function ComponentPreview({
     <div ref={containerRef} className={classNames(styles.preview, className)} style={{ height: forceHeight }}>
       <iframe
         {...rest}
-        sandbox={sandbox}
+        sandbox={sandbox || undefined}
         ref={currentRef}
         style={{
           ...style,
           height: forceHeight || (isScaling ? finalHeight + innerBottomPadding : legacyIframeHeight),
           width: isScaling ? targetWidth : legacyCurrentWidth,
-          visibility: width === 0 && isScaling && !fullContentHeight ? 'hidden' : undefined,
-          transform: fullContentHeight ? '' : computePreviewScale(width, containerWidth),
+          visibility: width === 0 && isScaling && !fullContentHeight && !forceVisible ? 'hidden' : undefined,
+          transform: fullContentHeight ? '' : computePreviewScale(width || 1280, containerWidth || 1280),
           border: 0,
           transformOrigin: 'top left',
         }}

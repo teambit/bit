@@ -1,13 +1,11 @@
+import type { Location, Modifier, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import {
   DocSchema,
   FunctionLikeSchema,
-  Location,
-  Modifier,
   ParameterSchema,
   SchemaNode,
   SchemaRegistry,
   TagName,
-  TypeRefSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import chalk from 'chalk';
 import { compact } from 'lodash';
@@ -23,6 +21,8 @@ export class ReactSchema extends SchemaNode {
   readonly doc?: DocSchema;
 
   readonly signature?: string | undefined;
+
+  readonly displaySchemaName = 'React';
 
   constructor(
     readonly location: Location,

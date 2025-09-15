@@ -1,18 +1,20 @@
-import { Harmony } from '@teambit/harmony';
-import { Component } from '@teambit/component';
-import { UnmergedComponent } from '@teambit/legacy.scope';
-import { ComponentID } from '@teambit/component-id';
+import type { Harmony } from '@teambit/harmony';
+import type { Component } from '@teambit/component';
+import type { UnmergedComponent } from '@teambit/legacy.scope';
+import type { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
+import type { VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { ExtensionDataList, getCompareExtPredicate } from '@teambit/legacy.extension-data';
 import { partition, mergeWith, merge, uniq, uniqWith, compact } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
-import { AspectSpecificField, ExtensionsOrigin, Workspace } from './workspace';
+import type { ExtensionsOrigin, Workspace } from './workspace';
+import { AspectSpecificField } from './workspace';
 import { MergeConflictFile } from './merge-conflict-file';
 
 export class AspectsMerger {
   readonly mergeConflictFile: MergeConflictFile;
-  private mergeConfigDepsResolverDataCache: { [compIdStr: string]: Record<string, any> } = {};
+  private mergeConfigDepsResolverDataCache: { [compIdStr: string]: VariantPolicyConfigArr } = {};
   constructor(
     private workspace: Workspace,
     private harmony: Harmony
@@ -20,7 +22,7 @@ export class AspectsMerger {
     this.mergeConflictFile = new MergeConflictFile(workspace.path);
   }
 
-  getDepsDataOfMergeConfig(id: ComponentID) {
+  getDepsDataOfMergeConfig(id: ComponentID): VariantPolicyConfigArr {
     return this.mergeConfigDepsResolverDataCache[id.toString()];
   }
 
@@ -32,7 +34,6 @@ export class AspectsMerger {
    * defaults extensions from workspace config
    * extensions from the model.
    */
-  // eslint-disable-next-line complexity
   async merge(
     componentId: ComponentID,
     componentFromScope?: Component,
@@ -62,14 +63,6 @@ export class AspectsMerger {
       errors.push(err);
     }
 
-    const adjustEnvsOnConfigMerge = (conf: Record<string, any>) => {
-      const env = conf[EnvsAspect.id]?.env;
-      if (!env) return;
-      const [id] = env.split('@');
-      conf[EnvsAspect.id] = { env: id };
-      conf[env] = {};
-    };
-
     const unmergedData = this.getUnmergedData(componentId);
     const unmergedDataMergeConf = unmergedData?.mergedConfig;
     const getMergeConfigCombined = () => {
@@ -86,14 +79,15 @@ export class AspectsMerger {
       });
     };
     const mergeConfigCombined = getMergeConfigCombined();
-    adjustEnvsOnConfigMerge(mergeConfigCombined || {});
+    ExtensionDataList.adjustEnvsOnConfigObject(mergeConfigCombined || {});
 
     const configMergeExtensions = mergeConfigCombined
       ? ExtensionDataList.fromConfigObject(mergeConfigCombined)
       : undefined;
 
     this.removeAutoDepsFromConfig(componentId, configMergeExtensions);
-    const scopeExtensions = this.getComponentFromScopeWithoutDuplications(componentFromScope);
+    const scopeExtensionsBeforeClone = this.getComponentFromScopeWithoutDuplications(componentFromScope);
+    const scopeExtensions = ExtensionDataList.fromArray(scopeExtensionsBeforeClone.map((e) => e.clone()));
     // backward compatibility. previously, it was saved as an array into the model (when there was merge-config)
     this.removeAutoDepsFromConfig(componentId, scopeExtensions, true);
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
@@ -181,6 +175,7 @@ export class AspectsMerger {
 
     const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
     const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
+    // clone the extension data to avoid mutating the original data (specifically, we don't want to mutate the scope data)
     const extensions = ExtensionDataList.fromArray(withoutRemoved);
     return {
       extensions,
@@ -214,36 +209,15 @@ export class AspectsMerger {
    */
   private removeAutoDepsFromConfig(componentId: ComponentID, conf?: ExtensionDataList, fromScope = false) {
     if (!conf) return;
-    const policy = conf.findCoreExtension(DependencyResolverAspect.id)?.config.policy;
-    if (!policy) return;
-
-    const mergeConfigObj = {};
-    ['dependencies', 'devDependencies', 'peerDependencies'].forEach((key) => {
-      if (!policy[key]) return;
-      // this is only relevant when it is saved as an array. otherwise, it's always force: true.
-      if (!Array.isArray(policy[key])) return;
-
-      mergeConfigObj[key] = policy[key].filter((dep) => !dep.force);
-      policy[key] = policy[key].filter((dep) => dep.force);
-
-      if (!policy[key].length) {
-        delete policy[key];
-        return;
-      }
-      // convert to object
-      policy[key] = policy[key].reduce((acc, current) => {
-        acc[current.name] = current.version;
-        return acc;
-      }, {});
-    });
-
+    const autoDepsObj = conf.extractAutoDepsFromConfig();
+    if (!autoDepsObj) return;
     if (!fromScope) {
       if (!this.mergeConfigDepsResolverDataCache[componentId.toString()]) {
         this.mergeConfigDepsResolverDataCache[componentId.toString()] = {};
       }
       this.mergeConfigDepsResolverDataCache[componentId.toString()] = merge(
         this.mergeConfigDepsResolverDataCache[componentId.toString()],
-        mergeConfigObj
+        autoDepsObj
       );
     }
   }

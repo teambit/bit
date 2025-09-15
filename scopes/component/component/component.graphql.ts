@@ -1,13 +1,13 @@
 import stripAnsi from 'strip-ansi';
 import { gql } from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
-import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import type { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
-import { ComponentLog } from '@teambit/scope.objects';
-import { Schema } from '@teambit/graphql';
-import { Component } from './component';
-import { ComponentFactory } from './component-factory';
-import { ComponentMain } from './component.main.runtime';
+import type { ComponentLog } from '@teambit/objects';
+import type { Schema } from '@teambit/graphql';
+import type { Component } from './component';
+import type { ComponentFactory } from './component-factory';
+import type { ComponentMain } from './component.main.runtime';
 
 export function componentSchema(componentExtension: ComponentMain): Schema {
   return {
@@ -250,8 +250,9 @@ export function componentSchema(componentExtension: ComponentMain): Schema {
             errorMessage: err.message ? stripAnsi(err.message) : err.name,
           }));
         },
-        id: async (host: ComponentFactory) => {
-          return host.name;
+        id: async (host: ComponentFactory, _args, _context, info) => {
+          const extensionId = info.variableValues.extensionId;
+          return extensionId ? `${host.name}/${extensionId}` : host.name;
         },
         name: async (host: ComponentFactory) => {
           return host.name;

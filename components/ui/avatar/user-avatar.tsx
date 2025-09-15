@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import classNames from 'classnames';
 import { Icon } from '@teambit/design.elements.icon';
 import { addAvatarQueryParams } from '@teambit/toolbox.url.add-avatar-query-params';
@@ -7,12 +7,12 @@ import { letterBgColors } from '@teambit/design.ui.styles.colors-by-letter';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import type { Placement as TooltipPlacement } from '@teambit/design.ui.tooltip';
-import { AccountObj } from './avatar';
+import type { AccountObj } from './avatar';
 import styles from './styles.module.scss';
 
 export type UserAvatarProps = {
   account: AccountObj;
-  size: number;
+  size?: number;
   imageSize?: number;
   fontSize?: number;
   imgClassName?: string;
@@ -21,17 +21,19 @@ export type UserAvatarProps = {
    */
   showTooltip?: boolean;
   tooltipPlacement?: TooltipPlacement;
+  extendTooltipContent?: ReactNode;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function UserAvatar({
   account,
-  size,
+  size = 32,
   imageSize = size,
   fontSize = Math.round(size * 0.4),
   className,
   imgClassName,
   showTooltip = false,
   tooltipPlacement = 'bottom',
+  extendTooltipContent,
   children,
   ...rest
 }: UserAvatarProps) {
@@ -75,13 +77,16 @@ export function UserAvatar({
       placement={tooltipPlacement}
       content={
         <div className={ellipsis}>
-          {displayName ? (
-            <>
-              {displayName} (@{name})
-            </>
-          ) : (
-            <>@{name}</>
-          )}
+          <span>
+            {displayName ? (
+              <>
+                {displayName} (@{name})
+              </>
+            ) : (
+              <>@{name}</>
+            )}
+          </span>
+          {extendTooltipContent}
         </div>
       }
     >

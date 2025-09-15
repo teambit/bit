@@ -1,4 +1,4 @@
-import Diagnosis from './diagnosis';
+import type Diagnosis from './diagnosis';
 
 /*
  * Setting up block level variable to store class state
@@ -11,7 +11,6 @@ const _checkName = (name) => (diagnosis: Diagnosis) => {
 };
 
 export default class DoctorRegistrar {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   diagnoses: Diagnosis[];
 
   constructor() {

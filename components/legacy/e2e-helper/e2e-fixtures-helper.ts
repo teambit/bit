@@ -4,13 +4,13 @@ import { capitalize } from 'lodash';
 import * as path from 'path';
 import tar from 'tar';
 
-import * as fixtures from './fixtures/fixtures';
-import CommandHelper from './e2e-command-helper';
-import FsHelper from './e2e-fs-helper';
-import NpmHelper from './e2e-npm-helper';
-import PackageJsonHelper from './e2e-package-json-helper';
-import ScopeHelper from './e2e-scope-helper';
-import ScopesData from './e2e-scopes';
+import * as fixtures from './fixtures';
+import type CommandHelper from './e2e-command-helper';
+import type FsHelper from './e2e-fs-helper';
+import type NpmHelper from './e2e-npm-helper';
+import type PackageJsonHelper from './e2e-package-json-helper';
+import type ScopeHelper from './e2e-scope-helper';
+import type ScopesData from './e2e-scopes';
 
 export type GenerateEnvJsoncOptions = {
   extends?: string;
@@ -77,7 +77,7 @@ export default class FixtureHelper {
     return this.command.tagWithoutBuild('bar/foo');
   }
   getFixturesDir() {
-    return path.join(__dirname, '../fixtures');
+    return path.join(__dirname, '../excluded-fixtures');
   }
 
   copyFixtureDir(src: string, dest: string) {
@@ -87,7 +87,7 @@ export default class FixtureHelper {
 
   copyFixtureComponents(dir = '', dest: string = path.join(this.scopes.localPath, dir)) {
     const sourceDir = path.join(this.getFixturesDir(), 'components', dir);
-    fs.copySync(sourceDir, dest);
+    fs.copySync(sourceDir, dest, { dereference: true });
   }
 
   copyFixtureExtensions(dir = '', cwd: string = this.scopes.localPath, targetFolder?: string) {
@@ -109,8 +109,10 @@ export default class FixtureHelper {
   copyFixtureFile(pathToFile = '', newName: string = path.basename(pathToFile), cwd: string = this.scopes.localPath) {
     const sourceFile = path.join(this.getFixturesDir(), pathToFile);
     const distFile = path.join(cwd, newName);
-    if (this.debugMode) console.log(chalk.green(`copying fixture ${sourceFile} to ${distFile}\n`)); // eslint-disable-line
-    fs.copySync(sourceFile, distFile);
+    const actualSource = fs.lstatSync(sourceFile).isSymbolicLink() ? fs.realpathSync(sourceFile) : sourceFile;
+
+    if (this.debugMode) console.log(chalk.green(`copying fixture ${actualSource} to ${distFile}\n`)); // eslint-disable-line
+    fs.copySync(actualSource, distFile);
   }
 
   /**

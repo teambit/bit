@@ -1,17 +1,25 @@
 import fs from 'fs-extra';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, IComponent } from '@teambit/component';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Component, IComponent } from '@teambit/component';
 import compact from 'lodash.compact';
-import { EnvsAspect, EnvsExecutionResult, EnvsMain } from '@teambit/envs';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import { UiMain, UIAspect } from '@teambit/ui';
+import type { EnvsExecutionResult, EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { BuilderMain } from '@teambit/builder';
+import { BuilderAspect } from '@teambit/builder';
+import type { UiMain } from '@teambit/ui';
+import { UIAspect } from '@teambit/ui';
 import { merge } from 'lodash';
-import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
-import { TestsResult } from '@teambit/tests-results';
-import { ComponentsResults, CallbackFn, Tests } from './tester';
+import type { DevFilesMain } from '@teambit/dev-files';
+import { DevFilesAspect } from '@teambit/dev-files';
+import type { TestsResult } from '@teambit/tests-results';
+import type { ComponentsResults, CallbackFn, Tests } from './tester';
 import { TestCmd } from './test.cmd';
 import { TesterAspect } from './tester.aspect';
 import { TesterService } from './tester.service';
@@ -32,6 +40,8 @@ export type TesterExtensionConfig = {
   watchOnStart: boolean;
   patterns: string[];
 };
+
+export type TestResults = EnvsExecutionResult<Tests>;
 
 export type TesterOptions = {
   /**
@@ -70,6 +80,30 @@ export type TesterOptions = {
   updateSnapshot?: boolean;
 
   callback?: CallbackFn;
+};
+
+type CoverageResults = {
+  files: CoverageFile[];
+  total: CoverageData;
+};
+
+type CoverageStats = {
+  pct: number;
+  total: number;
+  covered: number;
+  skipped: number;
+};
+
+type CoverageFile = {
+  path: string;
+  data: CoverageData;
+};
+
+type CoverageData = {
+  lines: CoverageStats;
+  statements: CoverageStats;
+  functions: CoverageStats;
+  branches: CoverageStats;
 };
 
 export class TesterMain {
@@ -119,7 +153,7 @@ export class TesterMain {
 
   _testsResults: { [componentId: string]: ComponentsResults } | undefined[] = [];
 
-  async test(components: Component[], opts?: TesterOptions): Promise<EnvsExecutionResult<Tests>> {
+  async test(components: Component[], opts?: TesterOptions): Promise<TestResults> {
     const options = this.getOptions(opts);
     const envsRuntime = await this.envs.createEnvironment(components);
     if (opts?.env) {
@@ -132,7 +166,7 @@ export class TesterMain {
     return results;
   }
 
-  private async generateJUnit(filePath: string, testsResults: EnvsExecutionResult<Tests>) {
+  private async generateJUnit(filePath: string, testsResults: TestResults) {
     const components = testsResults.results.map((envResult) => envResult.data?.components).flat();
     const jUnit = testsResultsToJUnitFormat(compact(components));
     await fs.outputFile(filePath, jUnit);
@@ -164,19 +198,23 @@ export class TesterMain {
   async getTestsResults(
     component: IComponent,
     idHasVersion = true
-  ): Promise<{ testsResults?: TestsResult; loading: boolean } | undefined> {
+  ): Promise<{ testsResults?: TestsResult; loading: boolean; coverage?: CoverageResults } | undefined> {
     const entry = component.get(TesterAspect.id);
     const isModified = !idHasVersion && (await component.isModified());
-    const data = this.builder.getDataByAspect(component, TesterAspect.id) as { tests: TestsResult };
+    const data = this.builder.getDataByAspect(component, TesterAspect.id) as {
+      tests: TestsResult & {
+        coverage: CoverageResults;
+      };
+    };
     if ((entry || data) && !isModified) {
-      return { testsResults: data?.tests || entry?.data.tests, loading: false };
+      return { testsResults: data?.tests || entry?.data.tests, loading: false, coverage: data?.tests.coverage };
     }
     return this.getTestsResultsFromState(component);
   }
 
   private getTestsResultsFromState(component: IComponent) {
     const tests = this._testsResults[component.id.toString()];
-    return { testsResults: tests?.results, loading: tests?.loading || false };
+    return { testsResults: tests?.results, loading: tests?.loading || false, coverage: tests?.coverage };
   }
 
   /**
@@ -264,7 +302,7 @@ export class TesterMain {
     }
     cli.register(new TestCmd(tester, workspace, logger));
 
-    graphql.register(testerSchema(tester, graphql));
+    graphql.register(() => testerSchema(tester, graphql));
 
     return tester;
   }

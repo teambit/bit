@@ -3,38 +3,34 @@ import uidNumber from 'uid-number';
 import { Mutex } from 'async-mutex';
 import { compact, uniqBy, differenceWith, isEqual } from 'lodash';
 import { BitError } from '@teambit/bit-error';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
-import pMap from 'p-map';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { OBJECTS_DIR } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { glob, writeFile, ChownOptions, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { ChownOptions, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { glob, writeFile } from '@teambit/legacy.utils';
 import { removeEmptyDir } from '@teambit/toolbox.fs.remove-empty-dir';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
-import {
-  Types,
-  HashNotFound,
-  OutdatedIndexJson,
-  ScopeJson,
-  UnmergedComponents,
-  RemoteLanes,
-} from '@teambit/legacy.scope';
-import { ScopeIndex, IndexType } from './scope-index';
+import type { Types, ScopeJson } from '@teambit/legacy.scope';
+import { HashNotFound, OutdatedIndexJson, UnmergedComponents, RemoteLanes } from '@teambit/legacy.scope';
+import type { IndexType, IndexItem } from './scope-index';
+import { ScopeIndex } from './scope-index';
 import BitObject from './object';
-import { ObjectItem, ObjectList } from './object-list';
+import type { ObjectItem } from './object-list';
+import { ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
-import { ContentTransformer, onPersist, onRead } from './repository-hooks';
-import { getMaxSizeForObjects, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { getMaxSizeForObjects, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { ScopeMeta, Lane, ModelComponent } from '../models';
 
+type ContentTransformer = (content: Buffer) => Buffer;
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
 
 export default class Repository {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   objects: { [key: string]: BitObject } = {};
   objectsToRemove: Ref[] = [];
   scopeJson: ScopeJson;
@@ -45,13 +41,20 @@ export default class Repository {
   protected cache: InMemoryCache<BitObject>;
   remoteLanes!: RemoteLanes;
   unmergedComponents!: UnmergedComponents;
-  persistMutex = new Mutex();
+  _persistMutex?: Mutex;
   constructor(scopePath: string, scopeJson: ScopeJson) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
-    this.onRead = onRead(scopePath, scopeJson);
-    this.onPersist = onPersist(scopePath, scopeJson);
+    this.onRead = (content: Buffer) => Repository.onPostObjectRead?.(content) || content;
+    this.onPersist = (content: Buffer) => Repository.onPreObjectPersist?.(content) || content;
     this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects() });
+  }
+
+  get persistMutex() {
+    if (!this._persistMutex) {
+      this._persistMutex = new Mutex();
+    }
+    return this._persistMutex;
   }
 
   static async load({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
@@ -85,6 +88,20 @@ export default class Repository {
   }
 
   static onPostObjectsPersist: () => Promise<void>;
+
+  /**
+   * Hook for transforming content before objects are persisted to the filesystem.
+   * Note: This function cannot be async because it's used by the synchronous `loadSync` method
+   * which needs to maintain sync behavior for compatibility with existing code.
+   */
+  static onPreObjectPersist: (content: Buffer) => Buffer;
+
+  /**
+   * Hook for transforming content after objects are read from the filesystem.
+   * Note: This function cannot be async because it's used by the synchronous `loadSync` method
+   * which needs to maintain sync behavior for compatibility with existing code.
+   */
+  static onPostObjectRead: (content: Buffer) => Buffer;
 
   async reLoadScopeIndex() {
     this.scopeIndex = await this.loadOptionallyCreateScopeIndex();
@@ -153,7 +170,7 @@ export default class Repository {
 
   async hasMultiple(refs: Ref[]): Promise<Ref[]> {
     const concurrency = concurrentIOLimit();
-    const existingRefs = await pMap(
+    const existingRefs = await pMapPool(
       refs,
       async (ref) => {
         const pathExists = await this.has(ref);
@@ -216,6 +233,9 @@ export default class Repository {
   async list(types: Types): Promise<BitObject[]> {
     const refs = await this.listRefs();
     const concurrency = concurrentIOLimit();
+    logger.debug(
+      `Repository.list, ${refs.length} refs are going to be loaded, searching for types: ${types.map((t) => t.name).join(', ')}`
+    );
     const objects: BitObject[] = [];
     const loadGracefully = process.argv.includes('--never-exported');
     const isTypeIncluded = (obj: BitObject) => types.some((type) => type.name === obj.constructor.name); // avoid using "obj instanceof type" for Harmony to call this function successfully
@@ -229,7 +249,12 @@ export default class Repository {
         if (loadGracefully && !isTypeIncluded(object)) return;
         objects.push(object);
       },
-      { concurrency }
+      {
+        concurrency,
+        onCompletedChunk: (completed) => {
+          if (completed % 1000 === 0) logger.debug(`Repository.list, completed ${completed} out of ${refs.length}`);
+        },
+      }
     );
     return objects;
   }
@@ -288,7 +313,7 @@ export default class Repository {
   async listRawObjects(): Promise<any> {
     const refs = await this.listRefs();
     const concurrency = concurrentIOLimit();
-    return pMap(
+    return pMapPool(
       refs,
       async (ref) => {
         try {
@@ -316,20 +341,25 @@ export default class Repository {
   }
 
   async _getBitObjectsByHashes(hashes: string[]): Promise<BitObject[]> {
+    const missingIndexItems: IndexItem[] = [];
     const bitObjects = await Promise.all(
       hashes.map(async (hash) => {
         const bitObject = await this.load(new Ref(hash));
         if (!bitObject) {
-          const indexJsonPath = this.scopeIndex.getPath();
           const indexItem = this.scopeIndex.find(hash);
           if (!indexItem) throw new Error(`_getBitObjectsByHashes failed finding ${hash}`);
-          await this.scopeIndex.deleteFile();
-          // @ts-ignore componentId must be set as it was retrieved from indexPath before
-          throw new OutdatedIndexJson(indexItem.toIdentifierString(), indexJsonPath);
+          missingIndexItems.push(indexItem);
+          return;
         }
         return bitObject;
       })
     );
+    if (missingIndexItems.length) {
+      this.scopeIndex.removeMany(missingIndexItems.map((item) => new Ref(item.hash)));
+      await this.scopeIndex.write();
+      const missingStringified = missingIndexItems.map((item) => item.toIdentifierString());
+      throw new OutdatedIndexJson(missingStringified);
+    }
     return compact(bitObjects);
   }
 
@@ -377,12 +407,12 @@ export default class Repository {
   async loadManyRaw(refs: Ref[]): Promise<ObjectItem[]> {
     const concurrency = concurrentIOLimit();
     const uniqRefs = uniqBy(refs, 'hash');
-    return pMap(uniqRefs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency });
+    return pMapPool(uniqRefs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency });
   }
 
   async loadManyRawIgnoreMissing(refs: Ref[]): Promise<ObjectItem[]> {
     const concurrency = concurrentIOLimit();
-    const results = await pMap(
+    const results = await pMapPool(
       refs,
       async (ref) => {
         try {
@@ -557,7 +587,7 @@ export default class Repository {
     const uniqRefs = uniqBy(refs, 'hash');
     logger.debug(`Repository._deleteMany: deleting ${uniqRefs.length} objects`);
     const concurrency = concurrentIOLimit();
-    await pMap(uniqRefs, (ref) => this._deleteOne(ref), { concurrency });
+    await pMapPool(uniqRefs, (ref) => this._deleteOne(ref), { concurrency });
     const removed = this.scopeIndex.removeMany(uniqRefs);
     if (removed) await this.scopeIndex.write();
   }
@@ -567,7 +597,7 @@ export default class Repository {
     const uniqRefs = uniqBy(refs, 'hash');
     logger.debug(`Repository.moveObjectsToDir: ${uniqRefs.length} objects`);
     const concurrency = concurrentIOLimit();
-    await pMap(uniqRefs, (ref) => this.moveOneObjectToDir(ref, dir), { concurrency });
+    await pMapPool(uniqRefs, (ref) => this.moveOneObjectToDir(ref, dir), { concurrency });
     const removed = this.scopeIndex.removeMany(uniqRefs);
     if (removed) await this.scopeIndex.write();
   }
@@ -634,7 +664,7 @@ export default class Repository {
     if (!count) return;
     logger.trace(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
     const concurrency = concurrentIOLimit();
-    await pMap(objects, (obj) => this._writeOne(obj), {
+    await pMapPool(objects, (obj) => this._writeOne(obj), {
       concurrency,
     });
     logger.trace(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);

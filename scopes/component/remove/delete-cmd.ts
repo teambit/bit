@@ -1,19 +1,19 @@
 import chalk from 'chalk';
 import yesno from 'yesno';
-import { Command, CommandOptions } from '@teambit/cli';
-import { Workspace } from '@teambit/workspace';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
-import { RemovedObjects } from '@teambit/legacy.scope';
+import type { RemovedObjects } from '@teambit/legacy.scope';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { RemoveMain } from './remove.main.runtime';
+import type { RemoveMain } from './remove.main.runtime';
 import { removeTemplate } from './remove-template';
 
 export class DeleteCmd implements Command {
   name = 'delete <component-pattern>';
-  description = 'mark components as deleted on the remote';
-  extendedDescription = `to remove components from your local workspace only, use "bit remove" command.
-this command marks the components as deleted, and after snap/tag and export they will be marked as deleted from the remote scope as well.
-`;
+  description = 'soft-delete components from remote scopes';
+  extendedDescription = `marks components as deleted so they won't be visible on remote scopes after export.
+components remain recoverable using "bit recover" unless --hard is used (permanent deletion, not recommended).
+to remove components from your local workspace only, use "bit remove" instead.`;
   arguments = [
     {
       name: 'component-pattern',
@@ -43,6 +43,7 @@ this command marks the components as deleted, and after snap/tag and export they
       'force',
       'relevant for --hard. allow the deletion even if used as a dependency. WARNING: components that depend on this component will corrupt',
     ],
+    ['', 'snaps <string>', 'comma-separated list of snap hashes to mark as deleted (e.g. --snaps "hash1,hash2,hash3")'],
   ] as CommandOptions;
   loader = true;
   remoteOp = true;
@@ -61,6 +62,7 @@ this command marks the components as deleted, and after snap/tag and export they
       hard = false,
       silent = false,
       range,
+      snaps,
     }: {
       force?: boolean;
       lane?: boolean;
@@ -68,6 +70,7 @@ this command marks the components as deleted, and after snap/tag and export they
       hard?: boolean;
       silent?: boolean;
       range?: string;
+      snaps?: string;
     }
   ) {
     if (this.workspace?.isOnLane() && !hard && !lane && !updateMain) {
@@ -90,7 +93,14 @@ this command marks the components as deleted, and after snap/tag and export they
       return `${localMessage}${this.paintArray(remoteResult)}`;
     }
 
-    const removedComps = await this.remove.deleteComps(componentsPattern, { updateMain, range });
+    const deleteOpts: any = { updateMain, range };
+    if (snaps) {
+      deleteOpts.snaps = snaps
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+    const removedComps = await this.remove.deleteComps(componentsPattern, deleteOpts);
     const removedCompIds = removedComps.map((comp) => comp.id.toString());
     return `${chalk.green('successfully deleted the following components:')}
 ${removedCompIds.join('\n')}

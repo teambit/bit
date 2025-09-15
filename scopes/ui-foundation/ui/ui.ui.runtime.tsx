@@ -1,15 +1,17 @@
 import type { GraphqlUI } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import type { ReactRouterUI } from '@teambit/react-router';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { ServerRenderer, BrowserRenderer } from '@teambit/react.rendering.ssr';
 import { SSRBrowserProvider } from '@teambit/ui-foundation.ui.hooks.use-user-agent';
 import type { SsrSession, RenderPlugin, ContextProps } from '@teambit/react.rendering.ssr';
 
-import React, { ReactNode, ComponentType } from 'react';
+import type { ReactNode, ComponentType } from 'react';
+import React from 'react';
 
-import { UIRootFactory } from './ui-root.ui';
+import type { UIRootFactory } from './ui-root.ui';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { ClientContext } from './ui/client-context';
 
@@ -45,7 +47,7 @@ export class UiUI {
     const hudItems = this.hudSlot.values();
     const lifecyclePlugins = this.getLifecyclePlugins();
 
-    const reactSsr = new BrowserRenderer(lifecyclePlugins);
+    const reactSsr = new BrowserRenderer(lifecyclePlugins, undefined, rootExtension);
     await reactSsr.render(
       <ClientContext>
         {hudItems}

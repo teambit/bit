@@ -1,4 +1,4 @@
-import { SchemaLocation, SchemaNode } from '../../schema-node';
+import type { SchemaLocation, SchemaNode } from '../../schema-node';
 import { SchemaRegistry } from '../../schema-registry';
 import { TagName, TagSchema } from './tag';
 

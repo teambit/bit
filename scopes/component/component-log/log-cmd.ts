@@ -1,8 +1,8 @@
 import c from 'chalk';
 import Table from 'cli-table';
-import { Command, CommandOptions } from '@teambit/cli';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { ComponentLogMain, LogOpts } from './component-log.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { LegacyComponentLog } from '@teambit/legacy-component-log';
+import type { ComponentLogMain, LogOpts } from './component-log.main.runtime';
 
 type LogFlags = {
   remote?: boolean;
@@ -14,10 +14,12 @@ type LogFlags = {
 };
 export default class LogCmd implements Command {
   name = 'log <id>';
-  description = 'show components(s) version history';
+  description = 'display component version history';
   helpUrl = 'reference/components/navigating-history';
-  extendedDescription: string;
-  group = 'info';
+  extendedDescription = `shows chronological history of component versions including tags and snaps with metadata.
+displays commit messages, authors, dates, and version information. supports both local and remote component logs.
+use various format options for compact or detailed views of version history.`;
+  group = 'version-control';
   alias = '';
   options = [
     ['r', 'remote', 'show log of a remote component'],

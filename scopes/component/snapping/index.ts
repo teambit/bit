@@ -1,20 +1,25 @@
 import { SnappingAspect } from './snapping.aspect';
 
-export type { BitCloudUser } from './tag-model-component';
+export type { BitCloudUser } from './version-maker';
 export type {
   SnappingMain,
   TagResults,
   SnapResults,
   SnapFromScopeResults,
   SnapDataParsed,
+  SnapDataPerCompRaw,
 } from './snapping.main.runtime';
 export default SnappingAspect;
 export { SnappingAspect };
-export { tagModelComponent, onTagIdTransformer, BasicTagParams } from './tag-model-component';
-export { AUTO_TAGGED_MSG, NOTHING_TO_TAG_MSG } from './tag-cmd';
+export { VersionMaker, BasicTagParams, VersionMakerParams, BasicTagSnapParams } from './version-maker';
 export {
-  snapFromScopeOptions,
-  inputDataDescription,
-  SnapDataPerCompRaw,
-  SnapFromScopeOptions,
-} from './snap-from-scope.cmd';
+  AUTO_TAGGED_MSG,
+  NOTHING_TO_TAG_MSG,
+  tagCmdOptions,
+  TagParams,
+  validateOptions,
+  tagResultOutput,
+  outputIdsIfExists,
+} from './tag-cmd';
+
+export { snapResultOutput } from './snap-cmd';
