@@ -29,9 +29,32 @@ function resolveRelativePath(filePath: string) {
   try {
     const resolvedFilePath = require.resolve(filePath);
     return resolvedFilePath;
-  } catch {
-    const resolvedFilePath = require.resolve(`${filePath}.js`);
-    return resolvedFilePath;
+  } catch (err) {
+    // Handle @teambit packages that have problematic exports adding .ts extension
+    if (filePath.startsWith('@teambit/')) {
+      const Module = require('module');
+      const cwdRequire = Module.createRequire(join(process.cwd(), 'index.js'));
+      const paths = cwdRequire.resolve.paths(filePath);
+
+      if (paths && paths.length > 0) {
+        // Try to find the file without the .ts extension that exports might add
+        const extensions = ['', '.js', '.json'];
+        for (const ext of extensions) {
+          const fullPath = join(paths[0], `${filePath}${ext}`);
+          if (require('fs').existsSync(fullPath)) {
+            return fullPath;
+          }
+        }
+      }
+    }
+
+    // Fallback: try appending .js extension
+    try {
+      const resolvedFilePath = require.resolve(`${filePath}.js`);
+      return resolvedFilePath;
+    } catch {
+      throw err;
+    }
   }
 }
 
@@ -107,7 +130,7 @@ function parseArgsFromSrc(args: OnResolveArgs): ParsedArgs {
 }
 
 async function handleModulePath(args: OnResolveArgs, bundleDir: string) {
-  const resolvedFilePath = require.resolve(args.path);
+  const resolvedFilePath = resolveRelativePath(args.path);
   const parsed = parse(args.path);
   const targetDir = join(bundleDir, 'node_modules', parsed.dir);
   await fs.ensureDir(targetDir);
