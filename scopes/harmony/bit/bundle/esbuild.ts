@@ -16,7 +16,7 @@ export function runEsbuild(outDir: string, appFile: string) {
       // 'import_meta_url': 'import_meta_url',
       // 'import_meta.url': 'import_meta_url',
     },
-    entryPoints: ['/Users/giladshoham/dev/bit/bit/scopes/harmony/bit/app.ts'],
+    entryPoints: [join(process.cwd(), 'scopes/harmony/bit/app.ts')],
     // entryPoints: ['/Users/giladshoham/dev/bit/bit/node_modules/@teambit/bit/dist/app.js'],
     // entryPoints: ['/Users/giladshoham/dev/temp/bundle-bit/node_modules/@my-scope/bit-bundle/dist/test-app.js'],
     // entryPoints: ['/Users/giladshoham/dev/temp/bundle-bit/my-scope/bit-bundle/test-app.ts']

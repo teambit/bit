@@ -1,4 +1,5 @@
 import ignorePlugin from 'esbuild-plugin-ignore';
+import { join } from 'path';
 import { build, Options } from 'tsup';
 import { configFilesEsbuildPlugin } from './config-files-esbuild-plugin';
 import { timeEsbuildPlugin } from './esbuild-plugin-time';
@@ -6,7 +7,7 @@ import { externals } from './externals';
 
 export async function runTsup(outDir: string, _appFile: string) {
   const opts: Options = {
-    entry: ['/Users/giladshoham/dev/bit/bit/scopes/harmony/bit/app.ts'],
+    entry: [join(process.cwd(), 'scopes/harmony/bit/app.ts')],
     splitting: false,
     sourcemap: true,
     clean: true,

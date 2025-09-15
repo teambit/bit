@@ -8,7 +8,7 @@ import { coreAspectsIds } from '../core-aspects-ids';
 const FILE_NAME = 'core-aspects-exports.ts';
 // const filePath = join('..', FILE_NAME);
 // TODO: make it not hard coded
-const filePath = join('/Users/giladshoham/dev/bit/bit/scopes/harmony/bit', FILE_NAME);
+const filePath = join(process.cwd(), 'scopes/harmony/bit', FILE_NAME);
 
 export function generateCoreAspectsBarrelFile() {
   const exports = generateExports();
