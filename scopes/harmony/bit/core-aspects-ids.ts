@@ -102,4 +102,8 @@ export const coreAspectsIds = [
   'teambit.component/stash',
   'teambit.git/git',
   'teambit.harmony/ipc-events',
+  'teambit.harmony/config-store',
+  'teambit.scope/version-history',
+  'teambit.ci/ci',
+  'teambit.mcp/cli-mcp-server',
 ];
