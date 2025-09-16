@@ -46,7 +46,7 @@ import type { Linter, LinterContext } from '@teambit/linter';
 import type { Formatter, FormatterContext } from '@teambit/formatter';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import type { ComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
-import type { SchemaExtractor } from '@teambit/schema';
+import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import type { Logger } from '@teambit/logger';

@@ -1,5 +1,5 @@
 import didYouMean from 'didyoumean';
-import yargs from 'yargs';
+// import yargs from 'yargs';
 import type { Command } from './command';
 import type { GroupsType } from './command-groups';
 import { compact } from 'lodash';
