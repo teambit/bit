@@ -690,6 +690,69 @@ jobs:
       - e2e_test_cmd:
          bit_bin: "--bin_bit=bbit"
 
+  # tests the cleanup script by simulating bundle process + cleanup + e2e tests
+  # IMPORTANT: This job only runs on branches matching: optimize-node-modules*, cleanup-script*, or *cleanup*script*
+  # It simulates the exact bundle process used in production, applies cleanup, then runs full e2e test suite
+  e2e_test_bundle_simulation:
+    <<: *defaults
+    environment:
+      BITSRC_ENV: stg
+      BIT_FEATURES: cloud-importer-v2
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+    parallelism: 25
+    steps:
+      - checkout
+      - restore_common_caches
+      - set_bit_cloud_registry
+      - setup_bit_version
+      - setup_pnpm
+      - run:
+          name: simulate bundle process - install bit package
+          command: >
+            mkdir bit-bundle-test &&
+            cd bit-bundle-test &&
+            pnpm init &&
+            echo "node-linker=hoisted" >> .npmrc &&
+            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
+            pnpm add @teambit/bit --os=linux --cpu=x64
+      - run:
+          name: apply cleanup script to bundled installation
+          command: >
+            cd bit-bundle-test &&
+            node ../scripts/cleanup-node-modules.js ./node_modules
+      - run:
+          name: create global link for cleaned bit binary
+          command: >
+            cd bit-bundle-test &&
+            mkdir -p /home/circleci/.npm-global/bin &&
+            ln -sf $(pwd)/node_modules/.bin/bit /home/circleci/.npm-global/bin/bit-cleaned &&
+            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+      - run:
+          name: verify cleaned binary works
+          command: >
+            bit-cleaned --version &&
+            bit-cleaned config list
+      - bit_config:
+          bin_name: "bit-cleaned"
+          token: "fake-token"
+      - run: 'cd bit && mkdir junit'
+      - run: 'bit-cleaned config set package-manager.cache /home/circleci/package-manager-cache'
+      - run:
+          name: 'Run e2e tests with cleaned bit binary'
+          command: 'cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs npm run mocha-circleci --bin_bit=bit-cleaned'
+          environment:
+            MOCHA_FILE: junit/e2e-test-results-cleaned.xml
+          when: always
+      - store_test_results:
+          path: bit/junit
+      - store_test_results_and_artifacts:
+          path: ~/Library/Caches/Bit/logs
+
   # ========== Utility Jobs ==========
   harmony_deploy_approval_job:
     <<: *defaults
@@ -1109,6 +1172,12 @@ workflows:
           requires:
             - setup_harmony
       - e2e_test:
+          requires:
+            - setup_harmony
+      - e2e_test_bundle_simulation:
+          filters:
+            branches:
+              only: /^optimize-node-modules.*|^cleanup-script.*|.*cleanup.*script.*/
           requires:
             - setup_harmony
       - bit_pr:

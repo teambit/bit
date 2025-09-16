@@ -99,6 +99,25 @@ Example chain showing transitive dependencies:
 
 Created `optimize_node_modules` command with optional platform parameter for DRY code.
 
+### Testing Integration: Bundle Simulation Job
+
+**Job**: `e2e_test_bundle_simulation`
+
+- **Purpose**: Tests cleanup script by simulating complete bundle → cleanup → e2e test flow
+- **Triggers**: Only runs on branches matching patterns:
+  - `optimize-node-modules*`
+  - `cleanup-script*`
+  - `*cleanup*script*`
+- **Process**:
+  1. Simulates bundle process (`pnpm add @teambit/bit` with hoisting + overrides)
+  2. Applies cleanup script to bundled installation
+  3. Creates `bit-cleaned` binary link (avoids conflicts with repo binary)
+  4. Runs full e2e test suite using cleaned installation
+- **Parallelization**: 25-way split same as regular e2e tests
+- **Output**: Separate test results (`e2e-test-results-cleaned.xml`)
+
+This ensures cleanup script changes are thoroughly tested before production deployment without affecting regular CI runs.
+
 ## Testing Methodology
 
 ### Validation Process
