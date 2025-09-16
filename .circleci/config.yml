@@ -751,7 +751,9 @@ jobs:
       - store_test_results:
           path: bit/junit
       - store_test_results_and_artifacts:
-          path: ~/Library/Caches/Bit/logs
+          test_results_path: bit/junit
+          artifacts_path: bit/junit
+          logs_path: ~/Library/Caches/Bit/logs
 
   # ========== Utility Jobs ==========
   harmony_deploy_approval_job:
