@@ -99,24 +99,33 @@ Example chain showing transitive dependencies:
 
 Created `optimize_node_modules` command with optional platform parameter for DRY code.
 
-### Testing Integration: Bundle Simulation Job
+### Testing Integration: Bundle Simulation Jobs
 
-**Job**: `e2e_test_bundle_simulation`
+**Setup Job**: `setup_bundle_simulation` (runs once)
 
-- **Purpose**: Tests cleanup script by simulating complete bundle → cleanup → e2e test flow
-- **Triggers**: Only runs on branches matching patterns:
-  - `optimize-node-modules*`
-  - `cleanup-script*`
-  - `*cleanup*script*`
+- **Purpose**: Creates cleaned bit bundle and persists to workspace
 - **Process**:
   1. Simulates bundle process (`pnpm add @teambit/bit` with hoisting + overrides)
   2. Applies cleanup script to bundled installation
-  3. Creates `bit-cleaned` binary link (avoids conflicts with repo binary)
-  4. Runs full e2e test suite using cleaned installation
-- **Parallelization**: 25-way split same as regular e2e tests
+  3. Verifies cleaned installation works
+  4. Persists bundle to workspace for parallel testing
+
+**Test Job**: `e2e_test_bundle_simulation` (parallelized 25x)
+
+- **Purpose**: Runs e2e tests using cleaned bit bundle from workspace
+- **Process**:
+  1. Attaches workspace with cleaned bundle
+  2. Creates `bit-cleaned` binary link (avoids conflicts with repo binary)
+  3. Runs full e2e test suite using cleaned installation
 - **Output**: Separate test results (`e2e-test-results-cleaned.xml`)
 
-This ensures cleanup script changes are thoroughly tested before production deployment without affecting regular CI runs.
+**Triggers**: Both jobs only run on branches matching patterns:
+
+- `optimize-node-modules*`
+- `cleanup-script*`
+- `*cleanup*script*`
+
+This approach optimizes CI by doing expensive setup once while maintaining full parallel test coverage. Ensures cleanup script changes are thoroughly tested before production deployment without affecting regular CI runs.
 
 ## Testing Methodology
 
