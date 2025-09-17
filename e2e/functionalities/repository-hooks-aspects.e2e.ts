@@ -107,7 +107,7 @@ const IV_LENGTH = 16;
 const TAG_LENGTH = 16;
 
 // Simple key derivation for demo purposes - in production, use proper key management
-const ENCRYPTION_KEY = crypto.scryptSync('bit-secret-key', 'bit-salt', KEY_LENGTH);
+const ENCRYPTION_KEY = crypto.scryptSync('bit-secret-key', 'bit-salt', KEY_LENGTH) as crypto.CipherKey;
 
 function encrypt(chunk: Buffer): Buffer {
   try {
