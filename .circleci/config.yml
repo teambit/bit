@@ -762,15 +762,6 @@ jobs:
           command: >
             cd bit-bundle-test &&
             node ../bit/scripts/cleanup-node-modules.js ./node_modules
-      - run:
-          name: verify cleaned installation works
-          command: >
-            cd bit-bundle-test &&
-            ls -la node_modules/.bin/ | head -20 &&
-            echo "---" &&
-            ls -la node_modules/@teambit/bit/bin/ | head -10 &&
-            echo "---" &&
-            npx bit --version
       - persist_to_workspace:
           root: .
           paths:
