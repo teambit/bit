@@ -88,6 +88,8 @@ commands:
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss" --values "^8.4.19" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.tslib" --values "^2.6.2" &&
             pnpm add @teambit/bit --os=<<parameters.os>> --cpu=<<parameters.cpu>>
 
   # Bundle installation for Windows (with Windows-specific configs)
@@ -114,6 +116,8 @@ commands:
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss" --values "^8.4.19" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.tslib" --values "^2.6.2" &&
             pnpm add @teambit/bit --os=win32 --cpu=<<parameters.cpu>>
 
   # Bit configuration
