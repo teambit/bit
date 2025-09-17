@@ -752,7 +752,9 @@ jobs:
             cd bit-bundle-test &&
             BIT_BIN=$(find node_modules -name "bit" -type f -path "*/bin/*" | head -1) &&
             echo "Found bit binary at: $BIT_BIN" &&
+            chmod +x $(pwd)/$BIT_BIN &&
             ln -sf $(pwd)/$BIT_BIN /home/circleci/.npm-global/bin/bit-cleaned &&
+            chmod +x /home/circleci/.npm-global/bin/bit-cleaned &&
             echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
       - run:
           name: verify cleaned binary works
