@@ -762,19 +762,8 @@ jobs:
             source $BASH_ENV &&
             bit-cleaned --version &&
             bit-cleaned config list
-      - run: 'cd bit && mkdir junit'
-      - run:
-          name: 'Run e2e tests with cleaned bit binary'
-          command: 'source $BASH_ENV && cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs npm run mocha-circleci --bin_bit=bit-cleaned'
-          environment:
-            MOCHA_FILE: junit/e2e-test-results-cleaned.xml
-          when: always
-      - store_test_results:
-          path: bit/junit
-      - store_test_results_and_artifacts:
-          test_results_path: bit/junit
-          artifacts_path: bit/junit
-          logs_path: ~/Library/Caches/Bit/logs
+      - e2e_test_cmd:
+          bit_bin: "--bin_bit=bit-cleaned"
 
   # ========== Utility Jobs ==========
   harmony_deploy_approval_job:
