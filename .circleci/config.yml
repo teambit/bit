@@ -760,11 +760,7 @@ jobs:
             source $BASH_ENV &&
             bit-cleaned --version &&
             bit-cleaned config list
-      - bit_config:
-          bin_name: "bit-cleaned"
-          token: "fake-token"
       - run: 'cd bit && mkdir junit'
-      - run: 'source $BASH_ENV && bit-cleaned config set package-manager.cache /home/circleci/package-manager-cache'
       - run:
           name: 'Run e2e tests with cleaned bit binary'
           command: 'source $BASH_ENV && cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs npm run mocha-circleci --bin_bit=bit-cleaned'
@@ -1204,7 +1200,7 @@ workflows:
             branches:
               only: /^optimize-node-modules.*|^cleanup-script.*|.*cleanup.*script.*/
           requires:
-            - checkout_code
+            - setup_harmony
       - e2e_test_bundle_simulation:
           filters:
             branches:
