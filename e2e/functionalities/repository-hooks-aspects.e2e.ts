@@ -66,7 +66,8 @@ chai.use(chaiFs);
 });
 
 function getRepositoryHooksAspectMainRuntime() {
-  return `import * as crypto from 'crypto';
+  return `// @ts-nocheck
+import * as crypto from 'crypto';
 import { MainRuntime } from '@teambit/cli';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
@@ -100,14 +101,14 @@ export class RepositoryHooksAspectMain {
 RepositoryHooksAspectAspect.addRuntime(RepositoryHooksAspectMain);
 
 // Constants for encryption
-const ENCRYPTION_MARKER = Buffer.from('BIT_ENCRYPTED_V1:', 'utf8');
+const ENCRYPTION_MARKER = new TextEncoder().encode('BIT_ENCRYPTED_V1:');
 const ALGORITHM = 'aes-256-gcm';
 const KEY_LENGTH = 32;
 const IV_LENGTH = 16;
 const TAG_LENGTH = 16;
 
 // Simple key derivation for demo purposes - in production, use proper key management
-const ENCRYPTION_KEY = crypto.scryptSync('bit-secret-key', 'bit-salt', KEY_LENGTH) as crypto.CipherKey;
+const ENCRYPTION_KEY = crypto.scryptSync('bit-secret-key', 'bit-salt', KEY_LENGTH);
 
 function encrypt(chunk: Buffer): Buffer {
   try {
@@ -118,7 +119,7 @@ function encrypt(chunk: Buffer): Buffer {
 
     console.log('Encryption successful');
     // Combine marker + iv + tag + encrypted data
-    return Buffer.concat([ENCRYPTION_MARKER, iv, tag, encrypted]);
+    return Buffer.concat([Buffer.from(ENCRYPTION_MARKER), iv, tag, encrypted]);
   } catch (error) {
     console.error('Encryption failed:', error);
     // Return original content if encryption fails
@@ -129,14 +130,15 @@ function encrypt(chunk: Buffer): Buffer {
 function decrypt(chunk: Buffer): Buffer {
   try {
     // Check if the content starts with our encryption marker
-    if (!chunk.subarray(0, ENCRYPTION_MARKER.length).equals(ENCRYPTION_MARKER)) {
+    const markerBuffer = Buffer.from(ENCRYPTION_MARKER);
+    if (!chunk.subarray(0, markerBuffer.length).equals(markerBuffer)) {
       // Not encrypted - return as is (backward compatibility)
       console.log('Decryption skipped: not encrypted');
       return chunk;
     }
 
     // Extract components
-    let offset = ENCRYPTION_MARKER.length;
+    let offset = markerBuffer.length;
     const iv = chunk.subarray(offset, offset + IV_LENGTH);
     offset += IV_LENGTH;
 
