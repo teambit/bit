@@ -719,7 +719,7 @@ jobs:
           name: apply cleanup script to bundled installation
           command: >
             cd bit-bundle-test &&
-            node ../scripts/cleanup-node-modules.js ./node_modules
+            node ../bit/scripts/cleanup-node-modules.js ./node_modules
       - run:
           name: verify cleaned installation works
           command: >
