@@ -70,7 +70,7 @@ commands:
         type: string
         default: "linux"
       cpu:
-        type: string  
+        type: string
         default: "x64"
       directory:
         type: string
@@ -90,11 +90,11 @@ commands:
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
             pnpm add @teambit/bit --os=<<parameters.os>> --cpu=<<parameters.cpu>>
 
-  # Bundle installation for Windows (with Windows-specific configs)  
+  # Bundle installation for Windows (with Windows-specific configs)
   install_bit_bundle_windows:
     parameters:
       cpu:
-        type: string  
+        type: string
         default: "x64"
       directory:
         type: string
@@ -150,7 +150,7 @@ commands:
           name: optimize node_modules size<<# parameters.platform >> for <<parameters.platform>><</parameters.platform>>
           command: >
             cd bit-${BIT_VERSION} &&
-            node ../bit/scripts/cleanup-node-modules.js ./node_modules &&
+            node ../bit/scripts/cleanup-node-modules.js ./node_modules --keep-teambit-maps &&
             echo "Node modules optimized successfully<<# parameters.platform >> for <<parameters.platform>><</parameters.platform>>"
 
   # NPM setup
@@ -758,10 +758,10 @@ jobs:
       - install_bit_bundle:
           directory: "bit-bundle-test"
       - run:
-          name: apply cleanup script to bundled installation
+          name: apply cleanup script to bundled installation with UI deps removal
           command: >
             cd bit-bundle-test &&
-            node ../bit/scripts/cleanup-node-modules.js ./node_modules
+            node ../bit/scripts/cleanup-node-modules.js ./node_modules --remove-ui-deps
       - persist_to_workspace:
           root: .
           paths:

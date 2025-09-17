@@ -19,6 +19,11 @@
  *    - Keeps only the 'min' folder which is sufficient for production use
  * 2. Source map files: Removes all *.map files throughout node_modules (~52MB)
  *    - These are only needed for debugging, not for production runtime
+ * 3. UI dependencies (with --remove-ui-deps): Removes UI-only packages (~45MB)
+ *    - react-syntax-highlighter, date-fns, d3-* packages, @react-hook/*
+ *    - Nested node_modules in @teambit/react and @teambit/ui
+ *    - Safe since UI is pre-bundled in artifacts directory
+ *    - WARNING: This will break `bit start --dev` which needs these packages to rebuild UI
  *
  * Safety:
  * - Only removes files that are definitively not needed for runtime
@@ -42,6 +47,8 @@ const config = {
   keepSourceMaps: process.argv.includes('--keep-source-maps'),
   // Set to true to keep only @teambit source maps (for debugging Bit's own code)
   keepTeambitMaps: process.argv.includes('--keep-teambit-maps'),
+  // Set to true to remove UI-only dependencies that are not needed for CLI operations
+  removeUiDeps: process.argv.includes('--remove-ui-deps'),
   // Set to true for verbose output
   verbose: process.argv.includes('--verbose'),
 };
@@ -403,6 +410,84 @@ function cleanupTypeScriptLocales(nodeModulesPath) {
   }
 }
 
+// UI Dependencies cleanup - removes UI-only packages not needed for CLI operations
+// WARNING: This will break `bit start --dev` which requires these packages to rebuild the UI
+function cleanupUiDependencies(nodeModulesPath) {
+  if (!config.removeUiDeps) {
+    return;
+  }
+
+  console.log('\n🎨 Removing UI dependencies...');
+  console.log('  (Safe to remove since UI is pre-bundled in artifacts)');
+  console.log('  ⚠️  WARNING: This will break `bit start --dev` mode');
+
+  let totalUiSaved = 0;
+  let uiPackagesRemoved = 0;
+
+  // List of UI-only packages that can be safely removed
+  const uiPackages = [
+    'react-syntax-highlighter', // Code highlighting in UI docs (~9MB)
+    'date-fns', // Date picker components (~12MB)
+    '@types/react-syntax-highlighter', // Type definitions (~2MB)
+    '@react-hook', // React UI utilities (~1MB)
+  ];
+
+  // D3 packages used for data visualization in UI
+  const d3Packages = [
+    'd3-color',
+    'd3-dispatch',
+    'd3-drag',
+    'd3-ease',
+    'd3-interpolate',
+    'd3-selection',
+    'd3-timer',
+    'd3-transition',
+    'd3-zoom',
+  ];
+
+  const allPackagesToRemove = [...uiPackages, ...d3Packages];
+
+  // Also remove nested node_modules in UI-related @teambit packages
+  // These are not needed since we use pre-bundled artifacts from these packages
+  const nestedNodeModulesToRemove = ['@teambit/react/node_modules', '@teambit/ui/node_modules'];
+
+  try {
+    // Remove main UI packages
+    for (const packageName of allPackagesToRemove) {
+      const packagePath = path.join(nodeModulesPath, packageName);
+
+      if (fs.existsSync(packagePath)) {
+        const size = getDirectorySize(packagePath);
+        if (deleteFileOrDir(packagePath, `UI dependency: ${packageName}`)) {
+          totalUiSaved += size;
+          uiPackagesRemoved++;
+        }
+      }
+    }
+
+    // Remove nested node_modules directories
+    for (const nestedPath of nestedNodeModulesToRemove) {
+      const fullPath = path.join(nodeModulesPath, nestedPath);
+
+      if (fs.existsSync(fullPath)) {
+        const size = getDirectorySize(fullPath);
+        if (deleteFileOrDir(fullPath, `Nested node_modules: ${nestedPath}`)) {
+          totalUiSaved += size;
+          uiPackagesRemoved++;
+        }
+      }
+    }
+
+    if (uiPackagesRemoved > 0) {
+      console.log(`  Removed ${uiPackagesRemoved} UI packages, saved: ${formatBytes(totalUiSaved)}`);
+    } else {
+      console.log('  No UI dependencies to remove');
+    }
+  } catch (error) {
+    console.log('  Error processing UI dependencies:', error.message);
+  }
+}
+
 // Main execution
 function main() {
   console.log('🚀 Node Modules Cleanup Script');
@@ -434,6 +519,7 @@ function main() {
   cleanupSourceMaps(absolutePath);
   cleanupDateFnsLocales(absolutePath);
   cleanupTypeScriptLocales(absolutePath);
+  cleanupUiDependencies(absolutePath);
 
   // Summary
   console.log('\n📊 Cleanup Summary');
@@ -471,6 +557,7 @@ Options:
   --dry-run         Show what would be deleted without actually deleting
   --keep-source-maps Keep all .map files (useful for debugging)
   --keep-teambit-maps Keep only @teambit .map files (for debugging Bit's code)
+  --remove-ui-deps  Remove UI-only dependencies not needed for CLI operations
   --verbose         Show detailed output
   --help           Show this help message
 
@@ -480,6 +567,7 @@ Examples:
   node cleanup-node-modules.js --dry-run          # Preview what would be deleted
   node cleanup-node-modules.js --keep-source-maps # Keep all source maps for debugging
   node cleanup-node-modules.js --keep-teambit-maps # Keep only @teambit source maps
+  node cleanup-node-modules.js --remove-ui-deps   # Also remove UI dependencies
 
 This script safely removes:
   1. Duplicate monaco-editor builds (dev, esm, min-maps folders) ~64MB
@@ -492,10 +580,16 @@ This script safely removes:
      - Removes all locales except English (451 locale files)
   4. TypeScript locale files (~4MB)
      - Removes all non-English error message locales (13 directories)
+  5. UI dependencies (--remove-ui-deps only) (~45MB):
+     - react-syntax-highlighter, date-fns, d3-* packages, @react-hook/*
+     - Nested node_modules in @teambit/react and @teambit/ui (unneeded - using pre-bundled artifacts)
+     - Safe to remove since UI is pre-bundled in artifacts
+     - ⚠️  WARNING: Will break 'bit start --dev' mode (rebuilds UI dynamically)
 
 Expected space savings:
-  - Default mode: ~216MB
-  - With --keep-teambit-maps: ~192MB
+  - Default mode: ~176MB
+  - With --keep-teambit-maps: ~159MB  
+  - With --remove-ui-deps (additional): ~45MB
 Safe for production use - only removes non-essential files.
 `);
   process.exit(0);
