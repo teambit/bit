@@ -127,8 +127,12 @@ export class ConfigMain {
     return configMain;
   }
 }
-
 ConfigAspect.addRuntime(ConfigMain);
+
+// Required for esbuild to work properly
+export function getConfigAspect() {
+  return ConfigAspect;
+}
 
 async function loadWorkspaceConfigIfExist(cwd = process.cwd()): Promise<WorkspaceConfig | undefined> {
   const consumerInfo = await getWorkspaceInfo(cwd);
