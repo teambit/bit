@@ -108,7 +108,7 @@ export class DependencyInstaller {
 
     private minimumReleaseAgeExclude?: string[],
 
-    private installingContext: DepInstallerContext = {},
+    private installingContext: DepInstallerContext = {}
   ) {}
 
   async install(
