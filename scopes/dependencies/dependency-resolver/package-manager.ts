@@ -215,6 +215,19 @@ export interface PackageManager {
   findUsages?(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string>;
 
   calcDependenciesGraph?(options: CalcDepsGraphOptions): Promise<DependenciesGraph | undefined>;
+
+  /**
+   * Defines the minimum number of minutes that must pass after a version is published before pnpm will install it.
+   * This applies to all dependencies, including transitive ones.
+   */
+  minimumReleaseAge?: number;
+
+  /**
+   * If you set minimumReleaseAge but need certain dependencies to always install the newest version immediately,
+   * you can list them under minimumReleaseAgeExclude. The exclusion works by package name or package name pattern
+   * and applies to all versions of that package.
+   */
+  minimumReleaseAgeExclude?: string[];
 }
 
 export interface CalcDepsGraphOptions {

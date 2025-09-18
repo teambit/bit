@@ -214,7 +214,7 @@ export async function install(
     | 'hoistWorkspacePackages'
     | 'returnListOfDepsRequiringBuild'
   > &
-    Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>,
+    Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline' | 'minimumReleaseAge' | 'minimumReleaseAgeExclude'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string; depsRequiringBuild?: DepPath[] }> {

@@ -651,6 +651,8 @@ export class DependencyResolverMain {
       this.config.peerDependencyRules,
       this.config.neverBuiltDependencies,
       this.config.preferOffline,
+      this.config.minimumReleaseAge,
+      this.config.minimumReleaseAgeExclude,
       options.installingContext
     );
   }

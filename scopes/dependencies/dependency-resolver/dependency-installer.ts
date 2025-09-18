@@ -104,7 +104,11 @@ export class DependencyInstaller {
 
     private preferOffline?: boolean,
 
-    private installingContext: DepInstallerContext = {}
+    private minimumReleaseAge?: number,
+
+    private minimumReleaseAgeExclude?: string[],
+
+    private installingContext: DepInstallerContext = {},
   ) {}
 
   async install(
@@ -200,6 +204,8 @@ export class DependencyInstaller {
       cacheRootDir: this.cacheRootDir,
       nodeLinker: this.nodeLinker,
       packageImportMethod: this.packageImportMethod,
+      minimumReleaseAge: this.minimumReleaseAge,
+      minimumReleaseAgeExclude: this.minimumReleaseAgeExclude,
       sideEffectsCache: this.sideEffectsCache,
       nodeVersion: this.nodeVersion,
       engineStrict: this.engineStrict,
