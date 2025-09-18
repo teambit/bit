@@ -209,6 +209,8 @@ export async function install(
     | 'enableModulesDir'
     | 'engineStrict'
     | 'excludeLinksFromLockfile'
+    | 'minimumReleaseAge'
+    | 'minimumReleaseAgeExclude'
     | 'neverBuiltDependencies'
     | 'ignorePackageManifest'
     | 'hoistWorkspacePackages'
