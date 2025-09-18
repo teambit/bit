@@ -13,12 +13,12 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
 // Parse arguments
 const args = process.argv.slice(2);
-const nodeModulesPath = args[0] || './node_modules';
 const showOnlyLarge = args.includes('--large-only');
+const filteredArgs = args.filter((arg) => !arg.startsWith('--'));
+const nodeModulesPath = filteredArgs[0] || './node_modules';
 const sizeThreshold = 1024 * 1024; // 1MB threshold for --large-only flag
 
 const absolutePath = path.resolve(nodeModulesPath);
@@ -41,24 +41,32 @@ if (showOnlyLarge) {
 const packageMap = new Map();
 
 function getDirectorySize(dir) {
-  try {
-    let result;
-    if (process.platform === 'darwin') {
-      result = execSync(`du -sk "${dir}" 2>/dev/null | cut -f1`, {
-        encoding: 'utf8',
-        stdio: ['pipe', 'pipe', 'ignore'],
+  // Use Node.js fs to calculate actual file sizes (not disk usage)
+  let totalSize = 0;
+
+  function calculateSize(dirPath) {
+    try {
+      const files = fs.readdirSync(dirPath);
+      files.forEach((file) => {
+        const filePath = path.join(dirPath, file);
+        try {
+          const stats = fs.statSync(filePath);
+          if (stats.isDirectory()) {
+            calculateSize(filePath);
+          } else {
+            totalSize += stats.size;
+          }
+        } catch {
+          // Skip files we can't access
+        }
       });
-      return parseInt(result.trim()) * 1024; // Convert KB to bytes
-    } else {
-      result = execSync(`du -sb "${dir}" 2>/dev/null | cut -f1`, {
-        encoding: 'utf8',
-        stdio: ['pipe', 'pipe', 'ignore'],
-      });
-      return parseInt(result.trim());
+    } catch {
+      // Skip directories we can't read
     }
-  } catch {
-    return 0;
   }
+
+  calculateSize(dir);
+  return totalSize;
 }
 
 function formatBytes(bytes) {
