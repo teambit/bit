@@ -340,7 +340,7 @@
           "line": 25,
           "character": 1
         },
-        "signature": "function Button(props: any): any",
+        "signature": "function Button(props: ButtonProps): any",
         "name": "Button",
         "params": [
           {
@@ -366,13 +366,14 @@
           }
         ],
         "returnType": {
-          "__schema": "InferenceTypeSchema",
+          "__schema": "TypeRefSchema",
           "location": {
             "filePath": "button.tsx",
             "line": 25,
             "character": 1
           },
-          "type": "any"
+          "name": "Button",
+          "internalFilePath": "button.tsx"
         },
         "modifiers": [
           "export"
@@ -424,13 +425,13 @@
         "name": "Hi",
         "params": [],
         "returnType": {
-          "__schema": "InferenceTypeSchema",
+          "__schema": "TypeRefSchema",
           "location": {
             "filePath": "index.ts",
             "line": 21,
             "character": 1
           },
-          "type": "void"
+          "name": "Hi"
         },
         "modifiers": [
           "export"
@@ -575,13 +576,14 @@
               }
             ],
             "returnType": {
-              "__schema": "InferenceTypeSchema",
+              "__schema": "TypeRefSchema",
               "location": {
                 "filePath": "button.composition.tsx",
                 "line": 14,
                 "character": 1
               },
-              "type": "any"
+              "name": "Footer",
+              "internalFilePath": "button.composition.tsx"
             },
             "modifiers": [
               "export"
@@ -3599,7 +3601,7 @@
             "line": 25,
             "character": 1
           },
-          "signature": "function Button(props: any): any",
+          "signature": "function Button(props: ButtonProps): any",
           "name": "Button",
           "params": [
             {
@@ -3625,13 +3627,14 @@
             }
           ],
           "returnType": {
-            "__schema": "InferenceTypeSchema",
+            "__schema": "TypeRefSchema",
             "location": {
               "filePath": "button.tsx",
               "line": 25,
               "character": 1
             },
-            "type": "any"
+            "name": "Button",
+            "internalFilePath": "button.tsx"
           },
           "modifiers": [
             "export"
@@ -3671,6 +3674,182 @@
           ],
           "extendsNodes": [],
           "implementNodes": []
+        }
+      ],
+      "internals": []
+    },
+    {
+      "__schema": "ModuleSchema",
+      "location": {
+        "filePath": "button.composition.tsx",
+        "line": 3,
+        "character": 1
+      },
+      "exports": [
+        {
+          "__schema": "FunctionLikeSchema",
+          "location": {
+            "filePath": "button.composition.tsx",
+            "line": 6,
+            "character": 14
+          },
+          "signature": "function(): any",
+          "name": "BasicButton",
+          "params": [],
+          "returnType": {
+            "__schema": "InferenceTypeSchema",
+            "location": {
+              "filePath": "button.composition.tsx",
+              "line": 6,
+              "character": 28
+            },
+            "type": "any"
+          },
+          "modifiers": []
+        },
+        {
+          "__schema": "FunctionLikeSchema",
+          "location": {
+            "filePath": "button.composition.tsx",
+            "line": 14,
+            "character": 1
+          },
+          "doc": {
+            "__schema": "DocSchema",
+            "location": {
+              "filePath": "button.composition.tsx",
+              "line": 10,
+              "character": 1
+            },
+            "raw": "/**\n * example of passing a JSX Element as a parameter\n */",
+            "comment": "example of passing a JSX Element as a parameter",
+            "tags": []
+          },
+          "signature": "function Footer({ children }: {\n    children?: any;\n}): any",
+          "name": "Footer",
+          "params": [
+            {
+              "__schema": "ParameterSchema",
+              "location": {
+                "filePath": "button.composition.tsx",
+                "line": 14,
+                "character": 24
+              },
+              "name": "{ children = <BasicButton /> }",
+              "type": {
+                "__schema": "TypeLiteralSchema",
+                "location": {
+                  "filePath": "button.composition.tsx",
+                  "line": 14,
+                  "character": 24
+                },
+                "members": [
+                  {
+                    "__schema": "InferenceTypeSchema",
+                    "location": {
+                      "filePath": "button.composition.tsx",
+                      "line": 14,
+                      "character": 24
+                    },
+                    "name": "children",
+                    "type": "any"
+                  }
+                ]
+              },
+              "isOptional": false,
+              "objectBindingNodes": [
+                {
+                  "__schema": "InferenceTypeSchema",
+                  "location": {
+                    "filePath": "button.composition.tsx",
+                    "line": 14,
+                    "character": 26
+                  },
+                  "name": "children",
+                  "type": "any",
+                  "defaultValue": "<BasicButton />",
+                  "isSpread": false
+                }
+              ],
+              "isSpread": false
+            }
+          ],
+          "returnType": {
+            "__schema": "TypeRefSchema",
+            "location": {
+              "filePath": "button.composition.tsx",
+              "line": 14,
+              "character": 1
+            },
+            "name": "Footer",
+            "internalFilePath": "button.composition.tsx"
+          },
+          "modifiers": [
+            "export"
+          ]
+        },
+        {
+          "__schema": "FunctionLikeSchema",
+          "location": {
+            "filePath": "button.composition.tsx",
+            "line": 18,
+            "character": 14
+          },
+          "signature": "function(): any",
+          "name": "ButtonWithCustomStyles",
+          "params": [],
+          "returnType": {
+            "__schema": "InferenceTypeSchema",
+            "location": {
+              "filePath": "button.composition.tsx",
+              "line": 18,
+              "character": 39
+            },
+            "type": "any"
+          },
+          "modifiers": []
+        },
+        {
+          "__schema": "FunctionLikeSchema",
+          "location": {
+            "filePath": "button.composition.tsx",
+            "line": 22,
+            "character": 14
+          },
+          "signature": "function(): any",
+          "name": "ButtonWithIcon",
+          "params": [],
+          "returnType": {
+            "__schema": "InferenceTypeSchema",
+            "location": {
+              "filePath": "button.composition.tsx",
+              "line": 22,
+              "character": 31
+            },
+            "type": "any"
+          },
+          "modifiers": []
+        },
+        {
+          "__schema": "FunctionLikeSchema",
+          "location": {
+            "filePath": "button.composition.tsx",
+            "line": 31,
+            "character": 14
+          },
+          "signature": "function(): any",
+          "name": "ButtonAsALink",
+          "params": [],
+          "returnType": {
+            "__schema": "InferenceTypeSchema",
+            "location": {
+              "filePath": "button.composition.tsx",
+              "line": 31,
+              "character": 30
+            },
+            "type": "any"
+          },
+          "modifiers": []
         }
       ],
       "internals": []
@@ -4010,7 +4189,7 @@
             "line": 25,
             "character": 1
           },
-          "signature": "function Button(props: any): any",
+          "signature": "function Button(props: ButtonProps): any",
           "name": "Button",
           "params": [
             {
@@ -4036,13 +4215,14 @@
             }
           ],
           "returnType": {
-            "__schema": "InferenceTypeSchema",
+            "__schema": "TypeRefSchema",
             "location": {
               "filePath": "button.tsx",
               "line": 25,
               "character": 1
             },
-            "type": "any"
+            "name": "Button",
+            "internalFilePath": "button.tsx"
           },
           "modifiers": [
             "export"
@@ -4094,13 +4274,13 @@
           "name": "Hi",
           "params": [],
           "returnType": {
-            "__schema": "InferenceTypeSchema",
+            "__schema": "TypeRefSchema",
             "location": {
               "filePath": "index.ts",
               "line": 21,
               "character": 1
             },
-            "type": "void"
+            "name": "Hi"
           },
           "modifiers": [
             "export"
@@ -4245,13 +4425,14 @@
                 }
               ],
               "returnType": {
-                "__schema": "InferenceTypeSchema",
+                "__schema": "TypeRefSchema",
                 "location": {
                   "filePath": "button.composition.tsx",
                   "line": 14,
                   "character": 1
                 },
-                "type": "any"
+                "name": "Footer",
+                "internalFilePath": "button.composition.tsx"
               },
               "modifiers": [
                 "export"
