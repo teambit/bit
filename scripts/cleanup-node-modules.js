@@ -37,7 +37,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
 // Configuration
 const config = {
@@ -63,25 +62,33 @@ function log(message) {
 }
 
 function getDirectorySize(dir) {
-  try {
-    // Use du -sk for kilobytes on macOS, du -sb for bytes on Linux
-    let result;
-    if (process.platform === 'darwin') {
-      result = execSync(`du -sk "${dir}" 2>/dev/null | cut -f1`, {
-        encoding: 'utf8',
-        stdio: ['pipe', 'pipe', 'ignore'],
+  // Use Node.js fs to calculate actual file sizes (not disk usage)
+  // This gives us the logical size, similar to what you see in "Size" (not "Size on disk")
+  let totalSize = 0;
+
+  function calculateSize(dirPath) {
+    try {
+      const files = fs.readdirSync(dirPath);
+      files.forEach((file) => {
+        const filePath = path.join(dirPath, file);
+        try {
+          const stats = fs.statSync(filePath);
+          if (stats.isDirectory()) {
+            calculateSize(filePath);
+          } else {
+            totalSize += stats.size;
+          }
+        } catch {
+          // Skip files we can't access
+        }
       });
-      return parseInt(result.trim()) * 1024; // Convert KB to bytes
-    } else {
-      result = execSync(`du -sb "${dir}" 2>/dev/null | cut -f1`, {
-        encoding: 'utf8',
-        stdio: ['pipe', 'pipe', 'ignore'],
-      });
-      return parseInt(result.trim()); // Already in bytes
+    } catch {
+      // Skip directories we can't read
     }
-  } catch {
-    return 0;
   }
+
+  calculateSize(dir);
+  return totalSize;
 }
 
 function formatBytes(bytes) {
@@ -122,24 +129,15 @@ function deleteFileOrDir(filePath, description) {
 // Get accurate file size using du command for both files and directories
 function getFileSizeAccurate(filePath, stats) {
   try {
-    // Always use du command for accurate disk usage measurement
-    let result;
-    if (process.platform === 'darwin') {
-      result = execSync(`du -sk "${filePath}" 2>/dev/null | cut -f1`, {
-        encoding: 'utf8',
-        stdio: ['pipe', 'pipe', 'ignore'],
-      });
-      return parseInt(result.trim()) * 1024; // Convert KB to bytes
-    } else {
-      result = execSync(`du -sb "${filePath}" 2>/dev/null | cut -f1`, {
-        encoding: 'utf8',
-        stdio: ['pipe', 'pipe', 'ignore'],
-      });
-      return parseInt(result.trim()); // Already in bytes
+    // Use stats.size for actual file size (not disk usage)
+    // This gives consistent cross-platform results
+    if (!stats) {
+      stats = fs.statSync(filePath);
     }
+    return stats.size;
   } catch {
-    // Fallback to stats.size for files if du fails
-    return stats.isDirectory() ? 0 : stats.size;
+    // If we can't read the file, return 0
+    return 0;
   }
 }
 

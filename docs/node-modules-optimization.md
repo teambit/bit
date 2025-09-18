@@ -266,10 +266,21 @@ Attempted to use esbuild bundling (PR #7180) to generate a definitive list of re
 
 Original approach using `execSync` with `find` command failed due to ENOBUFS error when scanning 14,697+ files. Fixed by implementing recursive filesystem traversal.
 
+### Size Calculation Method
+
+**Updated (September 2025):** Changed from `du` command to Node.js `fs.statSync()` for size calculations:
+
+- **Previous**: Used `du -sk` (macOS) / `du -sb` (Linux) - reported disk usage (allocated blocks)
+- **Current**: Uses `fs.statSync().size` - reports logical file size (actual bytes)
+- **Benefits**:
+  - Consistent cross-platform results
+  - Matches "Size" in Finder/Explorer (not "Size on disk")
+  - More accurate representation of actual data
+  - Example: BVM installation shows 566MB logical size vs 880MB disk usage
+
 ### Platform Considerations
 
-- macOS: Uses `du -sk` for size calculation
-- Linux: Uses `du -sb` for byte-accurate measurements
+- Size calculation now uniform across all platforms using Node.js fs
 - Cross-platform file deletion with proper error handling
 
 ### Safety Measures
