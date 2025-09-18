@@ -209,12 +209,14 @@ export async function install(
     | 'enableModulesDir'
     | 'engineStrict'
     | 'excludeLinksFromLockfile'
+    | 'minimumReleaseAge'
+    | 'minimumReleaseAgeExclude'
     | 'neverBuiltDependencies'
     | 'ignorePackageManifest'
     | 'hoistWorkspacePackages'
     | 'returnListOfDepsRequiringBuild'
   > &
-    Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline' | 'minimumReleaseAge' | 'minimumReleaseAgeExclude'>,
+    Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string; depsRequiringBuild?: DepPath[] }> {
