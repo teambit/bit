@@ -778,6 +778,12 @@
         }
       },
       "teambit.dependencies/dependency-resolver": {
+        /**
+        * IMPORTANT:
+        * This is irrelevant. Changes here won't affect the actual dependencies.
+        * The reason is that "bit deps set" was used in the past, so all dependencies set by config were saved into the model.
+        * To change a dependency from this list, you can run "bit deps set teambit.harmony/bit <pkg@version>".
+        */
         "policy": {
           "dependencies": {
             "@teambit/base-react.navigation.link": "2.0.33",
