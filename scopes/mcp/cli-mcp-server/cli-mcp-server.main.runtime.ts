@@ -1354,6 +1354,25 @@ export class CliMcpServerMain {
           args = [commandParts[1], ...args];
         }
 
+        // Check for risky lane commands that should not be executed without user awareness
+        if (command === 'lane') {
+          const subcommand = args[0];
+          if (subcommand === 'switch' || subcommand === 'merge') {
+            return this.formatAsCallToolResult(
+              `Error: The "lane ${subcommand}" command is not available through the MCP server for safety reasons. ` +
+                `This command must be run directly in the terminal where the user can review and confirm the operation.`
+            );
+          }
+        }
+
+        // Also check for the shorthand 'switch' command (which is an alias for 'lane switch')
+        if (command === 'switch') {
+          return this.formatAsCallToolResult(
+            `Error: The "switch" command (alias for "lane switch") is not available through the MCP server for safety reasons. ` +
+              `This command must be run directly in the terminal where the user can review and confirm the operation.`
+          );
+        }
+
         this.logger.debug(
           `[MCP-DEBUG] Executing command: ${command} with args: ${JSON.stringify(args)} and flags: ${JSON.stringify(flags)}`
         );
