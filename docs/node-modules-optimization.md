@@ -52,13 +52,7 @@ This document captures the analysis and optimization strategies for reducing Bit
 
 ### Results
 
-Based on BVM installation testing (September 2025):
-
-- **Default mode**: 723MB → ~547MB (~176MB saved, ~24% reduction)
-- **With --remove-ui-deps**: 723MB → ~502MB (~221MB saved, ~31% reduction)
-- **With --keep-teambit-maps**: 723MB → ~564MB (~159MB saved, ~22% reduction)
-
-_Note: Results based on logical file size calculation using Node.js fs.statSync() rather than disk usage_
+See **Results** section below for detailed measurements.
 
 ## Key Insights
 
@@ -295,117 +289,33 @@ Original approach using `execSync` with `find` command failed due to ENOBUFS err
 - Maintains debugging capabilities with `--keep-teambit-maps`
 - Extensive testing on real BVM installations
 
-## Metrics Summary
+## Results
 
-| Scenario          | Before | After  | Reduction     |
-| ----------------- | ------ | ------ | ------------- |
-| Default cleanup   | 723MB  | ~547MB | ~176MB (~24%) |
-| Remove UI deps    | 723MB  | ~502MB | ~221MB (~31%) |
-| Keep teambit maps | 723MB  | ~564MB | ~159MB (~22%) |
+Based on BVM installation testing (September 2025) with 723MB baseline:
 
-## Final Results
+| Scenario                     | Final Size | Space Saved | Reduction | Notes                       |
+| ---------------------------- | ---------- | ----------- | --------- | --------------------------- |
+| **Default mode**             | ~547MB     | ~176MB      | ~24%      | Recommended for production  |
+| **With --remove-ui-deps**    | ~502MB     | ~221MB      | ~31%      | ⚠️ Breaks `bit start --dev` |
+| **With --keep-teambit-maps** | ~564MB     | ~159MB      | ~22%      | For debugging Bit issues    |
 
-**Default mode (all optimizations):**
+_Note: Results based on logical file size calculation using Node.js fs.statSync() rather than disk usage_
 
-- Initial size: 723MB
-- Final size: ~547MB
-- Space saved: ~176MB (~24% reduction)
+## Key Findings
 
-**With --remove-ui-deps (aggressive optimization):**
+### UI Dependencies Analysis
 
-- Initial size: 723MB
-- Final size: ~502MB
-- Space saved: ~221MB (~31% reduction)
-- ⚠️ Breaks `bit start --dev` mode
+UI dependencies like `date-fns`, `react-syntax-highlighter`, and `d3-*` packages are only needed for `bit start --dev` mode. Production `bit start` uses pre-bundled UI artifacts, making these dependencies unnecessary for most users.
 
-## Additional Investigation Results (September 2025)
+### Remaining Large Packages
 
-### Post-Cleanup Analysis of BVM Installation
+After cleanup, the largest remaining packages are:
 
-After running the cleanup script with `--keep-teambit-maps` on a real BVM installation:
-
-**Results:**
-
-- Initial size: 1,129MB → Final size: 953MB
-- Space saved: 176MB (15.6% reduction)
-- Files removed: 8,171
-
-**Remaining Large Packages Analysis:**
-
-Top packages after cleanup:
-
-- `@teambit/` (339MB) - Core functionality, cannot be reduced
-- `@pnpm/` (22MB) - Package manager functionality
-- `@types/` (19MB) - TypeScript definitions
+- `@teambit/` packages (339MB) - Core functionality, cannot be reduced
+- `@pnpm/` packages (22MB) - Package manager functionality
+- `@types/` packages (19MB) - TypeScript definitions
 - `typescript` (18MB) - TypeScript compiler
-- `@babel/` (18MB) - Babel transpilation tools
-- `react-syntax-highlighter` (9MB) - **UI-only, removable**
-- `date-fns` (12MB) - **UI-only, removable**
-- `d3-*` packages (~9MB total) - **UI-only, removable**
-
-### UI Dependencies Removal Validation
-
-**Tested Successfully Removed:**
-
-- `react-syntax-highlighter` (9MB) - Code highlighting in UI docs
-- `date-fns` (12MB) - Date picker components
-- `@types/react-syntax-highlighter` (2MB) - Type definitions
-- Various `d3-*` packages (9MB) - Data visualization in UI
-- `@react-hook/*` packages (1MB) - React UI utilities
-
-**Total Additional Potential Savings: ~45MB (4.7% additional reduction)**
-
-**CLI Verification:**
-
-- ✅ `bit --version` works normally
-- ✅ `bit status` works normally
-- ✅ All core CLI commands function without UI dependencies
-
-**Key Finding:** UI dependencies are completely unnecessary for CLI operations since the UI is pre-bundled in `/node_modules/@teambit/ui/artifacts/ui-bundle/` (39MB).
-
-### Enhanced Cleanup Script Opportunities
-
-**Next Phase Options:**
-
-1. **Add UI dependency removal to cleanup script:**
-
-   ```bash
-   --remove-ui-deps flag that removes:
-   - react-syntax-highlighter
-   - date-fns
-   - d3-* packages
-   - @types/react-syntax-highlighter
-   - @react-hook packages
-   - @teambit/react/node_modules (unneeded - using pre-bundled artifacts)
-   - @teambit/ui/node_modules (unneeded - using pre-bundled artifacts)
-
-   ⚠️ WARNING: This will break `bit start --dev` mode which rebuilds UI dynamically.
-   Only use for production BVM distributions where development mode is not needed.
-   ```
-
-2. **TypeScript locale optimization:**
-
-   - Already implemented: removes 13 locale directories (3.75MB)
-   - Could potentially remove more TypeScript lib files if only specific features needed
-
-3. **@types package optimization:**
-   - `@types/jest` (7MB) - Only needed for testing
-   - `@types/lodash` (4MB) - Could be tree-shaken to specific types
-   - `@types/jsdom` (2MB) - Only needed for testing
-
-### Production vs Development Recommendations
-
-**Immediate (Can be implemented now):**
-
-1. ✅ Current cleanup script with `--keep-teambit-maps`
-2. ✅ **IMPLEMENTED**: `--remove-ui-deps` flag for additional 45MB savings
-   - ⚠️ Note: Breaks `bit start --dev` mode - only use for production BVM distributions
-
-**Future Considerations:**
-
-1. **Two-tier BVM distributions:**
-   - Standard: Current cleanup + UI deps removal (~ 35% total reduction)
-   - Minimal: Remove all non-essential dependencies (potential 45%+ reduction)
+- `@babel/` packages (18MB) - Babel transpilation tools
 
 ## Future Discussion Points
 
