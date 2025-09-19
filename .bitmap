@@ -310,13 +310,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/cli/error"
     },
-    "cli/prompts": {
-        "name": "cli/prompts",
-        "scope": "teambit.legacy",
-        "version": "0.0.25",
-        "mainFile": "index.ts",
-        "rootDir": "components/legacy/cli/prompts"
-    },
     "cli/webpack-events-listener": {
         "name": "cli/webpack-events-listener",
         "scope": "teambit.preview",

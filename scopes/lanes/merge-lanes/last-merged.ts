@@ -4,7 +4,6 @@ import fs from 'fs-extra';
 import yesno from 'yesno';
 import chalk from 'chalk';
 import { BitMap } from '@teambit/legacy.bit-map';
-import { PromptCanceled } from '@teambit/legacy.cli.prompts';
 import type { ScopeMain } from '@teambit/scope';
 import type { Lane } from '@teambit/objects';
 import { BitObject } from '@teambit/objects';
@@ -13,6 +12,12 @@ import type { Consumer } from '@teambit/legacy.consumer';
 import { BitError } from '@teambit/bit-error';
 import type { Logger } from '@teambit/logger';
 import type { MergeAbortOpts } from './merge-abort.cmd';
+
+class PromptCanceled extends BitError {
+  constructor() {
+    super(chalk.yellow('operation aborted'));
+  }
+}
 
 const LAST_MERGED_LANE_FILENAME = 'lane';
 const LAST_MERGED_BITMAP_FILENAME = 'bitmap';
