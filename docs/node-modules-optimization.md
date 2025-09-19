@@ -52,8 +52,13 @@ This document captures the analysis and optimization strategies for reducing Bit
 
 ### Results
 
-- **Default mode**: 1,129MB → 913MB (216MB saved, 19.1% reduction)
-- **With --keep-teambit-maps**: 1,129MB → 937MB (192MB saved, 17.0% reduction)
+Based on BVM installation testing (September 2025):
+
+- **Default mode**: 723MB → ~547MB (~176MB saved, ~24% reduction)
+- **With --remove-ui-deps**: 723MB → ~502MB (~221MB saved, ~31% reduction)
+- **With --keep-teambit-maps**: 723MB → ~564MB (~159MB saved, ~22% reduction)
+
+_Note: Results based on logical file size calculation using Node.js fs.statSync() rather than disk usage_
 
 ## Key Insights
 
@@ -292,22 +297,26 @@ Original approach using `execSync` with `find` command failed due to ENOBUFS err
 
 ## Metrics Summary
 
-| Scenario          | Before  | After   | Reduction     | Files Removed |
-| ----------------- | ------- | ------- | ------------- | ------------- |
-| Default cleanup   | 1,129MB | 907MB   | 222MB (19.7%) | 15,139        |
-| Keep teambit maps | 1,129MB | 970MB   | 159MB (14.1%) | 7,717         |
-| Monaco only       | 1,129MB | 1,065MB | 64MB (5.7%)   | 3             |
+| Scenario          | Before | After  | Reduction     |
+| ----------------- | ------ | ------ | ------------- |
+| Default cleanup   | 723MB  | ~547MB | ~176MB (~24%) |
+| Remove UI deps    | 723MB  | ~502MB | ~221MB (~31%) |
+| Keep teambit maps | 723MB  | ~564MB | ~159MB (~22%) |
 
 ## Final Results
 
 **Default mode (all optimizations):**
 
-- Initial size: 1,129MB
-- Final size: 907MB
-- Space saved: 222MB (19.7% reduction)
-- Files removed: 15,139
+- Initial size: 723MB
+- Final size: ~547MB
+- Space saved: ~176MB (~24% reduction)
 
-**Dry-run estimation accuracy:** Within 1MB (0.05% error) of actual results
+**With --remove-ui-deps (aggressive optimization):**
+
+- Initial size: 723MB
+- Final size: ~502MB
+- Space saved: ~221MB (~31% reduction)
+- ⚠️ Breaks `bit start --dev` mode
 
 ## Additional Investigation Results (September 2025)
 
