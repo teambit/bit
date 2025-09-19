@@ -33,9 +33,25 @@ This document captures the analysis and optimization strategies for reducing Bit
 
 4. **@teambit packages**: 339MB (core functionality)
 
-## Implemented Solution: Cleanup Script
+## Implemented Solutions
 
-### Created Files
+### 1. PNPM Overrides for Duplicate Packages
+
+Added overrides to consolidate duplicate packages:
+
+- `"postcss@8": "^8.4.19"`
+- `"tslib@2": "^2.6.2"`
+- `"ajv@6": "^6.12.6"`
+- `"source-map@0": "0.6.1"`
+- `"readable-stream@2": "2.3.8"`
+
+**Tested savings**: 21MB reduction in fresh installations
+
+_Note: Using version-specific keys (e.g., `postcss@8`) to handle conflicting major versions_
+
+### 2. Cleanup Script
+
+#### Created Files
 
 - `scripts/cleanup-node-modules.js`: Post-install optimization script
 - Updated `.circleci/config.yml`: Integrated cleanup into bundle jobs
