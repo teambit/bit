@@ -89,6 +89,13 @@ function findPackages(dir, baseDir = dir, depth = 0) {
       const stats = fs.statSync(itemPath);
 
       if (stats.isDirectory()) {
+        // Handle scoped packages (e.g., @teambit, @types)
+        if (item.startsWith('@') && depth === 0) {
+          // This is a scope directory, recurse into it to find packages
+          findPackages(itemPath, baseDir, depth);
+          continue;
+        }
+
         // Check if this is a package (has package.json)
         const packageJsonPath = path.join(itemPath, 'package.json');
         if (fs.existsSync(packageJsonPath)) {
@@ -171,7 +178,8 @@ duplicates.sort((a, b) => b.potentialSaving - a.potentialSaving);
 if (duplicates.length === 0) {
   console.log('✅ No duplicate packages found!');
 } else {
-  console.log(`Found ${duplicates.length} packages with multiple copies:\n`);
+  console.log(`Found ${duplicates.length} packages with multiple copies:`);
+  console.log(`(Sorted by potential savings - highest first)\n`);
   console.log('='.repeat(80));
 
   // Show top duplicates
@@ -208,11 +216,18 @@ if (duplicates.length === 0) {
   console.log(`Total space used by duplicates: ${formatBytes(totalDuplicateSize)}`);
   console.log(`Potential space savings: ${formatBytes(totalPotentialSavings)}`);
 
+  // Find packages with highest potential savings
+  const topSavings = [...duplicates].sort((a, b) => b.potentialSaving - a.potentialSaving).slice(0, 5);
+  console.log('\n💰 Top potential savings:');
+  for (const dup of topSavings) {
+    console.log(`   - ${dup.name}: ${formatBytes(dup.potentialSaving)} (${dup.count} copies)`);
+  }
+
   // Find packages with most duplicates
   const mostDuplicated = [...duplicates].sort((a, b) => b.count - a.count).slice(0, 5);
-  console.log('\n🔝 Most duplicated packages:');
+  console.log('\n📊 Most frequently duplicated:');
   for (const dup of mostDuplicated) {
-    console.log(`   - ${dup.name}: ${dup.count} copies`);
+    console.log(`   - ${dup.name}: ${dup.count} copies (${formatBytes(dup.potentialSaving)} savings)`);
   }
 
   // Find packages with most version conflicts
