@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
-import { resolveConflictPrompt } from '@teambit/legacy.cli.prompts';
+import { prompt } from 'enquirer';
 
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };
@@ -20,9 +20,21 @@ export const FileStatus = {
 
 export async function getMergeStrategyInteractive(): Promise<MergeStrategy> {
   try {
-    const result = await resolveConflictPrompt();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return mergeOptionsCli[result.mergeStrategy];
+    const { mergeStrategy } = await prompt<{ mergeStrategy: 'o' | 't' | 'm' }>({
+      type: 'select',
+      name: 'mergeStrategy',
+      message: 'Choose merge strategy:',
+      choices: [
+        { name: 'o', message: 'ours - use the current modified files' },
+        { name: 't', message: 'theirs - use the specified version (and override the modification)' },
+        {
+          name: 'm',
+          message:
+            'manual - merge the modified files with the specified version and leave the files in a conflict state',
+        },
+      ],
+    });
+    return mergeOptionsCli[mergeStrategy] as MergeStrategy;
   } catch {
     // probably user clicked ^C
     throw new BitError('the action has been canceled');
