@@ -48,6 +48,10 @@ const config = {
   keepTeambitMaps: process.argv.includes('--keep-teambit-maps'),
   // Set to true to remove UI-only dependencies that are not needed for CLI operations
   removeUiDeps: process.argv.includes('--remove-ui-deps'),
+  // Set to true to remove ESM builds (keep CJS only - default for current Bit)
+  removeEsm: process.argv.includes('--remove-esm'),
+  // Set to true to remove CJS builds (keep ESM only - for future ESM migration)
+  removeCjs: process.argv.includes('--remove-cjs'),
   // Set to true for verbose output
   verbose: process.argv.includes('--verbose'),
 };
@@ -486,6 +490,103 @@ function cleanupUiDependencies(nodeModulesPath) {
   }
 }
 
+// Duplicate module formats cleanup - removes ESM or CJS builds to avoid duplication
+function cleanupDuplicateModuleFormats(nodeModulesPath) {
+  if (!config.removeEsm && !config.removeCjs) {
+    return;
+  }
+
+  if (config.removeEsm && config.removeCjs) {
+    console.log('\n⚠️  Cannot remove both ESM and CJS formats - skipping module format cleanup');
+    return;
+  }
+
+  const formatToRemove = config.removeEsm ? 'esm' : 'cjs';
+  const formatToKeep = config.removeEsm ? 'CJS' : 'ESM';
+  console.log(`\n📦 Removing duplicate ${formatToRemove.toUpperCase()} builds (keeping ${formatToKeep})...`);
+
+  let totalFormatSaved = 0;
+  let foldersRemoved = 0;
+
+  // Common patterns for dual-format packages
+  const patterns = [
+    { parent: 'dist', folders: ['esm', 'cjs'] },
+    { parent: 'lib', folders: ['esm', 'cjs'] },
+    { parent: '', folders: ['esm', 'cjs'] }, // Some packages have esm/cjs at root
+  ];
+
+  function scanPackage(packagePath) {
+    patterns.forEach((pattern) => {
+      const basePath = pattern.parent ? path.join(packagePath, pattern.parent) : packagePath;
+      const targetPath = path.join(basePath, formatToRemove);
+
+      if (fs.existsSync(targetPath)) {
+        try {
+          const stats = fs.statSync(targetPath);
+          if (stats.isDirectory()) {
+            // Check if both formats exist
+            const otherFormat = formatToRemove === 'esm' ? 'cjs' : 'esm';
+            const otherPath = path.join(basePath, otherFormat);
+
+            if (fs.existsSync(otherPath)) {
+              const sizeBefore = getDirectorySize(targetPath);
+
+              if (config.dryRun) {
+                console.log(
+                  `  [DRY RUN] Would remove: ${path.relative(nodeModulesPath, targetPath)} (${formatBytes(sizeBefore)})`
+                );
+              } else {
+                fs.rmSync(targetPath, { recursive: true, force: true });
+                console.log(`  Removed: ${path.relative(nodeModulesPath, targetPath)} (${formatBytes(sizeBefore)})`);
+              }
+
+              totalFormatSaved += sizeBefore;
+              foldersRemoved++;
+            }
+          }
+        } catch {
+          // Skip files we can't process
+        }
+      }
+    });
+  }
+
+  // Scan all packages
+  try {
+    const packages = fs.readdirSync(nodeModulesPath);
+    packages.forEach((pkg) => {
+      const pkgPath = path.join(nodeModulesPath, pkg);
+
+      if (pkg.startsWith('@')) {
+        // Scoped packages
+        try {
+          const scopedPackages = fs.readdirSync(pkgPath);
+          scopedPackages.forEach((scopedPkg) => {
+            scanPackage(path.join(pkgPath, scopedPkg));
+          });
+        } catch {
+          // Skip if can't read
+        }
+      } else {
+        // Regular packages
+        scanPackage(pkgPath);
+      }
+    });
+
+    if (foldersRemoved > 0) {
+      totalSaved += totalFormatSaved;
+      filesDeleted += foldersRemoved;
+      console.log(
+        `  Removed ${foldersRemoved} ${formatToRemove.toUpperCase()} build folders, saved: ${formatBytes(totalFormatSaved)}`
+      );
+    } else {
+      console.log(`  No duplicate ${formatToRemove.toUpperCase()} builds found`);
+    }
+  } catch (error) {
+    console.log('  Error processing module formats:', error.message);
+  }
+}
+
 // Main execution
 function main() {
   console.log('🚀 Node Modules Cleanup Script');
@@ -518,6 +619,7 @@ function main() {
   cleanupDateFnsLocales(absolutePath);
   cleanupTypeScriptLocales(absolutePath);
   cleanupUiDependencies(absolutePath);
+  cleanupDuplicateModuleFormats(absolutePath);
 
   // Summary
   console.log('\n📊 Cleanup Summary');
@@ -556,6 +658,8 @@ Options:
   --keep-source-maps Keep all .map files (useful for debugging)
   --keep-teambit-maps Keep only @teambit .map files (for debugging Bit's code)
   --remove-ui-deps  Remove UI-only dependencies not needed for CLI operations
+  --remove-esm      Remove duplicate ESM builds (keep CJS for current Bit)
+  --remove-cjs      Remove duplicate CJS builds (keep ESM for future migration)
   --verbose         Show detailed output
   --help           Show this help message
 
@@ -566,6 +670,7 @@ Examples:
   node cleanup-node-modules.js --keep-source-maps # Keep all source maps for debugging
   node cleanup-node-modules.js --keep-teambit-maps # Keep only @teambit source maps
   node cleanup-node-modules.js --remove-ui-deps   # Also remove UI dependencies
+  node cleanup-node-modules.js --remove-esm       # Remove duplicate ESM builds
 
 This script safely removes:
   1. Duplicate monaco-editor builds (dev, esm, min-maps folders) ~64MB
@@ -583,11 +688,17 @@ This script safely removes:
      - Nested node_modules in @teambit/react and @teambit/ui (unneeded - using pre-bundled artifacts)
      - Safe to remove since UI is pre-bundled in artifacts
      - ⚠️  WARNING: Will break 'bit start --dev' mode (rebuilds UI dynamically)
+  6. Duplicate module formats (--remove-esm or --remove-cjs):
+     - Removes duplicate ESM or CJS builds when packages ship both formats
+     - Example: @modelcontextprotocol/sdk ships both dist/esm and dist/cjs (4.5MB each)
+     - Use --remove-esm to keep CJS only (recommended for current Bit)
+     - Use --remove-cjs to keep ESM only (for future ESM migration)
 
 Expected space savings:
   - Default mode: ~176MB
-  - With --keep-teambit-maps: ~159MB  
+  - With --keep-teambit-maps: ~159MB
   - With --remove-ui-deps (additional): ~45MB
+  - With --remove-esm (additional): varies by installation
 Safe for production use - only removes non-essential files.
 `);
   process.exit(0);

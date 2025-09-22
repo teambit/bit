@@ -60,10 +60,13 @@ _Note: Using version-specific keys (e.g., `postcss@8`) to handle conflicting maj
 
 - **Monaco Editor cleanup**: Removes `dev/`, `esm/`, `min-maps/` folders, keeps `min/` (~64MB saved)
 - **Source map removal**: Configurable removal of .map files (~124MB saved)
+- **Duplicate module format removal**: Removes ESM or CJS when packages ship both (~5-10MB+ saved)
 - **Safety flags**:
   - `--dry-run`: Preview changes
   - `--keep-source-maps`: Keep all source maps
   - `--keep-teambit-maps`: Keep only @teambit source maps for debugging
+  - `--remove-esm`: Remove duplicate ESM builds (keep CJS for current Bit)
+  - `--remove-cjs`: Remove duplicate CJS builds (keep ESM for future migration)
   - `--verbose`: Detailed output
 
 ### Results
@@ -332,6 +335,14 @@ _Note: Results based on logical file size calculation using Node.js fs.statSync(
 ### UI Dependencies Analysis
 
 UI dependencies like `date-fns`, `react-syntax-highlighter`, and `d3-*` packages are only needed for `bit start --dev` mode. Production `bit start` uses pre-bundled UI artifacts, making these dependencies unnecessary for most users.
+
+### Duplicate Module Formats
+
+Many packages ship both ESM and CJS builds, effectively doubling their size:
+
+- Example: `@modelcontextprotocol/sdk` has both `dist/esm` (4.5MB) and `dist/cjs` (4.5MB)
+- Testing found 17 packages with duplicate builds, totaling ~5MB potential savings
+- Since Bit currently uses CommonJS, the ESM builds can be safely removed
 
 ### Remaining Large Packages
 
