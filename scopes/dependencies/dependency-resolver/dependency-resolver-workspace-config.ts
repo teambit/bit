@@ -183,6 +183,18 @@ export interface DependencyResolverWorkspaceConfig {
    */
   neverBuiltDependencies?: string[];
 
+  /*
+   * Only allow builds of specific dependencies listed in this setting. The "preinstall", "install", and "postinstall" scripts
+   * of the listed packages will be executed during installation.
+   */
+  onlyBuiltDependencies?: string[];
+
+  /*
+   * Ignore the builds of specific dependencies. This setting is used together with onlyBuiltDependencies.
+   * The "preinstall", "install", and "postinstall" scripts of the listed packages will not be executed during installation.
+   */
+  ignoredBuiltDependencies?: string[];
+
   /**
    * If true, staleness checks for cached data will be bypassed, but missing data will be requested from the server.
    */

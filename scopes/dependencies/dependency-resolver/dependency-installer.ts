@@ -102,6 +102,10 @@ export class DependencyInstaller {
 
     private neverBuiltDependencies?: string[],
 
+    private onlyBuiltDependencies?: string[],
+
+    private ignoredBuiltDependencies?: string[],
+
     private preferOffline?: boolean,
 
     private minimumReleaseAge?: number,
@@ -212,7 +216,9 @@ export class DependencyInstaller {
       packageManagerConfigRootDir: options.packageManagerConfigRootDir,
       peerDependencyRules: this.peerDependencyRules,
       hidePackageManagerOutput,
-      neverBuiltDependencies: ['core-js', ...(this.neverBuiltDependencies ?? [])],
+      neverBuiltDependencies: this.neverBuiltDependencies,
+      onlyBuiltDependencies: this.onlyBuiltDependencies,
+      ignoredBuiltDependencies: this.ignoredBuiltDependencies,
       preferOffline: this.preferOffline,
       dedupeInjectedDeps: options.dedupeInjectedDeps,
       dependenciesGraph: options.dependenciesGraph,

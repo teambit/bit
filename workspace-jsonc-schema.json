@@ -260,6 +260,20 @@
             "type": "string"
           },
           "description": "Ignore the builds of specific dependencies. The 'preinstall', 'install', and 'postinstall' scripts of the listed packages will not be executed during installation."
+        },
+        "onlyBuiltDependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Only allow builds of specific dependencies listed in this setting. The 'preinstall', 'install', and 'postinstall' scripts of the listed packages will be executed during installation."
+        },
+        "ignoredBuiltDependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ignore the builds of specific dependencies. This setting is used together with onlyBuiltDependencies. The 'preinstall', 'install', and 'postinstall' scripts of the listed packages will not be executed during installation."
         }
       },
       "required": []
