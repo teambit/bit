@@ -771,7 +771,7 @@ jobs:
           name: apply cleanup script to bundled installation with UI deps removal
           command: >
             cd bit-bundle-test &&
-            node ../bit/scripts/cleanup-node-modules.js ./node_modules --remove-ui-deps
+            node ../bit/scripts/cleanup-node-modules.js ./node_modules --remove-ui-deps --remove-esm
       - persist_to_workspace:
           root: .
           paths:
