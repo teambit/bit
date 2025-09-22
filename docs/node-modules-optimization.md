@@ -307,13 +307,23 @@ Original approach using `execSync` with `find` command failed due to ENOBUFS err
 
 ## Results
 
-Based on BVM installation testing (September 2025) with 723MB baseline:
+Based on macOS testing (September 2025):
 
-| Scenario                     | Final Size | Space Saved | Reduction | Notes                       |
-| ---------------------------- | ---------- | ----------- | --------- | --------------------------- |
-| **Default mode**             | ~547MB     | ~176MB      | ~24%      | Recommended for production  |
-| **With --remove-ui-deps**    | ~502MB     | ~221MB      | ~31%      | ⚠️ Breaks `bit start --dev` |
-| **With --keep-teambit-maps** | ~564MB     | ~159MB      | ~22%      | For debugging Bit issues    |
+### Version History
+
+- **v1.12.126 baseline**: 786.9 MB
+- **v1.12.128** (removed Prompt/Winston): 725.4 MB (-61.5 MB)
+- **With PNPM overrides**: 706.3 MB (-19.1 MB additional)
+
+### Cleanup Script Results (from 706.3 MB baseline)
+
+| Scenario                     | Final Size | Space Saved | Reduction | Breakdown                                                   |
+| ---------------------------- | ---------- | ----------- | --------- | ----------------------------------------------------------- |
+| **Default mode**             | 532.2 MB   | 174.1 MB    | 24.7%     | Monaco: 62.3MB, Maps: 101MB, Locales: 10.9MB                |
+| **With --keep-teambit-maps** | 558.4 MB   | 147.9 MB    | 20.9%     | Monaco: 62.3MB, Maps: 74.7MB, Locales: 10.9MB               |
+| **With --remove-ui-deps**    | 524.3 MB   | 182.0 MB    | 25.8%     | Monaco: 62.3MB, Maps: 101MB, Locales: 10.9MB, UI deps: ~8MB |
+
+**Total optimization potential**: 786.9 MB → 524.3 MB (262.6 MB saved, 33.4% reduction)
 
 _Note: Results based on logical file size calculation using Node.js fs.statSync() rather than disk usage_
 
