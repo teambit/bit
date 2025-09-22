@@ -320,13 +320,13 @@ Based on macOS testing (September 2025):
 
 ### Cleanup Script Results (from 706.3 MB baseline)
 
-| Scenario                     | Final Size | Space Saved | Reduction | Breakdown                                                   |
-| ---------------------------- | ---------- | ----------- | --------- | ----------------------------------------------------------- |
-| **Default mode**             | 532.2 MB   | 174.1 MB    | 24.7%     | Monaco: 62.3MB, Maps: 101MB, Locales: 10.9MB                |
-| **With --keep-teambit-maps** | 558.4 MB   | 147.9 MB    | 20.9%     | Monaco: 62.3MB, Maps: 74.7MB, Locales: 10.9MB               |
-| **With --remove-ui-deps**    | 524.3 MB   | 182.0 MB    | 25.8%     | Monaco: 62.3MB, Maps: 101MB, Locales: 10.9MB, UI deps: ~8MB |
+| Scenario                     | Final Size | Space Saved | Reduction | Breakdown                                                      |
+| ---------------------------- | ---------- | ----------- | --------- | -------------------------------------------------------------- |
+| **Default mode**             | 528.5 MB   | 177.8 MB    | 25.2%     | Monaco: 62.3MB, Maps: 101MB, Locales: 14.6MB (2 TS instances)  |
+| **With --keep-teambit-maps** | 554.7 MB   | 151.6 MB    | 21.5%     | Monaco: 62.3MB, Maps: 74.7MB, Locales: 14.6MB (2 TS instances) |
+| **With --remove-ui-deps**    | 520.6 MB   | 185.7 MB    | 26.3%     | Monaco: 62.3MB, Maps: 101MB, Locales: 14.6MB, UI deps: ~8MB    |
 
-**Total optimization potential**: 786.9 MB → 524.3 MB (262.6 MB saved, 33.4% reduction)
+**Total optimization potential**: 786.9 MB → 520.6 MB (266.3 MB saved, 33.9% reduction)
 
 _Note: Results based on logical file size calculation using Node.js fs.statSync() rather than disk usage_
 

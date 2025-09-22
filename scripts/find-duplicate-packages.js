@@ -13,6 +13,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { getDirectorySize, formatBytes } = require('./package-utils');
 
 // Parse arguments
 const args = process.argv.slice(2);
@@ -40,42 +41,7 @@ if (showOnlyLarge) {
 // Map to store all package occurrences
 const packageMap = new Map();
 
-function getDirectorySize(dir) {
-  // Use Node.js fs to calculate actual file sizes (not disk usage)
-  let totalSize = 0;
-
-  function calculateSize(dirPath) {
-    try {
-      const files = fs.readdirSync(dirPath);
-      files.forEach((file) => {
-        const filePath = path.join(dirPath, file);
-        try {
-          const stats = fs.statSync(filePath);
-          if (stats.isDirectory()) {
-            calculateSize(filePath);
-          } else {
-            totalSize += stats.size;
-          }
-        } catch {
-          // Skip files we can't access
-        }
-      });
-    } catch {
-      // Skip directories we can't read
-    }
-  }
-
-  calculateSize(dir);
-  return totalSize;
-}
-
-function formatBytes(bytes) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
+// getDirectorySize and formatBytes now imported from package-utils
 
 function findPackages(dir, baseDir = dir, depth = 0) {
   // Don't go too deep to avoid infinite recursion

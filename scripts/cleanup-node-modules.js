@@ -37,6 +37,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { findPackageInstances } = require('./package-utils');
 
 // Configuration
 const config = {
@@ -371,44 +372,72 @@ function cleanupDateFnsLocales(nodeModulesPath) {
 // TypeScript locale cleanup - removes all non-English locales
 function cleanupTypeScriptLocales(nodeModulesPath) {
   console.log('\n📝 Cleaning up TypeScript locales...');
-  const typescriptPath = path.join(nodeModulesPath, 'typescript');
-  const libPath = path.join(typescriptPath, 'lib');
 
-  if (!fs.existsSync(libPath)) {
-    console.log('  TypeScript lib directory not found, skipping...');
+  // Find all TypeScript package instances
+  const typescriptInstances = findPackageInstances(nodeModulesPath, 'typescript');
+
+  if (typescriptInstances.length === 0) {
+    console.log('  No TypeScript packages found, skipping...');
     return;
   }
 
-  let localesSaved = 0;
-  let localesCount = 0;
+  console.log(`  Found ${typescriptInstances.length} TypeScript instance(s)`);
 
-  try {
-    // Remove known non-English locale directories
-    const localeDirectories = ['cs', 'de', 'es', 'fr', 'it', 'ja', 'ko', 'pl', 'pt-br', 'ru', 'tr', 'zh-cn', 'zh-tw'];
+  let totalLocalesSaved = 0;
+  let totalLocalesCount = 0;
 
-    for (const localeDir of localeDirectories) {
-      const localePath = path.join(libPath, localeDir);
+  for (const typescriptPath of typescriptInstances) {
+    const libPath = path.join(typescriptPath, 'lib');
+    if (!fs.existsSync(libPath)) {
+      continue;
+    }
 
-      if (fs.existsSync(localePath)) {
-        const stats = fs.statSync(localePath);
+    let localesSaved = 0;
+    let localesCount = 0;
 
-        if (stats.isDirectory()) {
-          const size = getDirectorySize(localePath);
-          if (deleteFileOrDir(localePath, `TypeScript locale: ${localeDir}`)) {
-            localesSaved += size;
-            localesCount++;
+    try {
+      // Remove known non-English locale directories
+      const localeDirectories = ['cs', 'de', 'es', 'fr', 'it', 'ja', 'ko', 'pl', 'pt-br', 'ru', 'tr', 'zh-cn', 'zh-tw'];
+
+      for (const localeDir of localeDirectories) {
+        const localePath = path.join(libPath, localeDir);
+
+        if (fs.existsSync(localePath)) {
+          const stats = fs.statSync(localePath);
+
+          if (stats.isDirectory()) {
+            const size = getDirectorySize(localePath);
+            if (
+              deleteFileOrDir(
+                localePath,
+                `TypeScript locale: ${localeDir} (${path.relative(nodeModulesPath, typescriptPath)})`
+              )
+            ) {
+              localesSaved += size;
+              localesCount++;
+            }
           }
         }
       }
-    }
 
-    if (localesCount > 0) {
-      console.log(`  Removed ${localesCount} locale directories, saved: ${formatBytes(localesSaved)}`);
-    } else {
-      console.log('  No TypeScript locales to remove');
+      totalLocalesSaved += localesSaved;
+      totalLocalesCount += localesCount;
+    } catch (error) {
+      console.log(
+        `  Error processing TypeScript locales in ${path.relative(nodeModulesPath, typescriptPath)}:`,
+        error.message
+      );
     }
-  } catch (error) {
-    console.log('  Error processing TypeScript locales:', error.message);
+  }
+
+  if (totalLocalesCount > 0) {
+    totalSaved += totalLocalesSaved;
+    filesDeleted += totalLocalesCount;
+    console.log(
+      `  Removed ${totalLocalesCount} locale directories from ${typescriptInstances.length} TypeScript instances, saved: ${formatBytes(totalLocalesSaved)}`
+    );
+  } else {
+    console.log('  No TypeScript locales to remove');
   }
 }
 
@@ -551,27 +580,44 @@ function cleanupDuplicateModuleFormats(nodeModulesPath) {
     });
   }
 
-  // Scan all packages
-  try {
-    const packages = fs.readdirSync(nodeModulesPath);
-    packages.forEach((pkg) => {
-      const pkgPath = path.join(nodeModulesPath, pkg);
+  // Use shared utility pattern to find all packages and scan them
+  function scanAllPackages(dir, depth = 0) {
+    if (depth > 10) return;
 
-      if (pkg.startsWith('@')) {
-        // Scoped packages
-        try {
-          const scopedPackages = fs.readdirSync(pkgPath);
-          scopedPackages.forEach((scopedPkg) => {
-            scanPackage(path.join(pkgPath, scopedPkg));
-          });
-        } catch {
-          // Skip if can't read
+    try {
+      const items = fs.readdirSync(dir);
+
+      for (const item of items) {
+        const itemPath = path.join(dir, item);
+        const stats = fs.statSync(itemPath);
+
+        if (stats.isDirectory()) {
+          // Handle scoped packages
+          if (item.startsWith('@') && depth === 0) {
+            scanAllPackages(itemPath, depth);
+            continue;
+          }
+
+          // Check if this is a package
+          const packageJsonPath = path.join(itemPath, 'package.json');
+          if (fs.existsSync(packageJsonPath)) {
+            scanPackage(itemPath);
+
+            // Check for nested node_modules
+            const nestedModulesPath = path.join(itemPath, 'node_modules');
+            if (fs.existsSync(nestedModulesPath) && item !== 'node_modules') {
+              scanAllPackages(nestedModulesPath, depth + 1);
+            }
+          }
         }
-      } else {
-        // Regular packages
-        scanPackage(pkgPath);
       }
-    });
+    } catch {
+      // Skip directories we can't read
+    }
+  }
+
+  try {
+    scanAllPackages(nodeModulesPath);
 
     if (foldersRemoved > 0) {
       totalSaved += totalFormatSaved;
