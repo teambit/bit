@@ -61,6 +61,7 @@ _Note: Using version-specific keys (e.g., `postcss@8`) to handle conflicting maj
 - **Monaco Editor cleanup**: Removes `dev/`, `esm/`, `min-maps/` folders, keeps `min/` (~64MB saved)
 - **Source map removal**: Configurable removal of .map files (~124MB saved)
 - **Duplicate module format removal**: Removes ESM or CJS when packages ship both (~5-10MB+ saved)
+- **TypeScript definitions cleanup**: Automatically removes `node_modules/@types` directory (~17MB saved)
 - **Safety flags**:
   - `--dry-run`: Preview changes
   - `--keep-source-maps`: Keep all source maps
@@ -188,6 +189,18 @@ Analysis of BVM installation at `/Users/davidfirst/.bvm/versions/1.12.122/bit-1.
 - `/node_modules/@teambit/mdx/artifacts/`
 
 Basic CLI commands (`bit --version`, `bit status`, etc.) function normally since they use pre-built bundles.
+
+### @types Directory Analysis
+
+**@types Directory Removal (Safe - 17MB saved)**
+
+The `node_modules/@types` directory can be safely removed from BVM installations because:
+
+1. **Workspace-local installation**: When users create TypeScript components, workspaces install their own @types locally as needed
+2. **CLI operations don't require types**: Basic Bit CLI commands (status, compile, etc.) don't need global TypeScript definitions
+3. **Build-time vs runtime**: @types are development dependencies used during compilation, not runtime execution
+
+**Cleanup Implementation**: The `cleanupTypeDefinitions()` function automatically removes the entire @types directory without requiring a flag, as this optimization is safer than UI dependency removal and has minimal impact on functionality.
 
 ## Esbuild Bundle Analysis Approach (Attempted)
 
@@ -320,13 +333,13 @@ Based on macOS testing (September 2025):
 
 ### Cleanup Script Results (from 706.3 MB baseline)
 
-| Scenario                     | Final Size | Space Saved | Reduction | Breakdown                                                      |
-| ---------------------------- | ---------- | ----------- | --------- | -------------------------------------------------------------- |
-| **Default mode**             | 528.5 MB   | 177.8 MB    | 25.2%     | Monaco: 62.3MB, Maps: 101MB, Locales: 14.6MB (2 TS instances)  |
-| **With --keep-teambit-maps** | 554.7 MB   | 151.6 MB    | 21.5%     | Monaco: 62.3MB, Maps: 74.7MB, Locales: 14.6MB (2 TS instances) |
-| **With --remove-ui-deps**    | 520.6 MB   | 185.7 MB    | 26.3%     | Monaco: 62.3MB, Maps: 101MB, Locales: 14.6MB, UI deps: ~8MB    |
+| Scenario                     | Final Size | Space Saved | Reduction | Breakdown                                                            |
+| ---------------------------- | ---------- | ----------- | --------- | -------------------------------------------------------------------- |
+| **Default mode**             | 511.5 MB   | 194.8 MB    | 27.6%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB           |
+| **With --keep-teambit-maps** | 537.7 MB   | 168.6 MB    | 23.9%     | Monaco: 62.3MB, Maps: 74.7MB, @types: 17MB, Locales: 14.6MB          |
+| **With --remove-ui-deps**    | 503.6 MB   | 202.7 MB    | 28.7%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB, UI: ~8MB |
 
-**Total optimization potential**: 786.9 MB → 520.6 MB (266.3 MB saved, 33.9% reduction)
+**Total optimization potential**: 786.9 MB → 503.6 MB (283.3 MB saved, 36.0% reduction)
 
 _Note: Results based on logical file size calculation using Node.js fs.statSync() rather than disk usage_
 

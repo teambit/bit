@@ -441,6 +441,34 @@ function cleanupTypeScriptLocales(nodeModulesPath) {
   }
 }
 
+// TypeScript type definitions cleanup - removes @types packages
+// Safe to remove because workspaces install their own @types locally when creating TS components
+function cleanupTypeDefinitions(nodeModulesPath) {
+  console.log('\n📝 Cleaning up TypeScript type definitions (@types)...');
+  const typesPath = path.join(nodeModulesPath, '@types');
+
+  if (!fs.existsSync(typesPath)) {
+    console.log('  @types directory not found, skipping...');
+    return;
+  }
+
+  try {
+    const sizeBefore = getDirectorySize(typesPath);
+
+    if (config.dryRun) {
+      console.log(`  [DRY RUN] Would remove: @types directory (${formatBytes(sizeBefore)})`);
+    } else {
+      fs.rmSync(typesPath, { recursive: true, force: true });
+      console.log(`  Removed @types directory, saved: ${formatBytes(sizeBefore)}`);
+    }
+
+    totalSaved += sizeBefore;
+    filesDeleted += 1;
+  } catch (error) {
+    console.log('  Error processing @types directory:', error.message);
+  }
+}
+
 // UI Dependencies cleanup - removes UI-only packages not needed for CLI operations
 // WARNING: This will break `bit start --dev` which requires these packages to rebuild the UI
 function cleanupUiDependencies(nodeModulesPath) {
@@ -664,6 +692,7 @@ function main() {
   cleanupSourceMaps(absolutePath);
   cleanupDateFnsLocales(absolutePath);
   cleanupTypeScriptLocales(absolutePath);
+  cleanupTypeDefinitions(absolutePath);
   cleanupUiDependencies(absolutePath);
   cleanupDuplicateModuleFormats(absolutePath);
 
@@ -729,7 +758,10 @@ This script safely removes:
      - Removes all locales except English (451 locale files)
   4. TypeScript locale files (~4MB)
      - Removes all non-English error message locales (13 directories)
-  5. UI dependencies (--remove-ui-deps only) (~45MB):
+  5. TypeScript type definitions (@types directory) (~17MB)
+     - Safe to remove: workspaces install their own @types when creating TS components
+     - CLI operations don't require global @types packages
+  6. UI dependencies (--remove-ui-deps only) (~45MB):
      - react-syntax-highlighter, date-fns, d3-* packages, @react-hook/*
      - Nested node_modules in @teambit/react and @teambit/ui (unneeded - using pre-bundled artifacts)
      - Safe to remove since UI is pre-bundled in artifacts
