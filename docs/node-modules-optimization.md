@@ -60,7 +60,7 @@ _Note: Using version-specific keys (e.g., `postcss@8`) to handle conflicting maj
 
 - **Monaco Editor cleanup**: Removes `dev/`, `esm/`, `min-maps/` folders, keeps `min/` (~64MB saved)
 - **Source map removal**: Configurable removal of .map files (~124MB saved)
-- **Duplicate module format removal**: Removes ESM or CJS when packages ship both (~7.6MB saved)
+- **Duplicate module format removal**: Removes ESM or CJS when packages ship both (~15.7MB saved)
 - **TypeScript definitions cleanup**: Automatically removes `node_modules/@types` directory (~17MB saved)
 - **Safety flags**:
   - `--dry-run`: Preview changes
@@ -333,13 +333,14 @@ Based on macOS testing (September 2025):
 
 ### Cleanup Script Results (from 706.3 MB baseline)
 
-| Scenario                     | Final Size | Space Saved | Reduction | Breakdown                                                            |
-| ---------------------------- | ---------- | ----------- | --------- | -------------------------------------------------------------------- |
-| **Default mode**             | 511.5 MB   | 194.8 MB    | 27.6%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB           |
-| **With --keep-teambit-maps** | 537.7 MB   | 168.6 MB    | 23.9%     | Monaco: 62.3MB, Maps: 74.7MB, @types: 17MB, Locales: 14.6MB          |
-| **With --remove-ui-deps**    | 503.6 MB   | 202.7 MB    | 28.7%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB, UI: ~8MB |
+| Scenario                     | Final Size | Space Saved | Reduction | Breakdown                                                                         |
+| ---------------------------- | ---------- | ----------- | --------- | --------------------------------------------------------------------------------- |
+| **Default mode**             | 511.5 MB   | 194.8 MB    | 27.6%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB                        |
+| **With --keep-teambit-maps** | 537.7 MB   | 168.6 MB    | 23.9%     | Monaco: 62.3MB, Maps: 74.7MB, @types: 17MB, Locales: 14.6MB                       |
+| **With --remove-esm**        | 495.8 MB   | 210.5 MB    | 29.8%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB, Duplicate ESM: 15.7MB |
+| **With --remove-ui-deps**    | 503.6 MB   | 202.7 MB    | 28.7%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB, UI: ~8MB              |
 
-**Total optimization potential**: 786.9 MB → 503.6 MB (283.3 MB saved, 36.0% reduction)
+**Total optimization potential**: 786.9 MB → 487.9 MB (299.0 MB saved, 38.0% reduction) with all flags
 
 _Note: Results based on logical file size calculation using Node.js fs.statSync() rather than disk usage_
 
@@ -353,9 +354,13 @@ UI dependencies like `date-fns`, `react-syntax-highlighter`, and `d3-*` packages
 
 Many packages ship both ESM and CJS builds, effectively doubling their size:
 
-- Example: `@modelcontextprotocol/sdk` has both `dist/esm` (4.5MB) and `dist/cjs` (4.5MB)
-- Example: `@sinclair/typebox` has both `build/esm` (2.5MB) and `build/cjs` (2.5MB)
-- Testing found packages with duplicate builds, totaling ~7.6MB potential savings
+- **Directory-based duplicates**: ~7.6MB
+  - Example: `@modelcontextprotocol/sdk` has both `dist/esm` (4.5MB) and `dist/cjs` (4.5MB)
+  - Example: `@sinclair/typebox` has both `build/esm` (2.5MB) and `build/cjs` (2.5MB)
+- **File-based duplicates (.mjs/.js pairs)**: ~8.1MB
+  - Example: Prettier ships both `.js` and `.mjs` versions of all plugins
+  - Files like `babel.js` (306KB) paired with `babel.mjs` (306KB)
+- **Total savings**: ~15.7MB by removing ESM builds (keeping CJS for current Bit)
 - Since Bit currently uses CommonJS, the ESM builds can be safely removed
 
 ### Remaining Large Packages

@@ -574,6 +574,7 @@ function cleanupDuplicateModuleFormats(nodeModulesPath) {
   ];
 
   function scanPackage(packagePath) {
+    // Check directory-based patterns (esm/, cjs/, etc.)
     patterns.forEach((pattern) => {
       const basePath = pattern.parent ? path.join(packagePath, pattern.parent) : packagePath;
       const targetPath = path.join(basePath, formatToRemove);
@@ -607,6 +608,53 @@ function cleanupDuplicateModuleFormats(nodeModulesPath) {
         }
       }
     });
+
+    // Check for .mjs/.js file pairs when removing ESM
+    if (config.removeEsm) {
+      function scanForMjsFiles(dir) {
+        try {
+          const items = fs.readdirSync(dir);
+
+          items.forEach((item) => {
+            const itemPath = path.join(dir, item);
+            const stats = fs.statSync(itemPath);
+
+            if (stats.isFile() && item.endsWith('.mjs')) {
+              const jsFile = item.replace('.mjs', '.js');
+              const jsPath = path.join(dir, jsFile);
+
+              // Only remove .mjs if corresponding .js exists
+              if (fs.existsSync(jsPath)) {
+                try {
+                  const sizeBefore = stats.size;
+
+                  if (config.dryRun) {
+                    console.log(
+                      `  [DRY RUN] Would remove: ${path.relative(nodeModulesPath, itemPath)} (${formatBytes(sizeBefore)})`
+                    );
+                  } else {
+                    fs.rmSync(itemPath, { force: true });
+                    console.log(`  Removed: ${path.relative(nodeModulesPath, itemPath)} (${formatBytes(sizeBefore)})`);
+                  }
+
+                  totalFormatSaved += sizeBefore;
+                  foldersRemoved++;
+                } catch {
+                  // Skip files we can't process
+                }
+              }
+            } else if (stats.isDirectory() && item !== 'node_modules') {
+              // Recursively scan subdirectories, but avoid nested node_modules
+              scanForMjsFiles(itemPath);
+            }
+          });
+        } catch {
+          // Skip directories we can't read
+        }
+      }
+
+      scanForMjsFiles(packagePath);
+    }
   }
 
   // Use shared utility pattern to find all packages and scan them
