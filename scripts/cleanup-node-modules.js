@@ -24,6 +24,10 @@
  *    - Nested node_modules in @teambit/react and @teambit/ui
  *    - Safe since UI is pre-bundled in artifacts directory
  *    - WARNING: This will break `bit start --dev` which needs these packages to rebuild UI
+ * 4. Source directories (with --remove-source): Removes redundant source files
+ *    - Removes src/ directories when dist/, lib/, min/, or versioned builds exist
+ *    - Removes dist/ when min/ exists (keeps smaller production build)
+ *    - Examples: zod/src/ (2.2MB), moment/src/ (1.1MB), moment/dist/ (0.8MB)
  *
  * Safety:
  * - Only removes files that are definitively not needed for runtime
@@ -53,6 +57,8 @@ const config = {
   removeEsm: process.argv.includes('--remove-esm'),
   // Set to true to remove CJS builds (keep ESM only - for future ESM migration)
   removeCjs: process.argv.includes('--remove-cjs'),
+  // Set to true to remove source directories when compiled versions exist
+  removeSource: process.argv.includes('--remove-source'),
   // Set to true for verbose output
   verbose: process.argv.includes('--verbose'),
 };
@@ -469,6 +475,126 @@ function cleanupTypeDefinitions(nodeModulesPath) {
   }
 }
 
+// Remove redundant source and duplicate build directories
+function cleanupRedundantBuilds(nodeModulesPath) {
+  if (!config.removeSource) {
+    return;
+  }
+
+  console.log('\n🏗️  Removing redundant source and build directories...');
+  let totalRedundantSaved = 0;
+  let redundantRemoved = 0;
+
+  function scanPackageForRedundantBuilds(packagePath) {
+    // Remove unnecessary source directories when compiled versions exist
+    const srcPath = path.join(packagePath, 'src');
+    if (fs.existsSync(srcPath)) {
+      try {
+        const stats = fs.statSync(srcPath);
+        if (stats.isDirectory()) {
+          // Check if there are compiled/built versions
+          const compiledDirs = ['v3', 'v4', 'dist', 'lib', 'build', 'compiled', 'min'];
+          const hasCompiledVersion = compiledDirs.some((dir) => fs.existsSync(path.join(packagePath, dir)));
+
+          if (hasCompiledVersion) {
+            const sizeBefore = getDirectorySize(srcPath);
+
+            if (config.dryRun) {
+              console.log(
+                `  [DRY RUN] Would remove: ${path.relative(nodeModulesPath, srcPath)} (${formatBytes(sizeBefore)}) - source files`
+              );
+            } else {
+              fs.rmSync(srcPath, { recursive: true, force: true });
+              console.log(
+                `  Removed: ${path.relative(nodeModulesPath, srcPath)} (${formatBytes(sizeBefore)}) - source files`
+              );
+            }
+
+            totalRedundantSaved += sizeBefore;
+            redundantRemoved++;
+          }
+        }
+      } catch {
+        // Skip if we can't process
+      }
+    }
+
+    // For packages like moment.js that have both min/ and dist/ directories
+    // Keep only the smallest production-ready version
+    const minPath = path.join(packagePath, 'min');
+    const distPath = path.join(packagePath, 'dist');
+
+    // If both min and dist exist, keep min (it's smaller and production-ready)
+    if (fs.existsSync(minPath) && fs.existsSync(distPath)) {
+      try {
+        const distSize = getDirectorySize(distPath);
+
+        if (config.dryRun) {
+          console.log(
+            `  [DRY RUN] Would remove: ${path.relative(nodeModulesPath, distPath)} (${formatBytes(distSize)}) - keeping min/ instead`
+          );
+        } else {
+          fs.rmSync(distPath, { recursive: true, force: true });
+          console.log(
+            `  Removed: ${path.relative(nodeModulesPath, distPath)} (${formatBytes(distSize)}) - keeping min/ instead`
+          );
+        }
+
+        totalRedundantSaved += distSize;
+        redundantRemoved++;
+      } catch {
+        // Skip if we can't process
+      }
+    }
+  }
+
+  // Recursively scan all packages
+  function scanAllPackages(dir, depth = 0) {
+    if (depth > 10) return;
+
+    try {
+      const items = fs.readdirSync(dir);
+
+      for (const item of items) {
+        const itemPath = path.join(dir, item);
+        const stats = fs.statSync(itemPath);
+
+        if (stats.isDirectory()) {
+          // Handle scoped packages
+          if (item.startsWith('@')) {
+            scanAllPackages(itemPath, depth);
+            continue;
+          }
+
+          // Check if this is a package
+          const packageJsonPath = path.join(itemPath, 'package.json');
+          if (fs.existsSync(packageJsonPath)) {
+            scanPackageForRedundantBuilds(itemPath);
+
+            // Check for nested node_modules
+            const nestedModulesPath = path.join(itemPath, 'node_modules');
+            if (fs.existsSync(nestedModulesPath) && item !== 'node_modules') {
+              scanAllPackages(nestedModulesPath, depth + 1);
+            }
+          }
+        }
+      }
+    } catch {
+      // Skip directories we can't read
+    }
+  }
+
+  scanAllPackages(nodeModulesPath);
+
+  if (redundantRemoved > 0) {
+    totalSaved += totalRedundantSaved;
+    filesDeleted += redundantRemoved;
+    console.log(`  Removed ${redundantRemoved} redundant directories, saved: ${formatBytes(totalRedundantSaved)}`);
+  } else {
+    console.log('  No redundant source or build directories found');
+  }
+}
+
 // UI Dependencies cleanup - removes UI-only packages not needed for CLI operations
 // WARNING: This will break `bit start --dev` which requires these packages to rebuild the UI
 function cleanupUiDependencies(nodeModulesPath) {
@@ -742,6 +868,7 @@ function main() {
   cleanupDateFnsLocales(absolutePath);
   cleanupTypeScriptLocales(absolutePath);
   cleanupTypeDefinitions(absolutePath);
+  cleanupRedundantBuilds(absolutePath);
   cleanupUiDependencies(absolutePath);
   cleanupDuplicateModuleFormats(absolutePath);
 
@@ -784,6 +911,7 @@ Options:
   --remove-ui-deps  Remove UI-only dependencies not needed for CLI operations
   --remove-esm      Remove duplicate ESM builds (keep CJS for current Bit)
   --remove-cjs      Remove duplicate CJS builds (keep ESM for future migration)
+  --remove-source   Remove source directories (src/) when compiled versions exist
   --verbose         Show detailed output
   --help           Show this help message
 
@@ -795,6 +923,7 @@ Examples:
   node cleanup-node-modules.js --keep-teambit-maps # Keep only @teambit source maps
   node cleanup-node-modules.js --remove-ui-deps   # Also remove UI dependencies
   node cleanup-node-modules.js --remove-esm       # Remove duplicate ESM builds
+  node cleanup-node-modules.js --remove-source    # Remove src/ when dist/ or min/ exist
 
 This script safely removes:
   1. Duplicate monaco-editor builds (dev, esm, min-maps folders) ~64MB
@@ -815,7 +944,11 @@ This script safely removes:
      - Nested node_modules in @teambit/react and @teambit/ui (unneeded - using pre-bundled artifacts)
      - Safe to remove since UI is pre-bundled in artifacts
      - ⚠️  WARNING: Will break 'bit start --dev' mode (rebuilds UI dynamically)
-  6. Duplicate module formats (--remove-esm or --remove-cjs):
+  7. Source directories (--remove-source only):
+     - Removes src/ directories when compiled versions exist (dist/, lib/, min/, v3/, v4/)
+     - Removes dist/ when min/ exists (keeps smaller production build)
+     - Examples: zod/src/ (2.2MB), moment/src/ (1.1MB), moment/dist/ (0.8MB)
+  8. Duplicate module formats (--remove-esm or --remove-cjs):
      - Removes duplicate ESM or CJS builds when packages ship both formats
      - Example: @modelcontextprotocol/sdk ships both dist/esm and dist/cjs (4.5MB each)
      - Use --remove-esm to keep CJS only (recommended for current Bit)

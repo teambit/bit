@@ -61,6 +61,7 @@ _Note: Using version-specific keys (e.g., `postcss@8`) to handle conflicting maj
 - **Monaco Editor cleanup**: Removes `dev/`, `esm/`, `min-maps/` folders, keeps `min/` (~64MB saved)
 - **Source map removal**: Configurable removal of .map files (~124MB saved)
 - **Duplicate module format removal**: Removes ESM or CJS when packages ship both (~15.7MB saved)
+- **Source directory removal**: Removes redundant source directories when compiled versions exist (~10.7MB saved)
 - **TypeScript definitions cleanup**: Automatically removes `node_modules/@types` directory (~17MB saved)
 - **Safety flags**:
   - `--dry-run`: Preview changes
@@ -68,6 +69,7 @@ _Note: Using version-specific keys (e.g., `postcss@8`) to handle conflicting maj
   - `--keep-teambit-maps`: Keep only @teambit source maps for debugging
   - `--remove-esm`: Remove duplicate ESM builds (keep CJS for current Bit)
   - `--remove-cjs`: Remove duplicate CJS builds (keep ESM for future migration)
+  - `--remove-source`: Remove source directories when compiled versions exist
   - `--verbose`: Detailed output
 
 ### Results
@@ -338,9 +340,10 @@ Based on macOS testing (September 2025):
 | **Default mode**             | 511.5 MB   | 194.8 MB    | 27.6%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB                        |
 | **With --keep-teambit-maps** | 537.7 MB   | 168.6 MB    | 23.9%     | Monaco: 62.3MB, Maps: 74.7MB, @types: 17MB, Locales: 14.6MB                       |
 | **With --remove-esm**        | 495.8 MB   | 210.5 MB    | 29.8%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB, Duplicate ESM: 15.7MB |
+| **With --remove-source**     | 500.8 MB   | 205.5 MB    | 29.1%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB, Source: 10.7MB        |
 | **With --remove-ui-deps**    | 503.6 MB   | 202.7 MB    | 28.7%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB, UI: ~8MB              |
 
-**Total optimization potential**: 786.9 MB → 487.9 MB (299.0 MB saved, 38.0% reduction) with all flags
+**Total optimization potential**: 786.9 MB → 477.2 MB (309.7 MB saved, 39.3% reduction) with all flags
 
 _Note: Results based on logical file size calculation using Node.js fs.statSync() rather than disk usage_
 
@@ -362,6 +365,19 @@ Many packages ship both ESM and CJS builds, effectively doubling their size:
   - Files like `babel.js` (306KB) paired with `babel.mjs` (306KB)
 - **Total savings**: ~15.7MB by removing ESM builds (keeping CJS for current Bit)
 - Since Bit currently uses CommonJS, the ESM builds can be safely removed
+
+### Source Directory Removal
+
+Many packages ship both source code and compiled builds, creating redundancy:
+
+- **Source + compiled patterns**:
+  - Example: `zod` has both `src/` (2.2MB TypeScript source) and `v3/`, `v4/` (compiled JS)
+  - Example: `moment` has both `src/` (1.1MB source) and `min/` (1.7MB minified)
+- **Multiple build targets**:
+  - Example: `moment` ships both `dist/` (804KB) and `min/` (1.7MB)
+  - Script keeps `min/` (smaller, production-ready) and removes `dist/`
+- **Total savings**: ~10.7MB by removing redundant source and build directories
+- **Safety**: Only removes source when compiled alternatives exist
 
 ### Remaining Large Packages
 
