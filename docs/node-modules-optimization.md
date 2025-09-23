@@ -60,7 +60,7 @@ _Note: Using version-specific keys (e.g., `postcss@8`) to handle conflicting maj
 
 - **Monaco Editor cleanup**: Removes `dev/`, `esm/`, `min-maps/` folders, keeps `min/` (~64MB saved)
 - **Source map removal**: Configurable removal of .map files (~124MB saved)
-- **Duplicate module format removal**: Removes ESM or CJS when packages ship both (~5-10MB+ saved)
+- **Duplicate module format removal**: Removes ESM or CJS when packages ship both (~7.6MB saved)
 - **TypeScript definitions cleanup**: Automatically removes `node_modules/@types` directory (~17MB saved)
 - **Safety flags**:
   - `--dry-run`: Preview changes
@@ -354,7 +354,8 @@ UI dependencies like `date-fns`, `react-syntax-highlighter`, and `d3-*` packages
 Many packages ship both ESM and CJS builds, effectively doubling their size:
 
 - Example: `@modelcontextprotocol/sdk` has both `dist/esm` (4.5MB) and `dist/cjs` (4.5MB)
-- Testing found 17 packages with duplicate builds, totaling ~5MB potential savings
+- Example: `@sinclair/typebox` has both `build/esm` (2.5MB) and `build/cjs` (2.5MB)
+- Testing found packages with duplicate builds, totaling ~7.6MB potential savings
 - Since Bit currently uses CommonJS, the ESM builds can be safely removed
 
 ### Remaining Large Packages

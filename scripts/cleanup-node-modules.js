@@ -569,6 +569,7 @@ function cleanupDuplicateModuleFormats(nodeModulesPath) {
   const patterns = [
     { parent: 'dist', folders: ['esm', 'cjs'] },
     { parent: 'lib', folders: ['esm', 'cjs'] },
+    { parent: 'build', folders: ['esm', 'cjs'] },
     { parent: '', folders: ['esm', 'cjs'] }, // Some packages have esm/cjs at root
   ];
 
@@ -621,7 +622,7 @@ function cleanupDuplicateModuleFormats(nodeModulesPath) {
 
         if (stats.isDirectory()) {
           // Handle scoped packages
-          if (item.startsWith('@') && depth === 0) {
+          if (item.startsWith('@')) {
             scanAllPackages(itemPath, depth);
             continue;
           }
