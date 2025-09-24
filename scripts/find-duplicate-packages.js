@@ -8,7 +8,12 @@
  * with potentially different versions. This helps identify opportunities for
  * dependency consolidation to reduce node_modules size.
  *
- * Usage: node find-duplicate-packages.js [path-to-node_modules]
+ * Usage: node find-duplicate-packages.js [path-to-node_modules] [options]
+ *
+ * Options:
+ *   --large-only    Show only packages larger than 1MB
+ *   --teambit-only  Show only @teambit/* package duplicates
+ *   --help          Show this help message
  */
 
 const fs = require('fs');
@@ -17,7 +22,36 @@ const { getDirectorySize, formatBytes } = require('./package-utils');
 
 // Parse arguments
 const args = process.argv.slice(2);
+
+// Check for help flag
+if (args.includes('--help')) {
+  console.log(`
+Find Duplicate Packages Script
+===============================
+
+This script finds all packages that appear multiple times in node_modules
+with potentially different versions. This helps identify opportunities for
+dependency consolidation to reduce node_modules size.
+
+Usage: node find-duplicate-packages.js [path-to-node_modules] [options]
+
+Options:
+  --large-only    Show only packages larger than 1MB
+  --teambit-only  Show only @teambit/* package duplicates
+  --help          Show this help message
+
+Examples:
+  node find-duplicate-packages.js                    # Scan ./node_modules
+  node find-duplicate-packages.js /path/to/node_modules  # Scan specific path
+  node find-duplicate-packages.js --large-only       # Show only large packages
+  node find-duplicate-packages.js --teambit-only     # Show only @teambit duplicates
+  node find-duplicate-packages.js --large-only --teambit-only  # Combine flags
+`);
+  process.exit(0);
+}
+
 const showOnlyLarge = args.includes('--large-only');
+const teambitOnly = args.includes('--teambit-only');
 const filteredArgs = args.filter((arg) => !arg.startsWith('--'));
 const nodeModulesPath = filteredArgs[0] || './node_modules';
 const sizeThreshold = 1024 * 1024; // 1MB threshold for --large-only flag
@@ -33,10 +67,12 @@ console.log('🔍 Finding Duplicate Packages');
 console.log('==============================');
 console.log(`📁 Scanning: ${absolutePath}`);
 if (showOnlyLarge) {
-  console.log(`📊 Showing only packages larger than 1MB\n`);
-} else {
-  console.log('');
+  console.log(`📊 Showing only packages larger than 1MB`);
 }
+if (teambitOnly) {
+  console.log(`🎯 Filtering only @teambit/* packages`);
+}
+console.log('');
 
 // Map to store all package occurrences
 const packageMap = new Map();
@@ -56,7 +92,7 @@ function findPackages(dir, baseDir = dir, depth = 0) {
 
       if (stats.isDirectory()) {
         // Handle scoped packages (e.g., @teambit, @types)
-        if (item.startsWith('@') && depth === 0) {
+        if (item.startsWith('@')) {
           // This is a scope directory, recurse into it to find packages
           findPackages(itemPath, baseDir, depth);
           continue;
@@ -112,6 +148,11 @@ let totalPotentialSavings = 0;
 
 for (const [packageName, locations] of packageMap.entries()) {
   if (locations.length > 1) {
+    // Filter for @teambit packages if flag is set
+    if (teambitOnly && !packageName.startsWith('@teambit/')) {
+      continue;
+    }
+
     // Calculate total size and find unique versions
     const totalSize = locations.reduce((sum, loc) => sum + loc.size, 0);
     const uniqueVersions = [...new Set(locations.map((loc) => loc.version))];
@@ -212,6 +253,7 @@ if (duplicates.length === 0) {
 
 console.log('\n💡 Tips:');
 console.log('   - Use --large-only flag to see only packages larger than 1MB');
+console.log('   - Use --teambit-only flag to focus on @teambit/* package duplicates');
 console.log('   - Consider using pnpm overrides to consolidate versions');
 console.log('   - Check if nested node_modules can be hoisted');
 console.log('   - Review version conflicts and update dependencies where possible');
