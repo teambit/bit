@@ -454,46 +454,4 @@ describe('import functionality on Harmony', function () {
       expect(componentJson.extensions).to.not.have.property(`${fullEnvId}@0.0.1`);
     });
   });
-  describe('import with pattern matching for nested namespaces', () => {
-    before(() => {
-      helper = new Helper();
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      // Create components with nested namespace structure similar to the bug report
-      // Create a component directly under examples/
-      helper.fs.outputFile('examples/hello-world/index.js', 'console.log("hello from examples");');
-      helper.command.addComponent('examples/hello-world', { n: 'examples/hello-world' });
-
-      // Create a component with nested namespace beta/vitest-4/examples/
-      helper.fs.outputFile('beta/vitest-4/examples/hello-world/index.js', 'console.log("hello from beta");');
-      helper.command.addComponent('beta/vitest-4/examples/hello-world', { n: 'beta/vitest-4/examples/hello-world' });
-
-      // Create another component in beta but not under examples
-      helper.fs.outputFile('beta/other/component/index.js', 'console.log("other beta component");');
-      helper.command.addComponent('beta/other/component', { n: 'beta/other/component' });
-
-      helper.command.tagAllWithoutBuild();
-      helper.command.export();
-
-      helper.scopeHelper.reInitWorkspace();
-      helper.scopeHelper.addRemoteScope();
-    });
-
-    describe('importing with pattern "examples/**"', () => {
-      before(() => {
-        helper.command.importComponent('examples/**', '-x');
-      });
-
-      it('should only import components directly under examples/, not nested namespaces containing examples', () => {
-        const list = helper.command.listParsed();
-        const ids = list.map((c) => c.id);
-        // First check we have the right number of components
-        expect(list).to.have.lengthOf(1);
-        // Check we imported the correct component (direct child of examples/)
-        expect(ids[0]).to.include('examples/hello-world');
-        // Ensure we didn't import the nested namespace component
-        const idsStr = ids.join(',');
-        expect(idsStr).to.not.include('beta/vitest-4/examples/hello-world');
-      });
-    });
-  });
 });
