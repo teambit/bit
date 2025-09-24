@@ -89,10 +89,7 @@ commands:
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss@8" --values "^8.4.19" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.tslib@2" --values "^2.6.2" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.ajv@6" --values "^6.12.6" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.source-map@0" --values "0.6.1" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.readable-stream@2" --values "2.3.8" &&
             pnpm add @teambit/bit --os=<<parameters.os>> --cpu=<<parameters.cpu>>
 
   # Bundle installation for Windows (with Windows-specific configs)
@@ -120,10 +117,7 @@ commands:
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss@8" --values "^8.4.19" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.tslib@2" --values "^2.6.2" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.ajv@6" --values "^6.12.6" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.source-map@0" --values "0.6.1" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.readable-stream@2" --values "2.3.8" &&
             pnpm add @teambit/bit --os=win32 --cpu=<<parameters.cpu>>
 
   # Bit configuration
