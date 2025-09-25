@@ -212,6 +212,8 @@ export async function install(
     | 'minimumReleaseAge'
     | 'minimumReleaseAgeExclude'
     | 'neverBuiltDependencies'
+    | 'onlyBuiltDependencies'
+    | 'ignoredBuiltDependencies'
     | 'ignorePackageManifest'
     | 'hoistWorkspacePackages'
     | 'returnListOfDepsRequiringBuild'
@@ -267,6 +269,12 @@ export async function install(
       hoistPattern.push(`!${pkgName}`);
     }
   }
+  let neverBuiltDependencies = options.neverBuiltDependencies
+  if (neverBuiltDependencies == null && options.onlyBuiltDependencies == null) {
+    // If neither neverBuiltDependencies nor onlyBuiltDependencies are set by the user
+    // we tell pnpm to allow all scripts to be executed by setting neverBuiltDependencies to []
+    neverBuiltDependencies = ['core-js']
+  }
   const opts: InstallOptions = {
     allProjects,
     autoInstallPeers: options.autoInstallPeers,
@@ -298,7 +306,7 @@ export async function install(
     userAgent: networkConfig.userAgent,
     ...options,
     injectWorkspacePackages: true,
-    neverBuiltDependencies: options.neverBuiltDependencies ?? [],
+    neverBuiltDependencies,
     returnListOfDepsRequiringBuild: true,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     depth: options.updateAll ? Infinity : 0,
