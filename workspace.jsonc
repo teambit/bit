@@ -294,11 +294,7 @@
         "@teambit/react.instructions.react.adding-tests": "0.0.6",
         "@teambit/react.jest.react-jest": "^1.0.37",
         "@teambit/react.rendering.ssr": "^1.0.3",
-<<<<<<< ours
-        "@teambit/react.ui.component-highlighter": "0.2.4",
-=======
         "@teambit/react.ui.component-highlighter": "0.2.5",
->>>>>>> theirs
         "@teambit/react.webpack.react-webpack": "^1.0.50",
         "@teambit/scope.content.scope-overview": "1.96.8",
         "@teambit/scope.ui.empty-scope": "^0.0.510",
