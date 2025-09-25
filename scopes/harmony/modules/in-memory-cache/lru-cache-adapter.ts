@@ -13,7 +13,7 @@ export class LRUCacheAdapter<T extends {} = any> implements InMemoryCache<T> {
       return { max: options.maxSize };
     }
     if (options.maxAge) {
-      return { ttl: options.maxAge, ttlAutopurge: false };
+      return { ttl: options.maxAge, ttlAutopurge: true };
     }
     throw new Error('LRUCacheAdapter: either maxSize or maxAge should be provided');
   }
