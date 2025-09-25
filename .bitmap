@@ -26,7 +26,7 @@
     "api-server": {
         "name": "api-server",
         "scope": "teambit.harmony",
-        "version": "1.0.762",
+        "version": "1.0.763",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/api-server"
     },
@@ -215,7 +215,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "1.12.132",
+        "version": "1.12.133",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -271,7 +271,7 @@
     "ci": {
         "name": "ci",
         "scope": "teambit.git",
-        "version": "1.0.114",
+        "version": "1.0.115",
         "mainFile": "index.ts",
         "rootDir": "scopes/git/ci"
     },
@@ -320,7 +320,7 @@
     "cloud": {
         "name": "cloud",
         "scope": "teambit.cloud",
-        "version": "0.0.1035",
+        "version": "0.0.1036",
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/cloud"
     },
@@ -495,7 +495,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.777",
+        "version": "2.0.778",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
@@ -866,7 +866,7 @@
     "lanes": {
         "name": "lanes",
         "scope": "teambit.lanes",
-        "version": "1.0.759",
+        "version": "1.0.760",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/lanes"
     },
@@ -915,7 +915,7 @@
     "merge-lanes": {
         "name": "merge-lanes",
         "scope": "teambit.lanes",
-        "version": "1.0.759",
+        "version": "1.0.760",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/merge-lanes"
     },
@@ -1321,7 +1321,7 @@
     "pnpm": {
         "name": "pnpm",
         "scope": "teambit.dependencies",
-        "version": "1.0.766",
+        "version": "1.0.767",
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/pnpm"
     },
@@ -1475,7 +1475,7 @@
     "status": {
         "name": "status",
         "scope": "teambit.component",
-        "version": "1.0.760",
+        "version": "1.0.761",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/status"
     },
