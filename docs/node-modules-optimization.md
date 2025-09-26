@@ -6,12 +6,6 @@ This document captures the analysis and optimization strategies for reducing Bit
 
 ## Current State Analysis
 
-### Size Measurements
-
-- **Source repository**: 1.8GB node_modules (uses .pnpm store with non-hoisted dependencies)
-- **BVM installation**: 1.1GB node_modules (uses hoisted dependencies via `node-linker=hoisted`)
-- **Direct pnpm install**: 1.4GB node_modules
-
 ### Major Space Consumers
 
 1. **Monaco Editor**: 77MB total
@@ -328,19 +322,20 @@ Based on macOS testing (September 2025):
 
 - **v1.12.126 baseline**: 786.9 MB
 - **v1.12.128** (removed Prompt/Winston): 725.4 MB (-61.5 MB)
-- **With PNPM overrides**: 708.5 MB (-16.9 MB additional)
+- **v1.12.134** (removed memoizee): 722.8 MB (-2.6 MB)
+- **With PNPM overrides**: 705.9 MB (-16.9 MB additional)
 
-### Cleanup Script Results (from 708.5 MB baseline)
+### Cleanup Script Results (from 705.9 MB baseline)
 
 | Scenario                     | Final Size | Space Saved | Reduction | Breakdown                                                                         |
 | ---------------------------- | ---------- | ----------- | --------- | --------------------------------------------------------------------------------- |
-| **Default mode**             | 513.7 MB   | 194.8 MB    | 27.5%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB                        |
-| **With --keep-teambit-maps** | 539.9 MB   | 168.6 MB    | 23.8%     | Monaco: 62.3MB, Maps: 74.7MB, @types: 17MB, Locales: 14.6MB                       |
-| **With --remove-esm**        | 498.0 MB   | 210.5 MB    | 29.7%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB, Duplicate ESM: 15.7MB |
-| **With --remove-source**     | 503.0 MB   | 205.5 MB    | 29.0%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB, Source: 10.7MB        |
-| **With --remove-ui-deps**    | 505.8 MB   | 202.7 MB    | 28.6%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB, UI: ~8MB              |
+| **Default mode**             | 511.1 MB   | 194.8 MB    | 27.6%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB                        |
+| **With --keep-teambit-maps** | 537.3 MB   | 168.6 MB    | 23.9%     | Monaco: 62.3MB, Maps: 74.7MB, @types: 17MB, Locales: 14.6MB                       |
+| **With --remove-esm**        | 495.4 MB   | 210.5 MB    | 29.8%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB, Duplicate ESM: 15.7MB |
+| **With --remove-source**     | 500.4 MB   | 205.5 MB    | 29.1%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB, Source: 10.7MB        |
+| **With --remove-ui-deps**    | 503.2 MB   | 202.7 MB    | 28.7%     | Monaco: 62.3MB, Maps: 101MB, @types: 17MB, Locales: 14.6MB, UI: ~8MB              |
 
-**Total optimization potential**: 786.9 MB → 479.4 MB (307.5 MB saved, 39.1% reduction) with all flags
+**Total optimization potential**: 786.9 MB → 476.8 MB (310.1 MB saved, 39.4% reduction) with all flags
 
 _Note: Results based on logical file size calculation using Node.js fs.statSync() rather than disk usage_
 
