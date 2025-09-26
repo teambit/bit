@@ -87,7 +87,7 @@ use --outdated to highlight components that have newer versions available.`;
     const getNamespaceWithWildcard = () => {
       if (!namespace) return undefined;
       if (hasWildcard(namespace)) return namespace;
-      return `${namespace}/*`;
+      return `${namespace}/**`;
     };
     const namespacesUsingWildcards = getNamespaceWithWildcard();
 
