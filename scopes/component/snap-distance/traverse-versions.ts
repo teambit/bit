@@ -10,7 +10,6 @@
  * methods here.
  */
 
-import memoize from 'memoizee';
 import pMapSeries from 'p-map-series';
 import { HeadNotFound, ParentNotFound, VersionNotFound } from '@teambit/legacy.scope';
 import type { VersionParents, ModelComponent, Version, Ref, Repository } from '@teambit/objects';
@@ -153,11 +152,32 @@ export async function getAllVersionHashes(options: GetAllVersionHashesParams): P
   return subsetOfVersionParents.map((s) => s.hash);
 }
 
-export const getAllVersionHashesMemoized = memoize(getAllVersionHashes, {
-  normalizer: (args) => JSON.stringify(args[0]),
-  promise: true,
-  maxAge: 1, // 1ms is good. it's only for consecutive calls while this function is still in process. we don't want to cache the results.
-});
+// Simple deduplication for consecutive calls during the same operation
+// Uses a WeakMap to avoid duplicate processing of identical options objects
+const activePromises = new WeakMap<GetAllVersionHashesParams, Promise<Ref[]>>();
+
+export const getAllVersionHashesMemoized = (options: GetAllVersionHashesParams): Promise<Ref[]> => {
+  // Check if we already have a promise for this exact options object
+  const existing = activePromises.get(options);
+  if (existing) {
+    return existing;
+  }
+
+  // Create new promise and track it
+  const promise = getAllVersionHashes(options);
+  activePromises.set(options, promise);
+
+  // Clean up after the promise resolves/rejects
+  promise
+    .finally(() => {
+      activePromises.delete(options);
+    })
+    .catch(() => {
+      // Ignore cleanup errors
+    });
+
+  return promise;
+};
 
 export async function hasVersionByRef(
   modelComponent: ModelComponent,

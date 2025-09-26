@@ -1,6 +1,6 @@
 import type { Visitor, PluginObj, PluginPass, NodePath } from '@babel/core';
 import { readFileSync } from 'fs-extra';
-import memoize from 'memoizee';
+import { memoize } from 'lodash';
 import type * as Types from '@babel/types'; // @babel/types, not @types/babel!
 import type { ComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import {
@@ -36,11 +36,7 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     }
   }
 
-  const extractMeta = memoize(
-    (filePath: string) => componentMap?.[filePath] || metaFromPackageJson(filePath),
-    // optimize for string input:
-    { primitive: true }
-  );
+  const extractMeta = memoize((filePath: string) => componentMap?.[filePath] || metaFromPackageJson(filePath));
 
   function addComponentId(path: NodePath<any>, filePath: string, identifier: string) {
     // add meta property, e.g. `Button.__bit_component = __bit_component;`
@@ -146,7 +142,7 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     },
     post() {
       // reset memoization, in case any file changes between runs
-      extractMeta.clear();
+      extractMeta.cache.clear?.();
     },
   };
 
