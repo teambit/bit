@@ -186,7 +186,7 @@
         "@teambit/defender.content.formatter-overview": "1.96.10",
         "@teambit/defender.content.linter-overview": "1.95.0",
         "@teambit/defender.content.tester-overview": "1.95.0",
-        "@teambit/defender.eslint-linter": "^1.0.55",
+        "@teambit/defender.eslint-linter": "^1.0.56",
         "@teambit/defender.fs.global-bit-temp-dir": "0.0.1",
         "@teambit/defender.jest-tester": "^2.0.17",
         "@teambit/defender.prettier-formatter": "^1.0.23",
