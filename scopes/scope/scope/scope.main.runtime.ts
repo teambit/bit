@@ -814,7 +814,7 @@ export class ScopeMain implements ComponentFactory {
     includeDeleted = false
   ): Promise<Component[]> {
     const patternsWithScope =
-      (filter?.namespaces && filter?.namespaces.map((pattern) => `**/${pattern || '**'}`)) || undefined;
+      (filter?.namespaces && filter?.namespaces.map((pattern) => `${this.name}/${pattern || '**'}`)) || undefined;
     const componentsIds = await this.listIds(includeCache, includeFromLanes, patternsWithScope);
 
     const comps = await this.getMany(
