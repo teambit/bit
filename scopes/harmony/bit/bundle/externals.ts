@@ -10,6 +10,7 @@ export const externals = [
   'rrweb-cssom',
   'canvas',
   'style-loader',
+  '@lydell/node-pty',
   'mini-css-extract-plugin',
   '@prerenderer/renderer-jsdom',
   '@pmmmwh/react-refresh-webpack-plugin',

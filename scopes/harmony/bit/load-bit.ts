@@ -292,8 +292,8 @@ export async function loadBit(path = process.cwd(), additionalAspects?: Aspect[]
     logger.isDaemon = true;
   }
   const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
-  // await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
-  await harmony.run();
+  await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+  // await harmony.run();
   if (loadCLIOnly) return harmony;
   const aspectLoader = harmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
