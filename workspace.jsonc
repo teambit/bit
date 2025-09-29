@@ -336,7 +336,7 @@
         "@teambit/ui-foundation.ui.notifications.store": "^0.0.500",
         "@teambit/ui-foundation.ui.react-router.use-query": "^0.0.505",
         "@teambit/ui-foundation.ui.top-bar": "^0.0.515",
-        "@teambit/ui-foundation.ui.tree.drawer": "^0.0.518",
+        "@teambit/ui-foundation.ui.tree.drawer": "^1.0.0",
         "@teambit/ui-foundation.ui.tree.file-tree": "0.0.526",
         "@teambit/ui-foundation.ui.tree.folder-tree-node": "0.0.510",
         "@teambit/ui-foundation.ui.tree.tree-node": "0.0.517",
