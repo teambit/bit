@@ -31,8 +31,11 @@
 }
 
 .envFilterDropdown {
-  width: 100%;
-  max-width: 400px;
+  width: 300px;
+}
+.dropdownContent {
+  overflow: auto;
+  max-height: 30vh;
 }
 
 .doneButton {
