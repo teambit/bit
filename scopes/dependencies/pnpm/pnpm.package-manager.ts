@@ -427,11 +427,12 @@ export class PnpmPackageManager implements PackageManager {
    * Calculating the dependencies graph of a given component using the lockfile.
    */
   async calcDependenciesGraph(opts: CalcDepsGraphOptions): Promise<void> {
-    const lockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: false });
-    if (!lockfile) {
+    const originalLockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: false });
+    if (!originalLockfile) {
       return undefined;
     }
-    for (const { componentRootDir, componentRelativeDir, pkgName, component } of opts.components) {
+    for (let { componentRootDir, componentRelativeDir, pkgName, component } of opts.components) {
+      const lockfile = JSON.parse(JSON.stringify(originalLockfile));
       if (componentRootDir && !lockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
         componentRootDir = componentRootDir.split('@')[0];
       }
