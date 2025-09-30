@@ -217,20 +217,17 @@ export class VersionMaker {
       rootComponentsPath: this.workspace.rootComponentsPath,
       componentIdByPkgName,
     };
-    await pMapPool(
-      this.allComponentsToTag,
-      async (consumerComponent) => {
-        const component = this._findWorkspaceCompByConsumerComp(consumerComponent);
-        if (consumerComponent.componentMap?.rootDir && component) {
-          await this.dependencyResolver.addDependenciesGraph(
-            component,
-            consumerComponent.componentMap.rootDir,
-            options
-          );
-        }
-      },
-      { concurrency: 10 }
-    );
+    const components: Array<{ component: Component }> = [];
+    for (const consumerComponent of this.allComponentsToTag) {
+      const component = this._findWorkspaceCompByConsumerComp(consumerComponent);
+      if (consumerComponent.componentMap?.rootDir && component) {
+        components.push({
+          component,
+          componentRelativeDir: consumerComponent.componentMap.rootDir,
+        });
+      }
+    }
+    await this.dependencyResolver.addDependenciesGraph(components, options);
     this.snapping.logger.clearStatusLine();
     this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
   }
