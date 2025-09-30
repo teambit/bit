@@ -589,7 +589,7 @@ export class DependencyResolverMain {
     components: Array<{
       component: Component,
       componentRelativeDir: string,
-    }>
+    }>,
     options: {
       rootDir: string;
       rootComponentsPath?: string;
@@ -609,7 +609,7 @@ export class DependencyResolverMain {
         componentRelativeDir,
       }))
       await this.getPackageManager()?.calcDependenciesGraph?.({
-        components: comopnentsForCalc,
+        components: componentsForCalc,
         rootDir: options.rootDir,
         componentIdByPkgName: options.componentIdByPkgName,
       });

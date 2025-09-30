@@ -217,7 +217,7 @@ export class VersionMaker {
       rootComponentsPath: this.workspace.rootComponentsPath,
       componentIdByPkgName,
     };
-    const components: Array<{ component: Component }> = [];
+    const components: Array<{ component: Component, componentRelativeDir: string }> = [];
     for (const consumerComponent of this.allComponentsToTag) {
       const component = this._findWorkspaceCompByConsumerComp(consumerComponent);
       if (consumerComponent.componentMap?.rootDir && component) {
