@@ -472,7 +472,7 @@ export class PnpmPackageManager implements PackageManager {
       );
       const graph = convertLockfileToGraph(partialLockfile, {
         ...opts,
-        componentRootDir,
+        componentRootDir: compRootDir,
         componentRelativeDir,
         pkgName,
       });
