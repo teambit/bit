@@ -104,6 +104,7 @@ export class VersionMaker {
     publishedPackages: string[];
     stagedConfig?: StagedConfig;
     removedComponents?: ComponentIdList;
+    totalComponentsCount?: number;
   }> {
     this.allWorkspaceComps = this.workspace ? await this.workspace.list() : undefined;
     const componentsToTag = this.getUniqCompsToTag();
@@ -136,6 +137,7 @@ export class VersionMaker {
         autoTaggedResults: autoTagData,
         publishedPackages: [],
         stagedConfig,
+        totalComponentsCount: this.allComponentsToTag.length,
       };
     }
 
@@ -202,6 +204,7 @@ export class VersionMaker {
       publishedPackages,
       stagedConfig,
       removedComponents,
+      totalComponentsCount: this.allComponentsToTag.length,
     };
   }
 

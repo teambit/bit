@@ -177,4 +177,34 @@ describe('bit tag command', function () {
       expect(() => helper.command.tagAllWithoutBuild('-m ""')).to.not.throw();
     });
   });
+  describe('component count display when new component depends on existing tagged component', () => {
+    let output;
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      // Create and tag an existing component
+      helper.fs.createFile('components/comp1', 'comp1.js', 'module.exports = { test: true };');
+      helper.command.addComponent('components/comp1', { i: 'components/comp1' });
+      helper.command.tagAllWithoutBuild();
+
+      // Modify comp1 so it will be tagged again
+      helper.fs.createFile('components/comp1', 'comp1.js', 'module.exports = { test: true, modified: true };');
+
+      // Create a new component that depends on comp1
+      helper.fs.createFile('components/comp2', 'comp2.js', "const comp1 = require('../comp1/comp1');");
+      helper.command.addComponent('components/comp2', { i: 'components/comp2' });
+      helper.command.linkAndRewire();
+
+      // Tag all components - this should tag both comp2 (new) and comp1 (modified)
+      // comp2 should be auto-tagged because its dependency (comp1) changed
+      output = helper.command.tagAllWithoutBuild();
+    });
+    it('should correctly display 2 components tagged, not 3', () => {
+      // The output should show:
+      // - 1 new component (comp2)
+      // - 1 changed component (comp1) with auto-tagged dependents (comp2 should be listed)
+      // Total: 2 component(s) tagged (not 3)
+      expect(output).to.have.string('2 component(s) tagged');
+      expect(output).to.not.have.string('3 component(s) tagged');
+    });
+  });
 });
