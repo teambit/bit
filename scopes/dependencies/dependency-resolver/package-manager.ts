@@ -230,13 +230,15 @@ export interface PackageManager {
   calcDependenciesGraph?(options: CalcDepsGraphOptions): Promise<void>;
 }
 
+export interface CalcDepsGraphForComponentOptions {
+  component: Component;
+  componentRootDir?: string;
+  componentRelativeDir: string;
+  pkgName?: string;
+}
+
 export interface CalcDepsGraphOptions {
-  components: Array<{
-    component: Component;
-    componentRootDir?: string;
-    componentRelativeDir: string;
-    pkgName?: string;
-  }>;
+  components: CalcDepsGraphForComponentOptions[];
   componentIdByPkgName: ComponentIdByPkgName;
   rootDir: string;
 }

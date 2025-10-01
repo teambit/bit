@@ -12,7 +12,7 @@ import {
   type DependencyEdge,
   type DependencyNeighbour,
 } from '@teambit/objects';
-import { type CalcDepsGraphOptions, type ComponentIdByPkgName } from '@teambit/dependency-resolver';
+import { type CalcDepsGraphOptions, type CalcDepsGraphForComponentOptions, type ComponentIdByPkgName } from '@teambit/dependency-resolver';
 import { getLockfileImporterId } from '@pnpm/lockfile.fs';
 import normalizePath from 'normalize-path';
 import { type BitLockfileFile } from './lynx';
@@ -22,7 +22,7 @@ function convertLockfileToGraphFromCapsule(
   {
     componentRelativeDir,
     componentIdByPkgName,
-  }: Pick<CalcDepsGraphOptions, 'componentRelativeDir' | 'componentIdByPkgName'>
+  }: Pick<CalcDepsGraphOptions & CalcDepsGraphForComponentOptions, 'componentRelativeDir' | 'componentIdByPkgName'>
 ): DependenciesGraph {
   const componentImporter = lockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
@@ -51,7 +51,7 @@ function importerDepsToNeighbours(
 
 export function convertLockfileToGraph(
   lockfile: BitLockfileFile,
-  { pkgName, componentRootDir, componentRelativeDir, componentIdByPkgName }: Omit<CalcDepsGraphOptions, 'rootDir'>
+  { pkgName, componentRootDir, componentRelativeDir, componentIdByPkgName }: Omit<CalcDepsGraphOptions & CalcDepsGraphForComponentOptions, 'rootDir'>
 ): DependenciesGraph {
   if (componentRootDir == null || pkgName == null) {
     return convertLockfileToGraphFromCapsule(lockfile, { componentRelativeDir, componentIdByPkgName });

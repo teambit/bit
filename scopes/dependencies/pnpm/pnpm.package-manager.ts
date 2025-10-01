@@ -431,14 +431,17 @@ export class PnpmPackageManager implements PackageManager {
     if (!originalLockfile) {
       return undefined;
     }
-    for (let { componentRootDir, componentRelativeDir, pkgName, component } of opts.components) {
+    for (const { componentRootDir, componentRelativeDir, pkgName, component } of opts.components) {
       const lockfile = JSON.parse(JSON.stringify(originalLockfile));
+      let compRootDir: string | undefined;
       if (componentRootDir && !lockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
-        componentRootDir = componentRootDir.split('@')[0];
+        compRootDir = componentRootDir.split('@')[0];
+      } else {
+        compRootDir = componentRootDir;
       }
       const filterByImporterIds = [componentRelativeDir as ProjectId];
-      if (componentRootDir != null) {
-        filterByImporterIds.push(componentRootDir as ProjectId);
+      if (compRootDir != null) {
+        filterByImporterIds.push(compRootDir as ProjectId);
       }
       for (const importerId of filterByImporterIds) {
         for (const depType of [
@@ -467,7 +470,12 @@ export class PnpmPackageManager implements PackageManager {
           skipped: new Set(),
         })
       );
-      const graph = convertLockfileToGraph(partialLockfile, { ...opts, componentRootDir, componentRelativeDir, pkgName });
+      const graph = convertLockfileToGraph(partialLockfile, {
+        ...opts,
+        componentRootDir,
+        componentRelativeDir,
+        pkgName,
+      });
       component.state._consumer.dependenciesGraph = graph;
     }
   }
