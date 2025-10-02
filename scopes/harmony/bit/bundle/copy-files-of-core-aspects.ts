@@ -17,6 +17,12 @@ const FILES_TO_COPY = {
       targets: ['package', 'configs-dir'],
     },
   ],
+  'teambit.defender/jest': [
+    {
+      paths: ['dist/jest.worker.js', 'dist/jest.worker.js.map'],
+      targets: ['configs-dir'],
+    },
+  ],
 };
 
 let wsRootDir: string;

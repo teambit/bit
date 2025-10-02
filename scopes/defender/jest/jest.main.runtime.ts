@@ -32,7 +32,17 @@ export class JestMain {
 
   static async provider([worker, loggerAspect]: [WorkerMain, LoggerMain]) {
     const logger = loggerAspect.createLogger(JestAspect.id);
-    const jestWorker = worker.declareWorker<JestWorker>(WORKER_NAME, require.resolve('./jest.worker'));
+    // When bundled, worker files are copied to a separate directory
+    let workerPath: string;
+    try {
+      workerPath = require.resolve('./jest.worker');
+    } catch {
+      // Fallback for bundled version where worker is in a separate directory
+      // Use dynamic path construction to avoid esbuild resolving at build time
+      const defenderPath = './defender' + '.jest/dist/jest.worker';
+      workerPath = require.resolve(defenderPath);
+    }
+    const jestWorker = worker.declareWorker<JestWorker>(WORKER_NAME, workerPath);
     return new JestMain(jestWorker, logger);
   }
 }
