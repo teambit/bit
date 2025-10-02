@@ -51,7 +51,7 @@ function importerDepsToNeighbours(
 
 export function convertLockfileToGraph(
   lockfile: BitLockfileFile,
-  { pkgName, componentRootDir, componentRelativeDir, componentIdByPkgName }: Omit<CalcDepsGraphOptions & CalcDepsGraphForComponentOptions, 'rootDir' | 'component'>
+  { pkgName, componentRootDir, componentRelativeDir, componentIdByPkgName }: Omit<CalcDepsGraphOptions & CalcDepsGraphForComponentOptions, 'rootDir' | 'component' | 'component'>
 ): DependenciesGraph {
   if (componentRootDir == null || pkgName == null) {
     return convertLockfileToGraphFromCapsule(lockfile, { componentRelativeDir, componentIdByPkgName });
