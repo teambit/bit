@@ -2550,6 +2550,26 @@ supports glob patterns to update specific packages. prompts for confirmation unl
 
 ---
 
+## validate
+
+**Description**: run type-checking, linting, and testing in sequence  
+validates components by running check-types, lint, and test commands in sequence.  
+stops at the first failure and returns a non-zero exit code.  
+by default validates only new and modified components. use --all to validate all components.
+
+`bit validate [component-pattern]`
+
+| **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
+| ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
+
+| **Option**            | **Option alias** | **Description**                                      |
+| --------------------- | :--------------: | ---------------------------------------------------- |
+| `--all`               |       `-a`       | validate all components, not only modified and new   |
+| `--continue-on-error` |       `-c`       | run all validation checks even when errors are found |
+
+---
+
 ## version
 
 **Description**: display the installed Bit version
