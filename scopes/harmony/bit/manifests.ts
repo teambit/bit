@@ -199,6 +199,10 @@ import { ConfigMergerMain } from '@teambit/config-merger/config-merger.main.runt
 import { VersionHistoryMain } from '@teambit/version-history/version-history.main.runtime';
 import { HostInitializerMain } from '@teambit/host-initializer/host-initializer.main.runtime';
 import { DoctorMain } from '@teambit/doctor/doctor.main.runtime';
+import { ConfigStoreMain } from '@teambit/config-store/config-store.main.runtime';
+import { CliMcpServerMain } from '@teambit/cli-mcp-server/cli-mcp-server.main.runtime';
+import { CiMain } from '@teambit/ci/ci.main.runtime';
+import { VueMain } from '@teambit/vue-aspect/vue.main.runtime';
 // import { ApplyMain } from '@teambit/apply/apply.main.runtime';
 
 /**
@@ -411,6 +415,10 @@ export const runtimesMap = {
   [VersionHistoryAspect.id]: VersionHistoryMain,
   [HostInitializerAspect.id]: HostInitializerMain,
   [DoctorAspect.id]: DoctorMain,
+  [ConfigStoreAspect.id]: ConfigStoreMain,
+  [CliMcpServerAspect.id]: CliMcpServerMain,
+  [CiAspect.id]: CiMain,
+  [VueAspect.id]: VueMain,
 };
 
 export function isCoreAspect(id: string) {
