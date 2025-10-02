@@ -1,5 +1,5 @@
 import didYouMean from 'didyoumean';
-import yargs from 'yargs';
+// import yargs from 'yargs';
 import type { Command } from './command';
 import type { GroupsType } from './command-groups';
 import { compact } from 'lodash';
@@ -14,6 +14,10 @@ import { CommandNotFound } from './exceptions/command-not-found';
 import type { OnCommandStartSlot } from './cli.main.runtime';
 import type { CommandRunner } from './command-runner';
 import { YargsExitWorkaround } from './exceptions/yargs-exit-workaround';
+
+// Using require instead of import because of this issue:
+// https://github.com/evanw/esbuild/issues/1492
+const yargs = require('yargs');
 
 export class CLIParser {
   public parser = yargs;

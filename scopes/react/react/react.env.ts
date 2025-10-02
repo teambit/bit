@@ -46,7 +46,7 @@ import type { Linter, LinterContext } from '@teambit/linter';
 import type { Formatter, FormatterContext } from '@teambit/formatter';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import type { ComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
-import type { SchemaExtractor } from '@teambit/schema';
+import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import type { Logger } from '@teambit/logger';
@@ -163,8 +163,9 @@ export class ReactEnv
    * @returns
    */
   createCjsJestTester(jestConfigPath?: string, jestModulePath?: string): Tester {
-    const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
-    const defaultConfig = join(pathToSource, './jest/jest.cjs.config.js');
+    // const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
+    // const defaultConfig = join(pathToSource, './jest/jest.cjs.config.js');
+    const defaultConfig = require.resolve('./jest/jest.cjs.config');
     const config = jestConfigPath || defaultConfig;
     const worker = this.getJestWorker();
     const tester = JestTester.create(
@@ -218,13 +219,14 @@ export class ReactEnv
 
   private createTsCompilerOptions(mode: CompilerMode = 'dev'): TypeScriptCompilerOptions {
     const tsconfig = mode === 'dev' ? cloneDeep(defaultTsConfig) : cloneDeep(buildTsConfig);
-    const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
+    // const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
+    const types = [require.resolve('./typescript/style.d.ts'), require.resolve('./typescript/asset.d.ts')];
     const compileJs = true;
     const compileJsx = true;
     return {
       tsconfig,
       // TODO: @david please remove this line and refactor to be something that makes sense.
-      types: [resolve(pathToSource, './typescript/style.d.ts'), resolve(pathToSource, './typescript/asset.d.ts')],
+      types,
       compileJs,
       compileJsx,
     };
