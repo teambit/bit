@@ -12,7 +12,7 @@ export function runEsbuild(outDir: string, appFile: string) {
   return build({
     define: {
       // 'process.env.JSON_LOGS': 'true',
-      'process.env.BIT_LOG': `'debug'`,
+      // 'process.env.BIT_LOG': `'debug'`,
       'import.meta.url': 'import_meta_url',
     },
     banner: {
