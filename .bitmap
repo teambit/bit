@@ -2032,6 +2032,20 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/utils"
     },
+    "validator": {
+        "name": "validator",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.defender",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/defender/validator",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@0.0.79": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
+    },
     "variants": {
         "name": "variants",
         "scope": "teambit.workspace",
