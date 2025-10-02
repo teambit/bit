@@ -15,7 +15,10 @@ by default validates only new and modified components. use --all to validate all
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   alias = '';
   group = 'testing';
-  options = [['a', 'all', 'validate all components, not only modified and new']] as CommandOptions;
+  options = [
+    ['a', 'all', 'validate all components, not only modified and new'],
+    ['c', 'continue-on-error', 'run all validation checks even when errors are found'],
+  ] as CommandOptions;
 
   constructor(
     private validator: ValidatorMain,
@@ -23,7 +26,10 @@ by default validates only new and modified components. use --all to validate all
     private logger: Logger
   ) {}
 
-  async report([pattern]: [string], { all = false }: { all: boolean }) {
+  async report(
+    [pattern]: [string],
+    { all = false, continueOnError = false }: { all: boolean; continueOnError: boolean }
+  ) {
     if (!this.workspace) throw new OutsideWorkspaceError();
 
     this.logger.console(chalk.bold('\n🔍 Running validation checks...\n'));
@@ -38,7 +44,7 @@ by default validates only new and modified components. use --all to validate all
 
     this.logger.console(`Validating ${components.length} component(s)\n`);
 
-    const result = await this.validator.validate(components);
+    const result = await this.validator.validate(components, continueOnError);
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
 
     if (result.code !== 0) {

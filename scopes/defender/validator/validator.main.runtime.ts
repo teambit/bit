@@ -32,23 +32,29 @@ export class ValidatorMain {
     private logger: Logger
   ) {}
 
-  async validate(components: Component[]): Promise<ValidationResult> {
+  async validate(components: Component[], continueOnError = false): Promise<ValidationResult> {
     // Step 1: Check types
     this.logger.console(chalk.cyan('1/3 Type Checking...'));
     const checkTypesResult = await this.checkTypes(components);
     this.logger.console(checkTypesResult.message);
-    if (checkTypesResult.code !== 0) return checkTypesResult;
+    if (checkTypesResult.code !== 0 && !continueOnError) return checkTypesResult;
 
     // Step 2: Lint
     this.logger.console(chalk.cyan('\n2/3 Linting...'));
     const lintResult = await this.lint(components);
     this.logger.console(lintResult.message);
-    if (lintResult.code !== 0) return lintResult;
+    if (lintResult.code !== 0 && !continueOnError) return lintResult;
 
     // Step 3: Test
     this.logger.console(chalk.cyan('\n3/3 Testing...'));
     const testResult = await this.test(components);
     this.logger.console(testResult.message);
+
+    // When continueOnError is true, return the first error found, or success if all passed
+    if (continueOnError) {
+      if (checkTypesResult.code !== 0) return checkTypesResult;
+      if (lintResult.code !== 0) return lintResult;
+    }
     return testResult;
   }
 
