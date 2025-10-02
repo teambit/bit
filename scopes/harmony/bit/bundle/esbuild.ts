@@ -13,8 +13,11 @@ export function runEsbuild(outDir: string, appFile: string) {
     define: {
       // 'process.env.JSON_LOGS': 'true',
       'process.env.BIT_LOG': `'debug'`,
-      // 'import_meta_url': 'import_meta_url',
-      // 'import_meta.url': 'import_meta_url',
+      'import.meta.url': 'import_meta_url',
+    },
+    banner: {
+      js: `const { pathToFileURL } = require('url');
+const import_meta_url = pathToFileURL(__filename).href;`,
     },
     entryPoints: [join(process.cwd(), 'scopes/harmony/bit/app.ts')],
     // entryPoints: ['/Users/giladshoham/dev/bit/bit/node_modules/@teambit/bit/dist/app.js'],

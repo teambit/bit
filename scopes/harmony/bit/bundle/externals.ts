@@ -3,6 +3,8 @@ export const externals = [
   'browserslist',
   'yoga-layout',
   'yoga-layout-prebuilt',
+  '@parcel/watcher',
+  'nconf',
   '@surma/rollup-plugin-off-main-thread',
   '@babel/preset-react',
   'ink',

@@ -87,6 +87,10 @@ function resolveHardCoded(packageName: string): string | undefined {
     espree: '9.6.1',
     '@bitdev/react.webpack.refresh-overlay': '0.0.2',
     '@surma/rollup-plugin-off-main-thread': '2.2.3',
+    '@babel/plugin-proposal-object-rest-spread': '7.20.7',
+    'source-map-support': '0.5.21',
+    nconf: '0.12.1',
+    '@parcel/watcher': '^2.5.1',
   };
   return hardCoded[packageName];
 }
