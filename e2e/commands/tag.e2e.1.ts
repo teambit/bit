@@ -211,22 +211,20 @@ describe('bit tag command', function () {
     let tagError: string;
     before(() => {
       helper.scopeHelper.reInitWorkspace();
-      // Create two components: comp2 (dependency) and comp1 (dependent)
-      helper.fs.createFile('comp2', 'index.js', "module.exports = () => 'comp2';");
-      helper.fs.createFile('comp1', 'index.js', "module.exports = () => 'comp1';");
-      helper.command.addComponent('comp1', { i: 'comp1' });
-      helper.command.addComponent('comp2', { i: 'comp2' });
+      // Create two independent components
+      helper.fs.outputFile('comp1/index.js', "module.exports = () => 'comp1';");
+      helper.fs.outputFile('comp2/index.js', "module.exports = () => 'comp2';");
+      helper.command.addComponent('comp1');
+      helper.command.addComponent('comp2');
 
       // Tag all components initially
       helper.command.tagAllWithoutBuild();
 
       // Modify comp1 to depend on comp2 with a relative import (creates a component issue)
-      helper.fs.createFile(
-        'comp1',
-        'index.js',
+      helper.fs.outputFile(
+        'comp1/index.js',
         "const comp2 = require('../comp2');\nmodule.exports = () => 'comp1 and ' + comp2();"
       );
-      // Don't run linkAndRewire - we want the relative import to stay
 
       // Try to tag comp2 - this should auto-tag comp1, but comp1 has a relative import issue
       try {

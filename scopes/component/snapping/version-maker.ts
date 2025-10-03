@@ -116,8 +116,8 @@ export class VersionMaker {
     const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
 
     // Validate component issues for auto-tag components
-    if (this.workspace && autoTagIds.length) {
-      const autoTagHarmonyComponents = await this.workspace.getMany(autoTagIds);
+    if (this.allWorkspaceComps && autoTagIds.length) {
+      const autoTagHarmonyComponents = this.allWorkspaceComps.filter((c) => autoTagIds.has(c.id));
       await this.builder.throwForComponentIssues(autoTagHarmonyComponents, this.params.ignoreIssues);
     }
 
