@@ -284,6 +284,7 @@ export class SnappingMain {
       detachHead,
       overrideHead,
       loose,
+      ignoreIssues,
     };
     const {
       taggedComponents,
@@ -587,6 +588,7 @@ export class SnappingMain {
       exitOnFirstFailedTask,
       detachHead,
       loose,
+      ignoreIssues,
     };
     const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents, totalComponentsCount } =
       await this.makeVersion(ids, components, makeVersionParams);

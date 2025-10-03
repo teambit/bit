@@ -53,6 +53,7 @@ export type BasicTagParams = BasicTagSnapParams & {
   editor?: string;
   versionsFile?: string;
   unmodified?: boolean;
+  ignoreIssues?: string;
 };
 
 export type VersionMakerParams = {
@@ -113,6 +114,13 @@ export class VersionMaker {
     const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
     const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
     const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
+
+    // Validate component issues for auto-tag components
+    if (this.workspace && autoTagIds.length) {
+      const autoTagHarmonyComponents = await this.workspace.getMany(autoTagIds);
+      await this.builder.throwForComponentIssues(autoTagHarmonyComponents, this.params.ignoreIssues);
+    }
+
     await this.triggerOnPreSnap(autoTagIds);
     this.allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
     await this.parseVersionsFile(idsToTag, autoTagIds);
@@ -220,7 +228,7 @@ export class VersionMaker {
       rootComponentsPath: this.workspace.rootComponentsPath,
       componentIdByPkgName,
     };
-    const components: Array<{ component: Component, componentRelativeDir: string }> = [];
+    const components: Array<{ component: Component; componentRelativeDir: string }> = [];
     for (const consumerComponent of this.allComponentsToTag) {
       const component = this._findWorkspaceCompByConsumerComp(consumerComponent);
       if (consumerComponent.componentMap?.rootDir && component) {
