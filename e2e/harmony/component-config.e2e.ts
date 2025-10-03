@@ -1,12 +1,13 @@
 import chai, { expect } from 'chai';
-import { isEmpty } from 'lodash';
+import lodash from 'lodash';
 import assertArrays from 'chai-arrays';
-
+import chaiFs from 'chai-fs';
 import { AlreadyExistsError } from '../../scopes/workspace/workspace/component-config-file/exceptions';
 import { Helper, GeneralHelper } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-chai.use(chaiFs);
 
+const { isEmpty } = lodash;
+
+chai.use(chaiFs);
 chai.use(assertArrays);
 
 describe('component config', function () {
