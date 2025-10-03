@@ -75,9 +75,15 @@ export function calculatePipelineOrder(
   let tasksQueue = new TasksQueue();
   locations.forEach((location) => addTasksToGraph(tasksQueue, dataPerLocation, location));
   if (tasks.length) {
+    const originalLength = tasksQueue.length;
     tasksQueue = new TasksQueue(
       ...tasksQueue.filter(({ task }) => tasks.includes(task.name) || tasks.includes(task.aspectId))
     );
+    if (tasksQueue.length === 0 && originalLength > 0) {
+      throw new Error(
+        `Pipeline error - no tasks found matching the specified filter: "${tasks.join(', ')}". Available tasks: ${getAvailableTaskNames(flattenedPipeline).join(', ')}`
+      );
+    }
   }
   if (skipTests) {
     tasksQueue = new TasksQueue(...tasksQueue.filter(({ task }) => task.aspectId !== Extensions.tester));
@@ -89,6 +95,15 @@ export function calculatePipelineOrder(
   }
 
   return tasksQueue;
+}
+
+function getAvailableTaskNames(tasks: BuildTask[]): string[] {
+  const uniqueTaskNames = new Set<string>();
+  tasks.forEach((task) => {
+    uniqueTaskNames.add(task.name);
+    uniqueTaskNames.add(task.aspectId);
+  });
+  return Array.from(uniqueTaskNames).sort();
 }
 
 function addTasksToGraph(tasksQueue: TasksQueue, dataPerLocation: DataPerLocation[], location: Location) {
