@@ -429,10 +429,10 @@ export class PnpmPackageManager implements PackageManager {
   async calcDependenciesGraph(opts: CalcDepsGraphOptions): Promise<void> {
     const originalLockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: false });
     if (!originalLockfile) {
-      return undefined;
+      return;
     }
     for (const { componentRootDir, componentRelativeDir, pkgName, component } of opts.components) {
-      const lockfile = JSON.parse(JSON.stringify(originalLockfile));
+      const lockfile = structuredClone(originalLockfile);
       let compRootDir: string | undefined;
       if (componentRootDir && !lockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
         compRootDir = componentRootDir.split('@')[0];
