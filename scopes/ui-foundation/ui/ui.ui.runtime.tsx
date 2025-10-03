@@ -42,6 +42,7 @@ export class UiUI {
   async render(rootExtension: string): Promise<void> {
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
+
     const uiRoot = rootFactory();
     const routes = this.router.renderRoutes(uiRoot.routes);
     const hudItems = this.hudSlot.values();
