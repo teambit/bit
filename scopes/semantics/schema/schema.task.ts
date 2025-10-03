@@ -38,6 +38,7 @@ export class SchemaTask implements BuildTask {
     await pMapSeries(capsules, async (capsule) => {
       const component = capsule.component;
       const isTaskDisabled = this.schema.isSchemaTaskDisabled(component);
+      // const hasLiveControlsEnabled = this.schema.hasLiveControlsEnabled(component);
       if (isTaskDisabled) return;
       try {
         const schema = await this.schema.getSchema(component, false, true, rootDir, capsule.path);

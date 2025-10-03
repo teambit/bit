@@ -60,7 +60,8 @@ export class UiUI {
   async renderSsr(rootExtension: string, ssrContent: SsrSession): Promise<string> {
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
-
+    console.log('lalalalalalalal \n\n\n\n\n');
+    throw new Error('lalalalalalalal \n\n\n\n\n');
     const uiRoot = rootFactory();
     const routes = this.router.renderRoutes(uiRoot.routes);
     const hudItems = this.hudSlot.values();
