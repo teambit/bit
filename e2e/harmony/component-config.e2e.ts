@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
-import { isEmpty } from 'lodash';
+import lodash from 'lodash';
+const { isEmpty } = lodash;
 import assertArrays from 'chai-arrays';
 
 import { AlreadyExistsError } from '../../scopes/workspace/workspace/component-config-file/exceptions';
