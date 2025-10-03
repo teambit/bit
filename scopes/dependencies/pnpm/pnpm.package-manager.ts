@@ -439,6 +439,11 @@ export class PnpmPackageManager implements PackageManager {
       } else {
         compRootDir = componentRootDir;
       }
+      if (!lockfile.importers[compRootDir as ProjectId]) {
+        // This will only happen if the env was not loaded correctly before install.
+        // But in this case we cannot calculate the dependency graph from the lockfile.
+        continue;
+      }
       const filterByImporterIds = [componentRelativeDir as ProjectId];
       if (compRootDir != null) {
         filterByImporterIds.push(compRootDir as ProjectId);
