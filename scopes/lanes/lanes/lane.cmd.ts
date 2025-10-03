@@ -562,6 +562,7 @@ export class LaneRemoveCmd implements Command {
     }
   ): Promise<string> {
     if (!silent) {
+      this.lanes.logger.clearStatusLine(); // stop the logger to avoid polluting the prompt
       const shouldProceed = await yesno({
         question: 'Are you sure you would like to proceed with this operation? [yes(y)/no(n)]',
       });

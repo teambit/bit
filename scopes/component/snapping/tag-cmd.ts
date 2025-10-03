@@ -253,11 +253,19 @@ semver allows the following options only: ${RELEASE_TYPES.join(', ')}`);
 }
 
 export function tagResultOutput(results: TagResults): string {
-  const { taggedComponents, autoTaggedResults, warnings, newComponents, removedComponents, exportedIds }: TagResults =
-    results;
+  const {
+    taggedComponents,
+    autoTaggedResults,
+    warnings,
+    newComponents,
+    removedComponents,
+    exportedIds,
+    totalComponentsCount,
+  }: TagResults = results;
   const changedComponents = taggedComponents.filter((component) => !newComponents.searchWithoutVersion(component.id));
   const addedComponents = taggedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
   const autoTaggedCount = autoTaggedResults ? autoTaggedResults.length : 0;
+  const totalCount = totalComponentsCount ?? taggedComponents.length + autoTaggedCount;
 
   const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
   const tagExplanationPersist = exportedIds
@@ -333,9 +341,7 @@ export function tagResultOutput(results: TagResults): string {
     exportedOutput() +
     warningsOutput +
     chalk.green(
-      `\n${taggedComponents.length + autoTaggedCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged${
-        exportedIds ? ' and exported' : ''
-      }`
+      `\n${totalCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged${exportedIds ? ' and exported' : ''}`
     ) +
     tagExplanation +
     softTagClarification

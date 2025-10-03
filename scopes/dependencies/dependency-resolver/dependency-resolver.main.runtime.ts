@@ -586,8 +586,10 @@ export class DependencyResolverMain {
   }
 
   async addDependenciesGraph(
-    component: Component,
-    componentRelativeDir: string,
+    components: Array<{
+      component: Component,
+      componentRelativeDir: string,
+    }>,
     options: {
       rootDir: string;
       rootComponentsPath?: string;
@@ -595,8 +597,8 @@ export class DependencyResolverMain {
     }
   ): Promise<void> {
     try {
-      component.state._consumer.dependenciesGraph = await this.getPackageManager()?.calcDependenciesGraph?.({
-        rootDir: options.rootDir,
+      const componentsForCalc = components.map(({ component, componentRelativeDir }) => ({
+        component,
         componentRootDir: options.rootComponentsPath
           ? this.getComponentDirInBitRoots(component, {
               workspacePath: options.rootDir,
@@ -605,6 +607,10 @@ export class DependencyResolverMain {
           : undefined,
         pkgName: this.getPackageName(component),
         componentRelativeDir,
+      }))
+      await this.getPackageManager()?.calcDependenciesGraph?.({
+        components: componentsForCalc,
+        rootDir: options.rootDir,
         componentIdByPkgName: options.componentIdByPkgName,
       });
     } catch (err) {

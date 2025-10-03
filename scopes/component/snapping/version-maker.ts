@@ -53,6 +53,7 @@ export type BasicTagParams = BasicTagSnapParams & {
   editor?: string;
   versionsFile?: string;
   unmodified?: boolean;
+  ignoreIssues?: string;
 };
 
 export type VersionMakerParams = {
@@ -104,6 +105,7 @@ export class VersionMaker {
     publishedPackages: string[];
     stagedConfig?: StagedConfig;
     removedComponents?: ComponentIdList;
+    totalComponentsCount?: number;
   }> {
     this.allWorkspaceComps = this.workspace ? await this.workspace.list() : undefined;
     const componentsToTag = this.getUniqCompsToTag();
@@ -112,6 +114,13 @@ export class VersionMaker {
     const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
     const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
     const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
+
+    // Validate component issues for auto-tag components
+    if (this.allWorkspaceComps && autoTagIds.length) {
+      const autoTagHarmonyComponents = this.allWorkspaceComps.filter((c) => autoTagIds.has(c.id));
+      await this.builder.throwForComponentIssues(autoTagHarmonyComponents, this.params.ignoreIssues);
+    }
+
     await this.triggerOnPreSnap(autoTagIds);
     this.allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
     await this.parseVersionsFile(idsToTag, autoTagIds);
@@ -136,6 +145,7 @@ export class VersionMaker {
         autoTaggedResults: autoTagData,
         publishedPackages: [],
         stagedConfig,
+        totalComponentsCount: this.allComponentsToTag.length,
       };
     }
 
@@ -202,6 +212,7 @@ export class VersionMaker {
       publishedPackages,
       stagedConfig,
       removedComponents,
+      totalComponentsCount: this.allComponentsToTag.length,
     };
   }
 
@@ -217,20 +228,17 @@ export class VersionMaker {
       rootComponentsPath: this.workspace.rootComponentsPath,
       componentIdByPkgName,
     };
-    await pMapPool(
-      this.allComponentsToTag,
-      async (consumerComponent) => {
-        const component = this._findWorkspaceCompByConsumerComp(consumerComponent);
-        if (consumerComponent.componentMap?.rootDir && component) {
-          await this.dependencyResolver.addDependenciesGraph(
-            component,
-            consumerComponent.componentMap.rootDir,
-            options
-          );
-        }
-      },
-      { concurrency: 10 }
-    );
+    const components: Array<{ component: Component; componentRelativeDir: string }> = [];
+    for (const consumerComponent of this.allComponentsToTag) {
+      const component = this._findWorkspaceCompByConsumerComp(consumerComponent);
+      if (consumerComponent.componentMap?.rootDir && component) {
+        components.push({
+          component,
+          componentRelativeDir: consumerComponent.componentMap.rootDir,
+        });
+      }
+    }
+    await this.dependencyResolver.addDependenciesGraph(components, options);
     this.snapping.logger.clearStatusLine();
     this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
   }

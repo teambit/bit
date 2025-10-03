@@ -155,6 +155,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       release: false,
       specFiles,
       patterns,
+      sourcePatterns: patterns,
       rootPath: this.workspace.path,
       workspace: this.workspace,
       debug: options.debug,

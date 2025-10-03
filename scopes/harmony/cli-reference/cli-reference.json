@@ -5453,37 +5453,6 @@
     "private": true
   },
   {
-    "name": "format [component-pattern]",
-    "alias": "",
-    "options": [
-      [
-        "c",
-        "changed",
-        "format only new and modified components"
-      ],
-      [
-        "",
-        "check",
-        "will output a human-friendly message and a list of unformatted files, if any"
-      ],
-      [
-        "j",
-        "json",
-        "return the format results in json format"
-      ]
-    ],
-    "description": "auto-format component source code",
-    "extendedDescription": "formats component files using the formatter configured by each component's environment (Prettier, etc.).\nby default formats all components. use --changed to format only new and modified components.\nsupports check mode to verify formatting without making changes.",
-    "group": "testing",
-    "private": false,
-    "arguments": [
-      {
-        "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      }
-    ]
-  },
-  {
     "name": "lint [component-pattern]",
     "alias": "",
     "options": [
@@ -5510,6 +5479,63 @@
     ],
     "description": "analyze component code for issues and style violations",
     "extendedDescription": "runs linters configured by each component's environment (ESLint, etc.) to check for code quality issues.\nby default lints all components. use --changed to lint only new and modified components.\nsupports automatic fixing of certain issues with --fix flag.",
+    "group": "testing",
+    "private": false,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
+  },
+  {
+    "name": "validate [component-pattern]",
+    "alias": "",
+    "options": [
+      [
+        "a",
+        "all",
+        "validate all components, not only modified and new"
+      ],
+      [
+        "c",
+        "continue-on-error",
+        "run all validation checks even when errors are found"
+      ]
+    ],
+    "description": "run type-checking, linting, and testing in sequence",
+    "extendedDescription": "validates components by running check-types, lint, and test commands in sequence.\nstops at the first failure and returns a non-zero exit code.\nby default validates only new and modified components. use --all to validate all components.",
+    "group": "testing",
+    "private": false,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
+  },
+  {
+    "name": "format [component-pattern]",
+    "alias": "",
+    "options": [
+      [
+        "c",
+        "changed",
+        "format only new and modified components"
+      ],
+      [
+        "",
+        "check",
+        "will output a human-friendly message and a list of unformatted files, if any"
+      ],
+      [
+        "j",
+        "json",
+        "return the format results in json format"
+      ]
+    ],
+    "description": "auto-format component source code",
+    "extendedDescription": "formats component files using the formatter configured by each component's environment (Prettier, etc.).\nby default formats all components. use --changed to format only new and modified components.\nsupports check mode to verify formatting without making changes.",
     "group": "testing",
     "private": false,
     "arguments": [

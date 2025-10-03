@@ -134,6 +134,7 @@ export type BasicTagResults = {
   warnings: string[];
   newComponents: ComponentIdList;
   removedComponents?: ComponentIdList;
+  totalComponentsCount?: number; // total count of all components tagged/snapped (including auto-tagged)
 };
 
 export type FileData = { path: string; content: string; delete?: boolean };
@@ -283,9 +284,16 @@ export class SnappingMain {
       detachHead,
       overrideHead,
       loose,
+      ignoreIssues,
     };
-    const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig, removedComponents } =
-      await this.makeVersion(compIds, components, params);
+    const {
+      taggedComponents,
+      autoTaggedResults,
+      publishedPackages,
+      stagedConfig,
+      removedComponents,
+      totalComponentsCount,
+    } = await this.makeVersion(compIds, components, params);
 
     const tagResults = {
       taggedComponents,
@@ -295,6 +303,7 @@ export class SnappingMain {
       warnings,
       newComponents,
       removedComponents,
+      totalComponentsCount,
     };
 
     await consumer.onDestroy(`tag (message: ${message || 'N/A'})`);
@@ -579,18 +588,17 @@ export class SnappingMain {
       exitOnFirstFailedTask,
       detachHead,
       loose,
+      ignoreIssues,
     };
-    const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await this.makeVersion(
-      ids,
-      components,
-      makeVersionParams
-    );
+    const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents, totalComponentsCount } =
+      await this.makeVersion(ids, components, makeVersionParams);
 
     const snapResults: Partial<SnapResults> = {
       snappedComponents: taggedComponents,
       autoSnappedResults: autoTaggedResults,
       newComponents,
       removedComponents,
+      totalComponentsCount,
     };
 
     const currentLane = consumer.getCurrentLaneId();

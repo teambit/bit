@@ -12,6 +12,7 @@ export type {
   PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
   CalcDepsGraphOptions,
+  CalcDepsGraphForComponentOptions,
   ComponentIdByPkgName,
 } from './package-manager';
 export type {

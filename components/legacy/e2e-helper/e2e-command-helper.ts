@@ -6,7 +6,7 @@ import type { StdioOptions } from 'child_process';
 import childProcess from 'child_process';
 import rightpad from 'pad-right';
 import * as path from 'path';
-import tar from 'tar';
+import { extract } from 'tar';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { NOTHING_TO_TAG_MSG } from '@teambit/snapping';
 import type { Descriptor } from '@teambit/envs';
@@ -899,7 +899,7 @@ export default class CommandHelper {
     return this.compile(compileId, compileFlags);
   }
 
-  packComponent(id: string, options: Record<string, any>, extract = false) {
+  packComponent(id: string, options: Record<string, any>, shouldExtract = false) {
     const defaultOptions = {
       o: '',
       p: '',
@@ -911,7 +911,7 @@ export default class CommandHelper {
       .map((key) => `-${key} ${options[key]}`)
       .join(' ');
     const result = this.runCmd(`bit pack ${id} ${value}`);
-    if (extract) {
+    if (shouldExtract) {
       if (
         !options ||
         // We don't just check that it's falsy because usually it's an empty string.
@@ -942,7 +942,7 @@ export default class CommandHelper {
       if (this.debugMode) {
         console.log(`untaring the file ${tarballFilePath} into ${dir}`); // eslint-disable-line no-console
       }
-      tar.x({ file: tarballFilePath, C: dir, sync: true });
+      extract({ file: tarballFilePath, C: dir, sync: true });
     }
     return result;
   }
