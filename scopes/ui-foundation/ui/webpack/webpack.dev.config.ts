@@ -183,6 +183,8 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         ),
         '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
         '@teambit/base-ui.graph.tree.recursive-tree': require.resolve('@teambit/base-ui.graph.tree.recursive-tree'),
+        '@teambit/semantics.entities.semantic-schema': require.resolve('@teambit/semantics.entities.semantic-schema'),
+        '@teambit/code.ui.code-editor': require.resolve('@teambit/code.ui.code-editor'),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
       },
       fallback: {
