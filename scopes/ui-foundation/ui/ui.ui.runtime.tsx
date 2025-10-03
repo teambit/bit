@@ -61,6 +61,7 @@ export class UiUI {
   async renderSsr(rootExtension: string, ssrContent: SsrSession): Promise<string> {
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
+    
     const uiRoot = rootFactory();
     const routes = this.router.renderRoutes(uiRoot.routes);
     const hudItems = this.hudSlot.values();
