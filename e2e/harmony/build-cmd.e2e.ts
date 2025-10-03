@@ -299,6 +299,19 @@ describe('build command', function () {
       expect(output).to.have.string('Total 2 components to build');
     });
   });
+
+  describe('build with invalid --tasks flag', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+    });
+    it('should throw an error when --tasks does not match any available tasks', () => {
+      const output = helper.general.runWithTryCatch('bit build --tasks non-existent-task');
+      expect(output).to.have.string('Pipeline error - no tasks found matching the specified filter');
+      expect(output).to.have.string('non-existent-task');
+      expect(output).to.have.string('Available tasks:');
+    });
+  });
 });
 
 function getNodeEnvExtension() {
