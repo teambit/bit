@@ -10,6 +10,7 @@
   "teambit.compilation/compiler",
   "teambit.defender/linter",
   "teambit.defender/formatter",
+  "teambit.defender/validator",
   "teambit.component/component",
   "teambit.mdx/mdx",
   "teambit.mdx/readme",
