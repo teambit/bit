@@ -3,10 +3,11 @@ import chalk from 'chalk';
 import path from 'path';
 import chaiFs from 'chai-fs';
 import lodash from 'lodash';
-const { uniq } = lodash;
 import { Extensions } from '@teambit/legacy.constants';
 import { SchemaName } from '@teambit/legacy.consumer-component';
 import { Helper } from '@teambit/legacy.e2e-helper';
+
+const { uniq } = lodash;
 
 chai.use(chaiFs);
 
