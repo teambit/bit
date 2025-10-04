@@ -180,35 +180,6 @@ export async function diffBetweenComponentsObjects(
     return { fieldName: field, diffOutput };
   });
 
-  const dependenciesRelativePathsOutput = (): FieldsDiff[] => {
-    if (!verbose) return [];
-    const dependenciesLeft = componentLeft.getAllDependencies();
-    const dependenciesRight = componentRight.getAllDependencies();
-    if (isEmpty(dependenciesLeft) || isEmpty(dependenciesRight)) return [];
-    return dependenciesLeft.reduce((acc, dependencyLeft) => {
-      const idStr = dependencyLeft.id.toString();
-      const dependencyRight = dependenciesRight.find((dep) => dep.id.isEqual(dependencyLeft.id));
-      if (!dependencyRight) return acc;
-      if (JSON.stringify(dependencyLeft.relativePaths) === JSON.stringify(dependencyRight.relativePaths)) return acc;
-      const fieldName = `Dependency ${idStr} relative-paths`;
-      const title =
-        titleLeft(fieldName, leftVersion, rightVersion) + chalk.bold(titleRight(fieldName, leftVersion, rightVersion));
-      const getValue = (fieldValue: Record<string, any>, left: boolean) => {
-        if (isEmpty(fieldValue)) return '';
-        const sign = left ? '-' : '+';
-        const jsonOutput = JSON.stringify(fieldValue, null, `${sign} `);
-        return `${jsonOutput}\n`;
-      };
-      const value =
-        chalk.red(getValue(dependencyLeft.relativePaths, true)) +
-        chalk.green(getValue(dependencyRight.relativePaths, false));
-      const diffOutput = title + value;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      acc.push({ fieldName, diffOutput });
-      return acc;
-    }, []);
-  };
-
   const getDepDiffType = (left?: string, right?: string): DepDiffType => {
     if (left && !right) return 'removed';
     if (!left && right) return 'added';
@@ -337,12 +308,7 @@ export async function diffBetweenComponentsObjects(
 
   const extensionsConfigOutput = await getExtensionsConfigOutput(componentLeft, componentRight);
 
-  const allDiffs = [
-    ...fieldsDiffOutput,
-    ...extensionsConfigOutput,
-    ...dependenciesRelativePathsOutput(),
-    ...getAllDepsOutput(),
-  ];
+  const allDiffs = [...fieldsDiffOutput, ...extensionsConfigOutput, ...getAllDepsOutput()];
 
   return isEmpty(allDiffs) ? undefined : allDiffs;
 }
