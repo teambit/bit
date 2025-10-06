@@ -67,21 +67,13 @@ describe('Version', () => {
       it('dependencies should be an array', () => {
         expect(dependencies).to.be.an('array').and.have.lengthOf(1);
       });
-      it('dependencies should have properties id and relativePaths only', () => {
+      it('dependencies should have id property only (relativePaths removed)', () => {
         expect(dependencies[0]).to.haveOwnProperty('id');
-        expect(dependencies[0]).to.haveOwnProperty('relativePaths');
+        expect(dependencies[0]).to.not.haveOwnProperty('relativePaths');
         expect(dependencies[0]).to.not.haveOwnProperty('nonExistProperty');
-        expect(Object.keys(dependencies[0])).to.have.lengthOf(2);
+        expect(Object.keys(dependencies[0])).to.have.lengthOf(1);
       });
-      it('relativePaths should be an array', () => {
-        expect(dependencies[0].relativePaths).to.be.an('array').and.have.lengthOf(1);
-      });
-      it('relativePaths should have properties sourceRelativePath and destinationRelativePath only', () => {
-        expect(dependencies[0].relativePaths[0]).to.haveOwnProperty('sourceRelativePath');
-        expect(dependencies[0].relativePaths[0]).to.haveOwnProperty('destinationRelativePath');
-        expect(dependencies[0].relativePaths[0]).to.not.haveOwnProperty('nonExistProperty');
-        expect(Object.keys(dependencies[0].relativePaths[0])).to.have.lengthOf(2);
-      });
+      // relativePaths tests removed - no longer included in Version.id() hash for Harmony components
     });
   });
   describe('hash()', () => {
