@@ -107,6 +107,7 @@ import { BitAspect } from './bit.aspect';
 import { ConfigStoreAspect } from '@teambit/config-store';
 import { CliMcpServerAspect } from '@teambit/cli-mcp-server';
 import { CiAspect } from '@teambit/ci';
+import { ScriptsAspect } from '@teambit/scripts';
 
 /**
  * this is the place to register core aspects.
@@ -222,6 +223,7 @@ export const manifestsMap = {
   [ConfigStoreAspect.id]: ConfigStoreAspect,
   [CliMcpServerAspect.id]: CliMcpServerAspect,
   [CiAspect.id]: CiAspect,
+  [ScriptsAspect.id]: ScriptsAspect,
 };
 
 export function isCoreAspect(id: string) {
