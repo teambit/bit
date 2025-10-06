@@ -233,9 +233,7 @@ export default class Version extends BitObject {
 
     const getDependencies = (deps: Dependencies) => {
       const clonedDependencies = deps.cloneAsString();
-      // relativePaths removed - always empty for Harmony components, legacy components won't use this version
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return clonedDependencies.map((dependency: Dependency) => {
+      return clonedDependencies.map((dependency) => {
         return {
           id: dependency.id,
         };
