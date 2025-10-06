@@ -231,19 +231,11 @@ export default class Version extends BitObject {
   id() {
     const obj = this.toObject();
 
-    // @todo: remove the entire dependencies.relativePaths from the ID (it's going to be a breaking change)
     const getDependencies = (deps: Dependencies) => {
       const clonedDependencies = deps.cloneAsString();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return clonedDependencies.map((dependency: Dependency) => {
+      return clonedDependencies.map((dependency) => {
         return {
           id: dependency.id,
-          relativePaths: dependency.relativePaths.map((relativePath) => {
-            return {
-              sourceRelativePath: relativePath.sourceRelativePath,
-              destinationRelativePath: relativePath.destinationRelativePath,
-            };
-          }),
         };
       });
     };
