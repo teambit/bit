@@ -26,10 +26,10 @@ export class ScriptsMain {
   ) {}
 
   /**
-   * Run a script for components matching the pattern
+   * Run a script for all components
    */
-  async runScript(scriptName: string, pattern?: string): Promise<string> {
-    const components = await this.getComponents(pattern);
+  async runScript(scriptName: string): Promise<string> {
+    const components = await this.getComponents();
     if (!components.length) {
       return chalk.yellow('no components found');
     }
@@ -67,8 +67,8 @@ export class ScriptsMain {
   /**
    * List all available scripts from all environments
    */
-  async listAllScripts(pattern?: string): Promise<string> {
-    const components = await this.getComponents(pattern);
+  async listAllScripts(): Promise<string> {
+    const components = await this.getComponents();
     if (!components.length) {
       return chalk.yellow('no components found');
     }
@@ -101,18 +101,10 @@ export class ScriptsMain {
     return results.join('\n');
   }
 
-  private async getComponents(pattern?: string): Promise<Component[]> {
-    if (!pattern) {
-      // Get all components
-      const host = this.componentAspect.getHost();
-      if (!host) throw new Error('workspace not found');
-      return host.list();
-    }
-
-    // Resolve components by pattern
-    const componentIds = await this.workspace.resolveMultipleComponentIds([pattern]);
-    const filteredIds = await this.workspace.filterIds(componentIds);
-    return this.workspace.getMany(filteredIds);
+  private async getComponents(): Promise<Component[]> {
+    const host = this.componentAspect.getHost();
+    if (!host) throw new Error('workspace not found');
+    return host.list();
   }
 
   private groupComponentsByEnv(components: Component[]): Record<string, Component[]> {

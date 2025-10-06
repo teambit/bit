@@ -22,7 +22,6 @@ describe('script command', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       envName = helper.env.setCustomEnv('env-with-scripts');
       envId = `${helper.scopes.remote}/${envName}`;
-      helper.command.install('--add-missing-deps');
 
       helper.fixtures.populateComponents(3);
       helper.extensions.addExtensionToVariant('*', envId);
@@ -59,19 +58,6 @@ describe('script command', function () {
         expect(output).to.have.string('Running script "test-script"');
       });
       it('should show the script output', () => {
-        expect(output).to.have.string('hello from script');
-      });
-    });
-
-    describe('bit script with pattern', () => {
-      let output: string;
-      before(() => {
-        output = helper.command.runCmd('bit script test-script comp1');
-      });
-      it('should run the script for the specified component', () => {
-        expect(output).to.have.string('Running script "test-script"');
-      });
-      it('should execute successfully', () => {
         expect(output).to.have.string('hello from script');
       });
     });
@@ -143,7 +129,6 @@ describe('script command', function () {
 
       const envName = helper.env.setCustomEnv('env-with-scripts');
       envId = `${helper.scopes.remote}/${envName}`;
-      helper.command.install('--add-missing-deps');
 
       // Create components with the same env
       helper.fixtures.populateComponents(2);

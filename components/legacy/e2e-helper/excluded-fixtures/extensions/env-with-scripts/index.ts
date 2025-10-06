@@ -1,4 +1,4 @@
-import { MyNodeEnvWithScripts } from './my-node-env-with-scripts.bit-env';
+import { EnvWithScripts } from './env-with-scripts.bit-env';
 
-export default MyNodeEnvWithScripts;
-export { MyNodeEnvWithScripts };
+export default EnvWithScripts;
+export { EnvWithScripts };

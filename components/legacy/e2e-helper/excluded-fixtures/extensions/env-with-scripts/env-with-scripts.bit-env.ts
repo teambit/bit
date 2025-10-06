@@ -1,13 +1,12 @@
 // @bit-no-check
 // @ts-nocheck
-import { NodeEnv } from '@teambit/node.node';
 import { Scripts } from '@teambit/scripts';
 
-export class MyNodeEnvWithScripts extends NodeEnv {
+export class EnvWithScripts {
   /**
    * name of the environment. used for friendly mentions across bit.
    */
-  name = 'my-node-env-with-scripts';
+  name = 'env-with-scripts';
 
   /**
    * define custom scripts for this environment
@@ -28,4 +27,4 @@ export class MyNodeEnvWithScripts extends NodeEnv {
   }
 }
 
-export default new MyNodeEnvWithScripts();
+export default new EnvWithScripts();

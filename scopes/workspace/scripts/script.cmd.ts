@@ -6,20 +6,16 @@ export type ScriptOptions = {
 };
 
 export class ScriptCmd implements Command {
-  name = 'script [script-name] [pattern]';
+  name = 'script [script-name]';
   description = 'run a script defined by the environment';
   extendedDescription = `executes custom scripts defined by component environments.
 scripts can be shell commands or JavaScript functions defined in env.scripts().
-when no pattern is specified, runs the script for all components grouped by their environment.
+runs the script for all components grouped by their environment.
 use --list to see all available scripts.`;
   arguments = [
     {
       name: 'script-name',
       description: 'the name of the script to run (e.g., "generate-svg", "pre-snap")',
-    },
-    {
-      name: 'pattern',
-      description: 'component pattern (optional, runs on all components if not specified)',
     },
   ];
   alias = '';
@@ -29,16 +25,16 @@ use --list to see all available scripts.`;
   constructor(private scripts: ScriptsMain) {}
 
   async report(args: string[], options: ScriptOptions): Promise<string> {
-    const [scriptName, pattern] = args;
+    const [scriptName] = args;
 
     if (options.list) {
-      return this.scripts.listAllScripts(pattern);
+      return this.scripts.listAllScripts();
     }
 
     if (!scriptName) {
       throw new Error('script name is required. Use --list to see available scripts.');
     }
 
-    return this.scripts.runScript(scriptName, pattern);
+    return this.scripts.runScript(scriptName);
   }
 }
