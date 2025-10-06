@@ -116,7 +116,8 @@ environments control how components are built, tested, linted, and deployed.`;
       // const envId = this.envs.getEnvId(component);
       const envId = await this.envs.calculateEnvId(component);
       const envIdStr = envId.toString();
-      const isLoaded = this.envs.isEnvRegistered(envIdStr);
+      const isRemoved = await this.envs.isEnvRemoved(envId);
+      const isLoaded = this.envs.isEnvRegistered(envIdStr) && !isRemoved;
       if (!isLoaded) {
         this.nonLoadedEnvs.add(envIdStr);
       }
