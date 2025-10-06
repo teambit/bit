@@ -1,10 +1,13 @@
+import type { EnvContext, EnvHandler } from '@teambit/envs';
 import type { ScriptHandler, ScriptsMap } from './script-definition';
 
 export class Scripts {
   constructor(private scriptsMap: ScriptsMap) {}
 
-  static from(scripts: ScriptsMap): Scripts {
-    return new Scripts(scripts);
+  static from(scripts: ScriptsMap): EnvHandler<Scripts> {
+    return (_context: EnvContext) => {
+      return new Scripts(scripts);
+    };
   }
 
   get(name: string): ScriptHandler | undefined {
