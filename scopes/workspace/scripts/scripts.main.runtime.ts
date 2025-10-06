@@ -40,16 +40,10 @@ export class ScriptsMain {
 
     for (const [envId, envComponents] of Object.entries(componentsByEnv)) {
       const env = this.envs.getEnvDefinitionByStringId(envId);
-      if (!env) {
-        this.logger.console(chalk.yellow(`env ${envId} not found, skipping`));
-        continue;
-      }
+      if (!env) continue;
 
       const scripts = this.getScriptsFromEnv(env);
-      if (!scripts) {
-        this.logger.console(chalk.yellow(`env ${envId} has no scripts defined, skipping`));
-        continue;
-      }
+      if (!scripts) continue;
 
       if (!scripts.has(scriptName)) {
         throw new ScriptNotFound(scriptName, envId);

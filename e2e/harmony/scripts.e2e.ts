@@ -20,16 +20,16 @@ describe('script command', function () {
     let envName: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       envName = helper.env.setCustomEnv('env-with-scripts');
       envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.install('--add-missing-deps');
 
       helper.fixtures.populateComponents(3);
       helper.extensions.addExtensionToVariant('*', envId);
       helper.command.compile();
     });
 
-    describe.only('bit script --list', () => {
+    describe('bit script --list', () => {
       let output: string;
       before(() => {
         output = helper.command.runCmd('bit script --list');
@@ -73,6 +73,22 @@ describe('script command', function () {
       });
       it('should execute successfully', () => {
         expect(output).to.have.string('hello from script');
+      });
+    });
+
+    describe('bit script async-script', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.runCmd('bit script async-script');
+      });
+      it('should run the async script successfully', () => {
+        expect(output).to.have.string('Running script "async-script"');
+      });
+      it('should show the async script output', () => {
+        expect(output).to.have.string('async script executed');
+      });
+      it('should show success message', () => {
+        expect(output).to.have.string('✓ Script function executed successfully');
       });
     });
 
@@ -124,10 +140,10 @@ describe('script command', function () {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
 
       const envName = helper.env.setCustomEnv('env-with-scripts');
       envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.install('--add-missing-deps');
 
       // Create components with the same env
       helper.fixtures.populateComponents(2);

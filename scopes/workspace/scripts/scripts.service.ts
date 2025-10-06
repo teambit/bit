@@ -47,9 +47,8 @@ export class ScriptsService implements EnvService<{}, ScriptsDescriptor> {
 
   transform(env: Env, context: EnvContext): ScriptsTransformationMap | undefined {
     if (!env?.scripts) return undefined;
-    const scriptsObj = env.scripts()(context);
     return {
-      getScripts: () => scriptsObj,
+      getScripts: () => env.scripts()(context),
     };
   }
 }
