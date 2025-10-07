@@ -1014,30 +1014,6 @@ if needed, use "bit env set" command to align the env id`;
     return Boolean(this.envSlot.get(id));
   }
 
-  /**
-   * checks if an env component is removed/deleted.
-   */
-  public async isEnvRemoved(envId: ComponentID): Promise<boolean> {
-    try {
-      if (!envId.hasVersion()) return false;
-      const host = this.componentMain.getHost();
-      if (!host) return false;
-
-      const bitmapEntry = host.bitMap.getBitmapEntryIfExist(envId);
-      if (bitmapEntry && bitmapEntry.isRemoved()) return true;
-      if (bitmapEntry && bitmapEntry.isRecovered()) return false;
-
-      const modelComp = await host.scope.getBitObjectModelComponent(envId.changeVersion(undefined));
-      if (!modelComp) return false;
-
-      const isRemoved = await modelComp.isRemoved(host.scope.legacyScope.objects, envId.version as string);
-      return isRemoved;
-    } catch {
-      // If there's an error checking, assume it's not removed
-      return false;
-    }
-  }
-
   isUsingAspectEnv(component: Component): boolean {
     const data = this.getEnvData(component);
     if (!data) return false;
