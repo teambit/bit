@@ -489,8 +489,9 @@ export class EnvsMain {
     const removeData = envComponent.config.extensions.findExtension('teambit.component/remove')?.config;
     if (removeData?.removed) {
       this.addFailedToLoadEnvs(envId);
-      throw new BitError(
-        `cannot load env "${envId}" because it has been deleted. ${requesting ? `This environment is used by component "${requesting}". ` : ''}`
+      this.printWarningIfFirstTime(
+        envId,
+        `env "${envId}" has been deleted and cannot be loaded. ${requesting ? `This environment is used by component "${requesting}". ` : ''}please use "bit env set" or "bit env replace" to set a new env.`
       );
     }
 
