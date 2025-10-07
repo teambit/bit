@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
+import { IssuesClasses } from '@teambit/component-issues';
 chai.use(chaiFs);
 
 describe('lanes with various issues', function () {
@@ -42,48 +43,25 @@ describe('lanes with various issues', function () {
     let envName: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
-      // Create a custom env
       envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
-      // Create some components that use the custom env
       helper.fixtures.populateComponents(3);
-      helper.extensions.addExtensionToVariant('*', envId);
-      helper.command.compile();
-      // Tag and export on main
+      helper.command.setEnv("'comp1, comp2, comp3'", envId);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      // Create a new lane
+
       helper.command.createLane('dev');
-      // Snap all components and export
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
-      // Delete the env on the lane
+
       helper.command.softRemoveOnLane(envName);
     });
     it('bit status should show an issue about the missing env', () => {
-      const status = helper.command.runCmd('bit status');
-      // The status should indicate something about the env being deleted or missing
-      // This could be a component issue or a status message
-      expect(status).to.satisfy((str: string) => {
-        return str.includes('deleted') || str.includes('missing') || str.includes('removed') || str.includes(envName);
-      });
-    });
-    it('components should show in status as having issues', () => {
-      const statusJson = helper.command.statusJson();
-      // Components should be listed with issues since their env is deleted
-      const hasIssues = statusJson.componentsWithIssues && statusJson.componentsWithIssues.length > 0;
-      expect(hasIssues).to.be.true;
+      helper.command.expectStatusToHaveIssue(IssuesClasses.RemovedEnv.name);
     });
     it('bit envs should show the env as not loaded', () => {
       const envsOutput = helper.command.envs();
       expect(envsOutput).to.have.string('(not loaded)');
-      expect(envsOutput).to.have.string(envName);
-    });
-    it('bit envs should show a warning about not being able to load the env', () => {
-      const envsOutput = helper.command.envs();
-      expect(envsOutput).to.have.string('warning');
-      expect(envsOutput).to.have.string("bit wasn't able to load");
       expect(envsOutput).to.have.string(envName);
     });
   });
