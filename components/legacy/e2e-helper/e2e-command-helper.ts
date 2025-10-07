@@ -995,4 +995,15 @@ export default class CommandHelper {
     const interactiveFlag = shouldBeInteractive ? '' : '--skip-interactive';
     return this.runCmd(`bit init ${options} ${interactiveFlag}`);
   }
+
+  pattern(pattern: string, options?: Record<string, any>) {
+    const parsedOpts = this.parseOptions(options);
+    return this.runCmd(`bit pattern "${pattern}" ${parsedOpts}`);
+  }
+
+  patternJson(pattern: string, options?: Record<string, any>) {
+    const opts = { ...options, json: true };
+    const result = this.pattern(pattern, opts);
+    return JSON.parse(result);
+  }
 }

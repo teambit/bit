@@ -1051,7 +1051,12 @@ export class ScopeMain implements ComponentFactory {
     const [statePatterns, nonStatePatterns] = partition(patterns, (p) => p.startsWith('$') || p.includes(' AND '));
     const nonStatePatternsNoVer = nonStatePatterns.map((p) => p.split('@')[0]); // no need for the version
     const idsFiltered = nonStatePatternsNoVer.length
-      ? ids.filter((id) => multimatch(idsToCheck(id), nonStatePatternsNoVer).length)
+      ? ids.filter((id) => {
+          const idsArray = idsToCheck(id);
+          // Check if ALL possible ID formats match the pattern (none are excluded)
+          // If any format is excluded by the pattern, the component should be excluded
+          return idsArray.every((idFormat) => multimatch([idFormat], nonStatePatternsNoVer).length > 0);
+        })
       : [];
 
     const idsStateFiltered = await mapSeries(statePatterns, async (statePattern) => {
