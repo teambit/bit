@@ -59,9 +59,9 @@ describe('lanes with various issues', function () {
     it('bit status should show an issue about the missing env', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.RemovedEnv.name);
     });
-    it('bit envs should show the env as not loaded', () => {
+    it('bit envs should show the env as deleted', () => {
       const envsOutput = helper.command.envs();
-      expect(envsOutput).to.have.string('(not loaded)');
+      expect(envsOutput).to.have.string('(deleted)');
       expect(envsOutput).to.have.string(envName);
     });
   });
