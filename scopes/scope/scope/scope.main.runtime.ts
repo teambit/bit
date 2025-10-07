@@ -1053,9 +1053,27 @@ export class ScopeMain implements ComponentFactory {
     const idsFiltered = nonStatePatternsNoVer.length
       ? ids.filter((id) => {
           const idsArray = idsToCheck(id);
-          // Check if ALL possible ID formats match the pattern (none are excluded)
-          // If any format is excluded by the pattern, the component should be excluded
-          return idsArray.every((idFormat) => multimatch([idFormat], nonStatePatternsNoVer).length > 0);
+
+          // Handle exclusion patterns correctly:
+          // For patterns with negation (!) we need different logic than positive patterns
+          const hasNegativePatterns = nonStatePatternsNoVer.some((pattern) => pattern.startsWith('!'));
+
+          if (hasNegativePatterns) {
+            // For patterns with exclusions, we need to check each ID format individually
+            // If ANY format would be excluded by the patterns, exclude the whole component
+            for (const idFormat of idsArray) {
+              const result = multimatch([idFormat], nonStatePatternsNoVer);
+              if (result.length === 0) {
+                // This format was excluded, so exclude the whole component
+                return false;
+              }
+            }
+            // None of the formats were excluded, include the component
+            return true;
+          } else {
+            // For positive patterns only, use original logic (any format matching is enough)
+            return multimatch(idsArray, nonStatePatternsNoVer).length > 0;
+          }
         })
       : [];
 
