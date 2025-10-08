@@ -608,7 +608,7 @@
         "strip-ansi": "6.0.0",
         "stylus-lookup": "3.0.2",
         "subscriptions-transport-ws": "0.9.18",
-        "symlink-dir": "^8.0.0",
+        "symlink-dir": "^9.0.0",
         "table": "6.7.3",
         "tar": "7.4.3",
         "tar-fs": "2.1.3",
