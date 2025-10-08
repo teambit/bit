@@ -120,7 +120,13 @@ environments control how components are built, tested, linted, and deployed.`;
       if (!isLoaded) {
         this.nonLoadedEnvs.add(envIdStr);
       }
-      const envWithErr = isLoaded ? envIdStr : `${envIdStr} ${chalk.red('(not loaded)')}`;
+      let envWithErr = isLoaded ? envIdStr : `${envIdStr} ${chalk.red('(not loaded)')}`;
+
+      const envComp = await this.envs.getEnvComponentByEnvId(envId.toString());
+      if (envComp && envComp.isDeleted()) {
+        envWithErr = `${envIdStr} ${chalk.red('(deleted)')}`;
+      }
+
       return {
         component: component.id.toString(),
         env: envWithErr,
