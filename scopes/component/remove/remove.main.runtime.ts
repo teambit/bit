@@ -221,20 +221,17 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
       if (!item.shouldRecover) continue;
 
       if (item.action === 'writeFromScope') {
-        // Case #1a: write from local scope
+        // Case #1a: write from local scope and remove the "removed" config
         const compFromScope = await this.workspace.scope.get(item.bitMapEntry!.id);
         if (compFromScope) {
           await this.workspace.write(compFromScope, item.bitMapEntry!.rootDir);
           this.workspace.bitMap.removeComponentConfig(item.bitMapEntry!.id, RemoveAspect.id, false);
         }
       } else if (item.action === 'deleteConfigAndImport') {
-        // Case #1b: delete config entry (will be handled by import)
+        // Case #1b: delete config entry before import
         delete item.bitMapEntry!.config?.[RemoveAspect.id];
-      } else if (item.action === 'updateConfig') {
-        // Case #4: just update config
-        await this.workspace.addSpecificComponentConfig(item.compId, RemoveAspect.id, { removed: false });
-      } else if (item.action === 'import') {
-        // Cases #2, #3, #5: set removed: false after import
+      } else {
+        // Cases #2, #3, #4, #5: set removed: false
         await this.workspace.addSpecificComponentConfig(item.compId, RemoveAspect.id, { removed: false });
       }
     }
