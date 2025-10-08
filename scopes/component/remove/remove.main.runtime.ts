@@ -305,19 +305,14 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
     }
 
     // Single component - try to resolve it
-    try {
-      const compId = await this.workspace.scope.resolveComponentId(pattern);
-      return [compId];
-    } catch {
-      // Component might not be in scope yet, try bitmap
-      const bitMapEntry = this.workspace.consumer.bitMap.components.find((compMap) => {
-        return compMap.id.fullName === pattern || compMap.id.toStringWithoutVersion() === pattern;
-      });
-      if (bitMapEntry) {
-        return [bitMapEntry.id];
-      }
-      return [];
+    const bitMapEntry = this.workspace.consumer.bitMap.components.find((compMap) => {
+      return compMap.id.fullName === pattern || compMap.id.toStringWithoutVersion() === pattern;
+    });
+    if (bitMapEntry) {
+      return [bitMapEntry.id];
     }
+    const compId = await this.workspace.scope.resolveComponentId(pattern);
+    return [compId];
   }
 
   /**
