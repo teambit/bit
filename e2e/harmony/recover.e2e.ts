@@ -323,7 +323,7 @@ describe('bit recover command', function () {
         helper.command.deleteComponent('comp1');
         helper.command.deleteComponent('comp2');
         helper.command.deleteComponent('comp3');
-        helper.command.recover('comp*');
+        helper.command.recover('**');
         helper.command.link();
       });
       it('bit status should not show removed components', () => {

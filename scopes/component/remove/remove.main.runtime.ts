@@ -196,15 +196,86 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
       return [];
     }
 
-    const recovered: ComponentID[] = [];
+    // Separate components that need importing from those that don't
+    const componentsNeedingImport: string[] = [];
+    const componentsInScope: Array<{ id: ComponentID; bitMapEntry: any }> = [];
+
     for (const compId of componentsToRecover) {
-      const wasRecovered = await this.recoverSingle(compId.toString(), options);
-      if (wasRecovered) {
-        recovered.push(compId);
+      const compIdStr = compId.toString();
+      const bitMapEntry = this.workspace.consumer.bitMap.components.find((compMap) => {
+        return compMap.id.fullName === compIdStr || compMap.id.toStringWithoutVersion() === compIdStr;
+      });
+
+      if (bitMapEntry?.config?.[RemoveAspect.id]) {
+        // Case #1: locally soft-removed
+        const compFromScope = await this.workspace.scope.get(bitMapEntry.id);
+        if (compFromScope) {
+          componentsInScope.push({ id: bitMapEntry.id, bitMapEntry });
+        } else {
+          componentsNeedingImport.push(bitMapEntry.id.toString());
+        }
+      } else {
+        // Cases #2-5: need to check if component needs importing
+        const compIdWithPossibleVer = await this.getComponentIdWithVersion(compId);
+        const compFromScope = await this.workspace.scope.get(compIdWithPossibleVer);
+        if (compFromScope && (await this.isDeleted(compFromScope))) {
+          componentsNeedingImport.push(compIdWithPossibleVer._legacy.toString());
+        } else if (bitMapEntry) {
+          // Case #4: imported and in bitmap but marked as removed
+          const comp = await this.workspace.get(compId);
+          const removeInfo = await this.getRemoveInfo(comp);
+          if (removeInfo.removed || removeInfo.range || removeInfo.snaps) {
+            componentsInScope.push({ id: compId, bitMapEntry: null });
+          }
+        } else {
+          // Case #5: need to import from remote
+          componentsNeedingImport.push(compId._legacy.toString());
+        }
       }
     }
 
-    return recovered;
+    // Import all components at once for better performance
+    if (componentsNeedingImport.length > 0) {
+      await this.importer.import({
+        ids: componentsNeedingImport,
+        installNpmPackages: !options.skipDependencyInstallation,
+        writeConfigFiles: !options.skipWriteConfigFiles,
+        override: true,
+      });
+    }
+
+    // Process components that are in scope (write from scope, update bitmap)
+    for (const { id, bitMapEntry } of componentsInScope) {
+      if (bitMapEntry?.config?.[RemoveAspect.id]) {
+        const compFromScope = await this.workspace.scope.get(id);
+        if (compFromScope) {
+          await this.workspace.write(compFromScope, bitMapEntry.rootDir);
+          this.workspace.bitMap.removeComponentConfig(id, RemoveAspect.id, false);
+        }
+      } else {
+        // Just update the config
+        await this.workspace.addSpecificComponentConfig(id, RemoveAspect.id, { removed: false });
+      }
+    }
+
+    // Set removed: false for all imported components
+    for (const idStr of componentsNeedingImport) {
+      const compId = await this.workspace.scope.resolveComponentId(idStr);
+      await this.workspace.addSpecificComponentConfig(compId, RemoveAspect.id, { removed: false });
+    }
+
+    // Write bitmap once at the end
+    if (componentsInScope.length > 0 || componentsNeedingImport.length > 0) {
+      await this.workspace.bitMap.write('recover');
+    }
+
+    return componentsToRecover;
+  }
+
+  private async getComponentIdWithVersion(compId: ComponentID): Promise<ComponentID> {
+    const currentLane = await this.workspace?.getCurrentLaneObject();
+    const idOnLane = currentLane?.getComponent(compId);
+    return idOnLane ? compId.changeVersion(idOnLane.head.toString()) : compId;
   }
 
   /**
