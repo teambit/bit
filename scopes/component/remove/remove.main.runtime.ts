@@ -196,86 +196,147 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
       return [];
     }
 
-    // Separate components that need importing from those that don't
-    const componentsNeedingImport: string[] = [];
-    const componentsInScope: Array<{ id: ComponentID; bitMapEntry: any }> = [];
+    // Classify components by recovery scenario
+    const componentsToProcess = await Promise.all(
+      componentsToRecover.map((compId) => this.classifyComponentForRecovery(compId.toString()))
+    );
 
-    for (const compId of componentsToRecover) {
-      const compIdStr = compId.toString();
-      const bitMapEntry = this.workspace.consumer.bitMap.components.find((compMap) => {
-        return compMap.id.fullName === compIdStr || compMap.id.toStringWithoutVersion() === compIdStr;
-      });
+    // Collect all components that need importing
+    const idsToImport = componentsToProcess
+      .filter((item) => item.action === 'import' || item.action === 'deleteConfigAndImport')
+      .map((item) => item.idToImport!);
 
-      if (bitMapEntry?.config?.[RemoveAspect.id]) {
-        // Case #1: locally soft-removed
-        const compFromScope = await this.workspace.scope.get(bitMapEntry.id);
-        if (compFromScope) {
-          componentsInScope.push({ id: bitMapEntry.id, bitMapEntry });
-        } else {
-          componentsNeedingImport.push(bitMapEntry.id.toString());
-        }
-      } else {
-        // Cases #2-5: need to check if component needs importing
-        const compIdWithPossibleVer = await this.getComponentIdWithVersion(compId);
-        const compFromScope = await this.workspace.scope.get(compIdWithPossibleVer);
-        if (compFromScope && (await this.isDeleted(compFromScope))) {
-          componentsNeedingImport.push(compIdWithPossibleVer._legacy.toString());
-        } else if (bitMapEntry) {
-          // Case #4: imported and in bitmap but marked as removed
-          const comp = await this.workspace.get(compId);
-          const removeInfo = await this.getRemoveInfo(comp);
-          if (removeInfo.removed || removeInfo.range || removeInfo.snaps) {
-            componentsInScope.push({ id: compId, bitMapEntry: null });
-          }
-        } else {
-          // Case #5: need to import from remote
-          componentsNeedingImport.push(compId._legacy.toString());
-        }
-      }
-    }
-
-    // Import all components at once for better performance
-    if (componentsNeedingImport.length > 0) {
+    // Import all at once for better performance
+    if (idsToImport.length > 0) {
       await this.importer.import({
-        ids: componentsNeedingImport,
+        ids: idsToImport,
         installNpmPackages: !options.skipDependencyInstallation,
         writeConfigFiles: !options.skipWriteConfigFiles,
         override: true,
       });
     }
 
-    // Process components that are in scope (write from scope, update bitmap)
-    for (const { id, bitMapEntry } of componentsInScope) {
-      if (bitMapEntry?.config?.[RemoveAspect.id]) {
-        const compFromScope = await this.workspace.scope.get(id);
+    // Process each component according to its classification
+    for (const item of componentsToProcess) {
+      if (!item.shouldRecover) continue;
+
+      if (item.action === 'writeFromScope') {
+        // Case #1a: write from local scope
+        const compFromScope = await this.workspace.scope.get(item.bitMapEntry!.id);
         if (compFromScope) {
-          await this.workspace.write(compFromScope, bitMapEntry.rootDir);
-          this.workspace.bitMap.removeComponentConfig(id, RemoveAspect.id, false);
+          await this.workspace.write(compFromScope, item.bitMapEntry!.rootDir);
+          this.workspace.bitMap.removeComponentConfig(item.bitMapEntry!.id, RemoveAspect.id, false);
         }
-      } else {
-        // Just update the config
-        await this.workspace.addSpecificComponentConfig(id, RemoveAspect.id, { removed: false });
+      } else if (item.action === 'deleteConfigAndImport') {
+        // Case #1b: delete config entry (will be handled by import)
+        delete item.bitMapEntry!.config?.[RemoveAspect.id];
+      } else if (item.action === 'updateConfig') {
+        // Case #4: just update config
+        await this.workspace.addSpecificComponentConfig(item.compId, RemoveAspect.id, { removed: false });
+      } else if (item.action === 'import') {
+        // Cases #2, #3, #5: set removed: false after import
+        await this.workspace.addSpecificComponentConfig(item.compId, RemoveAspect.id, { removed: false });
       }
     }
 
-    // Set removed: false for all imported components
-    for (const idStr of componentsNeedingImport) {
-      const compId = await this.workspace.scope.resolveComponentId(idStr);
-      await this.workspace.addSpecificComponentConfig(compId, RemoveAspect.id, { removed: false });
-    }
-
     // Write bitmap once at the end
-    if (componentsInScope.length > 0 || componentsNeedingImport.length > 0) {
-      await this.workspace.bitMap.write('recover');
-    }
+    await this.workspace.bitMap.write('recover');
 
-    return componentsToRecover;
+    return componentsToRecover.filter((_, idx) => componentsToProcess[idx].shouldRecover);
   }
 
-  private async getComponentIdWithVersion(compId: ComponentID): Promise<ComponentID> {
-    const currentLane = await this.workspace?.getCurrentLaneObject();
+  /**
+   * Classify a component to determine how it should be recovered.
+   * This implements the 5 different recovery scenarios.
+   */
+  private async classifyComponentForRecovery(compIdStr: string): Promise<{
+    compId: ComponentID;
+    shouldRecover: boolean;
+    action: 'writeFromScope' | 'deleteConfigAndImport' | 'updateConfig' | 'import' | 'none';
+    bitMapEntry?: any;
+    idToImport?: string;
+  }> {
+    if (!this.workspace) throw new ConsumerNotFound();
+
+    const bitMapEntry = this.workspace.consumer.bitMap.components.find((compMap) => {
+      return compMap.id.fullName === compIdStr || compMap.id.toStringWithoutVersion() === compIdStr;
+    });
+
+    // Case #1: Component in .bitmap with "removed" aspect entry
+    if (bitMapEntry?.config?.[RemoveAspect.id]) {
+      const compFromScope = await this.workspace.scope.get(bitMapEntry.id);
+      if (compFromScope) {
+        // Case #1a: exists in local scope - write from there
+        return {
+          compId: bitMapEntry.id,
+          shouldRecover: true,
+          action: 'writeFromScope',
+          bitMapEntry,
+        };
+      }
+      // Case #1b: not in local scope - import it
+      return {
+        compId: bitMapEntry.id,
+        shouldRecover: true,
+        action: 'deleteConfigAndImport',
+        bitMapEntry,
+        idToImport: bitMapEntry.id.toString(),
+      };
+    }
+
+    // Case #4: Component in .bitmap without "removed" aspect entry
+    if (bitMapEntry) {
+      const compId = bitMapEntry.id;
+      const comp = await this.workspace.get(compId);
+      const removeInfo = await this.getRemoveInfo(comp);
+      if (!removeInfo.removed && !removeInfo.range && !removeInfo.snaps) {
+        return { compId, shouldRecover: false, action: 'none' };
+      }
+      return {
+        compId,
+        shouldRecover: true,
+        action: 'updateConfig',
+      };
+    }
+
+    // Cases #2, #3, #5: Component not in .bitmap
+    const compId = await this.workspace.scope.resolveComponentId(compIdStr);
+    const currentLane = await this.workspace.getCurrentLaneObject();
     const idOnLane = currentLane?.getComponent(compId);
-    return idOnLane ? compId.changeVersion(idOnLane.head.toString()) : compId;
+    const compIdWithPossibleVer = idOnLane ? compId.changeVersion(idOnLane.head.toString()) : compId;
+    const compFromScope = await this.workspace.scope.get(compIdWithPossibleVer);
+
+    if (compFromScope && (await this.isDeleted(compFromScope))) {
+      // Cases #2 and #3: soft-removed and snapped/exported
+      return {
+        compId: compIdWithPossibleVer,
+        shouldRecover: true,
+        action: 'import',
+        idToImport: compIdWithPossibleVer._legacy.toString(),
+      };
+    }
+
+    // Case #5: workspace is empty, component on remote
+    let comp: Component | undefined;
+    try {
+      comp = await this.workspace.scope.getRemoteComponent(compId);
+    } catch (err: any) {
+      if (err instanceof NoHeadNoVersion) {
+        throw new BitError(
+          `unable to find the component ${compIdWithPossibleVer.toString()} in the current lane or main`
+        );
+      }
+      throw err;
+    }
+    if (!(await this.isDeleted(comp))) {
+      return { compId, shouldRecover: false, action: 'none' };
+    }
+    return {
+      compId,
+      shouldRecover: true,
+      action: 'import',
+      idToImport: compId._legacy.toString(),
+    };
   }
 
   /**
@@ -313,93 +374,6 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
     }
     const compId = await this.workspace.scope.resolveComponentId(pattern);
     return [compId];
-  }
-
-  /**
-   * recover a single soft-removed component.
-   * there are 5 different scenarios.
-   * 1. a component was just soft-removed, it wasn't snapped yet.  so it's now in .bitmap with the "removed" aspect entry.
-   * 1.a. the component still exists in the local scope. no need to import. write it from there.
-   * 1.b. the component doesn't exist in the local scope. import it.
-   * 2. soft-removed and then snapped. It's not in .bitmap now.
-   * 3. soft-removed, snapped, exported. it's not in .bitmap now.
-   * 4. a soft-removed components was imported, so it's now in .bitmap without the "removed" aspect entry.
-   * 5. workspace is empty. the soft-removed component is on the remote.
-   * returns `true` if it was recovered. `false` if the component wasn't soft-removed, so nothing to recover from.
-   */
-  private async recoverSingle(compIdStr: string, options: RecoverOptions): Promise<boolean> {
-    if (!this.workspace) throw new ConsumerNotFound();
-    const bitMapEntry = this.workspace.consumer.bitMap.components.find((compMap) => {
-      return compMap.id.fullName === compIdStr || compMap.id.toStringWithoutVersion() === compIdStr;
-    });
-    const importComp = async (idStr: string) => {
-      await this.importer.import({
-        ids: [idStr],
-        installNpmPackages: !options.skipDependencyInstallation,
-        writeConfigFiles: !options.skipWriteConfigFiles,
-        override: true,
-      });
-    };
-    const setAsRemovedFalse = async (compId: ComponentID) => {
-      await this.workspace.addSpecificComponentConfig(compId, RemoveAspect.id, { removed: false });
-      await this.workspace.bitMap.write('recover');
-    };
-    if (bitMapEntry) {
-      if (bitMapEntry.config?.[RemoveAspect.id]) {
-        // case #1
-        const compFromScope = await this.workspace.scope.get(bitMapEntry.id);
-        if (compFromScope) {
-          // in the case the component is in the scope, we prefer to write it from the scope rather than import it.
-          // because in some cases the "import" throws an error, e.g. when the component is diverged.
-          await this.workspace.write(compFromScope, bitMapEntry.rootDir);
-          this.workspace.bitMap.removeComponentConfig(bitMapEntry.id, RemoveAspect.id, false);
-          await this.workspace.bitMap.write('recover');
-        } else {
-          delete bitMapEntry.config?.[RemoveAspect.id];
-          await importComp(bitMapEntry.id.toString());
-        }
-        return true;
-      }
-      // case #4
-      const compId = bitMapEntry.id;
-      const comp = await this.workspace.get(compId);
-      const removeInfo = await this.getRemoveInfo(comp);
-      if (!removeInfo.removed && !removeInfo.range && !removeInfo.snaps) {
-        return false;
-      }
-      await setAsRemovedFalse(compId);
-      return true;
-    }
-    const compId = await this.workspace.scope.resolveComponentId(compIdStr);
-    const currentLane = await this.workspace.getCurrentLaneObject();
-    const idOnLane = currentLane?.getComponent(compId);
-    const compIdWithPossibleVer = idOnLane ? compId.changeVersion(idOnLane.head.toString()) : compId;
-    const compFromScope = await this.workspace.scope.get(compIdWithPossibleVer);
-    if (compFromScope && (await this.isDeleted(compFromScope))) {
-      // case #2 and #3
-      await importComp(compIdWithPossibleVer._legacy.toString());
-      await setAsRemovedFalse(compIdWithPossibleVer);
-      return true;
-    }
-    // case #5
-    let comp: Component | undefined;
-    try {
-      comp = await this.workspace.scope.getRemoteComponent(compId);
-    } catch (err: any) {
-      if (err instanceof NoHeadNoVersion) {
-        throw new BitError(
-          `unable to find the component ${compIdWithPossibleVer.toString()} in the current lane or main`
-        );
-      }
-      throw err;
-    }
-    if (!(await this.isDeleted(comp))) {
-      return false;
-    }
-    await importComp(compId._legacy.toString());
-    await setAsRemovedFalse(compId);
-
-    return true;
   }
 
   private async throwForMainComponentWhenOnLane(components: Component[]) {
