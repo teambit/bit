@@ -233,6 +233,7 @@ export class LanesMain {
       versionPerId: ids,
       allowAddingComponentsFromScope: true,
       skipNpmInstall: options?.skipDependencyInstallation,
+      isLane: true,
       lane,
     });
     return results;
@@ -248,6 +249,7 @@ export class LanesMain {
       allowAddingComponentsFromScope: true,
       revert: true,
       skipNpmInstall: options?.skipDependencyInstallation,
+      isLane: true,
       lane,
     });
     return results;
