@@ -1056,7 +1056,7 @@ export class ScopeMain implements ComponentFactory {
 
           // Handle exclusion patterns correctly:
           // For patterns with negation (!) we need different logic than positive patterns
-          const hasNegativePatterns = nonStatePatternsNoVer.some((pattern) => pattern.startsWith('!'));
+          const hasNegativePatterns = nonStatePatternsNoVer.some((p) => p.startsWith('!'));
 
           if (hasNegativePatterns) {
             // For patterns with exclusions, we need to check each ID format individually
