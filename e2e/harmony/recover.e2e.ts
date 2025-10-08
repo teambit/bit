@@ -312,4 +312,63 @@ describe('bit recover command', function () {
       expect(list).to.have.lengthOf(1);
     });
   });
+  describe('recover multiple components using pattern', () => {
+    describe('recover multiple components before snapping', () => {
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(3);
+        helper.command.tagWithoutBuild();
+        helper.command.export();
+
+        helper.command.deleteComponent('comp1');
+        helper.command.deleteComponent('comp2');
+        helper.command.deleteComponent('comp3');
+        helper.command.recover('comp*');
+        helper.command.link();
+      });
+      it('bit status should not show removed components', () => {
+        const status = helper.command.statusJson();
+        expect(status.locallySoftRemoved).to.have.lengthOf(0);
+      });
+      it('bit list should show all components', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(3);
+      });
+    });
+    describe('recover multiple components after snapping', () => {
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(3);
+        helper.command.tagWithoutBuild();
+        helper.command.export();
+
+        helper.command.deleteComponent('comp1');
+        helper.command.deleteComponent('comp2');
+        helper.fs.outputFile('comp3/index.js', '');
+        helper.command.tagAllWithoutBuild();
+        helper.command.recover(`${helper.scopes.remote}/*`);
+      });
+      it('should recover both components', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(3);
+        helper.bitMap.expectToHaveId('comp1');
+        helper.bitMap.expectToHaveId('comp2');
+      });
+      it('bit status should not show the components as remotelySoftRemoved', () => {
+        const status = helper.command.statusJson();
+        expect(status.remotelySoftRemoved).to.have.lengthOf(0);
+      });
+    });
+    describe('recover with pattern when no components match', () => {
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(2);
+        helper.command.tagWithoutBuild();
+        helper.command.export();
+      });
+      it('should throw an error when no soft-deleted components match', () => {
+        expect(() => helper.command.recover('nonexistent*')).to.throw('no soft-deleted components found');
+      });
+    });
+  });
 });

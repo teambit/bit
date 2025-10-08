@@ -184,8 +184,74 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
   }
 
   /**
-   * recover a soft-removed component.
-   * there are 4 different scenarios.
+   * recover soft-removed component(s) matching a pattern.
+   * supports component patterns (e.g., "comp1", "org.scope/*", etc.)
+   * returns array of recovered component IDs
+   */
+  async recover(pattern: string, options: RecoverOptions): Promise<ComponentID[]> {
+    if (!this.workspace) throw new ConsumerNotFound();
+
+    const componentsToRecover = await this.getComponentsToRecover(pattern);
+    if (componentsToRecover.length === 0) {
+      return [];
+    }
+
+    const recovered: ComponentID[] = [];
+    for (const compId of componentsToRecover) {
+      const wasRecovered = await this.recoverSingle(compId.toString(), options);
+      if (wasRecovered) {
+        recovered.push(compId);
+      }
+    }
+
+    return recovered;
+  }
+
+  /**
+   * get all components matching the pattern that are soft-removed and can be recovered
+   */
+  private async getComponentsToRecover(pattern: string): Promise<ComponentID[]> {
+    if (!this.workspace) throw new ConsumerNotFound();
+
+    // Check if pattern contains wildcards
+    if (hasWildcard(pattern)) {
+      // Get all soft-removed components from different sources
+      const locallySoftRemoved = this.workspace.consumer.bitMap.getRemoved();
+      const componentsList = this.workspace.componentList;
+      const remotelySoftRemoved = await componentsList.listRemotelySoftRemoved();
+      const remotelySoftRemovedIds = remotelySoftRemoved.map((c) => c.componentId);
+
+      // Also check components on the current lane that might be soft-removed
+      const removedStaged = await this.getRemovedStaged();
+
+      // Combine all soft-removed components
+      const allSoftRemoved = [...locallySoftRemoved, ...remotelySoftRemovedIds, ...removedStaged];
+
+      // Use the same pattern matching logic as filterIdsFromPoolIdsByPattern
+      const matches = await this.workspace.scope.filterIdsFromPoolIdsByPattern(pattern, allSoftRemoved, false);
+
+      return ComponentIdList.uniqFromArray(matches);
+    }
+
+    // Single component - try to resolve it
+    try {
+      const compId = await this.workspace.scope.resolveComponentId(pattern);
+      return [compId];
+    } catch {
+      // Component might not be in scope yet, try bitmap
+      const bitMapEntry = this.workspace.consumer.bitMap.components.find((compMap) => {
+        return compMap.id.fullName === pattern || compMap.id.toStringWithoutVersion() === pattern;
+      });
+      if (bitMapEntry) {
+        return [bitMapEntry.id];
+      }
+      return [];
+    }
+  }
+
+  /**
+   * recover a single soft-removed component.
+   * there are 5 different scenarios.
    * 1. a component was just soft-removed, it wasn't snapped yet.  so it's now in .bitmap with the "removed" aspect entry.
    * 1.a. the component still exists in the local scope. no need to import. write it from there.
    * 1.b. the component doesn't exist in the local scope. import it.
@@ -195,7 +261,7 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
    * 5. workspace is empty. the soft-removed component is on the remote.
    * returns `true` if it was recovered. `false` if the component wasn't soft-removed, so nothing to recover from.
    */
-  async recover(compIdStr: string, options: RecoverOptions): Promise<boolean> {
+  private async recoverSingle(compIdStr: string, options: RecoverOptions): Promise<boolean> {
     if (!this.workspace) throw new ConsumerNotFound();
     const bitMapEntry = this.workspace.consumer.bitMap.components.find((compMap) => {
       return compMap.id.fullName === compIdStr || compMap.id.toStringWithoutVersion() === compIdStr;
