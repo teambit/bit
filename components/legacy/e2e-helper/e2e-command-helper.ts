@@ -534,6 +534,13 @@ export default class CommandHelper {
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }
+  laneHistory(options = '') {
+    return this.runCmd(`bit lane history ${options}`);
+  }
+  laneHistoryParsed(): Array<Record<string, any>> {
+    const output = this.runCmd('bit lane history --json');
+    return JSON.parse(output);
+  }
   export(options = '') {
     return this.runCmd(`bit export ${options}`);
   }

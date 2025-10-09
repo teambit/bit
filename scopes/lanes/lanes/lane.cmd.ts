@@ -285,7 +285,10 @@ export class CatLaneHistoryCmd implements Command {
   }
 }
 
-export type LaneCheckoutOpts = { skipDependencyInstallation?: boolean };
+export type LaneCheckoutOpts = {
+  skipDependencyInstallation?: boolean;
+  restoreDeletedComponents?: boolean;
+};
 
 export class LaneCheckoutCmd implements Command {
   name = 'checkout <history-id>';
@@ -320,6 +323,7 @@ if you want to fork the lane from a certain point in history, use "lane checkout
   alias = '';
   options = [
     ['x', 'skip-dependency-installation', 'do not install dependencies of the checked out components'],
+    ['', 'restore-deleted-components', 'restore components that were deleted after this history point'],
     ['j', 'json', 'return the revert result in json format'],
   ] as CommandOptions;
   loader = true;
