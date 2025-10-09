@@ -996,14 +996,12 @@ export default class CommandHelper {
     return this.runCmd(`bit init ${options} ${interactiveFlag}`);
   }
 
-  pattern(pattern: string, options?: Record<string, any>) {
-    const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit pattern "${pattern}" ${parsedOpts}`);
+  pattern(pattern: string, flags = ''): string {
+    return this.runCmd(`bit pattern "${pattern}" ${flags}`);
   }
 
-  patternJson(pattern: string, options?: Record<string, any>) {
-    const opts = { ...options, json: true };
-    const result = this.pattern(pattern, opts);
+  patternJson(pattern: string, flags = ''): Record<string, any> {
+    const result = this.runCmd(`bit pattern "${pattern}" --json ${flags}`);
     return JSON.parse(result);
   }
 }

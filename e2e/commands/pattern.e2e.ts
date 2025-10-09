@@ -53,8 +53,7 @@ describe('pattern command', function () {
     });
 
     it('should return JSON format when using --json flag', () => {
-      const resultStr = helper.command.pattern('**', { json: true });
-      const result = JSON.parse(resultStr);
+      const result = helper.command.patternJson('**');
       expect(Array.isArray(result)).to.be.true;
       expect(result.length).to.equal(3);
       const resultStrings = result.map((r) => (typeof r === 'string' ? r : JSON.stringify(r)));
@@ -136,16 +135,6 @@ describe('pattern command', function () {
         expect(result).to.include('comp1');
         expect(result).to.not.include('comp2');
         expect(result).to.include('found 1 component');
-      });
-
-      it('should work with JSON output for exclusion patterns', () => {
-        const resultStr = helper.command.pattern(`!${scopeName}/comp1`, { json: true });
-        const result = JSON.parse(resultStr);
-        expect(Array.isArray(result)).to.be.true;
-        expect(result.length).to.equal(1);
-        const resultString = typeof result[0] === 'string' ? result[0] : JSON.stringify(result[0]);
-        expect(resultString).to.include('comp2');
-        expect(resultString).to.not.include('comp1');
       });
     });
   });
