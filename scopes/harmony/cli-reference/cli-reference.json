@@ -3798,6 +3798,11 @@
             "do not install dependencies of the checked out components"
           ],
           [
+            "",
+            "restore-deleted-components",
+            "restore components that were deleted after this history point"
+          ],
+          [
             "j",
             "json",
             "return the revert result in json format"
