@@ -1050,8 +1050,11 @@ export class ScopeMain implements ComponentFactory {
     const idsToCheck = (id: ComponentID) => [id._legacy.toStringWithoutVersion(), id.toStringWithoutVersion()];
     const [statePatterns, nonStatePatterns] = partition(patterns, (p) => p.startsWith('$') || p.includes(' AND '));
     const nonStatePatternsNoVer = nonStatePatterns.map((p) => p.split('@')[0]); // no need for the version
+    const idsMap: { [id: string]: ComponentID } = Object.fromEntries(
+      ids.map((id) => [id.toStringWithoutVersion(), id])
+    );
     const idsFiltered = nonStatePatternsNoVer.length
-      ? ids.filter((id) => multimatch(idsToCheck(id), nonStatePatternsNoVer).length)
+      ? multimatch(Object.keys(idsMap), nonStatePatternsNoVer).map((idStr) => idsMap[idStr])
       : [];
 
     const idsStateFiltered = await mapSeries(statePatterns, async (statePattern) => {
