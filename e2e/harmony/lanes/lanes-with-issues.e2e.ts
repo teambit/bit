@@ -46,7 +46,7 @@ describe('lanes with various issues', function () {
       envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(3);
-      helper.command.setEnv("'comp1, comp2, comp3'", envId);
+      helper.command.setEnv(`'!${envId}'`, envId);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
