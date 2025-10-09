@@ -1050,20 +1050,11 @@ export class ScopeMain implements ComponentFactory {
     const idsToCheck = (id: ComponentID) => [id._legacy.toStringWithoutVersion(), id.toStringWithoutVersion()];
     const [statePatterns, nonStatePatterns] = partition(patterns, (p) => p.startsWith('$') || p.includes(' AND '));
     const nonStatePatternsNoVer = nonStatePatterns.map((p) => p.split('@')[0]); // no need for the version
+    const idsMap: { [id: string]: ComponentID } = Object.fromEntries(
+      ids.map((id) => [id.toStringWithoutVersion(), id])
+    );
     const idsFiltered = nonStatePatternsNoVer.length
-      ? ids.filter((id) => {
-          const idsArray = idsToCheck(id);
-          // For exclusion patterns, if both formats are provided and one gets excluded,
-          // we should exclude the component even if the other format doesn't match
-          const hasExclusionPatterns = nonStatePatternsNoVer.some((p) => p.startsWith('!'));
-          if (hasExclusionPatterns) {
-            // Run multimatch on each ID format separately
-            // If ALL formats pass the patterns (not excluded), include the component
-            return idsArray.every((idFormat) => multimatch([idFormat], nonStatePatternsNoVer).length > 0);
-          }
-          // For non-exclusion patterns, use the original logic
-          return multimatch(idsArray, nonStatePatternsNoVer).length > 0;
-        })
+      ? multimatch(Object.keys(idsMap), nonStatePatternsNoVer).map((idStr) => idsMap[idStr])
       : [];
 
     const idsStateFiltered = await mapSeries(statePatterns, async (statePattern) => {
