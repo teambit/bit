@@ -138,6 +138,11 @@ describe('lane history with deleted components', function () {
           );
         }
 
+        // Read bitmap before revert to verify comp3 version
+        const bitmapBeforeRevert = helper.bitMap.read();
+        const comp3InBitmapBefore = Object.keys(bitmapBeforeRevert).find((key) => key.includes('comp3'));
+        const comp3VersionInBitmapBefore = bitmapBeforeRevert[comp3InBitmapBefore!].version;
+
         helper.command.runCmd(`bit lane revert ${historyBeforeChanges} --restore-deleted-components`);
 
         // All three components should be in the list
@@ -149,6 +154,13 @@ describe('lane history with deleted components', function () {
         const comp3VersionAfterRevert = comp3!.currentVersion || comp3!.version;
         expect(comp3VersionAfterRevert).to.equal(comp3VersionAfterModification);
         expect(comp3VersionAfterRevert).to.not.equal(comp3VersionBeforeChanges);
+
+        // Verify the version in .bitmap file remains the same
+        const bitmapAfterRevert = helper.bitMap.read();
+        const comp3InBitmapAfter = Object.keys(bitmapAfterRevert).find((key) => key.includes('comp3'));
+        const comp3VersionInBitmapAfter = bitmapAfterRevert[comp3InBitmapAfter!].version;
+        expect(comp3VersionInBitmapAfter).to.equal(comp3VersionInBitmapBefore);
+        expect(comp3VersionInBitmapAfter).to.equal(comp3VersionAfterModification);
 
         // comp1 and comp2 should be restored with their historical versions
         const comp1 = list.find((c) => c.id.includes('comp1'));
