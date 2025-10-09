@@ -198,7 +198,7 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
 
     // Classify components by recovery scenario
     const componentsToProcess = await Promise.all(
-      componentsToRecover.map((compId) => this.classifyComponentForRecovery(compId.toString()))
+      componentsToRecover.map((compId) => this.classifyComponentForRecovery(compId))
     );
 
     // Collect all components that need importing
@@ -246,7 +246,7 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
    * Classify a component to determine how it should be recovered.
    * This implements the 5 different recovery scenarios.
    */
-  private async classifyComponentForRecovery(compIdStr: string): Promise<{
+  private async classifyComponentForRecovery(compId: ComponentID): Promise<{
     compId: ComponentID;
     shouldRecover: boolean;
     action: 'writeFromScope' | 'deleteConfigAndImport' | 'updateConfig' | 'import' | 'none';
@@ -255,9 +255,7 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
   }> {
     if (!this.workspace) throw new ConsumerNotFound();
 
-    const bitMapEntry = this.workspace.consumer.bitMap.components.find((compMap) => {
-      return compMap.id.fullName === compIdStr || compMap.id.toStringWithoutVersion() === compIdStr;
-    });
+    const bitMapEntry = this.workspace.bitMap.getBitmapEntryIfExist(compId, { ignoreVersion: true });
 
     // Case #1: Component in .bitmap with "removed" aspect entry
     if (bitMapEntry?.config?.[RemoveAspect.id]) {
@@ -283,7 +281,6 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
 
     // Case #4: Component in .bitmap without "removed" aspect entry
     if (bitMapEntry) {
-      const compId = bitMapEntry.id;
       const comp = await this.workspace.get(compId);
       const removeInfo = await this.getRemoveInfo(comp);
       if (!removeInfo.removed && !removeInfo.range && !removeInfo.snaps) {
@@ -297,7 +294,6 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
     }
 
     // Cases #2, #3, #5: Component not in .bitmap
-    const compId = await this.workspace.scope.resolveComponentId(compIdStr);
     const currentLane = await this.workspace.getCurrentLaneObject();
     const idOnLane = currentLane?.getComponent(compId);
     const compIdWithPossibleVer = idOnLane ? compId.changeVersion(idOnLane.head.toString()) : compId;
