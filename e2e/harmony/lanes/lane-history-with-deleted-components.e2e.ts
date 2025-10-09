@@ -21,8 +21,7 @@ describe('lane history with deleted components', function () {
       helper.command.exportLane();
 
       // Get the history ID before deletion
-      const historyOutput = helper.command.runCmd('bit lane history --json');
-      const history = JSON.parse(historyOutput);
+      const history = helper.command.laneHistoryParsed();
       if (!history || !history.length) {
         throw new Error('Could not find history in output');
       }
@@ -71,8 +70,7 @@ describe('lane history with deleted components', function () {
         helper.command.exportLane();
 
         // Get the history ID before deletion
-        const historyOutput = helper.command.runCmd('bit lane history --json');
-        const history = JSON.parse(historyOutput);
+        const history = helper.command.laneHistoryParsed();
         if (!history || !history.length) {
           throw new Error('Could not find history in output');
         }
@@ -108,8 +106,7 @@ describe('lane history with deleted components', function () {
         helper.command.exportLane();
 
         // Get the history ID before deletion
-        const historyOutput = helper.command.runCmd('bit lane history --json');
-        const history = JSON.parse(historyOutput);
+        const history = helper.command.laneHistoryParsed();
         if (!history || !history.length) {
           throw new Error('Could not find history in output');
         }
@@ -153,8 +150,7 @@ describe('lane history with deleted components', function () {
         helper.command.exportLane();
 
         // Get the history ID and comp3 version before any changes
-        const historyOutput = helper.command.runCmd('bit lane history --json');
-        const history = JSON.parse(historyOutput);
+        const history = helper.command.laneHistoryParsed();
         historyBeforeChanges = history[history.length - 1].id;
         const listBefore = helper.command.listParsed();
         const comp3Before = listBefore.find((c) => c.id.includes('comp3'));
