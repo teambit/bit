@@ -314,6 +314,7 @@ describe('bit recover command', function () {
   });
   describe('recover multiple components using pattern', () => {
     describe('recover multiple components before snapping', () => {
+      let recoverOutput: string;
       before(() => {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(3);
@@ -323,8 +324,13 @@ describe('bit recover command', function () {
         helper.command.deleteComponent('comp1');
         helper.command.deleteComponent('comp2');
         helper.command.deleteComponent('comp3');
-        helper.command.recover('**');
-        helper.command.link();
+        recoverOutput = helper.command.recover("'**'");
+      });
+      it('should recover all three components', () => {
+        expect(recoverOutput).to.have.string('successfully recovered');
+        expect(recoverOutput).to.have.string('comp1');
+        expect(recoverOutput).to.have.string('comp2');
+        expect(recoverOutput).to.have.string('comp3');
       });
       it('bit status should not show removed components', () => {
         const status = helper.command.statusJson();
