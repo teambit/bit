@@ -154,4 +154,50 @@ import { HttpHelper } from '../http-helper';
       });
     });
   });
+  describe('import with pattern matching for nested namespaces', () => {
+    before(async () => {
+      httpHelper = new HttpHelper(helper);
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      await httpHelper.start();
+      helper.scopeHelper.addRemoteHttpScope();
+
+      // Create components with nested namespace structure
+      // Component directly under examples/
+      helper.fs.outputFile('examples/hello-world/index.js', 'console.log("hello from examples");');
+      helper.command.addComponent('examples/hello-world', { n: 'examples/hello-world' });
+
+      // Component with nested namespace beta/vitest-4/examples/
+      helper.fs.outputFile('beta/vitest-4/examples/hello-world/index.js', 'console.log("hello from beta");');
+      helper.command.addComponent('beta/vitest-4/examples/hello-world', { n: 'beta/vitest-4/examples/hello-world' });
+
+      // Another component in beta but not under examples
+      helper.fs.outputFile('beta/other/component/index.js', 'console.log("other beta component");');
+      helper.command.addComponent('beta/other/component', { n: 'beta/other/component' });
+
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // Reinit workspace to test importing
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteHttpScope();
+    });
+
+    it('should only import components directly under examples/ when using "examples/**" pattern', () => {
+      helper.command.importComponent('examples/**', '-x');
+      const list = helper.command.listParsed();
+      const ids = list.map((c) => c.id);
+
+      // Should only import the component directly under examples/, not nested namespaces
+      expect(list).to.have.lengthOf(1);
+      expect(ids[0]).to.include('examples/hello-world');
+
+      // Should NOT have imported the nested namespace component
+      const idsStr = ids.join(',');
+      expect(idsStr).to.not.include('beta/vitest-4/examples/hello-world');
+    });
+
+    after(() => {
+      httpHelper.killHttp();
+    });
+  });
 });

@@ -41,6 +41,12 @@ export type RelativePath = {
 
 export default class Dependency {
   id: ComponentID;
+  /**
+   * for Harmony components, relativePaths is always an empty array. it's validated at the Version level.
+   * the reasons this is still here are:
+   * 1) for forward compatibility. older versions also validated that this prop exists.
+   * 2) during component loading, this is used to determined whether a component is using relative-paths to other components.
+   */
   relativePaths: RelativePath[];
   packageName?: string;
   versionRange?: string;

@@ -2,10 +2,12 @@ import chai, { expect } from 'chai';
 import chalk from 'chalk';
 import path from 'path';
 import chaiFs from 'chai-fs';
-import { uniq } from 'lodash';
+import lodash from 'lodash';
 import { Extensions } from '@teambit/legacy.constants';
 import { SchemaName } from '@teambit/legacy.consumer-component';
 import { Helper } from '@teambit/legacy.e2e-helper';
+
+const { uniq } = lodash;
 
 chai.use(chaiFs);
 

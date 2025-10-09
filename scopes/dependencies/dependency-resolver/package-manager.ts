@@ -1,6 +1,6 @@
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import type { PeerDependencyRules, ProjectManifest, DependencyManifest } from '@pnpm/types';
-import type { ComponentID, ComponentMap } from '@teambit/component';
+import type { ComponentID, ComponentMap, Component } from '@teambit/component';
 import { type DependenciesGraph } from '@teambit/objects';
 import type { Registries } from '@teambit/pkg.entities.registry';
 import type { DepsFilterFn } from './manifest';
@@ -227,15 +227,20 @@ export interface PackageManager {
 
   findUsages?(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string>;
 
-  calcDependenciesGraph?(options: CalcDepsGraphOptions): Promise<DependenciesGraph | undefined>;
+  calcDependenciesGraph?(options: CalcDepsGraphOptions): Promise<void>;
+}
+
+export interface CalcDepsGraphForComponentOptions {
+  component: Component;
+  componentRootDir?: string;
+  componentRelativeDir: string;
+  pkgName?: string;
 }
 
 export interface CalcDepsGraphOptions {
-  componentRelativeDir: string;
+  components: CalcDepsGraphForComponentOptions[];
   componentIdByPkgName: ComponentIdByPkgName;
   rootDir: string;
-  componentRootDir?: string;
-  pkgName?: string;
 }
 
 export type ComponentIdByPkgName = Map<string, ComponentID>;

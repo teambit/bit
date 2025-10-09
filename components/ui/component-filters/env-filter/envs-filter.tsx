@@ -156,15 +156,16 @@ function envsFilter({ components, className, lanes }: ComponentFilterRenderProps
         onClickOutside={() => setOpen(false)}
         placeholderContent={<EnvsPlaceholder onClick={() => setOpen(!open)} />}
         bottomPlugin={<ButtonsPlugin onClear={onClear} onSubmit={onSubmit} submitClassName={styles.doneButton} />}
-        className={classNames(styles.envFilterDropdown)}
-        dropClass={classNames(styles.envFilterDropdown)}
+        dropClass={styles.envFilterDropdown}
         position="bottom"
       >
-        {selectList.map((option, index) => (
-          <CheckboxItem key={index} checked={option.checked} onInputChanged={(e) => onCheck(option.value, e)}>
-            {option.element}
-          </CheckboxItem>
-        ))}
+        <div className={styles.dropdownContent}>
+          {selectList.map((option, index) => (
+            <CheckboxItem key={index} checked={option.checked} onInputChanged={(e) => onCheck(option.value, e)}>
+              {option.element}
+            </CheckboxItem>
+          ))}
+        </div>
       </Dropdown>
     </div>
   );
