@@ -11,28 +11,34 @@ describe('lane history with deleted components', function () {
     helper.scopeHelper.destroy();
   });
 
+  /**
+   * Sets up a lane with 3 components, then deletes 2 of them.
+   * Returns the history ID from before the deletion.
+   */
+  function setupLaneWithDeletedComponents(): string {
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
+    helper.fixtures.populateComponents(3);
+    helper.command.createLane('dev');
+    helper.command.snapAllComponentsWithoutBuild('-m "add three components"');
+    helper.command.exportLane();
+
+    // Get the history ID before deletion
+    const history = helper.command.laneHistoryParsed();
+    const historyBeforeDelete = history[history.length - 1].id;
+
+    // Delete components using bit delete --lane
+    helper.command.softRemoveOnLane('comp1');
+    helper.command.softRemoveOnLane('comp2');
+    helper.command.snapAllComponentsWithoutBuild('--unmodified -m "delete comp1 and comp2"');
+    helper.command.exportLane();
+
+    return historyBeforeDelete;
+  }
+
   describe('checking out to a point in history before components were deleted using bit delete --lane', () => {
     let historyBeforeDelete: string;
     before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(3);
-      helper.command.createLane('dev');
-      helper.command.snapAllComponentsWithoutBuild('-m "add three components"');
-      helper.command.exportLane();
-
-      // Get the history ID before deletion
-      const history = helper.command.laneHistoryParsed();
-      if (!history || !history.length) {
-        throw new Error('Could not find history in output');
-      }
-      // Get the most recent history item
-      historyBeforeDelete = history[history.length - 1].id;
-
-      // Delete components using bit delete --lane
-      helper.command.softRemoveOnLane('comp1');
-      helper.command.softRemoveOnLane('comp2');
-      helper.command.snapAllComponentsWithoutBuild('--unmodified -m "delete comp1 and comp2"');
-      helper.command.exportLane();
+      historyBeforeDelete = setupLaneWithDeletedComponents();
 
       // Verify components are actually deleted
       const listAfterDelete = helper.command.listParsed();
@@ -63,31 +69,7 @@ describe('lane history with deleted components', function () {
     describe('without --restore-deleted-components flag', () => {
       let historyBeforeDelete: string;
       before(() => {
-        helper.scopeHelper.setWorkspaceWithRemoteScope();
-        helper.fixtures.populateComponents(3);
-        helper.command.createLane('dev');
-        helper.command.snapAllComponentsWithoutBuild('-m "add three components"');
-        helper.command.exportLane();
-
-        // Get the history ID before deletion
-        const history = helper.command.laneHistoryParsed();
-        if (!history || !history.length) {
-          throw new Error('Could not find history in output');
-        }
-        // Get the most recent history item
-        historyBeforeDelete = history[history.length - 1].id;
-
-        // Delete components using bit delete --lane
-        helper.command.softRemoveOnLane('comp1');
-        helper.command.softRemoveOnLane('comp2');
-        helper.command.snapAllComponentsWithoutBuild('--unmodified -m "delete comp1 and comp2"');
-        helper.command.exportLane();
-
-        // Verify components are actually deleted
-        const listAfterDelete = helper.command.listParsed();
-        if (listAfterDelete.length !== 1) {
-          throw new Error(`Expected 1 component after deletion, got ${listAfterDelete.length}`);
-        }
+        historyBeforeDelete = setupLaneWithDeletedComponents();
       });
 
       it('should not throw an error when reverting to a point before deletion', () => {
@@ -99,31 +81,7 @@ describe('lane history with deleted components', function () {
     describe('with --restore-deleted-components flag', () => {
       let historyBeforeDelete: string;
       before(() => {
-        helper.scopeHelper.setWorkspaceWithRemoteScope();
-        helper.fixtures.populateComponents(3);
-        helper.command.createLane('dev');
-        helper.command.snapAllComponentsWithoutBuild('-m "add three components"');
-        helper.command.exportLane();
-
-        // Get the history ID before deletion
-        const history = helper.command.laneHistoryParsed();
-        if (!history || !history.length) {
-          throw new Error('Could not find history in output');
-        }
-        // Get the most recent history item
-        historyBeforeDelete = history[history.length - 1].id;
-
-        // Delete components using bit delete --lane
-        helper.command.softRemoveOnLane('comp1');
-        helper.command.softRemoveOnLane('comp2');
-        helper.command.snapAllComponentsWithoutBuild('--unmodified -m "delete comp1 and comp2"');
-        helper.command.exportLane();
-
-        // Verify components are actually deleted
-        const listAfterDelete = helper.command.listParsed();
-        if (listAfterDelete.length !== 1) {
-          throw new Error(`Expected 1 component after deletion, got ${listAfterDelete.length}`);
-        }
+        historyBeforeDelete = setupLaneWithDeletedComponents();
       });
 
       it('should restore deleted components when using the flag', () => {
