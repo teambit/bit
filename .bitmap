@@ -1437,6 +1437,20 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/scope-api"
     },
+    "scripts": {
+        "name": "scripts",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/scripts",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
+    },
     "sidebar": {
         "name": "sidebar",
         "scope": "teambit.ui-foundation",
