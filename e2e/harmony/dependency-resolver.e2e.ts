@@ -397,6 +397,33 @@ describe('dependency-resolver extension', function () {
       });
     });
   });
+  describe('env.jsonc with policy.peer version="+" and a dependent', () => {
+    before(async () => {
+      helper = new Helper();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.env.setEmptyEnv();
+      helper.fs.outputFile(
+        'empty-env/env.jsonc',
+        `{
+  "policy": {
+    "peers": [
+      {
+        "name": "${helper.general.getPackageNameByCompName('comp2', false)}",
+        "version": "+",
+        "supportedRange": "^0.0.1"
+      }
+    ]
+  }
+}
+`
+      );
+      helper.command.setEnv('comp1', 'empty-env');
+    });
+    it('should not break bit build', () => {
+      expect(() => helper.command.build()).to.not.throw();
+    });
+  });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('env.jsonc with policy.peer version="*"', () => {
     let npmCiRegistry: NpmCiRegistry;
     const examplePkg = '@ci/lodash';

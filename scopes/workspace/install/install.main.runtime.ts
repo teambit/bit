@@ -943,11 +943,43 @@ export class InstallMain {
   private async _getEnvDependencies(envId: ComponentID): Promise<Record<string, string>> {
     const policy = await this.dependencyResolver.getEnvPolicyFromEnvId(envId);
     if (!policy) return {};
-    return Object.fromEntries(
-      policy.selfPolicy.entries
-        .filter(({ force, value }) => force && value.version !== '-')
-        .map(({ dependencyId, value }) => [dependencyId, value.version])
-    );
+    const entries = policy.selfPolicy.entries
+      .filter(({ force, value }) => force && value.version !== '-')
+      .map(({ dependencyId, value }) => {
+        const version = value.version === '+' ? this._resolveEnvPeerDepVersion(dependencyId, envId) : value.version;
+        return [dependencyId, version];
+      });
+    return Object.fromEntries(entries);
+  }
+
+  /**
+   * Resolves the "+" version placeholder for env peer dependencies.
+   * The "+" means: use the version from the workspace (either in .bitmap or workspace.jsonc).
+   * Strategy: check .bitmap first, then workspace.jsonc, then fallback to '*'.
+   */
+  private _resolveEnvPeerDepVersion(pkgName: string, envId: ComponentID): string {
+    // Try to resolve from workspace components (.bitmap)
+    const wsComponents = this.workspace.consumer?.bitMap.getAllBitIdsFromAllLanes();
+    if (wsComponents) {
+      const found = wsComponents.find((id) => {
+        const component = this.workspace.consumer?.bitMap.getComponent(id);
+        return component?.packageName === pkgName;
+      });
+      if (found) {
+        return found.version || '*';
+      }
+    }
+
+    // Try to resolve from workspace.jsonc policy
+    const wsPolicy = this.dependencyResolver.getWorkspacePolicyManifest();
+    const wsVersion = wsPolicy?.dependencies?.[pkgName] || wsPolicy?.peerDependencies?.[pkgName];
+    if (wsVersion && wsVersion !== '+') {
+      return wsVersion;
+    }
+
+    // Fallback to '*' if we can't resolve the version
+    this.logger.warn(`Unable to resolve "+" version for ${pkgName} in env ${envId.toString()}, using '*'`);
+    return '*';
   }
 
   /**
