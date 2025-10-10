@@ -397,6 +397,42 @@ describe('dependency-resolver extension', function () {
       });
     });
   });
+  describe('env.jsonc with policy.peer version="+" and a dependent', () => {
+    before(async () => {
+      helper = new Helper();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.env.setEmptyEnv();
+      helper.fs.outputFile(
+        'empty-env/env.jsonc',
+        `{
+  "policy": {
+    "peers": [
+      {
+        "name": "${helper.general.getPackageNameByCompName('comp2', false)}",
+        "version": "+",
+        "supportedRange": "^0.0.1"
+      }
+    ]
+  }
+}
+`
+      );
+      helper.command.setEnv('comp1', 'empty-env');
+    });
+    it('should not break bit build', () => {
+      expect(() => helper.command.build()).to.not.throw();
+    });
+    it('should resolve the "+" version to the actual component version in the manifest', () => {
+      const capsules = helper.command.capsuleListParsed();
+      const comp1Capsule = capsules.find((c) => c.id.includes('comp1'));
+      expect(comp1Capsule).to.exist;
+      const pkgJson = helper.fs.readJsonFile(`${comp1Capsule!.path}/package.json`);
+      const comp2PkgName = helper.general.getPackageNameByCompName('comp2', false);
+      // The "+" should have been resolved to "0.0.1" (the version of comp2)
+      expect(pkgJson.dependencies[comp2PkgName]).to.equal('0.0.1');
+    });
+  });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('env.jsonc with policy.peer version="*"', () => {
     let npmCiRegistry: NpmCiRegistry;
     const examplePkg = '@ci/lodash';
