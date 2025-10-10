@@ -1434,10 +1434,11 @@ if you want to fork the lane from a certain point in history, use "lane checkout
 | ------------ | :-------------------------------------------------------------------: |
 | `history-id` | the history-id to checkout to. run "bit lane history" to list the ids |
 
-| **Option**                       | **Option alias** | **Description**                                           |
-| -------------------------------- | :--------------: | --------------------------------------------------------- |
-| `--skip-dependency-installation` |       `-x`       | do not install dependencies of the checked out components |
-| `--json`                         |       `-j`       | return the revert result in json format                   |
+| **Option**                       | **Option alias** | **Description**                                               |
+| -------------------------------- | :--------------: | ------------------------------------------------------------- |
+| `--skip-dependency-installation` |       `-x`       | do not install dependencies of the checked out components     |
+| `--restore-deleted-components`   |                  | restore components that were deleted after this history point |
+| `--json`                         |       `-j`       | return the revert result in json format                       |
 
 ### lane merge
 
