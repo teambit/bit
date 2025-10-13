@@ -44,7 +44,7 @@ export type CheckoutProps = {
   reset?: boolean; // remove local changes. if set, the version is undefined.
   revert?: boolean; // change the files according to the given version, but don't change the bitmap version and don't try to merge
   all?: boolean; // checkout all ids
-  isLane?: boolean;
+  isLane?: boolean; // when true, allows components to not exist in the workspace filesystem - they will be loaded from scope.
   lane?: Lane; // currently needed for "bit switch" to tell the "fetch" where to fetch from
   workspaceOnly?: boolean;
   versionPerId?: ComponentID[]; // if given, the ComponentID.version is the version to checkout to.

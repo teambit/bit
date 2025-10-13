@@ -130,7 +130,7 @@ describe('bit diff command', function () {
     describe('running bit diff with multiple ids', () => {
       let output;
       before(() => {
-        output = helper.command.diff('"utils/is-type, utils/is-string"');
+        output = helper.command.diff('"**/utils/is-type, **/utils/is-string"');
       });
       it('should not show diff for non modified components', () => {
         expect(output).to.not.have.string(fixtures.isString);

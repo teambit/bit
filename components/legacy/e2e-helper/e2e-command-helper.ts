@@ -534,6 +534,13 @@ export default class CommandHelper {
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }
+  laneHistory(options = '') {
+    return this.runCmd(`bit lane history ${options}`);
+  }
+  laneHistoryParsed(): Array<Record<string, any>> {
+    const output = this.runCmd('bit lane history --json');
+    return JSON.parse(output);
+  }
   export(options = '') {
     return this.runCmd(`bit export ${options}`);
   }
@@ -994,5 +1001,14 @@ export default class CommandHelper {
   init(options = '', shouldBeInteractive = false) {
     const interactiveFlag = shouldBeInteractive ? '' : '--skip-interactive';
     return this.runCmd(`bit init ${options} ${interactiveFlag}`);
+  }
+
+  pattern(pattern: string, flags = ''): string {
+    return this.runCmd(`bit pattern "${pattern}" ${flags}`);
+  }
+
+  patternJson(pattern: string, flags = ''): Record<string, any> {
+    const result = this.runCmd(`bit pattern "${pattern}" --json ${flags}`);
+    return JSON.parse(result);
   }
 }

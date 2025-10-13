@@ -2276,7 +2276,7 @@
     ]
   },
   {
-    "name": "recover <component-name>",
+    "name": "recover <component-pattern>",
     "alias": "",
     "options": [
       [
@@ -2291,9 +2291,15 @@
       ]
     ],
     "description": "restore soft-deleted components",
-    "extendedDescription": "reverses the soft-deletion of components marked with \"bit delete\", restoring them to their previous state. works for both local and remote soft-deleted components.",
+    "extendedDescription": "reverses the soft-deletion of components marked with \"bit delete\", restoring them to their previous state. works for both local and remote soft-deleted components. supports patterns like \"comp1\", \"org.scope/*\", etc.",
     "group": "collaborate",
-    "private": false
+    "private": false,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
   },
   {
     "name": "checkout <to> [component-pattern]",
@@ -3790,6 +3796,11 @@
             "x",
             "skip-dependency-installation",
             "do not install dependencies of the checked out components"
+          ],
+          [
+            "",
+            "restore-deleted-components",
+            "restore components that were deleted after this history point"
           ],
           [
             "j",
