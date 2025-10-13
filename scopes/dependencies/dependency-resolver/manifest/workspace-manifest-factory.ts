@@ -151,6 +151,7 @@ export class WorkspaceManifestFactory {
       rootPolicy?: WorkspacePolicy;
     }
   ): Promise<ComponentDependenciesMap> {
+    const packageNames = components.map((component) => this.dependencyResolver.getPackageName(component));
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
       let depList = this.dependencyResolver.getDependencies(component, { includeHidden: true });
@@ -210,7 +211,7 @@ export class WorkspaceManifestFactory {
         );
       });
 
-      const defaultPeerDependencies = await this._getDefaultPeerDependencies(component, components);
+      const defaultPeerDependencies = await this._getDefaultPeerDependencies(component, packageNames);
 
       depManifest.dependencies = {
         ...defaultPeerDependencies,
@@ -240,28 +241,24 @@ export class WorkspaceManifestFactory {
 
   private async _getDefaultPeerDependencies(
     component: Component,
-    workspaceComponents: Component[]
+    packageNamesFromWorkspace: string[]
   ): Promise<Record<string, string>> {
     const envPolicy = await this.dependencyResolver.getComponentEnvPolicy(component);
-    const packageNamesFromWorkspace = workspaceComponents.map((comp) => this.dependencyResolver.getPackageName(comp));
     const selfPolicyWithoutLocal = envPolicy.selfPolicy.filter(
       (dep) => !packageNamesFromWorkspace.includes(dep.dependencyId)
     );
+
     const nameVersionTuples = selfPolicyWithoutLocal.toNameVersionTuple();
-    // Resolve "+" version placeholders by looking up the version from workspace components
     const resolved = nameVersionTuples.map(([name, version]) => {
-      if (version === '+') {
-        // Find the component in the workspace by its package name to get its version
-        const foundComponent = workspaceComponents.find(
-          (comp) => this.dependencyResolver.getPackageName(comp) === name
-        );
-        if (foundComponent && foundComponent.id.hasVersion()) {
-          return [name, snapToSemver(foundComponent.id.version as string)];
-        }
-        // If not found or no version, use '*' as fallback
-        return [name, '*'];
+      if (version !== '+') {
+        return [name, version];
       }
-      return [name, version];
+      // Resolve "+" version placeholders by looking up the already resolved version that was set in
+      // apply-overrides.resolveEnvPeerDepVersion()
+      const currentDeps = this.dependencyResolver.getDependencies(component);
+      const found = currentDeps.findByPkgNameOrCompId(name);
+      // If not found, use '*' as fallback
+      return [name, found?.version || '*'];
     });
     return fromPairs(resolved);
   }
