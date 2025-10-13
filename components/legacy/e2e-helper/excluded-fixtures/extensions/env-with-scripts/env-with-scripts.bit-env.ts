@@ -15,10 +15,11 @@ export class EnvWithScripts {
     return Scripts.from({
       'test-script': 'echo hello from script',
       'another-script': 'echo another output',
-      'async-script': async () => {
+      'async-script': async (context) => {
         return new Promise((resolve) => {
           setTimeout(() => {
             console.log('async script executed');
+            console.log(`executed for ${context?.components.length || 0} component(s)`);
             resolve();
           }, 100);
         });

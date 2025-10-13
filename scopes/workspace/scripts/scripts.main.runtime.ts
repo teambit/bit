@@ -15,14 +15,19 @@ import { ScriptsService } from './scripts.service';
 import { ScriptCmd } from './script.cmd';
 import { ScriptNotFound } from './exceptions';
 import type { Scripts } from './scripts';
-import type { ScriptHandler } from './script-definition';
+import type { ScriptHandler, ScriptExecuteContext } from './script-definition';
+
+export interface ScriptsConfig {
+  envs?: string[];
+}
 
 export class ScriptsMain {
   constructor(
     private workspace: Workspace,
     private envs: EnvsMain,
     private logger: Logger,
-    private componentAspect: ComponentMain
+    private componentAspect: ComponentMain,
+    private config: ScriptsConfig
   ) {}
 
   /**
@@ -38,7 +43,18 @@ export class ScriptsMain {
     const componentsByEnv = this.groupComponentsByEnv(components);
     const results: string[] = [];
 
+    // Filter envs based on config
+    const allowedEnvs = this.config.envs || [];
+    if (allowedEnvs.length === 0) {
+      return chalk.yellow('no envs configured in workspace.jsonc under "teambit.workspace/scripts.envs"');
+    }
+
     for (const [envId, envComponents] of Object.entries(componentsByEnv)) {
+      // Skip envs not in the allowed list
+      if (!this.isEnvAllowed(envId, allowedEnvs)) {
+        continue;
+      }
+
       const env = this.envs.getEnvDefinitionByStringId(envId);
       if (!env) continue;
 
@@ -78,7 +94,18 @@ export class ScriptsMain {
 
     results.push(chalk.green('Available scripts:\n'));
 
+    // Filter envs based on config
+    const allowedEnvs = this.config.envs || [];
+    if (allowedEnvs.length === 0) {
+      return chalk.yellow('no envs configured in workspace.jsonc under "teambit.workspace/scripts.envs"');
+    }
+
     for (const [envId, envComponents] of Object.entries(componentsByEnv)) {
+      // Skip envs not in the allowed list
+      if (!this.isEnvAllowed(envId, allowedEnvs)) {
+        continue;
+      }
+
       const env = this.envs.getEnvDefinitionByStringId(envId);
       if (!env) continue;
 
@@ -99,6 +126,16 @@ export class ScriptsMain {
     }
 
     return results.join('\n');
+  }
+
+  /**
+   * Check if an env is allowed to run scripts based on config
+   */
+  private isEnvAllowed(envId: string, allowedEnvs: string[]): boolean {
+    // Match full env ID or just the name part
+    return allowedEnvs.some((allowedEnv) => {
+      return envId === allowedEnv || envId.endsWith(`/${allowedEnv}`);
+    });
   }
 
   private async getComponents(): Promise<Component[]> {
@@ -144,9 +181,13 @@ export class ScriptsMain {
     }
   }
 
-  private async executeFunction(handler: () => void | Promise<void>, _components: Component[]): Promise<string> {
+  private async executeFunction(
+    handler: (context?: ScriptExecuteContext) => void | Promise<void>,
+    components: Component[]
+  ): Promise<string> {
     try {
-      await handler();
+      const context: ScriptExecuteContext = { components };
+      await handler(context);
       return chalk.green('✓ Script function executed successfully');
     } catch (error: any) {
       return chalk.red(`Error executing script function: ${error.message}`);
@@ -159,16 +200,13 @@ export class ScriptsMain {
 
   static runtime = MainRuntime;
 
-  static async provider([cli, workspace, envs, componentAspect, loggerMain]: [
-    CLIMain,
-    Workspace,
-    EnvsMain,
-    ComponentMain,
-    LoggerMain,
-  ]) {
+  static async provider(
+    [cli, workspace, envs, componentAspect, loggerMain]: [CLIMain, Workspace, EnvsMain, ComponentMain, LoggerMain],
+    config: ScriptsConfig
+  ) {
     const logger = loggerMain.createLogger(ScriptsAspect.id);
     const scriptsService = new ScriptsService();
-    const scriptsMain = new ScriptsMain(workspace, envs, logger, componentAspect);
+    const scriptsMain = new ScriptsMain(workspace, envs, logger, componentAspect, config);
 
     // Register service with envs
     envs.registerService(scriptsService);

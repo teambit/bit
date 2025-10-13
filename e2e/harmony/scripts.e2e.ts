@@ -25,6 +25,12 @@ describe('script command', function () {
 
       helper.fixtures.populateComponents(3);
       helper.extensions.addExtensionToVariant('*', envId);
+
+      // Configure scripts to allow this env
+      helper.workspaceJsonc.addKeyVal('teambit.workspace/scripts', {
+        envs: [envId],
+      });
+
       helper.command.compile();
     });
 
@@ -73,6 +79,9 @@ describe('script command', function () {
       it('should show the async script output', () => {
         expect(output).to.have.string('async script executed');
       });
+      it('should show the component count in the context', () => {
+        expect(output).to.have.string('executed for 3 component(s)');
+      });
       it('should show success message', () => {
         expect(output).to.have.string('✓ Script function executed successfully');
       });
@@ -99,7 +108,7 @@ describe('script command', function () {
     });
   });
 
-  describe('environment without scripts', () => {
+  describe('environment without scripts config', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -108,15 +117,14 @@ describe('script command', function () {
       helper.command.compile();
     });
 
-    describe('bit script --list', () => {
+    describe('bit script --list without config', () => {
       let output: string;
       before(() => {
         output = helper.command.runCmd('bit script --list');
       });
-      it('should show available scripts header', () => {
-        expect(output).to.have.string('Available scripts');
+      it('should show config warning', () => {
+        expect(output).to.have.string('no envs configured in workspace.jsonc');
       });
-      // React env doesn't have scripts defined, so no scripts should be listed
     });
   });
 
@@ -135,6 +143,11 @@ describe('script command', function () {
 
       helper.extensions.addExtensionToVariant('comp1', envId);
       helper.extensions.addExtensionToVariant('comp2', envId);
+
+      // Configure scripts to allow this env
+      helper.workspaceJsonc.addKeyVal('teambit.workspace/scripts', {
+        envs: [envId],
+      });
 
       helper.command.compile();
     });
