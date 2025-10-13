@@ -45,27 +45,22 @@ export class ScriptsMain {
    * Run a script for all components
    */
   async runScript(scriptName: string): Promise<string> {
-    const components = await this.getComponents();
-    if (!components.length) {
-      return chalk.yellow('no components found');
-    }
-
-    // Group components by environment
-    const componentsByEnv = this.groupComponentsByEnv(components);
-    const results: string[] = [];
-
     // Filter envs based on config
     const allowedEnvs = this.config.envs || [];
     if (allowedEnvs.length === 0) {
       return this.getConfigErrorMessage();
     }
 
-    for (const [envId, envComponents] of Object.entries(componentsByEnv)) {
-      // Skip envs not in the allowed list
-      if (!this.isEnvAllowed(envId, allowedEnvs)) {
-        continue;
-      }
+    const components = await this.getComponents();
+    if (!components.length) {
+      return chalk.yellow('no components found');
+    }
 
+    // Group components by environment, filtering only configured envs
+    const componentsByEnv = this.groupComponentsByEnv(components, allowedEnvs);
+    const results: string[] = [];
+
+    for (const [envId, envComponents] of Object.entries(componentsByEnv)) {
       const env = this.envs.getEnvDefinitionByStringId(envId);
       if (!env) continue;
 
@@ -95,28 +90,23 @@ export class ScriptsMain {
    * List all available scripts from all environments
    */
   async listAllScripts(): Promise<string> {
-    const components = await this.getComponents();
-    if (!components.length) {
-      return chalk.yellow('no components found');
-    }
-
-    const componentsByEnv = this.groupComponentsByEnv(components);
-    const results: string[] = [];
-
     // Filter envs based on config
     const allowedEnvs = this.config.envs || [];
     if (allowedEnvs.length === 0) {
       return this.getConfigErrorMessage();
     }
 
+    const components = await this.getComponents();
+    if (!components.length) {
+      return chalk.yellow('no components found');
+    }
+
+    // Group components by environment, filtering only configured envs
+    const componentsByEnv = this.groupComponentsByEnv(components, allowedEnvs);
+    const results: string[] = [];
     let foundAnyScripts = false;
 
     for (const [envId, envComponents] of Object.entries(componentsByEnv)) {
-      // Skip envs not in the allowed list
-      if (!this.isEnvAllowed(envId, allowedEnvs)) {
-        continue;
-      }
-
       const env = this.envs.getEnvDefinitionByStringId(envId);
       if (!env) continue;
 
@@ -164,11 +154,23 @@ export class ScriptsMain {
     return host.list();
   }
 
-  private groupComponentsByEnv(components: Component[]): Record<string, Component[]> {
+  private groupComponentsByEnv(components: Component[], allowedEnvs?: string[]): Record<string, Component[]> {
     const grouped = groupBy(components, (component) => {
       const env = this.envs.getOrCalculateEnv(component);
       return env.id;
     });
+
+    // If allowedEnvs is provided, filter out envs not in the list
+    if (allowedEnvs && allowedEnvs.length > 0) {
+      const filtered: Record<string, Component[]> = {};
+      for (const [envId, envComponents] of Object.entries(grouped)) {
+        if (this.isEnvAllowed(envId, allowedEnvs)) {
+          filtered[envId] = envComponents;
+        }
+      }
+      return filtered;
+    }
+
     return grouped;
   }
 
