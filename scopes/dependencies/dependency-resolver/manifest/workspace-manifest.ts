@@ -51,18 +51,13 @@ export class WorkspaceManifest extends Manifest {
         acc[pkgName] = version;
         return acc;
       }
-
-      // Try to resolve from workspace components manifest map
-      const componentManifest = Object.values(this.componentsManifestsMap).find(
-        (manifest) => manifest.packageName === pkgName
-      );
-      if (componentManifest?.version) {
-        acc[pkgName] = componentManifest.version;
-        return acc;
-      }
-
+      const foundVersion =
+        this.dependencies.dependencies?.[pkgName] ||
+        this.dependencies.devDependencies?.[pkgName] ||
+        this.dependencies.peerDependencies?.[pkgName] ||
+        this.dependencies.optionalDependencies?.[pkgName];
       // Fallback to '*' if we can't resolve the version
-      acc[pkgName] = '*';
+      acc[pkgName] = foundVersion || '*';
       return acc;
     }, {});
   }
