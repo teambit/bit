@@ -123,7 +123,9 @@ describe('script command', function () {
         output = helper.command.runCmd('bit script --list');
       });
       it('should show config warning', () => {
-        expect(output).to.have.string('no envs configured in workspace.jsonc');
+        expect(output).to.have.string('no envs configured');
+        expect(output).to.have.string('"teambit.workspace/scripts"');
+        expect(output).to.have.string('"envs"');
       });
     });
   });

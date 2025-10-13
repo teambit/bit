@@ -30,6 +30,17 @@ export class ScriptsMain {
     private config: ScriptsConfig
   ) {}
 
+  private getConfigErrorMessage(): string {
+    return chalk.yellow(
+      'no envs configured. Add to workspace.jsonc:\n' +
+        '{\n' +
+        '  "teambit.workspace/scripts": {\n' +
+        '    "envs": ["your-scope/your-env"]\n' +
+        '  }\n' +
+        '}'
+    );
+  }
+
   /**
    * Run a script for all components
    */
@@ -46,7 +57,7 @@ export class ScriptsMain {
     // Filter envs based on config
     const allowedEnvs = this.config.envs || [];
     if (allowedEnvs.length === 0) {
-      return chalk.yellow('no envs configured in workspace.jsonc under "teambit.workspace/scripts.envs"');
+      return this.getConfigErrorMessage();
     }
 
     for (const [envId, envComponents] of Object.entries(componentsByEnv)) {
@@ -92,13 +103,13 @@ export class ScriptsMain {
     const componentsByEnv = this.groupComponentsByEnv(components);
     const results: string[] = [];
 
-    results.push(chalk.green('Available scripts:\n'));
-
     // Filter envs based on config
     const allowedEnvs = this.config.envs || [];
     if (allowedEnvs.length === 0) {
-      return chalk.yellow('no envs configured in workspace.jsonc under "teambit.workspace/scripts.envs"');
+      return this.getConfigErrorMessage();
     }
+
+    let foundAnyScripts = false;
 
     for (const [envId, envComponents] of Object.entries(componentsByEnv)) {
       // Skip envs not in the allowed list
@@ -114,6 +125,11 @@ export class ScriptsMain {
         continue;
       }
 
+      if (!foundAnyScripts) {
+        results.push(chalk.green('Available scripts:\n'));
+        foundAnyScripts = true;
+      }
+
       results.push(chalk.cyan(`\nEnvironment: ${envId}`));
       results.push(chalk.gray(`  (used by ${envComponents.length} component(s))`));
 
@@ -123,6 +139,10 @@ export class ScriptsMain {
         const handlerStr = typeof handler === 'function' ? chalk.gray('[function]') : chalk.white(handler as string);
         results.push(`  ${chalk.bold(scriptName)}: ${handlerStr}`);
       });
+    }
+
+    if (!foundAnyScripts) {
+      return chalk.yellow('no scripts defined in the configured environments');
     }
 
     return results.join('\n');
