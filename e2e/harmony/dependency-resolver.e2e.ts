@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
+import fs from 'fs-extra';
 import type { Modules } from '@pnpm/modules-yaml';
 import { readModulesManifest } from '@pnpm/modules-yaml';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
@@ -424,13 +425,14 @@ describe('dependency-resolver extension', function () {
       expect(() => helper.command.build()).to.not.throw();
     });
     it('should resolve the "+" version to the actual component version in the manifest', () => {
-      const capsules = helper.command.capsuleListParsed();
-      const comp1Capsule = capsules.find((c) => c.id.includes('comp1'));
-      expect(comp1Capsule).to.exist;
-      const pkgJson = helper.fs.readJsonFile(`${comp1Capsule!.path}/package.json`);
+      const capsulesData = helper.command.capsuleListParsed();
+      const comp1CapsulePath = capsulesData.capsules.find((c: string) => c.includes('comp1'));
+      expect(comp1CapsulePath).to.exist;
+      const pkgJsonPath = path.join(comp1CapsulePath, 'package.json');
+      const pkgJson = fs.readJsonSync(pkgJsonPath);
       const comp2PkgName = helper.general.getPackageNameByCompName('comp2', false);
-      // The "+" should have been resolved to "0.0.1" (the version of comp2)
-      expect(pkgJson.dependencies[comp2PkgName]).to.equal('0.0.1');
+      // The "+" should have been resolved to "^0.0.1" (using the supportedRange with the actual version of comp2)
+      expect(pkgJson.peerDependencies[comp2PkgName]).to.equal('^0.0.1');
     });
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('env.jsonc with policy.peer version="*"', () => {

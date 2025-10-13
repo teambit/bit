@@ -14,13 +14,13 @@ import { compact, mapValues, omit, uniq, intersection, groupBy } from 'lodash';
 import type { ProjectManifest } from '@pnpm/types';
 import type { GenerateResult, GeneratorMain } from '@teambit/generator';
 import { GeneratorAspect } from '@teambit/generator';
-import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import type { ApplicationMain } from '@teambit/application';
 import { ApplicationAspect } from '@teambit/application';
 import type { VariantsMain } from '@teambit/variants';
 import { VariantsAspect } from '@teambit/variants';
 import type { Component } from '@teambit/component';
 import { ComponentID, ComponentMap } from '@teambit/component';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { PackageJsonFile } from '@teambit/component.sources';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
@@ -946,40 +946,9 @@ export class InstallMain {
     const entries = policy.selfPolicy.entries
       .filter(({ force, value }) => force && value.version !== '-')
       .map(({ dependencyId, value }) => {
-        const version = value.version === '+' ? this._resolveEnvPeerDepVersion(dependencyId, envId) : value.version;
-        return [dependencyId, version];
+        return [dependencyId, value.version];
       });
     return Object.fromEntries(entries);
-  }
-
-  /**
-   * Resolves the "+" version placeholder for env peer dependencies.
-   * The "+" means: use the version from the workspace (either in .bitmap or workspace.jsonc).
-   * Strategy: check .bitmap first, then workspace.jsonc, then fallback to '*'.
-   */
-  private _resolveEnvPeerDepVersion(pkgName: string, envId: ComponentID): string {
-    // Try to resolve from workspace components (.bitmap)
-    const wsComponents = this.workspace.consumer?.bitMap.getAllBitIdsFromAllLanes();
-    if (wsComponents) {
-      const found = wsComponents.find((id) => {
-        const component = this.workspace.consumer?.bitMap.getComponent(id);
-        return component?.packageName === pkgName;
-      });
-      if (found) {
-        return found.version || '*';
-      }
-    }
-
-    // Try to resolve from workspace.jsonc policy
-    const wsPolicy = this.dependencyResolver.getWorkspacePolicyManifest();
-    const wsVersion = wsPolicy?.dependencies?.[pkgName] || wsPolicy?.peerDependencies?.[pkgName];
-    if (wsVersion && wsVersion !== '+') {
-      return wsVersion;
-    }
-
-    // Fallback to '*' if we can't resolve the version
-    this.logger.warn(`Unable to resolve "+" version for ${pkgName} in env ${envId.toString()}, using '*'`);
-    return '*';
   }
 
   /**
