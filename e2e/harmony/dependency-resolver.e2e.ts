@@ -421,10 +421,9 @@ describe('dependency-resolver extension', function () {
       );
       helper.command.setEnv('comp1', 'empty-env');
     });
-    it('should not break bit build', () => {
+    it('should not break bit build and should resolve the "+" version to the actual component version in the manifest', () => {
       expect(() => helper.command.build()).to.not.throw();
-    });
-    it('should resolve the "+" version to the actual component version in the manifest', () => {
+
       const capsulesData = helper.command.capsuleListParsed();
       const comp1CapsulePath = capsulesData.capsules.find((c: string) => c.includes('comp1'));
       expect(comp1CapsulePath).to.exist;
