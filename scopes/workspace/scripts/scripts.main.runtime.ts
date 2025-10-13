@@ -140,11 +140,20 @@ export class ScriptsMain {
 
   /**
    * Check if an env is allowed to run scripts based on config
+   * Supports exact match with or without version
    */
   private isEnvAllowed(envId: string, allowedEnvs: string[]): boolean {
-    // Match full env ID or just the name part
     return allowedEnvs.some((allowedEnv) => {
-      return envId === allowedEnv || envId.endsWith(`/${allowedEnv}`);
+      // Exact match (with version): "my-scope/my-env@1.0.0" === "my-scope/my-env@1.0.0"
+      if (envId === allowedEnv) return true;
+
+      // If config has no version, match env without version part
+      // Config: "my-scope/my-env" should match "my-scope/my-env@1.0.0"
+      if (!allowedEnv.includes('@') && envId.startsWith(allowedEnv + '@')) {
+        return true;
+      }
+
+      return false;
     });
   }
 

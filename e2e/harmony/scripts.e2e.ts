@@ -181,4 +181,50 @@ describe('script command', function () {
       });
     });
   });
+
+  describe('env version mismatch', () => {
+    let envId: string;
+    let envIdWithDifferentVersion: string;
+
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+
+      const envName = helper.env.setCustomEnv('env-with-scripts');
+      envId = `${helper.scopes.remote}/${envName}`;
+      // Simulate a different version by tagging
+      envIdWithDifferentVersion = `${envId}@0.0.1`;
+
+      helper.fixtures.populateComponents(2);
+      helper.extensions.addExtensionToVariant('*', envId);
+
+      // Configure scripts to allow specific version only
+      helper.workspaceJsonc.addKeyVal('teambit.workspace/scripts', {
+        envs: [envIdWithDifferentVersion],
+      });
+
+      helper.command.compile();
+    });
+
+    describe('bit script --list with version mismatch', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.runCmd('bit script --list');
+      });
+      it('should not list scripts from env with different version', () => {
+        expect(output).to.have.string('no scripts defined in the configured environments');
+      });
+    });
+
+    describe('bit script test-script with version mismatch', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.runCmd('bit script test-script');
+      });
+      it('should not run scripts', () => {
+        expect(output).to.not.have.string('Running script');
+        expect(output).to.not.have.string('hello from script');
+      });
+    });
+  });
 });
