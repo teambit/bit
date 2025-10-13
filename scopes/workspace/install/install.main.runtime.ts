@@ -14,13 +14,13 @@ import { compact, mapValues, omit, uniq, intersection, groupBy } from 'lodash';
 import type { ProjectManifest } from '@pnpm/types';
 import type { GenerateResult, GeneratorMain } from '@teambit/generator';
 import { GeneratorAspect } from '@teambit/generator';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import type { ApplicationMain } from '@teambit/application';
 import { ApplicationAspect } from '@teambit/application';
 import type { VariantsMain } from '@teambit/variants';
 import { VariantsAspect } from '@teambit/variants';
 import type { Component } from '@teambit/component';
 import { ComponentID, ComponentMap } from '@teambit/component';
-import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { PackageJsonFile } from '@teambit/component.sources';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
@@ -943,12 +943,11 @@ export class InstallMain {
   private async _getEnvDependencies(envId: ComponentID): Promise<Record<string, string>> {
     const policy = await this.dependencyResolver.getEnvPolicyFromEnvId(envId);
     if (!policy) return {};
-    const entries = policy.selfPolicy.entries
-      .filter(({ force, value }) => force && value.version !== '-')
-      .map(({ dependencyId, value }) => {
-        return [dependencyId, value.version];
-      });
-    return Object.fromEntries(entries);
+    return Object.fromEntries(
+      policy.selfPolicy.entries
+        .filter(({ force, value }) => force && value.version !== '-')
+        .map(({ dependencyId, value }) => [dependencyId, value.version])
+    );
   }
 
   /**
