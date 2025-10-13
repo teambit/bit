@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
+import fs from 'fs-extra';
 import type { Modules } from '@pnpm/modules-yaml';
 import { readModulesManifest } from '@pnpm/modules-yaml';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
@@ -395,6 +396,42 @@ describe('dependency-resolver extension', function () {
         helper.command.tagAllComponents('--unmodified');
         validateDepData('0.0.2');
       });
+    });
+  });
+  describe('env.jsonc with policy.peer version="+" and a dependent', () => {
+    before(async () => {
+      helper = new Helper();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.env.setEmptyEnv();
+      helper.fs.outputFile(
+        'empty-env/env.jsonc',
+        `{
+  "policy": {
+    "peers": [
+      {
+        "name": "${helper.general.getPackageNameByCompName('comp2', false)}",
+        "version": "+",
+        "supportedRange": "^0.0.1"
+      }
+    ]
+  }
+}
+`
+      );
+      helper.command.setEnv('comp1', 'empty-env');
+    });
+    it('should not break bit build and should resolve the "+" version to the actual component version in the manifest', () => {
+      expect(() => helper.command.build()).to.not.throw();
+
+      const capsulesData = helper.command.capsuleListParsed();
+      const comp1CapsulePath = capsulesData.capsules.find((c: string) => c.includes('comp1'));
+      expect(comp1CapsulePath).to.exist;
+      const pkgJsonPath = path.join(comp1CapsulePath, 'package.json');
+      const pkgJson = fs.readJsonSync(pkgJsonPath);
+      const comp2PkgName = helper.general.getPackageNameByCompName('comp2', false);
+      // The "+" should have been resolved to "^0.0.1" (using the supportedRange with the actual version of comp2)
+      expect(pkgJson.peerDependencies[comp2PkgName]).to.equal('^0.0.1');
     });
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('env.jsonc with policy.peer version="*"', () => {
