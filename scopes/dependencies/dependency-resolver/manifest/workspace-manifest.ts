@@ -53,9 +53,9 @@ export class WorkspaceManifest extends Manifest {
       }
       const foundVersion =
         this.dependencies.dependencies?.[pkgName] ||
+        this.dependencies.optionalDependencies?.[pkgName] ||
         this.dependencies.devDependencies?.[pkgName] ||
-        this.dependencies.peerDependencies?.[pkgName] ||
-        this.dependencies.optionalDependencies?.[pkgName];
+        this.dependencies.peerDependencies?.[pkgName];
       // Fallback to '*' if we can't resolve the version
       acc[pkgName] = foundVersion || '*';
       return acc;
