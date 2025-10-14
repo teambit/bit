@@ -978,15 +978,21 @@ export class InstallMain {
           (await this.app.listAppsComponents()).map(async (app) => {
             const appPkgName = this.dependencyResolver.getPackageName(app);
             const appManifest = Object.values(manifests).find(({ name }) => name === appPkgName);
-            if (!appManifest) return null;
+            if (!appManifest) {
+              // If the app doesn't have a manifest yet (e.g., not configured in workspace.jsonc),
+              // we still need to create a root manifest for it so its dependencies are installed
+              this.logger.debug(`app ${appPkgName} doesn't have a manifest, creating a basic one for root components`);
+            }
             const envId = await this.envs.calculateEnvId(app);
+            const envDependencies = await this._getEnvDependencies(envId);
+            const appDependencies = appManifest?.dependencies;
             return [
               await this.getRootComponentDirByRootId(this.workspace.rootComponentsPath, app.id),
               {
-                ...omit(appManifest, ['name', 'version']),
+                ...(appManifest ? omit(appManifest, ['name', 'version']) : {}),
                 dependencies: {
-                  ...(await this._getEnvDependencies(envId)),
-                  ...appManifest.dependencies,
+                  ...envDependencies,
+                  ...appDependencies,
                   ...workspaceDeps,
                 },
                 installConfig: {
