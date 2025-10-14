@@ -247,7 +247,20 @@ export class WorkspaceManifestFactory {
     const selfPolicyWithoutLocal = envPolicy.selfPolicy.filter(
       (dep) => !packageNamesFromWorkspace.includes(dep.dependencyId)
     );
-    return fromPairs(selfPolicyWithoutLocal.toNameVersionTuple());
+
+    const nameVersionTuples = selfPolicyWithoutLocal.toNameVersionTuple();
+    const resolved = nameVersionTuples.map(([name, version]) => {
+      if (version !== '+') {
+        return [name, version];
+      }
+      // Resolve "+" version placeholders by looking up the already resolved version that was set in
+      // apply-overrides.resolveEnvPeerDepVersion()
+      const currentDeps = this.dependencyResolver.getDependencies(component);
+      const found = currentDeps.findByPkgNameOrCompId(name);
+      // If not found, use '*' as fallback
+      return [name, found?.version || '*'];
+    });
+    return fromPairs(resolved);
   }
 
   private async updateDependenciesVersions(
