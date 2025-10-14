@@ -75,6 +75,198 @@
     "private": false
   },
   {
+    "name": "show <component-name>",
+    "alias": "",
+    "options": [
+      [
+        "j",
+        "json",
+        "return the component data in json format"
+      ],
+      [
+        "l",
+        "legacy",
+        "use the legacy bit show."
+      ],
+      [
+        "r",
+        "remote",
+        "show data for a remote component"
+      ],
+      [
+        "b",
+        "browser",
+        "open the component page in the browser"
+      ],
+      [
+        "c",
+        "compare",
+        "legacy-only. compare current file system component to its latest tagged version [default=latest]"
+      ]
+    ],
+    "description": "display component metadata, dependencies, and configuration",
+    "extendedDescription": "shows detailed information about a component including its version, dependencies, environment, and other metadata.\nnote: to see file changes made in a specific version, use `bit diff <component> <version> --parent`.",
+    "group": "info-analysis",
+    "private": false,
+    "arguments": [
+      {
+        "name": "component-name",
+        "description": "component name or component id"
+      }
+    ]
+  },
+  {
+    "name": "component-issues",
+    "alias": "",
+    "options": [
+      [
+        "j",
+        "json",
+        "output issues in json format"
+      ]
+    ],
+    "description": "list available component-issues",
+    "extendedDescription": "",
+    "group": "info-analysis",
+    "private": true
+  },
+  {
+    "name": "envs",
+    "alias": "env",
+    "options": [],
+    "description": "show components and their assigned environments",
+    "extendedDescription": "displays a table showing each workspace component and its corresponding environment.\nenvironments control how components are built, tested, linted, and deployed.",
+    "group": "component-config",
+    "private": false,
+    "commands": [
+      {
+        "name": "list",
+        "alias": "",
+        "options": [],
+        "description": "list all envs currently used in the workspace",
+        "extendedDescription": "",
+        "group": "component-config",
+        "private": false
+      },
+      {
+        "name": "get <component-name>",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "services <string>",
+            "show information about the specific services only. for multiple services, separate by a comma and wrap with quotes"
+          ]
+        ],
+        "description": "show config information from a component's env",
+        "extendedDescription": "",
+        "group": "component-config",
+        "private": false,
+        "arguments": [
+          {
+            "name": "component-name",
+            "description": "the 'component name' or 'component id' of the component whose env you'd like to inspect"
+          }
+        ]
+      },
+      {
+        "name": "set <component-pattern> <env>",
+        "options": [],
+        "description": "Assigns one or more components a development environment (env)",
+        "group": "component-config",
+        "arguments": [
+          {
+            "name": "component-pattern",
+            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          },
+          {
+            "name": "env",
+            "description": "the env's component id (include version if not latest, e.g `teambit.community/envs/community-react@1.95.13`)"
+          }
+        ],
+        "examples": [
+          {
+            "cmd": "set ui/button teambit.react/react-env",
+            "description": "configures 'ui/button' to use the latest version of the 'teambit.react/react-env' env"
+          },
+          {
+            "cmd": "set ui/button teambit.community/envs/community-mdx@1.95.16",
+            "description": "configures 'ui/button' to use the 'teambit.community/envs/community-mdx@1.95.16' env"
+          },
+          {
+            "cmd": "set \"*/ui/**\" teambit.react/react-env",
+            "description": "configures all components that have the 'ui' namespace to use the latest version of the teambit.react/react-env env"
+          }
+        ]
+      },
+      {
+        "name": "unset <component-pattern>",
+        "options": [],
+        "description": "un-sets an env from components that were previously set by \"bit env set\" or by a component template",
+        "extendedDescription": "keep in mind that this doesn't remove envs that are set via variants.\nin only removes envs that appear in the .bitmap file, which were previously configured via \"bit env set\".\nthe purpose of this command is to reset previously assigned envs to either allow variants configure the env or use the base node env.\nyou can use a `<pattern>` for multiple component ids, such as `bit env unset \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
+        "group": "component-config",
+        "arguments": [
+          {
+            "name": "component-pattern",
+            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          }
+        ]
+      },
+      {
+        "name": "replace <current-env> <new-env>",
+        "options": [],
+        "description": "replace an existing env with another env for all components using the old env",
+        "group": "component-config",
+        "arguments": [
+          {
+            "name": "current-env",
+            "description": "the component id of the env to be replaced"
+          },
+          {
+            "name": "new-env",
+            "description": "the component id of the new env"
+          }
+        ],
+        "examples": [
+          {
+            "cmd": "replace teambit.harmony/aspect teambit.harmony/node",
+            "description": "components configured to use the 'aspect' env will be configured to use the 'node' env, instead"
+          }
+        ]
+      },
+      {
+        "name": "update [env-id] [pattern]",
+        "options": [],
+        "description": "update a version of an env for all components using that env",
+        "group": "component-config",
+        "arguments": [
+          {
+            "name": "env-id",
+            "description": "the environment id (defaults to all envs). optionally, add a version (id@version), if no version is supplied will use the latest version on the remote."
+          },
+          {
+            "name": "pattern",
+            "description": "the components to update (defaults to all components). component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          }
+        ],
+        "examples": [
+          {
+            "cmd": "envs update",
+            "description": "update all envs for all components in the workspace, to their latest version"
+          },
+          {
+            "cmd": "envs update scope.org/env '**/ui/**'",
+            "description": "update components in the \"ui\" namespace that use scope.org/env to use its latest version"
+          },
+          {
+            "cmd": "envs update scope.org/env@2.0.0",
+            "description": "update all components that use scope.org/env to version 2.0.0 (of this env)."
+          }
+        ]
+      }
+    ]
+  },
+  {
     "name": "config",
     "alias": "",
     "options": [],
@@ -258,198 +450,6 @@
         "extendedDescription": "",
         "group": "collaborate",
         "private": false
-      }
-    ]
-  },
-  {
-    "name": "component-issues",
-    "alias": "",
-    "options": [
-      [
-        "j",
-        "json",
-        "output issues in json format"
-      ]
-    ],
-    "description": "list available component-issues",
-    "extendedDescription": "",
-    "group": "info-analysis",
-    "private": true
-  },
-  {
-    "name": "show <component-name>",
-    "alias": "",
-    "options": [
-      [
-        "j",
-        "json",
-        "return the component data in json format"
-      ],
-      [
-        "l",
-        "legacy",
-        "use the legacy bit show."
-      ],
-      [
-        "r",
-        "remote",
-        "show data for a remote component"
-      ],
-      [
-        "b",
-        "browser",
-        "open the component page in the browser"
-      ],
-      [
-        "c",
-        "compare",
-        "legacy-only. compare current file system component to its latest tagged version [default=latest]"
-      ]
-    ],
-    "description": "display component metadata, dependencies, and configuration",
-    "extendedDescription": "shows detailed information about a component including its version, dependencies, environment, and other metadata.\nnote: to see file changes made in a specific version, use `bit diff <component> <version> --parent`.",
-    "group": "info-analysis",
-    "private": false,
-    "arguments": [
-      {
-        "name": "component-name",
-        "description": "component name or component id"
-      }
-    ]
-  },
-  {
-    "name": "envs",
-    "alias": "env",
-    "options": [],
-    "description": "show components and their assigned environments",
-    "extendedDescription": "displays a table showing each workspace component and its corresponding environment.\nenvironments control how components are built, tested, linted, and deployed.",
-    "group": "component-config",
-    "private": false,
-    "commands": [
-      {
-        "name": "list",
-        "alias": "",
-        "options": [],
-        "description": "list all envs currently used in the workspace",
-        "extendedDescription": "",
-        "group": "component-config",
-        "private": false
-      },
-      {
-        "name": "get <component-name>",
-        "alias": "",
-        "options": [
-          [
-            "",
-            "services <string>",
-            "show information about the specific services only. for multiple services, separate by a comma and wrap with quotes"
-          ]
-        ],
-        "description": "show config information from a component's env",
-        "extendedDescription": "",
-        "group": "component-config",
-        "private": false,
-        "arguments": [
-          {
-            "name": "component-name",
-            "description": "the 'component name' or 'component id' of the component whose env you'd like to inspect"
-          }
-        ]
-      },
-      {
-        "name": "set <component-pattern> <env>",
-        "options": [],
-        "description": "Assigns one or more components a development environment (env)",
-        "group": "component-config",
-        "arguments": [
-          {
-            "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-          },
-          {
-            "name": "env",
-            "description": "the env's component id (include version if not latest, e.g `teambit.community/envs/community-react@1.95.13`)"
-          }
-        ],
-        "examples": [
-          {
-            "cmd": "set ui/button teambit.react/react-env",
-            "description": "configures 'ui/button' to use the latest version of the 'teambit.react/react-env' env"
-          },
-          {
-            "cmd": "set ui/button teambit.community/envs/community-mdx@1.95.16",
-            "description": "configures 'ui/button' to use the 'teambit.community/envs/community-mdx@1.95.16' env"
-          },
-          {
-            "cmd": "set \"*/ui/**\" teambit.react/react-env",
-            "description": "configures all components that have the 'ui' namespace to use the latest version of the teambit.react/react-env env"
-          }
-        ]
-      },
-      {
-        "name": "unset <component-pattern>",
-        "options": [],
-        "description": "un-sets an env from components that were previously set by \"bit env set\" or by a component template",
-        "extendedDescription": "keep in mind that this doesn't remove envs that are set via variants.\nin only removes envs that appear in the .bitmap file, which were previously configured via \"bit env set\".\nthe purpose of this command is to reset previously assigned envs to either allow variants configure the env or use the base node env.\nyou can use a `<pattern>` for multiple component ids, such as `bit env unset \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
-        "group": "component-config",
-        "arguments": [
-          {
-            "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-          }
-        ]
-      },
-      {
-        "name": "replace <current-env> <new-env>",
-        "options": [],
-        "description": "replace an existing env with another env for all components using the old env",
-        "group": "component-config",
-        "arguments": [
-          {
-            "name": "current-env",
-            "description": "the component id of the env to be replaced"
-          },
-          {
-            "name": "new-env",
-            "description": "the component id of the new env"
-          }
-        ],
-        "examples": [
-          {
-            "cmd": "replace teambit.harmony/aspect teambit.harmony/node",
-            "description": "components configured to use the 'aspect' env will be configured to use the 'node' env, instead"
-          }
-        ]
-      },
-      {
-        "name": "update [env-id] [pattern]",
-        "options": [],
-        "description": "update a version of an env for all components using that env",
-        "group": "component-config",
-        "arguments": [
-          {
-            "name": "env-id",
-            "description": "the environment id (defaults to all envs). optionally, add a version (id@version), if no version is supplied will use the latest version on the remote."
-          },
-          {
-            "name": "pattern",
-            "description": "the components to update (defaults to all components). component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-          }
-        ],
-        "examples": [
-          {
-            "cmd": "envs update",
-            "description": "update all envs for all components in the workspace, to their latest version"
-          },
-          {
-            "cmd": "envs update scope.org/env '**/ui/**'",
-            "description": "update components in the \"ui\" namespace that use scope.org/env to use its latest version"
-          },
-          {
-            "cmd": "envs update scope.org/env@2.0.0",
-            "description": "update all components that use scope.org/env to version 2.0.0 (of this env)."
-          }
-        ]
       }
     ]
   },
@@ -1015,6 +1015,27 @@
         "extendedDescription": "",
         "group": "ungrouped",
         "private": false
+      }
+    ]
+  },
+  {
+    "name": "script [script-name]",
+    "alias": "",
+    "options": [
+      [
+        "l",
+        "list",
+        "list all available scripts from all environments"
+      ]
+    ],
+    "description": "run a script defined by the environment",
+    "extendedDescription": "executes custom scripts defined by component environments.\nscripts can be shell commands or JavaScript functions defined in env.scripts().\nruns the script for all components grouped by their environment.\nuse --list to see all available scripts.",
+    "group": "development",
+    "private": false,
+    "arguments": [
+      {
+        "name": "script-name",
+        "description": "the name of the script to run (e.g., \"generate-svg\", \"pre-snap\")"
       }
     ]
   },
