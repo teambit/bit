@@ -80,7 +80,21 @@ export const REPO_NAME = 'teambit/bit';
 
 export const DEFAULT_INDEX_NAME = 'index';
 
-export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'cjs', 'mjs', 'mts', 'cts', 'css', 'scss', 'less', 'sass'];
+export const DEFAULT_INDEX_EXTS = [
+  'js',
+  'ts',
+  'jsx',
+  'tsx',
+  'cjs',
+  'mjs',
+  'mts',
+  'cts',
+  'css',
+  'scss',
+  'less',
+  'sass',
+  'astro',
+];
 
 export const SUPPORTED_EXTENSIONS = [
   '.js',
@@ -97,6 +111,7 @@ export const SUPPORTED_EXTENSIONS = [
   '.mjs',
   '.mts',
   '.cts',
+  '.astro',
 ];
 
 export const NO_PLUGIN_TYPE = 'none';
