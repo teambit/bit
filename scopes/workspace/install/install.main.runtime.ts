@@ -386,6 +386,8 @@ export class InstallMain {
       dependenciesGraph: options?.dependenciesGraph,
       includeOptionalDeps: options?.includeOptionalDeps,
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
+      onlyBuiltDependencies: this.dependencyResolver.config.onlyBuiltDependencies,
+      ignoredBuiltDependencies: this.dependencyResolver.config.ignoredBuiltDependencies,
       overrides: this.dependencyResolver.config.overrides,
       hoistPatterns: this.dependencyResolver.config.hoistPatterns,
       hoistInjectedDependencies: this.dependencyResolver.config.hoistInjectedDependencies,

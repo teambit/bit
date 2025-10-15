@@ -70,6 +70,10 @@ export type PackageManagerInstallOptions = {
 
   neverBuiltDependencies?: string[];
 
+  onlyBuiltDependencies?: string[];
+
+  ignoredBuiltDependencies?: string[];
+
   preferOffline?: boolean;
 
   nmSelfReferences?: boolean;
