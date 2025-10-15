@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { FetchMissingHistory } from '@teambit/scope.remote-actions';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit lane multiple scopes', function () {
   this.timeout(0);

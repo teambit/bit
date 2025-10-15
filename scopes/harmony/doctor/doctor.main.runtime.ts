@@ -239,7 +239,8 @@ export class DoctorMain {
       return false;
     };
 
-    const myPack = tarFS.pack('.', {
+    const workspaceRoot = consumerInfo?.path || '.';
+    const myPack = tarFS.pack(workspaceRoot, {
       ignore,
       finalize: false,
       finish: packExamineResults,

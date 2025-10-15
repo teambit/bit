@@ -122,6 +122,11 @@ export class CapsuleListCmd implements Command {
   ) {}
 
   async report() {
+    if (!this.workspace && !this.scope) {
+      throw new Error(`This command requires a Bit workspace or scope.
+To initialize a workspace: bit init`);
+    }
+
     const { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir, scopeCapsulesRootDir } = this.getCapsulesRootDirs();
     const listWs = workspaceCapsulesRootDir ? await this.isolator.list(workspaceCapsulesRootDir) : undefined;
     const listScope = await this.isolator.list(scopeAspectsCapsulesRootDir);
@@ -148,6 +153,11 @@ export class CapsuleListCmd implements Command {
   }
 
   async json() {
+    if (!this.workspace && !this.scope) {
+      throw new Error(`This command requires a Bit workspace or scope.
+To initialize a workspace: bit init`);
+    }
+
     const rootDirs = this.getCapsulesRootDirs();
     const listWs = rootDirs.workspaceCapsulesRootDir
       ? await this.isolator.list(rootDirs.workspaceCapsulesRootDir)
@@ -197,11 +207,10 @@ export class CapsuleDeleteCmd implements Command {
 
 export class CapsuleCmd implements Command {
   name = 'capsule';
-  description = 'manage capsules';
-  extendedDescription = `a capsule is a directory containing the component code, isolated from the workspace.
-normally, capsules are created during the build process, the component files are copied and the packages are installed
-via the configured package-manager. the purpose is to compile/test them in isolation to make sure they will work for
-other users after publishing/exporting them.`;
+  description = 'manage isolated component environments';
+  extendedDescription = `capsules are temporary isolated directories containing component code and dependencies.
+automatically created during build processes to compile and test components in isolation.
+ensures components work independently before publishing, similar to how they'll be consumed.`;
   alias = '';
   group = 'advanced';
   commands: Command[] = [];

@@ -2,8 +2,8 @@ import chai, { expect } from 'chai';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { specFilePassingFixture, specFileFailingFixture, specFileErroringFixture } from './jest-fixtures';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('Jest Tester', function () {
   this.timeout(0);

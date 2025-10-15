@@ -22,9 +22,10 @@ type AddResults = {
 
 export class AddCmd implements Command {
   name = 'add [path...]';
-  description = 'track one or more directories as new components';
+  description = 'track existing directory contents as new components in the workspace';
   group = 'component-development';
-  extendedDescription = 'Learn the recommended workflow for tracking directories as components, in the link below.';
+  extendedDescription =
+    'Registers one or more directories as Bit components without changing your files. Each provided path becomes a component root tracked by Bit.';
   helpUrl = 'reference/workspace/component-directory';
   alias = 'a';
   options = [

@@ -95,7 +95,6 @@ export class CliMcpServerMain {
     return this._http;
   }
 
-
   private async getBitServerPort(cwd: string, skipValidatePortFlag = false): Promise<number | undefined> {
     try {
       const args = ['cli-server-port'];
@@ -1355,6 +1354,25 @@ export class CliMcpServerMain {
           args = [commandParts[1], ...args];
         }
 
+        // Check for lane commands that modify workspace state and require direct user interaction
+        if (command === 'lane') {
+          const subcommand = args[0];
+          if (subcommand === 'switch' || subcommand === 'merge') {
+            return this.formatAsCallToolResult(
+              `Error: The "lane ${subcommand}" command is not available through the MCP server. ` +
+                `This workspace-modifying operation must be run directly in the terminal where the user has full visibility and control.`
+            );
+          }
+        }
+
+        // Also check for the shorthand 'switch' command (which is an alias for 'lane switch')
+        if (command === 'switch') {
+          return this.formatAsCallToolResult(
+            `Error: The "switch" command (alias for "lane switch") is not available through the MCP server. ` +
+              `This workspace-modifying operation must be run directly in the terminal where the user has full visibility and control.`
+          );
+        }
+
         this.logger.debug(
           `[MCP-DEBUG] Executing command: ${command} with args: ${JSON.stringify(args)} and flags: ${JSON.stringify(flags)}`
         );
@@ -1534,6 +1552,27 @@ export class CliMcpServerMain {
 
   async getRulesContent(consumerProject: boolean = false, forceStandard: boolean = false): Promise<string> {
     return McpConfigWriter.getDefaultRulesContent(consumerProject, process.cwd(), forceStandard);
+  }
+
+  /**
+   * Get the path to the rules file based on editor type and scope
+   */
+  getRulesFilePath(editor: string, isGlobal: boolean, workspaceDir?: string): string {
+    const editorLower = editor.toLowerCase();
+
+    if (editorLower === 'vscode') {
+      return McpConfigWriter.getVSCodePromptsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'cursor') {
+      return McpConfigWriter.getCursorPromptsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'roo') {
+      return McpConfigWriter.getRooCodePromptsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'cline') {
+      return McpConfigWriter.getClinePromptsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'claude-code') {
+      return McpConfigWriter.getClaudeCodePromptsPath(isGlobal, workspaceDir);
+    }
+
+    throw new Error(`Editor "${editor}" is not supported yet for rules files.`);
   }
 
   static slots = [];

@@ -1,6 +1,5 @@
 // eslint-disable-next-line max-classes-per-file
 import chalk from 'chalk';
-import yn from 'yn';
 import type { ScopeMain } from '@teambit/scope';
 import type { LaneId } from '@teambit/lane-id';
 import { DEFAULT_LANE } from '@teambit/lane-id';
@@ -11,7 +10,7 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import type { LaneData } from '@teambit/legacy.scope';
 import { serializeLaneData } from '@teambit/legacy.scope';
 import { BitError } from '@teambit/bit-error';
-import { approveOperation } from '@teambit/legacy.cli.prompts';
+import yesno from 'yesno';
 import { COMPONENT_PATTERN_HELP, DEFAULT_CLOUD_DOMAIN } from '@teambit/legacy.constants';
 import type { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
 import type { SwitchCmd } from './switch.cmd';
@@ -286,7 +285,10 @@ export class CatLaneHistoryCmd implements Command {
   }
 }
 
-export type LaneCheckoutOpts = { skipDependencyInstallation?: boolean };
+export type LaneCheckoutOpts = {
+  skipDependencyInstallation?: boolean;
+  restoreDeletedComponents?: boolean;
+};
 
 export class LaneCheckoutCmd implements Command {
   name = 'checkout <history-id>';
@@ -321,6 +323,7 @@ if you want to fork the lane from a certain point in history, use "lane checkout
   alias = '';
   options = [
     ['x', 'skip-dependency-installation', 'do not install dependencies of the checked out components'],
+    ['', 'restore-deleted-components', 'restore components that were deleted after this history point'],
     ['j', 'json', 'return the revert result in json format'],
   ] as CommandOptions;
   loader = true;
@@ -563,9 +566,11 @@ export class LaneRemoveCmd implements Command {
     }
   ): Promise<string> {
     if (!silent) {
-      const removePromptResult = await approveOperation();
-      // @ts-ignore
-      if (!yn(removePromptResult.shouldProceed)) {
+      this.lanes.logger.clearStatusLine(); // stop the logger to avoid polluting the prompt
+      const shouldProceed = await yesno({
+        question: 'Are you sure you would like to proceed with this operation? [yes(y)/no(n)]',
+      });
+      if (!shouldProceed) {
         throw new BitError('the operation has been cancelled');
       }
     }
@@ -674,7 +679,10 @@ export class LaneFetchCmd implements Command {
 
 export class LaneCmd implements Command {
   name = 'lane [sub-command]';
-  description = 'manage lanes - if no sub-command is used, runs "bit lane list"';
+  description = 'manage lanes for parallel development';
+  extendedDescription = `lanes allow isolated development of features without affecting main branch components.
+create, switch between, and merge lanes to coordinate parallel work across teams.
+without a sub-command, lists all available lanes.`;
   alias = 'l';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],

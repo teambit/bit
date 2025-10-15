@@ -586,8 +586,10 @@ export class DependencyResolverMain {
   }
 
   async addDependenciesGraph(
-    component: Component,
-    componentRelativeDir: string,
+    components: Array<{
+      component: Component,
+      componentRelativeDir: string,
+    }>,
     options: {
       rootDir: string;
       rootComponentsPath?: string;
@@ -595,8 +597,8 @@ export class DependencyResolverMain {
     }
   ): Promise<void> {
     try {
-      component.state._consumer.dependenciesGraph = await this.getPackageManager()?.calcDependenciesGraph?.({
-        rootDir: options.rootDir,
+      const componentsForCalc = components.map(({ component, componentRelativeDir }) => ({
+        component,
         componentRootDir: options.rootComponentsPath
           ? this.getComponentDirInBitRoots(component, {
               workspacePath: options.rootDir,
@@ -605,6 +607,10 @@ export class DependencyResolverMain {
           : undefined,
         pkgName: this.getPackageName(component),
         componentRelativeDir,
+      }))
+      await this.getPackageManager()?.calcDependenciesGraph?.({
+        components: componentsForCalc,
+        rootDir: options.rootDir,
         componentIdByPkgName: options.componentIdByPkgName,
       });
     } catch (err) {
@@ -651,6 +657,8 @@ export class DependencyResolverMain {
       this.config.peerDependencyRules,
       this.config.neverBuiltDependencies,
       this.config.preferOffline,
+      this.config.minimumReleaseAge,
+      this.config.minimumReleaseAgeExclude,
       options.installingContext
     );
   }
@@ -1370,8 +1378,7 @@ export class DependencyResolverMain {
     const allowedPrefixes = ['https://', 'git:', 'git+ssh://', 'git+https://'];
     let errorMsg: undefined | string;
     data.dependencies?.forEach((dep) => {
-      const isVersionValid = Boolean(semver.valid(dep.version) || semver.validRange(dep.version));
-      if (isVersionValid) return;
+      if (this.isValidVersionSpecifier(dep.version)) return;
       if (dep.__type === COMPONENT_DEP_TYPE && isSnap(dep.version)) return;
       if (allowedPrefixes.some((prefix) => dep.version.startsWith(prefix))) return; // some packages are installed from https/git
       errorMsg = `${errorPrefix} the dependency version "${dep.version}" of ${dep.id} is not a valid semver version or range`;
@@ -1409,13 +1416,15 @@ as an alternative, you can use "+" to keep the same version installed in the wor
    * - direct URL specifiers to the public npm registry.
    *   E.g.: https://registry.npmjs.org/is-odd/-/is-odd-0.1.0.tgz)
    */
-  isValidVersionSpecifier (spec: string): boolean {
-    return parseBareSpecifier(
-      spec,
-      'pkgname', // This argument is the package but we don't need it
-      'latest',
-      'https://registry.npmjs.org/'
-    ) != null;
+  isValidVersionSpecifier(spec: string): boolean {
+    return (
+      parseBareSpecifier(
+        spec,
+        'pkgname', // This argument is the package but we don't need it
+        'latest',
+        'https://registry.npmjs.org/'
+      ) != null
+    );
   }
 
   /**

@@ -99,6 +99,14 @@ export type NetworkConfig = {
   cert?: string | string[];
   key?: string;
   userAgent?: string;
+  /**
+   * Warning messages are displayed when requests exceed the specified time threshold.
+   */
+  fetchMinSpeedKiBps?: number;
+  /**
+   * Warning messages are displayed when requests fall below speed minimum.
+   */
+  fetchWarnTimeoutMs?: number;
 };
 
 type Agent = HttpsProxyAgent | HttpAgent | HttpAgent.HttpsAgent | HttpProxyAgent | SocksProxyAgent | undefined;

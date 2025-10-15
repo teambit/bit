@@ -42,7 +42,10 @@ export type JsonLintResults = {
 
 export class LintCmd implements Command {
   name = 'lint [component-pattern]';
-  description = 'lint components in the development workspace';
+  description = 'analyze component code for issues and style violations';
+  extendedDescription = `runs linters configured by each component's environment (ESLint, etc.) to check for code quality issues.
+by default lints all components. use --changed to lint only new and modified components.
+supports automatic fixing of certain issues with --fix flag.`;
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   helpUrl = 'reference/linting/linter-overview';
   group = 'testing';

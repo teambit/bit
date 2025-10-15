@@ -1,11 +1,12 @@
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import path from 'path';
+import chaiString from 'chai-string';
 
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('multiple compilers - babel and typescript', function () {
   this.timeout(0);

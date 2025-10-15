@@ -1,6 +1,8 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
 import { loadBit } from '@teambit/bit';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
@@ -9,8 +11,8 @@ import { BuilderAspect } from '@teambit/builder';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import { specFileFailingFixture } from './jest-fixtures';
 
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('build command', function () {
   this.timeout(0);
@@ -264,6 +266,50 @@ describe('build command', function () {
       expect(output).to.not.have.string('comp1');
 
       expect(output).to.have.string('Total 1 components to build');
+    });
+  });
+
+  describe('build with --unmodified flag and component pattern', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      // Create 2 independent components (not related to each other)
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile('comp2/index.js', 'module.exports = function comp2() { return "comp2"; }');
+      helper.command.add('comp2');
+      helper.command.tagAllWithoutBuild();
+    });
+    it('should only build the specified component when using --unmodified with a component pattern', () => {
+      const output = helper.command.build('comp1 --unmodified');
+
+      // Should include comp1 since it was specified
+      expect(output).to.have.string('comp1');
+
+      // Should NOT include comp2, even with --unmodified flag
+      expect(output).to.not.have.string('comp2');
+
+      expect(output).to.have.string('Total 1 components to build');
+    });
+    it('should build both components when using --unmodified without a pattern', () => {
+      const output = helper.command.build('--unmodified');
+
+      // Should include both components
+      expect(output).to.have.string('comp1');
+      expect(output).to.have.string('comp2');
+
+      expect(output).to.have.string('Total 2 components to build');
+    });
+  });
+
+  describe('build with invalid --tasks flag', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+    });
+    it('should throw an error when --tasks does not match any available tasks', () => {
+      const output = helper.general.runWithTryCatch('bit build --tasks non-existent-task');
+      expect(output).to.have.string('Pipeline error - no tasks found matching the specified filter');
+      expect(output).to.have.string('non-existent-task');
+      expect(output).to.have.string('Available tasks:');
     });
   });
 });

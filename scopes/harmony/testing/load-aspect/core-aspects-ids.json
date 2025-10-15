@@ -10,6 +10,7 @@
   "teambit.compilation/compiler",
   "teambit.defender/linter",
   "teambit.defender/formatter",
+  "teambit.defender/validator",
   "teambit.component/component",
   "teambit.mdx/mdx",
   "teambit.mdx/readme",
@@ -104,6 +105,7 @@
   "teambit.harmony/config-store",
   "teambit.mcp/cli-mcp-server",
   "teambit.git/ci",
+  "teambit.workspace/scripts",
   "teambit.harmony/bit",
   "teambit.harmony/config"
 ]

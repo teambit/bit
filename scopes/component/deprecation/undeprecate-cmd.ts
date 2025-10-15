@@ -5,7 +5,8 @@ import type { DeprecationMain } from './deprecation.main.runtime';
 export class UndeprecateCmd implements Command {
   name = 'undeprecate <id>';
   group = 'collaborate';
-  description = 'undeprecate a deprecated component (local/remote)';
+  description = 'remove the deprecation status from a component';
+  extendedDescription = 'reverses the deprecation of a component, removing warnings and allowing normal use again.';
   alias = '';
   options = [] as CommandOptions;
   loader = true;

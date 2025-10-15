@@ -1,7 +1,8 @@
 import chai, { expect } from 'chai';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 const MAIN_ASPECT_PROVIDER_TEXT = 'main aspect provider';
 

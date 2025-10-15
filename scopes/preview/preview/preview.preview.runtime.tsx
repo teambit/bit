@@ -7,7 +7,6 @@ import { ComponentID } from '@teambit/component-id';
 // which is crucial in this context as preview operates from the frontend where proxy and CA cert handling are not required
 // Reverting to cross-fetch restores correct handling of relative URLs, ensuring that previews render correctly
 import crossFetch from 'cross-fetch';
-import memoize from 'memoizee';
 import { debounce, intersection, isObject } from 'lodash';
 
 import { PreviewNotFound } from './exceptions';
@@ -17,6 +16,7 @@ import { ClickInsideAnIframeEvent } from './events';
 import type { ModuleFile, PreviewModule } from './types/preview-module';
 import { RenderingContext } from './rendering-context';
 import { fetchComponentAspects } from './gql/fetch-component-aspects';
+import { LRUCache } from 'lru-cache';
 import { PREVIEW_MODULES } from './preview-modules';
 import { loadScript, loadLink } from './html-utils';
 import { SizeEvent } from './size-event';
@@ -308,10 +308,22 @@ export class PreviewPreview {
     return componentPreview as Record<string, ModuleFile[]>;
   }
 
-  private getComponentAspects = memoize(fetchComponentAspects, {
+  // Use LRU cache directly with TTL for component aspects
+  private componentAspectsCache = new LRUCache<string, any>({
     max: 100,
-    maxAge: 12 * 60 * 60 * 1000,
+    ttl: 12 * 60 * 60 * 1000, // 12 hours
   });
+
+  private getComponentAspects = async (componentId: string) => {
+    const cached = this.componentAspectsCache.get(componentId);
+    if (cached) {
+      return cached;
+    }
+
+    const result = await fetchComponentAspects(componentId);
+    this.componentAspectsCache.set(componentId, result);
+    return result;
+  };
 
   /**
    * register a new preview.

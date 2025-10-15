@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import { difference } from 'lodash';
+import * as _ from 'lodash';
 
 const MAX_FILES_READ = 1050;
 const MAX_FILES_READ_STATUS = 1500;
@@ -82,7 +82,9 @@ describe('Filesystem read count', function () {
         const isCI = process.env.CI || process.env.CIRCLECI;
         const maxTimeInSeconds = isCI ? 3 : 2;
         // On Mac M1, as of 2025/03/03, it takes 500ms.
-        console.log(`bit status load time in milliseconds: ${Math.floor(timeInMs)} (max allowed: ${maxTimeInSeconds}s)`);
+        console.log(
+          `bit status load time in milliseconds: ${Math.floor(timeInMs)} (max allowed: ${maxTimeInSeconds}s)`
+        );
         expect(timeInSeconds).to.be.lessThan(maxTimeInSeconds);
       });
     });
@@ -113,11 +115,11 @@ function printDiffFromLastSnapshot(cmdOutput: string) {
   const fromLastSnapshotLines = fromLastSnapshot.split('\n');
   const { linesFromBitInstallation, otherLines } = getLinesFromBitInstallation(cmdOutput);
   console.log('********** the following files are new ***************************');
-  difference(linesFromBitInstallation, fromLastSnapshotLines).forEach((line) => console.log(line));
+  _.difference(linesFromBitInstallation, fromLastSnapshotLines).forEach((line) => console.log(line));
   console.log('******************************************************************');
 
   console.log('********** the following files are old ***************************');
-  difference(fromLastSnapshotLines, linesFromBitInstallation).forEach((line) => console.log(line));
+  _.difference(fromLastSnapshotLines, linesFromBitInstallation).forEach((line) => console.log(line));
   console.log('******************************************************************');
 
   console.log('********** the following files are not from bit-installation *****');

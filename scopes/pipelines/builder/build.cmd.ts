@@ -30,12 +30,11 @@ type BuildOpts = {
 
 export class BuilderCmd implements Command {
   name = 'build [component-pattern]';
-  description = 'run set of tasks for build.';
-  extendedDescription = `by default, only new and modified components are built.
-the build takes place in an isolated directories on the filesystem (called "capsules"). the component files are copied to these directories
-and the package-manager installs the dependencies in the capsules root. once done, the build pipeline is running.
-because this process can take a while on a large workspace, some flags are available to shorten the process. See the example section for more info.
-  `;
+  description = 'run build pipeline tasks in isolated environments';
+  extendedDescription = `executes the complete build pipeline including compilation, testing, linting, and other tasks defined by component environments.
+the build takes place in isolated directories called "capsules" where component files are copied and dependencies are installed via the package manager.
+by default processes only new and modified components - use --unmodified to build all components.
+because this process can take a while on large workspaces, various flags are available to optimize the process - see examples for debugging workflows.`;
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   examples = [
     {
@@ -130,7 +129,8 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
     this.logger.setStatusLine('build');
     const start = process.hrtime();
-    const components = await this.workspace.getComponentsByUserInput(unmodified, pattern, true);
+    // If pattern is provided, don't pass the unmodified flag as "all" - the pattern should take precedence
+    const components = await this.workspace.getComponentsByUserInput(pattern ? false : unmodified, pattern, true);
     if (!components.length) {
       return chalk.bold(
         `no components found to build. use "--unmodified" flag to build all components or specify the ids to build, otherwise, only new and modified components will be built`

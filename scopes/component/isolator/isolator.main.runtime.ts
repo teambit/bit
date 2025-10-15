@@ -791,11 +791,11 @@ export class IsolatorMain {
       componentIdByPkgName,
       rootDir: capsulesDir,
     };
-    await Promise.all(
-      capsuleList.map((capsule) =>
-        this.dependencyResolver.addDependenciesGraph(capsule.component, path.relative(capsulesDir, capsule.path), opts)
-      )
-    );
+    const comps = capsuleList.map((capsule) => ({
+      component: capsule.component,
+      componentRelativeDir: path.relative(capsulesDir, capsule.path),
+    }));
+    await this.dependencyResolver.addDependenciesGraph(comps, opts);
   }
 
   private async markCapsulesAsReady(capsuleList: CapsuleList): Promise<void> {
@@ -1436,7 +1436,10 @@ export class IsolatorMain {
       }
 
       const isPublished = component.get('teambit.pkg/pkg')?.config?.packageJson?.publishConfig;
-      const canBeInstalled = host.isExported(component.id) && (remotes.isHub(component.id.scope) || isPublished);
+      const canBeInstalled =
+        host.isExported(component.id) &&
+        (remotes.isHub(component.id.scope) || isPublished) &&
+        component.buildStatus === 'succeed';
 
       if (canBeInstalled) {
         this.logger.debug(`[OPTIMIZATION] Excluding unmodified exported dependency: ${componentIdStr}`);

@@ -1,10 +1,11 @@
 import chai, { expect } from 'chai';
 import { successEjectMessage } from '@teambit/eject';
 import path from 'path';
+import chaiString from 'chai-string';
 import { Helper, DEFAULT_OWNER, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('eject command on Harmony', function () {
   this.timeout(0);

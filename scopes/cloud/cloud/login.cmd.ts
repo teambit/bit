@@ -7,7 +7,10 @@ import type { CloudMain } from './cloud.main.runtime';
 
 export class LoginCmd implements Command {
   name = 'login';
-  description = 'log in to Bit cloud';
+  description = 'authenticate with Bit Cloud for component publishing and collaboration';
+  extendedDescription = `opens browser to authenticate with Bit Cloud (bit.cloud) and obtain access token for publishing components.
+automatically updates .npmrc file with registry configuration and authentication token for seamless package publishing.
+supports custom cloud domains, CI/machine authentication, and manual token refresh options.`;
   group = 'auth';
   alias = '';
   options = [

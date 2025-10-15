@@ -3,8 +3,8 @@ import fs from 'fs-extra';
 import * as path from 'path';
 
 import { Helper, fixtures, DEFAULT_OWNER } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('set default owner and scope', function () {
   this.timeout(0);

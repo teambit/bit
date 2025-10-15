@@ -8,10 +8,9 @@ import { statusInvalidComponentsMsg } from '@teambit/legacy.constants';
 import { MainFileIsDir, PathOutsideConsumer, VersionShouldBeRemoved } from '@teambit/tracker';
 import { MissingMainFile } from '@teambit/legacy.bit-map';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-
-const assertArrays = require('chai-arrays');
+import chaiFs from 'chai-fs';
+import assertArrays from 'chai-arrays';
+chai.use(chaiFs);
 
 chai.use(assertArrays);
 

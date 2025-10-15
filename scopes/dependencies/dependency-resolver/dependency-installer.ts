@@ -104,6 +104,10 @@ export class DependencyInstaller {
 
     private preferOffline?: boolean,
 
+    private minimumReleaseAge?: number,
+
+    private minimumReleaseAgeExclude?: string[],
+
     private installingContext: DepInstallerContext = {}
   ) {}
 
@@ -200,6 +204,8 @@ export class DependencyInstaller {
       cacheRootDir: this.cacheRootDir,
       nodeLinker: this.nodeLinker,
       packageImportMethod: this.packageImportMethod,
+      minimumReleaseAge: this.minimumReleaseAge,
+      minimumReleaseAgeExclude: this.minimumReleaseAgeExclude,
       sideEffectsCache: this.sideEffectsCache,
       nodeVersion: this.nodeVersion,
       engineStrict: this.engineStrict,

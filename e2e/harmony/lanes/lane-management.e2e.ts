@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import { InvalidScopeName } from '@teambit/legacy-bit-id';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit lane management', function () {
   this.timeout(0);

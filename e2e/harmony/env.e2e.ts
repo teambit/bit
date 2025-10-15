@@ -2,9 +2,10 @@ import chai, { expect } from 'chai';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { IssuesClasses } from '@teambit/component-issues';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('env command', function () {
   this.timeout(0);

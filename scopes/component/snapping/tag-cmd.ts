@@ -100,9 +100,10 @@ export type TagParams = {
 export class TagCmd implements Command {
   name = 'tag [component-patterns...]';
   group = 'version-control';
-  description = 'create an immutable and exportable component snapshot, tagged with a release version.';
-  extendedDescription = `if no patterns are provided, it will tag all new and modified components.
-if patterns are entered, you can specify a version per pattern using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major`;
+  description = 'create immutable component snapshots with semantic version tags';
+  extendedDescription = `creates tagged versions using semantic versioning (semver) for component releases. tags are immutable and exportable.
+by default tags all new and modified components. supports version specification per pattern using "@" (e.g. foo@1.0.0, bar@minor).
+use for official releases. for development versions, use 'bit snap' instead.`;
   arguments = [
     {
       name: 'component-patterns...',
@@ -252,11 +253,19 @@ semver allows the following options only: ${RELEASE_TYPES.join(', ')}`);
 }
 
 export function tagResultOutput(results: TagResults): string {
-  const { taggedComponents, autoTaggedResults, warnings, newComponents, removedComponents, exportedIds }: TagResults =
-    results;
+  const {
+    taggedComponents,
+    autoTaggedResults,
+    warnings,
+    newComponents,
+    removedComponents,
+    exportedIds,
+    totalComponentsCount,
+  }: TagResults = results;
   const changedComponents = taggedComponents.filter((component) => !newComponents.searchWithoutVersion(component.id));
   const addedComponents = taggedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
   const autoTaggedCount = autoTaggedResults ? autoTaggedResults.length : 0;
+  const totalCount = totalComponentsCount ?? taggedComponents.length + autoTaggedCount;
 
   const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
   const tagExplanationPersist = exportedIds
@@ -332,9 +341,7 @@ export function tagResultOutput(results: TagResults): string {
     exportedOutput() +
     warningsOutput +
     chalk.green(
-      `\n${taggedComponents.length + autoTaggedCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged${
-        exportedIds ? ' and exported' : ''
-      }`
+      `\n${totalCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged${exportedIds ? ' and exported' : ''}`
     ) +
     tagExplanation +
     softTagClarification

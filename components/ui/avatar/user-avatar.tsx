@@ -42,11 +42,7 @@ export function UserAvatar({
   const profileImageWithParams =
     profileImage && profileImage.startsWith('blob:')
       ? profileImage
-      : addAvatarQueryParams(
-          profileImage,
-          imageSize,
-          styles.defaultAvatarBgColor
-        );
+      : addAvatarQueryParams(profileImage, imageSize, styles.defaultAvatarBgColor);
   const colors = firstLetter && letterBgColors[firstLetter.toLowerCase()];
   const avatar = (
     <div
@@ -57,18 +53,11 @@ export function UserAvatar({
       {profileImageWithParams && (
         <img
           src={profileImageWithParams}
-          className={classNames(
-            styles.avatarImg,
-            profileImage.startsWith('blob:') && styles.blob,
-            imgClassName
-          )}
+          className={classNames(styles.avatarImg, profileImage.startsWith('blob:') && styles.blob, imgClassName)}
         />
       )}
       {(displayName || name) && (
-        <span
-          className={styles.letter}
-          style={{ fontSize: `${fontSize}px`, lineHeight: `${size}px` }}
-        >
+        <span className={styles.letter} style={{ fontSize: `${fontSize}px`, lineHeight: `${size}px` }}>
           {getInitials(displayName || name)}
         </span>
       )}

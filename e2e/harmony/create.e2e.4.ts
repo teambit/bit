@@ -3,8 +3,8 @@ import { OutsideWorkspaceError } from '@teambit/workspace';
 import path from 'path';
 import os from 'os';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('create extension', function () {
   this.timeout(0);
@@ -184,9 +184,9 @@ describe('create extension', function () {
     it('should write dependencies to package.json', () => {
       const pkgJson = helper.fs.readJsonFile('package.json');
       expect(pkgJson.dependencies.eslint != null).to.eq(true);
-    })
+    });
     it('should not run installation', () => {
       expect(helper.fs.exists('node_modules/eslint')).to.eq(false);
-    })
+    });
   });
 });

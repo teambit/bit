@@ -36,7 +36,10 @@ export class DependencyNameRefactorCmd implements Command {
 export class RefactorCmd implements Command {
   name = 'refactor <sub-command>';
   alias = '';
-  description = 'source code refactoring / codemod';
+  description = 'automatically refactor component source code';
+  extendedDescription = `performs automated code transformations and refactoring operations across components.
+currently supports updating import/require statements when component names or dependencies change.
+useful for maintaining code consistency after renaming or restructuring components.`;
   options = [];
   group = 'workspace-tools';
   commands: Command[] = [];

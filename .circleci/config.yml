@@ -56,12 +56,70 @@ master_only_filter: &master_only_filter
 
 orbs:
   win: circleci/windows@5.0
+  slack: circleci/slack@5.2.3
 
 # ========================================
 # COMMANDS
 # ========================================
 
 commands:
+  # Bundle installation with hoisting and overrides (Linux/macOS)
+  install_bit_bundle:
+    parameters:
+      os:
+        type: string
+        default: "linux"
+      cpu:
+        type: string
+        default: "x64"
+      directory:
+        type: string
+        default: "bit-${BIT_VERSION}"
+    steps:
+      - run:
+          name: install bit bundle for <<parameters.os>> <<parameters.cpu>>
+          command: >
+            cd <<parameters.directory>> &&
+            pnpm init &&
+            echo "node-linker=hoisted" >> .npmrc &&
+            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss@8" --values "^8.4.19" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.ajv@6" --values "^6.12.6" &&
+            pnpm add @teambit/bit --os=<<parameters.os>> --cpu=<<parameters.cpu>>
+
+  # Bundle installation for Windows (with Windows-specific configs)
+  install_bit_bundle_windows:
+    parameters:
+      cpu:
+        type: string
+        default: "x64"
+      directory:
+        type: string
+        default: "bit-${BIT_VERSION}"
+    steps:
+      - run:
+          name: install bit bundle for Windows <<parameters.cpu>>
+          command: >
+            cd <<parameters.directory>> &&
+            pnpm init &&
+            echo "node-linker=hoisted" >> .npmrc &&
+            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
+            echo "prefer-symlinked-executables=false" >> .npmrc &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.neverBuiltDependencies --values cpu-features --values ssh2 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss@8" --values "^8.4.19" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.ajv@6" --values "^6.12.6" &&
+            pnpm add @teambit/bit --os=win32 --cpu=<<parameters.cpu>>
+
   # Bit configuration
   bit_config:
     parameters:
@@ -84,6 +142,20 @@ commands:
       # - run: '<<parameters.bin_name>> config set user.token <<parameters.token>>'
       - run: '<<parameters.bin_name>> config set hub_domain <<parameters.env>>.bit.dev'
       - run: '<<parameters.bin_name>> config set package-manager.cache /home/circleci/package-manager-cache'
+
+  # Optimize node_modules size for BVM distributions
+  optimize_node_modules:
+    parameters:
+      platform:
+        default: ''
+        type: string
+    steps:
+      - run:
+          name: optimize node_modules size<<# parameters.platform >> for <<parameters.platform>><</parameters.platform>>
+          command: >
+            cd bit-${BIT_VERSION} &&
+            node ../bit/scripts/cleanup-node-modules.js ./node_modules --keep-teambit-maps &&
+            echo "Node modules optimized successfully<<# parameters.platform >> for <<parameters.platform>><</parameters.platform>>"
 
   # NPM setup
   bit_global_for_npm:
@@ -584,7 +656,9 @@ jobs:
 
   # ========== Bit CI Jobs ==========
   bit_pr:
-    resource_class: 2xlarge
+    # uncomment in case this job fails with "Killed".
+    # resource_class: 2xlarge
+    resource_class: xlarge
     <<: *defaults
     environment:
       # BIT_FEATURES: cloud-importer-v2
@@ -606,7 +680,9 @@ jobs:
           path: ~/Library/Caches/Bit/logs
 
   bit_merge:
-    resource_class: 2xlarge
+    # uncomment in case this job fails with "Killed".
+    # resource_class: 2xlarge
+    resource_class: xlarge
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
@@ -671,6 +747,58 @@ jobs:
       - e2e_test_cmd:
          bit_bin: "--bin_bit=bbit"
 
+  # setup job: creates cleaned bit bundle and persists to workspace (runs once)
+  setup_bundle_simulation:
+    <<: *defaults
+    environment:
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+    steps:
+      - attach_workspace:
+          at: ./
+      - set_bit_cloud_registry
+      - setup_bit_version
+      - setup_pnpm
+      - run: mkdir bit-bundle-test
+      - install_bit_bundle:
+          directory: "bit-bundle-test"
+      - run:
+          name: apply cleanup script to bundled installation with UI deps removal
+          command: >
+            cd bit-bundle-test &&
+            node ../bit/scripts/cleanup-node-modules.js ./node_modules --remove-ui-deps --remove-esm
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bit-bundle-test
+
+  # test job: uses cleaned bit bundle from workspace and runs e2e tests (parallelized)
+  e2e_test_bundle_simulation:
+    <<: *defaults
+    environment:
+      BITSRC_ENV: stg
+      BIT_FEATURES: cloud-importer-v2
+    parallelism: 25
+    steps:
+      - attach_workspace:
+          at: ./
+      - restore_common_caches
+      - run:
+          name: setup cleaned bit binary
+          command: >
+            mkdir -p /home/circleci/.npm-global/bin &&
+            cd bit-bundle-test &&
+            BIT_BIN=$(find node_modules -name "bit" -type f -path "*/bin/*" | head -1) &&
+            echo "Found bit binary at: $BIT_BIN" &&
+            chmod +x $(pwd)/$BIT_BIN &&
+            ln -sf $(pwd)/$BIT_BIN /home/circleci/.npm-global/bin/bit-cleaned &&
+            chmod +x /home/circleci/.npm-global/bin/bit-cleaned &&
+            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+      - run:
+          name: verify cleaned binary works
+          command: source $BASH_ENV && bit-cleaned --version
+      - e2e_test_cmd:
+          bit_bin: "--bin_bit=bit-cleaned"
+
   # ========== Utility Jobs ==========
   harmony_deploy_approval_job:
     <<: *defaults
@@ -689,19 +817,8 @@ jobs:
       - set_bit_cloud_registry
       - setup_bit_version
       - setup_pnpm
-      - run:
-          name: install bit for Linux x64
-          command: >
-            cd bit-${BIT_VERSION} &&
-            pnpm init &&
-            echo "node-linker=hoisted" >> .npmrc &&
-            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
-            pnpm add @teambit/bit --os=linux --cpu=x64
+      - install_bit_bundle
+      - optimize_node_modules
       - run:
           name: copy lockfile
           command: mkdir lockfile && cp bit-${BIT_VERSION}/pnpm-lock.yaml lockfile
@@ -714,6 +831,8 @@ jobs:
           command: >
             cd bit-${BIT_VERSION} &&
             pnpm install --os=linux --cpu=arm64
+      - optimize_node_modules:
+          platform: arm64
       - compress_bit
       - run:
           name: move to linux-arm64 folder
@@ -742,19 +861,9 @@ jobs:
       - set_bit_cloud_registry
       - setup_bit_version
       - setup_pnpm
-      - run:
-          name: install bit for macOS x64
-          command: >
-            cd bit-${BIT_VERSION} &&
-            pnpm init &&
-            echo "node-linker=hoisted" >> .npmrc &&
-            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
-            pnpm add @teambit/bit --os=darwin --cpu=x64
+      - install_bit_bundle:
+          os: "darwin"
+      - optimize_node_modules
       - compress_bit
       - run:
           name: move to macos folder
@@ -764,6 +873,8 @@ jobs:
           command: >
             cd bit-${BIT_VERSION} &&
             pnpm install --os=darwin --cpu=arm64
+      - optimize_node_modules:
+          platform: arm64
       - compress_bit
       - run:
           name: move to macos-arm64 folder
@@ -789,21 +900,8 @@ jobs:
       - set_bit_cloud_registry
       - setup_bit_version
       - setup_pnpm
-      - run:
-          name: install bit for Windows x64
-          command: >
-            cd bit-${BIT_VERSION} &&
-            pnpm init &&
-            echo "node-linker=hoisted" >> .npmrc &&
-            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
-            echo "prefer-symlinked-executables=false" >> .npmrc &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.neverBuiltDependencies --values cpu-features --values ssh2 &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
-            pnpm add @teambit/bit --os=win32 --cpu=x64
+      - install_bit_bundle_windows
+      - optimize_node_modules
       - compress_bit
       - run:
           name: move to windows folder
@@ -1085,6 +1183,18 @@ workflows:
       - e2e_test:
           requires:
             - setup_harmony
+      - setup_bundle_simulation:
+          filters:
+            branches:
+              only: /^optimize-node-modules.*|^cleanup-script.*|.*cleanup.*script.*/
+          requires:
+            - setup_harmony
+      - e2e_test_bundle_simulation:
+          filters:
+            branches:
+              only: /^optimize-node-modules.*|^cleanup-script.*|.*cleanup.*script.*/
+          requires:
+            - setup_bundle_simulation
       - bit_pr:
           requires:
             - setup_harmony
@@ -1098,6 +1208,22 @@ workflows:
             branches:
               only: master
           serial-group: "bit-merge-operations"
+          post-steps:
+            - slack/notify:
+                event: fail
+                custom: |
+                  {
+                    "text": "🚨 MASTER BRANCH FAILURE 🚨",
+                    "blocks": [
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": "⚠️ *bit_merge failed on master branch*\nThis needs immediate attention!\n<${CIRCLE_BUILD_URL}|View Failed Build>"
+                        }
+                      }
+                    ]
+                  }
 
   # Nightly workflow
   nightly:

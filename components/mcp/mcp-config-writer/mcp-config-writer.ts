@@ -524,9 +524,17 @@ export class McpConfigWriter {
     // Ensure directory exists
     await fs.ensureDir(path.dirname(promptsPath));
 
-    // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
-    await fs.writeFile(promptsPath, rulesContent);
+    // Get base rules content
+    const baseRulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
+
+    // Add VS Code frontmatter
+    const vscodeRulesContent = `---
+applyTo: '**'
+---
+
+${baseRulesContent}`;
+
+    await fs.writeFile(promptsPath, vscodeRulesContent);
   }
 
   /**
@@ -541,9 +549,18 @@ export class McpConfigWriter {
     // Ensure directory exists
     await fs.ensureDir(path.dirname(promptsPath));
 
-    // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
-    await fs.writeFile(promptsPath, rulesContent);
+    // Get base rules content
+    const baseRulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
+
+    // Add Cursor frontmatter
+    const cursorRulesContent = `---
+description: Bit MCP Agent Instructions
+Always: true
+---
+
+${baseRulesContent}`;
+
+    await fs.writeFile(promptsPath, cursorRulesContent);
   }
 
   /**
@@ -558,7 +575,7 @@ export class McpConfigWriter {
     // Ensure directory exists
     await fs.ensureDir(path.dirname(promptsPath));
 
-    // Write rules content
+    // Get base rules content - Roo Code doesn't require frontmatter
     const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
     await fs.writeFile(promptsPath, rulesContent);
   }
@@ -575,9 +592,18 @@ export class McpConfigWriter {
     // Ensure directory exists
     await fs.ensureDir(path.dirname(promptsPath));
 
-    // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
-    await fs.writeFile(promptsPath, rulesContent);
+    // Get base rules content
+    const baseRulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
+
+    // Add Cline frontmatter
+    const clineRulesContent = `---
+description: Bit MCP Agent Instructions
+tags: ["bit", "mcp", "component-development"]
+---
+
+${baseRulesContent}`;
+
+    await fs.writeFile(promptsPath, clineRulesContent);
   }
 
   /**
@@ -593,9 +619,9 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Get base rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
+    const baseRulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
 
-    // Add integration instructions at the top
+    // Add integration instructions at the top (Claude Code doesn't use frontmatter)
     const integrationInstructions = `<!--
 To use these Bit instructions, add the following to your main CLAUDE.md file:
 
@@ -606,7 +632,7 @@ This will automatically include all Bit-specific instructions in your Claude Cod
 
 `;
 
-    const finalContent = integrationInstructions + rulesContent;
+    const finalContent = integrationInstructions + baseRulesContent;
 
     // Write rules content with integration instructions
     await fs.writeFile(promptsPath, finalContent);

@@ -17,7 +17,10 @@ type RunOptions = {
 
 export class RunCmd implements Command {
   name = 'run [app-name]';
-  description = "locally run an app component (independent of bit's dev server)";
+  description = 'start an application component locally';
+  extendedDescription = `runs application components in their own development server, separate from the "bit start" UI.
+apps are components that create deployable applications (React apps, Node.js servers, etc.).
+when no app name is specified, automatically detects and runs the app if only one exists in the workspace.`;
   helpUrl = 'reference/apps/apps-overview/';
   arguments = [
     {

@@ -1,7 +1,3 @@
----
-applyTo: '**'
----
-
 # Bit MCP Agent Instructions
 
 ## Core Objectives

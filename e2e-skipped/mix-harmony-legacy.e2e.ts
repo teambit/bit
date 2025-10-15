@@ -1,7 +1,8 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 // todo: fix after merging #9359
 describe.skip('mix use of Legacy and Harmony', function () {

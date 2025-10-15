@@ -917,9 +917,7 @@ export class InstallMain {
     };
   }
 
-  private async _getEnvManifests(
-    workspaceDeps: Record<string, string>
-  ): Promise<Record<string, ProjectManifest>> {
+  private async _getEnvManifests(workspaceDeps: Record<string, string>): Promise<Record<string, ProjectManifest>> {
     const envs = await this._getAllUsedEnvIds();
     return Object.fromEntries(
       await Promise.all(
