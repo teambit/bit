@@ -18,7 +18,6 @@ import detectiveLess from '@teambit/styling.deps-detectors.detective-less';
 import detectiveSass from '@teambit/styling.deps-detectors.detective-sass';
 import detectiveScss from '@teambit/styling.deps-detectors.detective-scss';
 import detectiveTypeScript from '@teambit/typescript.deps-detectors.detective-typescript';
-import { detectiveAstro } from '@frontend/astro.deps-detectors.detective-astro';
 
 import type { DependencyDetector } from '@teambit/dependency-resolver';
 import { DetectorHook } from '@teambit/dependency-resolver';
@@ -61,7 +60,6 @@ const extToType = {
   '.cts': 'ts',
   '.ts': 'ts',
   '.tsx': 'ts',
-  '.astro': 'astro',
 };
 
 const typeToDetective: Record<string, Detective> = {
@@ -74,7 +72,6 @@ const typeToDetective: Record<string, Detective> = {
   commonjs: detectiveEs6,
   es6: detectiveEs6,
   amd: detectiveAmd,
-  astro: detectiveAstro,
 };
 
 const debug = require('debug')('precinct');

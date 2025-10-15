@@ -94,10 +94,5 @@ describe('node-precinct', () => {
         revert();
       });
     });
-
-    it('supports .astro files', async () => {
-      const deps = await precinct.paperwork(`${fixturesFullPath}/astro.astro`);
-      assert.deepEqual(deps, ['./Default.astro']);
-    });
   });
 });
