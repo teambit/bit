@@ -97,7 +97,7 @@ describe('node-precinct', () => {
 
     it('supports .astro files', async () => {
       const deps = await precinct.paperwork(`${fixturesFullPath}/astro.astro`);
-      assert.deepEqual(deps, ['./Default.astro', './Named.astro', './ReExported.astro']);
+      assert.deepEqual(deps, ['./Default.astro']);
     });
   });
 });

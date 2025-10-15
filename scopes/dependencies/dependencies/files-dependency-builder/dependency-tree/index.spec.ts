@@ -33,11 +33,11 @@ function cleanUnitDir() {
 describe('dependencyTree', function () {
   this.timeout(8000);
   function testTreesForFormat(format, ext = '.js') {
-    it('returns an object form of the dependency tree for a file', () => {
+    it('returns an object form of the dependency tree for a file', async () => {
       const root = `${UNIT_TEST_DIR}/${format}`;
       const filename = path.normalize(`${root}/a${ext}`);
 
-      const tree = dependencyTree({ filename, root });
+      const tree = await dependencyTree({ filename, root });
 
       assert(tree instanceof Object);
 
@@ -142,20 +142,20 @@ describe('dependencyTree', function () {
     cleanUnitDir();
   });
 
-  it('returns an empty object for a non-existent filename', () => {
+  it('returns an empty object for a non-existent filename', async () => {
     mockfs({
       imaginary: {},
     });
 
     const root = `${UNIT_TEST_DIR}/imaginary`;
     const filename = `${root}/notafile.js`;
-    const tree = dependencyTree({ filename, root });
+    const tree = await dependencyTree({ filename, root });
 
     assert(tree instanceof Object);
     assert(!Object.keys(tree).length);
   });
 
-  it('handles nested tree structures', () => {
+  it('handles nested tree structures', async () => {
     const directory = `${UNIT_TEST_DIR}/extended`;
 
     mockfs({
@@ -177,7 +177,7 @@ describe('dependencyTree', function () {
     });
 
     const filename = path.normalize(`${directory}/a.js`);
-    const tree = dependencyTree({ filename, directory });
+    const tree = await dependencyTree({ filename, directory });
     assert(tree[filename] instanceof Object);
 
     // b and c
@@ -192,7 +192,7 @@ describe('dependencyTree', function () {
     assert.equal(cTree.length, 2);
   });
 
-  it('does not include files that are not real (#13)', () => {
+  it('does not include files that are not real (#13)', async () => {
     mockfs({
       [`${UNIT_TEST_DIR}/onlyRealDeps`]: {
         'a.js': 'var notReal = require("./notReal");',
@@ -202,7 +202,7 @@ describe('dependencyTree', function () {
     const directory = `${UNIT_TEST_DIR}/onlyRealDeps`;
     const filename = path.normalize(`${directory}/a.js`);
 
-    const tree = dependencyTree({ filename, directory });
+    const tree = await dependencyTree({ filename, directory });
     const subTree = tree[filename];
 
     assert.ok(!Object.keys(subTree).some((dep) => dep.indexOf('notReal') !== -1));
@@ -221,7 +221,7 @@ describe('dependencyTree', function () {
 
     const spy = sinon.spy(dependencyTreeRewired, '_getDependencies');
 
-    const tree = dependencyTreeRewired.default({ filename, directory });
+    const tree = await dependencyTreeRewired.default({ filename, directory });
 
     assert(spy.callCount === 2);
     assert(Object.keys(tree[filename]).length);
@@ -229,20 +229,20 @@ describe('dependencyTree', function () {
     await dependencyTreeRewired._getDependencies.restore();
   });
 
-  it('excludes Nodejs core modules by default', () => {
+  it('excludes Nodejs core modules by default', async () => {
     const directory = `${fixtures}/commonjs`;
     const filename = path.normalize(`${directory}/b.js`);
 
-    const tree = dependencyTree({ filename, directory });
+    const tree = await dependencyTree({ filename, directory });
     assert(Object.keys(tree[filename]).length === 0);
     assert(Object.keys(tree)[0].indexOf('b.js') !== -1);
   });
 
-  it('returns a list of absolutely pathed files', () => {
+  it('returns a list of absolutely pathed files', async () => {
     const directory = `${UNIT_TEST_DIR}/commonjs`;
     const filename = `${directory}/b.js`;
 
-    const tree = dependencyTree({ filename, directory });
+    const tree = await dependencyTree({ filename, directory });
     // eslint-disable-next-line
     for (const node in tree.nodes) {
       assert(node.indexOf(process.cwd()) !== -1);
@@ -250,7 +250,7 @@ describe('dependencyTree', function () {
   });
 
   describe('when given a detective configuration', () => {
-    it('passes it through to precinct', () => {
+    it('passes it through to precinct', async () => {
       const spy = sinon.spy(precinct, 'paperwork');
       const directory = path.normalize(`${fixtures}/onlyRealDeps`);
       const filename = path.normalize(`${directory}/a.js`);
@@ -260,7 +260,7 @@ describe('dependencyTree', function () {
         },
       };
 
-      dependencyTree({
+      await dependencyTree({
         filename,
         directory,
         detective: detectiveConfig,
@@ -273,7 +273,7 @@ describe('dependencyTree', function () {
 
   describe('when given a list to store non existent partials', () => {
     describe('and the file contains no valid partials', () => {
-      it('stores the invalid partials', () => {
+      it('stores the invalid partials', async () => {
         mockfs({
           [`${UNIT_TEST_DIR}/onlyRealDeps`]: {
             'a.js': 'var notReal = require("./notReal");',
@@ -284,7 +284,7 @@ describe('dependencyTree', function () {
         const filename = path.normalize(`${directory}/a.js`);
         const nonExistent = [];
 
-        dependencyTree({ filename, directory, nonExistent });
+        await dependencyTree({ filename, directory, nonExistent });
 
         assert.equal(Object.keys(nonExistent).length, 1);
         assert.equal(nonExistent[filename][0], './notReal');
@@ -292,7 +292,7 @@ describe('dependencyTree', function () {
     });
 
     describe('and the file contains all valid partials', () => {
-      it('does not store anything', () => {
+      it('does not store anything', async () => {
         mockfs({
           [`${UNIT_TEST_DIR}/onlyRealDeps`]: {
             'a.js': 'var b = require("./b");',
@@ -304,14 +304,14 @@ describe('dependencyTree', function () {
         const filename = `${directory}/a.js`;
         const nonExistent = [];
 
-        dependencyTree({ filename, directory, nonExistent });
+        await dependencyTree({ filename, directory, nonExistent });
 
         assert.equal(nonExistent.length, 0);
       });
     });
 
     describe('and the file contains a mix of invalid and valid partials', () => {
-      it('stores the invalid ones', () => {
+      it('stores the invalid ones', async () => {
         mockfs({
           [`${UNIT_TEST_DIR}/onlyRealDeps`]: {
             'a.js': 'var b = require("./b");',
@@ -324,7 +324,7 @@ describe('dependencyTree', function () {
         const filename = path.normalize(`${directory}/a.js`);
         const nonExistent = [];
 
-        dependencyTree({ filename, directory, nonExistent });
+        await dependencyTree({ filename, directory, nonExistent });
 
         assert.equal(Object.keys(nonExistent).length, 1);
         assert.equal(nonExistent[path.normalize(`${directory}/c.js`)][0], './notRealMan');
@@ -332,7 +332,7 @@ describe('dependencyTree', function () {
     });
 
     describe('and there is more than one reference to the invalid partial', () => {
-      it('should include the non-existent partial per file', () => {
+      it('should include the non-existent partial per file', async () => {
         mockfs({
           [`${UNIT_TEST_DIR}/onlyRealDeps`]: {
             'a.js': 'var b = require("./b");\nvar crap = require("./notRealMan");',
@@ -345,7 +345,7 @@ describe('dependencyTree', function () {
         const filename = path.normalize(`${directory}/a.js`);
         const nonExistent = [];
 
-        dependencyTree({ filename, directory, nonExistent });
+        await dependencyTree({ filename, directory, nonExistent });
 
         assert.equal(Object.keys(nonExistent).length, 2);
         assert.equal(nonExistent[filename][0], './notRealMan');
@@ -827,7 +827,7 @@ describe('dependencyTree', function () {
 
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config.filename = baseFile;
-      dependencyTree(config);
+      await dependencyTree(config);
 
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config.filename = indexFile;
