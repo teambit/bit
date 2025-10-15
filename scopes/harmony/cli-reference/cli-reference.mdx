@@ -2213,6 +2213,26 @@ optionally, provide [pattern] to limit the fork to specific components
 
 ---
 
+## script
+
+**Description**: run a script defined by the environment  
+executes custom scripts defined by component environments.  
+scripts can be shell commands or JavaScript functions defined in env.scripts().  
+runs the script for all components grouped by their environment.  
+use --list to see all available scripts.
+
+`bit script [script-name]`
+
+| **Arg**       |                         **Description**                          |
+| ------------- | :--------------------------------------------------------------: |
+| `script-name` | the name of the script to run (e.g., "generate-svg", "pre-snap") |
+
+| **Option** | **Option alias** | **Description**                                  |
+| ---------- | :--------------: | ------------------------------------------------ |
+| `--list`   |       `-l`       | list all available scripts from all environments |
+
+---
+
 ## set-peer
 
 **Description**: configure component to always be installed as peer dependency  
