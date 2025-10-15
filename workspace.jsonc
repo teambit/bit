@@ -28,7 +28,6 @@
         "@bitdev/react.generators.react-templates": "^4.0.2",
         "@bitdev/symphony.generators.symphony-templates": "^3.0.4",
         "@dagrejs/dagre": "^1.1.2",
-        "@frontend/astro.deps-detectors.detective-astro": "^0.0.1",
         "@graphql-modules/core": "0.7.17",
         "@graphql-tools/schema": "^10.0.0",
         "@jest/test-result": "29.3.1",
