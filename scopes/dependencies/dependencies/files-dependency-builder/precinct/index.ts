@@ -189,7 +189,7 @@ const normalizeDeps = (deps: BuiltinDeps, includeCore?: boolean): string[] => {
   return includeCore ? normalizedDeps : normalizedDeps.filter((d) => !isBuiltin(d));
 };
 
-const getDepsFromFile = (filename: string, options?: Options): string[] => {
+const getDepsFromFile = async (filename: string, options?: Options): Promise<string[]> => {
   const normalizedOptions: Options = assign({ includeCore: true }, options || {});
   const fileInfo = getFileInfo(filename);
   if (
@@ -207,7 +207,7 @@ const getDepsFromFile = (filename: string, options?: Options): string[] => {
   }
   debug('module type: ', fileInfo.type);
 
-  const deps = detective(fileInfo.ast, normalizedOptions[fileInfo.type]);
+  const deps = await detective(fileInfo.ast, normalizedOptions[fileInfo.type]);
 
   return normalizeDeps(deps, normalizedOptions?.includeCore);
 };

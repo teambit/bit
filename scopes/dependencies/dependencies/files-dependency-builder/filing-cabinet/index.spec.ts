@@ -80,7 +80,7 @@ describe('filing-cabinet', () => {
           directory: `${UNIT_TEST_DIR}/js/es6/`,
           ast,
         });
-        assert.ok(result.endsWith('es6/bar.js'));
+        assert.ok(result.endsWith(path.normalize('es6/bar.js')));
       });
 
       it('resolves the dependency successfully', () => {

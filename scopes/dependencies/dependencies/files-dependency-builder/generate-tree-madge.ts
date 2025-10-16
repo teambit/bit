@@ -118,7 +118,7 @@ type GenerateTreeResults = {
  * @param config
  * @return {Object}
  */
-export default function generateTree(files: string[] = [], config): GenerateTreeResults {
+export default async function generateTree(files: string[] = [], config): Promise<GenerateTreeResults> {
   const depTree = {};
   const nonExistent = {};
   const npmPaths = {};
@@ -126,14 +126,14 @@ export default function generateTree(files: string[] = [], config): GenerateTree
   const pathMap = [];
   const errors = {};
 
-  files.forEach((file) => {
+  for await (const file of files) {
     if (depTree[file]) {
-      return;
+      continue;
     }
 
     const detective = config.detectiveOptions;
     try {
-      const dependencyTreeResult = dependencyTree({
+      const dependencyTreeResult = await dependencyTree({
         filename: file,
         directory: config.baseDir,
         requireConfig: config.requireConfig,
@@ -165,7 +165,7 @@ export default function generateTree(files: string[] = [], config): GenerateTree
     } catch (err: any) {
       errors[file] = err;
     }
-  });
+  }
 
   let tree = convertTreePaths(depTree, pathCache, config.baseDir);
 
