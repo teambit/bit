@@ -765,6 +765,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/harmony-ui-app/harmony-ui-app"
     },
+    "hooks/use-api": {
+        "name": "hooks/use-api",
+        "scope": "teambit.api-reference",
+        "version": "0.0.56",
+        "mainFile": "index.ts",
+        "rootDir": "components/hooks/use-api"
+    },
     "hooks/use-cloud-scopes": {
         "name": "hooks/use-cloud-scopes",
         "scope": "teambit.cloud",
@@ -946,6 +953,13 @@
         "version": "0.0.513",
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/model/composition-type"
+    },
+    "models/api-reference-model": {
+        "name": "models/api-reference-model",
+        "scope": "teambit.api-reference",
+        "version": "0.0.52",
+        "mainFile": "index.ts",
+        "rootDir": "components/models/api-reference-model"
     },
     "models/cloud-scope": {
         "name": "models/cloud-scope",
@@ -1436,6 +1450,13 @@
         "version": "0.0.130",
         "mainFile": "index.ts",
         "rootDir": "components/legacy/scope-api"
+    },
+    "sections/api-reference-page": {
+        "name": "sections/api-reference-page",
+        "scope": "teambit.api-reference",
+        "version": "0.0.119",
+        "mainFile": "index.ts",
+        "rootDir": "components/sections/api-reference-page"
     },
     "sidebar": {
         "name": "sidebar",
