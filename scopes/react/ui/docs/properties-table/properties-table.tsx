@@ -17,6 +17,11 @@ export function PropertiesTable({ componentId, ...rest }: PropertiesTableProps) 
     console.error(`failed to fetch docs for ${componentId} in PropertiesTable`, error);
     return null;
   }
+  if (!data.docs.properties) {
+    // eslint-disable-next-line no-console
+    console.warn(`no properties found for ${componentId} in PropertiesTable`);
+    return null;
+  }
 
   const { properties } = data.docs;
 
