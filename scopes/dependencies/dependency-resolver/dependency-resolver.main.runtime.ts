@@ -587,8 +587,8 @@ export class DependencyResolverMain {
 
   async addDependenciesGraph(
     components: Array<{
-      component: Component,
-      componentRelativeDir: string,
+      component: Component;
+      componentRelativeDir: string;
     }>,
     options: {
       rootDir: string;
@@ -607,7 +607,7 @@ export class DependencyResolverMain {
           : undefined,
         pkgName: this.getPackageName(component),
         componentRelativeDir,
-      }))
+      }));
       await this.getPackageManager()?.calcDependenciesGraph?.({
         components: componentsForCalc,
         rootDir: options.rootDir,

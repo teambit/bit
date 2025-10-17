@@ -1018,23 +1018,50 @@
         "signature": "const a1: {\n    a: number;\n    b: number;\n}",
         "name": "a1",
         "type": {
-          "__schema": "TypeQuerySchema",
+          "__schema": "ObjectLiteralExpressionSchema",
           "location": {
             "filePath": "index.ts",
             "line": 61,
-            "character": 18
+            "character": 31
           },
-          "signature": "const obj: {\n    a: number;\n    b: number;\n}",
-          "type": {
-            "__schema": "TypeRefSchema",
-            "location": {
-              "filePath": "index.ts",
-              "line": 61,
-              "character": 25
+          "members": [
+            {
+              "__schema": "PropertyAssignmentSchema",
+              "location": {
+                "filePath": "index.ts",
+                "line": 61,
+                "character": 33
+              },
+              "name": "a",
+              "value": {
+                "__schema": "LiteralValueSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 61,
+                  "character": 36
+                },
+                "value": "5"
+              }
             },
-            "name": "obj",
-            "internalFilePath": "index.ts"
-          }
+            {
+              "__schema": "PropertyAssignmentSchema",
+              "location": {
+                "filePath": "index.ts",
+                "line": 61,
+                "character": 39
+              },
+              "name": "b",
+              "value": {
+                "__schema": "LiteralValueSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 61,
+                  "character": 42
+                },
+                "value": "9"
+              }
+            }
+          ]
         },
         "isOptional": false,
         "defaultValue": "{ a: 5, b: 9 }"
@@ -1980,28 +2007,7 @@
           },
           "signature": "const gfnc2: <T>(a: T) => void",
           "name": "anonymous",
-          "params": [
-            {
-              "__schema": "ParameterSchema",
-              "location": {
-                "filePath": "index.ts",
-                "line": 133,
-                "character": 14
-              },
-              "name": "a",
-              "type": {
-                "__schema": "InferenceTypeSchema",
-                "location": {
-                  "filePath": "index.ts",
-                  "line": 133,
-                  "character": 14
-                },
-                "type": "T"
-              },
-              "isOptional": false,
-              "isSpread": false
-            }
-          ],
+          "params": [],
           "returnType": {
             "__schema": "InferenceTypeSchema",
             "location": {
@@ -2009,7 +2015,7 @@
               "line": 133,
               "character": 14
             },
-            "type": "void"
+            "type": "any"
           },
           "modifiers": []
         },
@@ -3127,30 +3133,48 @@
             "signature": "const obj: {\n    a: number;\n    b: number;\n}",
             "name": "obj",
             "type": {
-              "__schema": "ArrayLiteralExpressionSchema",
+              "__schema": "ObjectLiteralExpressionSchema",
               "location": {
                 "filePath": "index.ts",
                 "line": 59,
-                "character": 7
+                "character": 13
               },
               "members": [
                 {
-                  "__schema": "InferenceTypeSchema",
+                  "__schema": "PropertyAssignmentSchema",
                   "location": {
                     "filePath": "index.ts",
                     "line": 59,
-                    "character": 7
+                    "character": 15
                   },
-                  "type": "a: number"
+                  "name": "a",
+                  "value": {
+                    "__schema": "LiteralValueSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 59,
+                      "character": 18
+                    },
+                    "value": "1"
+                  }
                 },
                 {
-                  "__schema": "InferenceTypeSchema",
+                  "__schema": "PropertyAssignmentSchema",
                   "location": {
                     "filePath": "index.ts",
                     "line": 59,
-                    "character": 7
+                    "character": 21
                   },
-                  "type": "b: number"
+                  "name": "b",
+                  "value": {
+                    "__schema": "LiteralValueSchema",
+                    "location": {
+                      "filePath": "index.ts",
+                      "line": 59,
+                      "character": 24
+                    },
+                    "value": "2"
+                  }
                 }
               ]
             },
@@ -4867,23 +4891,50 @@
           "signature": "const a1: {\n    a: number;\n    b: number;\n}",
           "name": "a1",
           "type": {
-            "__schema": "TypeQuerySchema",
+            "__schema": "ObjectLiteralExpressionSchema",
             "location": {
               "filePath": "index.ts",
               "line": 61,
-              "character": 18
+              "character": 31
             },
-            "signature": "const obj: {\n    a: number;\n    b: number;\n}",
-            "type": {
-              "__schema": "TypeRefSchema",
-              "location": {
-                "filePath": "index.ts",
-                "line": 61,
-                "character": 25
+            "members": [
+              {
+                "__schema": "PropertyAssignmentSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 61,
+                  "character": 33
+                },
+                "name": "a",
+                "value": {
+                  "__schema": "LiteralValueSchema",
+                  "location": {
+                    "filePath": "index.ts",
+                    "line": 61,
+                    "character": 36
+                  },
+                  "value": "5"
+                }
               },
-              "name": "obj",
-              "internalFilePath": "index.ts"
-            }
+              {
+                "__schema": "PropertyAssignmentSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 61,
+                  "character": 39
+                },
+                "name": "b",
+                "value": {
+                  "__schema": "LiteralValueSchema",
+                  "location": {
+                    "filePath": "index.ts",
+                    "line": 61,
+                    "character": 42
+                  },
+                  "value": "9"
+                }
+              }
+            ]
           },
           "isOptional": false,
           "defaultValue": "{ a: 5, b: 9 }"
@@ -5829,28 +5880,7 @@
             },
             "signature": "const gfnc2: <T>(a: T) => void",
             "name": "anonymous",
-            "params": [
-              {
-                "__schema": "ParameterSchema",
-                "location": {
-                  "filePath": "index.ts",
-                  "line": 133,
-                  "character": 14
-                },
-                "name": "a",
-                "type": {
-                  "__schema": "InferenceTypeSchema",
-                  "location": {
-                    "filePath": "index.ts",
-                    "line": 133,
-                    "character": 14
-                  },
-                  "type": "T"
-                },
-                "isOptional": false,
-                "isSpread": false
-              }
-            ],
+            "params": [],
             "returnType": {
               "__schema": "InferenceTypeSchema",
               "location": {
@@ -5858,7 +5888,7 @@
                 "line": 133,
                 "character": 14
               },
-              "type": "void"
+              "type": "any"
             },
             "modifiers": []
           },
@@ -6976,30 +7006,48 @@
               "signature": "const obj: {\n    a: number;\n    b: number;\n}",
               "name": "obj",
               "type": {
-                "__schema": "ArrayLiteralExpressionSchema",
+                "__schema": "ObjectLiteralExpressionSchema",
                 "location": {
                   "filePath": "index.ts",
                   "line": 59,
-                  "character": 7
+                  "character": 13
                 },
                 "members": [
                   {
-                    "__schema": "InferenceTypeSchema",
+                    "__schema": "PropertyAssignmentSchema",
                     "location": {
                       "filePath": "index.ts",
                       "line": 59,
-                      "character": 7
+                      "character": 15
                     },
-                    "type": "a: number"
+                    "name": "a",
+                    "value": {
+                      "__schema": "LiteralValueSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 59,
+                        "character": 18
+                      },
+                      "value": "1"
+                    }
                   },
                   {
-                    "__schema": "InferenceTypeSchema",
+                    "__schema": "PropertyAssignmentSchema",
                     "location": {
                       "filePath": "index.ts",
                       "line": 59,
-                      "character": 7
+                      "character": 21
                     },
-                    "type": "b: number"
+                    "name": "b",
+                    "value": {
+                      "__schema": "LiteralValueSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 59,
+                        "character": 24
+                      },
+                      "value": "2"
+                    }
                   }
                 ]
               },

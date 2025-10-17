@@ -765,6 +765,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/harmony-ui-app/harmony-ui-app"
     },
+    "hooks/use-api": {
+        "name": "hooks/use-api",
+        "scope": "teambit.api-reference",
+        "version": "0.0.56",
+        "mainFile": "index.ts",
+        "rootDir": "components/hooks/use-api"
+    },
     "hooks/use-cloud-scopes": {
         "name": "hooks/use-cloud-scopes",
         "scope": "teambit.cloud",
@@ -946,6 +953,20 @@
         "version": "0.0.514",
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/model/composition-type"
+    },
+    "models/api-node-renderer": {
+        "name": "models/api-node-renderer",
+        "scope": "teambit.api-reference",
+        "version": "0.0.52",
+        "mainFile": "index.ts",
+        "rootDir": "components/models/api-node-renderer"
+    },
+    "models/api-reference-model": {
+        "name": "models/api-reference-model",
+        "scope": "teambit.api-reference",
+        "version": "0.0.52",
+        "mainFile": "index.ts",
+        "rootDir": "components/models/api-reference-model"
     },
     "models/cloud-scope": {
         "name": "models/cloud-scope",
@@ -1443,6 +1464,13 @@
         "version": "0.0.6",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/scripts"
+    },
+    "sections/api-reference-page": {
+        "name": "sections/api-reference-page",
+        "scope": "teambit.api-reference",
+        "version": "0.0.119",
+        "mainFile": "index.ts",
+        "rootDir": "components/sections/api-reference-page"
     },
     "sidebar": {
         "name": "sidebar",
@@ -2038,6 +2066,13 @@
         "version": "0.0.28",
         "mainFile": "index.ts",
         "rootDir": "components/legacy/utils"
+    },
+    "utils/sort-api-nodes": {
+        "name": "utils/sort-api-nodes",
+        "scope": "teambit.api-reference",
+        "version": "0.0.52",
+        "mainFile": "index.ts",
+        "rootDir": "components/utils/sort-api-nodes"
     },
     "validator": {
         "name": "validator",

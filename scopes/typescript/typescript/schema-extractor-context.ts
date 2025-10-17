@@ -531,7 +531,7 @@ export class SchemaExtractorContext {
    * Create schema for function type, handling params and return type
    */
   private async createFunctionSchema(node: Node, location: Location, signature: string): Promise<FunctionLikeSchema> {
-    const match = signature.match(/\((.*)\)\s*(?:=>|:)\s*(.+)/);
+    const match = signature.match(/^\s*\(([^)]*)\)\s*(?:=>|:)\s*(.+)$/);
     if (!match) {
       return new FunctionLikeSchema(location, 'anonymous', [], new InferenceTypeSchema(location, 'any'), signature);
     }
@@ -693,6 +693,7 @@ export class SchemaExtractorContext {
     const mainIdentifier = new Identifier(typeStr, mainFileIdentifierKey);
 
     const parsedNodeIdentifier = nodeIdentifierList?.find(nodeIdentifier);
+
     const parsedMainIdentifier = mainIdentifierList?.find(mainIdentifier);
     const isExportedFromMain = parsedMainIdentifier && ExportIdentifier.isExportIdentifier(parsedMainIdentifier);
 
