@@ -693,6 +693,7 @@ export class SchemaExtractorContext {
     const mainIdentifier = new Identifier(typeStr, mainFileIdentifierKey);
 
     const parsedNodeIdentifier = nodeIdentifierList?.find(nodeIdentifier);
+
     const parsedMainIdentifier = mainIdentifierList?.find(mainIdentifier);
     const isExportedFromMain = parsedMainIdentifier && ExportIdentifier.isExportIdentifier(parsedMainIdentifier);
 

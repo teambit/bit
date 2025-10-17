@@ -32,6 +32,7 @@ export class ObjectLiteralExpressionTransformer implements SchemaTransformer {
             context.getIdentifierKeyForNode(init),
             context.getLocation(init)
           );
+
           if (internalRef) return internalRef;
 
           return context.getTypeRefForExternalNode(init);
@@ -50,6 +51,7 @@ export class ObjectLiteralExpressionTransformer implements SchemaTransformer {
             context.getIdentifierKeyForNode(init),
             context.getLocation(init)
           );
+
           const valueSchema = internalRef ?? (await context.getTypeRefForExternalNode(init));
           return new PropertyAssignmentSchema(schema.name, valueSchema, schema.location, schema.doc);
         }
