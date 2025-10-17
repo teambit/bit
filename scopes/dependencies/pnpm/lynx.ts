@@ -82,6 +82,8 @@ async function createStoreController(
     fetchTimeout: options.networkConfig.fetchTimeout,
     virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
     registries: options.registries.toMap(),
+    fetchWarnTimeoutMs: options.networkConfig.fetchWarnTimeoutMs,
+    fetchMinSpeedKiBps: options.networkConfig.fetchMinSpeedKiBps,
   };
   return createOrConnectStoreController(opts);
 }
@@ -125,6 +127,8 @@ export async function generateResolverAndFetcher({
     },
     registries: registries.toMap(),
     fullMetadata,
+    fetchWarnTimeoutMs: networkConfig?.fetchWarnTimeoutMs,
+    fetchMinSpeedKiBps: networkConfig?.fetchMinSpeedKiBps,
   };
   const result = createClient(opts);
   return result;

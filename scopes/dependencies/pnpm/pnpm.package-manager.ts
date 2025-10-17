@@ -426,47 +426,63 @@ export class PnpmPackageManager implements PackageManager {
   /**
    * Calculating the dependencies graph of a given component using the lockfile.
    */
-  async calcDependenciesGraph(opts: CalcDepsGraphOptions): Promise<DependenciesGraph | undefined> {
-    const lockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: false });
-    if (!lockfile) {
-      return undefined;
+  async calcDependenciesGraph(opts: CalcDepsGraphOptions): Promise<void> {
+    const originalLockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: false });
+    if (!originalLockfile) {
+      return;
     }
-    if (opts.componentRootDir && !lockfile.importers[opts.componentRootDir] && opts.componentRootDir.includes('@')) {
-      opts.componentRootDir = opts.componentRootDir.split('@')[0];
-    }
-    const filterByImporterIds = [opts.componentRelativeDir as ProjectId];
-    if (opts.componentRootDir != null) {
-      filterByImporterIds.push(opts.componentRootDir as ProjectId);
-    }
-    for (const importerId of filterByImporterIds) {
-      for (const depType of [
-        'dependencies',
-        'devDependencies',
-        'optionalDependencies',
-        'specifiers',
-        'dependenciesMeta',
-      ]) {
-        for (const workspacePkgName of opts.componentIdByPkgName.keys()) {
-          if (workspacePkgName !== opts.pkgName) {
-            delete lockfile.importers[importerId]?.[depType]?.[workspacePkgName];
+    for (const { componentRootDir, componentRelativeDir, pkgName, component } of opts.components) {
+      const lockfile = structuredClone(originalLockfile);
+      let compRootDir: string | undefined;
+      if (componentRootDir && !lockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
+        compRootDir = componentRootDir.split('@')[0];
+      } else {
+        compRootDir = componentRootDir;
+      }
+      if (!lockfile.importers[compRootDir as ProjectId]) {
+        // This will only happen if the env was not loaded correctly before install.
+        // But in this case we cannot calculate the dependency graph from the lockfile.
+        continue;
+      }
+      const filterByImporterIds = [componentRelativeDir as ProjectId];
+      if (compRootDir != null) {
+        filterByImporterIds.push(compRootDir as ProjectId);
+      }
+      for (const importerId of filterByImporterIds) {
+        for (const depType of [
+          'dependencies',
+          'devDependencies',
+          'optionalDependencies',
+          'specifiers',
+          'dependenciesMeta',
+        ]) {
+          for (const workspacePkgName of opts.componentIdByPkgName.keys()) {
+            if (workspacePkgName !== pkgName) {
+              delete lockfile.importers[importerId]?.[depType]?.[workspacePkgName];
+            }
           }
         }
       }
+      // Filters the lockfile so that it only includes packages related to the given component.
+      const partialLockfile = convertLockfileObjectToLockfileFile(
+        filterLockfileByImporters(lockfile, filterByImporterIds, {
+          include: {
+            dependencies: true,
+            devDependencies: true,
+            optionalDependencies: true,
+          },
+          failOnMissingDependencies: false,
+          skipped: new Set(),
+        })
+      );
+      const graph = convertLockfileToGraph(partialLockfile, {
+        ...opts,
+        componentRootDir: compRootDir,
+        componentRelativeDir,
+        pkgName,
+      });
+      component.state._consumer.dependenciesGraph = graph;
     }
-    // Filters the lockfile so that it only includes packages related to the given component.
-    const partialLockfile = convertLockfileObjectToLockfileFile(
-      filterLockfileByImporters(lockfile, filterByImporterIds, {
-        include: {
-          dependencies: true,
-          devDependencies: true,
-          optionalDependencies: true,
-        },
-        failOnMissingDependencies: false,
-        skipped: new Set(),
-      })
-    );
-    const graph = convertLockfileToGraph(partialLockfile, opts);
-    return graph;
   }
 }
 

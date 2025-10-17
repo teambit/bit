@@ -172,7 +172,7 @@ export async function getDependencyTree({
     }
     return path.resolve(componentDir, filePath);
   });
-  const { madgeTree, skipped, pathMap, errors } = generateTree(fullPaths, config);
+  const { madgeTree, skipped, pathMap, errors } = await generateTree(fullPaths, config);
   const tree: DependenciesTree = MadgeTreeToDependenciesTree(madgeTree, componentDir);
   const { missingGroups, foundPackages } = new MissingHandler(
     skipped,
