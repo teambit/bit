@@ -72,7 +72,6 @@
         "@teambit/any-fs": "0.0.5",
         "@teambit/api-reference.explorer.api-reference-explorer": "^0.0.39",
         "@teambit/api-reference.hooks.use-api-ref-url": "^0.0.25",
-        "@teambit/api-reference.hooks.use-api-renderers": "^0.0.36",
         "@teambit/api-reference.overview.api-reference-table-of-contents": "^0.0.39",
         "@teambit/api-reference.sections.api-reference-section": "^0.0.16",
         "@teambit/api-reference.utils.code-editor-options": "^0.0.16",

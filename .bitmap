@@ -772,6 +772,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/hooks/use-api"
     },
+    "hooks/use-api-renderers": {
+        "name": "hooks/use-api-renderers",
+        "scope": "teambit.api-reference",
+        "version": "0.0.36",
+        "mainFile": "index.ts",
+        "rootDir": "components/hooks/use-api-renderers"
+    },
     "hooks/use-cloud-scopes": {
         "name": "hooks/use-cloud-scopes",
         "scope": "teambit.cloud",
