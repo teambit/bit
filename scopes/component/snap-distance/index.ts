@@ -11,3 +11,4 @@ export {
   getVersionParentsFromVersion,
   GetAllVersionHashesParams,
 } from './traverse-versions';
+export { TargetHeadNotFound } from './target-head-not-found';
