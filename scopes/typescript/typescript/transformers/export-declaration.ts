@@ -34,6 +34,7 @@ export class ExportDeclarationTransformer implements SchemaTransformer {
         const alias = (elm.propertyName && elm.name.getText()) || undefined;
         const id = elm.propertyName?.getText() || elm.name.getText();
         const fileName = elm.getSourceFile().fileName;
+
         return new ExportIdentifier(id, fileName, alias, sourceFilePath);
       });
     }
