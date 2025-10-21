@@ -732,7 +732,7 @@ describe('merge config scenarios', function () {
       expect(deps).to.include('lodash');
     });
   });
-  describe('diverge: lane merges main when config unchanged but auto-dep bumped (deps set via overrides)', () => {
+  describe('diverge: lane merges main when config unchanged but auto-dep bumped (deps set via variants)', () => {
     let mainBeforeDiverge: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
