@@ -732,4 +732,51 @@ describe('merge config scenarios', function () {
       expect(deps).to.include('lodash');
     });
   });
+  describe('diverge: lane merges main when config unchanged but auto-dep bumped on main', () => {
+    let mainBeforeDiverge: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/index.js', `import R from 'ramda';`);
+      helper.npm.addFakeNpmPackage('ramda', '0.0.19');
+      helper.npm.addFakeNpmPackage('@types/express', '4.17.21');
+      // Set a manual dev dependency (force: true)
+      helper.command.dependenciesSet('comp1', '@types/express@4.17.21', '--dev');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      mainBeforeDiverge = helper.scopeHelper.cloneWorkspace();
+
+      helper.command.createLane();
+      // Lane doesn't change the manual dep, only makes an unmodified snap
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.getClonedWorkspace(mainBeforeDiverge);
+      // Main bumps the auto-detected dependency
+      helper.npm.addFakeNpmPackage('ramda', '0.0.21');
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { ramda: '0.0.21' } });
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('dev', '--skip-dependency-installation');
+      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation --ignore-config-changes');
+    });
+    // This is the bug fix: when config is unchanged between current/other/base,
+    // but auto deps are being merged, the unchanged force:true deps should be preserved
+    it('should preserve the manual devDependency (force:true) in the merged config', () => {
+      const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+      const typesExpressDep = showConfig.data.dependencies.find((d) => d.id === '@types/express');
+      expect(typesExpressDep).to.not.be.undefined;
+      expect(typesExpressDep.version).to.equal('4.17.21');
+      expect(typesExpressDep.lifecycle).to.equal('dev');
+    });
+    it('should also include the bumped auto dependency from main', () => {
+      const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+      const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
+      expect(ramdaDep).to.not.be.undefined;
+      expect(ramdaDep.version).to.equal('0.0.21');
+    });
+  });
 });
