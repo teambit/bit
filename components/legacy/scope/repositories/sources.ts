@@ -6,13 +6,14 @@ import { BuildStatus } from '@teambit/legacy.constants';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
 import type { ComponentObjects } from '../component-objects';
-import type { VersionInfo } from '@teambit/component.snap-distance';
+import type { SnapsDistance, VersionInfo } from '@teambit/component.snap-distance';
 import {
   getAllVersionHashes,
   getAllVersionsInfo,
   getSubsetOfVersionParents,
   getVersionParentsFromVersion,
   getDivergeData,
+  TargetHeadNotFound,
 } from '@teambit/component.snap-distance';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
@@ -614,12 +615,17 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
 
     if (existingLane && !existingLaneWithSameId) {
       // the lane id has changed
+      logger.debug(`sources.mergeLane, lane id has changed from ${existingLane.toLaneId()} to ${lane.toLaneId()}`);
       existingLane.changeScope(lane.scope);
       existingLane.changeName(lane.name);
     }
     const mergeResults: MergeResult[] = [];
     const mergeErrors: ComponentNeedsUpdate[] = [];
     const isExport = !isImport;
+
+    logger.debug(
+      `sources.mergeLane, isExport: ${isExport}, versionObjects: ${versionObjects?.length || 0}, versionParents: ${versionParents?.length || 0}`
+    );
 
     const getModelComponent = async (id: ComponentID): Promise<ModelComponent> => {
       const modelComponent =
@@ -671,13 +677,27 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
       const subsetOfVersionParents = versionParents
         ? getSubsetOfVersionParents(versionParents, component.head)
         : undefined;
-      const divergeResults = await getDivergeData({
-        repo,
-        modelComponent,
-        targetHead: component.head,
-        sourceHead: existingComponent.head,
-        versionParentsFromObjects: subsetOfVersionParents,
-      });
+      let divergeResults: SnapsDistance;
+      try {
+        divergeResults = await getDivergeData({
+          repo,
+          modelComponent,
+          targetHead: component.head,
+          sourceHead: existingComponent.head,
+          versionParentsFromObjects: subsetOfVersionParents,
+        });
+      } catch (err) {
+        if (err instanceof TargetHeadNotFound && isExport) {
+          throw new Error(`unable to merge component "${component.id.toString()}" on lane "${lane.toLaneId()}".
+the lane references snap "${component.head.toString()}", but this Version object was not found among the exported objects.
+total exported Version objects: ${versionObjects?.length || 0}.
+
+possible causes:
+- the lane object was exported without all its components
+- this snap should be available locally but is missing from the filesystem`);
+        }
+        throw err;
+      }
       if (divergeResults.isDiverged()) {
         if (isImport) {
           // do not update the local lane. later, suggest to snap-merge.

@@ -186,7 +186,7 @@ export class ScopeMain implements ComponentFactory {
 
     private aspectLoader: AspectLoaderMain,
 
-    private logger: Logger,
+    readonly logger: Logger,
 
     private envs: EnvsMain,
 
