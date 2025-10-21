@@ -740,8 +740,13 @@ describe('merge config scenarios', function () {
       helper.fs.outputFile('comp1/index.js', `import R from 'ramda';`);
       helper.npm.addFakeNpmPackage('ramda', '0.31.0');
       helper.npm.addFakeNpmPackage('@types/express', '4.17.21');
-      // Set a manual dev dependency (force: true)
-      helper.command.dependenciesSet('comp1', '@types/express@4.17.21', '--dev');
+
+      // Set a dev dependency (force: true)
+      // important!!! don't use "helper.command.dependenciesSet" for this. If you do, it'll be saved into the model with
+      // "__specific": true, and it won't reproduce the bug.
+      helper.workspaceJsonc.addToVariant('comp1', Extensions.dependencyResolver, {
+        policy: { devDependencies: { '@types/express': '4.17.21' } },
+      });
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       mainBeforeDiverge = helper.scopeHelper.cloneWorkspace();

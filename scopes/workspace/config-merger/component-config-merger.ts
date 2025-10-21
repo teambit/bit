@@ -403,26 +403,14 @@ export class ComponentConfigMerger {
       };
 
       if (this.areConfigsEqual(currentConfig, otherConfig)) {
-        // Config policies are equal, but we still need to add them to mergedPolicy
-        // if there are auto dependencies being merged. This ensures unchanged
-        // force:true dependencies are preserved in the merged result.
-        // We'll add them and then return, since there's no conflict to process.
-        if (currentConfigPolicy.length) {
-          currentConfigPolicy.forEach((dep) => {
-            addVariantPolicyEntryToPolicy(dep);
-          });
-        }
+        // No need to add unchanged config deps here - they will be rescued by
+        // addConfigDepsFromModelToConfigMerge() in aspects-merger during component loading
         return;
       }
       if (baseConfig && this.areConfigsEqual(baseConfig, otherConfig)) {
-        // was changed on current, but we still need to add current config to mergedPolicy
-        // if there are auto dependencies being merged. This ensures unchanged
-        // force:true dependencies are preserved in the merged result.
-        if (currentConfigPolicy.length) {
-          currentConfigPolicy.forEach((dep) => {
-            addVariantPolicyEntryToPolicy(dep);
-          });
-        }
+        // was changed on current
+        // No need to add unchanged config deps here - they will be rescued by
+        // addConfigDepsFromModelToConfigMerge() in aspects-merger during component loading
         return;
       }
       if (currentConfig === '-' || otherConfig === '-') {

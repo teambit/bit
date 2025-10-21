@@ -6,7 +6,7 @@ import { EnvsAspect } from '@teambit/envs';
 import type { VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { ExtensionDataList, getCompareExtPredicate } from '@teambit/legacy.extension-data';
-import { partition, mergeWith, merge, uniq, uniqWith, compact } from 'lodash';
+import { partition, mergeWith, merge, uniq, uniqWith, compact, cloneDeep } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import type { ExtensionsOrigin, Workspace } from './workspace';
 import { AspectSpecificField } from './workspace';
@@ -64,7 +64,7 @@ export class AspectsMerger {
     }
 
     const unmergedData = this.getUnmergedData(componentId);
-    const unmergedDataMergeConf = unmergedData?.mergedConfig;
+    const unmergedDataMergeConf = unmergedData?.mergedConfig ? cloneDeep(unmergedData.mergedConfig) : undefined;
     const getMergeConfigCombined = () => {
       if (!configMerge && !unmergedDataMergeConf) return undefined;
       if (!configMerge) return unmergedDataMergeConf;
@@ -94,7 +94,7 @@ export class AspectsMerger {
     const scopeExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
     const scopeExtensionsSpecific = new ExtensionDataList(...specific);
 
-    this.addConfigDepsFromModelToConfigMerge(scopeExtensionsSpecific, mergeConfigCombined);
+    this.addConfigDepsFromModelToConfigMerge(scopeExtensions, mergeConfigCombined);
 
     const componentConfigFile = await this.workspace.componentConfigFile(componentId);
     if (componentConfigFile) {
