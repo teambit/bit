@@ -3,7 +3,7 @@ import cx from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
+// import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
 import type { LanesHost } from '@teambit/lanes.ui.models.lanes-model';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { Link as BaseLink } from '@teambit/base-react.navigation.link';
@@ -24,15 +24,21 @@ export function UseLaneMenu({
   viewedLaneId,
   currentLaneId,
   actionName,
+  docsLink = 'https://bit.dev/reference/change-requests/building-lanes',
   actionIcon,
+  menuPlaceholderClass,
   menuClassName,
+  className,
 }: {
   host: LanesHost;
   viewedLaneId: LaneId;
   currentLaneId?: LaneId;
   actionName?: string;
   actionIcon?: string;
-  menuClassName?: string
+  className?: string;
+  menuPlaceholderClass?: string;
+  menuClassName?: string;
+  docsLink?: string;
 }) {
   const switchedOutToCurrentLane = !!currentLaneId?.isEqual(currentLaneId);
   const Menu = (
@@ -45,7 +51,7 @@ export function UseLaneMenu({
       </div>
       <LaneImportContent host={host} currentLaneId={viewedLaneId} switchedOutToCurrentLane={switchedOutToCurrentLane} />
       <div className={styles.moreInfo}>
-        <Link external href={'https://bit.dev/reference/lanes/lanes-overview'} className={linkStyles}>
+        <Link external href={docsLink} className={styles.link}>
           <Icon of="information-sign" />
           <div className={styles.drawerTitle}>Learn more about Lanes</div>
         </Link>
@@ -58,7 +64,8 @@ export function UseLaneMenu({
       actionName={actionName}
       actionIcon={actionIcon}
       position="bottom-end"
-      className={styles.useBox}
+      placeholderClass={menuPlaceholderClass}
+      className={cx(styles.useBox, className)}
       Menu={Menu}
     />
   );
