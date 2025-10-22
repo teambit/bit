@@ -246,6 +246,37 @@ export class ComponentConfigMerger {
     return { id, conflict: { currentConfig, otherConfig, baseConfig } };
   }
 
+  /**
+   * Performs a specialized 3-way merge for the dependency-resolver aspect configuration.
+   *
+   * This method handles merging of dependency configurations which is more complex than other aspects because:
+   * 1. Dependencies come from TWO sources:
+   *    - Config (policy): explicitly configured by user (marked with force: true)
+   *    - Data (auto): automatically detected from import statements in code (source: 'auto')
+   * 2. We need to merge both sources together to get the complete dependency picture
+   *
+   * The merge process:
+   * 1. Handles config policy merge (explicit dependencies):
+   *    - Compares each dependency in current vs other vs base config policies
+   *    - Uses 3-way merge: if base==other, use current; if base==current, use other; else conflict
+   *    - Skips dependencies that exist in workspace or other lane (they'll be resolved locally)
+   *
+   * 2. Handles data dependencies merge (auto-detected dependencies):
+   *    - Merges auto-detected deps from both current and other
+   *    - For each dependency, determines if it should be added, kept, or marked as conflict
+   *    - Ignores environment dependencies (handled separately by envStrategy)
+   *    - Skips workspace dependencies (resolved to workspace version)
+   *
+   * 3. Conflict detection:
+   *    - Version conflicts marked with special format: "CONFLICT::currentVer::otherVer::"
+   *    - Respects merge strategy (ours/theirs/manual) for automatic resolution
+   *
+   * Returns:
+   * - undefined if this is not the dependency-resolver aspect
+   * - MergeStrategyResult with either:
+   *   - mergedConfig: successfully merged dependency policy
+   *   - conflict: conflicted dependencies marked with version conflicts
+   */
   private depResolverStrategy(params: MergeStrategyParams): MergeStrategyResult | undefined {
     if (params.id !== DependencyResolverAspect.id) return undefined;
     this.logger.trace(`start depResolverStrategy for ${this.compIdStr}`);
@@ -372,10 +403,14 @@ export class ComponentConfigMerger {
       };
 
       if (this.areConfigsEqual(currentConfig, otherConfig)) {
+        // No need to add unchanged config deps here - they will be rescued by
+        // addConfigDepsFromModelToConfigMerge() in aspects-merger during component loading
         return;
       }
       if (baseConfig && this.areConfigsEqual(baseConfig, otherConfig)) {
         // was changed on current
+        // No need to add unchanged config deps here - they will be rescued by
+        // addConfigDepsFromModelToConfigMerge() in aspects-merger during component loading
         return;
       }
       if (currentConfig === '-' || otherConfig === '-') {
