@@ -16,7 +16,7 @@ import { TopBar } from '@teambit/ui-foundation.ui.top-bar';
 import { PreserveWorkspaceMode } from '@teambit/workspace.ui.preserve-workspace-mode';
 import classNames from 'classnames';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
-import { useUrlChangeBroadcaster } from '@teambit/workspace.hooks.use-workspace-url-change-broadcaster';
+import { useUrlChangeBroadcaster } from '@teambit/workspace.hooks.use-url-change-broadcaster';
 
 import { useWorkspace } from './use-workspace';
 import { WorkspaceOverview } from './workspace-overview';
