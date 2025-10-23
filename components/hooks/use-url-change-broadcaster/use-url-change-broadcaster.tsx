@@ -4,14 +4,8 @@ import { useLocation } from 'react-router-dom';
 export const URL_CHANGE_EVENT = 'WORKSPACE_URL_CHANGE';
 
 export type UrlChangeBroadcasterOptions = {
-  /** destination origin for postMessage (default: '*') */
   targetOrigin?: string;
-  /** debounce time in ms */
   debounceMs?: number;
-  /**
-   * function to transform or enrich the payload
-   * before it’s sent via postMessage.
-   */
   enrichPayload?: (payload: UrlChangePayload) => Record<string, unknown>;
 };
 
@@ -23,10 +17,6 @@ export type UrlChangePayload = {
   timestamp: number;
 };
 
-/**
- * Hook that broadcasts URL changes via postMessage to window.parent.
- * Mount it only when you want it active.
- */
 export function useUrlChangeBroadcaster({
   targetOrigin = '*',
   debounceMs = 0,
