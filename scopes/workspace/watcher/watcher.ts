@@ -68,6 +68,7 @@ export type RootDirs = { [dir: PathLinux]: ComponentID };
 type WatcherType = 'chokidar' | 'parcel';
 
 const DEBOUNCE_WAIT_MS = 100;
+const DROP_ERROR_DEBOUNCE_MS = 300; // Wait 300ms after last drop error before recovering
 type PathLinux = string; // ts fails when importing it from @teambit/legacy/dist/utils/path.
 
 export class Watcher {
@@ -82,6 +83,11 @@ export class Watcher {
   private multipleWatchers: WatcherProcessData[] = [];
   private logger: Logger;
   private workspacePathLinux: string;
+  // Snapshot-based recovery for FSEvents buffer overflow
+  private snapshotPath: PathOsBasedAbsolute;
+  private dropErrorDebounceTimer: NodeJS.Timeout | null = null;
+  private dropErrorCount = 0;
+  private isRecoveringFromSnapshot = false;
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
@@ -93,6 +99,7 @@ export class Watcher {
     this.verbose = this.options.verbose || false;
     this.logger = this.watcherMain.logger;
     this.workspacePathLinux = pathNormalizeToLinux(this.workspace.path);
+    this.snapshotPath = join(this.workspace.scope.path, 'watcher-snapshot.txt');
 
     if (process.env.BIT_WATCHER_USE_CHOKIDAR === 'true' || process.env.BIT_WATCHER_USE_CHOKIDAR === '1') {
       this.watcherType = 'chokidar';
@@ -101,6 +108,16 @@ export class Watcher {
 
   get consumer(): Consumer {
     return this.workspace.consumer;
+  }
+
+  private getParcelIgnorePatterns(): string[] {
+    return [
+      '**/node_modules/**',
+      '**/package.json',
+      `**/${this.workspace.scope.path}/cache/**`,
+      `**/${this.workspace.scope.path}/tmp/**`,
+      `**/${this.workspace.scope.path}/objects/**`,
+    ];
   }
 
   async watch() {
@@ -113,10 +130,15 @@ export class Watcher {
 
   private async watchParcel() {
     this.msgs?.onStart(this.workspace);
+
     try {
       await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), {
-        ignore: ['**/node_modules/**', '**/package.json'],
+        ignore: this.getParcelIgnorePatterns(),
       });
+
+      // Write initial snapshot for FSEvents buffer overflow recovery
+      await this.writeSnapshotIfNeeded();
+      this.logger.debug('Initial watcher snapshot created');
     } catch (err: any) {
       if (err.message.includes('Error starting FSEvents stream')) {
         throw new Error(`Failed to start the watcher: ${err.message}
@@ -487,18 +509,13 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
 
   private shouldIgnoreFromLocalScopeChokidar(pathToCheck: string) {
     if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
-    return (
-      pathToCheck.startsWith(`${this.workspacePathLinux}/.git/`) ||
-      pathToCheck.startsWith(`${this.workspacePathLinux}/.bit/`)
-    );
+    const scopePathLinux = pathNormalizeToLinux(this.workspace.scope.path);
+    return pathToCheck.startsWith(`${scopePathLinux}/`);
   }
 
   private shouldIgnoreFromLocalScopeParcel(pathToCheck: string) {
     if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
-    return (
-      pathToCheck.startsWith(join(this.workspace.path, '.git') + sep) ||
-      pathToCheck.startsWith(join(this.workspace.path, '.bit') + sep)
-    );
+    return pathToCheck.startsWith(this.workspace.scope.path + sep);
   }
 
   private async createChokidarWatcher() {
@@ -520,33 +537,76 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
 
   private async onParcelWatch(err: Error | null, allEvents: Event[]) {
     const events = allEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
-    if (!events.length) {
-      return;
+
+    if (this.verbose) {
+      this.logger.debug(
+        `onParcelWatch: ${allEvents.length} events, ${events.length} after filtering, error: ${err?.message || 'none'}`
+      );
     }
 
     const msgs = this.msgs;
     if (this.verbose) {
       if (msgs?.onAll) events.forEach((event) => msgs.onAll(event.type, event.path));
     }
-    if (err) {
-      if (!err.message.includes('Events were dropped by the FSEvents client')) {
-        // the message above shows up too many times and it doesn't affect the watcher.
-        msgs?.onError(err);
-      }
-      // don't throw on other errors, just log them.
-      // for example, when running "bit install" on a big project, it might error out with:
-      // "Error: Events were dropped by the FSEvents client. File system must be re-scanned."
-      // but it still works for the future events.
-    }
-    const startTime = new Date().getTime();
-    await mapSeries(events, async (event) => {
-      const { files, results, debounced, irrelevant, failureMsg } = await this.handleChange(event.path);
-      if (debounced || irrelevant) {
+
+    // Handle FSEvents buffer overflow with debounced snapshot recovery
+    if (err?.message.includes('Events were dropped')) {
+      // If recovery is already in progress, don't schedule another one
+      if (this.isRecoveringFromSnapshot) {
+        this.logger.debug('Recovery already in progress, ignoring additional drop error');
         return;
       }
-      const duration = new Date().getTime() - startTime;
-      msgs?.onChange(files, results, this.verbose, duration, failureMsg);
+
+      this.dropErrorCount++;
+      this.logger.warn(`⚠️  FSEvents buffer overflow detected (occurrence #${this.dropErrorCount})`);
+
+      // Clear existing timer and schedule new recovery
+      if (this.dropErrorDebounceTimer) {
+        clearTimeout(this.dropErrorDebounceTimer);
+      }
+
+      this.dropErrorDebounceTimer = setTimeout(async () => {
+        await this.recoverFromSnapshot();
+        this.dropErrorDebounceTimer = null;
+      }, DROP_ERROR_DEBOUNCE_MS);
+
+      // Don't process events if we got a drop error - wait for recovery
+      return;
+    }
+
+    // Handle other errors
+    if (err) {
+      msgs?.onError(err);
+      // Continue processing events even with other errors
+    }
+
+    if (!events.length) {
+      return;
+    }
+
+    const startTime = new Date().getTime();
+    await this.processEvents(events, startTime);
+
+    // Write snapshot after successful processing (non-blocking)
+    this.writeSnapshotIfNeeded().catch((writeErr) => {
+      this.logger.debug(`Failed to write watcher snapshot: ${writeErr.message}`);
     });
+  }
+
+  /**
+   * Process a list of file system events through the normal change handling pipeline.
+   */
+  private async processEvents(events: Event[], startTime: number): Promise<void> {
+    await Promise.all(
+      events.map(async (event) => {
+        const { files, results, debounced, irrelevant, failureMsg } = await this.handleChange(event.path);
+        if (debounced || irrelevant) {
+          return;
+        }
+        const duration = new Date().getTime() - startTime;
+        this.msgs?.onChange(files, results, this.verbose, duration, failureMsg);
+      })
+    );
   }
 
   private async setRootDirs() {
@@ -557,5 +617,141 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
       const rootDir = componentMap.getRootDir();
       this.rootDirs[rootDir] = componentId;
     });
+  }
+
+  /**
+   * Write a snapshot of the current filesystem state for recovery after FSEvents buffer overflow.
+   * This is called after successful event processing.
+   */
+  private async writeSnapshotIfNeeded(): Promise<void> {
+    if (this.watcherType !== 'parcel') {
+      return; // Snapshots only work with Parcel watcher
+    }
+
+    if (this.isRecoveringFromSnapshot) {
+      return; // Don't write snapshot while recovering
+    }
+
+    try {
+      await ParcelWatcher.writeSnapshot(this.workspace.path, this.snapshotPath, {
+        ignore: this.getParcelIgnorePatterns(),
+      });
+      this.logger.debug('Watcher snapshot written successfully');
+    } catch (err: any) {
+      this.logger.debug(`Failed to write watcher snapshot: ${err.message}`);
+    }
+  }
+
+  /**
+   * Recover from FSEvents buffer overflow by reading all events since the last snapshot.
+   * This is called after debouncing multiple drop errors.
+   */
+  private async recoverFromSnapshot(): Promise<void> {
+    if (this.isRecoveringFromSnapshot) {
+      this.logger.debug('Already recovering from snapshot, skipping');
+      return;
+    }
+
+    this.isRecoveringFromSnapshot = true;
+
+    // Clear the debounce timer since we're now executing the recovery
+    if (this.dropErrorDebounceTimer) {
+      clearTimeout(this.dropErrorDebounceTimer);
+      this.dropErrorDebounceTimer = null;
+    }
+
+    const startTime = new Date().getTime();
+    const dropsDetected = this.dropErrorCount;
+
+    // Reset drop error counter immediately to prevent multiple recoveries
+    this.dropErrorCount = 0;
+
+    try {
+      if (this.verbose) {
+        this.logger.console(
+          chalk.yellow(
+            `Recovering from FSEvents buffer overflow (${dropsDetected} drops detected). Scanning for missed events...`
+          )
+        );
+      }
+
+      // Check if snapshot exists
+      if (!(await fs.pathExists(this.snapshotPath))) {
+        if (this.verbose) {
+          this.logger.console(chalk.yellow('No snapshot found. Skipping recovery.'));
+        }
+        return;
+      }
+
+      // Get all events since last snapshot
+      const missedEvents = await ParcelWatcher.getEventsSince(this.workspace.path, this.snapshotPath, {
+        ignore: this.getParcelIgnorePatterns(),
+      });
+
+      // Write new snapshot immediately after reading events to prevent re-processing same events
+      await this.writeSnapshotIfNeeded();
+
+      const filteredEvents = missedEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
+
+      if (this.verbose) {
+        this.logger.console(
+          chalk.green(
+            `Found ${filteredEvents.length} missed events (${missedEvents.length} total, ${missedEvents.length - filteredEvents.length} ignored)`
+          )
+        );
+      }
+
+      if (filteredEvents.length === 0) {
+        if (this.verbose) {
+          this.logger.console(chalk.green('No relevant missed events. Watcher state is consistent.'));
+        }
+        return;
+      }
+
+      // Log critical files that were missed (for debugging)
+      if (this.verbose) {
+        const criticalFiles = filteredEvents.filter(
+          (e) => e.path.endsWith(BIT_MAP) || e.path.endsWith(WORKSPACE_JSONC)
+        );
+        if (criticalFiles.length > 0) {
+          this.logger.console(
+            chalk.cyan(`Critical files in missed events: ${criticalFiles.map((e) => basename(e.path)).join(', ')}`)
+          );
+        }
+      }
+
+      // Process all missed events using shared helper
+      await this.processEvents(filteredEvents, startTime);
+
+      if (this.verbose) {
+        const duration = new Date().getTime() - startTime;
+        this.logger.console(chalk.green(`✓ Recovery complete in ${duration}ms. Watcher state restored.`));
+      }
+    } catch (err: any) {
+      // If recovery failed with the same drop error, the operation is still ongoing - retry after delay
+      if (err.message?.includes('Events were dropped by the FSEvents client')) {
+        if (this.verbose) {
+          this.logger.console(
+            chalk.yellow(`Recovery scan also encountered buffer overflow. Retrying in ${DROP_ERROR_DEBOUNCE_MS}ms...`)
+          );
+        }
+
+        // Increment counter since we're encountering another drop
+        this.dropErrorCount++;
+
+        // Schedule another retry
+        setTimeout(async () => {
+          await this.recoverFromSnapshot();
+        }, DROP_ERROR_DEBOUNCE_MS);
+      } else {
+        // Other errors - log and give up (counter already reset at start)
+        this.logger.error(`Snapshot recovery failed: ${err.message}`);
+        if (this.verbose) {
+          this.logger.console(chalk.red(`Failed to recover from snapshot. Some events may have been missed.`));
+        }
+      }
+    } finally {
+      this.isRecoveringFromSnapshot = false;
+    }
   }
 }
