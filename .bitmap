@@ -800,6 +800,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/hooks/use-logout"
     },
+    "hooks/use-url-change-broadcaster": {
+        "name": "hooks/use-url-change-broadcaster",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "components/hooks/use-url-change-broadcaster",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "hooks/use-viewed-lane-from-url": {
         "name": "hooks/use-viewed-lane-from-url",
         "scope": "teambit.lanes",
