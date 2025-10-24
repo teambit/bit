@@ -531,7 +531,7 @@ export class SchemaExtractorContext {
    * Create schema for function type, handling params and return type
    */
   private async createFunctionSchema(node: Node, location: Location, signature: string): Promise<FunctionLikeSchema> {
-    const match = signature.match(/\((.*)\)\s*(?:=>|:)\s*(.+)/);
+    const match = signature.match(/^\s*\(([^)]*)\)\s*(?:=>|:)\s*(.+)$/);
     if (!match) {
       return new FunctionLikeSchema(location, 'anonymous', [], new InferenceTypeSchema(location, 'any'), signature);
     }
@@ -693,6 +693,7 @@ export class SchemaExtractorContext {
     const mainIdentifier = new Identifier(typeStr, mainFileIdentifierKey);
 
     const parsedNodeIdentifier = nodeIdentifierList?.find(nodeIdentifier);
+
     const parsedMainIdentifier = mainIdentifierList?.find(mainIdentifier);
     const isExportedFromMain = parsedMainIdentifier && ExportIdentifier.isExportIdentifier(parsedMainIdentifier);
 
@@ -718,7 +719,8 @@ export class SchemaExtractorContext {
         identifier.id,
         undefined,
         undefined,
-        !isExportedFromMain ? this.getPathRelativeToComponent(identifier.filePath) : undefined
+        !isExportedFromMain ? this.getPathRelativeToComponent(identifier.filePath) : undefined,
+        sourceFilePath
       );
     }
 
@@ -729,15 +731,15 @@ export class SchemaExtractorContext {
       const compIdByPath = await this.extractor.getComponentIDByPath(sourceFilePath);
 
       if (compIdByPath) {
-        return new TypeRefSchema(location, identifier.id, compIdByPath);
+        return new TypeRefSchema(location, identifier.id, compIdByPath, undefined, undefined, sourceFilePath);
       }
 
       if (compIdByPkg) {
-        return new TypeRefSchema(location, identifier.id, compIdByPkg);
+        return new TypeRefSchema(location, identifier.id, compIdByPkg, undefined, undefined, sourceFilePath);
       }
 
       // package without comp id
-      return new TypeRefSchema(location, identifier.id, undefined, pkgName);
+      return new TypeRefSchema(location, identifier.id, undefined, pkgName, undefined, sourceFilePath);
     }
 
     const relativeDir = identifier.filePath.substring(0, identifier.filePath.lastIndexOf('/'));
@@ -763,7 +765,7 @@ export class SchemaExtractorContext {
       return this.resolveTypeRef(exportedIdentifier, location, isExportedFromMain);
     }
 
-    return new TypeRefSchema(location, identifier.id);
+    return new TypeRefSchema(location, identifier.id, undefined, undefined, undefined, sourceFilePath);
   }
 
   async getTypeRefForExternalNode(node: Node): Promise<TypeRefSchema> {
