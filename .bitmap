@@ -800,6 +800,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/hooks/use-logout"
     },
+    "hooks/use-navigation-message-listener": {
+        "name": "hooks/use-navigation-message-listener",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "components/hooks/use-navigation-message-listener",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "hooks/use-url-change-broadcaster": {
         "name": "hooks/use-url-change-broadcaster",
         "scope": "teambit.workspace",
