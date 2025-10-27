@@ -320,7 +320,7 @@ describe('convertLockfileToGraph simple case', () => {
   });
 });
 
-describe.only('convertGraphToLockfile on invalid graph', () => {
+describe('convertGraphToLockfile on invalid graph', () => {
   it('should throw an error if resolution is missing', async () => {
     const packages: PackagesMap = new Map([['foo@1.0.0', {} as any]]);
     const edges: DependencyEdge[] = [
