@@ -26,7 +26,7 @@
     "api-server": {
         "name": "api-server",
         "scope": "teambit.harmony",
-        "version": "1.0.798",
+        "version": "1.0.799",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/api-server"
     },
@@ -215,7 +215,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "1.12.169",
+        "version": "1.12.170",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -271,7 +271,7 @@
     "ci": {
         "name": "ci",
         "scope": "teambit.git",
-        "version": "1.0.150",
+        "version": "1.0.151",
         "mainFile": "index.ts",
         "rootDir": "scopes/git/ci"
     },
@@ -320,7 +320,7 @@
     "cloud": {
         "name": "cloud",
         "scope": "teambit.cloud",
-        "version": "0.0.1071",
+        "version": "0.0.1072",
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/cloud"
     },
@@ -495,7 +495,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.814",
+        "version": "2.0.815",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
@@ -873,7 +873,7 @@
     "lanes": {
         "name": "lanes",
         "scope": "teambit.lanes",
-        "version": "1.0.795",
+        "version": "1.0.796",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/lanes"
     },
@@ -922,7 +922,7 @@
     "merge-lanes": {
         "name": "merge-lanes",
         "scope": "teambit.lanes",
-        "version": "1.0.795",
+        "version": "1.0.796",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/merge-lanes"
     },
@@ -1328,7 +1328,7 @@
     "pnpm": {
         "name": "pnpm",
         "scope": "teambit.dependencies",
-        "version": "1.0.803",
+        "version": "1.0.804",
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/pnpm"
     },
@@ -1489,7 +1489,7 @@
     "status": {
         "name": "status",
         "scope": "teambit.component",
-        "version": "1.0.796",
+        "version": "1.0.797",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/status"
     },
@@ -1888,7 +1888,7 @@
     "ui/menus/use-lanes-menu": {
         "name": "ui/menus/use-lanes-menu",
         "scope": "teambit.lanes",
-        "version": "0.0.242",
+        "version": "0.0.244",
         "mainFile": "index.ts",
         "rootDir": "components/ui/menus/use-lanes-menu"
     },
