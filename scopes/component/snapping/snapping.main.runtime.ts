@@ -488,9 +488,9 @@ export class SnappingMain {
     // When merging main into a lane, if aspects data can be successfully merged (no conflicts), we skip the
     // expensive aspect loading process. Only components with data conflicts need full aspect loading.
     // NOTE: This means executeOnCompAspectReCalcSlot (which recalculates aspect data like packageName, dependencies, etc.)
-    // only runs for components in loadAspectOnlyForIds. Components not in this list rely on:
-    // 1. Their existing aspect data being preserved when the merged config is applied (see addAspectsFromConfigObject)
-    // 2. The addDeps() method updating the dependencies field with the calculated policy
+    // only runs for components in loadAspectOnlyForIds. Components not in this list rely on their existing aspect data
+    // from when the component was loaded from the scope. For extensions that are part of the merged config, their data
+    // is preserved by addAspectsFromConfigObject to prevent data loss during config merge.
     const { loadAspectOnlyForIds } = params;
     const compsToLoadAspects = loadAspectOnlyForIds
       ? components.filter((c) => loadAspectOnlyForIds.hasWithoutVersion(c.id))
