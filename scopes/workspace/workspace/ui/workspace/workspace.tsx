@@ -17,6 +17,7 @@ import { PreserveWorkspaceMode } from '@teambit/workspace.ui.preserve-workspace-
 import classNames from 'classnames';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 import { useUrlChangeBroadcaster } from '@teambit/workspace.hooks.use-url-change-broadcaster';
+import { useNavigationMessageListener } from '@teambit/workspace.hooks.use-navigation-message-listener';
 
 import { useWorkspace } from './use-workspace';
 import { WorkspaceOverview } from './workspace-overview';
@@ -81,12 +82,13 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
   }
 
   workspaceUI.setComponents(workspace.components);
+  const inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
 
   return (
     <WorkspaceProvider workspace={workspace}>
       {!isMinimal && <NotificationsBinder reactionsRef={reactionsRef} />}
       <PreserveWorkspaceMode>
-        <MinimalModeUrlBroadcaster />
+        {isMinimal && inIframe && <MinimalModeUrlBroadcasterAndListener />}
         <div className={styles.workspaceWrapper}>
           {
             <TopBar
@@ -163,12 +165,8 @@ function NotificationsBinder({
   return null;
 }
 
-export function MinimalModeUrlBroadcaster() {
-  const { isMinimal } = useWorkspaceMode();
-  const inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
-
-  if (!isMinimal || !inIframe) return null;
-
+export function MinimalModeUrlBroadcasterAndListener() {
   useUrlChangeBroadcaster();
+  useNavigationMessageListener();
   return null;
 }
