@@ -348,11 +348,62 @@ export class SnappingMain {
       }
     });
 
+    // Merge scope-specific policy (from "bit dependencies set") into merged config.
+    // These dependencies are marked with __specific: true and need to be preserved during merge.
+    this.mergeScopeSpecificPolicy(consumerComponent, extensionDataList);
+
     consumerComponent.extensions = extensionDataList;
     component.state.aspects = await this.scope.createAspectListFromExtensionDataList(extensionDataList);
 
     const autoDeps = extensionsFromConfigObject.extractAutoDepsFromConfig();
     return autoDeps;
+  }
+
+  private mergeScopeSpecificPolicy(consumerComponent: ConsumerComponent, extensionDataList: ExtensionDataList): void {
+    const depsResolverFromMerged = extensionDataList.findCoreExtension(DependencyResolverAspect.id);
+    if (!depsResolverFromMerged) return;
+
+    const originalDepsResolver = consumerComponent.extensions.findCoreExtension(DependencyResolverAspect.id);
+    const isSpecific = originalDepsResolver?.config.__specific === true;
+    if (!isSpecific) return;
+
+    const scopePolicy = originalDepsResolver?.config.policy;
+    if (!scopePolicy) return;
+
+    const mergeConfigPolicy = depsResolverFromMerged.config.policy;
+    if (!mergeConfigPolicy) {
+      depsResolverFromMerged.config.policy = scopePolicy;
+      return;
+    }
+
+    Object.keys(scopePolicy).forEach((depType) => {
+      const scopeDepsForType = scopePolicy[depType];
+      if (!mergeConfigPolicy[depType]) {
+        mergeConfigPolicy[depType] = scopeDepsForType;
+        return;
+      }
+
+      if (Array.isArray(mergeConfigPolicy[depType])) {
+        // mergeConfigPolicy is in array format (from config merger)
+        this.addScopePolicyToMergedArray(mergeConfigPolicy[depType], scopeDepsForType);
+      } else {
+        // mergeConfigPolicy is in object format (both are objects, merge them)
+        mergeConfigPolicy[depType] = { ...scopeDepsForType, ...mergeConfigPolicy[depType] };
+      }
+    });
+  }
+
+  private addScopePolicyToMergedArray(policyArray: any[], scopeDepsForType: Record<string, string>): void {
+    Object.keys(scopeDepsForType).forEach((depId) => {
+      const version = scopeDepsForType[depId];
+      const existingDep = policyArray.find((dep) => dep.name === depId || dep.dependencyId === depId);
+
+      if (!existingDep) {
+        // Dependency only exists in scope policy - add it to merge config
+        policyArray.push({ name: depId, version, force: true });
+      }
+      // If already exists in merge config, keep it as-is (merge config takes precedence)
+    });
   }
 
   async snapFromScope(
