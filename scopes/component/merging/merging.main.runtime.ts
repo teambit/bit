@@ -738,17 +738,15 @@ export class MergingMain {
   }
 
   /**
-   * Merges scope-specific dependency policy into the merged config.
-   * This handles dependencies set via "bit dependencies set" (marked with __specific: true).
+   * Merges scope dependency policy into the merged config.
+   * This handles dependencies with force:true from the scope, regardless of whether they're
+   * set via "bit dependencies set" (__specific: true) or workspace variants.
    */
   private mergeScopeSpecificDepsPolicy(scopeExtensions: ExtensionDataList, mergeConfig?: Record<string, any>): void {
     const mergeConfigPolicy = mergeConfig?.[DependencyResolverAspect.id]?.policy;
     if (!mergeConfigPolicy) return;
 
     const depsResolver = scopeExtensions.findCoreExtension(DependencyResolverAspect.id);
-    const isSpecific = depsResolver?.config.__specific === true;
-    if (!isSpecific) return;
-
     const scopePolicy = depsResolver?.config.policy;
     if (!scopePolicy) return;
 
@@ -769,8 +767,13 @@ export class MergingMain {
         // mergeConfigPolicy is in array format (from config merger during bare-scope merge)
         this.addScopePolicyToMergedArray(mergeConfigPolicy[depType], scopeDepsForType);
       } else {
-        // mergeConfigPolicy is in object format (both are objects, merge them)
-        mergeConfigPolicy[depType] = { ...scopeDepsForType, ...mergeConfigPolicy[depType] };
+        // mergeConfigPolicy is in object format - merge and convert to array format
+        const merged = { ...scopeDepsForType, ...mergeConfigPolicy[depType] };
+        mergeConfigPolicy[depType] = Object.keys(merged).map((depId) => ({
+          name: depId,
+          version: merged[depId],
+          force: true,
+        }));
       }
     });
   }
