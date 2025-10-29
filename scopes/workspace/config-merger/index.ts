@@ -7,6 +7,6 @@ export type {
   WorkspaceConfigUpdateResult,
 } from '@teambit/component.modules.merge-helper';
 export type { ConfigMergeResult } from './config-merge-result';
-export { ComponentConfigMerger } from './component-config-merger';
+export { ComponentConfigMerger, PolicyDependency } from './component-config-merger';
 export default ConfigMergerAspect;
 export { ConfigMergerAspect };

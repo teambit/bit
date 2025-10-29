@@ -29,7 +29,7 @@ import { LoggerAspect } from '@teambit/logger';
 import { compact } from 'lodash';
 import type { ApplyVersionWithComps, CheckoutMain, ComponentStatusBase } from '@teambit/checkout';
 import { CheckoutAspect, removeFilesIfNeeded, updateFileStatus } from '@teambit/checkout';
-import type { ConfigMergerMain, ConfigMergeResult } from '@teambit/config-merger';
+import type { ConfigMergerMain, ConfigMergeResult, PolicyDependency } from '@teambit/config-merger';
 import { ConfigMergerAspect } from '@teambit/config-merger';
 import type { SnapsDistance } from '@teambit/component.snap-distance';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -38,6 +38,7 @@ import type { InstallMain } from '@teambit/install';
 import { InstallAspect } from '@teambit/install';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
 import type { DataMergeResult, MergeStatusProviderOptions } from './merge-status-provider';
@@ -529,6 +530,11 @@ export class MergingMain {
     if (configMergeResult) {
       const successfullyMergedConfig = configMergeResult.getSuccessfullyMergedConfig();
       if (successfullyMergedConfig) {
+        // Process mergedConfig to merge scope-specific policy and filter deletion markers
+        // This happens ONCE here, so both workspace and bare-scope merges use the same processed config
+        this.mergeScopeSpecificDepsPolicy(legacyComponent.extensions, successfullyMergedConfig);
+        this.filterDeletedDependenciesFromConfig(successfullyMergedConfig);
+
         unmergedComponent.mergedConfig = successfullyMergedConfig;
         // no need to `unmergedComponents.addEntry` here. it'll be added in the next lines inside `if (mergeResults)`.
         // because if `configMergeResult` is set, `mergeResults` must be set as well. both happen on diverge.
@@ -645,6 +651,9 @@ export class MergingMain {
           .map((c) => c.id);
         return ComponentIdList.fromArray(dataConflictedIds);
       };
+
+      // mergedConfig has already been processed in applyVersion() with scope-specific policy merged
+      // and deletion markers filtered, so we can use it directly
       const results = await this.snapping.snapFromScope(
         ids.map((id) => ({
           componentId: id.toString(),
@@ -726,6 +735,80 @@ export class MergingMain {
       })
     );
     return compact(mergePendingComponents);
+  }
+
+  /**
+   * Merges scope dependency policy into the merged config.
+   * This handles dependencies with force:true from the scope, regardless of whether they're
+   * set via "bit dependencies set" (__specific: true) or workspace variants.
+   *
+   * This is needed because if the mergeConfig has a policy, it will be used, and any other policy along the line will be ignored.
+   * In case the model has some dependencies that were set explicitly they're gonna be ignored.
+   * This makes sure to add them to the policy of the mergeConfig.
+   * In a way, this is similar to what we do when a user is running `bit deps set` and the component had previous dependencies set,
+   * we copy those dependencies along with the current one to the .bitmap file, so they won't get lost.
+   */
+  private mergeScopeSpecificDepsPolicy(scopeExtensions: ExtensionDataList, mergeConfig?: Record<string, any>): void {
+    const mergeConfigPolicy: Record<string, PolicyDependency[]> | undefined =
+      mergeConfig?.[DependencyResolverAspect.id]?.policy;
+    if (!mergeConfigPolicy) return;
+
+    const depsResolver = scopeExtensions.findCoreExtension(DependencyResolverAspect.id);
+    const scopePolicy = depsResolver?.config.policy;
+    if (!scopePolicy) return;
+
+    Object.keys(scopePolicy).forEach((depType) => {
+      const scopeDepsForType = scopePolicy[depType];
+      if (!mergeConfigPolicy[depType]) {
+        // mergeConfigPolicy doesn't have this depType yet.
+        // Convert scope policy (object format) to array format before adding
+        mergeConfigPolicy[depType] = Object.keys(scopeDepsForType).map((depId) => ({
+          name: depId,
+          version: scopeDepsForType[depId],
+          force: true,
+        }));
+        return;
+      }
+
+      // mergeConfigPolicy is always in array format (from config merger)
+      this.addScopePolicyToMergedArray(mergeConfigPolicy[depType], scopeDepsForType);
+    });
+  }
+
+  private addScopePolicyToMergedArray(policyArray: PolicyDependency[], scopeDepsForType: Record<string, string>): void {
+    Object.keys(scopeDepsForType).forEach((depId) => {
+      const version = scopeDepsForType[depId];
+      const existingDep = policyArray.find((dep) => dep.name === depId);
+
+      if (existingDep) {
+        // If merge config has version: '-', it means the dependency was explicitly deleted.
+        // Keep the '-' marker and don't override with scope policy.
+        if (existingDep.version === '-') {
+          return;
+        }
+        // Otherwise, dependency exists in merge config - keep merge config version (it's stronger)
+      } else {
+        // Dependency only exists in scope policy - add it to merge config
+        policyArray.push({ name: depId, version, force: true });
+      }
+    });
+  }
+
+  private filterDeletedDependenciesFromConfig(mergeConfig?: Record<string, any>): void {
+    const policy: Record<string, PolicyDependency[]> | undefined = mergeConfig?.[DependencyResolverAspect.id]?.policy;
+    if (!policy) return;
+
+    Object.keys(policy).forEach((depType) => {
+      const depValue = policy[depType];
+      // Filter out entries with version: '-' (deletion markers)
+      const filtered = depValue.filter((dep) => dep.version !== '-');
+      // If array is now empty, delete the key to avoid issues with downstream code
+      if (filtered.length === 0) {
+        delete policy[depType];
+      } else {
+        policy[depType] = filtered;
+      }
+    });
   }
 
   static slots = [];

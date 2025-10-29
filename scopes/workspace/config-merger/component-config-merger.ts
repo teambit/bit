@@ -18,6 +18,12 @@ type EnvData = { id: string; version?: string; config?: GenericConfigOrRemoved }
 
 type SerializedDependencyWithPolicy = SerializedDependency & { policy?: string; packageName?: string };
 
+export type PolicyDependency = {
+  name: string;
+  version: string;
+  force?: boolean;
+};
+
 export const conflictIndicator = 'CONFLICT::';
 
 export type MergeStrategyResult = {
@@ -349,12 +355,12 @@ export class ComponentConfigMerger {
       return currentDataPolicy.find((d) => d.dependencyId === pkgName);
     };
 
-    const mergedPolicy = {
+    const mergedPolicy: Record<string, PolicyDependency[]> = {
       dependencies: [],
       devDependencies: [],
       peerDependencies: [],
     };
-    const conflictedPolicy = {
+    const conflictedPolicy: Record<string, PolicyDependency[]> = {
       dependencies: [],
       devDependencies: [],
       peerDependencies: [],
@@ -404,13 +410,13 @@ export class ComponentConfigMerger {
 
       if (this.areConfigsEqual(currentConfig, otherConfig)) {
         // No need to add unchanged config deps here - they will be rescued by
-        // addConfigDepsFromModelToConfigMerge() in aspects-merger during component loading
+        // mergeScopeSpecificDepsPolicy() in merging.main.runtime during merge processing
         return;
       }
       if (baseConfig && this.areConfigsEqual(baseConfig, otherConfig)) {
         // was changed on current
         // No need to add unchanged config deps here - they will be rescued by
-        // addConfigDepsFromModelToConfigMerge() in aspects-merger during component loading
+        // mergeScopeSpecificDepsPolicy() in merging.main.runtime during merge processing
         return;
       }
       if (currentConfig === '-' || otherConfig === '-') {
@@ -423,6 +429,20 @@ export class ComponentConfigMerger {
             addVariantPolicyEntryToPolicy(dep);
           });
         }
+        // Check if any dependencies in current were deleted on other
+        // If a dependency exists in base and current but not in other, it was deleted on other
+        currentConfigPolicy.forEach((currentDep) => {
+          const baseDep = baseConfigPolicy?.find((d) => d.dependencyId === currentDep.dependencyId);
+          const otherDep = otherConfigPolicy.find((d) => d.dependencyId === currentDep.dependencyId);
+          if (baseDep && !otherDep) {
+            // Dependency was deleted on other - add it with version: '-' to mark for deletion
+            const depType = lifecycleToDepType[currentDep.lifecycleType];
+            mergedPolicy[depType].push({
+              name: currentDep.dependencyId,
+              version: '-',
+            });
+          }
+        });
         return;
       }
 
@@ -481,11 +501,11 @@ export class ComponentConfigMerger {
     handleConfigMerge();
 
     const hasConfigForDep = (depType: string, depName: string) => mergedPolicy[depType].find((d) => d.name === depName);
-    const getDepIdAsPkgName = (dep: SerializedDependencyWithPolicy) => {
+    const getDepIdAsPkgName = (dep: SerializedDependencyWithPolicy): string => {
       if (dep.__type !== 'component') {
         return dep.id;
       }
-      return dep.packageName;
+      return dep.packageName!;
     };
 
     const addSerializedDepToPolicy = (dep: SerializedDependencyWithPolicy) => {
