@@ -749,7 +749,8 @@ export class MergingMain {
    * we copy those dependencies along with the current one to the .bitmap file, so they won't get lost.
    */
   private mergeScopeSpecificDepsPolicy(scopeExtensions: ExtensionDataList, mergeConfig?: Record<string, any>): void {
-    const mergeConfigPolicy = mergeConfig?.[DependencyResolverAspect.id]?.policy;
+    const mergeConfigPolicy: Record<string, PolicyDependency[]> | undefined =
+      mergeConfig?.[DependencyResolverAspect.id]?.policy;
     if (!mergeConfigPolicy) return;
 
     const depsResolver = scopeExtensions.findCoreExtension(DependencyResolverAspect.id);
@@ -769,18 +770,8 @@ export class MergingMain {
         return;
       }
 
-      if (Array.isArray(mergeConfigPolicy[depType])) {
-        // mergeConfigPolicy is in array format (from config merger during bare-scope merge)
-        this.addScopePolicyToMergedArray(mergeConfigPolicy[depType], scopeDepsForType);
-      } else {
-        // mergeConfigPolicy is in object format - merge and convert to array format
-        const merged = { ...scopeDepsForType, ...mergeConfigPolicy[depType] };
-        mergeConfigPolicy[depType] = Object.keys(merged).map((depId) => ({
-          name: depId,
-          version: merged[depId],
-          force: true,
-        }));
-      }
+      // mergeConfigPolicy is always in array format (from config merger)
+      this.addScopePolicyToMergedArray(mergeConfigPolicy[depType], scopeDepsForType);
     });
   }
 
