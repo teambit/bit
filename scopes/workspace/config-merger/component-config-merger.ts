@@ -410,13 +410,13 @@ export class ComponentConfigMerger {
 
       if (this.areConfigsEqual(currentConfig, otherConfig)) {
         // No need to add unchanged config deps here - they will be rescued by
-        // addConfigDepsFromModelToConfigMerge() in aspects-merger during component loading
+        // mergeScopeSpecificDepsPolicy() in merging.main.runtime during merge processing
         return;
       }
       if (baseConfig && this.areConfigsEqual(baseConfig, otherConfig)) {
         // was changed on current
         // No need to add unchanged config deps here - they will be rescued by
-        // addConfigDepsFromModelToConfigMerge() in aspects-merger during component loading
+        // mergeScopeSpecificDepsPolicy() in merging.main.runtime during merge processing
         return;
       }
       if (currentConfig === '-' || otherConfig === '-') {
