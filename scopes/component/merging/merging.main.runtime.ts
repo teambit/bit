@@ -741,6 +741,12 @@ export class MergingMain {
    * Merges scope dependency policy into the merged config.
    * This handles dependencies with force:true from the scope, regardless of whether they're
    * set via "bit dependencies set" (__specific: true) or workspace variants.
+   *
+   * This is needed because if the mergeConfig has a policy, it will be used, and any other policy along the line will be ignored.
+   * In case the model has some dependencies that were set explicitly they're gonna be ignored.
+   * This makes sure to add them to the policy of the mergeConfig.
+   * In a way, this is similar to what we do when a user is running `bit deps set` and the component had previous dependencies set,
+   * we copy those dependencies along with the current one to the .bitmap file, so they won't get lost.
    */
   private mergeScopeSpecificDepsPolicy(scopeExtensions: ExtensionDataList, mergeConfig?: Record<string, any>): void {
     const mergeConfigPolicy = mergeConfig?.[DependencyResolverAspect.id]?.policy;
