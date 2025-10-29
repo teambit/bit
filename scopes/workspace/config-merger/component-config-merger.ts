@@ -423,6 +423,21 @@ export class ComponentConfigMerger {
             addVariantPolicyEntryToPolicy(dep);
           });
         }
+        // Check if any dependencies in current (lane) were deleted on other (main)
+        // If a dependency exists in base and current but not in other, it was deleted on other
+        currentConfigPolicy.forEach((currentDep) => {
+          const baseDep = baseConfigPolicy?.find((d) => d.dependencyId === currentDep.dependencyId);
+          const otherDep = otherConfigPolicy.find((d) => d.dependencyId === currentDep.dependencyId);
+          if (baseDep && !otherDep) {
+            // Dependency was deleted on other - add it with version: '-' to mark for deletion
+            const depType = lifecycleToDepType[currentDep.lifecycleType];
+            mergedPolicy[depType].push({
+              name: currentDep.dependencyId,
+              version: '-',
+              force: true,
+            });
+          }
+        });
         return;
       }
 
