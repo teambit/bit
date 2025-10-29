@@ -755,7 +755,13 @@ export class MergingMain {
     Object.keys(scopePolicy).forEach((depType) => {
       const scopeDepsForType = scopePolicy[depType];
       if (!mergeConfigPolicy[depType]) {
-        mergeConfigPolicy[depType] = scopeDepsForType;
+        // mergeConfigPolicy doesn't have this depType yet.
+        // Convert scope policy (object format) to array format before adding
+        mergeConfigPolicy[depType] = Object.keys(scopeDepsForType).map((depId) => ({
+          name: depId,
+          version: scopeDepsForType[depId],
+          force: true,
+        }));
         return;
       }
 
@@ -793,16 +799,32 @@ export class MergingMain {
     if (!policy) return;
 
     Object.keys(policy).forEach((depType) => {
-      if (Array.isArray(policy[depType])) {
+      const depValue = policy[depType];
+      if (!depValue) {
+        delete policy[depType];
+        return;
+      }
+
+      if (Array.isArray(depValue)) {
         // Array format: filter out entries with version: '-'
-        policy[depType] = policy[depType].filter((dep: any) => dep.version !== '-');
-      } else if (typeof policy[depType] === 'object') {
+        const filtered = depValue.filter((dep: any) => dep.version !== '-');
+        // If array is now empty, delete the key to avoid issues with downstream code
+        if (filtered.length === 0) {
+          delete policy[depType];
+        } else {
+          policy[depType] = filtered;
+        }
+      } else if (typeof depValue === 'object' && depValue !== null) {
         // Object format: delete keys with value '-'
-        Object.keys(policy[depType]).forEach((depId) => {
-          if (policy[depType][depId] === '-') {
-            delete policy[depType][depId];
+        Object.keys(depValue).forEach((depId) => {
+          if (depValue[depId] === '-') {
+            delete depValue[depId];
           }
         });
+        // If object is now empty, delete the key
+        if (Object.keys(depValue).length === 0) {
+          delete policy[depType];
+        }
       }
     });
   }
