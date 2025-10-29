@@ -795,36 +795,18 @@ export class MergingMain {
   }
 
   private filterDeletedDependenciesFromConfig(mergeConfig?: Record<string, any>): void {
-    const policy = mergeConfig?.[DependencyResolverAspect.id]?.policy;
+    const policy: Record<string, PolicyDependency[]> | undefined = mergeConfig?.[DependencyResolverAspect.id]?.policy;
     if (!policy) return;
 
     Object.keys(policy).forEach((depType) => {
       const depValue = policy[depType];
-      if (!depValue) {
+      // Filter out entries with version: '-' (deletion markers)
+      const filtered = depValue.filter((dep) => dep.version !== '-');
+      // If array is now empty, delete the key to avoid issues with downstream code
+      if (filtered.length === 0) {
         delete policy[depType];
-        return;
-      }
-
-      if (Array.isArray(depValue)) {
-        // Array format: filter out entries with version: '-'
-        const filtered = depValue.filter((dep: any) => dep.version !== '-');
-        // If array is now empty, delete the key to avoid issues with downstream code
-        if (filtered.length === 0) {
-          delete policy[depType];
-        } else {
-          policy[depType] = filtered;
-        }
-      } else if (typeof depValue === 'object' && depValue !== null) {
-        // Object format: delete keys with value '-'
-        Object.keys(depValue).forEach((depId) => {
-          if (depValue[depId] === '-') {
-            delete depValue[depId];
-          }
-        });
-        // If object is now empty, delete the key
-        if (Object.keys(depValue).length === 0) {
-          delete policy[depType];
-        }
+      } else {
+        policy[depType] = filtered;
       }
     });
   }
