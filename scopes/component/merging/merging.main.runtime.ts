@@ -29,7 +29,7 @@ import { LoggerAspect } from '@teambit/logger';
 import { compact } from 'lodash';
 import type { ApplyVersionWithComps, CheckoutMain, ComponentStatusBase } from '@teambit/checkout';
 import { CheckoutAspect, removeFilesIfNeeded, updateFileStatus } from '@teambit/checkout';
-import type { ConfigMergerMain, ConfigMergeResult } from '@teambit/config-merger';
+import type { ConfigMergerMain, ConfigMergeResult, PolicyDependency } from '@teambit/config-merger';
 import { ConfigMergerAspect } from '@teambit/config-merger';
 import type { SnapsDistance } from '@teambit/component.snap-distance';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -778,10 +778,10 @@ export class MergingMain {
     });
   }
 
-  private addScopePolicyToMergedArray(policyArray: any[], scopeDepsForType: Record<string, string>): void {
+  private addScopePolicyToMergedArray(policyArray: PolicyDependency[], scopeDepsForType: Record<string, string>): void {
     Object.keys(scopeDepsForType).forEach((depId) => {
       const version = scopeDepsForType[depId];
-      const existingDep = policyArray.find((dep) => dep.name === depId || dep.dependencyId === depId);
+      const existingDep = policyArray.find((dep) => dep.name === depId);
 
       if (existingDep) {
         // If merge config has version: '-', it means the dependency was explicitly deleted.

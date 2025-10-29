@@ -18,6 +18,12 @@ type EnvData = { id: string; version?: string; config?: GenericConfigOrRemoved }
 
 type SerializedDependencyWithPolicy = SerializedDependency & { policy?: string; packageName?: string };
 
+export type PolicyDependency = {
+  name: string;
+  version: string;
+  force?: boolean;
+};
+
 export const conflictIndicator = 'CONFLICT::';
 
 export type MergeStrategyResult = {
@@ -349,12 +355,12 @@ export class ComponentConfigMerger {
       return currentDataPolicy.find((d) => d.dependencyId === pkgName);
     };
 
-    const mergedPolicy = {
+    const mergedPolicy: Record<string, PolicyDependency[]> = {
       dependencies: [],
       devDependencies: [],
       peerDependencies: [],
     };
-    const conflictedPolicy = {
+    const conflictedPolicy: Record<string, PolicyDependency[]> = {
       dependencies: [],
       devDependencies: [],
       peerDependencies: [],
@@ -496,11 +502,11 @@ export class ComponentConfigMerger {
     handleConfigMerge();
 
     const hasConfigForDep = (depType: string, depName: string) => mergedPolicy[depType].find((d) => d.name === depName);
-    const getDepIdAsPkgName = (dep: SerializedDependencyWithPolicy) => {
+    const getDepIdAsPkgName = (dep: SerializedDependencyWithPolicy): string => {
       if (dep.__type !== 'component') {
         return dep.id;
       }
-      return dep.packageName;
+      return dep.packageName!;
     };
 
     const addSerializedDepToPolicy = (dep: SerializedDependencyWithPolicy) => {
