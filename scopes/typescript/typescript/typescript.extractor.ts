@@ -5,8 +5,13 @@ import type { SchemaExtractor, SchemaExtractorOptions } from '@teambit/schema';
 import type { TsserverClient } from '@teambit/ts-server';
 import type { Workspace } from '@teambit/workspace';
 import type { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
-import type { SchemaNode, ModuleSchema } from '@teambit/semantics.entities.semantic-schema';
-import { APISchema, UnImplementedSchema, IgnoredSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import {
+  APISchema,
+  UnImplementedSchema,
+  IgnoredSchema,
+  ModuleSchema,
+} from '@teambit/semantics.entities.semantic-schema';
 import type { Component } from '@teambit/component';
 import type { AbstractVinyl } from '@teambit/component.sources';
 import type { EnvContext } from '@teambit/envs';
@@ -17,6 +22,7 @@ import { AspectLoaderAspect, getCoreAspectPackageName } from '@teambit/aspect-lo
 import type { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { compact, flatten } from 'lodash';
+import minimatch from 'minimatch';
 import type { TypescriptMain } from './typescript.main.runtime';
 import { TransformerNotFound } from './exceptions';
 import { SchemaExtractorContext } from './schema-extractor-context';
@@ -88,28 +94,82 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const moduleSchema = (await this.computeSchema(mainAst, context)) as ModuleSchema;
     moduleSchema.flatExportsRecursively();
     const apiScheme = moduleSchema;
-    const internals = await this.computeInternalModules(context, internalFiles);
+    const internalModules = await this.computeInternalModules(context);
+    const includedFiles = this.resolveIncludedFiles(component, options.includeFiles ?? []);
 
-    const location = context.getLocation(mainAst);
-
-    return new APISchema(location, apiScheme, internals, component.id as any);
-  }
-
-  async computeInternalModules(context: SchemaExtractorContext, internalFiles: AbstractVinyl[]) {
-    if (internalFiles.length === 0) return [];
-    const internals = compact(
+    const includedModules = compact(
       await Promise.all(
-        [...context.internalIdentifiers.entries()].map(async ([filePath]) => {
-          const file = context.findFileInComponent(filePath);
-          if (!file) return undefined;
-          const fileAst = this.parseSourceFile(file);
-          const moduleSchema = (await this.computeSchema(fileAst, context)) as ModuleSchema;
-          moduleSchema.flatExportsRecursively();
-          return moduleSchema;
+        includedFiles.map(async (file) => {
+          const ast = this.parseSourceFile(file);
+          const schema = (await this.computeSchema(ast, context)) as ModuleSchema;
+          schema.flatExportsRecursively();
+          return schema;
         })
       )
     );
-    return internals;
+
+    const interalAndIncludedModules = includedModules.concat(internalModules);
+    const location = context.getLocation(mainAst);
+
+    return new APISchema(location, apiScheme, interalAndIncludedModules, component.id as any);
+  }
+
+  async computeInternalModules(context: SchemaExtractorContext) {
+    if (context.internalIdentifiers.size === 0) return [];
+
+    const modules = await Promise.all(
+      [...context.internalIdentifiers.entries()].map(async ([fileKey, idList]) => {
+        const file = context.findFileInComponent(fileKey);
+        if (!file) return undefined;
+
+        const parsedSourceFile = this.parseSourceFile(file);
+
+        const nameIndex = context.buildTopLevelNameIndex(parsedSourceFile);
+
+        const internalSchemas = await Promise.all(
+          idList.identifiers.map(async (identifier) => {
+            const decl = nameIndex.get(identifier.id);
+            if (!decl) return undefined;
+            return context.computeSchema(decl);
+          })
+        );
+
+        const filtered = compact(internalSchemas);
+        if (!filtered.length) return undefined;
+
+        return new ModuleSchema(context.getLocation(parsedSourceFile), [], filtered);
+      })
+    );
+
+    return compact(modules);
+  }
+
+  private normalizePath(p: string): string {
+    return p.replace(/\\/g, '/').replace(/^\.?\//, '');
+  }
+
+  private fileRelativePath(file: AbstractVinyl, component: Component): string {
+    const base = component.filesystem.files[0].base;
+    return this.normalizePath(file.path.slice(base.length).replace(/^\/+/, ''));
+  }
+
+  private matchGlob(input: string, pattern: string): boolean {
+    const hasGlobMeta = /[*?[\]{},]/.test(pattern);
+    if (!hasGlobMeta) return input === pattern;
+    return minimatch(input, pattern, { dot: true });
+  }
+
+  private resolveIncludedFiles(component: Component, includes: string[] = []): AbstractVinyl[] {
+    if (!includes.length) return [];
+
+    const normalizedIncludedPaths = includes.map(this.normalizePath);
+
+    return component.filesystem.files.filter((file) => {
+      const rel = this.fileRelativePath(file, component);
+      if (!(rel.endsWith('.ts') || rel.endsWith('.tsx'))) return false;
+
+      return normalizedIncludedPaths.some((pattern) => this.matchGlob(rel, pattern));
+    });
   }
 
   dispose() {

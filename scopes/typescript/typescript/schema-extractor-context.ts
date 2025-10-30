@@ -699,9 +699,13 @@ export class SchemaExtractorContext {
 
     if (!parsedNodeIdentifier) return undefined;
 
-    const internalRef = !isExportedFromMain;
-    if (internalRef) {
-      this.setInternalIdentifiers(parsedNodeIdentifier.normalizedPath, new IdentifierList([parsedNodeIdentifier]));
+    if (!isExportedFromMain) {
+      const src = parsedNodeIdentifier.sourceFilePath;
+      const isLocalOrRelative = !src || isRelativeImport(src); // bare specifiers (e.g., 'react') are excluded
+      if (isLocalOrRelative) {
+        const key = src ? parsedNodeIdentifier.normalizedPath : parsedNodeIdentifier.filePath;
+        this.setInternalIdentifiers(this.getIdentifierKey(key), new IdentifierList([parsedNodeIdentifier]));
+      }
     }
     return this.resolveTypeRef(parsedNodeIdentifier, location, isExportedFromMain);
   }
@@ -731,15 +735,15 @@ export class SchemaExtractorContext {
       const compIdByPath = await this.extractor.getComponentIDByPath(sourceFilePath);
 
       if (compIdByPath) {
-        return new TypeRefSchema(location, identifier.id, compIdByPath, undefined, undefined, sourceFilePath);
+        return new TypeRefSchema(location, identifier.id, compIdByPath, undefined, undefined);
       }
 
       if (compIdByPkg) {
-        return new TypeRefSchema(location, identifier.id, compIdByPkg, undefined, undefined, sourceFilePath);
+        return new TypeRefSchema(location, identifier.id, compIdByPkg, undefined, undefined);
       }
 
       // package without comp id
-      return new TypeRefSchema(location, identifier.id, undefined, pkgName, undefined, sourceFilePath);
+      return new TypeRefSchema(location, identifier.id, undefined, pkgName, undefined);
     }
 
     const relativeDir = identifier.filePath.substring(0, identifier.filePath.lastIndexOf('/'));
@@ -765,7 +769,7 @@ export class SchemaExtractorContext {
       return this.resolveTypeRef(exportedIdentifier, location, isExportedFromMain);
     }
 
-    return new TypeRefSchema(location, identifier.id, undefined, undefined, undefined, sourceFilePath);
+    return new TypeRefSchema(location, identifier.id, undefined, undefined, undefined);
   }
 
   async getTypeRefForExternalNode(node: Node): Promise<TypeRefSchema> {
@@ -787,6 +791,23 @@ export class SchemaExtractorContext {
       return new TypeRefSchema(location, typeStr, compIdByPkg);
     }
     return new TypeRefSchema(location, typeStr, undefined, pkgName);
+  }
+
+  buildTopLevelNameIndex(sf: ts.SourceFile): Map<string, ts.Node> {
+    const map = new Map<string, ts.Node>();
+    for (const s of sf.statements) {
+      const name =
+        'name' in s && s.name && ts.isIdentifier((s as any).name)
+          ? ((s as any).name as ts.Identifier).text
+          : ts.isVariableStatement(s) &&
+              s.declarationList.declarations.length === 1 &&
+              ts.isIdentifier(s.declarationList.declarations[0].name)
+            ? s.declarationList.declarations[0].name.text
+            : undefined;
+
+      if (name && !map.has(name)) map.set(name, s);
+    }
+    return map;
   }
 
   async jsDocToDocSchema(node: Node): Promise<DocSchema | undefined> {
