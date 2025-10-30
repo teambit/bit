@@ -44,7 +44,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
     private workspace: Workspace | undefined,
     private scope: ScopeMain,
     private aspectLoader: AspectLoaderMain,
-    private logger: Logger
+    private logger: Logger,
+    private includeFiles: string[] = []
   ) {}
 
   parseSourceFile(file: AbstractVinyl): SourceFile {
@@ -71,6 +72,9 @@ export class TypeScriptExtractor implements SchemaExtractor {
     if (options.contextPath) {
       this.rootContextPath = options.contextPath;
     }
+    if (options.includeFiles) {
+      this.includeFiles = options.includeFiles;
+    }
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
     const compatibleExts = ['.tsx', '.ts'];
@@ -95,7 +99,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     moduleSchema.flatExportsRecursively();
     const apiScheme = moduleSchema;
     const internalModules = await this.computeInternalModules(context);
-    const includedFiles = this.resolveIncludedFiles(component, options.includeFiles ?? []);
+    const includedFiles = this.resolveIncludedFiles(component, this.includeFiles ?? []);
 
     const includedModules = compact(
       await Promise.all(
@@ -317,7 +321,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
         tsMain.workspace,
         tsMain.scope,
         aspectLoaderMain,
-        context.createLogger(options.name)
+        context.createLogger(options.name),
+        options.includeFiles
       );
     };
   }
