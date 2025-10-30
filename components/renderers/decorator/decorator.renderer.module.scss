@@ -1,0 +1,10 @@
+.decorator {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.decoratorTitle {
+  font-size: var(--bit-p-sm, '14px');
+  font-weight: 500;
+}

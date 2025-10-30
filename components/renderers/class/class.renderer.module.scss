@@ -1,0 +1,17 @@
+.members {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.decorators {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.decoratorsTitle {
+  font-size: var(--bit-p-lg, '18px');
+  font-weight: 500;
+  text-transform: capitalize;
+}
