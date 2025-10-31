@@ -475,6 +475,12 @@ export class MergingMain {
       currentLane.addComponent({ id, head });
     };
 
+    const convertHashToTagIfPossible = (componentId: ComponentID): ComponentID => {
+      if (!componentId.version) return componentId;
+      const tag = modelComponent.getTag(componentId.version);
+      return tag ? componentId.changeVersion(tag) : componentId;
+    };
+
     const handleResolveUnrelated = (legacyCompToWrite?: ConsumerComponent) => {
       if (!currentComponent) throw new Error('currentComponent must be defined when resolvedUnrelated');
       // because when on a main, we don't allow merging lanes with unrelated. we asks users to switch to the lane
@@ -488,7 +494,8 @@ export class MergingMain {
         unrelatedLaneId: resolvedUnrelated.unrelatedLaneId,
       };
       legacyScope.objects.unmergedComponents.addEntry(unmergedComponent);
-      return { applyVersionResult: { id, filesStatus }, component: currentComponent, legacyCompToWrite };
+      const idForOutput = convertHashToTagIfPossible(id);
+      return { applyVersionResult: { id: idForOutput, filesStatus }, component: currentComponent, legacyCompToWrite };
     };
 
     const markAllFilesAsUnchanged = () => {
@@ -500,7 +507,8 @@ export class MergingMain {
     if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
       markAllFilesAsUnchanged();
       legacyScope.objects.unmergedComponents.addEntry(unmergedComponent);
-      return { applyVersionResult: { id, filesStatus }, component: currentComponent || undefined };
+      const idForOutput = convertHashToTagIfPossible(id);
+      return { applyVersionResult: { id: idForOutput, filesStatus }, component: currentComponent || undefined };
     }
     if (resolvedUnrelated?.strategy === 'ours') {
       markAllFilesAsUnchanged();
@@ -566,8 +574,9 @@ export class MergingMain {
       legacyScope.objects.add(modelComponent);
     }
 
+    const idForOutput = convertHashToTagIfPossible(idToLoad);
     return {
-      applyVersionResult: { id: idToLoad, filesStatus },
+      applyVersionResult: { id: idForOutput, filesStatus },
       component: currentComponent || undefined,
       legacyCompToWrite: legacyComponent,
     };
