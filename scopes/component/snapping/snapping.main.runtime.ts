@@ -457,6 +457,23 @@ export class SnappingMain {
           }
         });
       });
+      // When merging lanes, if a component being snapped has dependencies on components that were simply updated
+      // (non-diverged), those dependencies still point to the old lane versions. We need to update them to point
+      // to the newly merged versions. Also convert hashes to tags when available.
+    } else if (!params.updateDependents && updatedComponents.length) {
+      existingComponents.forEach((comp) => {
+        const deps = this.dependencyResolver.getComponentDependencies(comp);
+        const snapData = getSnapData(comp.id);
+        deps.forEach((dep) => {
+          const mergedComp = updatedComponents.find((c) => c.id.isEqualWithoutVersion(dep.componentId));
+          if (mergedComp) {
+            // Convert hash to tag if available
+            const tag = mergedComp.tags.byHash(mergedComp.id.version);
+            const versionToUse = tag?.version.raw || mergedComp.id.version;
+            snapData.dependencies.push(`${mergedComp.id.toStringWithoutVersion()}@${versionToUse}`);
+          }
+        });
+      });
     }
 
     const components = [...existingComponents, ...newComponents];
