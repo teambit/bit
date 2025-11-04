@@ -171,7 +171,7 @@
         "@teambit/component.ui.component-compare.utils.sort-logs": "^0.0.8",
         "@teambit/component.ui.component-compare.utils.sort-tabs": "0.0.104",
         "@teambit/component.ui.component-deprecated": "^0.0.41",
-        "@teambit/component.ui.component-meta": "^0.0.367",
+        "@teambit/component.ui.component-meta": "^0.0.368",
         "@teambit/component.ui.component-size": "^0.0.77",
         "@teambit/component.ui.component-status-resolver": "^0.0.510",
         "@teambit/component.ui.deprecation-icon": "^0.0.509",
