@@ -189,6 +189,7 @@
         "@teambit/defender.eslint-linter": "^1.0.56",
         "@teambit/defender.fs.global-bit-temp-dir": "0.0.1",
         "@teambit/defender.jest-tester": "^2.0.17",
+        "@teambit/defender.mocha-tester": "^1.0.33",
         "@teambit/defender.prettier-formatter": "^1.0.23",
         "@teambit/defender.tester-task": "^1.0.14",
         "@teambit/defender.ui.test-compare-section": "^0.0.101",

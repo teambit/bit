@@ -3,8 +3,8 @@ import type { TransformOptions } from '@babel/core';
 import type Mocha from 'mocha';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
+import { MochaTester } from '@teambit/defender.mocha-tester';
 import { MochaAspect } from './mocha.aspect';
-import { MochaTester } from './mocha.tester';
 
 export class MochaMain {
   constructor(private logger: Logger) {}
