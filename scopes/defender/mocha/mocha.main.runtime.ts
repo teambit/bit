@@ -4,7 +4,7 @@ import type Mocha from 'mocha';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import { MochaAspect } from './mocha.aspect';
-import { MochaTester } from './mocha.tester';
+import { MochaTester } from '@teambit/defender.mocha-tester';
 
 export class MochaMain {
   constructor(private logger: Logger) {}
