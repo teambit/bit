@@ -1205,6 +1205,27 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     await this.setDivergeData(repo, undefined, undefined, workspaceId);
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnSourceOnly;
+
+    // When there's a detached head, divergeData only includes the detached head lineage.
+    // We also need to include unexported versions from the main head lineage.
+    const hasDetachedHead = this.detachedHeads && this.detachedHeads.getAllHeads().length > 0;
+    if (hasDetachedHead && this.head) {
+      // Calculate divergence from the main head as well
+      const mainHeadDivergeData = await getDivergeData({
+        repo,
+        modelComponent: this,
+        targetHead: (this.laneId ? this.calculatedRemoteHeadWhenOnLane : this.remoteHead) || null,
+        sourceHead: this.head,
+        throws: false,
+      });
+      // Add main head local versions that aren't already in localHashes
+      for (const hash of mainHeadDivergeData.snapsOnSourceOnly) {
+        if (!localHashes.find((h) => h.isEqual(hash))) {
+          localHashes.push(hash);
+        }
+      }
+    }
+
     if (!localHashes.length) return [];
     return localHashes.reverse(); // reverse to get the older first
   }
