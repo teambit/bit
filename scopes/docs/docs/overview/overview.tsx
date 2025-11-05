@@ -44,7 +44,7 @@ export type OverviewProps = {
   getEmptyState?: () => ComponentType | undefined;
   TaggedAPI?: React.ComponentType<{ componentId: string }>;
   usePreviewSandboxSlot?: UsePreviewSandboxSlot;
-  renderPreviewFirst?: boolean;
+  renderCompositionsFirst?: boolean;
   defaultPkgManager?: 'npm' | 'yarn' | 'pnpm' | 'bit';
 };
 
@@ -55,7 +55,7 @@ export function Overview({
   getEmptyState,
   TaggedAPI,
   usePreviewSandboxSlot,
-  renderPreviewFirst,
+  renderCompositionsFirst,
   defaultPkgManager,
 }: OverviewProps) {
   const component = useContext(ComponentContext);
@@ -130,7 +130,7 @@ export function Overview({
               <CompositionGallerySkeleton compositionsLength={Math.min(component.compositions.length, 3)} />
             </ReadmeSkeleton>
           )}
-          {!isMinimal && !renderPreviewFirst ? (
+          {!isMinimal && !renderCompositionsFirst ? (
             <>
               <ComponentPreview
                 onLoad={onPreviewLoad}
