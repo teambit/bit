@@ -92,7 +92,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
         <div className={styles.workspaceWrapper}>
           {
             <TopBar
-              className={classNames(styles.topbar, styles[themeName])}
+              className={classNames(styles.topbar, styles[themeName], isMinimal && styles.minimal)}
               Corner={() => (
                 <Corner
                   className={classNames((isMinimal && styles.minimalCorner) || styles.corner, styles[themeName])}
