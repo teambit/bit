@@ -44,6 +44,8 @@ export type OverviewProps = {
   getEmptyState?: () => ComponentType | undefined;
   TaggedAPI?: React.ComponentType<{ componentId: string }>;
   usePreviewSandboxSlot?: UsePreviewSandboxSlot;
+  renderPreviewFirst?: boolean;
+  defaultPkgManager?: 'npm' | 'yarn' | 'pnpm' | 'bit';
 };
 
 export function Overview({
@@ -53,6 +55,8 @@ export function Overview({
   getEmptyState,
   TaggedAPI,
   usePreviewSandboxSlot,
+  renderPreviewFirst,
+  defaultPkgManager,
 }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
@@ -116,6 +120,7 @@ export function Overview({
           titleBadges={flatten(titleBadges.values())}
           componentDescriptor={componentDescriptor}
           component={component}
+          pkgManager={defaultPkgManager}
         />
       )}
       {!buildFailed && (
@@ -125,7 +130,7 @@ export function Overview({
               <CompositionGallerySkeleton compositionsLength={Math.min(component.compositions.length, 3)} />
             </ReadmeSkeleton>
           )}
-          {!isMinimal ? (
+          {!isMinimal && !renderPreviewFirst ? (
             <>
               <ComponentPreview
                 onLoad={onPreviewLoad}
