@@ -738,8 +738,8 @@ export default class Component extends BitObject {
       else
         throw new Error(`unable to add a new version for "${this.id()}" on main.
 this version started from an older version (${previouslyUsedVersion}), and not from the head (${head}).
-if this is done intentionally, please re-run with --detach-head (or --override-head if available).
-otherwise, please run "bit checkout head" to be up to date, then snap/tag your changes.`);
+please run "bit checkout head" to be up to date, then snap/tag your changes.
+if this is done intentionally, you can use --detach-head (or --override-head if available), but make sure you understand the implications as this is an experimental feature that may not be fully stable.`);
     } else {
       this.setHead(version.hash());
       this.detachedHeads.clearCurrent();
