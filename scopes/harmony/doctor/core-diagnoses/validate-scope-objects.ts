@@ -13,7 +13,7 @@ type ComponentWithMissingHead = {
 
 export default class ValidateScopeObjects extends Diagnosis {
   name = DIAGNOSIS_NAME;
-  description = 'checks if all ModelComponents have their head version objects present';
+  description = 'check if all components have their head version objects';
   category = 'scope integrity';
 
   _formatSymptoms(bareResult: ExamineBareResult): string {

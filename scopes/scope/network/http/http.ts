@@ -689,11 +689,24 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClientRequest(DOCTOR_QUERY, Verb.READ, {
-      diagnosisName,
-    });
+    try {
+      const data = await this.graphClientRequest(DOCTOR_QUERY, Verb.READ, {
+        diagnosisName,
+      });
 
-    return data.scope.doctor;
+      return data.scope.doctor;
+    } catch (err: any) {
+      // Check if the error is due to the remote not supporting the doctor query
+      if (err instanceof GraphQLClientError) {
+        const errorReport = err.report();
+        if (errorReport.includes('Cannot query field "doctor"')) {
+          throw new Error(
+            `Remote scope "${this.scopeName || this.url}" does not support doctor checks. Please upgrade the remote scope to a newer version.`
+          );
+        }
+      }
+      throw err;
+    }
   }
 
   async listLanes(id?: string): Promise<LaneData[]> {
