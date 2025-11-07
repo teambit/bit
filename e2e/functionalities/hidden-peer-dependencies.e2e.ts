@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 
-describe.only('hidden peer dependency via env.jsonc', function () {
+describe('hidden peer dependency via env.jsonc', function () {
   this.timeout(0);
   let helper: Helper;
   let workspaceCapsulesRootDir: string;
