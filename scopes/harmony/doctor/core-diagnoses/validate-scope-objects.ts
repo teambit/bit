@@ -28,7 +28,7 @@ export default class ValidateScopeObjects extends Diagnosis {
   }
 
   _formatManualTreat() {
-    return 'The missing objects need to be restored from backups, re-exported from the original source, or fetched using "bit import --all-history".';
+    return 'The missing objects need to be restored from backups or re-exported from workspaces that have these components.';
   }
 
   async _runExamine(): Promise<ExamineBareResult> {
