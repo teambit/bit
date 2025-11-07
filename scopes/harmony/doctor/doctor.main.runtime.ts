@@ -32,7 +32,12 @@ import { DoctorAspect } from './doctor.aspect';
 import { DoctorCmd } from './doctor-cmd';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 import chalk from 'chalk';
+import { doctorSchema } from './doctor.graphql';
 
 // run specific check
 export type DoctorMetaData = {
@@ -331,12 +336,13 @@ export class DoctorMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, LoggerAspect];
+  static dependencies = [CLIAspect, LoggerAspect, GraphqlAspect, ScopeAspect];
   static runtime = MainRuntime;
-  static async provider([cliMain, loggerMain]: [CLIMain, LoggerMain]) {
+  static async provider([cliMain, loggerMain, graphql, scope]: [CLIMain, LoggerMain, GraphqlMain, ScopeMain]) {
     const logger = loggerMain.createLogger(DoctorAspect.id);
     const doctor = new DoctorMain(logger);
     cliMain.register(new DoctorCmd(doctor));
+    graphql.register(() => doctorSchema(scope));
     return doctor;
   }
 }
