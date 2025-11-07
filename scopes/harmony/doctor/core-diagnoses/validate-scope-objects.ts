@@ -53,17 +53,12 @@ export default class ValidateScopeObjects extends Diagnosis {
       }
     }
 
-    // Get all components
-    const modelComponents = await scope.list();
+    // Get all local components only
+    const modelComponents = await scope.list(true);
     const componentsWithMissingHeads: ComponentWithMissingHead[] = [];
 
-    // Check each component - only local components
+    // Check each component
     for (const modelComponent of modelComponents) {
-      const compId = modelComponent.toComponentId();
-
-      // Skip components from other scopes (dependencies)
-      if (!scope.isLocal(compId)) continue;
-
       const head = modelComponent.getHead();
       if (!head) continue;
 
