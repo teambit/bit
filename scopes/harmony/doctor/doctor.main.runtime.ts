@@ -25,6 +25,8 @@ import { getNpmVersion } from './core-diagnoses/validate-npm-exec';
 import { getYarnVersion } from './core-diagnoses/validate-yarn-exec';
 import { DiagnosisNotFound } from './exceptions/diagnosis-not-found';
 import { MissingDiagnosisName } from './exceptions/missing-diagnosis-name';
+import { getRemoteByName } from '@teambit/scope.remotes';
+import { loadConsumerIfExist } from '@teambit/legacy.consumer';
 
 import { DoctorAspect } from './doctor.aspect';
 import { DoctorCmd } from './doctor-cmd';
@@ -62,6 +64,7 @@ export type DoctorOptions = {
   includeNodeModules?: boolean;
   includePublic?: boolean;
   excludeLocalScope?: boolean;
+  remote?: string;
 };
 
 export class DoctorMain {
@@ -70,20 +73,38 @@ export class DoctorMain {
   async runAll(options: DoctorOptions): Promise<DoctorRunAllResults> {
     registerCoreAndExtensionsDiagnoses();
     runningTimeStamp = this._getTimeStamp();
-    const doctorRegistrar = DoctorRegistrar.getInstance();
-    const examineResultsWithNulls = await Promise.all(
-      doctorRegistrar.diagnoses.map(async (diagnosis) => {
-        try {
-          return await diagnosis.examine();
-        } catch (err: any) {
-          this.logger.error(`doctor failed running diagnosis "${diagnosis.name}"`, err);
-          this.logger.consoleFailure(
-            chalk.red(`doctor failed running diagnosis "${diagnosis.name}".\nerror-message: ${err.message}`)
-          );
-        }
-      })
-    );
-    const examineResults = compact(examineResultsWithNulls);
+
+    let examineResults: ExamineResult[];
+
+    // Handle remote scope if specified
+    if (options.remote) {
+      try {
+        const consumer = await loadConsumerIfExist();
+        const remote = await getRemoteByName(options.remote, consumer);
+        const network = await remote.connect();
+        examineResults = await network.doctor();
+      } catch (err: any) {
+        this.logger.error(`Failed to run doctor on remote scope "${options.remote}"`, err);
+        throw err;
+      }
+    } else {
+      // Run locally
+      const doctorRegistrar = DoctorRegistrar.getInstance();
+      const examineResultsWithNulls = await Promise.all(
+        doctorRegistrar.diagnoses.map(async (diagnosis) => {
+          try {
+            return await diagnosis.examine();
+          } catch (err: any) {
+            this.logger.error(`doctor failed running diagnosis "${diagnosis.name}"`, err);
+            this.logger.consoleFailure(
+              chalk.red(`doctor failed running diagnosis "${diagnosis.name}".\nerror-message: ${err.message}`)
+            );
+          }
+        })
+      );
+      examineResults = compact(examineResultsWithNulls);
+    }
+
     const envMeta = await this._getEnvMeta();
     const savedFilePath = await this._saveExamineResultsToFile(examineResults, envMeta, options);
     return { examineResults, savedFilePath, metaData: envMeta };
@@ -95,12 +116,34 @@ export class DoctorMain {
     }
     registerCoreAndExtensionsDiagnoses();
     runningTimeStamp = this._getTimeStamp();
-    const doctorRegistrar = DoctorRegistrar.getInstance();
-    const diagnosis = doctorRegistrar.getDiagnosisByName(diagnosisName);
-    if (!diagnosis) {
-      throw new DiagnosisNotFound(diagnosisName);
+
+    let examineResult: ExamineResult;
+
+    // Handle remote scope if specified
+    if (options.remote) {
+      try {
+        const consumer = await loadConsumerIfExist();
+        const remote = await getRemoteByName(options.remote, consumer);
+        const network = await remote.connect();
+        const results = await network.doctor(diagnosisName);
+        if (results.length === 0) {
+          throw new DiagnosisNotFound(diagnosisName);
+        }
+        examineResult = results[0];
+      } catch (err: any) {
+        this.logger.error(`Failed to run doctor on remote scope "${options.remote}"`, err);
+        throw err;
+      }
+    } else {
+      // Run locally
+      const doctorRegistrar = DoctorRegistrar.getInstance();
+      const diagnosis = doctorRegistrar.getDiagnosisByName(diagnosisName);
+      if (!diagnosis) {
+        throw new DiagnosisNotFound(diagnosisName);
+      }
+      examineResult = await diagnosis.examine();
     }
-    const examineResult = await diagnosis.examine();
+
     const envMeta = await this._getEnvMeta();
     const savedFilePath = await this._saveExamineResultsToFile([examineResult], envMeta, options);
     return { examineResult, savedFilePath, metaData: envMeta };

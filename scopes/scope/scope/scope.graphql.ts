@@ -3,6 +3,7 @@ import { gql } from 'graphql-tag';
 import { latestVersions } from '@teambit/legacy.scope-api';
 import type { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
+import { runDoctorOnScope } from '@teambit/doctor';
 import type { ScopeMain } from './scope.main.runtime';
 
 export function scopeSchema(scopeMain: ScopeMain) {
@@ -53,6 +54,9 @@ export function scopeSchema(scopeMain: ScopeMain) {
 
         # get serialized legacy component ids with versions. deprecated. PLEASE DO NOT USE THIS API.
         _legacyLatestVersions(ids: [String]!): [String]
+
+        # run doctor diagnostics on the scope
+        doctor(diagnosisName: String): [ExamineResult]!
       }
 
       type Log {
@@ -67,6 +71,24 @@ export function scopeSchema(scopeMain: ScopeMain) {
       type LegacyMeta {
         id: String
         deprecated: Boolean
+      }
+
+      type DiagnosisMetaData {
+        name: String!
+        description: String!
+        category: String!
+      }
+
+      type ExamineBareResult {
+        valid: Boolean!
+        data: JSONObject
+      }
+
+      type ExamineResult {
+        diagnosisMetaData: DiagnosisMetaData!
+        bareResult: ExamineBareResult!
+        formattedSymptoms: String!
+        formattedManualTreat: String!
       }
 
       type Query {
@@ -130,6 +152,10 @@ export function scopeSchema(scopeMain: ScopeMain) {
 
         getBitVersion: () => {
           return getBitVersion();
+        },
+
+        doctor: async (scope: ScopeMain, { diagnosisName }: { diagnosisName?: string }) => {
+          return runDoctorOnScope(scope.legacyScope, diagnosisName);
         },
         // delete: async (scope: ScopeMain, props: {  }) => {
 
