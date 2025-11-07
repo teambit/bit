@@ -27,6 +27,7 @@ import { DiagnosisNotFound } from './exceptions/diagnosis-not-found';
 import { MissingDiagnosisName } from './exceptions/missing-diagnosis-name';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import { loadConsumerIfExist } from '@teambit/legacy.consumer';
+import type { Network } from '@teambit/scope.network';
 
 import { DoctorAspect } from './doctor.aspect';
 import { DoctorCmd } from './doctor-cmd';
@@ -84,9 +85,7 @@ export class DoctorMain {
     // Handle remote scope if specified
     if (options.remote) {
       try {
-        const consumer = await loadConsumerIfExist();
-        const remote = await getRemoteByName(options.remote, consumer);
-        const network = await remote.connect();
+        const network = await this._connectToRemote(options.remote);
         examineResults = await network.doctor();
       } catch (err: any) {
         this.logger.error(`Failed to run doctor on remote scope "${options.remote}"`, err);
@@ -127,9 +126,7 @@ export class DoctorMain {
     // Handle remote scope if specified
     if (options.remote) {
       try {
-        const consumer = await loadConsumerIfExist();
-        const remote = await getRemoteByName(options.remote, consumer);
-        const network = await remote.connect();
+        const network = await this._connectToRemote(options.remote);
         const results = await network.doctor(diagnosisName);
         if (results.length === 0) {
           throw new DiagnosisNotFound(diagnosisName);
@@ -152,6 +149,12 @@ export class DoctorMain {
     const envMeta = await this._getEnvMeta();
     const savedFilePath = await this._saveExamineResultsToFile([examineResult], envMeta, options);
     return { examineResult, savedFilePath, metaData: envMeta };
+  }
+
+  private async _connectToRemote(remoteName: string): Promise<Network> {
+    const consumer = await loadConsumerIfExist();
+    const remote = await getRemoteByName(remoteName, consumer);
+    return remote.connect();
   }
 
   async listDiagnoses(): Promise<Diagnosis[]> {
