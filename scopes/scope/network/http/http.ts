@@ -19,7 +19,7 @@ import { ConsumerComponent as Component } from '@teambit/legacy.consumer-compone
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import type { LaneData, ScopeDescriptor } from '@teambit/legacy.scope';
 import { RemovedObjects } from '@teambit/legacy.scope';
-import type { ExamineResult } from '@teambit/doctor';
+import type { DoctorResponse } from '@teambit/doctor';
 import { globalFlags } from '@teambit/cli';
 import { getConfig, listConfig } from '@teambit/config-store';
 import {
@@ -668,22 +668,33 @@ export class Http implements Network {
     return new DependencyGraph(oldGraph);
   }
 
-  async doctor(diagnosisName?: string): Promise<ExamineResult[]> {
+  async doctor(diagnosisName?: string): Promise<DoctorResponse> {
     const DOCTOR_QUERY = gql`
       query doctor($diagnosisName: String) {
         scope {
           doctor(diagnosisName: $diagnosisName) {
-            diagnosisMetaData {
-              name
-              description
-              category
+            examineResults {
+              diagnosisMetaData {
+                name
+                description
+                category
+              }
+              bareResult {
+                valid
+                data
+              }
+              formattedSymptoms
+              formattedManualTreat
             }
-            bareResult {
-              valid
-              data
+            metaData {
+              nodeVersion
+              runningTimestamp
+              platform
+              bitVersion
+              npmVersion
+              yarnVersion
+              userDetails
             }
-            formattedSymptoms
-            formattedManualTreat
           }
         }
       }

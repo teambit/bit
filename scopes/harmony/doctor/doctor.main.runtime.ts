@@ -46,8 +46,8 @@ export type DoctorMetaData = {
   runningTimestamp: number;
   platform: string;
   bitVersion: string;
-  npmVersion: string;
-  yarnVersion: string;
+  npmVersion: string | null | undefined;
+  yarnVersion: string | null | undefined;
   userDetails: string;
 };
 export type DoctorRunAllResults = {
@@ -58,6 +58,10 @@ export type DoctorRunAllResults = {
 export type DoctorRunOneResult = {
   examineResult: ExamineResult;
   savedFilePath: string | null | undefined;
+  metaData: DoctorMetaData;
+};
+export type DoctorResponse = {
+  examineResults: ExamineResult[];
   metaData: DoctorMetaData;
 };
 
@@ -81,12 +85,15 @@ export class DoctorMain {
     runningTimeStamp = this._getTimeStamp();
 
     let examineResults: ExamineResult[];
+    let envMeta: DoctorMetaData;
 
     // Handle remote scope if specified
     if (options.remote) {
       try {
         const network = await this._connectToRemote(options.remote);
-        examineResults = await network.doctor();
+        const response = await network.doctor();
+        examineResults = response.examineResults;
+        envMeta = response.metaData;
       } catch (err: any) {
         this.logger.error(`Failed to run doctor on remote scope "${options.remote}"`, err);
         throw err;
@@ -107,9 +114,9 @@ export class DoctorMain {
         })
       );
       examineResults = compact(examineResultsWithNulls);
+      envMeta = await this._getEnvMeta();
     }
 
-    const envMeta = await this._getEnvMeta();
     const savedFilePath = await this._saveExamineResultsToFile(examineResults, envMeta, options);
     return { examineResults, savedFilePath, metaData: envMeta };
   }
@@ -122,16 +129,18 @@ export class DoctorMain {
     runningTimeStamp = this._getTimeStamp();
 
     let examineResult: ExamineResult;
+    let envMeta: DoctorMetaData;
 
     // Handle remote scope if specified
     if (options.remote) {
       try {
         const network = await this._connectToRemote(options.remote);
-        const results = await network.doctor(diagnosisName);
-        if (results.length === 0) {
+        const response = await network.doctor(diagnosisName);
+        if (response.examineResults.length === 0) {
           throw new DiagnosisNotFound(diagnosisName);
         }
-        examineResult = results[0];
+        examineResult = response.examineResults[0];
+        envMeta = response.metaData;
       } catch (err: any) {
         this.logger.error(`Failed to run doctor on remote scope "${options.remote}"`, err);
         throw err;
@@ -144,9 +153,9 @@ export class DoctorMain {
         throw new DiagnosisNotFound(diagnosisName);
       }
       examineResult = await diagnosis.examine();
+      envMeta = await this._getEnvMeta();
     }
 
-    const envMeta = await this._getEnvMeta();
     const savedFilePath = await this._saveExamineResultsToFile([examineResult], envMeta, options);
     return { examineResult, savedFilePath, metaData: envMeta };
   }

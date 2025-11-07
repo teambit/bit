@@ -24,9 +24,24 @@ export function doctorSchema(scopeMain: ScopeMain): Schema {
         formattedManualTreat: String!
       }
 
+      type DoctorMetaData {
+        nodeVersion: String!
+        runningTimestamp: Float!
+        platform: String!
+        bitVersion: String!
+        npmVersion: String
+        yarnVersion: String
+        userDetails: String!
+      }
+
+      type DoctorResponse {
+        examineResults: [ExamineResult]!
+        metaData: DoctorMetaData!
+      }
+
       extend type Scope {
         # run doctor diagnostics on the scope
-        doctor(diagnosisName: String): [ExamineResult]!
+        doctor(diagnosisName: String): DoctorResponse!
       }
     `,
     resolvers: {
