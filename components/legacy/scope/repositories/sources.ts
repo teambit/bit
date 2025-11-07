@@ -130,7 +130,7 @@ export default class SourceRepository {
         return component;
       }
       const hash = component.getRef(bitId.version as string);
-      if (!hash) throw new Error(`sources.get: unable to get has for ${bitId.toString()}`);
+      if (!hash) throw new Error(`sources.get: unable to get hash for ${bitId.toString()}`);
       const hasLocalVersion = this.scope.stagedSnaps.has(hash.toString());
       if (hasLocalVersion) {
         // no point to go to the remote, it's local.
