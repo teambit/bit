@@ -376,6 +376,16 @@ export class DependencyResolverMain {
     return depList.filterHidden();
   }
 
+  getHiddenPeerDependencies(component: IComponent): DependencyList {
+    const entry = component.get(DependencyResolverAspect.id);
+    if (!entry) {
+      return DependencyList.fromArray([]);
+    }
+    const serializedDependencies: SerializedDependency[] = entry?.data?.dependencies || [];
+    const depList = this.getDependenciesFromSerializedDependencies(serializedDependencies);
+    return depList.getHiddenPeers();
+  }
+
   getDependenciesFromLegacyComponent(
     component: LegacyComponent,
     { includeHidden = false }: GetDependenciesOptions = {}
