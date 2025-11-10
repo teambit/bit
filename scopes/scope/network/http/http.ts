@@ -19,6 +19,7 @@ import { ConsumerComponent as Component } from '@teambit/legacy.consumer-compone
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import type { LaneData, ScopeDescriptor } from '@teambit/legacy.scope';
 import { RemovedObjects } from '@teambit/legacy.scope';
+import type { DoctorResponse } from '@teambit/doctor';
 import { globalFlags } from '@teambit/cli';
 import { getConfig, listConfig } from '@teambit/config-store';
 import {
@@ -665,6 +666,58 @@ export class Http implements Network {
     }));
     const oldGraph = DependencyGraph.buildFromNodesAndEdges(nodes, edges);
     return new DependencyGraph(oldGraph);
+  }
+
+  async doctor(diagnosisName?: string): Promise<DoctorResponse> {
+    const DOCTOR_QUERY = gql`
+      query doctor($diagnosisName: String) {
+        scope {
+          doctor(diagnosisName: $diagnosisName) {
+            examineResults {
+              diagnosisMetaData {
+                name
+                description
+                category
+              }
+              bareResult {
+                valid
+                data
+              }
+              formattedSymptoms
+              formattedManualTreat
+            }
+            metaData {
+              nodeVersion
+              runningTimestamp
+              platform
+              bitVersion
+              npmVersion
+              yarnVersion
+              userDetails
+            }
+          }
+        }
+      }
+    `;
+
+    try {
+      const data = await this.graphClientRequest(DOCTOR_QUERY, Verb.READ, {
+        diagnosisName,
+      });
+
+      return data.scope.doctor;
+    } catch (err: any) {
+      // Check if the error is due to the remote not supporting the doctor query
+      if (err instanceof GraphQLClientError) {
+        const errorReport = err.report();
+        if (errorReport.includes('Cannot query field "doctor"')) {
+          throw new Error(
+            `Remote scope "${this.scopeName || this.url}" does not support doctor checks. Please upgrade the remote scope to a newer version.`
+          );
+        }
+      }
+      throw err;
+    }
   }
 
   async listLanes(id?: string): Promise<LaneData[]> {
