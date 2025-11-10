@@ -84,6 +84,8 @@ export class DoctorMain {
     registerCoreAndExtensionsDiagnoses();
     runningTimeStamp = this._getTimeStamp();
 
+    this._validateOptions(options);
+
     let examineResults: ExamineResult[];
     let envMeta: DoctorMetaData;
 
@@ -128,6 +130,8 @@ export class DoctorMain {
     registerCoreAndExtensionsDiagnoses();
     runningTimeStamp = this._getTimeStamp();
 
+    this._validateOptions({ diagnosisName, ...options });
+
     let examineResult: ExamineResult;
     let envMeta: DoctorMetaData;
 
@@ -164,6 +168,32 @@ export class DoctorMain {
     const consumer = await loadConsumerIfExist();
     const remote = await getRemoteByName(remoteName, consumer);
     return remote.connect();
+  }
+
+  private _validateOptions(options: DoctorOptions): void {
+    if (!options.remote) return;
+
+    // Archive-related flags are incompatible with --remote
+    const incompatibleFlags: string[] = [];
+
+    if (options.archiveWorkspace) {
+      incompatibleFlags.push('--archive');
+    }
+    if (options.includeNodeModules) {
+      incompatibleFlags.push('--include-node-modules');
+    }
+    if (options.includePublic) {
+      incompatibleFlags.push('--include-public');
+    }
+    if (options.excludeLocalScope) {
+      incompatibleFlags.push('--exclude-local-scope');
+    }
+
+    if (incompatibleFlags.length > 0) {
+      throw new Error(
+        `The following flags cannot be used with --remote: ${incompatibleFlags.join(', ')}. Archive-related options are only applicable when running doctor locally.`
+      );
+    }
   }
 
   async listDiagnoses(): Promise<Diagnosis[]> {
