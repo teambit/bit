@@ -33,7 +33,11 @@ export type TitleBadge = {
 
 export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
-export type OverviewOptions = () => { queryParams?: string };
+export type OverviewOptions = () => {
+  queryParams?: string;
+  renderCompositionsFirst?: boolean;
+  defaultPkgManager?: 'npm' | 'yarn' | 'pnpm' | 'bit';
+};
 
 export type OverviewOptionsSlot = SlotRegistry<OverviewOptions>;
 
@@ -44,8 +48,6 @@ export type OverviewProps = {
   getEmptyState?: () => ComponentType | undefined;
   TaggedAPI?: React.ComponentType<{ componentId: string }>;
   usePreviewSandboxSlot?: UsePreviewSandboxSlot;
-  renderCompositionsFirst?: boolean;
-  defaultPkgManager?: 'npm' | 'yarn' | 'pnpm' | 'bit';
 };
 
 export function Overview({
@@ -55,8 +57,6 @@ export function Overview({
   getEmptyState,
   TaggedAPI,
   usePreviewSandboxSlot,
-  renderCompositionsFirst,
-  defaultPkgManager,
 }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
@@ -80,6 +80,8 @@ export function Overview({
   }`;
 
   const overviewPropsValues = overviewProps && overviewProps();
+
+  const { renderCompositionsFirst, defaultPkgManager } = overviewPropsValues || {};
 
   const themeParams = currentTheme?.themeName ? `theme=${currentTheme?.themeName}` : '';
 
