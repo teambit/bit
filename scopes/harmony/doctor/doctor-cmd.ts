@@ -10,6 +10,7 @@ type Flags = {
   includeNodeModules?: boolean;
   includePublic?: boolean;
   excludeLocalScope?: boolean;
+  remote?: string;
 };
 
 export class DoctorCmd implements Command {
@@ -33,6 +34,7 @@ can generate diagnostic reports and workspace archives for debugging and support
     ['n', 'include-node-modules', 'relevant for --archive. include node_modules in the archive file'],
     ['p', 'include-public', 'relevant for --archive. include public folder in the archive file'],
     ['e', 'exclude-local-scope', 'relevant for --archive. exclude .bit or .git/bit from the archive file'],
+    ['r', 'remote <remoteName>', 'run doctor checks on a remote scope'],
   ] as CommandOptions;
 
   constructor(private doctor: DoctorMain) {}
@@ -72,6 +74,7 @@ can generate diagnostic reports and workspace archives for debugging and support
       includeNodeModules = false,
       includePublic = false,
       excludeLocalScope = false,
+      remote,
     } = flags;
 
     if (list) {
@@ -96,6 +99,7 @@ can generate diagnostic reports and workspace archives for debugging and support
       includeNodeModules,
       includePublic,
       excludeLocalScope,
+      remote,
     };
     return diagnosisName ? this.doctor.runOne(doctorOptions) : this.doctor.runAll(doctorOptions);
   }
