@@ -167,16 +167,17 @@ export class CiMain {
 
   /**
    * Converts a branch name to a lane ID string using Bit's naming conventions.
-   * Sanitizes branch name by replacing slashes and dots with dashes, then
+   * Sanitizes branch name by replacing slashes and dots with dashes, converting to lowercase, then
    * prefixes with the workspace's default scope.
    *
    * @param branchName - The git branch name to convert
    * @returns Lane ID in format: {defaultScope}/{sanitizedBranch}
-   * @example convertBranchToLaneId("feature/new-component") => "my-scope/feature-new-component"
+   * @example convertBranchToLaneId("feature/New-Component") => "my-scope/feature-new-component"
    */
   convertBranchToLaneId(branchName: string): string {
     // Sanitize branch name to make it valid for Bit lane IDs by replacing slashes and dots with dashes
-    const sanitizedBranch = branchName.replace(/[/.]/g, '-');
+    // and converting to lowercase
+    const sanitizedBranch = branchName.replace(/[/.]/g, '-').toLowerCase();
     return `${this.workspace.defaultScope}/${sanitizedBranch}`;
   }
 
