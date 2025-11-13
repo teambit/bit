@@ -7,6 +7,20 @@ chai.use(chaiFs);
 describe('Mocha Tester', function () {
   this.timeout(0);
   let helper: Helper;
+  let envId: string;
+  let envName: string;
+
+  const setupMochaEnv = () => {
+    envName = helper.env.setCustomNewEnv('mocha-only-test-env', [
+      '@teambit/typescript.typescript-compiler',
+      '@teambit/defender.mocha-tester',
+      'chai',
+      '@babel/preset-typescript',
+      '@babel/preset-env',
+    ]);
+    envId = `${helper.scopes.remote}/${envName}`;
+  };
+
   before(() => {
     helper = new Helper();
   });
@@ -17,7 +31,8 @@ describe('Mocha Tester', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
-      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env');
+      setupMochaEnv();
+      helper.command.setEnv('comp1', envId);
       helper.command.install();
     });
     describe('component without any test file', () => {
@@ -98,7 +113,8 @@ describe('Mocha Tester', function () {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponentsTS(1);
-      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env');
+      setupMochaEnv();
+      helper.command.setEnv('comp1', envId);
       helper.command.install();
       helper.fs.outputFile(
         'comp1/foo.ts',
@@ -124,19 +140,10 @@ describe('addOne', () => {
     });
   });
   describe('component with multiple spec files and .only in one spec', () => {
-    let envId;
-    let envName;
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
-
-      // Create a custom env with mocha tester
-      envName = helper.env.setCustomNewEnv('mocha-only-test-env', [
-        '@teambit/typescript.typescript-compiler',
-        '@teambit/defender.mocha-tester',
-        'chai',
-      ]);
-      envId = `${helper.scopes.remote}/${envName}`;
+      setupMochaEnv();
       helper.command.setEnv('comp1', envId);
       helper.command.install();
 
