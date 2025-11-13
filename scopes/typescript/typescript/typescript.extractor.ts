@@ -127,16 +127,34 @@ export class TypeScriptExtractor implements SchemaExtractor {
         if (!file) return undefined;
 
         const parsedSourceFile = this.parseSourceFile(file);
-
         const nameIndex = context.buildTopLevelNameIndex(parsedSourceFile);
 
-        const internalSchemas = await Promise.all(
-          idList.identifiers.map(async (identifier) => {
-            const decl = nameIndex.get(identifier.id);
-            if (!decl) return undefined;
-            return context.computeSchema(decl);
-          })
-        );
+        const toVisit = new Set<string>(idList.identifiers.map((i) => i.id));
+        const visited = new Set<string>();
+        const internalSchemas: SchemaNode[] = [];
+
+        const enqueue = (name: string) => {
+          if (!visited.has(name) && !toVisit.has(name) && nameIndex.has(name)) {
+            toVisit.add(name);
+          }
+        };
+
+        while (toVisit.size) {
+          const name = toVisit.values().next().value as string;
+          toVisit.delete(name);
+
+          if (visited.has(name)) continue;
+          visited.add(name);
+
+          const decl = nameIndex.get(name);
+          if (!decl) continue;
+
+          const schema = await context.computeSchema(decl);
+          internalSchemas.push(schema);
+
+          const sameFileRefs = context.collectSameFileInternalTypeRefs(schema);
+          sameFileRefs.forEach(enqueue);
+        }
 
         const filtered = compact(internalSchemas);
         if (!filtered.length) return undefined;

@@ -810,6 +810,46 @@ export class SchemaExtractorContext {
     return map;
   }
 
+  // inside TypeScriptExtractor
+  /**
+   * Walk a SchemaNode tree and collect all TypeRefSchema names that
+   * have an internalFilePath.
+   *
+   * We intentionally do NOT try to match the identifierKey here –
+   * we already scope lookups by `nameIndex` for the current file,
+   * so cross-file refs will just fail `nameIndex.get(name)` and be ignored.
+   *
+   * This lets us correctly close over cases like:
+   *   type MyFirstCombinedProps = MyFirstProps & MyFirstPropsExtra;
+   * where `MyFirstPropsExtra` is internal to the same file.
+   */
+  collectSameFileInternalTypeRefs(root: SchemaNode): string[] {
+    const result = new Set<string>();
+    const stack: SchemaNode[] = [root];
+
+    while (stack.length) {
+      const node = stack.pop();
+      if (!node || typeof node !== 'object') continue;
+
+      if (TypeRefSchema.isTypeRefSchema(node) && typeof node.name === 'string' && node.internalFilePath) {
+        result.add(node.name);
+      }
+
+      for (const value of Object.values(node)) {
+        if (!value) continue;
+        if (Array.isArray(value)) {
+          for (const v of value) {
+            if (v && typeof v === 'object') stack.push(v as SchemaNode);
+          }
+        } else if (typeof value === 'object') {
+          stack.push(value as SchemaNode);
+        }
+      }
+    }
+
+    return Array.from(result);
+  }
+
   async jsDocToDocSchema(node: Node): Promise<DocSchema | undefined> {
     if (!canHaveJsDoc(node)) {
       return undefined;

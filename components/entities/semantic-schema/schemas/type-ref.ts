@@ -150,4 +150,8 @@ export class TypeRefSchema extends SchemaNode {
       typeArgs
     );
   }
+
+  static isTypeRefSchema(node: SchemaNode): node is TypeRefSchema {
+    return node.__schema === 'TypeRefSchema';
+  }
 }
