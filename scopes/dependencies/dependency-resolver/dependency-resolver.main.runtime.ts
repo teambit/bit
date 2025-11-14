@@ -587,8 +587,8 @@ export class DependencyResolverMain {
 
   async addDependenciesGraph(
     components: Array<{
-      component: Component,
-      componentRelativeDir: string,
+      component: Component;
+      componentRelativeDir: string;
     }>,
     options: {
       rootDir: string;
@@ -607,7 +607,7 @@ export class DependencyResolverMain {
           : undefined,
         pkgName: this.getPackageName(component),
         componentRelativeDir,
-      }))
+      }));
       if (!isFeatureEnabled(DEPS_GRAPH)) {
         // We need to optimize the performance of dependency graph calculation.
         // Temporarily we only calculate it for a limited number of components.

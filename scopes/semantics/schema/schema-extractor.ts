@@ -21,4 +21,9 @@ export type SchemaExtractorOptions = {
   tsserverPath?: string;
   contextPath?: string;
   skipInternals?: boolean;
+  /**
+   * Component-relative includes. Exact if no wildcard; glob-lite if contains * or **.
+   * Always materialized under `internals` unless already part of the public API graph.
+   */
+  includeFiles?: string[];
 };

@@ -35,6 +35,11 @@ export class VariableDeclaration implements SchemaTransformer {
     const doc = await context.jsDocToDocSchema(varDec);
     const nodeModifiers = ts.canHaveModifiers(varDec) ? ts.getModifiers(varDec) : undefined;
     const modifiers = nodeModifiers?.map((modifier) => modifier.getText()) || [];
+    if (varDec.initializer && ts.isObjectLiteralExpression(varDec.initializer)) {
+      const typeFromInit = await context.computeSchema(varDec.initializer);
+      const defaultValue = varDec.initializer.getText();
+      return new VariableLikeSchema(location, name, displaySig, typeFromInit, false, doc, defaultValue);
+    }
     if (varDec.initializer?.kind === ts.SyntaxKind.ArrowFunction) {
       const functionLikeInfo = await context.getQuickInfo((varDec.initializer as ArrowFunction).equalsGreaterThanToken);
       const returnTypeStr = functionLikeInfo ? parseTypeFromQuickInfo(functionLikeInfo) : 'any';

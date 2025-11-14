@@ -42,7 +42,12 @@ export class TypeRefSchema extends SchemaNode {
     /**
      * if the reference is not exported from the component, it can be internal to the file.
      */
-    readonly internalFilePath?: string
+    readonly internalFilePath?: string,
+
+    /**
+     * source file path where the type ref is defined
+     */
+    readonly sourceFilePath?: string
   ) {
     super();
     this.componentId = componentId;
@@ -123,6 +128,7 @@ export class TypeRefSchema extends SchemaNode {
       componentId: this.componentId ? this.componentId.toObject() : undefined,
       packageName: this.packageName,
       internalFilePath: this.internalFilePath,
+      sourceFilePath: this.sourceFilePath,
       typeArgs: this.typeArgs?.map((type) => type.toObject()),
     };
   }
@@ -138,7 +144,14 @@ export class TypeRefSchema extends SchemaNode {
     }
     const packageName = obj.packageName;
     const internalFilePath = obj.internalFilePath;
+    const sourceFilePath = obj.sourceFilePath;
     const typeArgs = obj.typeArgs?.map((type: any) => SchemaRegistry.fromObject(type));
-    return new TypeRefSchema(location, name, componentId, packageName, internalFilePath).withTypeArgs(typeArgs);
+    return new TypeRefSchema(location, name, componentId, packageName, internalFilePath, sourceFilePath).withTypeArgs(
+      typeArgs
+    );
+  }
+
+  static isTypeRefSchema(node: SchemaNode): node is TypeRefSchema {
+    return node.__schema === 'TypeRefSchema';
   }
 }
