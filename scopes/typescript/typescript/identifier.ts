@@ -1,4 +1,6 @@
 import { isAbsolute, resolve, dirname, normalize } from 'path';
+import { isRelativeImport } from '@teambit/legacy.utils';
+
 export class Identifier {
   public readonly normalizedPath: string;
 
@@ -13,8 +15,10 @@ export class Identifier {
 
   private static computeNormalizedPath(filePath: string, sourceFilePath?: string): string {
     let effectivePath = filePath;
-    if (sourceFilePath) {
-      effectivePath = isAbsolute(sourceFilePath) ? sourceFilePath : resolve(dirname(filePath), sourceFilePath);
+    const isAbsoluteSourceFilePath = sourceFilePath && isAbsolute(sourceFilePath);
+    const isRelativeSourceFilePath = sourceFilePath && isRelativeImport(sourceFilePath);
+    if (isAbsoluteSourceFilePath || isRelativeSourceFilePath) {
+      effectivePath = isAbsoluteSourceFilePath ? sourceFilePath : resolve(dirname(filePath), sourceFilePath);
     }
     return normalize(effectivePath).replace(/\\/g, '/');
   }
