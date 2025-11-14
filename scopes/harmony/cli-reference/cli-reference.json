@@ -4494,6 +4494,11 @@
         "e",
         "exclude-local-scope",
         "relevant for --archive. exclude .bit or .git/bit from the archive file"
+      ],
+      [
+        "r",
+        "remote <remoteName>",
+        "run doctor checks on a remote scope"
       ]
     ],
     "description": "diagnose and troubleshoot workspace issues",

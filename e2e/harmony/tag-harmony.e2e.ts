@@ -554,4 +554,183 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
       });
     });
   });
+  describe('export with detached-head when head was not exported yet', () => {
+    let versionHash2_0_0: string;
+    let versionHash2_0_1: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+
+      // Step 1: Tag 0.0.1 and export
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // Step 2: Tag 2.0.0 but DON'T export (this sets head to 2.0.0)
+      helper.command.tagAllWithoutBuild('--ver 2.0.0 --unmodified');
+      const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
+      versionHash2_0_0 = comp.versions['2.0.0'];
+
+      // Step 3: Checkout to 0.0.1
+      helper.command.runCmd('bit checkout 0.0.1 --all -x');
+
+      // Step 4: Tag with --detach-head (creates a detached head 2.0.1)
+      helper.command.tagAllWithoutBuild('--unmodified --detach-head');
+      const compAfterDetach = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
+      versionHash2_0_1 = compAfterDetach.versions['2.0.1'];
+
+      // Step 5: Export - should export BOTH 2.0.0 (head) and 2.0.1 (detached head)
+      helper.command.export();
+    });
+    it('should have exported both head (2.0.0) and detached-head (2.0.1) to the remote', () => {
+      const remoteComp = helper.command.catComponent(`${helper.scopes.remote}/comp1`, helper.scopes.remotePath);
+      expect(remoteComp.versions).to.have.property('2.0.0');
+      expect(remoteComp.versions).to.have.property('2.0.1');
+    });
+    it('should have the version object for 2.0.0 on the remote', () => {
+      expect(() => helper.command.catObject(versionHash2_0_0, false, helper.scopes.remotePath)).to.not.throw();
+    });
+    it('should have the version object for 2.0.1 on the remote', () => {
+      expect(() => helper.command.catObject(versionHash2_0_1, false, helper.scopes.remotePath)).to.not.throw();
+    });
+    describe('importing the component to a new workspace', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+      });
+      it('should successfully import without errors', () => {
+        expect(() => helper.command.importComponent('comp1', '-x')).to.not.throw();
+      });
+      it('should have version 2.0.0 available (the head)', () => {
+        const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
+        expect(comp.versions).to.have.property('2.0.0');
+      });
+      it('should have the version object for 2.0.0', () => {
+        expect(() => helper.command.catObject(versionHash2_0_0)).to.not.throw();
+      });
+    });
+  });
+  describe('export with detached-head when head and its parent were not exported yet', () => {
+    let versionHash2_0_0: string;
+    let snapHash: string;
+    let versionHash2_0_1: string;
+    let versionHash2_0_2: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+
+      // Step 1: Tag 0.0.1 and export
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // Step 2: Tag 2.0.0 but DON'T export (this sets head to 2.0.0)
+      helper.command.tagAllWithoutBuild('--ver 2.0.0 --unmodified');
+      const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
+      versionHash2_0_0 = comp.versions['2.0.0'];
+
+      // Step 3: Snap but DON'T export (creates an untagged snap)
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      const compAfterSnap = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
+      snapHash = compAfterSnap.head;
+
+      // Step 4: Tag 2.0.1 but DON'T export (this sets head to 2.0.1)
+      // Now we have 2.0.0 (tag), snap, and 2.0.1 (tag) all unexported
+      helper.command.tagAllWithoutBuild('--ver 2.0.1 --unmodified');
+      const comp2 = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
+      versionHash2_0_1 = comp2.versions['2.0.1'];
+
+      // Step 5: Checkout to 0.0.1
+      helper.command.runCmd('bit checkout 0.0.1 --all -x');
+
+      // Step 6: Tag with --detach-head (creates a detached head 2.0.2)
+      helper.command.tagAllWithoutBuild('--unmodified --detach-head');
+      const compAfterDetach = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
+      versionHash2_0_2 = compAfterDetach.versions['2.0.2'];
+
+      // Step 7: Export - should export 2.0.0, snap, 2.0.1 (head), and 2.0.2 (detached head)
+      helper.command.export();
+    });
+    it('should have exported all versions: 2.0.0, snap, 2.0.1 (head), and 2.0.2 (detached-head)', () => {
+      const remoteComp = helper.command.catComponent(`${helper.scopes.remote}/comp1`, helper.scopes.remotePath);
+      expect(remoteComp.versions).to.have.property('2.0.0');
+      expect(remoteComp.versions).to.have.property('2.0.1');
+      expect(remoteComp.versions).to.have.property('2.0.2');
+      // The snap is untagged, so it's referenced by the head, not in versions
+      expect(remoteComp.head).to.equal(versionHash2_0_1);
+    });
+    it('should have the version object for 2.0.0 on the remote', () => {
+      expect(() => helper.command.catObject(versionHash2_0_0, false, helper.scopes.remotePath)).to.not.throw();
+    });
+    it('should have the version object for the snap on the remote', () => {
+      expect(() => helper.command.catObject(snapHash, false, helper.scopes.remotePath)).to.not.throw();
+    });
+    it('should have the version object for 2.0.1 on the remote', () => {
+      expect(() => helper.command.catObject(versionHash2_0_1, false, helper.scopes.remotePath)).to.not.throw();
+    });
+    it('should have the version object for 2.0.2 on the remote', () => {
+      expect(() => helper.command.catObject(versionHash2_0_2, false, helper.scopes.remotePath)).to.not.throw();
+    });
+    describe('importing the component to a new workspace', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+      });
+      it('should successfully import without errors', () => {
+        expect(() => helper.command.importComponent('comp1', '-x')).to.not.throw();
+      });
+      it('should have all versions in the component metadata', () => {
+        const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
+        expect(comp.versions).to.have.property('2.0.0');
+        expect(comp.versions).to.have.property('2.0.1');
+        expect(comp.versions).to.have.property('2.0.2');
+      });
+      it('should have the version object for 2.0.1 (the head that was imported)', () => {
+        expect(() => helper.command.catObject(versionHash2_0_1)).to.not.throw();
+      });
+      it('should be able to import the snap directly by hash', () => {
+        expect(() => helper.command.importComponent(`comp1@${snapHash}`, '-x --override')).to.not.throw();
+      });
+    });
+  });
+  describe('export with --detach-head after merging a lane', () => {
+    let headOnMain: string;
+    let firstSnapOnLane: string;
+    let headOnLane: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+
+      // Step 1: Tag 1.0.0 and export
+      helper.command.tagAllWithoutBuild('--ver 1.0.0');
+      helper.command.export();
+
+      // Step 2: Create a lane from 1.0.0 and make snaps
+      helper.command.createLane('dev');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      firstSnapOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.export();
+
+      // Step 3: Switch back to main and tag 2.0.0 (DON'T export - this is the key!)
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.tagAllWithoutBuild('--unmodified --ver 2.0.0');
+      headOnMain = helper.command.getHead('comp1');
+
+      // Step 4: Merge the lane with --detach-head
+      helper.command.mergeLane('dev', '--detach-head -x');
+      // Step 5: Export - should export 2.0.0 (unexported main head)
+      helper.command.export();
+    });
+    it('should have exported the unexported main head (2.0.0)', () => {
+      const remoteComp = helper.command.catComponent(`${helper.scopes.remote}/comp1`, helper.scopes.remotePath);
+      expect(remoteComp.versions).to.have.property('2.0.0');
+    });
+    it('should have the version object for 2.0.0 on the remote', () => {
+      expect(() => helper.command.catObject(headOnMain, false, helper.scopes.remotePath)).to.not.throw();
+    });
+    it('should have the lane snaps on the remote (they were already exported on the lane)', () => {
+      expect(() => helper.command.catObject(firstSnapOnLane, false, helper.scopes.remotePath)).to.not.throw();
+      expect(() => helper.command.catObject(headOnLane, false, helper.scopes.remotePath)).to.not.throw();
+    });
+  });
 });

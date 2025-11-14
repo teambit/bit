@@ -6,6 +6,7 @@
 
 .corner {
   width: 300px;
+  background: var(--bit-bg-heaviest, #ededed) !important;
 
   &.dark {
     --bit-border-color-lightest: #333333;
@@ -15,6 +16,8 @@
 
 .minimalCorner {
   width: fit-content;
+  height: 46px !important;
+  background: var(--bit-bg-heaviest, #ededed) !important;
 
   &.dark {
     --bit-border-color-lightest: #333333;
@@ -77,6 +80,10 @@
         color: white;
       }
     }
+  }
+
+  &.minimal {
+    height: 46px;
   }
 }
 

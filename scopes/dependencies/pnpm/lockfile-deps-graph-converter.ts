@@ -4,6 +4,7 @@ import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.typ
 import { type ResolveFunction } from '@pnpm/client';
 import * as dp from '@pnpm/dependency-path';
 import { pick, partition } from 'lodash';
+import { BitError } from '@teambit/bit-error';
 import { snapToSemver } from '@teambit/component-package-version';
 import {
   DependenciesGraph,
@@ -317,6 +318,14 @@ export async function convertGraphToLockfile(
       }
     })
   );
+  // Validate the generated lockfile
+  for (const [depPath, pkg] of Object.entries(lockfile.packages)) {
+    if (pkg.resolution == null || Object.keys(pkg.resolution).length === 0) {
+      throw new BitError(
+        `Failed to generate a valid lockfile. The "packages['${depPath}'] entry doesn't have a "resolution" field.`
+      );
+    }
+  }
   return lockfile;
 
   function convertToDeps(neighbours: DependencyNeighbour[]) {

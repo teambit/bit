@@ -326,22 +326,32 @@ export class SnappingMain {
     if (!configObject) return;
     ExtensionDataList.adjustEnvsOnConfigObject(configObject);
     const extensionsFromConfigObject = ExtensionDataList.fromConfigObject(configObject);
-    const depsResolverFromConfig = extensionsFromConfigObject.findCoreExtension(DependencyResolverAspect.id);
-    if (depsResolverFromConfig) {
-      // @todo: merge also the scope-specific into the config here. same way we do in "addConfigDepsFromModelToConfigMerge"
-      depsResolverFromConfig.data.policy = component.state._consumer.extensions.findCoreExtension(
-        DependencyResolverAspect.id
-      )?.data.policy;
-    }
-    const autoDeps = extensionsFromConfigObject.extractAutoDepsFromConfig();
     const consumerComponent: ConsumerComponent = component.state._consumer;
+
     const extensionDataList = ExtensionDataList.mergeConfigs([
       extensionsFromConfigObject,
       consumerComponent.extensions,
     ]).filterRemovedExtensions();
+
+    // Restore data fields from the original extensions after merging configs.
+    // configObject contains only config (from the merged config result), it has no data.
+    // When merging configs, if an extension exists in both lists, the first one (extensionsFromConfigObject) wins.
+    // This means the merged entry gets the new config but loses the data from the original extension.
+    // We need to restore the data fields from the original extensions so components that skip aspect loading
+    // (PR #9570 optimization) still have their data. For example, DependencyResolver has data fields like
+    // packageName, dependencies, policy, componentRangePrefix. Note: it's OK to restore the "dependencies" field
+    // from the original component because it will be rewritten later by addDeps() with the calculated policy.
+    extensionDataList.forEach((ext) => {
+      const originalExt = consumerComponent.extensions.findExtension(ext.stringId, true);
+      if (originalExt && originalExt.data) {
+        ext.data = originalExt.data;
+      }
+    });
+
     consumerComponent.extensions = extensionDataList;
     component.state.aspects = await this.scope.createAspectListFromExtensionDataList(extensionDataList);
 
+    const autoDeps = extensionsFromConfigObject.extractAutoDepsFromConfig();
     return autoDeps;
   }
 
@@ -447,6 +457,23 @@ export class SnappingMain {
           }
         });
       });
+      // When merging lanes, if a component being snapped has dependencies on components that were simply updated
+      // (non-diverged), those dependencies still point to the old lane versions. We need to update them to point
+      // to the newly merged versions. Also convert hashes to tags when available.
+    } else if (!params.updateDependents && updatedComponents.length) {
+      existingComponents.forEach((comp) => {
+        const deps = this.dependencyResolver.getComponentDependencies(comp);
+        const snapData = getSnapData(comp.id);
+        deps.forEach((dep) => {
+          const mergedComp = updatedComponents.find((c) => c.id.isEqualWithoutVersion(dep.componentId));
+          if (mergedComp) {
+            // Convert hash to tag if available
+            const tag = mergedComp.tags.byHash(mergedComp.id.version);
+            const versionToUse = tag?.version.raw || mergedComp.id.version;
+            snapData.dependencies.push(`${mergedComp.id.toStringWithoutVersion()}@${versionToUse}`);
+          }
+        });
+      });
     }
 
     const components = [...existingComponents, ...newComponents];
@@ -473,6 +500,14 @@ export class SnappingMain {
     // otherwise, when a user set a custom-env, it won't be loaded and the Version object will leave the
     // teambit.envs/envs in a weird state. the config will be set correctly but the data will be set to the default
     // node env.
+    // OPTIMIZATION: loadAspectOnlyForIds is used to skip aspect loading for components without data conflicts.
+    // This was added in PR #9570 to improve performance during merge-from-scope operations.
+    // When merging main into a lane, if aspects data can be successfully merged (no conflicts), we skip the
+    // expensive aspect loading process. Only components with data conflicts need full aspect loading.
+    // NOTE: This means executeOnCompAspectReCalcSlot (which recalculates aspect data like packageName, dependencies, etc.)
+    // only runs for components in loadAspectOnlyForIds. Components not in this list rely on their existing aspect data
+    // from when the component was loaded from the scope. For extensions that are part of the merged config, their data
+    // is preserved by addAspectsFromConfigObject to prevent data loss during config merge.
     const { loadAspectOnlyForIds } = params;
     const compsToLoadAspects = loadAspectOnlyForIds
       ? components.filter((c) => loadAspectOnlyForIds.hasWithoutVersion(c.id))

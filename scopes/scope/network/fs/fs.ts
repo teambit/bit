@@ -9,6 +9,7 @@ import type { ComponentLog, ObjectItemsStream, ObjectList } from '@teambit/objec
 import { Ref } from '@teambit/objects';
 import type { LaneData, Scope, ScopeDescriptor } from '@teambit/legacy.scope';
 import { RemovedObjects, loadScope } from '@teambit/legacy.scope';
+import type { DoctorResponse } from '@teambit/doctor';
 import { FsScopeNotLoaded } from '../exceptions';
 import type { Network } from '../network';
 
@@ -92,6 +93,12 @@ export default class Fs implements Network {
     };
     const graphStr = getGraphAsString();
     return DependencyGraph.loadFromString(graphStr);
+  }
+
+  async doctor(diagnosisName?: string): Promise<DoctorResponse> {
+    // Use dynamic import to avoid circular dependency
+    const { runDoctorOnScope } = await import('@teambit/doctor');
+    return runDoctorOnScope(this.getScope(), diagnosisName);
   }
 
   async connect(): Promise<Fs> {

@@ -33,7 +33,11 @@ export type TitleBadge = {
 
 export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
-export type OverviewOptions = () => { queryParams?: string };
+export type OverviewOptions = () => {
+  queryParams?: string;
+  renderCompositionsFirst?: boolean;
+  defaultPkgManager?: 'npm' | 'yarn' | 'pnpm' | 'bit';
+};
 
 export type OverviewOptionsSlot = SlotRegistry<OverviewOptions>;
 
@@ -77,6 +81,8 @@ export function Overview({
 
   const overviewPropsValues = overviewProps && overviewProps();
 
+  const { renderCompositionsFirst, defaultPkgManager } = overviewPropsValues || {};
+
   const themeParams = currentTheme?.themeName ? `theme=${currentTheme?.themeName}` : '';
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -116,6 +122,7 @@ export function Overview({
           titleBadges={flatten(titleBadges.values())}
           componentDescriptor={componentDescriptor}
           component={component}
+          pkgManager={defaultPkgManager}
         />
       )}
       {!buildFailed && (
@@ -125,7 +132,7 @@ export function Overview({
               <CompositionGallerySkeleton compositionsLength={Math.min(component.compositions.length, 3)} />
             </ReadmeSkeleton>
           )}
-          {!isMinimal ? (
+          {!isMinimal && !renderCompositionsFirst ? (
             <>
               <ComponentPreview
                 onLoad={onPreviewLoad}
