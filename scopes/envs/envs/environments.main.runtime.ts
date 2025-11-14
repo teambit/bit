@@ -103,7 +103,7 @@ export type EnvCompDescriptor = EnvCompDescriptorProps & {
 
 export type Descriptor = RegularCompDescriptor | EnvCompDescriptor;
 
-export const DEFAULT_ENV = 'teambit.harmony/node';
+export const DEFAULT_ENV = 'teambit.envs/empty-env';
 
 export class EnvsMain {
   /**
@@ -229,18 +229,29 @@ export class EnvsMain {
     return new EnvDefinition(DEFAULT_ENV, defaultEnv);
   }
 
-  getCoreEnvsIds(): string[] {
+  /**
+   * Returns IDs of legacy core envs that were removed from core.
+   * These envs were previously bundled with Bit but are now regular dependencies.
+   * Used for backward compatibility - old components reference these without versions.
+   */
+  private getLegacyCoreEnvsIds(): string[] {
     return [
       'teambit.harmony/aspect',
-      'teambit.react/react',
-      'teambit.harmony/node',
-      'teambit.react/react-native',
       'teambit.html/html',
       'teambit.mdx/mdx',
       'teambit.envs/env',
       'teambit.mdx/readme',
       'teambit.harmony/bit-custom-aspect',
+      'teambit.harmony/node',
+      'teambit.react/react',
+      'teambit.react/react-native',
     ];
+  }
+
+  getCoreEnvsIds(): string[] {
+    // All core envs have been removed from core and are now regular dependencies.
+    // Return only legacy core envs for backward compatibility with old components.
+    return ['teambit.envs/empty-env', ...this.getLegacyCoreEnvsIds()];
   }
 
   /**
@@ -588,10 +599,31 @@ export class EnvsMain {
     };
   }
 
+  /**
+   * Resolves an env ID to a ComponentID with version.
+   * For legacy core envs (removed from core), assigns the latest loaded version.
+   */
   resolveEnv(component: Component, id: string) {
     const matchedEntry = component.state.aspects.entries.find((aspectEntry) => {
       return id === aspectEntry.id.toString() || id === aspectEntry.id.toString({ ignoreVersion: true });
     });
+
+    if (matchedEntry?.id) return matchedEntry.id;
+
+    // Handle legacy core envs that were removed from core
+    // Old components have these envs stored without version
+    const withoutVersion = id.split('@')[0];
+    if (this.getLegacyCoreEnvsIds().includes(withoutVersion)) {
+      // Try to find this env in the component's aspects (with version)
+      const legacyEnvWithVersion = component.state.aspects.entries.find((aspectEntry) => {
+        return aspectEntry.id.toStringWithoutVersion() === withoutVersion;
+      });
+      if (legacyEnvWithVersion) return legacyEnvWithVersion.id;
+
+      // Fallback: check if env is registered in slot (loaded from workspace/scope)
+      const fromSlot = this.envSlot.toArray().find(([envId]) => envId.startsWith(`${withoutVersion}@`));
+      if (fromSlot) return ComponentID.fromString(fromSlot[0]);
+    }
 
     return matchedEntry?.id;
   }
@@ -609,8 +641,12 @@ export class EnvsMain {
       ? ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion()
       : undefined;
 
+    // Handle core envs (including legacy core envs that were removed from core)
+    // Legacy envs without version will get resolved via resolveEnv() later
     if (envIdFromEnvsConfig && this.isCoreEnv(envIdFromEnvsConfig)) {
-      return ComponentID.fromString(envIdFromEnvsConfig);
+      // Try to resolve version for legacy core envs
+      const resolved = this.resolveEnv(component, envIdFromEnvsConfig);
+      return resolved ? ComponentID.fromString(resolved.toString()) : ComponentID.fromString(envIdFromEnvsConfig);
     }
 
     // in some cases we have the id configured in the teambit.envs/envs but without the version
