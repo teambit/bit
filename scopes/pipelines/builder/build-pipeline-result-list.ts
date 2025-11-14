@@ -15,6 +15,7 @@ export type PipelineReport = {
   endTime?: number;
   errors?: Array<Error | string>;
   warnings?: string[];
+  status?: 'pending';
 };
 
 export type AspectData = {
@@ -70,6 +71,7 @@ export class BuildPipelineResultList {
         warnings: foundComponent.warnings,
         startTime: foundComponent.startTime,
         endTime: foundComponent.endTime,
+        status: foundComponent.status,
       };
       return pipelineReport;
     });
