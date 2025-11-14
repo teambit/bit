@@ -334,7 +334,8 @@ describe('convertGraphToLockfile on invalid graph', () => {
             lifecycle: 'runtime',
           },
         ],
-      }, {
+      },
+      {
         id: 'foo@1.0.0',
         neighbours: [],
       },
@@ -359,6 +360,8 @@ describe('convertGraphToLockfile on invalid graph', () => {
     } catch (_error) {
       error = _error as Error;
     }
-    expect(error?.message).eq(`Failed to generate a valid lockfile. The "packages['foo@1.0.0'] entry doesn't have a "resolution" field.`);
+    expect(error?.message).eq(
+      `Failed to generate a valid lockfile. The "packages['foo@1.0.0'] entry doesn't have a "resolution" field.`
+    );
   });
 });
