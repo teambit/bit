@@ -735,15 +735,15 @@ export class SchemaExtractorContext {
       const compIdByPath = await this.extractor.getComponentIDByPath(sourceFilePath);
 
       if (compIdByPath) {
-        return new TypeRefSchema(location, identifier.id, compIdByPath, undefined, undefined);
+        return new TypeRefSchema(location, identifier.id, compIdByPath);
       }
 
       if (compIdByPkg) {
-        return new TypeRefSchema(location, identifier.id, compIdByPkg, undefined, undefined);
+        return new TypeRefSchema(location, identifier.id, compIdByPkg);
       }
 
       // package without comp id
-      return new TypeRefSchema(location, identifier.id, undefined, pkgName, undefined);
+      return new TypeRefSchema(location, identifier.id, undefined, pkgName);
     }
 
     const relativeDir = identifier.filePath.substring(0, identifier.filePath.lastIndexOf('/'));
