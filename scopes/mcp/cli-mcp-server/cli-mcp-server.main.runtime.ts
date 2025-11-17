@@ -801,7 +801,11 @@ export class CliMcpServerMain {
           try {
             const schemaArgs = ['schema', componentName, '--remote'];
             const schemaResult = await this.runBit(schemaArgs, cwd);
-            result.publicAPI = schemaResult.content[0].text;
+            const content = schemaResult.content[0];
+            if (content.type !== 'text') {
+              throw new Error(`Expected text content but got ${content.type}`);
+            }
+            result.publicAPI = content.text;
           } catch (schemaError) {
             this.logger.warn(
               `[MCP-DEBUG] Failed to get schema for ${componentName}: ${(schemaError as Error).message}`
