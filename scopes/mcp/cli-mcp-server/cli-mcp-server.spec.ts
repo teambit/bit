@@ -288,19 +288,21 @@ describe('CliMcpServer Integration Tests', function () {
     });
 
     it('should require componentIds parameter', async () => {
-      try {
-        await mcpClient.callTool({
-          name: 'bit_component_details',
-          arguments: {
-            cwd: workspacePath,
-            // Missing componentIds parameter
-          },
-        });
-        expect.fail('Should have thrown an error');
-      } catch (error: any) {
-        expect(error.message).to.include('componentIds');
-        expect(error.message).to.include('Required');
-      }
+      const result = (await mcpClient.callTool({
+        name: 'bit_component_details',
+        arguments: {
+          cwd: workspacePath,
+          // Missing componentIds parameter
+        },
+      })) as CallToolResult;
+
+      // With new SDK (1.22+), validation errors are returned in result with isError flag
+      expect(result).to.have.property('isError', true);
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
+      const errorText = (result.content[0] as any).text;
+      expect(errorText).to.include('componentIds');
+      expect(errorText).to.include('Required');
     });
   });
 

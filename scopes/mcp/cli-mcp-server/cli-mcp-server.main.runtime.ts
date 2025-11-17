@@ -801,7 +801,11 @@ export class CliMcpServerMain {
           try {
             const schemaArgs = ['schema', componentName, '--remote'];
             const schemaResult = await this.runBit(schemaArgs, cwd);
-            result.publicAPI = schemaResult.content[0].text;
+            const content = schemaResult.content[0];
+            if (content.type !== 'text') {
+              throw new Error(`Expected text content but got ${content.type}`);
+            }
+            result.publicAPI = content.text;
           } catch (schemaError) {
             this.logger.warn(
               `[MCP-DEBUG] Failed to get schema for ${componentName}: ${(schemaError as Error).message}`
@@ -950,18 +954,7 @@ export class CliMcpServerMain {
 
     server.tool(toolName, description, schema, async (params: any) => {
       try {
-        // Validate that componentIds parameter is provided and valid
-        if (!params.componentIds || !Array.isArray(params.componentIds) || params.componentIds.length === 0) {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: 'Error: componentIds parameter must be provided as a non-empty array of component IDs. Example: ["acme.design/ui/button", "acme.design/forms/input"]',
-              },
-            ],
-          };
-        }
-
+        // Schema validation is handled automatically by the SDK
         const includeSchema = params.includeSchema === true;
         const componentIds = params.componentIds;
 
