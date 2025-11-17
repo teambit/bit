@@ -942,7 +942,7 @@ export class CliMcpServerMain {
     const toolName = 'bit_component_details';
     const description =
       'Get detailed information about multiple components in parallel. Supports batch requests for efficient component discovery. Limited to 5 components max to prevent context overload.';
-    const schema = z.object({
+    const schema: Record<string, any> = {
       cwd: z.string().describe('Path to workspace directory'),
       componentIds: z
         .array(z.string())
@@ -950,7 +950,7 @@ export class CliMcpServerMain {
           'Array of component IDs to get details for. Limited to 5 components max. Examples: ["acme.design/ui/button", "acme.design/forms/input", "teambit.base-ui/navigation/link"]'
         ),
       includeSchema: z.boolean().optional().describe('Include component public API schema (default: false)'),
-    });
+    };
 
     server.tool(toolName, description, schema, async (params: any) => {
       try {
