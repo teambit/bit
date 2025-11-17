@@ -954,18 +954,7 @@ export class CliMcpServerMain {
 
     server.tool(toolName, description, schema, async (params: any) => {
       try {
-        // Validate that componentIds parameter is provided and valid
-        if (!params.componentIds || !Array.isArray(params.componentIds) || params.componentIds.length === 0) {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: 'Error: componentIds parameter must be provided as a non-empty array of component IDs. Example: ["acme.design/ui/button", "acme.design/forms/input"]',
-              },
-            ],
-          };
-        }
-
+        // Schema validation is handled automatically by the SDK
         const includeSchema = params.includeSchema === true;
         const componentIds = params.componentIds;
 
