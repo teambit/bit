@@ -109,6 +109,21 @@ export class BuildPipe {
     this.longProcessLogger.logProgress(`${taskLogPrefix}${task.description ? ` ${task.description}` : ''}`, false);
     this.updateFailedDependencyTask(task);
     if (this.shouldSkipTask(taskId, env.id)) {
+      // Save skipped tasks with pending status so they appear in the UI
+      const components = buildContext.capsuleNetwork.seedersCapsules.getAllComponents();
+      const componentsResults: ComponentResult[] = components.map((component) => ({
+        component,
+        status: 'pending',
+      }));
+      const taskResults: TaskResults = {
+        task,
+        env,
+        componentsResults,
+        artifacts: undefined,
+        startTime: Date.now(),
+        endTime: Date.now(),
+      };
+      this.taskResults.push(taskResults);
       return;
     }
     const startTask = process.hrtime();
