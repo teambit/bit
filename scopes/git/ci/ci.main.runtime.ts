@@ -547,8 +547,24 @@ export class CiMain {
       ...(autoMergeResolve && { mergeStrategy: autoMergeResolve }),
     };
     const checkoutResults = await this.checkout.checkout(checkoutProps);
+
     await this.workspace.bitMap.write('checkout head');
     this.logger.console(checkoutOutput(checkoutResults, checkoutProps));
+
+    // Check for workspace.jsonc conflicts
+    if (
+      checkoutResults.workspaceConfigUpdateResult?.workspaceDepsConflicts ||
+      checkoutResults.workspaceConfigUpdateResult?.workspaceConfigConflictWriteError
+    ) {
+      this.logger.console(chalk.red('❌ workspace.jsonc conflicts detected during checkout'));
+      this.logger.console(chalk.blue('\nTo resolve these conflicts, please run:'));
+      this.logger.console(chalk.bold('  bit checkout head'));
+      this.logger.console(chalk.gray('\nThis will allow you to manually resolve the conflicts in workspace.jsonc.'));
+
+      throw new Error(
+        'Cannot complete CI merge due to workspace.jsonc conflicts. Please run "bit checkout head" and fix the conflicts manually.'
+      );
+    }
 
     // Check for conflicts when using manual merge strategy
     if (autoMergeResolve === 'manual' && checkoutResults.leftUnresolvedConflicts) {
