@@ -15,7 +15,7 @@ import { gql, useQuery } from '@apollo/client';
 import { PillLabel } from '@teambit/design.ui.pill-label';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { Link } from '@teambit/base-react.navigation.link';
+import { Link, useLocation } from '@teambit/base-react.navigation.link';
 import { TestsSection } from './tests.section';
 import { TesterAspect } from './tester.aspect';
 import styles from './coverage-label.module.scss';
@@ -83,21 +83,26 @@ export class TesterUI {
     componentCompare.registerRoutes([testerCompareSection.route]);
     docs.registerTitleBadge({
       component: function badge({ legacyComponentModel }: { legacyComponentModel: ComponentModel }) {
+        const location = useLocation();
+        const search = location?.search ?? '';
+
         const { data } = useQuery(GET_COMPONENT, {
           variables: { id: legacyComponentModel.id.toString() },
         });
 
         if (!data || !data.getHost || !data.getHost.getTests) return null;
 
-        const total = data.getHost.getTests.testsResults?.coverage?.total as {
-          lines: {
-            covered: number;
-            total: number;
-            pct: number;
-          };
-        };
+        const total = data.getHost.getTests.testsResults?.coverage?.total as
+          | {
+              lines?: {
+                covered: number;
+                total: number;
+                pct: number;
+              };
+            }
+          | undefined;
 
-        if (!total) return null;
+        if (!total || !total.lines) return null;
 
         return (
           <Tooltip
@@ -105,7 +110,7 @@ export class TesterUI {
             placement="top"
             content={<div className={styles.coverageTooltipContent}>Test coverage</div>}
           >
-            <Link href={`~tests${document.location.search}`} className={styles.link}>
+            <Link href={`~tests${search}`} className={styles.link}>
               <PillLabel className={styles.label}>
                 <Icon of="scan-component" />
                 <span>{total.lines.pct}%</span>
