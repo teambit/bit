@@ -34,7 +34,7 @@ import fetch from 'node-fetch';
 import type { GraphMain } from '@teambit/graph';
 import type { ScopeMain } from '@teambit/scope';
 import { ComponentNotFound } from '@teambit/scope';
-import type { ComponentMain } from '@teambit/component';
+import type { ComponentMain, ComponentMap } from '@teambit/component';
 import type { SchemaMain } from '@teambit/schema';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import type { Logger } from '@teambit/logger';
@@ -413,7 +413,7 @@ export class APIForIDE {
     this.workspace.clearAllComponentsCache();
   }
 
-  async install(options = {}, packages?: string[]) {
+  async install(options = {}, packages?: string[]): Promise<ComponentMap<string>> {
     const opts = {
       optimizeReportForNonTerminal: true,
       dedupe: true,
