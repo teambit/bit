@@ -314,17 +314,22 @@ other:   ${otherLaneHead.toString()}`);
     const currentComponent = await getCurrentComponent();
     if (currentComponent.isRemoved()) {
       // we have a few options:
-      // 1. "other" is main. in this case, we don't care what happens on main, we want the component to stay deleted on
-      // this lane. (even when main is ahead, we don't want to merge it).
+      // 1. "other" is main.
+      // 1.a. it was deleted on the lane with --update-main. in this case, we need to merge because eventually we need this component
+      // to be merged to main with the "removed: true".
+      // 1.b. it was deleted on the lane without --update-main. in this case, we don't care what happens on main,
+      // we want the component to stay deleted on this lane. (even when main is ahead, we don't want to merge it).
       // 2. other is ahead. in this case, other recovered the component. so we can continue with the merge.
       // it is possible that it is diverged, in which case, still continue with the merge, and later on, the
       // merge-config will show a config conflict of the remove aspect.
       // 3. other is not ahead. in this case, just ignore this component, no point to merge it, we want it removed.
+      const isRemovedOnMain =
+        currentComponent.extensions.findCoreExtension('teambit.component/remove')?.config?.removeOnMain;
       const divergeData = await getDivergeData({ repo, modelComponent, targetHead: otherLaneHead, throws: false });
       const isTargetNotAhead = !divergeData.err && !divergeData.isTargetAhead();
       const shouldIgnore = this.otherLane
         ? isTargetNotAhead // option #2 and #3 above
-        : true; // it's main. option #1 above.
+        : !isRemovedOnMain; // it's main. option #1 above.
       if (shouldIgnore) {
         return this.returnUnmerged(id, `component has been removed`, true);
       }
