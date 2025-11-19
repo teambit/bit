@@ -617,6 +617,15 @@ jobs:
           name: 'check circular dependencies'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
 
+  check_env_cache_sync:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: 'check env cache synchronization'
+          command: 'cd bit && ./scripts/check-env-cache-sync.sh'
+
   generate_and_check_types:
     <<: *defaults
     steps:
@@ -1171,6 +1180,9 @@ workflows:
           requires:
             - setup_harmony
       - check_circular_dependencies:
+          requires:
+            - setup_harmony
+      - check_env_cache_sync:
           requires:
             - setup_harmony
       - generate_and_check_types:
