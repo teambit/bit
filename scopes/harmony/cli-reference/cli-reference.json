@@ -5273,6 +5273,11 @@
       [
         "a",
         "all",
+        "DEPRECATED. (use --unmodified)"
+      ],
+      [
+        "u",
+        "unmodified",
         "check-types for all components, not only modified and new"
       ],
       [
@@ -5287,7 +5292,7 @@
       ]
     ],
     "description": "validate TypeScript type correctness",
-    "extendedDescription": "checks for TypeScript type errors in component files, similar to running tsc.\nby default only checks new and modified components. use --all to check all components.\nuseful for catching type issues before tagging, snapping or building components.",
+    "extendedDescription": "checks for TypeScript type errors in component files, similar to running tsc.\nby default only checks new and modified components. use --unmodified to check all components.\nuseful for catching type issues before tagging, snapping or building components.",
     "group": "testing",
     "private": false,
     "arguments": [
