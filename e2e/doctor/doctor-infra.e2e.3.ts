@@ -95,6 +95,53 @@ describe('bit doctor infra', function () {
       });
     });
   });
+
+  describe('validate scope objects diagnosis', () => {
+    let parsedOutput;
+    let headHash;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+    });
+
+    describe('when all objects are present', () => {
+      before(() => {
+        const output = helper.command.doctorOne('validate scope objects', { j: '' });
+        parsedOutput = JSON.parse(output);
+      });
+      it('should pass the diagnosis', () => {
+        expect(parsedOutput.examineResult.bareResult.valid).to.be.true;
+      });
+      it('should have empty symptoms when valid', () => {
+        // When valid, the base Diagnosis class returns empty strings
+        expect(parsedOutput.examineResult.formattedSymptoms).to.equal('');
+      });
+    });
+
+    describe('when head version object is missing', () => {
+      before(() => {
+        // Get the head hash and delete the version object from remote scope
+        headHash = helper.command.getHead('comp1');
+        const hashPath = helper.general.getHashPathOfObject(headHash);
+        helper.fs.deleteRemoteObject(hashPath);
+
+        const output = helper.command.doctorOne('validate scope objects', { j: '', remote: helper.scopes.remote });
+        parsedOutput = JSON.parse(output);
+      });
+      it('should fail the diagnosis', () => {
+        expect(parsedOutput.examineResult.bareResult.valid).to.be.false;
+      });
+      it('should show the component with missing head in symptoms', () => {
+        expect(parsedOutput.examineResult.formattedSymptoms).to.include('comp1');
+        expect(parsedOutput.examineResult.formattedSymptoms).to.include(headHash);
+      });
+      it('should suggest restoring from backups', () => {
+        expect(parsedOutput.examineResult.formattedManualTreat).to.include('restored from backups');
+      });
+    });
+  });
 });
 
 function _validateCheckResultFormat(checkResult) {

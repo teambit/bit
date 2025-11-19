@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
 import { prompt } from 'enquirer';
+import { loader } from '@teambit/legacy.loader';
 
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };
@@ -19,6 +20,7 @@ export const FileStatus = {
 };
 
 export async function getMergeStrategyInteractive(): Promise<MergeStrategy> {
+  loader.stop();
   try {
     const { mergeStrategy } = await prompt<{ mergeStrategy: 'o' | 't' | 'm' }>({
       type: 'select',

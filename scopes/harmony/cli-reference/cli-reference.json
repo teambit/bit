@@ -4494,6 +4494,11 @@
         "e",
         "exclude-local-scope",
         "relevant for --archive. exclude .bit or .git/bit from the archive file"
+      ],
+      [
+        "r",
+        "remote <remoteName>",
+        "run doctor checks on a remote scope"
       ]
     ],
     "description": "diagnose and troubleshoot workspace issues",
@@ -5268,6 +5273,11 @@
       [
         "a",
         "all",
+        "DEPRECATED. (use --unmodified)"
+      ],
+      [
+        "u",
+        "unmodified",
         "check-types for all components, not only modified and new"
       ],
       [
@@ -5282,7 +5292,7 @@
       ]
     ],
     "description": "validate TypeScript type correctness",
-    "extendedDescription": "checks for TypeScript type errors in component files, similar to running tsc.\nby default only checks new and modified components. use --all to check all components.\nuseful for catching type issues before tagging, snapping or building components.",
+    "extendedDescription": "checks for TypeScript type errors in component files, similar to running tsc.\nby default only checks new and modified components. use --unmodified to check all components.\nuseful for catching type issues before tagging, snapping or building components.",
     "group": "testing",
     "private": false,
     "arguments": [

@@ -186,7 +186,7 @@ export class ScopeMain implements ComponentFactory {
 
     private aspectLoader: AspectLoaderMain,
 
-    private logger: Logger,
+    readonly logger: Logger,
 
     private envs: EnvsMain,
 
@@ -718,8 +718,17 @@ export class ScopeMain implements ComponentFactory {
     }));
     const nodes = consumerComponent.flattenedDependencies;
 
+    // Convert component ID from hash to tag if a tag exists, to match flattenedEdges format
+    let componentIdForGraph = component.id;
+    if (component.id.version) {
+      const tag = component.tags.byHash(component.id.version);
+      if (tag) {
+        componentIdForGraph = component.id.changeVersion(tag.version.raw);
+      }
+    }
+
     const graph = new Graph<ComponentID, DepEdgeType>();
-    graph.setNode(new Node(component.id.toString(), component.id));
+    graph.setNode(new Node(componentIdForGraph.toString(), componentIdForGraph));
     nodes.forEach((node) => graph.setNode(new Node(node.toString(), node)));
     edges.forEach((edge) => graph.setEdge(new Edge(edge.source.toString(), edge.target.toString(), edge.type)));
     return graph;

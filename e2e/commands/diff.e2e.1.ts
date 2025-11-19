@@ -87,7 +87,7 @@ describe('bit diff command', function () {
             helper.command.runCmd('bit config set git_path /non/exist/location');
           });
           after(() => {
-            helper.command.runCmd('bit config set git_path git');
+            helper.command.runCmd('bit config del git_path');
           });
           it('should throw an error GitNotFound', () => {
             const output = helper.general.runWithTryCatch('bit diff bar/foo');

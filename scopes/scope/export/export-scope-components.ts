@@ -201,9 +201,8 @@ export async function mergeObjects(
   const lanesObjects = bitObjectList.getLanes();
   const versions = bitObjectList.getVersions();
   const lanesHistory = bitObjectList.getLaneHistories();
-  logger.debugAndAddBreadCrumb(
-    'export-scope-components.mergeObjects',
-    `Going to merge ${components.length} components, ${lanesObjects.length} lanes`
+  logger.debug(
+    `export-scope-components.mergeObjects, Going to merge ${components.length} components, ${lanesObjects.length} lanes, ${versions.length} versions, ${lanesHistory.length} lane histories`
   );
   const { mergeResults, errors } = lanesObjects.length
     ? { mergeResults: [], errors: [] } // for lanes, no need to merge component objects, the lane is merged later.
