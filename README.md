@@ -30,11 +30,11 @@
 - **Reusable components.** Create reusable UI components and modules to reuse across your software.
 - **Standard building blocks.** Define the blueprints templates for creating components for devs and AI as one.
 - **Shell applications.** Compose reusable components and features into application shells.
-- **Atmoic and safe deployments.** Ensure simple, safe and optimized deployments of apps and services for testing and production.
+- **Atomic and safe deployments.** Ensure simple, safe and optimized deployments of apps and services for testing and production.
 
 Bit supports all tooling in the JS ecosystem and comes out of the box with official dev environments for [NodeJS](https://bit.dev/docs/backend-intro), [React](https://bit.dev/docs/react-intro), [Angular](https://bit.dev/docs/angular-introduction), [Vue](https://bit.dev/docs/vue-intro), [React Native](https://bit.dev/docs/react-native-intro), [NextJS](https://bit.dev/docs/quick-start/hello-world-nextjs) and [far more](https://bit.dev/docs). All are native to TypeScript and ESM and equipped with the best dev tooling.
 
-Bit is a fit to every codebase structure. You can use Bit components in a monorepo, polyrepo, or even without repositories at all. 
+Bit is a fit to every codebase structure. You can use Bit components in a monorepo, polyrepo, or even without repositories at all.
 
 ## Getting started
 
@@ -78,7 +78,7 @@ Create the components to compose into the feature. Run the following command to 
 bit create react pages/login
 ```
 
-Find simple guides for creating NodeJS modules, UI components and apps, backend services and more on the [Create Component docs](https://bit.dev/docs/getting-started/composing/creating-components/). 
+Find simple guides for creating NodeJS modules, UI components and apps, backend services and more on the [Create Component docs](https://bit.dev/docs/getting-started/composing/creating-components/).
 
 Compose the component into the application shell:
 
@@ -100,6 +100,7 @@ export function CorporateWebsite() {
 }
 
 ```
+
 Head to http://localhost:3000/login to view your new login page.
 You can use bit templates to list official templates or find guides for creating React hooks, backend services, NodeJS modules, UI components and more on our [create components docs](https://bit.dev/docs/getting-started/composing/creating-components). Optionally, use bit start to run the Bit UI to preview components in isolation.
 
