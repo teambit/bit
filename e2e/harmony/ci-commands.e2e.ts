@@ -342,4 +342,67 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
       expect(comp1?.currentVersion).to.equal('0.0.1');
     });
   });
+
+  describe('bit ci merge with workspace.jsonc conflicts due to dependency version changes', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+
+      // Create a fake npm package that we'll use as a dependency
+      helper.npm.addFakeNpmPackage('is-positive', '1.0.0');
+
+      // Create comp-a with a dependency on the fake package
+      helper.fs.outputFile(
+        'comp-a/comp-a.js',
+        `const isPositive = require('is-positive');
+module.exports = { isPositive };`
+      );
+      helper.command.addComponent('comp-a');
+
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-positive': '1.0.0' } });
+
+      // Create .gitignore and initial commit
+      helper.fs.outputFile('.gitignore', 'node_modules/\n.bit/\n');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "initial commit with is-positive@1.0.0"');
+      const defaultBranch = helper.command.runCmd('git branch --show-current').trim();
+      helper.command.runCmd(`git push -u origin ${defaultBranch}`);
+
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+
+      // Clone the workspace to simulate a parallel development scenario
+      const workspaceBeforeDivergence = helper.scopeHelper.cloneWorkspace();
+
+      // Bump the dependency version and tag/export again
+      helper.npm.addFakeNpmPackage('is-positive', '2.0.0');
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-positive': '2.0.0' } });
+
+      // Update workspace.jsonc with new version
+      const wsConfigUpdated = helper.workspaceJsonc.read();
+      wsConfigUpdated['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive'] = '2.0.0';
+      helper.workspaceJsonc.write(wsConfigUpdated);
+
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+
+      // Go back to the cloned workspace (still on 1.0.0)
+      helper.scopeHelper.getClonedWorkspace(workspaceBeforeDivergence);
+    });
+
+    it('should fail with clear error message about workspace.jsonc conflicts', () => {
+      let error: Error | undefined;
+      try {
+        helper.command.runCmd('bit ci merge --auto-merge-resolve manual');
+      } catch (err: any) {
+        error = err;
+      }
+
+      expect(error).to.exist;
+      expect(error?.message).to.include('workspace.jsonc conflicts');
+      expect(error?.message).to.include('bit checkout head');
+    });
+  });
 });
