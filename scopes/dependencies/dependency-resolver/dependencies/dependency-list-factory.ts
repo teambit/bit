@@ -59,12 +59,22 @@ export class DependencyListFactory {
     }
     // All deps defined in model
     const depListFromModel = await this.getDependenciesFromLegacyModelComponent(componentFromModel);
-    // Only deps from model which are also required in the current component on fs (currently missing)
+
+    // For component dependencies (bit components), always include them from the model if missingPackages has at least one entry.
+    // This is because component dependency detection may be incomplete during initial load (e.g., for Vue SFC files),
+    // but we still need to install these dependencies. Package dependencies are filtered by missingPackages to respect
+    // user changes in the source code.
+    const hasAnyMissingPackages = missingPackages.length > 0;
     const filteredDepList = depListFromModel.filter((dep) => {
       const packageName = dep.getPackageName?.();
       if (!packageName) {
         return false;
       }
+      // For component dependencies, include them if we have any missing packages detected (indicating the component is being analyzed)
+      if (dep.constructor.name === 'ComponentDependency' && hasAnyMissingPackages) {
+        return true;
+      }
+      // For package dependencies, only include if they're in the missing packages list
       return missingPackages.includes(packageName);
     });
     return filteredDepList;

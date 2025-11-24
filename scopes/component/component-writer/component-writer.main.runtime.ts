@@ -104,13 +104,26 @@ export class ComponentWriterMain {
     skipWriteConfigFiles = false
   ): Promise<Error | undefined> {
     this.logger.debug('installPackagesGracefully, start installing packages');
+    // Clear all components cache to ensure fresh dependency data is loaded.
+    // Without this, the install process might use stale cached components that don't have proper
+    // dependency information, resulting in missing package dependencies.
+    // Load the components to trigger full dependency detection before install.
+    // This ensures all dependencies from the source code are detected and added to the MissingPackagesDependenciesOnFs
+    // issue, which is used to merge dependencies from the model during manifest generation.
+    // We clear cache first to ensure components are loaded fresh from the filesystem.
+    this.workspace.clearAllComponentsCache();
+    this.logger.debug('installPackagesGracefully, loading components to detect dependencies');
+    await this.workspace.getMany(componentIds);
+    this.logger.debug('installPackagesGracefully, components loaded');
     try {
       const installOpts = {
         dedupe: true,
         updateExisting: false,
         import: false,
         writeConfigFiles: !skipWriteConfigFiles,
-        dependenciesGraph: await this.workspace.scope.getDependenciesGraphByComponentIds(componentIds),
+        // Don't pass dependenciesGraph during import-install to ensure all dependencies
+        // are resolved fresh from the component manifests. The pre-computed graph from the model
+        // may be incomplete for newly imported components whose dependencies aren't fully resolved yet.
       };
       await this.installer.install(undefined, installOpts);
       this.logger.debug('installPackagesGracefully, completed installing packages successfully');
