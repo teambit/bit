@@ -116,7 +116,9 @@ export function getDivergeDataBetweenTwoSnaps(
   let targetSubgraph = graph.successorsSubgraph(targetHead.toString(), { edgeFilter: (e) => e.attr === 'parent' });
   let sourceArr = sourceSubgraph.nodes.map((n) => n.id);
   let targetArr = targetSubgraph.nodes.map((n) => n.id);
-  let commonSnaps = sourceArr.filter((snap) => targetArr.includes(snap));
+
+  const targetSet = new Set(targetArr);
+  let commonSnaps = sourceArr.filter((snap) => targetSet.has(snap));
 
   if (!commonSnaps.length) {
     sourceSubgraph = graph.successorsSubgraph(localHead.toString());
