@@ -49,12 +49,12 @@
 
 ### 2.2 Pipeline Phases
 
-- [ ] Create `phases/` directory structure
-- [ ] Implement `discovery.phase.ts`
+- [x] Create `phases/` directory structure
+- [x] Implement `discovery.phase.ts`
   - [ ] Unit tests
-- [ ] Implement `resolution.phase.ts` (build LoadPlan)
+- [x] Implement `resolution.phase.ts` (build LoadPlan)
   - [ ] Unit tests
-- [ ] Implement `hydration.phase.ts` (load raw data)
+- [x] Implement `hydration.phase.ts` (load raw data)
   - [ ] Unit tests
 - [ ] Implement `enrichment.phase.ts` (add aspects, env descriptors)
   - [ ] Unit tests
