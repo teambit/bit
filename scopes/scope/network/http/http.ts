@@ -275,6 +275,16 @@ export class Http implements Network {
     errors: { [scopeName: string]: string };
     metadata?: { jobs?: string[] };
   }> {
+    // Initialize headers outside retry so the same request-id and objects-hash are used for all retries
+    logger.profile('objectList.getSha1Hash'); // temporary profile log to make sure this is not taking too long
+    const objectsHash = objectList.getSha1Hash();
+    logger.profile('objectList.getSha1Hash');
+    const headers = this.getHeaders({
+      'push-options': JSON.stringify(options),
+      'x-verb': Verb.WRITE,
+      'x-objects-hash': objectsHash,
+    });
+
     const { results, response } = await retry(
       async () => {
         const route = 'api/put';
@@ -283,7 +293,7 @@ export class Http implements Network {
         const opts = this.addAgentIfExist({
           method: 'post',
           body: pack,
-          headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
+          headers,
         });
         const _response = await _fetch(`${this.url}/${route}`, opts);
         logger.debug(
@@ -891,13 +901,16 @@ export class Http implements Network {
       // Ignore the error, we don't want to fail the request if we can't get the client version
       logger.error('failed getting bit version from the client');
     }
+    // Generate a unique request ID if not already provided in headers
+    const requestId = headers['x-request-id'] || `${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
     return Object.assign(
       headers,
       authHeader,
       localScope,
       customOrigin,
       { connection: 'keep-alive' },
-      { 'x-client-version': clientVersion }
+      { 'x-client-version': clientVersion },
+      { 'x-request-id': requestId }
     );
   }
 
