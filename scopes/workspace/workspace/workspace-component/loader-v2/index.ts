@@ -28,5 +28,8 @@ export { LoaderCache, CacheStats, CacheKeyOptions, createLoaderCache } from './l
 // Sources
 export { WorkspaceSource, createWorkspaceSource, ScopeSource, createScopeSource } from './sources';
 
+// Orchestrator
+export { WorkspaceComponentLoaderV2 } from './workspace-component-loader-v2';
+
 // Feature flag
 export { COMPONENT_LOADER_V2 } from '@teambit/harmony.modules.feature-toggle';

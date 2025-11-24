@@ -73,9 +73,9 @@
 
 ### 2.4 Loader V2 Orchestrator
 
-- [ ] Create `workspace-component-loader-v2.ts`
-- [ ] Wire up all phases
-- [ ] Add feature flag support (`BIT_LOADER_V2`)
+- [x] Create `workspace-component-loader-v2.ts`
+- [x] Wire up all phases
+- [x] Add feature flag support (`BIT_FEATURES=component-loader-v2`)
 - [ ] Integration tests with mock sources
 
 ---
