@@ -15,19 +15,19 @@
 
 ### Contract Tests
 
-- [ ] Identify key loading scenarios from existing e2e tests
-- [ ] Create `component-loader.contract.spec.ts` with scenarios:
-  - [ ] Load workspace-only component
-  - [ ] Load scope-only component
-  - [ ] Load component with workspace + scope data (merged)
-  - [ ] Load component that's out-of-sync
-  - [ ] Load new component (not in scope yet)
-  - [ ] Load component with extensions
-  - [ ] Load component with env
-  - [ ] Load env-of-env scenario
-  - [ ] Load multiple components with shared dependencies
-  - [ ] Verify caching behavior (same component loaded twice)
-- [ ] Ensure contract tests pass with current loader
+- [x] Identify key loading scenarios from existing e2e tests
+- [x] Create `component-loader-contract.e2e.ts` with scenarios:
+  - [x] Load workspace-only component
+  - [x] Load scope-only component
+  - [x] Load component with workspace + scope data (merged)
+  - [x] Load component that's out-of-sync
+  - [x] Load new component (not in scope yet)
+  - [x] Load component with extensions
+  - [x] Load component with env
+  - [ ] Load env-of-env scenario (deferred - complex setup)
+  - [x] Load multiple components with shared dependencies
+  - [x] Verify caching behavior (same component loaded twice)
+- [x] Ensure contract tests pass with current loader (21 tests passing)
 
 ### Instrumentation
 
