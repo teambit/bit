@@ -42,9 +42,9 @@
 
 ### 2.1 Core Types & Interfaces
 
-- [ ] Create `load-plan.ts` with LoadPlan, LoadPhase types
-- [ ] Create `component-source.ts` with ComponentSource interface
-- [ ] Create `loader-cache.ts` with unified cache implementation
+- [x] Create `load-plan.ts` with LoadPlan, LoadPhase types
+- [x] Create `component-source.ts` with ComponentSource interface
+- [x] Create `loader-cache.ts` with unified cache implementation
 - [ ] Add unit tests for each new module
 
 ### 2.2 Pipeline Phases
