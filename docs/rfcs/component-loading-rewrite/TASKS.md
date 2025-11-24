@@ -65,10 +65,11 @@
 
 ### 2.3 Component Sources
 
-- [ ] Implement `WorkspaceSource`
+- [x] Implement `WorkspaceSource` (adapter to existing workspace loader)
   - [ ] Unit tests
-- [ ] Implement `ScopeSource`
+- [x] Implement `ScopeSource` (adapter to existing scope loader)
   - [ ] Unit tests
+- [x] Add `COMPONENT_LOADER_V2` feature flag
 
 ### 2.4 Loader V2 Orchestrator
 

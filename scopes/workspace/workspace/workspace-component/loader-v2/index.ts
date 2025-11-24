@@ -24,3 +24,9 @@ export {
 export { ComponentSource, RawComponentData, MultiSourceLoader, MultiSourceLoadResult } from './component-source';
 
 export { LoaderCache, CacheStats, CacheKeyOptions, createLoaderCache } from './loader-cache';
+
+// Sources
+export { WorkspaceSource, createWorkspaceSource, ScopeSource, createScopeSource } from './sources';
+
+// Feature flag
+export { COMPONENT_LOADER_V2 } from '@teambit/harmony.modules.feature-toggle';
