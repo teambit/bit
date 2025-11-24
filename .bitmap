@@ -1437,6 +1437,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/renaming"
     },
+    "renderers/default-node-renderers": {
+        "name": "renderers/default-node-renderers",
+        "scope": "teambit.api-reference",
+        "version": "0.0.2",
+        "mainFile": "index.ts",
+        "rootDir": "components/renderers/default-node-renderers"
+    },
+    "renderers/tuple-type": {
+        "name": "renderers/tuple-type",
+        "scope": "teambit.api-reference",
+        "version": "0.0.15",
+        "mainFile": "index.ts",
+        "rootDir": "components/renderers/tuple-type"
+    },
     "schema": {
         "name": "schema",
         "scope": "teambit.semantics",
