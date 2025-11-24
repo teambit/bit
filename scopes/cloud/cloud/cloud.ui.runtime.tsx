@@ -2,7 +2,7 @@ import React from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { flatten } from 'lodash';
 import { SubMenu } from '@teambit/design.controls.menu';
-// import { useThemePicker, useNextTheme } from '@teambit/base-react.themes.theme-switcher';
+import { useThemePicker, useNextTheme } from '@teambit/base-react.themes.theme-switcher';
 import { Slot } from '@teambit/harmony';
 import type { UserBarItem, UserBarItemSlot, UserBarSection, UserBarSectionSlot } from '@teambit/cloud.ui.user-bar';
 import { UserBar } from '@teambit/cloud.ui.user-bar';
@@ -127,39 +127,39 @@ export class CloudUI {
           );
         },
       },
-      // {
-      //   category: 'DocsSupportAndFeedback',
-      //   component: function ThemePicker() {
-      //     const next = useNextTheme();
-      //     const { currentIdx } = useThemePicker();
-      //     return (
-      //       <SubMenu
-      //         item={{
-      //           label: 'Theme',
-      //           icon: 'lightmode',
-      //           children: [
-      //             {
-      //               label: 'Light',
-      //               icon: currentIdx === 0 ? 'checkmark' : '',
-      //               onClick: () => {
-      //                 if (currentIdx === 0) return;
-      //                 next();
-      //               },
-      //             },
-      //             {
-      //               label: 'Dark',
-      //               icon: currentIdx === 1 ? 'checkmark' : '',
-      //               onClick: () => {
-      //                 if (currentIdx === 1) return;
-      //                 next();
-      //               },
-      //             },
-      //           ],
-      //         }}
-      //       />
-      //     );
-      //   },
-      // },
+      {
+        category: 'DocsSupportAndFeedback',
+        component: function ThemePicker() {
+          const next = useNextTheme();
+          const { currentIdx } = useThemePicker();
+          return (
+            <SubMenu
+              item={{
+                label: 'Theme',
+                icon: 'lightmode',
+                children: [
+                  {
+                    label: 'Light',
+                    icon: currentIdx === 0 ? 'checkmark' : '',
+                    onClick: () => {
+                      if (currentIdx === 0) return;
+                      next();
+                    },
+                  },
+                  {
+                    label: 'Dark',
+                    icon: currentIdx === 1 ? 'checkmark' : '',
+                    onClick: () => {
+                      if (currentIdx === 1) return;
+                      next();
+                    },
+                  },
+                ],
+              }}
+            />
+          );
+        },
+      },
     ]);
     if (workspace) {
       workspace.registerMenuWidget([cloudUI.CloudUserBar]);
