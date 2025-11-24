@@ -136,6 +136,34 @@ describe('create extension', function () {
       });
     });
   });
+  describe('with scope as part of the component name (bit.cloud format)', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope({ addRemoteScopeAsDefaultScope: false });
+      helper.workspaceJsonc.addDefaultScope('default-org.default-scope');
+      // Use bit.cloud scope format: org.scope/namespace/name
+      helper.command.create('bit-aspect', 'my-org.my-scope/hooks/my-hook');
+    });
+    it('should create the directories properly under the parsed scope', () => {
+      // The scope "my-org.my-scope" is parsed into owner="my-org" and scope="my-scope"
+      // The default directory template is {scope}/{name}, so the path becomes my-scope/hooks/my-hook
+      const compRootDir = path.join(helper.scopes.localPath, 'my-scope', 'hooks/my-hook');
+      expect(compRootDir).to.be.a.directory();
+      expect(path.join(compRootDir, 'index.ts')).to.be.a.file();
+    });
+    it('should add the component with the correct name (without scope prefix)', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('hooks/my-hook');
+    });
+    it('should set the defaultScope to the parsed scope from the component name', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap['hooks/my-hook']).to.have.property('defaultScope');
+      expect(bitMap['hooks/my-hook'].defaultScope).to.equal('my-org.my-scope');
+    });
+    it('bit show should show the parsed scope as the defaultScope', () => {
+      const show = helper.command.showComponent('hooks/my-hook');
+      expect(show).to.include('my-org.my-scope');
+    });
+  });
   describe('with env defined inside the aspect-template different than the variants', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
