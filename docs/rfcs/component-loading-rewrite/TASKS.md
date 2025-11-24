@@ -56,11 +56,11 @@
   - [ ] Unit tests
 - [x] Implement `hydration.phase.ts` (load raw data)
   - [ ] Unit tests
-- [ ] Implement `enrichment.phase.ts` (add aspects, env descriptors)
+- [x] Implement `enrichment.phase.ts` (add aspects, env descriptors)
   - [ ] Unit tests
-- [ ] Implement `assembly.phase.ts` (build Component objects)
+- [x] Implement `assembly.phase.ts` (build Component objects)
   - [ ] Unit tests
-- [ ] Implement `execution.phase.ts` (run slots)
+- [x] Implement `execution.phase.ts` (run slots)
   - [ ] Unit tests
 
 ### 2.3 Component Sources

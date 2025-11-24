@@ -15,4 +15,6 @@
 export { DiscoveryPhase, DiscoveryResult } from './discovery.phase';
 export { ResolutionPhase, ResolutionResult } from './resolution.phase';
 export { HydrationPhase, HydrationResult } from './hydration.phase';
-// Enrichment, Assembly, and Execution phases to be added
+export { EnrichmentPhase, EnrichmentResult, EnrichedComponentData } from './enrichment.phase';
+export { AssemblyPhase, AssemblyResult } from './assembly.phase';
+export { ExecutionPhase, ExecutionResult, OnComponentLoadCallback } from './execution.phase';
