@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { flatten } from 'lodash';
 import { SubMenu } from '@teambit/design.controls.menu';
-import { useThemePicker, useNextTheme } from '@teambit/base-react.themes.theme-switcher';
+import { useThemePicker, useThemeByName } from '@teambit/base-react.themes.theme-switcher';
 import { Slot } from '@teambit/harmony';
 import type { UserBarItem, UserBarItemSlot, UserBarSection, UserBarSectionSlot } from '@teambit/cloud.ui.user-bar';
 import { UserBar } from '@teambit/cloud.ui.user-bar';
@@ -130,8 +130,20 @@ export class CloudUI {
       {
         category: 'DocsSupportAndFeedback',
         component: function ThemePicker() {
-          const next = useNextTheme();
-          const { currentIdx } = useThemePicker();
+          const theme = useThemePicker();
+          const light = useThemeByName('light');
+          const dark = useThemeByName('dark');
+
+          const setIfDifferent = useCallback(
+            (target) => {
+              if (!theme || !target || theme.current === target) return;
+              theme.setTheme(target);
+            },
+            [theme]
+          );
+
+          const currentName = theme?.current?.themeName;
+
           return (
             <SubMenu
               item={{
@@ -140,19 +152,13 @@ export class CloudUI {
                 children: [
                   {
                     label: 'Light',
-                    icon: currentIdx === 0 ? 'checkmark' : '',
-                    onClick: () => {
-                      if (currentIdx === 0) return;
-                      next();
-                    },
+                    icon: currentName === 'light' ? 'checkmark' : '',
+                    onClick: () => setIfDifferent(light),
                   },
                   {
                     label: 'Dark',
-                    icon: currentIdx === 1 ? 'checkmark' : '',
-                    onClick: () => {
-                      if (currentIdx === 1) return;
-                      next();
-                    },
+                    icon: currentName === 'dark' ? 'checkmark' : '',
+                    onClick: () => setIfDifferent(dark),
                   },
                 ],
               }}
