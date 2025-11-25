@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
-import { ComponentPreview, ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
+import type { ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
+import { ComponentPreview } from '@teambit/preview.ui.component-preview';
+import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 
-import { Composition } from '../composition';
+import type { Composition } from '../composition';
 
 export type ComponentCompositionProps = {
   /**
@@ -11,6 +13,7 @@ export type ComponentCompositionProps = {
 } & ComponentPreviewProps;
 
 export function ComponentComposition({ composition, component, queryParams = [], ...rest }: ComponentCompositionProps) {
+  const { isMinimal } = useWorkspaceMode();
   const includesEnvTemplate = component.preview?.includesEnvTemplate;
   const isScaling = component.preview?.isScaling;
   const shouldAddNameParam = component.preview?.useNameParam || (isScaling && includesEnvTemplate === false);
@@ -30,6 +33,7 @@ export function ComponentComposition({ composition, component, queryParams = [],
       style={{ width: '100%', height: '100%' }}
       previewName="compositions"
       queryParams={compositionParams}
+      propagateError={isMinimal}
     />
   );
 }

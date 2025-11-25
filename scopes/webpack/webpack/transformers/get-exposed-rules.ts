@@ -1,6 +1,6 @@
 import camelcase from 'camelcase';
 import 'expose-loader';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { generateExposeLoaders } from '@teambit/webpack.modules.generate-expose-loaders';
 import { compact } from 'lodash';
 import { resolvePeerToFile } from './resolve-peer';

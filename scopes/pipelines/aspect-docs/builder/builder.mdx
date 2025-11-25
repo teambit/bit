@@ -109,7 +109,10 @@ import { BuildTask, BuildContext, BuiltTaskResult, ComponentResult } from '@team
 // A task is an implementation of 'BuildTask' provided by the 'builder' aspect
 export class PrintCmpNameTask implements BuildTask {
   // The constructor leaves these properties up to the hands of the environment using this task
-  constructor(readonly aspectId: string, readonly name: string) {}
+  constructor(
+    readonly aspectId: string,
+    readonly name: string
+  ) {}
 
   // This is where the task logic is placed. It will be executed by the build pipeline
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
@@ -183,7 +186,10 @@ Example:
 import { BuildTask, BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
 
 export class PrintCmpNameTask implements BuildTask {
-  constructor(readonly aspectId: string, readonly name: string) {}
+  constructor(
+    readonly aspectId: string,
+    readonly name: string
+  ) {}
 
   // Place the task at the end of the build pipeline
   readonly location = 'end';

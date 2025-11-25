@@ -1,18 +1,18 @@
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { flatten, partition } from 'lodash';
-import { Consumer } from '@teambit/legacy/dist/consumer';
-import { Component, ComponentID } from '@teambit/component';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import type { Consumer } from '@teambit/legacy.consumer';
+import type { Component, ComponentID } from '@teambit/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ComponentIdList } from '@teambit/component-id';
-import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import type { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { CompIdGraph, DepEdgeType } from '@teambit/graph';
+import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
 import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
 import compact from 'lodash.compact';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
-import { Workspace } from './workspace';
+import type { Workspace } from './workspace';
 
 export function lifecycleToDepType(compDep: ComponentDependency): DepEdgeType {
   if (compDep.isExtension) return 'ext';
@@ -89,7 +89,7 @@ export class GraphIdsFromFsBuilder {
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
       throwForSeederNotFound: this.shouldThrowOnMissingDep,
       reFetchUnBuiltVersion: false,
-      lane: (await this.workspace.getCurrentLaneObject()) || undefined,
+      lane: await this.workspace.getCurrentLaneObject(),
       reason: 'for building graph-ids from the workspace',
     });
     notImported.map((id) => this.importedIds.push(id.toString()));
@@ -111,7 +111,7 @@ export class GraphIdsFromFsBuilder {
       return [];
     }
 
-    const deps = await this.dependencyResolver.getComponentDependencies(component);
+    const deps = this.dependencyResolver.getComponentDependencies(component);
     const allDepsIds = deps.map((d) => d.componentId);
     const allDependenciesComps = await this.loadManyComponents(allDepsIds, idStr);
 
@@ -135,18 +135,24 @@ export class GraphIdsFromFsBuilder {
     graphFromScope: CompIdGraph,
     component: Component
   ): Promise<Component[]> {
-    const deps = await this.dependencyResolver.getComponentDependencies(component);
+    const deps = this.dependencyResolver.getComponentDependencies(component);
     const workspaceIds = this.workspace.listIds();
+    const workspaceIdsStr = workspaceIds.map((id) => id.toString());
     const [depsInScopeGraph, depsNotInScopeGraph] = partition(
       deps,
       (dep) =>
-        graphFromScope.hasNode(dep.componentId.toString()) && !workspaceIds.find((id) => id.isEqual(dep.componentId))
+        graphFromScope.hasNode(dep.componentId.toString()) && !workspaceIdsStr.includes(dep.componentId.toString())
     );
 
     const depsInScopeGraphIds = depsInScopeGraph.map((dep) => dep.componentId.toString());
     const depsInScopeGraphIdsNotCompleted = depsInScopeGraphIds.filter((id) => !this.completed.includes(id));
     if (depsInScopeGraphIdsNotCompleted.length) {
       const subGraphs = graphFromScope.successorsSubgraph(depsInScopeGraphIdsNotCompleted);
+      // delete any edge that its source is from the workspace. if this component is modified, this edge could be
+      // incorrect. we don't need these edges anyway because we add them directly.
+      subGraphs.edges.forEach((edge) => {
+        if (workspaceIdsStr.includes(edge.sourceId)) subGraphs.deleteEdge(edge.sourceId, edge.targetId);
+      });
       this.graph.merge([subGraphs]);
       this.completed.push(...depsInScopeGraphIdsNotCompleted);
     }
@@ -171,12 +177,13 @@ export class GraphIdsFromFsBuilder {
   }
 
   private async loadManyComponents(componentsIds: ComponentID[], dependenciesOf?: string): Promise<Component[]> {
-    const components = await mapSeries(componentsIds, async (comp) => {
-      const idStr = comp.toString();
-      const fromCache = this.loadedComponents[idStr];
+    const components = await mapSeries(componentsIds, async (compId) => {
+      const idStrPotentiallyWithoutVersion = compId.toString();
+      const fromCache = this.loadedComponents[idStrPotentiallyWithoutVersion];
       if (fromCache) return fromCache;
       try {
-        const component = await this.workspace.get(comp);
+        const component = await this.workspace.get(compId);
+        const idStr = component.id.toString();
         this.loadedComponents[idStr] = component;
         this.graph.setNode(new Node(idStr, component.id));
         return component;
@@ -188,23 +195,25 @@ export class GraphIdsFromFsBuilder {
         ) {
           if (dependenciesOf && !this.shouldThrowOnMissingDep) {
             this.logger.warn(
-              `component ${idStr}, dependency of ${dependenciesOf} was not found. continuing without it`
+              `component ${idStrPotentiallyWithoutVersion}, dependency of ${dependenciesOf} was not found. continuing without it`
             );
             return null;
           }
           throw new BitError(
-            `error: component "${idStr}" was not found.\nthis component is a dependency of "${
+            `error: component "${idStrPotentiallyWithoutVersion}" was not found.\nthis component is a dependency of "${
               dependenciesOf || '<none>'
             }" and is needed as part of the graph generation`
           );
         }
         if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
           if (dependenciesOf && !this.shouldThrowOnInvalidDeps) {
-            this.logger.warn(`component ${idStr}, dependency of ${dependenciesOf} is invalid. continuing without it`);
+            this.logger.warn(
+              `component ${idStrPotentiallyWithoutVersion}, dependency of ${dependenciesOf} is invalid. continuing without it`
+            );
             return null;
           }
           throw new BitError(
-            `error: component "${idStr}" is invalid (${err.message}).\nthis component is a dependency of "${
+            `error: component "${idStrPotentiallyWithoutVersion}" is invalid (${err.message}).\nthis component is a dependency of "${
               dependenciesOf || '<none>'
             }" and is needed as part of the graph generation`
           );

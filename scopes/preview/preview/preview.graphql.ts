@@ -1,7 +1,7 @@
-import { Component } from '@teambit/component';
+import type { Component } from '@teambit/component';
 import { gql } from 'graphql-tag';
 
-import { PreviewMain } from './preview.main.runtime';
+import type { PreviewMain } from './preview.main.runtime';
 
 export function previewSchema(previewExtension: PreviewMain) {
   return {

@@ -1,7 +1,8 @@
 import { ExecutionContext } from '@teambit/envs';
-import { Harmony } from '@teambit/harmony';
-import { Component } from '@teambit/component';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { Harmony } from '@teambit/harmony';
+import type { Component } from '@teambit/component';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 
 export class AppContext extends ExecutionContext {
   constructor(
@@ -49,6 +50,11 @@ export class AppContext extends ExecutionContext {
     readonly port?: number,
 
     /**
+     * arguments to pass to the app.
+     */
+    readonly args?: string,
+
+    /**
      * path to the application component in the workspace
      */
     readonly workspaceComponentPath?: string,
@@ -90,6 +96,7 @@ export class AppContext extends ExecutionContext {
       overrides?.execContext || appContext?.execContext,
       overrides?.hostRootDir || appContext?.hostRootDir,
       overrides?.port || appContext?.port,
+      overrides?.args || appContext?.args,
       overrides?.workspaceComponentPath || appContext?.workspaceComponentPath,
       overrides?.envVariables || appContext?.envVariables
     );

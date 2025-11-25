@@ -1,7 +1,10 @@
 import { BitError } from '@teambit/bit-error';
 
 export class EnvNotFound extends BitError {
-  constructor(private id: string, private componentId?: string) {
+  constructor(
+    private id: string,
+    private componentId?: string
+  ) {
     super(getMessage(id, componentId));
   }
 }

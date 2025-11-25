@@ -1,7 +1,7 @@
-import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
-import { Logger } from '@teambit/logger';
-import { Capsule } from '@teambit/isolator';
-import { Publisher } from './publisher';
+import type { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
+import type { Logger } from '@teambit/logger';
+import type { Capsule } from '@teambit/isolator';
+import type { Publisher } from './publisher';
 
 /**
  * publish components by running "npm publish"
@@ -9,7 +9,11 @@ import { Publisher } from './publisher';
 export class PublishTask implements BuildTask {
   readonly name = 'PublishComponents';
   readonly location: TaskLocation = 'end';
-  constructor(readonly aspectId: string, private publisher: Publisher, private logger: Logger) {}
+  constructor(
+    readonly aspectId: string,
+    private publisher: Publisher,
+    private logger: Logger
+  ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     this.publisher.options.dryRun = false;

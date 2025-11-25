@@ -1,4 +1,5 @@
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 
 export class ExpressionWithTypeArgumentsSchema extends SchemaNode {
@@ -18,6 +19,17 @@ export class ExpressionWithTypeArgumentsSchema extends SchemaNode {
 
   toString() {
     return this.name;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let result = this.name;
+
+    if (this.typeArgs && this.typeArgs.length > 0) {
+      const typeArgsStr = this.typeArgs.map((arg) => arg.toFullSignature(options)).join(', ');
+      result += `<${typeArgsStr}>`;
+    }
+
+    return result;
   }
 
   toObject() {

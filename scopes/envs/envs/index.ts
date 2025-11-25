@@ -21,6 +21,7 @@ export type {
   Descriptor,
   RegularCompDescriptor,
   EnvCompDescriptor,
+  EnvJsonc,
 } from './environments.main.runtime';
 export { EnvsAspect };
 export { EnvsExecutionResult } from './runtime/envs-execution-result';

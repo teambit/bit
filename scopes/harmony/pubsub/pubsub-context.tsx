@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, RefObject, ReactNode } from 'react';
+import type { RefObject, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 
 export interface PubSubRegistry {
   /**

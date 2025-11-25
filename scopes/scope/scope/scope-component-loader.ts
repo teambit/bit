@@ -1,19 +1,23 @@
-import { Component, ComponentFS, ComponentID, Config, Snap, State, Tag, TagMap } from '@teambit/component';
+import type { ComponentID } from '@teambit/component';
+import { Component, ComponentFS, Config, Snap, State, Tag, TagMap } from '@teambit/component';
 import pMapSeries from 'p-map-series';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { SemVer } from 'semver';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { VERSION_ZERO } from '@teambit/legacy/dist/scope/models/model-component';
-import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
-import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ModelComponent, Version } from '@teambit/objects';
+import { VERSION_ZERO, Ref } from '@teambit/objects';
+import { BitError } from '@teambit/bit-error';
+import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import type { ScopeMain } from './scope.main.runtime';
 
 export class ScopeComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
   private importedComponentsCache: InMemoryCache<boolean>;
-  constructor(private scope: ScopeMain, private logger: Logger) {
+  constructor(
+    private scope: ScopeMain,
+    private logger: Logger
+  ) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.importedComponentsCache = createInMemoryCache({ maxAge: 1000 * 60 * 30 }); // 30 min
   }
@@ -24,7 +28,7 @@ export class ScopeComponentLoader {
       return fromCache;
     }
     const idStr = id.toString();
-    this.logger.debug(`ScopeComponentLoader.get, loading ${idStr}`);
+    this.logger.trace(`ScopeComponentLoader.get, loading ${idStr}`);
     const legacyId = id;
     let modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id);
     // import if missing
@@ -43,7 +47,17 @@ export class ScopeComponentLoader {
       id = id.changeScope(this.scope.name);
       modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id);
     }
-    if (!modelComponent) return undefined;
+
+    if (!modelComponent) {
+      if (this.scope.legacyScope.isLocal(id)) {
+        const existsWithoutVersion = await this.scope.legacyScope.getModelComponentIfExist(id.changeVersion(undefined));
+        const errMsg = existsWithoutVersion
+          ? `failed loading ${id.toString()}: the component exists but version ${id.version} is missing.`
+          : `failed loading ${id.toString()}: the component does not exist in the local scope.`;
+        this.logger.error(errMsg);
+      }
+      return undefined;
+    }
 
     const versionStr = id.hasVersion()
       ? (id.version as string)
@@ -52,6 +66,12 @@ export class ScopeComponentLoader {
     if (versionStr === VERSION_ZERO) return undefined;
     const newId = id.changeVersion(versionStr);
     const version = await modelComponent.loadVersion(versionStr, this.scope.legacyScope.objects);
+    const versionOriginId = version.originId;
+    if (versionOriginId && !versionOriginId.isEqualWithoutVersion(id)) {
+      throw new BitError(
+        `version "${versionStr}" seem to be originated from "${versionOriginId.toString()}", not from "${id.toStringWithoutVersion()}"`
+      );
+    }
     const snap = await this.getHeadSnap(modelComponent);
     const state = await this.createStateFromVersion(id, version);
     const tagMap = this.getTagMap(modelComponent);
@@ -78,13 +98,16 @@ export class ScopeComponentLoader {
   /**
    * get a component from a remote without importing it
    */
-  async getRemoteComponent(id: ComponentID): Promise<Component> {
+  async getRemoteComponent(id: ComponentID, fromMain = false): Promise<Component> {
     const compImport = this.scope.legacyScope.scopeImporter;
     const objectList = await compImport.getRemoteComponent(id);
     // it's crucial to add all objects to the Repository cache. otherwise, later, when it asks
     // for the consumerComponent from the legacyScope, it won't work.
     objectList?.getAll().forEach((obj) => this.scope.legacyScope.objects.setCache(obj));
-    const consumerComponent = await this.scope.legacyScope.getConsumerComponent(id);
+    const modelComponent = await this.scope.legacyScope.getModelComponent(id);
+    const headAsTag = modelComponent.getHeadAsTagIfExist();
+    const idToLoad = fromMain && headAsTag ? id.changeVersion(headAsTag) : id;
+    const consumerComponent = await this.scope.legacyScope.getConsumerComponent(idToLoad);
     return this.getFromConsumerComponent(consumerComponent);
   }
 
@@ -188,9 +211,9 @@ export class ScopeComponentLoader {
   private async createStateFromVersion(
     id: ComponentID,
     version: Version,
-    consumerComponent?: ConsumerComponent
+    consumerComponentOptional?: ConsumerComponent
   ): Promise<State> {
-    consumerComponent = consumerComponent || (await this.scope.legacyScope.getConsumerComponent(id));
+    const consumerComponent = consumerComponentOptional || (await this.scope.legacyScope.getConsumerComponent(id));
     const state = new State(
       // We use here the consumerComponent.extensions instead of version.extensions
       // because as part of the conversion to consumer component the artifacts are initialized as Artifact instances

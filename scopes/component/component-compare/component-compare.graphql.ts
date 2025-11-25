@@ -1,5 +1,5 @@
 import { gql } from 'graphql-tag';
-import { ComponentCompareMain, ComponentCompareResult } from './component-compare.main.runtime';
+import type { ComponentCompareMain, ComponentCompareResult } from './component-compare.main.runtime';
 
 export function componentCompareSchema(componentCompareMain: ComponentCompareMain) {
   return {

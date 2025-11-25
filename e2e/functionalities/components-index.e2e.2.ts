@@ -1,9 +1,9 @@
 import chai, { expect } from 'chai';
 
-import Helper from '../../src/e2e-helper/e2e-helper';
-import OutdatedIndexJson from '../../src/scope/exceptions/outdated-index-json';
-
-chai.use(require('chai-fs'));
+import { Helper } from '@teambit/legacy.e2e-helper';
+import { OutdatedIndexJson } from '@teambit/legacy.scope';
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('scope components index mechanism', function () {
   this.timeout(0);
@@ -16,9 +16,9 @@ describe('scope components index mechanism', function () {
   });
   describe('after tagging a component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
     });
     it('should save the component in the index.json file', () => {
@@ -63,7 +63,7 @@ describe('scope components index mechanism', function () {
       });
       describe('importing the component to a new scope', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
         });
@@ -89,9 +89,9 @@ describe('scope components index mechanism', function () {
   });
   describe('changing the index.json file manually to be empty', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
 
       // as an intermediate step, make sure bit list shows one component
@@ -125,9 +125,9 @@ describe('scope components index mechanism', function () {
   describe('outdated / out-of-sync index.json', () => {
     describe('adding a non-exist component to index.json', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
+        helper.fixtures.addComponentBarFoo();
         helper.command.tagAllWithoutBuild();
         const indexJsonWithBarFoo = helper.general.getComponentsFromIndexJson();
         helper.command.reset('bar/foo');
@@ -136,10 +136,7 @@ describe('scope components index mechanism', function () {
       });
       it('bit status should throw an error for the first time and then should work on the second run', () => {
         // used to show "Cannot read property 'scope' of null"
-        const error = new OutdatedIndexJson(
-          `component "${helper.scopes.remote}/bar/foo"`,
-          helper.general.indexJsonPath()
-        );
+        const error = new OutdatedIndexJson([`component "${helper.scopes.remote}/bar/foo"`]);
         const statusCmd = () => helper.command.status();
         helper.general.expectToThrow(statusCmd, error);
 

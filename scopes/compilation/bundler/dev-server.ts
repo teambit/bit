@@ -1,4 +1,4 @@
-import { Server } from 'http';
+import type { Server } from 'http';
 
 /**
  * interface for implementing dev servers.

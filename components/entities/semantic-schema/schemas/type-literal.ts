@@ -1,4 +1,5 @@
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 
 /**
@@ -7,7 +8,10 @@ import { SchemaRegistry } from '../schema-registry';
 export class TypeLiteralSchema extends SchemaNode {
   readonly members: SchemaNode[];
 
-  constructor(readonly location: SchemaLocation, members: SchemaNode[]) {
+  constructor(
+    readonly location: SchemaLocation,
+    members: SchemaNode[]
+  ) {
     super();
     this.members = members;
   }
@@ -18,6 +22,28 @@ export class TypeLiteralSchema extends SchemaNode {
 
   toString() {
     return `{ ${this.members.map((type) => type.toString()).join('; ')} }`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const indent = (level: number) => '  '.repeat(level);
+    const level = 0;
+    let signature = '';
+
+    signature += '{\n';
+
+    this.members.forEach((member) => {
+      const memberSignature = member.toFullSignature(options);
+
+      const memberLines = memberSignature.split('\n');
+
+      const indentedLines = memberLines.map((line) => indent(level + 1) + line);
+
+      signature += indentedLines.join('\n') + '\n';
+    });
+
+    signature += indent(level) + '}';
+
+    return signature;
   }
 
   toObject() {

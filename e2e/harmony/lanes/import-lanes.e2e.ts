@@ -1,12 +1,11 @@
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import chai, { expect } from 'chai';
 import path from 'path';
-import { statusWorkspaceIsCleanMsg } from '../../../src/constants';
-import { LANE_KEY } from '../../../src/consumer/bit-map/bit-map';
-import Helper from '../../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../../src/fixtures/fixtures';
-
-chai.use(require('chai-fs'));
+import { statusWorkspaceIsCleanMsg } from '@teambit/legacy.constants';
+import { LANE_KEY } from '@teambit/legacy.bit-map';
+import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('import lanes', function () {
   this.timeout(0);
@@ -21,7 +20,7 @@ describe('import lanes', function () {
     let appOutput: string;
     let laneHash: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       appOutput = helper.fixtures.populateComponents();
       helper.command.createLane('dev');
       helper.command.snapAllComponents();
@@ -32,7 +31,7 @@ describe('import lanes', function () {
     });
     describe('fetching lanes objects', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.fetchRemoteLane('dev');
       });
@@ -44,7 +43,7 @@ describe('import lanes', function () {
         expect(Object.keys(bitMap)).to.have.lengthOf(0);
       });
       it('should import components objects on that lane', () => {
-        const list = helper.command.listLocalScopeParsed('--scope');
+        const list = helper.command.listLocalScopeParsed();
         expect(list).to.have.lengthOf(3);
       });
       it('bit status should show a clean state', () => {
@@ -58,7 +57,7 @@ describe('import lanes', function () {
     });
     describe('importing the lane and checking out by bit switch', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.switchRemoteLane('dev');
       });
@@ -118,7 +117,7 @@ describe('import lanes', function () {
     });
     describe('importing the lane and checking out with a different local lane-name', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.switchRemoteLane('dev', '--alias my-new-lane');
       });

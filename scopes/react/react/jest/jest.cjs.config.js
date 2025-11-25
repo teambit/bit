@@ -1,8 +1,14 @@
-const baseConfig = require('./jest.base.config');
+const { cjsConfig } = require('@teambit/react.jest.react-jest');
+const { generateNodeModulesPattern } = require('@teambit/dependencies.modules.packages-excluder');
+const packagesToExclude = ['@teambit'];
 
-const cjsTransformer = require.resolve('./transformers/cjs-transformer.js');
-
-const cjsTransform = { ...baseConfig.transform, '^.+\\.(js|jsx|ts|tsx|cjs)$': cjsTransformer };
-const cjsConfig = { ...baseConfig, transform: cjsTransform };
-
-module.exports = cjsConfig;
+module.exports = {
+  ...cjsConfig,
+  transformIgnorePatterns: [
+    '^.+.module.(css|sass|scss)$',
+    generateNodeModulesPattern({
+      packages: packagesToExclude,
+      excludeComponents: true,
+    }),
+  ],
+};

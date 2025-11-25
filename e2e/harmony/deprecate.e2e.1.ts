@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import { Extensions } from '../../src/constants';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Extensions } from '@teambit/legacy.constants';
+import { Helper } from '@teambit/legacy.e2e-helper';
+import { IssuesClasses } from '@teambit/component-issues';
 
 describe('bit deprecate and undeprecate commands', function () {
   this.timeout(0);
@@ -13,7 +14,7 @@ describe('bit deprecate and undeprecate commands', function () {
   });
   describe('deprecate tagged component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
       helper.command.deprecateComponent('comp2');
@@ -71,7 +72,7 @@ describe('bit deprecate and undeprecate commands', function () {
         describe('importing a deprecated component', () => {
           let importOutput: string;
           before(() => {
-            helper.scopeHelper.reInitLocalScope();
+            helper.scopeHelper.reInitWorkspace();
             helper.scopeHelper.addRemoteScope();
             importOutput = helper.command.importComponent('comp2');
           });
@@ -81,7 +82,7 @@ describe('bit deprecate and undeprecate commands', function () {
         });
         describe('bit list of a remote deprecated component', () => {
           before(() => {
-            helper.scopeHelper.reInitLocalScope();
+            helper.scopeHelper.reInitWorkspace();
             helper.scopeHelper.addRemoteScope();
           });
           it('should indicate that the component is deprecated', () => {
@@ -93,7 +94,7 @@ describe('bit deprecate and undeprecate commands', function () {
         describe('importing all scope', () => {
           let output: string;
           before(() => {
-            helper.scopeHelper.reInitLocalScope();
+            helper.scopeHelper.reInitWorkspace();
             helper.scopeHelper.addRemoteScope();
             output = helper.command.importComponent('* -x');
           });
@@ -104,7 +105,7 @@ describe('bit deprecate and undeprecate commands', function () {
         describe('importing all scope with --include-deprecated flag', () => {
           let output: string;
           before(() => {
-            helper.scopeHelper.reInitLocalScope();
+            helper.scopeHelper.reInitWorkspace();
             helper.scopeHelper.addRemoteScope();
             output = helper.command.importComponent('* -x --include-deprecated');
           });
@@ -117,7 +118,7 @@ describe('bit deprecate and undeprecate commands', function () {
   });
   describe('reverting the deprecation by "bit checkout reset"', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.deprecateComponent('comp1');
@@ -134,7 +135,7 @@ describe('bit deprecate and undeprecate commands', function () {
   });
   describe('deprecate previous versions', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(2, undefined, 'version2');
@@ -166,7 +167,7 @@ describe('bit deprecate and undeprecate commands', function () {
     });
     describe('importing the component', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
       });
       it('import the latest version should not show the deprecated message', () => {
@@ -181,7 +182,7 @@ describe('bit deprecate and undeprecate commands', function () {
   });
   describe('deprecating with --range when it overlaps the current version', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.deprecateComponent('comp1', '--range "<1.0.0"');
@@ -196,6 +197,27 @@ describe('bit deprecate and undeprecate commands', function () {
       helper.command.tagAllWithoutBuild('--ver 2.0.0 --unmodified');
       const deprecationData = helper.command.showComponentParsedHarmonyByTitle('comp1', 'deprecated');
       expect(deprecationData.isDeprecate).to.be.false;
+    });
+  });
+  describe('using deprecated components', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.deprecateComponent('comp2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+    });
+    it('bit status should show the DeprecatedDependencies component-issue', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.DeprecatedDependencies.name);
+    });
+    describe('un-deprecating it', () => {
+      before(() => {
+        helper.command.undeprecateComponent('comp2');
+      });
+      it('bit status should not show the DeprecatedDependencies component-issue anymore', () => {
+        helper.command.expectStatusToNotHaveIssue(IssuesClasses.DeprecatedDependencies.name);
+      });
     });
   });
 });

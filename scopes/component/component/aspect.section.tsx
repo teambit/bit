@@ -1,6 +1,6 @@
 import React from 'react';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
-import { Section } from './section';
+import type { Section } from './section';
 import { AspectPage } from './ui/aspect-page';
 
 export class AspectSection implements Section {
@@ -12,6 +12,7 @@ export class AspectSection implements Section {
     href: '~aspect',
     children: <MenuWidgetIcon icon="configuration" tooltipContent="Configuration" />,
     displayName: 'Configuration',
+    hideInMinimalMode: true,
   };
   order = 50;
 }

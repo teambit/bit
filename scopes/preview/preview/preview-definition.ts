@@ -1,6 +1,6 @@
 import type { Component, ComponentMap } from '@teambit/component';
 import type { Environment, ExecutionContext } from '@teambit/envs';
-import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import type { AbstractVinyl } from '@teambit/component.sources';
 
 export interface PreviewDefinition {
   /**

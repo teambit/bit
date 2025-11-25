@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { SourceFileTransformer } from '.';
+import type { SourceFileTransformer } from './index';
 import { replaceName } from './replaceName';
 
 export const functionNamesTransformer: SourceFileTransformer = (mapping: Record<string, string>) => {
@@ -18,7 +18,7 @@ export const functionNamesTransformer: SourceFileTransformer = (mapping: Record<
           }
         }
         return ts.visitEachChild(node, updateTypeReference, context);
-      } catch (e) {
+      } catch {
         return node;
       }
     };

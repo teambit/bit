@@ -1,5 +1,5 @@
 import { AspectAspect } from '@teambit/aspect';
-import AspectLoaderAspect from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { BuilderAspect } from '@teambit/builder';
 import { BundlerAspect } from '@teambit/bundler';
 import { CacheAspect } from '@teambit/cache';
@@ -31,7 +31,7 @@ import { PnpmAspect } from '@teambit/pnpm';
 import { PreviewAspect } from '@teambit/preview';
 import { ComponentSizerAspect } from '@teambit/component-sizer';
 import { ReactAspect } from '@teambit/react';
-import { ReactNativeAspect } from '@teambit/react-native';
+import { VueAspect } from '@teambit/vue-aspect';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { SchemaAspect } from '@teambit/schema';
 import { PubsubAspect } from '@teambit/pubsub';
@@ -49,6 +49,7 @@ import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
 import { InstallAspect } from '@teambit/install';
 import { LinterAspect } from '@teambit/linter';
 import { FormatterAspect } from '@teambit/formatter';
+import { ValidatorAspect } from '@teambit/validator';
 import { ChangelogAspect } from '@teambit/changelog';
 import { CodeAspect } from '@teambit/code';
 import { CommandBarAspect } from '@teambit/command-bar';
@@ -57,19 +58,16 @@ import { ComponentTreeAspect } from '@teambit/component-tree';
 import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
 import { PrettierAspect } from '@teambit/prettier';
-import { SignAspect } from '@teambit/sign';
-import WorkerAspect from '@teambit/worker';
+import { WorkerAspect } from '@teambit/worker';
 import { GlobalConfigAspect } from '@teambit/global-config';
-import MultiCompilerAspect from '@teambit/multi-compiler';
-import MDXAspect from '@teambit/mdx';
-import ReadmeAspect from '@teambit/readme';
+import { MultiCompilerAspect } from '@teambit/multi-compiler';
+import { MDXAspect } from '@teambit/mdx';
+import { ReadmeAspect } from '@teambit/readme';
 import { ApplicationAspect } from '@teambit/application';
-import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
 import { ExportAspect } from '@teambit/export';
 import { ImporterAspect } from '@teambit/importer';
 import { EjectAspect } from '@teambit/eject';
 import { UserAgentAspect } from '@teambit/user-agent';
-import { HtmlAspect } from '@teambit/html';
 import { LanesAspect } from '@teambit/lanes';
 import { ForkingAspect } from '@teambit/forking';
 import { RenamingAspect } from '@teambit/renaming';
@@ -101,8 +99,22 @@ import { StashAspect } from '@teambit/stash';
 import { GitAspect } from '@teambit/git';
 import { IpcEventsAspect } from '@teambit/ipc-events';
 import { ConfigMergerAspect } from '@teambit/config-merger';
+import { VersionHistoryAspect } from '@teambit/version-history';
+import { HostInitializerAspect } from '@teambit/host-initializer';
+import { DoctorAspect } from '@teambit/doctor';
+import { ObjectsAspect } from '@teambit/objects';
 import { BitAspect } from './bit.aspect';
+import { ConfigStoreAspect } from '@teambit/config-store';
+import { CliMcpServerAspect } from '@teambit/cli-mcp-server';
+import { CiAspect } from '@teambit/ci';
+import { ScriptsAspect } from '@teambit/scripts';
 
+/**
+ * this is the place to register core aspects.
+ * if you modify this list (add/remove), please run `npm run generate-core-aspects-ids` to update
+ * teambit.harmony/testing/load-aspect component, which should not depend on this component.
+ * (it's done automatically by Circle during tag workflow)
+ */
 export const manifestsMap = {
   [AspectLoaderAspect.id]: AspectLoaderAspect,
   [CLIAspect.id]: CLIAspect,
@@ -115,6 +127,7 @@ export const manifestsMap = {
   [CompilerAspect.id]: CompilerAspect,
   [LinterAspect.id]: LinterAspect,
   [FormatterAspect.id]: FormatterAspect,
+  [ValidatorAspect.id]: ValidatorAspect,
   [ComponentAspect.id]: ComponentAspect,
   [MDXAspect.id]: MDXAspect,
   [ReadmeAspect.id]: ReadmeAspect,
@@ -139,7 +152,7 @@ export const manifestsMap = {
   [LoggerAspect.id]: LoggerAspect,
   [PkgAspect.id]: PkgAspect,
   [ReactAspect.id]: ReactAspect,
-  [ReactNativeAspect.id]: ReactNativeAspect,
+  [VueAspect.id]: VueAspect,
   [WorkerAspect.id]: WorkerAspect,
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,
@@ -166,15 +179,12 @@ export const manifestsMap = {
   [CommandBarAspect.id]: CommandBarAspect,
   [SidebarAspect.id]: SidebarAspect,
   [ComponentTreeAspect.id]: ComponentTreeAspect,
-  [SignAspect.id]: SignAspect,
-  [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
   [ExportAspect.id]: ExportAspect,
   [ImporterAspect.id]: ImporterAspect,
   [HarmonyUiAppAspect.id]: HarmonyUiAppAspect,
   [UserAgentAspect.id]: UserAgentAspect,
   [ApplicationAspect.id]: ApplicationAspect,
   [EjectAspect.id]: EjectAspect,
-  [HtmlAspect.id]: HtmlAspect,
   [LanesAspect.id]: LanesAspect,
   [ForkingAspect.id]: ForkingAspect,
   [RenamingAspect.id]: RenamingAspect,
@@ -206,6 +216,14 @@ export const manifestsMap = {
   [GitAspect.id]: GitAspect,
   [IpcEventsAspect.id]: IpcEventsAspect,
   [ConfigMergerAspect.id]: ConfigMergerAspect,
+  [VersionHistoryAspect.id]: VersionHistoryAspect,
+  [HostInitializerAspect.id]: HostInitializerAspect,
+  [DoctorAspect.id]: DoctorAspect,
+  [ObjectsAspect.id]: ObjectsAspect,
+  [ConfigStoreAspect.id]: ConfigStoreAspect,
+  [CliMcpServerAspect.id]: CliMcpServerAspect,
+  [CiAspect.id]: CiAspect,
+  [ScriptsAspect.id]: ScriptsAspect,
 };
 
 export function isCoreAspect(id: string) {

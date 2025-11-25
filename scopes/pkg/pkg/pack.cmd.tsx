@@ -1,8 +1,8 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 
-import { Packer, PackOptions } from './packer';
+import type { Packer, PackOptions } from './packer';
 
 type PackArgs = [string, string];
 type PackCmdOptions = {

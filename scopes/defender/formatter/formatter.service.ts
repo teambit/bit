@@ -1,10 +1,17 @@
 import chalk from 'chalk';
 import { defaults } from 'lodash';
-import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
+import type {
+  EnvService,
+  ExecutionContext,
+  EnvDefinition,
+  Env,
+  EnvContext,
+  ServiceTransformationMap,
+} from '@teambit/envs';
 import highlight from 'cli-highlight';
-import { Formatter, FormatResults } from './formatter';
-import { FormatterContext, FormatterOptions } from './formatter-context';
-import { FormatterConfig } from './formatter.main.runtime';
+import type { Formatter, FormatResults } from './formatter';
+import type { FormatterContext, FormatterOptions } from './formatter-context';
+import type { FormatterConfig } from './formatter.main.runtime';
 
 type FormatterTransformationMap = ServiceTransformationMap & {
   getFormatter: () => Formatter;
@@ -15,18 +22,21 @@ export class FormatterService implements EnvService<FormatResults> {
   constructor(private formatterConfig: FormatterConfig) {}
 
   async run(context: ExecutionContext, options: FormatterOptions): Promise<FormatResults> {
+    const formatter = this.getFormatter(context, options);
+    if (!formatter) {
+      return { results: [], errors: [] };
+    }
     const mergedOpts = this.optionsWithDefaults(options);
     const formatterContext: FormatterContext = this.mergeContext(mergedOpts, context);
-    const formatter = this.getFormatter(context, options);
 
     const results = options.check ? await formatter.check(formatterContext) : await formatter.format(formatterContext);
     return results;
   }
 
-  getFormatter(context: ExecutionContext, options: FormatterOptions): Formatter {
+  getFormatter(context: ExecutionContext, options: FormatterOptions): Formatter | undefined {
     const mergedOpts = this.optionsWithDefaults(options);
     const formatterContext: FormatterContext = this.mergeContext(mergedOpts, context);
-    const formatter: Formatter = context.env.getFormatter(formatterContext);
+    const formatter = context.env.getFormatter?.(formatterContext);
 
     return formatter;
   }

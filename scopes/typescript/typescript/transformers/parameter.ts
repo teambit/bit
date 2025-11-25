@@ -1,23 +1,17 @@
-import ts, {
-  BindingElement,
-  isIdentifier,
-  Node,
-  ParameterDeclaration,
-  SyntaxKind,
-  ArrayBindingElement,
-} from 'typescript';
+import type { BindingElement, Node, ParameterDeclaration, ArrayBindingElement } from 'typescript';
+import ts, { isIdentifier, SyntaxKind, isComputedPropertyName } from 'typescript';
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import {
   InferenceTypeSchema,
   ParameterSchema,
-  SchemaNode,
   TupleTypeSchema,
   TypeLiteralSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
 import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
-import { Identifier } from '../identifier';
+import type { Identifier } from '../identifier';
 
 export class ParameterTransformer implements SchemaTransformer {
   predicate(node: Node) {
@@ -102,12 +96,19 @@ export class ParameterTransformer implements SchemaTransformer {
       const info = await context.getQuickInfo(elem.name);
       const parsed = info ? parseTypeFromQuickInfo(info) : elem.getText();
       const defaultValue = elem.initializer ? elem.initializer.getText() : undefined;
+      const alias =
+        elem.propertyName && isComputedPropertyName(elem.propertyName)
+          ? elem.propertyName?.expression.getText()
+          : undefined;
+
+      const name = elem.name.getText();
       return new InferenceTypeSchema(
         context.getLocation(elem.name),
         parsed,
-        elem.name.getText(),
+        name,
         defaultValue,
-        Boolean(elem.dotDotDotToken)
+        Boolean(elem.dotDotDotToken),
+        alias
       );
     });
   }

@@ -1,7 +1,14 @@
-const baseConfig = require('./jest.base.config');
+const { esmConfig } = require('@teambit/react.jest.react-jest');
+const { generateNodeModulesPattern } = require('@teambit/dependencies.modules.packages-excluder');
+const packagesToExclude = ['@teambit'];
 
-const esmTransformer = require.resolve('./transformers/esm-transformer.js');
-const esmTransform = { ...baseConfig.transform, '^.+\\.(js|jsx|ts|tsx)$': esmTransformer };
-const esmConfig = { ...baseConfig, extensionsToTreatAsEsm: ['.ts', '.tsx', '.jsx'], transform: esmTransform };
-
-module.exports = esmConfig;
+module.exports = {
+  ...esmConfig,
+  transformIgnorePatterns: [
+    '^.+.module.(css|sass|scss)$',
+    generateNodeModulesPattern({
+      packages: packagesToExclude,
+      excludeComponents: true,
+    }),
+  ],
+};

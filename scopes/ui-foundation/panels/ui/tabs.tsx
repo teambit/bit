@@ -1,13 +1,7 @@
 import classNames from 'classnames';
 import React from 'react';
-import {
-  Tab as BaseTab,
-  TabList as BaseTabList,
-  TabListProps as BaseTabListProps,
-  TabPanel as TabPanelBase,
-  TabProps as BaseTabProps,
-  Tabs,
-} from 'react-tabs';
+import type { TabListProps as BaseTabListProps, TabProps as BaseTabProps } from 'react-tabs';
+import { Tab as BaseTab, TabList as BaseTabList, TabPanel as TabPanelBase, Tabs } from 'react-tabs';
 
 import styles from './tabs.module.scss';
 

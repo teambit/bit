@@ -1,11 +1,15 @@
-import { Aspect } from '@teambit/harmony';
-import { PluginDefinition } from './plugin-definition';
+import { realpathSync, existsSync } from 'fs';
+import type { Aspect } from '@teambit/harmony';
+import type { PluginDefinition } from './plugin-definition';
 
 export class Plugin {
-  constructor(readonly def: PluginDefinition, readonly path: string) {}
+  constructor(
+    readonly def: PluginDefinition,
+    readonly path: string
+  ) {}
 
   // consider adding a more abstract type here to allow users to ask for dependencies.
-  private _instance: undefined | unknown;
+  private _instance: undefined | any;
 
   /**
    * determines whether the plugin supports a certain runtime.
@@ -21,7 +25,14 @@ export class Plugin {
 
   require() {
     // eslint-disable-next-line global-require, import/no-dynamic-require
-    this._instance = require(this.path).default;
+    const mod = require(this.path);
+    this._instance = mod.default as any;
+    this._instance.__path = this.path;
+    const exists = existsSync(this.path);
+    // In case the path not exists we don't need to resolve it (it will throw an error)
+    const realPath = exists ? realpathSync(this.path) : this.path;
+    const resolvedPathFromRealPath = require.resolve(realPath);
+    this._instance.__resolvedPath = resolvedPathFromRealPath;
     return this._instance;
   }
 }

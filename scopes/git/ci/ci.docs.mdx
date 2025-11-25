@@ -1,0 +1,258 @@
+---
+description: 'Aspect that eases the Bit workflow in CI'
+labels: ['aspect', 'ci']
+---
+
+# Bit CI
+
+Bit's **`bit ci`** commands (plus one BVM enhancement) wrap several routine Bit tasks into single-purpose scripts so your CI pipelines stay short, readable and consistent.
+
+| Command                           | Purpose                                               | Typical CI Stage       |
+| --------------------------------- | ----------------------------------------------------- | ---------------------- |
+| [`bit ci verify`](#bit-ci-verify) | Lint + build gate on every commit                     | pre-push / commit hook |
+| [`bit ci pr`](#bit-ci-pr)         | Snap + export a feature lane when a PR opens/updates  | pull-request pipeline  |
+| [`bit ci merge`](#bit-ci-merge)   | Tag + export new semantic versions on merge to `main` | merge-to-main pipeline |
+
+---
+
+## `bit ci verify`
+
+|                  |                                                   |
+| ---------------- | ------------------------------------------------- |
+| **Syntax**       | `bit ci verify`                                   |
+| **What it does** | Ensures the component passes CI on every commit   |
+| **Runs**         | `bit install && bit status --strict && bit build` |
+
+### When to run
+
+- Every commit that **is not** part of an open Pull Request (e.g. a pre-push hook).
+- As an early CI job to fail fast on dependency drift or broken builds.
+
+### Exit behaviour
+
+The command stops at the first failing step (`status`, then `build`) and returns a non-zero exit code.
+
+---
+
+## `bit ci pr`
+
+Export a lane to Bit Cloud whenever a Pull Request is opened or updated.
+
+```bash
+bit ci pr [--message <string>] [--build] [--lane <string>]
+```
+
+| Flag        | Shorthand | Description                                                                               |
+| ----------- | --------- | ----------------------------------------------------------------------------------------- |
+| `--message` | `-m`      | Changelog entry. If omitted, tries the latest Git commit message (fails if unavailable).  |
+| `--build`   | `-b`      | Build locally before export. If absent, Ripple-CI builds the components.                  |
+| `--lane`    | `-l`      | Explicit lane name. Falls back to the current Git branch name. Performs input validation. |
+
+### Internal flow (fail-fast on any step)
+
+1. **Resolve lane name**
+   - From `--lane` or current Git branch.
+   - If the lane doesn’t exist remotely, create it; otherwise, `bit lane checkout <lane>`.
+2. **Run wrapped Bit commands**
+
+   ```bash
+   bit install
+   bit status --strict
+   bit lane create <lane>      # no-op if already exists
+   bit snap --message "<msg>" --build
+   bit export
+   ```
+
+3. **Clean-up**
+
+   ```bash
+   bit lane switch main   # leaves .bitmap unchanged in the working tree
+   ```
+
+### Typical CI placement
+
+Run on the _pull-request_ event after tests but before any deploy step.
+
+---
+
+## `bit ci merge`
+
+Publishes new semantic versions after a PR merges to `main`.
+
+```bash
+bit ci merge [--message <string>] [--build] [--increment <level>] [--patch|--minor|--major] [--increment-by <number>]
+```
+
+| Flag              | Shorthand | Description                                                                                                         |
+| ----------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `--message`       | `-m`      | Changelog entry (defaults to last Git commit message).                                                              |
+| `--build`         | `-b`      | Build locally (otherwise Ripple-CI does it). Required if workspace contains _soft-tagged_ components.               |
+| `--strict`        | `-s`      | Fail on warnings as well as errors (default: only fails on errors).                                                 |
+| `--increment`     | `-l`      | Version bump level: `major`, `premajor`, `minor`, `preminor`, `patch`, `prepatch`, `prerelease` (default: `patch`). |
+| `--patch`         | `-p`      | Shortcut for `--increment patch`.                                                                                   |
+| `--minor`         |           | Shortcut for `--increment minor`.                                                                                   |
+| `--major`         |           | Shortcut for `--increment major`.                                                                                   |
+| `--pre-release`   |           | Shortcut for `--increment prerelease` with optional identifier.                                                     |
+| `--prerelease-id` |           | Prerelease identifier (e.g. "dev" to get "1.0.0-dev.1").                                                            |
+| `--increment-by`  |           | Increment by more than 1 (e.g. `--increment-by 2` with patch: 0.0.1 → 0.0.3).                                       |
+
+### Automatic Version Bump Detection
+
+When **no explicit version flags** are provided, `bit ci merge` can automatically determine the version bump level from the commit message:
+
+1. **Explicit Keywords** (highest priority):
+
+   - `BIT-BUMP-MAJOR` anywhere in commit message → major version bump
+   - `BIT-BUMP-MINOR` anywhere in commit message → minor version bump
+
+2. **Conventional Commits** (when enabled):
+
+   - `feat!:` or `BREAKING CHANGE` → major version bump
+   - `feat:` → minor version bump
+   - `fix:` → patch version bump
+
+3. **Default**: patch version bump
+
+**Note**: Auto-detection only occurs when no version flags (`--patch`, `--minor`, `--major`, etc.) are provided. Explicit flags always take precedence.
+
+### Internal flow
+
+1. **Ensure main lane**
+
+   ```bash
+   bit lane switch main   # preserves working tree files
+   ```
+
+2. **Tag, build, export**
+
+   ```bash
+   bit install
+   bit tag --message "<msg>" --build --persist   # --persist only if soft tags exist
+   bit export
+   ```
+
+3. **Archive remote lane** (house-keeping).
+4. **Commit lock-file updates**
+
+   ```bash
+   git add .bitmap pnpm-lock.yaml
+   git commit -m "chore(release): sync bitmap + lockfile"
+   ```
+
+### Version bump examples
+
+```bash
+# Explicit version bump (takes precedence over auto-detection)
+bit ci merge --minor --message "feat: add new API endpoint"
+bit ci merge --major --message "feat!: breaking API changes"
+bit ci merge --patch --increment-by 3 --message "fix: critical patches"
+
+# Automatic detection from commit message (no flags needed)
+git commit -m "feat: add new API endpoint"
+bit ci merge --build  # → auto-detects minor bump
+
+git commit -m "feat!: breaking API changes"
+bit ci merge --build  # → auto-detects major bump
+
+git commit -m "fix: resolve memory leak"
+bit ci merge --build  # → auto-detects patch bump (if conventional commits enabled)
+
+# Using explicit keywords for auto-detection
+git commit -m "feat: add new feature BIT-BUMP-MINOR"
+bit ci merge --build  # → auto-detects minor bump
+
+git commit -m "refactor: major code restructure BIT-BUMP-MAJOR"
+bit ci merge --build  # → auto-detects major bump
+
+# Default patch increment (when no detection rules match)
+git commit -m "chore: update dependencies"
+bit ci merge --build  # → defaults to patch bump
+
+# Prerelease increment (explicit flag required)
+bit ci merge --pre-release dev --message "feat: experimental feature"
+```
+
+### CI hint
+
+Gate this step behind a branch-protection rule so only fast-forward merges trigger a release.
+
+---
+
+## Configuration
+
+The CI aspect supports configuration in `workspace.jsonc`:
+
+```json
+{
+  "teambit.git/ci": {
+    "commitMessageScript": "node scripts/generate-commit-message.js",
+    "useConventionalCommitsForVersionBump": true,
+    "useExplicitBumpKeywords": true
+  }
+}
+```
+
+### `commitMessageScript`
+
+**Optional.** Path to a script that generates custom commit messages for the `bit ci merge` command.
+
+- **Default**: Uses `"chore: update .bitmap and lockfiles as needed [skip ci]"`
+- **Usage**: The script should output the desired commit message to stdout
+- **Security**: Commands are parsed to avoid shell injection - no chaining allowed
+- **Working Directory**: Script runs in the workspace root directory
+
+**Example script:**
+
+```javascript
+#!/usr/bin/env node
+const { execSync } = require('child_process');
+
+try {
+  const version = execSync('npm show @my/package version', { encoding: 'utf8' }).trim();
+  console.log(`bump version to ${version} [skip ci]`);
+} catch {
+  console.log('chore: update .bitmap and lockfiles as needed [skip ci]');
+}
+```
+
+### `useConventionalCommitsForVersionBump`
+
+**Optional.** Enable automatic version bump detection based on conventional commit patterns.
+
+- **Default**: `false` (disabled)
+- **When enabled**: Analyzes commit messages for conventional commit patterns:
+  - `feat!:` or `BREAKING CHANGE` → major version bump
+  - `feat:` → minor version bump
+  - `fix:` → patch version bump
+
+```json
+{
+  "teambit.git/ci": {
+    "useConventionalCommitsForVersionBump": true
+  }
+}
+```
+
+### `useExplicitBumpKeywords`
+
+**Optional.** Enable automatic version bump detection using explicit keywords.
+
+- **Default**: `true` (enabled)
+- **Keywords**:
+  - `BIT-BUMP-MAJOR` anywhere in commit message → major version bump
+  - `BIT-BUMP-MINOR` anywhere in commit message → minor version bump
+
+```json
+{
+  "teambit.git/ci": {
+    "useExplicitBumpKeywords": false // disable explicit keywords
+  }
+}
+```
+
+**Example usage:**
+
+```bash
+git commit -m "feat: add new feature BIT-BUMP-MINOR"
+bit ci merge --build  # → automatically uses minor version bump
+```

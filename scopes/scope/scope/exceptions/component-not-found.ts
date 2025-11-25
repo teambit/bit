@@ -1,5 +1,5 @@
 import { BitError } from '@teambit/bit-error';
-import { ComponentID } from '@teambit/component';
+import type { ComponentID } from '@teambit/component';
 
 export class ComponentNotFound extends BitError {
   constructor(

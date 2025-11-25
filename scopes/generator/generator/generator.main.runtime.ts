@@ -1,31 +1,51 @@
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
-import ComponentConfig from '@teambit/legacy/dist/consumer/config';
-import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
-
+import fs from 'fs-extra';
+import camelCase from 'camelcase';
+import { resolve } from 'path';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
+import type { EnvDefinition, EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import { ComponentConfig } from '@teambit/legacy.consumer-config';
+import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
 import { ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain, Component } from '@teambit/component';
-
-import { isCoreAspect, loadBit, restoreGlobals } from '@teambit/bit';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { GitAspect, GitMain } from '@teambit/git';
+import { Scope as LegacyScope } from '@teambit/legacy.scope';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { Harmony, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { GitMain } from '@teambit/git';
+import { GitAspect } from '@teambit/git';
 import { BitError } from '@teambit/bit-error';
-import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
-import { TrackerAspect, TrackerMain } from '@teambit/tracker';
-import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-component-helper';
-import { compact } from 'lodash';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ComponentTemplate } from './component-template';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import type { TrackerMain } from '@teambit/tracker';
+import { TrackerAspect } from '@teambit/tracker';
+import type { NewComponentHelperMain } from '@teambit/new-component-helper';
+import { NewComponentHelperAspect } from '@teambit/new-component-helper';
+import { compact, uniq } from 'lodash';
+import { isValidScopeName } from '@teambit/legacy-bit-id';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { DeprecationMain } from '@teambit/deprecation';
+import { DeprecationAspect } from '@teambit/deprecation';
+import type { ComponentTemplate, GetComponentTemplates, PromptResults } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
-import { CreateCmd, CreateOptions } from './create.cmd';
+import type { CreateOptions } from './create.cmd';
+import { CreateCmd } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
 import { generatorSchema } from './generator.graphql';
-import { ComponentGenerator, GenerateResult, OnComponentCreateFn } from './component-generator';
+import type { GenerateResult, InstallOptions, OnComponentCreateFn } from './component-generator';
+import { ComponentGenerator } from './component-generator';
 import { WorkspaceGenerator } from './workspace-generator';
-import { WorkspaceTemplate } from './workspace-template';
-import { NewCmd, NewOptions } from './new.cmd';
+import type { WorkspaceTemplate } from './workspace-template';
+import type { NewOptions } from './new.cmd';
+import { NewCmd } from './new.cmd';
 import {
   componentGeneratorTemplate,
   componentGeneratorTemplateStandalone,
@@ -35,8 +55,10 @@ import {
 import { BasicWorkspaceStarter } from './templates/basic';
 import { StarterPlugin } from './starter.plugin';
 import { GeneratorService } from './generator.service';
+import { WorkspacePathExists } from './exceptions/workspace-path-exists';
+import { GLOBAL_SCOPE } from '@teambit/legacy.constants';
 
-export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
+export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[] | GetComponentTemplates>;
 export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
 export type OnComponentCreateSlot = SlotRegistry<OnComponentCreateFn>;
 
@@ -52,6 +74,14 @@ type TemplateWithId = { id: string; envName?: string };
 type WorkspaceTemplateWithId = TemplateWithId & { template: WorkspaceTemplate };
 type ComponentTemplateWithId = TemplateWithId & { template: ComponentTemplate };
 type AnyTemplateWithId = TemplateWithId & { template: ComponentTemplate | WorkspaceTemplate };
+
+type LegacyGlobal = { classInstance: any; methodName: string; value: any; empty: any };
+export type BitApi = {
+  isCoreAspect: (id: string) => boolean;
+  loadBit: (path?: string) => Promise<Harmony>;
+  restoreGlobalsFromSnapshot: (globals: LegacyGlobal[]) => void;
+  takeLegacyGlobalsSnapshot: () => LegacyGlobal[];
+};
 
 export type GenerateWorkspaceTemplateResult = { workspacePath: string; appName?: string };
 
@@ -75,6 +105,7 @@ export type GeneratorConfig = {
 
 export class GeneratorMain {
   private aspectLoaded = false;
+  private bitApi: BitApi;
   constructor(
     private componentTemplateSlot: ComponentTemplateSlot,
     private workspaceTemplateSlot: WorkspaceTemplateSlot,
@@ -88,13 +119,20 @@ export class GeneratorMain {
     private tracker: TrackerMain,
     private logger: Logger,
     private git: GitMain,
-    private wsConfigFiles: WorkspaceConfigFilesMain
+    private wsConfigFiles: WorkspaceConfigFilesMain,
+    private deprecation: DeprecationMain
   ) {}
+
+  setBitApi(bitApi: BitApi) {
+    this.bitApi = bitApi;
+  }
 
   /**
    * register a new component template.
+   * @param templates array of component templates or a function that returns an array of component templates.
+   * prefer to use the function to improve performance by loading the templates only when needed.
    */
-  registerComponentTemplate(templates: ComponentTemplate[]) {
+  registerComponentTemplate(templates: ComponentTemplate[] | GetComponentTemplates) {
     this.componentTemplateSlot.register(templates);
     return this;
   }
@@ -126,7 +164,7 @@ export class GeneratorMain {
   private getTemplateDescriptor = ({ id, template }: AnyTemplateWithId): TemplateDescriptor => {
     const shouldBeHidden = () => {
       if (template.hidden) return true;
-      if (this.config.hideCoreTemplates && isCoreAspect(id)) return true;
+      if (this.config.hideCoreTemplates && this.bitApi.isCoreAspect(id)) return true;
       return false;
     };
     return {
@@ -152,7 +190,10 @@ export class GeneratorMain {
    * get all component templates registered by a specific aspect ID.
    */
   getComponentTemplateByAspect(aspectId: string): ComponentTemplate[] {
-    return this.componentTemplateSlot.get(aspectId) || [];
+    const result = this.componentTemplateSlot.get(aspectId);
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    return result();
   }
 
   /**
@@ -190,17 +231,57 @@ export class GeneratorMain {
   }
 
   /**
+   * get or create a global scope, import the non-core aspects, load bit from that scope, create
+   * capsules for the aspects and load them from the capsules.
+   */
+  private async loadAspectsFromGlobalScope(
+    aspectIds: string[]
+  ): Promise<{ components: Component[]; globalScopeHarmony: Harmony; legacyGlobalsSnapshot: LegacyGlobal[] }> {
+    const globalScope = await LegacyScope.ensure(GLOBAL_SCOPE, 'global-scope');
+    await globalScope.ensureDir();
+    const legacyGlobalsSnapshot = this.bitApi.takeLegacyGlobalsSnapshot();
+    const globalScopeHarmony = await this.bitApi.loadBit(globalScope.path);
+    const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
+    const aspectLoader = globalScopeHarmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
+    const ids = aspectIds.map((id) => ComponentID.fromString(id));
+    const hasVersions = ids.every((id) => id.hasVersion());
+    const useCache = hasVersions; // if all components has versions, try to use the cached aspects
+    await scope.import(ids, { useCache, reason: 'to load aspects from global scope' });
+    const components = await scope.getMany(ids, true);
+
+    // don't use `await scope.loadAspectsFromCapsules(components, true);`
+    // it won't work for globalScope because `this !== scope.aspectLoader` (this instance
+    // is not the same as the aspectLoader instance Scope has)
+    const resolvedAspects = await scope.getResolvedAspects(components, { workspaceName: 'global-scope' });
+    try {
+      await aspectLoader.loadRequireableExtensions(resolvedAspects, true);
+    } catch (err: any) {
+      if (err?.error?.code === 'MODULE_NOT_FOUND') {
+        const resolvedAspectsAgain = await scope.getResolvedAspects(components, {
+          skipIfExists: false,
+          workspaceName: 'global-scope',
+        });
+        await aspectLoader.loadRequireableExtensions(resolvedAspectsAgain, true);
+      } else {
+        throw err;
+      }
+    }
+
+    return { components, globalScopeHarmony, legacyGlobalsSnapshot };
+  }
+
+  /**
    * Get the generator aspect and the envs aspect from an harmony instance of the global scope
    */
   private async getGlobalGeneratorEnvs(
     aspectId: string
   ): Promise<{ remoteGenerator: GeneratorMain; fullAspectId: string; remoteEnvsAspect: EnvsMain; aspect: any }> {
-    const { globalScopeHarmony, components } = await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
+    const { globalScopeHarmony, components, legacyGlobalsSnapshot } = await this.loadAspectsFromGlobalScope([aspectId]);
     const remoteGenerator = globalScopeHarmony.get<GeneratorMain>(GeneratorAspect.id);
     const remoteEnvsAspect = globalScopeHarmony.get<EnvsMain>(EnvsAspect.id);
     const aspect = components[0];
     const fullAspectId = aspect.id.toString();
-    restoreGlobals();
+    this.bitApi.restoreGlobalsFromSnapshot(legacyGlobalsSnapshot);
 
     return { remoteGenerator, fullAspectId, remoteEnvsAspect, aspect };
   }
@@ -228,11 +309,11 @@ export class GeneratorMain {
       throw new BitError(
         `to load a template from a different workspace, please provide the aspect-id using --aspect flag`
       );
-    const harmony = await loadBit(workspacePath);
+    const harmony = await this.bitApi.loadBit(workspacePath);
     let workspace: Workspace;
     try {
       workspace = harmony.get<Workspace>(WorkspaceAspect.id);
-    } catch (err: any) {
+    } catch {
       throw new Error(`fatal: "${workspacePath}" is not a valid Bit workspace, make sure the path is correct`);
     }
     const aspectComponentId = await workspace.resolveComponentId(aspectId);
@@ -291,15 +372,7 @@ export class GeneratorMain {
     return found?.template;
   }
 
-  async generateComponentTemplate(
-    componentNames: string[],
-    templateName: string,
-    options: Partial<CreateOptions>
-  ): Promise<GenerateResult[]> {
-    if (!this.workspace) throw new OutsideWorkspaceError();
-    await this.loadAspects();
-    const { namespace, aspect } = options;
-
+  async getTemplateWithId(templateName: string, aspect?: string): Promise<ComponentTemplateWithId> {
     const componentConfigLoadingRegistry = ComponentConfig.componentConfigLoadingRegistry;
 
     const templateWithId = await this.getComponentTemplate(templateName, aspect);
@@ -307,10 +380,61 @@ export class GeneratorMain {
     ComponentConfig.componentConfigLoadingRegistry = componentConfigLoadingRegistry;
 
     if (!templateWithId) throw new BitError(`template "${templateName}" was not found`);
+    return templateWithId;
+  }
 
-    const componentIds = componentNames.map((componentName) =>
-      this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
-    );
+  /**
+   * Parse the scope from a component name if provided in the format: scope/name
+   * This only works for bit.cloud scopes (containing a dot), e.g., "my-org.my-scope/hooks/use-session"
+   * Local bare-scopes don't contain a dot, so we can't distinguish between scope/name and namespace/name.
+   * @returns { scope, name } where scope is the extracted scope (or undefined) and name is the remaining component name
+   */
+  private parseScopeFromComponentIdStr(componentIdStr: string): { scope: string | undefined; name: string } {
+    const firstSlashIndex = componentIdStr.indexOf('/');
+    if (firstSlashIndex === -1) {
+      // no slash, so no scope prefix, e.g., "button"
+      return { scope: undefined, name: componentIdStr };
+    }
+    const potentialScope = componentIdStr.substring(0, firstSlashIndex);
+    // bit.cloud scopes always contain a dot (e.g., "my-org.my-scope")
+    // local bare-scopes don't contain a dot, so we can't distinguish them from namespace/name
+    if (potentialScope.includes('.') && isValidScopeName(potentialScope)) {
+      const name = componentIdStr.substring(firstSlashIndex + 1);
+      return { scope: potentialScope, name };
+    }
+    // no dot in the first segment, treat the whole string as the component name
+    return { scope: undefined, name: componentIdStr };
+  }
+
+  async generateComponentTemplate(
+    componentNames: string[],
+    templateName: string,
+    options: Partial<CreateOptions>,
+    installOptions?: InstallOptions,
+    promptResults?: PromptResults
+  ): Promise<GenerateResult[]> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    await this.loadAspects();
+    const { namespace, aspect } = options;
+
+    const templateWithId = await this.getTemplateWithId(templateName, aspect);
+
+    const componentIds = componentNames.map((componentName) => {
+      // Support scope/name syntax for bit.cloud scopes (containing a dot)
+      // e.g., "my-org.my-scope/hooks/use-session" -> scope: "my-org.my-scope", name: "hooks/use-session"
+      const { scope: parsedScope, name: parsedName } = this.parseScopeFromComponentIdStr(componentName);
+      const scope = parsedScope || options.scope;
+      return this.newComponentHelper.getNewComponentId(parsedName, namespace, scope);
+    });
+
+    const componentNameSameAsTemplateName = componentIds.find((componentId) => componentId.name === templateName);
+    if (componentNameSameAsTemplateName) {
+      const compNamePascal = camelCase(templateName, { pascalCase: true });
+      throw new BitError(
+        `unable to create a component with the same name as the template "${templateName}", please use a different name.
+the reason is that after refactoring, the code will have this invalid class: "class ${compNamePascal} extends ${compNamePascal} {}"`
+      );
+    }
 
     const envId = await this.getEnvIdFromTemplateWithId(templateWithId);
 
@@ -326,9 +450,11 @@ export class GeneratorMain {
       this.logger,
       this.onComponentCreateSlot,
       templateWithId.id,
-      envId
+      envId,
+      installOptions,
+      promptResults
     );
-    return componentGenerator.generate();
+    return componentGenerator.generate(options.force);
   }
 
   private async getEnvIdFromTemplateWithId(templateWithId: ComponentTemplateWithId): Promise<ComponentID | undefined> {
@@ -357,15 +483,36 @@ export class GeneratorMain {
     if (this.workspace) {
       throw new BitError('Error: unable to generate a new workspace inside of an existing workspace');
     }
+    const workspacePath = options.currentDir ? process.cwd() : resolve(workspaceName);
+    if (!options.currentDir && fs.existsSync(workspacePath)) {
+      throw new WorkspacePathExists(workspacePath);
+    }
     const { aspect: aspectId, loadFrom } = options;
     const { workspaceTemplate, aspect } = loadFrom
       ? await this.findTemplateInOtherWorkspace(loadFrom, templateName, aspectId)
       : await this.getWorkspaceTemplate(templateName, aspectId);
 
     if (!workspaceTemplate) throw new BitError(`template "${templateName}" was not found`);
-    const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, workspaceTemplate, aspect);
-    const workspacePath = await workspaceGenerator.generate();
+    const workspaceGenerator = new WorkspaceGenerator(
+      workspaceName,
+      workspacePath,
+      options,
+      workspaceTemplate,
+      this.bitApi,
+      aspect
+    );
+    await this.warnAboutDeprecation(aspect);
+    await workspaceGenerator.generate();
     return { workspacePath, appName: workspaceTemplate.appName };
+  }
+
+  private async warnAboutDeprecation(aspect?: Component) {
+    if (!aspect) return;
+    const deprecationInfo = await this.deprecation.getDeprecationInfo(aspect);
+    if (deprecationInfo.isDeprecate) {
+      const newStarterMsg = deprecationInfo.newId ? `, use "${deprecationInfo.newId.toString()}" instead` : '';
+      this.logger.consoleWarning(`the starter "${aspect?.id.toString()}" is deprecated${newStarterMsg}`);
+    }
   }
 
   private async getAllComponentTemplatesDescriptorsFlattened(aspectId?: string): Promise<Array<TemplateDescriptor>> {
@@ -384,7 +531,8 @@ export class GeneratorMain {
   private getAllComponentTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {
     const templatesByAspects = this.componentTemplateSlot.toArray();
     const flattened = templatesByAspects.flatMap(([id, componentTemplates]) => {
-      return componentTemplates.map((template) => ({
+      const resolvedComponentTemplates = Array.isArray(componentTemplates) ? componentTemplates : componentTemplates();
+      return resolvedComponentTemplates.map((template) => ({
         id,
         template,
       }));
@@ -463,7 +611,7 @@ export class GeneratorMain {
       remoteEnvsAspect = globals.remoteEnvsAspect;
       fullAspectId = globals.fullAspectId;
     }
-    const allIds = configEnvs?.concat(ids).concat([aspectId, fullAspectId]).filter(Boolean);
+    const allIds = uniq(configEnvs?.concat(ids).concat([aspectId, fullAspectId]).filter(Boolean));
     const envs = await this.loadEnvs(allIds, remoteEnvsAspect);
     const templates = envs.flatMap((env) => {
       if (!env.env.getGeneratorTemplates) return [];
@@ -507,6 +655,24 @@ export class GeneratorMain {
     this.aspectLoaded = true;
   }
 
+  /**
+   * Reload the generator config when workspace config changes.
+   * This ensures that changes to envs configuration in workspace.jsonc are reflected
+   * in long-running processes like "bit server".
+   */
+  async onWorkspaceConfigChange(): Promise<void> {
+    this.logger.debug('reloading generator config due to workspace config change');
+    try {
+      const workspaceConfig = this.workspace.getWorkspaceConfig();
+      const generatorConfigEntry = workspaceConfig.extensions.findExtension(GeneratorAspect.id);
+      if (generatorConfigEntry) {
+        this.config = generatorConfigEntry.config as GeneratorConfig;
+      }
+    } catch (error) {
+      this.logger.error('failed to reload generator config', error);
+    }
+  }
+
   static slots = [
     Slot.withType<ComponentTemplate[]>(),
     Slot.withType<WorkspaceTemplate[]>(),
@@ -525,6 +691,7 @@ export class GeneratorMain {
     LoggerAspect,
     GitAspect,
     WorkspaceConfigFilesAspect,
+    DeprecationAspect,
   ];
 
   static runtime = MainRuntime;
@@ -542,6 +709,7 @@ export class GeneratorMain {
       loggerMain,
       git,
       wsConfigFiles,
+      deprecation,
     ]: [
       Workspace,
       CLIMain,
@@ -553,13 +721,14 @@ export class GeneratorMain {
       TrackerMain,
       LoggerMain,
       GitMain,
-      WorkspaceConfigFilesMain
+      WorkspaceConfigFilesMain,
+      DeprecationMain,
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot, onComponentCreateSlot]: [
       ComponentTemplateSlot,
       WorkspaceTemplateSlot,
-      OnComponentCreateSlot
+      OnComponentCreateSlot,
     ]
   ) {
     const logger = loggerMain.createLogger(GeneratorAspect.id);
@@ -576,16 +745,23 @@ export class GeneratorMain {
       tracker,
       logger,
       git,
-      wsConfigFiles
+      wsConfigFiles,
+      deprecation
     );
+
+    // Register for workspace config changes to reload generator config
+    if (workspace) {
+      workspace.registerOnWorkspaceConfigChange(generator.onWorkspaceConfigChange.bind(generator));
+    }
+
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);
-    graphql.register(generatorSchema(generator));
+    graphql.register(() => generatorSchema(generator));
     aspectLoader.registerPlugins([new StarterPlugin(generator)]);
     envs.registerService(new GeneratorService());
 
     if (generator)
-      generator.registerComponentTemplate([
+      generator.registerComponentTemplate(() => [
         componentGeneratorTemplate,
         componentGeneratorTemplateStandalone,
         starterTemplate,

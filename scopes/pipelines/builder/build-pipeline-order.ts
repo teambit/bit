@@ -1,10 +1,11 @@
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
-import TesterAspect from '@teambit/tester';
-import { EnvDefinition, Environment } from '@teambit/envs';
-import { BuildTask, BuildTaskHelper } from './build-task';
+import type { EnvDefinition, Environment } from '@teambit/envs';
+import type { BuildTask } from './build-task';
+import { BuildTaskHelper } from './build-task';
 import type { TaskSlot } from './builder.main.runtime';
 import { TasksQueue } from './tasks-queue';
-import { PipeFunctionNames } from './builder.service';
+import type { PipeFunctionNames } from './builder.service';
+import { Extensions } from '@teambit/legacy.constants';
 
 type TaskDependenciesGraph = Graph<string, string>;
 type Location = 'start' | 'middle' | 'end';
@@ -74,12 +75,18 @@ export function calculatePipelineOrder(
   let tasksQueue = new TasksQueue();
   locations.forEach((location) => addTasksToGraph(tasksQueue, dataPerLocation, location));
   if (tasks.length) {
+    const originalLength = tasksQueue.length;
     tasksQueue = new TasksQueue(
       ...tasksQueue.filter(({ task }) => tasks.includes(task.name) || tasks.includes(task.aspectId))
     );
+    if (tasksQueue.length === 0 && originalLength > 0) {
+      throw new Error(
+        `Pipeline error - no tasks found matching the specified filter: "${tasks.join(', ')}". Available tasks: ${getAvailableTaskNames(flattenedPipeline).join(', ')}`
+      );
+    }
   }
   if (skipTests) {
-    tasksQueue = new TasksQueue(...tasksQueue.filter(({ task }) => task.aspectId !== TesterAspect.id));
+    tasksQueue = new TasksQueue(...tasksQueue.filter(({ task }) => task.aspectId !== Extensions.tester));
   }
   if (skipTasks.length) {
     tasksQueue = new TasksQueue(
@@ -88,6 +95,15 @@ export function calculatePipelineOrder(
   }
 
   return tasksQueue;
+}
+
+function getAvailableTaskNames(tasks: BuildTask[]): string[] {
+  const uniqueTaskNames = new Set<string>();
+  tasks.forEach((task) => {
+    uniqueTaskNames.add(task.name);
+    uniqueTaskNames.add(task.aspectId);
+  });
+  return Array.from(uniqueTaskNames).sort();
 }
 
 function addTasksToGraph(tasksQueue: TasksQueue, dataPerLocation: DataPerLocation[], location: Location) {

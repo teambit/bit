@@ -3,18 +3,17 @@ import path from 'path';
 import ssri from 'ssri';
 import _ from 'lodash';
 import { pack } from '@pnpm/plugin-commands-publishing';
-import { ComponentFactory } from '@teambit/component';
-import { ComponentResult, ArtifactDefinition } from '@teambit/builder';
-import { Capsule, IsolatorMain } from '@teambit/isolator';
+import type { ComponentFactory } from '@teambit/component';
+import type { ComponentResult, ArtifactDefinition } from '@teambit/builder';
+import type { Capsule, IsolatorMain } from '@teambit/isolator';
 import { isSnap } from '@teambit/component-version';
-import { ScopeMain } from '@teambit/scope';
-import LegacyScope from '@teambit/legacy/dist/scope/scope';
-import { checksumFile } from '@teambit/legacy/dist/utils';
-import { Logger } from '@teambit/logger';
+import type { ScopeMain } from '@teambit/scope';
+import { Scope as LegacyScope } from '@teambit/legacy.scope';
+import { checksumFile } from '@teambit/legacy.utils';
+import type { Logger } from '@teambit/logger';
 import pMap from 'p-map';
 import isRelative from 'is-relative-path';
 
-// @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
 
 export type PackResult = Omit<ComponentResult, 'component'>;
@@ -134,7 +133,7 @@ export class Packer {
         warnings.push(`"package.json at ${cwd}" contain a snap version which is not a valid semver, can't pack it`);
         return { warnings, startTime, endTime: Date.now() };
       }
-      const tgzName = await pack.handler({
+      const { tarballPath: tgzName } = await pack.api({
         argv: { original: [] },
         dir: cwd,
         rawConfig: {},

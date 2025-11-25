@@ -1,12 +1,14 @@
-import { Composition, CompositionProps } from '@teambit/compositions';
-import { DeprecationInfo } from '@teambit/deprecation';
-import { Descriptor } from '@teambit/envs';
-import { ComponentID, ComponentIdObj } from '@teambit/component-id';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { ComponentPreviewSize } from '@teambit/preview';
+import type { CompositionProps } from '@teambit/compositions';
+import { Composition } from '@teambit/compositions';
+import type { DeprecationInfo } from '@teambit/deprecation';
+import type { Descriptor } from '@teambit/envs';
+import type { ComponentIdObj } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
+import type { LegacyComponentLog } from '@teambit/legacy-component-log';
+import type { ComponentPreviewSize } from '@teambit/preview';
 import { Tag } from '../../tag';
 import { TagMap } from '../../tag-map';
-import { TagProps } from '../../tag/tag';
+import type { TagProps } from '../../tag/tag';
 // import { Snap } from '../../snap';
 
 // ADDING MORE PROPERTIES HERE IS NOT ALLOWED!!! IF YOU NEED DATA PLEASE ADD A NEW

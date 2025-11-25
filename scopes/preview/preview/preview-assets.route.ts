@@ -3,7 +3,7 @@ import type { Component } from '@teambit/component';
 import { serverError } from '@teambit/ui-foundation.ui.pages.static-error';
 import type { Logger } from '@teambit/logger';
 
-import { PreviewMain } from './preview.main.runtime';
+import type { PreviewMain } from './preview.main.runtime';
 
 export class PreviewAssetsRoute implements Route {
   constructor(

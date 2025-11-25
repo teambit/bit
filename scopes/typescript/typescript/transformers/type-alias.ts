@@ -1,7 +1,8 @@
-import ts, { Node, TypeAliasDeclaration } from 'typescript';
+import type { Node, TypeAliasDeclaration } from 'typescript';
+import ts from 'typescript';
 import { TypeSchema } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
 import { Identifier } from '../identifier';
 
 export class TypeAliasTransformer implements SchemaTransformer {

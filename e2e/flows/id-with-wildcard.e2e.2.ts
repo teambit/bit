@@ -1,8 +1,8 @@
 import { NoIdMatchPattern } from '@teambit/scope';
 import { expect } from 'chai';
 
-import NoIdMatchWildcard from '../../src/api/consumer/lib/exceptions/no-id-match-wildcard';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { NoIdMatchWildcard } from '@teambit/lister';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('component id with wildcard', function () {
   this.timeout(0);
@@ -16,16 +16,16 @@ describe('component id with wildcard', function () {
   describe('adding components with various namespaces', () => {
     let scopeAfterAdd;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.createFile('utils/is/string', 'string.js');
       helper.fs.createFile('utils/is/type', 'type.js');
       helper.fs.createFile('utils/fs/read', 'read.js');
       helper.fs.createFile('utils/fs/write', 'write.js');
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.addComponent('utils/is/*', { n: 'utils/is' });
       helper.command.addComponent('utils/fs/*', { n: 'utils/fs' });
-      scopeAfterAdd = helper.scopeHelper.cloneLocalScope();
+      scopeAfterAdd = helper.scopeHelper.cloneWorkspace();
     });
     describe('tag with wildcard', () => {
       describe('when wildcard does not match any component', () => {
@@ -37,7 +37,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.tagWithoutBuild('"utils/is/*"');
+          output = helper.command.tagWithoutBuild('"**/utils/is/*"');
         });
         it('should indicate the tagged components', () => {
           expect(output).to.have.string('2 component(s) tagged');
@@ -53,7 +53,7 @@ describe('component id with wildcard', function () {
     });
     describe('remove with wildcard', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterAdd);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterAdd);
         helper.command.tagAllWithoutBuild();
       });
       describe('when wildcard does not match any component', () => {
@@ -69,7 +69,7 @@ describe('component id with wildcard', function () {
           const status = helper.command.statusJson();
           expect(status.stagedComponents).to.have.lengthOf(5);
 
-          output = helper.command.removeComponent('"utils/fs/*"');
+          output = helper.command.removeComponent('"**/utils/fs/*"');
         });
         it('should indicate the removed components', () => {
           expect(output).to.have.string('utils/fs/read');
@@ -83,7 +83,7 @@ describe('component id with wildcard', function () {
     });
     describe('remove from remote with wildcard', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterAdd);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterAdd);
         helper.command.tagAllWithoutBuild();
         helper.command.export();
 
@@ -115,7 +115,7 @@ describe('component id with wildcard', function () {
     });
     describe('remove from remote with wildcard after removed locally', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterAdd);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterAdd);
         helper.scopeHelper.reInitRemoteScope();
         helper.command.tagAllWithoutBuild();
         helper.command.export();
@@ -146,7 +146,7 @@ describe('component id with wildcard', function () {
     });
     describe('export with wildcard', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterAdd);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterAdd);
         helper.scopeHelper.reInitRemoteScope();
         helper.command.tagAllWithoutBuild();
 
@@ -184,7 +184,7 @@ describe('component id with wildcard', function () {
     });
     describe('untag with wildcard', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterAdd);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterAdd);
         helper.command.tagAllWithoutBuild();
 
         // as an intermediate step, make sure all components are staged
@@ -200,10 +200,10 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.reset('"*/is/*"');
+          output = helper.command.reset('"**/*/is/*"');
         });
         it('should indicate the untagged components', () => {
-          expect(output).to.have.string('2 component(s) were untagged');
+          expect(output).to.have.string('2 component(s) were reset');
           expect(output).to.have.string('utils/is/string');
           expect(output).to.have.string('utils/is/type');
         });
@@ -216,7 +216,7 @@ describe('component id with wildcard', function () {
     });
     describe('checkout with wildcard', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterAdd);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterAdd);
         helper.command.tagAllWithoutBuild();
         helper.command.tagIncludeUnmodified('0.0.5');
 
@@ -234,7 +234,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.checkout('0.0.1 "utils/is/*"');
+          output = helper.command.checkout('0.0.1 "**/utils/is/*"');
         });
         it('should indicate the number of checked out components', () => {
           expect(output).to.have.string('successfully switched 2 components');
@@ -254,7 +254,7 @@ describe('component id with wildcard', function () {
     });
     describe('merge with wildcard', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterAdd);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterAdd);
         helper.command.tagAllWithoutBuild();
         helper.command.tagIncludeUnmodified('0.0.5');
 
@@ -265,7 +265,7 @@ describe('component id with wildcard', function () {
     });
     describe('diff with wildcard', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterAdd);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterAdd);
         helper.command.tagAllWithoutBuild();
         helper.fs.createFile('utils/is/string', 'string.js', '');
         helper.fs.createFile('utils/is/type', 'type.js', '');
@@ -288,7 +288,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.diff('"utils/is/*"');
+          output = helper.command.diff('"**/utils/is/*"');
         });
         it('should show diff only for the matched components', () => {
           expect(output).to.have.string('utils/is/string');
@@ -304,7 +304,7 @@ describe('component id with wildcard', function () {
     describe('list with wildcard', () => {
       let output;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterAdd);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterAdd);
         helper.command.tagAllWithoutBuild();
         output = helper.command.listLocalScope('--namespace "bar/*"');
       });
@@ -318,7 +318,7 @@ describe('component id with wildcard', function () {
     describe('list remote with wildcard', () => {
       let output;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterAdd);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterAdd);
         helper.command.tagAllWithoutBuild();
         helper.scopeHelper.reInitRemoteScope();
         helper.command.export();

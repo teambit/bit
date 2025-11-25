@@ -1,7 +1,7 @@
-import { Node } from 'typescript';
-import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaExtractorContext } from './schema-extractor-context';
-import { Identifier } from './identifier';
+import type { Node } from 'typescript';
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import type { SchemaExtractorContext } from './schema-extractor-context';
+import type { Identifier } from './identifier';
 
 export type SchemaTransformer = {
   /**

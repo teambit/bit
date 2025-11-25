@@ -1,4 +1,5 @@
-import { Configuration, ProvidePlugin } from 'webpack';
+import type { Configuration } from 'webpack';
+import { ProvidePlugin } from 'webpack';
 import TerserPlugin from 'terser-webpack-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import path from 'path';
@@ -16,9 +17,7 @@ export default function createWebpackConfig(
 ): Configuration {
   const baseConfig = createBaseConfig(outputDir, entryFiles);
   const browserConfig = createBrowserConfig(outputDir, title, publicDir);
-  // @ts-ignore that's an issue because of different types/webpack version
   const combined = merge(baseConfig, browserConfig);
-  // @ts-ignore that's an issue because of different types/webpack version
   return combined;
 }
 

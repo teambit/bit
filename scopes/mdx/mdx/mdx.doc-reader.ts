@@ -1,4 +1,5 @@
-import { DocReader, Doc } from '@teambit/docs';
+import type { DocReader } from '@teambit/docs';
+import { Doc } from '@teambit/docs';
 import { compile } from '@teambit/mdx.compilers.mdx-transpiler';
 
 export class MDXDocReader implements DocReader {

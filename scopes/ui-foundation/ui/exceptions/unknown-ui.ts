@@ -1,5 +1,8 @@
 export class UnknownUI extends Error {
-  constructor(readonly uiRoot: string = '', readonly available?: string[]) {
+  constructor(
+    readonly uiRoot: string = '',
+    readonly available?: string[]
+  ) {
     super();
   }
 

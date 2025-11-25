@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { outputFileSync } from 'fs-extra';
-import { Compiler, TranspileFileOutput, TranspileFileParams } from '@teambit/compiler';
-import { BuiltTaskResult, BuildContext } from '@teambit/builder';
+import type { Compiler, TranspileFileOutput, TranspileFileParams } from '@teambit/compiler';
+import type { BuiltTaskResult, BuildContext } from '@teambit/builder';
 import { compileSync as mdxCompileSync } from '@teambit/mdx.compilers.mdx-transpiler';
 import minimatch from 'minimatch';
 import { transpileFileContent as babelTranspileFileContent } from '@teambit/compilation.modules.babel-compiler';
@@ -19,7 +19,10 @@ export class MDXCompiler implements Compiler {
 
   distDir = 'dist';
 
-  constructor(readonly id: string, readonly config: MDXCompilerOpts) {}
+  constructor(
+    readonly id: string,
+    readonly config: MDXCompilerOpts
+  ) {}
 
   displayConfig() {
     return JSON.stringify(this.config, null, 2);

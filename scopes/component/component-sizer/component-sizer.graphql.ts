@@ -1,8 +1,8 @@
-import { Component } from '@teambit/component';
-import { Schema } from '@teambit/graphql';
+import type { Component } from '@teambit/component';
+import type { Schema } from '@teambit/graphql';
 import { gql } from 'graphql-tag';
 
-import { ComponentSizerMain } from './component-sizer.main.runtime';
+import type { ComponentSizerMain } from './component-sizer.main.runtime';
 
 export function componentSizerSchema(componentSizerMain: ComponentSizerMain): Schema {
   return {

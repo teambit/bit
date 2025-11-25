@@ -1,11 +1,10 @@
 import { IssuesClasses } from '@teambit/component-issues';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
-import { Extensions } from '../../src/constants';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-
-chai.use(require('chai-fs'));
+import { Extensions } from '@teambit/legacy.constants';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('merge config scenarios', function () {
   this.timeout(0);
@@ -22,14 +21,14 @@ describe('merge config scenarios', function () {
     let beforeMerges: string;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCiInPackageJsonHarmony();
       await npmCiRegistry.init();
       helper.command.tagAllComponents();
       helper.command.export();
-      beforeDiverge = helper.scopeHelper.cloneLocalScope();
+      beforeDiverge = helper.scopeHelper.cloneWorkspace();
       helper.command.createLane();
       helper.fixtures.populateComponents(3, undefined, 'on-lane');
       helper.command.deprecateComponent('comp1');
@@ -37,15 +36,15 @@ describe('merge config scenarios', function () {
       helper.command.export();
       helper.command.publish('"**"');
 
-      helper.scopeHelper.getClonedLocalScope(beforeDiverge);
+      helper.scopeHelper.getClonedWorkspace(beforeDiverge);
       helper.fixtures.populateComponents(3, undefined, 'v2');
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       npmCiRegistry.setResolver();
       helper.command.importComponent('comp1');
-      beforeMerges = helper.scopeHelper.cloneLocalScope();
+      beforeMerges = helper.scopeHelper.cloneWorkspace();
     });
     after(() => {
       npmCiRegistry.destroy();
@@ -80,7 +79,7 @@ describe('merge config scenarios', function () {
     });
     describe('switching to the lane', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeMerges);
+        helper.scopeHelper.getClonedWorkspace(beforeMerges);
         helper.command.switchRemoteLane('dev', undefined, false);
       });
       // previously it was showing it as modified due to dependencies changes
@@ -109,21 +108,24 @@ describe('merge config scenarios', function () {
   describe('diverge with config that is possible to merge', () => {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      const mainBeforeDiverge = helper.scopeHelper.cloneLocalScope();
+      const mainBeforeDiverge = helper.scopeHelper.cloneWorkspace();
 
       helper.command.createLane();
       helper.command.deprecateComponent('comp1');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
+      helper.scopeHelper.getClonedWorkspace(mainBeforeDiverge);
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
-      helper.command.mergeLane(`${helper.scopes.remote}/dev`, '--no-snap --skip-dependency-installation --no-squash');
+      helper.command.mergeLane(
+        `${helper.scopes.remote}/dev`,
+        '--no-auto-snap --skip-dependency-installation --no-squash'
+      );
     });
     it('bit status should not show the component with an issue of MergeConfigHasConflict', () => {
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MergeConfigHasConflict.name);
@@ -142,29 +144,29 @@ describe('merge config scenarios', function () {
     let beforeConfigResolved: string;
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      mainBeforeDiverge = helper.scopeHelper.cloneLocalScope();
+      mainBeforeDiverge = helper.scopeHelper.cloneWorkspace();
 
       helper.command.createLane();
       helper.command.deprecateComponent('comp1');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
+      helper.scopeHelper.getClonedWorkspace(mainBeforeDiverge);
       helper.command.deprecateComponent('comp1');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.undeprecateComponent('comp1');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev');
-      helper.command.mergeLane('main', '--no-snap --skip-dependency-installation');
-      beforeConfigResolved = helper.scopeHelper.cloneLocalScope();
+      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation');
+      beforeConfigResolved = helper.scopeHelper.cloneWorkspace();
     });
     it('bit status should show the component with an issue of MergeConfigHasConflict', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MergeConfigHasConflict.name);
@@ -180,7 +182,7 @@ describe('merge config scenarios', function () {
     });
     describe('fixing the conflict with theirs', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeConfigResolved);
+        helper.scopeHelper.getClonedWorkspace(beforeConfigResolved);
         helper.general.fixMergeConfigConflict('theirs');
       });
       it('should show the component as undeprecated', () => {
@@ -190,7 +192,7 @@ describe('merge config scenarios', function () {
     });
     describe('snapping the components', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeConfigResolved);
+        helper.scopeHelper.getClonedWorkspace(beforeConfigResolved);
         helper.general.fixMergeConfigConflict('theirs');
         helper.command.snapAllComponentsWithoutBuild();
       });
@@ -205,12 +207,12 @@ describe('merge config scenarios', function () {
     let beforeMerge: string;
     let beforeConfigResolved: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.dependenciesSet('comp1', 'lodash@3.3.1');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      mainBeforeDiverge = helper.scopeHelper.cloneLocalScope();
+      mainBeforeDiverge = helper.scopeHelper.cloneWorkspace();
 
       helper.command.createLane();
       helper.command.deprecateComponent('comp1');
@@ -218,7 +220,7 @@ describe('merge config scenarios', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
+      helper.scopeHelper.getClonedWorkspace(mainBeforeDiverge);
       helper.command.deprecateComponent('comp1');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.undeprecateComponent('comp1');
@@ -226,12 +228,12 @@ describe('merge config scenarios', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev', '--skip-dependency-installation');
-      beforeMerge = helper.scopeHelper.cloneLocalScope();
-      helper.command.mergeLane('main', '--no-snap --skip-dependency-installation');
-      beforeConfigResolved = helper.scopeHelper.cloneLocalScope();
+      beforeMerge = helper.scopeHelper.cloneWorkspace();
+      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation');
+      beforeConfigResolved = helper.scopeHelper.cloneWorkspace();
     });
     it('bit status should show the component with an issue of MergeConfigHasConflict', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MergeConfigHasConflict.name);
@@ -249,7 +251,7 @@ describe('merge config scenarios', function () {
     });
     describe('fixing the conflict with theirs', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeConfigResolved);
+        helper.scopeHelper.getClonedWorkspace(beforeConfigResolved);
         helper.general.fixMergeConfigConflict('theirs');
       });
       it('should show the dev-dependency as it was set on main', () => {
@@ -266,8 +268,8 @@ describe('merge config scenarios', function () {
     });
     describe('merging with --auto-merge-resolve ours', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeMerge);
-        helper.command.mergeLane('main', '--no-snap --skip-dependency-installation --auto-merge-resolve=ours');
+        helper.scopeHelper.getClonedWorkspace(beforeMerge);
+        helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation --auto-merge-resolve=ours');
       });
       it('should not generate the config-merge file', () => {
         const configMerge = helper.general.getConfigMergePath();
@@ -282,8 +284,8 @@ describe('merge config scenarios', function () {
     });
     describe('merging with --auto-merge-resolve theirs', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeMerge);
-        helper.command.mergeLane('main', '--no-snap --skip-dependency-installation --auto-merge-resolve=theirs');
+        helper.scopeHelper.getClonedWorkspace(beforeMerge);
+        helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation --auto-merge-resolve=theirs');
       });
       it('should not generate the config-merge file', () => {
         const configMerge = helper.general.getConfigMergePath();
@@ -299,23 +301,23 @@ describe('merge config scenarios', function () {
   describe('diverge with different dependencies config when "other" adds a package (current === base)', () => {
     let mainBeforeDiverge: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.dependenciesSet('comp1', 'lodash@3.3.1');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      mainBeforeDiverge = helper.scopeHelper.cloneLocalScope();
+      mainBeforeDiverge = helper.scopeHelper.cloneWorkspace();
 
       helper.command.createLane();
       helper.command.dependenciesSet('comp1', 'ramda@0.0.20');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
+      helper.scopeHelper.getClonedWorkspace(mainBeforeDiverge);
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
 
-      helper.command.mergeLane('dev', '--no-snap -x --no-squash');
+      helper.command.mergeLane('dev', '--no-auto-snap -x --no-squash');
     });
     // previously, it was ignoring the previous config and only adding "ramda".
     it('should not remove the packages it had previously via deps set', () => {
@@ -327,13 +329,13 @@ describe('merge config scenarios', function () {
     let mainBeforeDiverge: string;
     let beforeConfigResolved: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/index.js', `import R from 'ramda';`);
       helper.npm.addFakeNpmPackage('ramda', '0.0.19');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      mainBeforeDiverge = helper.scopeHelper.cloneLocalScope();
+      mainBeforeDiverge = helper.scopeHelper.cloneWorkspace();
 
       helper.command.createLane();
       helper.npm.addFakeNpmPackage('ramda', '0.0.20');
@@ -341,17 +343,17 @@ describe('merge config scenarios', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
+      helper.scopeHelper.getClonedWorkspace(mainBeforeDiverge);
       helper.npm.addFakeNpmPackage('ramda', '0.0.21');
       helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { ramda: '0.0.21' } });
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev', '--skip-dependency-installation');
-      helper.command.mergeLane('main', '--no-snap --skip-dependency-installation --ignore-config-changes');
-      beforeConfigResolved = helper.scopeHelper.cloneLocalScope();
+      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation --ignore-config-changes');
+      beforeConfigResolved = helper.scopeHelper.cloneWorkspace();
     });
     it('bit status should show the component with an issue of MergeConfigHasConflict', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MergeConfigHasConflict.name);
@@ -369,7 +371,7 @@ describe('merge config scenarios', function () {
     });
     describe('fixing the conflict with theirs', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeConfigResolved);
+        helper.scopeHelper.getClonedWorkspace(beforeConfigResolved);
         helper.general.fixMergeConfigConflict('theirs');
       });
       it('should show the dev-dependency as it was set on main', () => {
@@ -391,7 +393,7 @@ describe('merge config scenarios', function () {
     let envName: string;
     let envId: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
@@ -402,23 +404,23 @@ describe('merge config scenarios', function () {
       helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.3
 
       helper.command.export();
-      mainBeforeDiverge = helper.scopeHelper.cloneLocalScope();
+      mainBeforeDiverge = helper.scopeHelper.cloneWorkspace();
 
       helper.command.createLane();
       helper.command.setEnv('comp1', `${envId}@0.0.2`);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
+      helper.scopeHelper.getClonedWorkspace(mainBeforeDiverge);
       // helper.command.setEnv('comp1', `${envId}@0.0.3`);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev', '--skip-dependency-installation');
-      helper.command.mergeLane('main', '--no-snap --skip-dependency-installation');
-      beforeConfigResolved = helper.scopeHelper.cloneLocalScope();
+      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation');
+      beforeConfigResolved = helper.scopeHelper.cloneWorkspace();
     });
     it('bit status should show the component with an issue of MergeConfigHasConflict', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MergeConfigHasConflict.name);
@@ -455,7 +457,7 @@ describe('merge config scenarios', function () {
     });
     describe('fixing the conflict with theirs', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeConfigResolved);
+        helper.scopeHelper.getClonedWorkspace(beforeConfigResolved);
         helper.general.fixMergeConfigConflict('theirs');
       });
       it('should set the env according to the lane', () => {
@@ -496,9 +498,9 @@ describe('merge config scenarios', function () {
       let pkgHelper: Helper;
       before(async () => {
         pkgHelper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-        pkgHelper.scopeHelper.setNewLocalAndRemoteScopes();
+        pkgHelper.scopeHelper.setWorkspaceWithRemoteScope();
         pkgHelper.fixtures.createComponentBarFoo();
-        pkgHelper.fixtures.addComponentBarFooAsDir();
+        pkgHelper.fixtures.addComponentBarFoo();
         npmCiRegistry = new NpmCiRegistry(pkgHelper);
         npmCiRegistry.configureCiInPackageJsonHarmony();
         await npmCiRegistry.init();
@@ -507,14 +509,14 @@ describe('merge config scenarios', function () {
         barCompName = `${pkgHelper.scopes.remote}/bar/foo`;
         pkgHelper.command.export();
 
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.scopeHelper.addRemoteScope(pkgHelper.scopes.remotePath);
         helper.fixtures.populateComponents(1, false);
         helper.fs.outputFile('comp1/index.js', `require("${barPkgName}");`);
         helper.command.install(barPkgName);
         helper.command.tagAllWithoutBuild();
         helper.command.export();
-        beforeDiverge = helper.scopeHelper.cloneLocalScope();
+        beforeDiverge = helper.scopeHelper.cloneWorkspace();
 
         pkgHelper.command.tagAllComponents('--unmodified'); // 0.0.2
         pkgHelper.command.export();
@@ -525,11 +527,11 @@ describe('merge config scenarios', function () {
         helper.command.export();
 
         // add another tag on main to make it diverged from the lane.
-        helper.scopeHelper.getClonedLocalScope(beforeDiverge);
+        helper.scopeHelper.getClonedWorkspace(beforeDiverge);
         helper.command.tagAllWithoutBuild('--unmodified');
         helper.command.export();
 
-        beforeMerges = helper.scopeHelper.cloneLocalScope();
+        beforeMerges = helper.scopeHelper.cloneWorkspace();
       });
       after(() => {
         npmCiRegistry.destroy();
@@ -537,7 +539,7 @@ describe('merge config scenarios', function () {
       describe('when the dep was updated on the lane only, not on main', () => {
         describe('when the dep is in workspace.jsonc', () => {
           before(() => {
-            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-auto-snap`);
           });
           it('should change workspace.jsonc with the updated dependency', () => {
             const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
@@ -546,9 +548,9 @@ describe('merge config scenarios', function () {
         });
         describe('when the dep is not in the workspace.jsonc', () => {
           before(() => {
-            helper.scopeHelper.getClonedLocalScope(beforeMerges);
+            helper.scopeHelper.getClonedWorkspace(beforeMerges);
             helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: {} });
-            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-auto-snap`);
           });
           it('should auto-update the dependency according to the lane, because only there it was changed', () => {
             const deps = helper.command.getCompDepsIdsFromData('comp1');
@@ -574,16 +576,16 @@ describe('merge config scenarios', function () {
           pkgHelper.command.export();
 
           // on main
-          helper.scopeHelper.getClonedLocalScope(beforeMerges);
+          helper.scopeHelper.getClonedWorkspace(beforeMerges);
           helper.command.install(`${barPkgName}@0.0.3`);
           // by default, it is saved as ^0.0.3 to the workspace.jsonc
           helper.command.tagAllWithoutBuild();
           helper.command.export();
-          afterExport = helper.scopeHelper.cloneLocalScope();
+          afterExport = helper.scopeHelper.cloneWorkspace();
         });
         describe('when the dep is in workspace.jsonc', () => {
           before(() => {
-            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-auto-snap`);
           });
           it('should not write config-merge file', () => {
             const conflictFile = helper.general.getConfigMergePath();
@@ -592,7 +594,7 @@ describe('merge config scenarios', function () {
           it('should show the versions as conflicted in workspace.jsonc file', () => {
             const wsJsonc = helper.workspaceJsonc.readRaw();
             expect(wsJsonc).to.have.string(`<<<<<<< ours
-        "${barPkgName}": "^0.0.3"
+        "${barPkgName}": "0.0.3"
 =======
         "${barPkgName}": "0.0.2"
 >>>>>>> theirs`);
@@ -603,9 +605,9 @@ describe('merge config scenarios', function () {
         });
         describe('when the dep is not in the workspace.jsonc', () => {
           before(() => {
-            helper.scopeHelper.getClonedLocalScope(afterExport);
+            helper.scopeHelper.getClonedWorkspace(afterExport);
             helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: {} });
-            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-auto-snap`);
           });
           it('bit status should not show a workspace issue', () => {
             const status = helper.command.statusJson();
@@ -621,10 +623,86 @@ describe('merge config scenarios', function () {
       });
     }
   );
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'diverge with multiple components, each has a different dependency version',
+    () => {
+      let npmCiRegistry: NpmCiRegistry;
+      let beforeDiverge: string;
+      let barPkgName: string;
+      // let barCompName: string;
+      let pkgHelper: Helper;
+      let laneWs: string;
+      before(async () => {
+        pkgHelper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        pkgHelper.scopeHelper.setWorkspaceWithRemoteScope();
+        pkgHelper.fixtures.createComponentBarFoo();
+        pkgHelper.fixtures.addComponentBarFoo();
+        npmCiRegistry = new NpmCiRegistry(pkgHelper);
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        await npmCiRegistry.init();
+        pkgHelper.command.tagAllComponents();
+        barPkgName = pkgHelper.general.getPackageNameByCompName('bar/foo');
+        // barCompName = `${pkgHelper.scopes.remote}/bar/foo`;
+        pkgHelper.command.export();
+
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.scopeHelper.addRemoteScope(pkgHelper.scopes.remotePath);
+        helper.fixtures.populateComponents(2);
+        helper.fs.outputFile('comp1/index.js', `require("${barPkgName}");`);
+        helper.fs.outputFile('comp2/index.js', `require("${barPkgName}");`);
+        helper.command.install(barPkgName);
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+        beforeDiverge = helper.scopeHelper.cloneWorkspace();
+
+        helper.command.createLane();
+        helper.command.snapAllComponentsWithoutBuild('--unmodified'); // add another snap to make it diverged from main.
+        helper.command.export();
+        laneWs = helper.scopeHelper.cloneWorkspace();
+
+        pkgHelper.command.tagAllComponents('--unmodified'); // 0.0.2
+        pkgHelper.command.export();
+
+        helper.scopeHelper.getClonedWorkspace(beforeDiverge);
+        helper.command.install(`${barPkgName}@0.0.2`);
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+
+        pkgHelper.command.tagAllComponents('--unmodified'); // 0.0.3
+        pkgHelper.command.export();
+
+        helper.command.install(`${barPkgName}@0.0.3`);
+        helper.command.tagComponent('comp1');
+        helper.command.export();
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      describe('when the dep was updated on the lane only, not on main', () => {
+        describe('when the dep is in workspace.jsonc', () => {
+          let mergeOutput: string;
+          before(() => {
+            helper.scopeHelper.getClonedWorkspace(laneWs);
+            mergeOutput = helper.command.mergeLane(`main --no-auto-snap -x`);
+          });
+          it('should not update workspace.jsonc', () => {
+            const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+            expect(policy.dependencies[barPkgName]).to.equal('^0.0.1');
+          });
+          it('should tell why workspace.jsonc was not updated', () => {
+            expect(mergeOutput).to.have.string('workspace.jsonc was unable to update the following dependencies');
+            expect(mergeOutput).to.have.string(`multiple versions found`);
+            expect(mergeOutput).to.have.string(`0.0.3 (by ${helper.scopes.remote}/comp1)`);
+            expect(mergeOutput).to.have.string(`0.0.2 (by ${helper.scopes.remote}/comp2)`);
+          });
+        });
+      });
+    }
+  );
   describe('diverge with merge-able auto-detected dependencies config and pre-config explicitly set', () => {
     let mainBeforeDiverge: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/index.js', `import R from 'ramda';`);
       helper.npm.addFakeNpmPackage('ramda', '0.0.19');
@@ -632,26 +710,79 @@ describe('merge config scenarios', function () {
       helper.command.dependenciesSet('comp1', 'lodash@4.2.4');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      mainBeforeDiverge = helper.scopeHelper.cloneLocalScope();
+      mainBeforeDiverge = helper.scopeHelper.cloneWorkspace();
 
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
 
-      helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
+      helper.scopeHelper.getClonedWorkspace(mainBeforeDiverge);
       helper.npm.addFakeNpmPackage('ramda', '0.0.21');
       helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { ramda: '0.0.21' } });
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev', '--skip-dependency-installation');
-      helper.command.mergeLane('main', '--no-snap --skip-dependency-installation --ignore-config-changes');
+      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation --ignore-config-changes');
     });
     it('should not delete the previously deps set', () => {
       const deps = helper.command.getCompDepsIdsFromData('comp1');
       expect(deps).to.include('lodash');
+    });
+  });
+  describe('diverge: lane merges main when config unchanged but auto-dep bumped (deps set via variants)', () => {
+    let mainBeforeDiverge: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/index.js', `import R from 'ramda';`);
+      helper.npm.addFakeNpmPackage('ramda', '0.31.0');
+      helper.npm.addFakeNpmPackage('@types/express', '4.17.21');
+
+      // Set a dev dependency (force: true)
+      // important!!! don't use "helper.command.dependenciesSet" for this. If you do, it'll be saved into the model with
+      // "__specific": true, and it won't reproduce the bug.
+      helper.workspaceJsonc.addToVariant('comp1', Extensions.dependencyResolver, {
+        policy: { devDependencies: { '@types/express': '4.17.21' } },
+      });
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      mainBeforeDiverge = helper.scopeHelper.cloneWorkspace();
+
+      helper.command.createLane();
+      // Lane doesn't change the manual dep, only makes an unmodified snap
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.getClonedWorkspace(mainBeforeDiverge);
+      // Main bumps the auto-detected dependency
+      helper.npm.addFakeNpmPackage('ramda', '0.32.0');
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { ramda: '0.32.0' } });
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('dev', '--skip-dependency-installation');
+      helper.npm.addFakeNpmPackage('ramda', '0.31.0');
+      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation');
+    });
+    // This is the bug fix: when config is unchanged between current/other/base,
+    // but auto deps are being merged, the unchanged force:true deps should be preserved
+    it('should preserve the manual devDependency (force:true) in the merged config', () => {
+      const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+      const typesExpressDep = showConfig.data.dependencies.find((d) => d.id === '@types/express');
+      expect(typesExpressDep).to.not.be.undefined;
+      expect(typesExpressDep.version).to.equal('4.17.21');
+      expect(typesExpressDep.lifecycle).to.equal('dev');
+    });
+    it('should also include the bumped auto dependency from main', () => {
+      const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+      const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
+      expect(ramdaDep).to.not.be.undefined;
+      expect(ramdaDep.version).to.equal('0.32.0');
     });
   });
 });

@@ -1,11 +1,14 @@
 import chalk from 'chalk';
-import { Command } from '@teambit/cli';
-import { CloudMain } from './cloud.main.runtime';
+import type { Command } from '@teambit/cli';
+import type { CloudMain } from './cloud.main.runtime';
 
 export class WhoamiCmd implements Command {
   name = 'whoami';
-  description = 'display the currently logged in user';
-  group = 'general';
+  description = 'display the currently authenticated Bit Cloud user';
+  extendedDescription = `shows the username of the currently logged in Bit Cloud account.
+verifies authentication status with the cloud service and displays the active username.
+useful for confirming authentication before publishing or when switching between accounts.`;
+  group = 'auth';
   alias = '';
   options = [];
   loader = true;

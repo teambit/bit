@@ -1,9 +1,10 @@
-import React, { HTMLAttributes, useState, useMemo, useRef } from 'react';
+import type { HTMLAttributes } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { uniq } from 'lodash';
 import classNames from 'classnames';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
-import { FileIconSlot } from '@teambit/code';
+import type { FileIconSlot } from '@teambit/code';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import {
   useCompareQueryParam,
@@ -15,7 +16,8 @@ import { DarkTheme } from '@teambit/design.themes.dark-theme';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { CodeCompareTree } from './code-compare-tree';
-import { CodeCompareView, CodeCompareViewProps } from './code-compare-view';
+import type { CodeCompareViewProps } from './code-compare-view';
+import { CodeCompareView } from './code-compare-view';
 import { Widget } from './code-compare.widgets';
 
 import styles from './code-compare.module.scss';
@@ -29,6 +31,7 @@ export type CodeCompareProps = {
 
 export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareView }: CodeCompareProps) {
   const componentCompareContext = useComponentCompare();
+
   const query = useQuery();
   const location = useLocation() || { pathname: '/' };
 
@@ -40,15 +43,16 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   const hook = compareHooks?.code;
 
   const [isSidebarOpen, setSidebarOpenness] = useState(false);
-
-  const { fileTree: baseFileTree = [], mainFile } = useCode(hidden ? undefined : base?.model.id);
-  const { fileTree: compareFileTree = [] } = useCode(hidden ? undefined : compare?.model.id);
+  const baseHost = 'teambit.scope/scope';
+  const compareHost = compare?.hasLocalChanges ? 'teambit.workspace/workspace' : 'teambit.scope/scope';
+  const { fileTree: baseFileTree = [], mainFile } = useCode(hidden ? undefined : base?.model.id, baseHost);
+  const { fileTree: compareFileTree = [] } = useCode(hidden ? undefined : compare?.model.id, compareHost);
 
   const fileCompareDataByName = componentCompareContext?.fileCompareDataByName;
   const anyFileHasDiffStatus = useRef<boolean>(false);
 
   const fileTree = useMemo(() => {
-    const allFiles = uniq(baseFileTree.concat(compareFileTree));
+    const allFiles = uniq<string>(baseFileTree.concat(compareFileTree));
     anyFileHasDiffStatus.current = false;
     // sort by diff status
     return !fileCompareDataByName
@@ -56,7 +60,7 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
       : allFiles.sort((a, b) => {
           const aCompareResult = fileCompareDataByName.get(a);
           const bCompareResult = fileCompareDataByName.get(b);
-          const noStatus = (status) => !status || status === 'UNCHANGED';
+          const noStatus = (status?: string) => !status || status === 'UNCHANGED';
           const aStatus = aCompareResult?.status;
           const bStatus = bCompareResult?.status;
           if (!noStatus(aStatus) && !noStatus(bStatus)) return 0;
@@ -78,7 +82,7 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   );
 
   const controlledHref = useUpdatedUrlFromQuery({});
-  const getHref = (node) => {
+  const useHref = (node: any) => {
     const hrefFromHook =
       hook?.useUpdatedUrlFromQuery?.(
         { file: node.id },
@@ -130,7 +134,7 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
             currentFile={selectedFile}
             drawerName="FILES"
             widgets={[Widget]}
-            getHref={getHref}
+            getHref={useHref}
             onTreeNodeSelected={hook?.onClick}
             open={isSidebarOpen}
           />
@@ -141,8 +145,9 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
             widgets={[Widget]}
             fileName={selectedFile}
             files={fileTree}
-            getHref={getHref}
+            getHref={useHref}
             onTabClicked={hook?.onClick}
+            fileIconSlot={fileIconSlot}
           />
         </Pane>
       </SplitPane>

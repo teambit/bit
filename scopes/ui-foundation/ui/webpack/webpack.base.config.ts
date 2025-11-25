@@ -1,5 +1,6 @@
 import { merge } from 'lodash';
-import webpack, { Configuration } from 'webpack';
+import type { Configuration } from 'webpack';
+import webpack from 'webpack';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
@@ -101,6 +102,17 @@ export default function createWebpackConfig(
           'react-dom$': 'react-dom/profiling',
           'scheduler/tracing': 'scheduler/tracing-profiling',
         }),
+        '@teambit/component.ui.component-compare.context': require.resolve(
+          '@teambit/component.ui.component-compare.context'
+        ),
+        '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
+        '@teambit/base-ui.graph.tree.recursive-tree': require.resolve('@teambit/base-ui.graph.tree.recursive-tree'),
+        '@teambit/semantics.entities.semantic-schema': require.resolve('@teambit/semantics.entities.semantic-schema'),
+        '@teambit/code.ui.code-editor': require.resolve('@teambit/code.ui.code-editor'),
+        '@teambit/api-reference.hooks.use-api': require.resolve('@teambit/api-reference.hooks.use-api'),
+        '@teambit/api-reference.hooks.use-api-renderers': require.resolve(
+          '@teambit/api-reference.hooks.use-api-renderers'
+        ),
       },
       fallback: {
         module: false,

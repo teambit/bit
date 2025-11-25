@@ -1,4 +1,4 @@
-import { MousetrapInstance } from 'mousetrap';
+import type { MousetrapInstance } from 'mousetrap';
 
 export class MousetrapStub implements MousetrapInstance {
   stopCallback() {

@@ -1,9 +1,9 @@
 import chai, { expect } from 'chai';
-import { IS_WINDOWS } from '../../src/constants';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { IS_WINDOWS } from '@teambit/legacy.constants';
+import { Helper } from '@teambit/legacy.e2e-helper';
 import WatchRunner from '../watch-runner';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 // @TODO: fix for Windows
 (IS_WINDOWS ? describe.skip : describe)('bit watch command', function () {
@@ -17,10 +17,10 @@ chai.use(require('chai-fs'));
   });
   describe('Harmony watch, using Compiler & Typescript extensions', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponentsTS();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
     });
     describe('run bit watch', () => {

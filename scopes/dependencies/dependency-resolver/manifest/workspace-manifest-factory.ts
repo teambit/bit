@@ -1,18 +1,22 @@
-import { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { getCoreAspectPackageName } from '@teambit/aspect-loader';
 import { IssuesClasses } from '@teambit/component-issues';
-import { Component } from '@teambit/component';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import type { Component } from '@teambit/component';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { fromPairs, pickBy, mapValues, uniq, difference } from 'lodash';
 import { SemVer } from 'semver';
 import pMapSeries from 'p-map-series';
 import { snapToSemver } from '@teambit/component-package-version';
-import { ComponentDependency, DependencyList, PackageName } from '../dependencies';
-import { VariantPolicy, WorkspacePolicy, EnvPolicy } from '../policy';
-import { DependencyResolverMain } from '../dependency-resolver.main.runtime';
-import { ComponentsManifestsMap } from '../types';
+import type { DependencyList, PackageName } from '../dependencies';
+import { ComponentDependency } from '../dependencies';
+import type { WorkspacePolicy, EnvPolicy } from '../policy';
+import { VariantPolicy } from '../policy';
+import type { DependencyResolverMain } from '../dependency-resolver.main.runtime';
+import type { ComponentsManifestsMap } from '../types';
 import { ComponentManifest } from './component-manifest';
-import { dedupeDependencies, DedupedDependencies, getEmptyDedupedDependencies } from './deduping';
-import { ManifestToJsonOptions, ManifestDependenciesObject, DepObjectValue } from './manifest';
+import type { DedupedDependencies } from './deduping';
+import { dedupeDependencies, getEmptyDedupedDependencies } from './deduping';
+import type { ManifestToJsonOptions, ManifestDependenciesObject, DepObjectValue } from './manifest';
 import { updateDependencyVersion } from './update-dependency-version';
 import { WorkspaceManifest } from './workspace-manifest';
 
@@ -42,7 +46,10 @@ const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
   excludeExtensionsDependencies: false,
 };
 export class WorkspaceManifestFactory {
-  constructor(private dependencyResolver: DependencyResolverMain, private aspectLoader: AspectLoaderMain) {}
+  constructor(
+    private dependencyResolver: DependencyResolverMain,
+    private aspectLoader: AspectLoaderMain
+  ) {}
 
   async createFromComponents(
     name: string,
@@ -153,14 +160,13 @@ export class WorkspaceManifestFactory {
         const coreAspectIds = this.aspectLoader.getCoreAspectIds();
         for (const comp of depList.toTypeArray('component') as ComponentDependency[]) {
           const [compIdWithoutVersion] = comp.id.split('@');
-          if (
-            !comp.isExtension &&
-            !coreAspectIds.includes(compIdWithoutVersion) &&
-            components.some((c) => c.id.isEqual(comp.componentId))
-          ) {
-            const pkgName = comp.getPackageName();
-            if (pkgName !== '@teambit/harmony') {
-              additionalDeps[pkgName] = `workspace:*`;
+          if (!comp.isExtension && !coreAspectIds.includes(compIdWithoutVersion)) {
+            const componentInWorkspace = components.find((c) => c.id.isEqual(comp.componentId));
+            if (componentInWorkspace) {
+              const pkgName = this.dependencyResolver.getPackageName(componentInWorkspace);
+              if (pkgName !== '@teambit/harmony') {
+                additionalDeps[pkgName] = `workspace:*`;
+              }
             }
           }
         }
@@ -241,7 +247,20 @@ export class WorkspaceManifestFactory {
     const selfPolicyWithoutLocal = envPolicy.selfPolicy.filter(
       (dep) => !packageNamesFromWorkspace.includes(dep.dependencyId)
     );
-    return fromPairs(selfPolicyWithoutLocal.toNameVersionTuple());
+
+    const nameVersionTuples = selfPolicyWithoutLocal.toNameVersionTuple();
+    const resolved = nameVersionTuples.map(([name, version]) => {
+      if (version !== '+') {
+        return [name, version];
+      }
+      // Resolve "+" version placeholders by looking up the already resolved version that was set in
+      // apply-overrides.resolveEnvPeerDepVersion()
+      const currentDeps = this.dependencyResolver.getDependencies(component);
+      const found = currentDeps.findByPkgNameOrCompId(name);
+      // If not found, use '*' as fallback
+      return [name, found?.version || '*'];
+    });
+    return fromPairs(resolved);
   }
 
   private async updateDependenciesVersions(

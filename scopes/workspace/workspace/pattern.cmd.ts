@@ -1,12 +1,12 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { Workspace } from './workspace';
+import type { Workspace } from './workspace';
 import { statesFilter } from './filter';
 
 export class PatternCommand implements Command {
   name = 'pattern <pattern>';
   alias = '';
-  description = 'list the component ids matching the given pattern';
+  description = 'test and validate component patterns';
   extendedDescription = `this command helps validating a pattern before using it in other commands.
 NOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes.
 a pattern can be a simple component-id or component-name. e.g. 'ui/button'.
@@ -19,7 +19,7 @@ to filter by a state or attribute, prefix the pattern with "$". e.g. '$deprecate
 list of supported states: [${statesFilter.join(', ')}].
 to filter by multi-params state/attribute, separate the params with ":", e.g. '$env:teambit.react/react'.
 list of supported multi-params states: [env].
-to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/**'. note that the state must be first.
+to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/** AND $env:teambit.react/react'.
 `;
   examples = [
     { cmd: "bit pattern '**'", description: 'matches all components' },
@@ -35,7 +35,7 @@ to match a state and another criteria, use " AND " keyword. e.g. '$modified AND 
     { cmd: "bit pattern 'bar, foo'", description: 'matches two components: bar and foo' },
     { cmd: "bit pattern 'my-scope.org/**'", description: 'matches all components of the scope "my-scope.org"' },
   ];
-  group = 'development';
+  group = 'info-analysis';
   private = false;
   options = [['j', 'json', 'return the output as JSON']] as CommandOptions;
 

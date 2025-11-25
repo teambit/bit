@@ -1,22 +1,32 @@
 import { MainRuntime } from '@teambit/cli';
-import { CompilerAspect, CompilerMain } from '@teambit/compiler';
-import { InstallAspect, InstallMain } from '@teambit/install';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import type { ComponentID } from '@teambit/component-id';
+import type { CompilerMain } from '@teambit/compiler';
+import { CompilerAspect } from '@teambit/compiler';
+import type { InstallMain } from '@teambit/install';
+import { InstallAspect } from '@teambit/install';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import { uniq } from 'lodash';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
-import { MoverAspect, MoverMain } from '@teambit/mover';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { isDir, isDirEmptySync } from '@teambit/legacy/dist/utils';
-import { PathLinuxRelative, pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import { ConfigMergerAspect, ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import ComponentWriter, { ComponentWriterProps } from './component-writer';
+import type { MoverMain } from '@teambit/mover';
+import { MoverAspect } from '@teambit/mover';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { PathLinuxRelative, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { isDir, isDirEmptySync, pathNormalizeToLinux } from '@teambit/legacy.utils';
+import type { ComponentMap } from '@teambit/legacy.bit-map';
+import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
+import { DataToPersist } from '@teambit/component.sources';
+import type { ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
+import { ConfigMergerAspect } from '@teambit/config-merger';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
+import type { Consumer } from '@teambit/legacy.consumer';
+import type { ComponentWriterProps } from './component-writer';
+import ComponentWriter from './component-writer';
 import { ComponentWriterAspect } from './component-writer.aspect';
 
 export interface ManyComponentsWriterParams {
@@ -32,6 +42,8 @@ export interface ManyComponentsWriterParams {
   skipWriteConfigFiles?: boolean;
   reasonForBitmapChange?: string; // optional. will be written in the bitmap-history-metadata
   shouldUpdateWorkspaceConfig?: boolean; // whether it should update dependencies policy (or leave conflicts) in workspace.jsonc
+  mergeStrategy?: MergeStrategy; // needed for workspace.jsonc conflicts
+  writeDeps?: 'package.json' | 'workspace.jsonc';
 }
 
 export type ComponentWriterResults = {
@@ -64,11 +76,22 @@ export class ComponentWriterMain {
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
     let workspaceConfigUpdateResult: WorkspaceConfigUpdateResult | undefined;
-    if (opts.shouldUpdateWorkspaceConfig) {
-      workspaceConfigUpdateResult = await this.configMerge.updateDepsInWorkspaceConfig(opts.components);
+    if (opts.writeDeps) {
+      await this.workspace.writeDependencies(opts.writeDeps);
     }
-    if (!opts.skipDependencyInstallation) {
-      installationError = await this.installPackagesGracefully(opts.skipWriteConfigFiles);
+    if (opts.shouldUpdateWorkspaceConfig) {
+      workspaceConfigUpdateResult = await this.configMerge.updateDepsInWorkspaceConfig(
+        opts.components,
+        opts.mergeStrategy
+      );
+    }
+    if (this.workspace.externalPackageManagerIsUsed()) {
+      await this.installer.writeDependenciesToPackageJson();
+    } else if (!opts.skipDependencyInstallation) {
+      installationError = await this.installPackagesGracefully(
+        opts.components.map(({ id }) => id),
+        opts.skipWriteConfigFiles
+      );
       // no point to compile if the installation is not running. the environment is not ready.
       compilationError = await this.compileGracefully();
     }
@@ -76,7 +99,10 @@ export class ComponentWriterMain {
     return { installationError, compilationError, workspaceConfigUpdateResult };
   }
 
-  private async installPackagesGracefully(skipWriteConfigFiles = false): Promise<Error | undefined> {
+  private async installPackagesGracefully(
+    componentIds: ComponentID[],
+    skipWriteConfigFiles = false
+  ): Promise<Error | undefined> {
     this.logger.debug('installPackagesGracefully, start installing packages');
     try {
       const installOpts = {
@@ -84,6 +110,7 @@ export class ComponentWriterMain {
         updateExisting: false,
         import: false,
         writeConfigFiles: !skipWriteConfigFiles,
+        dependenciesGraph: await this.workspace.scope.getDependenciesGraphByComponentIds(componentIds),
       };
       await this.installer.install(undefined, installOpts);
       this.logger.debug('installPackagesGracefully, completed installing packages successfully');
@@ -125,6 +152,13 @@ export class ComponentWriterMain {
         componentWriter.existingComponentMap =
           componentWriter.existingComponentMap ||
           (await componentWriter.addComponentToBitMap(componentWriter.writeToPath));
+        const componentConfigPath = path.join(
+          this.workspace.path,
+          componentWriter.existingComponentMap.rootDir,
+          COMPONENT_CONFIG_FILE_NAME
+        );
+        const componentConfigExist = await fs.pathExists(componentConfigPath);
+        componentWriter.writeConfig = componentWriter.writeConfig || componentConfigExist;
       })
     );
     if (opts.resetConfig) {
@@ -158,21 +192,11 @@ export class ComponentWriterMain {
         if (ownerName && !compDir.startsWith(ownerName) && !allDirs.includes(`${ownerName}/${compDir}`)) {
           compWriter.writeToPath = `${ownerName}/${compDir}`;
         } else {
-          compWriter.writeToPath = this.incrementPathRecursively(compWriter.writeToPath, allDirs);
+          compWriter.writeToPath = incrementPathRecursively(compWriter.writeToPath, allDirs);
         }
         allDirs.push(compWriter.writeToPath);
       });
     });
-  }
-
-  private incrementPathRecursively(p: string, allPaths: string[]) {
-    const incrementPath = (str: string, number: number) => `${str}_${number}`;
-    let num = 1;
-    let newPath = incrementPath(p, num);
-    while (allPaths.includes(newPath)) {
-      newPath = incrementPath(p, (num += 1));
-    }
-    return newPath;
   }
 
   /**
@@ -187,7 +211,7 @@ export class ComponentWriterMain {
     const parentsOfOthersComps = componentWriterInstances.filter(({ writeToPath }) =>
       allDirs.find((d) => d.startsWith(`${writeToPath}/`))
     );
-    const existingRootDirs = Object.keys(this.consumer.bitMap.getAllTrackDirs());
+    const existingRootDirs = this.workspace.bitMap.getAllRootDirs();
     const parentsOfOthersCompsDirs = parentsOfOthersComps.map((c) => c.writeToPath);
     const allPaths: PathLinuxRelative[] = [...existingRootDirs, ...parentsOfOthersCompsDirs];
 
@@ -195,7 +219,7 @@ export class ComponentWriterMain {
     // change the paths of all these parents root-dir to not collide with the children root-dir
     parentsOfOthersComps.forEach((componentWriter) => {
       if (existingRootDirs.includes(componentWriter.writeToPath)) return; // component already exists.
-      const newPath = this.incrementPathRecursively(componentWriter.writeToPath, allPaths);
+      const newPath = incrementPathRecursively(componentWriter.writeToPath, allPaths);
       componentWriter.writeToPath = newPath;
     });
 
@@ -206,7 +230,7 @@ export class ComponentWriterMain {
       const existingParent = existingRootDirs.find((d) => d.startsWith(`${componentWriter.writeToPath}/`));
       if (!existingParent) return;
       if (existingRootDirs.includes(componentWriter.writeToPath)) return; // component already exists.
-      const newPath = this.incrementPathRecursively(componentWriter.writeToPath, allPaths);
+      const newPath = incrementPathRecursively(componentWriter.writeToPath, allPaths);
       componentWriter.writeToPath = newPath;
     });
 
@@ -216,7 +240,7 @@ export class ComponentWriterMain {
       const existingChildren = existingRootDirs.find((d) => componentWriter.writeToPath.startsWith(`${d}/`));
       if (!existingChildren) return;
       // we increment the existing one, because it is used to replace the base-path of the current component
-      const newPath = this.incrementPathRecursively(existingChildren, allPaths);
+      const newPath = incrementPathRecursively(existingChildren, allPaths);
       componentWriter.writeToPath = componentWriter.writeToPath.replace(existingChildren, newPath);
     });
   }
@@ -236,7 +260,7 @@ export class ComponentWriterMain {
       const componentMap = this.consumer.bitMap.getComponentIfExist(component.id, {
         ignoreVersion: true,
       });
-      this.throwErrorWhenDirectoryNotEmpty(this.consumer.toAbsolutePath(componentRootDir), componentMap, opts);
+      this.throwErrorWhenDirectoryNotEmpty(componentRootDir, componentMap, opts);
       return {
         existingComponentMap: componentMap,
       };
@@ -272,7 +296,7 @@ to move all component files to a different directory, run bit remove and then bi
     }
   }
   private throwErrorWhenDirectoryNotEmpty(
-    componentDir: PathOsBasedAbsolute,
+    componentDirRelative: PathOsBasedAbsolute,
     componentMap: ComponentMap | null | undefined,
     opts: ManyComponentsWriterParams
   ) {
@@ -283,15 +307,24 @@ to move all component files to a different directory, run bit remove and then bi
     // if writeToPath specified and that directory is already used for that component, it's ok to override
     if (opts.writeToPath && componentMap && componentMap.rootDir && componentMap.rootDir === opts.writeToPath) return;
 
-    if (fs.pathExistsSync(componentDir)) {
-      if (!isDir(componentDir)) {
-        throw new BitError(`unable to import to ${componentDir} because it's a file`);
-      }
-      if (!isDirEmptySync(componentDir) && opts.throwForExistingDir) {
+    const componentDir = this.consumer.toAbsolutePath(componentDirRelative);
+    if (!fs.pathExistsSync(componentDir)) return;
+    if (!componentMap) {
+      const compInTheSameDir = this.consumer.bitMap.getComponentIdByRootPath(componentDirRelative);
+      if (compInTheSameDir) {
         throw new BitError(
-          `unable to import to ${componentDir}, the directory is not empty. use --override flag to delete the directory and then import`
+          `unable to import to ${componentDir}, the directory is already used by ${compInTheSameDir.toString()}.
+either use --path to specify a different directory or modify "defaultDirectory" prop in the workspace.jsonc file to "{scopeId}/{name}"`
         );
       }
+    }
+    if (!isDir(componentDir)) {
+      throw new BitError(`unable to import to ${componentDir} because it's a file`);
+    }
+    if (!isDirEmptySync(componentDir) && opts.throwForExistingDir) {
+      throw new BitError(
+        `unable to import to ${componentDir}, the directory is not empty. use --override flag to delete the directory and then import`
+      );
     }
   }
 
@@ -304,7 +337,7 @@ to move all component files to a different directory, run bit remove and then bi
     LoggerMain,
     Workspace,
     MoverMain,
-    ConfigMergerMain
+    ConfigMergerMain,
   ]) {
     const logger = loggerMain.createLogger(ComponentWriterAspect.id);
     return new ComponentWriterMain(install, compiler, workspace, logger, mover, configMerger);
@@ -314,3 +347,13 @@ to move all component files to a different directory, run bit remove and then bi
 ComponentWriterAspect.addRuntime(ComponentWriterMain);
 
 export default ComponentWriterMain;
+
+export function incrementPathRecursively(p: string, allPaths: string[]) {
+  const incrementPath = (str: string, number: number) => `${str}_${number}`;
+  let num = 1;
+  let newPath = incrementPath(p, num);
+  while (allPaths.includes(newPath)) {
+    newPath = incrementPath(p, (num += 1));
+  }
+  return newPath;
+}

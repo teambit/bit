@@ -1,47 +1,56 @@
 import { ArtifactFactory, BuilderAspect } from '@teambit/builder';
 import type { BuilderMain } from '@teambit/builder';
-import { Asset, BundlerAspect, BundlerMain } from '@teambit/bundler';
-import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
-import { MainRuntime } from '@teambit/cli';
-import {
-  Component,
-  ComponentAspect,
-  ComponentMain,
-  ComponentMap,
-  ComponentID,
-  ResolveAspectsOptions,
-} from '@teambit/component';
+import type { Asset, BundlerMain } from '@teambit/bundler';
+import { BundlerAspect } from '@teambit/bundler';
+import type { PubsubMain } from '@teambit/pubsub';
+import { PubsubAspect } from '@teambit/pubsub';
+import { MainRuntime, CLIAspect } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import type { Component, ComponentMain, ComponentMap, ComponentID, ResolveAspectsOptions } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import { EnvsAspect } from '@teambit/envs';
-import type { EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
-import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
-import { UIAspect, UiMain, UIRoot } from '@teambit/ui';
-import { CacheAspect, CacheMain } from '@teambit/cache';
-import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
+import type { EnvsExecutionResult, EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
+import type { SlotRegistry, Harmony } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { UiMain, UIRoot } from '@teambit/ui';
+import { UIAspect } from '@teambit/ui';
+import type { CacheMain } from '@teambit/cache';
+import { CacheAspect } from '@teambit/cache';
+import { CACHE_ROOT } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
 import { uniq } from 'lodash';
-import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
+import { writeFileSync, existsSync, mkdirSync, ensureDirSync, writeJSONSync } from 'fs-extra';
 import { join } from 'path';
-import { PkgAspect, PkgMain } from '@teambit/pkg';
+import type { PkgMain } from '@teambit/pkg';
+import { PkgAspect } from '@teambit/pkg';
 import { AspectLoaderAspect, getAspectDir, getAspectDirFromBvm } from '@teambit/aspect-loader';
 import type { AspectDefinition, AspectLoaderMain } from '@teambit/aspect-loader';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { LoggerMain, Logger } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import { WatcherAspect, WatcherMain } from '@teambit/watcher';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { ONLY_OVERVIEW, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import type { ExpressMain } from '@teambit/express';
+import { ExpressAspect } from '@teambit/express';
+import { ArtifactFiles } from '@teambit/component.sources';
+import type { WatcherMain } from '@teambit/watcher';
+import { WatcherAspect } from '@teambit/watcher';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import { ONLY_OVERVIEW, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { BundlingStrategyNotFound } from './exceptions';
-import { generateLink, MainModulesMap } from './generate-link';
+import type { MainModulesMap } from './generate-link';
+import { generateLink } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
-import { PreviewDefinition } from './preview-definition';
+import type { PreviewDefinition } from './preview-definition';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { PreviewRoute } from './preview.route';
 import { PreviewTask, PREVIEW_TASK_NAME } from './preview.task';
-import { BundlingStrategy } from './bundling-strategy';
+import type { BundlingStrategy } from './bundling-strategy';
 import {
   EnvBundlingStrategy,
   ComponentBundlingStrategy,
@@ -66,6 +75,8 @@ import { PreviewService } from './preview.service';
 import { PUBLIC_DIR, RUNTIME_NAME, buildPreBundlePreview, generateBundlePreviewEntry } from './pre-bundle';
 import { BUNDLE_DIR, PreBundlePreviewTask } from './pre-bundle.task';
 import { createBundleHash, getBundlePath, readBundleHash } from './pre-bundle-utils';
+import { GeneratePreviewCmd } from './generate-preview.cmd';
+import { ServePreviewCmd } from './serve-preview.cmd';
 
 const noopResult = {
   results: [],
@@ -204,8 +215,12 @@ export class PreviewMain {
 
     private logger: Logger,
 
-    private dependencyResolver: DependencyResolverMain
+    private dependencyResolver: DependencyResolverMain,
+
+    private express: ExpressMain
   ) {}
+
+  private previewService: PreviewService;
 
   get tempFolder(): string {
     return this.workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR;
@@ -298,6 +313,110 @@ export class PreviewMain {
     }
     const envComponent = await this.envs.getEnvComponent(component);
     return this.doesEnvUseNameParam(envComponent);
+  }
+
+  async generateComponentPreview(
+    componentPattern: string,
+    name: string
+  ): Promise<EnvsExecutionResult<{ [id: string]: string }>> {
+    const componentIds = componentPattern
+      ? await this.workspace?.idsByPattern(componentPattern, true)
+      : this.workspace?.listIds();
+    if (!componentIds) {
+      throw new BitError(`unable to find components by the pattern: ${componentPattern}`);
+    }
+    const components = await this.workspace?.getMany(componentIds);
+    if (!components) {
+      throw new BitError(`unable to find components by the pattern: ${componentPattern}`);
+    }
+    const envsRuntime = await this.envs.createEnvironment(components);
+    const previewResults = await envsRuntime.run(this.previewService, { name });
+    return previewResults;
+  }
+
+  async serveLocalPreview({ port }: { port: number }): Promise<number> {
+    const app = this.express.createApp();
+
+    const getDirAndPath = async (comp, msg) => {
+      const componentPreviewIndex = await this.previewService.readComponentsPreview(msg);
+      const compParts = comp.split('/');
+      // go over all combination of parts to find the component
+      let compToCheck;
+      let filePath;
+      for (let i = compParts.length; i > 0; i--) {
+        /**
+         * Joins the component parts up to the specified index into a single string separated by '/'.
+         *
+         * @param compParts - An array of component parts.
+         * @param i - The index up to which the parts should be joined.
+         * @returns A string representing the joined component parts up to the specified index.
+         */
+        const part = compParts.slice(0, i).join('/');
+        if (componentPreviewIndex[part]) {
+          compToCheck = part;
+          filePath = compParts.slice(i).join('/');
+          break;
+        }
+      }
+      const componentPreviewFolder = componentPreviewIndex[compToCheck];
+      const envPreviewDir = this.previewService.getEnvLocalPreviewDir(msg, componentPreviewFolder);
+      if (!componentPreviewFolder) {
+        return [];
+      }
+      const publicDir = join(envPreviewDir, 'public');
+      return [publicDir, filePath];
+    };
+
+    // const dynamicRouteRegex = '/?[^/@]+(/[^~]*)?';
+    // readonly route = `/:componentId(${this.dynamicRouteRegex})/~aspect${this.registerRoute.route}`;
+    // app.use(`/:message/:componentId(${dynamicRouteRegex})`, async (req, res, next) => {
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    app.use(`/:message/:componentId(*)`, async (req, res, next) => {
+      // const comp = req.query.comp as string;
+      // const msg = req.query.message as string;
+      let comp = req.params.componentId as string;
+      const msg = req.params.message as string;
+      // Check if the folderName is provided
+      if (!comp) {
+        return res.status(400).send('Please specify a comp.');
+      }
+
+      if (!msg) {
+        return res.status(400).send('Please specify a message.');
+      }
+
+      if (comp.endsWith('/')) {
+        comp = comp.slice(0, -1);
+      }
+
+      const [publicDir, filePath] = await getDirAndPath(comp, msg);
+      if (!publicDir) {
+        return res.status(404).send('Folder not found.');
+      }
+      if (filePath) {
+        const file = join(publicDir, filePath);
+        if (!existsSync(file)) {
+          return res.status(404).send('File not found.');
+        }
+        return res.sendFile(file);
+      }
+
+      // Serve files from the specified folder
+      this.express.static(publicDir)(req, res, next);
+    });
+
+    const server = await app.listen(port);
+
+    return new Promise((resolve, reject) => {
+      server.on('error', (err) => {
+        reject(err);
+      });
+      server.on('listening', () => {
+        this.logger.consoleSuccess(`Bit preview server is listening on port ${port}`);
+        resolve(port);
+      });
+    });
   }
 
   /**
@@ -639,6 +758,17 @@ export class PreviewMain {
   private writeHash = new Map<string, string>();
   private timestamp = Date.now();
 
+  private ensureTempPackage() {
+    const workspacePath = this.workspace?.path;
+    const tempPackageDir = workspacePath ? join(workspacePath, 'node_modules', '@teambit', '_local') : '';
+    if (tempPackageDir) {
+      ensureDirSync(tempPackageDir);
+      writeJSONSync(join(tempPackageDir, 'package.json'), { name: '@teambit/_local' });
+      writeFileSync(join(tempPackageDir, 'index.js'), 'module.exports = {};');
+      return tempPackageDir;
+    }
+  }
+
   /**
    * write a link to load custom modules dynamically.
    * @param prefix write
@@ -653,7 +783,8 @@ export class PreviewMain {
     dirName: string,
     isSplitComponentBundle: boolean
   ) {
-    const contents = generateLink(prefix, moduleMap, mainModulesMap, isSplitComponentBundle);
+    const tempPackageDir = this.ensureTempPackage();
+    const contents = generateLink(prefix, moduleMap, mainModulesMap, isSplitComponentBundle, tempPackageDir);
     return this.writeLinkContents(contents, dirName, prefix);
   }
 
@@ -683,12 +814,13 @@ export class PreviewMain {
     });
 
     const previewRuntime = await this.writePreviewEntry(context);
-    const linkFiles = await this.updateLinkFiles(context.components, context);
+    const previews = this.previewSlot.values();
+    const linkFiles = await this.updateLinkFiles(previews, context.components, context);
 
     return [...linkFiles, previewRuntime];
   }
 
-  private async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
+  async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
     const { rebuild, skipUiBuild } = this.ui.runtimeOptions;
 
     const [name, uiRoot] = this.getUi();
@@ -723,8 +855,7 @@ export class PreviewMain {
     return previewRuntime;
   }
 
-  private updateLinkFiles(components: Component[] = [], context: ExecutionContext) {
-    const previews = this.previewSlot.values();
+  updateLinkFiles(previews: PreviewDefinition[], components: Component[] = [], context: ExecutionContext) {
     const paths = previews.map(async (previewDef) => {
       const defaultTemplatePath = await previewDef.renderTemplatePathByEnv?.(context.env);
       const visitedEnvs = new Set();
@@ -772,12 +903,12 @@ export class PreviewMain {
     return Promise.all(paths);
   }
 
+  /**
+   * @deprecated
+   * use `writePreviewEntry` instead
+   */
   async writePreviewRuntime(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
-    const [name, uiRoot] = this.getUi();
-    const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
-    const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
-    const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id);
-    return filePath;
+    return this.writePreviewEntry(context, aspectsIdsToNotFilterOut);
   }
 
   async resolveAspects(
@@ -834,17 +965,16 @@ export class PreviewMain {
   private getDefaultStrategies() {
     return [
       new EnvBundlingStrategy(this, this.pkg, this.dependencyResolver),
-      new ComponentBundlingStrategy(this, this.pkg, this.dependencyResolver),
+      new ComponentBundlingStrategy(this, this.dependencyResolver, this.logger),
     ];
   }
 
   // TODO - executionContext should be responsible for updating components list, and emit 'update' events
   // instead we keep track of changes
   private handleComponentChange = async (c: Component, updater: (currentComponents: ExecutionRef) => void) => {
-    const env = this.envs.getEnv(c);
-    const envId = env.id.toString();
+    const envId = await this.envs.getOrCalculateEnvId(c);
 
-    const executionRef = this.executionRefs.get(envId);
+    const executionRef = this.executionRefs.get(envId.toString());
     if (!executionRef) {
       this.logger.warn(
         `failed to update link file for component "${c.id.toString()}" - could not find execution context for ${envId}`
@@ -854,8 +984,8 @@ export class PreviewMain {
 
     // add / remove / etc
     updater(executionRef);
-
-    await this.updateLinkFiles(executionRef.currentComponents, executionRef.executionCtx);
+    const previews = this.previewSlot.values();
+    await this.updateLinkFiles(previews, executionRef.currentComponents, executionRef.executionCtx);
     return noopResult;
   };
 
@@ -928,11 +1058,13 @@ export class PreviewMain {
     GraphqlAspect,
     WatcherAspect,
     ScopeAspect,
+    CLIAspect,
+    ExpressAspect,
   ];
 
   static defaultConfig = {
     disabled: false,
-    onlyOverview: false,
+    onlyOverview: true,
   };
 
   static async provider(
@@ -953,6 +1085,8 @@ export class PreviewMain {
       graphql,
       watcher,
       scope,
+      cli,
+      express,
     ]: [
       BundlerMain,
       BuilderMain,
@@ -968,7 +1102,9 @@ export class PreviewMain {
       DependencyResolverMain,
       GraphqlMain,
       WatcherMain,
-      ScopeMain
+      ScopeMain,
+      CLIMain,
+      ExpressMain,
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
@@ -990,11 +1126,14 @@ export class PreviewMain {
       builder,
       workspace,
       logger,
-      dependencyResolver
+      dependencyResolver,
+      express
     );
 
+    cli.register(new GeneratePreviewCmd(preview), new ServePreviewCmd(preview));
+
     if (workspace)
-      uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger, watcher));
+      uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger, watcher, graphql));
 
     componentExtension.registerRoute([
       new PreviewRoute(preview, logger),
@@ -1032,10 +1171,12 @@ export class PreviewMain {
     if (scope) {
       scope.registerOnCompAspectReCalc((c) => preview.calcPreviewData(c));
     }
+    const previewService = new PreviewService(preview, logger, dependencyResolver, scope);
 
-    envs.registerService(new PreviewService());
+    envs.registerService(previewService);
+    preview.previewService = previewService;
 
-    graphql.register(previewSchema(preview));
+    graphql.register(() => previewSchema(preview));
 
     return preview;
   }

@@ -1,2 +1,3 @@
 fixtures
 e2e/fixtures
+components/legacy/e2e-helper/excluded-fixtures

@@ -1,12 +1,17 @@
 import React from 'react';
-import { RouteProps } from 'react-router-dom';
+import type { RouteProps } from 'react-router-dom';
 import flatten from 'lodash.flatten';
-import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { ComponentAspect, ComponentUI } from '@teambit/component';
+import type { Harmony, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { ComponentUI } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import { ComponentCompare } from '@teambit/component.ui.component-compare.component-compare';
 import { UIRuntime } from '@teambit/ui';
 import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { ComponentCompareProps, TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
+import type {
+  ComponentCompareProps,
+  TabItem,
+} from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { ComponentCompareChangelog } from '@teambit/component.ui.component-compare.changelog';
 import { ComponentCompareAspects } from '@teambit/component.ui.component-compare.compare-aspects.compare-aspects';
 import { AspectsCompareSection } from './component-compare-aspects.section';
@@ -30,7 +35,7 @@ export class ComponentCompareUI {
 
   static dependencies = [ComponentAspect];
 
-  getComponentComparePage = (props?: ComponentCompareProps) => {
+  getComponentComparePage = (props?: ComponentCompareProps & { pinned?: boolean }) => {
     const tabs = props?.tabs || (() => flatten(this.navSlot.values()));
     const routes = props?.routes || (() => flatten(this.routeSlot.values()));
     const host = props?.host || this.host;
@@ -107,14 +112,14 @@ export class ComponentCompareUI {
     const { config } = harmony;
     const host = String(config.get('teambit.harmony/bit'));
     const componentCompareUI = new ComponentCompareUI(host, navSlot, routeSlot, componentUi);
-    const componentCompareSection = new ComponentCompareSection(componentCompareUI);
+    const componentCompareSection = new ComponentCompareSection(componentCompareUI, false);
+    const pinnedComponentCompareSection = new ComponentCompareSection(componentCompareUI, true);
     componentUi.registerRoute([componentCompareSection.route]);
     componentUi.registerWidget(componentCompareSection.navigationLink, componentCompareSection.order);
+    componentUi.registerPinnedWidget(pinnedComponentCompareSection.navigationLink, pinnedComponentCompareSection.order);
     const aspectCompareSection = new AspectsCompareSection(componentCompareUI);
     const compareChangelog = new CompareChangelogSection(componentCompareUI);
-
     componentCompareUI.registerNavigation([aspectCompareSection, compareChangelog]);
-
     componentCompareUI.registerRoutes([aspectCompareSection.route, compareChangelog.route]);
     return componentCompareUI;
   }

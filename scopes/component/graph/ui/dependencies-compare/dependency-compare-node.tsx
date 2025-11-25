@@ -12,7 +12,7 @@ import React, { useMemo } from 'react';
 import { compare, valid } from 'semver';
 import { defaultNode, external } from '../../ui/component-node/variants';
 import { styles as componentNodeStyles } from '../../ui/component-node';
-import { CompareNodeModel } from './compare-node-model';
+import type { CompareNodeModel } from './compare-node-model';
 import styles from './dependency-compare-node.module.scss';
 import variants from './dependency-compare-variants.module.scss';
 
@@ -36,8 +36,8 @@ export type DependencyCompareNodeProps = {
 
 export function DependencyCompareNode(props: DependencyCompareNodeProps) {
   const { node, type = 'defaultNode' } = props;
-  const { id: baseIdStr, component: baseComponent, compareVersion, status } = node;
-  const { version: baseVersion } = baseComponent;
+  const { id: baseIdStr, component: baseComponent, compareVersion, status, componentId } = node;
+  const { version: baseVersion } = baseComponent || { version: componentId.version };
   const baseId = ComponentID.fromString(baseIdStr);
   const versionDiff = useMemo(
     () => valid(baseVersion) && valid(compareVersion) && compare(baseVersion, compareVersion),
@@ -47,7 +47,7 @@ export function DependencyCompareNode(props: DependencyCompareNodeProps) {
   return (
     <Card className={classnames(componentNodeStyles.compNode, getVariant(type))} elevation="none">
       <div className={componentNodeStyles.firstRow}>
-        <EnvIcon component={baseComponent} className={componentNodeStyles.envIcon} />
+        {baseComponent && <EnvIcon component={baseComponent} className={componentNodeStyles.envIcon} />}
         <Breadcrumbs componentId={baseId} className={mutedText} />
       </div>
       <div className={componentNodeStyles.nameLine}>
@@ -76,7 +76,7 @@ export function DependencyCompareNode(props: DependencyCompareNodeProps) {
         )}
 
         <div className={styles.buffs}>
-          <DeprecationIcon component={baseComponent} />
+          {baseComponent && <DeprecationIcon component={baseComponent} />}
           {status !== undefined && <CompareStatusResolver status={status} />}
         </div>
       </div>

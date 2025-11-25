@@ -1,4 +1,4 @@
-import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
+import type { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 
 export interface Preview {
   /**

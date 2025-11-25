@@ -1,24 +1,39 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { ConfigAspect, ConfigMain } from '@teambit/config';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { ConfigMain } from '@teambit/config';
+import { ConfigAspect } from '@teambit/config';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { ComponentAspect, Component, ComponentID, ComponentMain } from '@teambit/component';
-import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect, ComponentID } from '@teambit/component';
+import type { DeprecationMain } from '@teambit/deprecation';
+import { DeprecationAspect } from '@teambit/deprecation';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
 import { compact } from 'lodash';
-import { CompilerAspect, CompilerMain } from '@teambit/compiler';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-component-helper';
-import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { RefactoringAspect, MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
-import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import type { CompilerMain } from '@teambit/compiler';
+import { CompilerAspect } from '@teambit/compiler';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { NewComponentHelperMain } from '@teambit/new-component-helper';
+import { NewComponentHelperAspect } from '@teambit/new-component-helper';
+import type { RemoveMain } from '@teambit/remove';
+import { RemoveAspect } from '@teambit/remove';
+import type { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
+import { RefactoringAspect } from '@teambit/refactoring';
+import type { ComponentWriterMain } from '@teambit/component-writer';
+import { ComponentWriterAspect } from '@teambit/component-writer';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import pMapSeries from 'p-map-series';
-import { InstallMain, InstallAspect } from '@teambit/install';
+import type { InstallMain } from '@teambit/install';
+import { InstallAspect } from '@teambit/install';
 import { isValidIdChunk, InvalidName } from '@teambit/legacy-bit-id';
-import { RenameCmd, RenameOptions } from './rename.cmd';
+import type { RenameOptions } from './rename.cmd';
+import { RenameCmd } from './rename.cmd';
 import { RenamingAspect } from './renaming.aspect';
 import { RenamingFragment } from './renaming.fragment';
 import { renamingSchema } from './renaming.graphql';
@@ -112,7 +127,7 @@ make sure this argument is the name only, without the scope-name. to change the 
         await this.newComponentHelper.writeAndAddNewComp(sourceComp, targetId, options, config);
         options.deprecate
           ? await this.deprecation.deprecate(sourceId, targetId)
-          : await this.remove.deleteComps(sourceId.toString());
+          : await this.remove.deleteComps(sourceId.toString(), { updateMain: true });
       } else {
         this.workspace.bitMap.renameNewComponent(sourceId, targetId);
         await this.deleteLinkFromNodeModules(sourcePkg);
@@ -152,11 +167,12 @@ make sure this argument is the name only, without the scope-name. to change the 
         }
         if (!targetComp) throw new Error(`renameMultiple, targetComp is missing`);
         await this.refactoring.refactorVariableAndClasses(targetComp, sourceId, targetId, options);
+        const compPath = this.newComponentHelper.getNewComponentPath(targetId);
         this.refactoring.refactorFilenames(targetComp, sourceId, targetId);
         await this.componentWriter.writeMany({
           components: [targetComp.state._consumer],
           skipDependencyInstallation: true,
-          writeToPath: this.newComponentHelper.getNewComponentPath(targetId),
+          writeToPath: path.join(this.workspace.path, compPath),
           reasonForBitmapChange: 'rename',
         });
       });
@@ -184,16 +200,16 @@ make sure this argument is the name only, without the scope-name. to change the 
   }
 
   /**
-   * change the default-scope for new components. optionally (if refactor is true), change the source code to match the
-   * new scope-name.
-   * keep in mind that this is working for new components only, for tagged/exported it's impossible. See the errors
-   * thrown in such cases in this method.
+   * change the default-scope for new components.
+   * for tagged/exported components, delete (or deprecate - depends on the flag) the original ones and create new ones.
+   * optionally (if refactor is true), change the source code to match the new scope-name.
    */
   async renameScope(
     oldScope: string,
     newScope: string,
-    options: { refactor?: boolean; deprecate?: boolean } = {}
+    options: { refactor?: boolean; deprecate?: boolean; preserve?: boolean } = {}
   ): Promise<RenameResult> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const allComponentsIds = this.workspace.listIds();
     const componentsUsingOldScope = allComponentsIds.filter((compId) => compId.scope === oldScope);
     if (!componentsUsingOldScope.length && this.workspace.defaultScope !== oldScope) {
@@ -206,7 +222,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       const targetId = ComponentID.fromObject({ name: compId.fullName }, newScope);
       return { sourceId: compId, targetId };
     });
-    return this.renameMultiple(multipleIds, { ...options, preserve: true });
+    return this.renameMultiple(multipleIds, options);
   }
 
   /**
@@ -220,8 +236,8 @@ make sure this argument is the name only, without the scope-name. to change the 
     newOwner: string,
     options: { refactor?: boolean; ast?: boolean }
   ): Promise<RenameResult> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const isScopeUsesOldOwner = (scope: string) => scope.startsWith(`${oldOwner}.`);
-
     const allComponentsIds = this.workspace.listIds();
     const componentsUsingOldScope = allComponentsIds.filter((compId) => isScopeUsesOldOwner(compId.scope));
     if (!componentsUsingOldScope.length && !isScopeUsesOldOwner(this.workspace.defaultScope)) {
@@ -245,12 +261,13 @@ make sure this argument is the name only, without the scope-name. to change the 
   private async renameAspectIdsInWorkspaceConfig(ids: RenameId[]) {
     const config = this.config.workspaceConfig;
     if (!config) throw new Error('unable to get workspace config');
-    const hasChanged = ids.some((renameId) =>
+    const wereChangesDone = ids.map((renameId) =>
       config.renameExtensionInRaw(
         renameId.sourceId.toStringWithoutVersion(),
         renameId.targetId.toStringWithoutVersion()
       )
     );
+    const hasChanged = wereChangesDone.some((isChanged) => isChanged);
     if (hasChanged) await config.write({ reasonForChange: 'rename' });
   }
   private async changeEnvsAccordingToNewIds(renameData: RenameData[]) {
@@ -338,7 +355,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     CompilerMain,
     LoggerMain,
     EnvsMain,
-    RemoveMain
+    RemoveMain,
   ]) {
     const logger = loggerMain.createLogger(RenamingAspect.id);
     const renaming = new RenamingMain(
@@ -360,7 +377,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     scopeCommand?.commands?.push(new ScopeRenameCmd(renaming));
     scopeCommand?.commands?.push(new ScopeRenameOwnerCmd(renaming));
 
-    graphql.register(renamingSchema(renaming));
+    graphql.register(() => renamingSchema(renaming));
     componentMain.registerShowFragments([new RenamingFragment(renaming)]);
     return renaming;
   }

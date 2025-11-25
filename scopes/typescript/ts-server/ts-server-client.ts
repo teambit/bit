@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import path from 'path';
 import type ts from 'typescript/lib/tsserverlibrary';
 import { CheckTypes } from '@teambit/watcher';
@@ -9,6 +9,7 @@ import { findPathToModule } from './modules-resolver';
 import { ProcessBasedTsServer } from './process-based-tsserver';
 import { CommandTypes, EventName } from './tsp-command-types';
 import { getTsserverExecutable } from './utils';
+import type { Diagnostic } from './format-diagnostics';
 import { formatDiagnostic } from './format-diagnostics';
 
 export type TsserverClientOpts = {
@@ -16,13 +17,20 @@ export type TsserverClientOpts = {
   tsServerPath?: string; // if not provided, it'll use findTsserverPath() strategies.
   checkTypes?: CheckTypes; // whether errors/warnings are monitored and printed to the console.
   printTypeErrors?: boolean; // whether print typescript errors to the console.
+  aggregateDiagnosticData?: boolean; // whether to aggregate diagnostic data instead of printing them to the console.
+};
+
+export type DiagnosticData = {
+  file: string;
+  diagnostic: Diagnostic;
+  formatted: string;
 };
 
 export class TsserverClient {
   private tsServer: ProcessBasedTsServer | null;
   public lastDiagnostics: ts.server.protocol.DiagnosticEventBody[] = [];
   private serverRunning = false;
-
+  public diagnosticData: DiagnosticData[] = [];
   constructor(
     /**
      * absolute root path of the project.
@@ -306,12 +314,24 @@ export class TsserverClient {
   }
 
   private publishDiagnostic(message: ts.server.protocol.DiagnosticEvent) {
-    if (!message.body?.diagnostics.length || !this.options.printTypeErrors) {
+    if (!message.body?.diagnostics.length || (!this.options.printTypeErrors && !this.options.aggregateDiagnosticData)) {
       return;
     }
     this.lastDiagnostics.push(message.body);
     const file = path.relative(this.projectPath, message.body.file);
-    message.body.diagnostics.forEach((diag) => this.logger.console(formatDiagnostic(diag, file)));
+    message.body.diagnostics.forEach((diag) => {
+      const formatted = formatDiagnostic(diag, file);
+      if (this.options.printTypeErrors) {
+        this.logger.console(formatted);
+      }
+      if (this.options.aggregateDiagnosticData) {
+        this.diagnosticData.push({
+          file,
+          diagnostic: diag,
+          formatted,
+        });
+      }
+    });
   }
 
   /**

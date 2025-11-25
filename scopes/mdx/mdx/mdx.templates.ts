@@ -1,6 +1,7 @@
 import { MdxComponentTemplate, MdxEnvTemplate } from '@teambit/mdx.generator.mdx-templates';
-import { EnvContext } from '@teambit/envs';
-import { ComponentTemplate, TemplateList } from '@teambit/generator';
+import type { EnvContext } from '@teambit/envs';
+import type { ComponentTemplate } from '@teambit/generator';
+import { TemplateList } from '@teambit/generator';
 
 const templateListHandler = TemplateList.from([
   MdxComponentTemplate.from({ env: 'teambit.mdx/mdx-env' }),

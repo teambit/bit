@@ -1,5 +1,7 @@
-import React, { ButtonHTMLAttributes } from 'react';
-import { ComponentMeta, componentMetaField } from './component-meta';
+import type { ButtonHTMLAttributes } from 'react';
+import React from 'react';
+import type { ComponentMeta } from './component-meta';
+import { componentMetaField } from './component-meta';
 
 export function MockedComponentWithMeta(props: ButtonHTMLAttributes<HTMLButtonElement>) {
   return <button type="button" {...props} />;

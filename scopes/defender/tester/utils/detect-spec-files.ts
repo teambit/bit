@@ -1,5 +1,5 @@
-import { Component } from '@teambit/component';
-import { DevFilesMain } from '@teambit/dev-files';
+import type { Component } from '@teambit/component';
+import type { DevFilesMain } from '@teambit/dev-files';
 import { TesterAspect } from '../tester.aspect';
 
 /**

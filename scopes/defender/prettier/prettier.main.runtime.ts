@@ -1,9 +1,15 @@
 import { MainRuntime } from '@teambit/cli';
-import { Options as PrettierModuleOptions } from 'prettier';
-import { Formatter, FormatterMain, FormatterOptions } from '@teambit/formatter';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { Options as PrettierModuleOptions } from 'prettier';
+import type { Formatter, FormatterMain, FormatterOptions } from '@teambit/formatter';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type {
+  PrettierConfigTransformContext,
+  PrettierConfigTransformer,
+} from '@teambit/defender.prettier.config-mutator';
 import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
-import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+import { getCloudDomain } from '@teambit/legacy.constants';
+import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { PrettierAspect } from './prettier.aspect';
 import { PrettierFormatter } from './prettier.formatter';
 
@@ -14,18 +20,12 @@ export type PrettierOptions = {
   config: PrettierModuleOptions;
 };
 
-export type PrettierConfigTransformContext = {
-  check: boolean;
-};
-
-export type PrettierConfigTransformer = (
-  config: PrettierConfigMutator,
-  context: PrettierConfigTransformContext
-) => PrettierConfigMutator;
-
+// TODO: this aspect is not used anymore, it is still here for now for backward compatibility.
+// it will be removed as part of next major bit version
 export class PrettierMain {
   constructor(private logger: Logger) {}
   /**
+   * @deprecated use prettier formatter from https://bit.cloud/teambit/defender/prettier-formatter
    * create a prettier formatter instance.
    * @param options prettier options.
    * @param PrettierModule reference to an `prettier` module.
@@ -36,6 +36,9 @@ export class PrettierMain {
     transformers: PrettierConfigTransformer[] = [],
     PrettierModule?: any
   ): Formatter {
+    this.logger.consoleWarning(
+      `The 'Prettier' aspect is deprecated. Please use the 'prettier formatter' component instead. For more details, visit: https://${getCloudDomain()}/teambit/defender/prettier-formatter`
+    );
     const configMutator = new PrettierConfigMutator(options.config);
     const transformerContext: PrettierConfigTransformContext = { check: !!formatterOptions.check };
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);

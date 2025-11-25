@@ -1,4 +1,4 @@
-import { ErrorResponse } from '@apollo/client/link/error';
+import type { ErrorResponse } from '@apollo/client/link/error';
 
 export function logError({ graphQLErrors, networkError, operation }: ErrorResponse) {
   if (graphQLErrors)

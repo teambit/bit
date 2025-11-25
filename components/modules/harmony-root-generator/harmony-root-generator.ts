@@ -13,7 +13,8 @@ export async function createRoot(
   ignoreVersion?: boolean,
   addRuntimes = false,
   harmonyPackage?: string,
-  shouldRun = false
+  shouldRun = false,
+  useWebpackHot = true
 ) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
   const identifiers = getIdentifiers(aspectDefs, 'Aspect');
@@ -39,9 +40,7 @@ const config = JSON.parse('${stringifiedConfig}');
 const mergedConfig = { ...config, ...windowConfig };
 ${idSetters.join('\n')}
 export default function render(...props) {
-  if (import.meta?.webpackHot) {
-    import.meta?.webpackHot?.accept();
-  }
+  ${webpackHotAccept(useWebpackHot)}
   return Harmony.load([${identifiers.join(', ')}], '${runtime}', mergedConfig)
     .then((harmony) => {
       return harmony
@@ -73,6 +72,10 @@ export default function render(...props) {
 
 if (isBrowser || '${runtime}' === 'main' || ${shouldRun}) render();
 `;
+}
+
+function webpackHotAccept(useWebpackHot: boolean) {
+  return useWebpackHot ? 'if (import.meta?.webpackHot) { import.meta?.webpackHot?.accept(); }' : '';
 }
 
 function getRuntimeId(aspectDef: AspectDefinition) {
@@ -156,7 +159,13 @@ function getIdentifier(aspectDef: AspectDefinition, suffix: string, pathProp?: s
 }
 
 function getRegularAspectIdentifier(aspectDef: AspectDefinition, suffix: string, pathProp?: string): string {
-  const targetName = camelCase(`${parse(aspectDef.aspectPath).base.replace(/\./, '__').replace('@', '__')}${suffix}`);
+  let version = '';
+  if (aspectDef.getId) {
+    version = aspectDef.getId.split('@')[1];
+  }
+  const targetName = camelCase(
+    `${parse(aspectDef.aspectPath).base.replace(/\./, '__').replace('@', '__')}${version}${suffix}`
+  );
   const sourceName = pathProp ? getDefaultOrOnlyExport(aspectDef[pathProp]) : undefined;
   const identifier = sourceName ? `{${sourceName} as ${targetName}}` : targetName;
   return identifier;
@@ -168,7 +177,7 @@ function getDefaultOrOnlyExport(filePath: string): string | undefined {
     const exports = require(filePath);
     if (exports.default) return undefined;
     if (Object.keys(exports).length === 1) return Object.keys(exports)[0];
-  } catch (e) {
+  } catch {
     // ignore this error, fallback to just using the default export
   }
   return undefined;

@@ -1,6 +1,6 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { GitMain } from './git.main.runtime';
+import type { GitMain } from './git.main.runtime';
 
 const COMMAND_NAME = 'set-merge-driver';
 
@@ -13,7 +13,7 @@ export class SetGitMergeDriverCmd implements Command {
   alias = 'smd';
   description = `setup bit's git merge driver for bitmap files`;
   options = [['g', 'global', 'set the git merge driver globally']] as CommandOptions;
-  group = 'git';
+  group = 'workspace-tools';
   commands: Command[] = [];
   // helpUrl = '';
 

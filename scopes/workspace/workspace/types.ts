@@ -24,6 +24,12 @@ export interface WorkspaceExtConfig {
   defaultDirectory: string;
 
   /**
+   * sets the location of the root components directory.
+   * The location is a relative path to the workspace root and should use linux path separators (/).
+   */
+  rootComponentsDirectory?: string;
+
+  /**
    * set the default structure of components in your project
    */
   vendor: VendorConfig;
@@ -68,4 +74,14 @@ export interface WorkspaceExtConfig {
    * when set to true, bit will try to load MyDepAspect automatically.
    */
   autoLoadAspectsDeps?: boolean;
+
+  /**
+   * If set to `true`, enables external package manager mode. When enabled:
+   * - `bit install` will not install dependencies and will prompt the user to use their package manager.
+   * - Other commands that trigger installation (e.g., `bit import`, `bit checkout`) will skip the installation and print a warning.
+   * When this prop is set by bit to `true`, the following properties are automatically set to `false`:
+   * - `rootComponent`.
+   * - `enableWorkspaceConfigWrite`.
+   */
+  externalPackageManager?: boolean;
 }

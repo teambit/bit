@@ -1,7 +1,8 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { ComponentConfig } from '@teambit/generator';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ComponentConfig } from '@teambit/generator';
 import chalk from 'chalk';
-import { ForkingMain } from '.';
+import type { WorkspaceComponentLoadOptions } from '@teambit/workspace';
+import type { ForkingMain } from './forking.main.runtime';
 
 export type ForkOptions = {
   scope?: string;
@@ -14,11 +15,16 @@ export type ForkOptions = {
   env?: string;
   config?: ComponentConfig;
   ast?: boolean;
+  compile?: boolean;
+  loadOptions?: WorkspaceComponentLoadOptions;
 };
 
 export class ForkCmd implements Command {
   name = 'fork <source-component-id> [target-component-name]';
-  description = 'create a new component forked from an existing one (copies source files and configs)';
+  description = 'create a new component by copying from an existing one';
+  extendedDescription = `duplicates an existing component's source files and configuration to create a new independent component.
+useful for creating variations or starting development from a similar component.
+automatically handles import/require statement updates and provides refactoring options.`;
   helpUrl = 'docs/getting-started/collaborate/importing-components#fork-a-component';
   arguments = [
     { name: 'source-component-id', description: 'the component id of the source component' },
@@ -49,14 +55,14 @@ export class ForkCmd implements Command {
     ],
     ['', 'preserve', 'avoid refactoring file and variable/class names according to the new component name'],
     ['', 'no-link', 'avoid saving a reference to the original component'],
-    ['', 'ast', 'EXPERIMENTAL. use ast to transform files instead of regex'],
+    ['', 'ast', 'use ast to transform files instead of regex'],
   ] as CommandOptions;
 
   example: [
     {
       cmd: 'fork teambit.base-ui/input/button ui/button';
       description: "create a component named 'ui/button', forked from the remote 'input/button' component";
-    }
+    },
   ];
   loader = true;
   remoteOp = true;

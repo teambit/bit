@@ -1,6 +1,6 @@
-import { ShowFragment, Component } from '@teambit/component';
+import type { ShowFragment, Component } from '@teambit/component';
 import chalk from 'chalk';
-import { EnvsMain } from './environments.main.runtime';
+import type { EnvsMain } from './environments.main.runtime';
 
 export class EnvFragment implements ShowFragment {
   constructor(private envs: EnvsMain) {}

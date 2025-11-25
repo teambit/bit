@@ -1,4 +1,4 @@
-import {
+import type {
   EnvService,
   EnvDefinition,
   Env,
@@ -8,7 +8,7 @@ import {
 } from '@teambit/envs';
 import highlight from 'cli-highlight';
 import chalk from 'chalk';
-import { PackageJsonProps } from './pkg.main.runtime';
+import type { PackageJsonProps } from './pkg.main.runtime';
 
 export type PkgDescriptor = {
   id: string;
@@ -26,9 +26,14 @@ export class PkgService implements EnvService<{}, PkgDescriptor> {
 
   async render(env: EnvDefinition) {
     const descriptor = this.getDescriptor(env);
-    const title = chalk.green('configured package.json properties: ');
-    const config = descriptor?.config ? highlight(descriptor?.config, { language: 'json', ignoreIllegals: true }) : '';
-    return `${title}\n${config}`;
+    const parsed = JSON.parse(descriptor?.config || '{}');
+    const { packageJsonProps, npmIgnore } = parsed;
+    const jsonPropsTitle = chalk.green('configured package.json properties: ');
+    const config = packageJsonProps
+      ? highlight(JSON.stringify(packageJsonProps, null, 2), { language: 'json', ignoreIllegals: true })
+      : '';
+    const npmignoreTitle = chalk.green('configured npm ignore entries: ');
+    return `${jsonPropsTitle}\n${config}\n\n${npmignoreTitle}\n${npmIgnore.join('\n')}`;
   }
 
   transform(env: Env, context: EnvContext): PkgTransformationMap | undefined {
@@ -40,15 +45,22 @@ export class PkgService implements EnvService<{}, PkgDescriptor> {
       getPackageJsonProps: () => packageGenerator.packageJsonProps,
       // TODO: somehow handle context here? used in the aspect env
       getNpmIgnore: () => packageGenerator.npmIgnore,
+      modifyPackageJson: packageGenerator.modifyPackageJson,
     };
   }
 
   getDescriptor(env: EnvDefinition): PkgDescriptor | undefined {
     if (!env.env.getPackageJsonProps) return undefined;
     const props = env.env.getPackageJsonProps();
+    const npmIgnore = env.env.getNpmIgnore();
+    const config = {
+      packageJsonProps: props,
+      npmIgnore: npmIgnore,
+    };
+
     return {
       id: this.name,
-      config: props ? JSON.stringify(props, null, 2) : undefined,
+      config: JSON.stringify(config, null, 2),
       displayName: this.name,
     };
   }

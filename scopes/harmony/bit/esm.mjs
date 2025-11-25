@@ -12,6 +12,8 @@ export const registerCoreExtensions = cjsModule.registerCoreExtensions;
 export const BitAspect = cjsModule.BitAspect;
 export const loadBit = cjsModule.loadBit;
 export const restoreGlobals = cjsModule.restoreGlobals;
+export const restoreGlobalsFromSnapshot = cjsModule.restoreGlobalsFromSnapshot;
+export const takeLegacyGlobalsSnapshot = cjsModule.takeLegacyGlobalsSnapshot;
 
 export default cjsModule;
 

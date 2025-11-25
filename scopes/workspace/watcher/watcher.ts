@@ -1,32 +1,34 @@
-import { PubsubMain } from '@teambit/pubsub';
+import type { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
-import { dirname, basename } from 'path';
+import { dirname, basename, join, sep } from 'path';
 import { compact, difference, partition } from 'lodash';
-import { ComponentID } from '@teambit/component-id';
-import loader from '@teambit/legacy/dist/cli/loader';
-import { BIT_MAP, CFG_WATCH_USE_POLLING, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
-import { Consumer } from '@teambit/legacy/dist/consumer';
-import logger from '@teambit/legacy/dist/logger/logger';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import type { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { BIT_MAP, WORKSPACE_JSONC } from '@teambit/legacy.constants';
+import type { Consumer } from '@teambit/legacy.consumer';
+import { logger } from '@teambit/legacy.logger';
+import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import mapSeries from 'p-map-series';
 import chalk from 'chalk';
-import { ChildProcess } from 'child_process';
-import { UNMERGED_FILENAME } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
-import chokidar, { FSWatcher } from '@teambit/chokidar';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
-import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import { CompilationInitiator } from '@teambit/compiler';
+import type { ChildProcess } from 'child_process';
+import { UNMERGED_FILENAME } from '@teambit/legacy.scope';
+import type { FSWatcher } from 'chokidar';
+import chokidar from 'chokidar';
+import type { ComponentMap } from '@teambit/legacy.bit-map';
+import type { Workspace, OnComponentEventResult } from '@teambit/workspace';
 import {
   WorkspaceAspect,
-  Workspace,
-  OnComponentEventResult,
   OnComponentChangeEvent,
   OnComponentAddEvent,
   OnComponentRemovedEvent,
 } from '@teambit/workspace';
-import { CheckTypes } from './check-types';
-import { WatcherMain } from './watcher.main.runtime';
+import type { CheckTypes } from './check-types';
+import type { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';
+import type { Logger } from '@teambit/logger';
+import type { Event } from '@parcel/watcher';
+import ParcelWatcher from '@parcel/watcher';
+import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: ComponentID; componentIds: ComponentID[] };
 
@@ -49,61 +51,134 @@ export type OnFileEventFunc = (
 ) => void;
 
 export type WatchOptions = {
-  msgs?: EventMessages;
-  initiator?: CompilationInitiator;
+  initiator?: any; // the real type is CompilationInitiator, however it creates a circular dependency with the compiler aspect.
   verbose?: boolean; // print watch events to the console. (also ts-server events if spawnTSServer is true)
   spawnTSServer?: boolean; // needed for check types and extract API/docs.
   checkTypes?: CheckTypes; // if enabled, the spawnTSServer becomes true.
   preCompile?: boolean; // whether compile all components before start watching
   compile?: boolean; // whether compile modified/added components during watch process
+  import?: boolean; // whether import objects during watch when .bitmap got version changes
+  preImport?: boolean; // whether import objects before starting the watch process in case .bitmap is more updated than local scope.
+  generateTypes?: boolean; // whether generate d.ts files for typescript files during watch process (hurts performance)
+  trigger?: ComponentID; // trigger onComponentChange for the specified component-id. helpful when this comp must be a bundle, and needs to be recompile on any dep change.
 };
 
+export type RootDirs = { [dir: PathLinux]: ComponentID };
+
+type WatcherType = 'chokidar' | 'parcel';
+
 const DEBOUNCE_WAIT_MS = 100;
+const DROP_ERROR_DEBOUNCE_MS = 300; // Wait 300ms after last drop error before recovering
 type PathLinux = string; // ts fails when importing it from @teambit/legacy/dist/utils/path.
 
 export class Watcher {
-  private fsWatcher: FSWatcher;
+  private watcherType: WatcherType = 'parcel';
+  private chokidarWatcher: FSWatcher;
   private changedFilesPerComponent: { [componentId: string]: string[] } = {};
   private watchQueue = new WatchQueue();
   private bitMapChangesInProgress = false;
-  private ipcEventsDir: string;
-  private trackDirs: { [dir: PathLinux]: ComponentID } = {};
+  private ipcEventsDir: PathOsBasedAbsolute;
+  private rootDirs: RootDirs = {};
   private verbose = false;
   private multipleWatchers: WatcherProcessData[] = [];
+  private logger: Logger;
+  private workspacePathLinux: string;
+  // Snapshot-based recovery for FSEvents buffer overflow
+  private snapshotPath: PathOsBasedAbsolute;
+  private dropErrorDebounceTimer: NodeJS.Timeout | null = null;
+  private dropErrorCount = 0;
+  private isRecoveringFromSnapshot = false;
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
     private watcherMain: WatcherMain,
-    private options: WatchOptions
+    private options: WatchOptions,
+    private msgs?: EventMessages
   ) {
     this.ipcEventsDir = this.watcherMain.ipcEvents.eventsDir;
     this.verbose = this.options.verbose || false;
+    this.logger = this.watcherMain.logger;
+    this.workspacePathLinux = pathNormalizeToLinux(this.workspace.path);
+    this.snapshotPath = join(this.workspace.scope.path, 'watcher-snapshot.txt');
+
+    if (process.env.BIT_WATCHER_USE_CHOKIDAR === 'true' || process.env.BIT_WATCHER_USE_CHOKIDAR === '1') {
+      this.watcherType = 'chokidar';
+    }
   }
 
   get consumer(): Consumer {
     return this.workspace.consumer;
   }
 
-  async watch() {
-    const { msgs, ...watchOpts } = this.options;
-    await this.setTrackDirs();
-    const componentIds = Object.values(this.trackDirs);
-    await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
-    await this.createWatcher();
-    const watcher = this.fsWatcher;
-    msgs?.onStart(this.workspace);
+  private getParcelIgnorePatterns(): string[] {
+    return [
+      '**/node_modules/**',
+      '**/package.json',
+      `**/${this.workspace.scope.path}/cache/**`,
+      `**/${this.workspace.scope.path}/tmp/**`,
+      `**/${this.workspace.scope.path}/objects/**`,
+    ];
+  }
 
-    await this.workspace.scope.watchScopeInternalFiles();
+  async watch() {
+    await this.setRootDirs();
+    const componentIds = Object.values(this.rootDirs);
+    await this.watcherMain.triggerOnPreWatch(componentIds, this.options);
+    await this.watcherMain.watchScopeInternalFiles();
+    this.watcherType === 'parcel' ? await this.watchParcel() : await this.watchChokidar();
+  }
+
+  private async watchParcel() {
+    this.msgs?.onStart(this.workspace);
+
+    try {
+      await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), {
+        ignore: this.getParcelIgnorePatterns(),
+      });
+
+      // Write initial snapshot for FSEvents buffer overflow recovery
+      await this.writeSnapshotIfNeeded();
+      this.logger.debug('Initial watcher snapshot created');
+    } catch (err: any) {
+      if (err.message.includes('Error starting FSEvents stream')) {
+        throw new Error(`Failed to start the watcher: ${err.message}
+This is usually caused by too many watchers running in the same workspace (e.g., bit-watch, bit-start, bit-run, or VSCode with the Bit plugin).
+Try closing the other watchers and re-running the command.
+
+In general, if you're using "bit start" or "bit run", you don't need to run "bit watch" as well.
+Similarly, if you're using VSCode with the Bit extension, you can enable "Compile on Change" instead of running a watcher manually.
+
+If the issue persists, please refer to the Watchman troubleshooting guide:
+https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-register_with_server-error-f2d_register_rpc--null--21`);
+      }
+    }
+    this.msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
+    this.logger.clearStatusLine();
+  }
+
+  private async watchChokidar() {
+    await this.createChokidarWatcher();
+    const watcher = this.chokidarWatcher;
+    const msgs = this.msgs;
+    msgs?.onStart(this.workspace);
 
     return new Promise((resolve, reject) => {
       if (this.verbose) {
         // @ts-ignore
-        if (msgs?.onAll) watcher.on('all', msgs?.onAll);
+        if (msgs?.onAll) watcher.on('all', msgs.onAll);
       }
       watcher.on('ready', () => {
-        msgs?.onReady(this.workspace, this.trackDirs, this.verbose);
-        // console.log(this.fsWatcher.getWatched());
-        loader.stop();
+        msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
+        if (this.verbose) {
+          const watched = this.chokidarWatcher.getWatched();
+          const totalWatched = Object.values(watched).flat().length;
+          logger.console(
+            `${chalk.bold('the following files are being watched:')}\n${JSON.stringify(watched, null, 2)}`
+          );
+          logger.console(`\nTotal files being watched: ${chalk.bold(totalWatched.toString())}`);
+        }
+
+        this.logger.clearStatusLine();
       });
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('all', async (event, filePath) => {
@@ -170,7 +245,7 @@ export class Watcher {
         this.bitMapChangesInProgress = true;
         const buildResults = await this.watchQueue.add(() => this.handleBitmapChanges());
         this.bitMapChangesInProgress = false;
-        loader.stop();
+        this.logger.clearStatusLine();
         return { results: buildResults, files: [filePath] };
       }
       if (this.bitMapChangesInProgress) {
@@ -178,10 +253,14 @@ export class Watcher {
       }
       if (dirname(filePath) === this.ipcEventsDir) {
         const eventName = basename(filePath);
-        if (eventName !== 'onPostInstall') {
-          this.watcherMain.logger.warn(`eventName ${eventName} is not recognized, please handle it`);
+        if (eventName === 'onNotifySSE') {
+          const content = await fs.readFile(filePath, 'utf8');
+          this.logger.debug(`Watcher, onNotifySSE ${content}`);
+          const parsed = JSON.parse(content);
+          sendEventsToClients(parsed.event, parsed);
+        } else {
+          await this.watcherMain.ipcEvents.triggerGotEvent(eventName as any);
         }
-        await this.watcherMain.ipcEvents.triggerGotEvent(eventName as 'onPostInstall');
         return { results: [], files: [filePath] };
       }
       if (filePath.endsWith(WORKSPACE_JSONC)) {
@@ -194,13 +273,13 @@ export class Watcher {
       }
       const componentId = this.getComponentIdByPath(filePath);
       if (!componentId) {
-        loader.stop();
+        this.logger.clearStatusLine();
         return { results: [], files: [], irrelevant: true };
       }
       const compIdStr = componentId.toString();
       if (this.changedFilesPerComponent[compIdStr]) {
         this.changedFilesPerComponent[compIdStr].push(filePath);
-        loader.stop();
+        this.logger.clearStatusLine();
         return { results: [], files: [], debounced: true };
       }
       this.changedFilesPerComponent[compIdStr] = [filePath];
@@ -212,13 +291,13 @@ export class Watcher {
       const failureMsg = buildResults.length
         ? undefined
         : `files ${files.join(', ')} are inside the component ${compIdStr} but configured to be ignored`;
-      loader.stop();
+      this.logger.clearStatusLine();
       return { results: buildResults, files, failureMsg };
     } catch (err: any) {
       const msg = `watcher found an error while handling ${filePath}`;
       logger.error(msg, err);
       logger.console(`${msg}, ${err.message}`);
-      loader.stop();
+      this.logger.clearStatusLine();
       return { results: [], files: [filePath], failureMsg: err.message };
     }
   }
@@ -232,7 +311,7 @@ export class Watcher {
     files: PathOsBasedAbsolute[]
   ): Promise<OnComponentEventResult[]> {
     let updatedComponentId: ComponentID | undefined = componentId;
-    if (!(await this.workspace.hasId(componentId))) {
+    if (!this.workspace.hasId(componentId)) {
       // bitmap has changed meanwhile, which triggered `handleBitmapChanges`, which re-loaded consumer and updated versions
       // so the original componentId might not be in the workspace now, and we need to find the updated one
       const ids = this.workspace.listIds();
@@ -280,6 +359,10 @@ export class Watcher {
       removedFiles,
       true
     );
+    if (this.options.trigger && !updatedComponentId.isEqual(this.options.trigger)) {
+      await this.workspace.triggerOnComponentChange(this.options.trigger, [], [], this.options);
+    }
+
     return buildResults;
   }
 
@@ -287,24 +370,64 @@ export class Watcher {
    * if .bitmap changed, it's possible that a new component has been added. trigger onComponentAdd.
    */
   private async handleBitmapChanges(): Promise<OnComponentEventResult[]> {
-    const previewsTrackDirs = { ...this.trackDirs };
+    const previewsRootDirs = { ...this.rootDirs };
+    const previewsIds = this.consumer.bitMap.getAllBitIds();
     await this.workspace._reloadConsumer();
-    await this.setTrackDirs();
+    await this.setRootDirs();
+    await this.importObjectsIfNeeded(previewsIds);
     await this.workspace.triggerOnBitmapChange();
-    const newDirs: string[] = difference(Object.keys(this.trackDirs), Object.keys(previewsTrackDirs));
-    const removedDirs: string[] = difference(Object.keys(previewsTrackDirs), Object.keys(this.trackDirs));
+    const newDirs: string[] = difference(Object.keys(this.rootDirs), Object.keys(previewsRootDirs));
+    const removedDirs: string[] = difference(Object.keys(previewsRootDirs), Object.keys(this.rootDirs));
     const results: OnComponentEventResult[] = [];
     if (newDirs.length) {
       const addResults = await mapSeries(newDirs, async (dir) =>
-        this.executeWatchOperationsOnComponent(this.trackDirs[dir], [], [], false)
+        this.executeWatchOperationsOnComponent(this.rootDirs[dir], [], [], false)
       );
       results.push(...addResults.flat());
     }
     if (removedDirs.length) {
-      await mapSeries(removedDirs, (dir) => this.executeWatchOperationsOnRemove(previewsTrackDirs[dir]));
+      await mapSeries(removedDirs, (dir) => this.executeWatchOperationsOnRemove(previewsRootDirs[dir]));
     }
 
     return results;
+  }
+
+  /**
+   * needed when using git.
+   * it resolves the following issue - a user is running `git pull` which updates the components and the .bitmap file.
+   * because the objects locally are not updated, the .bitmap has new versions that don't exist in the local scope.
+   * as soon as the watcher gets an event about a file change, it loads the component which throws
+   * ComponentsPendingImport error.
+   * to resolve this, we import the new objects as soon as the .bitmap file changes.
+   * for performance reasons, we import only when: 1) the .bitmap file has version changes and 2) this new version is
+   * not already in the scope.
+   */
+  private async importObjectsIfNeeded(previewsIds: ComponentIdList) {
+    if (!this.options.import) {
+      return;
+    }
+    const currentIds = this.consumer.bitMap.getAllBitIds();
+    const hasVersionChanges = currentIds.find((id) => {
+      const prevId = previewsIds.searchWithoutVersion(id);
+      return prevId && prevId.version !== id.version;
+    });
+    if (!hasVersionChanges) {
+      return;
+    }
+    const existsInScope = await this.workspace.scope.isComponentInScope(hasVersionChanges);
+    if (existsInScope) {
+      // the .bitmap change was probably a result of tag/snap/merge, no need to import.
+      return;
+    }
+    if (this.options.verbose) {
+      logger.console(
+        `Watcher: .bitmap has changed with new versions which do not exist locally, importing the objects...`
+      );
+    }
+    await this.workspace.scope.import(currentIds, {
+      useCache: true,
+      lane: await this.workspace.getCurrentLaneObject(),
+    });
   }
 
   private async executeWatchOperationsOnRemove(componentId: ComponentID) {
@@ -364,64 +487,271 @@ export class Watcher {
 
   private getComponentIdByPath(filePath: string): ComponentID | null {
     const relativeFile = this.getRelativePathLinux(filePath);
-    const trackDir = this.findTrackDirByFilePathRecursively(relativeFile);
-    if (!trackDir) {
+    const rootDir = this.findRootDirByFilePathRecursively(relativeFile);
+    if (!rootDir) {
       // the file is not part of any component. If it was a new component, or a new file of
       // existing component, then, handleBitmapChanges() should deal with it.
       return null;
     }
-    return this.trackDirs[trackDir];
+    return this.rootDirs[rootDir];
   }
 
   private getRelativePathLinux(filePath: string) {
     return pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(filePath));
   }
 
-  private findTrackDirByFilePathRecursively(filePath: string): string | null {
-    if (this.trackDirs[filePath]) return filePath;
+  private findRootDirByFilePathRecursively(filePath: string): string | null {
+    if (this.rootDirs[filePath]) return filePath;
     const parentDir = dirname(filePath);
     if (parentDir === filePath) return null;
-    return this.findTrackDirByFilePathRecursively(parentDir);
+    return this.findRootDirByFilePathRecursively(parentDir);
   }
 
-  private async createWatcher() {
-    const usePollingConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_POLLING);
-    const usePolling = usePollingConf === 'true';
-    // const useFsEventsConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_FS_EVENTS);
-    // const useFsEvents = useFsEventsConf === 'true';
-    const ignoreLocalScope = (pathToCheck: string) => {
-      if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
-      return (
-        pathToCheck.startsWith(`${this.workspace.path}/.git/`) || pathToCheck.startsWith(`${this.workspace.path}/.bit/`)
-      );
-    };
-    this.fsWatcher = chokidar.watch(this.workspace.path, {
-      ignoreInitial: true,
-      // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
-      // (windows-style backslashes are converted to forward slashes)
-      ignored: ['**/node_modules/**', '**/package.json', ignoreLocalScope],
-      /**
-       * default to false, although it causes high CPU usage.
-       * see: https://github.com/paulmillr/chokidar/issues/1196#issuecomment-1711033539
-       * there is a fix for this in master. once a new version of Chokidar is released, we can upgrade it and then
-       * default to true.
-       */
-      usePolling,
-      // useFsEvents,
-      persistent: true,
-    });
+  private shouldIgnoreFromLocalScopeChokidar(pathToCheck: string) {
+    if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
+    const scopePathLinux = pathNormalizeToLinux(this.workspace.scope.path);
+    return pathToCheck.startsWith(`${scopePathLinux}/`);
+  }
+
+  private shouldIgnoreFromLocalScopeParcel(pathToCheck: string) {
+    if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
+    return pathToCheck.startsWith(this.workspace.scope.path + sep);
+  }
+
+  private async createChokidarWatcher() {
+    const chokidarOpts = await this.watcherMain.getChokidarWatchOptions();
+    // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
+    // (windows-style backslashes are converted to forward slashes)
+    chokidarOpts.ignored = [
+      '**/node_modules/**',
+      '**/package.json',
+      this.shouldIgnoreFromLocalScopeChokidar.bind(this),
+    ];
+    this.chokidarWatcher = chokidar.watch(this.workspace.path, chokidarOpts);
     if (this.verbose) {
-      logger.console(`chokidar.options ${JSON.stringify(this.fsWatcher.options, undefined, 2)}`);
+      logger.console(
+        `${chalk.bold('chokidar.options:\n')} ${JSON.stringify(this.chokidarWatcher.options, undefined, 2)}`
+      );
     }
   }
 
-  private async setTrackDirs() {
-    this.trackDirs = {};
+  private async onParcelWatch(err: Error | null, allEvents: Event[]) {
+    const events = allEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
+
+    if (this.verbose) {
+      this.logger.debug(
+        `onParcelWatch: ${allEvents.length} events, ${events.length} after filtering, error: ${err?.message || 'none'}`
+      );
+    }
+
+    const msgs = this.msgs;
+    if (this.verbose) {
+      if (msgs?.onAll) events.forEach((event) => msgs.onAll(event.type, event.path));
+    }
+
+    // Handle FSEvents buffer overflow with debounced snapshot recovery
+    if (err?.message.includes('Events were dropped')) {
+      // If recovery is already in progress, don't schedule another one
+      if (this.isRecoveringFromSnapshot) {
+        this.logger.debug('Recovery already in progress, ignoring additional drop error');
+        return;
+      }
+
+      this.dropErrorCount++;
+      this.logger.warn(`⚠️  FSEvents buffer overflow detected (occurrence #${this.dropErrorCount})`);
+
+      // Clear existing timer and schedule new recovery
+      if (this.dropErrorDebounceTimer) {
+        clearTimeout(this.dropErrorDebounceTimer);
+      }
+
+      this.dropErrorDebounceTimer = setTimeout(async () => {
+        await this.recoverFromSnapshot();
+        this.dropErrorDebounceTimer = null;
+      }, DROP_ERROR_DEBOUNCE_MS);
+
+      // Don't process events if we got a drop error - wait for recovery
+      return;
+    }
+
+    // Handle other errors
+    if (err) {
+      msgs?.onError(err);
+      // Continue processing events even with other errors
+    }
+
+    if (!events.length) {
+      return;
+    }
+
+    const startTime = new Date().getTime();
+    await this.processEvents(events, startTime);
+
+    // Write snapshot after successful processing (non-blocking)
+    this.writeSnapshotIfNeeded().catch((writeErr) => {
+      this.logger.debug(`Failed to write watcher snapshot: ${writeErr.message}`);
+    });
+  }
+
+  /**
+   * Process a list of file system events through the normal change handling pipeline.
+   */
+  private async processEvents(events: Event[], startTime: number): Promise<void> {
+    await Promise.all(
+      events.map(async (event) => {
+        const { files, results, debounced, irrelevant, failureMsg } = await this.handleChange(event.path);
+        if (debounced || irrelevant) {
+          return;
+        }
+        const duration = new Date().getTime() - startTime;
+        this.msgs?.onChange(files, results, this.verbose, duration, failureMsg);
+      })
+    );
+  }
+
+  private async setRootDirs() {
+    this.rootDirs = {};
     const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
     componentsFromBitMap.map((componentMap) => {
       const componentId = componentMap.id;
       const rootDir = componentMap.getRootDir();
-      this.trackDirs[rootDir] = componentId;
+      this.rootDirs[rootDir] = componentId;
     });
+  }
+
+  /**
+   * Write a snapshot of the current filesystem state for recovery after FSEvents buffer overflow.
+   * This is called after successful event processing.
+   */
+  private async writeSnapshotIfNeeded(): Promise<void> {
+    if (this.watcherType !== 'parcel') {
+      return; // Snapshots only work with Parcel watcher
+    }
+
+    if (this.isRecoveringFromSnapshot) {
+      return; // Don't write snapshot while recovering
+    }
+
+    try {
+      await ParcelWatcher.writeSnapshot(this.workspace.path, this.snapshotPath, {
+        ignore: this.getParcelIgnorePatterns(),
+      });
+      this.logger.debug('Watcher snapshot written successfully');
+    } catch (err: any) {
+      this.logger.debug(`Failed to write watcher snapshot: ${err.message}`);
+    }
+  }
+
+  /**
+   * Recover from FSEvents buffer overflow by reading all events since the last snapshot.
+   * This is called after debouncing multiple drop errors.
+   */
+  private async recoverFromSnapshot(): Promise<void> {
+    if (this.isRecoveringFromSnapshot) {
+      this.logger.debug('Already recovering from snapshot, skipping');
+      return;
+    }
+
+    this.isRecoveringFromSnapshot = true;
+
+    // Clear the debounce timer since we're now executing the recovery
+    if (this.dropErrorDebounceTimer) {
+      clearTimeout(this.dropErrorDebounceTimer);
+      this.dropErrorDebounceTimer = null;
+    }
+
+    const startTime = new Date().getTime();
+    const dropsDetected = this.dropErrorCount;
+
+    // Reset drop error counter immediately to prevent multiple recoveries
+    this.dropErrorCount = 0;
+
+    try {
+      if (this.verbose) {
+        this.logger.console(
+          chalk.yellow(
+            `Recovering from FSEvents buffer overflow (${dropsDetected} drops detected). Scanning for missed events...`
+          )
+        );
+      }
+
+      // Check if snapshot exists
+      if (!(await fs.pathExists(this.snapshotPath))) {
+        if (this.verbose) {
+          this.logger.console(chalk.yellow('No snapshot found. Skipping recovery.'));
+        }
+        return;
+      }
+
+      // Get all events since last snapshot
+      const missedEvents = await ParcelWatcher.getEventsSince(this.workspace.path, this.snapshotPath, {
+        ignore: this.getParcelIgnorePatterns(),
+      });
+
+      // Write new snapshot immediately after reading events to prevent re-processing same events
+      await this.writeSnapshotIfNeeded();
+
+      const filteredEvents = missedEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
+
+      if (this.verbose) {
+        this.logger.console(
+          chalk.green(
+            `Found ${filteredEvents.length} missed events (${missedEvents.length} total, ${missedEvents.length - filteredEvents.length} ignored)`
+          )
+        );
+      }
+
+      if (filteredEvents.length === 0) {
+        if (this.verbose) {
+          this.logger.console(chalk.green('No relevant missed events. Watcher state is consistent.'));
+        }
+        return;
+      }
+
+      // Log critical files that were missed (for debugging)
+      if (this.verbose) {
+        const criticalFiles = filteredEvents.filter(
+          (e) => e.path.endsWith(BIT_MAP) || e.path.endsWith(WORKSPACE_JSONC)
+        );
+        if (criticalFiles.length > 0) {
+          this.logger.console(
+            chalk.cyan(`Critical files in missed events: ${criticalFiles.map((e) => basename(e.path)).join(', ')}`)
+          );
+        }
+      }
+
+      // Process all missed events using shared helper
+      await this.processEvents(filteredEvents, startTime);
+
+      if (this.verbose) {
+        const duration = new Date().getTime() - startTime;
+        this.logger.console(chalk.green(`✓ Recovery complete in ${duration}ms. Watcher state restored.`));
+      }
+    } catch (err: any) {
+      // If recovery failed with the same drop error, the operation is still ongoing - retry after delay
+      if (err.message?.includes('Events were dropped by the FSEvents client')) {
+        if (this.verbose) {
+          this.logger.console(
+            chalk.yellow(`Recovery scan also encountered buffer overflow. Retrying in ${DROP_ERROR_DEBOUNCE_MS}ms...`)
+          );
+        }
+
+        // Increment counter since we're encountering another drop
+        this.dropErrorCount++;
+
+        // Schedule another retry
+        setTimeout(async () => {
+          await this.recoverFromSnapshot();
+        }, DROP_ERROR_DEBOUNCE_MS);
+      } else {
+        // Other errors - log and give up (counter already reset at start)
+        this.logger.error(`Snapshot recovery failed: ${err.message}`);
+        if (this.verbose) {
+          this.logger.console(chalk.red(`Failed to recover from snapshot. Some events may have been missed.`));
+        }
+      }
+    } finally {
+      this.isRecoveringFromSnapshot = false;
+    }
   }
 }

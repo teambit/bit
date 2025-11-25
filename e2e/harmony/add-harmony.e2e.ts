@@ -1,10 +1,9 @@
 import chai from 'chai';
 import path from 'path';
-import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/adding-individual-files';
-import { ParentDirTracked } from '../../src/consumer/component-ops/add-components/exceptions/parent-dir-tracked';
-import Helper from '../../src/e2e-helper/e2e-helper';
-
-chai.use(require('chai-fs'));
+import { ParentDirTracked, AddingIndividualFiles } from '@teambit/tracker';
+import { Helper } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('add command on Harmony', function () {
   this.timeout(0);
@@ -17,7 +16,7 @@ describe('add command on Harmony', function () {
   });
   describe('adding files when workspace is new', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
     });
     it('should throw an error AddingIndividualFiles', () => {
@@ -28,7 +27,7 @@ describe('add command on Harmony', function () {
   });
   describe('add a directory inside an existing component', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/foo/foo.ts');
     });

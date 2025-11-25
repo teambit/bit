@@ -1,13 +1,13 @@
-import { Graph } from '@teambit/graph.cleargraph';
-import { BitId } from '@teambit/legacy-bit-id';
-import { ComponentID } from '@teambit/component-id';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { CompIdGraph } from '@teambit/graph';
-import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import type { Graph } from '@teambit/graph.cleargraph';
+import type { BitId } from '@teambit/legacy-bit-id';
+import type { ComponentID } from '@teambit/component-id';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ComponentLog } from '@teambit/objects';
 import type { AspectDefinition } from '@teambit/aspect-loader';
-import { Component, InvalidComponent } from './component';
-import { State } from './state';
-import { Snap } from './snap';
+import type { DependencyList } from '@teambit/dependency-resolver';
+import type { Component, InvalidComponent } from './component';
+import type { State } from './state';
+import type { Snap } from './snap';
 
 export type ResolveAspectsOptions = FilterAspectsOptions & {
   throwOnError?: boolean;
@@ -30,14 +30,31 @@ export type LoadAspectsOptions = {
   (considering throwOnError as well) */
   hideMissingModuleError?: boolean;
 
+  /* The `ignoreErrorFunc` property is an optional parameter that can be passed to the `LoadAspectsOptions` object in
+  the `ComponentFactory` interface. If provided, it will be called with the error that occurred during the loading of
+  aspects. If the function returns `true`, the method will ignore the error and continue loading the other aspects.
+  If the function returns `false`, the method will print/throw the error. */
+  ignoreErrorFunc?: (err: Error) => boolean;
+
   /* The `ignoreErrors` property is an optional boolean parameter that can be passed to the `LoadAspectsOptions` object in
   the `ComponentFactory` interface. If set to `true`, it will cause the `loadAspects` method to ignore any errors that
   occur during the loading of aspects and continue loading the other aspects. If set to `false` or not provided, the
   method will print/throw an error if a required module is missing or if any other error occurs during the loading of
   aspects. */
   ignoreErrors?: boolean;
+
+  /**
+   * Force load the aspect from the host, even if it's already loaded.
+   */
+  forceLoad?: boolean;
+
   [key: string]: any;
 };
+
+/**
+ * don't use this type from @teambit/graph to not create a circular dependency.
+ */
+type CompIdGraph = Graph<ComponentID, 'prod' | 'dev' | 'ext' | 'peer'>;
 
 export type FilterAspectsOptions = {
   /**
@@ -119,6 +136,10 @@ export interface ComponentFactory {
 
   getLogs(id: ComponentID, shortHash?: boolean, startsFrom?: string): Promise<ComponentLog[]>;
 
+  getDependencies(component: Component): DependencyList;
+
+  componentPackageName(component: Component): string;
+
   /**
    * returns a specific state of a component by hash or semver.
    */
@@ -163,7 +184,7 @@ export interface ComponentFactory {
    */
   idsByPattern(pattern: string, throwForNoMatch?: boolean): Promise<ComponentID[]>;
 
-  hasId(componentId: ComponentID): Promise<boolean>;
+  hasId(componentId: ComponentID): Promise<boolean> | boolean;
 
   /**
    * Check if the host has the id, if no, search for the id in inner host (for example, workspace will search in the scope)
@@ -177,6 +198,11 @@ export interface ComponentFactory {
    * this is relevant for component from the workspace, where it can be locally changed. on the scope it's always false
    */
   isModified(component: Component): Promise<boolean>;
+
+  /**
+   * whether the component exists on the remote.
+   */
+  isExported(componentId: ComponentID): boolean;
 
   /**
    * write the component to the filesystem when applicable (no-op for scope).

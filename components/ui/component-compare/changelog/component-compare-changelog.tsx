@@ -1,5 +1,6 @@
-import React, { HTMLAttributes, useMemo, useContext } from 'react';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import type { HTMLAttributes } from 'react';
+import React, { useMemo, useContext } from 'react';
+import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { VersionBlock } from '@teambit/component.ui.version-block';
 import { ComponentContext } from '@teambit/component';
 import classNames from 'classnames';
@@ -30,15 +31,18 @@ const getLogsBetweenVersions: (
   compareVersion?: LegacyComponentLog
 ) => LegacyComponentLog[] = (allLogs, baseVersion, compareVersion) => {
   const [startingVersion, endingVersion] = orderByDateDsc(baseVersion, compareVersion);
-  const { startingVersionIndex, endingVersionIndex } = allLogs.reduce((accum, next, index) => {
-    if (next.hash === startingVersion?.hash) {
-      accum = { ...accum, startingVersionIndex: index };
-    }
-    if (next.hash === endingVersion?.hash) {
-      accum = { ...accum, endingVersionIndex: index };
-    }
-    return accum;
-  }, {} as { startingVersionIndex: number; endingVersionIndex: number });
+  const { startingVersionIndex, endingVersionIndex } = allLogs.reduce(
+    (accum, next, index) => {
+      if (next.hash === startingVersion?.hash) {
+        accum = { ...accum, startingVersionIndex: index };
+      }
+      if (next.hash === endingVersion?.hash) {
+        accum = { ...accum, endingVersionIndex: index };
+      }
+      return accum;
+    },
+    {} as { startingVersionIndex: number; endingVersionIndex: number }
+  );
 
   return allLogs.filter((_, index) => index >= startingVersionIndex && index <= endingVersionIndex);
 };

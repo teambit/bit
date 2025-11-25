@@ -1,5 +1,5 @@
-import { ComponentID } from '@teambit/component-id';
-import { Component } from '../component';
+import type { ComponentID } from '@teambit/component-id';
+import type { Component } from '../component';
 
 /**
  * allows to index components -> values.
@@ -66,8 +66,7 @@ export class ComponentMap<T> {
 
     const tuples = await Promise.all(tuplesP);
 
-    // @ts-ignore TODO: fix this type
-    return new ComponentMap(new Map(tuples));
+    return new ComponentMap(new Map(tuples as any));
   }
 
   /**

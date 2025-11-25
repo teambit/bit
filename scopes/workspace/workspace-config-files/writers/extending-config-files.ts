@@ -1,19 +1,20 @@
 import normalize from 'normalize-path';
 import format from 'string-format';
-import { sha1 } from '@teambit/legacy/dist/utils';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import fs from 'fs-extra';
 import { dirname, join, relative } from 'path';
 import pMapSeries from 'p-map-series';
 import { compact } from 'lodash';
-import { ExtendingConfigFile } from '../config-writer-entry';
-import { DedupedPaths, dedupePaths } from '../dedup-paths';
-import {
+import type { ExtendingConfigFile } from '../config-writer-entry';
+import type { DedupedPaths } from '../dedup-paths';
+import { dedupePaths } from '../dedup-paths';
+import type {
   EnvCompsDirsMap,
   EnvConfigWriterEntry,
   EnvMapValue,
   WriteConfigFilesOptions,
 } from '../workspace-config-files.main.runtime';
-import { WrittenConfigFile, WrittenRealConfigFilesByHash } from './real-config-files';
+import type { WrittenConfigFile, WrittenRealConfigFilesByHash } from './real-config-files';
 
 type EnvCalculatedExtendingConfigFile = {
   envId: string;
@@ -36,6 +37,7 @@ export async function handleExtendingConfigFiles(
   envCompsDirsMap: EnvCompsDirsMap,
   writtenRealConfigFiles: WrittenRealConfigFilesByHash,
   configsRootDir: string,
+  componentsRootDir: string | undefined,
   workspaceDir: string,
   opts: WriteConfigFilesOptions
 ): Promise<EnvsWrittenExtendingConfigFiles> {
@@ -46,7 +48,7 @@ export async function handleExtendingConfigFiles(
     configsRootDir,
     workspaceDir
   );
-  const fileHashPerDedupedPaths = dedupePaths(extendingConfigFilesMap, envCompsDirsMap);
+  const fileHashPerDedupedPaths = dedupePaths(extendingConfigFilesMap, envCompsDirsMap, componentsRootDir);
   await postProcessExtendingConfigFiles(
     envEntries,
     envCompsDirsMap,

@@ -1,11 +1,11 @@
 import format from 'string-format';
-import { sha1 } from '@teambit/legacy/dist/utils';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import fs from 'fs-extra';
 import { join } from 'path';
 import pMapSeries from 'p-map-series';
 import { compact } from 'lodash';
-import { ConfigFile, MergeConfigFilesFunc } from '../config-writer-entry';
-import {
+import type { ConfigFile, MergeConfigFilesFunc } from '../config-writer-entry';
+import type {
   EnvCompsDirsMap,
   EnvConfigWriterEntry,
   EnvMapValue,

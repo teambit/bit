@@ -1,8 +1,9 @@
-import { Node, ParenthesizedTypeNode, SyntaxKind } from 'typescript';
+import type { Node, ParenthesizedTypeNode } from 'typescript';
+import { SyntaxKind } from 'typescript';
 import { ParenthesizedTypeSchema } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { Identifier } from '../identifier';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { Identifier } from '../identifier';
 
 export class ParenthesizedTypeTransformer implements SchemaTransformer {
   predicate(node: Node) {

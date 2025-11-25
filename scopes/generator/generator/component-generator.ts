@@ -1,25 +1,23 @@
-import Vinyl from 'vinyl';
 import fs from 'fs-extra';
+import { prompt } from 'enquirer';
 import pMapSeries from 'p-map-series';
 import path from 'path';
-import { Workspace } from '@teambit/workspace';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import type { Workspace } from '@teambit/workspace';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
 import camelcase from 'camelcase';
 import { BitError } from '@teambit/bit-error';
-import { Logger } from '@teambit/logger';
-import { TrackerMain } from '@teambit/tracker';
+import type { Logger } from '@teambit/logger';
+import type { TrackerMain } from '@teambit/tracker';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
-import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import { NewComponentHelperMain } from '@teambit/new-component-helper';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
+import type { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ComponentID } from '@teambit/component-id';
-import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 
-import { ComponentTemplate, ComponentFile, ComponentConfig } from './component-template';
-import { CreateOptions } from './create.cmd';
-import { OnComponentCreateSlot } from './generator.main.runtime';
+import type { ComponentTemplate, ComponentConfig, PromptOption, PromptResults } from './component-template';
+import type { CreateOptions } from './create.cmd';
+import type { OnComponentCreateSlot } from './generator.main.runtime';
 
 export type GenerateResult = {
   id: ComponentID;
@@ -34,7 +32,9 @@ export type GenerateResult = {
   installMissingDependencies?: boolean;
 };
 
-export type OnComponentCreateFn = (generateResults: GenerateResult[]) => Promise<void>;
+export type InstallOptions = { optimizeReportForNonTerminal?: boolean };
+
+export type OnComponentCreateFn = (generateResults: GenerateResult[], installOptions?: InstallOptions) => Promise<void>;
 
 export class ComponentGenerator {
   constructor(
@@ -49,20 +49,23 @@ export class ComponentGenerator {
     private logger: Logger,
     private onComponentCreateSlot: OnComponentCreateSlot,
     private aspectId: string,
-    private envId?: ComponentID
+    private envId?: ComponentID,
+    private installOptions: InstallOptions = {},
+    private promptResults?: PromptResults
   ) {}
 
-  async generate(): Promise<GenerateResult[]> {
+  async generate(force = false): Promise<GenerateResult[]> {
     const dirsToDeleteIfFailed: string[] = [];
     const generateResults = await pMapSeries(this.componentIds, async (componentId) => {
       try {
-        const componentPath = this.newComponentHelper.getNewComponentPath(
-          componentId,
-          this.options.path,
-          this.componentIds.length
-        );
-        if (fs.existsSync(path.join(this.workspace.path, componentPath))) {
-          throw new BitError(`unable to create a component at "${componentPath}", this path already exist`);
+        const componentPath = this.newComponentHelper.getNewComponentPath(componentId, {
+          pathFromUser: this.options.path,
+          componentsToCreate: this.componentIds.length,
+        });
+        if (!force && fs.existsSync(path.join(this.workspace.path, componentPath))) {
+          throw new BitError(
+            `unable to create a component at "${componentPath}", this path already exists, please use "--path" to create the component in a different path`
+          );
         }
         dirsToDeleteIfFailed.push(componentPath);
         return await this.generateOneComponent(componentId, componentPath);
@@ -101,7 +104,7 @@ export class ComponentGenerator {
   private async runOnComponentCreateHook(generateResults: GenerateResult[]) {
     const fns = this.onComponentCreateSlot.values();
     if (!fns.length) return;
-    await Promise.all(fns.map((fn) => fn(generateResults)));
+    await Promise.all(fns.map((fn) => fn(generateResults, this.installOptions)));
   }
 
   /**
@@ -144,11 +147,91 @@ export class ComponentGenerator {
     );
   }
 
+  private getOptionResultFromArgs(option: PromptOption): string | boolean | undefined {
+    const args = process.argv.slice(2);
+    const argIndex = args.indexOf(`--${option.name}`);
+    if (argIndex === -1) {
+      return;
+    }
+    if (option.type === 'confirm') {
+      return true;
+    }
+    const argValue = args[argIndex + 1];
+    if (!argValue) {
+      throw new Error(`Missing value for ${option.name}`);
+    }
+    if (option.type === 'select' && !option.choices?.includes(argValue)) {
+      throw new Error(
+        `Invalid value for ${option.name}. Please use one of the following values: ${option.choices?.join(', ')}`
+      );
+    }
+    return argValue;
+  }
+
+  private async getPromptOptionResult(option: PromptOption): Promise<Record<string, string | boolean>> {
+    switch (option.type) {
+      case 'input':
+        return prompt({
+          type: 'input',
+          name: option.name,
+          message: option.message,
+        });
+      case 'confirm':
+        return prompt({
+          type: 'confirm',
+          name: option.name,
+          message: option.message,
+        });
+      case 'select':
+        return prompt({
+          type: 'select',
+          name: option.name,
+          message: option.message,
+          choices: option.choices,
+        });
+      default:
+        throw new Error(`unexpected prompt type ${option.type}`);
+    }
+  }
+
+  private async getPromptResults(): Promise<PromptResults | undefined> {
+    if (this.promptResults) {
+      return this.promptResults;
+    }
+    const promptOptions = this.template.promptOptions?.();
+    if (!promptOptions) {
+      return undefined;
+    }
+    const promptResults: PromptResults = {};
+    for await (const option of promptOptions) {
+      const fromArg = this.getOptionResultFromArgs(option);
+      if (fromArg) {
+        promptResults[option.name] = fromArg;
+        continue;
+      }
+      if (option.skip && option.skip(promptResults)) {
+        continue;
+      }
+      try {
+        const optionResult = await this.getPromptOptionResult(option);
+        promptResults[option.name] = optionResult[option.name];
+      } catch (err: any) {
+        if (!err) {
+          // for some reason, when the user clicks Ctrl+C, the error is an empty string
+          throw new Error(`The prompt has been canceled`);
+        }
+        throw err;
+      }
+    }
+    return promptResults;
+  }
+
   private async generateOneComponent(componentId: ComponentID, componentPath: string): Promise<GenerateResult> {
     const name = componentId.name;
     const namePascalCase = camelcase(name, { pascalCase: true });
     const nameCamelCase = camelcase(name);
     const aspectId = ComponentID.fromString(this.aspectId);
+    const promptResults = await this.getPromptResults();
 
     const files = await this.template.generateFiles({
       name,
@@ -157,20 +240,21 @@ export class ComponentGenerator {
       componentId,
       aspectId,
       envId: this.envId,
+      promptResults,
     });
     const mainFile = files.find((file) => file.isMain);
-    await this.writeComponentFiles(componentPath, files);
+    await this.newComponentHelper.writeComponentFiles(
+      componentPath,
+      files.map((f) => ({ path: f.relativePath, content: f.content }))
+    );
     const addResults = await this.tracker.track({
       rootDir: componentPath,
       mainFile: mainFile?.relativePath,
       componentName: componentId.fullName,
-      defaultScope: this.options.scope,
+      defaultScope: this.options.scope || componentId.scope,
     });
     const component = await this.workspace.get(componentId);
     const hasEnvConfiguredOriginally = this.envs.hasEnvConfigured(component);
-    if (this.template.isApp) {
-      await this.workspace.use(componentId.toString());
-    }
     const envBeforeConfigChanges = this.envs.getEnv(component);
     let config = this.template.config;
     if (config && typeof config === 'function') {
@@ -181,7 +265,7 @@ export class ComponentGenerator {
     const userEnv = this.options.env;
 
     if (!config && this.envId && !userEnv) {
-      const isInWorkspace = this.workspace.exists(this.envId);
+      const isInWorkspace = this.workspace.hasId(this.envId, { ignoreVersion: true });
       config = {
         [isInWorkspace ? this.envId.toStringWithoutVersion() : this.envId.toString()]: {},
         'teambit.envs/envs': {
@@ -223,7 +307,15 @@ export class ComponentGenerator {
         setBy: hasEnvConfiguredOriginally ? 'workspace variants' : '<default>',
       };
     };
-    const { envId, setBy } = getEnvData();
+    // eslint-disable-next-line prefer-const
+    let { envId, setBy } = getEnvData();
+    if (envId) {
+      const isInWorkspace = this.workspace.hasId(envId, { ignoreVersion: true });
+      const isSameAsThisEnvId = envId === this.envId?.toString() || envId === this.envId?.toStringWithoutVersion();
+      if (isSameAsThisEnvId && this.envId) {
+        envId = isInWorkspace ? this.envId.toStringWithoutVersion() : this.envId.toString();
+      }
+    }
     return {
       id: componentId,
       dir: componentPath,
@@ -252,28 +344,5 @@ export class ComponentGenerator {
     await this.tracker.addEnvToConfig(userEnv, config);
 
     return config;
-  }
-
-  /**
-   * writes the generated template files to the default directory set in the workspace config
-   */
-  private async writeComponentFiles(
-    componentPath: string,
-    templateFiles: ComponentFile[]
-  ): Promise<PathOsBasedRelative[]> {
-    const dataToPersist = new DataToPersist();
-    const vinylFiles = templateFiles.map((templateFile) => {
-      const templateFileVinyl = new Vinyl({
-        base: componentPath,
-        path: path.join(componentPath, templateFile.relativePath),
-        contents: Buffer.from(templateFile.content),
-      });
-      return AbstractVinyl.fromVinyl(templateFileVinyl);
-    });
-    const results = vinylFiles.map((v) => v.path);
-    dataToPersist.addManyFiles(vinylFiles);
-    dataToPersist.addBasePath(this.workspace.path);
-    await dataToPersist.persistAllToFS();
-    return results;
   }
 }

@@ -1,17 +1,20 @@
 // eslint-disable-next-line max-classes-per-file
 import chalk from 'chalk';
-import yn from 'yn';
-import { ScopeMain } from '@teambit/scope';
-import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
+import type { ScopeMain } from '@teambit/scope';
+import type { LaneId } from '@teambit/lane-id';
+import { DEFAULT_LANE } from '@teambit/lane-id';
 import { checkoutOutput } from '@teambit/checkout';
-import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { Command, CommandOptions } from '@teambit/cli';
-import { LaneData, serializeLaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
+import type { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError } from '@teambit/workspace';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { LaneData } from '@teambit/legacy.scope';
+import { serializeLaneData } from '@teambit/legacy.scope';
 import { BitError } from '@teambit/bit-error';
-import { approveOperation } from '@teambit/legacy/dist/prompts';
-import { COMPONENT_PATTERN_HELP, DEFAULT_CLOUD_DOMAIN } from '@teambit/legacy/dist/constants';
-import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
-import { SwitchCmd } from './switch.cmd';
+import yesno from 'yesno';
+import { COMPONENT_PATTERN_HELP, DEFAULT_CLOUD_DOMAIN } from '@teambit/legacy.constants';
+import type { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
+import type { SwitchCmd } from './switch.cmd';
+import type { FetchCmd } from '@teambit/importer';
 
 type LaneOptions = {
   details?: boolean;
@@ -36,7 +39,11 @@ export class LaneListCmd implements Command {
   remoteOp = true;
   skipWorkspace = true;
 
-  constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain) {}
+  constructor(
+    private lanes: LanesMain,
+    private workspace: Workspace,
+    private scope: ScopeMain
+  ) {}
 
   async report(args, laneOptions: LaneOptions): Promise<string> {
     const { details, remote, merged, notMerged } = laneOptions;
@@ -143,9 +150,27 @@ export class LaneShowCmd implements Command {
   remoteOp = true;
   skipWorkspace = true;
 
-  constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain) {}
+  constructor(
+    private lanes: LanesMain,
+    private workspace: Workspace,
+    private scope: ScopeMain
+  ) {}
 
   async report([name]: [string], laneOptions: LaneOptions): Promise<string> {
+    const lanes = await this.geLanesData([name], laneOptions);
+    const onlyLane = lanes[0];
+    const laneId = onlyLane.id;
+    const laneIdStr = laneId.isDefault() ? DEFAULT_LANE : laneId.toString();
+    const title = `showing information for ${chalk.bold(laneIdStr)}\n`;
+    const author = onlyLane.log ? `author: ${onlyLane.log?.username || 'N/A'} <${onlyLane.log?.email || 'N/A'}>\n` : '';
+    const date = onlyLane.log?.date ? `created: ${new Date(parseInt(onlyLane.log.date)).toLocaleString()}\n` : '';
+    const link = laneId.isDefault()
+      ? ''
+      : `link: https://${DEFAULT_CLOUD_DOMAIN}/${laneId.scope.replace('.', '/')}/~lane/${laneId.name}\n`;
+    return title + author + date + link + outputComponents(onlyLane.components);
+  }
+
+  private async geLanesData([name]: [string], laneOptions: LaneOptions) {
     const { remote } = laneOptions;
 
     if (!name && remote) {
@@ -162,24 +187,11 @@ export class LaneShowCmd implements Command {
       remote: remote ? laneId.scope : undefined,
     });
 
-    const onlyLane = lanes[0];
-    const title = `showing information for ${chalk.bold(onlyLane.id.toString())}\n`;
-    const author = `author: ${onlyLane.log?.username || 'N/A'} <${onlyLane.log?.email || 'N/A'}>\n`;
-    const date = onlyLane.log?.date
-      ? `created: ${new Date(parseInt(onlyLane.log.date)).toLocaleString()}\n`
-      : undefined;
-    const link = `link: https://${DEFAULT_CLOUD_DOMAIN}/${laneId.scope.replace('.', '/')}/~lane/${laneId.name}\n`;
-    return title + author + date + link + outputComponents(onlyLane.components);
+    return lanes;
   }
 
   async json([name]: [string], laneOptions: LaneOptions) {
-    const { remote } = laneOptions;
-
-    const lanes = await this.lanes.getLanes({
-      name,
-      remote,
-    });
-
+    const lanes = await this.geLanesData([name], laneOptions);
     return serializeLaneData(lanes[0]);
   }
 }
@@ -230,7 +242,7 @@ a lane created from another lane contains all the components of the original lan
         )}. you can change the lane's scope, before it is exported, with the "bit lane change-scope" command`;
     const title = chalk.green(
       `successfully added and checked out to the new lane ${chalk.bold(result.alias || result.laneId.name)}
-      ${currentLane !== null ? chalk.yellow(`\nnote - your new lane will be based on lane ${currentLane.name}`) : ''}
+      ${currentLane ? chalk.yellow(`\nnote - your new lane will be based on lane ${currentLane.name}`) : ''}
       `
     );
     const remoteScopeOutput = `this lane will be exported to ${remoteScopeOrDefaultScope}`;
@@ -262,6 +274,7 @@ export class CatLaneHistoryCmd implements Command {
   alias = 'clh';
   options = [] as CommandOptions;
   loader = true;
+  group = 'advanced';
 
   constructor(private lanes: LanesMain) {}
 
@@ -272,7 +285,10 @@ export class CatLaneHistoryCmd implements Command {
   }
 }
 
-export type LaneCheckoutOpts = { skipDependencyInstallation?: boolean };
+export type LaneCheckoutOpts = {
+  skipDependencyInstallation?: boolean;
+  restoreDeletedComponents?: boolean;
+};
 
 export class LaneCheckoutCmd implements Command {
   name = 'checkout <history-id>';
@@ -307,6 +323,8 @@ if you want to fork the lane from a certain point in history, use "lane checkout
   alias = '';
   options = [
     ['x', 'skip-dependency-installation', 'do not install dependencies of the checked out components'],
+    ['', 'restore-deleted-components', 'restore components that were deleted after this history point'],
+    ['j', 'json', 'return the revert result in json format'],
   ] as CommandOptions;
   loader = true;
 
@@ -316,37 +334,162 @@ if you want to fork the lane from a certain point in history, use "lane checkout
     const result = await this.lanes.revertHistory(historyId, opts);
     return checkoutOutput(result, {}, `successfully reverted according to history-id: ${historyId}`);
   }
+
+  async json([historyId]: [string], opts: LaneCheckoutOpts) {
+    const result = await this.lanes.revertHistory(historyId, opts);
+    return {
+      components: result.components?.map((component) => ({
+        id: component.id.toString(),
+        filesStatus: Object.entries(component.filesStatus || {}).reduce(
+          (acc, [filePath, status]) => {
+            acc[filePath] = status;
+            return acc;
+          },
+          {} as Record<string, string>
+        ),
+      })),
+      removedComponents: result.removedComponents?.map((id) => id.toString()),
+      addedComponents: result.addedComponents?.map((id) => id.toString()),
+      newComponents: result.newComponents?.map((id) => id.toString()),
+      failedComponents: result.failedComponents?.map((component) => ({
+        id: component.id.toString(),
+        unchangedMessage: component.unchangedMessage,
+        unchangedLegitimately: component.unchangedLegitimately,
+      })),
+      leftUnresolvedConflicts: result.leftUnresolvedConflicts,
+      newFromLane: result.newFromLane,
+      newFromLaneAdded: result.newFromLaneAdded,
+      version: result.version,
+      resolvedComponents: result.resolvedComponents?.map((component) => component.id.toString()),
+      abortedComponents: result.abortedComponents?.map((component) => ({
+        id: component.id.toString(),
+        filesStatus: Object.entries(component.filesStatus || {}).reduce(
+          (acc, [filePath, status]) => {
+            acc[filePath] = status;
+            return acc;
+          },
+          {} as Record<string, string>
+        ),
+      })),
+      installationError: result.installationError?.message,
+      compilationError: result.compilationError?.message,
+      mergeSnapError: result.mergeSnapError?.message,
+      mergeSnapResults: result.mergeSnapResults
+        ? {
+            snappedComponents: result.mergeSnapResults.snappedComponents?.map((component) => component.id.toString()),
+            removedComponents: result.mergeSnapResults.removedComponents?.toStringArray(),
+            exportedIds: result.mergeSnapResults.exportedIds?.map((id) => id.toString()),
+          }
+        : null,
+      workspaceConfigUpdateResult: result.workspaceConfigUpdateResult
+        ? {
+            logs: result.workspaceConfigUpdateResult.logs,
+          }
+        : undefined,
+      historyId,
+    };
+  }
 }
 
 export class LaneHistoryCmd implements Command {
   name = 'history [lane-name]';
   description = 'EXPERIMENTAL. show lane history, default to the current lane';
+  extendedDescription = `list from the oldest to the newest history items`;
   alias = '';
-  options = [['', 'id <string>', 'show a specific history item']] as CommandOptions;
+  options = [
+    ['', 'id <string>', 'show a specific history item'],
+    ['j', 'json', 'return the lane history in json format'],
+  ] as CommandOptions;
   loader = true;
 
   constructor(private lanes: LanesMain) {}
 
-  async report([laneName]: [string], { id }: { id?: string }): Promise<string> {
+  private async getHistoryData(laneName?: string, id?: string) {
     const laneId = laneName ? await this.lanes.parseLaneId(laneName) : this.lanes.getCurrentLaneId();
     if (!laneId || laneId.isDefault()) throw new BitError(`unable to show history of the default lane (main)`);
     await this.lanes.importLaneHistory(laneId);
     const laneHistory = await this.lanes.getLaneHistory(laneId);
     const history = laneHistory.getHistory();
+
     if (id) {
       const historyItem = history[id];
       if (!historyItem) throw new Error(`history id ${id} was not found`);
-      const date = new Date(parseInt(historyItem.log.date)).toLocaleString();
+      return { historyItem, id, history, singleItem: true };
+    }
+
+    return { history, singleItem: false };
+  }
+
+  private getDateString(date: string) {
+    return new Date(parseInt(date)).toLocaleString();
+  }
+
+  async report([laneName]: [string], { id }: { id?: string }): Promise<string> {
+    const { history, historyItem, singleItem } = await this.getHistoryData(laneName, id);
+
+    if (singleItem && historyItem) {
+      const date = this.getDateString(historyItem.log.date);
       const message = historyItem.log.message;
       return `${id} ${date} ${historyItem.log.username} ${message}\n\n${historyItem.components.join('\n')}`;
     }
+
     const items = Object.keys(history).map((uuid) => {
-      const historyItem = history[uuid];
-      const date = new Date(parseInt(historyItem.log.date)).toLocaleString();
-      const message = historyItem.log.message;
-      return `${uuid} ${date} ${historyItem.log.username} ${message}`;
+      const item = history[uuid];
+      const date = this.getDateString(item.log.date);
+      const message = item.log.message;
+      return `${uuid} ${date} ${item.log.username} ${message}`;
     });
     return items.join('\n');
+  }
+
+  async json([laneName]: [string], { id }: { id?: string }) {
+    const { history, historyItem, id: historyId, singleItem } = await this.getHistoryData(laneName, id);
+
+    if (singleItem && historyItem) {
+      return {
+        id: historyId,
+        date: historyItem.log.date,
+        username: historyItem.log.username,
+        message: historyItem.log.message,
+        components: historyItem.components,
+      };
+    }
+
+    return Object.keys(history).map((uuid) => {
+      const item = history[uuid];
+      return {
+        id: uuid,
+        date: item.log.date,
+        username: item.log.username,
+        message: item.log.message,
+        components: item.components,
+      };
+    });
+  }
+}
+
+export class LaneEjectCmd implements Command {
+  name = 'eject <component-pattern>';
+  description = `delete a component from the lane and install it as a package from main`;
+  extendedDescription = `NOTE: unlike "bit eject" on main, this command doesn't only remove the component from the
+workspace, but also mark it as deleted from the lane, so it won't be merged later on.`;
+  alias = '';
+  arguments = [
+    {
+      name: 'component-pattern',
+      description: COMPONENT_PATTERN_HELP,
+    },
+  ];
+  options = [] as CommandOptions;
+  loader = true;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report([pattern]: [string]) {
+    const results = await this.lanes.eject(pattern);
+    const title = chalk.green('successfully ejected the following components');
+    const body = results.map((r) => r.toString()).join('\n');
+    return `${title}\n${body}`;
   }
 }
 
@@ -376,7 +519,7 @@ export class LaneChangeScopeCmd implements Command {
 
 export class LaneRenameCmd implements Command {
   name = 'rename <new-name>';
-  description = `EXPERIMENTAL. change the lane-name locally`;
+  description = `change the lane-name locally`;
   extendedDescription = 'the remote will be updated after the next "bit export" command';
   alias = '';
   options = [
@@ -423,9 +566,11 @@ export class LaneRemoveCmd implements Command {
     }
   ): Promise<string> {
     if (!silent) {
-      const removePromptResult = await approveOperation();
-      // @ts-ignore
-      if (!yn(removePromptResult.shouldProceed)) {
+      this.lanes.logger.clearStatusLine(); // stop the logger to avoid polluting the prompt
+      const shouldProceed = await yesno({
+        question: 'Are you sure you would like to proceed with this operation? [yes(y)/no(n)]',
+      });
+      if (!shouldProceed) {
         throw new BitError('the operation has been cancelled');
       }
     }
@@ -461,7 +606,10 @@ export class LaneRemoveCompCmd implements Command {
   ] as CommandOptions;
   loader = true;
 
-  constructor(private workspace: Workspace, private lanes: LanesMain) {}
+  constructor(
+    private workspace: Workspace,
+    private lanes: LanesMain
+  ) {}
 
   async report(): Promise<string> {
     throw new BitError(`bit lane remove-comp has been removed. please use "bit remove" or "bit delete" instead`);
@@ -480,6 +628,7 @@ export class LaneImportCmd implements Command {
       'pattern <component-pattern>',
       'import only components from the lane that fit the specified component-pattern to the workspace. works only when the workspace is empty',
     ],
+    ['', 'branch', 'create and checkout a new git branch named after the lane'],
   ] as CommandOptions;
   loader = true;
 
@@ -487,15 +636,53 @@ export class LaneImportCmd implements Command {
 
   async report(
     [lane]: [string],
-    { skipDependencyInstallation = false, pattern }: { skipDependencyInstallation: boolean; pattern?: string }
+    {
+      skipDependencyInstallation = false,
+      pattern,
+      branch = false,
+    }: {
+      skipDependencyInstallation: boolean;
+      pattern?: string;
+      branch?: boolean;
+    }
   ): Promise<string> {
-    return this.switchCmd.report([lane], { getAll: true, skipDependencyInstallation, pattern });
+    return this.switchCmd.report([lane], { skipDependencyInstallation, pattern, branch });
+  }
+}
+
+export class LaneFetchCmd implements Command {
+  name = 'fetch [lane-id]';
+  description = `fetch component objects from lanes. if no lane-id is provided, it fetches from the current lane`;
+  extendedDescription = `note, it does not save the remote lanes objects locally, only the refs`;
+  alias = '';
+  options = [['a', 'all', 'fetch all remote lanes']] as CommandOptions;
+  loader = true;
+
+  constructor(
+    private fetchCmd: FetchCmd,
+    private lanes: LanesMain
+  ) {}
+
+  async report([laneId]: [string], { all }: { all?: boolean }): Promise<string> {
+    if (all) return this.fetchCmd.report([[]], { lanes: true });
+    const getLaneIdStr = () => {
+      if (laneId) return laneId;
+      const currentLane = this.lanes.getCurrentLaneId();
+      if (!currentLane || currentLane.isDefault())
+        throw new BitError('you are not checked out to any lane. please specify a lane-id to fetch or use --all flag');
+      return currentLane.toString();
+    };
+    const lane = getLaneIdStr();
+    return this.fetchCmd.report([[lane]], { lanes: true });
   }
 }
 
 export class LaneCmd implements Command {
   name = 'lane [sub-command]';
-  description = 'manage lanes - if no sub-command is used, runs "bit lane list"';
+  description = 'manage lanes for parallel development';
+  extendedDescription = `lanes allow isolated development of features without affecting main branch components.
+create, switch between, and merge lanes to coordinate parallel work across teams.
+without a sub-command, lists all available lanes.`;
   alias = 'l';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
@@ -511,16 +698,24 @@ export class LaneCmd implements Command {
   helpUrl = 'reference/components/lanes';
   commands: Command[] = [];
 
-  constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain) {}
+  constructor(
+    private lanes: LanesMain,
+    private workspace: Workspace,
+    private scope: ScopeMain
+  ) {}
 
   async report([name]: [string], laneOptions: LaneOptions): Promise<string> {
     return new LaneListCmd(this.lanes, this.workspace, this.scope).report([name], laneOptions);
   }
 }
 
+/**
+ * @deprecated - only use it to revert the add-readme command changes
+ */
 export class LaneRemoveReadmeCmd implements Command {
   name = 'remove-readme [laneName]';
-  description = 'EXPERIMENTAL. remove lane readme component';
+  description =
+    'DEPRECATED (only use it if you have used add-readme and want to undo it). remove lane readme component';
   options = [] as CommandOptions;
   loader = true;
   skipWorkspace = false;
@@ -539,37 +734,6 @@ export class LaneRemoveReadmeCmd implements Command {
     }
 
     return chalk.red(`${message}\n`);
-  }
-}
-
-export class LaneAddReadmeCmd implements Command {
-  name = 'add-readme <component-name> [lane-name]';
-  description = 'EXPERIMENTAL. sets an existing component as the readme of a lane';
-  arguments = [
-    { name: 'component-id', description: "the component name or id of the component to use as the lane's readme" },
-    { name: 'lane-name', description: 'the lane to attach the readme to (defaults to the current lane)' },
-  ];
-  options = [] as CommandOptions;
-  loader = true;
-  skipWorkspace = false;
-
-  constructor(private lanes: LanesMain) {}
-
-  async report([componentId, laneName]: [string, string]): Promise<string> {
-    const { result, message } = await this.lanes.addLaneReadme(componentId, laneName);
-
-    if (result)
-      return chalk.green(
-        `the component ${componentId} has been successfully added as the readme component for the lane ${
-          laneName || this.lanes.getCurrentLaneName()
-        }`
-      );
-
-    return chalk.red(
-      `${message || ''}\nthe component ${componentId} could not be added as a readme component for the lane ${
-        laneName || this.lanes.getCurrentLaneName()
-      }`
-    );
   }
 }
 

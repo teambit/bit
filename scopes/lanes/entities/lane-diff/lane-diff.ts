@@ -1,6 +1,7 @@
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
-import { LaneComponentDiff, PlainLaneComponentDiff } from './lane-component-diff';
+import type { PlainLaneComponentDiff } from './lane-component-diff';
+import { LaneComponentDiff } from './lane-component-diff';
 
 export type PlainLaneDiff = {
   sourceLane: string;
@@ -9,7 +10,11 @@ export type PlainLaneDiff = {
 };
 
 export class LaneDiff {
-  constructor(readonly sourceLane: LaneId, readonly diff: LaneComponentDiff[], readonly targetLane?: LaneId) {}
+  constructor(
+    readonly sourceLane: LaneId,
+    readonly diff: LaneComponentDiff[],
+    readonly targetLane?: LaneId
+  ) {}
 
   /**
    * count components that are up to date.

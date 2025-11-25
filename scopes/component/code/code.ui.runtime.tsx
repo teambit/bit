@@ -1,12 +1,16 @@
 import React from 'react';
-import { ComponentAspect, ComponentUI } from '@teambit/component';
+import type { ComponentUI } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
 import { CodeCompare, CodeCompareEditorProvider, type CodeCompareProps } from '@teambit/code.ui.code-compare';
-import { Harmony, SlotRegistry, Slot } from '@teambit/harmony';
+import type { Harmony, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
-import { CodePage, CodePageProps } from '@teambit/code.ui.code-tab-page';
-import { ComponentCompareUI, ComponentCompareAspect } from '@teambit/component-compare';
+import type { CodePageProps } from '@teambit/code.ui.code-tab-page';
+import { CodePage } from '@teambit/code.ui.code-tab-page';
+import type { ComponentCompareUI } from '@teambit/component-compare';
+import { ComponentCompareAspect } from '@teambit/component-compare';
 import { CodeEditorProvider } from '@teambit/code.ui.code-editor';
 import { CodeCompareSection } from '@teambit/code.ui.code-compare-section';
 import { CodeAspect } from './code.aspect';
@@ -64,14 +68,15 @@ export class CodeUI {
     const { config } = harmony;
     const host = String(config.get('teambit.harmony/bit'));
     const ui = new CodeUI(host, fileIconSlot);
-    const section = new CodeSection(ui);
-
+    const section = new CodeSection(ui, false);
+    const pinnedSection = new CodeSection(ui, true);
     // overrides the default tsx react icon with the typescript icon
     ui.registerEnvFileIcon([
       (fileName) => (isTsx.test(fileName) ? `${staticStorageUrl}/file-icons/file_type_typescript.svg` : undefined),
     ]);
     component.registerRoute([section.route]);
     component.registerWidget(section.navigationLink, section.order);
+    component.registerPinnedWidget(pinnedSection.navigationLink, pinnedSection.order);
     const codeCompare = new CodeCompareSection(ui);
     componentCompare.registerNavigation(codeCompare);
     componentCompare.registerRoutes([codeCompare.route]);

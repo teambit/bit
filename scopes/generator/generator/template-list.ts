@@ -1,12 +1,16 @@
-import { EnvContext, EnvHandler } from '@teambit/envs';
-import { ComponentTemplate } from './component-template';
+import type { EnvContext, EnvHandler } from '@teambit/envs';
+import type { ComponentTemplate } from './component-template';
 
 export type TemplateListOptions = {
   name?: string;
 };
 
 export class TemplateList {
-  constructor(readonly name: string, private templates: EnvHandler<ComponentTemplate>[], private context: EnvContext) {}
+  constructor(
+    readonly name: string,
+    private templates: EnvHandler<ComponentTemplate>[],
+    private context: EnvContext
+  ) {}
 
   compute(): ComponentTemplate[] {
     return this.templates.map((template) => template(this.context));

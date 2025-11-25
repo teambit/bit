@@ -1,21 +1,23 @@
-import {
+import type {
   BuildContext,
   BuiltTaskResult,
   BuildTask,
   TaskLocation,
   ComponentResult,
-  CAPSULE_ARTIFACTS_DIR,
+  ArtifactDefinition,
 } from '@teambit/builder';
+import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import { MainRuntime } from '@teambit/cli';
 import mapSeries from 'p-map-series';
-import { Component, ComponentMap } from '@teambit/component';
-import { AspectLoaderMain } from '@teambit/aspect-loader';
-import { Bundler, BundlerContext, BundlerHtmlConfig, BundlerResult, Target } from '@teambit/bundler';
+import type { Component } from '@teambit/component';
+import { ComponentMap } from '@teambit/component';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import type { Bundler, BundlerContext, BundlerHtmlConfig, BundlerResult, Target } from '@teambit/bundler';
 import type { EnvDefinition, Environment, EnvsMain } from '@teambit/envs';
 import { join } from 'path';
 import { compact, flatten, isEmpty } from 'lodash';
-import { Logger } from '@teambit/logger';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { Logger } from '@teambit/logger';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import type { PreviewMain } from './preview.main.runtime';
 import { generateTemplateEntries } from './bundler/chunks';
@@ -143,7 +145,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
     if (!capsule) throw new Error('no capsule found');
     // Passing here the env itself to make sure it's preview runtime will be part of the preview root file
     // that's needed to make sure the providers register there are running correctly
-    const previewRoot = await this.preview.writePreviewRuntime(context, [envComponent.id.toString()]);
+    const previewRoot = await this.preview.writePreviewEntry(context, [envComponent.id.toString()]);
     const entries = await this.generateEntries({
       envDef,
       splitComponentBundle: envPreviewConfig.splitComponentBundle ?? false,
@@ -268,12 +270,11 @@ export function getArtifactDirectory() {
   return join(CAPSULE_ARTIFACTS_DIR, 'env-template');
 }
 
-export function getArtifactDef() {
+export function getArtifactDef(): ArtifactDefinition[] {
   return [
     {
       name: 'env-template',
-      globPatterns: ['**'],
-      rootDir: getArtifactDirectory(),
+      globPatterns: [getArtifactDirectory()],
     },
   ];
 }

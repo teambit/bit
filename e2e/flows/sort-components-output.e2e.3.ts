@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 /**
  * expect the components 'comp1', 'comp2', 'comp3' to be sorted in this order
@@ -22,7 +22,7 @@ describe('basic flow with dependencies', function () {
   });
   describe('after adding components', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
     });
     describe('bit status', () => {
@@ -38,7 +38,7 @@ describe('basic flow with dependencies', function () {
         expectComponentsToBeSortedAlphabetically(output);
       });
     });
-    it('bit list --scope should not show any component', () => {
+    it('bit list --local-scope should not show any component', () => {
       const output = helper.command.listLocalScope();
       expect(output).to.have.string('found 0 components');
     });

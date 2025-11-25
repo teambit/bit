@@ -1,4 +1,5 @@
-import React, { HTMLAttributes } from 'react';
+import type { HTMLAttributes } from 'react';
+import React from 'react';
 import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
 import { Radio } from '@teambit/design.ui.input.radio';
 import classnames from 'classnames';
@@ -10,11 +11,13 @@ export type EditorSettingsHooks = {
   onViewModeChanged: (editorViewMode: EditorViewMode) => void;
   onWordWrapChanged: (wordWrap: boolean) => void;
   onIgnoreWhitespaceChanged: (ignoreWhitespace: boolean) => void;
+  onDiffOnlyChanged?: (diffOnly: boolean) => void;
 };
 export type EditorSettingsState = {
   editorViewMode: EditorViewMode;
   wordWrap: boolean;
   ignoreWhitespace: boolean;
+  diffOnly?: boolean;
 };
 export type EditorSettings = EditorSettingsHooks & EditorSettingsState;
 
@@ -24,6 +27,8 @@ export function CodeCompareEditorSettings({
   wordWrap,
   ignoreWhitespace,
   editorViewMode,
+  diffOnly,
+  onDiffOnlyChanged,
   onWordWrapChanged,
   onIgnoreWhitespaceChanged,
   onViewModeChanged,
@@ -51,6 +56,17 @@ export function CodeCompareEditorSettings({
           <span>Split</span>
         </Radio>
       </div>
+      {onDiffOnlyChanged && (
+        <div className={styles.diffOnlySettings}>
+          <CheckboxItem
+            className={styles.checkbox}
+            checked={diffOnly}
+            onInputChanged={() => onDiffOnlyChanged?.(!diffOnly)}
+          >
+            Show only diff
+          </CheckboxItem>
+        </div>
+      )}
       <div className={styles.ignoreWhitespaceSettings}>
         <CheckboxItem
           className={styles.checkbox}

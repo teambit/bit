@@ -1,17 +1,19 @@
-import React, { useContext, useEffect, useState, useMemo, useRef, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React, { useContext, useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import head from 'lodash.head';
 import queryString from 'query-string';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
-import { ComponentContext, ComponentModel } from '@teambit/component';
+import type { ComponentModel } from '@teambit/component';
+import { ComponentContext } from '@teambit/component';
 import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/docs.ui.queries.get-docs';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
-import { toPreviewUrl } from '@teambit/preview.ui.component-preview';
+import { SandboxPermissionsAggregator, toPreviewUrl } from '@teambit/preview.ui.component-preview';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/compositions.ui.compositions-menu-bar';
 import { CompositionContextProvider } from '@teambit/compositions.ui.hooks.use-composition';
@@ -19,24 +21,31 @@ import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { Separator } from '@teambit/design.ui.separator';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { AlertCard } from '@teambit/design.ui.alert-card';
-import { Link, useNavigate, useLocation } from '@teambit/base-react.navigation.link';
+import { Link as BaseLink, useNavigate, useLocation } from '@teambit/base-react.navigation.link';
 import { OptionButton } from '@teambit/design.ui.input.option-button';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
-import { EmptyStateSlot } from './compositions.ui.runtime';
-import { Composition } from './composition';
+import { Tooltip } from '@teambit/design.ui.tooltip';
+import type { EmptyStateSlot, CompositionsMenuSlot, UsePreviewSandboxSlot } from './compositions.ui.runtime';
+import type { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
-import type { CompositionsMenuSlot } from './compositions.ui.runtime';
-import { ComponentCompositionProps } from './ui/composition-preview';
+import type { ComponentCompositionProps } from './ui/composition-preview';
+
+// @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
+const Link = BaseLink as any;
 
 export type MenuBarWidget = {
   location: 'start' | 'end';
   content: ReactNode;
 };
-export type CompositionsProp = { menuBarWidgets?: CompositionsMenuSlot; emptyState?: EmptyStateSlot };
+export type CompositionsProp = {
+  menuBarWidgets?: CompositionsMenuSlot;
+  emptyState?: EmptyStateSlot;
+  usePreviewSandboxSlot?: UsePreviewSandboxSlot;
+};
 
-export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
+export function Compositions({ menuBarWidgets, emptyState, usePreviewSandboxSlot }: CompositionsProp) {
   const component = useContext(ComponentContext);
   const [searchParams] = useSearchParams();
   const params = useParams();
@@ -47,12 +56,12 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
   const currentComposition =
     component.compositions.find((composition) => composition.identifier.toLowerCase() === currentCompositionName) ||
     head(component.compositions);
-
+  const [sandboxValue, setSandboxValue] = useState('');
   const selectedRef = useRef(currentComposition);
   selectedRef.current = currentComposition;
 
   const properties = useDocs(component.id);
-
+  const previewSandboxHooks = usePreviewSandboxSlot?.values() ?? [];
   const isMobile = useIsMobile();
   const showSidebar = !isMobile && component.compositions.length > 0;
   const [isSidebarOpen, setSidebarOpenness] = useState(showSidebar);
@@ -72,6 +81,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
 
   const [compositionParams, setCompositionParams] = useState<Record<string, any>>({
     fullscreen: true,
+    livecontrols: true,
   });
 
   const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);
@@ -80,19 +90,27 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
   useEffect(() => setSidebarOpenness(showSidebar), [showSidebar]);
   return (
     <CompositionContextProvider queryParams={compositionParams} setQueryParams={setCompositionParams}>
-      <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
+      <SplitPane layout={sidebarOpenness} size="80%" className={styles.compositionsPage}>
         <Pane className={styles.left}>
           <CompositionsMenuBar menuBarWidgets={menuBarWidgets} className={styles.menuBar}>
-            <Link external href={currentCompositionFullUrl} className={styles.openInNewTab}>
-              <OptionButton icon="open-tab" />
-            </Link>
+            <Tooltip content={'Open in new tab'} placement="right">
+              <Link external href={currentCompositionFullUrl} className={styles.openInNewTab}>
+                <OptionButton icon="open-tab" />
+              </Link>
+            </Tooltip>
           </CompositionsMenuBar>
+          <SandboxPermissionsAggregator
+            hooks={previewSandboxHooks}
+            onSandboxChange={setSandboxValue}
+            component={component}
+          />
           <CompositionContent
             className={styles.compositionPanel}
             emptyState={emptyState}
             component={component}
             selected={currentComposition}
             queryParams={queryParams}
+            sandbox={sandboxValue}
           />
         </Pane>
         <HoverSplitter className={styles.splitter}>
@@ -129,7 +147,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
                       pathSegments[pathSegments.length - 1] = composition.identifier.toLowerCase();
                     }
 
-                    const urlParams = new URLSearchParams();
+                    const urlParams = new URLSearchParams(searchParams);
                     if (versionFromQueryParams) {
                       urlParams.set('version', versionFromQueryParams);
                     }
@@ -164,6 +182,7 @@ export function CompositionContent({
   selected,
   queryParams,
   emptyState,
+  sandbox,
   ...componentCompositionProps
 }: CompositionContentProps) {
   const env = component.environment?.id;
@@ -226,6 +245,7 @@ export function CompositionContent({
       fullContentHeight
       pubsub={true}
       queryParams={queryParams}
+      sandbox={sandbox}
       {...componentCompositionProps}
     />
   );

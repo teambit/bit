@@ -1,5 +1,5 @@
-import { ShowFragment } from './show-fragment';
-import { Component } from '../component';
+import type { ShowFragment } from './show-fragment';
+import type { Component } from '../component';
 
 export class NameFragment implements ShowFragment {
   async renderRow(component: Component) {

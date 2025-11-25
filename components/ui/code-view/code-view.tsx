@@ -1,6 +1,7 @@
 import { H1 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
-import React, { HTMLAttributes, useMemo } from 'react';
+import type { HTMLAttributes } from 'react';
+import React, { useMemo } from 'react';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 import { createElement } from 'react-syntax-highlighter';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
@@ -9,7 +10,7 @@ import markDownSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/ma
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { useLocation, useNavigate } from '@teambit/base-react.navigation.link';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import { DependencyType } from '@teambit/code.ui.queries.get-component-code';
+import type { DependencyType } from '@teambit/code.ui.queries.get-component-code';
 import { ComponentID } from '@teambit/component';
 import { useCoreAspects } from '@teambit/harmony.ui.hooks.use-core-aspects';
 import styles from './code-view.module.scss';
@@ -22,6 +23,7 @@ export type CodeViewProps = {
   loading?: boolean;
   codeSnippetClassName?: string;
   dependencies?: DependencyType[];
+  host?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
 SyntaxHighlighter.registerLanguage('md', markDownSyntax);
@@ -75,6 +77,34 @@ function joinPaths(base: string, relative: string) {
   return newPath.startsWith('/') ? newPath : `/${newPath}`;
 }
 
+function useInViewport(ref: React.RefObject<HTMLElement>) {
+  const [isInViewport, setIsInViewport] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!ref.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInViewport(entry.isIntersecting);
+      },
+      {
+        root: null,
+        threshold: 0.1,
+      }
+    );
+
+    observer.observe(ref.current);
+
+    return () => {
+      if (ref.current) {
+        observer.unobserve(ref.current);
+      }
+    };
+  }, [ref]);
+
+  return isInViewport;
+}
+
 export function CodeView({
   className,
   componentId,
@@ -84,6 +114,7 @@ export function CodeView({
   codeSnippetClassName,
   loading: loadingFromProps,
   dependencies,
+  host = 'teambit.scope/scope',
 }: CodeViewProps) {
   const depsByPackageName = new Map<string, DependencyType>(
     (dependencies || []).map((dep) => [(dep.packageName || dep.id).toString(), dep])
@@ -92,13 +123,16 @@ export function CodeView({
   const { fileContent: downloadedFileContent, loading: loadingFileContent } = useFileContent(
     componentId,
     currentFile,
-    !!currentFileContent
+    !!currentFileContent,
+    host
   );
   const loading = loadingFromProps || loadingFileContent;
   const location = useLocation();
   const navigate = useNavigate();
-  const [scrollBlock, setScrollBlock] = React.useState<'nearest' | 'center'>('center');
+  const [isHighlightedState, setIsHighlightedState] = React.useState(false);
   const highlightedLineRef = React.useRef<HTMLDivElement>(null);
+  const isInViewport = useInViewport(highlightedLineRef);
+
   const fileContent = currentFileContent || downloadedFileContent;
   const title = useMemo(() => currentFile?.split('/').pop(), [currentFile]);
   const lang = useMemo(() => {
@@ -107,6 +141,10 @@ export function CodeView({
     // for some reason, SyntaxHighlighter doesnt support scss or sass highlighting, only css. I need to check how to fix this properly
     if (langFromFileEnding === 'scss' || langFromFileEnding === 'sass') return 'css';
     if (langFromFileEnding === 'mdx') return 'md';
+    if (langFromFileEnding === 'vue') return 'html';
+    if (langFromFileEnding === 'cjs' || langFromFileEnding === 'mjs') return 'js';
+    if (langFromFileEnding === 'cts' || langFromFileEnding === 'mts') return 'ts';
+
     return langFromFileEnding;
   }, [fileContent]);
 
@@ -114,15 +152,15 @@ export function CodeView({
   const searchKeyword = extractSearchKeyword(location?.hash);
   const lineRange = extractLineRange(location?.hash);
 
-  React.useEffect(() => {
-    if (highlightedLineRef?.current) {
-      highlightedLineRef?.current.scrollIntoView({ behavior: 'smooth', block: scrollBlock });
+  React.useLayoutEffect(() => {
+    if (highlightedLineRef?.current && isHighlightedState && !isInViewport) {
+      highlightedLineRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-  }, [highlightedLineRef?.current, scrollBlock]);
+  }, [isHighlightedState, isInViewport]);
 
   const onLineClicked = React.useCallback(
     (_lineNumber: number) => () => {
-      setScrollBlock('nearest');
+      // setScrollBlock('nearest');
       // If the line number is already highlighted, remove the hash
       if (
         lineNumber === _lineNumber ||
@@ -139,9 +177,9 @@ export function CodeView({
   const customRenderer = React.useCallback(
     ({ rows, stylesheet, useInlineStyles }) => {
       let isKeywordHighlighted = false;
+      let refAssigned = false;
 
       return rows.map((node, index) => {
-        // console.log('🚀 ~ returnrows.map ~ node:', node);
         const lineText = node.children
           .map((child) => child.children?.[0]?.value ?? '')
           .join('')
@@ -205,9 +243,11 @@ export function CodeView({
             key: `line-number-${index}`,
           });
 
-        const highlightedRef = !isInRange
-          ? (isHighlighted && highlightedLineRef) || null
-          : (lineNum === lineRange.start && highlightedLineRef) || null;
+        const highlightedRef = !refAssigned && isHighlighted ? ((refAssigned = true), highlightedLineRef) : null;
+
+        if (isHighlighted && !isHighlightedState && highlightedRef) {
+          setIsHighlightedState(true);
+        }
 
         return (
           <div
@@ -227,7 +267,16 @@ export function CodeView({
         );
       });
     },
-    [onLineClicked, searchKeyword, lineNumber, lineRange, coreAspects, depsByPackageName.size, currentFile]
+    [
+      onLineClicked,
+      searchKeyword,
+      lineNumber,
+      lineRange,
+      coreAspects,
+      depsByPackageName.size,
+      currentFile,
+      isHighlightedState,
+    ]
   );
 
   const getSelectedLineRange = () => {

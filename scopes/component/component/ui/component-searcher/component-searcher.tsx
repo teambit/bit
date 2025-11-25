@@ -1,8 +1,10 @@
 import React from 'react';
-import { SearchResult, FuzzySearchItem, FuzzySearcher } from '@teambit/explorer.ui.command-bar';
+import type { SearchResult, FuzzySearchItem } from '@teambit/explorer.ui.command-bar';
+import { FuzzySearcher } from '@teambit/explorer.ui.command-bar';
 import type { SearchProvider } from '@teambit/command-bar';
-import { ComponentResult, ComponentResultPlugin } from './component-result';
-import { ComponentModel } from '../component-model';
+import type { ComponentResultPlugin } from './component-result';
+import { ComponentResult } from './component-result';
+import type { ComponentModel } from '../component-model';
 
 export type { ComponentResultPlugin };
 
@@ -44,12 +46,12 @@ export class ComponentSearcher extends FuzzySearcher<ComponentModel, ComponentSe
   }
 
   protected override toSearchResult = ({ item }: FuzzySearchItem<ComponentSearchIdx>): SearchResult => {
-    const { navigate, resultPlugins } = this.options;
+    const { resultPlugins } = this.options;
     const { component } = item;
 
     return {
       id: component.id.fullName,
-      action: () => navigate(`/${component.id.fullName}`),
+      action: `/${component.id.fullName}`,
       children: <ComponentResult component={component} plugins={resultPlugins} />,
     };
   };

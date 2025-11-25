@@ -1,3 +1,3 @@
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 
 export class Store extends ExtensionDataList {}

@@ -1,4 +1,5 @@
-import { Route, Verb, Request, Response } from '@teambit/express';
+import type { Route, Request, Response } from '@teambit/express';
+import { Verb } from '@teambit/express';
 import type { DiagnosticMain } from './diagnostic.main.runtime';
 
 export class DiagnosticRoute implements Route {

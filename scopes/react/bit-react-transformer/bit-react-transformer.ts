@@ -1,9 +1,9 @@
 import type { Visitor, PluginObj, PluginPass, NodePath } from '@babel/core';
 import { readFileSync } from 'fs-extra';
-import memoize from 'memoizee';
+import { memoize } from 'lodash';
 import type * as Types from '@babel/types'; // @babel/types, not @types/babel!
+import type { ComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 import {
-  ComponentMeta,
   componentMetaField,
   componentMetaProperties,
 } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
@@ -22,7 +22,7 @@ type Api = { types: typeof Types };
  * the bit babel transformer adds a `componentId` property on React components
  * for showcase and debugging purposes.
  */
-export function createBitReactTransformer(api: Api, opts: BitReactTransformerOptions) {
+export function createBitReactTransformer(api: Api, opts: BitReactTransformerOptions = {}) {
   let componentMap: Record<string, ComponentMeta>;
   const types = api.types;
 
@@ -36,11 +36,7 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     }
   }
 
-  const extractMeta = memoize(
-    (filePath: string) => componentMap?.[filePath] || metaFromPackageJson(filePath),
-    // optimize for string input:
-    { primitive: true }
-  );
+  const extractMeta = memoize((filePath: string) => componentMap?.[filePath] || metaFromPackageJson(filePath));
 
   function addComponentId(path: NodePath<any>, filePath: string, identifier: string) {
     // add meta property, e.g. `Button.__bit_component = __bit_component;`
@@ -52,7 +48,10 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
       )
     );
 
-    path.insertAfter(componentIdStaticProp);
+    // always append *after the nearest statement*, never inside an expression
+    const parentStatement = path.getStatementParent() ?? path;
+    // Note: Type assertion needed due to @babel/types version incompatibility
+    parentStatement.insertAfter(componentIdStaticProp as any);
   }
 
   const visitor: Visitor<PluginPass> = {
@@ -65,10 +64,11 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
       const meta = extractMeta(filename);
       if (!meta) return;
 
-      const deceleration = metaToDeceleration(meta, types);
+      const deceleration = metaToDeclaration(meta, types);
 
       // inserts to the top of file
-      path.unshiftContainer('body', deceleration);
+      // Note: Type assertion needed due to @babel/types version incompatibility
+      path.unshiftContainer('body', deceleration as any);
     },
 
     FunctionDeclaration(path, state) {
@@ -91,7 +91,7 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
       const id = node.id;
       switch (node.init.type) {
         case 'FunctionExpression':
-          if (isFunctionComponent(node.init.body)) {
+          if (isFunctionComponent(node.init.body as Types.BlockStatement)) {
             addComponentId(path.parentPath, filename, id.name);
           }
           break;
@@ -125,9 +125,10 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     ClassDeclaration(path, state) {
       const filename = state.file.opts.filename;
       if (!filename || !extractMeta(filename)) return;
-      if (!isClassComponent(path.node)) return;
+      if (!isClassComponent(path.node as Types.ClassDeclaration)) return;
 
-      const name = path.node.id.name;
+      const name = path.node.id?.name;
+      if (!name) return;
       addComponentId(path, filename, name);
     },
   };
@@ -141,14 +142,14 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     },
     post() {
       // reset memoization, in case any file changes between runs
-      extractMeta.clear();
+      extractMeta.cache.clear?.();
     },
   };
 
   return Plugin;
 }
 
-function metaToDeceleration(meta: ComponentMeta, types: typeof Types) {
+function metaToDeclaration(meta: ComponentMeta, types: typeof Types) {
   const properties = [
     // e.g. "id": "teambit.base-ui/input/button@0.6.10"
     types.objectProperty(types.identifier(componentMetaProperties.componentId), types.stringLiteral(meta.id)),

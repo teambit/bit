@@ -1,0 +1,22 @@
+.container {
+  display: flex;
+  height: calc(100% - 40px);
+  padding: 24px 0;
+}
+
+.inner {
+  overflow-y: auto;
+  padding-right: 16px;
+  width: 100%;
+}
+
+.title {
+  font-size: var(--bit-p-md);
+  font-weight: 500;
+  padding-bottom: 16px;
+}
+
+.empty {
+  font-size: var(--bit-p-xs);
+  padding-bottom: 24px;
+}

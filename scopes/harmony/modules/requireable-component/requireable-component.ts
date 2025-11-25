@@ -1,10 +1,14 @@
-import { Component } from '@teambit/component';
-import { Capsule } from '@teambit/isolator';
+import type { Component } from '@teambit/component';
+import type { Capsule } from '@teambit/isolator';
 
 type RequireFunc = () => any;
 
 export class RequireableComponent {
-  constructor(readonly component: Component, readonly requireFunc: RequireFunc, readonly capsule?: Capsule) {}
+  constructor(
+    readonly component: Component,
+    readonly requireFunc: RequireFunc,
+    readonly capsule?: Capsule
+  ) {}
 
   async require() {
     // eslint-disable-next-line global-require, import/no-dynamic-require

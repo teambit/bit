@@ -35,7 +35,9 @@
 
 .filtersContainer {
   opacity: 0;
-  transition: max-height 300ms ease-in-out, opacity 250ms ease-in-out;
+  transition:
+    max-height 300ms ease-in-out,
+    opacity 250ms ease-in-out;
   max-height: 0;
   border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
 

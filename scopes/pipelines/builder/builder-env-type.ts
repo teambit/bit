@@ -1,4 +1,4 @@
-import { Pipeline } from './pipeline';
+import type { Pipeline } from './pipeline';
 
 export interface BuilderEnv {
   /**

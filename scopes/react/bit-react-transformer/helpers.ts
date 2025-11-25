@@ -1,4 +1,4 @@
-import * as t from '@babel/types';
+import type * as t from '@babel/types';
 
 export function isClassComponent(classDec: t.ClassDeclaration) {
   const renderMethod = classDec.body.body.find((classMember) => {

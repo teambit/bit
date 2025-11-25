@@ -7,7 +7,7 @@ import { split, ApolloLink } from 'apollo-link';
 import { getMainDefinition } from 'apollo-utilities';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 import ws from 'ws';
-import { GraphQLServer } from '../graphql-server';
+import type { GraphQLServer } from '../graphql-server';
 
 async function getRemoteSchema({ uri, subscriptionsUri }) {
   const wrappingLink = new ApolloLink((operation, forward) => {

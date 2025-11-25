@@ -1,8 +1,8 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
-import { ComponentID } from '@teambit/component-id';
+import type { Command, CommandOptions } from '@teambit/cli';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
+import type { ComponentID } from '@teambit/component-id';
 import chalk from 'chalk';
-import { StatusMain } from './status.main.runtime';
+import type { StatusMain } from './status.main.runtime';
 
 export type MiniStatusOpts = {
   showIssues?: boolean;
@@ -11,7 +11,7 @@ export type MiniStatusOpts = {
 
 export class MiniStatusCmd implements Command {
   name = 'mini-status [component-pattern]';
-  description = 'EXPERIMENTAL. basic status for fast execution';
+  description = 'basic status for fast execution';
   extendedDescription = `shows only modified/new components with code changes. for the full status, use "bit status".
 this command only checks source code changes, it doesn't check for config/aspect/dependency changes`;
   arguments = [
@@ -20,8 +20,9 @@ this command only checks source code changes, it doesn't check for config/aspect
       description: COMPONENT_PATTERN_HELP,
     },
   ];
-  group = 'development';
+  group = 'info-analysis';
   alias = 'ms';
+  private = true;
   options = [
     ['', 'show-issues', 'show component issues (slows down the command)'],
     [
@@ -31,6 +32,7 @@ this command only checks source code changes, it doesn't check for config/aspect
     ],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
+  loadAspects = false;
   loader = true;
 
   constructor(private status: StatusMain) {}
@@ -55,7 +57,7 @@ this command only checks source code changes, it doesn't check for config/aspect
     return `${modifiedOutput}\n\n${newOutput}${compWithIssuesOutput}`;
   }
 
-  async json([pattern]: [string], opts: MiniStatusOpts) {
+  async json([pattern]: [string], opts: MiniStatusOpts): Promise<Record<string, any>> {
     const { modified, newComps, compWithIssues } = await this.status.statusMini(pattern, opts);
     return {
       modified: modified.map((m) => m.toStringWithoutVersion()),

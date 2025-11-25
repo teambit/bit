@@ -1,4 +1,4 @@
-import { WebpackConfigMutator } from '@teambit/webpack';
+import type { WebpackConfigMutator } from '@teambit/webpack';
 import { remove } from 'lodash';
 import TerserPlugin from 'terser-webpack-plugin';
 
@@ -22,7 +22,25 @@ export function setOutput(configMutator: WebpackConfigMutator) {
   return configMutator;
 }
 
-export function replaceTerserPlugin({ prerender = false }: { prerender: boolean }) {
+/**
+ * Setting the webSocketURL to use port 0
+ * This is will make the dev server to use the same port as the website
+ * This is mainly required for a cases when the port is forwarded to a different port
+ * For example when using online vscode instances
+ * @param configMutator
+ * @returns
+ */
+export function setDevServerClient(configMutator: WebpackConfigMutator) {
+  if (!configMutator.raw.devServer) configMutator.raw.devServer = {};
+
+  configMutator.raw.devServer.client = {
+    webSocketURL: 'ws://0.0.0.0:0/ws',
+  };
+
+  return configMutator;
+}
+
+export function replaceTerserPlugin() {
   return (configMutator: WebpackConfigMutator) => {
     if (!configMutator.raw.optimization?.minimizer) return configMutator;
 
@@ -30,7 +48,7 @@ export function replaceTerserPlugin({ prerender = false }: { prerender: boolean 
       return minimizer.constructor.name === 'TerserPlugin';
     });
 
-    const terserer = prerender ? CreateTerserPluginForPrerender() : CreateTerserPlugin();
+    const terserer = CreateTerserPlugin();
     configMutator.raw.optimization?.minimizer.push(terserer);
 
     return configMutator;
@@ -44,46 +62,6 @@ function CreateTerserPlugin() {
     // Link to options - https://esbuild.github.io/api/#minify
     terserOptions: {
       minify: true,
-    },
-  });
-}
-
-function CreateTerserPluginForPrerender() {
-  return new TerserPlugin({
-    extractComments: false,
-    terserOptions: {
-      parse: {
-        // We want terser to parse ecma 8 code. However, we don't want it
-        // to apply any minification steps that turns valid ecma 5 code
-        // into invalid ecma 5 code. This is why the 'compress' and 'output'
-        // sections only apply transformations that are ecma 5 safe
-        // https://github.com/facebook/create-react-app/pull/4234
-        ecma: 8,
-      },
-      compress: {
-        ecma: 5,
-        warnings: false,
-        // Disabled because of an issue with Uglify breaking seemingly valid code:
-        // https://github.com/facebook/create-react-app/issues/2376
-        // Pending further investigation:
-        // https://github.com/mishoo/UglifyJS2/issues/2011
-        comparisons: false,
-        // Disabled because of an issue with Terser breaking valid code:
-        // https://github.com/facebook/create-react-app/issues/5250
-        // Pending further investigation:
-        // https://github.com/terser-js/terser/issues/120
-        inline: 2,
-      },
-      mangle: {
-        safari10: true,
-      },
-      output: {
-        ecma: 5,
-        comments: false,
-        // Turned on because emoji and regex is not minified properly using default
-        // https://github.com/facebook/create-react-app/issues/2488
-        ascii_only: true,
-      },
     },
   });
 }

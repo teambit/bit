@@ -8,9 +8,10 @@ import styles from './composition-gallery.module.scss';
 
 export type CompositionGalleryProps = {
   component: ComponentModel;
+  sandbox?: string;
 };
 
-export function CompositionGallery({ component }: CompositionGalleryProps) {
+export function CompositionGallery({ component, sandbox }: CompositionGalleryProps) {
   const navigate = useNavigate();
   const hasCompositions = component.compositions.length > 0;
 
@@ -32,6 +33,8 @@ export function CompositionGallery({ component }: CompositionGalleryProps) {
               previewClass={styles.preview}
               composition={composition}
               component={component}
+              queryParams={'disableCta=true'}
+              sandbox={sandbox}
             />
           );
         })}

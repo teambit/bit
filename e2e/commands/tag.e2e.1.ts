@@ -1,8 +1,7 @@
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import { VersionAlreadyExists } from '../../src/scope/exceptions';
-
-const assertArrays = require('chai-arrays');
+import { Helper } from '@teambit/legacy.e2e-helper';
+import { VersionAlreadyExists } from '@teambit/legacy.scope';
+import assertArrays from 'chai-arrays';
 
 chai.use(assertArrays);
 
@@ -16,14 +15,14 @@ describe('bit tag command', function () {
     helper.scopeHelper.destroy();
   });
   before(() => {
-    helper.scopeHelper.reInitLocalScope();
+    helper.scopeHelper.reInitWorkspace();
   });
   describe('tag component with invalid mainFile in bitmap', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       const bitMap = helper.bitMap.read();
       bitMap['bar/foo'].mainFile = '';
       helper.bitMap.write(bitMap);
@@ -42,7 +41,7 @@ describe('bit tag command', function () {
     let output;
     describe('tag specific component', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+        helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
         helper.fs.createFile('components/patch', 'patch.js');
         helper.fs.createFile('components/minor', 'minor.js');
         helper.fs.createFile('components/major', 'major.js');
@@ -119,7 +118,7 @@ describe('bit tag command', function () {
   });
   describe('with removed file/files', () => {
     beforeEach(() => {
-      helper.scopeHelper.initNewLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'index.js');
       helper.command.addComponent('bar', { i: 'bar/foo' });
@@ -142,10 +141,10 @@ describe('bit tag command', function () {
   });
   describe('with Windows end-of-line characters', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       const impl = 'hello\r\n world\r\n';
       helper.fixtures.createComponentBarFoo(impl);
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
     });
     it('should write the file to the model with Linux EOL characters', () => {
@@ -160,7 +159,7 @@ describe('bit tag command', function () {
   describe('tag a component without its dependencies', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
       output = helper.general.runWithTryCatch('bit tag comp1');
     });
@@ -170,12 +169,75 @@ describe('bit tag command', function () {
   });
   describe('tag with an empty string', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1, false);
     });
     // previously it was throwing `expected log.message to be string, got boolean`.
     it('should not throw an error', () => {
       expect(() => helper.command.tagAllWithoutBuild('-m ""')).to.not.throw();
+    });
+  });
+  describe('component count display when new component depends on existing tagged component', () => {
+    let output;
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      // Create and tag an existing component
+      helper.fs.createFile('components/comp1', 'comp1.js', 'module.exports = { test: true };');
+      helper.command.addComponent('components/comp1', { i: 'components/comp1' });
+      helper.command.tagAllWithoutBuild();
+
+      // Modify comp1 so it will be tagged again
+      helper.fs.createFile('components/comp1', 'comp1.js', 'module.exports = { test: true, modified: true };');
+
+      // Create a new component that depends on comp1
+      helper.fs.createFile('components/comp2', 'comp2.js', "const comp1 = require('../comp1/comp1');");
+      helper.command.addComponent('components/comp2', { i: 'components/comp2' });
+      helper.command.linkAndRewire();
+
+      // Tag all components - this should tag both comp2 (new) and comp1 (modified)
+      // comp2 should be auto-tagged because its dependency (comp1) changed
+      output = helper.command.tagAllWithoutBuild();
+    });
+    it('should correctly display 2 components tagged, not 3', () => {
+      // The output should show:
+      // - 1 new component (comp2)
+      // - 1 changed component (comp1) with auto-tagged dependents (comp2 should be listed)
+      // Total: 2 component(s) tagged (not 3)
+      expect(output).to.have.string('2 component(s) tagged');
+      expect(output).to.not.have.string('3 component(s) tagged');
+    });
+  });
+  describe('tag component with auto-tag should validate component issues', () => {
+    let tagError: string;
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      // Create two independent components
+      helper.fs.outputFile('comp1/index.js', "module.exports = () => 'comp1';");
+      helper.fs.outputFile('comp2/index.js', "module.exports = () => 'comp2';");
+      helper.command.addComponent('comp1');
+      helper.command.addComponent('comp2');
+
+      // Tag all components initially
+      helper.command.tagAllWithoutBuild();
+
+      // Modify comp1 to depend on comp2 with a relative import (creates a component issue)
+      helper.fs.outputFile(
+        'comp1/index.js',
+        "const comp2 = require('../comp2');\nmodule.exports = () => 'comp1 and ' + comp2();"
+      );
+
+      // Try to tag comp2 - this should auto-tag comp1, but comp1 has a relative import issue
+      try {
+        helper.command.tagWithoutBuild('comp2', '--unmodified');
+      } catch (err: any) {
+        tagError = err.toString();
+      }
+    });
+    it('should throw an error about component issues, not about relativePaths in Version object', () => {
+      expect(tagError).to.have.string('issues found');
+      expect(tagError).to.have.string('relative import');
+      expect(tagError).to.not.have.string('unable to save Version object');
+      expect(tagError).to.not.have.string('should not have relativePaths');
     });
   });
 });

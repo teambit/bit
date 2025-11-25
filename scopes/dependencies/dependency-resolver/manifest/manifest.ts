@@ -1,6 +1,6 @@
-import { SemVer } from 'semver';
-import { PeerDependenciesMeta } from '../dependencies/dependency-list';
-import { PackageName, SemverVersion } from '../dependencies';
+import type { SemVer } from 'semver';
+import type { PeerDependenciesMeta } from '../dependencies/dependency-list';
+import type { PackageName, SemverVersion } from '../dependencies';
 
 // export type ManifestDependenciesKeys = 'dependencies' | 'devDependencies' | 'peerDependencies';
 
@@ -24,7 +24,11 @@ export interface ManifestToJsonOptions {
 }
 
 export class Manifest {
-  constructor(public name: string, public version: SemVer, public dependencies: ManifestDependenciesObject) {}
+  constructor(
+    public name: string,
+    public version: SemVer,
+    public dependencies: ManifestDependenciesObject
+  ) {}
 
   // Should be implemented on sub classes
   // get dir(): string {

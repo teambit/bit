@@ -3,34 +3,40 @@ import flatten from 'lodash.flatten';
 import copy from 'copy-to-clipboard';
 import type { RouteProps } from 'react-router-dom';
 import type { LinkProps } from '@teambit/base-react.navigation.link';
-import { CommandBarAspect, CommandBarUI, CommandEntry } from '@teambit/command-bar';
+import type { CommandBarUI, CommandEntry } from '@teambit/command-bar';
+import { CommandBarAspect } from '@teambit/command-bar';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import { PreviewAspect, ClickInsideAnIframeEvent } from '@teambit/preview';
-import { PubsubAspect, BitBaseEvent, PubsubUI } from '@teambit/pubsub';
-import { ReactRouterAspect, ReactRouterUI } from '@teambit/react-router';
+import type { BitBaseEvent, PubsubUI } from '@teambit/pubsub';
+import { PubsubAspect } from '@teambit/pubsub';
+import type { ReactRouterUI } from '@teambit/react-router';
+import { ReactRouterAspect } from '@teambit/react-router';
 import { UIRuntime } from '@teambit/ui';
 import { groupBy } from 'lodash';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
-import { MenuItem, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
+import type { MenuItem, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import type { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { Import } from '@teambit/ui-foundation.ui.use-box.menu';
 import { snapToSemver } from '@teambit/component-package-version';
 import { AspectSection } from './aspect.section';
 import { ComponentAspect } from './component.aspect';
-import { ComponentModel } from './ui';
-import { Component, ComponentPageElement, ComponentPageSlot } from './ui/component';
-import { ComponentResultPlugin, ComponentSearcher } from './ui/component-searcher';
-import {
+import type { ComponentModel } from './ui';
+import type { ComponentPageElement, ComponentPageSlot } from './ui/component';
+import { Component } from './ui/component';
+import type { ComponentResultPlugin } from './ui/component-searcher';
+import { ComponentSearcher } from './ui/component-searcher';
+import type {
   ConsumeMethodSlot,
   ConsumePlugin,
-  ComponentMenu,
   NavPlugin,
   OrderedNavigationSlot,
   RightSideMenuItem,
   RightSideMenuSlot,
 } from './ui/menu';
-import { GetComponentsOptions } from './get-component-opts';
+import { ComponentMenu } from './ui/menu';
+import type { GetComponentsOptions } from './get-component-opts';
 
 export type ComponentSearchResultSlot = SlotRegistry<ComponentResultPlugin[]>;
 
@@ -62,11 +68,14 @@ export class ComponentUI {
     private navSlot: OrderedNavigationSlot,
 
     readonly consumeMethodSlot: ConsumeMethodSlot,
-
     /**
      * slot for registering a new widget to the menu.
      */
     private widgetSlot: OrderedNavigationSlot,
+    /**
+     * slot for registering pinned widgets to the menu
+     */
+    private pinnedWidgetSlot: OrderedNavigationSlot,
     /**
      * slot for registering the right section of the menu
      */
@@ -236,6 +245,8 @@ export class ComponentUI {
         componentIdStr={options.componentId}
         useComponentFilters={options.useComponentFilters}
         RightNode={options.RightNode}
+        authToken={options.authToken}
+        pinnedWidgetSlot={this.pinnedWidgetSlot}
       />
     );
   }
@@ -263,6 +274,10 @@ export class ComponentUI {
 
   registerWidget(widget: LinkProps, order?: number) {
     this.widgetSlot.register({ props: widget, order });
+  }
+
+  registerPinnedWidget(widget: LinkProps, order?: number) {
+    this.pinnedWidgetSlot.register({ props: widget, order });
   }
 
   registerRightSideMenuItem(...rightSideMenuItem: RightSideMenuItem[]) {
@@ -302,6 +317,7 @@ export class ComponentUI {
     Slot.withType<ComponentPageSlot>(),
     Slot.withType<ComponentSearchResultSlot>(),
     Slot.withType<RightSideMenuSlot>(),
+    Slot.withType<NavPlugin>(),
   ];
   static defaultConfig: ComponentUIConfig = {
     commandBar: true,
@@ -319,6 +335,7 @@ export class ComponentUI {
       pageSlot,
       componentSearchResultSlot,
       rightSideMenuSlot,
+      pinnedWidgetSlot,
     ]: [
       RouteSlot,
       OrderedNavigationSlot,
@@ -327,7 +344,8 @@ export class ComponentUI {
       MenuItemSlot,
       ComponentPageSlot,
       ComponentSearchResultSlot,
-      RightSideMenuSlot
+      RightSideMenuSlot,
+      OrderedNavigationSlot,
     ]
   ) {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)
@@ -338,6 +356,7 @@ export class ComponentUI {
       navSlot,
       consumeMethodSlot,
       widgetSlot,
+      pinnedWidgetSlot,
       rightSideMenuSlot,
       menuItemSlot,
       pageSlot,
@@ -358,6 +377,10 @@ export class ComponentUI {
     componentUI.registerRoute(aspectSection.route);
     componentUI.registerWidget(aspectSection.navigationLink, aspectSection.order);
     componentUI.registerConsumeMethod(componentUI.bitMethod);
+    componentUI.registerRightSideMenuItem({
+      item: <commandBarUI.CommandBarButton />,
+      order: 90,
+    });
     return componentUI;
   }
 }

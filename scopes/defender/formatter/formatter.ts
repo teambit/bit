@@ -1,5 +1,5 @@
-import { Component } from '@teambit/component';
-import { FormatterContext } from './formatter-context';
+import type { Component } from '@teambit/component';
+import type { FormatterContext } from './formatter-context';
 
 export type ComponentFormatResult = {
   /**

@@ -2,10 +2,9 @@ import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 
-import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../src/fixtures/fixtures';
-import { VersionNotFound } from '../../src/scope/exceptions';
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
+import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
+import { VersionNotFound } from '@teambit/legacy.scope';
 
 const barFooV1 = "module.exports = function foo() { return 'got foo'; };\n";
 const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };\n";
@@ -21,7 +20,7 @@ describe('bit diff command', function () {
   });
   const barFooFile = 'foo.js';
   before(() => {
-    helper.scopeHelper.reInitLocalScope();
+    helper.scopeHelper.reInitWorkspace();
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -42,7 +41,7 @@ describe('bit diff command', function () {
   describe('after the component was created', () => {
     before(() => {
       helper.fixtures.createComponentBarFoo(barFooV1);
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
     });
     it('diff should show that all files were added', () => {
       const output = helper.command.diff('bar/foo');
@@ -88,7 +87,7 @@ describe('bit diff command', function () {
             helper.command.runCmd('bit config set git_path /non/exist/location');
           });
           after(() => {
-            helper.command.runCmd('bit config set git_path git');
+            helper.command.runCmd('bit config del git_path');
           });
           it('should throw an error GitNotFound', () => {
             const output = helper.general.runWithTryCatch('bit diff bar/foo');
@@ -100,13 +99,13 @@ describe('bit diff command', function () {
   });
   describe('when there are several modified components and non modified components', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo(barFooV1);
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.createComponentIsType();
-      helper.fixtures.addComponentUtilsIsTypeAsDir();
+      helper.fixtures.addComponentUtilsIsType();
       helper.fixtures.createComponentIsString('');
-      helper.fixtures.addComponentUtilsIsStringAsDir();
+      helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
 
       // modify only bar/foo and utils/is-type, not utils/is-string
@@ -131,7 +130,7 @@ describe('bit diff command', function () {
     describe('running bit diff with multiple ids', () => {
       let output;
       before(() => {
-        output = helper.command.diff('"utils/is-type, utils/is-string"');
+        output = helper.command.diff('"**/utils/is-type, **/utils/is-string"');
       });
       it('should not show diff for non modified components', () => {
         expect(output).to.not.have.string(fixtures.isString);
@@ -145,9 +144,9 @@ describe('bit diff command', function () {
   describe('when a file is deleted and another is added', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo(barFooV1);
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.fs.createFile('bar', 'foo2.js', barFooV2);
       fs.removeSync(path.join(helper.scopes.localPath, 'bar/foo.js'));
@@ -255,9 +254,9 @@ describe('bit diff command', function () {
   });
   describe('component with multiple versions', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo(barFooV1);
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo(); // 0.0.1
       helper.fixtures.createComponentBarFoo(barFooV2);
       helper.fixtures.tagComponentBarFoo(); // 0.0.2

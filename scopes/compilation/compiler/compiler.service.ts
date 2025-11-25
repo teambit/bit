@@ -1,7 +1,14 @@
-import { EnvService, EnvDefinition, Env, EnvContext, ServiceTransformationMap, ExecutionContext } from '@teambit/envs';
+import type {
+  EnvService,
+  EnvDefinition,
+  Env,
+  EnvContext,
+  ServiceTransformationMap,
+  ExecutionContext,
+} from '@teambit/envs';
 import chalk from 'chalk';
 import highlight from 'cli-highlight';
-import { Compiler } from './types';
+import type { Compiler } from './types';
 
 export type CompilerDescriptor = {
   id: string;
@@ -16,8 +23,8 @@ type CompilerTransformationMap = ServiceTransformationMap & {
 export class CompilerService implements EnvService<{}, CompilerDescriptor> {
   name = 'Compile';
 
-  getCompiler(context: ExecutionContext): Compiler {
-    const compiler: Compiler = context.env.getCompiler();
+  getCompiler(context: ExecutionContext): Compiler | undefined {
+    const compiler = context.env.getCompiler?.();
     return compiler;
   }
 

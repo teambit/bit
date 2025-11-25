@@ -1,4 +1,5 @@
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 import { TemplateLiteralTypeSpanSchema } from './template-literal-type-span';
 
 export class TemplateLiteralTypeSchema extends SchemaNode {
@@ -13,9 +14,14 @@ export class TemplateLiteralTypeSchema extends SchemaNode {
     this.templateSpans = templateSpans;
   }
 
-  toString() {
-    const spans = this.templateSpans.map((span) => span.toString()).join('');
+  toString(options?: { color?: boolean }) {
+    const spans = this.templateSpans.map((span) => span.toString(options)).join('');
     return `${this.head}${spans}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const spans = this.templateSpans.map((span) => span.toFullSignature(options)).join('');
+    return `\`${this.head}${spans}\``;
   }
 
   toObject() {

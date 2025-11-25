@@ -1,4 +1,5 @@
-import { HttpLink, split } from '@apollo/client';
+import type { HttpLink } from '@apollo/client';
+import { split } from '@apollo/client';
 import { getMainDefinition } from '@apollo/client/utilities';
 import type { WebSocketLink } from '@apollo/client/link/ws';
 

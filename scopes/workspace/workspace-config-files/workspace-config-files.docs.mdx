@@ -4,7 +4,7 @@ labels: ['core aspect', 'cli', 'configuration', 'workspace']
 ---
 
 This aspect provides the ability to write configuration files in the workspace.
-It provides an API to write configuration files in the workspace, and also provides cli commands to write configuration files.
+The main goal for these config file writers is to ensure that the LSP/IDE produces the same results as running the relevant commands (such as bit lint, bit format, or bit check types/TypeScript during build). It provides an API to write configuration files in the workspace, and also provides CLI commands to do so.
 
 ### Commands
 
@@ -14,3 +14,101 @@ Main command is `bit ws-config` which has the following sub commands:
 - `bit ws-config clean` - remove all configuration files from the workspace
 - `bit ws-config list` - list all registered configuration writers.
   this is useful for filtering used configuration writers when using the `--writers` flag in the write/clean commands.
+
+### How it works
+
+**Background:**
+
+Bit structures its workspaces in a manner that, while reminiscent of monorepos, introduces additional complexities:
+
+1. **Component Isolation:** Each component behaves as an isolated package with its own `package.json` and configuration files (like `tsconfig`, `eslint`, `prettier`, `jest`, etc.). Some components might share configurations.
+
+2. **Directory Structure Example:**
+
+   ```
+   - Root
+       - node_modules
+           - React-env
+               - config1
+           - Node-env
+               - config2
+           - Lit-env
+               - config3
+       - Users-domain
+           - React-comp1
+           - React-comp2
+           - Node-comp1
+       - Ecommerce-domain
+           - React-comp3
+           - React-comp4
+           - Node-comp1
+           - Node-comp2
+           - Lit-comp1
+           - Lit-comp2
+           - Lit-comp3
+   ```
+
+   - **Observations:**
+     - Sibling directories may require different configs at any hierarchy level.
+     - Components across different domains might share the same config.
+     - Actual config files reside within `node_modules` packages, not directly in the source folders.
+
+**Flow:**
+
+1. **Determining Config Associations:**
+
+   - **Step 1:** Identify the relevant config files for each component (e.g., for ESLint).
+   - **Step 2:** Group components sharing the same config.
+   - **Step 3:** Map the relevant paths for each config.
+
+   _Example Outcome:_
+
+   ```json
+   {
+     "Config1": [
+       "users-domain/react-comp1",
+       "users-domain/react-comp2",
+       "ecommerce-domain/react-comp3",
+       "ecommerce-domain/react-comp4"
+     ],
+     "Config2": ["..."],
+     "Config3": ["..."]
+   }
+   ```
+
+2. **Optimizing Config File Placement:**
+
+   - Develop an algorithm to determine optimal locations for generated config files, minimizing workspace pollution.
+
+   _Example Outcome:_
+
+   ```json
+   {
+     "root": "generated-config1", // Predominantly React components
+     "users-domain": "generated-config2", // Exclusively Node components
+     "ecommerce-domain": "generated-config3",
+     "ecommerce-domain/node-comp1": "generated-config2",
+     "ecommerce-domain/node-comp2": "generated-config2"
+   }
+   ```
+
+3. **Filesystem Structure:**
+
+   ```
+   - Root
+       - node_modules
+           - .config-files-dir
+               - Config1.<hash>.js
+               - Config2.<hash>.js
+               - Config3.<hash>.js
+   - generated-config1
+   - ...
+   ```
+
+   Each `generated-config` extends its respective config file:
+
+   ```json
+   {
+     "extends": ["./node_modules/.config-files-dir/.eslintrc.bit.<hash>.json"]
+   }
+   ```

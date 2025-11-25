@@ -1,8 +1,9 @@
 import chai, { expect } from 'chai';
-import { IS_WINDOWS } from '../../src/constants';
-import Helper from '../../src/e2e-helper/e2e-helper';
-
-chai.use(require('chai-fs'));
+import { IS_WINDOWS } from '@teambit/legacy.constants';
+import { Helper } from '@teambit/legacy.e2e-helper';
+import { specFilePassingFixture, specFileFailingFixture, specFileErroringFixture } from './jest-fixtures';
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('Jest Tester', function () {
   this.timeout(0);
@@ -15,7 +16,7 @@ describe('Jest Tester', function () {
   });
   describe('component without any test file', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
     });
     it('bit test should not throw any error', () => {
@@ -36,7 +37,7 @@ describe('Jest Tester', function () {
   // #2. C:\\Users\\Administrator\\AppData\\Local\\Temp\\2\\bit\\e2e\\2zmx1543-local\\comp1\\comp1.spec.ts
   (IS_WINDOWS ? describe.skip : describe)('component with a passing test', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
     });
@@ -51,7 +52,7 @@ describe('Jest Tester', function () {
   });
   (IS_WINDOWS ? describe.skip : describe)('component with a failing test', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFileFailingFixture());
     });
@@ -74,7 +75,7 @@ describe('Jest Tester', function () {
   });
   describe('component with an errored test', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFileErroringFixture());
     });
@@ -92,15 +93,20 @@ describe('Jest Tester', function () {
     });
   });
   describe('env with an incorrect Jest config', () => {
+    let envName;
+    let envId;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
-      helper.env.setCustomEnv('custom-react-env');
-      helper.fs.outputFile('custom-react-env/jest/jest.config.js', invalidJestConfigFixture());
-      helper.command.compile();
-      helper.command.install();
-      helper.command.setEnv('comp1', 'custom-react-env');
+      envName = helper.env.setCustomNewEnv('invalid-jest-config-env', [
+        '@teambit/react.react-env',
+        '@teambit/typescript.typescript-compiler',
+        '@teambit/defender.jest-tester',
+        '@teambit/defender.testers.multi-tester',
+      ]);
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.setEnv('comp1', envId);
     });
     it('bit test should exit with non-zero code', () => {
       expect(() => helper.command.test()).to.throw();
@@ -117,18 +123,23 @@ describe('Jest Tester', function () {
 
   describe('env with custom spec resolver', () => {
     let compName;
+    let envName;
+    let envId;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       compName = helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
       helper.fs.outputFile(
         'comp1/comp1.custom-pattern.spec.ts',
         specFilePassingFixture('custom pattern describe text', 'custom pattern it text')
       );
-      helper.env.setCustomEnv('custom-jest-resolve-env');
-      helper.command.compile();
-      helper.command.install();
-      helper.command.setEnv('comp1', 'custom-jest-resolve-env');
+      envName = helper.env.setCustomNewEnv('custom-jest-resolve-env', [
+        '@teambit/react.react-env',
+        '@teambit/typescript.typescript-compiler',
+        '@teambit/defender.jest-tester',
+      ]);
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.setEnv('comp1', envId);
     });
     describe('bit test command', () => {
       let output;
@@ -174,40 +185,3 @@ describe('Jest Tester', function () {
     });
   });
 });
-
-function specFilePassingFixture(describeText = 'test', itText = 'should pass') {
-  return `describe('${describeText}', () => {
-  it('${itText}', () => {
-    expect(true).toBeTruthy();
-  });
-});
-`;
-}
-
-function specFileFailingFixture() {
-  return `describe('test', () => {
-  it('should fail', () => {
-    expect(false).toBeTruthy();
-  });
-});
-`;
-}
-
-function specFileErroringFixture() {
-  return `describe('test', () => {
-    throw new Error('SomeError');
-  it('should not reach here', () => {
-    expect(true).toBeTruthy();
-  });
-});
-`;
-}
-
-function invalidJestConfigFixture() {
-  return `module.exports = {
-    transformIgnorePatterns: [
-      someUndefinedFunc(),
-    ],
-  };
-  `;
-}

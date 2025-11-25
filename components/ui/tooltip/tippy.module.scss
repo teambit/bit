@@ -1,0 +1,27 @@
+// NOTE: this file should only be used to apply 'teambit' theme to tippy's default global css. use separate file for adding scoped css.
+
+$bg: var(--bit-bg-tooltip, #2b2b2b);
+$textColor: var(--bit-text-color, #fff);
+
+// using global '.tippy-box' from TippyJS
+:global {
+  .tippy-box[data-theme~='teambit'] {
+    color: $textColor;
+    background: $bg;
+    border-radius: 8px;
+
+    .tippy-content {
+      padding: 0.85em;
+      white-space: nowrap;
+    }
+
+    &.tippy-breakLine .tippy-content {
+      white-space: pre-line;
+      word-break: break-all;
+    }
+
+    .tippy-svg-arrow {
+      fill: $bg;
+    }
+  }
+}

@@ -1,6 +1,5 @@
-import { GlobalConfigMain } from '@teambit/global-config';
 import mapSeries from 'p-map-series';
-import { Lane } from '@teambit/legacy/dist/scope/models';
+import type { Lane } from '@teambit/objects';
 import { existsSync } from 'fs-extra';
 import { join } from 'path';
 import {
@@ -9,19 +8,21 @@ import {
   CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR,
   CFG_USE_DATED_CAPSULES,
   CFG_CACHE_LOCK_ONLY_CAPSULES,
-} from '@teambit/legacy/dist/constants';
-import { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
-import { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
-import { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
+} from '@teambit/legacy.constants';
+import type { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
+import type { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
+import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { compact, uniq, difference, groupBy, defaultsDeep } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
-import { ExtensionManifest, Aspect } from '@teambit/harmony';
-import { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
-import { Logger } from '@teambit/logger';
-import { EnvsMain } from '@teambit/envs';
-import { NodeLinker } from '@teambit/dependency-resolver';
-import { ScopeMain } from './scope.main.runtime';
+import type { ExtensionManifest, Aspect } from '@teambit/harmony';
+import type { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
+import type { Logger } from '@teambit/logger';
+import type { EnvsMain } from '@teambit/envs';
+import type { NodeLinker } from '@teambit/dependency-resolver';
+import { BitError } from '@teambit/bit-error';
+import type { ScopeMain } from './scope.main.runtime';
+import type { ConfigStoreMain } from '@teambit/config-store';
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
 
@@ -38,7 +39,7 @@ export class ScopeAspectsLoader {
     private envs: EnvsMain,
     private isolator: IsolatorMain,
     private logger: Logger,
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {}
 
   async loadAspects(
@@ -118,23 +119,33 @@ needed-for: ${neededFor || '<unknown>'}`);
     opts: {
       packageManagerConfigRootDir?: string;
       workspaceName?: string;
+      loadCustomEnvs?: string;
     } = {}
   ): Promise<{ manifests: ManifestOrAspect[]; potentialPluginsIds: string[] }> {
     ids = uniq(ids);
+    const optsWithDefaults = { loadCustomEnvs: false, ...opts };
     this.logger.debug(`getManifestsGraphRecursively, ids:\n${ids.join('\n')}`);
     const nonVisitedId = ids.filter((id) => !visited.includes(id));
     if (!nonVisitedId.length) {
       return { manifests: [], potentialPluginsIds: [] };
     }
     const components = await this.getNonLoadedAspects(nonVisitedId, lane);
-    // Adding all the envs ids to the array to support case when one (or more) of the aspects has custom aspect env
-    const customEnvsIds = components
-      .map((component) => this.envs.getEnvId(component))
-      .filter((envId) => !this.aspectLoader.isCoreEnv(envId));
-    // In case there is custom env we need to load it right away, otherwise we will fail during the require aspects
-    await this.getManifestsAndLoadAspects(customEnvsIds, undefined, lane);
+    // This is usually not required, right now it required when signing aspects with custom envs.
+    // if you see another case where it's required, please consult @Gilad before passing it as true
+    // as it might have performance implications (like creating unnecessary capsules for aspects that are not needed
+    // during bit create for example, like loading the env of the env (aka bitdev.general/envs/bit-env) when
+    // loading the component's env.)
+    if (optsWithDefaults.loadCustomEnvs) {
+      // Adding all the envs ids to the array to support case when one (or more) of the aspects has custom aspect env
+      const customEnvsIds = components
+        .map((component) => this.envs.getEnvId(component))
+        .filter((envId) => !this.aspectLoader.isCoreEnv(envId));
+
+      // In case there is custom env we need to load it right away, otherwise we will fail during the require aspects
+      await this.getManifestsAndLoadAspects(customEnvsIds, undefined, lane);
+    }
     visited.push(...nonVisitedId);
-    const manifests = await this.requireAspects(components, throwOnError, opts);
+    const manifests = await this.requireAspects(components, throwOnError, optsWithDefaults);
     const potentialPluginsIds = compact(
       manifests.map((manifest, index) => {
         if (this.aspectLoader.isValidAspect(manifest)) return undefined;
@@ -154,7 +165,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       this.logger.debug(
         `getManifestsGraphRecursively, id: ${manifest.id || '<unknown>'}, found ${depIds.length}: ${depIds.join(', ')}`
       );
-      const { manifests: loaded } = await this.getManifestsGraphRecursively(depIds, visited, throwOnError, lane);
+      const { manifests: loaded } = await this.getManifestsGraphRecursively(depIds, visited, throwOnError, lane, opts);
       manifests.push(...loaded);
     });
 
@@ -225,11 +236,23 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   private async compileIfNoDist(capsule: Capsule, component: Component) {
-    const env = this.envs.getEnv(component);
-    const compiler: Compiler = env.env.getCompiler();
+    let compiler: Compiler | undefined;
+    try {
+      const env = this.envs.getEnv(component);
+      compiler = env.env.getCompiler();
+    } catch (err: any) {
+      this.logger.info(
+        `compileIfNoDist: failed loading compiler for ${component.id.toString()} in capsule ${capsule.path}, error: ${
+          err.message
+        }`
+      );
+    }
     const distDir = compiler?.distDir || DEFAULT_DIST_DIRNAME;
     const distExists = existsSync(join(capsule.path, distDir));
     if (distExists) return;
+    if (!compiler) {
+      throw new BitError(`unable to compile aspect/env ${component.id.toString()}, no compiler found`);
+    }
 
     const compiledCode = (
       await Promise.all(
@@ -242,7 +265,6 @@ needed-for: ${neededFor || '<unknown>'}`);
               },
             ] as TranspileFileOutputOneFile[];
           }
-
           if (compiler.transpileFile) {
             return compiler.transpileFile(file.contents.toString('utf8'), {
               filePath: file.path,
@@ -301,7 +323,7 @@ needed-for: ${neededFor || '<unknown>'}`);
           }
         });
         return manifests;
-      } catch (err) {
+      } catch {
         return null;
       }
     };
@@ -328,13 +350,13 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   shouldUseDatedCapsules(): boolean {
-    const globalConfig = this.globalConfig.getSync(CFG_USE_DATED_CAPSULES);
+    const globalConfig = this.configStore.getConfig(CFG_USE_DATED_CAPSULES);
     // @ts-ignore
     return globalConfig === true || globalConfig === 'true';
   }
 
   shouldCacheLockFileOnly(): boolean {
-    const globalConfig = this.globalConfig.getSync(CFG_CACHE_LOCK_ONLY_CAPSULES);
+    const globalConfig = this.configStore.getConfig(CFG_CACHE_LOCK_ONLY_CAPSULES);
     // @ts-ignore
     return globalConfig === true || globalConfig === 'true';
   }
@@ -342,16 +364,16 @@ needed-for: ${neededFor || '<unknown>'}`);
   getAspectCapsulePath() {
     const defaultPath = `${this.scope.path}-aspects`;
     if (this.scope.isGlobalScope) {
-      return this.globalConfig.getSync(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR) || defaultPath;
+      return this.configStore.getConfig(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR) || defaultPath;
     }
-    return this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR) || defaultPath;
+    return this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR) || defaultPath;
   }
 
   shouldUseHashForCapsules(): boolean {
     if (this.scope.isGlobalScope) {
-      return !this.globalConfig.getSync(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR);
+      return !this.configStore.getConfig(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR);
     }
-    return !this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR);
+    return !this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR);
   }
 
   getAspectsPackageManager(): string | undefined {

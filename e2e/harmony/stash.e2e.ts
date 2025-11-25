@@ -1,8 +1,9 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import chaiFs from 'chai-fs';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('bit stash command', function () {
   this.timeout(0);
@@ -15,7 +16,7 @@ describe('bit stash command', function () {
   });
   describe('basic stash', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, undefined, 'version2');
@@ -53,7 +54,7 @@ describe('bit stash command', function () {
   });
   describe('stash and local have conflicting modification', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, false, 'from-stash');
@@ -71,7 +72,7 @@ describe('bit stash command', function () {
   });
   describe('stash the modification from 0.0.1 then tag 0.0.2', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1, false);
       helper.fs.outputFile('comp1/index.js', 'console.log("hello");\n\n');
       helper.command.tagAllWithoutBuild();
@@ -90,7 +91,7 @@ describe('bit stash command', function () {
   });
   describe('stash and local have modification with a shared base - 0.0.1', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1, false);
       helper.fs.outputFile('comp1/index.js', 'console.log("hello");\n\n');
       helper.command.tagAllWithoutBuild();
@@ -104,6 +105,33 @@ describe('bit stash command', function () {
       expect(index).to.have.string('from-stash');
       expect(index).to.have.string('from-modification');
       expect(index).to.not.have.string('hello');
+    });
+  });
+  describe('stash new components along with modified', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild('comp2');
+      helper.fixtures.populateComponents(2, undefined, 'version2');
+      helper.command.stash('--include-new');
+    });
+    it('should stash both of them', () => {
+      const stashList = helper.command.stashList();
+      expect(stashList).to.have.string('2 components');
+    });
+    it('should remove the new component from .bitmap', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('comp2');
+      expect(bitMap).to.not.have.property('comp1');
+    });
+    describe('stash load them', () => {
+      before(() => {
+        helper.command.stashLoad();
+      });
+      it('should re-create the new component', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.have.property('comp1');
+      });
     });
   });
 });

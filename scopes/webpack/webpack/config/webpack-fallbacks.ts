@@ -13,6 +13,7 @@ const osFallbackPath = require.resolve('os-browserify/browser');
 const pathFallbackPath = require.resolve('path-browserify');
 const punycodeFallbackPath = require.resolve('punycode/');
 const processFallbackPath = require.resolve('process/browser');
+const eventsFallbackPath = require.resolve('events/');
 // Handled in separate alias
 const querystringFallbackPath = require.resolve('querystring-es3');
 const streamFallbackPath = require.resolve('stream-browserify');
@@ -28,6 +29,7 @@ const zlibFallbackPath = require.resolve('browserify-zlib');
 
 export const fallbacks = {
   assert: assertFallbackPath,
+  events: eventsFallbackPath,
   buffer: bufferFallbackPath,
   constants: constantsFallbackPath,
   crypto: cryptoFallbackPath,

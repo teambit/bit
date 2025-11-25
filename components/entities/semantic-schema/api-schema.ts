@@ -1,17 +1,8 @@
 import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
-import {
-  ClassSchema,
-  EnumSchema,
-  FunctionLikeSchema,
-  InterfaceSchema,
-  ModuleSchema,
-  TypeRefSchema,
-  TypeSchema,
-  UnresolvedSchema,
-  VariableLikeSchema,
-} from './schemas';
-import { SchemaLocation, SchemaNode } from './schema-node';
+import { ExportSchema, ModuleSchema } from './schemas';
+import type { SchemaLocation } from './schema-node';
+import { SchemaNode } from './schema-node';
 import { TagName } from './schemas/docs/tag';
 import { SchemaRegistry } from './schema-registry';
 
@@ -39,9 +30,21 @@ export class APISchema extends SchemaNode {
     this.taggedModuleExports = taggedModuleExports;
   }
 
-  listTaggedExports(module?: ModuleSchema) {
+  listTaggedExports(module?: ModuleSchema): SchemaNode[] {
     if (!module) return [];
-    return module.exports.filter((e) => e.doc?.hasTag(TagName.exports));
+    return module.exports
+      .filter((e) => {
+        if (ExportSchema.isExportSchema(e)) {
+          return e.exportNode.doc?.hasTag(TagName.exports) || e.doc?.hasTag(TagName.exports);
+        }
+        return e.doc?.hasTag(TagName.exports);
+      })
+      .map((e) => {
+        if (ExportSchema.isExportSchema(e)) {
+          return e.exportNode;
+        }
+        return e;
+      });
   }
 
   toString() {
@@ -54,27 +57,81 @@ export class APISchema extends SchemaNode {
 
   toStringPerType() {
     const title = chalk.inverse(`API Schema of ${this.componentId.toString()}\n`);
-    const getSection = (ClassObj, sectionName: string) => {
-      const objects = this.module.exports.filter((exp) => exp instanceof ClassObj);
-      if (!objects.length) {
-        return '';
+
+    const exportGroups = this.module.exports.reduce(
+      (acc, exp) => {
+        const node = ExportSchema.isExportSchema(exp) ? exp.exportNode : exp;
+
+        const displayName = node.displaySchemaName;
+
+        (acc[displayName] = acc[displayName] || []).push(exp);
+        return acc;
+      },
+      {} as { [key: string]: SchemaNode[] }
+    );
+
+    const sortedDisplayNames = Object.keys(exportGroups).sort();
+
+    if (sortedDisplayNames.length === 0) {
+      return title;
+    }
+
+    const sections = sortedDisplayNames.map((displayName) => {
+      const exports = exportGroups[displayName];
+      const sectionBody = exports.map((c) => c.toString({ color: true })).join('\n');
+
+      return `${chalk.green.bold(displayName)}\n${sectionBody}`;
+    });
+
+    return title + sections.join('\n\n') + '\n\n';
+  }
+
+  toFullSignature(options: { showDocs?: boolean; showTitles?: boolean } = { showDocs: true }): string {
+    const title = `API Schema of ${this.componentId.toString()}\n\n`;
+
+    const exportGroups: { [key: string]: SchemaNode[] } = {};
+
+    for (const exp of this.module.exports) {
+      const node = ExportSchema.isExportSchema(exp) ? exp.exportNode : exp;
+      const constructorName = node.constructor.name;
+
+      if (!exportGroups[constructorName]) {
+        exportGroups[constructorName] = [];
       }
 
-      return `${chalk.green.bold(sectionName)}\n${objects.map((c) => c.toString()).join('\n')}\n\n`;
+      exportGroups[constructorName].push(exp);
+    }
+
+    let output = options.showTitles ? title : '';
+
+    for (const [sectionName, exports] of Object.entries(exportGroups)) {
+      const readableSectionName = options.showTitles ? this.getReadableSectionName(sectionName) : '';
+
+      output += `${readableSectionName}\n\n`;
+
+      const sectionBody = exports.map((exp) => exp.toFullSignature(options)).join('\n\n');
+
+      output += `${sectionBody}\n\n`;
+    }
+
+    return output.trim();
+  }
+
+  private getReadableSectionName(constructorName: string): string {
+    const sectionNameMap: { [key: string]: string } = {
+      ModuleSchema: 'Namespaces',
+      ClassSchema: 'Classes',
+      InterfaceSchema: 'Interfaces',
+      FunctionLikeSchema: 'Functions',
+      VariableLikeSchema: 'Variables',
+      TypeSchema: 'Types',
+      EnumSchema: 'Enums',
+      TypeRefSchema: 'Type References',
+      UnresolvedSchema: 'Unresolved',
+      ReactSchema: 'React Components',
     };
 
-    return (
-      title +
-      getSection(ModuleSchema, 'Namespaces') +
-      getSection(ClassSchema, 'Classes') +
-      getSection(InterfaceSchema, 'Interfaces') +
-      getSection(FunctionLikeSchema, 'Functions') +
-      getSection(VariableLikeSchema, 'Variables') +
-      getSection(TypeSchema, 'Types') +
-      getSection(EnumSchema, 'Enums') +
-      getSection(TypeRefSchema, 'TypeReferences') +
-      getSection(UnresolvedSchema, 'Unresolved')
-    );
+    return sectionNameMap[constructorName] || constructorName;
   }
 
   listSignatures() {

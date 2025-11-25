@@ -1,26 +1,65 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { ExpressAspect, ExpressMain } from '@teambit/express';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { LanesAspect, LanesMain } from '@teambit/lanes';
-import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { SnappingAspect, SnappingMain } from '@teambit/snapping';
-import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
-import { ComponentCompareAspect, ComponentCompareMain } from '@teambit/component-compare';
-import { ComponentLogAspect, ComponentLogMain } from '@teambit/component-log';
-import { WatcherAspect, WatcherMain } from '@teambit/watcher';
-import { ConfigAspect, ConfigMain } from '@teambit/config';
-import { ExportAspect, ExportMain } from '@teambit/export';
-import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
-import { InstallAspect, InstallMain } from '@teambit/install';
-import { ImporterAspect, ImporterMain } from '@teambit/importer';
-import { Component } from '@teambit/component';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import type { CLIMain } from '@teambit/cli';
+import { createProxyServer } from 'http-proxy';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { Port } from '@teambit/toolbox.network.get-port';
+import fs from 'fs-extra';
+import type { ExpressMain } from '@teambit/express';
+import { ExpressAspect } from '@teambit/express';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { LanesMain } from '@teambit/lanes';
+import { LanesAspect } from '@teambit/lanes';
+import type { RemoveMain } from '@teambit/remove';
+import { RemoveAspect } from '@teambit/remove';
+import type { SnappingMain } from '@teambit/snapping';
+import { SnappingAspect } from '@teambit/snapping';
+import type { GeneratorMain } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator';
+import type { ComponentCompareMain } from '@teambit/component-compare';
+import { ComponentCompareAspect } from '@teambit/component-compare';
+import type { ComponentLogMain } from '@teambit/component-log';
+import { ComponentLogAspect } from '@teambit/component-log';
+import type { WatcherMain } from '@teambit/watcher';
+import { WatcherAspect } from '@teambit/watcher';
+import type { ConfigMain } from '@teambit/config';
+import { ConfigAspect } from '@teambit/config';
+import type { ExportMain } from '@teambit/export';
+import { ExportAspect } from '@teambit/export';
+import type { CheckoutMain } from '@teambit/checkout';
+import { CheckoutAspect } from '@teambit/checkout';
+import type { InstallMain } from '@teambit/install';
+import { InstallAspect } from '@teambit/install';
+import type { ImporterMain } from '@teambit/importer';
+import { ImporterAspect } from '@teambit/importer';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
+import cors from 'cors';
+import { createProxyMiddleware, fixRequestBody } from 'http-proxy-middleware';
 import { ApiServerAspect } from './api-server.aspect';
 import { CLIRoute } from './cli.route';
 import { ServerCmd } from './server.cmd';
 import { IDERoute } from './ide.route';
 import { APIForIDE } from './api-for-ide';
-import { SSEEventsRoute, sendEventsToClients } from './sse-events.route';
+import { SSEEventsRoute } from './sse-events.route';
+import { join } from 'path';
+import { CLIRawRoute } from './cli-raw.route';
+import type { ApplicationMain } from '@teambit/application';
+import { ApplicationAspect } from '@teambit/application';
+import type { DeprecationMain } from '@teambit/deprecation';
+import { DeprecationAspect } from '@teambit/deprecation';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import { DEFAULT_AUTH_TYPE, Http } from '@teambit/scope.network';
+import { getSymphonyUrl } from '@teambit/legacy.constants';
+import type { GraphMain } from '@teambit/graph';
+import { GraphAspect } from '@teambit/graph';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { SchemaMain } from '@teambit/schema';
+import { SchemaAspect } from '@teambit/schema';
 
 export class ApiServerMain {
   constructor(
@@ -68,6 +107,10 @@ export class ApiServerMain {
       sendEventsToClients('onWorkspaceConfigChange', {});
     });
 
+    this.workspace.scope.registerOnPostExport(async () => {
+      sendEventsToClients('onPostExport', {});
+    });
+
     this.installer.registerPostInstall(async () => {
       sendEventsToClients('onPostInstall', {});
     });
@@ -82,8 +125,103 @@ export class ApiServerMain {
         this.logger.error('watcher found an error', err);
       });
 
-    const port = options.port || 3000;
-    const server = await this.express.listen(port);
+    const port = options.port || (await this.getRandomPort());
+
+    const app = this.express.createApp();
+
+    app.use(
+      cors({
+        origin(origin, callback) {
+          callback(null, true);
+        },
+        credentials: true,
+      })
+    );
+    const proxyHeaders = {
+      Authorization: `${DEFAULT_AUTH_TYPE} ${Http.getToken()}`,
+      origin: '',
+      'user-agent': 'bit-vscode-proxy',
+    };
+    const symphonyUrl = getSymphonyUrl();
+    app.use(
+      '/api/cloud-graphql',
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      createProxyMiddleware({
+        target: `${symphonyUrl}/graphql`,
+        changeOrigin: true,
+        headers: proxyHeaders,
+        on: {
+          error: (err, req, res) => {
+            this.logger.error('graphql cloud proxy error', err);
+            // @ts-ignore
+            res.writeHead(500, {
+              'Content-Type': 'text/plain',
+            });
+            res.end('Something went wrong with the proxy server of bit cloud graphql');
+          },
+          proxyReq: fixRequestBody,
+        },
+      })
+    );
+
+    app.use(
+      '/api/cloud-rest',
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      createProxyMiddleware({
+        target: `${symphonyUrl}`,
+        changeOrigin: true,
+        headers: proxyHeaders,
+        on: {
+          proxyRes: (proxyRes) => {
+            proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
+          },
+          error: (err, req, res) => {
+            this.logger.error('rest cloud proxy error', err);
+            // @ts-ignore
+            res.writeHead(500, {
+              'Content-Type': 'text/plain',
+            });
+            res.end('Something went wrong with the proxy server of bit cloud rest');
+          },
+          proxyReq: fixRequestBody,
+        },
+      })
+    );
+
+    app.use(
+      '/websocket-server/subscriptions',
+      createProxyMiddleware({
+        pathFilter: '/',
+        target: symphonyUrl,
+        ws: true,
+        secure: false, // Disable SSL verification for proxy to remote server
+        changeOrigin: true,
+      })
+    );
+
+    const server = await app.listen(port);
+
+    const proxServer = createProxyServer();
+    server.on('upgrade', (req, socket, head) => {
+      req.url = req.url!.replace(/^.+?[/]/, '/');
+      try {
+        proxServer.ws(
+          req,
+          socket,
+          head,
+          {
+            target: `${symphonyUrl}/websocket-server`,
+            secure: false, // Disable SSL verification for proxy to remote server
+            changeOrigin: true,
+          },
+          (error) => {
+            this.logger.error(`failed to proxy ws: ${error.message}`, error);
+          }
+        );
+      } catch (error: any) {
+        this.logger.error(`failed to proxy ws: ${error.message}`, error);
+      }
+    });
 
     return new Promise((resolve, reject) => {
       server.on('error', (err) => {
@@ -91,9 +229,40 @@ export class ApiServerMain {
       });
       server.on('listening', () => {
         this.logger.consoleSuccess(`Bit Server is listening on port ${port}`);
-        resolve(true);
+        this.writeUsedPort(port);
+        resolve(port);
       });
     });
+  }
+
+  writeUsedPort(port: number) {
+    const filePath = this.getServerPortFilePath();
+    fs.writeFileSync(filePath, port.toString());
+  }
+
+  async getRandomPort() {
+    const startingPort = 4000; // we prefer to have the ports between 4000 and 4999.
+    // get random number in the range of [startingPort, 4999].
+    const randomNumber = Math.floor(Math.random() * (4999 - startingPort + 1) + startingPort);
+    const port = await Port.getPort(randomNumber, 65500);
+    return port;
+  }
+
+  async getExistingUsedPort(): Promise<number | undefined> {
+    const filePath = this.getServerPortFilePath();
+    try {
+      const fileContent = await fs.readFile(filePath, 'utf8');
+      return parseInt(fileContent, 10);
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        return undefined;
+      }
+      throw err;
+    }
+  }
+
+  private getServerPortFilePath() {
+    return join(this.workspace.scope.path, 'server-port.txt');
   }
 
   static dependencies = [
@@ -113,6 +282,13 @@ export class ApiServerMain {
     GeneratorAspect,
     RemoveAspect,
     ConfigAspect,
+    ApplicationAspect,
+    DeprecationAspect,
+    EnvsAspect,
+    GraphAspect,
+    ScopeAspect,
+    ComponentAspect,
+    SchemaAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -132,6 +308,13 @@ export class ApiServerMain {
     generator,
     remove,
     config,
+    application,
+    deprecation,
+    envs,
+    graph,
+    scope,
+    component,
+    schema,
   ]: [
     CLIMain,
     Workspace,
@@ -148,7 +331,14 @@ export class ApiServerMain {
     ComponentCompareMain,
     GeneratorMain,
     RemoveMain,
-    ConfigMain
+    ConfigMain,
+    ApplicationMain,
+    DeprecationMain,
+    EnvsMain,
+    GraphMain,
+    ScopeMain,
+    ComponentMain,
+    SchemaMain,
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
     const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer, importer);
@@ -165,14 +355,23 @@ export class ApiServerMain {
       componentCompare,
       generator,
       remove,
-      config
+      config,
+      application,
+      deprecation,
+      envs,
+      graph,
+      scope,
+      component,
+      schema,
+      logger
     );
     const cliRoute = new CLIRoute(logger, cli, apiForIDE);
-    const vscodeRoute = new IDERoute(logger, apiForIDE);
+    const cliRawRoute = new CLIRawRoute(logger, cli, apiForIDE);
+    const ideRoute = new IDERoute(logger, apiForIDE);
     const sseEventsRoute = new SSEEventsRoute(logger, cli);
     // register only when the workspace is available. don't register this on a remote-scope, for security reasons.
     if (workspace) {
-      express.register([cliRoute, vscodeRoute, sseEventsRoute]);
+      express.register([cliRoute, cliRawRoute, ideRoute, sseEventsRoute]);
     }
 
     return apiServer;

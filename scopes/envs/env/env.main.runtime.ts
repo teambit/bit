@@ -1,11 +1,18 @@
-import { AspectAspect, AspectMain } from '@teambit/aspect';
+import type { AspectMain } from '@teambit/aspect';
+import { AspectAspect } from '@teambit/aspect';
 import { MainRuntime } from '@teambit/cli';
-import { EnvsAspect, Environment, EnvsMain, EnvTransformer } from '@teambit/envs';
+import type { Environment, EnvsMain, EnvTransformer } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { EnvAspect } from './env.aspect';
 import { EnvEnv } from './env.env';
 
 export class EnvMain {
-  constructor(readonly envEnv: EnvEnv, private envs: EnvsMain) {}
+  constructor(
+    readonly envEnv: EnvEnv,
+    private envs: EnvsMain
+  ) {}
 
   /**
    * compose your own aspect environment.
@@ -15,10 +22,10 @@ export class EnvMain {
   }
 
   static slots = [];
-  static dependencies = [AspectAspect, EnvsAspect];
+  static dependencies = [AspectAspect, EnvsAspect, AspectLoaderAspect];
   static runtime = MainRuntime;
-  static async provider([aspectAspect, envs]: [AspectMain, EnvsMain]) {
-    const envEnv = aspectAspect.compose([], new EnvEnv(aspectAspect.aspectEnv));
+  static async provider([aspectAspect, envs, aspectLoader]: [AspectMain, EnvsMain, AspectLoaderMain]) {
+    const envEnv = aspectAspect.compose([], new EnvEnv(aspectAspect.aspectEnv, aspectLoader));
 
     envs.registerEnv(envEnv);
     return new EnvMain(envEnv as EnvEnv, envs);

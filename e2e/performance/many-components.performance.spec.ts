@@ -1,6 +1,6 @@
 /* eslint no-console: 0 */
 import { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 const maxComponents = 100; // 3K should work as well but it regressed
 const maxFlattenedDependencies = 10;
@@ -62,7 +62,7 @@ describe('many components Harmony', function () {
   });
   describe('basic commands', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       const getImp = (index) => {
         if (index === 0) return '';
         if (index > maxFlattenedDependencies) {
@@ -170,7 +170,7 @@ describe('heavy components Harmony', function () {
   });
   describe('basic commands', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes({ disablePreview: false });
+      helper.scopeHelper.setWorkspaceWithRemoteScope({ disablePreview: false });
       const getImp = () => {
         const hugeStr = randomStr(SIZE_IN_MB);
         return `console.log('${hugeStr}');`;

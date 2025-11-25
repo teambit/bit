@@ -1,5 +1,5 @@
-import { Component } from '@teambit/component';
-import { BuildContext } from '@teambit/builder';
+import type { Component } from '@teambit/component';
+import type { BuildContext } from '@teambit/builder';
 
 export type LibraryOptions = {
   /**
@@ -44,6 +44,10 @@ export type Target = {
    * array of components included in the target.
    */
   components: Component[];
+
+  componentDirectoryMap?: {
+    [componentId: string]: string;
+  };
 
   /**
    * output path of the target

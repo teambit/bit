@@ -1,6 +1,7 @@
 // eslint-disable-next-line import/no-unresolved
 import { Worker } from 'worker_threads';
-import { wrap, Remote } from 'comlink';
+import type { Remote } from 'comlink';
+import { wrap } from 'comlink';
 import nodeEndpoint from './node-endpoint';
 
 export type InitOptions = {
@@ -25,11 +26,14 @@ export type InitOptions = {
 };
 
 export class HarmonyWorker<T> {
-  constructor(readonly name: string, readonly workerPath: string) {}
+  constructor(
+    readonly name: string,
+    readonly workerPath: string
+  ) {}
 
-  private remoteWorker: undefined | Remote<T>;
+  protected remoteWorker: undefined | Remote<T>;
 
-  private worker: Worker | undefined;
+  protected worker: Worker | undefined;
 
   get stdout() {
     return this.worker?.stdout;

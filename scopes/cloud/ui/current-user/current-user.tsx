@@ -1,7 +1,7 @@
 import React from 'react';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import classNames from 'classnames';
-import { CloudUser } from '@teambit/cloud.models.cloud-user';
+import type { CloudUser } from '@teambit/cloud.models.cloud-user';
 import styles from './current-user.module.scss';
 
 export type CurrentUserProps = {

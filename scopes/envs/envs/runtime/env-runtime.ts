@@ -1,7 +1,7 @@
-import { AspectDefinition } from '@teambit/aspect-loader';
-import { Component } from '@teambit/component';
+import type { AspectDefinition } from '@teambit/aspect-loader';
+import type { Component } from '@teambit/component';
 
-import { Environment } from '../environment';
+import type { Environment } from '../environment';
 
 /**
  * env runtime is an instance which represent the given env in a

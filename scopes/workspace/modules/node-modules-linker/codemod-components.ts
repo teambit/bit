@@ -1,14 +1,15 @@
 import path from 'path';
-import { Workspace } from '@teambit/workspace';
-import { IssuesClasses, RelativeComponentsAuthoredEntry } from '@teambit/component-issues';
-import { Component } from '@teambit/component';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/legacy/dist/utils';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import replacePackageName from '@teambit/legacy/dist/utils/string/replace-package-name';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import type { Workspace } from '@teambit/workspace';
+import type { RelativeComponentsAuthoredEntry } from '@teambit/component-issues';
+import { IssuesClasses } from '@teambit/component-issues';
+import type { Component } from '@teambit/component';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
+import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, replacePackageName } from '@teambit/legacy.utils';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
+import type { SourceFile } from '@teambit/component.sources';
+import { DataToPersist } from '@teambit/component.sources';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 
 export type CodemodResult = {
   id: ComponentID;
@@ -73,7 +74,6 @@ async function codemodComponent(
         pathNormalizeToLinux(file.relative)
       ];
       if (!relativeInstances) return;
-      // @ts-ignore
       const fileBefore = file.contents.toString() as string;
       let newFileString = fileBefore;
       await Promise.all(
@@ -92,7 +92,6 @@ async function codemodComponent(
         })
       );
       if (fileBefore !== newFileString) {
-        // @ts-ignore
         file.contents = Buffer.from(newFileString);
         files.push(file);
       }
@@ -118,7 +117,7 @@ function getNameWithoutInternalPath(workspace: Workspace, relativeEntry: Relativ
   if (!componentMap) return importSource;
   const rootDir = componentMap.rootDir;
   if (!rootDir) return importSource;
-  const mainFile = componentMap.trackDir ? componentMap.mainFile : pathJoinLinux(rootDir, componentMap.mainFile);
+  const mainFile = pathJoinLinux(rootDir, componentMap.mainFile);
   const filePathRelativeToWorkspace = relativeEntry.relativePath.sourceRelativePath;
   if (filePathRelativeToWorkspace === mainFile) {
     return importSource;

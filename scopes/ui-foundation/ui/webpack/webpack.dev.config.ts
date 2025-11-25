@@ -1,7 +1,8 @@
 import { ProvidePlugin } from 'webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-import { fallbacksProvidePluginConfig, WebpackConfigWithDevServer, fallbacks } from '@teambit/webpack';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
+import type { WebpackConfigWithDevServer } from '@teambit/webpack';
+import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
 
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
@@ -93,7 +94,6 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
     },
 
     devServer: {
-      open: true,
       allowedHosts: 'all',
 
       static: [
@@ -178,6 +178,17 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         react: require.resolve('react'),
         'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
+        '@teambit/component.ui.component-compare.context': require.resolve(
+          '@teambit/component.ui.component-compare.context'
+        ),
+        '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
+        '@teambit/base-ui.graph.tree.recursive-tree': require.resolve('@teambit/base-ui.graph.tree.recursive-tree'),
+        '@teambit/semantics.entities.semantic-schema': require.resolve('@teambit/semantics.entities.semantic-schema'),
+        '@teambit/code.ui.code-editor': require.resolve('@teambit/code.ui.code-editor'),
+        '@teambit/api-reference.hooks.use-api': require.resolve('@teambit/api-reference.hooks.use-api'),
+        '@teambit/api-reference.hooks.use-api-renderers': require.resolve(
+          '@teambit/api-reference.hooks.use-api-renderers'
+        ),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
       },
       fallback: {

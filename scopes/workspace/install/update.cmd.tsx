@@ -1,6 +1,6 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 
-import { InstallMain } from './install.main.runtime';
+import type { InstallMain } from './install.main.runtime';
 
 type UpdateCmdOptions = {
   yes?: boolean;
@@ -13,15 +13,18 @@ type UpdateCmdOptions = {
 
 export default class UpdateCmd implements Command {
   name = 'update [package-patterns...]';
-  description = 'update dependencies. By default, dependencies are updated to the highest semver compatible versions.';
+  description = 'update workspace dependencies to newer versions';
+  extendedDescription = `updates dependencies in workspace.jsonc to newer versions and runs install to apply changes.
+by default, updates to highest semver-compatible versions. use --major, --minor, or --patch for specific version types.
+supports glob patterns to update specific packages. prompts for confirmation unless --yes is specified.`;
   helpUrl = 'reference/dependencies/configuring-dependencies/#update-dependencies';
   alias = 'up';
-  group = 'development';
+  group = 'dependencies';
   arguments = [
     {
       name: 'package-patterns...',
       description:
-        'a string list of package names, or patterns (separated by spaces or commas), e.g. "@teambit/**,@my-org/ui/**". The patterns should be in glob format. By default, all packages are selected.',
+        'a string list of package names, or patterns (separated by spaces or commas), e.g. "@teambit/**,@my-org/ui.**". The patterns should be in glob format. By default, all packages are selected.',
     },
   ];
   options = [

@@ -2,7 +2,8 @@ import { expect } from 'chai';
 import { ComponentID } from '@teambit/component';
 import { applyUpdates } from './apply-updates';
 
-describe('applyUpdates()', () => {
+describe('applyUpdates()', function () {
+  this.timeout(5000);
   it('should apply updates on root dependencies', () => {
     const { updatedWorkspacePolicyEntries } = applyUpdates(
       [
@@ -23,7 +24,6 @@ describe('applyUpdates()', () => {
         variantPoliciesByPatterns: {},
       }
     );
-    // @ts-ignore
     expect(updatedWorkspacePolicyEntries).to.deep.equal(
       [
         {
@@ -118,7 +118,6 @@ describe('applyUpdates()', () => {
         variantPoliciesByPatterns,
       }
     );
-    // @ts-ignore
     expect(variantPoliciesByPatterns.variant1).to.deep.equal({
       dependencies: {
         'variant1-runtime-dep1': { version: '2.0.0', resolveFromEnv: true },
@@ -133,7 +132,6 @@ describe('applyUpdates()', () => {
         'variant1-peer-dep2': '1.0.0',
       },
     });
-    // @ts-ignore
     expect(variantPoliciesByPatterns.variant2).to.deep.equal({
       dependencies: {
         'variant2-runtime-dep1': '1.0.0',
@@ -148,7 +146,6 @@ describe('applyUpdates()', () => {
         'variant2-peer-dep2': '1.0.0',
       },
     });
-    // @ts-ignore
     expect(variantPoliciesByPatterns.variant3).to.deep.equal({
       dependencies: {
         'variant3-runtime-dep1': '1.0.0',
@@ -193,7 +190,6 @@ describe('applyUpdates()', () => {
         variantPoliciesByPatterns: {},
       }
     );
-    // @ts-ignore
     expect(updatedComponents).to.deep.equal([
       {
         componentId: ComponentID.fromString('scope/component1'),

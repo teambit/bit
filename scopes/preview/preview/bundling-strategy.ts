@@ -1,7 +1,7 @@
-import { BuildContext, BuiltTaskResult } from '@teambit/builder';
-import { Target, BundlerResult, BundlerContext } from '@teambit/bundler';
-import { PreviewDefinition } from './preview-definition';
-import { PreviewTask } from './preview.task';
+import type { BuildContext, BuiltTaskResult } from '@teambit/builder';
+import type { Target, BundlerResult, BundlerContext } from '@teambit/bundler';
+import type { PreviewDefinition } from './preview-definition';
+import type { PreviewTask } from './preview.task';
 
 type ComputeTargetsExtraContextKeys = {
   splitComponentBundle?: boolean;

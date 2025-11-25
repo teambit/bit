@@ -1,7 +1,7 @@
 import c from 'chalk';
 import semver from 'semver';
 import Table from 'cli-table';
-import { ListScopeResult } from './lister.main.runtime';
+import type { ListScopeResult } from './lister.main.runtime';
 
 type Row = { id: string; localVersion: string; currentVersion: string; remoteVersion?: string };
 
@@ -12,14 +12,16 @@ export function listTemplate(listScopeResults: ListScopeResult[], json: boolean,
     if (!json && showRemoteVersion) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const color = listScopeResult.remoteVersion && semver.gt(listScopeResult.remoteVersion, version!) ? 'red' : null;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version = color ? c[color](version) : version;
     }
     const getFormattedId = () => {
-      const { deprecated, laneReadmeOf } = listScopeResult;
+      const { deprecated, laneReadmeOf, removed } = listScopeResult;
       let formattedId = c.white(`${id}`);
       if (deprecated) {
-        formattedId = c.white(`${formattedId} [Deprecated]`);
+        formattedId = c.yellow(`${formattedId} [Deprecated]`);
+      }
+      if (removed) {
+        formattedId = c.red(`${formattedId} [Deleted]`);
       }
       if (laneReadmeOf && laneReadmeOf.length > 0) {
         formattedId = `${formattedId}\n`;
@@ -58,6 +60,7 @@ export function listTemplate(listScopeResults: ListScopeResult[], json: boolean,
       deprecated: listScopeResult.deprecated,
       currentVersion: listScopeResult.currentlyUsedVersion || 'N/A',
       remoteVersion: listScopeResult.remoteVersion || 'N/A',
+      removed: listScopeResult.removed,
     };
     return data;
   }

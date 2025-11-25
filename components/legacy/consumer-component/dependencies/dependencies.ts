@@ -1,0 +1,175 @@
+import { cloneDeep, uniqBy } from 'lodash';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
+import type { BitIdStr } from '@teambit/legacy-bit-id';
+import { ValidationError } from '@teambit/legacy.cli.error';
+import type { Scope } from '@teambit/legacy.scope';
+import { validateType } from '@teambit/legacy.scope';
+import { fetchRemoteVersions } from '@teambit/scope.remotes';
+import Dependency from './dependency';
+
+export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
+export const DEPENDENCIES_TYPES_UI_MAP = {
+  dependencies: 'prod',
+  devDependencies: 'dev',
+};
+
+export type DependenciesFilterFunction = (dependency: Dependency) => boolean;
+
+export default class Dependencies {
+  constructor(readonly dependencies: Dependency[] = []) {}
+
+  serialize(): Record<string, any>[] {
+    return this.dependencies.map((dep) => Object.assign({}, dep, { id: dep.id.toString() }));
+  }
+
+  get(): Dependency[] {
+    return this.dependencies;
+  }
+
+  filter(fn: DependenciesFilterFunction): Dependencies {
+    const filtered = this.dependencies.filter(fn);
+    return new Dependencies(filtered);
+  }
+
+  sort() {
+    this.dependencies.sort((a, b) => {
+      const idA = a.id.toString();
+      const idB = b.id.toString();
+      if (idA < idB) {
+        return -1;
+      }
+      if (idA > idB) {
+        return 1;
+      }
+      return 0;
+    });
+  }
+
+  getClone(): Dependency[] {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    return this.dependencies.map((dependency) => Dependency.getClone(dependency));
+  }
+
+  add(dependency: Dependency) {
+    this.dependencies.push(dependency);
+  }
+
+  toStringOfIds(): string[] {
+    return this.dependencies.map((dep) => dep.id.toString());
+  }
+
+  isEmpty(): boolean {
+    return !this.dependencies.length;
+  }
+
+  cloneAsString(): Record<string, any>[] {
+    return this.dependencies.map((dependency) => {
+      const dependencyClone = cloneDeep(dependency);
+      // @ts-expect-error we want to change the type here explicitly
+      dependencyClone.id = dependency.id.toString();
+      return dependencyClone;
+    });
+  }
+
+  cloneAsObject(): Record<string, any>[] {
+    return this.dependencies.map((dependency) => {
+      const dependencyClone = cloneDeep(dependency);
+      // @ts-expect-error we want to change the type here explicitly
+      dependencyClone.id = dependency.id.serialize();
+      return dependencyClone;
+    });
+  }
+
+  getById(id: ComponentID): Dependency | null | undefined {
+    return this.dependencies.find((dep) => dep.id.isEqual(id));
+  }
+
+  getByPackageName(packageName: string): Dependency | null | undefined {
+    return this.dependencies.find((dep) => dep.packageName === packageName);
+  }
+
+  getByIdStr(id: BitIdStr): Dependency | null | undefined {
+    return this.dependencies.find((dep) => dep.id.toString() === id);
+  }
+
+  getBySourcePath(sourcePath: string): Dependency | null | undefined {
+    return this.dependencies.find((dependency) =>
+      dependency.relativePaths.some((relativePath) => {
+        return relativePath.sourceRelativePath === sourcePath;
+      })
+    );
+  }
+
+  getAllIds(): ComponentIdList {
+    return ComponentIdList.fromArray(this.dependencies.map((dependency) => dependency.id));
+  }
+
+  getIdsMap(): Record<string, ComponentID> {
+    const result = {};
+    this.dependencies.forEach((dep) => {
+      result[dep.id.toString()] = dep.id;
+    });
+    return result;
+  }
+
+  async addRemoteAndLocalVersions(scope: Scope, modelDependencies: Dependencies) {
+    const dependenciesIds = this.dependencies.map((dependency) => dependency.id);
+    const localDependencies = await scope.latestVersions(dependenciesIds);
+    const remoteVersionsDependencies = await fetchRemoteVersions(scope, dependenciesIds);
+
+    this.dependencies.forEach((dependency) => {
+      const remoteVersionId = remoteVersionsDependencies.find((remoteId) =>
+        remoteId.isEqualWithoutVersion(dependency.id)
+      );
+      const localVersionId = localDependencies.find((localId) => localId.isEqualWithoutVersion(dependency.id));
+      const modelVersionId = modelDependencies
+        .get()
+        .find((modelDependency) => modelDependency.id.isEqualWithoutVersion(dependency.id));
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      dependency.remoteVersion = remoteVersionId ? remoteVersionId.version : null;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      dependency.localVersion = localVersionId ? localVersionId.version : null;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      dependency.currentVersion = modelVersionId ? modelVersionId.id.version : dependency.id.version;
+    });
+  }
+
+  validate(bitId?: ComponentID): void {
+    const compIdStr = bitId ? ` of ${bitId.toString()}` : '';
+    const message = `failed validating the dependencies${compIdStr}.`;
+    validateType(message, this.dependencies, 'dependencies', 'array');
+    const allIds = this.getAllIds();
+    this.dependencies.forEach((dependency) => {
+      validateType(message, dependency, 'dependency', 'object');
+      if (!dependency.id) throw new ValidationError('one of the dependencies is missing ID');
+      const sameIds = allIds.filterExact(dependency.id);
+      if (sameIds.length > 1) {
+        throw new ValidationError(`a dependency ${dependency.id.toString()} is duplicated`);
+      }
+      if (bitId && bitId.isEqual(dependency.id)) {
+        throw new ValidationError(
+          `failed validating ${bitId.toString()}, one of the dependencies has the same id as the component`
+        );
+      }
+      const permittedProperties = ['id', 'relativePaths', 'packageName', 'versionRange'];
+      const currentProperties = Object.keys(dependency);
+      currentProperties.forEach((currentProp) => {
+        if (!permittedProperties.includes(currentProp)) {
+          throw new ValidationError(
+            `a dependency ${dependency.id.toString()} has an undetected property "${currentProp}"`
+          );
+        }
+      });
+    });
+  }
+
+  static merge(lists: Dependency[][]): Dependencies {
+    const res: Dependency[] = [];
+    const deps = lists.reduce((acc, curr) => {
+      acc = acc.concat(curr);
+      return acc;
+    }, res);
+    return new Dependencies(uniqBy(deps, (dep) => dep.id.toStringWithoutVersion()));
+  }
+}

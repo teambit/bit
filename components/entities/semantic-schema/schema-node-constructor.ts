@@ -1,4 +1,4 @@
-import { SchemaNode } from './schema-node';
+import type { SchemaNode } from './schema-node';
 
 export interface SchemaNodeConstructor {
   new (...args: any[]): SchemaNode;

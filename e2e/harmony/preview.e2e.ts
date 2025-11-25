@@ -1,9 +1,10 @@
 import chai, { expect } from 'chai';
+import chaiString from 'chai-string';
 
-import Helper from '../../src/e2e-helper/e2e-helper';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import { Helper } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('preview feature (during build)', function () {
   this.timeout(0);
@@ -16,7 +17,7 @@ describe('preview feature (during build)', function () {
   });
   describe('jsx component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes({ disablePreview: false });
+      helper.scopeHelper.setWorkspaceWithRemoteScope({ disablePreview: false });
       helper.fs.outputFile(
         'button/button.jsx',
         `import React from 'react'
@@ -38,7 +39,7 @@ describe('preview feature (during build)', function () {
       );
       helper.fs.outputFile('index.js', `export { Button } from './button';`);
       helper.command.addComponent('button');
-      helper.command.install();
+      helper.command.install('--add-missing-deps');
       helper.command.compile();
     });
     it('bit build should run successfully without preview errors', () => {

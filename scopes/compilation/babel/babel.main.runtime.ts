@@ -1,13 +1,18 @@
 import { MainRuntime } from '@teambit/cli';
-import { CompilerAspect, CompilerMain } from '@teambit/compiler';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { CompilerMain } from '@teambit/compiler';
+import { CompilerAspect } from '@teambit/compiler';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import { BabelCompiler } from '@teambit/compilation.babel-compiler';
 import * as babel from '@babel/core';
-import { BabelCompilerOptions } from './compiler-options';
+import type { BabelCompilerOptions } from './compiler-options';
 import { BabelAspect } from './babel.aspect';
 
 export class BabelMain {
-  constructor(private logger: Logger, private compiler: CompilerMain) {}
+  constructor(
+    private logger: Logger,
+    private compiler: CompilerMain
+  ) {}
 
   createCompiler(options: BabelCompilerOptions, babelModule = babel): BabelCompiler {
     return new BabelCompiler(BabelAspect.id, this.logger, options, options.babelTransformOptions || {}, babelModule);

@@ -1,9 +1,11 @@
-import { Node, SyntaxKind, TemplateLiteralTypeNode } from 'typescript';
+import type { Node, TemplateLiteralTypeNode } from 'typescript';
+import { SyntaxKind } from 'typescript';
 import pMapSeries from 'p-map-series';
-import { TemplateLiteralTypeSchema, TemplateLiteralTypeSpanSchema } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { Identifier } from '../identifier';
+import type { TemplateLiteralTypeSpanSchema } from '@teambit/semantics.entities.semantic-schema';
+import { TemplateLiteralTypeSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { Identifier } from '../identifier';
 
 export class TemplateLiteralTypeTransformer implements SchemaTransformer {
   predicate(node: Node) {

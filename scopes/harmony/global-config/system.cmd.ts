@@ -1,13 +1,16 @@
 // eslint-disable-next-line max-classes-per-file
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import fs from 'fs-extra';
 import chalk from 'chalk';
-import { DEBUG_LOG } from '@teambit/legacy/dist/constants';
+import cp from 'child_process';
+import { DEBUG_LOG } from '@teambit/legacy.constants';
 
 export class SystemCmd implements Command {
   name = 'system <sub-command>';
-  description = `system operations`;
-  group = 'workspace';
+  description = 'access system-level operations and debugging tools';
+  extendedDescription = `provides commands for system-level operations including viewing and tailing debug logs.
+useful for troubleshooting issues and monitoring Bit's internal operations in real-time.`;
+  group = 'system';
   alias = '';
   options = [] as CommandOptions;
   commands: Command[] = [];
@@ -22,12 +25,27 @@ export class SystemCmd implements Command {
 export class SystemLogCmd implements Command {
   name = 'log';
   description = `print debug.log to the screen`;
-  group = 'workspace';
+  group = 'system';
   alias = '';
+  loader = false;
   options = [] as CommandOptions;
 
   async report() {
     const logFile = fs.readFileSync(DEBUG_LOG, 'utf8');
     return logFile;
+  }
+}
+
+export class SystemTailLogCmd implements Command {
+  name = 'tail-log';
+  description = `print the log file to the screen as it is being written`;
+  extendedDescription = 'similar to linux "tail -f" command';
+  group = 'system';
+  alias = '';
+  loader = false;
+  options = [] as CommandOptions;
+
+  async wait() {
+    cp.execSync(`tail -f ${DEBUG_LOG}`, { stdio: 'inherit' });
   }
 }

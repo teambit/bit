@@ -1,6 +1,7 @@
 import { ComponentID } from '@teambit/component';
 import chalk from 'chalk';
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 
 export type PlainTypeRefSchema = {
@@ -41,10 +42,19 @@ export class TypeRefSchema extends SchemaNode {
     /**
      * if the reference is not exported from the component, it can be internal to the file.
      */
-    readonly internalFilePath?: string
+    readonly internalFilePath?: string,
+
+    /**
+     * source file path where the type ref is defined
+     */
+    readonly sourceFilePath?: string
   ) {
     super();
     this.componentId = componentId;
+  }
+
+  getNodes(): SchemaNode[] {
+    return this.typeArgs || [];
   }
 
   withTypeArgs(typeArgs: SchemaNode[]) {
@@ -52,25 +62,42 @@ export class TypeRefSchema extends SchemaNode {
     return this;
   }
 
-  toString() {
-    const name = this.nameToString();
+  toString(options?: { color?: boolean }) {
+    const name = this.nameToString(options);
     if (!this.typeArgs) {
       return name;
     }
-    const args = this.typeArgs.map((arg) => arg.toString()).join(', ');
+    const args = this.typeArgs.map((arg) => arg.toString(options)).join(', ');
     return `${name}<${args}>`;
   }
 
-  private nameToString() {
+  private nameToString(options?: { color?: boolean }) {
+    const dim = options?.color ? chalk.dim : (str: string) => str;
     if (this.componentId) {
-      const compStr = chalk.dim(`(component: ${this.componentId.toStringWithoutVersion()})`);
+      const compStr = dim(`(component: ${this.componentId.toStringWithoutVersion()})`);
       return `${compStr} ${this.name}`;
     }
     if (this.packageName) {
-      const pkgStr = chalk.dim(`(package: ${this.packageName})`);
+      const pkgStr = dim(`(package: ${this.packageName})`);
       return `${pkgStr} ${this.name}`;
     }
     return this.name;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let signature = this.name;
+
+    if (this.typeArgs && this.typeArgs.length > 0) {
+      const argsSignatures = this.typeArgs.map((arg) => arg.toFullSignature(options)).join(', ');
+      signature += `<${argsSignatures}>`;
+    }
+
+    if (options?.showDocs && this.doc) {
+      const docString = this.doc.toFullSignature();
+      signature = `${docString}\n${signature}`;
+    }
+
+    return signature;
   }
 
   /**
@@ -101,6 +128,7 @@ export class TypeRefSchema extends SchemaNode {
       componentId: this.componentId ? this.componentId.toObject() : undefined,
       packageName: this.packageName,
       internalFilePath: this.internalFilePath,
+      sourceFilePath: this.sourceFilePath,
       typeArgs: this.typeArgs?.map((type) => type.toObject()),
     };
   }
@@ -111,12 +139,19 @@ export class TypeRefSchema extends SchemaNode {
     let componentId;
     try {
       componentId = obj.componentId ? ComponentID.fromObject(obj.componentId) : undefined;
-    } catch (e) {
+    } catch {
       componentId = undefined;
     }
     const packageName = obj.packageName;
     const internalFilePath = obj.internalFilePath;
+    const sourceFilePath = obj.sourceFilePath;
     const typeArgs = obj.typeArgs?.map((type: any) => SchemaRegistry.fromObject(type));
-    return new TypeRefSchema(location, name, componentId, packageName, internalFilePath).withTypeArgs(typeArgs);
+    return new TypeRefSchema(location, name, componentId, packageName, internalFilePath, sourceFilePath).withTypeArgs(
+      typeArgs
+    );
+  }
+
+  static isTypeRefSchema(node: SchemaNode): node is TypeRefSchema {
+    return node.__schema === 'TypeRefSchema';
   }
 }

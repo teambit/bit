@@ -1,14 +1,18 @@
 import { MainRuntime } from '@teambit/cli';
-import { Server } from 'http';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import express, { Express } from 'express';
-import { concat, flatten, lowerCase, sortBy } from 'lodash';
+import type { Server } from 'http';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { Express } from 'express';
+import express from 'express';
+import { concat, flatten, lowerCase, sortBy, omit } from 'lodash';
 import bodyParser from 'body-parser';
 import { ExpressAspect } from './express.aspect';
 import { catchErrors } from './middlewares';
-import { Middleware, Request, Response, Route, Verb } from './types';
-import { MiddlewareManifest } from './middleware-manifest';
+import type { Middleware, Request, Response, Route } from './types';
+import { Verb } from './types';
+import type { MiddlewareManifest } from './middleware-manifest';
 
 export type ExpressConfig = {
   port: number;
@@ -51,6 +55,10 @@ export class ExpressMain {
     return app.listen(serverPort);
   }
 
+  static(root: string, opts?: any): any {
+    return express.static(root, opts);
+  }
+
   /**
    * register a new express routes.
    * route will be added as `/api/${route}`
@@ -90,7 +98,8 @@ export class ExpressMain {
     const app = expressApp || express();
     app.use((req, res, next) => {
       if (this.config.loggerIgnorePath.includes(req.url)) return next();
-      this.logger.debug(`express got a request to a URL: ${req.url}', headers:`, req.headers);
+      const headers = omit(req.headers, ['cookie', 'authorization']);
+      this.logger.debug(`express got a request to a URL: ${req.url}', headers:`, headers);
       return next();
     });
     if (!options?.disableBodyParser) this.bodyParser(app);

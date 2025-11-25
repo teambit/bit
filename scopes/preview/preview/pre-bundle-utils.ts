@@ -1,10 +1,10 @@
 import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs-extra';
-import { UIRoot } from '@teambit/ui';
+import type { UIRoot } from '@teambit/ui';
 import { getAspectDirFromBvm } from '@teambit/aspect-loader';
-import { SlotRegistry } from '@teambit/harmony';
-import { ArtifactDefinition } from '@teambit/builder';
-import { sha1 } from '@teambit/legacy/dist/utils';
+import type { SlotRegistry } from '@teambit/harmony';
+import type { ArtifactDefinition } from '@teambit/builder';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 
 /// utils
 
@@ -61,7 +61,7 @@ export function getBundlePath(bundleId: string, bundleDir: string, aspectDir: st
       return undefined;
     }
     return bundlePath;
-  } catch (err) {
+  } catch {
     return undefined;
   }
 }

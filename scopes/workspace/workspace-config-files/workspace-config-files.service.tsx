@@ -1,7 +1,7 @@
-import { Logger } from '@teambit/logger';
-import { EnvService, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
-import { ConfigWriterList } from './config-writer-list';
-import { ConfigWriterEntry } from './config-writer-entry';
+import type { Logger } from '@teambit/logger';
+import type { EnvService, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
+import type { ConfigWriterList } from './config-writer-list';
+import type { ConfigWriterEntry } from './config-writer-entry';
 
 export type PkgDescriptor = {
   id: string;

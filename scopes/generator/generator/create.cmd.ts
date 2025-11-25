@@ -1,7 +1,7 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { ComponentID } from '@teambit/component';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ComponentID } from '@teambit/component';
 import chalk from 'chalk';
-import { GeneratorMain } from './generator.main.runtime';
+import type { GeneratorMain } from './generator.main.runtime';
 import type { BaseComponentTemplateOptions } from './component-template';
 
 /**
@@ -10,11 +10,14 @@ import type { BaseComponentTemplateOptions } from './component-template';
 export type CreateOptions = BaseComponentTemplateOptions & {
   env?: string;
   aspect?: string;
+  force?: boolean;
 };
 
 export class CreateCmd implements Command {
   name = 'create <template-name> <component-names...>';
-  description = 'create a new component (source files and config) using a template.';
+  description = 'scaffold new component(s) from a template (sources, config, and env)';
+  extendedDescription =
+    "Generates one or more components from a chosen template with ready-to-use source files, configuration, and environment. Use it to quickly scaffold consistent components across your workspace. Run 'bit templates' to discover available templates.";
   alias = '';
   loader = true;
   helpUrl = 'reference/starters/create-starter';
@@ -35,7 +38,7 @@ export class CreateCmd implements Command {
       description: "creates a component named 'ui/button' using the 'react' template",
     },
     {
-      cmd: 'bit create node utils/is-string utils/is-number --aspect teambit.node/node',
+      cmd: 'bit create module utils/is-string utils/is-number --aspect teambit.node/node',
       description:
         "creates two components, 'utils/is-string' and 'utils/is-number' using the 'node' template from the 'node' aspect(env)",
     },
@@ -45,12 +48,17 @@ export class CreateCmd implements Command {
         "creates an mdx component named 'docs/create-components' and sets it scope to 'my-org.my-scope'. \nby default, the scope is the `defaultScope` value, configured in your `workspace.jsonc`.",
     },
     {
+      cmd: 'bit create react my-org.my-scope/hooks/use-session',
+      description:
+        "creates a component named 'hooks/use-session' with scope 'my-org.my-scope'. \nthe scope is parsed from the component name (bit.cloud scopes contain a dot).",
+    },
+    {
       cmd: 'bit create react ui/button --aspect teambit.react/react-env --env teambit.community/envs/community-react@3.0.3',
       description:
         "creates a component named 'ui/button' from the teambit.react/react-env env and sets it to use the 'community-react' env. \n(the template's default env is 'teambit.react/react-env').",
     },
   ];
-  group = 'development';
+  group = 'component-development';
   options = [
     ['n', 'namespace <string>', `sets the component's namespace and nested dirs inside the scope`],
     ['s', 'scope <string>', `sets the component's scope-name. if not entered, the default-scope will be used`],
@@ -58,6 +66,7 @@ export class CreateCmd implements Command {
     ['t', 'template <string>', 'env-id of the template. alias for --aspect.'],
     ['p', 'path <string>', 'relative path in the workspace. by default the path is `<scope>/<namespace>/<name>`'],
     ['e', 'env <string>', "set the component's environment. (overrides the env from variants and the template)"],
+    ['f', 'force', 'replace existing files at the target location'],
   ] as CommandOptions;
 
   constructor(private generator: GeneratorMain) {}
@@ -66,6 +75,7 @@ export class CreateCmd implements Command {
     [templateName, componentNames]: [string, string[]],
     options: Partial<CreateOptions> & {
       template?: string | ComponentID;
+      force?: boolean;
     }
   ) {
     options.aspectId = options.aspectId ?? options.template;

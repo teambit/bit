@@ -1,9 +1,9 @@
-import { ComponentID } from '@teambit/component';
-import { ExecutionContext } from '@teambit/envs';
-import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
-import { PathOsBased } from '@teambit/legacy/dist/utils/path';
+import type { ComponentID } from '@teambit/component';
+import type { ExecutionContext } from '@teambit/envs';
+import type { GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
+import type { PathOsBased } from '@teambit/toolbox.path.path';
 
-import { BrowserRuntimeSlot } from './bundler.main.runtime';
+import type { BrowserRuntimeSlot } from './bundler.main.runtime';
 
 export type ComponentDir = {
   componentDir?: (

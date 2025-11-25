@@ -1,24 +1,22 @@
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
-import { BASE_DOCS_DOMAIN, COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
-import { SnappingMain } from './snapping.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
+import type { SnappingMain } from './snapping.main.runtime';
 
 export default class ResetCmd implements Command {
   name = 'reset [component-pattern]';
-  description = 'revert tagged or snapped versions for component(s)';
+  description = 'revert local tags and snaps to previous versions';
   arguments = [
     {
       name: 'component-pattern',
       description: COMPONENT_PATTERN_HELP,
     },
-    {
-      name: 'component-version',
-      description: 'the version to untag (semver for tags. hash for snaps)',
-    },
   ];
-  group = 'development';
-  extendedDescription = `${BASE_DOCS_DOMAIN}components/tags#undoing-a-tag`;
+  group = 'version-control';
+  extendedDescription = `removes local component versions (tags/snaps) that haven't been exported yet.
+by default reverts all local versions. use --head to revert only the latest version.
+useful for undoing mistakes before exporting. exported versions cannot be reset.`;
   alias = '';
   options = [
     ['a', 'all', 'revert all unexported tags/snaps for all components'],
@@ -59,7 +57,7 @@ export default class ResetCmd implements Command {
       throw new BitError('please specify either --soft or --head flag, not both');
     }
     const { results, isSoftUntag } = await this.snapping.reset(pattern, head, force, soft);
-    const titleSuffix = isSoftUntag ? 'soft-untagged (are not candidates for tagging any more)' : 'untagged';
+    const titleSuffix = isSoftUntag ? 'soft-untagged (are not candidates for tagging any more)' : 'reset';
     const title = chalk.green(`${results.length} component(s) were ${titleSuffix}:\n`);
     const components = results.map((result) => {
       return `${chalk.cyan(result.id.toStringWithoutVersion())}. version(s): ${result.versions.join(', ')}`;

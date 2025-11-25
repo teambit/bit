@@ -1,6 +1,6 @@
 import { snapToSemver } from '@teambit/component-package-version';
-import { Dependency } from '../dependencies';
-import { VariantPolicy, WorkspacePolicy } from '../policy';
+import type { Dependency } from '../dependencies';
+import type { VariantPolicy, WorkspacePolicy } from '../policy';
 
 /**
  * This will create a function that will modify the version of the component dependencies before calling the package manager install
@@ -32,9 +32,11 @@ export function updateDependencyVersion(
   if (dependency.getPackageName) {
     const packageName = dependency.getPackageName();
     const variantVersion = variantPolicy?.getDepVersion(packageName, dependency.lifecycle);
-    const variantVersionWithoutMinus = variantVersion && variantVersion !== '-' ? variantVersion : undefined;
+    const specialChars = ['-', '+', '*'];
+    const variantVersionWithoutSpecialChar =
+      variantVersion && !specialChars.includes(variantVersion) ? variantVersion : undefined;
     const version =
-      variantVersionWithoutMinus ||
+      variantVersionWithoutSpecialChar ||
       rootPolicy?.getValidSemverDepVersion(packageName, dependency.lifecycle === 'peer' ? 'peer' : 'runtime') ||
       snapToSemver(dependency.version) ||
       '0.0.1-new';

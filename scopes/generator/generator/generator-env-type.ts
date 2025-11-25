@@ -1,6 +1,6 @@
-import { EnvHandler } from '@teambit/envs';
-import { TemplateList } from './template-list';
-import { StarterList } from './starter-list';
+import type { EnvHandler } from '@teambit/envs';
+import type { TemplateList } from './template-list';
+import type { StarterList } from './starter-list';
 
 export interface GeneratorEnv {
   /**

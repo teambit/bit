@@ -1,23 +1,27 @@
-import { Harmony } from '@teambit/harmony';
-import { Component } from '@teambit/component';
-import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
-import { ComponentID } from '@teambit/component-id';
+import type { Harmony } from '@teambit/harmony';
+import type { Component } from '@teambit/component';
+import type { UnmergedComponent } from '@teambit/legacy.scope';
+import type { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
-import { ExtensionDataList, getCompareExtPredicate } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { partition, mergeWith, merge, uniq, uniqWith } from 'lodash';
+import type { VariantPolicyConfigArr } from '@teambit/dependency-resolver';
+import { ExtensionDataList, getCompareExtPredicate } from '@teambit/legacy.extension-data';
+import { partition, mergeWith, merge, uniq, uniqWith, compact, cloneDeep } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
-import { AspectSpecificField, ExtensionsOrigin, Workspace } from './workspace';
+import type { ExtensionsOrigin, Workspace } from './workspace';
+import { AspectSpecificField } from './workspace';
 import { MergeConflictFile } from './merge-conflict-file';
 
 export class AspectsMerger {
   readonly mergeConflictFile: MergeConflictFile;
-  private mergeConfigDepsResolverDataCache: { [compIdStr: string]: Record<string, any> } = {};
-  constructor(private workspace: Workspace, private harmony: Harmony) {
+  private mergeConfigDepsResolverDataCache: { [compIdStr: string]: VariantPolicyConfigArr } = {};
+  constructor(
+    private workspace: Workspace,
+    private harmony: Harmony
+  ) {
     this.mergeConflictFile = new MergeConflictFile(workspace.path);
   }
 
-  getDepsDataOfMergeConfig(id: ComponentID) {
+  getDepsDataOfMergeConfig(id: ComponentID): VariantPolicyConfigArr {
     return this.mergeConfigDepsResolverDataCache[id.toString()];
   }
 
@@ -29,7 +33,6 @@ export class AspectsMerger {
    * defaults extensions from workspace config
    * extensions from the model.
    */
-  // eslint-disable-next-line complexity
   async merge(
     componentId: ComponentID,
     componentFromScope?: Component,
@@ -59,16 +62,8 @@ export class AspectsMerger {
       errors.push(err);
     }
 
-    const adjustEnvsOnConfigMerge = (conf: Record<string, any>) => {
-      const env = conf[EnvsAspect.id]?.env;
-      if (!env) return;
-      const [id] = env.split('@');
-      conf[EnvsAspect.id] = { env: id };
-      conf[env] = {};
-    };
-
     const unmergedData = this.getUnmergedData(componentId);
-    const unmergedDataMergeConf = unmergedData?.mergedConfig;
+    const unmergedDataMergeConf = unmergedData?.mergedConfig ? cloneDeep(unmergedData.mergedConfig) : undefined;
     const getMergeConfigCombined = () => {
       if (!configMerge && !unmergedDataMergeConf) return undefined;
       if (!configMerge) return unmergedDataMergeConf;
@@ -83,21 +78,24 @@ export class AspectsMerger {
       });
     };
     const mergeConfigCombined = getMergeConfigCombined();
-    adjustEnvsOnConfigMerge(mergeConfigCombined || {});
+    ExtensionDataList.adjustEnvsOnConfigObject(mergeConfigCombined || {});
 
     const configMergeExtensions = mergeConfigCombined
       ? ExtensionDataList.fromConfigObject(mergeConfigCombined)
       : undefined;
 
     this.removeAutoDepsFromConfig(componentId, configMergeExtensions);
-    const scopeExtensions = this.getComponentFromScopeWithoutDuplications(componentFromScope);
+    const scopeExtensionsBeforeClone = this.getComponentFromScopeWithoutDuplications(componentFromScope);
+    const scopeExtensions = ExtensionDataList.fromArray(scopeExtensionsBeforeClone.map((e) => e.clone()));
     // backward compatibility. previously, it was saved as an array into the model (when there was merge-config)
     this.removeAutoDepsFromConfig(componentId, scopeExtensions, true);
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
     const scopeExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
     const scopeExtensionsSpecific = new ExtensionDataList(...specific);
 
-    this.addConfigDepsFromModelToConfigMerge(scopeExtensionsSpecific, mergeConfigCombined);
+    // Note: mergeConfigCombined (which includes unmergedData.mergedConfig) has already been processed
+    // in merging.main.runtime.ts:applyVersion() with scope-specific policy merged and deletion markers filtered.
+    // No need to process it again here.
 
     const componentConfigFile = await this.workspace.componentConfigFile(componentId);
     if (componentConfigFile) {
@@ -178,6 +176,7 @@ export class AspectsMerger {
 
     const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
     const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
+    // clone the extension data to avoid mutating the original data (specifically, we don't want to mutate the scope data)
     const extensions = ExtensionDataList.fromArray(withoutRemoved);
     return {
       extensions,
@@ -211,63 +210,17 @@ export class AspectsMerger {
    */
   private removeAutoDepsFromConfig(componentId: ComponentID, conf?: ExtensionDataList, fromScope = false) {
     if (!conf) return;
-    const policy = conf.findCoreExtension(DependencyResolverAspect.id)?.config.policy;
-    if (!policy) return;
-
-    const mergeConfigObj = {};
-    ['dependencies', 'devDependencies', 'peerDependencies'].forEach((key) => {
-      if (!policy[key]) return;
-      // this is only relevant when it is saved as an array. otherwise, it's always force: true.
-      if (!Array.isArray(policy[key])) return;
-
-      mergeConfigObj[key] = policy[key].filter((dep) => !dep.force);
-      policy[key] = policy[key].filter((dep) => dep.force);
-
-      if (!policy[key].length) {
-        delete policy[key];
-        return;
-      }
-      // convert to object
-      policy[key] = policy[key].reduce((acc, current) => {
-        acc[current.name] = current.version;
-        return acc;
-      }, {});
-    });
-
+    const autoDepsObj = conf.extractAutoDepsFromConfig();
+    if (!autoDepsObj) return;
     if (!fromScope) {
       if (!this.mergeConfigDepsResolverDataCache[componentId.toString()]) {
         this.mergeConfigDepsResolverDataCache[componentId.toString()] = {};
       }
       this.mergeConfigDepsResolverDataCache[componentId.toString()] = merge(
         this.mergeConfigDepsResolverDataCache[componentId.toString()],
-        mergeConfigObj
+        autoDepsObj
       );
     }
-  }
-
-  /**
-   * this is needed because if the mergeConfig has a policy, it will be used, and any other policy along the line will be ignored.
-   * in case the model has some dependencies that were set explicitly they're gonna be ignored.
-   * this makes sure to add them to the policy of the mergeConfig.
-   * in a way, this is similar to what we do when a user is running `bit deps set` and the component had previous dependencies set,
-   * we copy those dependencies along with the current one to the .bitmap file, so they won't get lost.
-   */
-  private addConfigDepsFromModelToConfigMerge(
-    scopeExtensionsSpecific: ExtensionDataList,
-    mergeConfig?: Record<string, any>
-  ) {
-    const mergeConfigPolicy = mergeConfig?.[DependencyResolverAspect.id]?.policy;
-    if (!mergeConfigPolicy) return;
-    const scopePolicy = scopeExtensionsSpecific.findCoreExtension(DependencyResolverAspect.id)?.config.policy;
-    if (!scopePolicy) return;
-    Object.keys(scopePolicy).forEach((key) => {
-      if (!mergeConfigPolicy[key]) {
-        mergeConfigPolicy[key] = scopePolicy[key];
-        return;
-      }
-      // mergeConfigPolicy should take precedence over scopePolicy
-      mergeConfigPolicy[key] = { ...scopePolicy[key], ...mergeConfigPolicy[key] };
-    });
   }
 
   private getUnmergedData(componentId: ComponentID): UnmergedComponent | undefined {
@@ -287,7 +240,7 @@ export class AspectsMerger {
       )
       .map((aspect) => aspect.stringId);
     if (envWasFoundPreviously && (envAspect || aspectsRegisteredAsEnvs.length)) {
-      const nonEnvs = extensionDataList.filter((e) => {
+      const nonEnvs = extensionDataList.map((e) => {
         // normally the env-id inside the envs aspect doesn't have a version, but the aspect itself has a version.
         // also, the env-id inside the envs aspect includes the default-scope, but the aspect itself doesn't.
         if (
@@ -295,13 +248,18 @@ export class AspectsMerger {
           (envFromEnvsAspect && e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect) ||
           aspectsRegisteredAsEnvs.includes(e.stringId)
         ) {
-          return false;
+          return undefined;
         }
-        return true;
+        if (e.stringId === envAspect?.stringId) {
+          // must clone the env aspect to avoid mutating the original data
+          const clonedEnvAspect = e.clone();
+          delete clonedEnvAspect.config.env; // aspect env may have other data other then config.env.
+          return clonedEnvAspect;
+        }
+        return e;
       });
-      // still, aspect env may have other data other then config.env.
-      if (envAspect) delete envAspect.config.env;
-      return { extensionDataListFiltered: new ExtensionDataList(...nonEnvs), envIsCurrentlySet: true };
+
+      return { extensionDataListFiltered: new ExtensionDataList(...compact(nonEnvs)), envIsCurrentlySet: true };
     }
     if (envFromEnvsAspect && (origin === 'ModelNonSpecific' || origin === 'ModelSpecific')) {
       // if env was found, search for this env in the workspace and if found, replace the env-id with the one from the workspace

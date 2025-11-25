@@ -1,28 +1,40 @@
-import { Workspace } from '@teambit/workspace';
-import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import type { Workspace } from '@teambit/workspace';
 import mapSeries from 'p-map-series';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
-import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
-import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { Tmp } from '@teambit/legacy/dist/scope/repositories';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
-import { ImporterMain } from '@teambit/importer';
-import { Logger } from '@teambit/logger';
-import { compact } from 'lodash';
-import threeWayMerge from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
-import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
-import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
+import type { LaneId } from '@teambit/lane-id';
+import { DEFAULT_LANE } from '@teambit/lane-id';
+import type { SnapsDistance } from '@teambit/component.snap-distance';
+import { getDivergeData } from '@teambit/component.snap-distance';
+import type { Lane, ModelComponent, Version, Ref } from '@teambit/objects';
+import { NoCommonSnap, Tmp } from '@teambit/legacy.scope';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ImporterMain } from '@teambit/importer';
+import type { Logger } from '@teambit/logger';
+import { compact, isEqual } from 'lodash';
 import { ComponentConfigMerger } from '@teambit/config-merger';
-import { ScopeMain } from '@teambit/scope';
-import { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } from './merging.main.runtime';
+import type { ScopeMain } from '@teambit/scope';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
+import { threeWayMerge } from '@teambit/component.modules.merge-helper';
+import type { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } from './merging.main.runtime';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { BuilderAspect } from '@teambit/builder';
 
 export type MergeStatusProviderOptions = {
   resolveUnrelated?: MergeStrategy;
   mergeStrategy: MergeStrategy;
   ignoreConfigChanges?: boolean;
   shouldSquash?: boolean;
+  handleTargetAheadAsDiverged?: boolean;
+  detachHead?: boolean;
+  shouldMergeAspectsData?: boolean;
+};
+
+type ConflictedDataAspects = { [extId: string]: string }; // extId => reason
+
+export type DataMergeResult = {
+  conflictedAspects?: ConflictedDataAspects;
 };
 
 export const compIsAlreadyMergedMsg = 'component is already merged';
@@ -106,7 +118,7 @@ export class MergeStatusProvider {
     if (!divergeData) throw new Error(`getDivergedMergeStatus, divergeData is missing for ${id.toString()}`);
     if (!currentComponent) throw new Error(`getDivergedMergeStatus, currentComponent is missing for ${id.toString()}`);
 
-    const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
+    const baseSnap = divergeData.commonSnapBeforeDiverge as unknown as Ref; // must be set when isTrueMerge
     this.logger.debug(`merging snaps details:
 id:      ${id.toStringWithoutVersion()}
 base:    ${baseSnap.toString()}
@@ -136,6 +148,12 @@ other:   ${otherLaneHead.toString()}`);
     );
     const configMergeResult = configMerger.merge();
 
+    const dataMergeResult = this.mergeExtensionsData(
+      currentComponent.extensions,
+      baseComponent.extensions,
+      otherComponent.extensions
+    );
+
     const mergeResults = await threeWayMerge({
       scope: this.scope.legacyScope,
       otherComponent,
@@ -150,7 +168,64 @@ other:   ${otherLaneHead.toString()}`);
       mergeResults,
       divergeData,
       configMergeResult,
+      dataMergeResult,
     };
+  }
+
+  private mergeExtensionsData(
+    currentExtensions: ExtensionDataList,
+    baseExtensions: ExtensionDataList,
+    otherExtensions: ExtensionDataList
+  ): DataMergeResult {
+    if (!this.options.shouldMergeAspectsData) {
+      return {};
+    }
+    const conflictedAspects: { [extId: string]: string } = {}; // extId => reason
+    // these aspects handled separately
+    const aspectsToSkip = [DependencyResolverAspect.id, BuilderAspect.id];
+    currentExtensions.forEach((currentExtension) => {
+      if (aspectsToSkip.includes(currentExtension.stringId)) {
+        return;
+      }
+      const baseExtension = baseExtensions.findExtension(currentExtension.idWithoutVersion, true);
+      const otherExtension = otherExtensions.findExtension(currentExtension.idWithoutVersion, true);
+      if (!otherExtension) {
+        conflictedAspects[currentExtension.stringId] = 'missing in other';
+        return;
+      }
+      // check whether the version is different.
+      if (currentExtension.extensionId?.version !== otherExtension.extensionId?.version) {
+        if (baseExtension?.extensionId?.version === otherExtension.extensionId?.version) {
+          // ext version has changed in current. we're good.
+          return;
+        }
+        conflictedAspects[currentExtension.stringId] =
+          `version changed. base: ${baseExtension?.extensionId?.version}, other: ${otherExtension.extensionId?.version}`;
+        return;
+      }
+      if (isEqual(currentExtension.data, otherExtension.data)) return;
+      if (!baseExtension) {
+        conflictedAspects[currentExtension.stringId] = 'no base-version. conflicted in data';
+        return;
+      }
+      if (isEqual(baseExtension.data, otherExtension.data)) {
+        return; // changed in current. leave it.
+      }
+      if (isEqual(baseExtension.data, currentExtension.data)) {
+        // changed in other. copy it.
+        currentExtension.data = otherExtension.data;
+        return;
+      }
+      // changed in both. conflict.
+      conflictedAspects[currentExtension.stringId] = 'conflicted in data since base-version';
+    });
+    otherExtensions.forEach((otherExtension) => {
+      if (!currentExtensions.findExtension(otherExtension.idWithoutVersion, true)) {
+        conflictedAspects[otherExtension.stringId] = 'missing in current';
+      }
+    });
+
+    return { conflictedAspects };
   }
 
   private returnUnmerged(
@@ -164,6 +239,7 @@ other:   ${otherLaneHead.toString()}`);
     return componentStatus;
   }
 
+  // eslint-disable-next-line complexity
   private async getComponentStatusBeforeMergeAttempt(
     id: ComponentID // the id.version is the version we want to merge to the current component
   ): Promise<ComponentMergeStatusBeforeMergeAttempt> {
@@ -193,7 +269,8 @@ other:   ${otherLaneHead.toString()}`);
     if (componentOnOther.isRemoved()) {
       // if exist in current lane, we want the current lane to get the soft-remove update.
       // or if it was removed with --update-main, we want to merge it so then main will get the update.
-      const shouldMerge = idOnCurrentLane || componentOnOther.shouldRemoveFromMain();
+      // (unless this component does not exist on main, in which case, we don't want to merge it).
+      const shouldMerge = idOnCurrentLane || (componentOnOther.shouldRemoveFromMain() && modelComponent.head);
       if (shouldMerge) {
         // remove the component from the workspace if exist.
         componentStatus.shouldBeRemoved = true;
@@ -237,17 +314,22 @@ other:   ${otherLaneHead.toString()}`);
     const currentComponent = await getCurrentComponent();
     if (currentComponent.isRemoved()) {
       // we have a few options:
-      // 1. "other" is main. in this case, we don't care what happens on main, we want the component to stay deleted on
-      // this lane. (even when main is ahead, we don't want to merge it).
+      // 1. "other" is main.
+      // 1.a. it was deleted on the lane with --update-main. in this case, we need to merge because eventually we need this component
+      // to be merged to main with the "removed: true".
+      // 1.b. it was deleted on the lane without --update-main. in this case, we don't care what happens on main,
+      // we want the component to stay deleted on this lane. (even when main is ahead, we don't want to merge it).
       // 2. other is ahead. in this case, other recovered the component. so we can continue with the merge.
       // it is possible that it is diverged, in which case, still continue with the merge, and later on, the
       // merge-config will show a config conflict of the remove aspect.
       // 3. other is not ahead. in this case, just ignore this component, no point to merge it, we want it removed.
+      const isRemovedOnMain =
+        currentComponent.extensions.findCoreExtension('teambit.component/remove')?.config?.removeOnMain;
       const divergeData = await getDivergeData({ repo, modelComponent, targetHead: otherLaneHead, throws: false });
       const isTargetNotAhead = !divergeData.err && !divergeData.isTargetAhead();
       const shouldIgnore = this.otherLane
         ? isTargetNotAhead // option #2 and #3 above
-        : true; // it's main. option #1 above.
+        : !isRemovedOnMain; // it's main. option #1 above.
       if (shouldIgnore) {
         return this.returnUnmerged(id, `component has been removed`, true);
       }
@@ -301,12 +383,28 @@ other:   ${otherLaneHead.toString()}`);
         divergeData
       );
     }
+    if (this.options.detachHead && divergeData.commonSnapBeforeDiverge) {
+      // just override with the model data
+      const commonSnapId = id.changeVersion(divergeData.commonSnapBeforeDiverge.toString());
+      const commonSnapComp = await this.scope.legacyScope.getConsumerComponent(commonSnapId);
+      return {
+        ...componentStatus,
+        currentComponent: commonSnapComp,
+        componentFromModel: componentOnOther,
+        divergeData,
+      };
+    }
     if (!divergeData.isDiverged()) {
       if (divergeData.isSourceAhead()) {
         // component is ahead nothing to merge.
         return this.returnUnmerged(id, compIsAlreadyMergedMsg, true);
       }
-      if (divergeData.isTargetAhead()) {
+      if (!divergeData.isTargetAhead()) {
+        // we know that localHead and remoteHead are set, so if none of them is ahead they must be equal
+        return this.returnUnmerged(id, compIsAlreadyMergedMsg, true);
+      }
+      // target is ahead.
+      if (!this.options.handleTargetAheadAsDiverged || !divergeData.commonSnapBeforeDiverge) {
         // just override with the model data
         return {
           ...componentStatus,
@@ -315,8 +413,7 @@ other:   ${otherLaneHead.toString()}`);
           divergeData,
         };
       }
-      // we know that localHead and remoteHead are set, so if none of them is ahead they must be equal
-      return this.returnUnmerged(id, compIsAlreadyMergedMsg, true);
+      // target is ahead and we want to treat it as diverged, continue.
     }
 
     // it's diverged and needs merge operation

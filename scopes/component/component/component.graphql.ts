@@ -1,14 +1,15 @@
 import stripAnsi from 'strip-ansi';
 import { gql } from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
-import { ComponentID, ComponentIdObj } from '@teambit/component-id';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
-import { Component } from './component';
-import { ComponentFactory } from './component-factory';
-import { ComponentMain } from './component.main.runtime';
+import type { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
+import type { ComponentLog } from '@teambit/objects';
+import type { Schema } from '@teambit/graphql';
+import type { Component } from './component';
+import type { ComponentFactory } from './component-factory';
+import type { ComponentMain } from './component.main.runtime';
 
-export function componentSchema(componentExtension: ComponentMain) {
+export function componentSchema(componentExtension: ComponentMain): Schema {
   return {
     typeDefs: gql`
       scalar JSON
@@ -219,7 +220,7 @@ export function componentSchema(componentExtension: ComponentMain) {
           if (!head && filter?.takeHeadFromComponent) {
             head = component.id.version;
           }
-          const finalFilter = { ...filter, ...{ head } };
+          const finalFilter = { ...filter, head };
           return (await component.getLogs(finalFilter)).map((log) => ({ ...log, id: log.hash }));
         },
       },
@@ -229,7 +230,7 @@ export function componentSchema(componentExtension: ComponentMain) {
             const componentId = await host.resolveComponentId(id);
             const component = await host.get(componentId);
             return component;
-          } catch (error: any) {
+          } catch {
             return null;
           }
         },
@@ -249,8 +250,9 @@ export function componentSchema(componentExtension: ComponentMain) {
             errorMessage: err.message ? stripAnsi(err.message) : err.name,
           }));
         },
-        id: async (host: ComponentFactory) => {
-          return host.name;
+        id: async (host: ComponentFactory, _args, _context, info) => {
+          const extensionId = info.variableValues.extensionId;
+          return extensionId ? `${host.name}/${extensionId}` : host.name;
         },
         name: async (host: ComponentFactory) => {
           return host.name;

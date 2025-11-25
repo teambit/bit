@@ -1,7 +1,7 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { GeneratorMain } from './generator.main.runtime';
-import { BaseWorkspaceOptions } from './workspace-template';
+import type { GeneratorMain } from './generator.main.runtime';
+import type { BaseWorkspaceOptions } from './workspace-template';
 
 /**
  * NewOptions combines foundational properties with additional options for creating a workspace.
@@ -10,7 +10,10 @@ export type NewOptions = BaseWorkspaceOptions;
 
 export class NewCmd implements Command {
   name = 'new <template-name> <workspace-name>';
-  description = 'create a new workspace from a template';
+  description = 'create a new Bit workspace from a template';
+  extendedDescription = `initializes a new Bit workspace with pre-configured settings, environments, and optionally starter components.
+templates provide different setups for React, Angular, Node.js, or custom development workflows.
+installs dependencies and configures the workspace for immediate development.`;
   arguments = [
     {
       name: 'template-name',
@@ -24,7 +27,7 @@ export class NewCmd implements Command {
   ];
   alias = '';
   loader = true;
-  group = 'start';
+  group = 'workspace-setup';
   options = [
     [
       'a',

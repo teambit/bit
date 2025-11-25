@@ -1,16 +1,23 @@
-import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
-import { PubsubMain } from '@teambit/pubsub';
+import type {
+  EnvService,
+  ExecutionContext,
+  EnvDefinition,
+  Env,
+  EnvContext,
+  ServiceTransformationMap,
+} from '@teambit/envs';
+import type { PubsubMain } from '@teambit/pubsub';
 import chalk from 'chalk';
 import { flatten } from 'lodash';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import highlight from 'cli-highlight';
 import { sep } from 'path';
 import pMapSeries from 'p-map-series';
-import { BrowserRuntimeSlot, DevServerTransformerSlot } from './bundler.main.runtime';
+import type { BrowserRuntimeSlot, DevServerTransformerSlot } from './bundler.main.runtime';
 import { ComponentServer } from './component-server';
 import { dedupEnvs } from './dedup-envs';
-import { DevServer } from './dev-server';
-import { DevServerContext } from './dev-server-context';
+import type { DevServer } from './dev-server';
+import type { DevServerContext } from './dev-server-context';
 import { getEntry } from './get-entry';
 
 export type DevServerServiceOptions = { dedicatedEnvDevServers?: string[] };
@@ -162,9 +169,18 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     context.components = context.components.concat(this.getComponentsFromContexts(additionalContexts));
     const peers = await this.dependencyResolver.getPreviewHostDependenciesFromEnv(context.envDefinition.env);
     const hostRootDir = context.envRuntime.envAspectDefinition?.aspectPath;
+    const entry = await getEntry(context, this.runtimeSlot);
+    const componentDirectoryMap = {};
+    context.components.forEach((component) => {
+      // @ts-ignore this is usually a workspace component here so it has a workspace
+      const workspace = component.workspace;
+      if (!workspace) return;
+      componentDirectoryMap[component.id.toString()] = workspace.componentDir(component.id);
+    });
 
     return Object.assign(context, {
-      entry: await getEntry(context, this.runtimeSlot),
+      entry,
+      componentDirectoryMap,
       // don't start with a leading "/" because it generates errors on Windows
       rootPath: `preview/${context.envRuntime.id}`,
       publicPath: `${sep}public`,

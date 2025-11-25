@@ -2,9 +2,10 @@ import React, { useMemo } from 'react';
 import classnames from 'classnames';
 import { ResponsiveNavbar } from '@teambit/design.navigation.responsive-navbar';
 import type { TabProps } from '@teambit/design.navigation.responsive-navbar';
+import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 import { TopBarNav } from '../top-bar-nav';
 import styles from './menu.module.scss';
-import { NavPlugin, OrderedNavigationSlot } from './nav-plugin';
+import type { NavPlugin, OrderedNavigationSlot } from './nav-plugin';
 
 export type MenuNavProps = {
   /**
@@ -54,14 +55,22 @@ export function CollapsibleMenuNav({
   alwaysShowActiveTab,
   children,
 }: MenuNavProps) {
+  const { isMinimal } = useWorkspaceMode();
   const plugins = useMemo(() => {
     const _navPlugins = navPlugins.length > 0 ? navPlugins : navigationSlot?.toArray();
-    return (_navPlugins || []).sort(sortFn);
-  }, [navigationSlot, navPlugins]);
+    if (!isMinimal) {
+      return (_navPlugins || []).sort(sortFn);
+    }
+    return (_navPlugins || []).filter((widget) => !widget[1].props.hideInMinimalMode).sort(sortFn);
+  }, [navigationSlot, navPlugins, isMinimal]);
+
   const widgets = useMemo(() => {
     const _widgetPlugins = widgetPlugins.length > 0 ? widgetPlugins : widgetSlot?.toArray();
-    return (_widgetPlugins || []).sort(sortFn);
-  }, [widgetSlot, widgetPlugins]);
+    if (!isMinimal) {
+      return (_widgetPlugins || []).sort(sortFn);
+    }
+    return (_widgetPlugins || []).filter((widget) => !widget[1].props.hideInMinimalMode).sort(sortFn);
+  }, [widgetSlot, widgetPlugins, isMinimal]);
 
   const links = [...plugins, ...widgets].map(([, menuItem], index) => {
     // these styles keep plugins to the left and widgets to the right.
@@ -95,21 +104,5 @@ export function CollapsibleMenuNav({
 }
 
 function sortFn([, { order: first }]: [string, NavPlugin], [, { order: second }]: [string, NavPlugin]) {
-  // 0  - equal
-  // <0 - first < second
-  // >0 - first > second
-
   return (first ?? 0) - (second ?? 0);
 }
-
-// // this is the aspect-oriented and serialize-able way to sort plugins.
-// const pluginOrder = ['teambit.docs/docs', 'teambit.compositions/compositions', 'teambit.docs/docs'];
-// export function toSortedArray<T>(slot: SlotRegistry<T>, order: string[]) {
-//   // sort items according to the order
-//   const sorted = order.map((x) => [x, slot.get(x)]).filter(([, val]) => !!val) as [string, T][];
-//
-//   // add all other items
-//   const unsorted = slot.toArray().filter(([id]) => order.indexOf(id) < 0);
-//
-//   return sorted.concat(unsorted);
-// }

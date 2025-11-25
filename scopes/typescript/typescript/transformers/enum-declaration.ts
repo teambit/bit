@@ -1,8 +1,9 @@
-import ts, { Node, EnumDeclaration } from 'typescript';
+import type { Node, EnumDeclaration } from 'typescript';
+import ts from 'typescript';
 import { EnumMemberSchema, EnumSchema } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
 import { Identifier } from '../identifier';
 
 export class EnumDeclarationTransformer implements SchemaTransformer {

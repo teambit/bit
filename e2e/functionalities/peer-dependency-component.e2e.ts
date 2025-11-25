@@ -1,9 +1,10 @@
 import path from 'path';
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import chaiString from 'chai-string';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-string'));
+chai.use(chaiString);
 
 describe('set-peer', function () {
   this.timeout(0);
@@ -17,7 +18,7 @@ describe('set-peer', function () {
   describe('a component is a peer dependency', () => {
     let workspaceCapsulesRootDir: string;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
       helper.command.setPeer('comp2', '0');
       helper.command.install();
@@ -100,6 +101,19 @@ describe('set-peer', function () {
         });
       });
     });
+    describe('unset-peer', () => {
+      before(() => {
+        helper.command.unsetPeer('comp2');
+        helper.command.snapAllComponents();
+        helper.command.build();
+      });
+      it('should remove the always peer fields from the scope data', () => {
+        const comp = helper.command.catComponent(`comp2@latest`);
+        const depResolver = comp.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
+        expect(depResolver.config.peer).to.eq(undefined);
+        expect(depResolver.config.defaultPeerRange).to.eq(undefined);
+      });
+    });
   });
 });
 
@@ -115,7 +129,7 @@ describe('set-peer using just the version range prefix', function () {
   describe('a component is a peer dependency', () => {
     let workspaceCapsulesRootDir: string;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
       helper.command.setPeer('comp2', '^');
       helper.command.install();
@@ -213,7 +227,7 @@ describe('set-peer for existing component', function () {
   describe('a component is a peer dependency', () => {
     let workspaceCapsulesRootDir: string;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
       helper.command.install();
       helper.command.snapAllComponents();

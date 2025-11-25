@@ -2,7 +2,7 @@ import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import Helper from '../../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('policies order', function () {
   let helper: Helper;
@@ -10,7 +10,7 @@ describe('policies order', function () {
   describe('deps set order', () => {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
       helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
         envName: 'env1',
@@ -47,7 +47,7 @@ describe('policies order', function () {
   describe('env own dependency', () => {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.env.setCustomNewEnv(
         undefined,
         undefined,

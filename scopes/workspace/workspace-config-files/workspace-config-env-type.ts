@@ -1,4 +1,4 @@
-import { ConfigWriterList } from './config-writer-list';
+import type { ConfigWriterList } from './config-writer-list';
 
 export interface WorkspaceConfigEnv {
   /**

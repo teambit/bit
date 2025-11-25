@@ -1,10 +1,9 @@
 // eslint-disable-next-line max-classes-per-file
-import { Command, CommandOptions } from '@teambit/cli';
-import { CapsuleList, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { CapsuleList, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import type { ScopeMain } from '@teambit/scope';
 import chalk from 'chalk';
-
-import { Workspace } from '.';
+import type { Workspace } from './workspace';
 
 type CreateOpts = {
   baseDir?: string;
@@ -20,7 +19,7 @@ export class CapsuleCreateCmd implements Command {
   name = 'create [component-id...]';
   description = `create capsules for components`;
   helpUrl = 'reference/build-pipeline/capsule';
-  group = 'capsules';
+  group = 'advanced';
   alias = '';
   options = [
     [
@@ -38,7 +37,11 @@ export class CapsuleCreateCmd implements Command {
     ['p', 'package-manager <name>', 'npm, yarn or pnpm, default to npm'],
   ] as CommandOptions;
 
-  constructor(private workspace: Workspace | undefined, private scope: ScopeMain, private isolator: IsolatorMain) {}
+  constructor(
+    private workspace: Workspace | undefined,
+    private scope: ScopeMain,
+    private isolator: IsolatorMain
+  ) {}
 
   async create(
     [componentIds = []]: [string[]],
@@ -108,14 +111,23 @@ export class CapsuleCreateCmd implements Command {
 export class CapsuleListCmd implements Command {
   name = 'list';
   description = `list the capsules generated for this workspace`;
-  group = 'capsules';
+  group = 'advanced';
   alias = '';
   options = [['j', 'json', 'json format']] as CommandOptions;
 
-  constructor(private isolator: IsolatorMain, private workspace: Workspace | undefined, private scope: ScopeMain) {}
+  constructor(
+    private isolator: IsolatorMain,
+    private workspace: Workspace | undefined,
+    private scope: ScopeMain
+  ) {}
 
   async report() {
-    const { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir } = this.getCapsulesRootDirs();
+    if (!this.workspace && !this.scope) {
+      throw new Error(`This command requires a Bit workspace or scope.
+To initialize a workspace: bit init`);
+    }
+
+    const { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir, scopeCapsulesRootDir } = this.getCapsulesRootDirs();
     const listWs = workspaceCapsulesRootDir ? await this.isolator.list(workspaceCapsulesRootDir) : undefined;
     const listScope = await this.isolator.list(scopeAspectsCapsulesRootDir);
 
@@ -129,15 +141,23 @@ export class CapsuleListCmd implements Command {
     const wsLine = listWs
       ? chalk.green(`workspace capsules root-dir:       ${chalk.cyan(workspaceCapsulesRootDir)}`)
       : undefined;
-    const scopeLine = chalk.green(`scope's aspects capsules root-dir: ${chalk.cyan(scopeAspectsCapsulesRootDir)}`);
+    const scopeAspectLine = chalk.green(
+      `scope's aspects capsules root-dir: ${chalk.cyan(scopeAspectsCapsulesRootDir)}`
+    );
+    const scopeLine = chalk.green(`scope's capsules root-dir: ${chalk.cyan(scopeCapsulesRootDir)}`);
     const suggestLine = chalk.green(`use --json to get the list of all capsules`);
-    const lines = [title, wsLine, scopeLine, suggestLine].filter((x) => x).join('\n');
+    const lines = [title, wsLine, scopeAspectLine, scopeLine, suggestLine].filter((x) => x).join('\n');
 
     // TODO: improve output
     return lines;
   }
 
   async json() {
+    if (!this.workspace && !this.scope) {
+      throw new Error(`This command requires a Bit workspace or scope.
+To initialize a workspace: bit init`);
+    }
+
     const rootDirs = this.getCapsulesRootDirs();
     const listWs = rootDirs.workspaceCapsulesRootDir
       ? await this.isolator.list(rootDirs.workspaceCapsulesRootDir)
@@ -157,14 +177,18 @@ export class CapsuleDeleteCmd implements Command {
   name = 'delete';
   description = `delete capsules`;
   extendedDescription = `with no args, only workspace's capsules are deleted`;
-  group = 'capsules';
+  group = 'advanced';
   alias = '';
   options = [
     ['', 'scope-aspects', 'delete scope-aspects capsules'],
     ['a', 'all', 'delete all capsules for all workspaces and scopes'],
   ] as CommandOptions;
 
-  constructor(private isolator: IsolatorMain, private scope: ScopeMain, private workspace?: Workspace) {}
+  constructor(
+    private isolator: IsolatorMain,
+    private scope: ScopeMain,
+    private workspace?: Workspace
+  ) {}
 
   async report(args: [], { all, scopeAspects }: { all: boolean; scopeAspects: boolean }) {
     const capsuleBaseDirToDelete = (): string | undefined => {
@@ -183,17 +207,20 @@ export class CapsuleDeleteCmd implements Command {
 
 export class CapsuleCmd implements Command {
   name = 'capsule';
-  description = 'manage capsules';
-  extendedDescription = `a capsule is a directory containing the component code, isolated from the workspace.
-normally, capsules are created during the build process, the component files are copied and the packages are installed
-via the configured package-manager. the purpose is to compile/test them in isolation to make sure they will work for
-other users after publishing/exporting them.`;
+  description = 'manage isolated component environments';
+  extendedDescription = `capsules are temporary isolated directories containing component code and dependencies.
+automatically created during build processes to compile and test components in isolation.
+ensures components work independently before publishing, similar to how they'll be consumed.`;
   alias = '';
-  group = 'capsules';
+  group = 'advanced';
   commands: Command[] = [];
   options = [['j', 'json', 'json format']] as CommandOptions;
 
-  constructor(private isolator: IsolatorMain, private workspace: Workspace | undefined, private scope: ScopeMain) {}
+  constructor(
+    private isolator: IsolatorMain,
+    private workspace: Workspace | undefined,
+    private scope: ScopeMain
+  ) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async report(args: [string]) {
@@ -201,7 +228,7 @@ other users after publishing/exporting them.`;
   }
 }
 
-function getCapsulesRootDirs(isolator, scope, workspace) {
+function getCapsulesRootDirs(isolator, scope: ScopeMain, workspace) {
   const workspaceCapsulesRootDir = workspace
     ? isolator.getCapsulesRootDir({
         baseDir: workspace.getCapsulePath(),
@@ -212,6 +239,12 @@ function getCapsulesRootDirs(isolator, scope, workspace) {
     baseDir: scope.getAspectCapsulePath(),
     useHash: scope.shouldUseHashForCapsules(),
   });
+  const scopeCapsulesRootDir = workspace
+    ? undefined
+    : isolator.getCapsulesRootDir({
+        baseDir: process.cwd(),
+        useHash: true,
+      });
 
-  return { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir };
+  return { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir, scopeCapsulesRootDir };
 }

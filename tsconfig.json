@@ -17,11 +17,9 @@
     "outDir": "./dist"
   },
   "include": [
-    "src",
     "scopes",
     "e2e",
-    "components",
-    "toolbox"
+    "components"
   ],
   "exclude": [
     "node_modules",

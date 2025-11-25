@@ -1,36 +1,42 @@
 import { existsSync, readFileSync } from 'fs';
-import { ComponentType } from 'react';
+import type { ComponentType } from 'react';
 import type { AspectMain } from '@teambit/aspect';
-import { AspectDefinition, getAspectDirFromBvm } from '@teambit/aspect-loader';
-import { CacheAspect, CacheMain } from '@teambit/cache';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { AspectDefinition } from '@teambit/aspect-loader';
+import { getAspectDirFromBvm } from '@teambit/aspect-loader';
+import type { CacheMain } from '@teambit/cache';
+import { CacheAspect } from '@teambit/cache';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
-import { ExpressAspect, ExpressMain } from '@teambit/express';
+import type { ExpressMain } from '@teambit/express';
+import { ExpressAspect } from '@teambit/express';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import chalk from 'chalk';
-import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
-import { sha1 } from '@teambit/legacy/dist/utils';
+import type { SlotRegistry, Harmony } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { PubsubMain } from '@teambit/pubsub';
+import { PubsubAspect } from '@teambit/pubsub';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import pMapSeries from 'p-map-series';
 import fs from 'fs-extra';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { createRoot } from '@teambit/harmony.modules.harmony-root-generator';
-import { join, resolve } from 'path';
-import { promisify } from 'util';
+import { join, resolve as pathResolve } from 'path';
 import webpack from 'webpack';
 import { UiServerStartedEvent } from './events';
 import { UnknownUI, UnknownBuildError } from './exceptions';
 import { StartCmd } from './start.cmd';
 import { UIBuildCmd } from './ui-build.cmd';
-import { UIRoot } from './ui-root';
+import type { UIRoot } from './ui-root';
 import { UIServer } from './ui-server';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import createWebpackConfig from './webpack/webpack.browser.config';
 import createSsrWebpackConfig from './webpack/webpack.ssr.config';
-import { StartPlugin, StartPluginOptions } from './start-plugin';
+import type { StartPlugin, StartPluginOptions } from './start-plugin';
 import { BundleUiTask, BUNDLE_UI_HASH_FILENAME } from './bundle-ui.task';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
@@ -119,10 +125,16 @@ export type RuntimeOptions = {
    * skip build the UI before start
    */
   skipUiBuild?: boolean;
+
+  /**
+   * Show the internal urls of the dev servers
+   */
+  showInternalUrls?: boolean;
 };
 
 export class UiMain {
   private _isBundleUiServed = false;
+  private currentUIServer: UIServer | undefined;
 
   constructor(
     /**
@@ -234,10 +246,14 @@ export class UiMain {
 
     const compiler = webpack(config);
     this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" running webpack`);
-    const compilerRun = promisify(compiler.run.bind(compiler));
-    const results = await compilerRun();
+    const [results, errors] = await this.runWebpackPromise(compiler);
+
     this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" completed webpack`);
     if (!results) throw new UnknownBuildError();
+    if (errors) {
+      this.clearConsole();
+      throw new Error(errors);
+    }
     if (results?.hasErrors()) {
       this.clearConsole();
       throw new Error(results?.toString());
@@ -251,6 +267,23 @@ export class UiMain {
     return this;
   }
 
+  private async runWebpackPromise(
+    compiler: webpack.MultiCompiler
+  ): Promise<[webpack.MultiStats | undefined, string | undefined]> {
+    return new Promise((resolve) =>
+      // TODO: split to multiple processes to reduce time and configure concurrent builds.
+      // @see https://github.com/trivago/parallel-webpack
+      compiler.run((err, stats) => {
+        if (err) {
+          this.logger.error('get error from webpack compiler, when bundling ui server, full error:', err);
+
+          return resolve([undefined, `${err.toString()}\n${err.stack}`]);
+        }
+        return resolve([stats, undefined]);
+      })
+    );
+  }
+
   private async initiatePlugins(options: StartPluginOptions) {
     const plugins = this.startPluginSlot.values();
     await pMapSeries(plugins, (plugin) => plugin.initiate(options));
@@ -259,12 +292,15 @@ export class UiMain {
 
   runtimeOptions: RuntimeOptions = {};
 
+  getUIServer(): UIServer | undefined {
+    return this.currentUIServer;
+  }
   /**
    * create a Bit UI runtime.
    */
   async createRuntime(runtimeOptions: RuntimeOptions) {
     this.runtimeOptions = runtimeOptions;
-    const { uiRootName, pattern, dev, port, rebuild, verbose, skipUiBuild } = this.runtimeOptions;
+    const { uiRootName, pattern, dev, port, rebuild, verbose, skipUiBuild, showInternalUrls } = this.runtimeOptions;
     // uiRootName to be deprecated
     const uiRootAspectIdOrName = uiRootName || runtimeOptions.uiRootAspectIdOrName;
     const maybeUiRoot = this.getUi(uiRootAspectIdOrName);
@@ -275,6 +311,7 @@ export class UiMain {
     const plugins = await this.initiatePlugins({
       verbose,
       pattern,
+      showInternalUrls,
     });
 
     if (this.componentExtension.isHost(uiRootAspectId)) this.componentExtension.setHostPriority(uiRootAspectId);
@@ -290,6 +327,8 @@ export class UiMain {
       publicDir,
       startPlugins: plugins,
     });
+
+    this.currentUIServer = uiServer;
 
     // Adding signal listeners to make sure we immediately close the process on sigint / sigterm (otherwise webpack dev server closing will take time)
     this.addSignalListener();
@@ -462,7 +501,7 @@ export class UiMain {
       harmonyPackage,
       shouldRun
     );
-    const filepath = resolve(join(path || __dirname, `${runtimeName}.root${sha1(contents)}.js`));
+    const filepath = pathResolve(join(path || __dirname, `${runtimeName}.root${sha1(contents)}.js`));
     if (fs.existsSync(filepath)) return filepath;
     fs.outputFileSync(filepath, contents);
     return filepath;
@@ -644,7 +683,7 @@ export class UiMain {
       OnStartSlot,
       PublicDirOverwriteSlot,
       BuildMethodOverwriteSlot,
-      StartPluginSlot
+      StartPluginSlot,
     ],
     harmony: Harmony
   ) {

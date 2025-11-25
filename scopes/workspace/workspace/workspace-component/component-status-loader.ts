@@ -1,16 +1,16 @@
 import mapSeries from 'p-map-series';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { VERSION_ZERO } from '@teambit/legacy/dist/scope/models/model-component';
-import { Consumer } from '@teambit/legacy/dist/consumer';
-import { LATEST } from '@teambit/legacy/dist/constants';
-import { ModelComponent } from '@teambit/legacy/dist/scope/models';
-import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
-import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
-import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
-import MissingFilesFromComponent from '@teambit/legacy/dist/consumer/component/exceptions/missing-files-from-component';
-import ComponentOutOfSync from '@teambit/legacy/dist/consumer/exceptions/component-out-of-sync';
-import { Workspace } from '..';
+import type { ModelComponent } from '@teambit/objects';
+import { VERSION_ZERO } from '@teambit/objects';
+import type { Consumer } from '@teambit/legacy.consumer';
+import { ComponentsPendingImport, ComponentOutOfSync } from '@teambit/legacy.consumer';
+import { LATEST } from '@teambit/legacy.constants';
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
+import type { Workspace } from '..';
 
 export type ComponentStatusLegacy = {
   modified: boolean;
@@ -67,7 +67,7 @@ export class ComponentStatusLoader {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const status: ComponentStatusLegacy = {};
     const componentFromModel: ModelComponent | undefined = await this.consumer.scope.getModelComponentIfExist(id);
-    let componentFromFileSystem;
+    let componentFromFileSystem: ConsumerComponent | undefined;
     try {
       // change to 'latest' before loading from FS. don't change to null, otherwise, it'll cause
       // loadOne to not find model component as it assumes there is no version
@@ -82,11 +82,7 @@ export class ComponentStatusLoader {
       }
       componentFromFileSystem = components[0];
     } catch (err: any) {
-      if (
-        err instanceof MissingFilesFromComponent ||
-        err instanceof ComponentNotFoundInPath ||
-        err instanceof MissingBitMapComponent
-      ) {
+      if (err instanceof ComponentNotFoundInPath || err instanceof MissingBitMapComponent) {
         // the file/s have been deleted or the component doesn't exist in bit.map file
         if (componentFromModel) status.deleted = true;
         else status.notExist = true;
@@ -108,9 +104,13 @@ export class ComponentStatusLoader {
     }
 
     const lane = await this.consumer.getCurrentLaneObject();
-    await componentFromModel.setDivergeData(this.consumer.scope.objects);
-    status.staged = await componentFromModel.isLocallyChanged(this.consumer.scope.objects, lane);
     const versionFromFs = componentFromFileSystem.id.version;
+    status.staged = await componentFromModel.isLocallyChanged(
+      this.consumer.scope.objects,
+      lane,
+      componentFromFileSystem.id
+    );
+
     const idStr = id.toString();
     if (!componentFromFileSystem.id.hasVersion()) {
       throw new ComponentOutOfSync(idStr);

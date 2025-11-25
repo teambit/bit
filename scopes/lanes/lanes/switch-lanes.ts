@@ -1,21 +1,23 @@
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { ApplyVersionResults } from '@teambit/merging';
-import { Lane } from '@teambit/legacy/dist/scope/models';
-import { CheckoutProps } from '@teambit/checkout';
-import { Workspace } from '@teambit/workspace';
-import { Logger } from '@teambit/logger';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
+import type { ApplyVersionResults } from '@teambit/component.modules.merge-helper';
+import type { Lane } from '@teambit/objects';
+import type { CheckoutProps } from '@teambit/checkout';
+import type { Workspace } from '@teambit/workspace';
+import type { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
-import { LanesMain } from './lanes.main.runtime';
-import { throwForStagedComponents } from './create-lane';
+import { throwForStagedComponents } from '@teambit/lanes.modules.create-lane';
+import type { LanesMain } from './lanes.main.runtime';
 
 export type SwitchProps = {
   laneName: string;
   ids?: ComponentID[];
   laneBitIds?: ComponentID[]; // only needed for the deprecated onLanesOnly prop. once this prop is removed, this prop can be removed as well.
   pattern?: string;
-  existingOnWorkspaceOnly: boolean;
+  head?: boolean;
+  existingOnWorkspaceOnly?: boolean;
   remoteLane?: Lane;
   localTrackedLane?: string;
   alias?: string;
@@ -30,7 +32,7 @@ export class LaneSwitcher {
     private logger: Logger,
     private switchProps: SwitchProps,
     private checkoutProps: CheckoutProps,
-    private Lanes: LanesMain
+    private lanes: LanesMain
   ) {
     this.consumer = this.workspace.consumer;
   }
@@ -38,7 +40,7 @@ export class LaneSwitcher {
   async switch(): Promise<ApplyVersionResults> {
     this.logger.setStatusLine(`switching lanes`);
     if (this.workspace.isOnMain()) {
-      await throwForStagedComponents(this.consumer);
+      await throwForStagedComponents(this.workspace);
     }
     await this.populateSwitchProps();
     const bitMapIds = this.workspace.consumer.bitmapIdsFromCurrentLaneIncludeRemoved;
@@ -56,7 +58,7 @@ export class LaneSwitcher {
       lane: this.laneToSwitchTo,
     };
 
-    const results = await this.Lanes.checkout.checkout(checkoutProps);
+    const results = await this.lanes.checkout.checkout(checkoutProps);
 
     await this.saveLanesData();
     await this.consumer.onDestroy('lane-switch');
@@ -68,38 +70,54 @@ export class LaneSwitcher {
     const laneId = await this.consumer.scope.lanes.parseLaneIdFromString(this.switchProps.laneName);
 
     const localLane = await this.consumer.scope.loadLane(laneId);
-    const mainIds = await this.consumer.getIdsOfDefaultLane();
+    const getMainIds = async () => {
+      if (this.switchProps.head) {
+        const allIds = this.workspace.listIds();
+        await this.workspace.scope.legacyScope.scopeImporter.importWithoutDeps(allIds, {
+          cache: false,
+          ignoreMissingHead: true,
+        });
+        return this.consumer.getIdsOfDefaultLane();
+      }
+      const mainIds = await this.consumer.getIdsOfDefaultLane();
+      return mainIds;
+    };
+    const mainIds = await getMainIds();
     if (laneId.isDefault()) {
       await this.populatePropsAccordingToDefaultLane();
       this.switchProps.ids = mainIds;
     } else {
-      const laneIds = localLane
-        ? this.populatePropsAccordingToLocalLane(localLane)
-        : await this.populatePropsAccordingToRemoteLane(laneId);
+      const laneIds =
+        localLane && !this.switchProps.head
+          ? this.populatePropsAccordingToLocalLane(localLane)
+          : await this.populatePropsAccordingToRemoteLane(laneId);
       const idsOnLaneOnly = laneIds.filter((id) => !mainIds.find((i) => i.isEqualWithoutVersion(id)));
       const idsOnMainOnly = mainIds.filter((id) => !laneIds.find((i) => i.isEqualWithoutVersion(id)));
       this.switchProps.ids = [...idsOnMainOnly, ...laneIds];
       this.switchProps.laneBitIds = idsOnLaneOnly;
     }
+    await this.populateIdsAccordingToPattern();
+  }
 
-    if (this.switchProps.pattern) {
-      if (this.consumer.bitMap.getAllBitIdsFromAllLanes().length) {
-        // if the workspace is not empty, it's possible that it has components from lane-x, and is now switching
-        // partially to lane-y, while lane-y has the same components as lane-x. in which case, the user ends up with
-        // an invalid state of components from lane-x and lane-y together.
-        throw new BitError('error: use --pattern only when the workspace is empty');
-      }
-      const allIds = await this.workspace.resolveMultipleComponentIds(this.switchProps.ids || []);
-      const patternIds = await this.workspace.filterIdsFromPoolIdsByPattern(this.switchProps.pattern, allIds);
-      this.switchProps.ids = patternIds.map((id) => id);
+  private async populateIdsAccordingToPattern() {
+    if (!this.switchProps.pattern) {
+      return;
     }
+    if (this.consumer.bitMap.getAllBitIdsFromAllLanes().length) {
+      // if the workspace is not empty, it's possible that it has components from lane-x, and is now switching
+      // partially to lane-y, while lane-y has the same components as lane-x. in which case, the user ends up with
+      // an invalid state of components from lane-x and lane-y together.
+      throw new BitError('error: use --pattern only when the workspace is empty');
+    }
+    const allIds = this.switchProps.ids || [];
+    this.switchProps.ids = await this.workspace.filterIdsFromPoolIdsByPattern(this.switchProps.pattern, allIds);
   }
 
   private async populatePropsAccordingToRemoteLane(remoteLaneId: LaneId): Promise<ComponentID[]> {
     this.laneIdToSwitchTo = remoteLaneId;
     this.logger.debug(`populatePropsAccordingToRemoteLane, remoteLaneId: ${remoteLaneId.toString()}`);
     this.throwForSwitchingToCurrentLane();
-    const remoteLane = await this.Lanes.fetchLaneWithItsComponents(remoteLaneId);
+    const remoteLane = await this.lanes.fetchLaneWithItsComponents(remoteLaneId);
     this.switchProps.laneName = remoteLaneId.name;
     this.switchProps.localTrackedLane = this.consumer.scope.lanes.getAliasByLaneId(remoteLaneId) || undefined;
     this.switchProps.remoteLane = remoteLane;
@@ -126,7 +144,7 @@ export class LaneSwitcher {
         ? this.laneIdToSwitchTo.name
         : this.laneIdToSwitchTo.toString();
       throw new BitError(`already checked out to "${laneIdStr}".
-to be up to date with the remote lane, please run "bit checkout head""`);
+to be up to date with the remote lane, please run "bit checkout head"`);
     }
   }
 
@@ -147,5 +165,11 @@ to be up to date with the remote lane, please run "bit checkout head""`);
       ComponentIdList.fromArray(this.switchProps.ids || []),
       ComponentIdList.fromArray(this.switchProps.laneBitIds || [])
     );
+
+    // If this cache isn't cleared, here's what can happen:
+    // Switching from "lane-dev" to "main": while on "lane-dev", ModelComponent keeps in-memory props
+    // `laneHeadLocal` and `laneHeadRemote`. Methods like `headIncludeRemote()` use them and may return
+    // the lane-dev head instead of the head on main.
+    this.consumer.scope.objects.clearObjectsFromCache();
   }
 }

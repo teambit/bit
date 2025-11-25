@@ -3,7 +3,7 @@ import { join } from 'path';
 import findRoot from 'find-root';
 
 import { ComponentID } from '@teambit/component-id';
-import { ComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
+import type { ComponentMeta } from '@teambit/react.ui.highlighter.component-metadata.bit-component-meta';
 
 type Primitive = string | number | boolean | undefined | null;
 type Json = {
@@ -54,7 +54,7 @@ function parseJsonFile(pkgPath: string): Json | undefined {
 function safeFindRoot(filepath: string) {
   try {
     return findRoot(filepath);
-  } catch (e: any) {
+  } catch {
     // might happen for "scaffolding" files outside the project.
     return undefined;
   }

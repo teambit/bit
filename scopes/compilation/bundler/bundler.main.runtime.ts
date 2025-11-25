@@ -1,23 +1,30 @@
-import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
+import type { PubsubMain } from '@teambit/pubsub';
+import { PubsubAspect } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect } from '@teambit/component';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { BrowserRuntime } from './browser-runtime';
+import type { Component } from '@teambit/component';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { BrowserRuntime } from './browser-runtime';
 import { BundlerAspect } from './bundler.aspect';
-import { ComponentServer } from './component-server';
-import { BundlerContext } from './bundler-context';
+import type { ComponentServer } from './component-server';
+import { NewDevServersCreatedEvent } from './events';
+import type { BundlerContext } from './bundler-context';
 import { devServerSchema } from './dev-server.graphql';
 import { DevServerService } from './dev-server.service';
 import { BundlerService } from './bundler.service';
-import { DevServer } from './dev-server';
+import type { DevServer } from './dev-server';
 
 export type DevServerTransformer = (devServer: DevServer, { envId }: { envId: string }) => DevServer;
-
+export type OnPreDevServerCreated = (newCompsWithoutDevServer: Component[]) => Promise<void>;
 export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
 export type DevServerTransformerSlot = SlotRegistry<DevServerTransformer>;
+export type OnPreDevServerCreatedSlot = SlotRegistry<OnPreDevServerCreated>;
 
 export type BundlerConfig = {
   dedicatedEnvDevServers: string[];
@@ -27,6 +34,11 @@ export type BundlerConfig = {
  * bundler extension.
  */
 export class BundlerMain {
+  /**
+   * component servers.
+   */
+  private _componentServers: ComponentServer[] = [];
+
   constructor(
     readonly config: BundlerConfig,
     /**
@@ -52,25 +64,41 @@ export class BundlerMain {
     /**
      * dev server transformer slot.
      */
-    private devServerTransformerSlot: DevServerTransformerSlot
+    private devServerTransformerSlot: DevServerTransformerSlot,
+
+    /**
+     * pre-dev-server operation slot.
+     */
+    private onPreDevServerCreatedSlot: OnPreDevServerCreatedSlot,
+
+    private graphql: GraphqlMain
   ) {}
 
-  /**
-   * load all given components in corresponding dev servers.
-   * @param components defaults to all components in the workspace.
-   */
-  async devServer(components: Component[]): Promise<ComponentServer[]> {
+  async addNewDevServers(newCompsWithoutDevServers: Component[]): Promise<ComponentServer[]> {
+    const newComponents = newCompsWithoutDevServers.filter((component) => {
+      return !this.getComponentServer(component);
+    });
+
+    if (newComponents.length === 0) {
+      return [];
+    }
+
+    await Promise.all(this.onPreDevServerCreatedSlot.values().map((subscriberFn) => subscriberFn(newComponents)));
+
+    return this.devServer(newComponents, { configureProxy: true });
+  }
+
+  async devServer(components: Component[], opts: { configureProxy?: boolean } = {}): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
-    // TODO: this must be refactored away from here. this logic should be in the Preview.
-    // @ts-ignore
-    const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer[]>(this.devService, {
+    const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer>(this.devService, {
       dedicatedEnvDevServers: this.config.dedicatedEnvDevServers,
     });
+    if (opts.configureProxy) {
+      this.pubsub.pub(BundlerAspect.id, new NewDevServersCreatedEvent(servers, Date.now(), this.graphql, true));
+    }
     this._componentServers = servers;
-
     this.indexByComponent();
-
-    return this._componentServers;
+    return servers;
   }
 
   /**
@@ -84,7 +112,6 @@ export class BundlerMain {
       (componentServer) =>
         componentServer.context.relatedContexts.includes(envId) || componentServer.context.id === envId
     );
-
     return server;
   }
 
@@ -126,16 +153,24 @@ export class BundlerMain {
   }
 
   /**
-   * component servers.
+   * register a new pre-dev-server compiler.
+   * @param onPreDevServerCreated
    */
-  private _componentServers: null | ComponentServer[];
+  registerOnPreDevServerCreated(onPreDevServerCreated: OnPreDevServerCreated) {
+    this.onPreDevServerCreatedSlot.register(onPreDevServerCreated);
+    return this;
+  }
 
   private indexByComponent() {}
 
-  static slots = [Slot.withType<BrowserRuntime>(), Slot.withType<DevServerTransformerSlot>()];
+  static slots = [
+    Slot.withType<BrowserRuntime>(),
+    Slot.withType<DevServerTransformerSlot>(),
+    Slot.withType<OnPreDevServerCreatedSlot>(),
+  ];
 
   static runtime = MainRuntime;
-  static dependencies = [PubsubAspect, EnvsAspect, GraphqlAspect, DependencyResolverAspect, ComponentAspect];
+  static dependencies = [PubsubAspect, EnvsAspect, GraphqlAspect, DependencyResolverAspect];
 
   static defaultConfig = {
     dedicatedEnvDevServers: [],
@@ -144,13 +179,25 @@ export class BundlerMain {
   static async provider(
     [pubsub, envs, graphql, dependencyResolver]: [PubsubMain, EnvsMain, GraphqlMain, DependencyResolverMain],
     config,
-    [runtimeSlot, devServerTransformerSlot]: [BrowserRuntimeSlot, DevServerTransformerSlot]
+    [runtimeSlot, devServerTransformerSlot, onPreDevServerCreatedSlot]: [
+      BrowserRuntimeSlot,
+      DevServerTransformerSlot,
+      OnPreDevServerCreatedSlot,
+    ]
   ) {
     const devServerService = new DevServerService(pubsub, dependencyResolver, runtimeSlot, devServerTransformerSlot);
-    const bundler = new BundlerMain(config, pubsub, envs, devServerService, runtimeSlot, devServerTransformerSlot);
+    const bundler = new BundlerMain(
+      config,
+      pubsub,
+      envs,
+      devServerService,
+      runtimeSlot,
+      devServerTransformerSlot,
+      onPreDevServerCreatedSlot,
+      graphql
+    );
     envs.registerService(devServerService, new BundlerService());
-
-    graphql.register(devServerSchema(bundler));
+    graphql.register(() => devServerSchema(bundler, graphql));
 
     return bundler;
   }

@@ -1,21 +1,15 @@
 import { join } from 'path';
 import mapSeries from 'p-map-series';
-import {
-  BuildTask,
-  BuiltTaskResult,
-  BuildContext,
-  ComponentResult,
-  ArtifactDefinition,
-  CAPSULE_ARTIFACTS_DIR,
-} from '@teambit/builder';
+import type { BuildTask, BuiltTaskResult, BuildContext, ComponentResult, ArtifactDefinition } from '@teambit/builder';
+import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import { compact } from 'lodash';
-import { Capsule } from '@teambit/isolator';
-import { Component } from '@teambit/component';
+import type { Capsule } from '@teambit/isolator';
+import type { Component } from '@teambit/component';
 
 import { ApplicationAspect } from './application.aspect';
-import { ApplicationMain } from './application.main.runtime';
+import type { ApplicationMain } from './application.main.runtime';
 import { AppBuildContext } from './app-build-context';
-import { Application } from './application';
+import type { Application } from './application';
 
 export const BUILD_TASK = 'build_application';
 export const ARTIFACTS_DIR_NAME = 'apps';
@@ -48,7 +42,10 @@ export class AppsBuildTask implements BuildTask {
   name = BUILD_TASK;
   aspectId = ApplicationAspect.id;
   readonly location = 'end';
-  constructor(private application: ApplicationMain, private opt: Options = { deploy: true }) {}
+  constructor(
+    private application: ApplicationMain,
+    private opt: Options = { deploy: true }
+  ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const originalSeedersIds = context.capsuleNetwork.originalSeedersCapsules.map((c) => c.component.id.toString());

@@ -1,13 +1,13 @@
-import { Command } from '@teambit/cli';
+import type { Command } from '@teambit/cli';
 import { UnknownBuildError } from './exceptions';
 
-import { UiMain } from './ui.main.runtime';
+import type { UiMain } from './ui.main.runtime';
 
 export class UIBuildCmd implements Command {
   name = 'ui-build [type]';
   description = 'build production assets for deployment.';
   alias = 'c';
-  group = 'development';
+  group = 'run-serve';
   options = [];
   private = true;
 

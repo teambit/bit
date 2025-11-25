@@ -1,15 +1,12 @@
 import { MainRuntime } from '@teambit/cli';
 import { ConfigAspect } from '@teambit/config';
 import type { ConfigMain } from '@teambit/config';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { PathLinuxRelative } from '@teambit/toolbox.path.path';
 import { assign } from 'comment-json';
 import { omit, forEach } from 'lodash';
-import {
-  MatchedPatternWithConfig,
-  isMatchPattern,
-  sortMatchesBySpecificity,
-} from '@teambit/workspace.modules.match-pattern';
+import type { MatchedPatternWithConfig } from '@teambit/workspace.modules.match-pattern';
+import { isMatchPattern, sortMatchesBySpecificity } from '@teambit/workspace.modules.match-pattern';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { VariantsAspect } from './variants.aspect';
 
@@ -30,7 +27,10 @@ export class VariantsMain {
   static runtime = MainRuntime;
   static dependencies = [ConfigAspect];
 
-  constructor(private patterns: Patterns, private configAspect: ConfigMain) {
+  constructor(
+    private patterns: Patterns,
+    private configAspect: ConfigMain
+  ) {
     this.validateConfig();
   }
 

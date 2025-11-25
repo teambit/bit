@@ -1,5 +1,6 @@
 import pMapSeries from 'p-map-series';
-import { Tester, TesterContext, Tests, ComponentsResults } from '@teambit/tester';
+import type { Tester, TesterContext, ComponentsResults } from '@teambit/tester';
+import { Tests } from '@teambit/tester';
 import { TestsResult } from '@teambit/tests-results';
 import { compact } from 'lodash';
 
@@ -10,7 +11,10 @@ export type MultiCompilerOptions = {
 export class MultiTester implements Tester {
   displayName = 'Multi tester';
 
-  constructor(readonly id: string, readonly testers: Tester[]) {}
+  constructor(
+    readonly id: string,
+    readonly testers: Tester[]
+  ) {}
 
   displayConfig() {
     return this.testers

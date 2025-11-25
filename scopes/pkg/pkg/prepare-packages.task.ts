@@ -1,9 +1,9 @@
-import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
-import { Compiler } from '@teambit/compiler';
-import { Capsule } from '@teambit/isolator';
-import { EnvsMain } from '@teambit/envs';
-import { Logger } from '@teambit/logger';
-import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
+import type { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
+import type { Compiler } from '@teambit/compiler';
+import type { Capsule } from '@teambit/isolator';
+import type { EnvsMain } from '@teambit/envs';
+import type { Logger } from '@teambit/logger';
+import { PackageJsonFile } from '@teambit/component.sources';
 import fs from 'fs-extra';
 import path from 'path';
 import { writeNpmIgnore } from './write-npm-ignore';
@@ -14,7 +14,11 @@ import { writeNpmIgnore } from './write-npm-ignore';
 export class PreparePackagesTask implements BuildTask {
   readonly name = 'PreparePackages';
   readonly location = 'end';
-  constructor(readonly aspectId: string, private logger: Logger, private envs: EnvsMain) {}
+  constructor(
+    readonly aspectId: string,
+    private logger: Logger,
+    private envs: EnvsMain
+  ) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async execute(context: BuildContext): Promise<BuiltTaskResult> {

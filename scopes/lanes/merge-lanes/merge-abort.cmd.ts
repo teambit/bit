@@ -1,7 +1,8 @@
 import chalk from 'chalk';
-import { CheckoutProps, checkoutOutput } from '@teambit/checkout';
-import { Command, CommandOptions } from '@teambit/cli';
-import { MergeLanesMain } from './merge-lanes.main.runtime';
+import type { CheckoutProps } from '@teambit/checkout';
+import { checkoutOutput } from '@teambit/checkout';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { MergeLanesMain } from './merge-lanes.main.runtime';
 
 export type MergeAbortOpts = {
   silent?: boolean; // don't show prompt before aborting

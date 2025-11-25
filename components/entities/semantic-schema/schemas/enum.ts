@@ -1,5 +1,6 @@
 import chalk from 'chalk';
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 import { DocSchema } from './docs';
 import { SchemaRegistry } from '..';
 
@@ -23,9 +24,33 @@ export class EnumSchema extends SchemaNode {
     return this.members;
   }
 
-  toString() {
-    const membersStr = this.members.map((m) => `* ${m.toString()}`).join('\n');
-    return `${chalk.bold.underline(this.name)}\n${membersStr}`;
+  toString(options) {
+    const boldUnderline = options?.color ? chalk.bold.underline : (str: string) => str;
+    const membersStr = this.members.map((m) => `* ${m.toString(options)}`).join('\n');
+    return `${boldUnderline(this.name)}\n${membersStr}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let result = '';
+
+    if (options?.showDocs && this.doc) {
+      result += `${this.doc.toFullSignature()}\n`;
+    }
+
+    result += `enum ${this.name} {\n`;
+
+    const membersStr = this.members
+      .map((member) => {
+        const memberStr = member.toFullSignature(options);
+        return `  ${memberStr}`;
+      })
+      .join(',\n');
+
+    result += `${membersStr}\n`;
+
+    result += `}`;
+
+    return result;
   }
 
   toObject() {

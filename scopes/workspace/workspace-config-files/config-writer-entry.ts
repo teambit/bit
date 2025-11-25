@@ -1,6 +1,6 @@
-import { Environment, ExecutionContext } from '@teambit/envs';
-import { EnvMapValue } from './workspace-config-files.main.runtime';
-import { WrittenConfigFile } from './writers';
+import type { Environment, ExecutionContext } from '@teambit/envs';
+import type { EnvMapValue } from './workspace-config-files.main.runtime';
+import type { WrittenConfigFile } from './writers';
 
 export type ConfigFile = {
   /**

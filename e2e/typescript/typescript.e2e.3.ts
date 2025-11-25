@@ -1,9 +1,10 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
-import { IS_WINDOWS } from '../../src/constants';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { IS_WINDOWS } from '@teambit/legacy.constants';
+import { Helper } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('typescript', function () {
   this.timeout(0);
@@ -20,7 +21,7 @@ describe('typescript', function () {
       this.skip;
     } else {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         const listFixture = `import {Item} from '../item/item';
 /**
  * Awesome List React component.
@@ -52,7 +53,7 @@ export class List extends React.Component {
   });
   describe('auto recognizing @types packages', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.npm.initNpm();
       helper.fs.outputFile(
         path.join('bar', 'index.ts'),

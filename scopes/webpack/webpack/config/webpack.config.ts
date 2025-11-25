@@ -1,5 +1,6 @@
 /* eslint-disable complexity */
-import webpack, { Configuration } from 'webpack';
+import type { Configuration } from 'webpack';
+import webpack from 'webpack';
 import { isUndefined, omitBy } from 'lodash';
 import CompressionPlugin from 'compression-webpack-plugin';
 import { sep } from 'path';

@@ -1,4 +1,5 @@
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 import { ParameterSchema } from './parameter';
 
@@ -10,7 +11,11 @@ import { ParameterSchema } from './parameter';
 export class IndexSignatureSchema extends SchemaNode {
   readonly keyType: SchemaNode;
   readonly valueType: SchemaNode;
-  constructor(readonly location: SchemaLocation, keyType: ParameterSchema, valueType: SchemaNode) {
+  constructor(
+    readonly location: SchemaLocation,
+    keyType: ParameterSchema,
+    valueType: SchemaNode
+  ) {
     super();
     this.keyType = keyType;
     this.valueType = valueType;
@@ -18,6 +23,13 @@ export class IndexSignatureSchema extends SchemaNode {
 
   toString() {
     return `[${this.keyType.toString()}]: ${this.valueType.toString()}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const keyTypeStr = this.keyType.toFullSignature(options);
+    const valueTypeStr = this.valueType.toFullSignature(options);
+
+    return `[${keyTypeStr}]: ${valueTypeStr}`;
   }
 
   toObject() {

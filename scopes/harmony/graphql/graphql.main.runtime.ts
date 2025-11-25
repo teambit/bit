@@ -2,21 +2,26 @@ import { mergeSchemas } from '@graphql-tools/schema';
 import NoIntrospection from 'graphql-disable-introspection';
 import { GraphQLModule } from '@graphql-modules/core';
 import { MainRuntime } from '@teambit/cli';
-import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import express, { Express } from 'express';
-import { graphqlHTTP } from 'express-graphql';
+import type { Harmony, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { Express } from 'express';
+import express from 'express';
+import { graphqlHTTP, RequestInfo } from 'express-graphql';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { execute, subscribe } from 'graphql';
-import { PubSubEngine, PubSub } from 'graphql-subscriptions';
-import { createServer, Server } from 'http';
+import type { PubSubEngine } from 'graphql-subscriptions';
+import { PubSub } from 'graphql-subscriptions';
+import type { Server } from 'http';
+import { createServer } from 'http';
 import httpProxy from 'http-proxy';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import cors from 'cors';
-import { GraphQLServer } from './graphql-server';
+import type { GraphQLServer } from './graphql-server';
 import { createRemoteSchemas } from './create-remote-schemas';
 import { GraphqlAspect } from './graphql.aspect';
-import { Schema } from './schema';
+import type { Schema } from './schema';
 
 export enum Verb {
   WRITE = 'write',
@@ -32,7 +37,7 @@ export type GraphQLConfig = {
 
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
 
-export type SchemaSlot = SlotRegistry<Schema>;
+export type SchemaSlot = SlotRegistry<Schema | (() => Schema)>;
 
 export type PubSubSlot = SlotRegistry<PubSubEngine>;
 
@@ -44,6 +49,9 @@ export type GraphQLServerOptions = {
   remoteSchemas?: GraphQLServer[];
   subscriptionsPortRange?: number[];
   onWsConnect?: Function;
+  customExecuteFn?: (args: any) => Promise<any>;
+  customFormatErrorFn?: (args: any) => any;
+  extensions?: (info: RequestInfo) => Promise<any>;
 };
 
 export class GraphqlMain {
@@ -87,21 +95,29 @@ export class GraphqlMain {
   /**
    * returns the schema for a specific aspect by its id.
    */
-  getSchema(aspectId: string) {
-    return this.moduleSlot.get(aspectId);
+  getSchema(aspectId: string): Schema | undefined {
+    const schemaOrFunc = this.moduleSlot.get(aspectId);
+    if (!schemaOrFunc) return undefined;
+    const schema = typeof schemaOrFunc === 'function' ? schemaOrFunc() : schemaOrFunc;
+    return schema;
+  }
+
+  get execute() {
+    return execute;
   }
 
   /**
    * get multiple schema by aspect ids.
+   * used by the cloud.
    */
-  getSchemas(aspectIds: string[]) {
+  getSchemas(aspectIds: string[]): Schema[] {
     return this.moduleSlot
       .toArray()
       .filter(([aspectId]) => {
         return aspectIds.includes(aspectId);
       })
-      .map(([, schema]) => {
-        return schema;
+      .map(([, schemaOrFunc]) => {
+        return typeof schemaOrFunc === 'function' ? schemaOrFunc() : schemaOrFunc;
       });
   }
 
@@ -118,7 +134,6 @@ export class GraphqlMain {
     const app = options.app || express();
     if (!this.config.disableCors) {
       app.use(
-        // @ts-ignore todo: it's not clear what's the issue.
         cors({
           origin(origin, callback) {
             callback(null, true);
@@ -132,16 +147,20 @@ export class GraphqlMain {
       '/graphql',
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       graphqlHTTP((request, res, params) => ({
-        customFormatErrorFn: (err) => {
-          this.logger.error('graphql got an error during running the following query:', params);
-          this.logger.error('graphql error ', err);
-          return Object.assign(err, {
-            // @ts-ignore
-            ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
-            // @ts-ignore
-            HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code,
-          });
-        },
+        extensions: options?.extensions,
+        customExecuteFn: options.customExecuteFn,
+        customFormatErrorFn: options.customFormatErrorFn
+          ? options.customFormatErrorFn
+          : (err) => {
+              this.logger.error('graphql got an error during running the following query:', params);
+              this.logger.error('graphql error ', err);
+              return Object.assign(err, {
+                // @ts-ignore
+                ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
+                // @ts-ignore
+                HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code,
+              });
+            },
         schema,
         rootValue: request,
         graphiql,
@@ -193,8 +212,10 @@ export class GraphqlMain {
 
   /**
    * register a new graphql module.
+   * @param schema a function that returns Schema. avoid passing the Schema directly, it's supported only for backward
+   * compatibility but really bad for performance. it pulls the entire graphql library.
    */
-  register(schema: Schema) {
+  register(schema: Schema | (() => Schema)) {
     // const module = new GraphQLModule(schema);
     this.moduleSlot.register(schema);
     return this;
@@ -263,7 +284,8 @@ export class GraphqlMain {
 
   private buildModules(schemaSlot?: SchemaSlot) {
     const schemaSlots = schemaSlot ? schemaSlot.toArray() : this.moduleSlot.toArray();
-    return schemaSlots.map(([extensionId, schema]) => {
+    return schemaSlots.map(([extensionId, schemaOrFunc]) => {
+      const schema = typeof schemaOrFunc === 'function' ? schemaOrFunc() : schemaOrFunc;
       const moduleDeps = this.getModuleDependencies(extensionId);
 
       const module = new GraphQLModule({
@@ -291,7 +313,6 @@ export class GraphqlMain {
     const deps = this.context.getDependencies(extension);
     const ids = deps.map((dep) => dep.id);
 
-    // @ts-ignore check :TODO why types are breaking here.
     return Array.from(this.modules.entries())
       .map(([depId, module]) => {
         const dep = ids.includes(depId);
@@ -321,6 +342,7 @@ export class GraphqlMain {
   ) {
     const logger = loggerFactory.createLogger(GraphqlAspect.id);
     const graphqlMain = new GraphqlMain(config, moduleSlot, context, logger, graphQLServerSlot, pubSubSlot);
+    graphqlMain.registerPubSub(new PubSub());
     return graphqlMain;
   }
 }

@@ -1,30 +1,41 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { isEmpty } from 'lodash';
 import chalk from 'chalk';
-import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
+import { hasWildcard } from '@teambit/legacy.utils';
 import { listTemplate } from './list-template';
-import { ListerMain, ListScopeResult } from './lister.main.runtime';
+import type { ListerMain, ListScopeResult } from './lister.main.runtime';
 
 type ListFlags = {
   ids?: boolean;
-  scope?: boolean;
+  localScope?: boolean; // whether show all components in the local scope (including indirect dependencies)
+  scope?: string; // new flag for filtering by scope name
   json?: boolean;
   outdated?: boolean;
   namespace?: string;
+  includeDeleted?: boolean;
 };
 
 export class ListCmd implements Command {
   name = 'list [remote-scope]';
-  description = 'list components on a workspace or a remote scope (with flag).';
-  group = 'discover';
+  description = 'display components in workspace or remote scope';
+  extendedDescription = `shows components in the current workspace by default, or from a specified remote scope.
+supports filtering by scope, namespace, and various display options.
+use --outdated to highlight components that have newer versions available.`;
+  group = 'info-analysis';
   helpUrl = 'reference/reference/cli-reference#list';
   alias = 'ls';
   options = [
     ['i', 'ids', 'show only component ids, unformatted'],
-    ['s', 'scope', 'show only components stored in the local scope, including indirect dependencies'],
+    ['l', 'local-scope', 'show only components stored in the local scope, including indirect dependencies'],
+    ['s', 'scope <string>', 'filter components by their scope name (e.g., teambit.workspace)'],
     ['o', 'outdated', 'highlight outdated components, in comparison with their latest remote version (if one exists)'],
+    ['d', 'include-deleted', 'EXPERIMENTAL. show also deleted components'],
     ['j', 'json', 'show the output in JSON format'],
-    ['n', 'namespace <string>', "show only components in the specified namespace/s e.g. '-n ui' or '*/ui'"],
+    [
+      'n',
+      'namespace <string>',
+      "filter components by their namespace (a logical grouping within a scope, e.g., 'ui', '*/ui')",
+    ],
   ] as CommandOptions;
   loader = true;
   skipWorkspace = true;
@@ -33,6 +44,9 @@ export class ListCmd implements Command {
   constructor(private lister: ListerMain) {}
 
   async report([scopeName]: string[], listFlags: ListFlags) {
+    if (scopeName && (listFlags.localScope || listFlags.scope)) {
+      throw new Error('The --local-scope and --scope flags cannot be used when listing a remote scope.');
+    }
     const listScopeResults = await this.getListResults(scopeName, listFlags);
 
     const { ids, outdated = false } = listFlags;
@@ -52,6 +66,9 @@ export class ListCmd implements Command {
   }
 
   async json([scopeName]: string[], listFlags: ListFlags) {
+    if (scopeName && (listFlags.localScope || listFlags.scope)) {
+      throw new Error('The --local-scope and --scope flags cannot be used when listing a remote scope.');
+    }
     const listScopeResults = await this.getListResults(scopeName, listFlags);
 
     if (isEmpty(listScopeResults)) {
@@ -65,17 +82,17 @@ export class ListCmd implements Command {
 
   private async getListResults(
     scopeName?: string,
-    { namespace, scope, outdated }: ListFlags = {}
+    { namespace, localScope, scope, outdated, includeDeleted }: ListFlags = {}
   ): Promise<ListScopeResult[]> {
     const getNamespaceWithWildcard = () => {
       if (!namespace) return undefined;
       if (hasWildcard(namespace)) return namespace;
-      return `${namespace}/*`;
+      return `${namespace}/**`;
     };
-    const namespaceWithWildcard = getNamespaceWithWildcard();
+    const namespacesUsingWildcards = getNamespaceWithWildcard();
 
     return scopeName
-      ? this.lister.remoteList(scopeName, namespaceWithWildcard)
-      : this.lister.localList(scope, outdated, namespaceWithWildcard);
+      ? this.lister.remoteList(scopeName, { namespacesUsingWildcards, includeDeleted })
+      : this.lister.localList(localScope, outdated, namespacesUsingWildcards, scope);
   }
 }

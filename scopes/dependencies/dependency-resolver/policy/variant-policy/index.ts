@@ -7,4 +7,5 @@ export {
   VariantPolicyEntryValue,
   createVariantPolicyEntry,
   DependencySource,
+  VariantPolicyConfigArr,
 } from './variant-policy';

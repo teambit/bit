@@ -1,24 +1,33 @@
-import { isCoreAspect } from '@teambit/bit';
+import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import pLocate from 'p-locate';
 import { parse } from 'comment-json';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { IssuesAspect, IssuesMain } from '@teambit/issues';
+import type { SourceFile } from '@teambit/component.sources';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { IssuesMain } from '@teambit/issues';
+import { IssuesAspect } from '@teambit/issues';
+import type { EnvJsoncPatterns } from '@teambit/dev-files';
 import pMapSeries from 'p-map-series';
 import { IssuesClasses } from '@teambit/component-issues';
-import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { Harmony, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import type { AspectDefinition } from '@teambit/aspect-loader';
-import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
+import type { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { head, uniq } from 'lodash';
-import { WorkerAspect, WorkerMain } from '@teambit/worker';
+import type { WorkerMain } from '@teambit/worker';
+import { WorkerAspect } from '@teambit/worker';
 import { ComponentID } from '@teambit/component-id';
-import { EnvService } from './services';
-import { Environment } from './environment';
+import type { EnvService } from './services';
+import type { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
 import { environmentsSchema } from './environments.graphql';
 import { EnvRuntime, Runtime } from './runtime';
@@ -28,8 +37,25 @@ import { EnvsCmd, GetEnvCmd, ListEnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
 import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
 import { EnvPlugin } from './env.plugin';
+import { EnvJsoncDetector } from './env-jsonc.detector';
+
+export type EnvJsonc = {
+  extends?: string;
+  policy?: EnvPolicyConfigObject;
+  patterns?: EnvJsoncPatterns;
+};
+
+/**
+ * The resolved env jsonc is the env jsonc after it was resolved from all the parent envs
+ */
+export type ResolvedEnvJsonc = Omit<EnvJsonc, 'extends'>;
+
+export type EnvJsoncMergeCustomizer = (parentObj: EnvJsonc, childObj: EnvJsonc) => Partial<EnvJsonc>;
+export type EnvJsoncResolver = (parentId: string, envExtendsDeps?: LegacyDependency[]) => Promise<ResolvedEnvJsonc>;
 
 export type EnvsRegistry = SlotRegistry<Environment>;
+export type EnvJsoncMergeCustomizerRegistry = SlotRegistry<EnvJsoncMergeCustomizer>;
+export type EnvJsoncResolverRegistry = SlotRegistry<EnvJsoncResolver>;
 
 export type EnvsConfig = {
   env: string;
@@ -54,6 +80,7 @@ export type RegularCompDescriptor = {
   description?: string;
 };
 export type EnvCompDescriptorProps = RegularCompDescriptor & {
+  resolvedEnvJsonc?: ResolvedEnvJsonc;
   services?: {
     env: {
       id: string;
@@ -98,6 +125,8 @@ export class EnvsMain {
 
   private alreadyShownWarning = {};
 
+  private coreAspectIds: string[] = [];
+
   /**
    * icon of the extension.
    */
@@ -131,7 +160,11 @@ export class EnvsMain {
 
     private loggerMain: LoggerMain,
 
-    private workerMain: WorkerMain
+    private workerMain: WorkerMain,
+
+    private envJsoncMergeCustomizerSlot: EnvJsoncMergeCustomizerRegistry,
+
+    private envJsoncResolverSlot: EnvJsoncResolverRegistry
   ) {}
 
   /**
@@ -139,6 +172,13 @@ export class EnvsMain {
    */
   async createEnvironment(components: Component[]): Promise<Runtime> {
     return this.createRuntime(components);
+  }
+
+  setCoreAspectIds(ids: string[]) {
+    this.coreAspectIds = ids;
+  }
+  isCoreAspect(id: string) {
+    return this.coreAspectIds.includes(id);
   }
 
   /**
@@ -272,7 +312,31 @@ export class EnvsMain {
     return true;
   }
 
-  getEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): Object | undefined {
+  getEnvManifest(envComponent: Component): ResolvedEnvJsonc | undefined {
+    const data = this.getEnvData(envComponent) as EnvCompDescriptor;
+    if (!data) return undefined;
+    return data.resolvedEnvJsonc;
+  }
+
+  async getOrCalculateEnvManifest(
+    component: Component,
+    legacyFiles?: SourceFile[],
+    envExtendsDeps?: LegacyDependency[]
+  ): Promise<ResolvedEnvJsonc | undefined> {
+    try {
+      return (
+        this.getEnvManifest(component) || (await this.calculateEnvManifest(component, legacyFiles, envExtendsDeps))
+      );
+    } catch {
+      return this.calculateEnvManifest(component);
+    }
+  }
+
+  async calculateEnvManifest(
+    envComponent?: Component,
+    legacyFiles?: SourceFile[],
+    envExtendsDeps?: LegacyDependency[]
+  ): Promise<EnvJsonc | undefined> {
     // TODO: maybe throw an error here?
     if (!envComponent && !legacyFiles) return undefined;
     // @ts-ignore
@@ -283,8 +347,40 @@ export class EnvsMain {
 
     if (!envJson) return undefined;
 
-    const object = parse(envJson.contents.toString('utf8'));
-    return object;
+    const object: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
+    if (!object.extends) return object;
+    const resolvedObject = await this.recursivelyMergeWithParentManifest(object, envExtendsDeps);
+
+    return resolvedObject;
+  }
+
+  async recursivelyMergeWithParentManifest(object: EnvJsonc, envExtendsDeps?: LegacyDependency[]): Promise<EnvJsonc> {
+    if (!object.extends) return object;
+    const parentEnvId = object.extends;
+    const resolver = this.getAllRegisteredEnvJsoncResolvers()[0];
+
+    const parentObject: EnvJsonc = await resolver(parentEnvId, envExtendsDeps);
+    const mergedObject = this.mergeEnvManifests(parentObject, object);
+    if (mergedObject.extends) {
+      return this.recursivelyMergeWithParentManifest(mergedObject);
+    }
+    return mergedObject;
+  }
+
+  mergeEnvManifests(parent: EnvJsonc, child: EnvJsonc): EnvJsonc {
+    let merged: EnvJsonc = {};
+    const mergeCustomizer = this.getAllRegisteredEnvJsoncCustomizers();
+    for (const customizer of mergeCustomizer) {
+      const oneMerged = customizer(parent, child);
+      merged = { ...merged, ...oneMerged };
+    }
+    // This is important to make sure we won't keep the extends from the child
+    delete merged.extends;
+    // Take extends specifically from the parent so we can propagate it to the next parent
+    if (parent.extends) {
+      merged.extends = parent.extends;
+    }
+    return merged;
   }
 
   async hasEnvManifestById(envId: string, requesting: string): Promise<boolean | undefined> {
@@ -399,8 +495,17 @@ export class EnvsMain {
   getOrCalculateEnv(component: Component): EnvDefinition {
     try {
       return this.getEnv(component);
-    } catch (err) {
+    } catch {
       return this.calculateEnv(component);
+    }
+  }
+
+  getOrCalculateEnvId(component: Component): Promise<ComponentID> {
+    try {
+      const idStr = this.getEnvId(component);
+      return Promise.resolve(ComponentID.fromString(idStr));
+    } catch {
+      return this.calculateEnvId(component);
     }
   }
 
@@ -417,9 +522,16 @@ export class EnvsMain {
     const componentDescriptor = await this.getComponentEnvDescriptor(component, opts);
     if (!componentDescriptor) return undefined;
     const envComponentSelfDescriptor = await this.getEnvSelfDescriptor(component);
-    const result = envComponentSelfDescriptor
-      ? { ...componentDescriptor, self: envComponentSelfDescriptor }
-      : componentDescriptor;
+    // const resolvedEnvJsonc = await this.calculateEnvManifest(component);
+    const result = componentDescriptor;
+    if (envComponentSelfDescriptor) {
+      // @ts-ignore
+      result.self = envComponentSelfDescriptor;
+    }
+    // if (resolvedEnvJsonc) {
+    //   // @ts-ignore
+    //   result.resolvedEnvJsonc = resolvedEnvJsonc;
+    // }
     return result;
   }
 
@@ -436,14 +548,15 @@ export class EnvsMain {
     const envDef = this.getEnvFromComponent(envComponent);
     if (!envDef) return undefined;
 
-    const services = this.getServices(envDef);
+    const rawServices = await this.getServices(envDef);
+    const services = await rawServices.toObject();
     // const selfDescriptor = (await this.getEnvDescriptorFromEnvDef(envDef)) || {};
     const selfDescriptor = await this.getEnvDescriptorFromEnvDef(envDef);
 
     if (!selfDescriptor) return undefined;
     return {
       ...selfDescriptor,
-      services: services.toObject(),
+      services,
     };
   }
 
@@ -617,8 +730,20 @@ export class EnvsMain {
     return Boolean(this.getAllEnvsConfiguredOnComponent(component).length);
   }
 
-  getAllRegisteredEnvs(): string[] {
+  getAllRegisteredEnvsIds(): string[] {
     return this.envSlot.toArray().map((envData) => envData[0]);
+  }
+
+  getAllRegisteredEnvs(): Environment[] {
+    return this.envSlot.toArray().map((envData) => envData[1]);
+  }
+
+  getAllRegisteredEnvJsoncCustomizers(): EnvJsoncMergeCustomizer[] {
+    return this.envJsoncMergeCustomizerSlot.toArray().map((customizerEntry) => customizerEntry[1]);
+  }
+
+  getAllRegisteredEnvJsoncResolvers(): EnvJsoncResolver[] {
+    return this.envJsoncResolverSlot.toArray().map((resolver) => resolver[1]);
   }
 
   getEnvPlugin() {
@@ -709,6 +834,20 @@ export class EnvsMain {
     return finalId;
   }
 
+  validateEnvId(ext: ExtensionDataEntry) {
+    if (!ext.config?.env || !ext.data?.id || ext.config.env === ext.data.id) return;
+    let errorMsg: string;
+    if (ext.data.id === DEFAULT_ENV) {
+      errorMsg = `the env id "${ext.data.id}" is set to the default env (${DEFAULT_ENV}) in the aspect data, but it is set to "${ext.config.env}" in the aspect config.
+this may indicate that the env was not loaded properly. try running "bit install" to ensure the env is correctly loaded.
+to explicitly set the default env, use "bit env set" command.`;
+    } else {
+      errorMsg = `env id "${ext.data.id}" is different from the id in the envs aspect config "${ext.config.env}".
+if needed, use "bit env set" command to align the env id`;
+    }
+    return { errorMsg, minBitVersion: '1.9.82' };
+  }
+
   /**
    * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .calculateEnv() instead!)
    */
@@ -789,7 +928,7 @@ export class EnvsMain {
     const envId = await pLocate(ids, async (id) => {
       const idWithoutVersion = id.split('@')[0];
       if (this.isCoreEnv(idWithoutVersion)) return true;
-      if (isCoreAspect(idWithoutVersion)) return false;
+      if (this.isCoreAspect(idWithoutVersion)) return false;
       const envDef = this.getEnvDefinitionByStringId(id);
       if (envDef) return true;
       const envDefWithoutVersion = this.getEnvDefinitionByStringId(idWithoutVersion);
@@ -911,27 +1050,31 @@ export class EnvsMain {
   /**
    * get list of services enabled on an env.
    */
-  getServices(env: EnvDefinition): EnvServiceList {
+  async getServices(env: EnvDefinition): Promise<EnvServiceList> {
     const allServices = this.servicesRegistry.toArray();
     const services: [string, EnvService<any>][] = [];
-    allServices.forEach(([id, currentServices]) => {
-      currentServices.forEach((service) => {
-        try {
-          if (this.implements(env, service)) {
-            services.push([id, service]);
-          }
-        } catch (err) {
-          this.logger.warn(`failed loading service ${id} for env ${env.id}`);
-        }
-      });
-    });
+    await Promise.all(
+      allServices.map(async ([id, currentServices]) => {
+        await Promise.all(
+          currentServices.map(async (service) => {
+            try {
+              if (await this.implements(env, service)) {
+                services.push([id, service]);
+              }
+            } catch {
+              this.logger.warn(`failed loading service ${id} for env ${env.id}`);
+            }
+          })
+        );
+      })
+    );
     return new EnvServiceList(env, services);
   }
 
-  implements(env: EnvDefinition, service: EnvService<any>) {
+  async implements(env: EnvDefinition, service: EnvService<any>) {
     // TODO: remove this after refactoring everything and remove getDescriptor from being optional.
     if (!service.getDescriptor) return false;
-    return !!service.getDescriptor(env);
+    return !!(await service.getDescriptor(env));
   }
 
   /**
@@ -939,6 +1082,21 @@ export class EnvsMain {
    */
   registerEnv(env: Environment) {
     return this.envSlot.register(env);
+  }
+
+  /**
+   * register an env.jsonc merge customizer.
+   */
+  registerEnvJsoncMergeCustomizer(customizer: EnvJsoncMergeCustomizer) {
+    return this.envJsoncMergeCustomizerSlot.register(customizer);
+  }
+
+  registerEnvJsoncResolver(resolver: EnvJsoncResolver) {
+    return this.envJsoncResolverSlot.register(resolver);
+  }
+
+  getEnvJsoncDetector() {
+    return new EnvJsoncDetector();
   }
 
   async addNonLoadedEnvAsComponentIssues(components: Component[]) {
@@ -1019,7 +1177,12 @@ export class EnvsMain {
     }
   }
 
-  static slots = [Slot.withType<Environment>(), Slot.withType<EnvService<any>>()];
+  static slots = [
+    Slot.withType<Environment>(),
+    Slot.withType<EnvService<any>>(),
+    Slot.withType<EnvJsoncMergeCustomizerRegistry>(),
+    Slot.withType<EnvJsoncResolverRegistry>(),
+  ];
 
   static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect, CLIAspect, WorkerAspect, IssuesAspect];
 
@@ -1030,21 +1193,37 @@ export class EnvsMain {
       ComponentMain,
       CLIMain,
       WorkerMain,
-      IssuesMain
+      IssuesMain,
     ],
     config: EnvsConfig,
-    [envSlot, servicesRegistry]: [EnvsRegistry, ServicesRegistry],
+    [envSlot, servicesRegistry, envJsoncMergeCustomizerSlot, envJsoncResolverSlot]: [
+      EnvsRegistry,
+      ServicesRegistry,
+      EnvJsoncMergeCustomizerRegistry,
+      EnvJsoncResolverRegistry,
+    ],
     context: Harmony
   ) {
     const logger = loggerAspect.createLogger(EnvsAspect.id);
-    const envs = new EnvsMain(config, context, envSlot, logger, servicesRegistry, component, loggerAspect, worker);
+    const envs = new EnvsMain(
+      config,
+      context,
+      envSlot,
+      logger,
+      servicesRegistry,
+      component,
+      loggerAspect,
+      worker,
+      envJsoncMergeCustomizerSlot,
+      envJsoncResolverSlot
+    );
     component.registerShowFragments([new EnvFragment(envs)]);
     if (issues) issues.registerAddComponentsIssues(envs.addNonLoadedEnvAsComponentIssues.bind(envs));
 
     const envsCmd = new EnvsCmd(envs, component);
     envsCmd.commands = [new ListEnvsCmd(envs, component), new GetEnvCmd(envs, component)];
     cli.register(envsCmd);
-    graphql.register(environmentsSchema(envs));
+    graphql.register(() => environmentsSchema(envs));
     return envs;
   }
 }

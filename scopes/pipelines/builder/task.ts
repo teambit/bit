@@ -1,5 +1,5 @@
-import { BuildContext, BuiltTaskResult } from './build-task';
-import { TaskResultsList } from './task-results-list';
+import type { BuildContext, BuiltTaskResult } from './build-task';
+import type { TaskResultsList } from './task-results-list';
 
 /**
  * this is the external interface for task. please make

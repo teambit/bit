@@ -1,6 +1,7 @@
 import { MainRuntime } from '@teambit/cli';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import { CACHE_ROOT } from '@teambit/legacy.constants';
 import cacache from 'cacache';
 
 import { CacheAspect } from './cache.aspect';

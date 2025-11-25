@@ -1,12 +1,15 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { ComponentLogMain } from './component-log.main.runtime';
+import type { ComponentLogMain } from './component-log.main.runtime';
 import { getEmptyTableWithoutStyle, paintAuthor } from './log-cmd';
 
 export class LogFileCmd implements Command {
   name = 'log-file <filepath>';
-  description = 'EXPERIMENTAL. show file history';
-  group = 'info';
+  description = 'EXPERIMENTAL. display history of changes to a specific file';
+  extendedDescription = `shows version history for a specific file within component versions.
+tracks file-level changes across component snaps and tags.
+displays file modifications, hashes, and associated commit information.`;
+  group = 'version-control';
   alias = '';
   options = [['o', 'one-line', 'show each log entry in one line']] as CommandOptions;
   arguments = [{ name: 'filepath', description: 'file path relative to the workspace' }];

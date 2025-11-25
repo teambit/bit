@@ -1,5 +1,5 @@
-import { Component, ShowFragment } from '@teambit/component';
-import { DeprecationMain } from './deprecation.main.runtime';
+import type { Component, ShowFragment } from '@teambit/component';
+import type { DeprecationMain } from './deprecation.main.runtime';
 
 export class DeprecationFragment implements ShowFragment {
   constructor(private deprecation: DeprecationMain) {}

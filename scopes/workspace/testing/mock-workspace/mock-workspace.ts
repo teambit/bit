@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import LegacyHelper from '@teambit/legacy/dist/e2e-helper/e2e-helper';
+import { Helper as LegacyHelper } from '@teambit/legacy.e2e-helper';
 import { assign, parse, stringify } from 'comment-json';
 
 export type WorkspaceData = { workspacePath: string; remoteScopePath: string; remoteScopeName: string };
@@ -17,11 +17,11 @@ const isDebugMode = () => process.argv.includes('--debug');
 export function mockWorkspace(opts: { bareScopeName?: string } = {}): WorkspaceData {
   const legacyHelper = new LegacyHelper();
   if (opts.bareScopeName) {
-    legacyHelper.scopeHelper.reInitLocalScope();
+    legacyHelper.scopeHelper.reInitWorkspace();
     legacyHelper.scopes.setRemoteScope(undefined, undefined, opts.bareScopeName);
     legacyHelper.scopeHelper.addRemoteScope();
   } else {
-    legacyHelper.scopeHelper.setNewLocalAndRemoteScopes();
+    legacyHelper.scopeHelper.setWorkspaceWithRemoteScope();
   }
   legacyHelper.workspaceJsonc.setupDefault();
   if (isDebugMode()) {

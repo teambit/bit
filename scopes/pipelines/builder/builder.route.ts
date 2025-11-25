@@ -1,10 +1,10 @@
-import { Request, Response, Route } from '@teambit/express';
-import { Component } from '@teambit/component';
+import type { Request, Response, Route } from '@teambit/express';
+import type { Component } from '@teambit/component';
 import archiver from 'archiver';
-import { Logger } from '@teambit/logger';
-import { ScopeMain } from '@teambit/scope';
+import type { Logger } from '@teambit/logger';
+import type { ScopeMain } from '@teambit/scope';
 import mime from 'mime';
-import { BuilderMain } from './builder.main.runtime';
+import type { BuilderMain } from './builder.main.runtime';
 
 export const routePath = `builder`;
 
@@ -14,7 +14,11 @@ export type BuilderUrlParams = {
 };
 export const defaultExtension = '.tgz';
 export class BuilderRoute implements Route {
-  constructor(private builder: BuilderMain, private scope: ScopeMain, private logger: Logger) {}
+  constructor(
+    private builder: BuilderMain,
+    private scope: ScopeMain,
+    private logger: Logger
+  ) {}
   route = `/${routePath}/*`;
   method = 'get';
 

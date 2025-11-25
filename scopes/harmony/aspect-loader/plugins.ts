@@ -1,12 +1,14 @@
-import { Component } from '@teambit/component';
+import { realpathSync, existsSync } from 'fs';
+import type { Component } from '@teambit/component';
 import esmLoader from '@teambit/node.utils.esm-loader';
-import { NativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
+import pMapSeries from 'p-map-series';
+import { setExitOnUnhandledRejection } from '@teambit/cli';
 import { Aspect } from '@teambit/harmony';
-import { PluginDefinition } from './plugin-definition';
+import type { PluginDefinition } from './plugin-definition';
 import { isEsmModule } from './is-esm-module';
 import { Plugin } from './plugin';
-import { OnAspectLoadErrorHandler } from './aspect-loader.main.runtime';
+import type { OnAspectLoadErrorHandler } from './aspect-loader.main.runtime';
 
 export type PluginMap = { [filePath: string]: PluginDefinition };
 
@@ -36,14 +38,10 @@ export class Plugins {
     const aspect = Aspect.create({
       id: this.component.id.toString(),
     });
-
     aspect.addRuntime({
       provider: async () => {
-        await Promise.all(
-          plugins.map(async (plugin) => {
-            return this.registerPluginWithTryCatch(plugin, aspect);
-          })
-        );
+        // await Promise.all(plugins.map(async (plugin) => this.registerPluginWithTryCatch(plugin, aspect)));
+        await pMapSeries(plugins, async (plugin) => this.registerPluginWithTryCatch(plugin, aspect));
         // Return an empty object so haromny will have something in the extension instance
         // otherwise it will throw an error when trying to access the extension instance (harmony.get)
         return {};
@@ -57,23 +55,36 @@ export class Plugins {
   }
 
   async loadModule(path: string) {
-    NativeCompileCache.uninstall();
-    const module = await esmLoader(path);
-    return module.default;
+    const exists = existsSync(path);
+    // We manually resolve the path to avoid issues with symlinks
+    // the require.resolve and import inside the esmLoader will sometime uses cached resolved paths
+    // which lead to errors about file not found as it's trying to load the file from the wrong path
+    // In case the path not exists we don't need to resolve it (it will throw an error)
+    const realPath = exists ? realpathSync(path) : path;
+    const resolvedPathFromRealPath = require.resolve(realPath);
+    const module = await esmLoader(realPath, true);
+    const defaultModule = module.default;
+    if (!defaultModule) {
+      throw new Error(`Failed to load plugin. Ensure you use "export default" in your index.ts file.\nPath: ${path}`);
+    }
+    defaultModule.__path = path;
+    defaultModule.__resolvedPath = resolvedPathFromRealPath;
+    return defaultModule;
   }
 
   async registerPluginWithTryCatch(plugin: Plugin, aspect: Aspect) {
-    const isModule = isEsmModule(plugin.path);
-    const module = isModule ? await this.loadModule(plugin.path) : undefined;
-
     try {
+      setExitOnUnhandledRejection(false);
+      const isModule = isEsmModule(plugin.path);
+      const module = isModule ? await this.loadModule(plugin.path) : undefined;
       if (isModule && !module) {
         this.logger.consoleFailure(
           `failed to load plugin ${plugin.path}, make sure to use 'export default' to expose your plugin`
         );
         return undefined;
       }
-      return plugin.register(aspect, module);
+      plugin.register(aspect, module);
+      setExitOnUnhandledRejection(true);
     } catch (firstErr: any) {
       this.logger.warn(
         `failed loading plugin with pattern "${
@@ -84,14 +95,17 @@ export class Plugins {
       const isFixed = await this.triggerOnAspectLoadError(firstErr, this.component);
       let errAfterReLoad;
       if (isFixed) {
-        this.logger.info(
-          `the loading issue might be fixed now, re-loading plugin with pattern "${
-            plugin.def.pattern
-          }", in component ${this.component.id.toString()}`
-        );
         try {
+          const isModule = isEsmModule(plugin.path);
+          const module = isModule ? await this.loadModule(plugin.path) : undefined;
+          this.logger.info(
+            `the loading issue might be fixed now, re-loading plugin with pattern "${
+              plugin.def.pattern
+            }", in component ${this.component.id.toString()}`
+          );
           return plugin.register(aspect, module);
         } catch (err: any) {
+          setExitOnUnhandledRejection(true);
           this.logger.warn(
             `re-load of the plugin with pattern "${
               plugin.def.pattern
@@ -101,6 +115,7 @@ export class Plugins {
           errAfterReLoad = err;
         }
       }
+      setExitOnUnhandledRejection(true);
       const error = errAfterReLoad || firstErr;
       throw error;
     }
@@ -124,7 +139,8 @@ export class Plugins {
           : component.filesystem.byRegex(pluginDef.pattern);
 
       return files.map((file) => {
-        return new Plugin(pluginDef, resolvePath ? resolvePath(file.relative) : file.path);
+        const resolvedPath = resolvePath ? resolvePath(file.relative) : file.path;
+        return new Plugin(pluginDef, resolvedPath);
       });
     });
 

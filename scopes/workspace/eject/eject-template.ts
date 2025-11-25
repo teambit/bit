@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 
-import { getCloudDomain } from '@teambit/legacy/dist/constants';
-import { EjectResults } from './components-ejector';
+import { getCloudDomain } from '@teambit/legacy.constants';
+import type { EjectResults } from './components-ejector';
 
 export const successEjectMessage = 'successfully ejected the following components';
 export const failureEjectMessage = 'failed to eject the following components';

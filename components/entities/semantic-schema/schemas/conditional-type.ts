@@ -1,4 +1,5 @@
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 
 /**
@@ -31,6 +32,15 @@ export class ConditionalTypeSchema extends SchemaNode {
 
   toString() {
     return `${this.checkType.toString()} extends ${this.extendsType.toString()} ? ${this.trueType.toString()} : ${this.falseType.toString()}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const checkTypeStr = this.checkType.toFullSignature(options);
+    const extendsTypeStr = this.extendsType.toFullSignature(options);
+    const trueTypeStr = this.trueType.toFullSignature(options);
+    const falseTypeStr = this.falseType.toFullSignature(options);
+
+    return `${checkTypeStr} extends ${extendsTypeStr} ? ${trueTypeStr} : ${falseTypeStr}`;
   }
 
   toObject() {

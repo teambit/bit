@@ -1,6 +1,9 @@
 import React from 'react';
-import { Link } from '@teambit/design.ui.navigation.link';
+import { Link as BaseLink } from '@teambit/design.ui.navigation.link';
 import styles from './login.module.scss';
+
+// @todo - this will be fixed as part of the @teambit/base-react.navigation.link for @teambit/design.ui.navigation.link
+const Link = BaseLink as any;
 
 export type LoginProps = {
   loginText?: string;
@@ -12,7 +15,7 @@ export function Login({ loginText = 'Login', loginUrl }: LoginProps) {
 
   return (
     <div className={styles.login}>
-      <Link className={styles.text} href={loginUrl}>
+      <Link external className={styles.text} href={loginUrl}>
         {loginText}
       </Link>
     </div>

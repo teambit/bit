@@ -1,11 +1,8 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-import { UPDATE_DEPS_ON_IMPORT } from '../../src/api/consumer/lib/feature-toggle';
-
-chai.use(require('chai-fs'));
+import { Helper, DEFAULT_OWNER, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('import functionality on Harmony', function () {
   this.timeout(0);
@@ -20,7 +17,7 @@ describe('import functionality on Harmony', function () {
   describe('workspace with TS components', () => {
     let scopeWithoutOwner: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       helper.fixtures.populateComponentsTS(3);
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -38,7 +35,7 @@ describe('import functionality on Harmony', function () {
       describe('installing dependencies as packages, requiring them and then running build-one-graph', () => {
         // let importOutput;
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.scopeHelper.addRemoteScope();
           helper.npm.initNpm();
           helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, '0.0.1');
@@ -48,7 +45,7 @@ describe('import functionality on Harmony', function () {
           );
           helper.command.addComponent('bar');
           // as an intermediate step, make sure the scope is empty.
-          const localScope = helper.command.listLocalScopeParsed('--scope');
+          const localScope = helper.command.listLocalScopeParsed();
           expect(localScope).to.have.lengthOf(0);
 
           helper.command.runCmd('bit insights'); // this command happened to run the build-one-graph.
@@ -58,13 +55,13 @@ describe('import functionality on Harmony', function () {
         //   expect(importOutput).to.have.string('successfully imported one component');
         // });
         it('the scope should have the dependencies and the flattened dependencies', () => {
-          const localScope = helper.command.listLocalScopeParsed('--scope');
+          const localScope = helper.command.listLocalScopeParsed();
           expect(localScope).to.have.lengthOf(3);
         });
       });
       describe('importing the components', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           npmCiRegistry.setResolver();
           helper.command.importComponent('comp1');
         });
@@ -80,7 +77,7 @@ describe('import functionality on Harmony', function () {
       });
       describe('import with --path flag', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           npmCiRegistry.setResolver();
           helper.command.importComponentWithOptions('comp1', { p: 'src' });
         });
@@ -93,7 +90,7 @@ describe('import functionality on Harmony', function () {
       });
       describe('installing a component as a package and then importing it directly', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           const comp1Pkg = `@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`;
           helper.command.install(comp1Pkg);
           npmCiRegistry.setResolver();
@@ -112,7 +109,7 @@ describe('import functionality on Harmony', function () {
       describe('importing a component, modify it and then importing its dependent', () => {
         let output;
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           npmCiRegistry.setResolver();
           helper.command.importComponent('comp2');
           helper.fs.appendFile(`${scopeWithoutOwner}/comp2/index.ts`);
@@ -126,7 +123,7 @@ describe('import functionality on Harmony', function () {
   });
   describe('tag, export, clean scope objects, tag and export', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
       helper.command.export();
@@ -143,19 +140,19 @@ describe('import functionality on Harmony', function () {
   describe('import delta (bit import without ids) when local is behind', () => {
     let afterFirstExport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, undefined, ' v2');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.importAllComponents(); // to save all refs.
-      afterFirstExport = helper.scopeHelper.cloneLocalScope();
+      afterFirstExport = helper.scopeHelper.cloneWorkspace();
       helper.fixtures.populateComponents(1, undefined, ' v3');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       const bitMap = helper.bitMap.read();
-      helper.scopeHelper.getClonedLocalScope(afterFirstExport);
+      helper.scopeHelper.getClonedWorkspace(afterFirstExport);
       helper.bitMap.write(bitMap);
     });
     it('should not fetch existing versions, only the missing', () => {
@@ -167,7 +164,7 @@ describe('import functionality on Harmony', function () {
   describe('multiple components some are directory of others', () => {
     let scopeBeforeImport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.outputFile('foo/index.js');
       helper.fs.outputFile('bar/index.js');
       helper.command.addComponent('foo');
@@ -175,9 +172,9 @@ describe('import functionality on Harmony', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
-      scopeBeforeImport = helper.scopeHelper.cloneLocalScope();
+      scopeBeforeImport = helper.scopeHelper.cloneWorkspace();
     });
     describe('import them all at the same time', () => {
       before(() => {
@@ -193,7 +190,7 @@ describe('import functionality on Harmony', function () {
     });
     describe('import the parent dir first and then the child', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeBeforeImport);
+        helper.scopeHelper.getClonedWorkspace(scopeBeforeImport);
         helper.command.importComponent('foo');
       });
       it('should not throw when importing the child and should increment its base-path and preserve the suffix', () => {
@@ -203,7 +200,7 @@ describe('import functionality on Harmony', function () {
     });
     describe('import the child dir first and then the parent', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeBeforeImport);
+        helper.scopeHelper.getClonedWorkspace(scopeBeforeImport);
         helper.command.importComponent('foo/bar');
       });
       it('should not throw when importing the parent and should increment the path', () => {
@@ -217,7 +214,7 @@ describe('import functionality on Harmony', function () {
     () => {
       let scopeWithoutOwner: string;
       before(async () => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
         helper.fixtures.populateComponents(3);
         npmCiRegistry = new NpmCiRegistry(helper);
@@ -231,7 +228,7 @@ describe('import functionality on Harmony', function () {
       });
       describe('install as packages', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.scopeHelper.addRemoteScope();
           helper.npm.initNpm();
         });
@@ -243,7 +240,7 @@ describe('import functionality on Harmony', function () {
       });
       describe('importing the components', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           npmCiRegistry.setResolver();
           helper.command.importComponent('comp1');
         });
@@ -260,35 +257,35 @@ describe('import functionality on Harmony', function () {
   describe('changing the component default directory', () => {
     let beforeImport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
-      beforeImport = helper.scopeHelper.cloneLocalScope();
+      beforeImport = helper.scopeHelper.cloneWorkspace();
     });
     it('should import with no errors when defaultDirectory has "{owner}" placeholder', () => {
       helper.workspaceJsonc.setComponentsDir('{owner}/{name}');
       expect(() => helper.command.importComponent('comp1')).to.not.throw();
     });
     it('should import with no errors when defaultDirectory has "{scope-id}" placeholder', () => {
-      helper.scopeHelper.getClonedLocalScope(beforeImport);
+      helper.scopeHelper.getClonedWorkspace(beforeImport);
       helper.workspaceJsonc.setComponentsDir('{scopeId}/{name}');
       expect(() => helper.command.importComponent('comp1')).to.not.throw();
     });
     it('should throw an error when the placeholder is not supported', () => {
-      helper.scopeHelper.getClonedLocalScope(beforeImport);
+      helper.scopeHelper.getClonedWorkspace(beforeImport);
       helper.workspaceJsonc.setComponentsDir('{hello}/{name}');
       expect(() => helper.command.importComponent('comp1')).to.throw();
     });
   });
   describe('importing a component with @types dependency when current workspace does not have it', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.outputFile('bar/foo.ts', `import cors from 'cors'; console.log(cors);`);
       helper.command.add('bar');
-      helper.command.install('cors@2.8.5 @types/cors@2.8.10');
+      helper.command.install('cors@^2.8.5 @types/cors@^2.8.10');
 
       // intermediate step, make sure the types are saved in the
       const show = helper.command.showComponentParsed('bar');
@@ -297,7 +294,7 @@ describe('import functionality on Harmony', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar');
     });
@@ -312,12 +309,12 @@ describe('import functionality on Harmony', function () {
   describe('with --track-only flag', () => {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       const emptyBitMap = helper.bitMap.read();
       helper.command.importComponent('*');
@@ -333,7 +330,7 @@ describe('import functionality on Harmony', function () {
   });
   describe('import with deps having different versions than workspace.jsonc', () => {
     const initWsWithVer = (ver: string) => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.addPolicyToDependencyResolver({
         dependencies: {
@@ -344,8 +341,7 @@ describe('import functionality on Harmony', function () {
       helper.command.importComponent('comp1', '-x');
     };
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.command.setFeatures(UPDATE_DEPS_ON_IMPORT);
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/foo.js', `const get = require('lodash.get'); console.log(get);`);
       helper.workspaceJsonc.addPolicyToDependencyResolver({
@@ -382,19 +378,26 @@ describe('import functionality on Harmony', function () {
     // create the following graph:
     // comp1 -> comp2 -> comp3 -> comp4
     // comp1 -> comp-a -> comp4
+    // comp1 -> comp-a2 -> comp3 -> comp4
     // comp1 -> comp-b
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(4);
       helper.fs.outputFile('comp-a/index.js', `require('${helper.general.getPackageNameByCompName('comp4', false)}');`);
+      helper.fs.outputFile(
+        'comp-a2/index.js',
+        `require('${helper.general.getPackageNameByCompName('comp3', false)}');`
+      );
       helper.fs.outputFile('comp-b/index.js');
       helper.command.addComponent('comp-a');
       helper.command.addComponent('comp-b');
+      helper.command.addComponent('comp-a2');
       helper.command.compile();
       helper.fs.appendFile(
         'comp1/index.js',
-        `\nrequire('${helper.general.getPackageNameByCompName('comp-a', false)}');`
+        `\nrequire('${helper.general.getPackageNameByCompName('comp-a', false)}');
+        require('${helper.general.getPackageNameByCompName('comp-a2', false)}')`
       );
       helper.fs.appendFile(
         'comp1/index.js',
@@ -404,7 +407,7 @@ describe('import functionality on Harmony', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1', '-x');
     });
@@ -415,10 +418,11 @@ describe('import functionality on Harmony', function () {
       expect(bitMap).to.have.property('comp3');
       expect(bitMap).to.have.property('comp4');
       expect(bitMap).to.have.property('comp-a');
+      expect(bitMap).to.have.property('comp-a2');
       expect(bitMap).to.not.have.property('comp-b');
     });
     it('with --dependents-via should limit to graph traversing through the given id', () => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1', '-x');
 
@@ -429,6 +433,25 @@ describe('import functionality on Harmony', function () {
       expect(bitMap).to.have.property('comp4');
       expect(bitMap).to.not.have.property('comp-a');
       expect(bitMap).to.not.have.property('comp-b');
+    });
+  });
+  describe('import when component.json has a local env', () => {
+    let envId: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      envId = helper.env.setCustomEnv();
+      helper.fixtures.populateComponents(1);
+      helper.command.setEnv('comp1', 'node-env');
+      helper.command.ejectConf('comp1');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.importComponent('comp1', '-x');
+    });
+    it('should not modified the component.json of the other component to add invalid env info', () => {
+      const fullEnvId = `${helper.scopes.remote}/${envId}`;
+      const componentJson = helper.componentJson.read('comp1');
+      expect(componentJson.extensions).to.have.property(fullEnvId);
+      expect(componentJson.extensions).to.not.have.property(`${fullEnvId}@0.0.1`);
     });
   });
 });

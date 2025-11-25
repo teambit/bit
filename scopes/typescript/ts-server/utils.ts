@@ -24,5 +24,5 @@ export function getTsserverExecutable(): string {
 }
 
 function isWindows(): boolean {
-  return /^win/.test(process.platform);
+  return process.platform.startsWith('win');
 }

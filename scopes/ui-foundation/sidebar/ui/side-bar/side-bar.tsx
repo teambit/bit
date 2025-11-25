@@ -1,9 +1,11 @@
-import React, { useState, ComponentType } from 'react';
+import type { ComponentType } from 'react';
+import React, { useState } from 'react';
 import { flatten } from 'lodash';
 import classNames from 'classnames';
 import { MenuSection } from '@teambit/design.ui.surfaces.menu.section';
-import { DrawerType, DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
-import { DrawerSlot } from '../../sidebar.ui.runtime';
+import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
+import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
+import type { DrawerSlot } from '../../sidebar.ui.runtime';
 import styles from './side-bar.module.scss';
 
 export type SideBarProps = {

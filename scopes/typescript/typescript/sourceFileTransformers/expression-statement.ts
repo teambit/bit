@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { SourceFileTransformer } from '.';
+import type { SourceFileTransformer } from './index';
 import { replaceName } from './replaceName';
 
 export const expressionStatementTransformer: SourceFileTransformer = (mapping: Record<string, string>) => {
@@ -14,7 +14,7 @@ export const expressionStatementTransformer: SourceFileTransformer = (mapping: R
           return ts.factory.createIdentifier(newName);
         }
         return identifier;
-      } catch (e) {
+      } catch {
         return identifier;
       }
     };

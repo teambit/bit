@@ -20,11 +20,7 @@ Before submitting a new issue, please search past issues (open or closed).
 ### Specifications
 
 - Bit version:
-- Node version:
-- npm / yarn version:
 - Platform:
-- Bit compiler (include version):
-- Bit tester (include version):
 
 ### Context and additional information
 

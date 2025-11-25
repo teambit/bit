@@ -1,7 +1,7 @@
 import { EnvDefinition } from '../env-definition';
-import { Environment } from '../environment';
+import type { Environment } from '../environment';
 
-import { EnvRuntime, Runtime } from '../runtime';
+import type { EnvRuntime, Runtime } from '../runtime';
 
 export type ServiceMap<T> = {
   [env: string]: T;

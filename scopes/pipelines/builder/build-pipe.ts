@@ -1,15 +1,17 @@
-import { EnvDefinition } from '@teambit/envs';
-import { ComponentMap, ComponentID } from '@teambit/component';
-import { Logger, LongProcessLogger } from '@teambit/logger';
+import type { EnvDefinition } from '@teambit/envs';
+import type { ComponentMap } from '@teambit/component';
+import { ComponentID } from '@teambit/component';
+import type { Logger, LongProcessLogger } from '@teambit/logger';
 import mapSeries from 'p-map-series';
 import prettyTime from 'pretty-time';
 import { capitalize } from '@teambit/toolbox.string.capitalize';
 import chalk from 'chalk';
-import { ArtifactFactory, ArtifactList, FsArtifact } from './artifact';
-import { BuildContext, BuildTask, BuildTaskHelper, BuiltTaskResult } from './build-task';
-import { ComponentResult } from './types';
-import { TasksQueue } from './tasks-queue';
-import { EnvsBuildContext } from './builder.service';
+import type { ArtifactFactory, ArtifactList, FsArtifact } from './artifact';
+import type { BuildContext, BuildTask, BuiltTaskResult } from './build-task';
+import { BuildTaskHelper } from './build-task';
+import type { ComponentResult } from './types';
+import type { TasksQueue } from './tasks-queue';
+import type { EnvsBuildContext } from './builder.service';
 import { TaskResultsList } from './task-results-list';
 
 export type TaskResults = {
@@ -76,29 +78,15 @@ export class BuildPipe {
    * execute a pipeline of build tasks.
    */
   async execute(): Promise<TaskResultsList> {
-    this.addSignalListener();
     await this.executePreBuild();
     this.longProcessLogger = this.logger.createLongProcessLogger('running tasks', this.tasksQueue.length);
     await mapSeries(this.tasksQueue, async ({ task, env }) => this.executeTask(task, env));
     this.longProcessLogger.end();
     const capsuleRootDir = Object.values(this.envsBuildContext)[0]?.capsuleNetwork.capsulesRootDir;
-    const tasksResultsList = new TaskResultsList(this.tasksQueue, this.taskResults, capsuleRootDir);
+    const tasksResultsList = new TaskResultsList(this.tasksQueue, this.taskResults, capsuleRootDir, this.logger);
     await this.executePostBuild(tasksResultsList);
 
     return tasksResultsList;
-  }
-
-  /**
-   * for some reason, some tasks (such as typescript compilation) ignore ctrl+C. this fixes it.
-   */
-  private addSignalListener() {
-    process.on('SIGTERM', () => {
-      process.exit();
-    });
-
-    process.on('SIGINT', () => {
-      process.exit();
-    });
   }
 
   private async executePreBuild() {
@@ -121,11 +109,29 @@ export class BuildPipe {
     this.longProcessLogger.logProgress(`${taskLogPrefix}${task.description ? ` ${task.description}` : ''}`, false);
     this.updateFailedDependencyTask(task);
     if (this.shouldSkipTask(taskId, env.id)) {
+      // Save skipped tasks with pending status so they appear in the UI
+      const components = buildContext.capsuleNetwork.seedersCapsules.getAllComponents();
+      const componentsResults: ComponentResult[] = components.map((component) => ({
+        component,
+        status: 'pending',
+      }));
+      const taskResults: TaskResults = {
+        task,
+        env,
+        componentsResults,
+        artifacts: undefined,
+        startTime: Date.now(),
+        endTime: Date.now(),
+      };
+      this.taskResults.push(taskResults);
       return;
     }
     const startTask = process.hrtime();
     const taskStartTime = Date.now();
     let buildTaskResult: BuiltTaskResult;
+    this.logger.debug(
+      `${taskLogPrefix} memory usage: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
+    );
     try {
       buildTaskResult = await task.execute(buildContext);
     } catch (err) {
@@ -152,10 +158,18 @@ export class BuildPipe {
       artifacts = this.artifactFactory.generate(buildContext, defs, task);
     }
 
+    // For tasks that run on a single component (e.g., test/lint in single-component builds),
+    // add the task-level timing to the component result if it doesn't already have timing
+    const componentsResults = buildTaskResult.componentsResults;
+    if (componentsResults.length === 1 && !componentsResults[0].startTime && !componentsResults[0].endTime) {
+      componentsResults[0].startTime = taskStartTime;
+      componentsResults[0].endTime = endTime;
+    }
+
     const taskResults: TaskResults = {
       task,
       env,
-      componentsResults: buildTaskResult.componentsResults,
+      componentsResults,
       artifacts,
       startTime: taskStartTime,
       endTime,

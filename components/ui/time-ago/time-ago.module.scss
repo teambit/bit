@@ -1,0 +1,9 @@
+.dateTooltip,
+.dateTooltipContent {
+  display: flex;
+}
+
+.dateTooltip {
+  max-width: unset !important; // Override inline css from Tippyjs
+  width: max-content;
+}

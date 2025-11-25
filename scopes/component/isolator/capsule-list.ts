@@ -1,9 +1,9 @@
 import type { Component } from '@teambit/component';
-import { Dependency, DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { Dependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Edge, Graph, Node } from '@teambit/graph.cleargraph';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { normalize } from 'path';
-import { Capsule } from './capsule';
+import type { Capsule } from './capsule';
 
 export default class CapsuleList extends Array<Capsule> {
   getCapsule(id: ComponentID): Capsule | undefined {
@@ -25,6 +25,27 @@ export default class CapsuleList extends Array<Capsule> {
   }
   getAllComponents(): Component[] {
     return this.map((c) => c.component);
+  }
+  getAllComponentIDs(): ComponentID[] {
+    return this.map((c) => c.component.id);
+  }
+  getGraphIds(): Graph<Component, string> {
+    const components = this.getAllComponents();
+    const graph = new Graph<Component, string>();
+
+    components.forEach((comp: Component) => graph.setNode(new Node(comp.id.toString(), comp)));
+    const compIdsStr = components.map((c) => c.id.toString());
+
+    components.forEach((comp) => {
+      const deps = comp.getDependencies();
+      deps.forEach((dep) => {
+        if (compIdsStr.includes(dep.id)) {
+          graph.setEdge(new Edge(comp.id.toString(), dep.id, dep.type));
+        }
+      });
+    });
+
+    return graph;
   }
   // Sort the capsules by their dependencies. The capsules with no dependencies will be first. Returns a new array.
   async toposort(depResolver: DependencyResolverMain): Promise<CapsuleList> {

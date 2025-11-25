@@ -1,5 +1,5 @@
-import React from 'react';
-import { RouteProps } from 'react-router-dom';
+import type React from 'react';
+import type { RouteProps } from 'react-router-dom';
 import type { UseComponentType, Filters } from './ui/use-component';
 
 export type GetComponentsOptions = {
@@ -11,4 +11,5 @@ export type GetComponentsOptions = {
   RightNode?: React.ReactNode;
   className?: string;
   routes?: RouteProps[];
+  authToken?: string;
 };

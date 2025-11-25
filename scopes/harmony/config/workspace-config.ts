@@ -1,22 +1,21 @@
-import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import { ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
-import LegacyWorkspaceConfig, {
-  WorkspaceConfigProps as LegacyWorkspaceConfigProps,
-} from '@teambit/legacy/dist/consumer/config/workspace-config';
-import logger from '@teambit/legacy/dist/logger/logger';
-import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import { currentDateAndTimeToFileName } from '@teambit/legacy/dist/consumer/consumer';
-import { assign, parse, stringify, CommentJSONValue } from 'comment-json';
+import type { ComponentID } from '@teambit/component-id';
+import { DEFAULT_LANGUAGE, WORKSPACE_JSONC, Extensions } from '@teambit/legacy.constants';
+import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
+import type { ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
+import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { logger } from '@teambit/legacy.logger';
+import type { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { currentDateAndTimeToFileName } from '@teambit/legacy.consumer';
+import type { CommentObject } from 'comment-json';
+import { assign, parse, stringify } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { isEmpty, omit } from 'lodash';
-import WorkspaceAspect from '@teambit/workspace';
-import { SetExtensionOptions } from './config.main.runtime';
+import { omit } from 'lodash';
+import type { SetExtensionOptions } from './config.main.runtime';
 import { ExtensionAlreadyConfigured } from './exceptions';
 import InvalidConfigFile from './exceptions/invalid-config-file';
-import { HostConfig } from './types';
+import type { HostConfig } from './types';
 
 const INTERNAL_CONFIG_PROPS = ['$schema', '$schemaVersion', 'require'];
 
@@ -28,7 +27,7 @@ export type WorkspaceConfigFileProps = {
   // TODO: make it no optional
   $schema?: string;
   $schemaVersion?: string;
-} & ExtensionsDefs;
+} & WorkspaceSettingsNewProps;
 
 export type ComponentScopeDirMapEntry = {
   defaultScope?: string;
@@ -38,6 +37,7 @@ export type ComponentScopeDirMapEntry = {
 export type ComponentScopeDirMap = Array<ComponentScopeDirMapEntry>;
 
 export type WorkspaceExtensionProps = {
+  name?: string;
   defaultScope?: string;
   defaultDirectory?: string;
   components?: ComponentScopeDirMap;
@@ -52,14 +52,13 @@ export interface DependencyResolverExtensionProps {
   packageManagerProcessOptions?: any;
   useWorkspaces?: boolean;
   manageWorkspaces?: boolean;
+  externalPackageManager?: boolean;
 }
 
 export type WorkspaceSettingsNewProps = {
   'teambit.workspace/workspace': WorkspaceExtensionProps;
   'teambit.dependencies/dependency-resolver': DependencyResolverExtensionProps;
 };
-
-export type ExtensionsDefs = WorkspaceSettingsNewProps;
 
 export class WorkspaceConfig implements HostConfig {
   raw?: any;
@@ -83,6 +82,10 @@ export class WorkspaceConfig implements HostConfig {
     return this._extensions;
   }
 
+  get extensionsIds(): string[] {
+    return Object.keys(omit(this.raw, INTERNAL_CONFIG_PROPS));
+  }
+
   private loadExtensions() {
     const withoutInternalConfig = omit(this.raw, INTERNAL_CONFIG_PROPS);
     this._extensions = ExtensionDataList.fromConfigObject(withoutInternalConfig);
@@ -97,7 +100,10 @@ export class WorkspaceConfig implements HostConfig {
     const existing = this.extension(extensionId, options.ignoreVersion);
     if (existing) {
       if (options.mergeIntoExisting) {
-        config = { ...existing, ...config };
+        // Use assign from comment-json to preserve comments when merging
+        assign(this.raw[extensionId], config);
+        this.loadExtensions();
+        return;
       } else if (!options.overrideExisting) {
         throw new ExtensionAlreadyConfigured(extensionId);
       }
@@ -108,19 +114,42 @@ export class WorkspaceConfig implements HostConfig {
   }
 
   renameExtensionInRaw(oldExtId: string, newExtId: string): boolean {
+    let isChanged = false;
     if (this.raw[oldExtId]) {
       this.raw[newExtId] = this.raw[oldExtId];
       delete this.raw[oldExtId];
-      return true;
+      isChanged = true;
     }
-    return false;
+    const generatorEnvs = this.raw?.['teambit.generator/generator']?.envs;
+    if (generatorEnvs && generatorEnvs.includes(oldExtId)) {
+      generatorEnvs.splice(generatorEnvs.indexOf(oldExtId), 1, newExtId);
+      isChanged = true;
+    }
+    return isChanged;
   }
 
-  removeExtension(extId: string): boolean {
-    if (!this.raw[extId]) return false;
-    delete this.raw[extId];
-    this.loadExtensions();
-    return true;
+  removeExtension(extCompId: ComponentID): boolean {
+    const extId = extCompId.toStringWithoutVersion();
+    let isChanged = false;
+    const existingKey = this.getExistingKeyIgnoreVersion(extCompId);
+    if (existingKey) {
+      delete this.raw[existingKey];
+      isChanged = true;
+    }
+    const generatorEnvs = this.raw?.['teambit.generator/generator']?.envs;
+    if (generatorEnvs && generatorEnvs.includes(extId)) {
+      generatorEnvs.splice(generatorEnvs.indexOf(extId), 1);
+      isChanged = true;
+    }
+    if (isChanged) this.loadExtensions();
+    return isChanged;
+  }
+
+  getExistingKeyIgnoreVersion(id: ComponentID): string | undefined {
+    const idStr = id.toStringWithoutVersion();
+    if (this.raw[idStr]) return idStr;
+    const keys = Object.keys(this.raw);
+    return keys.find((key) => key.startsWith(`${idStr}@`));
   }
 
   /**
@@ -143,13 +172,45 @@ export class WorkspaceConfig implements HostConfig {
    * @returns
    * @memberof WorkspaceConfig
    */
-  static async create(props: WorkspaceConfigFileProps, dirPath: PathOsBasedAbsolute, scopePath: PathOsBasedAbsolute) {
+  static async create(
+    props: WorkspaceConfigFileProps,
+    dirPath: PathOsBasedAbsolute,
+    scopePath: PathOsBasedAbsolute,
+    generator?: string
+  ) {
     const template = await getWorkspaceConfigTemplateParsed();
     // previously, we just did `assign(template, props)`, but it was replacing the entire workspace config with the "props".
     // so for example, if the props only had defaultScope, it was removing the defaultDirectory.
-    const workspaceAspectConf = assign(template[WorkspaceAspect.id], props[WorkspaceAspect.id]);
-    const merged = assign(template, { [WorkspaceAspect.id]: workspaceAspectConf });
-    return new WorkspaceConfig(merged, WorkspaceConfig.composeWorkspaceJsoncPath(dirPath), scopePath);
+    const workspaceAspectConf = assign(template['teambit.workspace/workspace'], props['teambit.workspace/workspace']);
+
+    // When external package manager mode is enabled, set conflicting properties to false in the template
+    const depResolverConf = assign(template[Extensions.dependencyResolver], props[Extensions.dependencyResolver]);
+    if (depResolverConf.externalPackageManager) {
+      // Override template defaults to be compatible with external package manager mode
+      template[Extensions.dependencyResolver] = template[Extensions.dependencyResolver] || {};
+      template[Extensions.dependencyResolver].rootComponent = false;
+    }
+
+    const merged = assign(template, {
+      [Extensions.workspace]: workspaceAspectConf,
+      [Extensions.dependencyResolver]: depResolverConf,
+    });
+
+    if (generator) {
+      const generators = generator.split(',').map((g) => g.trim());
+      merged['teambit.generator/generator'] = { envs: generators };
+    }
+
+    const workspaceConfig = new WorkspaceConfig(
+      merged as WorkspaceConfigFileProps,
+      WorkspaceConfig.composeWorkspaceJsoncPath(dirPath),
+      scopePath
+    );
+
+    // Validate external package manager configuration
+    workspaceConfig.validateExternalPackageManagerConfig();
+
+    return workspaceConfig;
   }
 
   /**
@@ -165,18 +226,19 @@ export class WorkspaceConfig implements HostConfig {
   static async ensure(
     dirPath: PathOsBasedAbsolute,
     scopePath: PathOsBasedAbsolute,
-    workspaceConfigProps: WorkspaceConfigFileProps = {} as any
+    workspaceConfigProps: WorkspaceConfigFileProps = {} as any,
+    generator?: string
   ): Promise<WorkspaceConfig> {
     try {
       let workspaceConfig = await this.loadIfExist(dirPath, scopePath);
       if (workspaceConfig) {
         return workspaceConfig;
       }
-      workspaceConfig = await this.create(workspaceConfigProps, dirPath, scopePath);
+      workspaceConfig = await this.create(workspaceConfigProps, dirPath, scopePath, generator);
       return workspaceConfig;
     } catch (err: any) {
       if (err instanceof InvalidConfigFile) {
-        const workspaceConfig = this.create(workspaceConfigProps, dirPath, scopePath);
+        const workspaceConfig = this.create(workspaceConfigProps, dirPath, scopePath, generator);
         return workspaceConfig;
       }
       throw err;
@@ -246,10 +308,15 @@ export class WorkspaceConfig implements HostConfig {
     let parsed;
     try {
       parsed = parse(contentBuffer.toString());
-    } catch (e: any) {
+    } catch {
       throw new InvalidConfigFile(workspaceJsoncPath);
     }
-    return WorkspaceConfig.fromObject(parsed, workspaceJsoncPath, scopePath);
+    const workspaceConfig = WorkspaceConfig.fromObject(parsed, workspaceJsoncPath, scopePath);
+
+    // Validate external package manager configuration
+    workspaceConfig.validateExternalPackageManagerConfig();
+
+    return workspaceConfig;
   }
 
   async write({ dir, reasonForChange }: { dir?: PathOsBasedAbsolute; reasonForChange?: string } = {}): Promise<void> {
@@ -336,7 +403,6 @@ export class WorkspaceConfig implements HostConfig {
       componentsDefaultDirectory,
       _manageWorkspaces: this.extension('teambit.dependencies/dependency-resolver', true)?.manageWorkspaces,
       extensions: this.extensions.toConfigObject(),
-      // @ts-ignore
       path: this.path,
       isLegacy: false,
       write: ({ workspaceDir }) => this.write.call(this, { dir: workspaceDir }),
@@ -344,45 +410,32 @@ export class WorkspaceConfig implements HostConfig {
       _legacyPlainObject: () => undefined,
     };
   }
+
+  /**
+   * Validates that external package manager configuration is compatible with other settings
+   */
+  validateExternalPackageManagerConfig(): void {
+    const depResolverExt = this.extension('teambit.dependencies/dependency-resolver', true);
+    if (!depResolverExt?.externalPackageManager) {
+      return; // No validation needed if external package manager is not enabled
+    }
+
+    const conflicts: string[] = [];
+
+    // Check dependency-resolver aspect conflicts
+    if (depResolverExt?.rootComponent === true) {
+      conflicts.push('rootComponent cannot be true when externalPackageManager is enabled');
+    }
+
+    if (conflicts.length > 0) {
+      throw new Error(
+        `External package manager mode is incompatible with the following settings:\n${conflicts.map((c) => `  - ${c}`).join('\n')}\n\nPlease set these properties to false or remove them from your workspace.jsonc`
+      );
+    }
+  }
 }
 
-export function transformLegacyPropsToExtensions(
-  legacyConfig: LegacyWorkspaceConfig | LegacyWorkspaceConfigProps
-): ExtensionsDefs {
-  // TODO: move to utils
-  const removeUndefined = (obj) => {
-    // const res = omit(mapObjIndexed((val) => val === undefined))(obj);
-    // return res;
-    Object.entries(obj).forEach((e) => {
-      if (e[1] === undefined) delete obj[e[0]];
-    });
-    return obj;
-  };
-
-  const workspace = removeUndefined({
-    defaultScope: legacyConfig.defaultScope,
-    defaultDirectory: legacyConfig.componentsDefaultDirectory,
-  });
-  const dependencyResolver = removeUndefined({
-    packageManager: legacyConfig.packageManager,
-    // strictPeerDependencies: false,
-    extraArgs: legacyConfig.packageManagerArgs,
-    packageManagerProcessOptions: legacyConfig.packageManagerProcessOptions,
-    manageWorkspaces: legacyConfig.manageWorkspaces,
-    useWorkspaces: legacyConfig.useWorkspaces,
-  });
-  const data = {};
-  if (workspace && !isEmpty(workspace)) {
-    data['teambit.workspace/workspace'] = workspace;
-  }
-  if (dependencyResolver && !isEmpty(dependencyResolver)) {
-    data['teambit.dependencies/dependency-resolver'] = dependencyResolver;
-  }
-  // @ts-ignore
-  return data;
-}
-
-export async function getWorkspaceConfigTemplateParsed(): Promise<CommentJSONValue> {
+export async function getWorkspaceConfigTemplateParsed(): Promise<Record<string, any>> {
   let fileContent: Buffer;
   try {
     fileContent = await fs.readFile(path.join(__dirname, 'workspace-template.jsonc'));
@@ -391,9 +444,9 @@ export async function getWorkspaceConfigTemplateParsed(): Promise<CommentJSONVal
     // when the extension is compiled by tsc, it doesn't copy .jsonc files into the dists, grab it from src
     fileContent = await fs.readFile(path.join(__dirname, '..', 'workspace-template.jsonc'));
   }
-  return parse(fileContent.toString());
+  return parse(fileContent.toString()) as CommentObject;
 }
 
-export function stringifyWorkspaceConfig(workspaceConfig: CommentJSONValue): string {
+export function stringifyWorkspaceConfig(workspaceConfig: Record<string, any>): string {
   return stringify(workspaceConfig, undefined, 2);
 }

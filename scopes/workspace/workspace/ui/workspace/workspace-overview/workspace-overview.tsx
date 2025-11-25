@@ -4,18 +4,20 @@ import { EmptyWorkspace } from '@teambit/workspace.ui.empty-workspace';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { ComponentID } from '@teambit/component-id';
-import { ComponentModel } from '@teambit/component';
+import type { ComponentModel } from '@teambit/component';
 import { useCloudScopes } from '@teambit/cloud.hooks.use-cloud-scopes';
 import { ScopeID } from '@teambit/scopes.scope-id';
 import { compact } from 'lodash';
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';
 import type { ComponentCardPluginType, PluginProps } from '@teambit/explorer.ui.component-card';
+import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 import { WorkspaceContext } from '../workspace-context';
 import styles from './workspace-overview.module.scss';
 import { LinkPlugin } from './link-plugin';
 
 export function WorkspaceOverview() {
   const workspace = useContext(WorkspaceContext);
+  const { isMinimal } = useWorkspaceMode();
   const compModelsById = new Map(workspace.components.map((comp) => [comp.id.toString(), comp]));
   const { components, componentDescriptors } = workspace;
   const uniqueScopes = new Set(components.map((c) => c.id.scope));
@@ -23,7 +25,7 @@ export function WorkspaceOverview() {
   const { cloudScopes = [] } = useCloudScopes(uniqueScopesArr);
   const cloudScopesById = new Map(cloudScopes.map((scope) => [scope.id.toString(), scope]));
 
-  const plugins = useCardPlugins({ compModelsById });
+  const plugins = useCardPlugins({ compModelsById, showPreview: isMinimal });
 
   if (!components || components.length === 0) return <EmptyWorkspace name={workspace.name} />;
 
@@ -54,6 +56,7 @@ export function WorkspaceOverview() {
               component={component}
               plugins={plugins}
               scope={scope}
+              shouldShowPreviewState={isMinimal}
             />
           );
         })}
@@ -64,9 +67,19 @@ export function WorkspaceOverview() {
 
 export function useCardPlugins({
   compModelsById,
+  showPreview,
 }: {
   compModelsById: Map<string, ComponentModel>;
+  showPreview?: boolean;
 }): ComponentCardPluginType<PluginProps>[] {
+  const serverUrlsSignature = React.useMemo(() => {
+    const serversCount = Array.from(compModelsById.values())
+      .filter((comp) => comp.server?.url)
+      .map((comp) => comp.server?.url)
+      .join(',');
+    return serversCount;
+  }, [compModelsById]);
+
   const plugins = React.useMemo(
     () => [
       {
@@ -77,7 +90,7 @@ export function useCardPlugins({
             <PreviewPlaceholder
               componentDescriptor={component}
               component={compModel}
-              shouldShowPreview={shouldShowPreview}
+              shouldShowPreview={showPreview || shouldShowPreview}
             />
           );
         },
@@ -100,7 +113,7 @@ export function useCardPlugins({
       },
       new LinkPlugin(),
     ],
-    [compModelsById.size]
+    [compModelsById.size, serverUrlsSignature, showPreview]
   );
 
   return plugins;

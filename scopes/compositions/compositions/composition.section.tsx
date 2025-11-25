@@ -1,7 +1,12 @@
-import { Section } from '@teambit/component';
+import type { Section } from '@teambit/component';
 import React from 'react';
 import { Compositions } from './compositions';
-import type { CompositionsUI, CompositionsMenuSlot, EmptyStateSlot } from './compositions.ui.runtime';
+import type {
+  CompositionsUI,
+  CompositionsMenuSlot,
+  EmptyStateSlot,
+  UsePreviewSandboxSlot,
+} from './compositions.ui.runtime';
 
 type Options = { menuBarWidgetSlot: CompositionsMenuSlot };
 
@@ -12,7 +17,8 @@ export class CompositionsSection implements Section {
      */
     private compositions: CompositionsUI,
     private options: Options,
-    private emptyStateSlot: EmptyStateSlot
+    private emptyStateSlot: EmptyStateSlot,
+    private usePreviewSandboxSlot: UsePreviewSandboxSlot
   ) {}
 
   navigationLink = {
@@ -22,7 +28,13 @@ export class CompositionsSection implements Section {
 
   route = {
     path: '~compositions/*',
-    element: <Compositions menuBarWidgets={this.options.menuBarWidgetSlot} emptyState={this.emptyStateSlot} />,
+    element: (
+      <Compositions
+        menuBarWidgets={this.options.menuBarWidgetSlot}
+        emptyState={this.emptyStateSlot}
+        usePreviewSandboxSlot={this.usePreviewSandboxSlot}
+      />
+    ),
   };
 
   order = 20;

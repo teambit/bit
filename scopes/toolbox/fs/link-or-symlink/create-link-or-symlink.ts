@@ -3,7 +3,8 @@ import { platform } from 'os';
 import fsNative from 'fs';
 import { BitError } from '@teambit/bit-error';
 import * as path from 'path';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
+import symlinkDir from 'symlink-dir';
 
 /**
  * create a link (hard-link). if not possible (e.g. it's a directory) or avoidHardLink is true, use symlink.
@@ -47,7 +48,7 @@ Original error: ${err}`);
   }
 
   function symlink() {
-    IS_WINDOWS ? symlinkOrHardLink() : fs.symlinkSync(srcPath, destPath);
+    IS_WINDOWS ? symlinkOrHardLink() : symlinkDir.sync(srcPath, destPath);
   }
 
   /**
@@ -55,9 +56,11 @@ Original error: ${err}`);
    */
   function symlinkOrHardLink() {
     try {
-      fs.symlinkSync(srcPath, destPath);
+      symlinkDir.sync(srcPath, destPath, {
+        noJunction: true,
+      });
       logger.trace(`createLinkOrSymlink, symlinkOrHardLink() successfully created the symlink`);
-    } catch (err: any) {
+    } catch {
       // it can be a file or directory, we don't know. just run link(), it will junction for dirs and hard-link for files.
       link();
     }

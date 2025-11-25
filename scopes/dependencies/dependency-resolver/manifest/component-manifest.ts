@@ -1,8 +1,9 @@
-import { Component } from '@teambit/component';
-import { SemVer } from 'semver';
-import { EnvPolicy } from '../policy/env-policy';
+import type { Component } from '@teambit/component';
+import type { SemVer } from 'semver';
+import type { EnvPolicy } from '../policy/env-policy';
 
-import { Manifest, ManifestDependenciesObject } from './manifest';
+import type { ManifestDependenciesObject } from './manifest';
+import { Manifest } from './manifest';
 
 export class ComponentManifest extends Manifest {
   constructor(

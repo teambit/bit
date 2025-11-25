@@ -1,11 +1,11 @@
-import { ComponentMain } from '@teambit/component';
-import { Schema } from '@teambit/graphql';
+import type { ComponentMain } from '@teambit/component';
+import type { Schema } from '@teambit/graphql';
 import { gql } from 'graphql-tag';
 
-import { GraphBuilder } from './graph-builder';
-import { ComponentGraph } from './component-graph';
-import { GraphFilter } from './model/graph-filters';
-import { DependencyType } from './model/dependency';
+import type { GraphBuilder } from './graph-builder';
+import type { ComponentGraph } from './component-graph';
+import type { GraphFilter } from './model/graph-filters';
+import type { DependencyType } from './model/dependency';
 import { EdgeType } from './edge-type';
 
 const textCmp = new Intl.Collator().compare;
@@ -59,20 +59,32 @@ export function graphSchema(graphBuilder: GraphBuilder, componentAspect: Compone
                   sourceId: edge.sourceId,
                   targetId: edge.targetId,
                   dependencyLifecycleType: getDependencyLifecycleType(edge.attr.type),
-                } as { sourceId: string; targetId: string; dependencyLifecycleType: EdgeType })
+                }) as { sourceId: string; targetId: string; dependencyLifecycleType: EdgeType }
             )
             .sort((a, b) => textCmp(a.sourceId, b.sourceId))
             .sort((a, b) => textCmp(a.targetId, b.targetId));
         },
       },
       Query: {
-        graph: async (_parent, { ids, filter }: { ids?: string[]; filter?: GraphFilter }) => {
+        graph: async (_parent, { ids, filter }: { ids?: string[]; filter?: GraphFilter }, _context, info) => {
           const componentsHost = componentAspect.getHost();
           const resolvedIds = ids
             ? await componentsHost.resolveMultipleComponentIds(ids)
             : (await componentsHost.list()).map((x) => x.id);
 
-          const graph = await graphBuilder.getGraph(resolvedIds);
+          const isComponentFieldQueried = info.fieldNodes[0].selectionSet?.selections.some(
+            (selection: any) =>
+              selection.kind === 'Field' &&
+              selection.name.value === 'nodes' &&
+              selection.selectionSet?.selections.some(
+                (subSelection: any) => subSelection.kind === 'Field' && subSelection.name.value === 'component'
+              )
+          );
+
+          const graph = isComponentFieldQueried
+            ? await graphBuilder.getGraph(resolvedIds)
+            : await graphBuilder.getGraphIds(resolvedIds);
+
           if (!graph) return undefined;
 
           if (filter === 'runtimeOnly') {

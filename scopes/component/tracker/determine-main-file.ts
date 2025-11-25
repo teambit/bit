@@ -5,11 +5,12 @@ import {
   DEFAULT_INDEX_EXTS,
   DEFAULT_INDEX_NAME,
   DEFAULT_SEPARATOR,
-} from '@teambit/legacy/dist/constants';
-import { pathJoinLinux, PathLinux, pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
-import { MissingMainFile } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
-import { AddedComponent } from './add-components';
+} from '@teambit/legacy.constants';
+import type { PathLinux } from '@teambit/legacy.utils';
+import { pathJoinLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
+import type { ComponentMap } from '@teambit/legacy.bit-map';
+import { MissingMainFile } from '@teambit/legacy.bit-map';
+import type { AddedComponent } from './add-components';
 
 export default function determineMainFile(
   addedComponent: AddedComponent,
@@ -17,7 +18,7 @@ export default function determineMainFile(
 ): PathLinux {
   const mainFile = addedComponent.mainFile;
   const componentIdStr = addedComponent.componentId.toString();
-  const files = addedComponent.files.filter((file) => !file.test);
+  const files = addedComponent.files;
   const rootDir = existingComponentMap && existingComponentMap.rootDir;
   const strategies: Function[] = [
     getExistingIfNotChanged,
@@ -126,7 +127,7 @@ export default function determineMainFile(
       if (mainFileUsingRootDir) return mainFileUsingRootDir.relativePath;
     }
     // search for a file-name
-    const potentialMainFiles = files.filter((file) => file.name === baseMainFile);
+    const potentialMainFiles = files.filter((file) => path.basename(file.relativePath) === baseMainFile);
     if (!potentialMainFiles.length) return null;
     // when there are several files that met the criteria, choose the closer to the root
     const sortByNumOfDirs = (a, b) =>

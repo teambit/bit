@@ -1,0 +1,25 @@
+ARG BASE_IMAGE=node:22.14.0-alpine
+FROM $BASE_IMAGE
+ARG BIT_VERSION='1.11.31'
+# Install Git
+RUN apk update && apk add --no-cache git
+RUN addgroup -g 9000 user
+RUN adduser -u 9000 -G user -D -s /bin/sh -h /home/user user && chown user:user /home/user
+
+USER user
+RUN mkdir -p ~/.npm-global
+RUN npm config set prefix '~/.npm-global'
+# Update PATH
+ENV PATH=$PATH:home/user/.npm-global/bin:/home/user/bin
+
+
+RUN npm i @teambit/bvm -g
+RUN bvm config set RELEASE_TYPE nightly
+# installs bit
+RUN bvm -v
+RUN bvm install $BIT_VERSION
+
+RUN bvm link
+RUN ln -s /home/user/bin/bit /home/user/bin/bbit
+ENV NPM_CONFIG_PREFIX=/home/user/.npm-global
+RUN rm -rf /home/user/.bvm/versions/$BIT_VERSION/bit-$BIT_VERSION/node_modules/esbuild-linux-64/bin/

@@ -1,15 +1,25 @@
 import c from 'chalk';
 import Table from 'cli-table';
-import { Command, CommandOptions } from '@teambit/cli';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { ComponentLogMain } from './component-log.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { LegacyComponentLog } from '@teambit/legacy-component-log';
+import type { ComponentLogMain, LogOpts } from './component-log.main.runtime';
 
+type LogFlags = {
+  remote?: boolean;
+  parents?: boolean;
+  oneLine?: boolean;
+  fullHash?: boolean;
+  fullMessage?: boolean;
+  showHidden?: boolean;
+};
 export default class LogCmd implements Command {
   name = 'log <id>';
-  description = 'show components(s) version history';
+  description = 'display component version history';
   helpUrl = 'reference/components/navigating-history';
-  extendedDescription: string;
-  group = 'info';
+  extendedDescription = `shows chronological history of component versions including tags and snaps with metadata.
+displays commit messages, authors, dates, and version information. supports both local and remote component logs.
+use various format options for compact or detailed views of version history.`;
+  group = 'version-control';
   alias = '';
   options = [
     ['r', 'remote', 'show log of a remote component'],
@@ -17,6 +27,11 @@ export default class LogCmd implements Command {
     ['o', 'one-line', 'show each log entry in one line'],
     ['f', 'full-hash', 'show full hash of the snap (default to the first 9 characters for --one-line/--parents flags)'],
     ['m', 'full-message', 'show full message of the snap (default to the first line for --one-line/--parents flags)'],
+    [
+      '',
+      'show-hidden',
+      'show hidden snaps (snaps are marked as hidden typically when the following tag has the same files/config)',
+    ],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
   remoteOp = true; // should support log against remote
@@ -27,23 +42,18 @@ export default class LogCmd implements Command {
 
   async report(
     [id]: [string],
-    {
-      remote = false,
-      parents = false,
-      oneLine = false,
-      fullHash = false,
-      fullMessage,
-    }: { remote: boolean; parents: boolean; oneLine?: boolean; fullHash?: boolean; fullMessage?: boolean }
+    { remote = false, parents = false, oneLine = false, fullHash = false, fullMessage, showHidden }: LogFlags
   ) {
     if (!parents && !oneLine) {
       fullHash = true;
       fullMessage = true;
     }
+    const logOpts: LogOpts = { isRemote: remote, shortHash: !fullHash, shortMessage: !fullMessage, showHidden };
     if (parents) {
-      const logs = await this.componentLog.getLogsWithParents(id, fullHash, fullMessage);
+      const logs = await this.componentLog.getLogsWithParents(id, logOpts);
       return logs.join('\n');
     }
-    const logs = await this.componentLog.getLogs(id, remote, !fullHash, !fullMessage);
+    const logs = await this.componentLog.getLogs(id, logOpts);
     if (oneLine) {
       return logOneLine(logs.reverse());
     }
@@ -51,11 +61,19 @@ export default class LogCmd implements Command {
     return logs.reverse().map(paintLog).join('\n');
   }
 
-  async json([id]: [string], { remote = false, parents = false }: { remote: boolean; parents: boolean }) {
-    if (parents) {
-      return this.componentLog.getLogsWithParents(id);
+  async json(
+    [id]: [string],
+    { remote = false, parents = false, oneLine = false, fullHash = false, fullMessage, showHidden }: LogFlags
+  ) {
+    if (!parents && !oneLine) {
+      fullHash = true;
+      fullMessage = true;
     }
-    return this.componentLog.getLogs(id, remote);
+    const logOpts: LogOpts = { isRemote: remote, shortHash: !fullHash, shortMessage: !fullMessage, showHidden };
+    if (parents) {
+      return this.componentLog.getLogsWithParents(id, logOpts);
+    }
+    return this.componentLog.getLogs(id, logOpts);
   }
 }
 
@@ -74,8 +92,10 @@ export function paintAuthor(email: string | null | undefined, username: string |
 }
 
 function paintLog(log: LegacyComponentLog): string {
-  const { message, date, tag, hash, username, email } = log;
-  const title = tag ? `tag ${tag} (${hash})\n` : `snap ${hash}\n`;
+  const { message, date, tag, hash, username, email, deleted, deprecated } = log;
+  const deletedStr = deleted ? c.red(' [deleted]') : '';
+  const deprecatedStr = !deleted && deprecated ? c.yellow(' [deprecated]') : '';
+  const title = tag ? `tag ${tag} (${hash})${deletedStr}${deprecatedStr}\n` : `snap ${hash}\n`;
   return (
     c.yellow(title) +
     paintAuthor(email, username) +

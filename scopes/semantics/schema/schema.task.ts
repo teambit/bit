@@ -1,17 +1,17 @@
-import {
+import type {
   BuildContext,
   BuiltTaskResult,
   BuildTask,
   TaskLocation,
-  CAPSULE_ARTIFACTS_DIR,
   ComponentResult,
   ArtifactDefinition,
 } from '@teambit/builder';
-import { Logger } from '@teambit/logger';
+import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
+import type { Logger } from '@teambit/logger';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import { join } from 'path';
-import { SchemaMain } from './schema.main.runtime';
+import type { SchemaMain } from './schema.main.runtime';
 
 export const SCHEMA_TASK_NAME = 'ExtractSchema';
 export const SCHEMA_ARTIFACT_NAME = 'schema';
@@ -24,7 +24,11 @@ export class SchemaTask implements BuildTask {
   readonly location: TaskLocation = 'end';
   readonly description = 'extract api schema for a set of components';
 
-  constructor(readonly aspectId: string, private schema: SchemaMain, private logger: Logger) {}
+  constructor(
+    readonly aspectId: string,
+    private schema: SchemaMain,
+    private logger: Logger
+  ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const startTime = Date.now();
@@ -70,11 +74,10 @@ export function getSchemaArtifactPath() {
   return join(CAPSULE_ARTIFACTS_DIR, 'schema.json');
 }
 
-export function getSchemaArtifactDef() {
+export function getSchemaArtifactDef(): ArtifactDefinition {
   const def: ArtifactDefinition = {
     name: SCHEMA_ARTIFACT_NAME,
-    rootDir: CAPSULE_ARTIFACTS_DIR,
-    globPatterns: ['schema.json'],
+    globPatterns: [getSchemaArtifactPath()],
   };
 
   return def;

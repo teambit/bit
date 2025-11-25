@@ -1,10 +1,6 @@
-import {
-  FunctionLikeSchema,
-  ParameterSchema,
-  SchemaNode,
-  TypeRefSchema,
-} from '@teambit/semantics.entities.semantic-schema';
-import { SchemaNodeTransformer } from '@teambit/typescript';
+import type { ParameterSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { FunctionLikeSchema, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { SchemaNodeTransformer } from '@teambit/typescript';
 import { ReactSchema } from './react.schema';
 
 const REACT_FILE_EXT = ['.tsx', '.jsx'];

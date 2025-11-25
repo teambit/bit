@@ -1,6 +1,6 @@
-import { EnvContext, EnvHandler } from '@teambit/envs';
+import type { EnvContext, EnvHandler } from '@teambit/envs';
 import { findIndex } from 'lodash';
-import { ConfigWriterEntry } from './config-writer-entry';
+import type { ConfigWriterEntry } from './config-writer-entry';
 
 export type ConfigWriterHandler = {
   handler: EnvHandler<ConfigWriterEntry>;

@@ -1,6 +1,6 @@
-import { ComponentID } from '@teambit/component-id';
-import { RenderingContext } from './rendering-context';
-import { PreviewModule } from './types/preview-module';
+import type { ComponentID } from '@teambit/component-id';
+import type { RenderingContext } from './rendering-context';
+import type { PreviewModule } from './types/preview-module';
 
 export interface PreviewType {
   /**

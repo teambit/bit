@@ -12,6 +12,7 @@ export {
   VariantPolicyEntryValue,
   VariantPolicyConfigObject,
   SerializedVariantPolicy,
+  VariantPolicyConfigArr,
 } from './variant-policy';
 
 export { EnvPolicy, EnvPolicyConfigObject } from './env-policy';

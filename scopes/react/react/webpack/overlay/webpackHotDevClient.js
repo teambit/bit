@@ -181,6 +181,10 @@ function handleErrors(errors) {
     }
   }
 
+  // only send loaded event when mounted in an iframe
+  if (window.parent && window !== window.parent) {
+    window.parent.postMessage({ event: 'webpackInvalid' }, '*');
+  }
   // Do not attempt to reload now.
   // We will reload on next success instead.
 }

@@ -1,4 +1,4 @@
-import { DependencyLifecycleType } from '../dependencies';
+import type { DependencyLifecycleType } from '../dependencies';
 
 // TODO: add DetailedDependencyPolicy once support the force prop
 // export type DependencyPolicy = SemverVersionRule | DetailedDependencyPolicy;

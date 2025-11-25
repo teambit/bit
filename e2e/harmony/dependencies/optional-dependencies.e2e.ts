@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import Helper from '../../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 const ENV_POLICY = {
   peers: [
@@ -28,7 +28,8 @@ describe('optional dependencies', function () {
   let envId;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
+    helper.workspaceJsonc.disablePreview();
     envId = `${helper.scopes.remote}/react-based-env`;
     helper.command.create('react', 'button', '-p button --env teambit.react/react');
     helper.fs.prependFile('button/button.tsx', '// @ts-ignore\nimport isOdd from "is-odd";\n');
@@ -78,7 +79,7 @@ describe('optional dependencies', function () {
     let workspaceCapsulesRootDir: string;
     let buttonPkgJson;
     before(() => {
-      helper.command.build('--skip-tests');
+      helper.command.build('--tasks CoreExporter');
       workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
       buttonPkgJson = fs.readJsonSync(
         path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_button/package.json`)
@@ -111,7 +112,7 @@ describe('optional dependencies', function () {
     });
     describe('deps set --optional after snap', () => {
       before(() => {
-        helper.command.snapAllComponents('-m wip');
+        helper.command.snapAllComponentsWithoutBuild('-m wip');
         helper.command.dependenciesSet('button', 'is-positive@1.0.0', '--optional');
         showOutput = helper.command.showComponent('button');
       });

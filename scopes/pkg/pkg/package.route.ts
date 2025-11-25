@@ -1,7 +1,7 @@
-import { Request, Response, Route } from '@teambit/express';
+import type { Request, Response, Route } from '@teambit/express';
 import mime from 'mime';
 
-import { PkgMain } from './pkg.main.runtime';
+import type { PkgMain } from './pkg.main.runtime';
 
 export const routePath = `package`;
 export class PackageRoute implements Route {

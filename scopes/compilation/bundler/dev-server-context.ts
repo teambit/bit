@@ -1,4 +1,4 @@
-import { ExecutionContext } from '@teambit/envs';
+import type { ExecutionContext } from '@teambit/envs';
 
 export interface DevServerContext extends ExecutionContext {
   /**

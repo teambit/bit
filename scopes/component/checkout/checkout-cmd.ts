@@ -1,8 +1,8 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
+import type { ApplyVersionResults, MergeStrategy } from '@teambit/component.modules.merge-helper';
 import {
-  ApplyVersionResults,
   applyVersionReport,
   conflictSummaryReport,
   installationErrorOutput,
@@ -10,12 +10,11 @@ import {
   getRemovedOutput,
   getAddedOutput,
   getWorkspaceConfigUpdateOutput,
-} from '@teambit/merging';
-import { COMPONENT_PATTERN_HELP, HEAD, LATEST } from '@teambit/legacy/dist/constants';
-import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+} from '@teambit/component.modules.merge-helper';
+import { COMPONENT_PATTERN_HELP, HEAD, LATEST } from '@teambit/legacy.constants';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
+import type { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
 
 export class CheckoutCmd implements Command {
   name = 'checkout <to> [component-pattern]';
@@ -23,7 +22,7 @@ export class CheckoutCmd implements Command {
     {
       name: 'to',
       description:
-        "permitted values: [head, latest, reset, specific-version]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes",
+        "permitted values: [head, latest, reset, {specific-version}, {head~x}]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes",
     },
     {
       name: 'component-pattern',
@@ -32,13 +31,15 @@ export class CheckoutCmd implements Command {
   ];
   description = 'switch between component versions or remove local changes';
   helpUrl = 'reference/components/merging-changes#checkout-snaps-to-the-working-directory';
-  group = 'development';
-  extendedDescription = `
-\`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version
-\`bit checkout head [component-pattern]\` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all
-\`bit checkout latest [component-pattern]\` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all
-\`bit checkout reset [component-pattern]\` => remove local modifications from the specified ids (or all components when --all is used). also, if a component dir is deleted from the filesystem, it'll be restored
-when on a lane, "checkout head" only checks out components on this lane. to update main components, run "bit lane merge main"`;
+  group = 'version-control';
+  extendedDescription = `checkout components to specified versions or remove local changes. most commonly used as 'bit checkout head' to get latest versions.
+the \`<to>\` argument accepts these values:
+- head: checkout to last snap/tag (most common usage)
+- specific version: checkout to exact version (e.g. 'bit checkout 1.0.5 component-name')
+- head~x: go back x generations from head (e.g. 'head~2' for two versions back)
+- latest: checkout to latest semver tag
+- reset: remove local modifications and restore original files (also restores deleted component directories)
+when on lanes, 'checkout head' only affects lane components. to update main components, run 'bit lane merge main'.`;
   alias = 'U';
   options = [
     [
@@ -47,7 +48,7 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       'when a component is modified and the merge process found conflicts, display options to resolve them',
     ],
     [
-      '',
+      'r',
       'auto-merge-resolve <merge-strategy>',
       'in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
     ],
@@ -124,11 +125,17 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       forceOurs,
       forceTheirs,
     };
+    to = String(to); // it can be a number in case short-hash is used
     if (to === HEAD) checkoutProps.head = true;
     else if (to === LATEST) checkoutProps.latest = true;
     else if (to === 'reset') checkoutProps.reset = true;
     else if (to === 'main') checkoutProps.main = true;
-    else {
+    else if (to.startsWith(`${HEAD}~`)) {
+      const ancestor = parseInt(to.split('~')[1]);
+      if (Number.isNaN(ancestor))
+        throw new BitError(`the character after "${HEAD}~" must be a number, got ${ancestor}`);
+      checkoutProps.ancestor = ancestor;
+    } else {
       if (!ComponentID.isValidVersion(to)) throw new BitError(`the specified version "${to}" is not a valid version`);
       checkoutProps.version = to;
     }
@@ -183,14 +190,10 @@ export function checkoutOutput(
     return `${chalk.underline(title)}\n${body}`;
   };
   const getWsConfigUpdateLogs = () => {
-    // @TODO: uncomment the line below once UPDATE_DEPS_ON_IMPORT is enabled by default
-    // if (!importFlags.verbose) return '';
     const logs = workspaceConfigUpdateResult?.logs;
     if (!logs || !logs.length) return '';
     const logsStr = logs.join('\n');
-    return `${chalk.underline(
-      'verbose logs of workspace config update'
-    )}\n(this is temporarily. once this feature is enabled, use --verbose to see these logs)\n${logsStr}`;
+    return `${chalk.underline('verbose logs of workspace config update')}\n${logsStr}`;
   };
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
@@ -211,7 +214,6 @@ once ready, snap/tag the components to persist the changes`;
       const title =
         alternativeTitle ||
         `successfully ${switchedOrReverted} ${chalk.bold(componentName)} to version ${chalk.bold(
-          // @ts-ignore version is defined when !reset
           head || latest ? component.id.version : version
         )}`;
       return chalk.bold(title) + newLine + applyVersionReport(components, false);
@@ -225,7 +227,6 @@ once ready, snap/tag the components to persist the changes`;
       if (head) return 'their head version';
       if (latest) return 'their latest version';
       if (main) return 'their main version';
-      // @ts-ignore version is defined when !reset
       return `version ${chalk.bold(version)}`;
     };
     const versionOutput = getVerOutput();

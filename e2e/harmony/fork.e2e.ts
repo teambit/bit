@@ -1,13 +1,13 @@
 import { expect } from 'chai';
-import { Extensions } from '../../src/constants';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Extensions } from '@teambit/legacy.constants';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('bit fork command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.fixtures.populateComponents(1);
     helper.command.tagAllWithoutBuild();
     helper.command.export();
@@ -44,7 +44,7 @@ describe('bit fork command', function () {
   });
   describe('fork a remote component with no --target-id flag', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+      helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.scopeHelper.addRemoteScope();
       helper.command.fork(`${helper.scopes.remote}/comp1`);
     });

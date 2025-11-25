@@ -1,46 +1,50 @@
 // eslint-disable-next-line max-classes-per-file
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 // import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
-import { ApplicationMain } from './application.main.runtime';
+import type { ApplicationMain } from './application.main.runtime';
 
 export class AppListCmd implements Command {
   name = 'list';
   description = 'list all registered apps';
   alias = '';
-  group = 'apps';
+  group = 'run-serve';
   helpUrl = 'reference/reference/cli-reference';
   options = [['j', 'json', 'return the component data in json format']] as CommandOptions;
 
   constructor(private applicationAspect: ApplicationMain) {}
 
-  async report(args: [string], { json }: { json: boolean }) {
-    const appComponents = this.applicationAspect.mapApps();
-    if (json) return JSON.stringify(appComponents, null, 2);
-    if (!appComponents.length) return chalk.yellow('no apps found');
-
-    const rows = appComponents.flatMap(([id, apps]) => {
-      return apps.map((app) => [id, app.name]);
-    });
-
+  async report() {
+    const idsAndNames = await this.applicationAspect.listAppsIdsAndNames();
+    if (!idsAndNames.length) return chalk.yellow('no apps found');
+    const rows = idsAndNames.map(({ id, name }) => [id, name]);
     const table = new CLITable(['id', 'name'], rows);
     return table.render();
+  }
+
+  async json() {
+    const idsAndNames = await this.applicationAspect.listAppsIdsAndNames();
+    return idsAndNames;
   }
 }
 
 export class AppCmd implements Command {
-  name = 'app <sub-command>';
-  description = 'Manages apps';
+  name = 'app [sub-command]';
+  description = 'manage application components';
+  extendedDescription = `applications are components that create deployable, runnable applications like React apps or Node.js servers.
+list available apps in the workspace and inspect their configurations.
+use "bit run" to start an application locally.`;
   helpUrl = 'docs/getting-started/composing/create-apps';
   alias = 'apps';
-  group = 'apps';
+  group = 'run-serve';
   commands: Command[] = [];
   options = [] as CommandOptions;
 
+  constructor(private applicationAspect: ApplicationMain) {}
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async report(args: [string]) {
-    // it should never be here. Yargs throws an error before reaching this method.
-    return `Please specify a sub-command`;
+    return new AppListCmd(this.applicationAspect).report();
   }
 }

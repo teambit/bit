@@ -1,7 +1,7 @@
 import { gql } from 'graphql-tag';
-import { Schema } from '@teambit/graphql';
-import { ScopeDescriptor } from '@teambit/scopes.scope-descriptor';
-import { CloudMain } from './cloud.main.runtime';
+import type { Schema } from '@teambit/graphql';
+import type { ScopeDescriptor } from '@teambit/scopes.scope-descriptor';
+import type { CloudMain } from './cloud.main.runtime';
 
 export function cloudSchema(cloud: CloudMain): Schema {
   return {
@@ -20,12 +20,13 @@ export function cloudSchema(cloud: CloudMain): Schema {
       }
       type Query {
         getCurrentUser: CloudUser
-        loginUrl(redirectUrl: String!): String!
+        loginUrl: String!
         getCloudScopes(ids: [String!]): [CloudScope!]
         isLoggedIn: Boolean
       }
       type Mutation {
         logout: Boolean
+        setRedirectUrl(redirectUrl: String!): Boolean
       }
     `,
     resolvers: {
@@ -38,8 +39,8 @@ export function cloudSchema(cloud: CloudMain): Schema {
         isLoggedIn: () => {
           return cloud.isLoggedIn();
         },
-        loginUrl: (_, { redirectUrl }: { redirectUrl?: string }) => {
-          return cloud.getLoginUrl({ redirectUrl });
+        loginUrl: () => {
+          return cloud.getLoginUrl();
         },
         getCurrentUser: async () => {
           const user = await cloud.getCurrentUser();
@@ -54,7 +55,11 @@ export function cloudSchema(cloud: CloudMain): Schema {
       },
       Mutation: {
         logout: async () => {
-          cloud.logout();
+          await cloud.logout();
+          return true;
+        },
+        setRedirectUrl: async (_, { redirectUrl }: { redirectUrl: string }) => {
+          cloud.setRedirectUrl(redirectUrl);
           return true;
         },
       },

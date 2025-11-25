@@ -1,15 +1,8 @@
-import { ComponentID } from '@teambit/component-id';
-import {
-  PreviewAspect,
-  PreviewPreview,
-  RenderingContext,
-  PreviewRuntime,
-  PreviewModule,
-  ModuleFile,
-} from '@teambit/preview';
+import type { ComponentID } from '@teambit/component-id';
+import type { PreviewPreview, RenderingContext, PreviewModule, ModuleFile } from '@teambit/preview';
+import { PreviewAspect, PreviewRuntime } from '@teambit/preview';
 import head from 'lodash.head';
-import { CompositionBrowserMetadataObject } from './composition';
-
+import type { CompositionBrowserMetadataObject } from './composition';
 import { CompositionsAspect } from './compositions.aspect';
 
 export class CompositionsPreview {
@@ -20,12 +13,26 @@ export class CompositionsPreview {
     private preview: PreviewPreview
   ) {}
 
+  private cache = new Map<string, ModuleFile>();
+
   render(componentId: ComponentID, envId: string, modules: PreviewModule, otherPreviewDefs, context: RenderingContext) {
     if (!modules.componentMap[componentId.fullName]) return;
+    void this.renderAsync(componentId.fullName, envId, modules, modules.componentMap[componentId.fullName], context);
+  }
 
-    const compositions = this.selectPreviewModel(componentId.fullName, modules);
-    const metadata = this.getMetadata(componentId.fullName, modules);
-    const active = this.getActiveComposition(compositions, metadata);
+  private async renderAsync(
+    compKey: string,
+    envId: string,
+    modules: PreviewModule,
+    entries: any[],
+    context: RenderingContext
+  ) {
+    const files = await this.normalizeEntries(entries);
+    const combined = Object.assign({}, ...files);
+    this.cache.set(compKey, combined);
+
+    const metadata = this.getMetadata(compKey, modules);
+    const active = this.getActiveComposition(combined, metadata);
 
     const mainModule = modules.modulesMap[envId] || modules.modulesMap.default;
     let defaultExports = mainModule.default;
@@ -34,17 +41,46 @@ export class CompositionsPreview {
       defaultExports = defaultExports.default;
     }
 
-    // @ts-ignore Gilad - to fix.
-    defaultExports(active, context);
+    if (typeof defaultExports === 'function') {
+      try {
+        defaultExports(active, context);
+      } catch (err) {
+        // last-resort log – loaders already logged their own failures
+        // eslint-disable-next-line no-console
+        console.error('[preview][render:fail]', compKey, err);
+      }
+    }
   }
 
-  /** gets relevant information for this preview to render */
-  selectPreviewModel(componentFullName: string, previewModule: PreviewModule) {
-    const files = previewModule.componentMap[componentFullName] || [];
+  /** Accepts modules or loader functions and returns an array of module objects. */
+  private async normalizeEntries(entries: any[]): Promise<any[]> {
+    const tasks = (entries || []).map((item) => {
+      try {
+        if (typeof item === 'function') {
+          const p = item();
+          if (p && typeof p.then === 'function') return p.catch(() => ({}));
+          return Promise.resolve(p || {});
+        }
+        return Promise.resolve(item || {});
+      } catch {
+        return Promise.resolve({});
+      }
+    });
+    try {
+      return await Promise.all(tasks);
+    } catch {
+      return [];
+    }
+  }
 
-    // allow compositions to come from many files. It is assumed they will have unique named
-    const combined = Object.assign({}, ...files);
-    return combined;
+  selectPreviewModel(componentFullName: string, previewModule: PreviewModule) {
+    // Prefer the combined result produced during renderAsync (if already run)
+    const cached = this.cache.get(componentFullName);
+    if (cached) return cached;
+
+    // Fallback: best-effort sync combine of whatever is there (ignore loader functions)
+    const files = (previewModule.componentMap[componentFullName] || []).filter((x) => typeof x !== 'function');
+    return Object.assign({}, ...files);
   }
 
   getMetadata(componentFullName: string, previewModule: PreviewModule): CompositionBrowserMetadataObject | undefined {

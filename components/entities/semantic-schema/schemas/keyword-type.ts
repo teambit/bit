@@ -1,15 +1,23 @@
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 
 /**
  * e.g. 'string', 'boolean', etc.
  */
 export class KeywordTypeSchema extends SchemaNode {
-  constructor(readonly location: SchemaLocation, readonly name: string) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly name: string
+  ) {
     super();
   }
 
   toString() {
     return this.name;
+  }
+
+  toFullSignature(): string {
+    return this.toString();
   }
 
   toObject() {

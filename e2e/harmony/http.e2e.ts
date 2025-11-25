@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { IS_WINDOWS } from '../../src/constants';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { IS_WINDOWS } from '@teambit/legacy.constants';
+import { Helper } from '@teambit/legacy.e2e-helper';
 import { HttpHelper } from '../http-helper';
 
 // @TODO: fix for Windows
@@ -18,7 +18,7 @@ import { HttpHelper } from '../http-helper';
   describe('export lane', () => {
     before(async () => {
       httpHelper = new HttpHelper(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.command.createLane();
@@ -64,21 +64,27 @@ import { HttpHelper } from '../http-helper';
   describe('export with deleted components', () => {
     before(async () => {
       httpHelper = new HttpHelper(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
     });
-    it('bit list -r should show not show the removed component', () => {
+    it('bit list should not show the removed component', () => {
       const list = helper.command.listRemoteScopeParsed();
       expect(list).to.have.lengthOf(1);
       expect(list[0].id).to.not.have.string('comp2');
+    });
+    it('bit list --include-deleted should show the removed component', () => {
+      const list = helper.command.listRemoteScopeParsed('--include-deleted');
+      expect(list).to.have.lengthOf(2);
+      const ids = list.map((c) => c.id);
+      expect(ids).to.include(`${helper.scopes.remote}/comp2`);
     });
     it('bit import of the entire scope should not bring in the deleted components', () => {
       helper.command.importComponent('*', '-x');
@@ -95,14 +101,14 @@ import { HttpHelper } from '../http-helper';
     let scopeAfterExport: string;
     before(async () => {
       httpHelper = new HttpHelper(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
       exportOutput = helper.command.export();
-      scopeAfterExport = helper.scopeHelper.cloneLocalScope();
+      scopeAfterExport = helper.scopeHelper.cloneWorkspace();
     });
     after(() => {
       httpHelper.killHttp();
@@ -124,7 +130,7 @@ import { HttpHelper } from '../http-helper';
     describe('bit import', () => {
       let importOutput;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteHttpScope();
         importOutput = helper.command.importComponent('comp1');
       });
@@ -134,7 +140,7 @@ import { HttpHelper } from '../http-helper';
     });
     describe('bit remove --remote', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterExport);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterExport);
       });
       it('should show descriptive error when removing component that has dependents', () => {
         const output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/comp2`);
@@ -146,6 +152,52 @@ import { HttpHelper } from '../http-helper';
         expect(output).to.have.string('successfully removed components');
         expect(output).to.have.string('comp1');
       });
+    });
+  });
+  describe('import with pattern matching for nested namespaces', () => {
+    before(async () => {
+      httpHelper = new HttpHelper(helper);
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      await httpHelper.start();
+      helper.scopeHelper.addRemoteHttpScope();
+
+      // Create components with nested namespace structure
+      // Component directly under examples/
+      helper.fs.outputFile('examples/hello-world/index.js', 'console.log("hello from examples");');
+      helper.command.addComponent('examples/hello-world', { n: 'examples/hello-world' });
+
+      // Component with nested namespace beta/vitest-4/examples/
+      helper.fs.outputFile('beta/vitest-4/examples/hello-world/index.js', 'console.log("hello from beta");');
+      helper.command.addComponent('beta/vitest-4/examples/hello-world', { n: 'beta/vitest-4/examples/hello-world' });
+
+      // Another component in beta but not under examples
+      helper.fs.outputFile('beta/other/component/index.js', 'console.log("other beta component");');
+      helper.command.addComponent('beta/other/component', { n: 'beta/other/component' });
+
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // Reinit workspace to test importing
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteHttpScope();
+    });
+
+    it('should only import components directly under examples/ when using "examples/**" pattern', () => {
+      helper.command.importComponent('examples/**', '-x');
+      const list = helper.command.listParsed();
+      const ids = list.map((c) => c.id);
+
+      // Should only import the component directly under examples/, not nested namespaces
+      expect(list).to.have.lengthOf(1);
+      expect(ids[0]).to.include('examples/hello-world');
+
+      // Should NOT have imported the nested namespace component
+      const idsStr = ids.join(',');
+      expect(idsStr).to.not.include('beta/vitest-4/examples/hello-world');
+    });
+
+    after(() => {
+      httpHelper.killHttp();
     });
   });
 });

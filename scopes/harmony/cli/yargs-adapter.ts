@@ -1,8 +1,9 @@
-import { Command } from '@teambit/legacy/dist/cli/command';
-import { Arguments, CommandModule, Argv, Options } from 'yargs';
-import { TOKEN_FLAG } from '@teambit/legacy/dist/constants';
-import { camelCase } from 'lodash';
+import type { Command } from './command';
+import type { Arguments, CommandModule, Argv, Options } from 'yargs';
+import { TOKEN_FLAG } from '@teambit/legacy.constants';
 import { CommandRunner } from './command-runner';
+import type { OnCommandStartSlot } from './cli.main.runtime';
+import { getArgsData, getFlagsData } from './command-helper';
 
 export const GLOBAL_GROUP = 'Global';
 export const STANDARD_GROUP = 'Options';
@@ -11,7 +12,11 @@ export class YargsAdapter implements CommandModule {
   command: string;
   describe?: string;
   aliases?: string;
-  constructor(private commanderCommand: Command) {
+  commandRunner?: CommandRunner;
+  constructor(
+    private commanderCommand: Command,
+    private onCommandStartSlot: OnCommandStartSlot
+  ) {
     this.command = commanderCommand.name;
     this.describe = commanderCommand.description;
     this.aliases = commanderCommand.alias;
@@ -31,8 +36,8 @@ export class YargsAdapter implements CommandModule {
   }
 
   handler(argv: Arguments) {
-    const enteredArgs = getArgsFromCommandName(this.commanderCommand.name);
-    const argsValues = enteredArgs.map((a) => argv[a]) as any[];
+    const commandArgs = getArgsData(this.commanderCommand).map((arg) => arg.nameCamelCase);
+    const argsValues = commandArgs.map((a) => argv[a]) as any[];
     // a workaround to get a flag syntax such as "--all [version]" work with yargs.
     const flags = Object.keys(argv).reduce((acc, current) => {
       if (current === '_' || current === '$0' || current === '--') return acc;
@@ -43,8 +48,8 @@ export class YargsAdapter implements CommandModule {
     }, {});
     this.commanderCommand._packageManagerArgs = (argv['--'] || []) as string[];
 
-    const commandRunner = new CommandRunner(this.commanderCommand, argsValues, flags);
-    return commandRunner.runCommand();
+    const commandRunner = new CommandRunner(this.commanderCommand, argsValues, flags, this.onCommandStartSlot);
+    this.commandRunner = commandRunner;
   }
 
   get positional() {
@@ -52,17 +57,18 @@ export class YargsAdapter implements CommandModule {
   }
 
   static optionsToBuilder(command: Command): { [key: string]: Options } {
-    const option = command.options.reduce((acc, [alias, opt, desc]) => {
-      const optName = opt.split(' ')[0];
-      acc[optName] = {
-        alias,
-        describe: desc,
+    const flagsData = getFlagsData(command);
+    const option = flagsData.reduce((acc, flag) => {
+      acc[flag.name] = {
+        alias: flag.alias,
+        describe: flag.description,
         group: STANDARD_GROUP,
-        type: opt.includes(' ') ? 'string' : 'boolean',
-        requiresArg: opt.includes('<'),
+        type: flag.type,
+        requiresArg: flag.requiresArg,
       } as Options;
       return acc;
     }, {});
+
     const globalOptions = YargsAdapter.getGlobalOptions(command);
 
     return { ...option, ...globalOptions };
@@ -83,25 +89,9 @@ export class YargsAdapter implements CommandModule {
     };
     globalOptions['safe-mode'] = {
       describe:
-        'bootstrap the bare-minimum with only the CLI aspect. useful mainly for low-level commands when bit refuses to load',
+        'useful when it fails to load normally. it skips loading aspects from workspace.jsonc, and for legacy-commands it initializes only the CLI aspect',
       group: GLOBAL_GROUP,
     };
     return globalOptions;
   }
-}
-
-function getArgsFromCommandName(commandName: string) {
-  const commandSplit = commandName.split(' ');
-  commandSplit.shift(); // remove the first element, it's the command-name
-
-  return commandSplit.map((existArg) => {
-    const trimmed = existArg.trim();
-    if ((!trimmed.startsWith('<') && !trimmed.startsWith('[')) || (!trimmed.endsWith('>') && !trimmed.endsWith(']'))) {
-      throw new Error(`expect arg "${trimmed}" of "${commandName}" to be wrapped with "[]" or "<>"`);
-    }
-    // remove the opening and closing brackets
-    const withoutBrackets = trimmed.slice(1, -1);
-
-    return camelCase(withoutBrackets);
-  });
 }

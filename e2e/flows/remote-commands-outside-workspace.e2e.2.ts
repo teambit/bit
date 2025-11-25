@@ -1,8 +1,8 @@
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import { expect } from 'chai';
 
-import { ConsumerNotFound } from '../../src/consumer/exceptions';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { ConsumerNotFound } from '@teambit/legacy.consumer';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('bit remote command', function () {
   this.timeout(0);
@@ -15,15 +15,15 @@ describe('bit remote command', function () {
   });
   describe('exporting a component to a global remote', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.reInitRemoteScope();
       helper.workspaceJsonc.setupDefault();
       helper.command.runCmd(`bit remote add file://${helper.scopes.remotePath} --global`);
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.scopeHelper.cleanLocalScope();
+      helper.scopeHelper.cleanWorkspace();
     });
     after(() => {
       helper.command.runCmd(`bit remote del ${helper.scopes.remote} --global`);

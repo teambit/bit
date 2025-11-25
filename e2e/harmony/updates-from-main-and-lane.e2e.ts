@@ -1,8 +1,10 @@
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('updates from main and lane', function () {
   this.timeout(0);
@@ -16,14 +18,14 @@ describe('updates from main and lane', function () {
   describe('updates are available from both main and lane', () => {
     let scopeBeforeUpdate: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.createLane();
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
       helper.command.export();
-      scopeBeforeUpdate = helper.scopeHelper.cloneLocalScope();
+      scopeBeforeUpdate = helper.scopeHelper.cloneWorkspace();
 
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
       helper.command.export();
@@ -31,7 +33,7 @@ describe('updates from main and lane', function () {
       helper.command.tagWithoutBuild('comp2', '--unmodified');
       helper.command.export();
 
-      helper.scopeHelper.getClonedLocalScope(scopeBeforeUpdate);
+      helper.scopeHelper.getClonedWorkspace(scopeBeforeUpdate);
       helper.command.import();
     });
     it('by default should only show updates from the current lane', () => {
@@ -68,7 +70,7 @@ describe('updates from main and lane', function () {
       before(() => {
         mergeOutput = helper.command.mergeLane(
           'main',
-          '--skip-dependency-installation --no-snap --include-non-lane-comps'
+          '--skip-dependency-installation --no-auto-snap --include-non-lane-comps'
         );
       });
       it('should update not only components belong to the main but also components that are available on the workspace and have updates from main', () => {

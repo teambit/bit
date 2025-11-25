@@ -1,8 +1,9 @@
 import { expect } from 'chai';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
-import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents } from '@teambit/component.testing.mock-components';
-import { DependenciesMain, SetDependenciesResult } from './dependencies.main.runtime';
+import type { DependenciesMain, SetDependenciesResult } from './dependencies.main.runtime';
 import { DependenciesAspect } from './dependencies.aspect';
 
 describe('Dependencies Aspect', function () {

@@ -1,23 +1,27 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import moment from 'moment';
-import { ComponentID } from '@teambit/component-id';
-import {
-  DependencyResolverAspect,
-  DependencyResolverMain,
-  KEY_NAME_BY_LIFECYCLE_TYPE,
-} from '@teambit/dependency-resolver';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { cloneDeep, compact, set } from 'lodash';
+import type { ComponentID } from '@teambit/component-id';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, KEY_NAME_BY_LIFECYCLE_TYPE } from '@teambit/dependency-resolver';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
+import { cloneDeep, compact, set, uniq } from 'lodash';
 import pMapSeries from 'p-map-series';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import ComponentLoader, { DependencyLoaderOpts } from '@teambit/legacy/dist/consumer/component/component-loader';
-import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
-import { GraphAspect, ComponentIdGraph, GraphMain } from '@teambit/graph';
-import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
+import type { ConsumerComponent, DependencyLoaderOpts } from '@teambit/legacy.consumer-component';
+import { ComponentLoader } from '@teambit/legacy.consumer-component';
+import type { DevFilesMain } from '@teambit/dev-files';
+import { DevFilesAspect } from '@teambit/dev-files';
+import type { ComponentIdGraph, GraphMain } from '@teambit/graph';
+import { GraphAspect } from '@teambit/graph';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { snapToSemver } from '@teambit/component-package-version';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 import { DependenciesLoader } from './dependencies-loader/dependencies-loader';
-import { DependenciesData, OverridesDependenciesData } from './dependencies-loader/dependencies-data';
+import type { DependenciesData, OverridesDependenciesData } from './dependencies-loader/dependencies-data';
+import type { RemoveDependenciesFlags, SetDependenciesFlags } from './dependencies-cmd';
 import {
   DependenciesBlameCmd,
   DependenciesCmd,
@@ -29,13 +33,16 @@ import {
   DependenciesSetCmd,
   DependenciesUnsetCmd,
   DependenciesUsageCmd,
-  RemoveDependenciesFlags,
-  SetDependenciesFlags,
+  DependenciesWriteCmd,
   SetPeerCmd,
+  UnsetPeerCmd,
   WhyCmd,
 } from './dependencies-cmd';
 import { DependenciesAspect } from './dependencies.aspect';
-import { DebugDependencies } from './dependencies-loader/auto-detect-deps';
+import type { DebugDependencies } from './dependencies-loader/auto-detect-deps';
+import { DependentsCmd } from './dependents-cmd';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 
 export type RemoveDependencyResult = { id: ComponentID; removedPackages: string[] };
 export type SetDependenciesResult = { changedComps: string[]; addedPackages: Record<string, string> };
@@ -63,7 +70,8 @@ export class DependenciesMain {
     private dependencyResolver: DependencyResolverMain,
     private devFiles: DevFilesMain,
     private aspectLoader: AspectLoaderMain,
-    private graph: GraphMain
+    private graph: GraphMain,
+    private logger: Logger
   ) {}
 
   async setPeer(componentId: string, range?: string): Promise<void> {
@@ -75,6 +83,23 @@ export class DependenciesMain {
     });
 
     await this.workspace.bitMap.write(`set-peer (${componentId})`);
+  }
+
+  async unsetPeer(componentId: string): Promise<void> {
+    const compId = await this.workspace.resolveComponentId(componentId);
+    // const config = { peer: true, defaultPeerRange: range };
+    const config = await this.workspace.getAspectConfigForComponent(compId, DependencyResolverAspect.id);
+    if (config) {
+      if ('peer' in config) {
+        delete config.peer;
+      }
+      if ('defaultPeerRange' in config) {
+        delete config.defaultPeerRange;
+      }
+    }
+    this.workspace.bitMap.addComponentConfig(compId, DependencyResolverAspect.id, config);
+
+    await this.workspace.bitMap.write(`unset-peer (${componentId})`);
   }
 
   async setDependency(
@@ -127,9 +152,20 @@ export class DependenciesMain {
     options: RemoveDependenciesFlags = {},
     removeOnlyIfExists = false // unset
   ): Promise<RemoveDependencyResult[]> {
+    const getLifeCycle = () => {
+      if (options.dev) return 'dev';
+      if (options.peer) return 'peer';
+      return 'runtime';
+    };
     const compIds = await this.workspace.idsByPattern(componentPattern);
     const results = await pMapSeries(compIds, async (compId) => {
       const component = await this.workspace.get(compId);
+      const missingPackages = uniq(
+        component.state.issues
+          .getIssueByName('MissingPackagesDependenciesOnFs')
+          ?.data.map((d) => d.missingPackages)
+          .flat() || []
+      );
       const depList = this.dependencyResolver.getDependencies(component);
       const getCurrentConfig = async () => {
         const currentConfigFromWorkspace = await this.workspace.getSpecificComponentConfig(
@@ -142,17 +178,18 @@ export class DependenciesMain {
       };
       const currentDepResolverConfig = await getCurrentConfig();
       const newDepResolverConfig = cloneDeep(currentDepResolverConfig || {});
+      const depField = KEY_NAME_BY_LIFECYCLE_TYPE[getLifeCycle()];
       const removedPackagesWithNulls = await pMapSeries(packages, async (pkg) => {
         const [name, version] = this.splitPkgToNameAndVer(pkg);
-        const dependency = depList.findByPkgNameOrCompId(name, version);
-        if (!dependency) return null;
+        const dependency = depList.findByPkgNameOrCompId(name, version, getLifeCycle());
+        if (!dependency) {
+          if (!missingPackages.includes(name)) return null;
+          if (removeOnlyIfExists) return null;
+          set(newDepResolverConfig, ['policy', depField, name], '-');
+          return `${name}@${version || 'latest'}`;
+        }
         const depName = dependency.getPackageName?.() || dependency.id;
-        const getLifeCycle = () => {
-          if (options.dev) return 'dev';
-          if (options.peer) return 'peer';
-          return dependency.lifecycle;
-        };
-        const depField = KEY_NAME_BY_LIFECYCLE_TYPE[getLifeCycle()];
+
         const existsInSpecificConfig = newDepResolverConfig.policy?.[depField]?.[depName];
         if (existsInSpecificConfig) {
           if (existsInSpecificConfig === '-') return null;
@@ -216,7 +253,8 @@ export class DependenciesMain {
       component,
       this.dependencyResolver,
       this.devFiles,
-      this.aspectLoader
+      this.aspectLoader,
+      this.logger
     );
     return dependenciesLoader.load(this.workspace, opts);
   }
@@ -232,7 +270,8 @@ export class DependenciesMain {
       component,
       this.dependencyResolver,
       this.devFiles,
-      this.aspectLoader
+      this.aspectLoader,
+      this.logger
     );
     return dependenciesLoader.loadFromScope(dependenciesData);
   }
@@ -303,6 +342,7 @@ export class DependenciesMain {
   }
 
   async usageDeep(depName: string, opts?: { depth?: number }): Promise<string | undefined> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     if (!isComponentId(depName)) {
       return this.dependencyResolver.getPackageManager()?.findUsages?.(depName, {
         lockfileDir: this.workspace.path,
@@ -317,6 +357,7 @@ export class DependenciesMain {
    * @returns a map of component-id-string to the version of the dependency
    */
   async usage(depName: string): Promise<{ [compIdStr: string]: string }> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const [name, version] = this.splitPkgToNameAndVer(depName);
     const allComps = await this.workspace.list();
     const results = {};
@@ -364,20 +405,23 @@ export class DependenciesMain {
     AspectLoaderAspect,
     ScopeAspect,
     GraphAspect,
+    LoggerAspect,
   ];
 
   static runtime = MainRuntime;
 
-  static async provider([cli, workspace, depsResolver, devFiles, aspectLoader, scope, graph]: [
+  static async provider([cli, workspace, depsResolver, devFiles, aspectLoader, scope, graph, loggerMain]: [
     CLIMain,
     Workspace,
     DependencyResolverMain,
     DevFilesMain,
     AspectLoaderMain,
     ScopeMain,
-    GraphMain
+    GraphMain,
+    LoggerMain,
   ]) {
-    const depsMain = new DependenciesMain(workspace, scope, depsResolver, devFiles, aspectLoader, graph);
+    const logger = loggerMain.createLogger(DependenciesAspect.id);
+    const depsMain = new DependenciesMain(workspace, scope, depsResolver, devFiles, aspectLoader, graph, logger);
     const depsCmd = new DependenciesCmd();
     depsCmd.commands = [
       new DependenciesGetCmd(depsMain),
@@ -389,10 +433,15 @@ export class DependenciesMain {
       new DependenciesEjectCmd(depsMain),
       new DependenciesBlameCmd(depsMain),
       new DependenciesUsageCmd(depsMain),
+      new DependenciesWriteCmd(workspace),
     ];
-    const whyCmd = new WhyCmd(depsMain);
-    const setPeerCmd = new SetPeerCmd(depsMain);
-    cli.register(depsCmd, whyCmd, setPeerCmd);
+    cli.register(
+      depsCmd,
+      new WhyCmd(depsMain),
+      new SetPeerCmd(depsMain),
+      new UnsetPeerCmd(depsMain),
+      new DependentsCmd(workspace)
+    );
 
     ComponentLoader.loadDeps = depsMain.loadDependencies.bind(depsMain);
 

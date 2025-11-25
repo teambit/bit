@@ -1,16 +1,8 @@
-import React, {
-  ComponentType,
-  createContext,
-  ReactNode,
-  useContext,
-  useState,
-  Dispatch,
-  SetStateAction,
-  useEffect,
-} from 'react';
-import { ComponentModel } from '@teambit/component';
+import type { ComponentType, ReactNode, Dispatch, SetStateAction } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { ComponentModel } from '@teambit/component';
 import { isFunction } from 'lodash';
-import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import type { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 
 export type ComponentFilters = Array<ComponentFilterCriteria<any>>;
 export type ComponentFilterRenderProps = {
@@ -40,26 +32,37 @@ const updateFilter = (filterContext: ComponentFilterContextType, updatedFilter: 
     });
   });
 };
+
 export function useComponentFilter<T>(
   filterId: string,
   defaultState?: T
-): [ComponentFilterCriteria<T>, Dispatch<SetStateAction<ComponentFilterCriteria<T>>>] | undefined {
+): [ComponentFilterCriteria<T> | undefined, Dispatch<SetStateAction<ComponentFilterCriteria<T>>>] {
   const filterContext = useContext(ComponentFilterContext);
-  const filterFromContext = filterContext?.filters.find((existingFilter) => existingFilter.id === filterId);
+
+  const filterFromContext: ComponentFilterCriteria<any> = filterContext?.filters.find(
+    (existingFilter) => existingFilter.id === filterId
+  ) || {
+    id: filterId,
+    render: () => null,
+    match: () => true,
+    state: defaultState,
+    order: 0,
+  };
 
   useEffect(() => {
-    if (filterFromContext && defaultState) {
+    if (filterContext && defaultState !== undefined) {
       const initialFilterState = { ...filterFromContext, state: defaultState };
-      updateFilter(filterContext as ComponentFilterContextType, initialFilterState);
+      updateFilter(filterContext, initialFilterState);
     }
   }, [filterId]);
 
-  if (!filterContext || !filterFromContext) return undefined;
   type Setter = Dispatch<SetStateAction<ComponentFilterCriteria<any>>>;
 
   const setState: Setter = (updatedState) => {
     const nextState = isFunction(updatedState) ? updatedState(filterFromContext) : updatedState;
-    updateFilter(filterContext, nextState);
+    if (filterContext) {
+      updateFilter(filterContext, nextState);
+    }
   };
 
   return [filterFromContext, setState];
@@ -74,7 +77,7 @@ export function useComponentFilters():
 
 export const ComponentFiltersProvider = ({
   children,
-  filters,
+  filters = [],
 }: {
   children: ReactNode;
   filters?: ComponentFilters;

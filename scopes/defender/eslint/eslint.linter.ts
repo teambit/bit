@@ -1,19 +1,19 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { flatten, compact } from 'lodash';
-import { Linter, LinterContext, LintResults, ComponentLintResult } from '@teambit/linter';
+import type { Linter, LinterContext, LintResults, ComponentLintResult } from '@teambit/linter';
 import { ESLint as ESLintLib } from 'eslint';
 import mapSeries from 'p-map-series';
 import objectHash from 'object-hash';
-import { ComponentMap } from '@teambit/component';
-import { Logger } from '@teambit/logger';
-import { ESLintOptions } from './eslint.main.runtime';
+import type { ComponentMap } from '@teambit/component';
+import type { Logger } from '@teambit/logger';
+import type { ESLintOptions } from './eslint.main.runtime';
 
 export class ESLintLinter implements Linter {
   constructor(
     private logger: Logger,
 
-    private options: ESLintOptions,
+    private options: ESLintOptions = { config: {} },
 
     /**
      * reference to the eslint module.
@@ -42,7 +42,7 @@ export class ESLintLinter implements Linter {
         this.options.config.overrideConfig.parserOptions.project = tsConfigPath;
       }
     }
-    const resultsP = mapSeries(context.components, async (component) => {
+    const resultsP = mapSeries(context.componentsDirMap.components, async (component) => {
       longProcessLogger.logProgress(
         `component: ${component.id.toString()}, # of files: ${component.filesystem.files.length}`
       );
@@ -70,6 +70,7 @@ export class ESLintLinter implements Linter {
         totalFixableWarningCount,
         totalWarningCount,
         componentsResults,
+        isClean,
       } = this.computeComponentResultsWithTotals(results);
 
       return {
@@ -80,6 +81,7 @@ export class ESLintLinter implements Linter {
         totalFixableErrorCount,
         totalFixableWarningCount,
         totalWarningCount,
+        isClean,
         results: componentsResults,
       };
     });
@@ -96,6 +98,7 @@ export class ESLintLinter implements Linter {
       totalComponentsWithFixableErrorCount,
       totalComponentsWithFixableWarningCount,
       totalComponentsWithWarningCount,
+      isClean,
     } = this.computeManyComponentsTotals(results);
 
     return {
@@ -109,6 +112,7 @@ export class ESLintLinter implements Linter {
       totalComponentsWithFixableErrorCount,
       totalComponentsWithFixableWarningCount,
       totalComponentsWithWarningCount,
+      isClean,
       results,
       errors: [],
     };
@@ -158,7 +162,6 @@ export class ESLintLinter implements Linter {
     let totalWarningCount = 0;
     const componentsResults = results.map((result) => {
       totalErrorCount += result.errorCount ?? 0;
-      // @ts-ignore - missing from the @types/eslint lib
       totalFatalErrorCount += result.fatalErrorCount ?? 0;
       totalFixableErrorCount += result.fixableErrorCount ?? 0;
       totalFixableWarningCount += result.fixableWarningCount ?? 0;
@@ -166,7 +169,6 @@ export class ESLintLinter implements Linter {
       return {
         filePath: result.filePath,
         errorCount: result.errorCount,
-        // @ts-ignore - missing from the @types/eslint lib
         fatalErrorCount: result.fatalErrorCount,
         fixableErrorCount: result.fixableErrorCount,
         fixableWarningCount: result.fixableWarningCount,
@@ -175,6 +177,8 @@ export class ESLintLinter implements Linter {
         raw: result,
       };
     });
+    const isClean = totalErrorCount === 0 && totalWarningCount === 0 && totalFatalErrorCount === 0;
+
     return {
       totalErrorCount,
       totalFatalErrorCount,
@@ -182,6 +186,7 @@ export class ESLintLinter implements Linter {
       totalFixableWarningCount,
       totalWarningCount,
       componentsResults,
+      isClean,
     };
   }
 
@@ -196,16 +201,18 @@ export class ESLintLinter implements Linter {
     let totalComponentsWithFixableErrorCount = 0;
     let totalComponentsWithFixableWarningCount = 0;
     let totalComponentsWithWarningCount = 0;
+    let isClean = true;
 
     componentsResults.forEach((result) => {
       if (result.totalErrorCount) {
         totalErrorCount += result.totalErrorCount;
         totalComponentsWithErrorCount += 1;
+        isClean = false;
       }
-      // @ts-ignore - missing from the @types/eslint lib
       if (result.totalFatalErrorCount) {
         totalFatalErrorCount += result.totalFatalErrorCount;
         totalComponentsWithFatalErrorCount += 1;
+        isClean = false;
       }
       if (result.totalFixableErrorCount) {
         totalFixableErrorCount += result.totalFixableErrorCount;
@@ -218,6 +225,7 @@ export class ESLintLinter implements Linter {
       if (result.totalWarningCount) {
         totalWarningCount += result.totalWarningCount;
         totalComponentsWithWarningCount += 1;
+        isClean = false;
       }
     });
     return {
@@ -232,6 +240,7 @@ export class ESLintLinter implements Linter {
       totalComponentsWithFixableErrorCount,
       totalComponentsWithFixableWarningCount,
       totalComponentsWithWarningCount,
+      isClean,
     };
   }
 

@@ -1,5 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import { WorkerAspect } from './worker.aspect';
 import { HarmonyWorker } from './harmony-worker';
 
@@ -8,7 +9,10 @@ export type WorkerSlot = SlotRegistry<HarmonyWorker<unknown>>;
 export type WorkerNameSlot = SlotRegistry<string>;
 
 export class WorkerMain {
-  constructor(private workerSlot: WorkerSlot, private workerNameSlot: WorkerNameSlot) {}
+  constructor(
+    private workerSlot: WorkerSlot,
+    private workerNameSlot: WorkerNameSlot
+  ) {}
 
   static runtime = MainRuntime;
 

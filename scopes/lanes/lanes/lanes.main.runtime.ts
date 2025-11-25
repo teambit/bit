@@ -1,43 +1,59 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import pMapSeries from 'p-map-series';
 import pMap from 'p-map';
-import { ScopeMain, ScopeAspect } from '@teambit/scope';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { ExpressAspect, ExpressMain } from '@teambit/express';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
-import { LaneDiffCmd, LaneDiffGenerator, LaneDiffResults } from '@teambit/lanes.modules.diff';
-import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { ExpressMain } from '@teambit/express';
+import { ExpressAspect } from '@teambit/express';
+import type { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError, WorkspaceAspect } from '@teambit/workspace';
+import { getRemoteByName } from '@teambit/scope.remotes';
+import type { LaneDiffResults } from '@teambit/lanes.modules.diff';
+import { LaneDiffCmd, LaneDiffGenerator, LaneHistoryDiffCmd } from '@teambit/lanes.modules.diff';
+import type { Scope as LegacyScope, TrackLane, LaneData } from '@teambit/legacy.scope';
+import { NoCommonSnap } from '@teambit/legacy.scope';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import { MergeStrategy, MergeOptions } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
-import { HistoryItem } from '@teambit/legacy/dist/scope/models/lane-history';
-import { ImporterAspect, ImporterMain } from '@teambit/importer';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { DiffOptions } from '@teambit/legacy.component-diff';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
+import type { MergingMain } from '@teambit/merging';
+import { MergingAspect } from '@teambit/merging';
+import { MergeOptions } from '@teambit/component.modules.merge-helper';
+import type { ImporterMain } from '@teambit/importer';
+import { FetchCmd, ImporterAspect } from '@teambit/importer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
-import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
-import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
-import { Lane, LaneHistory, Version } from '@teambit/legacy/dist/scope/models';
-import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
-import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
-import { ExportAspect, ExportMain } from '@teambit/export';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import type { HistoryItem, LaneHistory, Version } from '@teambit/objects';
+import { Ref, Lane } from '@teambit/objects';
+import type { SnapsDistance } from '@teambit/component.snap-distance';
+import { getDivergeData } from '@teambit/component.snap-distance';
+import type { ExportMain } from '@teambit/export';
+import { ExportAspect } from '@teambit/export';
 import { compact } from 'lodash';
-import { ComponentCompareMain, ComponentCompareAspect } from '@teambit/component-compare';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
-import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { MergingMain, MergingAspect } from '@teambit/merging';
-import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
+import type { ComponentCompareMain } from '@teambit/component-compare';
+import { ComponentCompareAspect } from '@teambit/component-compare';
+import type { ComponentWriterMain } from '@teambit/component-writer';
+import { ComponentWriterAspect } from '@teambit/component-writer';
+import type { RemoveMain } from '@teambit/remove';
+import { RemoveAspect } from '@teambit/remove';
+import type { CheckoutMain } from '@teambit/checkout';
+import { CheckoutAspect } from '@teambit/checkout';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
-import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
-import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
-import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
-import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import type { ComponentsList } from '@teambit/legacy.component-list';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import fs from 'fs-extra';
+import execa from 'execa';
+import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
+import { removeLanes } from './remove-lanes';
 import { LanesAspect } from './lanes.aspect';
+import type { LaneCheckoutOpts } from './lane.cmd';
 import {
   LaneCmd,
   LaneCreateCmd,
@@ -48,22 +64,24 @@ import {
   LaneChangeScopeCmd,
   LaneAliasCmd,
   LaneRenameCmd,
-  LaneAddReadmeCmd,
   LaneRemoveReadmeCmd,
   LaneRemoveCompCmd,
   CatLaneHistoryCmd,
   LaneHistoryCmd,
   LaneCheckoutCmd,
-  LaneCheckoutOpts,
   LaneRevertCmd,
+  LaneFetchCmd,
+  LaneEjectCmd,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
 import { LaneSwitcher } from './switch-lanes';
-import { createLane, createLaneInScope, throwForInvalidLaneName } from './create-lane';
+import { createLane, createLaneInScope, throwForInvalidLaneName } from '@teambit/lanes.modules.create-lane';
 import { LanesCreateRoute } from './lanes.create.route';
 import { LanesDeleteRoute } from './lanes.delete.route';
 import { LanesRestoreRoute } from './lanes.restore.route';
+import type { InstallMain } from '@teambit/install';
+import { InstallAspect } from '@teambit/install';
 
 export { Lane };
 
@@ -85,13 +103,17 @@ export type CreateLaneOptions = {
 };
 
 export type SwitchLaneOptions = {
+  head?: boolean;
   alias?: string;
   merge?: MergeStrategy;
-  getAll?: boolean;
+  forceOurs?: boolean;
+  forceTheirs?: boolean;
+  workspaceOnly?: boolean;
   pattern?: string;
   skipDependencyInstallation?: boolean;
   verbose?: boolean;
   override?: boolean;
+  branch?: boolean;
 };
 
 export type LaneComponentDiffStatus = {
@@ -113,6 +135,8 @@ export type LaneDiffStatusOptions = {
   skipChanges?: boolean;
 };
 
+export type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
+
 export type LaneDiffStatus = {
   source: LaneId;
   target: LaneId;
@@ -122,6 +146,7 @@ export type LaneDiffStatus = {
 export type MarkRemoveOnLaneResult = { removedFromWs: ComponentID[]; markedRemoved: ComponentID[] };
 
 export type CreateLaneResult = {
+  lane: Lane;
   laneId: LaneId;
   hash: string;
   alias?: string;
@@ -139,7 +164,8 @@ export class LanesMain {
     private componentCompare: ComponentCompareMain,
     readonly componentWriter: ComponentWriterMain,
     private remove: RemoveMain,
-    readonly checkout: CheckoutMain
+    readonly checkout: CheckoutMain,
+    private install: InstallMain
   ) {}
 
   /**
@@ -161,7 +187,7 @@ export class LanesMain {
   }): Promise<LaneData[]> {
     const showMergeData = Boolean(merged || notMerged);
     const consumer = this.workspace?.consumer;
-
+    if (!this.scope) throw new Error(`error: please run the command from a workspace or a scope directory`);
     if (remote) {
       const laneId = name ? LaneId.from(name, remote) : undefined;
       const remoteObj = await getRemoteByName(remote, consumer);
@@ -201,25 +227,65 @@ export class LanesMain {
   async checkoutHistory(historyId: string, options?: LaneCheckoutOpts) {
     const historyItem = await this.getHistoryItemOfCurrentLane(historyId);
     const ids = historyItem.components.map((id) => ComponentID.fromString(id));
+    const lane = await this.getCurrentLane();
     const results = await this.checkout.checkout({
       ids: ids.map((id) => id.changeVersion(undefined)),
       versionPerId: ids,
       allowAddingComponentsFromScope: true,
       skipNpmInstall: options?.skipDependencyInstallation,
+      isLane: true,
+      lane,
     });
     return results;
   }
 
   async revertHistory(historyId: string, options?: LaneCheckoutOpts) {
     const historyItem = await this.getHistoryItemOfCurrentLane(historyId);
-    const ids = historyItem.components.map((id) => ComponentID.fromString(id));
+    const lane = await this.getCurrentLane();
+
+    const historyComponentIds = historyItem.components.map((id) => ComponentID.fromString(id));
+
+    // When restoreDeletedComponents is set, we need to identify which components from the history
+    // are currently not in the workspace (i.e., were deleted after that history point)
+    let existingIds = historyComponentIds;
+    let deletedIds: ComponentID[] = [];
+
+    if (options?.restoreDeletedComponents) {
+      const currentBitmap = this.workspace?.consumer.bitMap.getAllBitIdsFromAllLanes() || [];
+      const currentComponentIdsSet = new Set(currentBitmap.map((id) => id.toStringWithoutVersion()));
+
+      existingIds = historyComponentIds.filter((id) => currentComponentIdsSet.has(id.toStringWithoutVersion()));
+      deletedIds = historyComponentIds.filter((id) => !currentComponentIdsSet.has(id.toStringWithoutVersion()));
+    }
+
+    // First, revert the existing components (keeps bitmap versions)
     const results = await this.checkout.checkout({
-      ids: ids.map((id) => id.changeVersion(undefined)),
-      versionPerId: ids,
+      ids: existingIds.map((id) => id.changeVersion(undefined)),
+      versionPerId: existingIds,
       allowAddingComponentsFromScope: true,
       revert: true,
       skipNpmInstall: options?.skipDependencyInstallation,
+      isLane: true,
+      lane,
     });
+
+    // If there are deleted components to restore, checkout them separately (updates bitmap)
+    if (deletedIds.length > 0) {
+      const deletedResults = await this.checkout.checkout({
+        ids: deletedIds.map((id) => id.changeVersion(undefined)),
+        versionPerId: deletedIds,
+        allowAddingComponentsFromScope: true,
+        revert: false, // Don't use revert mode for deleted components - we want to update bitmap
+        skipNpmInstall: options?.skipDependencyInstallation,
+        isLane: true,
+        lane,
+      });
+
+      // Merge the results
+      results.components = [...(results.components || []), ...(deletedResults.components || [])];
+      results.addedComponents = [...(results.addedComponents || []), ...(deletedResults.addedComponents || [])];
+    }
+
     return results;
   }
 
@@ -244,6 +310,11 @@ export class LanesMain {
     await this.importer.importLaneObject(laneId, undefined, true);
   }
 
+  async isLaneExistsOnRemote(laneId: LaneId): Promise<boolean> {
+    const results = await this.scope.legacyScope.scopeImporter.importLanes([laneId]);
+    return results.length > 0;
+  }
+
   getCurrentLaneName(): string | null {
     return this.getCurrentLaneId()?.name || null;
   }
@@ -266,9 +337,9 @@ export class LanesMain {
   /**
    * get the currently checked out lane object, if on main - return null.
    */
-  async getCurrentLane(): Promise<Lane | null> {
+  async getCurrentLane(): Promise<Lane | undefined> {
     const laneId = this.getCurrentLaneId();
-    if (!laneId || laneId.isDefault()) return null;
+    if (!laneId || laneId.isDefault()) return undefined;
     return this.loadLane(laneId);
   }
 
@@ -287,6 +358,7 @@ export class LanesMain {
     if (!this.workspace) {
       const newLane = await createLaneInScope(name, this.scope);
       return {
+        lane: newLane,
         laneId: newLane.toLaneId(),
         hash: newLane.hash().toString(),
       };
@@ -316,6 +388,7 @@ if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-
     await this.workspace.consumer.onDestroy('lane-create');
 
     const results = {
+      lane: laneObj,
       alias,
       laneId: laneObj.toLaneId(),
       hash: laneObj.hash().toString(),
@@ -323,7 +396,7 @@ if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-
     return results;
   }
 
-  async loadLane(id: LaneId): Promise<Lane | null> {
+  async loadLane(id: LaneId): Promise<Lane | undefined> {
     return this.scope.legacyScope.lanes.loadLane(id);
   }
 
@@ -471,17 +544,36 @@ please create a new lane instead, which will include all components of this lane
   }
 
   async exportLane(lane: Lane) {
-    await this.exporter.exportMany({
+    await this.exporter.pushToScopes({
       scope: this.scope.legacyScope,
       laneObject: lane,
       ids: new ComponentIdList(),
-      idsWithFutureScope: new ComponentIdList(),
       allVersions: false,
     });
   }
 
   async importLaneObject(laneId: LaneId, persistIfNotExists = true, includeLaneHistory = false): Promise<Lane> {
     return this.importer.importLaneObject(laneId, persistIfNotExists, includeLaneHistory);
+  }
+
+  async eject(pattern: string): Promise<ComponentID[]> {
+    if (!this.workspace) {
+      throw new BitError(`unable to eject a component outside of Bit workspace`);
+    }
+    const ids = await this.workspace.idsByPattern(pattern);
+    await Promise.all(
+      ids.map(async (id) => {
+        const modelComp = await this.scope.getBitObjectModelComponent(id, true);
+        if (!modelComp!.head) {
+          throw new BitError(`unable to eject "${id.toString()}" as it has no main version`);
+        }
+      })
+    );
+
+    const deletedComps = await this.remove.deleteComps(pattern);
+    const packages = deletedComps.map((c) => c.getPackageName());
+    await this.install.install(packages);
+    return deletedComps.map((c) => c.id);
   }
 
   /**
@@ -497,12 +589,12 @@ please create a new lane instead, which will include all components of this lane
    * save the objects and the lane to the local scope.
    * this method doesn't change anything in the workspace.
    */
-  async fetchLaneWithItsComponents(laneId: LaneId): Promise<Lane> {
+  async fetchLaneWithItsComponents(laneId: LaneId, includeUpdateDependents = false): Promise<Lane> {
     this.logger.debug(`fetching lane ${laneId.toString()}`);
     const lane = await this.importer.importLaneObject(laneId);
     if (!lane) throw new Error(`unable to import lane ${laneId.toString()} from the remote`);
 
-    await this.importer.fetchLaneComponents(lane);
+    await this.importer.fetchLaneComponents(lane, includeUpdateDependents);
     this.logger.debug(`fetching lane ${laneId.toString()} done, fetched ${lane.components.length} components`);
     return lane;
   }
@@ -548,11 +640,22 @@ please create a new lane instead, which will include all components of this lane
    */
   async switchLanes(
     laneName: string,
-    { alias, merge, pattern, getAll = false, skipDependencyInstallation = false }: SwitchLaneOptions
+    {
+      alias,
+      merge,
+      forceOurs,
+      forceTheirs,
+      pattern,
+      workspaceOnly,
+      skipDependencyInstallation = false,
+      head,
+      branch = false,
+    }: SwitchLaneOptions
   ) {
     if (!this.workspace) {
-      throw new BitError(`unable to switch lanes outside of Bit workspace`);
+      throw new OutsideWorkspaceError();
     }
+    this.workspace.inInstallContext = true;
     let mergeStrategy;
     if (merge && typeof merge === 'string') {
       const mergeOptions = Object.keys(MergeOptions);
@@ -567,19 +670,69 @@ please create a new lane instead, which will include all components of this lane
 
     const switchProps = {
       laneName,
-      existingOnWorkspaceOnly: !getAll,
+      existingOnWorkspaceOnly: workspaceOnly,
       pattern,
       alias,
+      head,
     };
     const checkoutProps = {
       mergeStrategy,
+      forceOurs,
+      forceTheirs,
       skipNpmInstall: skipDependencyInstallation,
       isLane: true,
       promptMergeOptions: false,
       reset: false,
       all: false,
     };
-    return new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps, this).switch();
+
+    // Create git branch if requested and git is available
+    let gitBranchWarning: string | undefined;
+    if (branch) {
+      gitBranchWarning = await this.createGitBranchForLane(laneName);
+    }
+
+    const switchResult = await new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps, this).switch();
+
+    // Add git branch warning to the result if present
+    if (gitBranchWarning) {
+      switchResult.gitBranchWarning = gitBranchWarning;
+    }
+
+    return switchResult;
+  }
+
+  private async createGitBranchForLane(laneName: string): Promise<string | undefined> {
+    if (!this.workspace) return;
+
+    try {
+      // Check if git exists in the project
+      const isGit = await fs.pathExists('.git');
+      if (!isGit) {
+        const warning = 'Git repository not found. Skipping git branch creation.';
+        this.logger.warn(warning);
+        return warning;
+      }
+
+      const gitExecutablePath = getGitExecutablePath();
+
+      // Create and checkout to the new git branch
+      await execa(gitExecutablePath, ['checkout', '-b', laneName], {
+        cwd: this.workspace.path,
+      });
+
+      this.logger.info(`Created and checked out git branch: ${laneName}`);
+      return undefined; // No warning
+    } catch (err: any) {
+      // Don't fail the lane import if git branch creation fails
+      const detailedError = err.stderr?.trim() || err.message;
+      const warning = `Failed to create git branch "${laneName}".
+  - Command: ${err.command}
+  - Reason: ${detailedError}`;
+
+      this.logger.warn(warning);
+      return warning;
+    }
   }
 
   /**
@@ -700,7 +853,7 @@ please create a new lane instead, which will include all components of this lane
           )
         : [];
 
-    await this.importer.importObjectsFromMainIfExist(targetMainHeads);
+    await this.importer.importObjectsFromMainIfExist(targetMainHeads, { cache: true });
 
     const diffProps = compact(
       await Promise.all(
@@ -969,51 +1122,6 @@ please create a new lane instead, which will include all components of this lane
     await this.createLane(laneId.name, { scope: laneId.scope });
   }
 
-  async addLaneReadme(readmeComponentIdStr: string, laneName?: string): Promise<{ result: boolean; message?: string }> {
-    if (!this.workspace) {
-      throw new BitError(`unable to track a lane readme component outside of Bit workspace`);
-    }
-    const readmeComponentId = await this.workspace.resolveComponentId(readmeComponentIdStr);
-
-    const scope: LegacyScope = this.workspace.scope.legacyScope;
-    const laneId: LaneId = laneName
-      ? await scope.lanes.parseLaneIdFromString(laneName)
-      : (this.getCurrentLaneId() as LaneId);
-
-    const lane: Lane | null | undefined = await scope.loadLane(laneId);
-
-    if (!lane) {
-      return { result: false, message: `cannot find lane ${laneName}` };
-    }
-
-    lane.setReadmeComponent(readmeComponentId);
-    await scope.lanes.saveLane(lane, { laneHistoryMsg: 'add readme' });
-
-    const existingLaneConfig =
-      (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
-
-    const remoteLaneIdStr = lane.toLaneId().toString();
-
-    if (existingLaneConfig.readme) {
-      await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, {
-        ...existingLaneConfig,
-        readme: {
-          ...existingLaneConfig.readme,
-          [remoteLaneIdStr]: true,
-        },
-      });
-    } else {
-      await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, {
-        ...existingLaneConfig,
-        readme: {
-          [remoteLaneIdStr]: true,
-        },
-      });
-    }
-    await this.workspace.bitMap.write('lane-add-readme');
-    return { result: true };
-  }
-
   /**
    * if the local lane was forked from another lane, this gets the differences between the two.
    * it also fetches the original lane from the remote to make sure the data is up to date.
@@ -1069,10 +1177,66 @@ please create a new lane instead, which will include all components of this lane
   }
 
   /**
+   * list components on a lane that their main got updates.
+   */
+  async listUpdatesFromMainPending(componentsList: ComponentsList): Promise<DivergeDataPerId[]> {
+    const consumer = this.workspace?.consumer;
+    if (!consumer) throw new Error(`unable to get listUpdatesFromForked outside of a workspace`);
+    if (consumer.isOnMain()) {
+      return [];
+    }
+    const allIds = consumer.bitMap.getAllBitIds();
+
+    const duringMergeIds = componentsList.listDuringMergeStateComponents();
+
+    const componentsFromModel = await componentsList.getModelComponents();
+    const compFromModelOnWorkspace = componentsFromModel
+      .filter((c) => allIds.hasWithoutVersion(c.toComponentId()))
+      // if a component is merge-pending, it needs to be resolved first before getting more updates from main
+      .filter((c) => !duringMergeIds.hasWithoutVersion(c.toComponentId()));
+
+    // by default, when on a lane, main is not fetched. we need to fetch it to get the latest updates.
+    await consumer.scope.scopeImporter.importWithoutDeps(
+      ComponentIdList.fromArray(compFromModelOnWorkspace.map((c) => c.toComponentId())),
+      {
+        cache: false,
+        includeVersionHistory: true,
+        ignoreMissingHead: true,
+        reason: 'main components of the current lane to check for updates',
+      }
+    );
+    const results = await Promise.all(
+      compFromModelOnWorkspace.map(async (modelComponent) => {
+        const headOnMain = modelComponent.head;
+        if (!headOnMain) return undefined;
+        const checkedOutVersion = allIds.searchWithoutVersion(modelComponent.toComponentId())?.version;
+        if (!checkedOutVersion) {
+          throw new Error(
+            `listUpdatesFromMainPending: unable to find ${modelComponent.toComponentId()} in the workspace`
+          );
+        }
+        const headOnLane = modelComponent.getRef(checkedOutVersion);
+
+        const divergeData = await getDivergeData({
+          repo: consumer.scope.objects,
+          modelComponent,
+          targetHead: headOnMain,
+          sourceHead: headOnLane,
+          throws: false,
+        });
+        if (!divergeData.snapsOnTargetOnly.length && !divergeData.err) return undefined;
+        return { id: modelComponent.toComponentId(), divergeData };
+      })
+    );
+
+    return compact(results);
+  }
+
+  /**
    * default to remove all of them.
    * returns true if the lane has changed
    */
-  async removeUpdateDependents(laneId: LaneId, ids?: ComponentID[]): Promise<Boolean> {
+  async removeUpdateDependents(laneId: LaneId, ids?: ComponentID[]): Promise<boolean> {
     const lane = await this.loadLane(laneId);
     if (!lane) throw new BitError(`unable to find a lane ${laneId.toString()}`);
     if (ids?.length) {
@@ -1135,6 +1299,7 @@ please create a new lane instead, which will include all components of this lane
     ComponentWriterAspect,
     RemoveAspect,
     CheckoutAspect,
+    InstallAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1152,6 +1317,7 @@ please create a new lane instead, which will include all components of this lane
     componentWriter,
     remove,
     checkout,
+    install,
   ]: [
     CLIMain,
     ScopeMain,
@@ -1166,7 +1332,8 @@ please create a new lane instead, which will include all components of this lane
     ComponentCompareMain,
     ComponentWriterMain,
     RemoveMain,
-    CheckoutMain
+    CheckoutMain,
+    InstallMain,
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
     const lanesMain = new LanesMain(
@@ -1180,9 +1347,11 @@ please create a new lane instead, which will include all components of this lane
       componentCompare,
       componentWriter,
       remove,
-      checkout
+      checkout,
+      install
     );
     const switchCmd = new SwitchCmd(lanesMain);
+    const fetchCmd = new FetchCmd(importer);
     const laneCmd = new LaneCmd(lanesMain, workspace, scope);
     laneCmd.commands = [
       new LaneListCmd(lanesMain, workspace, scope),
@@ -1194,21 +1363,21 @@ please create a new lane instead, which will include all components of this lane
       new LaneAliasCmd(lanesMain),
       new LaneRenameCmd(lanesMain),
       new LaneDiffCmd(workspace, scope, componentCompare),
-      new LaneAddReadmeCmd(lanesMain),
       new LaneRemoveReadmeCmd(lanesMain),
       new LaneImportCmd(switchCmd),
       new LaneRemoveCompCmd(workspace, lanesMain),
+      new LaneFetchCmd(fetchCmd, lanesMain),
+      new LaneEjectCmd(lanesMain),
     ];
-    if (isFeatureEnabled(SUPPORT_LANE_HISTORY)) {
-      laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
-      laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
-      laneCmd.commands.push(new LaneRevertCmd(lanesMain));
-    }
+    laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
+    laneCmd.commands.push(new LaneHistoryDiffCmd(lanesMain, workspace, scope, componentCompare));
+    laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
+    laneCmd.commands.push(new LaneRevertCmd(lanesMain));
     cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));
     cli.registerOnStart(async () => {
       await lanesMain.recreateNewLaneIfDeleted();
     });
-    graphql.register(lanesSchema(lanesMain));
+    graphql.register(() => lanesSchema(lanesMain));
     express.register([
       new LanesCreateRoute(lanesMain, logger),
       new LanesDeleteRoute(lanesMain, logger),

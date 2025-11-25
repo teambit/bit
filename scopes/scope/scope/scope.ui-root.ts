@@ -1,6 +1,6 @@
-import { ResolveAspectsOptions } from '@teambit/component';
-import { ComponentID } from '@teambit/component-id';
-import { UIRoot } from '@teambit/ui';
+import type { ResolveAspectsOptions } from '@teambit/component';
+import type { ComponentID } from '@teambit/component-id';
+import type { UIRoot } from '@teambit/ui';
 
 import type { ScopeMain } from './scope.main.runtime';
 

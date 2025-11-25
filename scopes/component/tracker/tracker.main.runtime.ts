@@ -1,16 +1,23 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import path from 'path';
-import { ComponentID } from '@teambit/component-id';
-import EnvsAspect from '@teambit/envs';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import type { ComponentID } from '@teambit/component-id';
+import { EnvsAspect } from '@teambit/envs';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { PathOsBasedRelative, PathOsBasedAbsolute, PathLinuxRelative } from '@teambit/legacy.utils';
 import { AddCmd } from './add-cmd';
-import AddComponents, { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
+import type { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
+import AddComponents, { addMultipleFromResolvedTrackData } from './add-components';
 import { TrackerAspect } from './tracker.aspect';
 
 export type TrackResult = { files: string[]; warnings: Warnings; componentId: ComponentID };
 
+/**
+ * this is for "bit add", where some data, such as "componentName" are not necessarily known
+ */
 export type TrackData = {
   rootDir: PathOsBasedRelative | PathOsBasedAbsolute; // path relative to the workspace or absolute path
   componentName?: string; // if empty, it'll be generated from the path
@@ -19,8 +26,23 @@ export type TrackData = {
   config?: { [aspectName: string]: any }; // config specific to this component, which overrides variants of workspace.jsonc
 };
 
+/**
+ * this is for commands where we know all the data to enter into .bitmap, such as defaultScope, componentName and files.
+ */
+export type ResolvedTrackData = {
+  rootDir: PathLinuxRelative; // path relative to the workspace
+  componentName: string;
+  mainFile: string;
+  files: string[]; // component files relative to the component rootDir
+  defaultScope: string;
+  config?: { [aspectName: string]: any }; // config specific to this component, which overrides variants of workspace.jsonc
+};
+
 export class TrackerMain {
-  constructor(private workspace: Workspace, private logger: Logger) {}
+  constructor(
+    private workspace: Workspace,
+    private logger: Logger
+  ) {}
 
   /**
    * add a new component to the .bitmap file.
@@ -49,6 +71,10 @@ export class TrackerMain {
     return { files, warnings: result.warnings, componentId: result.addedComponents[0].id };
   }
 
+  async trackMany(manyTrackData: ResolvedTrackData[]): Promise<ComponentID[]> {
+    return addMultipleFromResolvedTrackData(this.workspace, manyTrackData);
+  }
+
   async addForCLI(addProps: AddProps): Promise<AddActionResults> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const addContext: AddContext = { workspace: this.workspace };
@@ -70,7 +96,7 @@ export class TrackerMain {
     let userEnvIdWithPotentialVersion: string;
     try {
       userEnvIdWithPotentialVersion = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(userEnvId);
-    } catch (err) {
+    } catch {
       // the env needs to be without version
       userEnvIdWithPotentialVersion = userEnvId.toStringWithoutVersion();
     }
@@ -106,8 +132,7 @@ export class TrackerMain {
    * otherwise, it is self-hosted
    */
   private async isHostedByBit(scopeName: string): Promise<boolean> {
-    // TODO: once scope create a new API for this, replace it with the new one
-    const remotes = await this.workspace.scope._legacyRemotes();
+    const remotes = await this.workspace.scope.getRemoteScopes();
     return remotes.isHub(scopeName);
   }
 

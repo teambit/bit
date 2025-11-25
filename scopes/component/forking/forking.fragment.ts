@@ -1,5 +1,5 @@
-import { Component, ShowFragment } from '@teambit/component';
-import { ForkingMain } from './forking.main.runtime';
+import type { Component, ShowFragment } from '@teambit/component';
+import type { ForkingMain } from './forking.main.runtime';
 
 export class ForkingFragment implements ShowFragment {
   constructor(private forking: ForkingMain) {}

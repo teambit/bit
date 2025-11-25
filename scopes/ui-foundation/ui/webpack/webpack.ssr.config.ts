@@ -1,4 +1,4 @@
-import { Configuration } from 'webpack';
+import type { Configuration } from 'webpack';
 import path from 'path';
 import { merge } from 'webpack-merge';
 import createBaseConfig from './webpack.base.config';
@@ -10,9 +10,7 @@ export default function createWebpackConfig(
 ): Configuration {
   const baseConfig = createBaseConfig(workspaceDir, entryFiles);
   const ssrConfig = createSsrConfig(workspaceDir, publicDir);
-  // @ts-ignore that's an issue because of different types/webpack version
   const combined = merge(baseConfig, ssrConfig);
-  // @ts-ignore that's an issue because of different types/webpack version
   return combined;
 }
 

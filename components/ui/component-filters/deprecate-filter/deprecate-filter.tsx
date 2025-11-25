@@ -1,10 +1,8 @@
 import classNames from 'classnames';
 import React from 'react';
-import { Toggle } from '@teambit/design.ui.input.toggle';
-import {
-  ComponentFilterCriteria,
-  useComponentFilter,
-} from '@teambit/component.ui.component-filters.component-filter-context';
+import { Toggle } from '@teambit/design.inputs.toggle-switch';
+import type { ComponentFilterCriteria } from '@teambit/component.ui.component-filters.component-filter-context';
+import { useComponentFilter } from '@teambit/component.ui.component-filters.component-filter-context';
 import styles from './deprecate-filter.module.scss';
 
 export type DeprecateFilterCriteria = ComponentFilterCriteria<boolean>;
@@ -19,12 +17,10 @@ export const DeprecateFilter: DeprecateFilterCriteria = {
 
 function deprecateFilter({ className }: React.HTMLAttributes<HTMLDivElement>) {
   const filterContext = useComponentFilter<boolean>(DeprecateFilter.id);
-
   if (!filterContext) return null;
-
   const [filter, updateFilter] = filterContext;
 
-  const isActive = filter.state;
+  const isActive = filter?.state;
 
   return (
     <div className={classNames(styles.deprecateFilter, isActive && styles.active, className)}>

@@ -4,11 +4,11 @@ import { prompt, AutoComplete } from 'enquirer';
 import { compact, uniq } from 'lodash';
 import chalk from 'chalk';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { GraphMain } from '@teambit/graph';
-import { Logger } from '@teambit/logger';
-import { Workspace } from '@teambit/workspace';
+import type { GraphMain } from '@teambit/graph';
+import type { Logger } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
-import { ImportOptions } from './import-components';
+import type { ImportOptions } from './import-components';
 
 const SHOW_ALL_PATHS_LIMIT = 10;
 const SCROLL_LIMIT = 20;
@@ -23,7 +23,7 @@ export class DependentsGetter {
 
   async getDependents(targetCompIds: ComponentID[]): Promise<ComponentID[]> {
     this.logger.setStatusLine('finding dependents');
-    const { silent } = this.options;
+    const { silent, dependentsAll } = this.options;
     const graph = await this.graph.getGraphIds();
     const sourceIds = this.workspace.listIds();
     const getIdsForThrough = () => {
@@ -34,7 +34,7 @@ export class DependentsGetter {
         .map((id) => ComponentID.fromString(id));
     };
     const allPaths = graph.findAllPathsFromSourcesToTargets(sourceIds, targetCompIds, getIdsForThrough());
-    const selectedPaths = silent ? allPaths : await this.promptDependents(allPaths);
+    const selectedPaths = silent || dependentsAll ? allPaths : await this.promptDependents(allPaths);
     const uniqAsStrings = uniq(selectedPaths.flat());
 
     const ids: ComponentID[] = [];
@@ -72,7 +72,7 @@ export class DependentsGetter {
     this.logger.clearStatusLine();
 
     const totalToShow = SHOW_ALL_PATHS_LIMIT;
-    if (allPaths.length >= totalToShow) {
+    if (allPaths.length > totalToShow) {
       return this.promptLevelByLevel(allPaths);
     }
     const firstItems = allPaths.slice(0, totalToShow);

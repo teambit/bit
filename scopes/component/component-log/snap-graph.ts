@@ -1,5 +1,5 @@
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
-import { ComponentLogInfo } from './component-log.main.runtime';
+import type { ComponentLogInfo } from './component-log.main.runtime';
 
 export function buildSnapGraph(componentLog: ComponentLogInfo[]) {
   const graph = new Graph<ComponentLogInfo, string>();

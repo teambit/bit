@@ -1,15 +1,19 @@
 import React from 'react';
-import { Section } from '@teambit/component';
+import type { Section } from '@teambit/component';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
-import { ComponentCompareUI } from './component-compare.ui.runtime';
+import type { ComponentCompareUI } from './component-compare.ui.runtime';
 
 export class ComponentCompareSection implements Section {
-  constructor(private componentCompare: ComponentCompareUI) {}
+  constructor(
+    private componentCompare: ComponentCompareUI,
+    private pinned: boolean
+  ) {}
 
   navigationLink = {
     href: '~compare',
     displayName: 'Compare',
     children: <MenuWidgetIcon icon="compare" tooltipContent="Compare" />,
+    hideInMinimalMode: !this.pinned,
   };
 
   route = {
@@ -17,5 +21,5 @@ export class ComponentCompareSection implements Section {
     element: this.componentCompare.getComponentComparePage(),
   };
 
-  order = 35;
+  order = this.pinned ? 20 : 35;
 }

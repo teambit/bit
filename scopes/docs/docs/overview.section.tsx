@@ -1,8 +1,9 @@
 import React from 'react';
-import { Section } from '@teambit/component';
-import { APIReferenceUI } from '@teambit/api-reference';
-import { Overview, TitleBadgeSlot, OverviewOptionsSlot } from './overview';
-import { DocsUI } from './docs.ui.runtime';
+import type { Section } from '@teambit/component';
+import type { APIReferenceUI } from '@teambit/api-reference';
+import type { TitleBadgeSlot, OverviewOptionsSlot } from './overview';
+import { Overview } from './overview';
+import type { DocsUI, UsePreviewSandboxSlot } from './docs.ui.runtime';
 
 export class OverviewSection implements Section {
   constructor(
@@ -12,7 +13,8 @@ export class OverviewSection implements Section {
     private titleBadgeSlot: TitleBadgeSlot,
     private overviewOptionsSlot: OverviewOptionsSlot,
     private docs: DocsUI,
-    private apiRef: APIReferenceUI
+    private apiRef: APIReferenceUI,
+    private usePreviewSandboxSlot: UsePreviewSandboxSlot
   ) {}
 
   navigationLink = {
@@ -29,6 +31,7 @@ export class OverviewSection implements Section {
         overviewOptions={this.overviewOptionsSlot}
         getEmptyState={this.docs.getEmptyState.bind(this.docs)}
         TaggedAPI={this.apiRef.TaggedAPIPage}
+        usePreviewSandboxSlot={this.usePreviewSandboxSlot}
       />
     ),
   };

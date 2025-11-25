@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('two components with the same name but different scope-name', function () {
   this.timeout(0);
@@ -13,19 +13,19 @@ describe('two components with the same name but different scope-name', function 
   });
   describe('importing objects from another scope', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.setScope(scopeName, 'bar/foo');
       helper.command.tagAllWithoutBuild();
       helper.command.tagIncludeUnmodified('0.0.2');
       helper.command.exportIds('bar/foo');
 
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.command.runCmd(`bit import ${scopeName}/bar/foo --objects`);
     });
@@ -38,20 +38,20 @@ describe('two components with the same name but different scope-name', function 
     let anotherScopeName: string;
     let anotherScopePath: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       anotherScopeName = scopeName;
       anotherScopePath = scopePath;
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.setScope(scopeName, 'bar/foo');
       helper.command.tagWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.command.runCmd(`bit import ${scopeName}/bar/foo`);
     });
@@ -70,7 +70,7 @@ describe('two components with the same name but different scope-name', function 
         helper.command.tagAllWithoutBuild();
         helper.command.export();
 
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.scopeHelper.addRemoteScope(anotherScopePath);
 
@@ -84,7 +84,7 @@ describe('two components with the same name but different scope-name', function 
   describe('creating two new components with the same name in the same workspace', () => {
     let anotherScopeName: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       anotherScopeName = scopeName;
       helper.scopeHelper.addRemoteScope(scopePath);

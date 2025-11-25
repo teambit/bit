@@ -1,17 +1,20 @@
-import { Harmony } from '@teambit/harmony';
+import type { DevFilesMain } from '@teambit/dev-files';
+import { DevFilesAspect } from '@teambit/dev-files';
+import type { Harmony } from '@teambit/harmony';
 import { merge, omit } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
-import type { CompilerMain } from '@teambit/compiler';
-import { CompilerAspect, Compiler } from '@teambit/compiler';
-import { BuildTask } from '@teambit/builder';
-import { Component, ComponentID } from '@teambit/component';
-import { EnvsAspect, EnvsMain, EnvTransformer, Environment, EnvContext } from '@teambit/envs';
+import type { CompilerMain, Compiler } from '@teambit/compiler';
+import { CompilerAspect } from '@teambit/compiler';
+import type { BuildTask } from '@teambit/builder';
+import type { Component } from '@teambit/component';
+import { ComponentID } from '@teambit/component';
+import type { EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
+import { EnvsAspect, EnvContext } from '@teambit/envs';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
-import type { JestMain } from '@teambit/jest';
-import { JestAspect } from '@teambit/jest';
 import type { PkgMain, PackageJsonProps } from '@teambit/pkg';
-import { SchemaMain, SchemaAspect } from '@teambit/schema';
+import type { SchemaMain } from '@teambit/schema';
+import { SchemaAspect } from '@teambit/schema';
 import { PkgAspect } from '@teambit/pkg';
 import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
@@ -19,31 +22,36 @@ import type { TypescriptMain, TsCompilerOptionsWithoutTsConfig, TsConfigTransfor
 import { TypescriptAspect } from '@teambit/typescript';
 import type { WebpackMain, Configuration, WebpackConfigTransformer } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
-import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { DevServerContext, BundlerContext } from '@teambit/bundler';
-import { DependencyResolverAspect, DependencyResolverMain, EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { GeneratorMain } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { DevServerContext, BundlerContext } from '@teambit/bundler';
+import type { DependencyResolverMain, EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import ts from 'typescript';
-import { ApplicationAspect, ApplicationMain } from '@teambit/application';
-import { FormatterContext } from '@teambit/formatter';
-import { LinterContext } from '@teambit/linter';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
-import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
-import { WorkerAspect, WorkerMain } from '@teambit/worker';
+import type { ApplicationMain } from '@teambit/application';
+import { ApplicationAspect } from '@teambit/application';
+import type { FormatterContext } from '@teambit/formatter';
+import type { LinterContext } from '@teambit/linter';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { EslintConfigTransformer } from '@teambit/defender.eslint.config-mutator';
+import type { WorkerMain } from '@teambit/worker';
+import { WorkerAspect } from '@teambit/worker';
 
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { ReactAppType } from './apps/web';
 import { reactSchema } from './react.graphql';
 import { getTemplates } from './react.templates';
-import { ReactAppOptions } from './apps/web/react-app-options';
+import type { ReactAppOptions } from './apps/web/react-app-options';
 import { ReactSchema } from './react.schema';
 import { ReactAPITransformer } from './react.api.transformer';
+import type { PrettierConfigTransformer } from '@teambit/defender.prettier.config-mutator';
 
 type ReactDeps = [
   EnvsMain,
-  JestMain,
   TypescriptMain,
   CompilerMain,
   WebpackMain,
@@ -51,14 +59,13 @@ type ReactDeps = [
   GraphqlMain,
   PkgMain,
   TesterMain,
-  ESLintMain,
-  PrettierMain,
   ApplicationMain,
   GeneratorMain,
   DependencyResolverMain,
   LoggerMain,
   SchemaMain,
-  WorkerMain
+  WorkerMain,
+  DevFilesMain,
 ];
 
 export type ReactMainConfig = {
@@ -314,8 +321,11 @@ export class ReactMain {
    * @param jestModulePath absolute path to jest
    */
   overrideJestConfig(jestConfigPath: string, jestModulePath?: string) {
+    const buildTransformers = [() => jestConfigPath];
     return this.envs.override({
       getTester: () => this.reactEnv.getTester(jestConfigPath, jestModulePath),
+      getBuildPipe: () =>
+        this.reactEnv.getBuildPipe({ jestModifier: { transformers: buildTransformers, module: jestModulePath } }),
     });
   }
 
@@ -402,7 +412,6 @@ export class ReactMain {
   static runtime = MainRuntime;
   static dependencies = [
     EnvsAspect,
-    JestAspect,
     TypescriptAspect,
     CompilerAspect,
     WebpackAspect,
@@ -410,20 +419,18 @@ export class ReactMain {
     GraphqlAspect,
     PkgAspect,
     TesterAspect,
-    ESLintAspect,
-    PrettierAspect,
     ApplicationAspect,
     GeneratorAspect,
     DependencyResolverAspect,
     LoggerAspect,
     SchemaAspect,
     WorkerAspect,
+    DevFilesAspect,
   ];
 
   static async provider(
     [
       envs,
-      jestAspect,
       tsAspect,
       compiler,
       webpack,
@@ -431,14 +438,13 @@ export class ReactMain {
       graphql,
       pkg,
       tester,
-      eslint,
-      prettier,
       application,
       generator,
       dependencyResolver,
       loggerMain,
       schemaMain,
       workerMain,
+      devFilesMain,
     ]: ReactDeps,
     config: ReactMainConfig,
     slots,
@@ -446,31 +452,30 @@ export class ReactMain {
   ) {
     const logger = loggerMain.createLogger(ReactAspect.id);
     const reactEnv = new ReactEnv(
-      jestAspect,
       tsAspect,
       compiler,
       webpack,
       workspace,
+      workerMain,
       pkg,
       tester,
       config,
-      eslint,
-      prettier,
       dependencyResolver,
+      devFilesMain,
       logger,
       CompilerAspect.id
     );
     const appType = new ReactAppType('react-app', reactEnv, logger, dependencyResolver);
     const react = new ReactMain(reactEnv, envs, application, appType, dependencyResolver, logger);
-    graphql.register(reactSchema(react));
+    graphql.register(() => reactSchema(react));
     envs.registerEnv(reactEnv);
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerMain, workerMain, harmony);
-      generator.registerComponentTemplate(getTemplates(envContext));
+      generator.registerComponentTemplate(() => getTemplates(envContext));
     }
 
     if (application) application.registerAppType(appType);
-    if (schemaMain) schemaMain.registerSchemaClass(ReactSchema);
+    if (schemaMain) schemaMain.registerSchemaClasses(() => [ReactSchema]);
     if (tsAspect) tsAspect.registerApiTransformer([new ReactAPITransformer()]);
 
     return react;

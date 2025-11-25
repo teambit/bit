@@ -1,4 +1,4 @@
-import { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
+import type { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
 
 export type ExtractorOptions = {
   /**
@@ -30,4 +30,10 @@ export type ExtractorOptions = {
    * api transformers.
    */
   apiTransformers?: SchemaNodeTransformer[];
+
+  /**
+   * Component-relative includes. Exact if no wildcard; glob-lite if contains * or **.
+   * Always materialized under `internals` unless already part of the public API graph.
+   */
+  includeFiles?: string[];
 };

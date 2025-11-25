@@ -1,12 +1,16 @@
-import { EnvContext, EnvHandler } from '@teambit/envs';
-import { WorkspaceTemplate } from './workspace-template';
+import type { EnvContext, EnvHandler } from '@teambit/envs';
+import type { WorkspaceTemplate } from './workspace-template';
 
 export type StarterListOptions = {
   name?: string;
 };
 
 export class StarterList {
-  constructor(readonly name: string, private starters: EnvHandler<WorkspaceTemplate>[], private context: EnvContext) {}
+  constructor(
+    readonly name: string,
+    private starters: EnvHandler<WorkspaceTemplate>[],
+    private context: EnvContext
+  ) {}
 
   compute(): WorkspaceTemplate[] {
     return this.starters.map((starter) => starter(this.context));

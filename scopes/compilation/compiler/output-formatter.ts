@@ -1,11 +1,11 @@
 import chalk from 'chalk';
 import { Logger } from '@teambit/logger';
-import { ComponentsStatus } from './compiler.cmd';
+import type { BuildResult } from './workspace-compiler';
 
-export const formatCompileResults = (compileResults: ComponentsStatus[], verbose: boolean) =>
+export const formatCompileResults = (compileResults: BuildResult[], verbose: boolean) =>
   compileResults
-    .map((componentResult: ComponentsStatus) => ({
-      componentId: componentResult.component.id.fullName,
+    .map((componentResult: BuildResult) => ({
+      componentId: componentResult.component,
       files: componentResult.buildResults,
       status: componentResult.errors.length ? 'FAILURE' : 'SUCCESS',
       icon: componentResult.errors.length ? chalk.red('✗') : Logger.successSymbol(),

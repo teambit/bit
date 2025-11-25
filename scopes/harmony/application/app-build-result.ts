@@ -1,4 +1,4 @@
-import { ArtifactDefinition } from '@teambit/builder';
+import type { ArtifactDefinition } from '@teambit/builder';
 
 export interface AppBuildResult {
   artifacts?: ArtifactDefinition[];

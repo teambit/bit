@@ -1,10 +1,16 @@
 import chalk from 'chalk';
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 
 export class GetAccessorSchema extends SchemaNode {
   readonly type: SchemaNode;
-  constructor(readonly location: SchemaLocation, readonly name: string, type: SchemaNode, readonly signature: string) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly name: string,
+    type: SchemaNode,
+    readonly signature: string
+  ) {
     super();
     this.type = type;
   }
@@ -16,8 +22,21 @@ export class GetAccessorSchema extends SchemaNode {
     return [this.type];
   }
 
-  toString() {
-    return `get ${chalk.bold(this.name)}(): ${this.type.toString()}`;
+  toString(options?: { color?: boolean }): string {
+    const bold = options?.color ? chalk.bold : (x: string) => x;
+    return `get ${bold(this.name)}(): ${this.type.toString(options)}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let result = '';
+
+    if (options?.showDocs && this.doc) {
+      result += `${this.doc.toFullSignature()}\n`;
+    }
+
+    result += `get ${this.name}(): ${this.type.toFullSignature(options)}`;
+
+    return result;
   }
 
   toObject() {

@@ -1,5 +1,5 @@
-import { BundlerResult } from '@teambit/bundler';
-import { ReactAppBuildResult } from './react-build-result';
+import type { BundlerResult } from '@teambit/bundler';
+import type { ReactAppBuildResult } from './react-build-result';
 
 type ResultsOptions = {
   publicDir: string;

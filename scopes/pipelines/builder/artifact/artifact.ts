@@ -1,4 +1,4 @@
-import type { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import type { ArtifactFiles, ArtifactObject } from '@teambit/component.sources';
 import type { TaskDescriptor } from '../build-task';
 import type { ArtifactDefinition } from './artifact-definition';
 import { DefaultResolver } from '../storage/default-resolver';

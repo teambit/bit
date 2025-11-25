@@ -1,12 +1,13 @@
 // eslint-disable-next-line max-classes-per-file
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import Table from 'cli-table';
 import chalk from 'chalk';
 import archy from 'archy';
-import { generateDependenciesInfoTable } from '@teambit/legacy/dist/cli/templates/component-template';
-import { ComponentIdGraph } from '@teambit/graph';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
-import { DependenciesMain } from './dependencies.main.runtime';
+import type { ComponentIdGraph } from '@teambit/graph';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
+import { generateDependenciesInfoTable } from './template';
+import type { DependenciesMain } from './dependencies.main.runtime';
+import type { Workspace } from '@teambit/workspace';
 
 type GetDependenciesFlags = {
   tree: boolean;
@@ -24,12 +25,12 @@ export type RemoveDependenciesFlags = SetDependenciesFlags;
 export class DependenciesGetCmd implements Command {
   name = 'get <component-name>';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
-  group = 'info';
+  group = 'info-analysis';
   description = 'show direct and indirect dependencies of the given component';
   alias = '';
   options = [
     ['', 'scope', 'get the data from the scope instead of the workspace'],
-    ['t', 'tree', 'EXPERIMENTAL. render dependencies as a tree, similar to "npm ls"'],
+    ['t', 'tree', 'render dependencies as a tree, similar to "npm ls"'],
   ] as CommandOptions;
 
   constructor(private deps: DependenciesMain) {}
@@ -69,7 +70,7 @@ try running "bit cat-component ${results.id.toStringWithoutVersion()}" to see wh
 export class DependenciesDebugCmd implements Command {
   name = 'debug <component-name>';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
-  group = 'info';
+  group = 'info-analysis';
   description = 'show the immediate dependencies and how their versions were determined';
   alias = '';
   options = [] as CommandOptions;
@@ -92,7 +93,7 @@ export class DependenciesSetCmd implements Command {
         'package name with or without a version, e.g. "lodash@1.0.0" or just "lodash" which will be resolved to the latest',
     },
   ];
-  group = 'info';
+  group = 'dependencies';
   description = 'set a dependency to component(s)';
   alias = '';
   options = [
@@ -125,8 +126,12 @@ export class DependenciesRemoveCmd implements Command {
         'package name with or without a version, e.g. "lodash@1.0.0" or just "lodash" which will remove all lodash instances of any version',
     },
   ];
-  group = 'info';
-  description = 'remove a dependency to component(s)';
+  group = 'dependencies';
+  description = 'remove a dependency from one or more components';
+  extendedDescription = `this command removes the dependency whether it was set by 'bit deps set'/variants or by auto-detection.
+if the dependency was auto-detected, it will be marked with a minus sign in the .bitmap file.
+otherwise, the config is written to .bitmap without the dependency.
+see also 'bit deps unset'`;
   alias = '';
   options = [
     ['d', 'dev', 'remove from devDependencies'],
@@ -159,8 +164,11 @@ export class DependenciesUnsetCmd implements Command {
         'package name with or without a version, e.g. "lodash@1.0.0" or just "lodash" which will remove all lodash instances of any version',
     },
   ];
-  group = 'info';
-  description = 'unset a dependency to component(s) that was previously set by "bit deps set"';
+  group = 'dependencies';
+  description = 'unset a dependency to component(s) that was set via config (e.g. "bit deps set" or variants)';
+  extendedDescription = `this command removes the dependency only when it was set by config not if it was auto detected.
+in the .bitmap file, the config is written without the dependency.
+see also "bit deps remove"`;
   alias = '';
   options = [
     ['d', 'dev', 'unset from devDependencies'],
@@ -186,7 +194,7 @@ export class DependenciesUnsetCmd implements Command {
 export class DependenciesResetCmd implements Command {
   name = 'reset <component-pattern>';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
-  group = 'info';
+  group = 'dependencies';
   description = 'reset dependencies to the default values (revert any previously "bit deps set")';
   alias = '';
   options = [] as CommandOptions;
@@ -204,7 +212,7 @@ export class DependenciesResetCmd implements Command {
 export class DependenciesEjectCmd implements Command {
   name = 'eject <component-pattern>';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
-  group = 'info';
+  group = 'dependencies';
   description = 'write dependencies that were previously set via "bit deps set" into .bitmap';
   alias = '';
   options = [] as CommandOptions;
@@ -227,8 +235,8 @@ export class DependenciesBlameCmd implements Command {
       description: 'package-name. for components, you can use either component-id or package-name',
     },
   ];
-  group = 'info';
-  description = 'EXPERIMENTAL. find out which snap/tag changed a dependency version';
+  group = 'info-analysis';
+  description = 'find out which snap/tag changed a dependency version';
   alias = '';
   options = [] as CommandOptions;
 
@@ -282,8 +290,11 @@ export class DependenciesUsageCmd implements Command {
         'package-name. for components, you can use either component-id or package-name. if version is specified, it will search for the exact version',
     },
   ];
-  group = 'info';
-  description = 'EXPERIMENTAL. find components that use the specified dependency';
+  group = 'dependencies';
+  description = 'find components that use the specified dependency';
+  extendedDescription = `searches workspace components to find which ones depend on the specified package or component.
+useful for understanding dependency usage before removing packages or when refactoring components.
+supports both exact version matching and package name patterns.`;
   alias = '';
   options = [['', 'depth <number>', 'max display depth of the dependency graph']] as CommandOptions;
 
@@ -309,9 +320,10 @@ export class WhyCmd extends DependenciesUsageCmd {
 export class DependenciesCmd implements Command {
   name = 'deps <sub-command>';
   alias = 'dependencies';
-  description = 'manage dependencies';
+  description = 'manage component dependencies';
+  extendedDescription = `configure and analyze component dependencies with sub-commands for setting, removing, and inspecting dependency relationships.`;
   options = [];
-  group = 'info';
+  group = 'dependencies';
   commands: Command[] = [];
   helpUrl = 'reference/dependencies/configuring-dependencies';
 
@@ -328,11 +340,14 @@ export class SetPeerCmd implements Command {
     { name: 'component-id', description: 'the component to set as always peer' },
     {
       name: 'range',
-      description: 'the default range to use for the componnent, when added to peerDependencies',
+      description: 'the default range to use for the component, when added to peerDependencies',
     },
   ];
-  group = 'info';
-  description = 'set a component as always peer';
+  group = 'dependencies';
+  description = 'configure component to always be installed as peer dependency';
+  extendedDescription = `marks a component to always be treated as a peer dependency when used by other components.
+useful for shared libraries that should be provided by the consuming application.
+the specified version range will be used when adding this component as a peer dependency.`;
   alias = '';
   options = [];
 
@@ -341,5 +356,50 @@ export class SetPeerCmd implements Command {
   async report([componentId, range]: [string, string]) {
     await this.deps.setPeer(componentId, range != null ? range.toString() : range);
     return `${chalk.green('successfully marked the component as a peer component')}`;
+  }
+}
+
+export class UnsetPeerCmd implements Command {
+  name = 'unset-peer <component-id>';
+  arguments = [{ name: 'component-id', description: 'the component to unset as always peer' }];
+  group = 'dependencies';
+  description = 'remove always-peer configuration from component';
+  extendedDescription = `removes the always-peer marking from a component, allowing it to be installed as a regular dependency.
+reverses the effect of 'bit set-peer' command. the component will be treated normally in dependency resolution.`;
+  alias = '';
+  options = [];
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([componentId]: [string]) {
+    await this.deps.unsetPeer(componentId);
+    return `${chalk.green('successfully marked the component as not a peer component')}`;
+  }
+}
+
+type DependenciesWriteCmdOptions = {
+  target?: 'workspace.jsonc' | 'package.json';
+};
+
+export class DependenciesWriteCmd implements Command {
+  name = 'write';
+  arguments = [];
+  group = 'dependencies';
+  description =
+    'write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions';
+  alias = '';
+  options = [
+    [
+      '',
+      'target <workspace.jsonc|package.json>',
+      'specify where the dependencies should be written. By default they are saved to workspace.jsonc',
+    ],
+  ] as CommandOptions;
+
+  constructor(private workspace: Workspace) {}
+
+  async report(_, options: DependenciesWriteCmdOptions) {
+    await this.workspace.writeDependencies(options.target);
+    return '';
   }
 }

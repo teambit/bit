@@ -4,18 +4,13 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import { InvalidName } from '@teambit/legacy-bit-id';
-import { statusInvalidComponentsMsg } from '../../src/constants';
-import { MissingMainFile } from '../../src/consumer/bit-map/exceptions';
-import {
-  MainFileIsDir,
-  PathOutsideConsumer,
-  VersionShouldBeRemoved,
-} from '../../src/consumer/component-ops/add-components/exceptions';
-import Helper from '../../src/e2e-helper/e2e-helper';
-
-chai.use(require('chai-fs'));
-
-const assertArrays = require('chai-arrays');
+import { statusInvalidComponentsMsg } from '@teambit/legacy.constants';
+import { MainFileIsDir, PathOutsideConsumer, VersionShouldBeRemoved } from '@teambit/tracker';
+import { MissingMainFile } from '@teambit/legacy.bit-map';
+import { Helper } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
+import assertArrays from 'chai-arrays';
+chai.use(chaiFs);
 
 chai.use(assertArrays);
 
@@ -32,37 +27,37 @@ describe('bit add command', function () {
   describe('add before running "bit init"', () => {
     it('Should return message to run "bit init"', () => {
       helper.fixtures.createComponentBarFoo();
-      const cmd = () => helper.fixtures.addComponentBarFooAsDir();
+      const cmd = () => helper.fixtures.addComponentBarFoo();
       const error = new OutsideWorkspaceError();
       helper.general.expectToThrow(cmd, error);
     });
   });
   describe('bit add without bitmap and .git/bit initialized', () => {
     it('Should find local scope inside .git/bit and add component', () => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.git.initNewGitRepo();
       helper.bitMap.delete();
       helper.fs.deletePath('.bit');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      helper.scopeHelper.initWorkspace();
+      helper.command.init();
       helper.fixtures.createComponentBarFoo();
-      const addCmd = () => helper.fixtures.addComponentBarFooAsDir();
+      const addCmd = () => helper.fixtures.addComponentBarFoo();
       expect(addCmd).to.not.throw();
     });
   });
   describe('add one component', () => {
     let output;
     beforeEach(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
     });
     it('Should print tracking component: id', () => {
       helper.fixtures.createComponentBarFoo();
-      output = helper.fixtures.addComponentBarFooAsDir();
+      output = helper.fixtures.addComponentBarFoo();
       expect(output).to.contain('bar/foo');
     });
     it('Should print warning when trying to add file that is already tracked with different id and not add it as a new one', () => {
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       output = helper.command.addComponent('bar -i bar/new');
       expect(output).to.have.string(
         `warning: files bar/foo.js already used by component: ${helper.scopes.remote}/bar/foo`
@@ -131,7 +126,7 @@ describe('bit add command', function () {
   });
   describe('with multiple index files', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fs.createFile('bar', 'index.js');
       helper.fs.createFile('bar', 'foo.js');
       helper.fs.createFile(path.join('bar', 'exceptions'), 'some-exception.js');
@@ -146,7 +141,7 @@ describe('bit add command', function () {
   describe('add component/s with gitignore', () => {
     let errorMessage;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
     });
     it('Should show warning msg in case there are no files to add because of gitignore', () => {
       helper.fs.createFile('bar', 'foo2.js');
@@ -164,7 +159,7 @@ describe('bit add command', function () {
   describe('ignore specific files inside component', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fs.createFile('bar', 'foo.js');
       helper.fs.createFile('bar', 'foo3.js');
       helper.fs.createFile('bar', 'boo.js');
@@ -188,7 +183,7 @@ describe('bit add command', function () {
   });
   describe('add component when id includes a version', () => {
     before(() => {
-      helper.scopeHelper.initWorkspace();
+      helper.command.init();
       helper.fixtures.createComponentBarFoo();
     });
     it('should throw an VersionShouldBeRemoved exception', () => {
@@ -199,7 +194,7 @@ describe('bit add command', function () {
   });
   describe('add component when the main file is a directory', () => {
     before(() => {
-      helper.scopeHelper.initWorkspace();
+      helper.command.init();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('mainDir', 'mainFile.js');
     });
@@ -213,7 +208,7 @@ describe('bit add command', function () {
   describe('add the main file when it was removed before', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fs.createFile('bar', 'foo.js');
       helper.fs.createFile('bar', 'foo-main.js');
       helper.command.addComponent('bar', { m: 'foo-main.js', i: 'bar/foo' });
@@ -231,7 +226,7 @@ describe('bit add command', function () {
   describe('directory is with upper case and test/main flags are written with lower case', () => {
     let addOutput;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fs.createFile('Bar', 'foo.js');
       addOutput = helper.general.runWithTryCatch('bit add Bar -i bar -m bar/foo.js');
     });
@@ -257,7 +252,7 @@ describe('bit add command', function () {
       consumerDir = path.join(helper.scopes.localPath, 'bar');
       fs.mkdirSync(consumerDir);
       helper.fs.createFile('foo', 'foo.js');
-      helper.scopeHelper.initWorkspace(consumerDir);
+      helper.command.init(consumerDir);
     });
     it('should throw PathOutsideConsumer error', () => {
       const addCmd = () => helper.command.addComponent('../foo', undefined, consumerDir);
@@ -267,7 +262,7 @@ describe('bit add command', function () {
   });
   describe('no mainFile and one of the files has the same name as the directory', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fs.createFile('bar', 'bar.js');
       helper.fs.createFile('bar', 'foo.js');
       helper.command.addComponent('bar');
@@ -280,7 +275,7 @@ describe('bit add command', function () {
   });
   describe('sort .bitmap components', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fs.createFileOnRootLevel('aaa/aaa.js');
       helper.fs.createFileOnRootLevel('bbb/bbb.js');
       helper.fs.createFileOnRootLevel('ccc/ccc.js');

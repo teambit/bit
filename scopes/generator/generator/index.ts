@@ -1,11 +1,14 @@
-export type { GeneratorMain } from './generator.main.runtime';
+export type { GeneratorMain, TemplateDescriptor } from './generator.main.runtime';
 export type {
   ComponentContext,
   ComponentTemplate,
   ComponentTemplateOptions,
+  GetComponentTemplates,
   ComponentFile,
   ComponentConfig,
   ConfigContext,
+  PromptOption,
+  PromptResults,
 } from './component-template';
 export type {
   WorkspaceContext,

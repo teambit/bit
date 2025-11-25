@@ -12,6 +12,8 @@ export type CompositionCardProps = {
   composition: Composition;
   openCompositionLink?: string;
   previewClass?: string;
+  queryParams?: string | string[];
+  sandbox?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export const CompositionCard = React.memo(_CompositionCard);
@@ -22,25 +24,29 @@ function _CompositionCard({
   className,
   openCompositionLink,
   previewClass,
+  queryParams,
+  sandbox,
   ...rest
 }: CompositionCardProps) {
   const Composition = React.useMemo(() => {
     return (
       <ComponentComposition
+        disableScroll
         className={previewClass}
-        includeEnv={false}
+        includeEnv={true}
         loading={'lazy'}
         composition={composition}
         component={component}
         viewport={1280}
-        scrolling="no"
+        queryParams={queryParams}
         previewName="compositions"
+        sandbox={sandbox}
       />
     );
-  }, [composition.identifier, component.id.toString(), previewClass]);
+  }, [composition.identifier, component.id.toString(), previewClass, sandbox]);
 
   return (
-    <div {...rest} key={composition.identifier} className={classnames(styles.compositionCard, className)}>
+    <div key={composition.identifier} {...rest} className={classnames(styles.compositionCard, className)}>
       <div className={styles.compositionPreview}>{Composition}</div>
       <div className={styles.bottom}>
         <span className={classnames(ellipsis, styles.displayName)}>{composition.displayName}</span>

@@ -1,11 +1,7 @@
-import {
-  DEPENDENCIES_FIELDS,
-  MANUALLY_ADD_DEPENDENCY,
-  MANUALLY_REMOVE_DEPENDENCY,
-} from '@teambit/legacy/dist/constants';
-import logger from '@teambit/legacy/dist/logger/logger';
-import Component, { ManuallyChangedDependencies } from '@teambit/legacy/dist/consumer/component/consumer-component';
-import { FileType } from './auto-detect-deps';
+import { DEPENDENCIES_FIELDS, MANUALLY_ADD_DEPENDENCY, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy.constants';
+import { logger } from '@teambit/legacy.logger';
+import type { ConsumerComponent as Component, ManuallyChangedDependencies } from '@teambit/legacy.consumer-component';
+import type { FileType } from './auto-detect-deps';
 
 export default class OverridesDependencies {
   component: Component;
@@ -15,7 +11,6 @@ export default class OverridesDependencies {
   missingPackageDependencies: string[];
   constructor(component: Component) {
     this.component = component;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
     this.manuallyRemovedDependencies = {};
     this.manuallyAddedDependencies = {};

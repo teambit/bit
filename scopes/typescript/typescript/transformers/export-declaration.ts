@@ -1,19 +1,20 @@
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import {
-  SchemaNode,
   ModuleSchema,
   UnresolvedSchema,
   UnImplementedSchema,
+  ExportSchema,
 } from '@teambit/semantics.entities.semantic-schema';
-import ts, {
+import type {
   Node,
-  SyntaxKind,
   ExportDeclaration as ExportDeclarationNode,
   NamedExports,
   NamespaceExport,
   ExportSpecifier,
 } from 'typescript';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { SchemaTransformer } from '../schema-transformer';
+import ts, { SyntaxKind } from 'typescript';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
 
 export class ExportDeclarationTransformer implements SchemaTransformer {
@@ -97,7 +98,7 @@ function isSameNode(nodeA: Node, nodeB: Node): boolean {
   return nodeA.kind === nodeB.kind && nodeA.pos === nodeB.pos && nodeA.end === nodeB.end;
 }
 
-async function namedExport(exportClause: NamedExports, context: SchemaExtractorContext): Promise<SchemaNode[]> {
+async function namedExport(exportClause: NamedExports, context: SchemaExtractorContext): Promise<ExportSchema[]> {
   const schemas = await Promise.all(
     exportClause.elements.map(async (element) => {
       return exportSpecifierToSchemaNode(element, context);
@@ -107,19 +108,31 @@ async function namedExport(exportClause: NamedExports, context: SchemaExtractorC
   return schemas;
 }
 
-async function exportSpecifierToSchemaNode(element: ExportSpecifier, context: SchemaExtractorContext) {
+async function exportSpecifierToSchemaNode(
+  element: ExportSpecifier,
+  context: SchemaExtractorContext
+): Promise<ExportSchema> {
   try {
-    const definitionInfo = await context.definitionInfo(element);
+    const name = element.propertyName?.getText() || element.name.getText();
+    const alias = element.propertyName ? element.name.getText() : undefined;
+    const location = context.getLocation(element.name);
+    const definitionInfo = element.isTypeOnly
+      ? await context.definitionInfo(element.name)
+      : await context.definitionInfo(element);
+
     if (!definitionInfo) {
+      const exportNode = new UnresolvedSchema(location, element.name.getText());
       // happens for example when the main index.ts file exports variable from an mdx file.
       // tsserver is unable to get the definition node because it doesn't know to parse mdx files.
-      return new UnresolvedSchema(context.getLocation(element.name), element.name.getText());
+      // return new UnresolvedSchema(context.getLocation(element.name), element.name.getText());
+      return new ExportSchema(location, name, exportNode, alias);
     }
 
     const definitionNode = await context.definition(definitionInfo);
 
     if (!definitionNode) {
-      return await context.resolveType(element, element.name.getText(), false);
+      const exportNode = await context.resolveType(element, name);
+      return new ExportSchema(location, name, exportNode, alias);
     }
 
     // if it is reexported from another export
@@ -133,12 +146,15 @@ make sure "bit status" is clean and there are no errors about missing packages/l
 also, make sure the tsconfig.json in the root has the "jsx" setting defined.`);
     }
 
-    if (definitionNode.parent.kind === SyntaxKind.ExportSpecifier)
+    if (definitionNode.parent.kind === SyntaxKind.ExportSpecifier) {
       return await exportSpecifierToSchemaNode(definitionNode.parent as ExportSpecifier, context);
+    }
 
-    return await context.computeSchema(definitionNode.parent);
-  } catch (e) {
-    return new UnresolvedSchema(context.getLocation(element.name), element.name.getText());
+    const exportNode = await context.computeSchema(definitionNode.parent);
+    return new ExportSchema(location, name, exportNode, alias);
+  } catch {
+    const exportNode = new UnresolvedSchema(context.getLocation(element.name), element.name.getText());
+    return new ExportSchema(context.getLocation(element.name), element.name.getText(), exportNode);
   }
 }
 

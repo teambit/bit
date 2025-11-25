@@ -1,4 +1,5 @@
-import React, { ComponentType, useEffect, useState, ReactElement } from 'react';
+import type { ComponentType, ReactElement } from 'react';
+import React, { useEffect, useState } from 'react';
 import { LoaderRibbon } from '@teambit/base-ui.loaders.loader-ribbon';
 
 export type LoaderProps = {

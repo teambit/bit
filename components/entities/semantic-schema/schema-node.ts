@@ -1,5 +1,6 @@
 import { pickBy } from 'lodash';
-import { DocSchema } from './schemas';
+import pluralize from 'pluralize';
+import type { DocSchema } from './schemas';
 
 export interface ISchemaNode {
   __schema: string;
@@ -8,10 +9,12 @@ export interface ISchemaNode {
   signature?: string;
   name?: string;
   toObject(): Record<string, any>;
-  toString(): string;
+  toString(options?: { color?: boolean }): string;
+  toFullSignature(options?: { showDocs?: boolean }): string;
   getNodes(): SchemaNode[];
   findNode(predicate: (node: SchemaNode) => boolean, visitedNodes?: Set<SchemaNode>): SchemaNode | undefined;
   getAllNodesRecursively(visitedNodes?: Set<SchemaNode>): SchemaNode[];
+  displaySchemaName: string;
 }
 
 /**
@@ -21,11 +24,17 @@ export interface ISchemaNode {
  */
 export abstract class SchemaNode implements ISchemaNode {
   readonly __schema = this.constructor.name;
+  readonly displaySchemaName = pluralize(
+    this.constructor.name
+      .replace(/Schema$/, '')
+      .replace(/([A-Z])/g, ' $1')
+      .trim()
+  );
+
   abstract readonly location: SchemaLocation;
   readonly doc?: DocSchema;
   readonly signature?: string;
   readonly name?: string;
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static fromObject(obj: Record<string, any>): SchemaNode {
     throw new Error(`Method 'fromObject' not implemented in subclass.`);
@@ -44,7 +53,8 @@ export abstract class SchemaNode implements ISchemaNode {
     );
   }
 
-  abstract toString(): string;
+  abstract toString(options?: { color?: boolean }): string;
+  abstract toFullSignature(options?: { showDocs?: boolean }): string;
 
   getNodes(): SchemaNode[] {
     return [this];
