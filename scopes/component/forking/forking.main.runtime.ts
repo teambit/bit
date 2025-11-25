@@ -227,8 +227,12 @@ export class ForkingMain {
     }
     const getPatternWithScopeName = () => {
       if (!pattern) return undefined;
-      if (pattern.startsWith(`${originalScope}/`)) return pattern;
-      return `${originalScope}/${pattern}`;
+      const patterns = pattern.split(',').map((p) => p.trim());
+      const patternsWithScope = patterns.map((p) => {
+        if (p.startsWith(`${originalScope}/`)) return p;
+        return `${originalScope}/${p}`;
+      });
+      return patternsWithScope.join(', ');
     };
     const patternWithScopeName = getPatternWithScopeName();
     const idsFromOriginalScope = patternWithScopeName
