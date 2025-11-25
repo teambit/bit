@@ -56,6 +56,7 @@ export class ObjectList {
   /**
    * Generates a SHA1 hash from all object buffers.
    * Used to identify duplicate export requests during retries.
+   * Performance wise, it's not too bad. ~98ms for 150 components on CircleCI.
    */
   getSha1Hash(): string {
     const hash = crypto.createHash('sha1');

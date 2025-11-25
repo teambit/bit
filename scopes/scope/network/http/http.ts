@@ -1,4 +1,5 @@
 import { ClientError, gql, GraphQLClient } from 'graphql-request';
+import { v4 } from 'uuid';
 import { isNil } from 'lodash';
 import nodeFetch from '@pnpm/node-fetch';
 import retry from 'async-retry';
@@ -276,9 +277,7 @@ export class Http implements Network {
     metadata?: { jobs?: string[] };
   }> {
     // Initialize headers outside retry so the same request-id and objects-hash are used for all retries
-    logger.profile('objectList.getSha1Hash'); // temporary profile log to make sure this is not taking too long
     const objectsHash = objectList.getSha1Hash();
-    logger.profile('objectList.getSha1Hash');
     const headers = this.getHeaders({
       'push-options': JSON.stringify(options),
       'x-verb': Verb.WRITE,
@@ -902,7 +901,7 @@ export class Http implements Network {
       logger.error('failed getting bit version from the client');
     }
     // Generate a unique request ID if not already provided in headers
-    const requestId = headers['x-request-id'] || `${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
+    const requestId = headers['x-request-id'] || `${v4()}`;
     return Object.assign(
       headers,
       authHeader,
