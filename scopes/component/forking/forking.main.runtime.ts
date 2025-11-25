@@ -103,42 +103,40 @@ export class ForkingMain {
 
     const targetScope = options?.scope || this.workspace.defaultScope;
 
-    // Try to get matching IDs from workspace first
+    // Get workspace components matching the pattern
     const workspaceIds = this.workspace.listIds();
     const matchedWorkspaceIds = await this.workspace.filterIdsFromPoolIdsByPattern(pattern, workspaceIds, false);
 
-    // Try to get remote components matching the pattern
-    // Extract scope from pattern if it exists (e.g., "org.scope/**" -> "org.scope")
-    const patternParts = pattern.split('/');
-    const potentialScope = patternParts[0];
+    // Get remote components matching the pattern
+    // Extract unique scope names from the pattern to query remote scopes
+    const scopeNames = this.extractScopeNamesFromPattern(pattern);
     let remoteIds: ComponentID[] = [];
 
-    // Check if pattern starts with a scope name
-    if (potentialScope && !potentialScope.includes('*')) {
+    for (const scopeName of scopeNames) {
       try {
-        const allIdsFromScope = await this.workspace.scope.listRemoteScope(potentialScope);
+        const allIdsFromScope = await this.workspace.scope.listRemoteScope(scopeName);
         if (allIdsFromScope.length > 0) {
-          remoteIds = await this.workspace.scope.filterIdsFromPoolIdsByPattern(pattern, allIdsFromScope, false);
+          const filtered = await this.workspace.scope.filterIdsFromPoolIdsByPattern(pattern, allIdsFromScope, false);
+          remoteIds.push(...filtered);
         }
       } catch {
-        // If the scope doesn't exist or can't be accessed, continue without remote IDs
+        // If the scope doesn't exist or can't be accessed, continue
       }
     }
 
-    // Combine workspace and remote IDs
     const allMatchedIds = [...matchedWorkspaceIds, ...remoteIds];
 
     if (!allMatchedIds.length) {
       throw new BitError(`no components found matching pattern "${pattern}"`);
     }
 
-    // Check for existing components with same names in workspace
-    const workspaceBitIds = ComponentIdList.fromArray(workspaceIds.map((id) => id));
+    // Check for name conflicts
+    const workspaceBitIds = ComponentIdList.fromArray(workspaceIds);
     allMatchedIds.forEach((id) => {
-      const existInWorkspace = workspaceBitIds.searchWithoutVersion(id);
-      if (existInWorkspace) {
+      const nameConflict = workspaceBitIds.searchWithoutScopeAndVersion(id);
+      if (nameConflict && nameConflict.scope !== id.scope) {
         throw new BitError(
-          `unable to fork "${id.toString()}". the workspace has a component "${existInWorkspace.toString()}" with the same name`
+          `unable to fork "${id.toString()}". the workspace has a component "${nameConflict.toString()}" with the same name but different scope`
         );
       }
     });
@@ -171,6 +169,37 @@ export class ForkingMain {
     }
 
     return forkedIds;
+  }
+
+  /**
+   * Extract scope names from a pattern
+   * e.g., "org.scope/**" -> ["org.scope"]
+   * e.g., "org.scope/ui/**, org.scope2/backend/**" -> ["org.scope", "org.scope2"]
+   */
+  private extractScopeNamesFromPattern(pattern: string): string[] {
+    const patterns = pattern.split(',').map((p) => p.trim());
+    const scopeNames = new Set<string>();
+
+    for (const pat of patterns) {
+      // Skip negation patterns
+      if (pat.startsWith('!')) continue;
+      // Skip state filters
+      if (pat.startsWith('$')) continue;
+
+      const parts = pat.split('/');
+      const potentialScope = parts[0];
+
+      // Only add if it looks like a scope name (contains a dot or doesn't have wildcards)
+      if (
+        potentialScope &&
+        !potentialScope.includes('*') &&
+        (potentialScope.includes('.') || !potentialScope.includes('/'))
+      ) {
+        scopeNames.add(potentialScope);
+      }
+    }
+
+    return Array.from(scopeNames);
   }
 
   /**
