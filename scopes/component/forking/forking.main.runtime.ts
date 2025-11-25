@@ -95,6 +95,91 @@ export class ForkingMain {
   }
 
   /**
+   * fork multiple components matching a pattern
+   * all components are forked with the same name to a target scope
+   */
+  async forkByPattern(pattern: string, options?: ForkOptions): Promise<ComponentID[]> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+
+    // Determine target scope
+    const targetScope = options?.scope || this.workspace.defaultScope;
+    if (!targetScope) {
+      throw new BitError(
+        'unable to fork components by pattern: no target scope specified. either provide --scope flag or set a defaultScope in workspace.jsonc'
+      );
+    }
+
+    // Try to get matching IDs from workspace first
+    const workspaceIds = await this.workspace.listIds();
+    const matchedWorkspaceIds = await this.workspace.filterIdsFromPoolIdsByPattern(pattern, workspaceIds, false);
+
+    // Try to get remote components matching the pattern
+    // Extract scope from pattern if it exists (e.g., "org.scope/**" -> "org.scope")
+    const patternParts = pattern.split('/');
+    const potentialScope = patternParts[0];
+    let remoteIds: ComponentID[] = [];
+
+    // Check if pattern starts with a scope name
+    if (potentialScope && !potentialScope.includes('*')) {
+      try {
+        const allIdsFromScope = await this.workspace.scope.listRemoteScope(potentialScope);
+        if (allIdsFromScope.length > 0) {
+          remoteIds = await this.workspace.scope.filterIdsFromPoolIdsByPattern(pattern, allIdsFromScope, false);
+        }
+      } catch {
+        // If the scope doesn't exist or can't be accessed, continue without remote IDs
+      }
+    }
+
+    // Combine workspace and remote IDs
+    const allMatchedIds = [...matchedWorkspaceIds, ...remoteIds];
+
+    if (!allMatchedIds.length) {
+      throw new BitError(`no components found matching pattern "${pattern}"`);
+    }
+
+    // Check for existing components with same names in workspace
+    const workspaceBitIds = ComponentIdList.fromArray(workspaceIds.map((id) => id));
+    allMatchedIds.forEach((id) => {
+      const existInWorkspace = workspaceBitIds.searchWithoutVersion(id);
+      if (existInWorkspace) {
+        throw new BitError(
+          `unable to fork "${id.toString()}". the workspace has a component "${existInWorkspace.toString()}" with the same name`
+        );
+      }
+    });
+
+    const forkedIds: ComponentID[] = [];
+
+    // Fork workspace components
+    for (const id of matchedWorkspaceIds) {
+      const existing = await this.workspace.get(id);
+      const targetCompId = await this.forkExistingInWorkspace(existing, undefined, { ...options, scope: targetScope });
+      forkedIds.push(targetCompId);
+    }
+
+    // Fork remote components
+    if (remoteIds.length > 0) {
+      const componentsToFork: MultipleComponentsToFork = remoteIds.map((id) => ({
+        sourceId: id.toString(),
+        targetScope,
+      }));
+
+      const results = await this.forkMultipleFromRemote(componentsToFork, {
+        refactor: options?.refactor,
+        scope: targetScope,
+        install: !options?.skipDependencyInstallation,
+        ast: options?.ast,
+        compile: false,
+      });
+
+      forkedIds.push(...results.map((result) => result.targetCompId));
+    }
+
+    return forkedIds;
+  }
+
+  /**
    * get the forking data, such as the source where a component was forked from
    */
   getForkInfo(component: Component): ForkInfo | null {
