@@ -101,16 +101,10 @@ export class ForkingMain {
   async forkByPattern(pattern: string, options?: ForkOptions): Promise<ComponentID[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
 
-    // Determine target scope
     const targetScope = options?.scope || this.workspace.defaultScope;
-    if (!targetScope) {
-      throw new BitError(
-        'unable to fork components by pattern: no target scope specified. either provide --scope flag or set a defaultScope in workspace.jsonc'
-      );
-    }
 
     // Try to get matching IDs from workspace first
-    const workspaceIds = await this.workspace.listIds();
+    const workspaceIds = this.workspace.listIds();
     const matchedWorkspaceIds = await this.workspace.filterIdsFromPoolIdsByPattern(pattern, workspaceIds, false);
 
     // Try to get remote components matching the pattern
