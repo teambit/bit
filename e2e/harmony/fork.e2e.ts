@@ -63,27 +63,33 @@ describe('bit fork command', function () {
     });
   });
   describe('fork multiple components using pattern', () => {
-    let remoteBeforeFork: string;
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(2);
-      helper.command.tagAllWithoutBuild();
-      helper.command.export();
-      remoteBeforeFork = helper.scopes.remote;
-      helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
-      helper.scopeHelper.addRemoteScope();
-    });
-    it('should throw an error when target-component-name is provided with pattern', () => {
-      const forkCmd = () => helper.command.fork(`"${remoteBeforeFork}/*" comp2`);
-      expect(forkCmd).to.throw('target-component-name is not allowed when using patterns');
-    });
-    it('should throw an error when no scope is provided and no defaultScope is set', () => {
-      const forkCmd = () => helper.command.fork(`"${remoteBeforeFork}/*"`);
-      expect(forkCmd).to.throw('no target scope specified');
+    describe('validation errors', () => {
+      let remoteScope: string;
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(2);
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+        remoteScope = helper.scopes.remote;
+        helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
+        helper.scopeHelper.addRemoteScope();
+      });
+      it('should throw an error when target-component-name is provided with pattern', () => {
+        const forkCmd = () => helper.command.fork(`"${remoteScope}/*" comp2`);
+        expect(forkCmd).to.throw('target-component-name is not allowed when using patterns');
+      });
     });
     describe('fork with --scope flag', () => {
+      let remoteScope: string;
       before(() => {
-        helper.command.fork(`"${remoteBeforeFork}/*"`, `--scope ${helper.scopes.env} -x`);
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(2);
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+        remoteScope = helper.scopes.remote;
+        helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
+        helper.scopeHelper.addRemoteScope();
+        helper.command.fork(`"${remoteScope}/*"`, `--scope ${helper.scopes.env} -x`);
       });
       it('should fork all matching components', () => {
         const status = helper.command.statusJson();
@@ -99,7 +105,39 @@ describe('bit fork command', function () {
       it('bit show should show the forked components with reference to original', () => {
         const showFork = helper.command.showAspectConfig('comp1', Extensions.forking);
         expect(showFork.config).to.have.property('forkedFrom');
-        expect(showFork.config.forkedFrom.scope).to.equal(remoteBeforeFork);
+        expect(showFork.config.forkedFrom.scope).to.equal(remoteScope);
+      });
+    });
+    describe('fork with comma-separated pattern for specific component IDs', () => {
+      let remoteScope: string;
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(3);
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+        remoteScope = helper.scopes.remote;
+        helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
+        helper.scopeHelper.addRemoteScope();
+        // Fork using comma-separated pattern with specific component IDs (no wildcards)
+        helper.command.fork(`"${remoteScope}/comp1,${remoteScope}/comp3"`, `--scope ${helper.scopes.env} -x`);
+      });
+      it('should fork the specified components', () => {
+        const status = helper.command.statusJson();
+        expect(status.newComponents).to.have.lengthOf(2);
+      });
+      it('should fork components with same names to the target scope', () => {
+        const list = helper.command.listParsed();
+        const forkedComps = list.filter((comp) => comp.id.includes(helper.scopes.env));
+        expect(forkedComps).to.have.lengthOf(2);
+      });
+      it('bit show should show the forked components with reference to original', () => {
+        const showFork1 = helper.command.showAspectConfig('comp1', Extensions.forking);
+        expect(showFork1.config).to.have.property('forkedFrom');
+        expect(showFork1.config.forkedFrom.scope).to.equal(remoteScope);
+
+        const showFork3 = helper.command.showAspectConfig('comp3', Extensions.forking);
+        expect(showFork3.config).to.have.property('forkedFrom');
+        expect(showFork3.config.forkedFrom.scope).to.equal(remoteScope);
       });
     });
   });

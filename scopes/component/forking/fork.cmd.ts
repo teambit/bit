@@ -86,7 +86,7 @@ the target-component-name argument is not allowed when using patterns.`;
   constructor(private forking: ForkingMain) {}
 
   async report([sourceId, targetId]: [string, string], options: ForkOptions): Promise<string> {
-    const isPattern = hasWildcard(sourceId);
+    const isPattern = hasWildcard(sourceId) || sourceId.includes(',');
 
     if (isPattern) {
       // Pattern mode - fork multiple components
