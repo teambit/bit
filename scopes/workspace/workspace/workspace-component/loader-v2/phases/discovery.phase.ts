@@ -83,9 +83,11 @@ export class DiscoveryPhase {
    */
   private isInWorkspace(id: ComponentID): boolean {
     try {
-      // Try to get the component from bitmap
+      // Check if component is in bitmap
+      const allIdsStr = this.bitmap.getAllIdsStr();
+      const idStr = id.toString();
       const idWithoutVersion = id.toStringWithoutVersion();
-      return this.bitmap.hasId(idWithoutVersion);
+      return idStr in allIdsStr || idWithoutVersion in allIdsStr;
     } catch {
       return false;
     }

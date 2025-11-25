@@ -66,8 +66,8 @@ export class AssemblyPhase {
     // Build ComponentFS from legacy files
     const componentFS = ComponentFS.fromVinyls(raw.consumerComponent.files);
 
-    // Build Config from extensions
-    const config = Config.fromExtensions(raw.extensions);
+    // Build Config from consumer component
+    const config = new Config(raw.consumerComponent);
 
     // Upsert env and dependency resolver data into config
     await this.upsertExtensionData(config, EnvsAspect.id, envsData);
