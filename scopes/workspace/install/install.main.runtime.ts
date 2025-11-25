@@ -369,6 +369,9 @@ export class InstallMain {
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     };
     const { linkedRootDeps } = await this.calculateLinks(linkOpts);
+    // Capture envs that failed to load before install - they may become available after install
+    // and we'll need to re-detect dependencies for components using custom file extensions (e.g., .vue)
+    const envsFailedToLoadBeforeInstall = this.envs.getFailedToLoadEnvs();
     // eslint-disable-next-line prefer-const
     let { mergedRootPolicy, componentsAndManifests: current } = await this._getComponentsManifestsAndRootPolicy(
       installer,
@@ -484,6 +487,37 @@ export class InstallMain {
       // After pruning we need reload moved envs, as during the pruning the old location might be deleted
       await this.reloadMovedEnvs();
     }
+
+    // If addMissingDeps was requested and there were envs that failed to load before install,
+    // we need to re-check for missing dependencies now that envs may be available.
+    // This handles the case where a component uses a custom file extension (e.g., .vue) that requires
+    // an env detector that wasn't available during the first dependency detection pass.
+    if (options?.addMissingDeps && envsFailedToLoadBeforeInstall.length > 0) {
+      await this.workspace.clearCache();
+      const missingPackages = await this._getAllMissingPackages();
+      if (missingPackages.length > 0) {
+        this.logger.debug(
+          `found ${missingPackages.length} missing packages after envs became available: ${missingPackages.join(', ')}`
+        );
+        await this._addPackages(missingPackages, { skipUnavailable: options?.skipUnavailable });
+        // Run another install to install the newly discovered missing packages
+        const newManifests = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
+        await installer.installComponents(
+          this.workspace.path,
+          newManifests.manifests,
+          mergedRootPolicy,
+          newManifests.componentDirectoryMap,
+          {
+            linkedDependencies,
+            installTeambitBit: false,
+            forcedHarmonyVersion,
+          },
+          pmInstallOptions
+        );
+        current = newManifests;
+      }
+    }
+
     // this is now commented out because we assume we don't need it anymore.
     // even when the env was not loaded before and it is loaded now, it should be fine because the dependencies-data
     // is only about the auto-detect-deps. there are two more steps: version-resolution and apply-overrides that
