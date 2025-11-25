@@ -110,7 +110,7 @@ export class ForkingMain {
     // Get remote components matching the pattern
     // Extract unique scope names from the pattern to query remote scopes
     const scopeNames = this.extractScopeNamesFromPattern(pattern);
-    let remoteIds: ComponentID[] = [];
+    const remoteIds: ComponentID[] = [];
 
     for (const scopeName of scopeNames) {
       try {
@@ -130,29 +130,34 @@ export class ForkingMain {
       throw new BitError(`no components found matching pattern "${pattern}"`);
     }
 
-    // Check for name conflicts
+    // Filter out components that would conflict with existing workspace components
     const workspaceBitIds = ComponentIdList.fromArray(workspaceIds);
-    allMatchedIds.forEach((id) => {
-      const nameConflict = workspaceBitIds.searchWithoutScopeAndVersion(id);
-      if (nameConflict && nameConflict.scope !== id.scope) {
-        throw new BitError(
-          `unable to fork "${id.toString()}". the workspace has a component "${nameConflict.toString()}" with the same name but different scope`
-        );
-      }
+    const idsToFork = allMatchedIds.filter((id) => {
+      const newComponentId = ComponentID.fromObject({ name: id.fullName }, targetScope);
+      const existInWorkspace = workspaceBitIds.searchWithoutVersion(newComponentId);
+      return !existInWorkspace;
     });
+
+    if (!idsToFork.length) {
+      throw new BitError(
+        `all components matching pattern "${pattern}" already exist in the workspace with scope "${targetScope}"`
+      );
+    }
 
     const forkedIds: ComponentID[] = [];
 
     // Fork workspace components
-    for (const id of matchedWorkspaceIds) {
+    const workspaceIdsToFork = idsToFork.filter((id) => matchedWorkspaceIds.some((wsId) => wsId.isEqual(id)));
+    for (const id of workspaceIdsToFork) {
       const existing = await this.workspace.get(id);
       const targetCompId = await this.forkExistingInWorkspace(existing, undefined, { ...options, scope: targetScope });
       forkedIds.push(targetCompId);
     }
 
     // Fork remote components
-    if (remoteIds.length > 0) {
-      const componentsToFork: MultipleComponentsToFork = remoteIds.map((id) => ({
+    const remoteIdsToFork = idsToFork.filter((id) => remoteIds.some((remoteId) => remoteId.isEqual(id)));
+    if (remoteIdsToFork.length > 0) {
+      const componentsToFork: MultipleComponentsToFork = remoteIdsToFork.map((id) => ({
         sourceId: id.toString(),
         targetScope,
       }));
