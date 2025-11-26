@@ -1209,7 +1209,14 @@ export class InstallMain {
   }
 
   private async getComponentsDirectory(ids: ComponentID[]): Promise<ComponentMap<string>> {
-    const components = ids.length ? await this.workspace.getMany(ids) : await this.workspace.list();
+    // We intentionally use loadSeedersAsAspects: false here to avoid loading env aspects during installation.
+    // While this causes issues with --add-missing-deps for custom detectors (see PR #10044),
+    // loading seeders during installation causes regressions where lane imports fail with errors like:
+    // "Cannot find module '/private/tmp/a27cc147/node_modules/@teambit/node.envs.node-babel-mocha/dist/node-babel-mocha.bit-env.js'"
+    // The env aspect files are not yet available during the initial installation phase.
+    const components = ids.length
+      ? await this.workspace.getMany(ids)
+      : await this.workspace.list(undefined, { loadSeedersAsAspects: false });
     return ComponentMap.as<string>(components, (component) => this.workspace.componentDir(component.id));
   }
 
