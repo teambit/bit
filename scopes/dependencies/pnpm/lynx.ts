@@ -272,31 +272,6 @@ export async function install(
       hoistPattern.push(`!${pkgName}`);
     }
   }
-  let neverBuiltDependencies = options.neverBuiltDependencies
-  let onlyBuiltDependencies: string[] | undefined
-  let ignoredBuiltDependencies: string[] | undefined
-  if (options.allowScripts == null) {
-    if (neverBuiltDependencies == null) {
-      // If neither neverBuiltDependencies nor allowScripts are set by the user
-      // we tell pnpm to allow all scripts to be executed by setting neverBuiltDependencies to []
-      neverBuiltDependencies = ['core-js']
-    }
-  } else {
-    onlyBuiltDependencies = [];
-    ignoredBuiltDependencies = [];
-    for (const [packageDescriptor, allowedScript] of Object.entries(options.allowScripts)) {
-      switch (allowedScript) {
-      case true: {
-        onlyBuiltDependencies.push(packageDescriptor);
-        break;
-      }
-      case false: {
-        ignoredBuiltDependencies.push(packageDescriptor);
-        break;
-      }
-      }
-    }
-  }
   const opts: InstallOptions = {
     allProjects,
     autoInstallPeers: options.autoInstallPeers,
@@ -328,9 +303,10 @@ export async function install(
     userAgent: networkConfig.userAgent,
     ...options,
     injectWorkspacePackages: true,
-    neverBuiltDependencies,
-    onlyBuiltDependencies,
-    ignoredBuiltDependencies,
+    ...resolveScriptPolicies({
+      allowScripts: options.allowScripts,
+      neverBuiltDependencies: options.neverBuiltDependencies,
+    }),
     returnListOfDepsRequiringBuild: true,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     depth: options.updateAll ? Infinity : 0,
@@ -401,6 +377,40 @@ export async function install(
     storeDir: storeController.dir,
     depsRequiringBuild,
   };
+}
+
+type ScriptPolicyConfig = {
+  allowScripts?: Record<string, boolean | 'warn'>;
+  neverBuiltDependencies?: string[];
+};
+
+function resolveScriptPolicies({ allowScripts, neverBuiltDependencies }: ScriptPolicyConfig) {
+  let resolvedNeverBuilt = neverBuiltDependencies;
+  let onlyBuiltDependencies: string[] | undefined;
+  let ignoredBuiltDependencies: string[] | undefined;
+  if (allowScripts == null) {
+    if (resolvedNeverBuilt == null) {
+      // If neither neverBuiltDependencies nor allowScripts are set by the user
+      // we tell pnpm to allow all scripts to be executed by setting neverBuiltDependencies to []
+      resolvedNeverBuilt = ['core-js'];
+    }
+  } else {
+    onlyBuiltDependencies = [];
+    ignoredBuiltDependencies = [];
+    for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts)) {
+      switch (allowedScript) {
+        case true:
+          onlyBuiltDependencies.push(packageDescriptor);
+          break;
+        case false:
+          ignoredBuiltDependencies.push(packageDescriptor);
+          break;
+        default:
+          break;
+      }
+    }
+  }
+  return { neverBuiltDependencies: resolvedNeverBuilt, onlyBuiltDependencies, ignoredBuiltDependencies };
 }
 
 function initReporter(opts?: ReportOptions) {
