@@ -203,6 +203,7 @@ export async function install(
     dryRun?: boolean;
     dedupeInjectedDeps?: boolean;
     forcedHarmonyVersion?: string;
+    allowScripts?: Record<string, boolean | 'warn'>;
   } & Pick<
     InstallOptions,
     | 'autoInstallPeers'
@@ -216,8 +217,6 @@ export async function install(
     | 'minimumReleaseAge'
     | 'minimumReleaseAgeExclude'
     | 'neverBuiltDependencies'
-    | 'onlyBuiltDependencies'
-    | 'ignoredBuiltDependencies'
     | 'ignorePackageManifest'
     | 'hoistWorkspacePackages'
     | 'returnListOfDepsRequiringBuild'
@@ -274,10 +273,29 @@ export async function install(
     }
   }
   let neverBuiltDependencies = options.neverBuiltDependencies
-  if (neverBuiltDependencies == null && options.onlyBuiltDependencies == null) {
-    // If neither neverBuiltDependencies nor onlyBuiltDependencies are set by the user
-    // we tell pnpm to allow all scripts to be executed by setting neverBuiltDependencies to []
-    neverBuiltDependencies = ['core-js']
+  let onlyBuiltDependencies: string[] | undefined
+  let ignoredBuiltDependencies: string[] | undefined
+  if (options.allowScripts == null) {
+    if (neverBuiltDependencies == null) {
+      // If neither neverBuiltDependencies nor allowScripts are set by the user
+      // we tell pnpm to allow all scripts to be executed by setting neverBuiltDependencies to []
+      neverBuiltDependencies = ['core-js']
+    }
+  } else {
+    onlyBuiltDependencies = [];
+    ignoredBuiltDependencies = [];
+    for (const [packageDescriptor, allowedScript] of Object.entries(options.allowScripts)) {
+      switch (allowedScript) {
+      case true: {
+        onlyBuiltDependencies.push(packageDescriptor);
+        break;
+      }
+      case false: {
+        ignoredBuiltDependencies.push(packageDescriptor);
+        break;
+      }
+      }
+    }
   }
   const opts: InstallOptions = {
     allProjects,
@@ -311,6 +329,8 @@ export async function install(
     ...options,
     injectWorkspacePackages: true,
     neverBuiltDependencies,
+    onlyBuiltDependencies,
+    ignoredBuiltDependencies,
     returnListOfDepsRequiringBuild: true,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     depth: options.updateAll ? Infinity : 0,

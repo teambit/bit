@@ -70,9 +70,7 @@ export type PackageManagerInstallOptions = {
 
   neverBuiltDependencies?: string[];
 
-  onlyBuiltDependencies?: string[];
-
-  ignoredBuiltDependencies?: string[];
+  allowScripts?: Record<string, boolean | 'warn'>;
 
   preferOffline?: boolean;
 

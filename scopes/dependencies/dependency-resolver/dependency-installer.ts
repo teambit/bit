@@ -102,9 +102,7 @@ export class DependencyInstaller {
 
     private neverBuiltDependencies?: string[],
 
-    private onlyBuiltDependencies?: string[],
-
-    private ignoredBuiltDependencies?: string[],
+    private allowScripts?: Record<string, boolean | 'warn'>,
 
     private preferOffline?: boolean,
 
@@ -217,8 +215,7 @@ export class DependencyInstaller {
       peerDependencyRules: this.peerDependencyRules,
       hidePackageManagerOutput,
       neverBuiltDependencies: this.neverBuiltDependencies,
-      onlyBuiltDependencies: this.onlyBuiltDependencies,
-      ignoredBuiltDependencies: this.ignoredBuiltDependencies,
+      allowScripts: this.allowScripts,
       preferOffline: this.preferOffline,
       dedupeInjectedDeps: options.dedupeInjectedDeps,
       dependenciesGraph: options.dependenciesGraph,
