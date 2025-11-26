@@ -16,12 +16,15 @@ import { TopBar } from '@teambit/ui-foundation.ui.top-bar';
 import { PreserveWorkspaceMode } from '@teambit/workspace.ui.preserve-workspace-mode';
 import classNames from 'classnames';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
+import { useUrlChangeBroadcaster } from '@teambit/workspace.hooks.use-url-change-broadcaster';
+import { useNavigationMessageListener } from '@teambit/workspace.hooks.use-navigation-message-listener';
 
 import { useWorkspace } from './use-workspace';
 import { WorkspaceOverview } from './workspace-overview';
 import { WorkspaceProvider } from './workspace-provider';
 import styles from './workspace.module.scss';
 import type { WorkspaceUI } from '../../workspace.ui.runtime';
+import { ThemeFromUrlSync } from './theme-from-url';
 
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
@@ -80,15 +83,18 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
   }
 
   workspaceUI.setComponents(workspace.components);
+  const inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
 
   return (
     <WorkspaceProvider workspace={workspace}>
       {!isMinimal && <NotificationsBinder reactionsRef={reactionsRef} />}
       <PreserveWorkspaceMode>
+        <ThemeFromUrlSync />
+        {isMinimal && inIframe && <MinimalModeUrlBroadcasterAndListener />}
         <div className={styles.workspaceWrapper}>
           {
             <TopBar
-              className={classNames(styles.topbar, styles[themeName])}
+              className={classNames(styles.topbar, styles[themeName], isMinimal && styles.minimal)}
               Corner={() => (
                 <Corner
                   className={classNames((isMinimal && styles.minimalCorner) || styles.corner, styles[themeName])}
@@ -158,5 +164,11 @@ function NotificationsBinder({
     };
   }, [notificationsMapped, reactionsRef]);
 
+  return null;
+}
+
+export function MinimalModeUrlBroadcasterAndListener() {
+  useUrlChangeBroadcaster();
+  useNavigationMessageListener();
   return null;
 }

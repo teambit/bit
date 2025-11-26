@@ -125,6 +125,16 @@ export type ClearCacheOptions = {
   skipClearFailedToLoadEnvs?: boolean;
 };
 
+/**
+ * Field used to mark aspect config as "specific" (set via .bitmap or component.json).
+ * When __specific is true, this config takes precedence over workspace variants during merging.
+ * See https://github.com/teambit/bit/pull/5342 for original implementation.
+ *
+ * Important behavior for dependency-resolver aspect:
+ * - Dependencies set via workspace variants are saved WITHOUT __specific (until first `bit deps set`)
+ * - Once `bit deps set` is called, the entire dependency-resolver config gets __specific: true
+ * - From that point forward, ALL deps in that aspect are considered "specific"
+ */
 export const AspectSpecificField = '__specific';
 export const ComponentAdded = 'componentAdded';
 export const ComponentChanged = 'componentChanged';

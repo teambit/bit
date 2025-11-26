@@ -5,6 +5,7 @@ import type { ListScopeResult } from '@teambit/legacy.component-list';
 import type { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import type { ComponentLog, ObjectItemsStream, ObjectList } from '@teambit/objects';
 import type { LaneData, ScopeDescriptor, RemovedObjects } from '@teambit/legacy.scope';
+import type { DoctorResponse } from '@teambit/doctor';
 
 export interface Network {
   // @todo: this causes ts errors in the ssh class for some reason
@@ -27,4 +28,5 @@ export interface Network {
   graph(bitId?: ComponentID): Promise<DependencyGraph>;
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]>;
   hasObjects(hashes: string[]): Promise<string[]>;
+  doctor(diagnosisName?: string): Promise<DoctorResponse>;
 }

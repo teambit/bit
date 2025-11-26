@@ -738,8 +738,8 @@ export default class Component extends BitObject {
       else
         throw new Error(`unable to add a new version for "${this.id()}" on main.
 this version started from an older version (${previouslyUsedVersion}), and not from the head (${head}).
-if this is done intentionally, please re-run with --detach-head (or --override-head if available).
-otherwise, please run "bit checkout head" to be up to date, then snap/tag your changes.`);
+please run "bit checkout head" to be up to date, then snap/tag your changes.
+if this is done intentionally, you can use --detach-head (or --override-head if available), but make sure you understand the implications as this is an experimental feature that may not be fully stable.`);
     } else {
       this.setHead(version.hash());
       this.detachedHeads.clearCurrent();
@@ -1205,6 +1205,27 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     await this.setDivergeData(repo, undefined, undefined, workspaceId);
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnSourceOnly;
+
+    // When there's a detached head, divergeData only includes the detached head lineage.
+    // We also need to include unexported versions from the main head lineage.
+    const hasDetachedHead = this.detachedHeads && this.detachedHeads.getAllHeads().length > 0;
+    if (hasDetachedHead && this.head) {
+      // Calculate divergence from the main head as well
+      const mainHeadDivergeData = await getDivergeData({
+        repo,
+        modelComponent: this,
+        targetHead: (this.laneId ? this.calculatedRemoteHeadWhenOnLane : this.remoteHead) || null,
+        sourceHead: this.head,
+        throws: false,
+      });
+      // Add main head local versions that aren't already in localHashes
+      for (const hash of mainHeadDivergeData.snapsOnSourceOnly) {
+        if (!localHashes.find((h) => h.isEqual(hash))) {
+          localHashes.push(hash);
+        }
+      }
+    }
+
     if (!localHashes.length) return [];
     return localHashes.reverse(); // reverse to get the older first
   }

@@ -1211,9 +1211,7 @@ export class InstallMain {
   }
 
   private async getComponentsDirectory(ids: ComponentID[]): Promise<ComponentMap<string>> {
-    const components = ids.length
-      ? await this.workspace.getMany(ids)
-      : await this.workspace.list(undefined, { loadSeedersAsAspects: false });
+    const components = ids.length ? await this.workspace.getMany(ids) : await this.workspace.list();
     return ComponentMap.as<string>(components, (component) => this.workspace.componentDir(component.id));
   }
 

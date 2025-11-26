@@ -186,7 +186,7 @@ export class ScopeMain implements ComponentFactory {
 
     private aspectLoader: AspectLoaderMain,
 
-    private logger: Logger,
+    readonly logger: Logger,
 
     private envs: EnvsMain,
 
@@ -718,8 +718,17 @@ export class ScopeMain implements ComponentFactory {
     }));
     const nodes = consumerComponent.flattenedDependencies;
 
+    // Convert component ID from hash to tag if a tag exists, to match flattenedEdges format
+    let componentIdForGraph = component.id;
+    if (component.id.version) {
+      const tag = component.tags.byHash(component.id.version);
+      if (tag) {
+        componentIdForGraph = component.id.changeVersion(tag.version.raw);
+      }
+    }
+
     const graph = new Graph<ComponentID, DepEdgeType>();
-    graph.setNode(new Node(component.id.toString(), component.id));
+    graph.setNode(new Node(componentIdForGraph.toString(), componentIdForGraph));
     nodes.forEach((node) => graph.setNode(new Node(node.toString(), node)));
     edges.forEach((edge) => graph.setEdge(new Edge(edge.source.toString(), edge.target.toString(), edge.type)));
     return graph;
@@ -814,7 +823,7 @@ export class ScopeMain implements ComponentFactory {
     includeDeleted = false
   ): Promise<Component[]> {
     const patternsWithScope =
-      (filter?.namespaces && filter?.namespaces.map((pattern) => `**/${pattern || '**'}`)) || undefined;
+      (filter?.namespaces && filter?.namespaces.map((pattern) => `${this.name}/${pattern || '**'}`)) || undefined;
     const componentsIds = await this.listIds(includeCache, includeFromLanes, patternsWithScope);
 
     const comps = await this.getMany(
@@ -1046,12 +1055,13 @@ export class ScopeMain implements ComponentFactory {
       // otherwise it'll never match anything. don't use ".push()". it must be the first item in the array.
       patterns.unshift('**');
     }
-    // check also as legacyId.toString, as it doesn't have the defaultScope
-    const idsToCheck = (id: ComponentID) => [id._legacy.toStringWithoutVersion(), id.toStringWithoutVersion()];
     const [statePatterns, nonStatePatterns] = partition(patterns, (p) => p.startsWith('$') || p.includes(' AND '));
     const nonStatePatternsNoVer = nonStatePatterns.map((p) => p.split('@')[0]); // no need for the version
+    const idsMap: { [id: string]: ComponentID } = Object.fromEntries(
+      ids.map((id) => [id.toStringWithoutVersion(), id])
+    );
     const idsFiltered = nonStatePatternsNoVer.length
-      ? ids.filter((id) => multimatch(idsToCheck(id), nonStatePatternsNoVer).length)
+      ? multimatch(Object.keys(idsMap), nonStatePatternsNoVer).map((idStr) => idsMap[idStr])
       : [];
 
     const idsStateFiltered = await mapSeries(statePatterns, async (statePattern) => {
@@ -1061,6 +1071,8 @@ export class ScopeMain implements ComponentFactory {
       if (statePattern.includes(' AND ')) {
         let filteredByAnd: ComponentID[] = ids;
         const patternSplit = statePattern.split(' AND ').map((p) => p.trim());
+        // check also as legacyId.toString, as it doesn't have the defaultScope
+        const idsToCheck = (id: ComponentID) => [id._legacy.toStringWithoutVersion(), id.toStringWithoutVersion()];
         for await (const onePattern of patternSplit) {
           filteredByAnd = onePattern.startsWith('$')
             ? await filterByStateFunc(onePattern.replace('$', ''), filteredByAnd)

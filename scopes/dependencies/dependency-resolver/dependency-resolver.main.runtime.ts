@@ -586,8 +586,10 @@ export class DependencyResolverMain {
   }
 
   async addDependenciesGraph(
-    component: Component,
-    componentRelativeDir: string,
+    components: Array<{
+      component: Component;
+      componentRelativeDir: string;
+    }>,
     options: {
       rootDir: string;
       rootComponentsPath?: string;
@@ -595,8 +597,8 @@ export class DependencyResolverMain {
     }
   ): Promise<void> {
     try {
-      component.state._consumer.dependenciesGraph = await this.getPackageManager()?.calcDependenciesGraph?.({
-        rootDir: options.rootDir,
+      let componentsForCalc = components.map(({ component, componentRelativeDir }) => ({
+        component,
         componentRootDir: options.rootComponentsPath
           ? this.getComponentDirInBitRoots(component, {
               workspacePath: options.rootDir,
@@ -605,6 +607,15 @@ export class DependencyResolverMain {
           : undefined,
         pkgName: this.getPackageName(component),
         componentRelativeDir,
+      }));
+      if (!isFeatureEnabled(DEPS_GRAPH)) {
+        // We need to optimize the performance of dependency graph calculation.
+        // Temporarily we only calculate it for a limited number of components.
+        componentsForCalc = componentsForCalc.slice(0, 10);
+      }
+      await this.getPackageManager()?.calcDependenciesGraph?.({
+        components: componentsForCalc,
+        rootDir: options.rootDir,
         componentIdByPkgName: options.componentIdByPkgName,
       });
     } catch (err) {
@@ -1374,8 +1385,7 @@ export class DependencyResolverMain {
     const allowedPrefixes = ['https://', 'git:', 'git+ssh://', 'git+https://'];
     let errorMsg: undefined | string;
     data.dependencies?.forEach((dep) => {
-      const isVersionValid = Boolean(semver.valid(dep.version) || semver.validRange(dep.version));
-      if (isVersionValid) return;
+      if (this.isValidVersionSpecifier(dep.version)) return;
       if (dep.__type === COMPONENT_DEP_TYPE && isSnap(dep.version)) return;
       if (allowedPrefixes.some((prefix) => dep.version.startsWith(prefix))) return; // some packages are installed from https/git
       errorMsg = `${errorPrefix} the dependency version "${dep.version}" of ${dep.id} is not a valid semver version or range`;

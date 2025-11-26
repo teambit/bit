@@ -127,7 +127,8 @@ export class SchemaMain {
     contextPath?: string,
     skipInternals?: boolean,
     schemaTransformers?: SchemaTransformer[],
-    apiTransformers?: SchemaNodeTransformer[]
+    apiTransformers?: SchemaNodeTransformer[],
+    includeFiles?: string[]
   ): Promise<APISchema> {
     if (this.config.disabled) {
       return APISchema.empty(component.id as any);
@@ -153,7 +154,13 @@ export class SchemaMain {
         apiTransformers
       );
 
-      const result = await schemaExtractor.extract(component, { formatter, tsserverPath, contextPath, skipInternals });
+      const result = await schemaExtractor.extract(component, {
+        formatter,
+        tsserverPath,
+        contextPath,
+        skipInternals,
+        includeFiles,
+      });
       if (shouldDisposeResourcesOnceDone) schemaExtractor.dispose();
 
       return result;

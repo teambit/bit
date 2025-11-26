@@ -233,6 +233,7 @@ export class LanesMain {
       versionPerId: ids,
       allowAddingComponentsFromScope: true,
       skipNpmInstall: options?.skipDependencyInstallation,
+      isLane: true,
       lane,
     });
     return results;
@@ -240,16 +241,51 @@ export class LanesMain {
 
   async revertHistory(historyId: string, options?: LaneCheckoutOpts) {
     const historyItem = await this.getHistoryItemOfCurrentLane(historyId);
-    const ids = historyItem.components.map((id) => ComponentID.fromString(id));
     const lane = await this.getCurrentLane();
+
+    const historyComponentIds = historyItem.components.map((id) => ComponentID.fromString(id));
+
+    // When restoreDeletedComponents is set, we need to identify which components from the history
+    // are currently not in the workspace (i.e., were deleted after that history point)
+    let existingIds = historyComponentIds;
+    let deletedIds: ComponentID[] = [];
+
+    if (options?.restoreDeletedComponents) {
+      const currentBitmap = this.workspace?.consumer.bitMap.getAllBitIdsFromAllLanes() || [];
+      const currentComponentIdsSet = new Set(currentBitmap.map((id) => id.toStringWithoutVersion()));
+
+      existingIds = historyComponentIds.filter((id) => currentComponentIdsSet.has(id.toStringWithoutVersion()));
+      deletedIds = historyComponentIds.filter((id) => !currentComponentIdsSet.has(id.toStringWithoutVersion()));
+    }
+
+    // First, revert the existing components (keeps bitmap versions)
     const results = await this.checkout.checkout({
-      ids: ids.map((id) => id.changeVersion(undefined)),
-      versionPerId: ids,
+      ids: existingIds.map((id) => id.changeVersion(undefined)),
+      versionPerId: existingIds,
       allowAddingComponentsFromScope: true,
       revert: true,
       skipNpmInstall: options?.skipDependencyInstallation,
+      isLane: true,
       lane,
     });
+
+    // If there are deleted components to restore, checkout them separately (updates bitmap)
+    if (deletedIds.length > 0) {
+      const deletedResults = await this.checkout.checkout({
+        ids: deletedIds.map((id) => id.changeVersion(undefined)),
+        versionPerId: deletedIds,
+        allowAddingComponentsFromScope: true,
+        revert: false, // Don't use revert mode for deleted components - we want to update bitmap
+        skipNpmInstall: options?.skipDependencyInstallation,
+        isLane: true,
+        lane,
+      });
+
+      // Merge the results
+      results.components = [...(results.components || []), ...(deletedResults.components || [])];
+      results.addedComponents = [...(results.addedComponents || []), ...(deletedResults.addedComponents || [])];
+    }
+
     return results;
   }
 

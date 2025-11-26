@@ -269,6 +269,8 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 type TypeGeneratorParamsPerEnv = { envId: string; compParams: TypeGeneratorCompParams[]; typeCompiler: Compiler };
 
 export class WorkspaceCompiler {
+  private componentsBeingProcessedInOnAspectLoadFail = new Set<string>();
+
   constructor(
     private workspace: Workspace,
     private envs: EnvsMain,
@@ -320,20 +322,36 @@ export class WorkspaceCompiler {
       const shouldCompile = (inInstallContext && inInstallAfterPmContext) || !inInstallContext;
       if (shouldCompile) {
         const id = component.id;
-        const { graph, successors } = await this.getEnvDepsGraph(id);
-        // const deps = this.dependencyResolver.getDependencies(component);
-        // const depsIds = deps.getComponentDependencies().map((dep) => {
-        //   return dep.id.toString();
-        // });
-        const depsIds = successors.map((s) => s.id);
-        await this.compileComponents(
-          [id.toString(), ...depsIds],
-          { initiator: CompilationInitiator.AspectLoadFail },
-          true,
-          { loadExtensions: true, executeLoadSlot: true },
-          graph
-        );
-        return true;
+        const idStr = id.toString();
+
+        // Prevent infinite loop when there's a circular dependency between an env and a component.
+        // If we're already processing this component, don't re-enter.
+        if (this.componentsBeingProcessedInOnAspectLoadFail.has(idStr)) {
+          this.logger.debug(
+            `onAspectLoadFail: skipping ${idStr} as it's already being processed (preventing infinite loop)`
+          );
+          return false;
+        }
+
+        this.componentsBeingProcessedInOnAspectLoadFail.add(idStr);
+        try {
+          const { graph, successors } = await this.getEnvDepsGraph(id);
+          // const deps = this.dependencyResolver.getDependencies(component);
+          // const depsIds = deps.getComponentDependencies().map((dep) => {
+          //   return dep.id.toString();
+          // });
+          const depsIds = successors.map((s) => s.id);
+          await this.compileComponents(
+            [id.toString(), ...depsIds],
+            { initiator: CompilationInitiator.AspectLoadFail },
+            true,
+            { loadExtensions: true, executeLoadSlot: true },
+            graph
+          );
+          return true;
+        } finally {
+          this.componentsBeingProcessedInOnAspectLoadFail.delete(idStr);
+        }
       }
     }
     return false;

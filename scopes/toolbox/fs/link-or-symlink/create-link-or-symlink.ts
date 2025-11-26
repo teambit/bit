@@ -56,7 +56,9 @@ Original error: ${err}`);
    */
   function symlinkOrHardLink() {
     try {
-      symlinkDir.sync(srcPath, destPath);
+      symlinkDir.sync(srcPath, destPath, {
+        noJunction: true,
+      });
       logger.trace(`createLinkOrSymlink, symlinkOrHardLink() successfully created the symlink`);
     } catch {
       // it can be a file or directory, we don't know. just run link(), it will junction for dirs and hard-link for files.

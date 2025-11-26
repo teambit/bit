@@ -167,16 +167,17 @@ export class CiMain {
 
   /**
    * Converts a branch name to a lane ID string using Bit's naming conventions.
-   * Sanitizes branch name by replacing slashes and dots with dashes, then
+   * Sanitizes branch name by replacing slashes and dots with dashes, converting to lowercase, then
    * prefixes with the workspace's default scope.
    *
    * @param branchName - The git branch name to convert
    * @returns Lane ID in format: {defaultScope}/{sanitizedBranch}
-   * @example convertBranchToLaneId("feature/new-component") => "my-scope/feature-new-component"
+   * @example convertBranchToLaneId("feature/New-Component") => "my-scope/feature-new-component"
    */
   convertBranchToLaneId(branchName: string): string {
     // Sanitize branch name to make it valid for Bit lane IDs by replacing slashes and dots with dashes
-    const sanitizedBranch = branchName.replace(/[/.]/g, '-');
+    // and converting to lowercase
+    const sanitizedBranch = branchName.replace(/[/.]/g, '-').toLowerCase();
     return `${this.workspace.defaultScope}/${sanitizedBranch}`;
   }
 
@@ -546,8 +547,24 @@ export class CiMain {
       ...(autoMergeResolve && { mergeStrategy: autoMergeResolve }),
     };
     const checkoutResults = await this.checkout.checkout(checkoutProps);
+
     await this.workspace.bitMap.write('checkout head');
     this.logger.console(checkoutOutput(checkoutResults, checkoutProps));
+
+    // Check for workspace.jsonc conflicts
+    if (
+      checkoutResults.workspaceConfigUpdateResult?.workspaceDepsConflicts ||
+      checkoutResults.workspaceConfigUpdateResult?.workspaceConfigConflictWriteError
+    ) {
+      this.logger.console(chalk.red('❌ workspace.jsonc conflicts detected during checkout'));
+      this.logger.console(chalk.blue('\nTo resolve these conflicts, please run:'));
+      this.logger.console(chalk.bold('  bit checkout head'));
+      this.logger.console(chalk.gray('\nThis will allow you to manually resolve the conflicts in workspace.jsonc.'));
+
+      throw new Error(
+        'Cannot complete CI merge due to workspace.jsonc conflicts. Please run "bit checkout head" and fix the conflicts manually.'
+      );
+    }
 
     // Check for conflicts when using manual merge strategy
     if (autoMergeResolve === 'manual' && checkoutResults.leftUnresolvedConflicts) {

@@ -143,13 +143,21 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 }
 
 export function snapResultOutput(results: SnapResults): string {
-  const { snappedComponents, autoSnappedResults, warnings, newComponents, laneName, removedComponents }: SnapResults =
-    results;
+  const {
+    snappedComponents,
+    autoSnappedResults,
+    warnings,
+    newComponents,
+    laneName,
+    removedComponents,
+    totalComponentsCount,
+  }: SnapResults = results;
   const changedComponents = snappedComponents.filter((component) => {
     return !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id);
   });
   const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
   const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
+  const totalCount = totalComponentsCount ?? snappedComponents.length + autoTaggedCount;
 
   const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
   const snapExplanation = `\n(use "bit export" to push these components to a remote")
@@ -186,7 +194,7 @@ export function snapResultOutput(results: SnapResults): string {
     outputIfExists('changed components', 'components that got a version bump', changedComponents) +
     outputIdsIfExists('removed components', removedComponents) +
     warningsOutput +
-    chalk.green(`\n${snappedComponents.length + autoTaggedCount} component(s) snapped${laneStr}`) +
+    chalk.green(`\n${totalCount} component(s) snapped${laneStr}`) +
     snapExplanation
   );
 }
