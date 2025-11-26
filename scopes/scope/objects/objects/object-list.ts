@@ -61,7 +61,7 @@ export class ObjectList {
   getSha1Hash(): string {
     const hash = crypto.createHash('sha1');
     for (const obj of this.objects) {
-      hash.update(obj.buffer);
+      hash.update(new Uint8Array(obj.buffer));
     }
     return hash.digest('hex');
   }
