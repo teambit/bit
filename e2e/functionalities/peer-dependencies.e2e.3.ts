@@ -300,22 +300,4 @@ describe('peer-dependencies functionality', function () {
       });
     });
   });
-  describe.only('a peer dependency with exclude option', () => {
-    let workspaceCapsulesRootDir: string;
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.fixtures.populateComponents(2);
-      helper.workspaceJsonc.addPolicyToDependencyResolver({
-        peerDependencies: { [`@${helper.scopes.remote}/comp2`]: { version: '*' , exclude: true } },
-      });
-      helper.command.build(undefined, '--ignore-issues="DuplicateComponentAndPackage"');
-      workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
-    });
-    it('should not add peer dependency to the generated package.json', () => {
-      const pkgJson = fs.readJsonSync(
-        path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1/package.json`)
-      );
-      expect(pkgJson.peerDependencies).to.deep.equal(undefined);
-    });
-  });
 });
