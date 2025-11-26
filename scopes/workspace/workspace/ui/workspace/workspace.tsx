@@ -24,6 +24,7 @@ import { WorkspaceOverview } from './workspace-overview';
 import { WorkspaceProvider } from './workspace-provider';
 import styles from './workspace.module.scss';
 import type { WorkspaceUI } from '../../workspace.ui.runtime';
+import { ThemeFromUrlSync } from './theme-from-url';
 
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
@@ -88,6 +89,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
     <WorkspaceProvider workspace={workspace}>
       {!isMinimal && <NotificationsBinder reactionsRef={reactionsRef} />}
       <PreserveWorkspaceMode>
+        <ThemeFromUrlSync />
         {isMinimal && inIframe && <MinimalModeUrlBroadcasterAndListener />}
         <div className={styles.workspaceWrapper}>
           {
