@@ -309,7 +309,7 @@ with no args, only workspace's capsules are deleted
 
 **Description**: validate TypeScript type correctness  
 checks for TypeScript type errors in component files, similar to running tsc.  
-by default only checks new and modified components. use --all to check all components.  
+by default only checks new and modified components. use --unmodified to check all components.  
 useful for catching type issues before tagging, snapping or building components.
 
 `bit check-types [component-pattern]`
@@ -318,11 +318,12 @@ useful for catching type issues before tagging, snapping or building components.
 | ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
-| **Option** | **Option alias** | **Description**                                           |
-| ---------- | :--------------: | --------------------------------------------------------- |
-| `--all`    |       `-a`       | check-types for all components, not only modified and new |
-| `--strict` |                  | in case issues found, exit with code 1                    |
-| `--json`   |       `-j`       | return the output in json format                          |
+| **Option**     | **Option alias** | **Description**                                           |
+| -------------- | :--------------: | --------------------------------------------------------- |
+| `--all`        |       `-a`       | DEPRECATED. (use --unmodified)                            |
+| `--unmodified` |       `-u`       | check-types for all components, not only modified and new |
+| `--strict`     |                  | in case issues found, exit with code 1                    |
+| `--json`       |       `-j`       | return the output in json format                          |
 
 ---
 
@@ -958,12 +959,15 @@ duplicates an existing component's source files and configuration to create a ne
 useful for creating variations or starting development from a similar component.  
 automatically handles import/require statement updates and provides refactoring options.
 
-`bit fork <source-component-id> [target-component-name]`
+when using a pattern, all matching components are forked with the same name to a target scope.  
+the target-component-name argument is not allowed when using patterns.
 
-| **Arg**                 |                                                               **Description**                                                               |
-| ----------------------- | :-----------------------------------------------------------------------------------------------------------------------------------------: |
-| `source-component-id`   |                                                  the component id of the source component                                                   |
-| `target-component-name` | the name for the new component (component name without scope, e.g. name/spaces/my-button). to set a different scope, use the '--scope' flag |
+`bit fork <pattern> [target-component-name]`
+
+| **Arg**                 |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
+| ----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| `pattern`               | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
+| `target-component-name` |                                                                                                                                  the name for the new component (component name without scope, e.g. name/spaces/my-button). to set a different scope, use the '--scope' flag. not allowed when using patterns                                                                                                                                   |
 
 | **Option**                       | **Option alias** | **Description**                                                                                                     |
 | -------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------- |

@@ -48,6 +48,11 @@ export class CreateCmd implements Command {
         "creates an mdx component named 'docs/create-components' and sets it scope to 'my-org.my-scope'. \nby default, the scope is the `defaultScope` value, configured in your `workspace.jsonc`.",
     },
     {
+      cmd: 'bit create react my-org.my-scope/hooks/use-session',
+      description:
+        "creates a component named 'hooks/use-session' with scope 'my-org.my-scope'. \nthe scope is parsed from the component name (bit.cloud scopes contain a dot).",
+    },
+    {
       cmd: 'bit create react ui/button --aspect teambit.react/react-env --env teambit.community/envs/community-react@3.0.3',
       description:
         "creates a component named 'ui/button' from the teambit.react/react-env env and sets it to use the 'community-react' env. \n(the template's default env is 'teambit.react/react-env').",

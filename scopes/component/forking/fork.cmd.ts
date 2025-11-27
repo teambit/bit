@@ -1,6 +1,8 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import type { ComponentConfig } from '@teambit/generator';
 import chalk from 'chalk';
+import { hasWildcard } from '@teambit/legacy.utils';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { WorkspaceComponentLoadOptions } from '@teambit/workspace';
 import type { ForkingMain } from './forking.main.runtime';
 
@@ -20,18 +22,24 @@ export type ForkOptions = {
 };
 
 export class ForkCmd implements Command {
-  name = 'fork <source-component-id> [target-component-name]';
+  name = 'fork <pattern> [target-component-name]';
   description = 'create a new component by copying from an existing one';
   extendedDescription = `duplicates an existing component's source files and configuration to create a new independent component.
 useful for creating variations or starting development from a similar component.
-automatically handles import/require statement updates and provides refactoring options.`;
+automatically handles import/require statement updates and provides refactoring options.
+
+when using a pattern, all matching components are forked with the same name to a target scope.
+the target-component-name argument is not allowed when using patterns.`;
   helpUrl = 'docs/getting-started/collaborate/importing-components#fork-a-component';
   arguments = [
-    { name: 'source-component-id', description: 'the component id of the source component' },
+    {
+      name: 'pattern',
+      description: COMPONENT_PATTERN_HELP,
+    },
     {
       name: 'target-component-name',
       description:
-        "the name for the new component (component name without scope, e.g. name/spaces/my-button). to set a different scope, use the '--scope' flag",
+        "the name for the new component (component name without scope, e.g. name/spaces/my-button). to set a different scope, use the '--scope' flag. not allowed when using patterns",
     },
   ];
   group = 'collaborate';
@@ -63,6 +71,14 @@ automatically handles import/require statement updates and provides refactoring 
       cmd: 'fork teambit.base-ui/input/button ui/button';
       description: "create a component named 'ui/button', forked from the remote 'input/button' component";
     },
+    {
+      cmd: 'fork "teambit.base-ui/**" --scope my-org.my-scope';
+      description: 'fork all components from teambit.base-ui scope to my-org.my-scope';
+    },
+    {
+      cmd: 'fork "my-org.utils/string/**"';
+      description: 'fork all string utility components to the workspace default scope';
+    },
   ];
   loader = true;
   remoteOp = true;
@@ -70,8 +86,24 @@ automatically handles import/require statement updates and provides refactoring 
   constructor(private forking: ForkingMain) {}
 
   async report([sourceId, targetId]: [string, string], options: ForkOptions): Promise<string> {
-    const results = await this.forking.fork(sourceId, targetId, options);
-    const targetIdStr = results.toString();
+    const isPattern = hasWildcard(sourceId) || sourceId.includes(',');
+
+    if (isPattern) {
+      // Pattern mode - fork multiple components
+      if (targetId) {
+        throw new Error('target-component-name is not allowed when using patterns');
+      }
+
+      const results = await this.forking.forkByPattern(sourceId, options);
+      const title = chalk.green(
+        `successfully forked ${chalk.bold(results.length)} component(s) matching pattern ${chalk.bold(sourceId)}`
+      );
+      return `${title}\n${results.map((id) => id.toString()).join('\n')}`;
+    }
+
+    // Single component mode - original behavior
+    const result = await this.forking.fork(sourceId, targetId, options);
+    const targetIdStr = result.toString();
     return chalk.green(`successfully forked ${chalk.bold(targetIdStr)} from ${chalk.bold(sourceId)}`);
   }
 }

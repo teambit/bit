@@ -368,7 +368,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.78-v1
+          key: core-aspect-env-v0.0.80-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -451,7 +451,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.78-v1
+          key: core-aspect-env-v0.0.80-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -557,7 +557,7 @@ jobs:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.0.78-v1
+          key: core-aspect-env-v0.0.80-v1
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a107
       # - run: cd bit && bbit compile
@@ -612,10 +612,19 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.78-v1
+          key: core-aspect-env-v0.0.80-v1
       - run:
           name: 'check circular dependencies'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
+
+  check_env_cache_sync:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: 'check env cache synchronization'
+          command: 'cd bit && ./scripts/check-env-cache-sync.sh'
 
   generate_and_check_types:
     <<: *defaults
@@ -1171,6 +1180,9 @@ workflows:
           requires:
             - setup_harmony
       - check_circular_dependencies:
+          requires:
+            - setup_harmony
+      - check_env_cache_sync:
           requires:
             - setup_harmony
       - generate_and_check_types:

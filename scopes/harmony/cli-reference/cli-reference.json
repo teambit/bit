@@ -1379,6 +1379,10 @@
         "description": "creates an mdx component named 'docs/create-components' and sets it scope to 'my-org.my-scope'. \nby default, the scope is the `defaultScope` value, configured in your `workspace.jsonc`."
       },
       {
+        "cmd": "bit create react my-org.my-scope/hooks/use-session",
+        "description": "creates a component named 'hooks/use-session' with scope 'my-org.my-scope'. \nthe scope is parsed from the component name (bit.cloud scopes contain a dot)."
+      },
+      {
         "cmd": "bit create react ui/button --aspect teambit.react/react-env --env teambit.community/envs/community-react@3.0.3",
         "description": "creates a component named 'ui/button' from the teambit.react/react-env env and sets it to use the 'community-react' env. \n(the template's default env is 'teambit.react/react-env')."
       }
@@ -5200,7 +5204,7 @@
     ]
   },
   {
-    "name": "fork <source-component-id> [target-component-name]",
+    "name": "fork <pattern> [target-component-name]",
     "alias": "",
     "options": [
       [
@@ -5250,19 +5254,19 @@
       ]
     ],
     "description": "create a new component by copying from an existing one",
-    "extendedDescription": "duplicates an existing component's source files and configuration to create a new independent component.\nuseful for creating variations or starting development from a similar component.\nautomatically handles import/require statement updates and provides refactoring options.",
+    "extendedDescription": "duplicates an existing component's source files and configuration to create a new independent component.\nuseful for creating variations or starting development from a similar component.\nautomatically handles import/require statement updates and provides refactoring options.\n\nwhen using a pattern, all matching components are forked with the same name to a target scope.\nthe target-component-name argument is not allowed when using patterns.",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
     "skipWorkspace": true,
     "arguments": [
       {
-        "name": "source-component-id",
-        "description": "the component id of the source component"
+        "name": "pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       },
       {
         "name": "target-component-name",
-        "description": "the name for the new component (component name without scope, e.g. name/spaces/my-button). to set a different scope, use the '--scope' flag"
+        "description": "the name for the new component (component name without scope, e.g. name/spaces/my-button). to set a different scope, use the '--scope' flag. not allowed when using patterns"
       }
     ]
   },
@@ -5273,6 +5277,11 @@
       [
         "a",
         "all",
+        "DEPRECATED. (use --unmodified)"
+      ],
+      [
+        "u",
+        "unmodified",
         "check-types for all components, not only modified and new"
       ],
       [
@@ -5287,7 +5296,7 @@
       ]
     ],
     "description": "validate TypeScript type correctness",
-    "extendedDescription": "checks for TypeScript type errors in component files, similar to running tsc.\nby default only checks new and modified components. use --all to check all components.\nuseful for catching type issues before tagging, snapping or building components.",
+    "extendedDescription": "checks for TypeScript type errors in component files, similar to running tsc.\nby default only checks new and modified components. use --unmodified to check all components.\nuseful for catching type issues before tagging, snapping or building components.",
     "group": "testing",
     "private": false,
     "arguments": [
