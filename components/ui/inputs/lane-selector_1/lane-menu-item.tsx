@@ -14,7 +14,7 @@ import styles from './lane-menu-item.module.scss';
 export type LaneMenuItemProps = {
   selected?: LaneId;
   current: LaneModel;
-  getHref?: (laneId: LaneId) => string;
+  getHref?: (laneId: LaneId, relative?: boolean, lane?: LaneModel) => string;
   onLaneSelected?: (laneId: LaneId, lane: LaneModel) => void;
   icon?: React.ReactNode;
   timestamp?: Date;
@@ -40,7 +40,7 @@ export const LaneMenuItem = forwardRef<HTMLDivElement, LaneMenuItemProps>(
     const isDefaultLane = current.id.isDefault();
     const defaultIcon = <Icon of="changed-components" />;
     const iconWithDefault = icon || (isDefaultLane ? defaultIcon : undefined);
-    const href = getHref(current.id);
+    const href = getHref(current.id, undefined, current);
 
     const onClick = () => {
       onLaneSelected?.(current.id, current);

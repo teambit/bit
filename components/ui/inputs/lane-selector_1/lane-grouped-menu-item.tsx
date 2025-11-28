@@ -16,7 +16,7 @@ export type LaneGroupedMenuItemProps = {
   onLaneSelected?: (laneId: LaneId, lane: LaneModel) => void;
   icon?: React.ReactNode;
   timestamp?: (lane: LaneModel) => Date | undefined;
-  innerRefs?: (laneId: LaneId) => React.RefObject<HTMLDivElement> | undefined;
+  innerRefs?: (laneId: LaneId, lane: LaneModel) => React.RefObject<HTMLDivElement> | undefined;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function LaneGroupedMenuItem({
@@ -56,7 +56,7 @@ export function LaneGroupedMenuItem({
       </div>
       {current.map((lane) => (
         <LaneMenuItem
-          ref={innerRefs?.(lane.id)}
+          ref={innerRefs?.(lane.id, lane)}
           key={lane.id.toString()}
           onLaneSelected={onLaneSelected}
           getHref={getHref}
