@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ComponentID } from '@teambit/component';
+import type { ComponentID } from '@teambit/component';
 import type { ComponentFilterCriteria } from '@teambit/component.ui.component-filters.component-filter-context';
 
 export interface ItemType {

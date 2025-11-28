@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 import classNames from 'classnames';
 import { Icon } from '@teambit/design.elements.icon';
 import { addAvatarQueryParams } from '@teambit/toolbox.url.add-avatar-query-params';

@@ -42,7 +42,7 @@
         "@pnpm/colorize-semver-diff": "1.0.1",
         "@pnpm/config": "1004.6.2",
         "@pnpm/core": "1013.0.0",
-        "@pnpm/default-reporter": "1002.0.15",
+        "@pnpm/default-reporter": "1002.1.0",
         "@pnpm/dependency-path": "1001.1.6",
         "@pnpm/error": "1000.0.5",
         "@pnpm/fetch": "1000.2.8",
