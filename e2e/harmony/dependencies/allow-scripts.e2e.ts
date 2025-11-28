@@ -21,6 +21,8 @@ chai.use(chaiFs);
         '@pnpm.e2e/failing-postinstall': false,
         '@pnpm.e2e/pre-and-postinstall-scripts-example': true,
       });
+      // The installation below would fail if we didn't explicitly disallow
+      // @pnpm.e2e/failing-postinstall in allowScripts.
       helper.command.install('@pnpm.e2e/failing-postinstall @pnpm.e2e/pre-and-postinstall-scripts-example');
     });
     after(() => {

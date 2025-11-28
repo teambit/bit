@@ -391,7 +391,7 @@ function resolveScriptPolicies({ allowScripts, neverBuiltDependencies }: ScriptP
   if (allowScripts == null) {
     if (resolvedNeverBuilt == null) {
       // If neither neverBuiltDependencies nor allowScripts are set by the user
-      // we tell pnpm to allow all scripts to be executed by setting neverBuiltDependencies to []
+      // we tell pnpm to allow all scripts to be executed, except the packages listed below.
       resolvedNeverBuilt = ['core-js'];
     }
   } else {
@@ -406,6 +406,9 @@ function resolveScriptPolicies({ allowScripts, neverBuiltDependencies }: ScriptP
           ignoredBuiltDependencies.push(packageDescriptor);
           break;
         default:
+          // Ignore any non-boolean values. String values are placeholders that the user
+          // should replace with booleans.
+          // pnpm will print a warning about these during installation.
           break;
       }
     }
