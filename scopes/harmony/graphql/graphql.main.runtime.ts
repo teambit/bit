@@ -8,7 +8,7 @@ import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import type { Express } from 'express';
 import express from 'express';
-import { graphqlHTTP, RequestInfo } from 'express-graphql';
+import { graphqlHTTP, type RequestInfo } from 'express-graphql';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { execute, subscribe } from 'graphql';
 import type { PubSubEngine } from 'graphql-subscriptions';
