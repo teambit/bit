@@ -2,6 +2,7 @@ import tarStream from 'tar-stream';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { compact } from 'lodash';
 import { Readable, PassThrough, pipeline } from 'stream';
+import crypto from 'crypto';
 import BitObject from './object';
 import { BitObjectList } from './bit-object-list';
 import Ref from './ref';
@@ -50,6 +51,19 @@ export class ObjectList {
 
   count() {
     return this.objects.length;
+  }
+
+  /**
+   * Generates a SHA1 hash from all object buffers.
+   * Used to identify duplicate export requests during retries.
+   * Performance wise, it's not too bad. ~98ms for 150 components on CircleCI.
+   */
+  getSha1Hash(): string {
+    const hash = crypto.createHash('sha1');
+    for (const obj of this.objects) {
+      hash.update(new Uint8Array(obj.buffer));
+    }
+    return hash.digest('hex');
   }
 
   static mergeMultipleInstances(objectLists: ObjectList[]): ObjectList {
