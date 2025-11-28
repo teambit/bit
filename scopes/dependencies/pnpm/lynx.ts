@@ -425,6 +425,7 @@ function initReporter(opts?: ReportOptions) {
       hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
       hideProgressPrefix: opts?.hideProgressPrefix,
       hideLifecycleOutput: opts?.hideLifecycleOutput,
+      approveBuildsInstructionText: 'Update the "allowScripts" field under "teambit.dependencies/dependency-resolver" in workspace.jsonc to control which packages are allowed to run scripts.',
     },
     streamParser: streamParser as any, // eslint-disable-line
     // Linked in core aspects are excluded from the output to reduce noise.
