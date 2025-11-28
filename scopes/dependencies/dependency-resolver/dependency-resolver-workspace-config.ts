@@ -184,8 +184,8 @@ export interface DependencyResolverWorkspaceConfig {
   neverBuiltDependencies?: string[];
 
   /*
-   * Only allow builds of specific dependencies listed in this setting. The "preinstall", "install", and "postinstall" scripts
-   * of the listed packages will be executed during installation.
+   * Fine-grained control over dependency lifecycle scripts. Allows explicitly permitting (true), blocking (false), or warning ('warn')
+   * for specific dependencies' "preinstall", "install", and "postinstall" scripts during installation.
    */
   allowScripts?: Record<string, boolean | 'warn'>;
 
