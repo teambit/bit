@@ -38,7 +38,7 @@ import type { InstallMain } from '@teambit/install';
 import { InstallAspect } from '@teambit/install';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
 import type { DataMergeResult, MergeStatusProviderOptions } from './merge-status-provider';
