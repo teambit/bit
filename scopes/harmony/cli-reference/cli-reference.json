@@ -2264,7 +2264,7 @@
       [
         "",
         "lane",
-        "when on a lane, delete the component from this lane only. avoid merging it to main or other lanes"
+        "when on a lane, delete the component from this lane only. this removal will not affect main when the lane is merged"
       ],
       [
         "",
