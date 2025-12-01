@@ -203,6 +203,7 @@ export async function install(
     dryRun?: boolean;
     dedupeInjectedDeps?: boolean;
     forcedHarmonyVersion?: string;
+    allowScripts?: Record<string, boolean | 'warn'>;
   } & Pick<
     InstallOptions,
     | 'autoInstallPeers'
@@ -302,7 +303,10 @@ export async function install(
     userAgent: networkConfig.userAgent,
     ...options,
     injectWorkspacePackages: true,
-    neverBuiltDependencies: options.neverBuiltDependencies ?? [],
+    ...resolveScriptPolicies({
+      allowScripts: options.allowScripts,
+      neverBuiltDependencies: options.neverBuiltDependencies,
+    }),
     returnListOfDepsRequiringBuild: true,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     depth: options.updateAll ? Infinity : 0,
@@ -375,6 +379,43 @@ export async function install(
   };
 }
 
+type ScriptPolicyConfig = {
+  allowScripts?: Record<string, boolean | 'warn'>;
+  neverBuiltDependencies?: string[];
+};
+
+function resolveScriptPolicies({ allowScripts, neverBuiltDependencies }: ScriptPolicyConfig) {
+  let resolvedNeverBuilt = neverBuiltDependencies;
+  let onlyBuiltDependencies: string[] | undefined;
+  let ignoredBuiltDependencies: string[] | undefined;
+  if (allowScripts == null) {
+    if (resolvedNeverBuilt == null) {
+      // If neither neverBuiltDependencies nor allowScripts are set by the user
+      // we tell pnpm to allow all scripts to be executed, except the packages listed below.
+      resolvedNeverBuilt = ['core-js'];
+    }
+  } else {
+    onlyBuiltDependencies = [];
+    ignoredBuiltDependencies = [];
+    for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts)) {
+      switch (allowedScript) {
+        case true:
+          onlyBuiltDependencies.push(packageDescriptor);
+          break;
+        case false:
+          ignoredBuiltDependencies.push(packageDescriptor);
+          break;
+        default:
+          // Ignore any non-boolean values. String values are placeholders that the user
+          // should replace with booleans.
+          // pnpm will print a warning about these during installation.
+          break;
+      }
+    }
+  }
+  return { neverBuiltDependencies: resolvedNeverBuilt, onlyBuiltDependencies, ignoredBuiltDependencies };
+}
+
 function initReporter(opts?: ReportOptions) {
   return initDefaultReporter({
     context: {
@@ -387,6 +428,7 @@ function initReporter(opts?: ReportOptions) {
       hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
       hideProgressPrefix: opts?.hideProgressPrefix,
       hideLifecycleOutput: opts?.hideLifecycleOutput,
+      approveBuildsInstructionText: 'Update the "allowScripts" field under "teambit.dependencies/dependency-resolver" in workspace.jsonc to control which packages are allowed to run scripts.',
     },
     streamParser: streamParser as any, // eslint-disable-line
     // Linked in core aspects are excluded from the output to reduce noise.
