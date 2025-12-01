@@ -25,7 +25,11 @@ to remove components from your local workspace only, use "bit remove" instead.`;
   skipWorkspace = true;
   alias = '';
   options = [
-    ['', 'lane', 'when on a lane, delete the component from this lane only. avoid merging it to main or other lanes'],
+    [
+      '',
+      'lane',
+      'when on a lane, delete the component from this lane only. this removal will not affect main when the lane is merged',
+    ],
     ['', 'update-main', 'delete component/s on the main lane after merging this lane into main'],
     [
       '',
