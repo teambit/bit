@@ -486,7 +486,7 @@
         "fs-extra": "10.0.0",
         "fuse.js": "6.6.2",
         "get-tsconfig": "4.2.0",
-        "glob": "7.1.6",
+        "glob": "13.0.0",
         "globby": "11.0.1",
         "graceful-fs": "4.2.10",
         "graphlib": "2.1.8",
