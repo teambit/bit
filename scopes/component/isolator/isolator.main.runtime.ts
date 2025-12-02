@@ -1340,8 +1340,26 @@ export class IsolatorMain {
     addDependencies(packageJson);
     const currentVersion = getComponentPackageVersion(component);
     packageJson.addOrUpdateProperty('version', currentVersion);
+    this.removeHiddenPeerDependencies(packageJson, component);
 
     return packageJson;
+  }
+
+  /**
+   * Remove peers that are marked as hidden in env.jsonc/policies for capsules only.
+   * This keeps these peers in workspace installs, while omitting them from capsule package.json.
+   */
+  private removeHiddenPeerDependencies(packageJson: PackageJsonFile, component: Component) {
+    if (Object.keys(packageJson.packageJsonObject.peerDependencies ?? {}).length === 0) {
+      return;
+    }
+    const hiddenPeers = this.dependencyResolver.getHiddenPeerDependencies(component);
+    hiddenPeers.forEach((dep) => {
+      const peerName = dep.getPackageName?.();
+      if (peerName) {
+        delete packageJson.packageJsonObject.peerDependencies[peerName];
+      }
+    });
   }
 
   /**
