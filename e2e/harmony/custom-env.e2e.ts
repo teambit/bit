@@ -65,7 +65,6 @@ describe('custom env', function () {
     let envName;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(3);
@@ -120,7 +119,6 @@ describe('custom env', function () {
   describe('change an env after tag', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       const envName = helper.env.setCustomEnv();
       const envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(3);
@@ -138,7 +136,6 @@ describe('custom env', function () {
     let envId;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       const envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(1, false);
@@ -230,7 +227,6 @@ describe('custom env', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -643,7 +639,6 @@ export default createMounter(MyReactProvider) as any;`
   describe('custom env with invalid env.jsonc', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       const envName = helper.env.setCustomEnv();
       const envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(1);

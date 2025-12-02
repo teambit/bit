@@ -301,7 +301,6 @@ describe('tag components on Harmony', function () {
     let afterFirstTag: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       afterFirstTag = helper.scopeHelper.cloneWorkspace();
@@ -350,7 +349,6 @@ describe('tag components on Harmony', function () {
     let tagOutput: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
       tagOutput = helper.command.tagAllWithoutBuild('--increment prerelease --prerelease-id dev');
     });
@@ -400,7 +398,6 @@ describe('tag components on Harmony', function () {
     let tagOutput: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
       tagOutput = helper.command.softTag('--pre-release dev');
     });
