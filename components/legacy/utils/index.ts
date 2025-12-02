@@ -1,7 +1,6 @@
 // @TODO refactor this file to include only exports
 import writeFile from './fs-write-file';
 import { checksum, checksumFile } from './checksum';
-import glob from './glob';
 import immutableUnshift from './immutable-unshift';
 import isBitUrl from './is-bit-url';
 import isDir from './is-dir';
@@ -32,7 +31,6 @@ export {
   toBase64,
   toBase64ArrayBuffer,
   fromBase64,
-  glob,
   checksum,
   checksumFile,
   writeFile,
