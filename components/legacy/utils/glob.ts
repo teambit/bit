@@ -1,11 +1,7 @@
-const globlib = require('glob');
-const path = require('path');
+import { glob as globlib } from 'glob';
+import path from 'path';
 
-export default function glob(pattern: string, options?: {}): Promise<string[]> {
-  return new Promise((resolve, reject) => {
-    globlib(pattern, options, (err, matches) => {
-      if (err) return reject(err);
-      return resolve(matches.map((match) => path.normalize(match)));
-    });
-  });
+export default async function glob(pattern: string, options?: {}): Promise<string[]> {
+  const matches = await globlib(pattern, options);
+  return matches.map((match) => path.normalize(match));
 }

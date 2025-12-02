@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import glob from 'glob';
+import { globSync } from 'glob';
 import path from 'path';
 import { loadConsumer } from '@teambit/legacy.consumer';
 import { Scope } from '@teambit/legacy.scope';
@@ -34,7 +34,7 @@ export default class BrokenSymlinkFiles extends Diagnosis {
   async _runExamine(): Promise<ExamineBareResult> {
     const consumer = await loadConsumer();
     const envComponentsDir = path.join(consumer.scope.getPath(), Scope.getComponentsRelativePath());
-    const potentialSymlinks = glob.sync('**/node_modules/@bit/**', { cwd: envComponentsDir });
+    const potentialSymlinks = globSync('**/node_modules/@bit/**', { cwd: envComponentsDir });
     const potentialSymlinksAbs = potentialSymlinks.map((p) => path.join(envComponentsDir, p));
     const brokenSymlinks: BrokenSymlink[] = [];
     const results = potentialSymlinksAbs.map(async (potentialSymlink) => {
