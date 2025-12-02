@@ -136,9 +136,13 @@ export class Watcher {
   private async watchParcel() {
     this.msgs?.onStart(this.workspace);
 
-    // Use shared watcher daemon pattern to avoid FSEvents limit
-    // Unless explicitly disabled via env var
-    const useSharedWatcher = process.env.BIT_WATCHER_NO_SHARED !== 'true' && process.env.BIT_WATCHER_NO_SHARED !== '1';
+    // Use shared watcher daemon pattern to avoid FSEvents limit on macOS
+    // FSEvents has a system-wide limit on concurrent watchers, which causes
+    // "Error starting FSEvents stream" when multiple bit commands run watchers.
+    // This is only an issue on macOS - other platforms don't have this limitation.
+    const isMacOS = process.platform === 'darwin';
+    const isSharedDisabled = process.env.BIT_WATCHER_NO_SHARED === 'true' || process.env.BIT_WATCHER_NO_SHARED === '1';
+    const useSharedWatcher = isMacOS && !isSharedDisabled;
 
     if (useSharedWatcher) {
       try {
@@ -308,33 +312,54 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
   }
 
   /**
-   * Setup graceful shutdown handlers for daemon mode
+   * Setup graceful shutdown handlers for daemon mode.
+   * When SIGINT/SIGTERM is received, we need to:
+   * 1. Stop the daemon (cleanup socket, notify clients)
+   * 2. Call process.exit() to actually terminate
+   *
+   * Important: Once you add a handler for SIGINT, Node.js no longer exits automatically.
+   * You must call process.exit() explicitly.
    */
   private setupDaemonShutdown(): void {
-    const cleanup = async () => {
+    let isShuttingDown = false;
+
+    const cleanup = () => {
+      if (isShuttingDown) return;
+      isShuttingDown = true;
+
       this.logger.debug('Daemon shutting down...');
-      await this.watcherDaemon?.stop();
+      // Stop is async but we need to exit - start the cleanup and exit
+      // The socket will be cleaned up by the OS when the process exits
+      this.watcherDaemon?.stop().finally(() => {
+        process.exit(0);
+      });
+
+      // Fallback: if stop() hangs, force exit after 1 second
+      setTimeout(() => {
+        process.exit(0);
+      }, 1000).unref();
     };
 
     process.on('SIGINT', cleanup);
     process.on('SIGTERM', cleanup);
-    process.on('exit', () => {
-      // Synchronous cleanup
-      this.watcherDaemon?.stop().catch(() => {});
-    });
   }
 
   /**
-   * Setup graceful shutdown handlers for client mode
+   * Setup graceful shutdown handlers for client mode.
    */
   private setupClientShutdown(): void {
+    let isShuttingDown = false;
+
     const cleanup = () => {
+      if (isShuttingDown) return;
+      isShuttingDown = true;
+
       this.watcherClient?.disconnect();
+      process.exit(0);
     };
 
     process.on('SIGINT', cleanup);
     process.on('SIGTERM', cleanup);
-    process.on('exit', cleanup);
   }
 
   private async watchChokidar() {
