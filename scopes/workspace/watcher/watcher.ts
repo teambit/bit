@@ -192,7 +192,6 @@ Similarly, if you're using VSCode with the Bit extension, you can enable "Compil
 If the issue persists, please refer to the Watchman troubleshooting guide:
 https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-register_with_server-error-f2d_register_rpc--null--21`);
       }
-      throw err;
     }
     this.msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
     this.logger.clearStatusLine();
