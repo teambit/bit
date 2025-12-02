@@ -139,7 +139,6 @@ export class WatcherDaemon {
       JSON.stringify({
         pid: process.pid,
         startTime: Date.now(),
-        version: 1,
       })
     );
 
