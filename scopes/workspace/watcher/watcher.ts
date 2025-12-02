@@ -93,6 +93,10 @@ export class Watcher {
   private watcherDaemon: WatcherDaemon | null = null;
   private watcherClient: WatcherClient | null = null;
   private isDaemon = false;
+  // Parcel watcher subscription for cleanup
+  private parcelSubscription: { unsubscribe: () => Promise<void> } | null = null;
+  // Signal handlers for cleanup (to avoid accumulation)
+  private signalCleanupHandler: (() => void) | null = null;
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
@@ -203,9 +207,19 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
    */
   private async startParcelWatcherAsDaemon(): Promise<void> {
     try {
-      await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatchAsDaemon.bind(this), {
-        ignore: this.getParcelIgnorePatterns(),
-      });
+      // Clean up existing subscription if any (e.g., when transitioning from client to daemon)
+      if (this.parcelSubscription) {
+        await this.parcelSubscription.unsubscribe();
+        this.parcelSubscription = null;
+      }
+
+      this.parcelSubscription = await ParcelWatcher.subscribe(
+        this.workspace.path,
+        this.onParcelWatchAsDaemon.bind(this),
+        {
+          ignore: this.getParcelIgnorePatterns(),
+        }
+      );
 
       // Write initial snapshot for FSEvents buffer overflow recovery
       await this.writeSnapshotIfNeeded();
@@ -312,6 +326,18 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
   }
 
   /**
+   * Remove any existing signal handlers to prevent accumulation.
+   * This is important when transitioning between client and daemon modes.
+   */
+  private removeSignalHandlers(): void {
+    if (this.signalCleanupHandler) {
+      process.off('SIGINT', this.signalCleanupHandler);
+      process.off('SIGTERM', this.signalCleanupHandler);
+      this.signalCleanupHandler = null;
+    }
+  }
+
+  /**
    * Setup graceful shutdown handlers for daemon mode.
    * When SIGINT/SIGTERM is received, we need to:
    * 1. Stop the daemon (cleanup socket, notify clients)
@@ -321,6 +347,9 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
    * You must call process.exit() explicitly.
    */
   private setupDaemonShutdown(): void {
+    // Remove old handlers to prevent accumulation when transitioning modes
+    this.removeSignalHandlers();
+
     let isShuttingDown = false;
 
     const cleanup = () => {
@@ -328,11 +357,20 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
       isShuttingDown = true;
 
       this.logger.debug('Daemon shutting down...');
+      // Unsubscribe from Parcel watcher
+      this.parcelSubscription?.unsubscribe().catch((err) => {
+        this.logger.debug(`Error unsubscribing from Parcel watcher: ${err.message}`);
+      });
       // Stop is async but we need to exit - start the cleanup and exit
       // The socket will be cleaned up by the OS when the process exits
-      this.watcherDaemon?.stop().finally(() => {
-        process.exit(0);
-      });
+      this.watcherDaemon
+        ?.stop()
+        .catch((err) => {
+          this.logger.error(`Error stopping daemon: ${err.message}`);
+        })
+        .finally(() => {
+          process.exit(0);
+        });
 
       // Fallback: if stop() hangs, force exit after 1 second
       setTimeout(() => {
@@ -340,6 +378,7 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
       }, 1000).unref();
     };
 
+    this.signalCleanupHandler = cleanup;
     process.on('SIGINT', cleanup);
     process.on('SIGTERM', cleanup);
   }
@@ -348,6 +387,9 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
    * Setup graceful shutdown handlers for client mode.
    */
   private setupClientShutdown(): void {
+    // Remove old handlers to prevent accumulation when transitioning modes
+    this.removeSignalHandlers();
+
     let isShuttingDown = false;
 
     const cleanup = () => {
@@ -358,6 +400,7 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
       process.exit(0);
     };
 
+    this.signalCleanupHandler = cleanup;
     process.on('SIGINT', cleanup);
     process.on('SIGTERM', cleanup);
   }

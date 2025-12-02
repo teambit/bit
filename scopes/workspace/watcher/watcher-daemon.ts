@@ -63,7 +63,7 @@ export class WatcherDaemon {
   /**
    * Check if a daemon is already running for this workspace
    */
-  static async isRunning(scopePath: string): Promise<boolean> {
+  static async isRunning(scopePath: string, logger?: Logger): Promise<boolean> {
     const lockPath = path.join(scopePath, LOCK_FILENAME);
     const socketPath = path.join(scopePath, SOCKET_FILENAME);
 
@@ -75,7 +75,16 @@ export class WatcherDaemon {
     // Check if the PID in lock file is still alive
     try {
       const lockContent = await fs.readFile(lockPath, 'utf8');
-      const { pid } = JSON.parse(lockContent);
+      let pid: number;
+      try {
+        ({ pid } = JSON.parse(lockContent));
+      } catch (parseErr: any) {
+        // Malformed JSON in lock file - treat as stale and clean up
+        logger?.debug(`Malformed lock file, cleaning up: ${parseErr.message}`);
+        await fs.remove(lockPath);
+        await fs.remove(socketPath);
+        return false;
+      }
 
       // Check if process is running
       try {
@@ -121,6 +130,7 @@ export class WatcherDaemon {
 
       socket.on('error', () => {
         clearTimeout(timeout);
+        socket.destroy();
         resolve(false);
       });
     });
@@ -299,8 +309,6 @@ export class WatcherClient {
   private disconnectHandler: (() => void) | null = null;
   private buffer = '';
   private isConnected = false;
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 3;
 
   constructor(
     private scopePath: string,
@@ -326,7 +334,6 @@ export class WatcherClient {
       this.socket.on('connect', () => {
         clearTimeout(timeout);
         this.isConnected = true;
-        this.reconnectAttempts = 0;
         this.logger.debug('Watcher client connected to daemon');
         resolve();
       });
@@ -343,6 +350,7 @@ export class WatcherClient {
 
       this.socket.on('error', (err) => {
         clearTimeout(timeout);
+        this.socket?.destroy();
         this.isConnected = false;
         this.logger.debug(`Watcher client error: ${err.message}`);
         reject(err);
@@ -354,7 +362,7 @@ export class WatcherClient {
    * Handle incoming data from the daemon
    */
   private handleData(data: Buffer): void {
-    this.buffer += data.toString();
+    this.buffer += data.toString('utf8');
 
     // Process complete messages (newline-delimited JSON)
     const lines = this.buffer.split('\n');
@@ -387,7 +395,9 @@ export class WatcherClient {
         this.readyHandler?.();
         break;
       case 'heartbeat':
-        // Just a keep-alive, no action needed
+        // Heartbeats serve to keep the TCP connection alive and allow the OS to detect
+        // a dead daemon faster. The client doesn't need to actively monitor them since
+        // the socket 'close' event will fire when the daemon dies.
         break;
     }
   }
@@ -442,23 +452,51 @@ export class WatcherClient {
 /**
  * Get or create a watcher connection for the given workspace.
  * Returns either a daemon (if we're the first) or a client (if daemon exists).
+ *
+ * Uses retry with random jitter to handle race conditions when multiple processes
+ * try to become the daemon simultaneously.
  */
 export async function getOrCreateWatcherConnection(
   scopePath: string,
-  logger: Logger
+  logger: Logger,
+  retryCount = 0
 ): Promise<{ isDaemon: boolean; daemon?: WatcherDaemon; client?: WatcherClient }> {
+  const MAX_RETRIES = 3;
+
   // Check if daemon is already running
-  const isRunning = await WatcherDaemon.isRunning(scopePath);
+  const isRunning = await WatcherDaemon.isRunning(scopePath, logger);
 
   if (isRunning) {
     // Connect as client
     const client = new WatcherClient(scopePath, logger);
-    await client.connect();
-    return { isDaemon: false, client };
+    try {
+      await client.connect();
+      return { isDaemon: false, client };
+    } catch (err: any) {
+      // Connection failed - daemon might have just died, retry
+      if (retryCount < MAX_RETRIES) {
+        // Add random jitter (100-500ms) to reduce thundering herd
+        const jitter = 100 + Math.random() * 400;
+        await new Promise((resolve) => setTimeout(resolve, jitter));
+        return getOrCreateWatcherConnection(scopePath, logger, retryCount + 1);
+      }
+      throw err;
+    }
   }
 
-  // Become the daemon
+  // Try to become the daemon
   const daemon = new WatcherDaemon(scopePath, logger);
-  await daemon.start();
-  return { isDaemon: true, daemon };
+  try {
+    await daemon.start();
+    return { isDaemon: true, daemon };
+  } catch (err: any) {
+    // Failed to start daemon - another process might have beaten us, retry as client
+    if (retryCount < MAX_RETRIES) {
+      // Add random jitter to reduce thundering herd
+      const jitter = 100 + Math.random() * 400;
+      await new Promise((resolve) => setTimeout(resolve, jitter));
+      return getOrCreateWatcherConnection(scopePath, logger, retryCount + 1);
+    }
+    throw err;
+  }
 }
