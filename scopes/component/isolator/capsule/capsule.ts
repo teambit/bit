@@ -4,7 +4,7 @@ import { Capsule as CapsuleTemplate, Console, State } from '@teambit/capsule';
 import type { Component } from '@teambit/component';
 import filenamify from 'filenamify';
 import { realpathSync } from 'fs';
-import glob from 'glob';
+import { globSync } from 'glob';
 import path from 'path';
 import { v4 } from 'uuid';
 
@@ -111,7 +111,7 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
    * returns the paths inside the capsule
    */
   getAllFilesPaths(dir = '.', options: { ignore?: string[] } = {}) {
-    const files = glob.sync('**', { cwd: path.join(this.path, dir), nodir: true, ...options });
+    const files = globSync('**', { cwd: path.join(this.path, dir), nodir: true, ...options });
     return files.map((file) => path.join(dir, file));
   }
 

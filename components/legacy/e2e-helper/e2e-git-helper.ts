@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import glob from 'glob';
+import { globSync } from 'glob';
 import * as path from 'path';
 
 import type CommandHelper from './e2e-command-helper';
@@ -42,7 +42,7 @@ export default class GitHelper {
     fs.removeSync(path.join(this.scopes.localPath, '.bit'));
     if (!cloneWithComponentsFiles) fs.removeSync(path.join(this.scopes.localPath, 'components'));
     // delete all node-modules from all directories
-    const directories = glob.sync(path.normalize('**/'), { cwd: this.scopes.localPath, dot: true });
+    const directories = globSync(path.normalize('**/'), { cwd: this.scopes.localPath, dot: true });
     directories.forEach((dir) => {
       if (dir.includes('node_modules')) {
         fs.removeSync(path.join(this.scopes.localPath, dir));
@@ -54,7 +54,7 @@ export default class GitHelper {
     fs.removeSync(path.join(this.scopes.localPath, '.bit'));
     if (!cloneWithComponentsFiles) fs.removeSync(path.join(this.scopes.localPath, 'components'));
     // delete all node-modules from all directories
-    const directories = glob.sync(path.normalize('**/'), { cwd: this.scopes.localPath, dot: true });
+    const directories = globSync(path.normalize('**/'), { cwd: this.scopes.localPath, dot: true });
     directories.forEach((dir) => {
       if (dir.includes('node_modules')) {
         fs.removeSync(path.join(this.scopes.localPath, dir));
