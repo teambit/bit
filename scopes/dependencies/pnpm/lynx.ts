@@ -204,6 +204,7 @@ export async function install(
     dedupeInjectedDeps?: boolean;
     forcedHarmonyVersion?: string;
     allowScripts?: Record<string, boolean | 'warn'>;
+    dangerouslyAllowAllScripts?: boolean;
   } & Pick<
     InstallOptions,
     | 'autoInstallPeers'
@@ -306,6 +307,7 @@ export async function install(
     ...resolveScriptPolicies({
       allowScripts: options.allowScripts,
       neverBuiltDependencies: options.neverBuiltDependencies,
+      dangerouslyAllowAllScripts: options.dangerouslyAllowAllScripts,
     }),
     returnListOfDepsRequiringBuild: true,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
@@ -382,13 +384,20 @@ export async function install(
 type ScriptPolicyConfig = {
   allowScripts?: Record<string, boolean | 'warn'>;
   neverBuiltDependencies?: string[];
+  dangerouslyAllowAllScripts?: boolean;
 };
 
-function resolveScriptPolicies({ allowScripts, neverBuiltDependencies }: ScriptPolicyConfig) {
+function resolveScriptPolicies(
+  {
+    allowScripts,
+    neverBuiltDependencies,
+    dangerouslyAllowAllScripts,
+  }: ScriptPolicyConfig
+) {
   let resolvedNeverBuilt = neverBuiltDependencies;
   let onlyBuiltDependencies: string[] | undefined;
   let ignoredBuiltDependencies: string[] | undefined;
-  if (allowScripts == null) {
+  if (dangerouslyAllowAllScripts) {
     if (resolvedNeverBuilt == null) {
       // If neither neverBuiltDependencies nor allowScripts are set by the user
       // we tell pnpm to allow all scripts to be executed, except the packages listed below.
@@ -397,7 +406,7 @@ function resolveScriptPolicies({ allowScripts, neverBuiltDependencies }: ScriptP
   } else {
     onlyBuiltDependencies = [];
     ignoredBuiltDependencies = [];
-    for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts)) {
+    for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts ?? {})) {
       switch (allowedScript) {
         case true:
           onlyBuiltDependencies.push(packageDescriptor);

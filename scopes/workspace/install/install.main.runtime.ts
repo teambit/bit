@@ -387,6 +387,7 @@ export class InstallMain {
       includeOptionalDeps: options?.includeOptionalDeps,
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
       allowScripts: this.dependencyResolver.config.allowScripts,
+      dangerouslyAllowAllScripts: this.dependencyResolver.config.dangerouslyAllowAllScripts,
       overrides: this.dependencyResolver.config.overrides,
       hoistPatterns: this.dependencyResolver.config.hoistPatterns,
       hoistInjectedDependencies: this.dependencyResolver.config.hoistInjectedDependencies,

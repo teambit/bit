@@ -662,6 +662,7 @@ export class DependencyResolverMain {
       this.config.peerDependencyRules,
       this.config.neverBuiltDependencies,
       this.config.allowScripts,
+      this.config.dangerouslyAllowAllScripts,
       this.config.preferOffline,
       this.config.minimumReleaseAge,
       this.config.minimumReleaseAgeExclude,
