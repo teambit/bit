@@ -306,17 +306,34 @@ describe('bit reset command', function () {
     });
   });
   describe('components with env config after multiple snaps', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(1);
-      helper.command.setEnv('comp1', 'teambit.react/react');
-      helper.command.snapAllComponentsWithoutBuild();
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.resetAll();
+    describe('when env is not changed between snaps', () => {
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.setEnv('comp1', 'teambit.react/react');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.resetAll();
+      });
+      it('bit reset should restore the env config that was set before the first snap', () => {
+        const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
+        expect(envData.config.env).to.equal('teambit.react/react');
+      });
     });
-    it('bit reset should restore the env config that was set before the first snap', () => {
-      const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
-      expect(envData.config.env).to.equal('teambit.react/react');
+    describe('when env is changed between snaps', () => {
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.setEnv('comp1', 'teambit.react/react');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.setEnv('comp1', 'teambit.harmony/node');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.resetAll();
+      });
+      it('bit reset should keep the latest env config (not revert to the first snap env)', () => {
+        const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
+        expect(envData.config.env).to.equal('teambit.harmony/node');
+      });
     });
   });
   describe('when checked out to a non-head version with detach-head functionality', () => {

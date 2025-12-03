@@ -71,9 +71,14 @@ export class StagedConfig {
   addComponentConfig(id: ComponentID, config: Config, componentMapObject: Record<string, any>) {
     const exists = this.componentsConfig.find((c) => c.id.isEqual(id, { ignoreVersion: true }));
     if (exists) {
-      // Only update config if the new config has a value. This ensures that on subsequent snaps,
-      // if the config was already removed from .bitmap (and is now undefined), we preserve the
-      // original config that was saved on the first snap.
+      // Only update config if the new config has a value. This handles two scenarios:
+      // 1. User snaps multiple times without changing config: After the first snap, config is
+      //    removed from .bitmap and saved here. On subsequent snaps, componentMap.config is
+      //    undefined (not because user removed it, but because it was already moved here).
+      //    We preserve the original config by not overwriting with undefined.
+      // 2. User changes config between snaps: The new config is written to .bitmap, so
+      //    componentMap.config has a value and we update staged-config with the latest.
+      // This ensures "bit reset" always restores the most recent config the user explicitly set.
       if (config) {
         exists.config = config;
       }
