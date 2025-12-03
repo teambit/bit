@@ -335,6 +335,21 @@ describe('bit reset command', function () {
         expect(envData.config.env).to.equal('teambit.harmony/node');
       });
     });
+    describe('when a different config (deps) is changed between snaps but env stays the same', () => {
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.setEnv('comp1', 'teambit.react/react');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.dependenciesSet('comp1', 'lodash@4.17.21');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.resetAll();
+      });
+      it('bit reset should restore both the env and the deps config', () => {
+        const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
+        expect(envData.config.env).to.equal('teambit.react/react');
+      });
+    });
   });
   describe('when checked out to a non-head version with detach-head functionality', () => {
     before(() => {

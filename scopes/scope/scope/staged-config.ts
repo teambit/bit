@@ -71,16 +71,18 @@ export class StagedConfig {
   addComponentConfig(id: ComponentID, config: Config, componentMapObject: Record<string, any>) {
     const exists = this.componentsConfig.find((c) => c.id.isEqual(id, { ignoreVersion: true }));
     if (exists) {
-      // Only update config if the new config has a value. This handles two scenarios:
+      // Merge configs instead of overwriting. This handles multiple scenarios:
       // 1. User snaps multiple times without changing config: After the first snap, config is
       //    removed from .bitmap and saved here. On subsequent snaps, componentMap.config is
-      //    undefined (not because user removed it, but because it was already moved here).
-      //    We preserve the original config by not overwriting with undefined.
-      // 2. User changes config between snaps: The new config is written to .bitmap, so
-      //    componentMap.config has a value and we update staged-config with the latest.
-      // This ensures "bit reset" always restores the most recent config the user explicitly set.
+      //    undefined - we preserve the original config.
+      // 2. User changes a specific aspect config between snaps (e.g., adds a dep): The new config
+      //    only contains the changed aspect. We merge it with existing config to preserve other
+      //    aspects (like env) that were saved in previous snaps.
+      // 3. User changes multiple aspects: Each aspect in new config overwrites the old value.
+      // This ensures "bit reset" restores the most recent config the user explicitly set for
+      // each aspect, while preserving configs that weren't changed.
       if (config) {
-        exists.config = config;
+        exists.config = { ...exists.config, ...config };
       }
     } else {
       this.componentsConfig.push({ id, config, componentMapObject });
