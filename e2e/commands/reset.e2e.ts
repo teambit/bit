@@ -305,6 +305,20 @@ describe('bit reset command', function () {
       expect(stagedConfig).to.have.lengthOf(0);
     });
   });
+  describe('components with env config after multiple snaps', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.setEnv('comp1', 'teambit.react/react');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.resetAll();
+    });
+    it('bit reset should restore the env config that was set before the first snap', () => {
+      const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
+      expect(envData.config.env).to.equal('teambit.react/react');
+    });
+  });
   describe('when checked out to a non-head version with detach-head functionality', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();

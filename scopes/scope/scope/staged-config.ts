@@ -71,7 +71,12 @@ export class StagedConfig {
   addComponentConfig(id: ComponentID, config: Config, componentMapObject: Record<string, any>) {
     const exists = this.componentsConfig.find((c) => c.id.isEqual(id, { ignoreVersion: true }));
     if (exists) {
-      exists.config = config;
+      // Only update config if the new config has a value. This ensures that on subsequent snaps,
+      // if the config was already removed from .bitmap (and is now undefined), we preserve the
+      // original config that was saved on the first snap.
+      if (config) {
+        exists.config = config;
+      }
     } else {
       this.componentsConfig.push({ id, config, componentMapObject });
     }
