@@ -8,7 +8,7 @@ type BitWatcherProcess = {
   pid: number;
   command: string;
   cwd: string;
-  isVSCodeServer: boolean; // bit server processes are managed by VSCode extension
+  isVSCodeServer: boolean; // bit server processes are managed by VS Code extension
 };
 
 /**
@@ -21,9 +21,10 @@ async function detectRunningBitWatchers(): Promise<BitWatcherProcess[]> {
   }
 
   try {
-    // Find all node processes running bit watch/start/run/server
-    // The pattern matches "bit watch", "bit start", "bit run", "bit server" commands
-    const { stdout } = await execAsync(`ps aux | grep -E "node.*/bit (watch|start|run|server)" | grep -v grep || true`);
+    // Use ps -eo for more predictable output format (just pid and command)
+    const { stdout } = await execAsync(
+      `ps -eo pid,command | grep -E "/bit (watch|start|run|server)" | grep -v grep || true`
+    );
 
     if (!stdout.trim()) {
       return [];
@@ -33,19 +34,24 @@ async function detectRunningBitWatchers(): Promise<BitWatcherProcess[]> {
     const lines = stdout.trim().split('\n');
 
     for (const line of lines) {
-      const parts = line.trim().split(/\s+/);
-      if (parts.length < 11) continue;
+      const trimmedLine = line.trim();
+      const firstSpaceIdx = trimmedLine.indexOf(' ');
+      if (firstSpaceIdx === -1) continue;
 
-      const pid = parseInt(parts[1], 10);
-      if (isNaN(pid) || pid === process.pid) continue; // Skip current process
+      const pidStr = trimmedLine.slice(0, firstSpaceIdx);
+      const command = trimmedLine.slice(firstSpaceIdx + 1).trim();
 
-      const command = parts.slice(10).join(' ');
+      // Validate PID is purely numeric to prevent command injection
+      if (!/^\d+$/.test(pidStr)) continue;
+
+      const pid = parseInt(pidStr, 10);
+      if (pid === process.pid) continue; // Skip current process
 
       // server-forever is just a spawner process, it doesn't run a watcher itself
       if (/server-forever/.test(command)) continue;
 
-      // bit server is started by VSCode extension - users should close VSCode windows instead of killing these
-      const isVSCodeServer = /bit\s+server/.test(command);
+      // bit server is started by VS Code extension - users should close VS Code windows instead of killing these
+      const isVSCodeServer = /bit server(?:\s|$)/.test(command);
 
       // Get the working directory of this process using lsof
       let cwd = 'unknown';
@@ -87,7 +93,7 @@ Each running watcher process may consume multiple streams internally.`;
     message += `\n\n${chalk.yellow('Found the following Bit watcher processes:')}`;
     for (const proc of runningWatchers) {
       const cwdInfo = proc.cwd !== 'unknown' ? ` (${proc.cwd})` : '';
-      const vscodeNote = proc.isVSCodeServer ? chalk.gray(' [VSCode extension]') : '';
+      const vscodeNote = proc.isVSCodeServer ? chalk.gray(' [VS Code extension]') : '';
       message += `\n  ${chalk.cyan(`PID ${proc.pid}`)}: ${proc.command}${cwdInfo}${vscodeNote}`;
     }
 
@@ -97,13 +103,13 @@ Each running watcher process may consume multiple streams internally.`;
       message += `\n  2. Kill specific processes: ${chalk.cyan(`kill ${killableProcesses.map((p) => p.pid).join(' ')}`)}`;
     }
     if (vscodeServers.length > 0) {
-      message += `\n  ${killableProcesses.length > 0 ? '3' : '1'}. Close unused VSCode windows (${vscodeServers.length} VSCode Bit server${vscodeServers.length > 1 ? 's' : ''} running)`;
+      message += `\n  ${killableProcesses.length > 0 ? '3' : '1'}. Close unused VS Code windows (${vscodeServers.length} VS Code Bit server${vscodeServers.length > 1 ? 's' : ''} running)`;
     }
   }
 
   message += `\n
 ${chalk.yellow('Note:')} If you're using "bit start" or "bit run", you don't need "bit watch" separately.
-With the VSCode Bit extension, you can use "Compile on Change" instead of running a watcher manually.
+With the VS Code Bit extension, you can use "Compile on Change" instead of running a watcher manually.
 
 For more details, see: https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-register_with_server-error-f2d_register_rpc--null--21`;
 
