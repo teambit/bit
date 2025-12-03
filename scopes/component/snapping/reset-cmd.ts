@@ -70,7 +70,7 @@ useful for undoing mistakes before exporting. exported versions cannot be reset.
   private async promptForResetAll() {
     this.snapping.logger.clearStatusLine();
     const ok = await yesno({
-      question: `${chalk.bold('this will reset all local tags/snaps for all components. would you like to proceed? [yes(y)/no(n)]')}`,
+      question: `${chalk.bold('This will reset all local tags/snaps for all components. Would you like to proceed? [yes(y)/no(n)]')}`,
     });
     if (!ok) {
       throw new BitError('the operation has been canceled');
