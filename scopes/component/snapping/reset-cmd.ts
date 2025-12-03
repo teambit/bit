@@ -55,8 +55,7 @@ useful for undoing mistakes before exporting. exported versions cannot be reset.
       throw new BitError('please specify either --soft or --head flag, not both');
     }
     // if no pattern provided, reset all components (with confirmation unless --silent or --all)
-    const resetAll = !pattern;
-    if (resetAll && !silent && !all) {
+    if (!pattern && !silent && !all) {
       await this.promptForResetAll();
     }
     const { results, isSoftUntag } = await this.snapping.reset(pattern, head, force, soft);
