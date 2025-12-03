@@ -3115,7 +3115,7 @@
       [
         "a",
         "all",
-        "revert all unexported tags/snaps for all components"
+        "DEPRECATED. this is now the default behavior when no component-pattern is provided"
       ],
       [
         "",
@@ -3136,10 +3136,15 @@
         "",
         "never-exported",
         "reset only components that were never exported"
+      ],
+      [
+        "s",
+        "silent",
+        "skip confirmation when resetting all components"
       ]
     ],
     "description": "revert local tags and snaps to previous versions",
-    "extendedDescription": "removes local component versions (tags/snaps) that haven't been exported yet.\nby default reverts all local versions. use --head to revert only the latest version.\nuseful for undoing mistakes before exporting. exported versions cannot be reset.",
+    "extendedDescription": "removes local component versions (tags/snaps) that haven't been exported yet.\nif no component-pattern is provided, resets all components (with confirmation prompt).\nby default reverts all local versions of each component. use --head to revert only the latest version.\nuseful for undoing mistakes before exporting. exported versions cannot be reset.",
     "group": "version-control",
     "private": false,
     "arguments": [
