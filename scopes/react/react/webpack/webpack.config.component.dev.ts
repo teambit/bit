@@ -5,6 +5,7 @@ import { ComponentID } from '@teambit/component-id';
 // TODO: remove it once we can set policy from component to component then set it via the component.json
 import '@teambit/react.babel.bit-react-transformer';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
 
 const matchNothingRegex = 'a^';
 
@@ -71,7 +72,11 @@ export default function (workDir: string, envId: string): Configuration {
               },
             },
             {
-              loader: require.resolve('@teambit/mdx.modules.mdx-loader'),
+              loader: require.resolve('@mdx-js/loader'),
+              options: mdxOptions,
+            },
+            {
+              loader: require.resolve('@teambit/mdx.modules.mdx-pre-loader'),
             },
           ],
         },

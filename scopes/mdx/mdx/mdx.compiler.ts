@@ -2,10 +2,11 @@ import { join } from 'path';
 import { outputFileSync } from 'fs-extra';
 import type { Compiler, TranspileFileOutput, TranspileFileParams } from '@teambit/compiler';
 import type { BuiltTaskResult, BuildContext } from '@teambit/builder';
-import { compileSync as mdxCompileSync } from '@teambit/mdx.compilers.mdx-transpiler';
 import minimatch from 'minimatch';
 import { transpileFileContent as babelTranspileFileContent } from '@teambit/compilation.modules.babel-compiler';
 import type { TransformOptions } from '@babel/core';
+import { compileSync as mdxCompileSync } from '@mdx-js/mdx';
+import { basicMdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
 
 export type MDXCompilerOpts = {
   ignoredExtensions?: string[];
@@ -33,14 +34,10 @@ export class MDXCompiler implements Compiler {
   }
 
   transpileFile(fileContent: string, options: TranspileFileParams): TranspileFileOutput {
-    const afterMdxCompile = mdxCompileSync(fileContent, {
-      filepath: options.filePath,
-      // this compiler is not indented to compile according to the bit flavour.
-      bitFlavour: false,
-    });
+    const afterMdxCompile = mdxCompileSync(fileContent, basicMdxOptions);
     const filePathAfterMdxCompile = this.replaceFileExtToJs(options.filePath);
     const afterBabelCompile = babelTranspileFileContent(
-      afterMdxCompile.contents,
+      afterMdxCompile.toString(),
       {
         rootDir: options.componentDir,
         filePath: filePathAfterMdxCompile,

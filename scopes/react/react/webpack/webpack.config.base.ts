@@ -12,8 +12,10 @@ import { postCssConfig } from './postcss.config';
 // TODO: remove it once we can set policy from component to component then set it via the component.json
 import '@teambit/react.babel.bit-react-transformer';
 // Make sure the mdx-loader is a dependency
-import '@teambit/mdx.modules.mdx-loader';
-
+// eslint-disable-next-line import/no-unresolved
+import '@mdx-js/loader';
+import '@teambit/mdx.modules.mdx-pre-loader';
+import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
 const styleLoaderPath = require.resolve('style-loader');
 
 const moduleFileExtensions = [
@@ -157,7 +159,11 @@ export default function (isEnvProduction = false): Configuration {
                   },
                 },
                 {
-                  loader: require.resolve('@teambit/mdx.modules.mdx-loader'),
+                  loader: require.resolve('@mdx-js/loader'),
+                  options: mdxOptions,
+                },
+                {
+                  loader: require.resolve('@teambit/mdx.modules.mdx-pre-loader'),
                 },
               ],
             },
