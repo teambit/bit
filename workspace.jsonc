@@ -12,6 +12,7 @@
   "teambit.dependencies/dependency-resolver": {
     "policy": {
       "dependencies": {
+        "@apollo/client": "^4.0.9",
         "@babel/core": "7.28.3",
         "@babel/plugin-proposal-decorators": "7.28.0",
         "@babel/plugin-transform-class-properties": "7.27.1",
