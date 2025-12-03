@@ -39,7 +39,6 @@ const whitelist = [
   'npm', // needed for e2e tests
   'cross-env', // needed for e2e tests on Windows
   '@typescript-eslint/typescript-estree', // required for @typescript-eslint/parser in .eslintrc.js
-  '@mdx-js/mdx', // required for @mdx-js/react in mdx files - maybe should be added to envs (like we have in env.jsonc)
   // then we can remove it from here
   'mocha-multi-reporters',
 ];
