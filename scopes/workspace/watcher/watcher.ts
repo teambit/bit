@@ -30,6 +30,7 @@ import type { Event } from '@parcel/watcher';
 import ParcelWatcher from '@parcel/watcher';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 import { WatcherDaemon, WatcherClient, getOrCreateWatcherConnection, type WatcherError } from './watcher-daemon';
+import { formatFSEventsErrorMessage } from './fsevents-error';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: ComponentID; componentIds: ComponentID[] };
 
@@ -186,15 +187,8 @@ export class Watcher {
       this.logger.debug('Initial watcher snapshot created');
     } catch (err: any) {
       if (err.message.includes('Error starting FSEvents stream')) {
-        throw new Error(`Failed to start the watcher: ${err.message}
-This is usually caused by too many watchers running in the same workspace (e.g., bit-watch, bit-start, bit-run, or VSCode with the Bit plugin).
-Try closing the other watchers and re-running the command.
-
-In general, if you're using "bit start" or "bit run", you don't need to run "bit watch" as well.
-Similarly, if you're using VSCode with the Bit extension, you can enable "Compile on Change" instead of running a watcher manually.
-
-If the issue persists, please refer to the Watchman troubleshooting guide:
-https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-register_with_server-error-f2d_register_rpc--null--21`);
+        const errorMessage = await formatFSEventsErrorMessage();
+        throw new Error(errorMessage);
       }
       throw err;
     }
@@ -230,6 +224,10 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
     } catch (err: any) {
       // Clean up daemon on failure
       await this.watcherDaemon?.stop();
+      if (err.message.includes('Error starting FSEvents stream')) {
+        const errorMessage = await formatFSEventsErrorMessage();
+        throw new Error(errorMessage);
+      }
       throw err;
     }
   }
