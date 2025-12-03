@@ -10,6 +10,16 @@
     "resolveEnvsFromRoots": false
   },
   "teambit.dependencies/dependency-resolver": {
+    "allowScripts": {
+       "@apollo/protobufjs": true,
+       "@parcel/watcher": true,
+       "bufferutil": true,
+       "core-js": false,
+       "core-js-pure": false,
+       "es5-ext": true,
+       "esbuild": true,
+       "utf-8-validate": true
+    },
     "policy": {
       "dependencies": {
         "@babel/core": "7.28.3",
