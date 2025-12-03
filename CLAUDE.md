@@ -30,7 +30,14 @@ For comprehensive Bit MCP workflow instructions and core principles, see: `.gith
 - `npm run e2e-test:debug` - Run e2e tests in debug mode (keeps workspaces, prints output)
 - `npm run mocha-circleci` - Run mocha tests with CircleCI configuration
 
-**Running specific e2e tests:** To run a specific test during development, add `.only` to the describe or it block (e.g., `describe.only(...)` or `it.only(...)`), then run `npm run e2e-test`. IMPORTANT: Always use `.only` when running e2e tests to avoid running the entire test suite.
+**Running specific e2e tests:**
+⚠️ **CRITICAL: ALWAYS add `.only` to the test before running e2e tests!** ⚠️
+
+- Add `.only` to the `describe` or `it` block (e.g., `describe.only(...)` or `it.only(...)`)
+- Then run `npm run e2e-test` or `npm run e2e-test:debug`
+- The `--grep` flag does NOT work reliably - you MUST use `.only`
+- Running without `.only` will execute the ENTIRE test suite which takes hours
+- Example: Change `describe('my test', ...)` to `describe.only('my test', ...)`
 
 **Bug reproduction testing:** When asked to reproduce a bug, create an e2e test instead of creating test directories in the current workspace. You cannot create nested Bit workspaces. E2E test helpers provide workspace creation methods that use temporary directories and automatically clean up after tests.
 
