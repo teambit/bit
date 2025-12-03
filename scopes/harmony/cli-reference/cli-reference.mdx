@@ -2049,7 +2049,8 @@ for local components: simply renames the existing component in place.
 
 **Description**: revert local tags and snaps to previous versions  
 removes local component versions (tags/snaps) that haven't been exported yet.  
-by default reverts all local versions. use --head to revert only the latest version.  
+if no component-pattern is provided, resets all components (with confirmation prompt).  
+by default reverts all local versions of each component. use --head to revert only the latest version.  
 useful for undoing mistakes before exporting. exported versions cannot be reset.
 
 `bit reset [component-pattern]`
@@ -2060,11 +2061,12 @@ useful for undoing mistakes before exporting. exported versions cannot be reset.
 
 | **Option**         | **Option alias** | **Description**                                                                                                 |
 | ------------------ | :--------------: | --------------------------------------------------------------------------------------------------------------- |
-| `--all`            |       `-a`       | revert all unexported tags/snaps for all components                                                             |
+| `--all`            |       `-a`       | DEPRECATED. this is now the default behavior when no component-pattern is provided                              |
 | `--head`           |                  | revert the head tag/snap only (by default, all local tags/snaps are reverted)                                   |
 | `--soft`           |                  | revert only soft-tags (components tagged with --soft flag)                                                      |
 | `--force`          |       `-f`       | revert the tag even if it's used as a dependency. WARNING: components that depend on this tag will be corrupted |
 | `--never-exported` |                  | reset only components that were never exported                                                                  |
+| `--silent`         |       `-s`       | skip confirmation when resetting all components                                                                 |
 
 ---
 

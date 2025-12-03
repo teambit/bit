@@ -519,7 +519,7 @@ export default class CommandHelper {
     return this.runCmd(`bit reset ${id} ${head ? '--head' : ''} ${flag}`);
   }
   resetAll(options = '') {
-    return this.runCmd(`bit reset ${options} --all`);
+    return this.runCmd(`bit reset ${options} --silent`);
   }
   resetSoft(id: string) {
     return this.runCmd(`bit reset ${id} --soft`);
