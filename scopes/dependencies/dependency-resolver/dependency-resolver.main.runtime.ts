@@ -1,5 +1,6 @@
 import multimatch from 'multimatch';
 import { isSnap } from '@teambit/component-version';
+import { BitError } from '@teambit/bit-error';
 import mapSeries from 'p-map-series';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { MainRuntime } from '@teambit/cli';
@@ -662,6 +663,7 @@ export class DependencyResolverMain {
       this.config.peerDependencyRules,
       this.config.neverBuiltDependencies,
       this.config.allowScripts,
+      this.config.dangerouslyAllowAllScripts,
       this.config.preferOffline,
       this.config.minimumReleaseAge,
       this.config.minimumReleaseAgeExclude,
@@ -1005,6 +1007,36 @@ export class DependencyResolverMain {
 
   get packageManagerName(): string {
     return this.config.packageManager ?? DEFAULT_HARMONY_PACKAGE_MANAGER;
+  }
+
+  getAllowedScripts() {
+    if (!process.env.BIT_ALLOW_SCRIPTS) {
+      return this.config.allowScripts;
+    }
+    let allowScriptsFromEnv: Record<string, boolean>;
+    try {
+      allowScriptsFromEnv = JSON.parse(process.env.BIT_ALLOW_SCRIPTS);
+    } catch {
+      throw new BitError('Failed to parse the JSON object in the BIT_ALLOW_SCRIPTS environment variable');
+    }
+    if (typeof allowScriptsFromEnv !== 'object' || allowScriptsFromEnv === null || Array.isArray(allowScriptsFromEnv)) {
+      throw new BitError('BIT_ALLOW_SCRIPTS must be a JSON object');
+    }
+    return {
+      ...this.config.allowScripts,
+      ...allowScriptsFromEnv,
+    };
+  }
+
+  updateAllowedScripts(newAllowedScripts: Record<string, boolean>): void {
+    this.config.allowScripts = {
+      ...this.config.allowScripts,
+      ...newAllowedScripts,
+    };
+    this.configAspect.setExtension(DependencyResolverAspect.id, this.config, {
+      mergeIntoExisting: true,
+      ignoreVersion: true,
+    });
   }
 
   addToRootPolicy(entries: WorkspacePolicyEntry[], options?: WorkspacePolicyAddEntryOptions): WorkspacePolicy {

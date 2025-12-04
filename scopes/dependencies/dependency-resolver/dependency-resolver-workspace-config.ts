@@ -190,6 +190,11 @@ export interface DependencyResolverWorkspaceConfig {
   allowScripts?: Record<string, boolean | 'warn'>;
 
   /**
+   * Set this to true in order to allow all dependencies to run install scripts.
+   */
+  dangerouslyAllowAllScripts?: boolean;
+
+  /**
    * If true, staleness checks for cached data will be bypassed, but missing data will be requested from the server.
    */
   preferOffline?: boolean;
