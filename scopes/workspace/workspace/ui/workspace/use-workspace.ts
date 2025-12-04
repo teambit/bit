@@ -65,7 +65,7 @@ const wcComponentFields = gql`
       icon
     }
   }
-`;
+` as any;
 
 const WORKSPACE = gql`
   query workspace {
@@ -79,7 +79,7 @@ const WORKSPACE = gql`
     }
   }
   ${wcComponentFields}
-`;
+` as any;
 
 const COMPONENT_SUBSCRIPTION_ADDED = gql`
   subscription OnComponentAdded {
@@ -90,7 +90,7 @@ const COMPONENT_SUBSCRIPTION_ADDED = gql`
     }
   }
   ${wcComponentFields}
-`;
+` as any;
 
 const COMPONENT_SUBSCRIPTION_CHANGED = gql`
   subscription OnComponentChanged {
@@ -101,7 +101,7 @@ const COMPONENT_SUBSCRIPTION_CHANGED = gql`
     }
   }
   ${wcComponentFields}
-`;
+` as any;
 
 const COMPONENT_SUBSCRIPTION_REMOVED = gql`
   subscription OnComponentRemoved {
@@ -113,7 +113,7 @@ const COMPONENT_SUBSCRIPTION_REMOVED = gql`
       }
     }
   }
-`;
+` as any;
 
 const COMPONENT_SERVER_STARTED = gql`
   subscription OnComponentServerStarted {
@@ -124,7 +124,7 @@ const COMPONENT_SERVER_STARTED = gql`
       basePath
     }
   }
-`;
+` as any;
 
 export function useWorkspace(options: UseWorkspaceOptions = {}) {
   const { data, subscribeToMore, ...rest } = useDataQuery(WORKSPACE);

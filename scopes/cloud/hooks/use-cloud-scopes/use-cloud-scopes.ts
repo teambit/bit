@@ -13,7 +13,7 @@ export const GET_CLOUD_SCOPES_QUERY = gql`
       displayName
     }
   }
-`;
+` as any;
 
 export function useCloudScopes(ids?: string[]): { cloudScopes?: ScopeDescriptor[] } {
   const { data } = useDataQuery<{ getCloudScopes?: (ScopeDescriptor & { id: string })[] }>(GET_CLOUD_SCOPES_QUERY, {

@@ -6,7 +6,7 @@ export const componentIdFields = gql`
     version
     scope
   }
-`;
+` as any;
 
 export const componentOverviewFields = gql`
   fragment componentOverviewFields on Component {
@@ -56,7 +56,7 @@ export const componentOverviewFields = gql`
     }
   }
   ${componentIdFields}
-`;
+` as any;
 
 export const componentFields = gql`
   fragment componentFields on Component {
@@ -72,7 +72,7 @@ export const componentFields = gql`
     }
   }
   ${componentOverviewFields}
-`;
+` as any;
 
 export const componentFieldsWithLogs = gql`
   fragment componentFieldWithLogs on Component {
@@ -100,7 +100,7 @@ export const componentFieldsWithLogs = gql`
     }
   }
   ${componentIdFields}
-`;
+` as any;
 
 export const COMPONENT_QUERY_LOG_FIELDS = `
   $logOffset: Int
@@ -109,7 +109,7 @@ export const COMPONENT_QUERY_LOG_FIELDS = `
   $logHead: String
   $logSort: String
   $logTakeHeadFromComponent: Boolean
-`;
+` as any;
 
 export const GET_COMPONENT = gql`
   query Component($extensionId: String!, $id: String!) {
@@ -121,7 +121,7 @@ export const GET_COMPONENT = gql`
     }
   }
   ${componentFields}
-`;
+` as any;
 
 export const GET_COMPONENT_WITH_LOGS = gql`
   query Component(
@@ -137,7 +137,7 @@ export const GET_COMPONENT_WITH_LOGS = gql`
     }
   }
   ${componentFieldsWithLogs}
-`;
+` as any;
 
 export const SUB_SUBSCRIPTION_ADDED = gql`
   subscription OnComponentAdded {
@@ -148,7 +148,7 @@ export const SUB_SUBSCRIPTION_ADDED = gql`
     }
   }
   ${componentFields}
-`;
+` as any;
 
 export const SUB_COMPONENT_CHANGED = gql`
   subscription OnComponentChanged {
@@ -159,7 +159,7 @@ export const SUB_COMPONENT_CHANGED = gql`
     }
   }
   ${componentFields}
-`;
+` as any;
 
 export const SUB_COMPONENT_REMOVED = gql`
   subscription OnComponentRemoved {
@@ -170,4 +170,4 @@ export const SUB_COMPONENT_REMOVED = gql`
     }
   }
   ${componentIdFields}
-`;
+` as any;

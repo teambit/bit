@@ -21,7 +21,7 @@ const GET_COMPONENT = gql`
       }
     }
   }
-`;
+` as any;
 
 // TODO: get the docs domain from the community aspect and pass it here as a prop
 export function AspectPage() {

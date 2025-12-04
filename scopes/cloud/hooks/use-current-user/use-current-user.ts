@@ -19,7 +19,7 @@ export const CURRENT_USER_QUERY = gql`
     loginUrl
     isLoggedIn
   }
-`;
+` as any;
 
 export function useCurrentUser(): {
   currentUser?: CloudUser;

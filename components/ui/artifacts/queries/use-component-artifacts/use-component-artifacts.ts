@@ -33,7 +33,7 @@ const ARTIFACTS_QUERY = gql`
       }
     }
   }
-`;
+` as any;
 
 export function useComponentArtifacts(
   host: string,
@@ -85,7 +85,7 @@ const ARTIFACTS_QUERY_WITH_FILE_CONTENT = gql`
       }
     }
   }
-`;
+` as any;
 
 export function useComponentArtifactFileContent(
   host: string,
