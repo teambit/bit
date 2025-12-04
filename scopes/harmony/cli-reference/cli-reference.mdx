@@ -1165,22 +1165,24 @@ automatically imports components, compiles components, links to node_modules, an
 | ------------- | :-------------------------------------------------: |
 | `packages...` | a list of packages to install (separated by spaces) |
 
-| **Option**                   | **Option alias** | **Description**                                                                                        |
-| ---------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------ |
-| `--type [lifecycleType]`     |       `-t`       | "runtime" (default) or "peer" (dev is not a valid option)                                              |
-| `--update`                   |       `-u`       | update all dependencies to latest version according to their semver range                              |
-| `--update-existing`          |                  | DEPRECATED (not needed anymore, it is the default now). update existing dependencies version and types |
-| `--save-prefix [savePrefix]` |                  | set the prefix to use when adding dependency to workspace.jsonc                                        |
-| `--skip-dedupe`              |                  | do not dedupe dependencies on installation                                                             |
-| `--skip-import`              |                  | do not import bit objects post installation                                                            |
-| `--skip-compile`             |                  | do not compile components                                                                              |
-| `--skip-write-config-files`  |                  | do not write config files (such as eslint, tsconfig, prettier, etc...)                                 |
-| `--add-missing-deps`         |       `-a`       | install all missing dependencies                                                                       |
-| `--skip-unavailable`         |                  | when adding missing dependencies, skip those that are not found in the regisry                         |
-| `--add-missing-peers`        |                  | install all missing peer dependencies                                                                  |
-| `--recurring-install`        |                  | automatically run install again if there are non loaded old envs in your workspace                     |
-| `--no-optional [noOptional]` |                  | do not install optional dependencies (works with pnpm only)                                            |
-| `--lockfile-only`            |                  | dependencies are not written to node_modules. Only the lockfile is updated                             |
+| **Option**                      | **Option alias** | **Description**                                                                                        |
+| ------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------ |
+| `--type [lifecycleType]`        |       `-t`       | "runtime" (default) or "peer" (dev is not a valid option)                                              |
+| `--update`                      |       `-u`       | update all dependencies to latest version according to their semver range                              |
+| `--update-existing`             |                  | DEPRECATED (not needed anymore, it is the default now). update existing dependencies version and types |
+| `--save-prefix [savePrefix]`    |                  | set the prefix to use when adding dependency to workspace.jsonc                                        |
+| `--skip-dedupe`                 |                  | do not dedupe dependencies on installation                                                             |
+| `--skip-import`                 |                  | do not import bit objects post installation                                                            |
+| `--skip-compile`                |                  | do not compile components                                                                              |
+| `--skip-write-config-files`     |                  | do not write config files (such as eslint, tsconfig, prettier, etc...)                                 |
+| `--add-missing-deps`            |       `-a`       | install all missing dependencies                                                                       |
+| `--skip-unavailable`            |                  | when adding missing dependencies, skip those that are not found in the regisry                         |
+| `--add-missing-peers`           |                  | install all missing peer dependencies                                                                  |
+| `--recurring-install`           |                  | automatically run install again if there are non loaded old envs in your workspace                     |
+| `--no-optional [noOptional]`    |                  | do not install optional dependencies (works with pnpm only)                                            |
+| `--lockfile-only`               |                  | dependencies are not written to node_modules. Only the lockfile is updated                             |
+| `--allow-scripts [pkgNames]`    |                  | a comma separated list of package names that are allowed to run installation scripts                   |
+| `--disallow-scripts [pkgNames]` |                  | a comma separated list of package names that are NOT allowed to run installation scripts               |
 
 ---
 

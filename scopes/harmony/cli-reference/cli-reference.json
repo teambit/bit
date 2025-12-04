@@ -1907,6 +1907,16 @@
         "",
         "lockfile-only",
         "dependencies are not written to node_modules. Only the lockfile is updated"
+      ],
+      [
+        "",
+        "allow-scripts [pkgNames]",
+        "a comma separated list of package names that are allowed to run installation scripts"
+      ],
+      [
+        "",
+        "disallow-scripts [pkgNames]",
+        "a comma separated list of package names that are NOT allowed to run installation scripts"
       ]
     ],
     "description": "install workspace dependencies",
