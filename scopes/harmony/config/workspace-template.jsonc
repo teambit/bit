@@ -58,6 +58,13 @@
    * main configuration for component dependency resolution.
    **/
   "teambit.dependencies/dependency-resolver": {
+     /**
+     * Configure which dependencies are allowed to run install scripts.
+     * By default, no dependencies can run scripts. Set to true to allow, false to explicitly disallow.
+     * Example: { "esbuild": true, "core-js": false }
+     * See also: dangerouslyAllowAllScripts to allow all scripts (not recommended).
+     * This is a security-sensitive setting: enabling scripts may allow arbitrary code execution during install.
+     **/
     "allowScripts": {},
     "rootComponents": true,
     "policy": {

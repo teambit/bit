@@ -1013,11 +1013,14 @@ export class DependencyResolverMain {
     if (!process.env.BIT_ALLOW_SCRIPTS) {
       return this.config.allowScripts;
     }
-    let allowScriptsFromEnv!: Record<string, boolean>
+    let allowScriptsFromEnv: Record<string, boolean>
     try {
       allowScriptsFromEnv = JSON.parse(process.env.BIT_ALLOW_SCRIPTS);
     } catch {
       throw new BitError('Failed to parse the JSON object in the BIT_ALLOW_SCRIPTS environment variable');
+    }
+    if (typeof allowScriptsFromEnv !== 'object' || allowScriptsFromEnv === null || Array.isArray(allowScriptsFromEnv)) {
+      throw new BitError('BIT_ALLOW_SCRIPTS must be a JSON object');
     }
     return {
       ...this.config.allowScripts,

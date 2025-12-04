@@ -399,7 +399,7 @@ function resolveScriptPolicies(
   let ignoredBuiltDependencies: string[] | undefined;
   if (dangerouslyAllowAllScripts) {
     if (resolvedNeverBuilt == null) {
-      // If neither neverBuiltDependencies nor allowScripts are set by the user
+      // If neverBuiltDependencies is not explicitly set, use a default list
       // we tell pnpm to allow all scripts to be executed, except the packages listed below.
       resolvedNeverBuilt = ['core-js'];
     }

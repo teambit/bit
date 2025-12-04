@@ -156,16 +156,25 @@ automatically imports components, compiles components, links to node_modules, an
     if (!allowScriptsFlag && !disallowScriptsFlag) return undefined;
     const allowScripts: Record<string, boolean> = {};
     if (allowScriptsFlag) {
-      for (const pkgName of allowScriptsFlag.split(',')) {
+      for (const pkgName of this._parseCommaSeparatedPkgList(allowScriptsFlag)) {
         allowScripts[pkgName] = true;
       }
     }
     if (disallowScriptsFlag) {
-      for (const pkgName of disallowScriptsFlag.split(',')) {
+      for (const pkgName of this._parseCommaSeparatedPkgList(disallowScriptsFlag)) {
         allowScripts[pkgName] = false;
       }
     }
     return allowScripts;
+  }
+
+  private * _parseCommaSeparatedPkgList(pkgList: string): IterableIterator<string> {
+    for (const pkgName of pkgList.split(',')) {
+      const trimmed = pkgName.trim();
+      if (trimmed) {
+        yield trimmed;
+      }
+    }
   }
 }
 
