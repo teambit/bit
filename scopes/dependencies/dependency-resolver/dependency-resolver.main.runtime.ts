@@ -1013,7 +1013,7 @@ export class DependencyResolverMain {
     if (!process.env.BIT_ALLOW_SCRIPTS) {
       return this.config.allowScripts;
     }
-    let allowScriptsFromEnv: Record<string, boolean>
+    let allowScriptsFromEnv: Record<string, boolean>;
     try {
       allowScriptsFromEnv = JSON.parse(process.env.BIT_ALLOW_SCRIPTS);
     } catch {

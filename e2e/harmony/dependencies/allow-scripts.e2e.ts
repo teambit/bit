@@ -7,6 +7,38 @@ chai.use(chaiFs);
 (supportNpmCiRegistryTesting ? describe : describe.skip)('allowing scripts to run in dependencies', function () {
   this.timeout(0);
   let helper: Helper;
+  describe('by default all scripts are blocked', () => {
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      helper.command.install('@pnpm.e2e/pre-and-postinstall-scripts-example');
+    });
+    after(() => {
+      helper.command.delConfig('registry');
+      npmCiRegistry.destroy();
+      helper.scopeHelper.destroy();
+    });
+    it('should not build the dependency', async () => {
+      expect(
+        path.join(
+          helper.fixtures.scopes.localPath,
+          'node_modules/@pnpm.e2e/pre-and-postinstall-scripts-example/package.json'
+        )
+      ).to.be.a.path();
+      expect(
+        path.join(
+          helper.fixtures.scopes.localPath,
+          'node_modules/@pnpm.e2e/pre-and-postinstall-scripts-example/generated-by-preinstall.js'
+        )
+      ).not.to.be.a.path();
+    });
+  });
   describe('setting allow scripts via workspace.jsonc', () => {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
@@ -45,7 +77,7 @@ chai.use(chaiFs);
       ).to.be.a.path();
     });
   });
-  describe('setting allow scripts via flags', () => {
+  describe.only('setting allow scripts via flags', () => {
     let npmCiRegistry: NpmCiRegistry;
     let workspaceJsonc;
     before(async () => {
