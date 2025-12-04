@@ -104,6 +104,7 @@ export type WorkspaceInstallOptions = {
   writeConfigFiles?: boolean;
   skipPrune?: boolean;
   dependenciesGraph?: DependenciesGraph;
+  allowScripts?: Record<string, boolean>;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -344,6 +345,10 @@ export class InstallMain {
   }
 
   private async _installModules(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
+    if (options?.allowScripts) {
+      this.dependencyResolver.updateAllowedScripts(options.allowScripts);
+      await this.dependencyResolver.persistConfig('update allowScripts configuration');
+    }
     const pm = this.dependencyResolver.getPackageManager();
     this.logger.console(
       `installing dependencies in workspace using ${pm?.name} (${chalk.cyan(
@@ -386,7 +391,8 @@ export class InstallMain {
       dependenciesGraph: options?.dependenciesGraph,
       includeOptionalDeps: options?.includeOptionalDeps,
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
-      allowScripts: this.dependencyResolver.config.allowScripts,
+      allowScripts: this.dependencyResolver.getAllowedScripts(),
+      dangerouslyAllowAllScripts: this.dependencyResolver.config.dangerouslyAllowAllScripts,
       overrides: this.dependencyResolver.config.overrides,
       hoistPatterns: this.dependencyResolver.config.hoistPatterns,
       hoistInjectedDependencies: this.dependencyResolver.config.hoistInjectedDependencies,

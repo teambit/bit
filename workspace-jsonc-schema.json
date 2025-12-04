@@ -283,6 +283,11 @@
               "@org/pkg@1.0.0": "warn"
             }
           ]
+        },
+        "dangerouslyAllowAllScripts": {
+          "type": "boolean",
+          "description": "⚠️ SECURITY WARNING: When set to true, allows all dependencies to run their lifecycle scripts ('preinstall', 'install', 'postinstall') during installation. This is potentially dangerous as install scripts can execute arbitrary code. Use 'allowScripts' for fine-grained control instead of this option. Only enable this if you trust all dependencies in your project.",
+          "default": false
         }
       },
       "required": []
