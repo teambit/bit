@@ -1016,7 +1016,7 @@ export class DependencyResolverMain {
     let allowScriptsFromEnv!: Record<string, boolean>
     try {
       allowScriptsFromEnv = JSON.parse(process.env.BIT_ALLOW_SCRIPTS);
-    } catch (err) {
+    } catch {
       throw new BitError('Failed to parse the JSON object in the BIT_ALLOW_SCRIPTS environment variable');
     }
     return {

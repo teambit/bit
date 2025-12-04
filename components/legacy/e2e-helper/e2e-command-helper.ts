@@ -887,9 +887,14 @@ export default class CommandHelper {
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
   }
-  install(packages = '', options?: Record<string, any>, cwd = this.scopes.localPath) {
+  install(
+    packages = '',
+    options?: Record<string, any>,
+    cwd = this.scopes.localPath,
+    runCmdOpts?: { envVariables?: Record<string, string> }
+  ) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit install ${packages} ${parsedOpts}`, cwd);
+    return this.runCmd(`bit install ${packages} ${parsedOpts}`, cwd, 'pipe', undefined, false, runCmdOpts?.envVariables);
   }
   update(flags?: string) {
     return this.runCmd(`bit update ${flags || ''}`);
