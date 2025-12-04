@@ -391,7 +391,7 @@ export class InstallMain {
       dependenciesGraph: options?.dependenciesGraph,
       includeOptionalDeps: options?.includeOptionalDeps,
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
-      allowScripts: this.dependencyResolver.config.allowScripts,
+      allowScripts: this.dependencyResolver.getAllowedScripts(),
       dangerouslyAllowAllScripts: this.dependencyResolver.config.dangerouslyAllowAllScripts,
       overrides: this.dependencyResolver.config.overrides,
       hoistPatterns: this.dependencyResolver.config.hoistPatterns,

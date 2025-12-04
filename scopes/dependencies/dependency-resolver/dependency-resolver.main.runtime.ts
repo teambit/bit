@@ -1,5 +1,6 @@
 import multimatch from 'multimatch';
 import { isSnap } from '@teambit/component-version';
+import { BitError } from '@teambit/bit-error';
 import mapSeries from 'p-map-series';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { MainRuntime } from '@teambit/cli';
@@ -1006,6 +1007,22 @@ export class DependencyResolverMain {
 
   get packageManagerName(): string {
     return this.config.packageManager ?? DEFAULT_HARMONY_PACKAGE_MANAGER;
+  }
+
+  getAllowedScripts() {
+    if (!process.env.BIT_ALLOW_SCRIPTS) {
+      return this.config.allowScripts;
+    }
+    let allowScriptsFromEnv!: Record<string, boolean>
+    try {
+      allowScriptsFromEnv = JSON.parse(process.env.BIT_ALLOW_SCRIPTS);
+    } catch (err) {
+      throw new BitError('Failed to parse the JSON object in the BIT_ALLOW_SCRIPTS environment variable');
+    }
+    return {
+      ...this.config.allowScripts,
+      ...allowScriptsFromEnv,
+    };
   }
 
   updateAllowedScripts(newAllowedScripts: Record<string, boolean>): void {
