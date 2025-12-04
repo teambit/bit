@@ -172,7 +172,7 @@ export class ReactEnv
         jest: jestModulePath || require.resolve('jest'),
         config,
       },
-      { logger: this.logger, worker }
+      { logger: this.logger, worker, devFiles: this.devFiles }
     );
 
     return tester;
@@ -205,7 +205,7 @@ export class ReactEnv
         jest: jestModulePath || require.resolve('jest'),
         config,
       },
-      { logger: this.logger, worker }
+      { logger: this.logger, worker, devFiles: this.devFiles }
     );
   }
 
