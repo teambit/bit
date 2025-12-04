@@ -22,7 +22,7 @@ import { ScopeComponentsImporter } from '@teambit/legacy.scope';
 import { importAllArtifactsFromLane } from '@teambit/component.sources';
 import type { InstallMain } from '@teambit/install';
 import { InstallAspect } from '@teambit/install';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { type ComponentID, ComponentIdList } from '@teambit/component-id';
 import type { Lane } from '@teambit/objects';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import type { GraphMain } from '@teambit/graph';

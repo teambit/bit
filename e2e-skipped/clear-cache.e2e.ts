@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
-import { glob } from 'glob';
+import { globSync } from 'glob';
 import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('bit clear-cache', function () {
@@ -21,7 +21,7 @@ describe('bit clear-cache', function () {
       helper.command.status(); // to populate the cache.
 
       const cachePath = path.join(helper.scopes.localPath, '.bit/cache/components/file-paths/content-v2/sha512');
-      const files = glob.sync('**/*', { cwd: cachePath, nodir: true });
+      const files = globSync('**/*', { cwd: cachePath, nodir: true });
       if (!files.length) throw new Error('no cache files found');
       const cacheFile = path.join(cachePath, files[0]);
       fs.chmodSync(cacheFile, '755');

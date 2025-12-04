@@ -23,7 +23,7 @@ describe('dev files', function () {
     const COMP_NAME = 'custom-dev-files';
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
       envName = helper.env.setCustomEnv(ENV_NAME);
       envId = `${helper.scopes.remote}/${envName}`;
       // helper.fixtures.createComponentBarFoo();

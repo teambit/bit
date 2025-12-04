@@ -305,6 +305,52 @@ describe('bit reset command', function () {
       expect(stagedConfig).to.have.lengthOf(0);
     });
   });
+  describe('components with env config after multiple snaps', () => {
+    describe('when env is not changed between snaps', () => {
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.setEnv('comp1', 'teambit.react/react');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.resetAll();
+      });
+      it('bit reset should restore the env config that was set before the first snap', () => {
+        const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
+        expect(envData.config.env).to.equal('teambit.react/react');
+      });
+    });
+    describe('when env is changed between snaps', () => {
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.setEnv('comp1', 'teambit.react/react');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.setEnv('comp1', 'teambit.harmony/node');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.resetAll();
+      });
+      it('bit reset should keep the latest env config (not revert to the first snap env)', () => {
+        const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
+        expect(envData.config.env).to.equal('teambit.harmony/node');
+      });
+    });
+    describe('when a different config (deps) is changed between snaps but env stays the same', () => {
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.setEnv('comp1', 'teambit.react/react');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.dependenciesSet('comp1', 'lodash@4.17.21');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.resetAll();
+      });
+      it('bit reset should restore both the env and the deps config', () => {
+        const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
+        expect(envData.config.env).to.equal('teambit.react/react');
+      });
+    });
+  });
   describe('when checked out to a non-head version with detach-head functionality', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();

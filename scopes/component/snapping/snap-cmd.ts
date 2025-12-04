@@ -161,7 +161,7 @@ export function snapResultOutput(results: SnapResults): string {
 
   const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
   const snapExplanation = `\n(use "bit export" to push these components to a remote")
-(use "bit reset --all" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)`;
+(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)`;
 
   const compInBold = (id: ComponentID) => {
     const version = id.hasVersion() ? `@${id.version}` : '';

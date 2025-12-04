@@ -20,7 +20,7 @@ chai.use(chaiString);
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.scopeHelper.setWorkspaceWithRemoteScope();
-    helper.workspaceJsonc.setPackageManager();
+    helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();
     npmCiRegistry.configureCiInPackageJsonHarmony();

@@ -1,6 +1,6 @@
 import path from 'path';
 import { ComponentID } from '@teambit/component';
-import { DependenciesGraph, PackagesMap, DependencyEdge } from '@teambit/objects';
+import { DependenciesGraph, type PackagesMap, type DependencyEdge } from '@teambit/objects';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
 import { type BitLockfileFile } from './lynx';
 import { expect } from 'chai';

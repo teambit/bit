@@ -29,6 +29,8 @@ import type { Logger } from '@teambit/logger';
 import type { Event } from '@parcel/watcher';
 import ParcelWatcher from '@parcel/watcher';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
+import { WatcherDaemon, WatcherClient, getOrCreateWatcherConnection, type WatcherError } from './watcher-daemon';
+import { formatFSEventsErrorMessage } from './fsevents-error';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: ComponentID; componentIds: ComponentID[] };
 
@@ -88,6 +90,14 @@ export class Watcher {
   private dropErrorDebounceTimer: NodeJS.Timeout | null = null;
   private dropErrorCount = 0;
   private isRecoveringFromSnapshot = false;
+  // Shared watcher daemon/client
+  private watcherDaemon: WatcherDaemon | null = null;
+  private watcherClient: WatcherClient | null = null;
+  private isDaemon = false;
+  // Parcel watcher subscription for cleanup
+  private parcelSubscription: { unsubscribe: () => Promise<void> } | null = null;
+  // Signal handlers for cleanup (to avoid accumulation)
+  private signalCleanupHandler: (() => void) | null = null;
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
@@ -131,6 +141,42 @@ export class Watcher {
   private async watchParcel() {
     this.msgs?.onStart(this.workspace);
 
+    // Use shared watcher daemon pattern to avoid FSEvents limit on macOS
+    // FSEvents has a system-wide limit on concurrent watchers, which causes
+    // "Error starting FSEvents stream" when multiple bit commands run watchers.
+    // This is only an issue on macOS - other platforms don't have this limitation.
+    const isMacOS = process.platform === 'darwin';
+    const isSharedDisabled = process.env.BIT_WATCHER_NO_SHARED === 'true' || process.env.BIT_WATCHER_NO_SHARED === '1';
+    const useSharedWatcher = isMacOS && !isSharedDisabled;
+
+    if (useSharedWatcher) {
+      try {
+        const connection = await getOrCreateWatcherConnection(this.workspace.scope.path, this.logger);
+
+        if (connection.isDaemon && connection.daemon) {
+          // We're the daemon - run the actual Parcel watcher
+          this.isDaemon = true;
+          this.watcherDaemon = connection.daemon;
+          this.logger.debug('Started as watcher daemon');
+          await this.startParcelWatcherAsDaemon();
+        } else if (connection.client) {
+          // We're a client - receive events from the daemon
+          this.isDaemon = false;
+          this.watcherClient = connection.client;
+          this.logger.debug('Connected to existing watcher daemon');
+          await this.startAsClient();
+        }
+
+        this.msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
+        this.logger.clearStatusLine();
+        return;
+      } catch (err: any) {
+        // If shared watcher setup fails, fall back to direct Parcel watcher
+        this.logger.debug(`Shared watcher setup failed, falling back to direct watcher: ${err.message}`);
+      }
+    }
+
+    // Original direct Parcel watcher logic (fallback)
     try {
       await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), {
         ignore: this.getParcelIgnorePatterns(),
@@ -141,19 +187,220 @@ export class Watcher {
       this.logger.debug('Initial watcher snapshot created');
     } catch (err: any) {
       if (err.message.includes('Error starting FSEvents stream')) {
-        throw new Error(`Failed to start the watcher: ${err.message}
-This is usually caused by too many watchers running in the same workspace (e.g., bit-watch, bit-start, bit-run, or VSCode with the Bit plugin).
-Try closing the other watchers and re-running the command.
-
-In general, if you're using "bit start" or "bit run", you don't need to run "bit watch" as well.
-Similarly, if you're using VSCode with the Bit extension, you can enable "Compile on Change" instead of running a watcher manually.
-
-If the issue persists, please refer to the Watchman troubleshooting guide:
-https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-register_with_server-error-f2d_register_rpc--null--21`);
+        const errorMessage = await formatFSEventsErrorMessage();
+        throw new Error(errorMessage);
       }
+      throw err;
     }
     this.msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
     this.logger.clearStatusLine();
+  }
+
+  /**
+   * Start Parcel watcher as the daemon - broadcast events to all clients
+   */
+  private async startParcelWatcherAsDaemon(): Promise<void> {
+    try {
+      // Clean up existing subscription if any (e.g., when transitioning from client to daemon)
+      if (this.parcelSubscription) {
+        await this.parcelSubscription.unsubscribe();
+        this.parcelSubscription = null;
+      }
+
+      this.parcelSubscription = await ParcelWatcher.subscribe(
+        this.workspace.path,
+        this.onParcelWatchAsDaemon.bind(this),
+        {
+          ignore: this.getParcelIgnorePatterns(),
+        }
+      );
+
+      // Write initial snapshot for FSEvents buffer overflow recovery
+      await this.writeSnapshotIfNeeded();
+      this.logger.debug('Initial watcher snapshot created (daemon mode)');
+
+      // Setup graceful shutdown
+      this.setupDaemonShutdown();
+    } catch (err: any) {
+      // Clean up daemon on failure
+      await this.watcherDaemon?.stop();
+      if (err.message.includes('Error starting FSEvents stream')) {
+        const errorMessage = await formatFSEventsErrorMessage();
+        throw new Error(errorMessage);
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Handle Parcel watcher events when running as daemon
+   */
+  private async onParcelWatchAsDaemon(err: Error | null, allEvents: Event[]) {
+    const events = allEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
+
+    // Broadcast events to all clients
+    if (events.length > 0) {
+      this.watcherDaemon?.broadcastEvents(events);
+    }
+
+    // Also broadcast errors
+    if (err) {
+      const isDropError = err.message.includes('Events were dropped');
+      this.watcherDaemon?.broadcastError(err.message, isDropError);
+    }
+
+    // Process events locally (the daemon is also a watcher)
+    await this.onParcelWatch(err, allEvents);
+  }
+
+  /**
+   * Start as a client receiving events from the daemon
+   */
+  private async startAsClient(): Promise<void> {
+    if (!this.watcherClient) {
+      throw new Error('Watcher client not initialized');
+    }
+
+    // Handle events from the daemon
+    this.watcherClient.onEvents(async (events) => {
+      const filteredEvents = events.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
+      if (filteredEvents.length > 0) {
+        const startTime = Date.now();
+        await this.processEvents(filteredEvents, startTime);
+      }
+    });
+
+    // Handle errors from the daemon
+    this.watcherClient.onError(async (error: WatcherError) => {
+      if (error.isDropError) {
+        // The daemon will handle recovery, but we should be aware
+        this.logger.debug('Daemon reported FSEvents buffer overflow');
+      } else {
+        this.msgs?.onError(new Error(error.message));
+      }
+    });
+
+    // Handle disconnection from the daemon
+    this.watcherClient.onDisconnect(async () => {
+      this.logger.debug('Disconnected from watcher daemon');
+
+      // Try to become the new daemon or reconnect
+      await this.handleDaemonDisconnection();
+    });
+
+    // Setup graceful shutdown
+    this.setupClientShutdown();
+  }
+
+  /**
+   * Handle disconnection from the daemon - try to become the new daemon or reconnect
+   */
+  private async handleDaemonDisconnection(): Promise<void> {
+    // Wait a bit for any other client to potentially become the daemon
+    await this.sleep(500);
+
+    try {
+      const connection = await getOrCreateWatcherConnection(this.workspace.scope.path, this.logger);
+
+      if (connection.isDaemon && connection.daemon) {
+        // We became the new daemon
+        this.isDaemon = true;
+        this.watcherDaemon = connection.daemon;
+        this.watcherClient = null;
+        this.logger.console(
+          chalk.yellow('Previous watcher daemon disconnected. This process is now the watcher daemon.')
+        );
+        await this.startParcelWatcherAsDaemon();
+      } else if (connection.client) {
+        // Another process became the daemon, connect to it
+        this.watcherClient = connection.client;
+        this.logger.debug('Reconnected to new watcher daemon');
+        await this.startAsClient();
+      }
+    } catch (err: any) {
+      this.logger.error(`Failed to reconnect after daemon disconnection: ${err.message}`);
+      this.msgs?.onError(err);
+    }
+  }
+
+  /**
+   * Remove any existing signal handlers to prevent accumulation.
+   * This is important when transitioning between client and daemon modes.
+   */
+  private removeSignalHandlers(): void {
+    if (this.signalCleanupHandler) {
+      process.off('SIGINT', this.signalCleanupHandler);
+      process.off('SIGTERM', this.signalCleanupHandler);
+      this.signalCleanupHandler = null;
+    }
+  }
+
+  /**
+   * Setup graceful shutdown handlers for daemon mode.
+   * When SIGINT/SIGTERM is received, we need to:
+   * 1. Stop the daemon (cleanup socket, notify clients)
+   * 2. Call process.exit() to actually terminate
+   *
+   * Important: Once you add a handler for SIGINT, Node.js no longer exits automatically.
+   * You must call process.exit() explicitly.
+   */
+  private setupDaemonShutdown(): void {
+    // Remove old handlers to prevent accumulation when transitioning modes
+    this.removeSignalHandlers();
+
+    let isShuttingDown = false;
+
+    const cleanup = () => {
+      if (isShuttingDown) return;
+      isShuttingDown = true;
+
+      this.logger.debug('Daemon shutting down...');
+      // Unsubscribe from Parcel watcher
+      this.parcelSubscription?.unsubscribe().catch((err) => {
+        this.logger.debug(`Error unsubscribing from Parcel watcher: ${err.message}`);
+      });
+      // Stop is async but we need to exit - start the cleanup and exit
+      // The socket will be cleaned up by the OS when the process exits
+      this.watcherDaemon
+        ?.stop()
+        .catch((err) => {
+          this.logger.error(`Error stopping daemon: ${err.message}`);
+        })
+        .finally(() => {
+          process.exit(0);
+        });
+
+      // Fallback: if stop() hangs, force exit after 1 second
+      setTimeout(() => {
+        process.exit(0);
+      }, 1000).unref();
+    };
+
+    this.signalCleanupHandler = cleanup;
+    process.on('SIGINT', cleanup);
+    process.on('SIGTERM', cleanup);
+  }
+
+  /**
+   * Setup graceful shutdown handlers for client mode.
+   */
+  private setupClientShutdown(): void {
+    // Remove old handlers to prevent accumulation when transitioning modes
+    this.removeSignalHandlers();
+
+    let isShuttingDown = false;
+
+    const cleanup = () => {
+      if (isShuttingDown) return;
+      isShuttingDown = true;
+
+      this.watcherClient?.disconnect();
+      process.exit(0);
+    };
+
+    this.signalCleanupHandler = cleanup;
+    process.on('SIGINT', cleanup);
+    process.on('SIGTERM', cleanup);
   }
 
   private async watchChokidar() {
