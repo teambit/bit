@@ -1,0 +1,52 @@
+.toolbar {
+  display: flex;
+  padding: 4px;
+}
+
+.left,
+.right {
+  display: flex;
+  flex: 1;
+  padding: 4px;
+  background-color: var(--background-color);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.right {
+  justify-content: flex-end;
+}
+
+.mainContainer {
+  display: flex;
+  height: 100%;
+  min-height: 80vh;
+}
+
+.subContainerLeft {
+  flex: 1;
+}
+
+.subContainerRight {
+  flex: 1;
+}
+
+.subView {
+  height: 100%;
+  background-color: var(--background-color);
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.widgets {
+  display: flex;
+  padding: 4px;
+}
+
+.dropdown {
+  display: flex;
+}

@@ -13,5 +13,5 @@ export { Composition } from './composition';
 export type { CompositionContentProps } from './compositions';
 export { CompositionContent } from './compositions';
 export type { CompositionsPreview } from './compositions.preview.runtime';
-export { ComponentComposition } from './ui';
+export { ComponentComposition, LiveControls, LiveControlsRenderer } from './ui';
 export default CompositionsAspect;

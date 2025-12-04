@@ -1787,6 +1787,27 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/ui/component-preview"
     },
+    "ui/composition-compare": {
+        "name": "ui/composition-compare",
+        "scope": "teambit.compositions",
+        "version": "0.0.258",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/composition-compare"
+    },
+    "ui/composition-compare-section": {
+        "name": "ui/composition-compare-section",
+        "scope": "teambit.compositions",
+        "version": "0.0.101",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/composition-compare-section"
+    },
+    "ui/composition-live-controls": {
+        "name": "ui/composition-live-controls",
+        "scope": "teambit.compositions",
+        "version": "0.0.3",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/composition-live-controls"
+    },
     "ui/compositions-app": {
         "name": "ui/compositions-app",
         "scope": "teambit.react",

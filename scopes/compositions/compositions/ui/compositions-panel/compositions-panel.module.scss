@@ -13,6 +13,7 @@
     border: none;
     border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   }
+
   > div:last-child {
     border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   }
@@ -178,4 +179,36 @@
       }
     }
   }
+}
+
+.liveControlsSkeleton {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 1;
+  transition:
+    opacity 160ms ease-out,
+    transform 160ms ease-out;
+}
+
+.liveControlsSkeleton--hidden {
+  opacity: 0;
+  transform: translateY(2px);
+}
+
+.liveControlsContent {
+  opacity: 1;
+  transition:
+    opacity 160ms ease-out,
+    transform 160ms ease-out;
+}
+
+.liveControlsContent--hidden {
+  opacity: 0;
+  transform: translateY(2px);
+}
+
+.loader {
+  color: var(--skeleton-color, #e0e0e0);
 }
