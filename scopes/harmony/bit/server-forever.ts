@@ -37,7 +37,13 @@ export function spawnPTY() {
 
   // @ts-ignore
   ptyProcess.on('data', (data) => {
-    if (!clients.length) outputNotForClients += data.toString();
+    if (!clients.length) {
+      outputNotForClients += data.toString();
+      if (outputNotForClients.includes('Bit Server is listening')) {
+        // important! if you change the message here, change it also in the vscode extension.
+        console.log('successfully started the bit server');
+      }
+    }
     // Forward data from the ptyProcess to connected clients
     // console.log('ptyProcess data:', data.toString());
     clients.forEach((socket) => {
@@ -114,15 +120,22 @@ This means another instance may already be running in this workspace.
 
   // @ts-ignore
   ptyProcess.on('exit', (code, signal) => {
-    server.close();
     if (didGetClient) {
+      server.close();
       console.log(`PTY exited with code ${code} and signal ${signal}`);
       setTimeout(() => {
         console.log('Restarting the PTY process...');
         spawnPTY(); // Restart the PTY process
       }, 100);
     } else {
-      console.error(`Failed to start the PTY Process. Error: ${outputNotForClients}`);
+      // Can't use `throw` here because this callback is from a native N-API module (node-pty),
+      // and exceptions thrown in native callbacks are not properly propagated to Node.js.
+      // Use process.stderr.write (sync) and wait for it to drain before exiting,
+      // so the parent process (VS Code extension) can capture the error message.
+      const errorMsg = `Failed to start the bit server. Error:\n${outputNotForClients}\n`;
+      process.stderr.write(errorMsg, () => {
+        process.exit(1);
+      });
     }
   });
 }
