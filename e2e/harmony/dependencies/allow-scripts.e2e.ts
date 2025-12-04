@@ -77,7 +77,7 @@ chai.use(chaiFs);
       ).to.be.a.path();
     });
   });
-  describe.only('setting allow scripts via flags', () => {
+  describe('setting allow scripts via flags', () => {
     let npmCiRegistry: NpmCiRegistry;
     let workspaceJsonc;
     before(async () => {
