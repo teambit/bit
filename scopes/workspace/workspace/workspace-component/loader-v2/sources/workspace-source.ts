@@ -1,42 +1,154 @@
+import { ComponentIdList } from '@teambit/component-id';
 import type { ComponentID } from '@teambit/component-id';
-import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { ComponentSource, RawComponentData } from '../component-source';
 import type { Workspace } from '../../../workspace';
 
 /**
  * WorkspaceSource loads components from the workspace filesystem.
  *
- * NOTE: This is a stub implementation.  V2 loader currently delegates to V1 in workspace-component-loader-v2.ts.
- * This file exists to satisfy the type system but methods are not currently used.
+ * Uses workspace.consumer.loadComponents() to load from the filesystem.
  */
 export class WorkspaceSource implements ComponentSource {
   readonly name = 'workspace';
-  readonly priority = 1;
+  readonly priority = 1; // Workspace has higher priority than scope
 
   constructor(private workspace: Workspace) {}
 
-  async has(_id: ComponentID): Promise<boolean> {
-    throw new Error('WorkspaceSource.has not implemented - V2 loader delegates to V1');
+  /**
+   * Check if a component exists in the workspace (.bitmap)
+   */
+  async has(id: ComponentID): Promise<boolean> {
+    try {
+      const allIdsStr = this.workspace.consumer.bitMap.getAllIdsStr();
+      const idStr = id.toString();
+      const idWithoutVersion = id.toStringWithoutVersion();
+      return idStr in allIdsStr || idWithoutVersion in allIdsStr;
+    } catch {
+      return false;
+    }
   }
 
-  async hasMany(_ids: ComponentID[]): Promise<Map<string, boolean>> {
-    throw new Error('WorkspaceSource.hasMany not implemented - V2 loader delegates to V1');
+  /**
+   * Check multiple components at once
+   */
+  async hasMany(ids: ComponentID[]): Promise<Map<string, boolean>> {
+    const result = new Map<string, boolean>();
+    const allIdsStr = this.workspace.consumer.bitMap.getAllIdsStr();
+
+    for (const id of ids) {
+      const idStr = id.toString();
+      const idWithoutVersion = id.toStringWithoutVersion();
+      const has = idStr in allIdsStr || idWithoutVersion in allIdsStr;
+      result.set(idStr, has);
+    }
+
+    return result;
   }
 
-  async loadRaw(_id: ComponentID): Promise<RawComponentData> {
-    throw new Error('WorkspaceSource.loadRaw not implemented - V2 loader delegates to V1');
+  /**
+   * Load a single component from workspace
+   */
+  async loadRaw(id: ComponentID): Promise<RawComponentData> {
+    const result = await this.loadRawMany([id]);
+    const data = result.get(id.toString());
+    if (!data) {
+      throw new Error(`Component ${id.toString()} not found in workspace`);
+    }
+    return data;
   }
 
-  async loadRawMany(_ids: ComponentID[]): Promise<Map<string, RawComponentData>> {
-    throw new Error('WorkspaceSource.loadRawMany not implemented - V2 loader delegates to V1');
+  /**
+   * Load multiple components from workspace
+   */
+  async loadRawMany(ids: ComponentID[]): Promise<Map<string, RawComponentData>> {
+    const result = new Map<string, RawComponentData>();
+
+    if (ids.length === 0) {
+      return result;
+    }
+
+    // Load components using consumer.loadComponents
+    const loadOpts = {
+      originatedFromHarmony: true,
+      loadExtensions: false,
+      loadDocs: false,
+      loadCompositions: false,
+    };
+
+    const { components, invalidComponents, removedComponents } = await this.workspace.consumer.loadComponents(
+      ComponentIdList.fromArray(ids),
+      false, // throwOnFailure
+      loadOpts
+    );
+
+    // Process successfully loaded components
+    const allComponents = components.concat(removedComponents || []);
+    for (const consumerComponent of allComponents) {
+      const componentId = ids.find((id) => id.isEqual(consumerComponent.id));
+      if (!componentId) continue;
+
+      const extensions = consumerComponent.extensions || (consumerComponent as any).config?.extensions || [];
+
+      result.set(componentId.toString(), {
+        id: componentId,
+        consumerComponent,
+        extensions,
+        isNew: !consumerComponent.version || consumerComponent.version === 'latest',
+        source: 'workspace',
+      });
+    }
+
+    // Process invalid components (still create entries for error tracking)
+    for (const invalid of invalidComponents || []) {
+      const componentId = ids.find((id) => id.toString() === invalid.id.toString());
+      if (!componentId) continue;
+
+      // For invalid components, create a minimal RawComponentData with errors
+      result.set(componentId.toString(), {
+        id: componentId,
+        consumerComponent: invalid.component as any,
+        extensions: new ExtensionDataList(),
+        errors: [invalid.error],
+        isNew: true,
+        source: 'workspace',
+      });
+    }
+
+    return result;
   }
 
-  async getExtensions(_id: ComponentID): Promise<ExtensionDataList | null> {
-    throw new Error('WorkspaceSource.getExtensions not implemented - V2 loader delegates to V1');
+  /**
+   * Get extensions for a component without fully loading it
+   */
+  async getExtensions(id: ComponentID): Promise<ExtensionDataList | null> {
+    try {
+      // Load the component just to get extensions
+      const data = await this.loadRaw(id);
+      return data.extensions;
+    } catch {
+      return null;
+    }
   }
 
-  async getExtensionsMany(_ids: ComponentID[]): Promise<Map<string, ExtensionDataList>> {
-    throw new Error('WorkspaceSource.getExtensionsMany not implemented - V2 loader delegates to V1');
+  /**
+   * Get extensions for multiple components
+   */
+  async getExtensionsMany(ids: ComponentID[]): Promise<Map<string, ExtensionDataList>> {
+    const result = new Map<string, ExtensionDataList>();
+
+    try {
+      const loaded = await this.loadRawMany(ids);
+      for (const [idStr, data] of loaded) {
+        if (data.extensions) {
+          result.set(idStr, data.extensions);
+        }
+      }
+    } catch {
+      // Return empty map on error
+    }
+
+    return result;
   }
 }
 

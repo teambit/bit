@@ -60,6 +60,14 @@ export class EnrichmentPhase {
         const enriched = await this.enrichComponent(rawData);
         result.enriched.set(idStr, enriched);
       } catch (err: any) {
+        // For components that fail enrichment (e.g., scope components with incomplete metadata),
+        // create a minimal enriched version with empty env/deps data
+        // This allows the pipeline to continue and create the component
+        result.enriched.set(idStr, {
+          raw: rawData,
+          envsData: {},
+          depResolverData: {},
+        });
         result.failed.set(idStr, err);
       }
     }
@@ -71,12 +79,24 @@ export class EnrichmentPhase {
    * Enrich a single component.
    */
   private async enrichComponent(raw: RawComponentData): Promise<EnrichedComponentData> {
-    // For now, create a minimal Component-like object to pass to envs/deps resolver
-    // In a real implementation, this would need to be a proper Component instance
+    // Create a minimal Component-like object to pass to envs/deps resolver
+    // The envs aspect expects component.state.aspects to have a .get() method (AspectList)
+    // For now, create a simple mock that delegates to raw.extensions
+    const aspectsMock = {
+      get: (id: string) => {
+        if (!raw.extensions || !raw.extensions.findExtension) {
+          return undefined;
+        }
+        const ext = raw.extensions.findExtension(id);
+        return ext ? { config: ext.data } : undefined;
+      },
+    };
+
     const componentLike: any = {
       id: raw.id,
       state: {
         _consumer: raw.consumerComponent,
+        aspects: aspectsMock,
         config: {
           extensions: raw.extensions,
         },
@@ -92,10 +112,19 @@ export class EnrichmentPhase {
     });
 
     // Merge dependencies from workspace and model
-    const wsDeps = raw.consumerComponent.dependencies?.dependencies || [];
-    const modelDeps = raw.consumerComponent.componentFromModel?.dependencies?.dependencies || [];
-    const merged = Dependencies.merge([wsDeps, modelDeps]);
-    const envExtendsDeps = merged.get();
+    // For scope components, dependencies might not be fully initialized
+    let envExtendsDeps = [];
+    try {
+      const wsDeps = raw.consumerComponent.dependencies?.dependencies || [];
+      const modelDeps = raw.consumerComponent.componentFromModel?.dependencies?.dependencies || [];
+      if (wsDeps.length > 0 || modelDeps.length > 0) {
+        const merged = Dependencies.merge([wsDeps, modelDeps]);
+        envExtendsDeps = merged?.get() || [];
+      }
+    } catch {
+      // If dependency merging fails, continue with empty deps
+      envExtendsDeps = [];
+    }
 
     // Merge variant policies
     const policy = await this.dependencyResolver.mergeVariantPolicies(

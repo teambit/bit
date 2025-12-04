@@ -95,7 +95,14 @@ export class ScopeSource implements ComponentSource {
       const component = await this.scope.get(id, undefined, false);
       if (!component) return null;
 
-      return component.state._consumer.extensions;
+      // For scope components, extensions are in the Version object accessed via component.head
+      // The Version object is the actual model that stores extensions
+      if (component.head && (component.head as any).extensions) {
+        return (component.head as any).extensions;
+      }
+
+      // Fallback to consumer component extensions if available
+      return component.state._consumer?.extensions || null;
     } catch {
       return null;
     }
@@ -123,10 +130,23 @@ export class ScopeSource implements ComponentSource {
    * Convert a Component to RawComponentData
    */
   private componentToRawData(component: Component): RawComponentData {
+    // For scope components, extensions are in the Version object (component.head)
+    // The Version object is the source of truth for scope-stored components
+    let extensions = component.state._consumer?.extensions;
+
+    if (component.head && (component.head as any).extensions) {
+      extensions = (component.head as any).extensions;
+    }
+
+    // Ensure extensions is always an ExtensionDataList, never a plain array
+    const { ExtensionDataList } = require('@teambit/legacy.extension-data');
+    const finalExtensions =
+      extensions instanceof ExtensionDataList ? extensions : ExtensionDataList.fromArray(extensions || []);
+
     return {
       id: component.id,
       consumerComponent: component.state._consumer,
-      extensions: component.state._consumer.extensions,
+      extensions: finalExtensions,
       isNew: false, // Scope components are never "new"
       source: 'scope',
     };
