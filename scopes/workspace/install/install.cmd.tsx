@@ -69,8 +69,8 @@ automatically imports components, compiles components, links to node_modules, an
     ],
     ['', 'no-optional [noOptional]', 'do not install optional dependencies (works with pnpm only)'],
     ['', 'lockfile-only', 'dependencies are not written to node_modules. Only the lockfile is updated'],
-    ['', 'allow-scripts [pkgNames]', 'a list of package names that are allowed to run installation scripts'],
-    ['', 'disallow-scripts [pkgNames]', 'a list of package names that are NOT allowed to run installation scripts'],
+    ['', 'allow-scripts [pkgNames]', 'a comma separated list of package names that are allowed to run installation scripts'],
+    ['', 'disallow-scripts [pkgNames]', 'a comma separated list of package names that are NOT allowed to run installation scripts'],
   ] as CommandOptions;
 
   constructor(
