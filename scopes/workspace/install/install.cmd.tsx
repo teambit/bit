@@ -22,6 +22,8 @@ type InstallCmdOptions = {
   noOptional: boolean;
   recurringInstall: boolean;
   lockfileOnly: boolean;
+  allowScripts?: string;
+  disallowScripts?: string;
 };
 
 type FormatOutputArgs = {
@@ -67,6 +69,8 @@ automatically imports components, compiles components, links to node_modules, an
     ],
     ['', 'no-optional [noOptional]', 'do not install optional dependencies (works with pnpm only)'],
     ['', 'lockfile-only', 'dependencies are not written to node_modules. Only the lockfile is updated'],
+    ['', 'allow-scripts [pkgNames]', 'a list of package names that are allowed to run installation scripts'],
+    ['', 'disallow-scripts [pkgNames]', 'a list of package names that are NOT allowed to run installation scripts'],
   ] as CommandOptions;
 
   constructor(
@@ -131,6 +135,7 @@ automatically imports components, compiles components, links to node_modules, an
       recurringInstall: options.recurringInstall,
       lockfileOnly: options.lockfileOnly,
       showExternalPackageManagerPrompt: true,
+      allowScripts: this._parseAllowScriptsFlags(options.allowScripts, options.disallowScripts),
     };
     const components = await this.install.install(validPackages, installOpts);
     const endTime = Date.now();
@@ -142,6 +147,25 @@ automatically imports components, compiles components, links to node_modules, an
       recurringInstall: options[recurringInstallFlagName],
       oldNonLoadedEnvs,
     });
+  }
+
+  private _parseAllowScriptsFlags(
+    allowScriptsFlag?: string,
+    disallowScriptsFlag?: string
+  ): Record<string, boolean> | undefined {
+    if (!allowScriptsFlag && !disallowScriptsFlag) return undefined;
+    const allowScripts: Record<string, boolean> = {};
+    if (allowScriptsFlag) {
+      for (const pkgName of allowScriptsFlag.split(',')) {
+        allowScripts[pkgName] = true;
+      }
+    }
+    if (disallowScriptsFlag) {
+      for (const pkgName of disallowScriptsFlag.split(',')) {
+        allowScripts[pkgName] = false;
+      }
+    }
+    return allowScripts;
   }
 }
 

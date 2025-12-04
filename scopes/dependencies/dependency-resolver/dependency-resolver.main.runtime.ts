@@ -1008,6 +1008,17 @@ export class DependencyResolverMain {
     return this.config.packageManager ?? DEFAULT_HARMONY_PACKAGE_MANAGER;
   }
 
+  updateAllowedScripts(newAllowedScripts: Record<string, boolean>): void {
+    this.config.allowScripts = {
+      ...this.config.allowScripts,
+      ...newAllowedScripts,
+    };
+    this.configAspect.setExtension(DependencyResolverAspect.id, this.config, {
+      mergeIntoExisting: true,
+      ignoreVersion: true,
+    });
+  }
+
   addToRootPolicy(entries: WorkspacePolicyEntry[], options?: WorkspacePolicyAddEntryOptions): WorkspacePolicy {
     const workspacePolicy = this.getWorkspacePolicyFromConfig();
     entries.forEach((entry) => workspacePolicy.add(entry, options));
