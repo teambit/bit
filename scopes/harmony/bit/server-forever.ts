@@ -128,9 +128,10 @@ This means another instance may already be running in this workspace.
         spawnPTY(); // Restart the PTY process
       }, 100);
     } else {
+      server.close();
       // Can't use `throw` here because this callback is from a native N-API module (node-pty),
       // and exceptions thrown in native callbacks are not properly propagated to Node.js.
-      // Use process.stderr.write (sync) and wait for it to drain before exiting,
+      // Use process.stderr.write and wait for it to drain before exiting,
       // so the parent process (VS Code extension) can capture the error message.
       const errorMsg = `Failed to start the bit server. Error:\n${outputNotForClients}\n`;
       process.stderr.write(errorMsg, () => {
