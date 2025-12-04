@@ -12,7 +12,7 @@
   "teambit.dependencies/dependency-resolver": {
     "policy": {
       "dependencies": {
-        "@apollo/client": "^4.0.9",
+        "@apollo/client": "^3.6.0",
         "@babel/core": "7.28.3",
         "@babel/plugin-proposal-decorators": "7.28.0",
         "@babel/plugin-transform-class-properties": "7.27.1",
@@ -494,6 +494,7 @@
         "globby": "11.0.1",
         "graceful-fs": "4.2.10",
         "graphlib": "2.1.8",
+        "graphql": "15.8.0",
         "graphql-disable-introspection": "^1.2.0",
         "graphql-request": "6.1.0",
         "graphql-subscriptions": "1.2.0",
