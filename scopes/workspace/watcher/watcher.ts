@@ -26,7 +26,7 @@ import type { CheckTypes } from './check-types';
 import type { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';
 import type { Logger } from '@teambit/logger';
-import type { Event, SubscribeOptions } from '@parcel/watcher';
+import type { Event, Options as ParcelWatcherOptions } from '@parcel/watcher';
 import ParcelWatcher from '@parcel/watcher';
 import { execSync } from 'child_process';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
@@ -138,8 +138,8 @@ export class Watcher {
    * On macOS, FSEvents is the default but has a system-wide limit of ~500 streams.
    * Watchman is a single-daemon solution that avoids this limit.
    */
-  private getParcelWatcherOptions(): SubscribeOptions {
-    const options: SubscribeOptions = {
+  private getParcelWatcherOptions(): ParcelWatcherOptions {
+    const options: ParcelWatcherOptions = {
       ignore: this.getParcelIgnorePatterns(),
     };
 
