@@ -205,8 +205,8 @@ export class ReactEnv
         jest: jestModulePath || require.resolve('jest'),
         config,
       },
-      { logger: this.logger, worker } as any
-      // { logger: this.logger, worker, devFiles: this.devFiles },
+      // { logger: this.logger, worker } as any,
+      { logger: this.logger, worker, devFiles: this.devFiles }
     );
   }
 
@@ -541,8 +541,8 @@ export class ReactEnv
     const worker = this.getJestWorker();
     const testerTask = JestTask.create(
       { config: jestConfigPath, jest: jestPath },
-      { logger: this.logger, worker } as any
-      // { logger: this.logger, worker, devFiles: this.devFiles },
+      // { logger: this.logger, worker } as any,
+      { logger: this.logger, worker, devFiles: this.devFiles }
     );
     return [this.createCjsCompilerTask(transformers, modifiers?.tsModifier?.module || ts), testerTask];
   }
