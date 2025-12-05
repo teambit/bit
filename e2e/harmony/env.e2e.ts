@@ -84,6 +84,24 @@ describe('env command', function () {
         });
       });
     });
+    describe('run bit env unset on component without env config in .bitmap', () => {
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.setEnv('comp1', 'teambit.harmony/aspect');
+        helper.command.tagAllWithoutBuild();
+      });
+      it('should indicate that there was no env config in .bitmap to remove', () => {
+        const output = helper.command.unsetEnv('comp1');
+        expect(output).to.have.string(
+          'unable to find components matching the pattern with env configured in the .bitmap file'
+        );
+      });
+      it('should not change the bitmap file', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1).to.not.have.property('config');
+      });
+    });
   });
   describe('bit env replace', () => {
     describe('replacing a failed-loaded env', () => {
