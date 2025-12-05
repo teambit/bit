@@ -5,7 +5,7 @@ labels: ['string', 'utility']
 
 import { humanizeCompositionId } from './humanize'
 
-```jsx
+```jsx live="true"
 () => {
   return (
     <>
