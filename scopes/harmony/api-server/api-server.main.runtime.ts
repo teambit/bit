@@ -115,15 +115,10 @@ export class ApiServerMain {
       sendEventsToClients('onPostInstall', {});
     });
 
-    this.watcher
-      .watch({
-        preCompile: false,
-        compile: options.compile,
-      })
-      .catch((err) => {
-        // don't throw an error, we don't want to break the "run" process
-        this.logger.error('watcher found an error', err);
-      });
+    await this.watcher.watch({
+      preCompile: false,
+      compile: options.compile,
+    });
 
     const port = options.port || (await this.getRandomPort());
 
@@ -228,6 +223,7 @@ export class ApiServerMain {
         reject(err);
       });
       server.on('listening', () => {
+        // important! if you change the message here, change it also in server-forever.ts and also in the vscode extension.
         this.logger.consoleSuccess(`Bit Server is listening on port ${port}`);
         this.writeUsedPort(port);
         resolve(port);
