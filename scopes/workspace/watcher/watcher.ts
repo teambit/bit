@@ -157,7 +157,7 @@ export class Watcher {
   }
 
   /**
-   * Check if Watchman is installed and running.
+   * Check if Watchman is installed.
    * Result is cached to avoid repeated shell executions.
    */
   private isWatchmanAvailable(): boolean {
@@ -165,7 +165,7 @@ export class Watcher {
       return this.watchmanAvailable;
     }
     try {
-      execSync('watchman version', { stdio: 'ignore', timeout: 5000 });
+      execSync('watchman version', { stdio: 'ignore', timeout: 5000, shell: false });
       this.watchmanAvailable = true;
     } catch {
       this.watchmanAvailable = false;
