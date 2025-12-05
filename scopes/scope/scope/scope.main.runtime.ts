@@ -566,7 +566,10 @@ export class ScopeMain implements ComponentFactory {
     const globalConfigFile = globalStore.getPath();
     const scopeJsonPath = scopeStore.getPath();
     const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile, scopeJsonPath];
-    const watcher = chokidar.watch(pathsToWatch, watchOptions);
+    // Use polling to reduce FSEvents stream consumption on macOS.
+    // These files change infrequently (mainly during import/export operations),
+    // so the small CPU overhead of polling is acceptable.
+    const watcher = chokidar.watch(pathsToWatch, { ...watchOptions, usePolling: true, interval: 300 });
     watcher.on('ready', () => {
       this.logger.debug(`watchSystemFiles has started, watching ${pathsToWatch.join(', ')}`);
     });
