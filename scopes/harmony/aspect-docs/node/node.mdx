@@ -6,7 +6,7 @@ Node environment is composed out of the base [React Environment](https://bit.clo
 
 To use this environment for your components, add it to any of the `variants` in your `workspace.jsonc` file as follows:
 
-```json title="workspace.jsonc"
+```json
 {
   "teambit.workspace/variants": {
     "some/path": {
@@ -66,7 +66,7 @@ bit create node-env extensions/custom-node
 
 As with any component, environments must themselves have an environment which compiles, builds, transpiles, etc, them. Bit has a special environment that knows how to create other environments - `teambit.harmony/aspect`. So for any component that is meant to be a Bit environment, you must set `teambit.harmony/aspect` as the environment for that component.
 
-```json title="add variant for the extension and set the aspect env"
+```json
 {
   //...
   "teambit.workspace/variants": {
@@ -83,7 +83,7 @@ Validate the above by running `bit env` and see that the extension-component has
 
 Now that you have a basic customized extension to start from, you can go ahead and configure it for your components in `workspace.json`:
 
-```json title="edit variants and set the new env"
+```json
 {
   //...
   "teambit.workspace/variants": {
