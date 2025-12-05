@@ -1,17 +1,12 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import classNames from 'classnames';
 import { useSearchParams } from 'react-router-dom';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { useNavigate, useLocation } from '@teambit/base-react.navigation.link';
-import {
-  type LiveControlReadyEventData,
-  getReadyListener,
-  broadcastUpdate,
-} from '@teambit/compositions.ui.composition-live-controls';
-
+import { useLiveControls } from '@teambit/compositions.ui.composition-live-controls';
 import styles from './compositions-panel.module.scss';
 import type { Composition } from '../../composition';
 import { LiveControls } from './live-control-panel';
@@ -54,10 +49,8 @@ export function CompositionsPanel({
   className,
   ...rest
 }: CompositionsPanelProps) {
-  // setup drawer state
-  // TODO: only for alpha versions of live controls. remove when stable.
-  const [hasLiveControls, setHasLiveControls] = useState(false);
   const [openDrawerList, onToggleDrawer] = useState(['COMPOSITIONS', 'LIVE_CONTROLS']);
+  const { hasLiveControls, ready, defs, values, onChange, setTimestamp } = useLiveControls();
   const handleDrawerToggle = (id: string) => {
     const isDrawerOpen = openDrawerList.includes(id);
     if (isDrawerOpen) {
@@ -76,25 +69,19 @@ export function CompositionsPanel({
   const versionFromQueryParams = searchParams.get('version');
   const navigate = useNavigate();
 
-  // live control state
-  const [controlsTimestamp, setControlsTimestamp] = useState(0);
-  const [controlsDefs, setControlsDefs] = useState<any>(null);
-  const [controlsValues, setControlsValues] = useState<any>({});
-  const [mounter, setMounter] = useState<Window>();
-
   // composition navigation action
   const handleSelect = useCallback(
     (selected: Composition) => {
       onSelect && onSelect(selected);
       if (selected === active) return;
-      setControlsTimestamp(0);
+      setTimestamp(0);
     },
     [onSelect]
   );
   const onCompositionCodeClicked = useCallback(
     (composition: Composition) => (e: React.MouseEvent<HTMLDivElement>) => {
       e.preventDefault();
-      setControlsTimestamp(0);
+      setTimestamp(0);
       const queryParams = new URLSearchParams();
       if (versionFromQueryParams) {
         queryParams.set('version', versionFromQueryParams);
@@ -103,44 +90,6 @@ export function CompositionsPanel({
       navigate(`${basePath}/~code/${composition.filepath}?${queryParams.toString()}#search=${composition.identifier}`);
     },
     [location?.pathname, versionFromQueryParams]
-  );
-
-  // listen to the mounter for live control updates
-  useEffect(() => {
-    // TODO: remove when stable.
-    window.addEventListener('message', (e: MessageEvent) => {
-      if (e.data.type === 'composition-live-controls:activate') {
-        setHasLiveControls(true);
-      }
-    });
-
-    function onLiveControlsSetup(e: MessageEvent<LiveControlReadyEventData>) {
-      getReadyListener(e, ({ controls, values, timestamp }) => {
-        const iframeWindow = e.source;
-        setMounter(iframeWindow as Window);
-        setControlsDefs(controls);
-        setControlsValues(values);
-        setControlsTimestamp(timestamp);
-      });
-    }
-    window.addEventListener('message', onLiveControlsSetup);
-    return () => {
-      window.removeEventListener('message', onLiveControlsSetup);
-    };
-  }, []);
-
-  // sync live control updates back to the mounter
-  const onLiveControlsUpdate = useCallback(
-    (key: string, value: any) => {
-      if (mounter) {
-        broadcastUpdate(mounter, controlsTimestamp, {
-          key,
-          value,
-        });
-      }
-      setControlsValues((prev: any) => ({ ...prev, [key]: value }));
-    },
-    [mounter, controlsValues, controlsTimestamp]
   );
 
   return (
@@ -182,22 +131,20 @@ export function CompositionsPanel({
           })}
         </ul>
       </DrawerUI>
-      {
-        /* TODO: remove when stable */ hasLiveControls ? (
-          <DrawerUI
-            isOpen={openDrawerList.includes('LIVE_CONTROLS')}
-            onToggle={() => handleDrawerToggle('LIVE_CONTROLS')}
-            className={classNames(styles.tab)}
-            name="LIVE CONTROLS"
-          >
-            {controlsTimestamp ? (
-              <LiveControls defs={controlsDefs} values={controlsValues} onChange={onLiveControlsUpdate} />
-            ) : (
-              <div className={styles.noLiveControls}>No live controls available for this composition</div>
-            )}
-          </DrawerUI>
-        ) : null
-      }
+      {hasLiveControls ? (
+        <DrawerUI
+          name="LIVE CONTROLS"
+          className={classNames(styles.tab, className)}
+          isOpen={openDrawerList.includes('LIVE_CONTROLS')}
+          onToggle={() => handleDrawerToggle('LIVE_CONTROLS')}
+        >
+          {ready ? (
+            <LiveControls defs={defs} values={values} onChange={onChange} />
+          ) : (
+            <div className={styles.noLiveControls}>No live controls available for this composition</div>
+          )}
+        </DrawerUI>
+      ) : null}
     </div>
   );
 }
