@@ -99,6 +99,8 @@ export class Watcher {
   private parcelSubscription: { unsubscribe: () => Promise<void> } | null = null;
   // Signal handlers for cleanup (to avoid accumulation)
   private signalCleanupHandler: (() => void) | null = null;
+  // Cached Watchman availability (checked once per process lifetime)
+  private watchmanAvailable: boolean | null = null;
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
@@ -155,15 +157,20 @@ export class Watcher {
   }
 
   /**
-   * Check if Watchman is installed and running
+   * Check if Watchman is installed and running.
+   * Result is cached to avoid repeated shell executions.
    */
   private isWatchmanAvailable(): boolean {
-    try {
-      execSync('watchman version', { stdio: 'ignore' });
-      return true;
-    } catch {
-      return false;
+    if (this.watchmanAvailable !== null) {
+      return this.watchmanAvailable;
     }
+    try {
+      execSync('watchman version', { stdio: 'ignore', timeout: 5000 });
+      this.watchmanAvailable = true;
+    } catch {
+      this.watchmanAvailable = false;
+    }
+    return this.watchmanAvailable;
   }
 
   async watch() {
