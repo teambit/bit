@@ -45,7 +45,7 @@ describe('Jest Tester', function () {
       const output = helper.command.test('', true);
       expect(output).to.have.string('✓ should pass');
     });
-    it('bit build should show the passing component via Jest output', () => {
+    it.only('bit build should show the passing component via Jest output', () => {
       const output = helper.command.build('', undefined, true);
       expect(output).to.have.string('✓ should pass');
     });

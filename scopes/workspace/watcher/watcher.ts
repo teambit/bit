@@ -164,9 +164,14 @@ export class Watcher {
     if (this.watchmanAvailable !== null) {
       return this.watchmanAvailable;
     }
-    // Use spawnSync with shell: false (default) for security - prevents command injection
-    const result = spawnSync('watchman', ['version'], { stdio: 'ignore', timeout: 5000 });
-    this.watchmanAvailable = result.status === 0;
+    try {
+      // Use spawnSync with shell: false (default) for security - prevents command injection
+      const result = spawnSync('watchman', ['version'], { stdio: 'ignore', timeout: 5000 });
+      // Check for spawn errors (e.g., command not found) or non-zero exit status
+      this.watchmanAvailable = !result.error && result.status === 0;
+    } catch {
+      this.watchmanAvailable = false;
+    }
     return this.watchmanAvailable;
   }
 
