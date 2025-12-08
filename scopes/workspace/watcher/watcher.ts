@@ -165,7 +165,7 @@ export class Watcher {
       return this.watchmanAvailable;
     }
     try {
-      execSync('watchman version', { stdio: 'ignore', timeout: 5000, shell: false });
+      execSync('watchman version', { stdio: 'ignore', timeout: 5000 });
       this.watchmanAvailable = true;
     } catch {
       this.watchmanAvailable = false;
