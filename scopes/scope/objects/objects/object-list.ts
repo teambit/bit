@@ -134,7 +134,10 @@ export class ObjectList {
     const extract = tarStream.extract();
     let startData: StartFile | undefined;
     let endData: EndFile | undefined;
+    let entriesReceived = 0;
+
     extract.on('entry', (header, stream, next) => {
+      entriesReceived += 1;
       const data: Buffer[] = [];
       stream.on('data', (chunk) => {
         data.push(chunk);
@@ -168,24 +171,40 @@ export class ObjectList {
     });
 
     // not sure if needed
-    extract.on('error', (err) => {
-      passThrough.emit('error', err);
+    extract.on('error', (err: any) => {
+      logger.error(`fromTarToObjectStream tar extraction error after receiving ${entriesReceived} entries`, err);
+
+      // Enhanced error message for tar corruption with entry count
+      if (err.message?.includes('invalid tar header') || err.message?.includes('Invalid tar header')) {
+        const enhancedError = new Error(
+          `Invalid tar header after receiving ${entriesReceived} entries. Possible causes: 1) Server aborted request mid-stream, 2) Network corruption during transfer. Original error: ${err.message}`
+        );
+        enhancedError.stack = err.stack;
+        passThrough.emit('error', enhancedError);
+      } else {
+        passThrough.emit('error', err);
+      }
     });
 
     extract.on('finish', () => {
       if (startData?.schema === OBJECT_LIST_CURRENT_SCHEMA && !endData) {
         // wasn't able to find a better way to indicate whether the server aborted the request
         // see https://github.com/node-fetch/node-fetch/issues/1117
+        logger.error(
+          `fromTarToObjectStream, server terminated the stream unexpectedly. Start: ${JSON.stringify(startData)}, entries received: ${entriesReceived}`
+        );
         passThrough.emit(
           'error',
-          new Error(`server terminated the stream unexpectedly (metadata: ${JSON.stringify(startData)})`)
+          new Error(
+            `server terminated the stream unexpectedly (metadata: ${JSON.stringify(startData)}, entries received: ${entriesReceived})`
+          )
         );
       }
       passThrough.end();
     });
     pipeline(packStream, extract, (err) => {
       if (err) {
-        logger.error('fromTarToObjectStream, pipeline', err);
+        logger.error(`fromTarToObjectStream, pipeline error after ${entriesReceived} entries`, err);
         passThrough.emit('error', err);
       } else {
         logger.debug('fromTarToObjectStream, pipeline is completed');
@@ -201,21 +220,36 @@ export class ObjectList {
     logger.debug('fromObjectStreamToTar, start sending data', startFile);
     pack.entry({ name: TAR_STREAM_START_FILENAME }, JSON.stringify(startFile));
     let numOfFiles = 0;
+    let isFinalized = false;
+
     readable.on('data', (obj: ObjectItem) => {
       numOfFiles += 1;
       pack.entry({ name: ObjectList.combineScopeAndHash(obj) }, obj.buffer);
     });
     readable.on('end', () => {
+      if (isFinalized) {
+        logger.warn(`fromObjectStreamToTar (${scopeName}), received 'end' event but pack already finalized`);
+        return;
+      }
       const endFile: EndFile = { numOfFiles, scopeName };
       logger.debug('fromObjectStreamToTar, finished sending data', endFile);
       pack.entry({ name: TAR_STREAM_END_FILENAME }, JSON.stringify(endFile));
       pack.finalize();
+      isFinalized = true;
     });
     readable.on('error', (err) => {
+      if (isFinalized) {
+        logger.error(
+          `ObjectList.fromObjectStreamToTar, received error but pack already finalized. Files sent: ${numOfFiles}`,
+          err
+        );
+        return;
+      }
       const errorMessage = err.message || `unexpected error (${err.name})`;
-      logger.error(`ObjectList.fromObjectStreamToTar, streaming an error as a file`, err);
+      logger.error(`ObjectList.fromObjectStreamToTar, streaming an error as a file after ${numOfFiles} files`, err);
       pack.entry({ name: TAR_STREAM_ERROR_FILENAME }, errorMessage);
       pack.finalize();
+      isFinalized = true;
     });
     return pack;
   }
