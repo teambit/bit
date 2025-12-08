@@ -28,7 +28,7 @@ import { WatchQueue } from './watch-queue';
 import type { Logger } from '@teambit/logger';
 import type { Event, Options as ParcelWatcherOptions } from '@parcel/watcher';
 import ParcelWatcher from '@parcel/watcher';
-import { execSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 import { WatcherDaemon, WatcherClient, getOrCreateWatcherConnection, type WatcherError } from './watcher-daemon';
 import { formatFSEventsErrorMessage } from './fsevents-error';
@@ -158,18 +158,15 @@ export class Watcher {
 
   /**
    * Check if Watchman is installed.
-   * Result is cached to avoid repeated shell executions.
+   * Result is cached to avoid repeated executions.
    */
   private isWatchmanAvailable(): boolean {
     if (this.watchmanAvailable !== null) {
       return this.watchmanAvailable;
     }
-    try {
-      execSync('watchman version', { stdio: 'ignore', timeout: 5000 });
-      this.watchmanAvailable = true;
-    } catch {
-      this.watchmanAvailable = false;
-    }
+    // Use spawnSync with shell: false (default) for security - prevents command injection
+    const result = spawnSync('watchman', ['version'], { stdio: 'ignore', timeout: 5000 });
+    this.watchmanAvailable = result.status === 0;
     return this.watchmanAvailable;
   }
 
