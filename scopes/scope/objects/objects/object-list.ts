@@ -231,11 +231,11 @@ export class ObjectList {
         logger.warn(`fromObjectStreamToTar (${scopeName}), received 'end' event but pack already finalized`);
         return;
       }
+      isFinalized = true;
       const endFile: EndFile = { numOfFiles, scopeName };
       logger.debug('fromObjectStreamToTar, finished sending data', endFile);
       pack.entry({ name: TAR_STREAM_END_FILENAME }, JSON.stringify(endFile));
       pack.finalize();
-      isFinalized = true;
     });
     readable.on('error', (err) => {
       if (isFinalized) {
@@ -245,11 +245,11 @@ export class ObjectList {
         );
         return;
       }
+      isFinalized = true;
       const errorMessage = err.message || `unexpected error (${err.name})`;
       logger.error(`ObjectList.fromObjectStreamToTar, streaming an error as a file after ${numOfFiles} files`, err);
       pack.entry({ name: TAR_STREAM_ERROR_FILENAME }, errorMessage);
       pack.finalize();
-      isFinalized = true;
     });
     return pack;
   }
