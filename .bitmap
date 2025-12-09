@@ -1433,7 +1433,10 @@
         "scope": "teambit.webpack",
         "version": "1.0.22",
         "mainFile": "index.ts",
-        "rootDir": "scopes/webpack/modules/generate-style-loaders"
+        "rootDir": "scopes/webpack/modules/generate-style-loaders",
+        "config": {
+            "teambit.node/node@1.3.0": {}
+        }
     },
     "modules/get-basic-log": {
         "name": "modules/get-basic-log",
