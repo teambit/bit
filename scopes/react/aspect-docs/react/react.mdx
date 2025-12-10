@@ -107,7 +107,7 @@ Now that you have a basic customized extension to start from, you can go ahead a
 React implements a set of APIs you can use to merge your preferred configuration with its defaults. These APIs are called **transformers** and they all start with the `override` pre-fix. Find [Available transformers here](#transformers-api-docs).
 In case of a conflict, your config will override the default.
 
-```typescript {4,14} title="Customized TypeScript configuration"
+```typescript title="Customized TypeScript configuration"
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 
@@ -141,7 +141,7 @@ The below example uses the `overrideCompiler` transformer to override the `getCo
 1. Create a new Babel compiler using the Babel aspect, and initialize it with the above babelConfig
 1. Use the `compose` Env API to apply the compiler override transformer and add Babel as a transpiler in the environment
 
-```typescript {3,5,10-12,15,17-18,22-23}
+```typescript
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { BabelAspect, BabelMain } from '@teambit/babel';
@@ -169,7 +169,7 @@ export class CustomReactExtension {
 }
 ```
 
-<!-- ## Composition Providers
+{/* ## Composition Providers
 
 The React environment is able to "wrap" component compositions with an array of providers, each of which is simply a component which wraps its `children` with functionality, such as a context, styling, theme, etc.
 
@@ -226,7 +226,7 @@ export class ReactWithProvidersPreview {
 ReactWithProvidersAspect.addRuntime(ReactWithProvidersPreview)
 ```
 
-> See the full demo project [here](https://github.com/teambit/react-env-with-providers). -->
+> See the full demo project [here](https://github.com/teambit/react-env-with-providers). */}
 
 ### Transformers API docs
 
