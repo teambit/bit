@@ -77,3 +77,6 @@ package-lock.json
 .claude/*
 !.claude/skills/
 
+# Release notes temp files (for review only)
+releases-docs/temp-files/
+
