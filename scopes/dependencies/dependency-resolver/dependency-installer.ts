@@ -6,7 +6,7 @@ import type { ComponentMap } from '@teambit/component';
 import { type DependenciesGraph } from '@teambit/objects';
 import type { Logger } from '@teambit/logger';
 import type { PathAbsolute } from '@teambit/toolbox.path.path';
-import type { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
+import type { PeerDependencyRules, ProjectManifest, IgnoredBuilds } from '@pnpm/types';
 import { MainAspectNotInstallable, RootDirNotDefined } from './exceptions';
 import type { PackageManager, PackageManagerInstallOptions, PackageImportMethod } from './package-manager';
 import type { WorkspacePolicy } from './policy';
@@ -152,7 +152,7 @@ export class DependencyInstaller {
     componentDirectoryMap: ComponentMap<string>,
     options: InstallOptions = DEFAULT_INSTALL_OPTIONS,
     packageManagerOptions: PackageManagerInstallOptions = DEFAULT_PM_INSTALL_OPTIONS
-  ): Promise<{ dependenciesChanged: boolean }> {
+  ): Promise<{ dependenciesChanged: boolean; ignoredBuilds?: IgnoredBuilds }> {
     const args = {
       componentDirectoryMap,
       options,

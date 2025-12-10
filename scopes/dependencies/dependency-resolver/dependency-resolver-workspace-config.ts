@@ -187,7 +187,7 @@ export interface DependencyResolverWorkspaceConfig {
    * Fine-grained control over dependency lifecycle scripts. Allows explicitly permitting (true), blocking (false), or warning ('warn')
    * for specific dependencies' "preinstall", "install", and "postinstall" scripts during installation.
    */
-  allowScripts?: Record<string, boolean | 'warn'>;
+  allowScripts?: Record<string, boolean | string>;
 
   /**
    * Set this to true in order to allow all dependencies to run install scripts.

@@ -419,7 +419,7 @@ export class InstallMain {
       // are not added to the manifests.
       // This is an issue when installation is done using root components.
       hasMissingLocalComponents = hasRootComponents && hasComponentsFromWorkspaceInMissingDeps(current);
-      const { dependenciesChanged } = await installer.installComponents(
+      const { dependenciesChanged, ignoredBuilds } = await installer.installComponents(
         this.workspace.path,
         current.manifests,
         mergedRootPolicy,
@@ -431,6 +431,14 @@ export class InstallMain {
         },
         pmInstallOptions
       );
+      if (ignoredBuilds?.size) {
+        const allowScripts = {};
+        for (const ignoredBuild of ignoredBuilds.values()) {
+          allowScripts[ignoredBuild] ??= 'change to true or false';
+        }
+        this.dependencyResolver.updateAllowedScripts(allowScripts);
+        await this.dependencyResolver.persistConfig('update allowScripts configuration');
+      }
       this.workspace.inInstallAfterPmContext = true;
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);

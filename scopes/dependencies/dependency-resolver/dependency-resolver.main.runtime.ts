@@ -1028,7 +1028,7 @@ export class DependencyResolverMain {
     };
   }
 
-  updateAllowedScripts(newAllowedScripts: Record<string, boolean>): void {
+  updateAllowedScripts(newAllowedScripts: Record<string, boolean | string>): void {
     this.config.allowScripts = {
       ...this.config.allowScripts,
       ...newAllowedScripts,

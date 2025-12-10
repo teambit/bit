@@ -49,6 +49,7 @@ export interface InstallResult {
   rebuild: RebuildFn;
   storeDir: string;
   depsRequiringBuild?: DepPath[];
+  ignoredBuilds?: Set<DepPath>;
 }
 
 type ReadConfigResult = Promise<{ config: Config; warnings: string[] }>;
@@ -164,7 +165,7 @@ export class PnpmPackageManager implements PackageManager {
       });
     }
     this.modulesManifestCache.delete(rootDir);
-    const { dependenciesChanged, rebuild, storeDir, depsRequiringBuild } = await install(
+    const { dependenciesChanged, rebuild, storeDir, depsRequiringBuild, ignoredBuilds } = await install(
       rootDir,
       manifests,
       config.storeDir,
@@ -224,7 +225,7 @@ export class PnpmPackageManager implements PackageManager {
       // this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
       // this.logger.consoleSuccess('installing dependencies using pnpm');
     }
-    return { dependenciesChanged, rebuild, storeDir, depsRequiringBuild };
+    return { dependenciesChanged, rebuild, storeDir, depsRequiringBuild, ignoredBuilds };
   }
 
   async getPeerDependencyIssues(

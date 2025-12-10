@@ -182,6 +182,14 @@ export interface ReportOptions {
   process?: NodeJS.Process;
 }
 
+export interface InstallResult {
+  dependenciesChanged: boolean;
+  rebuild: RebuildFn;
+  storeDir: string;
+  depsRequiringBuild?: DepPath[];
+  ignoredBuilds?: Set<DepPath>;
+}
+
 export async function install(
   rootDir: string,
   manifestsByPaths: Record<string, ProjectManifest>,
@@ -225,7 +233,7 @@ export async function install(
     Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
-): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string; depsRequiringBuild?: DepPath[] }> {
+): Promise<InstallResult> {
   const externalDependencies = new Set<string>();
   const readPackage = createReadPackageHooks(options);
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
@@ -325,6 +333,7 @@ export async function install(
 
   let dependenciesChanged = false;
   let depsRequiringBuild: DepPath[] | undefined;
+  let ignoredBuilds: Set<DepPath> | undefined;
   if (!options.dryRun) {
     let stopReporting: Function | undefined;
     if (!options.hidePackageManagerOutput) {
@@ -339,6 +348,8 @@ export async function install(
       installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
       const installResult = await installsRunning[rootDir];
       depsRequiringBuild = installResult.depsRequiringBuild?.sort();
+      ignoredBuilds = installResult.ignoredBuilds;
+      console.log(ignoredBuilds)
       if (depsRequiringBuild != null) {
         await addDepsRequiringBuildToLockfile(rootDir, depsRequiringBuild);
       }
@@ -378,6 +389,7 @@ export async function install(
     },
     storeDir: storeController.dir,
     depsRequiringBuild,
+    ignoredBuilds,
   };
 }
 

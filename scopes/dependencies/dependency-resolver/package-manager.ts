@@ -1,5 +1,5 @@
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
-import type { PeerDependencyRules, ProjectManifest, DependencyManifest } from '@pnpm/types';
+import type { PeerDependencyRules, ProjectManifest, DependencyManifest, IgnoredBuilds } from '@pnpm/types';
 import type { ComponentID, ComponentMap, Component } from '@teambit/component';
 import { type DependenciesGraph } from '@teambit/objects';
 import type { Registries } from '@teambit/pkg.entities.registry';
@@ -193,7 +193,7 @@ export interface PackageManager {
   install(
     context: InstallationContext,
     options: PackageManagerInstallOptions
-  ): Promise<{ dependenciesChanged: boolean }>;
+  ): Promise<{ dependenciesChanged: boolean; ignoredBuilds?: IgnoredBuilds }>;
 
   pruneModules?(rootDir: string): Promise<void>;
 
