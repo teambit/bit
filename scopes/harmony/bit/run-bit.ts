@@ -56,9 +56,10 @@ function consoleFileReadUsages() {
     return;
   }
   let numR = 0;
-  const print = (filename: string) => {
+  const print = (filename: string | URL) => {
+    const path = filename instanceof URL ? filename.pathname : String(filename);
     // eslint-disable-next-line no-console
-    console.log(`#${numR}`, filename);
+    console.log(`#${numR}`, path);
   };
   const originalReadFile = fs.readFile;
   const originalReadFileSync = fs.readFileSync;
