@@ -1,6 +1,8 @@
 import type { DependencyDetector, FileContext } from '@teambit/dependency-resolver';
-import { compileSync } from '@mdx-js/mdx';
+// import { compileSync } from '@mdx-js/mdx';
 import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
+
+const { compileSync } = require('@mdx-js/mdx');
 
 type ImportSpecifier = {
   /**
