@@ -7,11 +7,28 @@ description: Generate comprehensive release notes for Bit from git commits and p
 
 This skill helps generate release notes for Bit following the established patterns and guidelines.
 
+## Important: Intermediate Files
+
+All intermediate steps must be saved to `releases-docs/temp-files/` for review. This folder is gitignored.
+
+**Required intermediate files:**
+
+1. `raw-commits.md` - Raw commit data from GitHub API
+2. `filtered-commits.md` - Two sections: filtered out commits and kept commits
+
 ## Workflow
 
 Follow these steps to generate release notes:
 
-### Step 1: Determine the Commit Range
+### Step 1: Setup Temp Directory
+
+First, ensure the temp directory exists:
+
+```bash
+mkdir -p releases-docs/temp-files
+```
+
+### Step 2: Determine the Commit Range
 
 1. **Get the latest release tag and commit:**
 
@@ -37,7 +54,7 @@ Follow these steps to generate release notes:
    - If user provides a specific commit hash, use that as `FROM_COMMIT`
    - If not provided, use `HEAD` (latest commit on master)
 
-### Step 2: Fetch Commits Between Releases
+### Step 3: Fetch Commits and Save to raw-commits.md
 
 Use the GitHub API to get commits between the release and the starting point:
 
@@ -47,21 +64,77 @@ gh api "repos/teambit/bit/compare/${RELEASE_COMMIT}...${FROM_COMMIT}" \
     --jq '.commits[] | "\(.sha[0:7]) | \(.commit.message | split("\n")[0]) | \(.commit.author.name)"'
 ```
 
-### Step 3: Filter Out Uninteresting Commits
+**Save the output to `releases-docs/temp-files/raw-commits.md`** with the following format:
 
-Remove commits that should NOT appear in release notes:
+```markdown
+# Raw Commits
+
+Generated: {DATE}
+From: {FROM_COMMIT or HEAD}
+To: {RELEASE_TAG} ({RELEASE_COMMIT})
+Total commits: {COUNT}
+
+## Commits
+
+| Hash    | Message                      | Author      |
+| ------- | ---------------------------- | ----------- |
+| abc1234 | feat: add new feature (#123) | Author Name |
+| def5678 | fix: resolve bug (#456)      | Author Name |
+
+...
+```
+
+### Step 4: Filter Commits and Save to filtered-commits.md
+
+Analyze each commit and categorize into two groups:
+
+**FILTER OUT (do not include in release notes):**
 
 - Version bump commits: `bump teambit version to X.X.X [skip ci]`
 - CI-only changes: commits that only modify CircleCI config
 - Skip CI markers: commits with `[skip ci]` in the message
 - Auto-merge commits: `Merge branch 'X' into master`
 
-**Keep these commits** (they go in Internal section):
+**KEEP (include in release notes):**
 
-- Dependency updates (e.g., "chore(deps): bump X from Y to Z")
-- Refactoring commits
+- All feature commits (`feat:`)
+- All fix commits (`fix:`)
+- All performance commits (`perf:`)
+- Dependency updates (go in Internal section)
+- Refactoring commits (go in Internal section)
 
-### Step 4: Enrich Commit Information
+**Save to `releases-docs/temp-files/filtered-commits.md`** with the following format:
+
+```markdown
+# Filtered Commits
+
+Generated: {DATE}
+
+## Filtered Out ({COUNT} commits)
+
+These commits are excluded from the release notes:
+
+| Hash    | Message                                   | Reason       |
+| ------- | ----------------------------------------- | ------------ |
+| abc1234 | bump teambit version to 1.13.5 [skip ci]  | Version bump |
+| def5678 | ci, temporarily set tag to increment by 2 | CI change    |
+
+...
+
+## Kept for Release Notes ({COUNT} commits)
+
+These commits will be included in the release notes:
+
+| Hash    | Message                         | Category     |
+| ------- | ------------------------------- | ------------ |
+| ghi9012 | feat: add new command (#123)    | New Features |
+| jkl3456 | fix: resolve issue (#456)       | Bug Fixes    |
+| mno7890 | chore(deps): bump lodash (#789) | Internal     |
+
+...
+```
+
+### Step 5: Enrich Commit Information
 
 For commits that are merge commits or have unclear messages, fetch PR details:
 
@@ -79,9 +152,9 @@ Look for:
 - Labels (feat, fix, perf, etc.)
 - Related issues
 
-### Step 5: Categorize Changes
+### Step 6: Categorize Changes
 
-Group commits into these categories based on content:
+Group the KEPT commits into these categories based on content:
 
 | Category         | Indicators                                                                        |
 | ---------------- | --------------------------------------------------------------------------------- |
@@ -91,7 +164,7 @@ Group commits into these categories based on content:
 | **Bug Fixes**    | "Fix", "fix:", bug corrections, issue resolutions                                 |
 | **Internal**     | Dependency updates, refactoring, CI changes, code cleanup, test improvements      |
 
-### Step 6: Write Release Notes
+### Step 7: Write Release Notes
 
 Follow the guidelines in `releases-docs/guideline.md`:
 
@@ -103,7 +176,7 @@ Follow the guidelines in `releases-docs/guideline.md`:
    - Use backticks for: commands, flags, file names, config properties
    - Use **bold** for major feature names
 
-### Step 7: Save the Release Notes
+### Step 8: Save the Release Notes
 
 Save to `releases-docs/releases/` folder:
 
@@ -140,11 +213,27 @@ Save to `releases-docs/releases/` folder:
 - Modernize some legacy code (#10024, #10014)
 ```
 
+## Output Files Summary
+
+| File                                | Location                    | Purpose                          |
+| ----------------------------------- | --------------------------- | -------------------------------- |
+| `raw-commits.md`                    | `releases-docs/temp-files/` | Raw commit data for review       |
+| `filtered-commits.md`               | `releases-docs/temp-files/` | Filtered/kept commits for review |
+| `v{VERSION}.md` or `new-release.md` | `releases-docs/releases/`   | Final release notes              |
+
 ## Reference Files
 
 - **Guidelines:** `releases-docs/guideline.md` - Detailed formatting and style guidelines
 - **Examples:** `releases-docs/releases/` - Previous release notes for reference patterns
-- **Scripts:** `releases-docs/scripts/` - Helper scripts for fetching commits
+
+## Helper Scripts (Optional)
+
+The `releases-docs/scripts/` directory contains shell scripts for manual use:
+
+- `get-release-commits.sh [FROM_COMMIT] [TO_TAG]` - Fetches commits between releases
+- `filter-commits.sh` - Filters out uninteresting commits (pipe input to it)
+
+These scripts are provided for manual/CLI use. When using this skill, Claude uses the `gh` API commands directly as they work from any directory without needing the local git repository.
 
 ## Tips
 
