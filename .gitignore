@@ -75,3 +75,6 @@ package-lock.json
 
 # Claude Code files
 .claude/
+!.claude/skills
+!.claude/skills/**
+
