@@ -19,7 +19,7 @@ export function namespacePriority(ns: string): number {
 }
 
 export function sortNamespacesAdvanced(list: string[]): string[] {
-  return [...list].sort((a, b) => {
+  return list.sort((a, b) => {
     const pa = namespacePriority(a);
     const pb = namespacePriority(b);
     if (pa !== pb) return pa - pb;
@@ -28,7 +28,7 @@ export function sortNamespacesAdvanced(list: string[]): string[] {
 }
 
 export function sortItemsByNamespace(items: WorkspaceItem[]): WorkspaceItem[] {
-  return [...items].sort((a, b) => {
+  return items.sort((a, b) => {
     const na = a.component.id.namespace || '/';
     const nb = b.component.id.namespace || '/';
 
