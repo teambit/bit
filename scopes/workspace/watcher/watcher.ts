@@ -26,8 +26,9 @@ import type { CheckTypes } from './check-types';
 import type { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';
 import type { Logger } from '@teambit/logger';
-import type { Event } from '@parcel/watcher';
+import type { Event, Options as ParcelWatcherOptions } from '@parcel/watcher';
 import ParcelWatcher from '@parcel/watcher';
+import { spawnSync } from 'child_process';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 import { WatcherDaemon, WatcherClient, getOrCreateWatcherConnection, type WatcherError } from './watcher-daemon';
 import { formatFSEventsErrorMessage } from './fsevents-error';
@@ -98,6 +99,8 @@ export class Watcher {
   private parcelSubscription: { unsubscribe: () => Promise<void> } | null = null;
   // Signal handlers for cleanup (to avoid accumulation)
   private signalCleanupHandler: (() => void) | null = null;
+  // Cached Watchman availability (checked once per process lifetime)
+  private watchmanAvailable: boolean | null = null;
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
@@ -128,6 +131,48 @@ export class Watcher {
       `**/${this.workspace.scope.path}/tmp/**`,
       `**/${this.workspace.scope.path}/objects/**`,
     ];
+  }
+
+  /**
+   * Get Parcel watcher options, preferring Watchman on macOS when available.
+   * On macOS, FSEvents is the default but has a system-wide limit of ~500 streams.
+   * Watchman is a single-daemon solution that avoids this limit.
+   */
+  private getParcelWatcherOptions(): ParcelWatcherOptions {
+    const options: ParcelWatcherOptions = {
+      ignore: this.getParcelIgnorePatterns(),
+    };
+
+    // On macOS, prefer Watchman if available to avoid FSEvents stream limit
+    if (process.platform === 'darwin') {
+      if (this.isWatchmanAvailable()) {
+        options.backend = 'watchman';
+        this.logger.debug('Using Watchman backend for file watching');
+      } else {
+        this.logger.debug('Using FSEvents backend for file watching (Watchman not available)');
+      }
+    }
+
+    return options;
+  }
+
+  /**
+   * Check if Watchman is installed.
+   * Result is cached to avoid repeated executions.
+   */
+  private isWatchmanAvailable(): boolean {
+    if (this.watchmanAvailable !== null) {
+      return this.watchmanAvailable;
+    }
+    try {
+      // Use spawnSync with shell: false (default) for security - prevents command injection
+      const result = spawnSync('watchman', ['version'], { stdio: 'ignore', timeout: 5000 });
+      // Check for spawn errors (e.g., command not found) or non-zero exit status
+      this.watchmanAvailable = !result.error && result.status === 0;
+    } catch {
+      this.watchmanAvailable = false;
+    }
+    return this.watchmanAvailable;
   }
 
   async watch() {
@@ -178,9 +223,7 @@ export class Watcher {
 
     // Original direct Parcel watcher logic (fallback)
     try {
-      await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), {
-        ignore: this.getParcelIgnorePatterns(),
-      });
+      await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), this.getParcelWatcherOptions());
 
       // Write initial snapshot for FSEvents buffer overflow recovery
       await this.writeSnapshotIfNeeded();
@@ -210,9 +253,7 @@ export class Watcher {
       this.parcelSubscription = await ParcelWatcher.subscribe(
         this.workspace.path,
         this.onParcelWatchAsDaemon.bind(this),
-        {
-          ignore: this.getParcelIgnorePatterns(),
-        }
+        this.getParcelWatcherOptions()
       );
 
       // Write initial snapshot for FSEvents buffer overflow recovery
@@ -880,9 +921,7 @@ export class Watcher {
     }
 
     try {
-      await ParcelWatcher.writeSnapshot(this.workspace.path, this.snapshotPath, {
-        ignore: this.getParcelIgnorePatterns(),
-      });
+      await ParcelWatcher.writeSnapshot(this.workspace.path, this.snapshotPath, this.getParcelWatcherOptions());
       this.logger.debug('Watcher snapshot written successfully');
     } catch (err: any) {
       this.logger.debug(`Failed to write watcher snapshot: ${err.message}`);
@@ -931,9 +970,11 @@ export class Watcher {
       }
 
       // Get all events since last snapshot
-      const missedEvents = await ParcelWatcher.getEventsSince(this.workspace.path, this.snapshotPath, {
-        ignore: this.getParcelIgnorePatterns(),
-      });
+      const missedEvents = await ParcelWatcher.getEventsSince(
+        this.workspace.path,
+        this.snapshotPath,
+        this.getParcelWatcherOptions()
+      );
 
       // Write new snapshot immediately after reading events to prevent re-processing same events
       await this.writeSnapshotIfNeeded();

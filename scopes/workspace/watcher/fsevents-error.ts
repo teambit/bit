@@ -108,6 +108,10 @@ Each running watcher process may consume multiple streams internally.`;
   }
 
   message += `\n
+${chalk.green('Recommended solution:')} Install Watchman to avoid FSEvents limits entirely.
+Watchman is a file watching service that uses a single daemon for all watchers:
+  ${chalk.cyan('brew install watchman')}
+
 ${chalk.yellow('Note:')} If you're using "bit start" or "bit run", you don't need "bit watch" separately.
 With the VS Code Bit extension, you can use "Compile on Change" instead of running a watcher manually.
 
