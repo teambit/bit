@@ -387,13 +387,11 @@ type ScriptPolicyConfig = {
   dangerouslyAllowAllScripts?: boolean;
 };
 
-function resolveScriptPolicies(
-  {
-    allowScripts,
-    neverBuiltDependencies,
-    dangerouslyAllowAllScripts,
-  }: ScriptPolicyConfig
-) {
+function resolveScriptPolicies({
+  allowScripts,
+  neverBuiltDependencies,
+  dangerouslyAllowAllScripts,
+}: ScriptPolicyConfig) {
   let resolvedNeverBuilt = neverBuiltDependencies;
   let onlyBuiltDependencies: string[] | undefined;
   let ignoredBuiltDependencies: string[] | undefined;
@@ -437,7 +435,8 @@ function initReporter(opts?: ReportOptions) {
       hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
       hideProgressPrefix: opts?.hideProgressPrefix,
       hideLifecycleOutput: opts?.hideLifecycleOutput,
-      approveBuildsInstructionText: 'Update the "allowScripts" field under "teambit.dependencies/dependency-resolver" in workspace.jsonc to control which packages are allowed to run scripts.',
+      approveBuildsInstructionText:
+        'Update the "allowScripts" field under "teambit.dependencies/dependency-resolver" in workspace.jsonc. \nSet to true to allow, false to explicitly disallow. \nExample: allowScripts: { "esbuild": true, "core-js": false }. \nThis is a security-sensitive setting: enabling scripts may allow arbitrary code execution during install.',
     },
     streamParser: streamParser as any, // eslint-disable-line
     // Linked in core aspects are excluded from the output to reduce noise.

@@ -49,7 +49,7 @@ export class ScopeComponentLoader {
     }
 
     if (!modelComponent) {
-      if (this.scope.legacyScope.isLocal(id)) {
+      if (this.scope.legacyScope.isLocal(id) && id.hasVersion()) {
         const existsWithoutVersion = await this.scope.legacyScope.getModelComponentIfExist(id.changeVersion(undefined));
         const errMsg = existsWithoutVersion
           ? `failed loading ${id.toString()}: the component exists but version ${id.version} is missing.`
