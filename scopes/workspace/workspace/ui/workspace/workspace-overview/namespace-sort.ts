@@ -4,13 +4,7 @@ export const PRIORITY_HIGH = ['ui', 'pages'] as string[];
 export const PRIORITY_MED = ['design'] as string[];
 export const PRIORITY_LOW = ['entities', 'provider', 'hooks', 'icons'] as string[];
 
-export type RootNamespace =
-  | (typeof PRIORITY_HIGH)[number]
-  | (typeof PRIORITY_MED)[number]
-  | (typeof PRIORITY_LOW)[number]
-  | string;
-
-export function getRootNamespace(ns: string): RootNamespace {
+export function getRootNamespace(ns: string): string {
   if (!ns) return '';
   return ns.split('/')[0]!;
 }
