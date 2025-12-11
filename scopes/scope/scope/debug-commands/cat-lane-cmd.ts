@@ -1,5 +1,5 @@
 import { catLane } from './cat-lane';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 
 export default class CatLaneCmd implements Command {
   name = 'cat-lane <id>';

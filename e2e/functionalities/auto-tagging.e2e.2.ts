@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import { AUTO_TAGGED_MSG } from '@teambit/snapping';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('auto tagging functionality', function () {
   this.timeout(0);

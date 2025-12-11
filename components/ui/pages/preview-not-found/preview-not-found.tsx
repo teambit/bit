@@ -1,4 +1,5 @@
-import React, { CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
+import React from 'react';
 import { ImageIcon } from './image-icon';
 
 const styles: Record<string, CSSProperties> = {

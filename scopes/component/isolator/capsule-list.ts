@@ -1,9 +1,9 @@
 import type { Component } from '@teambit/component';
-import { Dependency, DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { Dependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Edge, Graph, Node } from '@teambit/graph.cleargraph';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { normalize } from 'path';
-import { Capsule } from './capsule';
+import type { Capsule } from './capsule';
 
 export default class CapsuleList extends Array<Capsule> {
   getCapsule(id: ComponentID): Capsule | undefined {

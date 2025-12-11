@@ -6,7 +6,8 @@ import { compact, uniq, differenceWith, isEmpty, isString, unionWith, get } from
 import { LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
+import type { BitIdStr } from '@teambit/legacy-bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import {
   AUTO_GENERATED_MSG,
@@ -17,23 +18,16 @@ import {
   BITMAP_PREFIX_MESSAGE,
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import {
-  pathJoinLinux,
-  pathNormalizeToLinux,
+import type {
   PathLinux,
   PathLinuxRelative,
   PathOsBased,
   PathOsBasedAbsolute,
   PathOsBasedRelative,
 } from '@teambit/toolbox.path.path';
-import {
-  ComponentMap,
-  ComponentMapFile,
-  Config,
-  PathChange,
-  getFilesByDir,
-  getGitIgnoreHarmony,
-} from './component-map';
+import { pathJoinLinux, pathNormalizeToLinux } from '@teambit/toolbox.path.path';
+import type { ComponentMapFile, Config, PathChange } from './component-map';
+import { ComponentMap, getFilesByDir, getGitIgnoreHarmony } from './component-map';
 import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
@@ -292,9 +286,11 @@ export class BitMap {
     });
   }
 
-  resetLaneComponentsToNew() {
+  resetLaneComponentsToNew(): ComponentID[] {
+    const changedIds: ComponentID[] = [];
     this.components = this.components.map((component) => {
       if (component.isAvailableOnCurrentLane) return component;
+      changedIds.push(component.id);
       return new ComponentMap({
         id: component.id.changeVersion(undefined).changeScope(component.scope || (component.defaultScope as string)),
         mainFile: component.mainFile,
@@ -305,6 +301,10 @@ export class BitMap {
         onLanesOnly: false,
       });
     });
+    if (changedIds.length) {
+      this.markAsChanged();
+    }
+    return changedIds;
   }
 
   private throwForDuplicateRootDirs(componentsJson: Record<string, any>) {

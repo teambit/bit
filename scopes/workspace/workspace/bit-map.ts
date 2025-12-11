@@ -1,12 +1,13 @@
 import { isEqual, merge } from 'lodash';
-import { ComponentID } from '@teambit/component-id';
-import { BitMap as LegacyBitMap, ComponentMap, GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
-import { Consumer } from '@teambit/legacy.consumer';
+import type { ComponentID } from '@teambit/component-id';
+import type { ComponentMap, GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
+import { BitMap as LegacyBitMap } from '@teambit/legacy.bit-map';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
-import { LaneId } from '@teambit/lane-id';
+import type { LaneId } from '@teambit/lane-id';
 import { EnvsAspect } from '@teambit/envs';
-import { PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
+import type { PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import { getPathStatIfExist } from '@teambit/toolbox.fs.last-modified';
 
 export type MergeOptions = {

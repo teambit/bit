@@ -1,4 +1,4 @@
-import { ComponentModel } from '@teambit/component';
+import type { ComponentModel } from '@teambit/component';
 import { NodeModel } from '../query';
 
 export type CompareStatus = 'modified' | 'new' | 'deleted' | undefined;

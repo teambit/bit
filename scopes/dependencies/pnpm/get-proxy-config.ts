@@ -1,5 +1,5 @@
-import { PackageManagerProxyConfig } from '@teambit/dependency-resolver';
-import { Config } from '@pnpm/config';
+import type { PackageManagerProxyConfig } from '@teambit/dependency-resolver';
+import type { Config } from '@pnpm/config';
 
 export function getProxyConfig(config: Config): PackageManagerProxyConfig {
   const httpProxy = config.httpProxy;

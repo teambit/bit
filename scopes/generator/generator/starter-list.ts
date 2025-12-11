@@ -1,5 +1,5 @@
-import { EnvContext, EnvHandler } from '@teambit/envs';
-import { WorkspaceTemplate } from './workspace-template';
+import type { EnvContext, EnvHandler } from '@teambit/envs';
+import type { WorkspaceTemplate } from './workspace-template';
 
 export type StarterListOptions = {
   name?: string;

@@ -10,7 +10,8 @@ import stylusLookup from 'stylus-lookup';
 import { lookupJavaScript, lookupTypeScript } from '@teambit/typescript.deps-lookups.lookup-typescript';
 import { lookupStyling } from '@teambit/styling.deps-lookups.lookup-styling';
 
-import { DependencyDetector, DetectorHook } from '../detector-hook';
+import type { DependencyDetector } from '@teambit/dependency-resolver';
+import { DetectorHook } from '@teambit/dependency-resolver';
 
 const debug = require('debug')('cabinet');
 

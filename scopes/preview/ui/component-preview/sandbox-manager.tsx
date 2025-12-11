@@ -1,4 +1,4 @@
-import { ComponentModel } from '@teambit/component';
+import type { ComponentModel } from '@teambit/component';
 import React, { useRef, useEffect } from 'react';
 
 export type SandboxPermission =

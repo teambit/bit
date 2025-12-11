@@ -1,5 +1,5 @@
 import { runAction } from './run-action';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 
 export class RunActionCmd implements Command {
   name = 'run-action <action-name> <remote> <options>';

@@ -1,12 +1,12 @@
-import { LinkDetail } from '@teambit/dependency-resolver';
-import { Logger } from '@teambit/logger';
-import { ComponentID } from '@teambit/component-id';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { LinkDetail } from '@teambit/dependency-resolver';
+import type { Logger } from '@teambit/logger';
+import type { ComponentID } from '@teambit/component-id';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import path from 'path';
 
-import { Capsule } from './capsule';
-import CapsuleList from './capsule-list';
+import type { Capsule } from './capsule';
+import type CapsuleList from './capsule-list';
 
 export async function symlinkDependenciesToCapsules(
   capsules: Capsule[],

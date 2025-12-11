@@ -12,7 +12,8 @@ type Options = {
 
 export class CiPrCmd implements Command {
   name = 'pr';
-  description = 'This command is meant to run when a PR was open/updated and meant to export a lane to bit-cloud.';
+  description = 'Exports a feature lane to Bit Cloud when a Pull Request is opened or updated.';
+  extendedDescription = `Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. Cleans up by switching back to main. Use in pull-request CI pipelines after tests and before deploy.`;
   group = 'collaborate';
 
   options: CommandOptions = [
@@ -33,11 +34,11 @@ export class CiPrCmd implements Command {
     this.logger.console('🚀 Initializing PR command');
     if (!this.workspace) throw new OutsideWorkspaceError();
 
-    let branch: string;
+    let laneIdStr: string;
     let message: string;
 
     if (options.lane) {
-      branch = options.lane;
+      laneIdStr = options.lane;
     } else {
       const currentBranch = await this.ci.getBranchName().catch((e) => {
         throw new Error(`Failed to get branch name from Git: ${e.toString()}`);
@@ -45,9 +46,7 @@ export class CiPrCmd implements Command {
       if (!currentBranch) {
         throw new Error('Failed to get branch name');
       }
-      // Sanitize branch name to make it valid for Bit lane IDs by replacing slashes with dashes
-      const sanitizedBranch = currentBranch.replace(/\//g, '-');
-      branch = `${this.workspace.defaultScope}/${sanitizedBranch}`;
+      laneIdStr = this.ci.convertBranchToLaneId(currentBranch);
     }
 
     if (options.message) {
@@ -60,11 +59,17 @@ export class CiPrCmd implements Command {
       message = commitMessage;
     }
 
-    return this.ci.snapPrCommit({
-      branch,
+    const results = await this.ci.snapPrCommit({
+      laneIdStr: laneIdStr,
       message,
       build: options.build,
       strict: options.strict,
     });
+
+    if (results) {
+      return results;
+    }
+
+    return `PR command executed successfully`;
   }
 }

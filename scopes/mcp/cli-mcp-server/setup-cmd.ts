@@ -1,6 +1,6 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { CliMcpServerMain } from './cli-mcp-server.main.runtime';
+import type { CliMcpServerMain } from './cli-mcp-server.main.runtime';
 
 export type McpSetupCmdOptions = {
   consumerProject?: boolean;

@@ -1,10 +1,11 @@
 import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
-import { AspectEnv } from '@teambit/aspect';
-import { PackageJsonProps } from '@teambit/pkg';
+import type { AspectEnv } from '@teambit/aspect';
+import type { PackageJsonProps } from '@teambit/pkg';
 import { BUNDLE_UI_DIR } from '@teambit/ui';
-import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
-import { AspectLoaderMain } from '@teambit/aspect-loader';
-import { GetNpmIgnoreContext } from '@teambit/envs';
+import type { PreviewStrategyName } from '@teambit/preview';
+import { COMPONENT_PREVIEW_STRATEGY_NAME } from '@teambit/preview';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import type { GetNpmIgnoreContext } from '@teambit/envs';
 
 export const EnvEnvType = 'env';
 

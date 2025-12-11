@@ -1,6 +1,6 @@
 import { snapToSemver } from '@teambit/component-package-version';
-import { Dependency } from '../dependencies';
-import { VariantPolicy, WorkspacePolicy } from '../policy';
+import type { Dependency } from '../dependencies';
+import type { VariantPolicy, WorkspacePolicy } from '../policy';
 
 /**
  * This will create a function that will modify the version of the component dependencies before calling the package manager install

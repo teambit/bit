@@ -1,9 +1,10 @@
 /* eslint no-console: 0 */
 import chalk from 'chalk';
-import childProcess, { ChildProcess } from 'child_process';
+import type { ChildProcess } from 'child_process';
+import childProcess from 'child_process';
 import rightpad from 'pad-right';
 
-import { Helper } from '@teambit/legacy.e2e-helper';
+import type { Helper } from '@teambit/legacy.e2e-helper';
 
 const HTTP_TIMEOUT_FOR_MSG = 120000; // 2 min
 

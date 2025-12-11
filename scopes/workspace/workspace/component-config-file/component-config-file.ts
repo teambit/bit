@@ -1,11 +1,12 @@
-import { ComponentID, AspectList, AspectEntry, ResolveComponentIdFunc } from '@teambit/component';
+import type { AspectList, ResolveComponentIdFunc } from '@teambit/component';
+import { ComponentID, AspectEntry } from '@teambit/component';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
 import {
   ExtensionDataList,
   configEntryToDataEntry,
   REMOVE_EXTENSION_SPECIAL_SIGN,
 } from '@teambit/legacy.extension-data';
-import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { JsonVinyl } from '@teambit/component.sources';
 import detectIndent from 'detect-indent';
 import detectNewline from 'detect-newline';
@@ -126,14 +127,21 @@ export class ComponentConfigFile {
     }
   }
 
-  async removeAspect(aspectId: string, markWithMinusIfNotExist: boolean, resolveComponentId: ResolveComponentIdFunc) {
+  async removeAspect(
+    aspectId: string,
+    markWithMinusIfNotExist: boolean,
+    resolveComponentId: ResolveComponentIdFunc
+  ): Promise<boolean> {
     const existing = this.aspects.get(aspectId);
     if (existing) {
       const aspectList = this.aspects.withoutEntries([aspectId]);
       this.aspects = aspectList;
+      return true;
     } else if (markWithMinusIfNotExist) {
       await this.addAspect(aspectId, REMOVE_EXTENSION_SPECIAL_SIGN, resolveComponentId);
+      return true;
     }
+    return false;
   }
 
   private async aspectEntryFromConfigObject(id: string, config: any, resolveComponentId: ResolveComponentIdFunc) {

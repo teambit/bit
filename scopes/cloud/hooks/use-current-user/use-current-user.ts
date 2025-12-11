@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { useMutation, gql } from '@apollo/client';
-import { CloudUser } from '@teambit/cloud.models.cloud-user';
+import type { CloudUser } from '@teambit/cloud.models.cloud-user';
 
 export const SET_REDIRECT_URL_MUTATION = gql`
   mutation SetRedirectUrl($redirectUrl: String!) {

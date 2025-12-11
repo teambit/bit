@@ -1,7 +1,7 @@
-import { EnvContext, EnvHandler } from '@teambit/envs';
+import type { EnvContext, EnvHandler } from '@teambit/envs';
 import { clone, findIndex } from 'lodash';
-import { Task } from './task';
-import { BuildTask } from './build-task';
+import type { Task } from './task';
+import type { BuildTask } from './build-task';
 
 export type TaskHandler = {
   handler: EnvHandler<Task>;

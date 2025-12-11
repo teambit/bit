@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { GraphMain, VersionSubgraph } from '@teambit/graph';
+import type { GraphMain, VersionSubgraph } from '@teambit/graph';
 import { rcompare } from 'semver';
 // import { ComponentID } from '../../../component/component-id';
 import { ComponentID } from '@teambit/component';
-import { Insight, InsightResult, RawResult } from '../insight';
+import type { Insight, InsightResult, RawResult } from '../insight';
 // import NoDataForInsight from '../exceptions/no-data-for-insight';
 
 export const INSIGHT_NAME = 'duplicate dependencies';

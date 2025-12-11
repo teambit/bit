@@ -1,15 +1,15 @@
 import chalk from 'chalk';
-import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import { Command, CommandOptions } from '@teambit/cli';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ComponentIdList, ComponentID } from '@teambit/component-id';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { DEFAULT_BIT_RELEASE_TYPE, COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
 import { IssuesClasses } from '@teambit/component-issues';
-import { ReleaseType } from 'semver';
+import type { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
-import { Logger } from '@teambit/logger';
-import { TagResults, SnappingMain } from './snapping.main.runtime';
-import { BasicTagParams } from './version-maker';
-import { ConfigStoreMain } from '@teambit/config-store';
+import type { Logger } from '@teambit/logger';
+import type { TagResults, SnappingMain } from './snapping.main.runtime';
+import type { BasicTagParams } from './version-maker';
+import type { ConfigStoreMain } from '@teambit/config-store';
 
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
 export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
@@ -24,6 +24,7 @@ export const tagCmdOptions = [
     'editor [editor]',
     'open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
   ],
+  ['', 'versions-file <path>', 'path to a file containing component versions. format: "component-id: version"'],
   ['v', 'ver <version>', 'tag with the given version'],
   ['l', 'increment <level>', `options are: [${RELEASE_TYPES.join(', ')}], default to patch`],
   ['', 'prerelease-id <id>', 'prerelease identifier (e.g. "dev" to get "1.0.0-dev.1")'],
@@ -93,14 +94,16 @@ export type TagParams = {
   failFast?: boolean;
   disableTagPipeline?: boolean;
   loose?: boolean;
+  versionsFile?: string;
 } & Partial<BasicTagParams>;
 
 export class TagCmd implements Command {
   name = 'tag [component-patterns...]';
   group = 'version-control';
-  description = 'create an immutable and exportable component snapshot, tagged with a release version.';
-  extendedDescription = `if no patterns are provided, it will tag all new and modified components.
-if patterns are entered, you can specify a version per pattern using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major`;
+  description = 'create immutable component snapshots with semantic version tags';
+  extendedDescription = `creates tagged versions using semantic versioning (semver) for component releases. tags are immutable and exportable.
+by default tags all new and modified components. supports version specification per pattern using "@" (e.g. foo@1.0.0, bar@minor).
+use for official releases. for development versions, use 'bit snap' instead.`;
   arguments = [
     {
       name: 'component-patterns...',
@@ -126,6 +129,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
       message = '',
       ver,
       editor = '',
+      versionsFile,
       snapped = false,
       unmerged = false,
       ignoreIssues,
@@ -176,6 +180,7 @@ To undo local tag use the "bit reset" command.`
       snapped,
       unmerged,
       editor,
+      versionsFile,
       message,
       releaseType,
       preReleaseId,
@@ -248,11 +253,19 @@ semver allows the following options only: ${RELEASE_TYPES.join(', ')}`);
 }
 
 export function tagResultOutput(results: TagResults): string {
-  const { taggedComponents, autoTaggedResults, warnings, newComponents, removedComponents, exportedIds }: TagResults =
-    results;
+  const {
+    taggedComponents,
+    autoTaggedResults,
+    warnings,
+    newComponents,
+    removedComponents,
+    exportedIds,
+    totalComponentsCount,
+  }: TagResults = results;
   const changedComponents = taggedComponents.filter((component) => !newComponents.searchWithoutVersion(component.id));
   const addedComponents = taggedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
   const autoTaggedCount = autoTaggedResults ? autoTaggedResults.length : 0;
+  const totalCount = totalComponentsCount ?? taggedComponents.length + autoTaggedCount;
 
   const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
   const tagExplanationPersist = exportedIds
@@ -328,9 +341,7 @@ export function tagResultOutput(results: TagResults): string {
     exportedOutput() +
     warningsOutput +
     chalk.green(
-      `\n${taggedComponents.length + autoTaggedCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged${
-        exportedIds ? ' and exported' : ''
-      }`
+      `\n${totalCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged${exportedIds ? ' and exported' : ''}`
     ) +
     tagExplanation +
     softTagClarification

@@ -1,8 +1,9 @@
 import { join } from 'path';
-import { BuildContext, BuildTask, BuiltTaskResult, CAPSULE_ARTIFACTS_DIR, TaskLocation } from '@teambit/builder';
-import { Capsule } from '@teambit/isolator';
-import { Logger } from '@teambit/logger';
-import { UIRoot, UiMain } from '@teambit/ui';
+import type { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
+import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
+import type { Capsule } from '@teambit/isolator';
+import type { Logger } from '@teambit/logger';
+import type { UIRoot, UiMain } from '@teambit/ui';
 import { generateBundleHash, getBundleArtifactDef } from './pre-bundle-utils';
 import { RUNTIME_NAME, buildPreBundlePreview } from './pre-bundle';
 import { PreviewAspect } from './preview.aspect';

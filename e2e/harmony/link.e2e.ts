@@ -2,8 +2,8 @@ import path from 'path';
 import { globalBitTempDir } from '@teambit/defender.fs.global-bit-temp-dir';
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('linking to a target', function () {
   this.timeout(0);

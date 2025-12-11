@@ -1,7 +1,7 @@
-import { Component } from '@teambit/component';
-import { Capsule, Network } from '@teambit/isolator';
-import { BuildContext, PipeName, TaskResults } from '@teambit/builder';
-import { LaneId } from '@teambit/lane-id';
+import type { Component } from '@teambit/component';
+import type { Capsule, Network } from '@teambit/isolator';
+import type { BuildContext, PipeName, TaskResults } from '@teambit/builder';
+import type { LaneId } from '@teambit/lane-id';
 import { AppContext } from './app-context';
 
 export type AppBuildContextCreate = {

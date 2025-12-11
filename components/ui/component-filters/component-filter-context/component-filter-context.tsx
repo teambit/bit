@@ -1,16 +1,8 @@
-import React, {
-  ComponentType,
-  createContext,
-  ReactNode,
-  useContext,
-  useState,
-  Dispatch,
-  SetStateAction,
-  useEffect,
-} from 'react';
-import { ComponentModel } from '@teambit/component';
+import type { ComponentType, ReactNode, Dispatch, SetStateAction } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { ComponentModel } from '@teambit/component';
 import { isFunction } from 'lodash';
-import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import type { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 
 export type ComponentFilters = Array<ComponentFilterCriteria<any>>;
 export type ComponentFilterRenderProps = {

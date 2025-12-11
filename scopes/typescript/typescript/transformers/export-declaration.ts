@@ -1,20 +1,20 @@
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import {
-  SchemaNode,
   ModuleSchema,
   UnresolvedSchema,
   UnImplementedSchema,
   ExportSchema,
 } from '@teambit/semantics.entities.semantic-schema';
-import ts, {
+import type {
   Node,
-  SyntaxKind,
   ExportDeclaration as ExportDeclarationNode,
   NamedExports,
   NamespaceExport,
   ExportSpecifier,
 } from 'typescript';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { SchemaTransformer } from '../schema-transformer';
+import ts, { SyntaxKind } from 'typescript';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
 
 export class ExportDeclarationTransformer implements SchemaTransformer {

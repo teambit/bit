@@ -1,4 +1,4 @@
-import { ComponentID } from '@teambit/component';
+import type { ComponentID } from '@teambit/component';
 
 export class CapsuleNotFound extends Error {
   constructor(private id: ComponentID) {

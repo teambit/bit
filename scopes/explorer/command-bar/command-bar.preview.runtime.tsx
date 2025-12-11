@@ -1,5 +1,6 @@
 import { PreviewRuntime } from '@teambit/preview';
-import { PubsubAspect, PubsubPreview } from '@teambit/pubsub';
+import type { PubsubPreview } from '@teambit/pubsub';
+import { PubsubAspect } from '@teambit/pubsub';
 import { isOpenCommandBarKeybinding } from './keybinding';
 import { CommandBarAspect } from './command-bar.aspect';
 import { KeyEvent } from './model/key-event';

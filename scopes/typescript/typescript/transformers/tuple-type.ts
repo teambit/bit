@@ -1,9 +1,10 @@
-import { Node, SyntaxKind, TupleTypeNode } from 'typescript';
+import type { Node, TupleTypeNode } from 'typescript';
+import { SyntaxKind } from 'typescript';
 import pMapSeries from 'p-map-series';
 import { TupleTypeSchema } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { Identifier } from '../identifier';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { Identifier } from '../identifier';
 
 export class TupleTypeTransformer implements SchemaTransformer {
   predicate(node: Node) {

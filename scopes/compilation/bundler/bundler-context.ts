@@ -1,5 +1,5 @@
-import { Component } from '@teambit/component';
-import { BuildContext } from '@teambit/builder';
+import type { Component } from '@teambit/component';
+import type { BuildContext } from '@teambit/builder';
 
 export type LibraryOptions = {
   /**

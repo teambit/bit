@@ -1,9 +1,9 @@
 // eslint-disable-next-line max-classes-per-file
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 // import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
-import { ApplicationMain } from './application.main.runtime';
+import type { ApplicationMain } from './application.main.runtime';
 
 export class AppListCmd implements Command {
   name = 'list';
@@ -31,7 +31,10 @@ export class AppListCmd implements Command {
 
 export class AppCmd implements Command {
   name = 'app [sub-command]';
-  description = 'Manages apps';
+  description = 'manage application components';
+  extendedDescription = `applications are components that create deployable, runnable applications like React apps or Node.js servers.
+list available apps in the workspace and inspect their configurations.
+use "bit run" to start an application locally.`;
   helpUrl = 'docs/getting-started/composing/create-apps';
   alias = 'apps';
   group = 'run-serve';

@@ -1,10 +1,10 @@
-import { BundlerMain } from '@teambit/bundler';
-import { Component, ComponentID, ResolveAspectsOptions } from '@teambit/component';
-import { UIRoot } from '@teambit/ui';
-import { GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
-import { PathOsBased } from '@teambit/toolbox.path.path';
+import type { BundlerMain } from '@teambit/bundler';
+import type { Component, ComponentID, ResolveAspectsOptions } from '@teambit/component';
+import type { UIRoot } from '@teambit/ui';
+import type { GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
+import type { PathOsBased } from '@teambit/toolbox.path.path';
 
-import { Workspace } from './workspace';
+import type { Workspace } from './workspace';
 
 export class WorkspaceUIRoot implements UIRoot {
   constructor(

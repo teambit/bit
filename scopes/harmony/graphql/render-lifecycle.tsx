@@ -1,4 +1,5 @@
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React from 'react';
 // Calling getMarkupFromTree instead of getDataFromTree so we can control the render function
 // This is required since upgrade to @apollo/client v3.6.9 because otherwise the ssr is not working since
 // webpack is not bundling the react-dom/server

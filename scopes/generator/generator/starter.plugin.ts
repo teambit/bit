@@ -1,6 +1,6 @@
-import { PluginDefinition } from '@teambit/aspect-loader';
+import type { PluginDefinition } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
-import { GeneratorMain } from './generator.main.runtime';
+import type { GeneratorMain } from './generator.main.runtime';
 
 export class StarterPlugin implements PluginDefinition {
   constructor(private generator: GeneratorMain) {}

@@ -2,9 +2,10 @@ import chai, { expect } from 'chai';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { IssuesClasses } from '@teambit/component-issues';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('env command', function () {
   this.timeout(0);
@@ -81,6 +82,24 @@ describe('env command', function () {
           const compJson = helper.componentJson.read('comp1');
           expect(compJson.extensions).to.not.have.property(Extensions.envs);
         });
+      });
+    });
+    describe('run bit env unset on component without env config in .bitmap', () => {
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.setEnv('comp1', 'teambit.harmony/aspect');
+        helper.command.tagAllWithoutBuild();
+      });
+      it('should indicate that there was no env config in .bitmap to remove', () => {
+        const output = helper.command.unsetEnv('comp1');
+        expect(output).to.have.string(
+          'unable to find components matching the pattern with env configured in the .bitmap file'
+        );
+      });
+      it('should not change the bitmap file', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1).to.not.have.property('config');
       });
     });
   });

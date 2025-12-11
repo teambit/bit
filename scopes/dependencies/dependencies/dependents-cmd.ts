@@ -1,8 +1,9 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
-import { dependents, DependentsResults } from './dependents';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { DependentsResults } from './dependents';
+import { dependents } from './dependents';
 import { generateDependentsInfoTable } from './template';
-import { Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
 
 export class DependentsCmd implements Command {
   name = 'dependents <component-name>';
@@ -13,7 +14,10 @@ export class DependentsCmd implements Command {
       description: 'component name or component id',
     },
   ];
-  description = 'show dependents of the given component';
+  description = 'show components that depend on the specified component';
+  extendedDescription = `displays components from both workspace and scope that depend on the specified component.
+useful for understanding impact before making changes to a component or when planning refactoring.
+shows both direct and transitive dependents organized by their origin (workspace vs scope).`;
   group = 'dependencies';
   alias = '';
   options = [['j', 'json', 'return the dependents in JSON format']] as CommandOptions;

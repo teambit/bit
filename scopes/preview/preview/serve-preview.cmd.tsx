@@ -1,4 +1,4 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import type { PreviewMain } from './preview.main.runtime';
 
 export class ServePreviewCmd implements Command {

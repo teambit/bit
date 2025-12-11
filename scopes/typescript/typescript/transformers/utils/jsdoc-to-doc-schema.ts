@@ -1,22 +1,15 @@
 /* eslint-disable complexity */
 /* eslint-disable no-fallthrough */
-import {
-  getTextOfJSDocComment,
-  JSDocParameterTag,
-  JSDocPropertyLikeTag,
-  JSDocPropertyTag,
-  JSDocReturnTag,
-  JSDocTag,
-  SyntaxKind,
-} from 'typescript';
+import type { JSDocParameterTag, JSDocPropertyLikeTag, JSDocPropertyTag, JSDocReturnTag, JSDocTag } from 'typescript';
+import { getTextOfJSDocComment, SyntaxKind } from 'typescript';
 import {
   PropertyLikeTagSchema,
   ReturnTagSchema,
   TagName,
   TagSchema,
 } from '@teambit/semantics.entities.semantic-schema';
-import { Formatter } from '@teambit/formatter';
-import { SchemaExtractorContext } from '../../schema-extractor-context';
+import type { Formatter } from '@teambit/formatter';
+import type { SchemaExtractorContext } from '../../schema-extractor-context';
 
 export async function tagParser(
   tag: JSDocTag,

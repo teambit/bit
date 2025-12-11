@@ -4,9 +4,9 @@ import Vinyl from 'vinyl';
 
 import { logger } from '@teambit/legacy.logger';
 import { Source } from '@teambit/objects';
-import { PathOsBased } from '@teambit/toolbox.path.path';
+import type { PathOsBased } from '@teambit/toolbox.path.path';
 import * as eol from '@teambit/toolbox.string.eol';
-import { FileConstructor } from './vinyl-types';
+import type { FileConstructor } from './vinyl-types';
 
 type AbstractVinylProps = {
   cwd: PathOsBased;
@@ -22,7 +22,6 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
 
   static fromVinyl(vinyl: Vinyl): AbstractVinyl {
     if (vinyl instanceof AbstractVinyl) return vinyl;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new AbstractVinyl(vinyl);
   }
 
@@ -45,7 +44,6 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
     override?: boolean = this.override,
     verbose?: boolean = this.verbose
   ): Promise<string | null | undefined> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const filePath = writePath || this.path;
     const msg = _verboseMsg(filePath, override);
     if (verbose) {
@@ -53,22 +51,18 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
     }
     logger.debug(msg);
     if (!override && fs.existsSync(filePath)) return null;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     await fs.outputFile(filePath, eol.auto(this.contents));
     return filePath;
   }
 
   toReadableString() {
     return {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       relativePath: this.relative,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       content: this.contents.toString(),
     };
   }
 
   static loadFromParsedStringBase(parsedString: any): AbstractVinylProps {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const contents = Buffer.isBuffer(parsedString._contents)
       ? parsedString._contents
       : Buffer.from(parsedString._contents);
@@ -91,7 +85,6 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
 
   async _getStatIfFileExists(): Promise<fs.Stats | null | undefined> {
     try {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return await fs.lstat(this.path);
     } catch {
       return null; // probably file does not exist

@@ -1,8 +1,8 @@
-import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
-import { Logger } from '@teambit/logger';
+import type { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
+import type { Logger } from '@teambit/logger';
 import { getExposedRules } from './get-exposed-rules';
 import { resolvePeerToDirOrFile } from './resolve-peer';
-import { WebpackConfigTransformContext } from '../webpack.main.runtime';
+import type { WebpackConfigTransformContext } from '../webpack.main.runtime';
 import { getExternals } from './get-externals';
 
 export function generateAddAliasesFromPeersTransformer(peers: string[], logger: Logger) {

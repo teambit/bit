@@ -1,4 +1,4 @@
-import { SearchProvider as Searcher } from '@teambit/explorer.ui.command-bar';
+import type { SearchProvider as Searcher } from '@teambit/explorer.ui.command-bar';
 
 export interface SearchProvider {
   /** provide completions for this search term */

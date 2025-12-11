@@ -1,35 +1,31 @@
-import { CloudMain } from '@teambit/cloud';
-import {
+import type { CloudMain } from '@teambit/cloud';
+import { extendWithComponentsFromDir, BIT_CLOUD_REGISTRY } from '@teambit/dependency-resolver';
+import type {
   DependencyResolverMain,
-  extendWithComponentsFromDir,
   InstallationContext,
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
-  BIT_CLOUD_REGISTRY,
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
-  type CalcDepsGraphOptions,
+  CalcDepsGraphOptions,
 } from '@teambit/dependency-resolver';
 import { Registries, Registry } from '@teambit/pkg.entities.registry';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { type LockfileFile } from '@pnpm/lockfile.types';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
-import { PeerDependencyIssuesByProjects } from '@pnpm/core';
+import type { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
-import { Config } from '@pnpm/config';
+import type { Config } from '@pnpm/config';
 import { type ProjectId, type ProjectManifest, type DepPath } from '@pnpm/types';
-import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
-import {
-  buildDependenciesHierarchy,
-  DependenciesHierarchy,
-  createPackagesSearcher,
-  PackageNode,
-} from '@pnpm/reviewing.dependencies-hierarchy';
+import type { Modules } from '@pnpm/modules-yaml';
+import { readModulesManifest } from '@pnpm/modules-yaml';
+import type { DependenciesHierarchy, PackageNode } from '@pnpm/reviewing.dependencies-hierarchy';
+import { buildDependenciesHierarchy, createPackagesSearcher } from '@pnpm/reviewing.dependencies-hierarchy';
 import { renderTree } from '@pnpm/list';
 import {
   readWantedLockfile,
@@ -42,7 +38,8 @@ import { join } from 'path';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
-import { generateResolverAndFetcher, RebuildFn } from './lynx';
+import type { RebuildFn } from './lynx';
+import { generateResolverAndFetcher } from './lynx';
 import { type DependenciesGraph } from '@teambit/objects';
 
 export type { RebuildFn };
@@ -181,7 +178,11 @@ export class PnpmPackageManager implements PackageManager {
         engineStrict: installOptions.engineStrict ?? config.engineStrict,
         excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
         lockfileOnly: installOptions.lockfileOnly,
+        minimumReleaseAge: installOptions.minimumReleaseAge,
+        minimumReleaseAgeExclude: installOptions.minimumReleaseAgeExclude,
         neverBuiltDependencies: installOptions.neverBuiltDependencies,
+        allowScripts: installOptions.allowScripts,
+        dangerouslyAllowAllScripts: installOptions.dangerouslyAllowAllScripts,
         nodeLinker: installOptions.nodeLinker,
         nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
         includeOptionalDeps: installOptions.includeOptionalDeps,
@@ -427,47 +428,63 @@ export class PnpmPackageManager implements PackageManager {
   /**
    * Calculating the dependencies graph of a given component using the lockfile.
    */
-  async calcDependenciesGraph(opts: CalcDepsGraphOptions): Promise<DependenciesGraph | undefined> {
-    const lockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: false });
-    if (!lockfile) {
-      return undefined;
+  async calcDependenciesGraph(opts: CalcDepsGraphOptions): Promise<void> {
+    const originalLockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: false });
+    if (!originalLockfile) {
+      return;
     }
-    if (opts.componentRootDir && !lockfile.importers[opts.componentRootDir] && opts.componentRootDir.includes('@')) {
-      opts.componentRootDir = opts.componentRootDir.split('@')[0];
-    }
-    const filterByImporterIds = [opts.componentRelativeDir as ProjectId];
-    if (opts.componentRootDir != null) {
-      filterByImporterIds.push(opts.componentRootDir as ProjectId);
-    }
-    for (const importerId of filterByImporterIds) {
-      for (const depType of [
-        'dependencies',
-        'devDependencies',
-        'optionalDependencies',
-        'specifiers',
-        'dependenciesMeta',
-      ]) {
-        for (const workspacePkgName of opts.componentIdByPkgName.keys()) {
-          if (workspacePkgName !== opts.pkgName) {
-            delete lockfile.importers[importerId]?.[depType]?.[workspacePkgName];
+    for (const { componentRootDir, componentRelativeDir, pkgName, component } of opts.components) {
+      const lockfile = structuredClone(originalLockfile);
+      let compRootDir: string | undefined;
+      if (componentRootDir && !lockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
+        compRootDir = componentRootDir.split('@')[0];
+      } else {
+        compRootDir = componentRootDir;
+      }
+      if (!lockfile.importers[compRootDir as ProjectId]) {
+        // This will only happen if the env was not loaded correctly before install.
+        // But in this case we cannot calculate the dependency graph from the lockfile.
+        continue;
+      }
+      const filterByImporterIds = [componentRelativeDir as ProjectId];
+      if (compRootDir != null) {
+        filterByImporterIds.push(compRootDir as ProjectId);
+      }
+      for (const importerId of filterByImporterIds) {
+        for (const depType of [
+          'dependencies',
+          'devDependencies',
+          'optionalDependencies',
+          'specifiers',
+          'dependenciesMeta',
+        ]) {
+          for (const workspacePkgName of opts.componentIdByPkgName.keys()) {
+            if (workspacePkgName !== pkgName) {
+              delete lockfile.importers[importerId]?.[depType]?.[workspacePkgName];
+            }
           }
         }
       }
+      // Filters the lockfile so that it only includes packages related to the given component.
+      const partialLockfile = convertLockfileObjectToLockfileFile(
+        filterLockfileByImporters(lockfile, filterByImporterIds, {
+          include: {
+            dependencies: true,
+            devDependencies: true,
+            optionalDependencies: true,
+          },
+          failOnMissingDependencies: false,
+          skipped: new Set(),
+        })
+      );
+      const graph = convertLockfileToGraph(partialLockfile, {
+        ...opts,
+        componentRootDir: compRootDir,
+        componentRelativeDir,
+        pkgName,
+      });
+      component.state._consumer.dependenciesGraph = graph;
     }
-    // Filters the lockfile so that it only includes packages related to the given component.
-    const partialLockfile = convertLockfileObjectToLockfileFile(
-      filterLockfileByImporters(lockfile, filterByImporterIds, {
-        include: {
-          dependencies: true,
-          devDependencies: true,
-          optionalDependencies: true,
-        },
-        failOnMissingDependencies: false,
-        skipped: new Set(),
-      })
-    );
-    const graph = convertLockfileToGraph(partialLockfile, opts);
-    return graph;
   }
 }
 

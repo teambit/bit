@@ -1,4 +1,5 @@
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React from 'react';
 
 export const mountPointId = 'root';
 const placeholderRegex = /<div id="root"><\/div>/;

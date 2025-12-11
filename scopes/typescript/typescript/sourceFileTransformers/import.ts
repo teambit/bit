@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { SourceFileTransformer } from './index';
+import type { SourceFileTransformer } from './index';
 
 export const importTransformer: SourceFileTransformer = (mapping: Record<string, string>) => {
   return (context) => {

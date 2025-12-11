@@ -1,9 +1,10 @@
-import ts, { Node, TypeReferenceNode } from 'typescript';
+import type { Node, TypeReferenceNode } from 'typescript';
+import ts from 'typescript';
 import { TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { Identifier } from '../identifier';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { Identifier } from '../identifier';
 
 /**
  * In the following example, `AriaButtonProps` is a type reference

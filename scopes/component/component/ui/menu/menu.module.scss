@@ -70,11 +70,15 @@
   }
 }
 
-.useBox {
-  --bit-drawer-margin: 14px;
+.useBox,
+.versionDropdown {
+  --bit-drawer-margin: 10px;
 }
 
 .componentVersionMenu {
+  width: 500px;
+}
+.componentVersionMenuWorkspace {
   width: 350px;
 }
 
@@ -100,4 +104,5 @@
 
 .useBoxContainer {
   width: 500px !important;
+  border: 1px solid var(--border-medium-color, #ededed);
 }

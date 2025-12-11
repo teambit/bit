@@ -1,12 +1,11 @@
 import { validateEnvPolicyConfigObject } from './validate-env-policy';
-import {
-  createVariantPolicyEntry,
+import type {
   VariantPolicyEntry,
-  VariantPolicy,
   VariantPolicyConfigObject,
   VariantPolicyFromConfigObjectOptions,
 } from '../variant-policy';
-import { DependencyLifecycleType } from '../../dependencies';
+import { createVariantPolicyEntry, VariantPolicy } from '../variant-policy';
+import type { DependencyLifecycleType } from '../../dependencies';
 
 export type EnvJsoncPolicyEntry = {
   name: string;

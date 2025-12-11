@@ -5,8 +5,9 @@ import { BitError } from '@teambit/bit-error';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { SCOPE_JSON, SCOPE_JSONC } from '@teambit/legacy.constants';
-import { Remote } from '@teambit/scope.remotes';
-import { cleanObject, PathOsBasedAbsolute, writeFile } from '@teambit/legacy.utils';
+import type { Remote } from '@teambit/scope.remotes';
+import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { cleanObject, writeFile } from '@teambit/legacy.utils';
 import { ScopeJsonNotFound } from './exceptions';
 
 export function getPath(scopePath: string): string {

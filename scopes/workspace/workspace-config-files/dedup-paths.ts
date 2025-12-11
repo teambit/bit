@@ -1,8 +1,8 @@
 import { invertBy, uniq } from 'lodash';
 import { dirname } from 'path';
-import { PathLinuxRelative } from '@teambit/toolbox.path.path';
-import { CompPathExtendingHashMap, EnvCompsDirsMap } from './workspace-config-files.main.runtime';
-import { ExtendingConfigFilesMap } from './writers';
+import type { PathLinuxRelative } from '@teambit/toolbox.path.path';
+import type { CompPathExtendingHashMap, EnvCompsDirsMap } from './workspace-config-files.main.runtime';
+import type { ExtendingConfigFilesMap } from './writers';
 
 export type DedupedPaths = Array<{
   fileHash: string;

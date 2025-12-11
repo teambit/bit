@@ -1,5 +1,5 @@
-import { CloudUser } from '@teambit/cloud.models.cloud-user';
-import { ComponentType } from 'react';
+import type { CloudUser } from '@teambit/cloud.models.cloud-user';
+import type { ComponentType } from 'react';
 
 export type UserBarItem = {
   /**

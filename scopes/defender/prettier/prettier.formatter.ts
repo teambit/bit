@@ -1,15 +1,17 @@
-import { AbstractVinyl } from '@teambit/component.sources';
-import {
+import type { AbstractVinyl } from '@teambit/component.sources';
+import type {
   Formatter,
   FormatterContext,
   FormatResults,
   FileFormatResult,
   ComponentFormatResult,
 } from '@teambit/formatter';
-import PrettierLib, { Options as PrettierModuleOptions } from 'prettier';
+import type { Options as PrettierModuleOptions } from 'prettier';
+// eslint-disable-next-line import/default
+import PrettierLib from 'prettier';
 import mapSeries from 'p-map-series';
-import { Logger } from '@teambit/logger';
-import { ExecutionContext } from '@teambit/envs';
+import type { Logger } from '@teambit/logger';
+import type { ExecutionContext } from '@teambit/envs';
 // import { PrettierOptions } from './prettier.main.runtime';
 
 export class PrettierFormatter implements Formatter {

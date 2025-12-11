@@ -7,7 +7,7 @@ import Ref from '../objects/ref';
 import { BitObject } from '../objects';
 import type Version from './version';
 import { getVersionParentsFromVersion } from '@teambit/component.snap-distance';
-import ModelComponent from './model-component';
+import type ModelComponent from './model-component';
 
 export type VersionParents = {
   hash: Ref;

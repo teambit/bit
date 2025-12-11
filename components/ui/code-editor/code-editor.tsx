@@ -1,7 +1,8 @@
 import React from 'react';
 import classnames from 'classnames';
-import { OnMount, BeforeMount, OnChange, EditorProps, loader } from '@monaco-editor/react';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import type { OnMount, BeforeMount, OnChange, EditorProps } from '@monaco-editor/react';
+import { loader } from '@monaco-editor/react';
+import type * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
 
 loader.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.48.0/min/vs' } });

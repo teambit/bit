@@ -1,9 +1,9 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
-import { ComponentID } from '@teambit/component-id';
-import { FileStatus } from '@teambit/merging';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ComponentID } from '@teambit/component-id';
+import { FileStatus } from '@teambit/component.modules.merge-helper';
 import type { ImporterMain } from './importer.main.runtime';
-import { ImportDetails, ImportStatus } from './import-components';
+import type { ImportDetails, ImportStatus } from './import-components';
 
 export class FetchCmd implements Command {
   name = 'fetch [ids...]';
@@ -36,13 +36,11 @@ export class FetchCmd implements Command {
     {
       lanes = false,
       components = false,
-      json = false,
       fromOriginalScope = false,
       allHistory = false,
     }: {
       lanes?: boolean;
       components?: boolean;
-      json?: boolean;
       fromOriginalScope?: boolean;
       allHistory?: boolean;
     }
@@ -54,24 +52,25 @@ export class FetchCmd implements Command {
       fromOriginalScope,
       allHistory
     );
-    if (json) {
-      return JSON.stringify({ importDetails }, null, 4);
-    }
-    if (importedIds.length) {
-      const title =
-        importedIds.length === 1
-          ? 'successfully fetched one component'
-          : `successfully fetched ${importedIds.length} components`;
-      const componentDependencies = importedIds.map((id) => {
-        const details = importDetails.find((c) => c.id === id.toStringWithoutVersion());
-        if (!details) throw new Error(`missing details for component ${id.toString()}`);
-        return formatPlainComponentItemWithVersions(id, details);
-      });
-      const componentDependenciesOutput = [chalk.green(title)].concat(componentDependencies).join('\n');
 
-      return componentDependenciesOutput;
+    if (!importedIds.length) {
+      return chalk.yellow('nothing to import');
     }
-    return chalk.yellow('nothing to import');
+    const title = `successfully fetched ${importedIds.length} component(s)`;
+    if (!importDetails) {
+      // in case it fetches from a scope, when a workspace is not available.
+      const comps = importedIds.map((id) => chalk.cyan(id.toString()));
+      return [chalk.green(title)].concat(comps).join('\n');
+    }
+
+    const componentDependencies = importedIds.map((id) => {
+      const details = importDetails.find((c) => c.id === id.toStringWithoutVersion());
+      if (!details) throw new Error(`missing details for component ${id.toString()}`);
+      return formatPlainComponentItemWithVersions(id, details);
+    });
+    const componentDependenciesOutput = [chalk.green(title)].concat(componentDependencies).join('\n');
+
+    return componentDependenciesOutput;
   }
 }
 

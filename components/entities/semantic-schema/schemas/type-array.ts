@@ -1,4 +1,5 @@
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 
 export class TypeArraySchema extends SchemaNode {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { TupleTypeSchema } from '@teambit/semantics.entities.semantic-schema';
 import styles from './tuple-type.renderer.module.scss';
 
@@ -52,7 +52,8 @@ function TupleTypeArray(props: APINodeRenderProps) {
   );
 }
 
-function ElementRenderer({ element, renderers, ...props }) {
+function ElementRenderer({ element, ...props }) {
+  const { renderers } = props;
   const elementRenderer = renderers.find((renderer) => renderer.predicate(element));
   if (elementRenderer) {
     return (

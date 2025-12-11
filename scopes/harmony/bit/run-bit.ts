@@ -1,9 +1,4 @@
 /* eslint-disable import/first */
-process.on('uncaughtException', (err) => {
-  // eslint-disable-next-line no-console
-  console.error('uncaughtException', err);
-  process.exit(1);
-});
 
 import fs from 'fs';
 consoleFileReadUsages();
@@ -15,7 +10,7 @@ gracefulFs.gracefulify(fs);
 import './hook-require';
 import { bootstrap } from './bootstrap';
 import { handleErrorAndExit } from '@teambit/cli';
-import { Aspect } from '@teambit/harmony';
+import type { Aspect } from '@teambit/harmony';
 import { runCLI } from './load-bit';
 import { autocomplete } from './autocomplete';
 import { ServerCommander, shouldUseBitServer } from './server-commander';
@@ -42,6 +37,12 @@ export async function runBit(additionalAspects?: Aspect[]) {
 }
 
 async function initApp(additionalAspects?: Aspect[]) {
+  // don't place this "process.on" block on the top. otherwise, "server-forever" will show "uncaughtException" on any error.
+  process.on('uncaughtException', (err) => {
+    // eslint-disable-next-line no-console
+    console.error('uncaughtException', err);
+    process.exit(1);
+  });
   try {
     await bootstrap();
     await runCLI(additionalAspects);

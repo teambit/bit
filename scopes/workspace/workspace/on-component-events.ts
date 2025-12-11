@@ -1,7 +1,7 @@
-import { Component, ComponentID, AspectData } from '@teambit/component';
-import { ComponentLoadOptions } from '@teambit/legacy.consumer-component';
+import type { Component, ComponentID, AspectData } from '@teambit/component';
+import type { ComponentLoadOptions } from '@teambit/legacy.consumer-component';
 import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
-import { WatchOptions } from '@teambit/watcher';
+import type { WatchOptions } from '@teambit/watcher';
 
 export type SerializableResults = { results: any; toString: () => string };
 export type OnComponentChange = (

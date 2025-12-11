@@ -1,40 +1,32 @@
 import { BitError } from '@teambit/bit-error';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { isHash } from '@teambit/component-version';
 import pMap from 'p-map';
 import { BuildStatus } from '@teambit/legacy.constants';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
-import { ComponentObjects } from '../component-objects';
+import type { ComponentObjects } from '../component-objects';
+import type { SnapsDistance, VersionInfo } from '@teambit/component.snap-distance';
 import {
   getAllVersionHashes,
   getAllVersionsInfo,
   getSubsetOfVersionParents,
   getVersionParentsFromVersion,
-  VersionInfo,
   getDivergeData,
+  TargetHeadNotFound,
 } from '@teambit/component.snap-distance';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import {
-  ModelComponent,
-  Source,
-  Symlink,
-  Version,
-  Repository,
-  BitObject,
-  ComponentProps,
-  Ref,
-  Lane,
-  LaneComponent,
-} from '@teambit/objects';
-import Scope from '../scope';
+import type { Source, Repository, BitObject, ComponentProps, Lane, LaneComponent } from '@teambit/objects';
+import { ModelComponent, Symlink, Version, Ref } from '@teambit/objects';
+import type Scope from '../scope';
 import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import { InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { compact } from 'lodash';
 
 export type ComponentTree = {
@@ -138,7 +130,7 @@ export default class SourceRepository {
         return component;
       }
       const hash = component.getRef(bitId.version as string);
-      if (!hash) throw new Error(`sources.get: unable to get has for ${bitId.toString()}`);
+      if (!hash) throw new Error(`sources.get: unable to get hash for ${bitId.toString()}`);
       const hasLocalVersion = this.scope.stagedSnaps.has(hash.toString());
       if (hasLocalVersion) {
         // no point to go to the remote, it's local.
@@ -623,12 +615,17 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
 
     if (existingLane && !existingLaneWithSameId) {
       // the lane id has changed
+      logger.debug(`sources.mergeLane, lane id has changed from ${existingLane.toLaneId()} to ${lane.toLaneId()}`);
       existingLane.changeScope(lane.scope);
       existingLane.changeName(lane.name);
     }
     const mergeResults: MergeResult[] = [];
     const mergeErrors: ComponentNeedsUpdate[] = [];
     const isExport = !isImport;
+
+    logger.debug(
+      `sources.mergeLane, isExport: ${isExport}, versionObjects: ${versionObjects?.length || 0}, versionParents: ${versionParents?.length || 0}`
+    );
 
     const getModelComponent = async (id: ComponentID): Promise<ModelComponent> => {
       const modelComponent =
@@ -680,13 +677,27 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
       const subsetOfVersionParents = versionParents
         ? getSubsetOfVersionParents(versionParents, component.head)
         : undefined;
-      const divergeResults = await getDivergeData({
-        repo,
-        modelComponent,
-        targetHead: component.head,
-        sourceHead: existingComponent.head,
-        versionParentsFromObjects: subsetOfVersionParents,
-      });
+      let divergeResults: SnapsDistance;
+      try {
+        divergeResults = await getDivergeData({
+          repo,
+          modelComponent,
+          targetHead: component.head,
+          sourceHead: existingComponent.head,
+          versionParentsFromObjects: subsetOfVersionParents,
+        });
+      } catch (err) {
+        if (err instanceof TargetHeadNotFound && isExport) {
+          throw new Error(`unable to merge component "${component.id.toString()}" on lane "${lane.toLaneId()}".
+the lane references snap "${component.head.toString()}", but this Version object was not found among the exported objects.
+total exported Version objects: ${versionObjects?.length || 0}.
+
+possible causes:
+- the lane object was exported without all its components
+- this snap should be available locally but is missing from the filesystem`);
+        }
+        throw err;
+      }
       if (divergeResults.isDiverged()) {
         if (isImport) {
           // do not update the local lane. later, suggest to snap-merge.

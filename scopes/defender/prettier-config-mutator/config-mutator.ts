@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash';
-import { Options as PrettierOptions, Plugin } from 'prettier';
+import type { Options as PrettierOptions, Plugin } from 'prettier';
 
 export type PrettierConfigTransformContext = {
   check: boolean;

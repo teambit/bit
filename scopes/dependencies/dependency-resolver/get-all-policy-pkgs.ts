@@ -1,7 +1,7 @@
-import { ComponentID } from '@teambit/component-id';
-import { ManifestDependenciesKeysNames } from './manifest';
-import { VariantPolicyConfigObject, VariantPolicyEntryValue, WorkspacePolicy } from './policy';
-import { DependencyLifecycleType } from './dependencies/dependency';
+import type { ComponentID } from '@teambit/component-id';
+import type { ManifestDependenciesKeysNames } from './manifest';
+import type { VariantPolicyConfigObject, VariantPolicyEntryValue, WorkspacePolicy } from './policy';
+import type { DependencyLifecycleType } from './dependencies/dependency';
 import { KEY_NAME_BY_LIFECYCLE_TYPE } from './dependencies';
 
 export type CurrentPkgSource =

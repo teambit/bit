@@ -1,14 +1,15 @@
 import { MainRuntime } from '@teambit/cli';
-import { Options as PrettierModuleOptions } from 'prettier';
-import { Formatter, FormatterMain, FormatterOptions } from '@teambit/formatter';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import {
-  PrettierConfigMutator,
+import type { Options as PrettierModuleOptions } from 'prettier';
+import type { Formatter, FormatterMain, FormatterOptions } from '@teambit/formatter';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type {
   PrettierConfigTransformContext,
   PrettierConfigTransformer,
 } from '@teambit/defender.prettier.config-mutator';
+import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
 import { getCloudDomain } from '@teambit/legacy.constants';
-import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { PrettierAspect } from './prettier.aspect';
 import { PrettierFormatter } from './prettier.formatter';
 

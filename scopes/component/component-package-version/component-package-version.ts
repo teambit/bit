@@ -1,4 +1,4 @@
-import { Component } from '@teambit/component';
+import type { Component } from '@teambit/component';
 import { isHash } from '@teambit/component-version';
 
 export const SNAP_VERSION_PREFIX = '0.0.0-';

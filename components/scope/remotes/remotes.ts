@@ -2,18 +2,20 @@ import { groupBy, forEach, get } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import pMap from 'p-map';
-import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
+import type { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
+import { CURRENT_FETCH_SCHEMA } from '@teambit/legacy.scope-api';
 import { GlobalRemotes } from './global-remotes';
 import { logger } from '@teambit/legacy.logger';
-import { Scope as LegacyScope, ScopeNotFound } from '@teambit/legacy.scope';
-import { DependencyGraph } from '@teambit/legacy.dependency-graph';
+import type { Scope as LegacyScope } from '@teambit/legacy.scope';
+import { ScopeNotFound } from '@teambit/legacy.scope';
+import type { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import { prependBang } from '@teambit/legacy.utils';
 import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
 import { PrimaryOverloaded } from './exceptions';
 import { Remote } from './remote';
 import remoteResolver from './remote-resolver/remote-resolver';
 import { UnexpectedNetworkError } from '@teambit/scope.network';
-import { ObjectItemsStream } from '@teambit/objects';
+import type { ObjectItemsStream } from '@teambit/objects';
 import { ScopeNotFoundOrDenied } from './exceptions/scope-not-found-or-denied';
 
 export class Remotes extends Map<string, Remote> {

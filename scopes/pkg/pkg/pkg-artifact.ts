@@ -1,4 +1,4 @@
-import { AbstractVinyl } from '@teambit/component.sources';
+import type { AbstractVinyl } from '@teambit/component.sources';
 
 export class PkgArtifact {
   constructor(private artifacts: AbstractVinyl[]) {}

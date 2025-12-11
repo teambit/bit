@@ -72,3 +72,5 @@ export const CLOUD_IMPORTER_V2 = 'cloud-importer-v2';
 export const ALLOW_SAME_NAME = 'allow-same-name'; // not in use anymore
 
 export const DEPS_GRAPH = 'deps-graph';
+
+export const DISABLE_CAPSULE_OPTIMIZATION = 'disable-capsule-optimization';

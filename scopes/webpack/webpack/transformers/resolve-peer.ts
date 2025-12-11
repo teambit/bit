@@ -1,7 +1,7 @@
 import fs, { realpathSync } from 'fs';
 import { ResolverFactory, CachedInputFileSystem } from 'enhanced-resolve';
 import findRoot from 'find-root';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 
 /**
  * Get the package folder, and in case it's not found get the resolved file path

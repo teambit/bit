@@ -1,7 +1,8 @@
 import semver from 'semver';
 import { listRemote } from '@teambit/bvm.list';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
-import Diagnosis, { ExamineBareResult } from '../diagnosis';
+import type { ExamineBareResult } from '../diagnosis';
+import Diagnosis from '../diagnosis';
 
 export default class ValidateBitVersion extends Diagnosis {
   name = 'validate bit version';
@@ -10,7 +11,6 @@ export default class ValidateBitVersion extends Diagnosis {
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
     if (!bareResult.data) throw new Error('ValidateBitVersion, bareResult.data is missing');
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!bareResult.data.latestVersion) {
       return 'could not fetch bit latest version';
     }
@@ -21,7 +21,6 @@ export default class ValidateBitVersion extends Diagnosis {
 
   _formatManualTreat(bareResult: ExamineBareResult) {
     if (!bareResult.data) throw new Error('ValidateBitVersion, bareResult.data is missing');
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!bareResult.data.latestVersion) {
       return 'please make sure you have an internet connection';
     }

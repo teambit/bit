@@ -1,7 +1,8 @@
 import React from 'react';
-import { DiffEditorProps, DiffOnMount, loader } from '@monaco-editor/react';
+import type { DiffEditorProps, DiffOnMount } from '@monaco-editor/react';
+import { loader } from '@monaco-editor/react';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
-import { EditorSettingsState } from '../code-compare-editor-settings';
+import type { EditorSettingsState } from '../code-compare-editor-settings';
 
 loader.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.48.0/min/vs' } });
 

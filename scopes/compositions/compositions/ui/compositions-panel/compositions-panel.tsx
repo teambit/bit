@@ -13,7 +13,7 @@ import {
 } from '@teambit/compositions.ui.composition-live-controls';
 
 import styles from './compositions-panel.module.scss';
-import { Composition } from '../../composition';
+import type { Composition } from '../../composition';
 import { LiveControls } from './live-control-panel';
 
 export type CompositionsPanelProps = {

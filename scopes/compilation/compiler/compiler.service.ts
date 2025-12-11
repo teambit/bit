@@ -1,7 +1,14 @@
-import { EnvService, EnvDefinition, Env, EnvContext, ServiceTransformationMap, ExecutionContext } from '@teambit/envs';
+import type {
+  EnvService,
+  EnvDefinition,
+  Env,
+  EnvContext,
+  ServiceTransformationMap,
+  ExecutionContext,
+} from '@teambit/envs';
 import chalk from 'chalk';
 import highlight from 'cli-highlight';
-import { Compiler } from './types';
+import type { Compiler } from './types';
 
 export type CompilerDescriptor = {
   id: string;

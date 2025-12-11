@@ -2,8 +2,8 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { Extensions } from '@teambit/legacy.constants';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit lane command', function () {
   this.timeout(0);
@@ -566,6 +566,42 @@ describe('bit lane command', function () {
     it('should not merge the deleted component although main is ahead', () => {
       const status = helper.command.statusJson();
       expect(status.stagedComponents).to.have.lengthOf(1);
+    });
+  });
+  describe('delete on a lane with --update-main then merging the deleted component from main when main is ahead', () => {
+    let onMain: string;
+    let onLane: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      onMain = helper.scopeHelper.cloneWorkspace();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.softRemoveOnLane('comp1', '--update-main');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      onLane = helper.scopeHelper.cloneWorkspace();
+      helper.scopeHelper.getClonedWorkspace(onMain);
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.scopeHelper.getClonedWorkspace(onLane);
+      helper.command.mergeLane('main', '-x');
+    });
+    it('should merge the deleted component because it was deleted with --update-main', () => {
+      const status = helper.command.statusJson();
+      // comp1 should be staged (merged with the removal), and comp2 should be staged (merged from main)
+      expect(status.stagedComponents).to.have.lengthOf(2);
+    });
+    it('should keep the component marked as removed', () => {
+      const removeData = helper.command.showAspectConfig('comp1', Extensions.remove);
+      expect(removeData.config.removed).to.be.true;
+    });
+    it('should keep the component marked with removeOnMain', () => {
+      const removeData = helper.command.showAspectConfig('comp1', Extensions.remove);
+      expect(removeData.config.removeOnMain).to.be.true;
     });
   });
 });

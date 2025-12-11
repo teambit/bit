@@ -1,4 +1,4 @@
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 
 export class MainFileNotFound extends Error {
   constructor(

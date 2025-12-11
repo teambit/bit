@@ -1,5 +1,5 @@
-import BitObject from './object';
-import Repository from './repository';
+import type BitObject from './object';
+import type Repository from './repository';
 
 export default class Ref {
   hash: string;

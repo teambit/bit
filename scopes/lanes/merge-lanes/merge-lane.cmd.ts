@@ -1,11 +1,12 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
-import { mergeReport, MergeStrategy } from '@teambit/merging';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
+import { mergeReport } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import { removeTemplate } from '@teambit/remove';
-import { MergeLanesMain } from './merge-lanes.main.runtime';
-import { ConfigStoreMain } from '@teambit/config-store';
+import type { MergeLanesMain } from './merge-lanes.main.runtime';
+import type { ConfigStoreMain } from '@teambit/config-store';
 
 export class MergeLaneCmd implements Command {
   name = 'merge <lane> [pattern]';

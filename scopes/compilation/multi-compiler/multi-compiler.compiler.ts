@@ -1,15 +1,15 @@
 import { join } from 'path';
 import pMapSeries from 'p-map-series';
-import {
+import type {
   Compiler,
   CompilerOptions,
   TranspileComponentParams,
   TranspileFileOutput,
   TranspileFileParams,
 } from '@teambit/compiler';
-import { BuiltTaskResult, BuildContext, TaskResultsList } from '@teambit/builder';
+import type { BuiltTaskResult, BuildContext, TaskResultsList } from '@teambit/builder';
 import { mergeComponentResults } from '@teambit/pipelines.modules.merge-component-results';
-import { Component } from '@teambit/component';
+import type { Component } from '@teambit/component';
 
 export type MultiCompilerOptions = {
   targetExtension?: string;

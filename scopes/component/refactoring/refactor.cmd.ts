@@ -1,9 +1,9 @@
 // eslint-disable-next-line max-classes-per-file
-import { Command, CommandOptions } from '@teambit/cli';
-import { ComponentMain } from '@teambit/component';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ComponentMain } from '@teambit/component';
 // import { PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
-import { RefactoringMain } from './refactoring.main.runtime';
+import type { RefactoringMain } from './refactoring.main.runtime';
 
 export class DependencyNameRefactorCmd implements Command {
   name = 'dependency-name <old-id> <new-id>';
@@ -36,7 +36,10 @@ export class DependencyNameRefactorCmd implements Command {
 export class RefactorCmd implements Command {
   name = 'refactor <sub-command>';
   alias = '';
-  description = 'source code refactoring / codemod';
+  description = 'automatically refactor component source code';
+  extendedDescription = `performs automated code transformations and refactoring operations across components.
+currently supports updating import/require statements when component names or dependencies change.
+useful for maintaining code consistency after renaming or restructuring components.`;
   options = [];
   group = 'workspace-tools';
   commands: Command[] = [];

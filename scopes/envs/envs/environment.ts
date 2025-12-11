@@ -11,8 +11,8 @@ import type { ModifyPackageJsonFunc, PackageJsonProps } from '@teambit/pkg';
 import type { DependencyDetector, EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import type { Capsule } from '@teambit/isolator';
 import type { Component } from '@teambit/component';
-import { EnvPreviewConfig } from '@teambit/preview';
-import { SchemaNodeTransformer, SchemaTransformer } from '@teambit/typescript';
+import type { EnvPreviewConfig } from '@teambit/preview';
+import type { SchemaNodeTransformer, SchemaTransformer } from '@teambit/typescript';
 
 export type EnvDescriptor = {
   type: string;

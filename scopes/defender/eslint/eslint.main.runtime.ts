@@ -1,15 +1,13 @@
 import { MainRuntime } from '@teambit/cli';
 // import { Linter as ESLinter, ESLint as ESLintLib } from 'eslint';
-import { ESLint as ESLintLib } from 'eslint';
-import { Linter, LinterContext, LinterMain } from '@teambit/linter';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import {
-  EslintConfigMutator,
-  EslintConfigTransformContext,
-  EslintConfigTransformer,
-} from '@teambit/defender.eslint.config-mutator';
+import type { ESLint as ESLintLib } from 'eslint';
+import type { Linter, LinterContext, LinterMain } from '@teambit/linter';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { EslintConfigTransformContext, EslintConfigTransformer } from '@teambit/defender.eslint.config-mutator';
+import { EslintConfigMutator } from '@teambit/defender.eslint.config-mutator';
 import { getCloudDomain } from '@teambit/legacy.constants';
-import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { ESLintAspect } from './eslint.aspect';
 import { ESLintLinter } from './eslint.linter';
 

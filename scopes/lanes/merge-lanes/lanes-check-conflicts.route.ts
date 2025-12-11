@@ -1,6 +1,7 @@
-import { Route, Verb, Request, Response } from '@teambit/express';
-import { Logger } from '@teambit/logger';
-import { MergeLanesMain } from './merge-lanes.main.runtime';
+import type { Route, Request, Response } from '@teambit/express';
+import { Verb } from '@teambit/express';
+import type { Logger } from '@teambit/logger';
+import type { MergeLanesMain } from './merge-lanes.main.runtime';
 
 export class LanesCheckConflictsRoute implements Route {
   constructor(

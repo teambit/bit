@@ -1,7 +1,10 @@
-import React, { ReactNode } from 'react';
-import { useSingleton, UseSingletonProps } from '@tippyjs/react';
+import type { ReactNode } from 'react';
+import React from 'react';
+import type { UseSingletonProps } from '@tippyjs/react';
+import { useSingleton } from '@tippyjs/react';
 import { ProvideTooltipInstance } from './shared-instance';
-import { Tooltip, TooltipProps } from './tooltip';
+import type { TooltipProps } from './tooltip';
+import { Tooltip } from './tooltip';
 
 export interface SingletonTooltipProviderProps extends Omit<TooltipProps & UseSingletonProps, 'children'> {
   children: ReactNode;

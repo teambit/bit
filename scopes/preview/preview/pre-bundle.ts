@@ -1,6 +1,6 @@
 import { join, resolve } from 'path';
 import fs, { existsSync, outputFileSync, readJsonSync } from 'fs-extra';
-import { AspectDefinition } from '@teambit/aspect-loader';
+import type { AspectDefinition } from '@teambit/aspect-loader';
 import {
   createHarmonyImports,
   createImports,

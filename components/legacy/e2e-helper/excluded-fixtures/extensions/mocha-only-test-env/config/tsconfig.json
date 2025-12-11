@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "es2019", "DOM", "ES6" ,"DOM.Iterable"
+    ],
+    "target": "es2015",
+    "module": "es2020",
+    "jsx": "react",
+    "declaration": true,
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "outDir": "./dist"
+  },
+  "exclude": [
+    "artifacts",
+    "public",
+    "dist",
+    "node_modules",
+    "package.json",
+    "**/*.cjs"
+  ],
+  "include": [
+    "**/*",
+    "**/*.json"
+  ]
+}

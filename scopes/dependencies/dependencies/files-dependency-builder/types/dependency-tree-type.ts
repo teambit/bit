@@ -1,6 +1,6 @@
-import { ImportSpecifier } from '@teambit/legacy.consumer-component';
-import { ResolvedPackageData } from '../../resolve-pkg-data';
-import { DependencyDetector } from '../detector-hook';
+import type { ImportSpecifier } from '@teambit/legacy.consumer-component';
+import type { ResolvedPackageData } from '../../resolve-pkg-data';
+import type { DependencyDetector } from '@teambit/dependency-resolver';
 import { isEmpty } from 'lodash';
 
 export type FileObject = {
@@ -17,7 +17,7 @@ export class DependenciesTreeItem {
   unidentifiedPackages: string[] = [];
   components: ResolvedPackageData[] = [];
   error?: Error; // error.code is either PARSING_ERROR or RESOLVE_ERROR
-  missing?: { [key in MissingType]: string[] };
+  missing?: Record<MissingType, string[]>;
 
   isEmpty() {
     return (

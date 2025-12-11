@@ -1,6 +1,7 @@
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { useComponentQuery } from './use-component-query';
-import { ComponentQueryResult, UseComponentOptions, UseComponentType, Filters } from './use-component.model';
+import type { ComponentQueryResult, UseComponentOptions } from './use-component.model';
+import { UseComponentType, Filters } from './use-component.model';
 
 export { UseComponentType, Filters };
 

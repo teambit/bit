@@ -1,8 +1,9 @@
-import React, { HTMLAttributes } from 'react';
+import type { HTMLAttributes } from 'react';
+import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { LaneId } from '@teambit/lane-id';
+import type { LaneId } from '@teambit/lane-id';
 import classnames from 'classnames';
-import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
+import type { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneMenuItem } from './lane-menu-item';
 
 import styles from './lane-grouped-menu-item.module.scss';
@@ -15,7 +16,7 @@ export type LaneGroupedMenuItemProps = {
   onLaneSelected?: (laneId: LaneId, lane: LaneModel) => void;
   icon?: React.ReactNode;
   timestamp?: (lane: LaneModel) => Date | undefined;
-  innerRefs?: (laneId: LaneId) => React.RefObject<HTMLDivElement> | undefined;
+  innerRefs?: (laneId: LaneId, lane: LaneModel) => React.RefObject<HTMLDivElement> | undefined;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function LaneGroupedMenuItem({
@@ -55,7 +56,7 @@ export function LaneGroupedMenuItem({
       </div>
       {current.map((lane) => (
         <LaneMenuItem
-          ref={innerRefs?.(lane.id)}
+          ref={innerRefs?.(lane.id, lane)}
           key={lane.id.toString()}
           onLaneSelected={onLaneSelected}
           getHref={getHref}

@@ -1,4 +1,4 @@
-import { Artifact, ArtifactList } from '@teambit/builder';
+import type { Artifact, ArtifactList } from '@teambit/builder';
 import { AppBuildContext } from './app-build-context';
 
 export class AppDeployContext extends AppBuildContext {

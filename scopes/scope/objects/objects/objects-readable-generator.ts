@@ -1,14 +1,14 @@
 import pMapSeries from 'p-map-series';
 import { BitError } from '@teambit/bit-error';
 import { Readable } from 'stream';
-import BitObject from './object';
-import Repository from './repository';
-import Ref from './ref';
-import { Scope } from '@teambit/legacy.scope';
+import type BitObject from './object';
+import type Repository from './repository';
+import type Ref from './ref';
+import type { Scope } from '@teambit/legacy.scope';
 import { logger } from '@teambit/legacy.logger';
 import { getAllVersionHashesMemoized } from '@teambit/component.snap-distance';
-import { Lane, LaneHistory, ModelComponent, Version } from '../models';
-import { ObjectItem } from './object-list';
+import type { Lane, LaneHistory, ModelComponent, Version } from '../models';
+import type { ObjectItem } from './object-list';
 
 export type ComponentWithCollectOptions = {
   component: ModelComponent;

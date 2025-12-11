@@ -1,21 +1,23 @@
-import { ExpressMain } from '@teambit/express';
-import { GraphqlMain } from '@teambit/graphql';
-import { Logger } from '@teambit/logger';
-import express, { Express } from 'express';
+import type { ExpressMain } from '@teambit/express';
+import type { GraphqlMain } from '@teambit/graphql';
+import type { Logger } from '@teambit/logger';
+import type { Express } from 'express';
+import express from 'express';
 import fallback from 'express-history-api-fallback';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { stripTrailingChar } from '@teambit/toolbox.string.strip-trailing-char';
-import { Server } from 'http';
+import type { Server } from 'http';
 import httpProxy from 'http-proxy';
 import { join } from 'path';
 import webpack from 'webpack';
-import WebpackDevServer, { Configuration as WdsConfiguration } from 'webpack-dev-server';
-import { ComponentServer } from '@teambit/bundler';
+import type { Configuration as WdsConfiguration } from 'webpack-dev-server';
+import WebpackDevServer from 'webpack-dev-server';
+import type { ComponentServer } from '@teambit/bundler';
 import { createSsrMiddleware } from './ssr-middleware';
-import { StartPlugin } from './start-plugin';
-import { ProxyEntry, UIRoot } from './ui-root';
+import type { StartPlugin } from './start-plugin';
+import type { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
-import { UiMain } from './ui.main.runtime';
+import type { UiMain } from './ui.main.runtime';
 
 import { devConfig } from './webpack/webpack.dev.config';
 
@@ -288,7 +290,6 @@ export class UIServer {
     const config = await this.getDevConfig();
     const compiler = webpack(config as any);
     const devServerConfig = await this.getDevServerConfig(devServerPort, expressAppPort, config.devServer);
-    // @ts-ignore in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
     const devServer = new WebpackDevServer(devServerConfig, compiler);
 
     await devServer.start();

@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { RenderingContext } from '@teambit/preview';
+import type { RenderingContext } from '@teambit/preview';
 
 import { CompositionsApp } from './compositions-app';
 

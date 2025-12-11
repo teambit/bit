@@ -1,18 +1,20 @@
 import open from 'open';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
 // import { Logger } from '@teambit/logger';
 // import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { reportLegacy, actionLegacy } from './legacy-show/show-legacy-cmd';
-import { ComponentMain } from '../component.main.runtime';
+import type { ComponentMain } from '../component.main.runtime';
 import { isLikelyPackageName, resolveComponentIdFromPackageName } from '@teambit/pkg.modules.component-package-name';
 
 export class ShowCmd implements Command {
   name = 'show <component-name>';
-  description = "display the component's essential information";
+  description = 'display component metadata, dependencies, and configuration';
+  extendedDescription = `shows detailed information about a component including its version, dependencies, environment, and other metadata.
+note: to see file changes made in a specific version, use \`bit diff <component> <version> --parent\`.`;
   alias = '';
   group = 'info-analysis';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];

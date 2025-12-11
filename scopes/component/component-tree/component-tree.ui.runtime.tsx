@@ -1,7 +1,8 @@
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
 
-import { ComponentTreeNode } from './component-tree-node';
+import type { ComponentTreeNode } from './component-tree-node';
 import { ComponentTreeAspect } from './component-tree.aspect';
 
 export type ComponentTreeSlot = SlotRegistry<ComponentTreeNode>;

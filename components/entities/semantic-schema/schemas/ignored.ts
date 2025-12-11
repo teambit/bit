@@ -1,5 +1,7 @@
-import { DocSchema, SchemaRegistry } from '..';
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { DocSchema } from '..';
+import { SchemaRegistry } from '..';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 
 export class IgnoredSchema extends SchemaNode {
   public location: SchemaLocation;

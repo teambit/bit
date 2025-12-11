@@ -1,5 +1,5 @@
 import type { Component } from '@teambit/component';
-import { Doc } from '@teambit/docs.entities.doc';
+import type { Doc } from '@teambit/docs.entities.doc';
 
 export interface DocReader {
   /**

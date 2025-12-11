@@ -1,7 +1,7 @@
 .simple,
 .detailed {
   cursor: pointer;
-  border: 1px solid var(--bit-border-color, #babec9);
+  border: 1px solid #babec9;
   border-radius: 6px;
   transition: background-color 300ms ease-in-out;
   height: 30px;
@@ -22,11 +22,13 @@
     cursor: default;
     background-color: var(--border-medium-color, #ededed);
     color: var(--on-background-medium-color, #707279);
+
     > span {
       display: none;
     }
   }
 }
+
 .versionName {
   flex-grow: 1;
   min-width: fit-content;
@@ -44,6 +46,7 @@
 
 .loader {
   color: var(--bit-bg-dent, #f6f6f6);
+
   > span {
     padding: 4px;
   }

@@ -1,49 +1,56 @@
 import { ArtifactFactory, BuilderAspect } from '@teambit/builder';
 import type { BuilderMain } from '@teambit/builder';
-import { Asset, BundlerAspect, BundlerMain } from '@teambit/bundler';
-import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
+import type { Asset, BundlerMain } from '@teambit/bundler';
+import { BundlerAspect } from '@teambit/bundler';
+import type { PubsubMain } from '@teambit/pubsub';
+import { PubsubAspect } from '@teambit/pubsub';
 import { MainRuntime, CLIAspect } from '@teambit/cli';
 import type { CLIMain } from '@teambit/cli';
-import {
-  Component,
-  ComponentAspect,
-  ComponentMain,
-  ComponentMap,
-  ComponentID,
-  ResolveAspectsOptions,
-} from '@teambit/component';
+import type { Component, ComponentMain, ComponentMap, ComponentID, ResolveAspectsOptions } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import { EnvsAspect } from '@teambit/envs';
 import type { EnvsExecutionResult, EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
-import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
-import { UIAspect, UiMain, UIRoot } from '@teambit/ui';
-import { CacheAspect, CacheMain } from '@teambit/cache';
+import type { SlotRegistry, Harmony } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { UiMain, UIRoot } from '@teambit/ui';
+import { UIAspect } from '@teambit/ui';
+import type { CacheMain } from '@teambit/cache';
+import { CacheAspect } from '@teambit/cache';
 import { CACHE_ROOT } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
 import { uniq } from 'lodash';
 import { writeFileSync, existsSync, mkdirSync, ensureDirSync, writeJSONSync } from 'fs-extra';
 import { join } from 'path';
-import { PkgAspect, PkgMain } from '@teambit/pkg';
+import type { PkgMain } from '@teambit/pkg';
+import { PkgAspect } from '@teambit/pkg';
 import { AspectLoaderAspect, getAspectDir, getAspectDirFromBvm } from '@teambit/aspect-loader';
 import type { AspectDefinition, AspectLoaderMain } from '@teambit/aspect-loader';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { LoggerMain, Logger } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ExpressAspect, ExpressMain } from '@teambit/express';
+import type { ExpressMain } from '@teambit/express';
+import { ExpressAspect } from '@teambit/express';
 import { ArtifactFiles } from '@teambit/component.sources';
-import { WatcherAspect, WatcherMain } from '@teambit/watcher';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import type { WatcherMain } from '@teambit/watcher';
+import { WatcherAspect } from '@teambit/watcher';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 import { ONLY_OVERVIEW, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { BundlingStrategyNotFound } from './exceptions';
-import { generateLink, MainModulesMap } from './generate-link';
+import type { MainModulesMap } from './generate-link';
+import { generateLink } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
-import { PreviewDefinition } from './preview-definition';
+import type { PreviewDefinition } from './preview-definition';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { PreviewRoute } from './preview.route';
 import { PreviewTask, PREVIEW_TASK_NAME } from './preview.task';
-import { BundlingStrategy } from './bundling-strategy';
+import type { BundlingStrategy } from './bundling-strategy';
 import {
   EnvBundlingStrategy,
   ComponentBundlingStrategy,

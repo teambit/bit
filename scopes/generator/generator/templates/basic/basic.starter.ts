@@ -1,5 +1,5 @@
 import { gitIgnoreTemplate } from '@teambit/git.modules.git-ignore';
-import { WorkspaceContext, WorkspaceTemplate as Starter } from '../../workspace-template';
+import type { WorkspaceContext, WorkspaceTemplate as Starter } from '../../workspace-template';
 import { workspaceConfig } from './template/files/workspace-config';
 import { packageJson } from './template/files/package-json';
 

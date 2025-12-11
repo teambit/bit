@@ -1,8 +1,10 @@
-import { Component, ComponentID } from '@teambit/component';
-import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
+import type { Component, ComponentID } from '@teambit/component';
+import type { Node, Edge } from '@teambit/graph.cleargraph';
+import { Graph } from '@teambit/graph.cleargraph';
 
-import { Dependency } from '../model/dependency';
-import { DuplicateDependency, VersionSubgraph } from '../duplicate-dependency';
+import type { Dependency } from '../model/dependency';
+import type { VersionSubgraph } from '../duplicate-dependency';
+import { DuplicateDependency } from '../duplicate-dependency';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
 

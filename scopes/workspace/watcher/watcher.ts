@@ -1,33 +1,37 @@
-import { PubsubMain } from '@teambit/pubsub';
+import type { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
 import { dirname, basename, join, sep } from 'path';
 import { compact, difference, partition } from 'lodash';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BIT_MAP, WORKSPACE_JSONC } from '@teambit/legacy.constants';
-import { Consumer } from '@teambit/legacy.consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
-import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import mapSeries from 'p-map-series';
 import chalk from 'chalk';
-import { ChildProcess } from 'child_process';
+import type { ChildProcess } from 'child_process';
 import { UNMERGED_FILENAME } from '@teambit/legacy.scope';
-import chokidar, { FSWatcher } from 'chokidar';
-import { ComponentMap } from '@teambit/legacy.bit-map';
-import { CompilationInitiator } from '@teambit/compiler';
+import type { FSWatcher } from 'chokidar';
+import chokidar from 'chokidar';
+import type { ComponentMap } from '@teambit/legacy.bit-map';
+import type { Workspace, OnComponentEventResult } from '@teambit/workspace';
 import {
   WorkspaceAspect,
-  Workspace,
-  OnComponentEventResult,
   OnComponentChangeEvent,
   OnComponentAddEvent,
   OnComponentRemovedEvent,
 } from '@teambit/workspace';
-import { CheckTypes } from './check-types';
-import { WatcherMain } from './watcher.main.runtime';
+import type { CheckTypes } from './check-types';
+import type { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';
-import { Logger } from '@teambit/logger';
-import ParcelWatcher, { Event } from '@parcel/watcher';
+import type { Logger } from '@teambit/logger';
+import type { Event, Options as ParcelWatcherOptions } from '@parcel/watcher';
+import ParcelWatcher from '@parcel/watcher';
+import { spawnSync } from 'child_process';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
+import { WatcherDaemon, WatcherClient, getOrCreateWatcherConnection, type WatcherError } from './watcher-daemon';
+import { formatFSEventsErrorMessage } from './fsevents-error';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: ComponentID; componentIds: ComponentID[] };
 
@@ -50,13 +54,14 @@ export type OnFileEventFunc = (
 ) => void;
 
 export type WatchOptions = {
-  initiator?: CompilationInitiator;
+  initiator?: any; // the real type is CompilationInitiator, however it creates a circular dependency with the compiler aspect.
   verbose?: boolean; // print watch events to the console. (also ts-server events if spawnTSServer is true)
   spawnTSServer?: boolean; // needed for check types and extract API/docs.
   checkTypes?: CheckTypes; // if enabled, the spawnTSServer becomes true.
   preCompile?: boolean; // whether compile all components before start watching
   compile?: boolean; // whether compile modified/added components during watch process
-  import?: boolean; // whether import objects when .bitmap got version changes
+  import?: boolean; // whether import objects during watch when .bitmap got version changes
+  preImport?: boolean; // whether import objects before starting the watch process in case .bitmap is more updated than local scope.
   generateTypes?: boolean; // whether generate d.ts files for typescript files during watch process (hurts performance)
   trigger?: ComponentID; // trigger onComponentChange for the specified component-id. helpful when this comp must be a bundle, and needs to be recompile on any dep change.
 };
@@ -66,6 +71,7 @@ export type RootDirs = { [dir: PathLinux]: ComponentID };
 type WatcherType = 'chokidar' | 'parcel';
 
 const DEBOUNCE_WAIT_MS = 100;
+const DROP_ERROR_DEBOUNCE_MS = 300; // Wait 300ms after last drop error before recovering
 type PathLinux = string; // ts fails when importing it from @teambit/legacy/dist/utils/path.
 
 export class Watcher {
@@ -80,6 +86,21 @@ export class Watcher {
   private multipleWatchers: WatcherProcessData[] = [];
   private logger: Logger;
   private workspacePathLinux: string;
+  // Snapshot-based recovery for FSEvents buffer overflow
+  private snapshotPath: PathOsBasedAbsolute;
+  private dropErrorDebounceTimer: NodeJS.Timeout | null = null;
+  private dropErrorCount = 0;
+  private isRecoveringFromSnapshot = false;
+  // Shared watcher daemon/client
+  private watcherDaemon: WatcherDaemon | null = null;
+  private watcherClient: WatcherClient | null = null;
+  private isDaemon = false;
+  // Parcel watcher subscription for cleanup
+  private parcelSubscription: { unsubscribe: () => Promise<void> } | null = null;
+  // Signal handlers for cleanup (to avoid accumulation)
+  private signalCleanupHandler: (() => void) | null = null;
+  // Cached Watchman availability (checked once per process lifetime)
+  private watchmanAvailable: boolean | null = null;
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
@@ -91,6 +112,7 @@ export class Watcher {
     this.verbose = this.options.verbose || false;
     this.logger = this.watcherMain.logger;
     this.workspacePathLinux = pathNormalizeToLinux(this.workspace.path);
+    this.snapshotPath = join(this.workspace.scope.path, 'watcher-snapshot.txt');
 
     if (process.env.BIT_WATCHER_USE_CHOKIDAR === 'true' || process.env.BIT_WATCHER_USE_CHOKIDAR === '1') {
       this.watcherType = 'chokidar';
@@ -99,6 +121,58 @@ export class Watcher {
 
   get consumer(): Consumer {
     return this.workspace.consumer;
+  }
+
+  private getParcelIgnorePatterns(): string[] {
+    return [
+      '**/node_modules/**',
+      '**/package.json',
+      `**/${this.workspace.scope.path}/cache/**`,
+      `**/${this.workspace.scope.path}/tmp/**`,
+      `**/${this.workspace.scope.path}/objects/**`,
+    ];
+  }
+
+  /**
+   * Get Parcel watcher options, preferring Watchman on macOS when available.
+   * On macOS, FSEvents is the default but has a system-wide limit of ~500 streams.
+   * Watchman is a single-daemon solution that avoids this limit.
+   */
+  private getParcelWatcherOptions(): ParcelWatcherOptions {
+    const options: ParcelWatcherOptions = {
+      ignore: this.getParcelIgnorePatterns(),
+    };
+
+    // On macOS, prefer Watchman if available to avoid FSEvents stream limit
+    if (process.platform === 'darwin') {
+      if (this.isWatchmanAvailable()) {
+        options.backend = 'watchman';
+        this.logger.debug('Using Watchman backend for file watching');
+      } else {
+        this.logger.debug('Using FSEvents backend for file watching (Watchman not available)');
+      }
+    }
+
+    return options;
+  }
+
+  /**
+   * Check if Watchman is installed.
+   * Result is cached to avoid repeated executions.
+   */
+  private isWatchmanAvailable(): boolean {
+    if (this.watchmanAvailable !== null) {
+      return this.watchmanAvailable;
+    }
+    try {
+      // Use spawnSync with shell: false (default) for security - prevents command injection
+      const result = spawnSync('watchman', ['version'], { stdio: 'ignore', timeout: 5000 });
+      // Check for spawn errors (e.g., command not found) or non-zero exit status
+      this.watchmanAvailable = !result.error && result.status === 0;
+    } catch {
+      this.watchmanAvailable = false;
+    }
+    return this.watchmanAvailable;
   }
 
   async watch() {
@@ -111,25 +185,263 @@ export class Watcher {
 
   private async watchParcel() {
     this.msgs?.onStart(this.workspace);
+
+    // Use shared watcher daemon pattern to avoid FSEvents limit on macOS
+    // FSEvents has a system-wide limit on concurrent watchers, which causes
+    // "Error starting FSEvents stream" when multiple bit commands run watchers.
+    // This is only an issue on macOS - other platforms don't have this limitation.
+    const isMacOS = process.platform === 'darwin';
+    const isSharedDisabled = process.env.BIT_WATCHER_NO_SHARED === 'true' || process.env.BIT_WATCHER_NO_SHARED === '1';
+    const useSharedWatcher = isMacOS && !isSharedDisabled;
+
+    if (useSharedWatcher) {
+      try {
+        const connection = await getOrCreateWatcherConnection(this.workspace.scope.path, this.logger);
+
+        if (connection.isDaemon && connection.daemon) {
+          // We're the daemon - run the actual Parcel watcher
+          this.isDaemon = true;
+          this.watcherDaemon = connection.daemon;
+          this.logger.debug('Started as watcher daemon');
+          await this.startParcelWatcherAsDaemon();
+        } else if (connection.client) {
+          // We're a client - receive events from the daemon
+          this.isDaemon = false;
+          this.watcherClient = connection.client;
+          this.logger.debug('Connected to existing watcher daemon');
+          await this.startAsClient();
+        }
+
+        this.msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
+        this.logger.clearStatusLine();
+        return;
+      } catch (err: any) {
+        // If shared watcher setup fails, fall back to direct Parcel watcher
+        this.logger.debug(`Shared watcher setup failed, falling back to direct watcher: ${err.message}`);
+      }
+    }
+
+    // Original direct Parcel watcher logic (fallback)
     try {
-      await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), {
-        ignore: ['**/node_modules/**', '**/package.json'],
-      });
+      await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), this.getParcelWatcherOptions());
+
+      // Write initial snapshot for FSEvents buffer overflow recovery
+      await this.writeSnapshotIfNeeded();
+      this.logger.debug('Initial watcher snapshot created');
     } catch (err: any) {
       if (err.message.includes('Error starting FSEvents stream')) {
-        throw new Error(`Failed to start the watcher: ${err.message}
-This is usually caused by too many watchers running in the same workspace (e.g., bit-watch, bit-start, bit-run, or VSCode with the Bit plugin).
-Try closing the other watchers and re-running the command.
-
-In general, if you're using "bit start" or "bit run", you don't need to run "bit watch" as well.
-Similarly, if you're using VSCode with the Bit extension, you can enable "Compile on Change" instead of running a watcher manually.
-
-If the issue persists, please refer to the Watchman troubleshooting guide:
-https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-register_with_server-error-f2d_register_rpc--null--21`);
+        const errorMessage = await formatFSEventsErrorMessage();
+        throw new Error(errorMessage);
       }
+      throw err;
     }
     this.msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
     this.logger.clearStatusLine();
+  }
+
+  /**
+   * Start Parcel watcher as the daemon - broadcast events to all clients
+   */
+  private async startParcelWatcherAsDaemon(): Promise<void> {
+    try {
+      // Clean up existing subscription if any (e.g., when transitioning from client to daemon)
+      if (this.parcelSubscription) {
+        await this.parcelSubscription.unsubscribe();
+        this.parcelSubscription = null;
+      }
+
+      this.parcelSubscription = await ParcelWatcher.subscribe(
+        this.workspace.path,
+        this.onParcelWatchAsDaemon.bind(this),
+        this.getParcelWatcherOptions()
+      );
+
+      // Write initial snapshot for FSEvents buffer overflow recovery
+      await this.writeSnapshotIfNeeded();
+      this.logger.debug('Initial watcher snapshot created (daemon mode)');
+
+      // Setup graceful shutdown
+      this.setupDaemonShutdown();
+    } catch (err: any) {
+      // Clean up daemon on failure
+      await this.watcherDaemon?.stop();
+      if (err.message.includes('Error starting FSEvents stream')) {
+        const errorMessage = await formatFSEventsErrorMessage();
+        throw new Error(errorMessage);
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Handle Parcel watcher events when running as daemon
+   */
+  private async onParcelWatchAsDaemon(err: Error | null, allEvents: Event[]) {
+    const events = allEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
+
+    // Broadcast events to all clients
+    if (events.length > 0) {
+      this.watcherDaemon?.broadcastEvents(events);
+    }
+
+    // Also broadcast errors
+    if (err) {
+      const isDropError = err.message.includes('Events were dropped');
+      this.watcherDaemon?.broadcastError(err.message, isDropError);
+    }
+
+    // Process events locally (the daemon is also a watcher)
+    await this.onParcelWatch(err, allEvents);
+  }
+
+  /**
+   * Start as a client receiving events from the daemon
+   */
+  private async startAsClient(): Promise<void> {
+    if (!this.watcherClient) {
+      throw new Error('Watcher client not initialized');
+    }
+
+    // Handle events from the daemon
+    this.watcherClient.onEvents(async (events) => {
+      const filteredEvents = events.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
+      if (filteredEvents.length > 0) {
+        const startTime = Date.now();
+        await this.processEvents(filteredEvents, startTime);
+      }
+    });
+
+    // Handle errors from the daemon
+    this.watcherClient.onError(async (error: WatcherError) => {
+      if (error.isDropError) {
+        // The daemon will handle recovery, but we should be aware
+        this.logger.debug('Daemon reported FSEvents buffer overflow');
+      } else {
+        this.msgs?.onError(new Error(error.message));
+      }
+    });
+
+    // Handle disconnection from the daemon
+    this.watcherClient.onDisconnect(async () => {
+      this.logger.debug('Disconnected from watcher daemon');
+
+      // Try to become the new daemon or reconnect
+      await this.handleDaemonDisconnection();
+    });
+
+    // Setup graceful shutdown
+    this.setupClientShutdown();
+  }
+
+  /**
+   * Handle disconnection from the daemon - try to become the new daemon or reconnect
+   */
+  private async handleDaemonDisconnection(): Promise<void> {
+    // Wait a bit for any other client to potentially become the daemon
+    await this.sleep(500);
+
+    try {
+      const connection = await getOrCreateWatcherConnection(this.workspace.scope.path, this.logger);
+
+      if (connection.isDaemon && connection.daemon) {
+        // We became the new daemon
+        this.isDaemon = true;
+        this.watcherDaemon = connection.daemon;
+        this.watcherClient = null;
+        this.logger.console(
+          chalk.yellow('Previous watcher daemon disconnected. This process is now the watcher daemon.')
+        );
+        await this.startParcelWatcherAsDaemon();
+      } else if (connection.client) {
+        // Another process became the daemon, connect to it
+        this.watcherClient = connection.client;
+        this.logger.debug('Reconnected to new watcher daemon');
+        await this.startAsClient();
+      }
+    } catch (err: any) {
+      this.logger.error(`Failed to reconnect after daemon disconnection: ${err.message}`);
+      this.msgs?.onError(err);
+    }
+  }
+
+  /**
+   * Remove any existing signal handlers to prevent accumulation.
+   * This is important when transitioning between client and daemon modes.
+   */
+  private removeSignalHandlers(): void {
+    if (this.signalCleanupHandler) {
+      process.off('SIGINT', this.signalCleanupHandler);
+      process.off('SIGTERM', this.signalCleanupHandler);
+      this.signalCleanupHandler = null;
+    }
+  }
+
+  /**
+   * Setup graceful shutdown handlers for daemon mode.
+   * When SIGINT/SIGTERM is received, we need to:
+   * 1. Stop the daemon (cleanup socket, notify clients)
+   * 2. Call process.exit() to actually terminate
+   *
+   * Important: Once you add a handler for SIGINT, Node.js no longer exits automatically.
+   * You must call process.exit() explicitly.
+   */
+  private setupDaemonShutdown(): void {
+    // Remove old handlers to prevent accumulation when transitioning modes
+    this.removeSignalHandlers();
+
+    let isShuttingDown = false;
+
+    const cleanup = () => {
+      if (isShuttingDown) return;
+      isShuttingDown = true;
+
+      this.logger.debug('Daemon shutting down...');
+      // Unsubscribe from Parcel watcher
+      this.parcelSubscription?.unsubscribe().catch((err) => {
+        this.logger.debug(`Error unsubscribing from Parcel watcher: ${err.message}`);
+      });
+      // Stop is async but we need to exit - start the cleanup and exit
+      // The socket will be cleaned up by the OS when the process exits
+      this.watcherDaemon
+        ?.stop()
+        .catch((err) => {
+          this.logger.error(`Error stopping daemon: ${err.message}`);
+        })
+        .finally(() => {
+          process.exit(0);
+        });
+
+      // Fallback: if stop() hangs, force exit after 1 second
+      setTimeout(() => {
+        process.exit(0);
+      }, 1000).unref();
+    };
+
+    this.signalCleanupHandler = cleanup;
+    process.on('SIGINT', cleanup);
+    process.on('SIGTERM', cleanup);
+  }
+
+  /**
+   * Setup graceful shutdown handlers for client mode.
+   */
+  private setupClientShutdown(): void {
+    // Remove old handlers to prevent accumulation when transitioning modes
+    this.removeSignalHandlers();
+
+    let isShuttingDown = false;
+
+    const cleanup = () => {
+      if (isShuttingDown) return;
+      isShuttingDown = true;
+
+      this.watcherClient?.disconnect();
+      process.exit(0);
+    };
+
+    this.signalCleanupHandler = cleanup;
+    process.on('SIGINT', cleanup);
+    process.on('SIGTERM', cleanup);
   }
 
   private async watchChokidar() {
@@ -485,18 +797,13 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
 
   private shouldIgnoreFromLocalScopeChokidar(pathToCheck: string) {
     if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
-    return (
-      pathToCheck.startsWith(`${this.workspacePathLinux}/.git/`) ||
-      pathToCheck.startsWith(`${this.workspacePathLinux}/.bit/`)
-    );
+    const scopePathLinux = pathNormalizeToLinux(this.workspace.scope.path);
+    return pathToCheck.startsWith(`${scopePathLinux}/`);
   }
 
   private shouldIgnoreFromLocalScopeParcel(pathToCheck: string) {
     if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
-    return (
-      pathToCheck.startsWith(join(this.workspace.path, '.git') + sep) ||
-      pathToCheck.startsWith(join(this.workspace.path, '.bit') + sep)
-    );
+    return pathToCheck.startsWith(this.workspace.scope.path + sep);
   }
 
   private async createChokidarWatcher() {
@@ -518,33 +825,76 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
 
   private async onParcelWatch(err: Error | null, allEvents: Event[]) {
     const events = allEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
-    if (!events.length) {
-      return;
+
+    if (this.verbose) {
+      this.logger.debug(
+        `onParcelWatch: ${allEvents.length} events, ${events.length} after filtering, error: ${err?.message || 'none'}`
+      );
     }
 
     const msgs = this.msgs;
     if (this.verbose) {
       if (msgs?.onAll) events.forEach((event) => msgs.onAll(event.type, event.path));
     }
-    if (err) {
-      if (!err.message.includes('Events were dropped by the FSEvents client')) {
-        // the message above shows up too many times and it doesn't affect the watcher.
-        msgs?.onError(err);
-      }
-      // don't throw on other errors, just log them.
-      // for example, when running "bit install" on a big project, it might error out with:
-      // "Error: Events were dropped by the FSEvents client. File system must be re-scanned."
-      // but it still works for the future events.
-    }
-    const startTime = new Date().getTime();
-    await mapSeries(events, async (event) => {
-      const { files, results, debounced, irrelevant, failureMsg } = await this.handleChange(event.path);
-      if (debounced || irrelevant) {
+
+    // Handle FSEvents buffer overflow with debounced snapshot recovery
+    if (err?.message.includes('Events were dropped')) {
+      // If recovery is already in progress, don't schedule another one
+      if (this.isRecoveringFromSnapshot) {
+        this.logger.debug('Recovery already in progress, ignoring additional drop error');
         return;
       }
-      const duration = new Date().getTime() - startTime;
-      msgs?.onChange(files, results, this.verbose, duration, failureMsg);
+
+      this.dropErrorCount++;
+      this.logger.warn(`⚠️  FSEvents buffer overflow detected (occurrence #${this.dropErrorCount})`);
+
+      // Clear existing timer and schedule new recovery
+      if (this.dropErrorDebounceTimer) {
+        clearTimeout(this.dropErrorDebounceTimer);
+      }
+
+      this.dropErrorDebounceTimer = setTimeout(async () => {
+        await this.recoverFromSnapshot();
+        this.dropErrorDebounceTimer = null;
+      }, DROP_ERROR_DEBOUNCE_MS);
+
+      // Don't process events if we got a drop error - wait for recovery
+      return;
+    }
+
+    // Handle other errors
+    if (err) {
+      msgs?.onError(err);
+      // Continue processing events even with other errors
+    }
+
+    if (!events.length) {
+      return;
+    }
+
+    const startTime = new Date().getTime();
+    await this.processEvents(events, startTime);
+
+    // Write snapshot after successful processing (non-blocking)
+    this.writeSnapshotIfNeeded().catch((writeErr) => {
+      this.logger.debug(`Failed to write watcher snapshot: ${writeErr.message}`);
     });
+  }
+
+  /**
+   * Process a list of file system events through the normal change handling pipeline.
+   */
+  private async processEvents(events: Event[], startTime: number): Promise<void> {
+    await Promise.all(
+      events.map(async (event) => {
+        const { files, results, debounced, irrelevant, failureMsg } = await this.handleChange(event.path);
+        if (debounced || irrelevant) {
+          return;
+        }
+        const duration = new Date().getTime() - startTime;
+        this.msgs?.onChange(files, results, this.verbose, duration, failureMsg);
+      })
+    );
   }
 
   private async setRootDirs() {
@@ -555,5 +905,141 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
       const rootDir = componentMap.getRootDir();
       this.rootDirs[rootDir] = componentId;
     });
+  }
+
+  /**
+   * Write a snapshot of the current filesystem state for recovery after FSEvents buffer overflow.
+   * This is called after successful event processing.
+   */
+  private async writeSnapshotIfNeeded(): Promise<void> {
+    if (this.watcherType !== 'parcel') {
+      return; // Snapshots only work with Parcel watcher
+    }
+
+    if (this.isRecoveringFromSnapshot) {
+      return; // Don't write snapshot while recovering
+    }
+
+    try {
+      await ParcelWatcher.writeSnapshot(this.workspace.path, this.snapshotPath, this.getParcelWatcherOptions());
+      this.logger.debug('Watcher snapshot written successfully');
+    } catch (err: any) {
+      this.logger.debug(`Failed to write watcher snapshot: ${err.message}`);
+    }
+  }
+
+  /**
+   * Recover from FSEvents buffer overflow by reading all events since the last snapshot.
+   * This is called after debouncing multiple drop errors.
+   */
+  private async recoverFromSnapshot(): Promise<void> {
+    if (this.isRecoveringFromSnapshot) {
+      this.logger.debug('Already recovering from snapshot, skipping');
+      return;
+    }
+
+    this.isRecoveringFromSnapshot = true;
+
+    // Clear the debounce timer since we're now executing the recovery
+    if (this.dropErrorDebounceTimer) {
+      clearTimeout(this.dropErrorDebounceTimer);
+      this.dropErrorDebounceTimer = null;
+    }
+
+    const startTime = new Date().getTime();
+    const dropsDetected = this.dropErrorCount;
+
+    // Reset drop error counter immediately to prevent multiple recoveries
+    this.dropErrorCount = 0;
+
+    try {
+      if (this.verbose) {
+        this.logger.console(
+          chalk.yellow(
+            `Recovering from FSEvents buffer overflow (${dropsDetected} drops detected). Scanning for missed events...`
+          )
+        );
+      }
+
+      // Check if snapshot exists
+      if (!(await fs.pathExists(this.snapshotPath))) {
+        if (this.verbose) {
+          this.logger.console(chalk.yellow('No snapshot found. Skipping recovery.'));
+        }
+        return;
+      }
+
+      // Get all events since last snapshot
+      const missedEvents = await ParcelWatcher.getEventsSince(
+        this.workspace.path,
+        this.snapshotPath,
+        this.getParcelWatcherOptions()
+      );
+
+      // Write new snapshot immediately after reading events to prevent re-processing same events
+      await this.writeSnapshotIfNeeded();
+
+      const filteredEvents = missedEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
+
+      if (this.verbose) {
+        this.logger.console(
+          chalk.green(
+            `Found ${filteredEvents.length} missed events (${missedEvents.length} total, ${missedEvents.length - filteredEvents.length} ignored)`
+          )
+        );
+      }
+
+      if (filteredEvents.length === 0) {
+        if (this.verbose) {
+          this.logger.console(chalk.green('No relevant missed events. Watcher state is consistent.'));
+        }
+        return;
+      }
+
+      // Log critical files that were missed (for debugging)
+      if (this.verbose) {
+        const criticalFiles = filteredEvents.filter(
+          (e) => e.path.endsWith(BIT_MAP) || e.path.endsWith(WORKSPACE_JSONC)
+        );
+        if (criticalFiles.length > 0) {
+          this.logger.console(
+            chalk.cyan(`Critical files in missed events: ${criticalFiles.map((e) => basename(e.path)).join(', ')}`)
+          );
+        }
+      }
+
+      // Process all missed events using shared helper
+      await this.processEvents(filteredEvents, startTime);
+
+      if (this.verbose) {
+        const duration = new Date().getTime() - startTime;
+        this.logger.console(chalk.green(`✓ Recovery complete in ${duration}ms. Watcher state restored.`));
+      }
+    } catch (err: any) {
+      // If recovery failed with the same drop error, the operation is still ongoing - retry after delay
+      if (err.message?.includes('Events were dropped by the FSEvents client')) {
+        if (this.verbose) {
+          this.logger.console(
+            chalk.yellow(`Recovery scan also encountered buffer overflow. Retrying in ${DROP_ERROR_DEBOUNCE_MS}ms...`)
+          );
+        }
+
+        // Increment counter since we're encountering another drop
+        this.dropErrorCount++;
+
+        // Schedule another retry
+        setTimeout(async () => {
+          await this.recoverFromSnapshot();
+        }, DROP_ERROR_DEBOUNCE_MS);
+      } else {
+        // Other errors - log and give up (counter already reset at start)
+        this.logger.error(`Snapshot recovery failed: ${err.message}`);
+        if (this.verbose) {
+          this.logger.console(chalk.red(`Failed to recover from snapshot. Some events may have been missed.`));
+        }
+      }
+    } finally {
+      this.isRecoveringFromSnapshot = false;
+    }
   }
 }

@@ -1,7 +1,8 @@
 import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
 import { ExportSchema, ModuleSchema } from './schemas';
-import { SchemaLocation, SchemaNode } from './schema-node';
+import type { SchemaLocation } from './schema-node';
+import { SchemaNode } from './schema-node';
 import { TagName } from './schemas/docs/tag';
 import { SchemaRegistry } from './schema-registry';
 

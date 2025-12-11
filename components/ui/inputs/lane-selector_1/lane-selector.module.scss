@@ -27,6 +27,7 @@
 
 .menu {
   width: 300px;
+  min-width: initial;
   border-radius: 8px;
   padding: 0;
   // border: 1px solid var(--border-medium-color);
@@ -48,12 +49,24 @@
   padding-top: 0;
 }
 
-.searchInput {
-  // otherwise, search input defaults to 12px for 's' inputSize
-  font-size: var(--bit-p-xs, '14px') !important;
+.searchInputContainer .searchInput {
+  font-size: 14px;
+
   &:focus {
-    border: 1px solid var(--border-high-color);
+    border: 1px solid var(--border-medium-focus-color, #c6c6c6);
   }
+}
+
+.searchInput + [class*='iconsHolder'] {
+  top: 50%;
+  right: 0px;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+}
+
+.searchInput.clear + [class*='iconsHolder'] {
+  font-size: 16px;
+  cursor: pointer;
 }
 
 .toolbar {
@@ -95,10 +108,6 @@
   height: 14px;
   width: 14px;
   padding-right: 4px;
-  filter: invert(46%) sepia(8%) saturate(298%) hue-rotate(189deg) brightness(95%) contrast(91%);
-}
-
-.searchIcon {
-  // otherwise the search icon is not aligned with the placeholder
-  top: calc(50% - 0.5rem) !important;
+  filter: invert(46%) sepia(8%) saturate(298%) hue-rotate(189deg)
+    brightness(95%) contrast(91%);
 }

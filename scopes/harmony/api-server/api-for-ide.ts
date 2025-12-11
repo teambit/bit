@@ -1,35 +1,43 @@
 import path from 'path';
 import fs from 'fs-extra';
 import filenamify from 'filenamify';
-import { CompFiles, Workspace, FilesStatus } from '@teambit/workspace';
-import { PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy.utils';
+import type { CompFiles, Workspace, FilesStatus } from '@teambit/workspace';
+import type { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy.utils';
+import { pathJoinLinux } from '@teambit/legacy.utils';
 import pMap from 'p-map';
-import { SnappingMain } from '@teambit/snapping';
-import { LanesMain } from '@teambit/lanes';
-import { InstallMain } from '@teambit/install';
-import { ExportMain } from '@teambit/export';
-import { CheckoutMain } from '@teambit/checkout';
-import { ApplyVersionResults } from '@teambit/merging';
-import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
-import { LaneLog } from '@teambit/objects';
-import { ComponentCompareMain } from '@teambit/component-compare';
-import { GeneratorMain, PromptOption, PromptResults } from '@teambit/generator';
+import type { SnappingMain } from '@teambit/snapping';
+import type { LanesMain } from '@teambit/lanes';
+import type { InstallMain } from '@teambit/install';
+import type { ExportMain } from '@teambit/export';
+import type { CheckoutMain } from '@teambit/checkout';
+import type { ApplyVersionResults } from '@teambit/component.modules.merge-helper';
+import type { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
+import type { LaneLog } from '@teambit/objects';
+import type { ComponentCompareMain } from '@teambit/component-compare';
+import type {
+  GenerateResult,
+  GeneratorMain,
+  PromptOption,
+  PromptResults,
+  TemplateDescriptor,
+} from '@teambit/generator';
 import { getParsedHistoryMetadata } from '@teambit/legacy.consumer';
-import { RemovedObjects } from '@teambit/legacy.scope';
-import { RemoveMain } from '@teambit/remove';
+import type { RemovedObjects } from '@teambit/legacy.scope';
+import type { RemoveMain } from '@teambit/remove';
 import { compact, uniq } from 'lodash';
-import { ConfigMain } from '@teambit/config';
+import type { ConfigMain } from '@teambit/config';
 import { LANE_REMOTE_DELIMITER, LaneId } from '@teambit/lane-id';
-import { ApplicationMain } from '@teambit/application';
-import { DeprecationMain } from '@teambit/deprecation';
-import { EnvsMain } from '@teambit/envs';
+import type { ApplicationMain } from '@teambit/application';
+import type { DeprecationMain } from '@teambit/deprecation';
+import type { EnvsMain } from '@teambit/envs';
 import fetch from 'node-fetch';
-import { GraphMain } from '@teambit/graph';
-import { ComponentNotFound, ScopeMain } from '@teambit/scope';
-import { ComponentMain } from '@teambit/component';
-import { SchemaMain } from '@teambit/schema';
+import type { GraphMain } from '@teambit/graph';
+import type { ScopeMain } from '@teambit/scope';
+import { ComponentNotFound } from '@teambit/scope';
+import type { ComponentMain, ComponentMap } from '@teambit/component';
+import type { SchemaMain } from '@teambit/schema';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 
 const FILES_HISTORY_DIR = 'files-history';
 const ENV_ICONS_DIR = 'env-icons';
@@ -405,7 +413,7 @@ export class APIForIDE {
     this.workspace.clearAllComponentsCache();
   }
 
-  async install(options = {}, packages?: string[]) {
+  async install(options = {}, packages?: string[]): Promise<ComponentMap<string>> {
     const opts = {
       optimizeReportForNonTerminal: true,
       dedupe: true,
@@ -437,7 +445,11 @@ export class APIForIDE {
     return this.adjustCheckoutResultsToIde(results);
   }
 
-  async getTemplates() {
+  async importObjectsIfOutdatedAgainstBitmap(): Promise<void> {
+    return this.workspace.importObjectsIfOutdatedAgainstBitmap();
+  }
+
+  async getTemplates(): Promise<TemplateDescriptor[]> {
     const templates = await this.generator.listTemplates();
     return templates;
   }
@@ -447,7 +459,11 @@ export class APIForIDE {
     return template.template.promptOptions?.();
   }
 
-  async createComponent(templateName: string, idIncludeScope: string, promptResults?: PromptResults) {
+  async createComponent(
+    templateName: string,
+    idIncludeScope: string,
+    promptResults?: PromptResults
+  ): Promise<GenerateResult[]> {
     if (!idIncludeScope.includes('/')) {
       throw new Error('id should include the scope name');
     }

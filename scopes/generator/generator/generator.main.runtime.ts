@@ -1,34 +1,51 @@
 import fs from 'fs-extra';
 import camelCase from 'camelcase';
 import { resolve } from 'path';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
+import type { EnvDefinition, EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
 import { ComponentConfig } from '@teambit/legacy.consumer-config';
-import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
 import { ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain, Component } from '@teambit/component';
 import { Scope as LegacyScope } from '@teambit/legacy.scope';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { GitAspect, GitMain } from '@teambit/git';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { Harmony, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { GitMain } from '@teambit/git';
+import { GitAspect } from '@teambit/git';
 import { BitError } from '@teambit/bit-error';
-import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
-import { TrackerAspect, TrackerMain } from '@teambit/tracker';
-import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-component-helper';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import type { TrackerMain } from '@teambit/tracker';
+import { TrackerAspect } from '@teambit/tracker';
+import type { NewComponentHelperMain } from '@teambit/new-component-helper';
+import { NewComponentHelperAspect } from '@teambit/new-component-helper';
 import { compact, uniq } from 'lodash';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
-import { ComponentTemplate, GetComponentTemplates, PromptResults } from './component-template';
+import { isValidScopeName } from '@teambit/legacy-bit-id';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { DeprecationMain } from '@teambit/deprecation';
+import { DeprecationAspect } from '@teambit/deprecation';
+import type { ComponentTemplate, GetComponentTemplates, PromptResults } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
-import { CreateCmd, CreateOptions } from './create.cmd';
+import type { CreateOptions } from './create.cmd';
+import { CreateCmd } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
 import { generatorSchema } from './generator.graphql';
-import { ComponentGenerator, GenerateResult, InstallOptions, OnComponentCreateFn } from './component-generator';
+import type { GenerateResult, InstallOptions, OnComponentCreateFn } from './component-generator';
+import { ComponentGenerator } from './component-generator';
 import { WorkspaceGenerator } from './workspace-generator';
-import { WorkspaceTemplate } from './workspace-template';
-import { NewCmd, NewOptions } from './new.cmd';
+import type { WorkspaceTemplate } from './workspace-template';
+import type { NewOptions } from './new.cmd';
+import { NewCmd } from './new.cmd';
 import {
   componentGeneratorTemplate,
   componentGeneratorTemplateStandalone,
@@ -366,6 +383,29 @@ export class GeneratorMain {
     return templateWithId;
   }
 
+  /**
+   * Parse the scope from a component name if provided in the format: scope/name
+   * This only works for bit.cloud scopes (containing a dot), e.g., "my-org.my-scope/hooks/use-session"
+   * Local bare-scopes don't contain a dot, so we can't distinguish between scope/name and namespace/name.
+   * @returns { scope, name } where scope is the extracted scope (or undefined) and name is the remaining component name
+   */
+  private parseScopeFromComponentIdStr(componentIdStr: string): { scope: string | undefined; name: string } {
+    const firstSlashIndex = componentIdStr.indexOf('/');
+    if (firstSlashIndex === -1) {
+      // no slash, so no scope prefix, e.g., "button"
+      return { scope: undefined, name: componentIdStr };
+    }
+    const potentialScope = componentIdStr.substring(0, firstSlashIndex);
+    // bit.cloud scopes always contain a dot (e.g., "my-org.my-scope")
+    // local bare-scopes don't contain a dot, so we can't distinguish them from namespace/name
+    if (potentialScope.includes('.') && isValidScopeName(potentialScope)) {
+      const name = componentIdStr.substring(firstSlashIndex + 1);
+      return { scope: potentialScope, name };
+    }
+    // no dot in the first segment, treat the whole string as the component name
+    return { scope: undefined, name: componentIdStr };
+  }
+
   async generateComponentTemplate(
     componentNames: string[],
     templateName: string,
@@ -379,9 +419,13 @@ export class GeneratorMain {
 
     const templateWithId = await this.getTemplateWithId(templateName, aspect);
 
-    const componentIds = componentNames.map((componentName) =>
-      this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
-    );
+    const componentIds = componentNames.map((componentName) => {
+      // Support scope/name syntax for bit.cloud scopes (containing a dot)
+      // e.g., "my-org.my-scope/hooks/use-session" -> scope: "my-org.my-scope", name: "hooks/use-session"
+      const { scope: parsedScope, name: parsedName } = this.parseScopeFromComponentIdStr(componentName);
+      const scope = parsedScope || options.scope;
+      return this.newComponentHelper.getNewComponentId(parsedName, namespace, scope);
+    });
 
     const componentNameSameAsTemplateName = componentIds.find((componentId) => componentId.name === templateName);
     if (componentNameSameAsTemplateName) {

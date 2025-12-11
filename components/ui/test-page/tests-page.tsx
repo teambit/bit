@@ -7,10 +7,11 @@ import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import { TestLoader } from '@teambit/defender.ui.test-loader';
-import { EmptyStateSlot } from '@teambit/tester';
+import type { EmptyStateSlot } from '@teambit/tester';
 import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
 import classNames from 'classnames';
-import React, { HTMLAttributes, useContext } from 'react';
+import type { HTMLAttributes } from 'react';
+import React, { useContext } from 'react';
 import { TestTable } from '@teambit/defender.ui.test-table';
 import { Table, type ColumnProps, type CellFunctionProps } from '@teambit/design.content.table';
 import { Link } from '@teambit/design.ui.navigation.link';
@@ -380,7 +381,7 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
   if (testResults === null || testData?.testsResults === null) {
     return (
       <EmptyBox
-        title="This component doesn’t have any tests."
+        title="This component doesn't have any tests."
         linkText="Learn how to add tests to your components"
         link={`https://bit.dev/reference/dev-services-overview/tester/tester-overview`}
       />
@@ -392,7 +393,6 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
       <div>
         <H1 className={styles.title}>Tests</H1>
         <Separator isPresentational className={styles.separator} />
-        <H2 className={styles.subtitle}>Tests Results</H2>
         <TestTable testResults={testResults} className={styles.testBlock} />
         {testCoverage && testCoverage.files.length > 0 && (
           <>

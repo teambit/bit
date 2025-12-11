@@ -1,9 +1,10 @@
 import path from 'path';
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
+import chaiString from 'chai-string';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-string'));
+chai.use(chaiString);
 
 describe('peer-dependencies functionality', function () {
   this.timeout(0);

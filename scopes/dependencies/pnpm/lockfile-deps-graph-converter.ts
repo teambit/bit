@@ -4,6 +4,7 @@ import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.typ
 import { type ResolveFunction } from '@pnpm/client';
 import * as dp from '@pnpm/dependency-path';
 import { pick, partition } from 'lodash';
+import { BitError } from '@teambit/bit-error';
 import { snapToSemver } from '@teambit/component-package-version';
 import {
   DependenciesGraph,
@@ -12,7 +13,11 @@ import {
   type DependencyEdge,
   type DependencyNeighbour,
 } from '@teambit/objects';
-import { type CalcDepsGraphOptions, type ComponentIdByPkgName } from '@teambit/dependency-resolver';
+import {
+  type CalcDepsGraphOptions,
+  type CalcDepsGraphForComponentOptions,
+  type ComponentIdByPkgName,
+} from '@teambit/dependency-resolver';
 import { getLockfileImporterId } from '@pnpm/lockfile.fs';
 import normalizePath from 'normalize-path';
 import { type BitLockfileFile } from './lynx';
@@ -22,7 +27,7 @@ function convertLockfileToGraphFromCapsule(
   {
     componentRelativeDir,
     componentIdByPkgName,
-  }: Pick<CalcDepsGraphOptions, 'componentRelativeDir' | 'componentIdByPkgName'>
+  }: Pick<CalcDepsGraphOptions & CalcDepsGraphForComponentOptions, 'componentRelativeDir' | 'componentIdByPkgName'>
 ): DependenciesGraph {
   const componentImporter = lockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
@@ -51,7 +56,12 @@ function importerDepsToNeighbours(
 
 export function convertLockfileToGraph(
   lockfile: BitLockfileFile,
-  { pkgName, componentRootDir, componentRelativeDir, componentIdByPkgName }: Omit<CalcDepsGraphOptions, 'rootDir'>
+  {
+    pkgName,
+    componentRootDir,
+    componentRelativeDir,
+    componentIdByPkgName,
+  }: Omit<CalcDepsGraphOptions & CalcDepsGraphForComponentOptions, 'rootDir' | 'components' | 'component'>
 ): DependenciesGraph {
   if (componentRootDir == null || pkgName == null) {
     return convertLockfileToGraphFromCapsule(lockfile, { componentRelativeDir, componentIdByPkgName });
@@ -61,8 +71,8 @@ export function convertLockfileToGraph(
   if (componentDevImporter.devDependencies != null) {
     directDependencies.push(...importerDepsToNeighbours(componentDevImporter.devDependencies, 'dev', false));
   }
-  const lockedPkg =
-    lockfile.snapshots![`${pkgName}@${lockfile.importers![componentRootDir].dependencies![pkgName].version}`];
+  const lockedPkgDepPath = `${pkgName}@${lockfile.importers![componentRootDir].dependencies![pkgName].version}`;
+  const lockedPkg = lockfile.snapshots![lockedPkgDepPath];
   for (const depType of ['dependencies' as const, 'optionalDependencies' as const]) {
     const optional = depType === 'optionalDependencies';
     for (const [name, version] of Object.entries(lockedPkg[depType] ?? {})) {
@@ -76,6 +86,8 @@ export function convertLockfileToGraph(
       });
     }
   }
+  delete lockfile.snapshots![lockedPkgDepPath];
+  delete lockfile.packages![dp.removeSuffix(lockedPkgDepPath)];
   return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
 }
 
@@ -306,6 +318,14 @@ export async function convertGraphToLockfile(
       }
     })
   );
+  // Validate the generated lockfile
+  for (const [depPath, pkg] of Object.entries(lockfile.packages)) {
+    if (pkg.resolution == null || Object.keys(pkg.resolution).length === 0) {
+      throw new BitError(
+        `Failed to generate a valid lockfile. The "packages['${depPath}'] entry doesn't have a "resolution" field.`
+      );
+    }
+  }
   return lockfile;
 
   function convertToDeps(neighbours: DependencyNeighbour[]) {

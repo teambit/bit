@@ -2,9 +2,9 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import { specFileFailingFixture } from '../jest.e2e';
-
-chai.use(require('chai-fs'));
+import { specFileFailingFixture } from '../jest-fixtures';
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('merge lanes - edge cases and special scenarios', function () {
   this.timeout(0);

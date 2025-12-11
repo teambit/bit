@@ -1,12 +1,12 @@
 import chalk from 'chalk';
 import GraphLib from 'graphlib';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
-import { GraphConfig, VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
+import type { GraphConfig } from '@teambit/legacy.dependency-graph';
+import { VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
 import { getRemoteByName } from '@teambit/scope.remotes';
-import { ComponentMain } from '@teambit/component';
-import type { Workspace } from '@teambit/workspace';
-import { GraphMain } from './graph.main.runtime';
+import type { ComponentMain } from '@teambit/component';
+import type { GraphMain } from './graph.main.runtime';
 
 export type GraphOpt = {
   remote?: string;
@@ -20,8 +20,10 @@ export type GraphOpt = {
 
 export class GraphCmd implements Command {
   name = 'graph [id]';
-  description = "generate an SVG image file with the components' dependencies graph";
-  extendedDescription: 'black arrow is a runtime dependency. red arrow is either dev or peer';
+  description = 'visualize component dependencies as a graph image';
+  extendedDescription = `generates an SVG (or PNG) image showing component dependency relationships.
+black arrows represent runtime dependencies, red arrows show dev or peer dependencies.
+by default shows only workspace components; use --include-dependencies for full dependency tree.`;
   group = 'info-analysis';
   alias = '';
   options = [
@@ -113,9 +115,14 @@ export class GraphCmd implements Command {
     return GraphLib.json.write(graph);
   }
 
-  private getWorkspaceIfExist(): Workspace | undefined {
+  /**
+   *
+   * @returns Workspace if it exists, otherwise undefined.
+   * the reason to not add it here as a type is to avoid circular dependency issues.
+   */
+  private getWorkspaceIfExist(): any {
     try {
-      return this.componentAspect.getHost('teambit.workspace/workspace') as Workspace | undefined;
+      return this.componentAspect.getHost('teambit.workspace/workspace');
     } catch {
       return undefined;
     }

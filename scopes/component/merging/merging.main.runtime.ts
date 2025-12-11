@@ -1,55 +1,65 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace, AutoTagResult } from '@teambit/workspace';
-import { Consumer } from '@teambit/legacy.consumer';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import { SnappingAspect, SnappingMain, TagResults } from '@teambit/snapping';
+import type { SnappingMain, TagResults } from '@teambit/snapping';
+import { SnappingAspect } from '@teambit/snapping';
 import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
-import { UnmergedComponent } from '@teambit/legacy.scope';
-import { Ref, Lane, ModelComponent } from '@teambit/objects';
+import type { UnmergedComponent } from '@teambit/legacy.scope';
+import type { Ref, Lane, ModelComponent } from '@teambit/objects';
 import chalk from 'chalk';
-import { ConfigAspect, ConfigMain } from '@teambit/config';
-import { RemoveAspect, RemoveMain, deleteComponentsFiles } from '@teambit/remove';
+import type { ConfigMain } from '@teambit/config';
+import { ConfigAspect } from '@teambit/config';
+import type { RemoveMain } from '@teambit/remove';
+import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { ImporterAspect, ImporterMain } from '@teambit/importer';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { ComponentWriterMain } from '@teambit/component-writer';
+import { ComponentWriterAspect } from '@teambit/component-writer';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ImporterMain } from '@teambit/importer';
+import { ImporterAspect } from '@teambit/importer';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import { compact } from 'lodash';
-import {
-  ApplyVersionWithComps,
-  CheckoutAspect,
-  CheckoutMain,
-  ComponentStatusBase,
-  applyModifiedVersion,
-  removeFilesIfNeeded,
-  updateFileStatus,
-} from '@teambit/checkout';
-import {
-  ConfigMergerAspect,
-  ConfigMergerMain,
-  ConfigMergeResult,
-  WorkspaceConfigUpdateResult,
-} from '@teambit/config-merger';
-import { SnapsDistance } from '@teambit/component.snap-distance';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { InstallMain, InstallAspect } from '@teambit/install';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import type { ApplyVersionWithComps, CheckoutMain, ComponentStatusBase } from '@teambit/checkout';
+import { CheckoutAspect, removeFilesIfNeeded, updateFileStatus } from '@teambit/checkout';
+import type { ConfigMergerMain, ConfigMergeResult, PolicyDependency } from '@teambit/config-merger';
+import { ConfigMergerAspect } from '@teambit/config-merger';
+import type { SnapsDistance } from '@teambit/component.snap-distance';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { InstallMain } from '@teambit/install';
+import { InstallAspect } from '@teambit/install';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
-import { DataMergeResult, MergeStatusProvider, MergeStatusProviderOptions } from './merge-status-provider';
-import {
+import type { DataMergeResult, MergeStatusProviderOptions } from './merge-status-provider';
+import { MergeStatusProvider } from './merge-status-provider';
+import type {
   MergeStrategy,
+  MergeResultsThreeWay,
+  ApplyVersionResults,
+  FailedComponents,
+  MergeSnapResults,
+} from '@teambit/component.modules.merge-helper';
+import {
+  applyModifiedVersion,
   FileStatus,
   getMergeStrategyInteractive,
-  MergeResultsThreeWay,
   MergeOptions,
-} from './merge-version';
-import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
-import { ApplicationAspect, ApplicationMain } from '@teambit/application';
+} from '@teambit/component.modules.merge-helper';
+import type { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store';
+import type { ApplicationMain } from '@teambit/application';
+import { ApplicationAspect } from '@teambit/application';
 
 type ResolveUnrelatedData = {
   strategy: MergeStrategy;
@@ -76,40 +86,6 @@ export type ComponentMergeStatusBeforeMergeAttempt = ComponentStatusBase & {
     currentId: ComponentID;
     modelComponent: ModelComponent;
   };
-};
-
-export type FailedComponents = { id: ComponentID; unchangedMessage: string; unchangedLegitimately?: boolean };
-
-// fileName is PathLinux. TS doesn't let anything else in the keys other than string and number
-export type FilesStatus = { [fileName: string]: keyof typeof FileStatus };
-
-export type MergeSnapResults = {
-  snappedComponents: ConsumerComponent[];
-  autoSnappedResults: AutoTagResult[];
-  removedComponents?: ComponentIdList;
-  exportedIds?: ComponentID[];
-} | null;
-
-export type ApplyVersionResult = { id: ComponentID; filesStatus: FilesStatus };
-
-export type ApplyVersionResults = {
-  components?: ApplyVersionResult[];
-  version?: string;
-  failedComponents?: FailedComponents[];
-  removedComponents?: ComponentID[];
-  addedComponents?: ComponentID[]; // relevant when restoreMissingComponents is true (e.g. bit lane merge-abort)
-  newComponents?: ComponentID[]; // relevant for "bit stash load". (stashedBitmapEntries is populated)
-  resolvedComponents?: ConsumerComponent[]; // relevant for bit merge --resolve
-  abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
-  mergeSnapResults?: MergeSnapResults;
-  mergeSnapError?: Error;
-  leftUnresolvedConflicts?: boolean;
-  verbose?: boolean;
-  newFromLane?: string[];
-  newFromLaneAdded?: boolean;
-  installationError?: Error; // in case the package manager failed, it won't throw, instead, it'll return error here
-  compilationError?: Error; // in case the compiler failed, it won't throw, instead, it'll return error here
-  workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult;
 };
 
 export class MergingMain {
@@ -499,6 +475,12 @@ export class MergingMain {
       currentLane.addComponent({ id, head });
     };
 
+    const convertHashToTagIfPossible = (componentId: ComponentID): ComponentID => {
+      if (!componentId.version) return componentId;
+      const tag = modelComponent.getTag(componentId.version);
+      return tag ? componentId.changeVersion(tag) : componentId;
+    };
+
     const handleResolveUnrelated = (legacyCompToWrite?: ConsumerComponent) => {
       if (!currentComponent) throw new Error('currentComponent must be defined when resolvedUnrelated');
       // because when on a main, we don't allow merging lanes with unrelated. we asks users to switch to the lane
@@ -512,7 +494,8 @@ export class MergingMain {
         unrelatedLaneId: resolvedUnrelated.unrelatedLaneId,
       };
       legacyScope.objects.unmergedComponents.addEntry(unmergedComponent);
-      return { applyVersionResult: { id, filesStatus }, component: currentComponent, legacyCompToWrite };
+      const idForOutput = convertHashToTagIfPossible(id);
+      return { applyVersionResult: { id: idForOutput, filesStatus }, component: currentComponent, legacyCompToWrite };
     };
 
     const markAllFilesAsUnchanged = () => {
@@ -524,7 +507,8 @@ export class MergingMain {
     if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
       markAllFilesAsUnchanged();
       legacyScope.objects.unmergedComponents.addEntry(unmergedComponent);
-      return { applyVersionResult: { id, filesStatus }, component: currentComponent || undefined };
+      const idForOutput = convertHashToTagIfPossible(id);
+      return { applyVersionResult: { id: idForOutput, filesStatus }, component: currentComponent || undefined };
     }
     if (resolvedUnrelated?.strategy === 'ours') {
       markAllFilesAsUnchanged();
@@ -554,6 +538,11 @@ export class MergingMain {
     if (configMergeResult) {
       const successfullyMergedConfig = configMergeResult.getSuccessfullyMergedConfig();
       if (successfullyMergedConfig) {
+        // Process mergedConfig to merge scope-specific policy and filter deletion markers
+        // This happens ONCE here, so both workspace and bare-scope merges use the same processed config
+        this.mergeScopeSpecificDepsPolicy(legacyComponent.extensions, successfullyMergedConfig);
+        this.filterDeletedDependenciesFromConfig(successfullyMergedConfig);
+
         unmergedComponent.mergedConfig = successfullyMergedConfig;
         // no need to `unmergedComponents.addEntry` here. it'll be added in the next lines inside `if (mergeResults)`.
         // because if `configMergeResult` is set, `mergeResults` must be set as well. both happen on diverge.
@@ -585,8 +574,9 @@ export class MergingMain {
       legacyScope.objects.add(modelComponent);
     }
 
+    const idForOutput = convertHashToTagIfPossible(idToLoad);
     return {
-      applyVersionResult: { id: idToLoad, filesStatus },
+      applyVersionResult: { id: idForOutput, filesStatus },
       component: currentComponent || undefined,
       legacyCompToWrite: legacyComponent,
     };
@@ -670,6 +660,9 @@ export class MergingMain {
           .map((c) => c.id);
         return ComponentIdList.fromArray(dataConflictedIds);
       };
+
+      // mergedConfig has already been processed in applyVersion() with scope-specific policy merged
+      // and deletion markers filtered, so we can use it directly
       const results = await this.snapping.snapFromScope(
         ids.map((id) => ({
           componentId: id.toString(),
@@ -751,6 +744,80 @@ export class MergingMain {
       })
     );
     return compact(mergePendingComponents);
+  }
+
+  /**
+   * Merges scope dependency policy into the merged config.
+   * This handles dependencies with force:true from the scope, regardless of whether they're
+   * set via "bit dependencies set" (__specific: true) or workspace variants.
+   *
+   * This is needed because if the mergeConfig has a policy, it will be used, and any other policy along the line will be ignored.
+   * In case the model has some dependencies that were set explicitly they're gonna be ignored.
+   * This makes sure to add them to the policy of the mergeConfig.
+   * In a way, this is similar to what we do when a user is running `bit deps set` and the component had previous dependencies set,
+   * we copy those dependencies along with the current one to the .bitmap file, so they won't get lost.
+   */
+  private mergeScopeSpecificDepsPolicy(scopeExtensions: ExtensionDataList, mergeConfig?: Record<string, any>): void {
+    const mergeConfigPolicy: Record<string, PolicyDependency[]> | undefined =
+      mergeConfig?.[DependencyResolverAspect.id]?.policy;
+    if (!mergeConfigPolicy) return;
+
+    const depsResolver = scopeExtensions.findCoreExtension(DependencyResolverAspect.id);
+    const scopePolicy = depsResolver?.config.policy;
+    if (!scopePolicy) return;
+
+    Object.keys(scopePolicy).forEach((depType) => {
+      const scopeDepsForType = scopePolicy[depType];
+      if (!mergeConfigPolicy[depType]) {
+        // mergeConfigPolicy doesn't have this depType yet.
+        // Convert scope policy (object format) to array format before adding
+        mergeConfigPolicy[depType] = Object.keys(scopeDepsForType).map((depId) => ({
+          name: depId,
+          version: scopeDepsForType[depId],
+          force: true,
+        }));
+        return;
+      }
+
+      // mergeConfigPolicy is always in array format (from config merger)
+      this.addScopePolicyToMergedArray(mergeConfigPolicy[depType], scopeDepsForType);
+    });
+  }
+
+  private addScopePolicyToMergedArray(policyArray: PolicyDependency[], scopeDepsForType: Record<string, string>): void {
+    Object.keys(scopeDepsForType).forEach((depId) => {
+      const version = scopeDepsForType[depId];
+      const existingDep = policyArray.find((dep) => dep.name === depId);
+
+      if (existingDep) {
+        // If merge config has version: '-', it means the dependency was explicitly deleted.
+        // Keep the '-' marker and don't override with scope policy.
+        if (existingDep.version === '-') {
+          return;
+        }
+        // Otherwise, dependency exists in merge config - keep merge config version (it's stronger)
+      } else {
+        // Dependency only exists in scope policy - add it to merge config
+        policyArray.push({ name: depId, version, force: true });
+      }
+    });
+  }
+
+  private filterDeletedDependenciesFromConfig(mergeConfig?: Record<string, any>): void {
+    const policy: Record<string, PolicyDependency[]> | undefined = mergeConfig?.[DependencyResolverAspect.id]?.policy;
+    if (!policy) return;
+
+    Object.keys(policy).forEach((depType) => {
+      const depValue = policy[depType];
+      // Filter out entries with version: '-' (deletion markers)
+      const filtered = depValue.filter((dep) => dep.version !== '-');
+      // If array is now empty, delete the key to avoid issues with downstream code
+      if (filtered.length === 0) {
+        delete policy[depType];
+      } else {
+        policy[depType] = filtered;
+      }
+    });
   }
 
   static slots = [];

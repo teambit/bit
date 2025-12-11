@@ -3,7 +3,8 @@ import { ComponentModel } from '@teambit/component';
 import useLatest from '@react-hook/latest';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
-import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import type { ComponentIdObj } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 
 import { Workspace } from './workspace-model';
 

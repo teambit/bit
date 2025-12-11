@@ -7,8 +7,8 @@ import { logger } from '@teambit/legacy.logger';
 import { InvalidIndexJson } from '@teambit/legacy.scope';
 import { ModelComponent, Symlink } from '../models';
 import Lane from '../models/lane';
-import BitObject from './object';
-import Ref from './ref';
+import type BitObject from './object';
+import type Ref from './ref';
 import { difference } from 'lodash';
 
 const COMPONENTS_INDEX_FILENAME = 'index.json';
@@ -111,7 +111,6 @@ export class ScopeIndex {
   }
 
   getHashes(indexType: IndexType): string[] {
-    // @ts-ignore how to tell TS that all this.index.prop are array?
     return this.index[indexType].map((indexItem: IndexItem) => indexItem.hash);
   }
   getHashesByQuery(indexType: IndexType, filter: Function): string[] {

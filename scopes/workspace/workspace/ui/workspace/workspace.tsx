@@ -1,6 +1,6 @@
 import 'reset-css';
 import pluralize from 'pluralize';
-import React, { useState, useMemo, useEffect, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useLayoutEffect, useRef } from 'react';
 import { Route } from 'react-router-dom';
 import type { ComponentModel } from '@teambit/component';
 import type { ComponentID } from '@teambit/component-id';
@@ -16,12 +16,15 @@ import { TopBar } from '@teambit/ui-foundation.ui.top-bar';
 import { PreserveWorkspaceMode } from '@teambit/workspace.ui.preserve-workspace-mode';
 import classNames from 'classnames';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
+import { useUrlChangeBroadcaster } from '@teambit/workspace.hooks.use-url-change-broadcaster';
+import { useNavigationMessageListener } from '@teambit/workspace.hooks.use-navigation-message-listener';
 
 import { useWorkspace } from './use-workspace';
 import { WorkspaceOverview } from './workspace-overview';
 import { WorkspaceProvider } from './workspace-provider';
 import styles from './workspace.module.scss';
-import { WorkspaceUI } from '../../workspace.ui.runtime';
+import type { WorkspaceUI } from '../../workspace.ui.runtime';
+import { ThemeFromUrlSync } from './theme-from-url';
 
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
@@ -36,7 +39,23 @@ export type WorkspaceProps = {
  */
 export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebarTogglerChange }: WorkspaceProps) {
   const { isMinimal } = useWorkspaceMode();
-  const reactions = useComponentNotifications();
+
+  const reactionsRef = useRef<{
+    onComponentAdded: (comps: ComponentModel[]) => void;
+    onComponentRemoved: (ids: ComponentID[]) => void;
+  }>({
+    onComponentAdded: () => {},
+    onComponentRemoved: () => {},
+  });
+
+  const reactions = useMemo(
+    () => ({
+      onComponentAdded: (comps: ComponentModel[]) => reactionsRef.current.onComponentAdded(comps),
+      onComponentRemoved: (ids: ComponentID[]) => reactionsRef.current.onComponentRemoved(ids),
+    }),
+    []
+  );
+
   const { workspace } = useWorkspace(reactions);
   const theme = useThemePicker();
   const currentTheme = theme?.current;
@@ -64,14 +83,18 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
   }
 
   workspaceUI.setComponents(workspace.components);
+  const inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
 
   return (
     <WorkspaceProvider workspace={workspace}>
+      {!isMinimal && <NotificationsBinder reactionsRef={reactionsRef} />}
       <PreserveWorkspaceMode>
+        <ThemeFromUrlSync />
+        {isMinimal && inIframe && <MinimalModeUrlBroadcasterAndListener />}
         <div className={styles.workspaceWrapper}>
           {
             <TopBar
-              className={classNames(styles.topbar, styles[themeName])}
+              className={classNames(styles.topbar, styles[themeName], isMinimal && styles.minimal)}
               Corner={() => (
                 <Corner
                   className={classNames((isMinimal && styles.minimalCorner) || styles.corner, styles[themeName])}
@@ -107,12 +130,18 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
   );
 }
 
-function useComponentNotifications() {
+function NotificationsBinder({
+  reactionsRef,
+}: {
+  reactionsRef: React.MutableRefObject<{
+    onComponentAdded: (comps: ComponentModel[]) => void;
+    onComponentRemoved: (ids: ComponentID[]) => void;
+  }>;
+}) {
   const notifications = useNotifications();
 
-  // memo not really needed, but for peace of mind
-  return useMemo(
-    () => ({
+  const notificationsMapped = useMemo(() => {
+    return {
       onComponentAdded: (comps: ComponentModel[]) => {
         const notificationId = notifications.log(
           `added ${pluralize('component', comps.length)}: ${comps.map((comp) => comp.id.toString()).join(', ')}`
@@ -125,7 +154,21 @@ function useComponentNotifications() {
         );
         setTimeout(() => notifications.dismiss(notificationId), 12 * 1000);
       },
-    }),
-    [notifications]
-  );
+    };
+  }, [notifications]);
+
+  useEffect(() => {
+    reactionsRef.current = notificationsMapped;
+    return () => {
+      reactionsRef.current = { onComponentAdded: () => {}, onComponentRemoved: () => {} };
+    };
+  }, [notificationsMapped, reactionsRef]);
+
+  return null;
+}
+
+export function MinimalModeUrlBroadcasterAndListener() {
+  useUrlChangeBroadcaster();
+  useNavigationMessageListener();
+  return null;
 }

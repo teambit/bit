@@ -1,7 +1,9 @@
-import React, { SVGProps } from 'react';
+import type { SVGProps } from 'react';
+import React from 'react';
 
 export function ImageIcon(props: SVGProps<SVGSVGElement>) {
   return (
+    // @ts-ignore
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" {...props}>
       <path
         fill="currentColor"

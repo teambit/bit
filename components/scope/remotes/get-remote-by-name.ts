@@ -1,6 +1,6 @@
-import { Consumer } from '@teambit/legacy.consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { getScopeRemotes } from './scope-remotes';
-import { Remote } from './remote';
+import type { Remote } from './remote';
 import { Remotes } from './remotes';
 
 export async function getRemoteByName(remoteName: string, consumer?: Consumer): Promise<Remote> {

@@ -1,11 +1,13 @@
-import React, { HTMLAttributes, useMemo, useRef, useEffect, useState, useCallback } from 'react';
+import type { HTMLAttributes } from 'react';
+import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import classnames from 'classnames';
 import { compact, isFunction } from 'lodash';
-import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
-import { LaneId } from '@teambit/lane-id';
-import { FetchMoreLanesResult } from '@teambit/lanes.hooks.use-lanes';
-import { LaneDropdownItems, GroupedLaneDropdownItem } from './lane-selector';
+import type { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import type { LaneId } from '@teambit/lane-id';
+import type { FetchMoreLanesResult } from '@teambit/lanes.hooks.use-lanes';
+import type { LaneDropdownItems, GroupedLaneDropdownItem } from './lane-selector';
 import { LaneMenuItem } from './lane-menu-item';
 import { LaneGroupedMenuItem } from './lane-grouped-menu-item';
 
@@ -17,7 +19,7 @@ export type LaneSelectorListProps = {
   nonMainLanes: LaneModel[];
   className?: string;
   groupByScope?: boolean;
-  getHref?: (laneId: LaneId) => string;
+  getHref?: (laneId: LaneId, relative?: boolean, selectedLane?: LaneModel) => string;
   onLaneSelected?: (selectedLaneId: LaneId, selectedLane: LaneModel) => void;
   search?: string;
   mainIcon?: React.ReactNode;
@@ -185,7 +187,7 @@ export function _LaneSelectorList({
                 nonMainLanes.find((nonMainLane) => nonMainLane.id.isEqual(currentSelectedLaneId))) ||
               mainLane;
             currentSelectedLaneId && selectedLane && onLaneSelected?.(currentSelectedLaneId, selectedLane);
-            currentSelectedLaneId && selectedLane && navigate(getHref(currentSelectedLaneId));
+            currentSelectedLaneId && selectedLane && navigate(getHref(currentSelectedLaneId, undefined, selectedLane));
             return currentSelectedLaneId;
           });
           break;
@@ -251,8 +253,8 @@ export function _LaneSelectorList({
               current={lanesByScope}
               icon={scopeIconLookup?.get(scope)}
               timestamp={(lane) => lane.updatedAt || lane.createdAt}
-              innerRefs={(laneId) => {
-                return laneDOMRefs.current.get(laneId.toString());
+              innerRefs={(laneId, lane) => {
+                return laneDOMRefs.current.get(lane.hash || laneId.toString());
               }}
             />
           );

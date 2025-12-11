@@ -1,7 +1,8 @@
 import chai, { expect } from 'chai';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 const MAIN_ASPECT_PROVIDER_TEXT = 'main aspect provider';
 
@@ -24,7 +25,6 @@ describe('custom aspects', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -85,7 +85,6 @@ describe('custom aspects', function () {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       helper.fixtures.populateExtensions(2, true);
       helper.extensions.addExtensionToVariant('extensions', 'teambit.harmony/aspect');
       helper.command.create('bit-aspect', 'main-aspect');
@@ -148,7 +147,6 @@ describe('custom aspects', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();

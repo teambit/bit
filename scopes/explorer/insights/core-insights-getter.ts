@@ -1,4 +1,4 @@
-import { GraphMain } from '@teambit/graph';
+import type { GraphMain } from '@teambit/graph';
 
 import DuplicateDependencies from './all-insights/duplicate-dependencies';
 import FindCycles from './all-insights/find-circulars';

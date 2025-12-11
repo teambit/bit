@@ -1,11 +1,12 @@
-import ts, { Node, SourceFile } from 'typescript';
+import type { Node, SourceFile } from 'typescript';
+import ts from 'typescript';
 import { flatten } from 'lodash';
 import pMapSeries from 'p-map-series';
 import { ModuleSchema } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaTransformer } from '../schema-transformer';
+import type { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { Identifier } from '../identifier';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { Identifier } from '../identifier';
 
 export class SourceFileTransformer implements SchemaTransformer {
   predicate(node: Node) {

@@ -5,7 +5,8 @@ import type { Logger } from '@teambit/logger';
 
 import type { PreviewMain } from './preview.main.runtime';
 import type { PreviewArtifact } from './preview-artifact';
-import { getArtifactFileMiddleware, GetCacheControlFunc } from './artifact-file-middleware';
+import type { GetCacheControlFunc } from './artifact-file-middleware';
+import { getArtifactFileMiddleware } from './artifact-file-middleware';
 
 type UrlParams = ComponentUrlParams & {
   filePath?: string;
@@ -42,7 +43,6 @@ export class EnvTemplateRoute implements RegisteredComponentRoute {
   middlewares = [
     async (req: Request<UrlParams>, res: Response, next: NextFunction) => {
       try {
-        // @ts-ignore TODO: @guy please fix.
         // const component = req.component as Component | undefined;
         // if (!component) return res.status(404).send(noPreview());
 

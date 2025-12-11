@@ -1,4 +1,4 @@
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { ExecutionContext } from '@teambit/envs';
 
 type GroupIdContextMap = Record<string, ExecutionContext[]>;

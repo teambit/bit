@@ -2,12 +2,13 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
+import assertArrays from 'chai-arrays';
+import chaiString from 'chai-string';
 
-chai.use(require('chai-fs'));
-const assertArrays = require('chai-arrays');
-
+chai.use(chaiFs);
 chai.use(assertArrays);
-chai.use(require('chai-string'));
+chai.use(chaiString);
 
 describe('bit import', function () {
   this.timeout(0);
@@ -448,6 +449,37 @@ describe('bit import', function () {
         const ls = helper.command.listLocalScopeParsed();
         expect(ls).to.be.lengthOf(3);
       });
+    });
+  });
+  describe('external package manager mode', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      // export a new simple component
+      helper.fs.createFile('global', 'simple.js', 'const isOdd = require("is-odd")');
+      helper.command.addComponent('global', { i: 'global/simple' });
+      helper.command.install('is-odd@1.0.0');
+      helper.command.tagWithoutBuild('global/simple');
+      helper.command.exportIds('global/simple');
+
+      helper.command.removeComponent('global/simple');
+      helper.fs.createFile('global2', 'simple.js', 'const isOdd = require("is-odd")');
+      helper.command.addComponent('global2', { i: 'global2/simple' });
+      helper.command.install('is-odd@2.0.0');
+      helper.command.tagWithoutBuild('global2/simple');
+      helper.command.exportIds('global2/simple');
+
+      // create a new workspace that uses an external package manager
+      helper.scopeHelper.cleanWorkspace();
+      helper.command.init('--external-package-manager');
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importManyComponents(['global/simple', 'global2/simple']);
+    });
+    it('should write dependencies to package.json', () => {
+      const pkgJson = helper.fs.readJsonFile('package.json');
+      expect(pkgJson.dependencies['is-odd']).to.eq('2.0.0');
+    });
+    it('should not run installation', () => {
+      expect(helper.fs.exists('node_modules/is-odd')).to.eq(false);
     });
   });
 });

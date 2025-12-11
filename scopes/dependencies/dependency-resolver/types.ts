@@ -1,8 +1,8 @@
-import { ComponentConfig, ComponentFS } from '@teambit/component';
-import { PathLinux } from '@teambit/toolbox.path.path';
+import type { ComponentConfig, ComponentFS } from '@teambit/component';
+import type { PathLinux } from '@teambit/toolbox.path.path';
 
-import { ComponentManifest } from './manifest/component-manifest';
-import { PackageName } from './dependencies';
+import type { ComponentManifest } from './manifest/component-manifest';
+import type { PackageName } from './dependencies';
 
 export type RegistryName = string;
 

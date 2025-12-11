@@ -1,7 +1,7 @@
-import { Bundler, DevServer } from '@teambit/bundler';
-import { WebpackConfigTransformer } from '@teambit/webpack';
+import type { Bundler, DevServer } from '@teambit/bundler';
+import type { WebpackConfigTransformer } from '@teambit/webpack';
 
-import { ReactDeployContext } from './deploy-context';
+import type { ReactDeployContext } from './deploy-context';
 
 export type ReactAppOptions = {
   /**

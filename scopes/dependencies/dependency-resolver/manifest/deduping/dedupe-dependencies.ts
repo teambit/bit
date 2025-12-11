@@ -1,7 +1,7 @@
-import { ManifestDependenciesKeysNames, ManifestDependenciesObject } from '../manifest';
-import { WorkspacePolicy } from '../../policy';
-import { PackageName, SemverVersion } from '../../dependencies';
-import { ComponentDependenciesMap } from '../workspace-manifest-factory';
+import type { ManifestDependenciesKeysNames, ManifestDependenciesObject } from '../manifest';
+import type { WorkspacePolicy } from '../../policy';
+import type { PackageName, SemverVersion } from '../../dependencies';
+import type { ComponentDependenciesMap } from '../workspace-manifest-factory';
 import { hoistDependencies } from './hoist-dependencies';
 import { indexByDepId } from './index-by-dep-id';
 import { mergeWithRootDeps } from './merge-with-root';

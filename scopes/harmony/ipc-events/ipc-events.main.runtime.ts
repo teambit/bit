@@ -1,6 +1,9 @@
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import pMapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import path from 'path';

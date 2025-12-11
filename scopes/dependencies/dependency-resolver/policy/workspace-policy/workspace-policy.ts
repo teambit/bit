@@ -1,8 +1,9 @@
 import { uniqWith } from 'lodash';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import { snapToSemver } from '@teambit/component-package-version';
-import { Policy, SemverVersion, GitUrlVersion, FileSystemPath, PolicyConfigKeys } from '../policy';
-import { KEY_NAME_BY_LIFECYCLE_TYPE, WorkspaceDependencyLifecycleType } from '../../dependencies';
+import type { Policy, SemverVersion, GitUrlVersion, FileSystemPath, PolicyConfigKeys } from '../policy';
+import type { WorkspaceDependencyLifecycleType } from '../../dependencies';
+import { KEY_NAME_BY_LIFECYCLE_TYPE } from '../../dependencies';
 import { EntryAlreadyExist } from './exceptions';
 
 export type WorkspacePolicyConfigKeys = Omit<PolicyConfigKeys, 'devDependencies'>;

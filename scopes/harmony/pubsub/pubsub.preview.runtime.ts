@@ -8,10 +8,10 @@ import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import { EventEmitter2 } from 'eventemitter2';
 import { connectToParent, ErrorCode } from 'penpal';
 
-import { BitBaseEvent } from './bit-base-event';
+import type { BitBaseEvent } from './bit-base-event';
 import { PubSubNoParentError } from './no-parent-error';
 import { PubsubAspect } from './pubsub.aspect';
-import { Callback } from './types';
+import type { Callback } from './types';
 
 type ParentMethods = {
   pub: (topic: string, event: BitBaseEvent<any>) => Promise<any>;

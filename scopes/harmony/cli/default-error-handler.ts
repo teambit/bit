@@ -29,7 +29,6 @@ function handleNonBitCustomErrors(err: Error): string {
       `error: you do not have permissions to access '${err.path}', were you running bit, npm or git as root?`
     );
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return chalk.red(err.message || err);
 }
 

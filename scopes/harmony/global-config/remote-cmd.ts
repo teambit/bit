@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import Table from 'cli-table';
 import { forEach, isEmpty } from 'lodash';
 import { add, list, remove } from './remote';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 
 class RemoteAdd implements Command {
   name = 'add <url>';
@@ -58,13 +58,15 @@ export class RemoteList implements Command {
 
 export class RemoteCmd implements Command {
   name = 'remote';
-  description = 'manage set of tracked bit scope(s)';
+  description = 'manage remote scopes for self-hosted environments';
+  extendedDescription = `configure connections to self-hosted remote scopes via HTTP or file protocol.
+note: this command is only needed for self-hosted scopes. when using bit.cloud, remote scopes are automatically configured.
+remotes are bare scopes that store exported components and enable collaboration across teams.`;
   group = 'collaborate';
   helpUrl = 'reference/scope/remote-scopes';
   alias = '';
   loadAspects = false;
   options = [['g', 'global', 'see globally configured remotes']] as CommandOptions;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   commands = [new RemoteAdd(), new RemoteRm(), new RemoteList()];
 
   async report(args: string[], { global }: { global: boolean }) {

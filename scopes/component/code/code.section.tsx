@@ -1,4 +1,4 @@
-import { Section } from '@teambit/component';
+import type { Section } from '@teambit/component';
 import React from 'react';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import type { CodeUI } from './code.ui.runtime';

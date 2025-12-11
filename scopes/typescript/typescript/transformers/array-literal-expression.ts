@@ -1,13 +1,11 @@
-import {
-  ArrayLiteralExpressionSchema,
-  SchemaNode,
-  UnImplementedSchema,
-} from '@teambit/semantics.entities.semantic-schema';
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { ArrayLiteralExpressionSchema, UnImplementedSchema } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
-import ts, { ArrayLiteralExpression, Node } from 'typescript';
+import type { ArrayLiteralExpression, Node } from 'typescript';
+import ts from 'typescript';
 import type { SchemaExtractorContext } from '../schema-extractor-context';
-import { SchemaTransformer } from '../schema-transformer';
-import { Identifier } from '../identifier';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { Identifier } from '../identifier';
 
 export class ArrayLiteralExpressionTransformer implements SchemaTransformer {
   predicate(node: Node): boolean {

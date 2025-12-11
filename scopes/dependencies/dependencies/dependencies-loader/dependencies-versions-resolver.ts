@@ -1,16 +1,17 @@
 import { ComponentID } from '@teambit/component-id';
 import semver from 'semver';
 import { isSnap } from '@teambit/component-version';
-import { Consumer } from '@teambit/legacy.consumer';
-import { Workspace } from '@teambit/workspace';
+import type { Consumer } from '@teambit/legacy.consumer';
+import type { Workspace } from '@teambit/workspace';
 import { logger } from '@teambit/legacy.logger';
 import { isEmpty } from 'lodash';
-import { Dependency, Dependencies, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
-import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { Dependency, Dependencies, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
-import OverridesDependencies from './overrides-dependencies';
-import { DebugComponentsDependency, getValidComponentVersion } from './auto-detect-deps';
+import type OverridesDependencies from './overrides-dependencies';
+import type { DebugComponentsDependency } from './auto-detect-deps';
+import { getValidComponentVersion } from './auto-detect-deps';
 
 type DepType = 'dependencies' | 'devDependencies' | 'peerDependencies';
 

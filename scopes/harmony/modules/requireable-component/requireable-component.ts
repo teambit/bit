@@ -1,5 +1,5 @@
-import { Component } from '@teambit/component';
-import { Capsule } from '@teambit/isolator';
+import type { Component } from '@teambit/component';
+import type { Capsule } from '@teambit/isolator';
 
 type RequireFunc = () => any;
 

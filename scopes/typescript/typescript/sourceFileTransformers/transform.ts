@@ -1,4 +1,4 @@
-import { Formatter } from '@teambit/formatter';
+import type { Formatter } from '@teambit/formatter';
 import ts from 'typescript';
 import * as path from 'path';
 import { EmptyLineEncoder } from './empty-line-encoder';

@@ -1,7 +1,7 @@
 import * as path from 'path';
-import { ComponentID } from '@teambit/component-id';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import type { ComponentID } from '@teambit/component-id';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from './component-id-to-package-name';
 
 export function getNodeModulesPathOfComponent({

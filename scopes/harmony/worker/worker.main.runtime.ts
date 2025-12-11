@@ -1,5 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import { WorkerAspect } from './worker.aspect';
 import { HarmonyWorker } from './harmony-worker';
 

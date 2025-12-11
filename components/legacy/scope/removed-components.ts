@@ -1,5 +1,5 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BitIdStr } from '@teambit/legacy-bit-id';
+import type { BitIdStr } from '@teambit/legacy-bit-id';
 
 export type RemovedObjectSerialized = {
   removedComponentIds: BitIdStr[];

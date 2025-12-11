@@ -1,4 +1,4 @@
-import { DiagnosticMessageChain, server } from 'typescript';
+import type { DiagnosticMessageChain, server } from 'typescript';
 
 export type Diagnostic = server.protocol.Diagnostic;
 

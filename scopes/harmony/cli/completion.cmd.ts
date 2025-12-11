@@ -1,4 +1,4 @@
-import { Command } from './command';
+import type { Command } from './command';
 
 export class CompletionCmd implements Command {
   name = 'completion';

@@ -1,9 +1,9 @@
 import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs-extra';
-import { UIRoot } from '@teambit/ui';
+import type { UIRoot } from '@teambit/ui';
 import { getAspectDirFromBvm } from '@teambit/aspect-loader';
-import { SlotRegistry } from '@teambit/harmony';
-import { ArtifactDefinition } from '@teambit/builder';
+import type { SlotRegistry } from '@teambit/harmony';
+import type { ArtifactDefinition } from '@teambit/builder';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 
 /// utils

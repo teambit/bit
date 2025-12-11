@@ -1,27 +1,20 @@
 import mapSeries from 'p-map-series';
 import { compact, partition, property, sortBy } from 'lodash';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { logger } from '@teambit/legacy.logger';
-import { Remotes, Remote, getScopeRemotes } from '@teambit/scope.remotes';
+import type { Remotes, Remote } from '@teambit/scope.remotes';
+import { getScopeRemotes } from '@teambit/scope.remotes';
+import type { MergeResult, Scope } from '@teambit/legacy.scope';
 import {
-  MergeResult,
   PersistFailed,
-  Scope,
   ComponentNeedsUpdate,
   ComponentNotFound,
   MergeConflict,
   MergeConflictOnRemote,
 } from '@teambit/legacy.scope';
-import {
-  Lane,
-  Version,
-  ModelComponent,
-  VersionHistory,
-  LaneHistory,
-  Ref,
-  BitObjectList,
-  ObjectList,
-} from '@teambit/objects';
+import type { Lane, ModelComponent, VersionHistory, LaneHistory, BitObjectList, ObjectList } from '@teambit/objects';
+import { Version, Ref } from '@teambit/objects';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '@teambit/scope.remote-actions';
 import { loader } from '@teambit/legacy.loader';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
@@ -208,9 +201,8 @@ export async function mergeObjects(
   const lanesObjects = bitObjectList.getLanes();
   const versions = bitObjectList.getVersions();
   const lanesHistory = bitObjectList.getLaneHistories();
-  logger.debugAndAddBreadCrumb(
-    'export-scope-components.mergeObjects',
-    `Going to merge ${components.length} components, ${lanesObjects.length} lanes`
+  logger.debug(
+    `export-scope-components.mergeObjects, Going to merge ${components.length} components, ${lanesObjects.length} lanes, ${versions.length} versions, ${lanesHistory.length} lane histories`
   );
   const { mergeResults, errors } = lanesObjects.length
     ? { mergeResults: [], errors: [] } // for lanes, no need to merge component objects, the lane is merged later.

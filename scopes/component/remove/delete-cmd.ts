@@ -1,20 +1,19 @@
 import chalk from 'chalk';
 import yesno from 'yesno';
-import { Command, CommandOptions } from '@teambit/cli';
-import { Workspace } from '@teambit/workspace';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
-import { RemovedObjects } from '@teambit/legacy.scope';
+import type { RemovedObjects } from '@teambit/legacy.scope';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { RemoveMain } from './remove.main.runtime';
+import type { RemoveMain } from './remove.main.runtime';
 import { removeTemplate } from './remove-template';
 
 export class DeleteCmd implements Command {
   name = 'delete <component-pattern>';
-  description = 'mark components as deleted on the remote';
-  extendedDescription = `to remove components from your local workspace only, use "bit remove" command.
-this command marks the components as deleted, and after snap/tag and export they will be marked as deleted from the remote scope as well.
-unless the '--hard' flag is used (not recommended!), in which case, the component will be deleted from the remote scope immediately.
-`;
+  description = 'soft-delete components from remote scopes';
+  extendedDescription = `marks components as deleted so they won't be visible on remote scopes after export.
+components remain recoverable using "bit recover" unless --hard is used (permanent deletion, not recommended).
+to remove components from your local workspace only, use "bit remove" instead.`;
   arguments = [
     {
       name: 'component-pattern',
@@ -26,7 +25,11 @@ unless the '--hard' flag is used (not recommended!), in which case, the componen
   skipWorkspace = true;
   alias = '';
   options = [
-    ['', 'lane', 'when on a lane, delete the component from this lane only. avoid merging it to main or other lanes'],
+    [
+      '',
+      'lane',
+      'when on a lane, delete the component from this lane only. this removal will not affect main when the lane is merged',
+    ],
     ['', 'update-main', 'delete component/s on the main lane after merging this lane into main'],
     [
       '',
@@ -75,14 +78,16 @@ unless the '--hard' flag is used (not recommended!), in which case, the componen
     }
   ) {
     if (this.workspace?.isOnLane() && !hard && !lane && !updateMain) {
-      throw new BitError(`error: to delete components when on a lane, use --lane flag`);
+      throw new BitError(`error: to delete components when on a lane, use either --lane or --update-main flag.
+--lane: delete the component from this lane only
+--update-main: delete the component from main after this lane is merged`);
     }
     if (this.workspace?.isOnMain() && updateMain) {
       throw new BitError(`--update-main is relevant only when on a lane`);
     }
 
     if (!silent) {
-      await this.removePrompt(hard, lane);
+      await this.removePrompt(hard, lane, updateMain);
     }
 
     if (hard) {
@@ -113,11 +118,19 @@ ${chalk.bold('to update the remote, please tag/snap and then export. to revert, 
     return removedObjectsArray.map((item) => removeTemplate(item, true));
   }
 
-  private async removePrompt(hard?: boolean, lane?: boolean) {
+  private async removePrompt(hard?: boolean, lane?: boolean, updateMain?: boolean) {
     this.remove.logger.clearStatusLine();
-    const laneOrMainWarning = lane
-      ? `this command will mark the component as removed from this lane, resetting the component to its pre-lane state and content (after tag/snap and export)`
-      : `this command will mark the component as deleted, and it won’t be visible on the remote scope (after tag/snap and export).`;
+
+    let laneOrMainWarning: string;
+    if (updateMain) {
+      laneOrMainWarning = `once this lane is merged, the component will be deleted from main (it won't be visible on the remote scope after tag/snap and export).
+if your intent was to undo all changes to this component done as part of the lane so the component in main will be intact, use --lane instead.`;
+    } else if (lane) {
+      laneOrMainWarning = `this command will mark the component as removed from this lane, resetting the component to its pre-lane state and content (after tag/snap and export)`;
+    } else {
+      laneOrMainWarning = `this command will mark the component as deleted, and it won't be visible on the remote scope (after tag/snap and export).`;
+    }
+
     const remoteOrLocalOutput = hard
       ? `WARNING: the component(s) will be permanently deleted from the remote with no option to recover. prefer omitting --hard to only mark the component as soft deleted`
       : `${laneOrMainWarning}

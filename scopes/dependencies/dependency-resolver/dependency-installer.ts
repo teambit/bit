@@ -1,17 +1,17 @@
 import mapSeries from 'p-map-series';
 import path from 'path';
 import fs from 'fs-extra';
-import { MainAspect, AspectLoaderMain } from '@teambit/aspect-loader';
-import { ComponentMap } from '@teambit/component';
+import type { MainAspect, AspectLoaderMain } from '@teambit/aspect-loader';
+import type { ComponentMap } from '@teambit/component';
 import { type DependenciesGraph } from '@teambit/objects';
-import { Logger } from '@teambit/logger';
-import { PathAbsolute } from '@teambit/toolbox.path.path';
-import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
+import type { Logger } from '@teambit/logger';
+import type { PathAbsolute } from '@teambit/toolbox.path.path';
+import type { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
 import { MainAspectNotInstallable, RootDirNotDefined } from './exceptions';
-import { PackageManager, PackageManagerInstallOptions, PackageImportMethod } from './package-manager';
-import { WorkspacePolicy } from './policy';
-import { CreateFromComponentsOptions } from './manifest';
-import { DependencyResolverMain } from './dependency-resolver.main.runtime';
+import type { PackageManager, PackageManagerInstallOptions, PackageImportMethod } from './package-manager';
+import type { WorkspacePolicy } from './policy';
+import type { CreateFromComponentsOptions } from './manifest';
+import type { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
 const DEFAULT_PM_INSTALL_OPTIONS: PackageManagerInstallOptions = {
   dedupe: true,
@@ -102,7 +102,15 @@ export class DependencyInstaller {
 
     private neverBuiltDependencies?: string[],
 
+    private allowScripts?: Record<string, boolean | 'warn'>,
+
+    private dangerouslyAllowAllScripts?: boolean,
+
     private preferOffline?: boolean,
+
+    private minimumReleaseAge?: number,
+
+    private minimumReleaseAgeExclude?: string[],
 
     private installingContext: DepInstallerContext = {}
   ) {}
@@ -200,13 +208,17 @@ export class DependencyInstaller {
       cacheRootDir: this.cacheRootDir,
       nodeLinker: this.nodeLinker,
       packageImportMethod: this.packageImportMethod,
+      minimumReleaseAge: this.minimumReleaseAge,
+      minimumReleaseAgeExclude: this.minimumReleaseAgeExclude,
       sideEffectsCache: this.sideEffectsCache,
       nodeVersion: this.nodeVersion,
       engineStrict: this.engineStrict,
       packageManagerConfigRootDir: options.packageManagerConfigRootDir,
       peerDependencyRules: this.peerDependencyRules,
       hidePackageManagerOutput,
-      neverBuiltDependencies: ['core-js', ...(this.neverBuiltDependencies ?? [])],
+      neverBuiltDependencies: this.neverBuiltDependencies,
+      allowScripts: this.allowScripts,
+      dangerouslyAllowAllScripts: this.dangerouslyAllowAllScripts,
       preferOffline: this.preferOffline,
       dedupeInjectedDeps: options.dedupeInjectedDeps,
       dependenciesGraph: options.dependenciesGraph,

@@ -1,36 +1,38 @@
 import type { ComponentUI, ComponentModel } from '@teambit/component';
 import { compact, flatten } from 'lodash';
 import { ComponentAspect } from '@teambit/component';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { SidebarAspect, SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
-import { ComponentTreeNode } from '@teambit/component-tree';
-import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
-import React, { ComponentType, ReactNode } from 'react';
-import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
-import { RouteProps } from 'react-router-dom';
-import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
+import type { SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
+import { SidebarAspect } from '@teambit/sidebar';
+import type { ComponentTreeNode } from '@teambit/component-tree';
+import type { UIRootUI as UIRoot, UiUI } from '@teambit/ui';
+import { UIAspect, UIRuntime } from '@teambit/ui';
+import type { ComponentType, ReactNode } from 'react';
+import React from 'react';
+import type { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
+import type { RouteProps } from 'react-router-dom';
+import type { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
-import { CommandBarAspect, CommandBarUI, CommandHandler } from '@teambit/command-bar';
-import { ScopeModel } from '@teambit/scope.models.scope-model';
-import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
-import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
-import {
-  DrawerWidgetSlot,
-  FilterWidget,
-  TreeToggleWidget,
-  ComponentFiltersSlot,
-} from '@teambit/component.ui.component-drawer';
-import { ComponentFilters } from '@teambit/component.ui.component-filters.component-filter-context';
+import type { CommandBarUI, CommandHandler } from '@teambit/command-bar';
+import { CommandBarAspect } from '@teambit/command-bar';
+import type { ScopeModel } from '@teambit/scope.models.scope-model';
+import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
+import type { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import type { DrawerWidgetSlot, ComponentFiltersSlot } from '@teambit/component.ui.component-drawer';
+import { FilterWidget, TreeToggleWidget } from '@teambit/component.ui.component-drawer';
+import type { ComponentFilters } from '@teambit/component.ui.component-filters.component-filter-context';
 import { DeprecateFilter } from '@teambit/component.ui.component-filters.deprecate-filter';
 import { EnvsFilter } from '@teambit/component.ui.component-filters.env-filter';
-import { ComponentUrlResolver, ComponentUrlProvider } from '@teambit/component.modules.component-url';
+import type { ComponentUrlResolver } from '@teambit/component.modules.component-url';
+import { ComponentUrlProvider } from '@teambit/component.modules.component-url';
 import { ShowMainFilter } from '@teambit/component.ui.component-filters.show-main-filter';
 import { ScopeMenu, ScopeUseBox } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
 import { scopeDrawer } from './scope.ui.drawer';
-import { GetScopeOptions } from './get-scope-options';
+import type { GetScopeOptions } from './get-scope-options';
 
 export type ScopeBadge = ComponentType;
 

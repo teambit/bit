@@ -1,4 +1,4 @@
-import { RawGraph } from './get-graph.query';
+import type { RawGraph } from './get-graph.query';
 import { NodeModel } from './node-model';
 import { EdgeModel } from './edge-model';
 

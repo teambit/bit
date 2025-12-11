@@ -1,4 +1,4 @@
-import { ComponentContext, ComponentTemplate } from '../../component-template';
+import type { ComponentContext, ComponentTemplate } from '../../component-template';
 import { indexFile } from './files/index';
 import { starterFile } from './files/starter';
 import { docFile } from './files/doc-file';

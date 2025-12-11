@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { KeySequence } from '@teambit/ui-foundation.ui.keycap';
 import { mutedText } from '@teambit/base-ui.text.muted-text';
-import { Command } from './command';
+import type { Command } from './command';
 
 import styles from './command-result.module.scss';
 

@@ -1,8 +1,8 @@
 import { BitError } from '@teambit/bit-error';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { Logger } from '@teambit/logger';
-import openBrowser from 'react-dev-utils/openBrowser';
+import type { Logger } from '@teambit/logger';
+import open from 'open';
 import chalk from 'chalk';
 import type { UiMain } from './ui.main.runtime';
 
@@ -21,7 +21,10 @@ type StartFlags = {
 
 export class StartCmd implements Command {
   name = 'start [component-pattern]';
-  description = 'run the ui/development server';
+  description = 'launch the Bit development server';
+  extendedDescription = `starts the local development server providing a UI to browse, preview, and interact with components.
+works in both workspaces and scopes. opens automatically in your browser at http://localhost:3000 (or specified port).
+includes hot module reloading for development.`;
   arguments = [
     {
       name: 'component-pattern',
@@ -108,7 +111,7 @@ export class StartCmd implements Command {
 Bit server is running on ${chalk.cyan(url)}`);
         spinnies.add('summary', { text: message, status: 'non-spinnable' });
         if (!noBrowser) {
-          openBrowser(url);
+          await open(url);
         }
         return undefined;
       })

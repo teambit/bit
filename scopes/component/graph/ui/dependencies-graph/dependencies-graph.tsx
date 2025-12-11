@@ -1,22 +1,19 @@
 import React, { useCallback, useMemo, useRef, useEffect } from 'react';
 import classnames from 'classnames';
+import type { NodeProps, NodeTypes, ReactFlowInstance, ReactFlowProps } from 'reactflow';
 import ReactFlow, {
   Background,
   Controls,
   Handle,
   MiniMap,
-  NodeProps,
-  NodeTypes,
-  ReactFlowInstance,
   Position,
-  ReactFlowProps,
   ReactFlowProvider,
   useNodesState,
 } from 'reactflow';
-import { ComponentID } from '@teambit/component';
-import { ComponentWidgetSlot } from '../../graph.ui.runtime';
+import type { ComponentID } from '@teambit/component';
+import type { ComponentWidgetSlot } from '../../graph.ui.runtime';
 import { ComponentNode } from '../component-node';
-import { EdgeModel, GraphModel, NodeModel } from '../query';
+import type { EdgeModel, GraphModel, NodeModel } from '../query';
 import { calcElements } from './calc-elements';
 import { calcMinimapColors } from './minimap';
 import { ComponentGraphContext } from './graph-context';

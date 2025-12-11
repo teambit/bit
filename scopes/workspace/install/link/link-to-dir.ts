@@ -1,4 +1,4 @@
-import { LinkToDirResult } from '@teambit/dependency-resolver';
+import type { LinkToDirResult } from '@teambit/dependency-resolver';
 import chalk from 'chalk';
 import { LinkRow } from './link-row';
 

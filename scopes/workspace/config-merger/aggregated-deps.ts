@@ -1,4 +1,4 @@
-import { PkgEntry } from './config-merger.main.runtime';
+import type { PkgEntry } from './config-merger.main.runtime';
 
 type UsedBy = { compIdStr: string; version: string };
 

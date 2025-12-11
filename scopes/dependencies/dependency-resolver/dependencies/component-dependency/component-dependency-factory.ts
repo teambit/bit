@@ -1,17 +1,18 @@
 import mapSeries from 'p-map-series';
-import { ComponentMain } from '@teambit/component';
+import type { ComponentMain } from '@teambit/component';
 import { compact } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
-import {
+import type {
   ConsumerComponent as LegacyComponent,
   Dependency,
   Dependency as LegacyDependency,
 } from '@teambit/legacy.consumer-component';
 import type { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { ComponentDependency, SerializedComponentDependency, TYPE } from './component-dependency';
-import { DependencyLifecycleType } from '../dependency';
-import { DependencyFactory } from '../dependency-factory';
+import type { SerializedComponentDependency } from './component-dependency';
+import { ComponentDependency, TYPE } from './component-dependency';
+import type { DependencyLifecycleType } from '../dependency';
+import type { DependencyFactory } from '../dependency-factory';
 import { DependencyList } from '../dependency-list';
 
 export class ComponentDependencyFactory implements DependencyFactory {

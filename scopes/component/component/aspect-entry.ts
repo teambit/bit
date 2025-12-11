@@ -3,8 +3,8 @@
  */
 
 import type { ExtensionDataEntry } from '@teambit/legacy.extension-data';
-import { ComponentID } from '@teambit/component-id';
-import { RawComponentMetadata } from './component-interface';
+import type { ComponentID } from '@teambit/component-id';
+import type { RawComponentMetadata } from './component-interface';
 
 export type Serializable = {
   toString(): string;

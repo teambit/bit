@@ -2,7 +2,7 @@
 // without this change, typescript throws errors when trying to extend the Vinyl class due to the
 // overloading.
 
-import * as fs from 'fs';
+import type * as fs from 'fs';
 
 interface ConstructorOptions {
   /**

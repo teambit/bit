@@ -6,19 +6,20 @@ import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { BitId } from '@teambit/legacy-bit-id';
 import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '@teambit/legacy.constants';
-import { ConsumerComponent, SchemaName, Dependencies, Dependency } from '@teambit/legacy.consumer-component';
+import type { Dependencies, Dependency } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent, SchemaName } from '@teambit/legacy.consumer-component';
 import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
 import { ComponentOverrides, getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import { getLatestVersion, validateVersion } from '@teambit/pkg.modules.semver-helper';
+import type { SnapsDistance } from '@teambit/component.snap-distance';
 import {
-  SnapsDistance,
   getDivergeData,
   getAllVersionParents,
   getAllVersionsInfo,
@@ -36,20 +37,21 @@ import {
   errorIsTypeOfMissingObject,
   BitIdCompIdError,
 } from '@teambit/legacy.scope';
-import { Repository, BitObject, Ref } from '../objects';
-import Lane from './lane';
+import type { Repository } from '../objects';
+import { BitObject, Ref } from '../objects';
+import type Lane from './lane';
 import ScopeMeta from './scopeMeta';
-import Source from './source';
-import Version from './version';
-import VersionHistory, { VersionParents } from './version-history';
-import { ObjectItem } from '../objects/object-list';
+import type Source from './source';
+import type Version from './version';
+import type { VersionParents } from './version-history';
+import VersionHistory from './version-history';
+import type { ObjectItem } from '../objects/object-list';
 import type { Scope } from '@teambit/legacy.scope';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { DetachedHeads } from './detach-heads';
 
 type State = {
   versions?: {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     [version: string]: {
       local?: boolean; // whether a component was changed locally
     };
@@ -98,7 +100,6 @@ export const VERSION_ZERO = '0.0.0';
  * with 'Component' in their headers. see object-registrar.types()
  */
 // TODO: FIX me .parser
-// @ts-ignore
 export default class Component extends BitObject {
   scope: string;
   name: string;
@@ -603,7 +604,6 @@ export default class Component extends BitObject {
   collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
     return Promise.all(
       this.listVersions().map((versionNum) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return this.toConsumerComponent(versionNum, this.scope, repo);
       })
     );
@@ -738,8 +738,8 @@ export default class Component extends BitObject {
       else
         throw new Error(`unable to add a new version for "${this.id()}" on main.
 this version started from an older version (${previouslyUsedVersion}), and not from the head (${head}).
-if this is done intentionally, please re-run with --detach-head (or --override-head if available).
-otherwise, please run "bit checkout head" to be up to date, then snap/tag your changes.`);
+please run "bit checkout head" to be up to date, then snap/tag your changes.
+if this is done intentionally, you can use --detach-head (or --override-head if available), but make sure you understand the implications as this is an experimental feature that may not be fully stable.`);
     } else {
       this.setHead(version.hash());
       this.detachedHeads.clearCurrent();
@@ -1086,7 +1086,6 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     // @todo: this is weird. why the scopeMeta would be taken from the current scope and not he component scope?
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
-    // @ts-ignore
     const [files, scopeMeta] = await Promise.all([filesP, scopeMetaP]);
 
     const extensions = version.extensions.clone();
@@ -1206,6 +1205,27 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     await this.setDivergeData(repo, undefined, undefined, workspaceId);
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnSourceOnly;
+
+    // When there's a detached head, divergeData only includes the detached head lineage.
+    // We also need to include unexported versions from the main head lineage.
+    const hasDetachedHead = this.detachedHeads && this.detachedHeads.getAllHeads().length > 0;
+    if (hasDetachedHead && this.head) {
+      // Calculate divergence from the main head as well
+      const mainHeadDivergeData = await getDivergeData({
+        repo,
+        modelComponent: this,
+        targetHead: (this.laneId ? this.calculatedRemoteHeadWhenOnLane : this.remoteHead) || null,
+        sourceHead: this.head,
+        throws: false,
+      });
+      // Add main head local versions that aren't already in localHashes
+      for (const hash of mainHeadDivergeData.snapsOnSourceOnly) {
+        if (!localHashes.find((h) => h.isEqual(hash))) {
+          localHashes.push(hash);
+        }
+      }
+    }
+
     if (!localHashes.length) return [];
     return localHashes.reverse(); // reverse to get the older first
   }

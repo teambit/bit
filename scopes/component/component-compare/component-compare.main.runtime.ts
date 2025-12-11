@@ -1,34 +1,33 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { compact } from 'lodash';
 import { BitError } from '@teambit/bit-error';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { ScopeMain, ScopeAspect } from '@teambit/scope';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
 import { BuilderAspect } from '@teambit/builder';
-import { ModelComponent, Version } from '@teambit/objects';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import {
-  DependencyResolverAspect,
-  DependencyList,
-  DependencyResolverMain,
-  SerializedDependency,
-} from '@teambit/dependency-resolver';
-import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
-import {
-  DiffOptions,
-  DiffResults,
-  FieldsDiff,
-  FileDiff,
-  getFilesDiff,
-  diffBetweenComponentsObjects,
-} from '@teambit/legacy.component-diff';
-import { TesterMain, TesterAspect } from '@teambit/tester';
-import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
+import type { ModelComponent, Version } from '@teambit/objects';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { DependencyList, DependencyResolverMain, SerializedDependency } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { LoggerMain, Logger } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { DiffOptions, DiffResults, FieldsDiff, FileDiff } from '@teambit/legacy.component-diff';
+import { getFilesDiff, diffBetweenComponentsObjects } from '@teambit/legacy.component-diff';
+import type { TesterMain } from '@teambit/tester';
+import { TesterAspect } from '@teambit/tester';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import { componentCompareSchema } from './component-compare.graphql';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { DiffCmd } from './diff-cmd';
-import { ImporterAspect, ImporterMain } from '@teambit/importer';
+import type { ImporterMain } from '@teambit/importer';
+import { ImporterAspect } from '@teambit/importer';
 
 export type ComponentCompareResult = {
   id: string;

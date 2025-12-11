@@ -1,4 +1,4 @@
-import { Component } from '@teambit/component';
+import type { Component } from '@teambit/component';
 
 export type TaskMetadata = { [key: string]: any };
 
@@ -34,4 +34,11 @@ export type ComponentResult = {
    * timestamp in milliseconds when the task ended
    */
   endTime?: number;
+
+  /**
+   * status of the task execution for this component.
+   * "pending" indicates the task was skipped due to a dependency failure.
+   * undefined/null indicates success (or failure if errors are present).
+   */
+  status?: 'pending';
 };

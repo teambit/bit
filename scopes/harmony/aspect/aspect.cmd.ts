@@ -1,10 +1,10 @@
 // eslint-disable-next-line max-classes-per-file
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { CLITable } from '@teambit/cli-table';
 import chalk from 'chalk';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { AspectMain } from './aspect.main.runtime';
+import type { AspectMain } from './aspect.main.runtime';
 
 export class ListAspectCmd implements Command {
   name = 'list [pattern]';
@@ -264,7 +264,10 @@ ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
 export class AspectCmd implements Command {
   name = 'aspect <sub-command>';
   alias = '';
-  description = 'manage aspects';
+  description = 'manage component aspects and their configurations';
+  extendedDescription = `aspects provide functionality and tools for components throughout their development lifecycle.
+primarily useful for inspecting aspect assignments and configurations with "bit aspect get".
+rarely used for manual aspect management as most aspects are configured automatically.`;
   options = [];
   group = 'component-config';
   commands: Command[] = [];

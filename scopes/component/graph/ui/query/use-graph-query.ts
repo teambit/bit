@@ -1,7 +1,8 @@
 import { useMemo, useEffect, useState } from 'react';
 import { useQuery, useLazyQuery } from '@apollo/client';
 import { GraphQlError } from '@teambit/graphql';
-import { GET_GRAPH, RawGraphQuery, GET_GRAPH_IDS } from './get-graph.query';
+import type { RawGraphQuery } from './get-graph.query';
+import { GET_GRAPH, GET_GRAPH_IDS } from './get-graph.query';
 import { GraphModel } from './graph-model';
 
 type QueryVariables = {

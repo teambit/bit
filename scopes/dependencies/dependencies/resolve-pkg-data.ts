@@ -3,7 +3,7 @@ import path from 'path';
 import readPkgUp from 'read-pkg-up';
 import { PACKAGE_JSON } from '@teambit/legacy.constants';
 import { PackageJsonFile } from '@teambit/component.sources';
-import { PathLinuxAbsolute, PathOsBased, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
+import type { PathLinuxAbsolute, PathOsBased, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import { resolvePackageNameByPath } from '@teambit/legacy.utils';
 
 export interface ResolvedPackageData {
@@ -98,7 +98,6 @@ function enrichDataFromDependency(packageData: ResolvedPackageData) {
   if (packageInfo.componentId) {
     const scope = packageInfo.componentId.scope as string;
     if (packageInfo.exported === false) {
-      // @ts-ignore
       delete packageInfo.componentId.scope;
     }
     const componentId = ComponentID.fromObject(packageInfo.componentId, scope);

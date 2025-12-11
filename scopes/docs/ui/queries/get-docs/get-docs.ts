@@ -1,5 +1,5 @@
 import { useQuery, gql } from '@apollo/client';
-import { ComponentID } from '@teambit/component';
+import type { ComponentID } from '@teambit/component';
 
 export const docsFields = gql`
   fragment docsFields on ReactDocs {

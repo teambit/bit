@@ -10,25 +10,28 @@ process.env.BROWSERSLIST_IGNORE_OLD_DATA = 'true';
 
 import './hook-require';
 
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import {
   AspectLoaderAspect,
   getAspectDir,
   getAspectDistDir,
-  AspectLoaderMain,
   getCoreAspectPackageName,
   getCoreAspectName,
 } from '@teambit/aspect-loader';
 import json from 'comment-json';
 import userHome from 'user-home';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
-import { Harmony, RuntimeDefinition, Extension, Aspect } from '@teambit/harmony';
+import type { RuntimeDefinition, Extension, Aspect } from '@teambit/harmony';
+import { Harmony } from '@teambit/harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
 import { Config } from '@teambit/harmony/dist/harmony-config';
 import { readConfigFile } from '@teambit/harmony/dist/harmony-config/config-reader';
 import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
 import { loadConsumer } from '@teambit/legacy.consumer';
-import { getWorkspaceInfo, WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
+import type { WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { BitError } from '@teambit/bit-error';
 import { ComponentLoader } from '@teambit/legacy.consumer-component';
@@ -47,9 +50,12 @@ import { resolve, join } from 'path';
 import { getAllCoreAspectsIds, isCoreAspect, manifestsMap } from './manifests';
 import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
-import { BitConfig } from './bit.provider';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
+import type { BitConfig } from './bit.provider';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { GeneratorMain } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator';
+import { HostInitializerMain } from '@teambit/host-initializer';
 
 async function loadLegacyConfig(config: any) {
   const harmony = await Harmony.load([ConfigAspect], ConfigRuntime.name, config.toObject());
@@ -58,6 +64,9 @@ async function loadLegacyConfig(config: any) {
 
 async function getConfig(cwd = process.cwd()) {
   const consumerInfo = await getWorkspaceInfo(cwd);
+  if (consumerInfo && !consumerInfo.hasScope && consumerInfo.hasBitMap && consumerInfo.hasWorkspaceConfig) {
+    await HostInitializerMain.init(consumerInfo.path);
+  }
   const scopePath = findScopePath(cwd);
 
   let wsConfig;
@@ -278,7 +287,6 @@ export async function loadBit(path = process.cwd(), additionalAspects?: Aspect[]
     logger.isDaemon = true;
   }
   const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
-
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
   if (loadCLIOnly) return harmony;
   const aspectLoader = harmony.get<AspectLoaderMain>(AspectLoaderAspect.id);

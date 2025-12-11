@@ -1,5 +1,5 @@
-import { EnvHandler } from '@teambit/envs';
-import { Formatter } from './formatter';
+import type { EnvHandler } from '@teambit/envs';
+import type { Formatter } from './formatter';
 
 export interface FormatterEnv {
   /**

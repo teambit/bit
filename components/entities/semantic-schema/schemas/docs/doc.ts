@@ -1,6 +1,7 @@
-import { SchemaLocation, SchemaNode } from '../../schema-node';
+import type { SchemaLocation } from '../../schema-node';
+import { SchemaNode } from '../../schema-node';
 import { SchemaRegistry } from '../../schema-registry';
-import { TagName, TagSchema } from './tag';
+import type { TagName, TagSchema } from './tag';
 
 export class DocSchema extends SchemaNode {
   readonly tags?: TagSchema[];

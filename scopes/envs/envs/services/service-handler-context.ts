@@ -1,7 +1,7 @@
-import { ComponentID } from '@teambit/component';
-import { Harmony } from '@teambit/harmony';
-import { Logger, LoggerMain } from '@teambit/logger';
-import { WorkerMain } from '@teambit/worker';
+import type { ComponentID } from '@teambit/component';
+import type { Harmony } from '@teambit/harmony';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import type { WorkerMain } from '@teambit/worker';
 
 export class ServiceHandlerContext {
   constructor(

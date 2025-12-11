@@ -10,7 +10,7 @@ const buildTreeFixtures = path.join(fixtures, 'build-tree');
 describe('buildTree', () => {
   describe('getDependencyTree', () => {
     const filePaths: string[] = [];
-    let visited: any;
+    const visited: any = {};
     const dependencyTreeParams = {
       componentDir: __dirname,
       workspacePath: __dirname,

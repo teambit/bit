@@ -5,9 +5,10 @@ import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Extensions, IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('custom env', function () {
   this.timeout(0);
@@ -64,7 +65,6 @@ describe('custom env', function () {
     let envName;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(3);
@@ -119,7 +119,6 @@ describe('custom env', function () {
   describe('change an env after tag', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       const envName = helper.env.setCustomEnv();
       const envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(3);
@@ -137,7 +136,6 @@ describe('custom env', function () {
     let envId;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       const envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(1, false);
@@ -229,7 +227,6 @@ describe('custom env', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -524,10 +521,67 @@ describe('custom env', function () {
       // const envName = helper.env.setCustomEnv();
       // const envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(1, false);
-      helper.fs.outputFile('node-env/foo.ts', `import "@${helper.scopes.remote}/comp1'";`);
+      helper.fs.outputFile('node-env/foo.ts', `import "@${helper.scopes.remote}/comp1";`);
+      helper.command.setEnv('comp1', 'node-env');
     });
     it('should not enter into an infinite loop on any command', () => {
       helper.command.status();
+    });
+  });
+  describe('circular dependencies between an env and a theme component used in env mounter', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+
+      // Create a React env
+      const envName = helper.env.setCustomNewEnv('react-based-env');
+      const envId = `${helper.scopes.remote}/${envName}`;
+
+      // Create a theme component
+      helper.fixtures.populateComponents(1, false);
+      helper.command.rename('comp1', 'theme');
+      helper.fs.outputFile(
+        'theme/index.tsx',
+        `import React from 'react';
+export const MyTheme = ({ children }: { children: React.ReactNode }) => <div className="theme">{children}</div>;`
+      );
+
+      // Set the env to use this theme component in its mounter
+      helper.fs.outputFile(
+        `${envName}/preview/mounter.tsx`,
+        `import React from 'react';
+import { createMounter } from '@teambit/react.mounter';
+import { MyTheme } from '@${helper.scopes.remote}/theme';
+
+export function MyReactProvider({ children }: { children: React.ReactNode }) {
+  return <MyTheme>{children}</MyTheme>;
+}
+
+export default createMounter(MyReactProvider) as any;`
+      );
+
+      // Set the theme component to use the custom env
+      helper.command.setEnv('theme', envId);
+
+      // Compile and snap on a lane
+      helper.command.compile();
+      helper.command.createLane('test-circular');
+      helper.command.snapAllComponentsWithoutBuild(
+        '--ignore-issues "CircularDependencies,MissingPackagesDependenciesOnFs"'
+      );
+      helper.command.export();
+
+      // Create a new workspace and import the lane
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.workspaceJsonc.setupDefault();
+      helper.command.importLane('test-circular', '-x');
+    });
+    it('bit status should not enter into an infinite loop', () => {
+      expect(() => helper.command.status()).to.not.throw();
+    });
+    it('should complete bit status command successfully', () => {
+      const status = helper.command.status();
+      expect(status).to.be.a('string');
     });
   });
   describe('ejecting conf when current env exists locally', () => {
@@ -585,7 +639,6 @@ describe('custom env', function () {
   describe('custom env with invalid env.jsonc', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
       const envName = helper.env.setCustomEnv();
       const envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(1);

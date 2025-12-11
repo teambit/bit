@@ -1,13 +1,16 @@
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import { MainRuntime } from '@teambit/cli';
-import { ExpressAspect, ExpressMain } from '@teambit/express';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import type { ExpressMain } from '@teambit/express';
+import { ExpressAspect } from '@teambit/express';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
 import { DiagnosticAspect } from './diagnostic.aspect';
 import { DiagnosticRoute } from './diagnostic.route';
 import { DiagnosticGraphql } from './diagnostic.graphql';
-import { Diagnostic } from './diagnostic';
+import type { Diagnostic } from './diagnostic';
 
 export type DiagnosticSlot = SlotRegistry<Diagnostic[]>;
 

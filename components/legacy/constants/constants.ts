@@ -531,11 +531,15 @@ export enum Extensions {
   compiler = 'teambit.compilation/compiler',
   envs = 'teambit.envs/envs',
   builder = 'teambit.pipelines/builder',
+  tester = 'teambit.defender/tester',
   deprecation = 'teambit.component/deprecation',
   forking = 'teambit.component/forking',
   renaming = 'teambit.component/renaming',
   lanes = 'teambit.lanes/lanes',
   remove = 'teambit.component/remove',
+  workspace = 'teambit.workspace/workspace',
+  typescript = 'teambit.typescript/typescript',
+  aspect = 'teambit.harmony/aspect',
 }
 
 export enum BuildStatus {

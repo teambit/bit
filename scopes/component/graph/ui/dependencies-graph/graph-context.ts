@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { ComponentWidgetSlot } from '../../graph.ui.runtime';
+import type { ComponentWidgetSlot } from '../../graph.ui.runtime';
 
 /** internal context, to pass shared information to all nodes */
 export type ComponentGraph = {

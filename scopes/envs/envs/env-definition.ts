@@ -1,4 +1,4 @@
-import { Environment } from './environment';
+import type { Environment } from './environment';
 
 /**
  * API for component development environment.

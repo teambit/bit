@@ -1,9 +1,10 @@
-import { AnyFS, NodeFS } from '@teambit/any-fs';
-import { Container, ContainerFactoryOptions, ContainerStatus, Exec, ExecOptions } from '@teambit/capsule';
+import type { AnyFS } from '@teambit/any-fs';
+import { NodeFS } from '@teambit/any-fs';
+import type { Container, ContainerFactoryOptions, ContainerStatus, Exec, ExecOptions } from '@teambit/capsule';
 import execa from 'execa';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { Stream } from 'stream';
+import type { Stream } from 'stream';
 
 import ContainerExec from './container-exec';
 

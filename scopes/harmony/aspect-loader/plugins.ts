@@ -1,14 +1,14 @@
 import { realpathSync, existsSync } from 'fs';
-import { Component } from '@teambit/component';
+import type { Component } from '@teambit/component';
 import esmLoader from '@teambit/node.utils.esm-loader';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import pMapSeries from 'p-map-series';
 import { setExitOnUnhandledRejection } from '@teambit/cli';
 import { Aspect } from '@teambit/harmony';
-import { PluginDefinition } from './plugin-definition';
+import type { PluginDefinition } from './plugin-definition';
 import { isEsmModule } from './is-esm-module';
 import { Plugin } from './plugin';
-import { OnAspectLoadErrorHandler } from './aspect-loader.main.runtime';
+import type { OnAspectLoadErrorHandler } from './aspect-loader.main.runtime';
 
 export type PluginMap = { [filePath: string]: PluginDefinition };
 

@@ -1,10 +1,12 @@
-import { BuildContext, BuiltTaskResult, BuildTask, CAPSULE_ARTIFACTS_DIR, ArtifactDefinition } from '@teambit/builder';
+import type { BuildContext, BuiltTaskResult, BuildTask, ArtifactDefinition } from '@teambit/builder';
+import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import fs from 'fs-extra';
 import { join } from 'path';
-import { Compiler, CompilerAspect } from '@teambit/compiler';
-import { DevFilesMain } from '@teambit/dev-files';
+import type { Compiler } from '@teambit/compiler';
+import { CompilerAspect } from '@teambit/compiler';
+import type { DevFilesMain } from '@teambit/dev-files';
 import { ComponentMap } from '@teambit/component';
-import { Tester } from './tester';
+import type { Tester } from './tester';
 import { detectTestFiles } from './utils';
 import { testsResultsToJUnitFormat } from './utils/junit-generator';
 
@@ -89,7 +91,7 @@ export class TesterTask implements BuildTask {
     );
 
     return {
-      artifacts: getArtifactDef(), // @ts-ignore
+      artifacts: getArtifactDef(),
       componentsResults: testsResults.components.map((componentTests) => {
         const componentErrors = componentTests.errors;
         const component = context.capsuleNetwork.graphCapsules.getCapsule(componentTests.componentId)?.component;

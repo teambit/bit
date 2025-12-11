@@ -1,9 +1,12 @@
 import { difference } from 'lodash';
-import { Graph } from '@teambit/graph.cleargraph';
-import { UnmergedComponent, NoCommonSnap, VersionNotFoundOnFS } from '@teambit/legacy.scope';
-import { ModelComponent, Ref, Repository, VersionParents, versionParentsToGraph } from '@teambit/objects';
+import type { Graph } from '@teambit/graph.cleargraph';
+import type { UnmergedComponent } from '@teambit/legacy.scope';
+import { NoCommonSnap, VersionNotFoundOnFS } from '@teambit/legacy.scope';
+import type { ModelComponent, Repository, VersionParents } from '@teambit/objects';
+import { Ref, versionParentsToGraph } from '@teambit/objects';
 import { SnapsDistance } from './snaps-distance';
 import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
+import { TargetHeadNotFound } from './target-head-not-found';
 
 /**
  * *** NEW WAY ***
@@ -83,8 +86,7 @@ export async function getDivergeData({
   });
   const unmergedData = repo.unmergedComponents.getEntry(modelComponent.toComponentId());
   if (!versionParents.find((p) => p.hash.isEqual(targetHead))) {
-    throw new Error(`error: a remote of "${modelComponent.id()}" points to ${targetHead}, which is missing from the VersionHistory object for some reason.
-running "bit import" should fix the issue.`);
+    throw new TargetHeadNotFound(modelComponent.id(), targetHead.toString());
   }
 
   return getDivergeDataBetweenTwoSnaps(
@@ -109,14 +111,14 @@ export function getDivergeDataBetweenTwoSnaps(
 ): SnapsDistance {
   const getVersionData = (ref: Ref): VersionParents | undefined => versionParents.find((v) => v.hash.isEqual(ref));
 
-  let error: Error | undefined;
-
   const graph = versionParentsToGraph(versionParents);
   let sourceSubgraph = graph.successorsSubgraph(localHead.toString(), { edgeFilter: (e) => e.attr === 'parent' });
   let targetSubgraph = graph.successorsSubgraph(targetHead.toString(), { edgeFilter: (e) => e.attr === 'parent' });
   let sourceArr = sourceSubgraph.nodes.map((n) => n.id);
   let targetArr = targetSubgraph.nodes.map((n) => n.id);
-  let commonSnaps = sourceArr.filter((snap) => targetArr.includes(snap));
+
+  const targetSet = new Set(targetArr);
+  let commonSnaps = sourceArr.filter((snap) => targetSet.has(snap));
 
   if (!commonSnaps.length) {
     sourceSubgraph = graph.successorsSubgraph(localHead.toString());
@@ -190,7 +192,7 @@ bit import ${id} --objects`);
     return new SnapsDistance(snapsOnSourceOnly, snapsOnTargetOnly, undefined, err);
   }
 
-  return new SnapsDistance(snapsOnSourceOnly, snapsOnTargetOnly, commonSnapBeforeDiverge, error);
+  return new SnapsDistance(snapsOnSourceOnly, snapsOnTargetOnly, commonSnapBeforeDiverge);
 }
 
 /**

@@ -1,24 +1,23 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import open from 'open';
 import { ejectTemplate } from '@teambit/eject';
-import { WILDCARD_HELP, COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
 import { isEmpty } from 'lodash';
-import { ExportMain, ExportResult } from './export.main.runtime';
+import type { ExportMain, ExportResult } from './export.main.runtime';
 
 export class ExportCmd implements Command {
   name = 'export [component-patterns...]';
-  description = 'export components from the workspace to remote scopes';
+  description = 'upload components to remote scopes';
   arguments = [
     {
       name: 'component-patterns...',
       description: `(not recommended) ${COMPONENT_PATTERN_HELP}`,
     },
   ];
-  extendedDescription = `bit export => export all staged snaps/tags of components to their remote scope. if checked out to a lane, export the lane as well
-  \`bit export [pattern...]\` => export components included by the pattern to their remote scope (we recommend not using a pattern in
-    most scenarios so that all changes are exported simultaneously)
-  ${WILDCARD_HELP('export')}`;
+  extendedDescription = `uploads staged versions (snaps/tags) to remote scopes, making them available for consumption by other workspaces.
+without arguments, exports all staged components. when on a lane, exports the lane as well.
+exporting is the final step after development and versioning to share components with your team.`;
   alias = 'e';
   helpUrl = 'reference/components/exporting-components';
   options = [
@@ -159,7 +158,7 @@ export class ExportCmd implements Command {
       const prefix = shouldOpenBrowser ? 'Your browser has been opened to the following link' : 'Visit the link below';
       const msg = `\n\n${prefix} to track the progress of building the components in the cloud\n`;
       if (shouldOpenBrowser) {
-        open(rippleJobUrls[0], { url: true }).catch(() => {
+        open(rippleJobUrls[0]).catch(() => {
           /** it's ok, the user is instructed to open the browser manually */
         });
       }

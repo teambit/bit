@@ -1,7 +1,7 @@
-import { Command } from '@teambit/cli';
+import type { Command } from '@teambit/cli';
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { Workspace } from '../workspace';
+import type { Workspace } from '../workspace';
 import { installAfterEnvChangesMsg } from './envs-set.cmd';
 
 export class EnvsUpdateCmd implements Command {

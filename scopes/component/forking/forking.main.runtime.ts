@@ -1,27 +1,40 @@
 import { BitError } from '@teambit/bit-error';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { importTransformer, exportTransformer } from '@teambit/typescript';
-import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
-import { ComponentDependency, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ComponentConfig } from '@teambit/generator';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { ComponentDependency, DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { ComponentConfig } from '@teambit/generator';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
 import { isHash } from '@teambit/component-version';
-import { InstallAspect, InstallMain } from '@teambit/install';
-import { ComponentID, ComponentIdObj, ComponentIdList } from '@teambit/component-id';
-import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-component-helper';
-import { PkgAspect, PkgMain } from '@teambit/pkg';
-import { RefactoringAspect, MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace, WorkspaceComponentLoadOptions } from '@teambit/workspace';
+import type { InstallMain } from '@teambit/install';
+import { InstallAspect } from '@teambit/install';
+import type { ComponentIdObj } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { NewComponentHelperMain } from '@teambit/new-component-helper';
+import { NewComponentHelperAspect } from '@teambit/new-component-helper';
+import type { PkgMain } from '@teambit/pkg';
+import { PkgAspect } from '@teambit/pkg';
+import type { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
+import { RefactoringAspect } from '@teambit/refactoring';
+import type { Workspace, WorkspaceComponentLoadOptions } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import { snapToSemver } from '@teambit/component-package-version';
 import { uniqBy } from 'lodash';
 import pMapSeries from 'p-map-series';
 import { parse } from 'semver';
-import { ForkCmd, ForkOptions } from './fork.cmd';
+import type { ForkOptions } from './fork.cmd';
+import { ForkCmd } from './fork.cmd';
 import { ForkingAspect } from './forking.aspect';
 import { ForkingFragment } from './forking.fragment';
 import { forkingSchema } from './forking.graphql';
-import { ScopeForkCmd, ScopeForkOptions } from './scope-fork.cmd';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import type { ScopeForkOptions } from './scope-fork.cmd';
+import { ScopeForkCmd } from './scope-fork.cmd';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 
 export type ForkInfo = {
   forkedFrom: ComponentID;
@@ -79,6 +92,119 @@ export class ForkingMain {
     await this.saveDeps(component);
     if (!options?.skipDependencyInstallation) await this.installDeps();
     return targetCompId;
+  }
+
+  /**
+   * fork multiple components matching a pattern
+   * all components are forked with the same name to a target scope
+   */
+  async forkByPattern(pattern: string, options?: ForkOptions): Promise<ComponentID[]> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+
+    const targetScope = options?.scope || this.workspace.defaultScope;
+
+    // Get workspace components matching the pattern
+    const workspaceIds = this.workspace.listIds();
+    const matchedWorkspaceIds = await this.workspace.filterIdsFromPoolIdsByPattern(pattern, workspaceIds, false);
+
+    // Get remote components matching the pattern
+    // Extract unique scope names from the pattern to query remote scopes
+    const scopeNames = this.extractScopeNamesFromPattern(pattern);
+    const remoteIds: ComponentID[] = [];
+
+    for (const scopeName of scopeNames) {
+      try {
+        const allIdsFromScope = await this.workspace.scope.listRemoteScope(scopeName);
+        if (allIdsFromScope.length > 0) {
+          const filtered = await this.workspace.scope.filterIdsFromPoolIdsByPattern(pattern, allIdsFromScope, false);
+          remoteIds.push(...filtered);
+        }
+      } catch {
+        // If the scope doesn't exist or can't be accessed, continue
+      }
+    }
+
+    const allMatchedIds = [...matchedWorkspaceIds, ...remoteIds];
+
+    if (!allMatchedIds.length) {
+      throw new BitError(`no components found matching pattern "${pattern}"`);
+    }
+
+    // Filter out components that would conflict with existing workspace components
+    const workspaceBitIds = ComponentIdList.fromArray(workspaceIds);
+    const idsToFork = allMatchedIds.filter((id) => {
+      const newComponentId = ComponentID.fromObject({ name: id.fullName }, targetScope);
+      const existInWorkspace = workspaceBitIds.searchWithoutVersion(newComponentId);
+      return !existInWorkspace;
+    });
+
+    if (!idsToFork.length) {
+      throw new BitError(
+        `all components matching pattern "${pattern}" already exist in the workspace with scope "${targetScope}"`
+      );
+    }
+
+    const forkedIds: ComponentID[] = [];
+
+    // Fork workspace components
+    const workspaceIdsToFork = idsToFork.filter((id) => matchedWorkspaceIds.some((wsId) => wsId.isEqual(id)));
+    for (const id of workspaceIdsToFork) {
+      const existing = await this.workspace.get(id);
+      const targetCompId = await this.forkExistingInWorkspace(existing, undefined, { ...options, scope: targetScope });
+      forkedIds.push(targetCompId);
+    }
+
+    // Fork remote components
+    const remoteIdsToFork = idsToFork.filter((id) => remoteIds.some((remoteId) => remoteId.isEqual(id)));
+    if (remoteIdsToFork.length > 0) {
+      const componentsToFork: MultipleComponentsToFork = remoteIdsToFork.map((id) => ({
+        sourceId: id.toString(),
+        targetScope,
+      }));
+
+      const results = await this.forkMultipleFromRemote(componentsToFork, {
+        refactor: options?.refactor,
+        scope: targetScope,
+        install: !options?.skipDependencyInstallation,
+        ast: options?.ast,
+        compile: false,
+      });
+
+      forkedIds.push(...results.map((result) => result.targetCompId));
+    }
+
+    return forkedIds;
+  }
+
+  /**
+   * Extract scope names from a pattern
+   * e.g., "org.scope/**" -> ["org.scope"]
+   * e.g., "org.scope/ui/**, org.scope2/backend/**" -> ["org.scope", "org.scope2"]
+   */
+  private extractScopeNamesFromPattern(pattern: string): string[] {
+    const patterns = pattern.split(',').map((p) => p.trim());
+    const scopeNames = new Set<string>();
+
+    for (const pat of patterns) {
+      // Skip negation patterns
+      if (pat.startsWith('!')) continue;
+      // Skip state filters
+      if (pat.startsWith('$')) continue;
+
+      const parts = pat.split('/');
+      const potentialScope = parts[0];
+
+      // Only add if it looks like a scope name (contains a dot or doesn't have wildcards)
+      if (
+        potentialScope &&
+        !potentialScope.includes('*') &&
+        (potentialScope.includes('.') || !potentialScope.includes('/'))
+      ) {
+        scopeNames.add(potentialScope);
+      }
+    }
+
+    return Array.from(scopeNames);
   }
 
   /**
@@ -214,8 +340,12 @@ export class ForkingMain {
     }
     const getPatternWithScopeName = () => {
       if (!pattern) return undefined;
-      if (pattern.startsWith(`${originalScope}/`)) return pattern;
-      return `${originalScope}/${pattern}`;
+      const patterns = pattern.split(',').map((p) => p.trim());
+      const patternsWithScope = patterns.map((p) => {
+        if (p.startsWith(`${originalScope}/`)) return p;
+        return `${originalScope}/${p}`;
+      });
+      return patternsWithScope.join(', ');
     };
     const patternWithScopeName = getPatternWithScopeName();
     const idsFromOriginalScope = patternWithScopeName

@@ -1,5 +1,5 @@
 import { isString } from 'lodash';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 
 export function isBitIdMatchByWildcards(bitId: ComponentID, idsWithWildcard: string[] | string): boolean {
   if (!Array.isArray(idsWithWildcard)) idsWithWildcard = [idsWithWildcard];

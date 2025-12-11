@@ -1,24 +1,24 @@
 import mapSeries from 'p-map-series';
-import {
+import type {
   BuilderMain,
   BuildTask,
   BuildContext,
   ComponentResult,
   TaskResults,
   BuiltTaskResult,
-  CAPSULE_ARTIFACTS_DIR,
-  ArtifactList,
   Artifact,
 } from '@teambit/builder';
+import { CAPSULE_ARTIFACTS_DIR, ArtifactList } from '@teambit/builder';
 import { compact, join } from 'lodash';
-import { Capsule } from '@teambit/isolator';
-import { Component } from '@teambit/component';
+import type { Capsule } from '@teambit/isolator';
+import type { Component } from '@teambit/component';
 import { ApplicationAspect } from './application.aspect';
-import { ApplicationMain } from './application.main.runtime';
-import { ARTIFACTS_DIR_NAME, BUILD_TASK, BuildDeployContexts } from './build-application.task';
+import type { ApplicationMain } from './application.main.runtime';
+import type { BuildDeployContexts } from './build-application.task';
+import { ARTIFACTS_DIR_NAME, BUILD_TASK } from './build-application.task';
 import { AppDeployContext } from './app-deploy-context';
-import { Application } from './application';
-import { ApplicationDeployment } from './app-instance';
+import type { Application } from './application';
+import type { ApplicationDeployment } from './app-instance';
 import { AppBuildContext } from './app-build-context';
 
 export const DEPLOY_TASK = 'deploy_application';

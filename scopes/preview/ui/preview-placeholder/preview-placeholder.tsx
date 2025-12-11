@@ -1,9 +1,10 @@
-import React, { useMemo, useEffect, useRef, ComponentType, ReactNode } from 'react';
+import type { ComponentType, ReactNode } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { CompositionsAspect, ComponentComposition, Composition } from '@teambit/compositions';
 import { H3, H5 } from '@teambit/design.ui.heading';
 import { capitalize } from '@teambit/toolbox.string.capitalize';
-import { ComponentModel } from '@teambit/component';
-import { ComponentDescriptor } from '@teambit/component-descriptor';
+import type { ComponentModel } from '@teambit/component';
+import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { DocsAspect } from '@teambit/docs';
 import styles from './preview-placeholder.module.scss';

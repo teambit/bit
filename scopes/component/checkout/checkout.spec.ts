@@ -1,17 +1,21 @@
-import chai, { expect } from 'chai';
+import { expect, use } from 'chai';
 import fs from 'fs-extra';
-import { Harmony } from '@teambit/harmony';
-import { ComponentID } from '@teambit/component-id';
+import type { Harmony } from '@teambit/harmony';
+import type { ComponentID } from '@teambit/component-id';
 import { loadAspect, loadManyAspects } from '@teambit/harmony.testing.load-aspect';
-import { SnappingAspect, SnappingMain } from '@teambit/snapping';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import type { SnappingMain } from '@teambit/snapping';
+import { SnappingAspect } from '@teambit/snapping';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents } from '@teambit/component.testing.mock-components';
-import { ListerAspect, ListerMain } from '@teambit/lister';
-import { CheckoutMain } from './checkout.main.runtime';
+import type { ListerMain } from '@teambit/lister';
+import { ListerAspect } from '@teambit/lister';
+import type { CheckoutMain } from './checkout.main.runtime';
 import { CheckoutAspect } from './checkout.aspect';
 
-chai.use(require('chai-fs'));
+use(require('chai-fs'));
 
 describe('CheckoutAspect', function () {
   this.timeout(0);

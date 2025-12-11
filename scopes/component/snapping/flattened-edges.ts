@@ -1,10 +1,10 @@
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
-import { DepEdgeType } from '@teambit/graph';
-import { ScopeMain } from '@teambit/scope';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { DepEdge, Lane } from '@teambit/objects';
+import type { DepEdgeType } from '@teambit/graph';
+import type { ScopeMain } from '@teambit/scope';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { DepEdge, Lane } from '@teambit/objects';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { BitError } from '@teambit/bit-error';
 

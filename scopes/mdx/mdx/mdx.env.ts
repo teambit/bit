@@ -1,16 +1,17 @@
-import { Environment } from '@teambit/envs';
+import type { Environment } from '@teambit/envs';
 import { merge } from 'lodash';
-import { ReactMain } from '@teambit/react';
+import type { ReactMain } from '@teambit/react';
 import { BabelCompiler } from '@teambit/compilation.babel-compiler';
-import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
-import { TsConfigTransformer } from '@teambit/typescript';
+import type { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
+import type { TsConfigTransformer } from '@teambit/typescript';
 import { babelConfig } from './babel/babel.config';
-import { Logger } from '@teambit/logger';
-import { MultiCompilerMain } from '@teambit/multi-compiler';
-import { CompilerMain } from '@teambit/compiler';
-import { DocsMain } from '@teambit/docs';
+import type { Logger } from '@teambit/logger';
+import type { MultiCompilerMain } from '@teambit/multi-compiler';
+import type { CompilerMain } from '@teambit/compiler';
+import type { DocsMain } from '@teambit/docs';
 import { MDXAspect } from './mdx.aspect';
-import { MDXCompiler, MDXCompilerOpts } from './mdx.compiler';
+import type { MDXCompilerOpts } from './mdx.compiler';
+import { MDXCompiler } from './mdx.compiler';
 
 export const MdxEnvType = 'mdx';
 

@@ -1,22 +1,20 @@
 /* eslint-disable complexity */
-import React, { useContext, ComponentType, useState } from 'react';
+import type { ComponentType } from 'react';
+import React, { useContext, useState } from 'react';
 import classNames from 'classnames';
 import { flatten } from 'lodash';
 // import { Icon } from '@teambit/design.elements.icon';
 // import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
-import {
-  ComponentPreview,
-  ComponentPreviewProps,
-  SandboxPermissionsAggregator,
-} from '@teambit/preview.ui.component-preview';
+import type { ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
+import { ComponentPreview, SandboxPermissionsAggregator } from '@teambit/preview.ui.component-preview';
 // import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { CompositionGallery, CompositionGallerySkeleton } from '@teambit/compositions.panels.composition-gallery';
 import { useThemePicker } from '@teambit/base-react.themes.theme-switcher';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
-import { UsePreviewSandboxSlot } from '@teambit/compositions';
+import type { UsePreviewSandboxSlot } from '@teambit/compositions';
 import { ReadmeSkeleton } from './readme-skeleton';
 import styles from './overview.module.scss';
 
@@ -35,7 +33,11 @@ export type TitleBadge = {
 
 export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
-export type OverviewOptions = () => { queryParams?: string };
+export type OverviewOptions = () => {
+  queryParams?: string;
+  renderCompositionsFirst?: boolean;
+  defaultPkgManager?: 'npm' | 'yarn' | 'pnpm' | 'bit';
+};
 
 export type OverviewOptionsSlot = SlotRegistry<OverviewOptions>;
 
@@ -79,6 +81,8 @@ export function Overview({
 
   const overviewPropsValues = overviewProps && overviewProps();
 
+  const { renderCompositionsFirst, defaultPkgManager } = overviewPropsValues || {};
+
   const themeParams = currentTheme?.themeName ? `theme=${currentTheme?.themeName}` : '';
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -118,6 +122,7 @@ export function Overview({
           titleBadges={flatten(titleBadges.values())}
           componentDescriptor={componentDescriptor}
           component={component}
+          pkgManager={defaultPkgManager}
         />
       )}
       {!buildFailed && (
@@ -127,7 +132,7 @@ export function Overview({
               <CompositionGallerySkeleton compositionsLength={Math.min(component.compositions.length, 3)} />
             </ReadmeSkeleton>
           )}
-          {!isMinimal ? (
+          {!isMinimal && !renderCompositionsFirst ? (
             <>
               <ComponentPreview
                 onLoad={onPreviewLoad}
@@ -142,11 +147,15 @@ export function Overview({
                 component={component}
                 style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
               />
-              {component.preview?.onlyOverview && !isLoading && <CompositionGallery component={component} />}
+              {component.preview?.onlyOverview && !isLoading && (
+                <CompositionGallery component={component} sandbox={sandboxValue} />
+              )}
             </>
           ) : (
             <>
-              {component.preview?.onlyOverview && !isLoading && <CompositionGallery component={component} />}
+              {component.preview?.onlyOverview && !isLoading && (
+                <CompositionGallery component={component} sandbox={sandboxValue} />
+              )}
               <ComponentPreview
                 onLoad={onPreviewLoad}
                 previewName="overview"

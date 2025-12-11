@@ -1,10 +1,10 @@
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
-import { PeerDependencyRules, ProjectManifest, DependencyManifest } from '@pnpm/types';
-import { ComponentID, ComponentMap } from '@teambit/component';
+import type { PeerDependencyRules, ProjectManifest, DependencyManifest } from '@pnpm/types';
+import type { ComponentID, ComponentMap, Component } from '@teambit/component';
 import { type DependenciesGraph } from '@teambit/objects';
-import { Registries } from '@teambit/pkg.entities.registry';
-import { DepsFilterFn } from './manifest';
-import { NetworkConfig, ProxyConfig } from './dependency-resolver.main.runtime';
+import type { Registries } from '@teambit/pkg.entities.registry';
+import type { DepsFilterFn } from './manifest';
+import type { NetworkConfig, ProxyConfig } from './dependency-resolver.main.runtime';
 
 export { PeerDependencyIssuesByProjects };
 
@@ -69,6 +69,10 @@ export type PackageManagerInstallOptions = {
   hasRootComponents?: boolean;
 
   neverBuiltDependencies?: string[];
+
+  allowScripts?: Record<string, boolean | 'warn'>;
+
+  dangerouslyAllowAllScripts?: boolean;
 
   preferOffline?: boolean;
 
@@ -136,6 +140,19 @@ export type PackageManagerInstallOptions = {
   dependenciesGraph?: DependenciesGraph;
 
   forcedHarmonyVersion?: string;
+
+  /**
+   * Defines the minimum number of minutes that must pass after a version is published before pnpm will install it.
+   * This applies to all dependencies, including transitive ones.
+   */
+  minimumReleaseAge?: number;
+
+  /**
+   * If you set minimumReleaseAge but need certain dependencies to always install the newest version immediately,
+   * you can list them under minimumReleaseAgeExclude. The exclusion works by package name or package name pattern
+   * and applies to all versions of that package.
+   */
+  minimumReleaseAgeExclude?: string[];
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -214,15 +231,20 @@ export interface PackageManager {
 
   findUsages?(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string>;
 
-  calcDependenciesGraph?(options: CalcDepsGraphOptions): Promise<DependenciesGraph | undefined>;
+  calcDependenciesGraph?(options: CalcDepsGraphOptions): Promise<void>;
+}
+
+export interface CalcDepsGraphForComponentOptions {
+  component: Component;
+  componentRootDir?: string;
+  componentRelativeDir: string;
+  pkgName?: string;
 }
 
 export interface CalcDepsGraphOptions {
-  componentRelativeDir: string;
+  components: CalcDepsGraphForComponentOptions[];
   componentIdByPkgName: ComponentIdByPkgName;
   rootDir: string;
-  componentRootDir?: string;
-  pkgName?: string;
 }
 
 export type ComponentIdByPkgName = Map<string, ComponentID>;

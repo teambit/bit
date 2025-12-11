@@ -1,8 +1,9 @@
 import { isObject, omit } from 'lodash';
-import { Configuration, ResolveOptions, RuleSetRule } from 'webpack';
-import { merge, mergeWithCustomize, mergeWithRules, CustomizeRule } from 'webpack-merge';
-import { ICustomizeOptions } from 'webpack-merge/dist/types';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
+import type { Configuration, ResolveOptions, RuleSetRule } from 'webpack';
+import type { CustomizeRule } from 'webpack-merge';
+import { merge, mergeWithCustomize, mergeWithRules } from 'webpack-merge';
+import type { ICustomizeOptions } from 'webpack-merge/dist/types';
+import type HtmlWebpackPlugin from 'html-webpack-plugin';
 import { inject } from '@teambit/html.modules.inject-html-element';
 import type { InjectedHtmlElement as CustomHtmlElement } from '@teambit/html.modules.inject-html-element';
 
@@ -135,7 +136,6 @@ export class WebpackConfigMutator {
     if (!this.raw.module.rules) {
       this.raw.module.rules = [];
     }
-    // @ts-ignore
     const moduleWithOneOf = this.raw.module.rules.find((r) => !!(r as RuleSetRule).oneOf);
     if (!moduleWithOneOf) {
       this.raw.module.rules.unshift({ oneOf: [] });
@@ -202,7 +202,6 @@ export class WebpackConfigMutator {
       return this;
     }
     if (isObject(this.raw?.resolve?.alias)) {
-      // @ts-ignore
       this.raw.resolve.alias = omit(this.raw.resolve.alias, aliases);
     }
     return this;
@@ -241,7 +240,6 @@ export class WebpackConfigMutator {
     ) {
       externals = [externalDeps].concat(externals);
     } else if (externalDeps instanceof Object && externals instanceof Object) {
-      // @ts-ignore
       externals = {
         ...externals,
         ...externalDeps,

@@ -2,9 +2,10 @@ import doctrine from 'doctrine';
 import * as reactDocs from 'react-docgen';
 
 import { logger } from '@teambit/legacy.logger';
-import { pathNormalizeToLinux, PathOsBased } from '@teambit/legacy.utils';
+import type { PathOsBased } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import extractDataRegex from '../extract-data-regex';
-import { Doclet } from '../types';
+import type { Doclet } from '../types';
 
 function formatProperties(props) {
   const parseDescription = (description) => {

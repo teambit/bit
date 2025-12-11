@@ -1,7 +1,8 @@
 import chai, { expect } from 'chai';
+import chaiFs from 'chai-fs';
 import { Helper } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('untag components on Harmony', function () {
   this.timeout(0);

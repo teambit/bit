@@ -1,14 +1,16 @@
 import path from 'path';
 import filenamify from 'filenamify';
 import fs from 'fs-extra';
-import { ComponentMain } from '@teambit/component';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentMain } from '@teambit/component';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
 import minimatch from 'minimatch';
 import { ArtifactFiles } from '@teambit/component.sources';
-import { BuilderMain } from '../builder.main.runtime';
-import { ArtifactsOpts } from './artifacts.cmd';
+import type { BuilderMain } from '../builder.main.runtime';
+import type { ArtifactsOpts } from './artifacts.cmd';
 import { ArtifactList } from './artifact-list';
 import { Artifact } from './artifact';
 

@@ -1,14 +1,14 @@
-import React, { HTMLAttributes, useMemo, useContext, useCallback } from 'react';
+import type { HTMLAttributes } from 'react';
+import React, { useMemo, useContext, useCallback } from 'react';
 import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { WidgetProps, TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
+import type { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
+import { TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { FileTree, useFileTreeContext } from '@teambit/ui-foundation.ui.tree.file-tree';
-import {
-  ArtifactFile,
-  getArtifactFileDetailsFromUrl,
-} from '@teambit/component.ui.artifacts.models.component-artifacts-model';
-import { TreeNode, TreeNodeProps } from '@teambit/design.ui.tree';
+import type { ArtifactFile } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
+import { getArtifactFileDetailsFromUrl } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
+import type { TreeNode, TreeNodeProps } from '@teambit/design.ui.tree';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { ComponentTreeLoader } from '@teambit/design.ui.skeletons.sidebar-loader';
 import isBinaryPath from 'is-binary-path';

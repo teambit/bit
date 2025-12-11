@@ -1,33 +1,36 @@
-import ts, { Node, SourceFile, SyntaxKind } from 'typescript';
+import type { Node, SourceFile } from 'typescript';
+import ts, { SyntaxKind } from 'typescript';
 import { getTsconfig } from 'get-tsconfig';
-import { SchemaExtractor, SchemaExtractorOptions } from '@teambit/schema';
-import { TsserverClient } from '@teambit/ts-server';
+import type { SchemaExtractor, SchemaExtractorOptions } from '@teambit/schema';
+import type { TsserverClient } from '@teambit/ts-server';
 import type { Workspace } from '@teambit/workspace';
-import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import {
-  SchemaNode,
   APISchema,
-  ModuleSchema,
   UnImplementedSchema,
   IgnoredSchema,
+  ModuleSchema,
 } from '@teambit/semantics.entities.semantic-schema';
-import { Component } from '@teambit/component';
-import { AbstractVinyl } from '@teambit/component.sources';
-import { EnvContext } from '@teambit/envs';
-import { Formatter } from '@teambit/formatter';
-import { Logger } from '@teambit/logger';
-import { AspectLoaderAspect, AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
-import { ScopeMain } from '@teambit/scope';
+import type { Component } from '@teambit/component';
+import type { AbstractVinyl } from '@teambit/component.sources';
+import type { EnvContext } from '@teambit/envs';
+import type { Formatter } from '@teambit/formatter';
+import type { Logger } from '@teambit/logger';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect, getCoreAspectPackageName } from '@teambit/aspect-loader';
+import type { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { compact, flatten } from 'lodash';
-import { TypescriptMain } from './typescript.main.runtime';
+import minimatch from 'minimatch';
+import type { TypescriptMain } from './typescript.main.runtime';
 import { TransformerNotFound } from './exceptions';
 import { SchemaExtractorContext } from './schema-extractor-context';
-import { Identifier } from './identifier';
+import type { Identifier } from './identifier';
 import { IdentifierList } from './identifier-list';
-import { ExtractorOptions } from './extractor-options';
+import type { ExtractorOptions } from './extractor-options';
 import { TypescriptAspect } from './typescript.aspect';
-import { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
+import type { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
 
 export class TypeScriptExtractor implements SchemaExtractor {
   constructor(
@@ -41,7 +44,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
     private workspace: Workspace | undefined,
     private scope: ScopeMain,
     private aspectLoader: AspectLoaderMain,
-    private logger: Logger
+    private logger: Logger,
+    private includeFiles: string[] = []
   ) {}
 
   parseSourceFile(file: AbstractVinyl): SourceFile {
@@ -68,6 +72,9 @@ export class TypeScriptExtractor implements SchemaExtractor {
     if (options.contextPath) {
       this.rootContextPath = options.contextPath;
     }
+    if (options.includeFiles) {
+      this.includeFiles = options.includeFiles;
+    }
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
     const compatibleExts = ['.tsx', '.ts'];
@@ -91,28 +98,100 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const moduleSchema = (await this.computeSchema(mainAst, context)) as ModuleSchema;
     moduleSchema.flatExportsRecursively();
     const apiScheme = moduleSchema;
-    const internals = await this.computeInternalModules(context, internalFiles);
+    const internalModules = await this.computeInternalModules(context);
+    const includedFiles = this.resolveIncludedFiles(component, this.includeFiles ?? []);
 
-    const location = context.getLocation(mainAst);
-
-    return new APISchema(location, apiScheme, internals, component.id as any);
-  }
-
-  async computeInternalModules(context: SchemaExtractorContext, internalFiles: AbstractVinyl[]) {
-    if (internalFiles.length === 0) return [];
-    const internals = compact(
+    const includedModules = compact(
       await Promise.all(
-        [...context.internalIdentifiers.entries()].map(async ([filePath]) => {
-          const file = context.findFileInComponent(filePath);
-          if (!file) return undefined;
-          const fileAst = this.parseSourceFile(file);
-          const moduleSchema = (await this.computeSchema(fileAst, context)) as ModuleSchema;
-          moduleSchema.flatExportsRecursively();
-          return moduleSchema;
+        includedFiles.map(async (file) => {
+          const ast = this.parseSourceFile(file);
+          const schema = (await this.computeSchema(ast, context)) as ModuleSchema;
+          schema.flatExportsRecursively();
+          return schema;
         })
       )
     );
-    return internals;
+
+    const interalAndIncludedModules = includedModules.concat(internalModules);
+    const location = context.getLocation(mainAst);
+
+    return new APISchema(location, apiScheme, interalAndIncludedModules, component.id as any);
+  }
+
+  async computeInternalModules(context: SchemaExtractorContext) {
+    if (context.internalIdentifiers.size === 0) return [];
+
+    const modules = await Promise.all(
+      [...context.internalIdentifiers.entries()].map(async ([fileKey, idList]) => {
+        const file = context.findFileInComponent(fileKey);
+        if (!file) return undefined;
+
+        const parsedSourceFile = this.parseSourceFile(file);
+        const nameIndex = context.buildTopLevelNameIndex(parsedSourceFile);
+
+        const toVisit = new Set<string>(idList.identifiers.map((i) => i.id));
+        const visited = new Set<string>();
+        const internalSchemas: SchemaNode[] = [];
+
+        const enqueue = (name: string) => {
+          if (!visited.has(name) && !toVisit.has(name) && nameIndex.has(name)) {
+            toVisit.add(name);
+          }
+        };
+
+        while (toVisit.size) {
+          const name = toVisit.values().next().value as string;
+          toVisit.delete(name);
+
+          if (visited.has(name)) continue;
+          visited.add(name);
+
+          const decl = nameIndex.get(name);
+          if (!decl) continue;
+
+          const schema = await context.computeSchema(decl);
+          internalSchemas.push(schema);
+
+          const sameFileRefs = context.collectSameFileInternalTypeRefs(schema);
+          sameFileRefs.forEach(enqueue);
+        }
+
+        const filtered = compact(internalSchemas);
+        if (!filtered.length) return undefined;
+
+        return new ModuleSchema(context.getLocation(parsedSourceFile), [], filtered);
+      })
+    );
+
+    return compact(modules);
+  }
+
+  private normalizePath(p: string): string {
+    return p.replace(/\\/g, '/').replace(/^\.?\//, '');
+  }
+
+  private fileRelativePath(file: AbstractVinyl, component: Component): string {
+    const base = component.filesystem.files[0].base;
+    return this.normalizePath(file.path.slice(base.length).replace(/^\/+/, ''));
+  }
+
+  private matchGlob(input: string, pattern: string): boolean {
+    const hasGlobMeta = /[*?[\]{},]/.test(pattern);
+    if (!hasGlobMeta) return input === pattern;
+    return minimatch(input, pattern, { dot: true });
+  }
+
+  private resolveIncludedFiles(component: Component, includes: string[] = []): AbstractVinyl[] {
+    if (!includes.length) return [];
+
+    const normalizedIncludedPaths = includes.map(this.normalizePath);
+
+    return component.filesystem.files.filter((file) => {
+      const rel = this.fileRelativePath(file, component);
+      if (!(rel.endsWith('.ts') || rel.endsWith('.tsx'))) return false;
+
+      return normalizedIncludedPaths.some((pattern) => this.matchGlob(rel, pattern));
+    });
   }
 
   dispose() {
@@ -260,7 +339,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
         tsMain.workspace,
         tsMain.scope,
         aspectLoaderMain,
-        context.createLogger(options.name)
+        context.createLogger(options.name),
+        options.includeFiles
       );
     };
   }

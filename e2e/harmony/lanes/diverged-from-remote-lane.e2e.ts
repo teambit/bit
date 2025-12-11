@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('local is diverged from the remote', function () {
   this.timeout(0);

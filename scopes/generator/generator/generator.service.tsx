@@ -1,8 +1,8 @@
 import chalk from 'chalk';
-import { EnvService, Env, EnvContext, ServiceTransformationMap, EnvDefinition } from '@teambit/envs';
+import type { EnvService, Env, EnvContext, ServiceTransformationMap, EnvDefinition } from '@teambit/envs';
 import { pick } from 'lodash';
-import { ComponentTemplate, ComponentTemplateOptions } from './component-template';
-import { WorkspaceTemplate, WorkspaceTemplateOptions } from './workspace-template';
+import type { ComponentTemplate, ComponentTemplateOptions } from './component-template';
+import type { WorkspaceTemplate, WorkspaceTemplateOptions } from './workspace-template';
 
 type GeneratorTransformationMap = ServiceTransformationMap & {
   getGeneratorTemplates: () => ComponentTemplate[];

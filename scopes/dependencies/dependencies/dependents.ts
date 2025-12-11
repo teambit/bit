@@ -1,7 +1,8 @@
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { DependencyGraph, DependenciesInfo } from '@teambit/legacy.dependency-graph';
-import { Workspace } from '@teambit/workspace';
+import type { DependenciesInfo } from '@teambit/legacy.dependency-graph';
+import { DependencyGraph } from '@teambit/legacy.dependency-graph';
+import type { Workspace } from '@teambit/workspace';
 
 export type DependentsResults = {
   scopeDependents: DependenciesInfo[];

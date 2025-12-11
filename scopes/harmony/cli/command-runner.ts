@@ -1,11 +1,11 @@
 import { logger, shouldDisableLoader } from '@teambit/legacy.logger';
-import { CLIArgs, Command, Flags } from './command';
+import type { CLIArgs, Command, Flags } from './command';
 import { loader } from '@teambit/legacy.loader';
 import { handleErrorAndExit } from './handle-errors';
 import { TOKEN_FLAG_NAME } from '@teambit/legacy.constants';
 import globalFlags from './global-flags';
 import { Analytics } from '@teambit/legacy.analytics';
-import { OnCommandStartSlot } from './cli.main.runtime';
+import type { OnCommandStartSlot } from './cli.main.runtime';
 import pMapSeries from 'p-map-series';
 
 type CommandResult = { data: any; exitCode: number };

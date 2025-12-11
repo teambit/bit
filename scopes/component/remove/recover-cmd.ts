@@ -1,7 +1,8 @@
 import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
-import { Command, CommandOptions } from '@teambit/cli';
-import { RemoveMain } from './remove.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
+import type { RemoveMain } from './remove.main.runtime';
 
 export type RecoverOptions = {
   skipDependencyInstallation?: boolean;
@@ -9,8 +10,16 @@ export type RecoverOptions = {
 };
 
 export class RecoverCmd implements Command {
-  name = 'recover <component-name>';
-  description = 'recover component(s) soft-deleted from the workspace, or a remote scope';
+  name = 'recover <component-pattern>';
+  description = 'restore soft-deleted components';
+  extendedDescription =
+    'reverses the soft-deletion of components marked with "bit delete", restoring them to their previous state. works for both local and remote soft-deleted components. supports patterns like "comp1", "org.scope/*", etc.';
+  arguments = [
+    {
+      name: 'component-pattern',
+      description: COMPONENT_PATTERN_HELP,
+    },
+  ];
   group = 'collaborate';
   options = [
     ['x', 'skip-dependency-installation', 'do not install packages in case of importing components'],
@@ -20,11 +29,12 @@ export class RecoverCmd implements Command {
 
   constructor(private remove: RemoveMain) {}
 
-  async report([componentName]: [string], options: RecoverOptions) {
-    const hasRecovered = await this.remove.recover(componentName, options);
-    if (!hasRecovered) {
-      throw new BitError(`component ${componentName} was not soft-deleted, nothing to recover`);
+  async report([componentPattern]: [string], options: RecoverOptions) {
+    const recovered = await this.remove.recover(componentPattern, options);
+    if (recovered.length === 0) {
+      throw new BitError(`no soft-deleted components found matching pattern "${componentPattern}"`);
     }
-    return chalk.green(`successfully recovered ${componentName}`);
+    const recoveredStr = recovered.map((id) => id.toString()).join('\n');
+    return `${chalk.green('successfully recovered the following component(s):')}\n${recoveredStr}`;
   }
 }

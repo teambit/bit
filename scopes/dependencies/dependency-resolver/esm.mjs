@@ -19,6 +19,7 @@ export const DependencyLinker = cjsModule.DependencyLinker;
 export const DependencyInstaller = cjsModule.DependencyInstaller;
 export const extendWithComponentsFromDir = cjsModule.extendWithComponentsFromDir;
 export const isRange = cjsModule.isRange;
+export const DetectorHook = cjsModule.DetectorHook;
 
 export default cjsModule;
 

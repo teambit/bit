@@ -3,7 +3,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import { serializeError } from 'serialize-error';
 import format from 'string-format';
-import { Logger as PinoLogger, Level } from 'pino';
+import type { Logger as PinoLogger } from 'pino';
+import { Level } from 'pino';
 import yn from 'yn';
 import pMapSeries from 'p-map-series';
 

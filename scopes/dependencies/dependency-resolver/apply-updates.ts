@@ -1,6 +1,6 @@
-import { ComponentID } from '@teambit/component';
-import { MergedOutdatedPkg } from './dependency-resolver.main.runtime';
-import { VariantPolicyConfigObject, WorkspacePolicyEntry } from './policy';
+import type { ComponentID } from '@teambit/component';
+import type { MergedOutdatedPkg } from './dependency-resolver.main.runtime';
+import type { VariantPolicyConfigObject, WorkspacePolicyEntry } from './policy';
 
 export interface UpdatedComponent {
   componentId: ComponentID;

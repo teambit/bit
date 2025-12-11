@@ -1,22 +1,13 @@
 import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
-import { Scope } from '..';
+import type { Scope } from '..';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { logger } from '@teambit/legacy.logger';
-import {
-  LaneComponent,
-  LaneLog,
-  IndexType,
-  LaneItem,
-  BitObject,
-  Repository,
-  Lane,
-  LaneHistory,
-  Version,
-} from '@teambit/objects';
-import { ScopeJson, TrackLane } from '../scope-json';
+import type { LaneComponent, LaneLog, LaneItem, BitObject, Repository, Lane, Version } from '@teambit/objects';
+import { IndexType, LaneHistory } from '@teambit/objects';
+import type { ScopeJson, TrackLane } from '../scope-json';
 
 export default class Lanes {
   objects: Repository;

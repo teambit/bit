@@ -1,8 +1,8 @@
-import { Component } from '@teambit/component';
-import { Schema } from '@teambit/graphql';
+import type { Component } from '@teambit/component';
+import type { Schema } from '@teambit/graphql';
 import { gql } from 'graphql-tag';
 
-import { CompositionsMain } from './compositions.main.runtime';
+import type { CompositionsMain } from './compositions.main.runtime';
 
 export function compositionsSchema(compositions: CompositionsMain): Schema {
   return {

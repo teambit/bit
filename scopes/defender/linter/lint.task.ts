@@ -1,9 +1,9 @@
 import path from 'path';
-import { BuildTask, BuiltTaskResult, BuildContext, ComponentResult } from '@teambit/builder';
+import type { BuildTask, BuiltTaskResult, BuildContext, ComponentResult } from '@teambit/builder';
 import { ComponentMap } from '@teambit/component';
-import { CapsuleList } from '@teambit/isolator';
-import { Linter } from './linter';
-import { LinterContext } from './linter-context';
+import type { CapsuleList } from '@teambit/isolator';
+import type { Linter } from './linter';
+import type { LinterContext } from './linter-context';
 
 export class LintTask implements BuildTask {
   constructor(

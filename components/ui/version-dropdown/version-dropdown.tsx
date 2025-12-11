@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo, type ComponentType, type HTMLAttributes } from 'react';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
-import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
+import type { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import classNames from 'classnames';
 import styles from './version-dropdown.module.scss';
 import { VersionInfo } from './version-info';
 import { LaneInfo } from './lane-info';
-import { SimpleVersion, VersionProps } from './version-dropdown-placeholder';
+import type { VersionProps } from './version-dropdown-placeholder';
+import { SimpleVersion } from './version-dropdown-placeholder';
 
 export const LOCAL_VERSION = 'workspace';
 
@@ -51,11 +52,11 @@ export type VersionDropdownProps = {
   menuClassName?: string;
   showVersionDetails?: boolean;
   disabled?: boolean;
-  PlaceholderComponent?: React.ComponentType<VersionProps>;
-} & React.HTMLAttributes<HTMLDivElement>;
+  PlaceholderComponent?: ComponentType<VersionProps>;
+} & HTMLAttributes<HTMLDivElement>;
 
-export const VersionDropdown = React.memo(_VersionDropdown);
-const VersionMenu = React.memo(_VersionMenu);
+export const VersionDropdown = memo(_VersionDropdown);
+const VersionMenu = memo(_VersionMenu);
 function _VersionDropdown({
   currentVersion,
   latestVersion,
@@ -81,7 +82,7 @@ function _VersionDropdown({
   const singleVersion = !hasMoreVersions;
   const [open, setOpen] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (loading && open) {
       setOpen(false);
     }
@@ -175,7 +176,7 @@ type VersionMenuProps = {
   getActiveTabIndex?: GetActiveTabIndex;
   open?: boolean;
   onVersionClicked?: () => void;
-} & React.HTMLAttributes<HTMLDivElement>;
+} & HTMLAttributes<HTMLDivElement>;
 
 export type VersionMenuTab =
   | {
@@ -216,7 +217,7 @@ function _VersionMenu({
   const { snaps, tags, loading: loadingVersions } = useVersions?.() || {};
   const loading = loadingFromProps || loadingVersions;
 
-  const tabs = React.useMemo(
+  const tabs = useMemo(
     () =>
       VERSION_TAB_NAMES.map((name) => {
         switch (name) {
@@ -231,16 +232,16 @@ function _VersionMenu({
     [snaps?.length, tags?.length, lanes?.length, loading]
   );
 
-  const [activeTabIndex, setActiveTab] = React.useState<number | undefined>(
+  const [activeTabIndex, setActiveTab] = useState<number | undefined>(
     getActiveTabIndex(currentVersion, tabs, tags, snaps, currentLane)
   );
 
-  const activeTab = React.useMemo(
+  const activeTab = useMemo(
     () => (activeTabIndex !== undefined ? tabs[activeTabIndex] : undefined),
     [activeTabIndex, tabs]
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!currentLane) return;
     if (tabs.length === 0) return;
     const _activeTabIndex = getActiveTabIndex(currentVersion, tabs, tags, snaps, currentLane);
@@ -248,13 +249,10 @@ function _VersionMenu({
   }, [currentLane, tabs.length, tags?.length, snaps?.length, currentVersion, loading]);
 
   const multipleTabs = tabs.length > 1;
-  const message = multipleTabs
-    ? 'Switch to view tags, snaps, or lanes'
-    : `Switch between ${tabs[0]?.name.toLocaleLowerCase()}s`;
 
   const showTab = activeTabIndex !== undefined && tabs[activeTabIndex]?.payload.length > 0;
 
-  const _rowRenderer = React.useCallback(
+  const _rowRenderer = useCallback(
     function VersionRowRenderer({ index }) {
       const { name, payload = [] } = activeTab || {};
       const item = payload[index];
@@ -273,18 +271,18 @@ function _VersionMenu({
           showDetails={showVersionDetails}
           onVersionClicked={onVersionClicked}
           {...version}
-        ></VersionInfo>
+        />
       );
     },
     [activeTab, currentVersion, latestVersion, showVersionDetails, currentLane?.id.toString(), showTab]
   );
 
-  const rowRenderer = React.useMemo(
+  const rowRenderer = useMemo(
     () => (showTab && activeTab ? _rowRenderer : () => null),
     [showTab, activeTab, _rowRenderer]
   );
 
-  const ActiveTab = React.useMemo(() => {
+  const ActiveTab = useMemo(() => {
     return activeTab?.payload.map((payload, index) => {
       return rowRenderer({ index });
     });
@@ -292,24 +290,21 @@ function _VersionMenu({
 
   return (
     <div {...rest} className={classNames(styles.versionMenuContainer, !open && styles.hide)}>
-      <div className={styles.top}>
-        {loading && <LineSkeleton count={6} className={styles.loader} />}
-        {!loading && <div className={classNames(styles.titleContainer, styles.title)}>{message}</div>}
-        {!loading && localVersion && (
-          <MenuLinkItem
-            href={'?'}
-            active={currentVersion === LOCAL_VERSION}
-            className={classNames(styles.versionRow, styles.localVersion)}
-            onClick={onVersionClicked}
-          >
-            <div className={styles.version}>
-              <UserAvatar size={24} account={{}} className={styles.versionUserAvatar} />
-              <span className={styles.versionName}>{LOCAL_VERSION}</span>
-            </div>
-          </MenuLinkItem>
-        )}
-      </div>
-      <div className={classNames(multipleTabs && styles.tabs)}>
+      {loading && <LineSkeleton count={6} className={styles.loader} />}
+      {!loading && localVersion && (
+        <MenuLinkItem
+          href={'?'}
+          active={currentVersion === LOCAL_VERSION}
+          className={classNames(styles.versionRow, styles.localVersion)}
+          onClick={onVersionClicked}
+        >
+          <div className={styles.version}>
+            <UserAvatar size={24} account={{}} className={styles.versionUserAvatar} />
+            <span className={styles.versionName}>{LOCAL_VERSION}</span>
+          </div>
+        </MenuLinkItem>
+      )}
+      <div className={classNames(multipleTabs && styles.tabs, !localVersion && styles.withoutLocal)}>
         {multipleTabs &&
           tabs.map(({ name }, index) => {
             return (

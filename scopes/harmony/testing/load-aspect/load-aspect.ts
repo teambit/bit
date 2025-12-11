@@ -3,9 +3,11 @@ import { loadConsumer } from '@teambit/legacy.consumer';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { readdirSync, readFileSync } from 'fs';
-import { Harmony, Aspect, Extension } from '@teambit/harmony';
+import type { Aspect, Extension } from '@teambit/harmony';
+import { Harmony } from '@teambit/harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
-import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
+import type { ConfigOptions } from '@teambit/harmony/dist/harmony-config';
+import { Config } from '@teambit/harmony/dist/harmony-config';
 import { ComponentID } from '@teambit/component';
 import { CLIAspect } from '@teambit/cli';
 import { NodeAspect } from '@teambit/node';

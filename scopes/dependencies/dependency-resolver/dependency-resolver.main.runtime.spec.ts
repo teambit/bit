@@ -1,14 +1,6 @@
-// @ts-ignore
-jest.mock('@teambit/scope.network', () => ({
-  Http: {
-    // @ts-ignore
-    getNetworkConfig: jest.fn(),
-    // @ts-ignore
-    getProxyConfig: jest.fn(),
-  },
-}));
-
 /* eslint-disable import/first */
+import { expect } from 'chai';
+import sinon from 'sinon';
 import { ComponentID } from '@teambit/component';
 import path from 'path';
 import { Http } from '@teambit/scope.network';
@@ -19,12 +11,21 @@ const logger = {
 };
 
 describe('DepenendencyResolverMain.getNetworkConfig()', () => {
-  const packageManagerSlot = {
-    // @ts-ignore
-    get: jest.fn(() => ({
-      getNetworkConfig: () => ({}),
-    })),
-  };
+  let httpStub: sinon.SinonStub;
+  let packageManagerSlot: any;
+
+  beforeEach(() => {
+    httpStub = sinon.stub(Http, 'getNetworkConfig');
+    packageManagerSlot = {
+      get: sinon.stub().returns({
+        getNetworkConfig: () => ({}),
+      }),
+    };
+  });
+
+  afterEach(() => {
+    sinon.restore();
+  });
   it('should return settings from global config', async () => {
     const depResolver = new DependencyResolverMain(
       {} as any,
@@ -51,9 +52,8 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       networkConcurrency: 6,
       maxSockets: 7,
     };
-    // @ts-ignore
-    Http.getNetworkConfig.mockReturnValue(Promise.resolve(globalConfig));
-    expect(await depResolver.getNetworkConfig()).toEqual(globalConfig);
+    httpStub.resolves(globalConfig);
+    expect(await depResolver.getNetworkConfig()).to.deep.equal(globalConfig);
   });
   it('should return settings from package manager config', async () => {
     const depResolver = new DependencyResolverMain(
@@ -81,12 +81,11 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       networkConcurrency: 66,
       maxSockets: 77,
     };
-    packageManagerSlot.get.mockReturnValue({
+    packageManagerSlot.get.returns({
       getNetworkConfig: () => pmConfig,
     });
-    // @ts-ignore
-    Http.getNetworkConfig.mockReturnValue(Promise.resolve({}));
-    expect(await depResolver.getNetworkConfig()).toEqual(pmConfig);
+    httpStub.resolves({});
+    expect(await depResolver.getNetworkConfig()).to.deep.equal(pmConfig);
   });
   it('should return settings from aspect config', async () => {
     const config = {
@@ -98,8 +97,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       networkConcurrency: 666,
       maxSockets: 777,
     } as any;
-    // @ts-ignore
-    Http.getNetworkConfig.mockReturnValue(Promise.resolve({}));
+    httpStub.resolves({});
     const depResolver = new DependencyResolverMain(
       config,
       {} as any,
@@ -116,7 +114,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       {} as any,
       {} as any
     );
-    expect(await depResolver.getNetworkConfig()).toEqual(config);
+    expect(await depResolver.getNetworkConfig()).to.deep.equal(config);
   });
   it('should merge settings from global config, package manager config, and aspect config', async () => {
     const globalConfig = {
@@ -132,9 +130,8 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       networkConcurrency: 666,
       maxSockets: 777,
     } as any;
-    // @ts-ignore
-    Http.getNetworkConfig.mockReturnValue(Promise.resolve(globalConfig));
-    packageManagerSlot.get.mockReturnValue({
+    httpStub.resolves(globalConfig);
+    packageManagerSlot.get.returns({
       getNetworkConfig: () => pmConfig,
     });
     const depResolver = new DependencyResolverMain(
@@ -153,7 +150,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       {} as any,
       {} as any
     );
-    expect(await depResolver.getNetworkConfig()).toEqual({
+    expect(await depResolver.getNetworkConfig()).to.deep.equal({
       fetchTimeout: 1,
       fetchRetries: 2,
       fetchRetryFactor: 33,
@@ -169,7 +166,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       {} as any,
       {} as any,
       {} as any,
-      { debug: jest.fn() } as any,
+      { debug: sinon.stub() } as any,
       {} as any,
       {} as any,
       {} as any,
@@ -180,14 +177,10 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       {} as any,
       {} as any
     );
-    // @ts-ignore
-    Http.getNetworkConfig.mockReturnValue(
-      Promise.resolve({
-        cafile: path.join(__dirname, 'fixtures/cafile.txt'),
-      })
-    );
-    // @ts-ignore
-    expect((await depResolver.getNetworkConfig()).ca).toStrictEqual([
+    httpStub.resolves({
+      cafile: path.join(__dirname, 'fixtures/cafile.txt'),
+    });
+    expect((await depResolver.getNetworkConfig()).ca).to.deep.equal([
       `-----BEGIN CERTIFICATE-----
 XXXX
 -----END CERTIFICATE-----`,
@@ -201,7 +194,6 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
     policy: any
   ) {
     const packageManagerSlot = {
-      // @ts-ignore
       get: () => ({
         resolveRemoteVersion,
         getNetworkConfig: () => ({}),
@@ -213,12 +205,9 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
       {} as any,
       {} as any,
       {
-        // @ts-ignore
-        debug: jest.fn(),
-        // @ts-ignore
-        setStatusLine: jest.fn(),
-        // @ts-ignore
-        consoleSuccess: jest.fn(),
+        debug: sinon.stub(),
+        setStatusLine: sinon.stub(),
+        consoleSuccess: sinon.stub(),
       } as any,
       {} as any,
       {} as any,
@@ -315,8 +304,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
         ],
         components: [],
       });
-      // @ts-ignore
-      expect(outdatedPkgs).toStrictEqual([
+      expect(outdatedPkgs).to.deep.equal([
         {
           currentRange: '1.0.0',
           latestRange: '2.0.0',
@@ -418,8 +406,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
         components: [],
         forceVersionBump: 'patch',
       });
-      // @ts-ignore
-      expect(outdatedPkgs).toStrictEqual([
+      expect(outdatedPkgs).to.deep.equal([
         {
           currentRange: '0.0.1',
           latestRange: '0.0.2',
@@ -438,8 +425,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
         components: [],
         forceVersionBump: 'minor',
       });
-      // @ts-ignore
-      expect(outdatedPkgs).toStrictEqual([
+      expect(outdatedPkgs).to.deep.equal([
         {
           currentRange: '0.0.1',
           latestRange: '0.0.2',
@@ -466,8 +452,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
         components: [],
         forceVersionBump: 'major',
       });
-      // @ts-ignore
-      expect(outdatedPkgs).toStrictEqual([
+      expect(outdatedPkgs).to.deep.equal([
         {
           currentRange: '0.0.1',
           latestRange: '0.0.2',
@@ -517,8 +502,8 @@ describe('DepenendencyResolverMain.getComponentEnvPolicyFromEnv()', () => {
       {} as any,
       {} as any
     );
-    await expect(
-      depResolver.getComponentEnvPolicyFromEnv(
+    try {
+      await depResolver.getComponentEnvPolicyFromEnv(
         {
           getDependencies: () => ({
             peers: [
@@ -531,7 +516,12 @@ describe('DepenendencyResolverMain.getComponentEnvPolicyFromEnv()', () => {
           }),
         },
         { envId: 'teambit.test/test' }
-      ) // @ts-ignore
-    ).rejects.toThrowError('Peer "@teambit/community.ui.bit-cli.commands-provider" has an empty supportedRange');
+      );
+      expect.fail('Expected method to throw');
+    } catch (error: any) {
+      expect(error.message).to.equal(
+        'Peer "@teambit/community.ui.bit-cli.commands-provider" has an empty supportedRange'
+      );
+    }
   });
 });

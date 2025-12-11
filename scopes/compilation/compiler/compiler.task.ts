@@ -1,11 +1,11 @@
-import { BuildContext, BuiltTaskResult, BuildTask, TaskResultsList } from '@teambit/builder';
-import { Capsule } from '@teambit/isolator';
+import type { BuildContext, BuiltTaskResult, BuildTask, TaskResultsList } from '@teambit/builder';
+import type { Capsule } from '@teambit/isolator';
 import { hardLinkDirectory } from '@teambit/toolbox.fs.hard-link-directory';
-import { EnvContext, EnvHandler } from '@teambit/envs';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { EnvContext, EnvHandler } from '@teambit/envs';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import fs from 'fs-extra';
 import path from 'path';
-import { Compiler } from './types';
+import type { Compiler } from './types';
 import { CompilerAspect } from './compiler.aspect';
 
 export type CompilerTaskOptions = {

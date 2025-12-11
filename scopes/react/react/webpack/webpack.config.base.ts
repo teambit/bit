@@ -3,7 +3,8 @@ import { sep } from 'path';
 import 'style-loader';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
-import { Configuration, IgnorePlugin } from 'webpack';
+import type { Configuration } from 'webpack';
+import { IgnorePlugin } from 'webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 import { generateStyleLoaders } from '@teambit/webpack.modules.generate-style-loaders';
 import { postCssConfig } from './postcss.config';
@@ -325,7 +326,6 @@ export default function (isEnvProduction = false): Configuration {
         },
       ],
     },
-    // @ts-ignore
     plugins: [
       isEnvProduction &&
         new MiniCssExtractPlugin({

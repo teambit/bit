@@ -6,19 +6,30 @@
 
 .corner {
   width: 300px;
+  background: var(--background-color, #ededed) !important;
 
   &.dark {
     --bit-border-color-lightest: #333333;
     --bit-text-color-heavy: white;
   }
+
+  &.light {
+    --background-color: #ededed;
+  }
 }
 
 .minimalCorner {
   width: fit-content;
+  height: 46px !important;
+  background: var(--background-color, #ededed) !important;
 
   &.dark {
     --bit-border-color-lightest: #333333;
     --bit-text-color-heavy: white;
+  }
+
+  &.light {
+    --background-color: #ededed;
   }
 
   > a {
@@ -48,7 +59,7 @@
   flex: none;
 
   &.dark {
-    --bit-bg-heaviest: #333333;
+    --bit-bg-heaviest: #060414;
     --bit-accent-color: #6a57fd;
     --bit-bg-heavy: #2c2b36;
 
@@ -77,6 +88,10 @@
         color: white;
       }
     }
+  }
+
+  &.minimal {
+    height: 46px;
   }
 }
 
@@ -109,7 +124,7 @@
   }
 
   &.dark {
-    background-color: #333333;
+    background-color: #060414;
 
     a[class*='laneGalleryIcon'] {
       > img {

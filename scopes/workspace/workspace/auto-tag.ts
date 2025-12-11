@@ -2,8 +2,8 @@ import graphlib, { Graph } from 'graphlib';
 import semver from 'semver';
 import { ComponentIdList } from '@teambit/component-id';
 import { isTag } from '@teambit/component-version';
-import { Consumer } from '@teambit/legacy.consumer';
-import { Dependency, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { Consumer } from '@teambit/legacy.consumer';
+import type { Dependency, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 
 export async function getAutoTagPending(consumer: Consumer, changedComponents: ComponentIdList): Promise<Component[]> {
   const autoTagInfo = await getAutoTagInfo(consumer, changedComponents);

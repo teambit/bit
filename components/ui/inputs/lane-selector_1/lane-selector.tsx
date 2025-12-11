@@ -1,17 +1,19 @@
-import React, { HTMLAttributes, useState, ChangeEventHandler, useEffect, useCallback, useRef } from 'react';
+import type { HTMLAttributes, ChangeEventHandler } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import classnames from 'classnames';
 import { useLocation } from 'react-router-dom';
 import { isEqual } from 'lodash';
-import { LaneId } from '@teambit/lane-id';
+import type { LaneId } from '@teambit/lane-id';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
-import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import type { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { InputText as SearchInput } from '@teambit/design.inputs.input-text';
 import Fuse from 'fuse.js';
 // import { ToggleButton } from '@teambit/design.inputs.toggle-button';
 import { Icon } from '@teambit/design.elements.icon';
 // import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
 // import { Tooltip } from '@teambit/design.ui.tooltip';
-import { FetchMoreLanes } from '@teambit/lanes.hooks.use-lanes';
+import type { FetchMoreLanes } from '@teambit/lanes.hooks.use-lanes';
 
 import { LaneSelectorList } from './lane-selector-list';
 import { LanePlaceholder } from './lane-placeholder';
@@ -224,26 +226,27 @@ export function LaneSelector(props: LaneSelectorProps) {
   function LaneSearch() {
     const isClear = searchIconRef.current === CLEAR_SEARCH_ICON;
 
-    return (
-      (multipleLanes && (
-        <div className={styles.search}>
-          <SearchInput
-            activeLabel={false}
-            inputSize={'s'}
-            // ref={inputRef}
-            className={classnames(styles.searchInputContainer, isClear && styles.pointer)}
-            inputClass={styles.searchInput}
-            placeholder={'Search'}
-            value={search}
-            onChange={handleSearchOnChange}
-            onClick={handleSearchOnClick}
-            autoFocus={true}
-            icon={<Icon of={searchIconRef.current} className={styles.searchIcon} onClick={handleSearchIconClicked} />}
-          />
-        </div>
-      )) ||
-      null
-    );
+    return multipleLanes ? (
+      <div className={styles.search}>
+        <SearchInput
+          activeLabel={false}
+          inputSize="s"
+          className={styles.searchInputContainer}
+          inputClass={classnames(styles.searchInput, isClear && styles.clear)}
+          placeholder="Search"
+          value={search}
+          onChange={handleSearchOnChange}
+          onClick={handleSearchOnClick}
+          autoFocus
+          icon={
+            <Icon
+              of={searchIconRef.current}
+              onClick={handleSearchIconClicked}
+            />
+          }
+        />
+      </div>
+    ) : null;
   }
   // TBD: needs redesign
 
@@ -284,7 +287,7 @@ export function LaneSelector(props: LaneSelectorProps) {
     if (!multipleLanes && !dropdownOpen) return null;
 
     return (
-      <React.Fragment key={'lane-selector-dropdown-root'}>
+      <React.Fragment key='lane-selector-dropdown-root'>
         <div className={styles.toolbar}>
           {/* {multipleLanes && groupByScope && (
               <div className={styles.groupBy}>

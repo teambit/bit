@@ -1,5 +1,5 @@
-import { EnvService, Env, EnvContext, ServiceTransformationMap, ExecutionContext } from '@teambit/envs';
-import { ApplicationType } from './application-type';
+import type { EnvService, Env, EnvContext, ServiceTransformationMap, ExecutionContext } from '@teambit/envs';
+import type { ApplicationType } from './application-type';
 
 type ApplicationTransformationMap = ServiceTransformationMap & {
   getAppTypes: () => ApplicationType<any>[];

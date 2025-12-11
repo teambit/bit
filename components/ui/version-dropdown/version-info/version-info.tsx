@@ -5,8 +5,7 @@ import React, { useMemo, useRef, useEffect } from 'react';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import classNames from 'classnames';
-
-import { DropdownComponentVersion } from '../version-dropdown';
+import type { DropdownComponentVersion } from '../version-dropdown';
 import styles from './version-info.module.scss';
 
 export interface VersionInfoProps extends DropdownComponentVersion {

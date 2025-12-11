@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
-import { MarkerType, Edge, Node } from 'reactflow';
-import { ComponentID } from '@teambit/component';
+import type { Edge, Node } from 'reactflow';
+import { MarkerType } from 'reactflow';
+import type { ComponentID } from '@teambit/component';
 import { calcLayout } from './calc-layout';
-import { EdgeModel, GraphModel, NodeModel } from '../query';
+import type { EdgeModel, GraphModel, NodeModel } from '../query';
 
 import { depTypeToClass, depTypeToLabel } from './dep-edge';
 

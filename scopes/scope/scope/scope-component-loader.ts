@@ -1,11 +1,14 @@
-import { Component, ComponentFS, ComponentID, Config, Snap, State, Tag, TagMap } from '@teambit/component';
+import type { ComponentID } from '@teambit/component';
+import { Component, ComponentFS, Config, Snap, State, Tag, TagMap } from '@teambit/component';
 import pMapSeries from 'p-map-series';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { SemVer } from 'semver';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { VERSION_ZERO, Ref, ModelComponent, Version } from '@teambit/objects';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ModelComponent, Version } from '@teambit/objects';
+import { VERSION_ZERO, Ref } from '@teambit/objects';
 import { BitError } from '@teambit/bit-error';
-import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import type { ScopeMain } from './scope.main.runtime';
 
 export class ScopeComponentLoader {
@@ -44,7 +47,17 @@ export class ScopeComponentLoader {
       id = id.changeScope(this.scope.name);
       modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id);
     }
-    if (!modelComponent) return undefined;
+
+    if (!modelComponent) {
+      if (this.scope.legacyScope.isLocal(id) && id.hasVersion()) {
+        const existsWithoutVersion = await this.scope.legacyScope.getModelComponentIfExist(id.changeVersion(undefined));
+        const errMsg = existsWithoutVersion
+          ? `failed loading ${id.toString()}: the component exists but version ${id.version} is missing.`
+          : `failed loading ${id.toString()}: the component does not exist in the local scope.`;
+        this.logger.error(errMsg);
+      }
+      return undefined;
+    }
 
     const versionStr = id.hasVersion()
       ? (id.version as string)

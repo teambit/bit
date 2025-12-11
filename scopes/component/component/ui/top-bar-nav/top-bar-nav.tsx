@@ -2,7 +2,7 @@ import React from 'react';
 import classnames from 'classnames';
 import { useLocation } from 'react-router-dom';
 import { Link as BaseLink } from '@teambit/base-react.navigation.link';
-import { NavPluginProps } from '../menu/nav-plugin';
+import type { NavPluginProps } from '../menu/nav-plugin';
 
 import styles from './top-bar-nav.module.scss';
 

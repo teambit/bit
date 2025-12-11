@@ -1,7 +1,7 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import formatDiagnosesList from './diagnosis-list-template';
 import formatDiagnosesResult from './doctor-results-template';
-import { DoctorMain, DoctorOptions } from './doctor.main.runtime';
+import type { DoctorMain, DoctorOptions } from './doctor.main.runtime';
 
 type Flags = {
   list?: boolean;
@@ -10,11 +10,15 @@ type Flags = {
   includeNodeModules?: boolean;
   includePublic?: boolean;
   excludeLocalScope?: boolean;
+  remote?: string;
 };
 
 export class DoctorCmd implements Command {
   name = 'doctor [diagnosis-name]';
-  description = 'diagnose a bit workspace';
+  description = 'diagnose and troubleshoot workspace issues';
+  extendedDescription = `runs comprehensive health checks on your workspace to detect and report configuration problems, 
+missing dependencies, corrupted data, and other issues that may affect workspace functionality.
+can generate diagnostic reports and workspace archives for debugging and support purposes.`;
   group = 'system';
   alias = '';
   loadAspects = false;
@@ -30,6 +34,7 @@ export class DoctorCmd implements Command {
     ['n', 'include-node-modules', 'relevant for --archive. include node_modules in the archive file'],
     ['p', 'include-public', 'relevant for --archive. include public folder in the archive file'],
     ['e', 'exclude-local-scope', 'relevant for --archive. exclude .bit or .git/bit from the archive file'],
+    ['r', 'remote <remoteName>', 'run doctor checks on a remote scope'],
   ] as CommandOptions;
 
   constructor(private doctor: DoctorMain) {}
@@ -69,6 +74,7 @@ export class DoctorCmd implements Command {
       includeNodeModules = false,
       includePublic = false,
       excludeLocalScope = false,
+      remote,
     } = flags;
 
     if (list) {
@@ -93,6 +99,7 @@ export class DoctorCmd implements Command {
       includeNodeModules,
       includePublic,
       excludeLocalScope,
+      remote,
     };
     return diagnosisName ? this.doctor.runOne(doctorOptions) : this.doctor.runAll(doctorOptions);
   }

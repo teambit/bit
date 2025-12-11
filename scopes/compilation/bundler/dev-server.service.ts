@@ -1,16 +1,23 @@
-import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
-import { PubsubMain } from '@teambit/pubsub';
+import type {
+  EnvService,
+  ExecutionContext,
+  EnvDefinition,
+  Env,
+  EnvContext,
+  ServiceTransformationMap,
+} from '@teambit/envs';
+import type { PubsubMain } from '@teambit/pubsub';
 import chalk from 'chalk';
 import { flatten } from 'lodash';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import highlight from 'cli-highlight';
 import { sep } from 'path';
 import pMapSeries from 'p-map-series';
-import { BrowserRuntimeSlot, DevServerTransformerSlot } from './bundler.main.runtime';
+import type { BrowserRuntimeSlot, DevServerTransformerSlot } from './bundler.main.runtime';
 import { ComponentServer } from './component-server';
 import { dedupEnvs } from './dedup-envs';
-import { DevServer } from './dev-server';
-import { DevServerContext } from './dev-server-context';
+import type { DevServer } from './dev-server';
+import type { DevServerContext } from './dev-server-context';
 import { getEntry } from './get-entry';
 
 export type DevServerServiceOptions = { dedicatedEnvDevServers?: string[] };

@@ -1,22 +1,40 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { createProxyServer } from 'http-proxy';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { Port } from '@teambit/toolbox.network.get-port';
 import fs from 'fs-extra';
-import { ExpressAspect, ExpressMain } from '@teambit/express';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { LanesAspect, LanesMain } from '@teambit/lanes';
-import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { SnappingAspect, SnappingMain } from '@teambit/snapping';
-import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
-import { ComponentCompareAspect, ComponentCompareMain } from '@teambit/component-compare';
-import { ComponentLogAspect, ComponentLogMain } from '@teambit/component-log';
-import { WatcherAspect, WatcherMain } from '@teambit/watcher';
-import { ConfigAspect, ConfigMain } from '@teambit/config';
-import { ExportAspect, ExportMain } from '@teambit/export';
-import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
-import { InstallAspect, InstallMain } from '@teambit/install';
-import { ImporterAspect, ImporterMain } from '@teambit/importer';
-import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import type { ExpressMain } from '@teambit/express';
+import { ExpressAspect } from '@teambit/express';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { LanesMain } from '@teambit/lanes';
+import { LanesAspect } from '@teambit/lanes';
+import type { RemoveMain } from '@teambit/remove';
+import { RemoveAspect } from '@teambit/remove';
+import type { SnappingMain } from '@teambit/snapping';
+import { SnappingAspect } from '@teambit/snapping';
+import type { GeneratorMain } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator';
+import type { ComponentCompareMain } from '@teambit/component-compare';
+import { ComponentCompareAspect } from '@teambit/component-compare';
+import type { ComponentLogMain } from '@teambit/component-log';
+import { ComponentLogAspect } from '@teambit/component-log';
+import type { WatcherMain } from '@teambit/watcher';
+import { WatcherAspect } from '@teambit/watcher';
+import type { ConfigMain } from '@teambit/config';
+import { ConfigAspect } from '@teambit/config';
+import type { ExportMain } from '@teambit/export';
+import { ExportAspect } from '@teambit/export';
+import type { CheckoutMain } from '@teambit/checkout';
+import { CheckoutAspect } from '@teambit/checkout';
+import type { InstallMain } from '@teambit/install';
+import { InstallAspect } from '@teambit/install';
+import type { ImporterMain } from '@teambit/importer';
+import { ImporterAspect } from '@teambit/importer';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 import cors from 'cors';
 import { createProxyMiddleware, fixRequestBody } from 'http-proxy-middleware';
@@ -28,14 +46,20 @@ import { APIForIDE } from './api-for-ide';
 import { SSEEventsRoute } from './sse-events.route';
 import { join } from 'path';
 import { CLIRawRoute } from './cli-raw.route';
-import { ApplicationAspect, ApplicationMain } from '@teambit/application';
-import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import type { ApplicationMain } from '@teambit/application';
+import { ApplicationAspect } from '@teambit/application';
+import type { DeprecationMain } from '@teambit/deprecation';
+import { DeprecationAspect } from '@teambit/deprecation';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
 import { DEFAULT_AUTH_TYPE, Http } from '@teambit/scope.network';
 import { getSymphonyUrl } from '@teambit/legacy.constants';
-import { GraphAspect, GraphMain } from '@teambit/graph';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { SchemaAspect, SchemaMain } from '@teambit/schema';
+import type { GraphMain } from '@teambit/graph';
+import { GraphAspect } from '@teambit/graph';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { SchemaMain } from '@teambit/schema';
+import { SchemaAspect } from '@teambit/schema';
 
 export class ApiServerMain {
   constructor(
@@ -91,22 +115,16 @@ export class ApiServerMain {
       sendEventsToClients('onPostInstall', {});
     });
 
-    this.watcher
-      .watch({
-        preCompile: false,
-        compile: options.compile,
-      })
-      .catch((err) => {
-        // don't throw an error, we don't want to break the "run" process
-        this.logger.error('watcher found an error', err);
-      });
+    await this.watcher.watch({
+      preCompile: false,
+      compile: options.compile,
+    });
 
     const port = options.port || (await this.getRandomPort());
 
     const app = this.express.createApp();
 
     app.use(
-      // @ts-ignore todo: it's not clear what's the issue.
       cors({
         origin(origin, callback) {
           callback(null, true);
@@ -165,13 +183,47 @@ export class ApiServerMain {
       })
     );
 
+    app.use(
+      '/websocket-server/subscriptions',
+      createProxyMiddleware({
+        pathFilter: '/',
+        target: symphonyUrl,
+        ws: true,
+        secure: false, // Disable SSL verification for proxy to remote server
+        changeOrigin: true,
+      })
+    );
+
     const server = await app.listen(port);
+
+    const proxServer = createProxyServer();
+    server.on('upgrade', (req, socket, head) => {
+      req.url = req.url!.replace(/^.+?[/]/, '/');
+      try {
+        proxServer.ws(
+          req,
+          socket,
+          head,
+          {
+            target: `${symphonyUrl}/websocket-server`,
+            secure: false, // Disable SSL verification for proxy to remote server
+            changeOrigin: true,
+          },
+          (error) => {
+            this.logger.error(`failed to proxy ws: ${error.message}`, error);
+          }
+        );
+      } catch (error: any) {
+        this.logger.error(`failed to proxy ws: ${error.message}`, error);
+      }
+    });
 
     return new Promise((resolve, reject) => {
       server.on('error', (err) => {
         reject(err);
       });
       server.on('listening', () => {
+        // important! if you change the message here, change it also in server-forever.ts and also in the vscode extension.
         this.logger.consoleSuccess(`Bit Server is listening on port ${port}`);
         this.writeUsedPort(port);
         resolve(port);

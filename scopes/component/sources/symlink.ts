@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import * as path from 'path';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { createLinkOrSymlink } from '@teambit/toolbox.fs.link-or-symlink';
 
 export class Symlink {

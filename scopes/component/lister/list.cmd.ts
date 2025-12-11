@@ -1,9 +1,9 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { isEmpty } from 'lodash';
 import chalk from 'chalk';
 import { hasWildcard } from '@teambit/legacy.utils';
 import { listTemplate } from './list-template';
-import { ListerMain, ListScopeResult } from './lister.main.runtime';
+import type { ListerMain, ListScopeResult } from './lister.main.runtime';
 
 type ListFlags = {
   ids?: boolean;
@@ -17,7 +17,10 @@ type ListFlags = {
 
 export class ListCmd implements Command {
   name = 'list [remote-scope]';
-  description = 'list components on a workspace or a remote scope (with flag).';
+  description = 'display components in workspace or remote scope';
+  extendedDescription = `shows components in the current workspace by default, or from a specified remote scope.
+supports filtering by scope, namespace, and various display options.
+use --outdated to highlight components that have newer versions available.`;
   group = 'info-analysis';
   helpUrl = 'reference/reference/cli-reference#list';
   alias = 'ls';
@@ -84,7 +87,7 @@ export class ListCmd implements Command {
     const getNamespaceWithWildcard = () => {
       if (!namespace) return undefined;
       if (hasWildcard(namespace)) return namespace;
-      return `${namespace}/*`;
+      return `${namespace}/**`;
     };
     const namespacesUsingWildcards = getNamespaceWithWildcard();
 

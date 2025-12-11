@@ -2,9 +2,10 @@ import path from 'path';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { Consumer } from '@teambit/legacy.consumer';
 import { Scope } from '@teambit/legacy.scope';
-import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { BitMap } from '@teambit/legacy.bit-map';
-import { ConfigMain, WorkspaceConfig, WorkspaceExtensionProps, WorkspaceConfigFileProps } from '@teambit/config';
+import type { WorkspaceExtensionProps } from '@teambit/config';
+import { ConfigMain, WorkspaceConfig } from '@teambit/config';
 import { PackageJsonFile } from '@teambit/component.sources';
 import { pickBy } from 'lodash';
 
@@ -21,7 +22,7 @@ export async function createConsumer(
   const scopeName = `${path.basename(process.cwd())}-local-${generateRandomStr()}`;
   const scope = await Scope.ensure(resolvedScopePath, scopeName);
   const workspaceConfigProps = workspaceExtensionProps
-    ? ({
+    ? {
         'teambit.workspace/workspace': pickBy({
           name: workspaceExtensionProps.name,
           defaultScope: workspaceExtensionProps.defaultScope,
@@ -31,9 +32,32 @@ export async function createConsumer(
         'teambit.dependencies/dependency-resolver': workspaceExtensionProps.externalPackageManager
           ? { externalPackageManager: workspaceExtensionProps.externalPackageManager }
           : {},
-      } as WorkspaceConfigFileProps)
+      }
     : undefined;
-  const config = await ConfigMain.ensureWorkspace(projectPath, scope.path, workspaceConfigProps, generator);
+  const config = await ConfigMain.ensureWorkspace(projectPath, scope.path, workspaceConfigProps as any, generator);
+
+  // Configure workspace-config-files for external package manager mode or interactive mode
+  const shouldEnableWorkspaceConfigWrite =
+    workspaceExtensionProps?.externalPackageManager ||
+    workspaceExtensionProps?.defaultDirectory?.startsWith('bit-components');
+
+  if (shouldEnableWorkspaceConfigWrite) {
+    const workspaceConfig = config.workspaceConfig;
+    if (workspaceConfig) {
+      workspaceConfig.setExtension(
+        'teambit.workspace/workspace-config-files',
+        {
+          enableWorkspaceConfigWrite: true,
+          useDefaultDirectory: true,
+        },
+        { ignoreVersion: true, overrideExisting: true }
+      );
+
+      // Write the config to disk to persist the changes
+      await workspaceConfig.write();
+    }
+  }
+
   const legacyConfig = (config.config as WorkspaceConfig).toLegacy();
   const consumer = new Consumer({
     projectPath,

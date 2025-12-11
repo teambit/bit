@@ -1,8 +1,10 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { ComponentID, ComponentIdObj } from '@teambit/component-id';
-import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
-import { Logger } from '@teambit/logger';
+import type { ComponentIdObj } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
+import type { LaneId } from '@teambit/lane-id';
+import { DEFAULT_LANE } from '@teambit/lane-id';
+import type { Logger } from '@teambit/logger';
 
 const STAGED_CONFIG_DIR = 'staged-config';
 
@@ -69,7 +71,19 @@ export class StagedConfig {
   addComponentConfig(id: ComponentID, config: Config, componentMapObject: Record<string, any>) {
     const exists = this.componentsConfig.find((c) => c.id.isEqual(id, { ignoreVersion: true }));
     if (exists) {
-      exists.config = config;
+      // Merge configs instead of overwriting. This handles multiple scenarios:
+      // 1. User snaps multiple times without changing config: After the first snap, config is
+      //    removed from .bitmap and saved here. On subsequent snaps, componentMap.config is
+      //    undefined - we preserve the original config.
+      // 2. User changes a specific aspect config between snaps (e.g., adds a dep): The new config
+      //    only contains the changed aspect. We merge it with existing config to preserve other
+      //    aspects (like env) that were saved in previous snaps.
+      // 3. User changes multiple aspects: Each aspect in new config overwrites the old value.
+      // This ensures "bit reset" restores the most recent config the user explicitly set for
+      // each aspect, while preserving configs that weren't changed.
+      if (config) {
+        exists.config = { ...exists.config, ...config };
+      }
     } else {
       this.componentsConfig.push({ id, config, componentMapObject });
     }

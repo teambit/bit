@@ -1,5 +1,5 @@
 import { BitError } from '@teambit/bit-error';
-import { WorkspacePolicyEntry } from '../workspace-policy';
+import type { WorkspacePolicyEntry } from '../workspace-policy';
 
 export class EntryAlreadyExist extends BitError {
   constructor(entry: WorkspacePolicyEntry) {

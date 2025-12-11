@@ -1,5 +1,5 @@
-import { ComponentID } from '@teambit/component-id';
-import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { ComponentID } from '@teambit/component-id';
+import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 
 export default class ComponentWithDependencies {
   component: Component;

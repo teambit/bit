@@ -1,11 +1,12 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
+import chaiString from 'chai-string';
 
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 const EXTENSIONS_BASE_FOLDER = 'babel-env';
 

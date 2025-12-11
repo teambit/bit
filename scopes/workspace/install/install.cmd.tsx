@@ -1,10 +1,11 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import packageNameValidate from 'validate-npm-package-name';
-import { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
-import { Logger } from '@teambit/logger';
+import type { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
+import type { Logger } from '@teambit/logger';
 import chalk from 'chalk';
-import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { InstallMain, WorkspaceInstallOptions } from './install.main.runtime';
+import type { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError } from '@teambit/workspace';
+import type { InstallMain, WorkspaceInstallOptions } from './install.main.runtime';
 
 type InstallCmdOptions = {
   type: WorkspaceDependencyLifecycleType;
@@ -21,6 +22,8 @@ type InstallCmdOptions = {
   noOptional: boolean;
   recurringInstall: boolean;
   lockfileOnly: boolean;
+  allowScripts?: string;
+  disallowScripts?: string;
 };
 
 type FormatOutputArgs = {
@@ -35,9 +38,10 @@ const recurringInstallFlagName = 'recurring-install';
 
 export default class InstallCmd implements Command {
   name = 'install [packages...]';
-  description = 'installs workspace dependencies';
-  extendedDescription =
-    'when no package is specified, all workspace dependencies are installed and all workspace components are imported.';
+  description = 'install workspace dependencies';
+  extendedDescription = `installs workspace dependencies and prepares the workspace for development.
+when packages are specified, adds them to workspace.jsonc policy and installs. when no packages specified, installs existing dependencies.
+automatically imports components, compiles components, links to node_modules, and writes config files.`;
   helpUrl = 'reference/dependencies/dependency-installation';
   arguments = [{ name: 'packages...', description: 'a list of packages to install (separated by spaces)' }];
   alias = 'in';
@@ -65,6 +69,8 @@ export default class InstallCmd implements Command {
     ],
     ['', 'no-optional [noOptional]', 'do not install optional dependencies (works with pnpm only)'],
     ['', 'lockfile-only', 'dependencies are not written to node_modules. Only the lockfile is updated'],
+    ['', 'allow-scripts [pkgNames]', 'a comma separated list of package names that are allowed to run installation scripts'],
+    ['', 'disallow-scripts [pkgNames]', 'a comma separated list of package names that are NOT allowed to run installation scripts'],
   ] as CommandOptions;
 
   constructor(
@@ -89,12 +95,29 @@ export default class InstallCmd implements Command {
       );
     }
 
-    packages.forEach((pkg) => {
-      const pkgName = extractPackageName(pkg);
-      if (!packageNameValidate(pkgName).validForNewPackages) {
+    const validPackages = await Promise.all(
+      packages.map(async (pkg) => {
+        const pkgName = extractPackageName(pkg);
+        if (packageNameValidate(pkgName).validForNewPackages) {
+          return pkg;
+        }
+        // if this is a component-id, find the package name and use it instead.
+        try {
+          // Check if it's not a package name (doesn't start with @)
+          if (!pkgName.startsWith('@')) {
+            // Try to resolve it as a component ID
+            const componentId = await this.workspace.resolveComponentId(pkg);
+            // Get the package name for this component
+            const component = await this.workspace.get(componentId);
+            const componentPackageName = this.workspace.componentPackageName(component);
+            return componentPackageName;
+          }
+        } catch {
+          // If component resolution fails, fall through to original error
+        }
         throw new Error(`the package name "${pkgName}" is invalid. please provide a valid package name.`);
-      }
-    });
+      })
+    );
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     const installOpts: WorkspaceInstallOptions = {
       lifecycleType: options.addMissingPeers ? 'peer' : options.type,
@@ -112,8 +135,9 @@ export default class InstallCmd implements Command {
       recurringInstall: options.recurringInstall,
       lockfileOnly: options.lockfileOnly,
       showExternalPackageManagerPrompt: true,
+      allowScripts: this._parseAllowScriptsFlags(options.allowScripts, options.disallowScripts),
     };
-    const components = await this.install.install(packages, installOpts);
+    const components = await this.install.install(validPackages, installOpts);
     const endTime = Date.now();
     const oldNonLoadedEnvs = this.install.getOldNonLoadedEnvs();
     return formatOutput({
@@ -123,6 +147,34 @@ export default class InstallCmd implements Command {
       recurringInstall: options[recurringInstallFlagName],
       oldNonLoadedEnvs,
     });
+  }
+
+  private _parseAllowScriptsFlags(
+    allowScriptsFlag?: string,
+    disallowScriptsFlag?: string
+  ): Record<string, boolean> | undefined {
+    if (!allowScriptsFlag && !disallowScriptsFlag) return undefined;
+    const allowScripts: Record<string, boolean> = {};
+    if (allowScriptsFlag) {
+      for (const pkgName of this._parseCommaSeparatedPkgList(allowScriptsFlag)) {
+        allowScripts[pkgName] = true;
+      }
+    }
+    if (disallowScriptsFlag) {
+      for (const pkgName of this._parseCommaSeparatedPkgList(disallowScriptsFlag)) {
+        allowScripts[pkgName] = false;
+      }
+    }
+    return allowScripts;
+  }
+
+  private * _parseCommaSeparatedPkgList(pkgList: string): IterableIterator<string> {
+    for (const pkgName of pkgList.split(',')) {
+      const trimmed = pkgName.trim();
+      if (trimmed) {
+        yield trimmed;
+      }
+    }
   }
 }
 

@@ -1,43 +1,39 @@
 import semver from 'semver';
 import { isEmpty } from 'lodash';
-import {
-  DependencyResolverAspect,
-  DependencyResolverMain,
-  WorkspacePolicy,
-  WorkspacePolicyConfigKeysNames,
-  WorkspacePolicyEntry,
-} from '@teambit/dependency-resolver';
+import type { DependencyResolverMain, WorkspacePolicy, WorkspacePolicyEntry } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { snapToSemver } from '@teambit/component-package-version';
 import tempy from 'tempy';
 import fs from 'fs-extra';
 import { MainRuntime } from '@teambit/cli';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
-import { ConfigAspect, ConfigMain } from '@teambit/config';
-import { MergeStrategy, mergeFiles, MergeFileParams } from '@teambit/merging';
+import type { ConfigMain } from '@teambit/config';
+import { ConfigAspect } from '@teambit/config';
+import { mergeFiles } from '@teambit/component.modules.merge-helper';
 import { isRange1GreaterThanRange2Naively } from '@teambit/pkg.modules.semver-helper';
-import { ConfigMergeResult, parseVersionLineWithConflict } from './config-merge-result';
+import type { ConfigMergeResult } from './config-merge-result';
+import { parseVersionLineWithConflict } from './config-merge-result';
 import { ConfigMergerAspect } from './config-merger.aspect';
 import { AggregatedDeps } from './aggregated-deps';
+import type {
+  MergeFileParams,
+  MergeStrategy,
+  WorkspaceConfigUpdateResult,
+  WorkspaceDepsConflicts,
+  WorkspaceDepsUnchanged,
+  WorkspaceDepsUpdates,
+} from '@teambit/component.modules.merge-helper';
 
 export type PkgEntry = { name: string; version: string; force: boolean };
 
 const WS_DEPS_FIELDS = ['dependencies', 'peerDependencies'];
 
-export type WorkspaceDepsUpdates = { [pkgName: string]: [string, string] }; // from => to
-export type WorkspaceDepsConflicts = Record<WorkspacePolicyConfigKeysNames, Array<{ name: string; version: string }>>; // the pkg value is in a format of CONFLICT::OURS::THEIRS
-export type WorkspaceDepsUnchanged = { [pkgName: string]: string }; // the pkg value is the message why it wasn't updated
-
-export type WorkspaceConfigUpdateResult = {
-  workspaceDepsUpdates?: WorkspaceDepsUpdates; // in case workspace.jsonc has been updated with dependencies versions
-  workspaceDepsConflicts?: WorkspaceDepsConflicts; // in case workspace.jsonc has conflicts
-  workspaceDepsUnchanged?: WorkspaceDepsUnchanged; // in case the deps in workspace.jsonc couldn't be updated
-  workspaceConfigConflictWriteError?: Error; // in case workspace.jsonc has conflicts and we failed to write the conflicts to the file
-  logs?: string[]; // verbose details about the updates/conflicts for each one of the deps
-};
 export class ConfigMergerMain {
   constructor(
     private workspace: Workspace,

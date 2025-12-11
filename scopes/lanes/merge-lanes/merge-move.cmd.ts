@@ -1,6 +1,6 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
-import { MergeLanesMain } from './merge-lanes.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { MergeLanesMain } from './merge-lanes.main.runtime';
 import { BitError } from '@teambit/bit-error';
 
 export type MergeAbortOpts = {

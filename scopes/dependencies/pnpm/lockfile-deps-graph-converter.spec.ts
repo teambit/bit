@@ -1,6 +1,6 @@
 import path from 'path';
 import { ComponentID } from '@teambit/component';
-import { DependenciesGraph } from '@teambit/objects';
+import { DependenciesGraph, type PackagesMap, type DependencyEdge } from '@teambit/objects';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
 import { type BitLockfileFile } from './lynx';
 import { expect } from 'chai';
@@ -56,13 +56,23 @@ describe('convertLockfileToGraph simple case', () => {
           foo: '1.0.0(patch_hash=0000)',
           qar: '1.1.0',
           zoo: '1.1.0(qar@1.1.0)',
+          comp2: 'file:comps/comp2',
         },
+      },
+      'comp2@file:comps/comp2': {
+        dependencies: {},
       },
     },
     packages: {
       'comp1@file:comps/comp1': {
         resolution: {
           directory: 'comps/comp1',
+          type: 'directory',
+        },
+      },
+      'comp2@file:comps/comp2': {
+        resolution: {
+          directory: 'comps/comp2',
           type: 'directory',
         },
       },
@@ -102,7 +112,10 @@ describe('convertLockfileToGraph simple case', () => {
     pkgName: 'comp1',
     componentRelativeDir: 'comps/comp1',
     componentRootDir: 'node_modules/.bit_roots/env',
-    componentIdByPkgName: new Map([['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')]]),
+    componentIdByPkgName: new Map([
+      ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+      ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+    ]),
   });
   const expected = {
     schemaVersion: '2.0',
@@ -120,23 +133,6 @@ describe('convertLockfileToGraph simple case', () => {
         attr: {
           pkgId: 'zoo@1.1.0',
         },
-      },
-      {
-        id: 'comp1@1.0.0',
-        neighbours: [
-          {
-            id: 'foo@1.0.0(patch_hash=0000)',
-            optional: false,
-          },
-          {
-            id: 'qar@1.1.0',
-            optional: false,
-          },
-          {
-            id: 'zoo@1.1.0(qar@1.1.0)',
-            optional: false,
-          },
-        ],
       },
       {
         id: '.',
@@ -161,6 +157,13 @@ describe('convertLockfileToGraph simple case', () => {
             specifier: '^1.1.0',
             lifecycle: 'runtime',
             optional: false,
+          },
+          {
+            id: 'comp2@1.0.0',
+            lifecycle: 'runtime',
+            name: 'comp2',
+            optional: false,
+            specifier: '*',
           },
         ],
       },
@@ -197,9 +200,9 @@ describe('convertLockfileToGraph simple case', () => {
           integrity: 'sha512-333',
         },
       },
-      'comp1@1.0.0': {
+      'comp2@1.0.0': {
         component: {
-          name: 'comp1',
+          name: 'comp2',
           scope: 'my-scope',
         },
       },
@@ -221,6 +224,7 @@ describe('convertLockfileToGraph simple case', () => {
               bar: `link:${path.resolve('comps/bar')}`, // Links from the manifests are added to the lockfile
               qar: '1.1.0',
               zoo: '1.1.0',
+              comp2: '1.0.0',
             },
           },
         },
@@ -234,6 +238,10 @@ describe('convertLockfileToGraph simple case', () => {
       importers: {
         'comps/comp1': {
           dependencies: {
+            comp2: {
+              version: '1.0.0',
+              specifier: '1.0.0',
+            },
             foo: {
               version: '1.0.0(patch_hash=0000)',
               specifier: '^1.0.0',
@@ -264,13 +272,7 @@ describe('convertLockfileToGraph simple case', () => {
         },
         'bar@1.0.0': {},
         'qar@1.1.0': {},
-        'comp1@1.0.0': {
-          dependencies: {
-            foo: '1.0.0(patch_hash=0000)',
-            qar: '1.1.0',
-            zoo: '1.1.0(qar@1.1.0)',
-          },
-        },
+        'comp2@1.0.0': {},
         'zoo@1.1.0(qar@1.1.0)': {
           dependencies: {
             qar: '1.1.0',
@@ -278,7 +280,7 @@ describe('convertLockfileToGraph simple case', () => {
         },
       },
       packages: {
-        'comp1@1.0.0': {
+        'comp2@1.0.0': {
           resolution: {
             integrity: '0000',
           },
@@ -315,5 +317,51 @@ describe('convertLockfileToGraph simple case', () => {
         },
       },
     });
+  });
+});
+
+describe('convertGraphToLockfile on invalid graph', () => {
+  it('should throw an error if resolution is missing', async () => {
+    const packages: PackagesMap = new Map([['foo@1.0.0', {} as any]]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [
+          {
+            id: 'foo@1.0.0',
+            name: 'foo',
+            specifier: '1.0.0',
+            lifecycle: 'runtime',
+          },
+        ],
+      },
+      {
+        id: 'foo@1.0.0',
+        neighbours: [],
+      },
+    ];
+    const graph = new DependenciesGraph({
+      packages,
+      edges,
+    });
+    let error: Error | undefined;
+    try {
+      await convertGraphToLockfile(new DependenciesGraph(graph), {
+        manifests: {
+          [path.resolve('comps/comp1')]: {
+            dependencies: {
+              foo: '1.0.0',
+            },
+          },
+        },
+        rootDir: process.cwd(),
+        resolve: () => ({ resolution: {} }) as any,
+      });
+    } catch (_error) {
+      error = _error as Error;
+    }
+    expect(error?.message).eq(
+      `Failed to generate a valid lockfile. The "packages['foo@1.0.0'] entry doesn't have a "resolution" field.`
+    );
   });
 });

@@ -2,7 +2,7 @@ import { JestTask, jestWorkerPath } from '@teambit/defender.jest-tester';
 import type { JestWorker } from '@teambit/defender.jest-tester';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { BabelCompiler } from '@teambit/compilation.babel-compiler';
-import { Compiler, CompilerMain } from '@teambit/compiler';
+import type { Compiler, CompilerMain } from '@teambit/compiler';
 import type {
   DependenciesEnv,
   PackageEnv,
@@ -11,26 +11,28 @@ import type {
   PreviewEnv,
 } from '@teambit/envs';
 import { merge } from 'lodash';
-import { PackageJsonProps } from '@teambit/pkg';
-import { TsConfigSourceFile } from 'typescript';
-import { ReactEnv } from '@teambit/react';
-import { BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
+import type { PackageJsonProps } from '@teambit/pkg';
+import type { TsConfigSourceFile } from 'typescript';
+import type { ReactEnv } from '@teambit/react';
+import type { BuildTask } from '@teambit/builder';
+import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { Bundler, BundlerContext } from '@teambit/bundler';
-import { WebpackConfigTransformer } from '@teambit/webpack';
-import { Tester } from '@teambit/tester';
-import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
-import { ConfigWriterEntry } from '@teambit/workspace-config-files';
+import type { Bundler, BundlerContext } from '@teambit/bundler';
+import type { WebpackConfigTransformer } from '@teambit/webpack';
+import type { Tester } from '@teambit/tester';
+import type { PreviewStrategyName } from '@teambit/preview';
+import { COMPONENT_PREVIEW_STRATEGY_NAME } from '@teambit/preview';
+import type { ConfigWriterEntry } from '@teambit/workspace-config-files';
 import { PrettierConfigWriter } from '@teambit/defender.prettier-formatter';
 import { TypescriptConfigWriter } from '@teambit/typescript.typescript-compiler';
 import { EslintConfigWriter } from '@teambit/defender.eslint-linter';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { join } from 'path';
-import { WorkerMain } from '@teambit/worker';
+import type { WorkerMain } from '@teambit/worker';
 
-import { DevFilesMain } from '@teambit/dev-files';
-import { TsConfigTransformer } from '@teambit/typescript';
-import { TesterTask } from '@teambit/defender.tester-task';
+import type { DevFilesMain } from '@teambit/dev-files';
+import type { TsConfigTransformer } from '@teambit/typescript';
+import type { TesterTask } from '@teambit/defender.tester-task';
 
 import { babelConfig } from './babel/babel-config';
 

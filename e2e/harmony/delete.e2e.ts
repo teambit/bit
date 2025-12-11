@@ -1,9 +1,10 @@
 import path from 'path';
 import { IssuesClasses } from '@teambit/component-issues';
 import chai, { expect } from 'chai';
+import chaiFs from 'chai-fs';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('bit delete command', function () {
   let helper: Helper;

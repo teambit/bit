@@ -5,15 +5,16 @@ import fs from 'fs-extra';
 import { dirname, join, relative } from 'path';
 import pMapSeries from 'p-map-series';
 import { compact } from 'lodash';
-import { ExtendingConfigFile } from '../config-writer-entry';
-import { DedupedPaths, dedupePaths } from '../dedup-paths';
-import {
+import type { ExtendingConfigFile } from '../config-writer-entry';
+import type { DedupedPaths } from '../dedup-paths';
+import { dedupePaths } from '../dedup-paths';
+import type {
   EnvCompsDirsMap,
   EnvConfigWriterEntry,
   EnvMapValue,
   WriteConfigFilesOptions,
 } from '../workspace-config-files.main.runtime';
-import { WrittenConfigFile, WrittenRealConfigFilesByHash } from './real-config-files';
+import type { WrittenConfigFile, WrittenRealConfigFilesByHash } from './real-config-files';
 
 type EnvCalculatedExtendingConfigFile = {
   envId: string;

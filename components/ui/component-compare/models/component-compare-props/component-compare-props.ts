@@ -1,12 +1,12 @@
-import { HTMLAttributes, ComponentType } from 'react';
-import { RouteProps } from 'react-router-dom';
-import { ComponentID, UseComponentType } from '@teambit/component';
-import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
-import { ComponentCompareState } from '@teambit/component.ui.component-compare.models.component-compare-state';
+import type { HTMLAttributes, ComponentType } from 'react';
+import type { RouteProps } from 'react-router-dom';
+import type { ComponentID, UseComponentType } from '@teambit/component';
+import type { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
+import type { ComponentCompareState } from '@teambit/component.ui.component-compare.models.component-compare-state';
 import type { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
-import { MaybeLazyLoaded } from '@teambit/component.ui.component-compare.utils.lazy-loading';
-import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
-import { StateAndHooks } from '@teambit/component.ui.component-compare.context';
+import type { MaybeLazyLoaded } from '@teambit/component.ui.component-compare.utils.lazy-loading';
+import type { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
+import type { StateAndHooks } from '@teambit/component.ui.component-compare.context';
 
 export interface TabItem {
   id: string;

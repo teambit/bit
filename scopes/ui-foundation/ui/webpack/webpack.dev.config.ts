@@ -1,7 +1,8 @@
 import { ProvidePlugin } from 'webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
-import { fallbacksProvidePluginConfig, WebpackConfigWithDevServer, fallbacks } from '@teambit/webpack';
+import type { WebpackConfigWithDevServer } from '@teambit/webpack';
+import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
 
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
@@ -106,9 +107,11 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
           // Can be:
           // serveIndex: {} (options for the `serveIndex` option you can find https://github.com/expressjs/serve-index)
           serveIndex: true,
-          // Can be:
-          // watch: {} (options for the `watch` option you can find https://github.com/paulmillr/chokidar)
-          watch: true,
+          // Disabled: The static public directory typically doesn't exist, and when Chokidar
+          // watches a non-existent path, it recursively watches parent directories until it
+          // finds one that exists - potentially watching the entire workspace root.
+          // This causes unnecessary file system events and wastes FSEvents streams on macOS.
+          watch: false,
         },
       ],
 
@@ -182,6 +185,12 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         ),
         '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
         '@teambit/base-ui.graph.tree.recursive-tree': require.resolve('@teambit/base-ui.graph.tree.recursive-tree'),
+        '@teambit/semantics.entities.semantic-schema': require.resolve('@teambit/semantics.entities.semantic-schema'),
+        '@teambit/code.ui.code-editor': require.resolve('@teambit/code.ui.code-editor'),
+        '@teambit/api-reference.hooks.use-api': require.resolve('@teambit/api-reference.hooks.use-api'),
+        '@teambit/api-reference.hooks.use-api-renderers': require.resolve(
+          '@teambit/api-reference.hooks.use-api-renderers'
+        ),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
       },
       fallback: {

@@ -1,7 +1,7 @@
-import { Schema } from '@teambit/graphql';
+import type { Schema } from '@teambit/graphql';
 import { gql } from 'graphql-tag';
 
-import { AspectLoaderMain } from './aspect-loader.main.runtime';
+import type { AspectLoaderMain } from './aspect-loader.main.runtime';
 
 export function aspectLoaderSchema(aspectLoaderMain: AspectLoaderMain): Schema {
   return {

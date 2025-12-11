@@ -1,4 +1,4 @@
-import { SlotRegistry } from '@teambit/harmony';
+import type { SlotRegistry } from '@teambit/harmony';
 
 export type UserBarSection = {
   /**

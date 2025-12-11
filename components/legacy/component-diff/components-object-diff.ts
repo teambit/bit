@@ -1,16 +1,17 @@
 import arrayDifference from 'array-difference';
 import tempy from 'tempy';
 import chalk from 'chalk';
-import { ComponentIdList } from '@teambit/component-id';
+import type { ComponentIdList } from '@teambit/component-id';
 import Table from 'cli-table';
 import normalize from 'normalize-path';
 import diff from 'object-diff';
 import { compact, find, get, isEmpty, isNil, union } from 'lodash';
 import { lt, gt } from 'semver';
-import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { DiffOptions, FieldsDiff, getOneFileDiff } from './components-diff';
+import type { DiffOptions, FieldsDiff } from './components-diff';
+import { getOneFileDiff } from './components-diff';
 
 type ConfigDiff = {
   fieldName: string;
@@ -179,35 +180,6 @@ export async function diffBetweenComponentsObjects(
     return { fieldName: field, diffOutput };
   });
 
-  const dependenciesRelativePathsOutput = (): FieldsDiff[] => {
-    if (!verbose) return [];
-    const dependenciesLeft = componentLeft.getAllDependencies();
-    const dependenciesRight = componentRight.getAllDependencies();
-    if (isEmpty(dependenciesLeft) || isEmpty(dependenciesRight)) return [];
-    return dependenciesLeft.reduce((acc, dependencyLeft) => {
-      const idStr = dependencyLeft.id.toString();
-      const dependencyRight = dependenciesRight.find((dep) => dep.id.isEqual(dependencyLeft.id));
-      if (!dependencyRight) return acc;
-      if (JSON.stringify(dependencyLeft.relativePaths) === JSON.stringify(dependencyRight.relativePaths)) return acc;
-      const fieldName = `Dependency ${idStr} relative-paths`;
-      const title =
-        titleLeft(fieldName, leftVersion, rightVersion) + chalk.bold(titleRight(fieldName, leftVersion, rightVersion));
-      const getValue = (fieldValue: Record<string, any>, left: boolean) => {
-        if (isEmpty(fieldValue)) return '';
-        const sign = left ? '-' : '+';
-        const jsonOutput = JSON.stringify(fieldValue, null, `${sign} `);
-        return `${jsonOutput}\n`;
-      };
-      const value =
-        chalk.red(getValue(dependencyLeft.relativePaths, true)) +
-        chalk.green(getValue(dependencyRight.relativePaths, false));
-      const diffOutput = title + value;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      acc.push({ fieldName, diffOutput });
-      return acc;
-    }, []);
-  };
-
   const getDepDiffType = (left?: string, right?: string): DepDiffType => {
     if (left && !right) return 'removed';
     if (!left && right) return 'added';
@@ -336,12 +308,7 @@ export async function diffBetweenComponentsObjects(
 
   const extensionsConfigOutput = await getExtensionsConfigOutput(componentLeft, componentRight);
 
-  const allDiffs = [
-    ...fieldsDiffOutput,
-    ...extensionsConfigOutput,
-    ...dependenciesRelativePathsOutput(),
-    ...getAllDepsOutput(),
-  ];
+  const allDiffs = [...fieldsDiffOutput, ...extensionsConfigOutput, ...getAllDepsOutput()];
 
   return isEmpty(allDiffs) ? undefined : allDiffs;
 }

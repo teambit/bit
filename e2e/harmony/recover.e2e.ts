@@ -1,9 +1,10 @@
 import { IssuesClasses } from '@teambit/component-issues';
 import chai, { expect } from 'chai';
+import chaiFs from 'chai-fs';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { Extensions } from '@teambit/legacy.constants';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('bit recover command', function () {
   this.timeout(0);
@@ -309,6 +310,71 @@ describe('bit recover command', function () {
       expect(() => helper.command.recover('comp1')).not.to.throw();
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(1);
+    });
+  });
+  describe('recover multiple components using pattern', () => {
+    describe('recover multiple components before snapping', () => {
+      let recoverOutput: string;
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(3);
+        helper.command.tagWithoutBuild();
+        helper.command.export();
+
+        helper.command.deleteComponent('comp1');
+        helper.command.deleteComponent('comp2');
+        helper.command.deleteComponent('comp3');
+        recoverOutput = helper.command.recover("'**'");
+      });
+      it('should recover all three components', () => {
+        expect(recoverOutput).to.have.string('successfully recovered');
+        expect(recoverOutput).to.have.string('comp1');
+        expect(recoverOutput).to.have.string('comp2');
+        expect(recoverOutput).to.have.string('comp3');
+      });
+      it('bit status should not show removed components', () => {
+        const status = helper.command.statusJson();
+        expect(status.locallySoftRemoved).to.have.lengthOf(0);
+      });
+      it('bit list should show all components', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(3);
+      });
+    });
+    describe('recover multiple components after snapping', () => {
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(3);
+        helper.command.tagWithoutBuild();
+        helper.command.export();
+
+        helper.command.deleteComponent('comp1');
+        helper.command.deleteComponent('comp2');
+        helper.fs.outputFile('comp3/index.js', '');
+        helper.command.tagAllWithoutBuild();
+        helper.command.recover(`${helper.scopes.remote}/*`);
+      });
+      it('should recover both components', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(3);
+        helper.bitMap.expectToHaveId('comp1');
+        helper.bitMap.expectToHaveId('comp2');
+      });
+      it('bit status should not show the components as remotelySoftRemoved', () => {
+        const status = helper.command.statusJson();
+        expect(status.remotelySoftRemoved).to.have.lengthOf(0);
+      });
+    });
+    describe('recover with pattern when no components match', () => {
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(2);
+        helper.command.tagWithoutBuild();
+        helper.command.export();
+      });
+      it('should throw an error when no soft-deleted components match', () => {
+        expect(() => helper.command.recover('nonexistent*')).to.throw('no soft-deleted components found');
+      });
     });
   });
 });

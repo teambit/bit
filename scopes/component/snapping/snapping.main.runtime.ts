@@ -1,8 +1,8 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import fs from 'fs-extra';
 import {
-  LegacyOnTagResult,
   UnmergedComponents,
   VersionNotFound,
   ComponentNotFound,
@@ -10,62 +10,70 @@ import {
   ParentNotFound,
 } from '@teambit/legacy.scope';
 import { FlattenedDependenciesGetter } from './get-flattened-dependencies';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace, AutoTagResult } from '@teambit/workspace';
-import semver, { ReleaseType } from 'semver';
+import type { Workspace, AutoTagResult } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
+import type { ReleaseType } from 'semver';
+import semver from 'semver';
 import { compact, difference, uniq } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Extensions, LATEST, BuildStatus } from '@teambit/legacy.constants';
-import { ComponentsPendingImport, Consumer } from '@teambit/legacy.consumer';
+import type { BuildStatus } from '@teambit/legacy.constants';
+import { Extensions, LATEST } from '@teambit/legacy.constants';
+import type { Consumer } from '@teambit/legacy.consumer';
+import { ComponentsPendingImport } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import pMapSeries from 'p-map-series';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import pMap from 'p-map';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import {
-  BitObject,
-  Ref,
-  Repository,
-  Lane,
-  ModelComponent,
-  Version,
-  DepEdge,
-  DepEdgeType,
-  Log,
-  AddVersionOpts,
-} from '@teambit/objects';
-import { Component, ConsumerComponent } from '@teambit/component';
-import { DependencyResolverAspect, DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
+import type { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { Repository, Lane, ModelComponent, DepEdge, DepEdgeType, Log, AddVersionOpts } from '@teambit/objects';
+import { BitObject, Ref, Version } from '@teambit/objects';
+import type { Component, ConsumerComponent } from '@teambit/component';
+import type { DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
-import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import type { BuilderMain, LegacyOnTagResult } from '@teambit/builder';
+import { BuilderAspect } from '@teambit/builder';
 import { LaneId } from '@teambit/lane-id';
-import { ImporterAspect, ImporterMain } from '@teambit/importer';
-import { ExportAspect, ExportMain } from '@teambit/export';
+import type { ImporterMain } from '@teambit/importer';
+import { ImporterAspect } from '@teambit/importer';
+import type { ExportMain } from '@teambit/export';
+import { ExportAspect } from '@teambit/export';
 import { isHash, isTag } from '@teambit/component-version';
-import { ArtifactFiles, ArtifactSource, getArtifactsFiles, SourceFile } from '@teambit/component.sources';
-import { DependenciesAspect, DependenciesMain } from '@teambit/dependencies';
+import type { ArtifactSource } from '@teambit/component.sources';
+import { ArtifactFiles, getArtifactsFiles, SourceFile } from '@teambit/component.sources';
+import type { DependenciesMain } from '@teambit/dependencies';
+import { DependenciesAspect } from '@teambit/dependencies';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
 import ResetCmd from './reset-cmd';
-import { addDeps, generateCompFromScope, NewDependencies } from './generate-comp-from-scope';
+import type { NewDependencies } from './generate-comp-from-scope';
+import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
 import { FlattenedEdgesGetter } from './flattened-edges';
 import { SnapDistanceCmd } from './snap-distance-cmd';
+import type { ResetResult } from './reset-component';
 import {
   removeLocalVersionsForAllComponents,
-  ResetResult,
   getComponentsWithOptionToUntag,
   removeLocalVersionsForMultipleComponents,
 } from './reset-component';
-import { ApplicationAspect, ApplicationMain } from '@teambit/application';
+import type { ApplicationMain } from '@teambit/application';
+import { ApplicationAspect } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
-import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { VersionMaker, BasicTagParams, BasicTagSnapParams, updateVersions, VersionMakerParams } from './version-maker';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import type { RemoveMain } from '@teambit/remove';
+import { RemoveAspect } from '@teambit/remove';
+import type { BasicTagParams, BasicTagSnapParams, VersionMakerParams } from './version-maker';
+import { VersionMaker, updateVersions } from './version-maker';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 
 export type PackageIntegritiesByPublishedPackages = Map<
   string,
@@ -126,6 +134,7 @@ export type BasicTagResults = {
   warnings: string[];
   newComponents: ComponentIdList;
   removedComponents?: ComponentIdList;
+  totalComponentsCount?: number; // total count of all components tagged/snapped (including auto-tagged)
 };
 
 export type FileData = { path: string; content: string; delete?: boolean };
@@ -186,6 +195,7 @@ export class SnappingMain {
     message = '',
     version,
     editor = '',
+    versionsFile,
     snapped = false,
     unmerged = false,
     releaseType,
@@ -254,6 +264,7 @@ export class SnappingMain {
     const params = {
       message,
       editor,
+      versionsFile,
       exactVersion: validExactVersion,
       releaseType,
       preReleaseId,
@@ -273,9 +284,16 @@ export class SnappingMain {
       detachHead,
       overrideHead,
       loose,
+      ignoreIssues,
     };
-    const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig, removedComponents } =
-      await this.makeVersion(compIds, components, params);
+    const {
+      taggedComponents,
+      autoTaggedResults,
+      publishedPackages,
+      stagedConfig,
+      removedComponents,
+      totalComponentsCount,
+    } = await this.makeVersion(compIds, components, params);
 
     const tagResults = {
       taggedComponents,
@@ -285,6 +303,7 @@ export class SnappingMain {
       warnings,
       newComponents,
       removedComponents,
+      totalComponentsCount,
     };
 
     await consumer.onDestroy(`tag (message: ${message || 'N/A'})`);
@@ -307,22 +326,32 @@ export class SnappingMain {
     if (!configObject) return;
     ExtensionDataList.adjustEnvsOnConfigObject(configObject);
     const extensionsFromConfigObject = ExtensionDataList.fromConfigObject(configObject);
-    const depsResolverFromConfig = extensionsFromConfigObject.findCoreExtension(DependencyResolverAspect.id);
-    if (depsResolverFromConfig) {
-      // @todo: merge also the scope-specific into the config here. same way we do in "addConfigDepsFromModelToConfigMerge"
-      depsResolverFromConfig.data.policy = component.state._consumer.extensions.findCoreExtension(
-        DependencyResolverAspect.id
-      )?.data.policy;
-    }
-    const autoDeps = extensionsFromConfigObject.extractAutoDepsFromConfig();
     const consumerComponent: ConsumerComponent = component.state._consumer;
+
     const extensionDataList = ExtensionDataList.mergeConfigs([
       extensionsFromConfigObject,
       consumerComponent.extensions,
     ]).filterRemovedExtensions();
+
+    // Restore data fields from the original extensions after merging configs.
+    // configObject contains only config (from the merged config result), it has no data.
+    // When merging configs, if an extension exists in both lists, the first one (extensionsFromConfigObject) wins.
+    // This means the merged entry gets the new config but loses the data from the original extension.
+    // We need to restore the data fields from the original extensions so components that skip aspect loading
+    // (PR #9570 optimization) still have their data. For example, DependencyResolver has data fields like
+    // packageName, dependencies, policy, componentRangePrefix. Note: it's OK to restore the "dependencies" field
+    // from the original component because it will be rewritten later by addDeps() with the calculated policy.
+    extensionDataList.forEach((ext) => {
+      const originalExt = consumerComponent.extensions.findExtension(ext.stringId, true);
+      if (originalExt && originalExt.data) {
+        ext.data = originalExt.data;
+      }
+    });
+
     consumerComponent.extensions = extensionDataList;
     component.state.aspects = await this.scope.createAspectListFromExtensionDataList(extensionDataList);
 
+    const autoDeps = extensionsFromConfigObject.extractAutoDepsFromConfig();
     return autoDeps;
   }
 
@@ -428,6 +457,23 @@ export class SnappingMain {
           }
         });
       });
+      // When merging lanes, if a component being snapped has dependencies on components that were simply updated
+      // (non-diverged), those dependencies still point to the old lane versions. We need to update them to point
+      // to the newly merged versions. Also convert hashes to tags when available.
+    } else if (!params.updateDependents && updatedComponents.length) {
+      existingComponents.forEach((comp) => {
+        const deps = this.dependencyResolver.getComponentDependencies(comp);
+        const snapData = getSnapData(comp.id);
+        deps.forEach((dep) => {
+          const mergedComp = updatedComponents.find((c) => c.id.isEqualWithoutVersion(dep.componentId));
+          if (mergedComp) {
+            // Convert hash to tag if available
+            const tag = mergedComp.tags.byHash(mergedComp.id.version);
+            const versionToUse = tag?.version.raw || mergedComp.id.version;
+            snapData.dependencies.push(`${mergedComp.id.toStringWithoutVersion()}@${versionToUse}`);
+          }
+        });
+      });
     }
 
     const components = [...existingComponents, ...newComponents];
@@ -454,6 +500,14 @@ export class SnappingMain {
     // otherwise, when a user set a custom-env, it won't be loaded and the Version object will leave the
     // teambit.envs/envs in a weird state. the config will be set correctly but the data will be set to the default
     // node env.
+    // OPTIMIZATION: loadAspectOnlyForIds is used to skip aspect loading for components without data conflicts.
+    // This was added in PR #9570 to improve performance during merge-from-scope operations.
+    // When merging main into a lane, if aspects data can be successfully merged (no conflicts), we skip the
+    // expensive aspect loading process. Only components with data conflicts need full aspect loading.
+    // NOTE: This means executeOnCompAspectReCalcSlot (which recalculates aspect data like packageName, dependencies, etc.)
+    // only runs for components in loadAspectOnlyForIds. Components not in this list rely on their existing aspect data
+    // from when the component was loaded from the scope. For extensions that are part of the merged config, their data
+    // is preserved by addAspectsFromConfigObject to prevent data loss during config merge.
     const { loadAspectOnlyForIds } = params;
     const compsToLoadAspects = loadAspectOnlyForIds
       ? components.filter((c) => loadAspectOnlyForIds.hasWithoutVersion(c.id))
@@ -569,18 +623,17 @@ export class SnappingMain {
       exitOnFirstFailedTask,
       detachHead,
       loose,
+      ignoreIssues,
     };
-    const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await this.makeVersion(
-      ids,
-      components,
-      makeVersionParams
-    );
+    const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents, totalComponentsCount } =
+      await this.makeVersion(ids, components, makeVersionParams);
 
     const snapResults: Partial<SnapResults> = {
       snappedComponents: taggedComponents,
       autoSnappedResults: autoTaggedResults,
       newComponents,
       removedComponents,
+      totalComponentsCount,
     };
 
     const currentLane = consumer.getCurrentLaneId();

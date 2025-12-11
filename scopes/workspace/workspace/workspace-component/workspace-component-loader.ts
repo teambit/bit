@@ -2,26 +2,27 @@ import pMap from 'p-map';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import { Component, ComponentFS, Config, InvalidComponent, State, TagMap } from '@teambit/component';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { Component, InvalidComponent } from '@teambit/component';
+import { ComponentFS, Config, State, TagMap } from '@teambit/component';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import mapSeries from 'p-map-series';
 import { compact, fromPairs, groupBy, pick, uniq, uniqBy } from 'lodash';
-import {
-  ComponentNotFoundInPath,
-  ConsumerComponent,
-  ComponentLoadOptions as LegacyComponentLoadOptions,
-  Dependencies,
-} from '@teambit/legacy.consumer-component';
+import type { ComponentLoadOptions as LegacyComponentLoadOptions } from '@teambit/legacy.consumer-component';
+import { ComponentNotFoundInPath, ConsumerComponent, Dependencies } from '@teambit/legacy.consumer-component';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ComponentNotFound } from '@teambit/legacy.scope';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { Logger } from '@teambit/logger';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { Logger } from '@teambit/logger';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
-import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import { AspectLoaderMain } from '@teambit/aspect-loader';
-import { Workspace } from '../workspace';
+import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import type { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 import { MergeConfigConflict } from '../exceptions/merge-config-conflict';
 

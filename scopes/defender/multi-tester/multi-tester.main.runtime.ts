@@ -1,7 +1,8 @@
 import { getCloudDomain } from '@teambit/legacy.constants';
 import { MainRuntime } from '@teambit/cli';
-import { Tester } from '@teambit/tester';
-import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
+import type { Tester } from '@teambit/tester';
+import type { LoggerMain, Logger } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import { MultiTesterAspect } from './multi-tester.aspect';
 import { MultiTester } from './multi-tester.tester';
 

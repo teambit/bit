@@ -1,6 +1,7 @@
 import { IssuesList } from '@teambit/component-issues';
-import { Dependency, ManuallyChangedDependencies } from '@teambit/legacy.consumer-component';
-import { AllDependencies, AllPackagesDependencies } from './apply-overrides';
+import type { ManuallyChangedDependencies } from '@teambit/legacy.consumer-component';
+import { Dependency } from '@teambit/legacy.consumer-component';
+import type { AllDependencies, AllPackagesDependencies } from './apply-overrides';
 
 export type OverridesDependenciesData = {
   manuallyRemovedDependencies: ManuallyChangedDependencies;
@@ -17,6 +18,7 @@ export class DependenciesData {
   ) {}
 
   serialize(): string {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const { issues, allDependencies, ...rest } = this;
     return JSON.stringify({
       ...rest,

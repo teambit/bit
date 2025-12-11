@@ -1,4 +1,5 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import {
   CACHE_ROOT,
   DEBUG_LOG,
@@ -11,7 +12,8 @@ import { GlobalConfigAspect } from './global-config.aspect';
 import { GlobalsCmd } from './globals.cmd';
 import { SystemCmd, SystemLogCmd, SystemTailLogCmd } from './system.cmd';
 import { RemoteCmd } from './remote-cmd';
-import { ConfigStoreAspect, ConfigStoreMain, setGlobalConfig, delGlobalConfig } from '@teambit/config-store';
+import type { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect, setGlobalConfig, delGlobalConfig } from '@teambit/config-store';
 
 export class GlobalConfigMain {
   constructor(private configStore: ConfigStoreMain) {}

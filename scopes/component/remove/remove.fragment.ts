@@ -1,5 +1,5 @@
-import { Component, ShowFragment } from '@teambit/component';
-import { RemoveMain } from './remove.main.runtime';
+import type { Component, ShowFragment } from '@teambit/component';
+import type { RemoveMain } from './remove.main.runtime';
 
 export class RemoveFragment implements ShowFragment {
   constructor(private remove: RemoveMain) {}

@@ -6,10 +6,10 @@ import {
   PEER_DEP_LIFECYCLE_TYPE,
   RUNTIME_DEP_LIFECYCLE_TYPE,
 } from '../../dependencies/constants';
-import { DependencyLifecycleType, SemverVersion } from '../../dependencies';
-import { DedupedDependencies } from './dedupe-dependencies';
+import type { DependencyLifecycleType, SemverVersion } from '../../dependencies';
+import type { DedupedDependencies } from './dedupe-dependencies';
 import { hoistDependencies } from './hoist-dependencies';
-import { PackageNameIndex, PackageNameIndexComponentItem, PackageNameIndexItemMetadata } from './index-by-dep-id';
+import type { PackageNameIndex, PackageNameIndexComponentItem, PackageNameIndexItemMetadata } from './index-by-dep-id';
 
 const DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX = 'dependent-component';
 

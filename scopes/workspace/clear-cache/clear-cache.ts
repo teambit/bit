@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
-import { Consumer, loadConsumerIfExist } from '@teambit/legacy.consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
+import { loadConsumerIfExist } from '@teambit/legacy.consumer';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';

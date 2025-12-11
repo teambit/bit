@@ -1,4 +1,4 @@
-import { ComponentID } from '@teambit/component';
+import type { ComponentID } from '@teambit/component';
 
 /**
  * BaseComponentTemplateOptions describes the foundational properties for components.

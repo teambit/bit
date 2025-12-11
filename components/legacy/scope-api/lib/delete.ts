@@ -1,5 +1,6 @@
 import { ComponentIdList } from '@teambit/component-id';
-import { RemovedObjects, loadScope, RemovedObjectSerialized } from '@teambit/legacy.scope';
+import type { RemovedObjectSerialized } from '@teambit/legacy.scope';
+import { RemovedObjects, loadScope } from '@teambit/legacy.scope';
 
 export default async function remove({
   path,

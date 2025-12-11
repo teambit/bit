@@ -1,5 +1,5 @@
 import { BitError } from '@teambit/bit-error';
-import { ClientError } from 'graphql-request';
+import type { ClientError } from 'graphql-request';
 import PermissionDenied from './permission-denied';
 
 /**

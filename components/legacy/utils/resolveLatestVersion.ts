@@ -5,7 +5,7 @@
  */
 import { compact, isEmpty } from 'lodash';
 import semver from 'semver';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentID, ComponentIdList } from '@teambit/component-id';
 
 export default function getLatestVersionNumber(bitIds: ComponentIdList, bitId: ComponentID): ComponentID {
   if (!bitId._legacy.getVersion().latest) return bitId;

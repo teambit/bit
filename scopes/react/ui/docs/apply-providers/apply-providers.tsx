@@ -1,4 +1,5 @@
-import React, { HTMLAttributes } from 'react';
+import type { HTMLAttributes } from 'react';
+import React from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Composer } from '@teambit/base-ui.utils.composer';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';

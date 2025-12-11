@@ -1,8 +1,8 @@
 import React from 'react';
-import { Section } from '@teambit/component';
+import type { Section } from '@teambit/component';
 import type { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
-import { ComponentCompareUI } from './component-compare.ui.runtime';
+import type { ComponentCompareUI } from './component-compare.ui.runtime';
 
 export class CompareChangelogSection implements Section, TabItem {
   constructor(private compareUI: ComponentCompareUI) {}

@@ -5,7 +5,7 @@ import path from 'path';
 import rewire from 'rewire';
 import sinon from 'sinon';
 
-import { DependencyDetector } from '../detector-hook';
+import type { DependencyDetector } from '@teambit/dependency-resolver';
 
 const UNIT_TEST_DIR = path.join(BIT_TEMP_ROOT, 'unit-test');
 
@@ -80,7 +80,7 @@ describe('filing-cabinet', () => {
           directory: `${UNIT_TEST_DIR}/js/es6/`,
           ast,
         });
-        assert.ok(result.endsWith('es6/bar.js'));
+        assert.ok(result.endsWith(path.normalize('es6/bar.js')));
       });
 
       it('resolves the dependency successfully', () => {

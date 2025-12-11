@@ -1,8 +1,11 @@
-import { ComponentType } from 'react';
+import type { ComponentType } from 'react';
 import { UIRuntime } from '@teambit/ui';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { ComponentCompareUI, ComponentCompareAspect } from '@teambit/component-compare';
-import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { ComponentCompareUI } from '@teambit/component-compare';
+import { ComponentCompareAspect } from '@teambit/component-compare';
+import type { ComponentUI, ComponentModel } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import { GraphAspect } from './graph.aspect';
 import { GraphSection } from './ui/graph.section';
 import { GraphCompareSection } from './graph.compare.section';

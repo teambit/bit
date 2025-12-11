@@ -1,5 +1,6 @@
 import pMapSeries from 'p-map-series';
-import { Tester, TesterContext, Tests, ComponentsResults } from '@teambit/tester';
+import type { Tester, TesterContext, ComponentsResults } from '@teambit/tester';
+import { Tests } from '@teambit/tester';
 import { TestsResult } from '@teambit/tests-results';
 import { compact } from 'lodash';
 

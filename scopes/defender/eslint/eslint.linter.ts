@@ -1,13 +1,13 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { flatten, compact } from 'lodash';
-import { Linter, LinterContext, LintResults, ComponentLintResult } from '@teambit/linter';
+import type { Linter, LinterContext, LintResults, ComponentLintResult } from '@teambit/linter';
 import { ESLint as ESLintLib } from 'eslint';
 import mapSeries from 'p-map-series';
 import objectHash from 'object-hash';
-import { ComponentMap } from '@teambit/component';
-import { Logger } from '@teambit/logger';
-import { ESLintOptions } from './eslint.main.runtime';
+import type { ComponentMap } from '@teambit/component';
+import type { Logger } from '@teambit/logger';
+import type { ESLintOptions } from './eslint.main.runtime';
 
 export class ESLintLinter implements Linter {
   constructor(
@@ -162,7 +162,6 @@ export class ESLintLinter implements Linter {
     let totalWarningCount = 0;
     const componentsResults = results.map((result) => {
       totalErrorCount += result.errorCount ?? 0;
-      // @ts-ignore - missing from the @types/eslint lib
       totalFatalErrorCount += result.fatalErrorCount ?? 0;
       totalFixableErrorCount += result.fixableErrorCount ?? 0;
       totalFixableWarningCount += result.fixableWarningCount ?? 0;
@@ -170,7 +169,6 @@ export class ESLintLinter implements Linter {
       return {
         filePath: result.filePath,
         errorCount: result.errorCount,
-        // @ts-ignore - missing from the @types/eslint lib
         fatalErrorCount: result.fatalErrorCount,
         fixableErrorCount: result.fixableErrorCount,
         fixableWarningCount: result.fixableWarningCount,
@@ -211,7 +209,6 @@ export class ESLintLinter implements Linter {
         totalComponentsWithErrorCount += 1;
         isClean = false;
       }
-      // @ts-ignore - missing from the @types/eslint lib
       if (result.totalFatalErrorCount) {
         totalFatalErrorCount += result.totalFatalErrorCount;
         totalComponentsWithFatalErrorCount += 1;

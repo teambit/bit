@@ -1,5 +1,5 @@
-import { BuildTask, BuiltTaskResult, BuildContext, ComponentResult } from '@teambit/builder';
-import { Formatter } from './formatter';
+import type { BuildTask, BuiltTaskResult, BuildContext, ComponentResult } from '@teambit/builder';
+import type { Formatter } from './formatter';
 
 export class FormatTask implements BuildTask {
   constructor(

@@ -1,9 +1,9 @@
-import { Component } from '@teambit/component';
-import { ExecutionContext } from '@teambit/envs';
-import { PubsubMain } from '@teambit/pubsub';
-import { AddressInfo } from 'net';
-import { Server } from 'http';
-import { DevServer } from './dev-server';
+import type { Component } from '@teambit/component';
+import type { ExecutionContext } from '@teambit/envs';
+import type { PubsubMain } from '@teambit/pubsub';
+import type { AddressInfo } from 'net';
+import type { Server } from 'http';
+import type { DevServer } from './dev-server';
 import { BindError } from './exceptions';
 import { ComponentsServerStartedEvent } from './events';
 import { BundlerAspect } from './bundler.aspect';

@@ -1,9 +1,14 @@
 import chalk from 'chalk';
 import { compact } from 'lodash';
-import { applyVersionReport, installationErrorOutput, MergeStrategy, compilationErrorOutput } from '@teambit/merging';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
+import {
+  applyVersionReport,
+  installationErrorOutput,
+  compilationErrorOutput,
+} from '@teambit/component.modules.merge-helper';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { LanesMain } from './lanes.main.runtime';
+import type { LanesMain } from './lanes.main.runtime';
 
 export class SwitchCmd implements Command {
   name = 'switch <lane>';
@@ -80,7 +85,7 @@ ${COMPONENT_PATTERN_HELP}`,
       branch?: boolean;
     }
   ) {
-    const { components, failedComponents, installationError, compilationError } = await this.lanes.switchLanes(lane, {
+    const switchResult = await this.lanes.switchLanes(lane, {
       head,
       alias,
       merge: autoMergeResolve,
@@ -91,6 +96,8 @@ ${COMPONENT_PATTERN_HELP}`,
       skipDependencyInstallation,
       branch,
     });
+    const { components, failedComponents, installationError, compilationError, gitBranchWarning } = switchResult;
+
     if (getAll) {
       this.lanes.logger.warn('the --get-all flag is deprecated and currently the default behavior');
     }
@@ -120,9 +127,14 @@ ${COMPONENT_PATTERN_HELP}`,
       return chalk.bold(title) + applyVersionReport(components, true, false) + laneSwitched;
     };
 
+    const getGitBranchWarningOutput = () => {
+      return gitBranchWarning ? chalk.yellow(`Warning: ${gitBranchWarning}`) : null;
+    };
+
     return compact([
       getFailureOutput(),
       getSuccessfulOutput(),
+      getGitBranchWarningOutput(),
       installationErrorOutput(installationError),
       compilationErrorOutput(compilationError),
     ]).join('\n\n');

@@ -3,7 +3,6 @@
  */
 import fs from 'fs-extra';
 import path from 'path';
-
 // @ts-ignore we currently have @types/node as v12, and this is available > 16. once updated, remove the ts-ignore
 import { isBuiltin } from 'module';
 
@@ -20,7 +19,8 @@ import detectiveSass from '@teambit/styling.deps-detectors.detective-sass';
 import detectiveScss from '@teambit/styling.deps-detectors.detective-scss';
 import detectiveTypeScript from '@teambit/typescript.deps-detectors.detective-typescript';
 
-import { DependencyDetector, DetectorHook } from '../detector-hook';
+import type { DependencyDetector } from '@teambit/dependency-resolver';
+import { DetectorHook } from '@teambit/dependency-resolver';
 
 /**
  * The file info object.
@@ -189,7 +189,7 @@ const normalizeDeps = (deps: BuiltinDeps, includeCore?: boolean): string[] => {
   return includeCore ? normalizedDeps : normalizedDeps.filter((d) => !isBuiltin(d));
 };
 
-const getDepsFromFile = (filename: string, options?: Options): string[] => {
+const getDepsFromFile = async (filename: string, options?: Options): Promise<string[]> => {
   const normalizedOptions: Options = assign({ includeCore: true }, options || {});
   const fileInfo = getFileInfo(filename);
   if (
@@ -207,7 +207,7 @@ const getDepsFromFile = (filename: string, options?: Options): string[] => {
   }
   debug('module type: ', fileInfo.type);
 
-  const deps = detective(fileInfo.ast, normalizedOptions[fileInfo.type]);
+  const deps = await detective(fileInfo.ast, normalizedOptions[fileInfo.type]);
 
   return normalizeDeps(deps, normalizedOptions?.includeCore);
 };

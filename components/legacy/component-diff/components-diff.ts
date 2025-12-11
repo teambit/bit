@@ -1,10 +1,10 @@
 import chalk from 'chalk';
 import tempy from 'tempy';
 import { uniq } from 'lodash';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { diffFiles } from './diff-files';
-import { PathOsBased } from '@teambit/toolbox.path.path';
-import { SourceFile } from '@teambit/component.sources';
+import type { PathOsBased } from '@teambit/toolbox.path.path';
+import type { SourceFile } from '@teambit/component.sources';
 
 export type DiffStatus = 'MODIFIED' | 'UNCHANGED' | 'NEW' | 'DELETED';
 

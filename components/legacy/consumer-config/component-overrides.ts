@@ -1,14 +1,14 @@
 import { pickBy, keys, isEmpty, cloneDeep, get, merge } from 'lodash';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import {
   MANUALLY_ADD_DEPENDENCY,
   MANUALLY_REMOVE_DEPENDENCY,
   OVERRIDE_COMPONENT_PREFIX,
   DEPENDENCIES_FIELDS,
 } from '@teambit/legacy.constants';
-import { SourceFile } from '@teambit/component.sources';
+import type { SourceFile } from '@teambit/component.sources';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { ConsumerComponent, Dependency } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent, Dependency } from '@teambit/legacy.consumer-component';
 
 export type ConsumerOverridesOfComponent = ComponentOverridesData & {
   extensions?: Record<string, any>;

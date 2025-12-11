@@ -4,11 +4,11 @@ import { prompt, AutoComplete } from 'enquirer';
 import { compact, uniq } from 'lodash';
 import chalk from 'chalk';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { GraphMain } from '@teambit/graph';
-import { Logger } from '@teambit/logger';
-import { Workspace } from '@teambit/workspace';
+import type { GraphMain } from '@teambit/graph';
+import type { Logger } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
-import { ImportOptions } from './import-components';
+import type { ImportOptions } from './import-components';
 
 const SHOW_ALL_PATHS_LIMIT = 10;
 const SCROLL_LIMIT = 20;

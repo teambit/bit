@@ -1,9 +1,9 @@
 /* eslint-disable max-classes-per-file */
 
-import { GraphqlMain } from '@teambit/graphql';
+import type { GraphqlMain } from '@teambit/graphql';
 import { BitBaseEvent } from '@teambit/pubsub';
-import { ComponentServer } from '../component-server';
-import { ExecutionContext } from '@teambit/envs';
+import type { ComponentServer } from '../component-server';
+import type { ExecutionContext } from '@teambit/envs';
 
 export const ComponentServerStartedEvent = 'ComponentServerStartedEvent';
 

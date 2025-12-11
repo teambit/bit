@@ -6,11 +6,12 @@ import * as yaml from 'yaml';
 import * as ini from 'ini';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
-import CommandHelper from './e2e-command-helper';
-import FsHelper from './e2e-fs-helper';
-import NpmHelper from './e2e-npm-helper';
-import ScopesData, { DEFAULT_OWNER } from './e2e-scopes';
-import WorkspaceJsoncHelper from './e2e-workspace-jsonc-helper';
+import type CommandHelper from './e2e-command-helper';
+import type FsHelper from './e2e-fs-helper';
+import type NpmHelper from './e2e-npm-helper';
+import type ScopesData from './e2e-scopes';
+import { DEFAULT_OWNER } from './e2e-scopes';
+import type WorkspaceJsoncHelper from './e2e-workspace-jsonc-helper';
 
 type SetupWorkspaceOpts = {
   addRemoteScopeAsDefaultScope?: boolean; // default to true, otherwise, the scope is "my-scope"
@@ -21,6 +22,7 @@ type SetupWorkspaceOpts = {
   generatePackageJson?: boolean;
   yarnRCConfig?: any;
   npmrcConfig?: any;
+  interactive?: boolean; // default to false. relevant only when ".git" exits.
 };
 
 export default class ScopeHelper {
@@ -65,8 +67,8 @@ export default class ScopeHelper {
   reInitWorkspace(opts?: SetupWorkspaceOpts) {
     this.cleanWorkspace();
     if (opts?.initGit) this.command.runCmd('git init');
-    const initWsOpts = opts?.generatePackageJson ? undefined : '--no-package-json';
-    this.command.init(initWsOpts);
+    const pkgJsonFlag = opts?.generatePackageJson ? undefined : '--no-package-json';
+    this.command.init(pkgJsonFlag, opts?.interactive);
 
     if (opts?.addRemoteScopeAsDefaultScope ?? true) this.workspaceJsonc.addDefaultScope();
     if (opts?.disablePreview ?? true) this.workspaceJsonc.disablePreview();

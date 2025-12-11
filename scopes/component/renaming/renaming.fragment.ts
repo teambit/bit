@@ -1,5 +1,5 @@
-import { Component, ShowFragment } from '@teambit/component';
-import { RenamingMain } from './renaming.main.runtime';
+import type { Component, ShowFragment } from '@teambit/component';
+import type { RenamingMain } from './renaming.main.runtime';
 
 export class RenamingFragment implements ShowFragment {
   constructor(private renaming: RenamingMain) {}

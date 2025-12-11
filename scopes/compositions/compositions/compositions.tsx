@@ -1,11 +1,13 @@
-import React, { useContext, useEffect, useState, useMemo, useRef, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React, { useContext, useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import head from 'lodash.head';
 import queryString from 'query-string';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
-import { ComponentContext, ComponentModel } from '@teambit/component';
+import type { ComponentModel } from '@teambit/component';
+import { ComponentContext } from '@teambit/component';
 import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/docs.ui.queries.get-docs';
@@ -23,13 +25,12 @@ import { Link as BaseLink, useNavigate, useLocation } from '@teambit/base-react.
 import { OptionButton } from '@teambit/design.ui.input.option-button';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { Tooltip } from '@teambit/design.ui.tooltip';
-import { EmptyStateSlot } from './compositions.ui.runtime';
-import { Composition } from './composition';
+import type { EmptyStateSlot, CompositionsMenuSlot, UsePreviewSandboxSlot } from './compositions.ui.runtime';
+import type { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
-import type { CompositionsMenuSlot, UsePreviewSandboxSlot } from './compositions.ui.runtime';
-import { ComponentCompositionProps } from './ui/composition-preview';
+import type { ComponentCompositionProps } from './ui/composition-preview';
 
 // @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
 const Link = BaseLink as any;

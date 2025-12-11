@@ -1,22 +1,27 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import moment from 'moment';
-import { ComponentID } from '@teambit/component-id';
-import {
-  DependencyResolverAspect,
-  DependencyResolverMain,
-  KEY_NAME_BY_LIFECYCLE_TYPE,
-} from '@teambit/dependency-resolver';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import type { ComponentID } from '@teambit/component-id';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, KEY_NAME_BY_LIFECYCLE_TYPE } from '@teambit/dependency-resolver';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import { cloneDeep, compact, set, uniq } from 'lodash';
 import pMapSeries from 'p-map-series';
-import { ConsumerComponent, ComponentLoader, DependencyLoaderOpts } from '@teambit/legacy.consumer-component';
-import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
-import { GraphAspect, ComponentIdGraph, GraphMain } from '@teambit/graph';
-import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
+import type { ConsumerComponent, DependencyLoaderOpts } from '@teambit/legacy.consumer-component';
+import { ComponentLoader } from '@teambit/legacy.consumer-component';
+import type { DevFilesMain } from '@teambit/dev-files';
+import { DevFilesAspect } from '@teambit/dev-files';
+import type { ComponentIdGraph, GraphMain } from '@teambit/graph';
+import { GraphAspect } from '@teambit/graph';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { snapToSemver } from '@teambit/component-package-version';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 import { DependenciesLoader } from './dependencies-loader/dependencies-loader';
-import { DependenciesData, OverridesDependenciesData } from './dependencies-loader/dependencies-data';
+import type { DependenciesData, OverridesDependenciesData } from './dependencies-loader/dependencies-data';
+import type { RemoveDependenciesFlags, SetDependenciesFlags } from './dependencies-cmd';
 import {
   DependenciesBlameCmd,
   DependenciesCmd,
@@ -29,16 +34,15 @@ import {
   DependenciesUnsetCmd,
   DependenciesUsageCmd,
   DependenciesWriteCmd,
-  RemoveDependenciesFlags,
-  SetDependenciesFlags,
   SetPeerCmd,
   UnsetPeerCmd,
   WhyCmd,
 } from './dependencies-cmd';
 import { DependenciesAspect } from './dependencies.aspect';
-import { DebugDependencies } from './dependencies-loader/auto-detect-deps';
+import type { DebugDependencies } from './dependencies-loader/auto-detect-deps';
 import { DependentsCmd } from './dependents-cmd';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 
 export type RemoveDependencyResult = { id: ComponentID; removedPackages: string[] };
 export type SetDependenciesResult = { changedComps: string[]; addedPackages: Record<string, string> };

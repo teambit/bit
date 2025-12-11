@@ -1,7 +1,7 @@
-import { ComponentID } from '@teambit/component';
+import type { ComponentID } from '@teambit/component';
 import colorizeSemverDiff from '@pnpm/colorize-semver-diff';
 import semverDiff from '@pnpm/semver-diff';
-import { MergedOutdatedPkg } from '@teambit/dependency-resolver';
+import type { MergedOutdatedPkg } from '@teambit/dependency-resolver';
 import { getBorderCharacters, table } from 'table';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';

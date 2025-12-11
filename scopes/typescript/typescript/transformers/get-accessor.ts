@@ -1,9 +1,10 @@
-import ts, { Node, GetAccessorDeclaration } from 'typescript';
+import type { Node, GetAccessorDeclaration } from 'typescript';
+import ts from 'typescript';
 import { GetAccessorSchema } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
 import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
-import { Identifier } from '../identifier';
+import type { Identifier } from '../identifier';
 
 export class GetAccessorTransformer implements SchemaTransformer {
   predicate(node: Node) {

@@ -1,9 +1,9 @@
 import { forEach, omit, pick } from 'lodash';
 import { LIFECYCLE_TYPE_BY_KEY_NAME } from '../../dependencies/constants';
-import { ManifestDependenciesKeysNames, DepObjectValue, ManifestDependenciesObject } from '../manifest';
-import { DependencyLifecycleType, SemverVersion, PackageName } from '../../dependencies';
-import { ComponentDependenciesMap } from '../workspace-manifest-factory';
-import { WorkspacePolicy } from '../../policy';
+import type { ManifestDependenciesKeysNames, DepObjectValue, ManifestDependenciesObject } from '../manifest';
+import type { DependencyLifecycleType, SemverVersion, PackageName } from '../../dependencies';
+import type { ComponentDependenciesMap } from '../workspace-manifest-factory';
+import type { WorkspacePolicy } from '../../policy';
 
 export type PackageNameIndexItem = {
   metadata: PackageNameIndexItemMetadata;

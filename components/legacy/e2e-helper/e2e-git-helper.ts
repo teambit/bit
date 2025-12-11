@@ -1,10 +1,10 @@
 import fs from 'fs-extra';
-import glob from 'glob';
+import { globSync } from 'glob';
 import * as path from 'path';
 
-import CommandHelper from './e2e-command-helper';
-import ScopeHelper from './e2e-scope-helper';
-import ScopesData from './e2e-scopes';
+import type CommandHelper from './e2e-command-helper';
+import type ScopeHelper from './e2e-scope-helper';
+import type ScopesData from './e2e-scopes';
 
 export default class GitHelper {
   scopes: ScopesData;
@@ -23,8 +23,12 @@ export default class GitHelper {
     const hookPath = path.join(this.scopes.localPath, '.git', 'hooks', hookName);
     return fs.outputFileSync(hookPath, content);
   }
-  initNewGitRepo() {
-    return this.command.runCmd('git init');
+  initNewGitRepo(setTestUser = false) {
+    this.command.runCmd('git init');
+    if (setTestUser) {
+      this.addGitConfig('user.name', 'Test User');
+      this.addGitConfig('user.email', 'test@example.com');
+    }
   }
 
   addGitConfig(key: string, val: string, location = 'local') {
@@ -38,7 +42,7 @@ export default class GitHelper {
     fs.removeSync(path.join(this.scopes.localPath, '.bit'));
     if (!cloneWithComponentsFiles) fs.removeSync(path.join(this.scopes.localPath, 'components'));
     // delete all node-modules from all directories
-    const directories = glob.sync(path.normalize('**/'), { cwd: this.scopes.localPath, dot: true });
+    const directories = globSync(path.normalize('**/'), { cwd: this.scopes.localPath, dot: true });
     directories.forEach((dir) => {
       if (dir.includes('node_modules')) {
         fs.removeSync(path.join(this.scopes.localPath, dir));
@@ -50,7 +54,7 @@ export default class GitHelper {
     fs.removeSync(path.join(this.scopes.localPath, '.bit'));
     if (!cloneWithComponentsFiles) fs.removeSync(path.join(this.scopes.localPath, 'components'));
     // delete all node-modules from all directories
-    const directories = glob.sync(path.normalize('**/'), { cwd: this.scopes.localPath, dot: true });
+    const directories = globSync(path.normalize('**/'), { cwd: this.scopes.localPath, dot: true });
     directories.forEach((dir) => {
       if (dir.includes('node_modules')) {
         fs.removeSync(path.join(this.scopes.localPath, dir));

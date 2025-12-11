@@ -1,7 +1,7 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { groupBy } from 'lodash';
-import { GeneratorMain, TemplateDescriptor } from './generator.main.runtime';
+import type { GeneratorMain, TemplateDescriptor } from './generator.main.runtime';
 
 export type TemplatesOptions = {
   showAll?: boolean;
@@ -11,9 +11,9 @@ export type TemplatesOptions = {
 
 export class TemplatesCmd implements Command {
   name = 'templates';
-  description = 'list available templates for "bit create" and "bit new"';
+  description = 'list available templates for creating components and workspaces';
   extendedDescription =
-    'list components templates when inside bit-workspace (for bit-create), otherwise, list workspace templates (for bit-new)';
+    "Lists available templates. Inside a workspace it shows component templates for 'bit create'; outside a workspace it shows workspace templates for 'bit new'.";
   alias = '';
   loader = true;
   group = 'component-development';

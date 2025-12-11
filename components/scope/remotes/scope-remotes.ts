@@ -1,6 +1,6 @@
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { GlobalRemotes } from './global-remotes';
-import { Scope as LegacyScope } from '@teambit/legacy.scope';
+import type { Scope as LegacyScope } from '@teambit/legacy.scope';
 import { Remotes } from './remotes';
 
 export async function getScopeRemotes(scope: LegacyScope): Promise<Remotes> {

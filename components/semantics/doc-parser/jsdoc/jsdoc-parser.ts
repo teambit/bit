@@ -1,7 +1,7 @@
 import { logger } from '@teambit/legacy.logger';
-import { PathOsBased } from '@teambit/toolbox.path.path';
+import type { PathOsBased } from '@teambit/toolbox.path.path';
 import extractDataRegex from '../extract-data-regex';
-import { Doclet } from '../types';
+import type { Doclet } from '../types';
 
 export default async function parse(data: string, filePath: PathOsBased): Promise<Doclet[]> {
   const doclets: Array<Doclet> = [];

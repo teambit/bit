@@ -1,9 +1,9 @@
 import { ComponentID } from '@teambit/component';
 import { gql } from 'graphql-tag';
 import { latestVersions } from '@teambit/legacy.scope-api';
-import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
+import type { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
-import { ScopeMain } from './scope.main.runtime';
+import type { ScopeMain } from './scope.main.runtime';
 
 export function scopeSchema(scopeMain: ScopeMain) {
   return {

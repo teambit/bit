@@ -1,8 +1,8 @@
-import { Component } from '@teambit/component';
-import { Env } from '../env-interface';
-import { Environment } from '../environment';
-import { ServiceHandler } from './service-handler';
-import { ServiceHandlerContext } from './service-handler-context';
+import type { Component } from '@teambit/component';
+import type { Env } from '../env-interface';
+import type { Environment } from '../environment';
+import type { ServiceHandler } from './service-handler';
+import type { ServiceHandlerContext } from './service-handler-context';
 
 export type EnvContext = {
   components: Component[];

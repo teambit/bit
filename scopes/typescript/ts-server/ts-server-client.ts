@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import path from 'path';
 import type ts from 'typescript/lib/tsserverlibrary';
 import { CheckTypes } from '@teambit/watcher';
@@ -9,7 +9,8 @@ import { findPathToModule } from './modules-resolver';
 import { ProcessBasedTsServer } from './process-based-tsserver';
 import { CommandTypes, EventName } from './tsp-command-types';
 import { getTsserverExecutable } from './utils';
-import { formatDiagnostic, Diagnostic } from './format-diagnostics';
+import type { Diagnostic } from './format-diagnostics';
+import { formatDiagnostic } from './format-diagnostics';
 
 export type TsserverClientOpts = {
   verbose?: boolean; // print tsserver events to the console.

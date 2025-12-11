@@ -1,11 +1,14 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
-import { DeprecationMain } from './deprecation.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { DeprecationMain } from './deprecation.main.runtime';
 
 export class DeprecateCmd implements Command {
   name = 'deprecate <component-name>';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
-  description = 'deprecate a component';
+  description = 'mark a component as deprecated to discourage its use';
+  extendedDescription = `marks a component as deprecated locally, then after snap/tag and export it becomes deprecated in the remote scope.
+optionally specify a replacement component or deprecate only specific version ranges.
+deprecated components remain available but display warnings when installed or imported.`;
   group = 'collaborate';
   skipWorkspace = true;
   alias = 'd';

@@ -1,24 +1,25 @@
 import isBuiltinModule from 'is-builtin-module';
 import path from 'path';
 import { uniq, compact, flatten, head, omit } from 'lodash';
-import { Stats } from 'fs';
+import type { Stats } from 'fs';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
 import { findCurrentBvmDir } from '@teambit/bvm.path';
-import { ComponentMap, Component, ComponentID, ComponentMain } from '@teambit/component';
-import { Logger } from '@teambit/logger';
-import { PathAbsolute } from '@teambit/toolbox.path.path';
+import type { ComponentMap, Component, ComponentID, ComponentMain } from '@teambit/component';
+import type { Logger } from '@teambit/logger';
+import type { PathAbsolute } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { BitError } from '@teambit/bit-error';
-import { EnvsMain } from '@teambit/envs';
-import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
+import type { EnvsMain } from '@teambit/envs';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 import {
   MainAspectNotLinkable,
   RootDirNotDefined,
   CoreAspectLinkError,
   NonAspectCorePackageLinkError,
 } from './exceptions';
-import { DependencyResolverMain } from './dependency-resolver.main.runtime';
+import type { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
 /**
  * context of the linking process.

@@ -1,11 +1,11 @@
 import mapSeries from 'p-map-series';
 import { pickBy, isEmpty } from 'lodash';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { logger } from '@teambit/legacy.logger';
-import { ConsumerComponent as Component, ComponentLoadOptions } from '@teambit/legacy.consumer-component';
-import { PackageJsonFile } from '@teambit/component.sources';
+import type { ConsumerComponent as Component, ComponentLoadOptions } from '@teambit/legacy.consumer-component';
+import type { PackageJsonFile } from '@teambit/component.sources';
 import AbstractConfig from './abstract-config';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 
 export type ComponentConfigLoadOptions = Pick<ComponentLoadOptions, 'loadExtensions' | 'originatedFromHarmony'>;
 

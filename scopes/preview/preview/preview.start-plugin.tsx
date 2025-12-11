@@ -1,21 +1,21 @@
 import { flatten } from 'lodash';
+import type { BundlerMain, ComponentServer } from '@teambit/bundler';
 import {
   BundlerAspect,
-  BundlerMain,
-  ComponentServer,
   ComponentServerStartedEvent,
   ComponentsServerStartedEvent,
   NewDevServersCreatedEvent,
 } from '@teambit/bundler';
-import { PubsubMain } from '@teambit/pubsub';
-import { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
-import { Workspace } from '@teambit/workspace';
+import type { PubsubMain } from '@teambit/pubsub';
+import type { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
+import type { Workspace } from '@teambit/workspace';
 import { SubscribeToEvents } from '@teambit/preview.cli.dev-server-events-listener';
 import { SubscribeToWebpackEvents } from '@teambit/preview.cli.webpack-events-listener';
 import { CompilationInitiator } from '@teambit/compiler';
-import { Logger } from '@teambit/logger';
-import { CheckTypes, WatcherMain } from '@teambit/watcher';
-import { GraphqlMain } from '@teambit/graphql';
+import type { Logger } from '@teambit/logger';
+import type { WatcherMain } from '@teambit/watcher';
+import { CheckTypes } from '@teambit/watcher';
+import type { GraphqlMain } from '@teambit/graphql';
 import chalk from 'chalk';
 
 type ServerState = {

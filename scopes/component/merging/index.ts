@@ -1,32 +1,25 @@
 import { MergingAspect } from './merging.aspect';
 
-export {
-  mergeReport,
-  applyVersionReport,
-  conflictSummaryReport,
-  installationErrorOutput,
-  compilationErrorOutput,
-  getRemovedOutput,
-  getAddedOutput,
-  getWorkspaceConfigUpdateOutput,
-} from './merge-cmd';
+export { mergeReport } from './merge-cmd';
 export { compIsAlreadyMergedMsg } from './merge-status-provider';
-export {
-  threeWayMerge,
-  getMergeStrategyInteractive,
-  MergeStrategy,
-  FileStatus,
-  MergeOptions,
-  MergeResultsThreeWay,
-} from './merge-version';
-export { MergeFileResult, MergeFileParams, mergeFiles } from './merge-files';
+export type { MergingMain, ComponentMergeStatus } from './merging.main.runtime';
+
+// Re-export types and functions from merge-helper for backward compatibility
 export type {
-  MergingMain,
-  ComponentMergeStatus,
-  ApplyVersionResults,
   ApplyVersionResult,
-  FilesStatus,
+  ApplyVersionResults,
   FailedComponents,
-} from './merging.main.runtime';
+  FilesStatus,
+} from '@teambit/component.modules.merge-helper';
+export {
+  FileStatus,
+  getMergeStrategyInteractive,
+  getMergeStrategy,
+  MergeOptions,
+  MergeStrategy,
+  threeWayMerge,
+  MergeResultsThreeWay,
+} from '@teambit/component.modules.merge-helper';
+
 export default MergingAspect;
 export { MergingAspect };

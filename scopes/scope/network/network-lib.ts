@@ -1,6 +1,6 @@
 import { ProtocolNotSupported } from './exceptions';
 import Fs from './fs';
-import { Network } from './network';
+import type { Network } from './network';
 import { Http } from './http';
 
 export default function connect(host: string, name: string, localScopeName?: string): Promise<Network> {
@@ -9,7 +9,6 @@ export default function connect(host: string, name: string, localScopeName?: str
   }
 
   if (host.startsWith('file://')) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Fs(host.replace('file://', '')).connect();
   }
 

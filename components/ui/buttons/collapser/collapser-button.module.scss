@@ -12,7 +12,7 @@
   &.open {
     .circle {
       > div {
-        transform: rotate(-0.5turn) translateY(2px);
+        transform: rotate(-0.5turn) translateY(1px);
         transform-origin: center;
       }
     }
@@ -20,36 +20,33 @@
 }
 .circle {
   height: 100%;
-  font-size: 12px;
-  padding: 10px;
+  font-size: 10px;
+  padding: 8px;
   background-color: var(--bit-bg-color, #fff);
-  // TODO - @oded - unify with other shadows. this shadow is different. talk to amir
-  box-shadow:
-    0 -1px 1px 0 rgba(0, 0, 0, 0.09),
-    0 1px 2px 0 rgba(0, 0, 0, 0.23);
-  transition: padding 300ms ease-in-out;
+  border: 1px solid var(--border-medium-color, #ededed);
+  transition: padding 200ms ease-in-out;
 
   > div {
-    transition: transform 300ms ease-in-out;
+    transition: transform 200ms ease-in-out;
   }
 
   .right & {
-    border-top-right-radius: 50%;
-    border-bottom-right-radius: 50%;
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
 
-    padding-left: 10px;
+    // padding-left: 10px;
     &:hover {
-      padding-left: 16px;
+      padding-left: 12px;
     }
   }
 
   .left & {
-    border-top-left-radius: 50%;
-    border-bottom-left-radius: 50%;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
 
-    padding-right: 10px;
+    // padding-right: 10px;
     &:hover {
-      padding-right: 16px;
+      padding-right: 12px;
     }
   }
 }

@@ -46,7 +46,7 @@ export { StagedSnaps } from './staged-snaps';
 export { ComponentVersion } from './component-version';
 export { validateVersionInstance } from './version-validator';
 export { typesObj, typesToObject, Types } from './object-registrar';
-export { GarbageCollectorOpts, LegacyOnTagResult, ScopeDescriptor } from './scope';
+export { GarbageCollectorOpts, ScopeDescriptor } from './scope';
 export { loadScopeIfExist } from './scope-loader';
 export { ScopeComponentsImporter, errorIsTypeOfMissingObject } from './component-ops/scope-components-importer';
 export { multipleVersionDependenciesToConsumer, VersionDependencies } from './version-dependencies';

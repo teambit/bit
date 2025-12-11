@@ -1,9 +1,10 @@
 import chai, { expect } from 'chai';
+import chaiString from 'chai-string';
 
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('preview feature (during build)', function () {
   this.timeout(0);

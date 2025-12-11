@@ -202,7 +202,7 @@ const isPositive = require("is-positive");`
       it('should add an updated version of the dependency from the model to the bitmap', function () {
         const bitMap = helper.bitMap.read();
         expect(
-          bitMap.comp1.config['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative']
+          bitMap.comp1.config['teambit.dependencies/dependency-resolver'].policy.devDependencies['is-negative']
         ).to.equal('^2.1.0');
       });
       it('should not update extensions from the model', function () {
@@ -232,7 +232,7 @@ const isPositive = require("is-positive");`
       it('should add an updated version of the dependency from the model to the bitmap', function () {
         const bitMap = helper.bitMap.read();
         expect(
-          bitMap.comp1.config['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative']
+          bitMap.comp1.config['teambit.dependencies/dependency-resolver'].policy.devDependencies['is-negative']
         ).to.equal('~2.1.0');
       });
       it('should not update extensions from the model', function () {

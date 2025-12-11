@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import { EdgeType } from '../../edge-type';
+import type { EdgeType } from '../../edge-type';
 
 export const GET_GRAPH_IDS = gql`
   query graph($ids: [String], $filter: String) {

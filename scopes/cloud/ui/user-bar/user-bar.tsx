@@ -6,10 +6,11 @@ import { Login } from '@teambit/cloud.ui.login';
 import { CurrentUser } from '@teambit/cloud.ui.current-user';
 import { useCurrentUser } from '@teambit/cloud.hooks.use-current-user';
 import { useLogout } from '@teambit/cloud.hooks.use-logout';
-import { Menu, MenuItemType } from '@teambit/design.controls.menu';
+import type { MenuItemType } from '@teambit/design.controls.menu';
+import { Menu } from '@teambit/design.controls.menu';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
-import { UserBarSection } from './section';
-import { UserBarItem } from './item';
+import type { UserBarSection } from './section';
+import type { UserBarItem } from './item';
 
 import styles from './user-bar.module.scss';
 

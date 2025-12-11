@@ -1,10 +1,12 @@
-import { Route, Verb, Request, Response } from '@teambit/express';
+import type { Route, Request, Response } from '@teambit/express';
+import { Verb } from '@teambit/express';
 import { fetch } from '@teambit/legacy.scope-api';
 import { ObjectList } from '@teambit/objects';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 // @ts-ignore
 import { pipeline } from 'stream/promises';
-import { ScopeMain } from '../scope.main.runtime';
+import type { ScopeMain } from '../scope.main.runtime';
+import { omit } from 'lodash';
 
 export class FetchRoute implements Route {
   constructor(
@@ -30,7 +32,8 @@ export class FetchRoute implements Route {
       const pack = ObjectList.fromObjectStreamToTar(readable, this.scope.name);
       try {
         await pipeline(pack, res);
-        this.logger.info('fetch.router, the response has been sent successfully to the client', req.headers);
+        const headers = omit(req.headers, ['cookie', 'authorization']);
+        this.logger.info('fetch.router, the response has been sent successfully to the client', headers);
       } catch (err: any) {
         if (req.aborted) {
           this.logger.warn('FetchRoute, the client aborted the request', err);

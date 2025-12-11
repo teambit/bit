@@ -6,8 +6,9 @@ import { loadConsumerIfExist } from '@teambit/legacy.consumer';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import readline from 'readline';
 import { CLIParser } from './cli-parser';
-import { CLIMain } from './cli.main.runtime';
-import { GenerateCommandsDoc, GenerateOpts } from './generate-doc-md';
+import type { CLIMain } from './cli.main.runtime';
+import type { GenerateOpts } from './generate-doc-md';
+import { GenerateCommandsDoc } from './generate-doc-md';
 
 export class CliGenerateCmd implements Command {
   name = 'generate';
@@ -51,6 +52,7 @@ export class CliCmd implements Command {
   loader = false;
   group = 'system';
   options = [] as CommandOptions;
+  private = true;
 
   constructor(private cliMain: CLIMain) {}
 

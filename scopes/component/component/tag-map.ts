@@ -1,9 +1,10 @@
 import { getLatestVersion } from '@teambit/pkg.modules.semver-helper';
-import { SemVer, maxSatisfying } from 'semver';
+import type { SemVer } from 'semver';
+import { maxSatisfying } from 'semver';
 
 import { CouldNotFindLatest } from './exceptions';
-import { Hash } from './hash';
-import { Tag } from './tag';
+import type { Hash } from './hash';
+import type { Tag } from './tag';
 
 export class TagMap extends Map<SemVer, Tag> {
   /**

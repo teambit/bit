@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import { DedupedPaths, dedupePaths } from './dedup-paths';
-import { ExtendingConfigFilesMap } from './writers';
+import type { DedupedPaths } from './dedup-paths';
+import { dedupePaths } from './dedup-paths';
+import type { ExtendingConfigFilesMap } from './writers';
 
 const envCompsDirsMap = {
   'teambit.harmony/node': {

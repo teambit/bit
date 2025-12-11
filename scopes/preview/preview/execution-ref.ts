@@ -1,4 +1,4 @@
-import { Component, ComponentID } from '@teambit/component';
+import type { Component, ComponentID } from '@teambit/component';
 import type { ExecutionContext } from '@teambit/envs';
 
 // TODO - use workspace.list() instead of this

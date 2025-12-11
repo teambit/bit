@@ -23,7 +23,7 @@ const debug = debugFactory('tree');
  * @param {Array} [options.nonExistent] - List of partials that do not exist
  * @return {Object}
  */
-export default function (options) {
+export default async function (options) {
   const config = new Config(options);
 
   if (!fs.existsSync(config.filename)) {
@@ -59,7 +59,7 @@ module.exports.toList = function (options) {
  * @param  {Config} config
  * @return {Array}
  */
-module.exports._getDependencies = function (config) {
+module.exports._getDependencies = async function (config) {
   let dependenciesRaw; // from some detectives it comes as an array, from some it is an object
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
@@ -68,7 +68,7 @@ module.exports._getDependencies = function (config) {
   delete precinct.ast;
 
   try {
-    dependenciesRaw = precinct.paperwork(config.filename, precinctOptions);
+    dependenciesRaw = await precinct.paperwork(config.filename, precinctOptions);
   } catch (e: any) {
     debug(`error getting dependencies: ${e.message}`);
     debug(e.stack);
@@ -165,7 +165,7 @@ module.exports._getDependencies = function (config) {
  * `pathMap` has the dependencies and some more info, such as importSpecifiers. we should use only
  * pathMap and get rid of tree.
  */
-function traverse(config) {
+async function traverse(config) {
   const tree = [];
   const stack = [config.filename];
   while (stack.length) {
@@ -174,16 +174,16 @@ function traverse(config) {
     if (config.visited[dependency]) {
       populateFromCache(dependency);
     } else {
-      traverseDependency(dependency);
+      await traverseDependency(dependency);
     }
   }
 
   return tree;
 
-  function traverseDependency(dependency) {
+  async function traverseDependency(dependency) {
     const localConfig = config.clone();
     localConfig.filename = dependency;
-    let dependencies = module.exports._getDependencies(localConfig);
+    let dependencies = await module.exports._getDependencies(localConfig);
     if (config.filter) {
       debug('using filter function to filter out dependencies');
       debug(`number of dependencies before filtering: ${dependencies.length}`);

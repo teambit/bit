@@ -1,5 +1,5 @@
-import { BuildOptions } from './version-history-cmd';
-import { VersionHistoryMain } from './version-history.main.runtime';
+import type { BuildOptions } from './version-history-cmd';
+import type { VersionHistoryMain } from './version-history.main.runtime';
 
 export class BuildVersionHistoryAction {
   name = BuildVersionHistoryAction.name;

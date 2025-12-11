@@ -1,6 +1,6 @@
-import { EnvContext, EnvHandler } from '@teambit/envs';
-import { Component } from '@teambit/component';
-import { PackageJsonProps } from './pkg.main.runtime';
+import type { EnvContext, EnvHandler } from '@teambit/envs';
+import type { Component } from '@teambit/component';
+import type { PackageJsonProps } from './pkg.main.runtime';
 
 export type ModifyPackageJsonFunc = (
   component: Component,

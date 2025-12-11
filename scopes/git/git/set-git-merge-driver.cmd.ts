@@ -1,6 +1,6 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { GitMain } from './git.main.runtime';
+import type { GitMain } from './git.main.runtime';
 
 const COMMAND_NAME = 'set-merge-driver';
 

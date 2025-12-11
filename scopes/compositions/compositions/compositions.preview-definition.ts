@@ -1,11 +1,11 @@
-import { Component, ComponentMap } from '@teambit/component';
+import type { Component, ComponentMap } from '@teambit/component';
 import type { ExecutionContext, Environment } from '@teambit/envs';
-import { PreviewDefinition } from '@teambit/preview';
+import type { PreviewDefinition } from '@teambit/preview';
 import { isFunction } from 'lodash';
-import { AbstractVinyl } from '@teambit/component.sources';
+import type { AbstractVinyl } from '@teambit/component.sources';
 
-import { CompositionsMain } from './compositions.main.runtime';
-import { CompositionBrowserMetadataObject } from './composition';
+import type { CompositionsMain } from './compositions.main.runtime';
+import type { CompositionBrowserMetadataObject } from './composition';
 
 export class CompositionPreviewDefinition implements PreviewDefinition {
   readonly prefix = 'compositions';

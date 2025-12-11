@@ -1,7 +1,7 @@
 import vinylFile from 'vinyl-file';
 import { logger } from '@teambit/legacy.logger';
-import { Repository, SourceFileModel } from '@teambit/objects';
-import { PathOsBased } from '@teambit/toolbox.path.path';
+import type { Repository, SourceFileModel } from '@teambit/objects';
+import type { PathOsBased } from '@teambit/toolbox.path.path';
 import FileSourceNotFound from './file-source-not-found';
 import AbstractVinyl from './abstract-vinyl';
 import { forEach } from 'lodash';
@@ -14,7 +14,6 @@ export default class SourceFile extends AbstractVinyl {
     extendedProps: Record<string, any> = {}
   ): SourceFile {
     try {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const file = new SourceFile(vinylFile.readSync(filePath, { base, cwd: consumerPath }));
       const addToFile = (value, key) => (file[key] = value); /* eslint-disable-line no-return-assign */
       forEach(extendedProps, addToFile);

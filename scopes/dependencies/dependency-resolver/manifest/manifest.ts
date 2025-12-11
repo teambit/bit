@@ -1,6 +1,6 @@
-import { SemVer } from 'semver';
-import { PeerDependenciesMeta } from '../dependencies/dependency-list';
-import { PackageName, SemverVersion } from '../dependencies';
+import type { SemVer } from 'semver';
+import type { PeerDependenciesMeta } from '../dependencies/dependency-list';
+import type { PackageName, SemverVersion } from '../dependencies';
 
 // export type ManifestDependenciesKeys = 'dependencies' | 'devDependencies' | 'peerDependencies';
 

@@ -1,6 +1,6 @@
 // TODO: This 2 (component and capsule should be probably an interfaces in the shared types implemented by the actual classes
-import { Component } from '@teambit/component';
-import { Capsule } from '@teambit/isolator';
+import type { Component } from '@teambit/component';
+import type { Capsule } from '@teambit/isolator';
 
 export class ResolvedComponent {
   constructor(

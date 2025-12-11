@@ -1,4 +1,4 @@
-import { Node } from 'reactflow';
+import type { Node } from 'reactflow';
 import { rootNodeColor, defaultNodeColor, externalNodeColor } from '../component-node';
 
 export function calcMinimapColors(node: Node) {

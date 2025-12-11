@@ -1,4 +1,4 @@
-import { ComponentStatusLegacy } from './component-status-loader';
+import type { ComponentStatusLegacy } from './component-status-loader';
 
 export type ModifyInfo = {
   hasModifiedFiles: boolean;

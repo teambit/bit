@@ -1,18 +1,18 @@
-import { TsserverClient } from '@teambit/ts-server';
+import type { TsserverClient } from '@teambit/ts-server';
 import { getTokenAtPosition, canHaveJsDoc, getJsDoc } from 'tsutils';
-import ts, { ExportAssignment, getTextOfJSDocComment, ExportDeclaration, Node, SyntaxKind, TypeNode } from 'typescript';
+import type { ExportAssignment, ExportDeclaration, Node, TypeNode } from 'typescript';
+import ts, { getTextOfJSDocComment, SyntaxKind } from 'typescript';
 import { head, uniqBy } from 'lodash';
 // @ts-ignore david we should figure fix this.
 // eslint-disable-next-line import/no-unresolved
-import protocol from 'typescript/lib/protocol';
+import type protocol from 'typescript/lib/protocol';
 import { pathNormalizeToLinux, isRelativeImport } from '@teambit/legacy.utils';
 import { resolve, sep, relative, join, isAbsolute, extname } from 'path';
-import { Component, ComponentID } from '@teambit/component';
+import type { Component, ComponentID } from '@teambit/component';
+import type { SchemaNode, Location } from '@teambit/semantics.entities.semantic-schema';
 import {
   TypeRefSchema,
-  SchemaNode,
   InferenceTypeSchema,
-  Location,
   DocSchema,
   IgnoredSchema,
   TagSchema,
@@ -21,10 +21,10 @@ import {
   ParameterSchema,
   FunctionLikeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
-import { ComponentDependency } from '@teambit/dependency-resolver';
-import { Formatter } from '@teambit/formatter';
+import type { ComponentDependency } from '@teambit/dependency-resolver';
+import type { Formatter } from '@teambit/formatter';
 import pMapSeries from 'p-map-series';
-import { TypeScriptExtractor } from './typescript.extractor';
+import type { TypeScriptExtractor } from './typescript.extractor';
 import { IdentifierList } from './identifier-list';
 import { parseTypeFromQuickInfo } from './transformers/utils/parse-type-from-quick-info';
 import { tagParser } from './transformers/utils/jsdoc-to-doc-schema';
@@ -531,7 +531,7 @@ export class SchemaExtractorContext {
    * Create schema for function type, handling params and return type
    */
   private async createFunctionSchema(node: Node, location: Location, signature: string): Promise<FunctionLikeSchema> {
-    const match = signature.match(/\((.*)\)\s*(?:=>|:)\s*(.+)/);
+    const match = signature.match(/^\s*\(([^)]*)\)\s*(?:=>|:)\s*(.+)$/);
     if (!match) {
       return new FunctionLikeSchema(location, 'anonymous', [], new InferenceTypeSchema(location, 'any'), signature);
     }
@@ -693,14 +693,19 @@ export class SchemaExtractorContext {
     const mainIdentifier = new Identifier(typeStr, mainFileIdentifierKey);
 
     const parsedNodeIdentifier = nodeIdentifierList?.find(nodeIdentifier);
+
     const parsedMainIdentifier = mainIdentifierList?.find(mainIdentifier);
     const isExportedFromMain = parsedMainIdentifier && ExportIdentifier.isExportIdentifier(parsedMainIdentifier);
 
     if (!parsedNodeIdentifier) return undefined;
 
-    const internalRef = !isExportedFromMain;
-    if (internalRef) {
-      this.setInternalIdentifiers(parsedNodeIdentifier.normalizedPath, new IdentifierList([parsedNodeIdentifier]));
+    if (!isExportedFromMain) {
+      const src = parsedNodeIdentifier.sourceFilePath;
+      const isLocalOrRelative = !src || isRelativeImport(src); // bare specifiers (e.g., 'react') are excluded
+      if (isLocalOrRelative) {
+        const key = src ? parsedNodeIdentifier.normalizedPath : parsedNodeIdentifier.filePath;
+        this.setInternalIdentifiers(this.getIdentifierKey(key), new IdentifierList([parsedNodeIdentifier]));
+      }
     }
     return this.resolveTypeRef(parsedNodeIdentifier, location, isExportedFromMain);
   }
@@ -718,7 +723,8 @@ export class SchemaExtractorContext {
         identifier.id,
         undefined,
         undefined,
-        !isExportedFromMain ? this.getPathRelativeToComponent(identifier.filePath) : undefined
+        !isExportedFromMain ? this.getPathRelativeToComponent(identifier.filePath) : undefined,
+        sourceFilePath
       );
     }
 
@@ -763,7 +769,7 @@ export class SchemaExtractorContext {
       return this.resolveTypeRef(exportedIdentifier, location, isExportedFromMain);
     }
 
-    return new TypeRefSchema(location, identifier.id);
+    return new TypeRefSchema(location, identifier.id, undefined, undefined, undefined);
   }
 
   async getTypeRefForExternalNode(node: Node): Promise<TypeRefSchema> {
@@ -785,6 +791,63 @@ export class SchemaExtractorContext {
       return new TypeRefSchema(location, typeStr, compIdByPkg);
     }
     return new TypeRefSchema(location, typeStr, undefined, pkgName);
+  }
+
+  buildTopLevelNameIndex(sf: ts.SourceFile): Map<string, ts.Node> {
+    const map = new Map<string, ts.Node>();
+    for (const s of sf.statements) {
+      const name =
+        'name' in s && s.name && ts.isIdentifier((s as any).name)
+          ? ((s as any).name as ts.Identifier).text
+          : ts.isVariableStatement(s) &&
+              s.declarationList.declarations.length === 1 &&
+              ts.isIdentifier(s.declarationList.declarations[0].name)
+            ? s.declarationList.declarations[0].name.text
+            : undefined;
+
+      if (name && !map.has(name)) map.set(name, s);
+    }
+    return map;
+  }
+
+  // inside TypeScriptExtractor
+  /**
+   * Walk a SchemaNode tree and collect all TypeRefSchema names that
+   * have an internalFilePath.
+   *
+   * We intentionally do NOT try to match the identifierKey here –
+   * we already scope lookups by `nameIndex` for the current file,
+   * so cross-file refs will just fail `nameIndex.get(name)` and be ignored.
+   *
+   * This lets us correctly close over cases like:
+   *   type MyFirstCombinedProps = MyFirstProps & MyFirstPropsExtra;
+   * where `MyFirstPropsExtra` is internal to the same file.
+   */
+  collectSameFileInternalTypeRefs(root: SchemaNode): string[] {
+    const result = new Set<string>();
+    const stack: SchemaNode[] = [root];
+
+    while (stack.length) {
+      const node = stack.pop();
+      if (!node || typeof node !== 'object') continue;
+
+      if (TypeRefSchema.isTypeRefSchema(node) && typeof node.name === 'string' && node.internalFilePath) {
+        result.add(node.name);
+      }
+
+      for (const value of Object.values(node)) {
+        if (!value) continue;
+        if (Array.isArray(value)) {
+          for (const v of value) {
+            if (v && typeof v === 'object') stack.push(v as SchemaNode);
+          }
+        } else if (typeof value === 'object') {
+          stack.push(value as SchemaNode);
+        }
+      }
+    }
+
+    return Array.from(result);
   }
 
   async jsDocToDocSchema(node: Node): Promise<DocSchema | undefined> {

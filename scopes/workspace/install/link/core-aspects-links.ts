@@ -1,4 +1,4 @@
-import { CoreAspectLinkResult } from '@teambit/dependency-resolver';
+import type { CoreAspectLinkResult } from '@teambit/dependency-resolver';
 import chalk from 'chalk';
 
 import { getPackageNameFromTarget } from './get-package-name-from-target';

@@ -1,21 +1,26 @@
 import { ClientError, gql, GraphQLClient } from 'graphql-request';
+import { v4 } from 'uuid';
 import { isNil } from 'lodash';
 import nodeFetch from '@pnpm/node-fetch';
 import retry from 'async-retry';
 import readLine from 'readline';
-import HttpAgent from 'agentkeepalive';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type HttpAgent from 'agentkeepalive';
+import type { ComponentIdList } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import { SocksProxyAgent } from 'socks-proxy-agent';
-import { HttpProxyAgent } from 'http-proxy-agent';
+import type { SocksProxyAgent } from 'socks-proxy-agent';
+import type { HttpProxyAgent } from 'http-proxy-agent';
 import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { LaneId } from '@teambit/lane-id';
-import { getAgent, AgentOptions } from '@teambit/toolbox.network.agent';
-import { ListScopeResult } from '@teambit/legacy.component-list';
-import { Network } from '../network';
+import type { AgentOptions } from '@teambit/toolbox.network.agent';
+import { getAgent } from '@teambit/toolbox.network.agent';
+import type { ListScopeResult } from '@teambit/legacy.component-list';
+import type { Network } from '../network';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import { LaneData, ScopeDescriptor, RemovedObjects } from '@teambit/legacy.scope';
+import type { LaneData, ScopeDescriptor } from '@teambit/legacy.scope';
+import { RemovedObjects } from '@teambit/legacy.scope';
+import type { DoctorResponse } from '@teambit/doctor';
 import { globalFlags } from '@teambit/cli';
 import { getConfig, listConfig } from '@teambit/config-store';
 import {
@@ -45,8 +50,9 @@ import {
   CENTRAL_BIT_HUB_URL_IMPORTER_V2,
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { ObjectItemsStream, ObjectList, ComponentLog } from '@teambit/objects';
-import { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
+import type { ObjectItemsStream, ComponentLog } from '@teambit/objects';
+import { ObjectList } from '@teambit/objects';
+import type { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
 import { remoteErrorHandler } from '../remote-error-handler';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
@@ -95,6 +101,14 @@ export type NetworkConfig = {
   cert?: string | string[];
   key?: string;
   userAgent?: string;
+  /**
+   * Warning messages are displayed when requests exceed the specified time threshold.
+   */
+  fetchMinSpeedKiBps?: number;
+  /**
+   * Warning messages are displayed when requests fall below speed minimum.
+   */
+  fetchWarnTimeoutMs?: number;
 };
 
 type Agent = HttpsProxyAgent | HttpAgent | HttpAgent.HttpsAgent | HttpProxyAgent | SocksProxyAgent | undefined;
@@ -262,6 +276,14 @@ export class Http implements Network {
     errors: { [scopeName: string]: string };
     metadata?: { jobs?: string[] };
   }> {
+    // Initialize headers outside retry so the same request-id and objects-hash are used for all retries
+    const objectsHash = objectList.getSha1Hash();
+    const headers = this.getHeaders({
+      'push-options': JSON.stringify(options),
+      'x-verb': Verb.WRITE,
+      'x-objects-hash': objectsHash,
+    });
+
     const { results, response } = await retry(
       async () => {
         const route = 'api/put';
@@ -270,7 +292,7 @@ export class Http implements Network {
         const opts = this.addAgentIfExist({
           method: 'post',
           body: pack,
-          headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
+          headers,
         });
         const _response = await _fetch(`${this.url}/${route}`, opts);
         logger.debug(
@@ -404,7 +426,6 @@ export class Http implements Network {
     // const res = await fetch(urlToFetch, opts);
     logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
-    // @ts-ignore TODO: need to fix this
     const objectListReadable = ObjectList.fromTarToObjectStream(res.body);
 
     return objectListReadable;
@@ -656,6 +677,58 @@ export class Http implements Network {
     return new DependencyGraph(oldGraph);
   }
 
+  async doctor(diagnosisName?: string): Promise<DoctorResponse> {
+    const DOCTOR_QUERY = gql`
+      query doctor($diagnosisName: String) {
+        scope {
+          doctor(diagnosisName: $diagnosisName) {
+            examineResults {
+              diagnosisMetaData {
+                name
+                description
+                category
+              }
+              bareResult {
+                valid
+                data
+              }
+              formattedSymptoms
+              formattedManualTreat
+            }
+            metaData {
+              nodeVersion
+              runningTimestamp
+              platform
+              bitVersion
+              npmVersion
+              yarnVersion
+              userDetails
+            }
+          }
+        }
+      }
+    `;
+
+    try {
+      const data = await this.graphClientRequest(DOCTOR_QUERY, Verb.READ, {
+        diagnosisName,
+      });
+
+      return data.scope.doctor;
+    } catch (err: any) {
+      // Check if the error is due to the remote not supporting the doctor query
+      if (err instanceof GraphQLClientError) {
+        const errorReport = err.report();
+        if (errorReport.includes('Cannot query field "doctor"')) {
+          throw new Error(
+            `Remote scope "${this.scopeName || this.url}" does not support doctor checks. Please upgrade the remote scope to a newer version.`
+          );
+        }
+      }
+      throw err;
+    }
+  }
+
   async listLanes(id?: string): Promise<LaneData[]> {
     const LIST_LANES = gql`
       query Lanes($ids: [String!]) {
@@ -821,17 +894,22 @@ export class Http implements Network {
   private getHeaders(headers: { [key: string]: string } = {}) {
     const authHeader = this.token ? getAuthHeader(this.token) : {};
     const localScope = this.localScopeName ? { 'x-request-scope': this.localScopeName } : {};
+    const customOrigin = process.env.__CUSTOM_ORIGIN ? { 'x-custom-origin': process.env.__CUSTOM_ORIGIN } : {};
     const clientVersion = this.getClientVersion() || 'unknown';
     if (clientVersion === 'unknown') {
       // Ignore the error, we don't want to fail the request if we can't get the client version
       logger.error('failed getting bit version from the client');
     }
+    // Generate a unique request ID if not already provided in headers
+    const requestId = headers['x-request-id'] || `${v4()}`;
     return Object.assign(
       headers,
       authHeader,
       localScope,
+      customOrigin,
       { connection: 'keep-alive' },
-      { 'x-client-version': clientVersion }
+      { 'x-client-version': clientVersion },
+      { 'x-request-id': requestId }
     );
   }
 

@@ -1,4 +1,4 @@
-import { ComponentID } from '@teambit/component';
+import type { ComponentID } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 
 export class PkgArtifactNotFound extends BitError {

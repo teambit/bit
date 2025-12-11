@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import { table } from 'table';
 import type { Alignment } from 'table';
-import { DoctorMetaData, DoctorRunAllResults } from './doctor.main.runtime';
-import { ExamineResult } from './diagnosis';
+import type { DoctorMetaData, DoctorRunAllResults } from './doctor.main.runtime';
+import type { ExamineResult } from './diagnosis';
 
 // const NAME_COLUMN_WIDTH = 100;
 // const DESCRIPTION_COLUMN_WIDTH = 30;

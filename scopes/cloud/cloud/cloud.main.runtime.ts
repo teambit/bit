@@ -1,16 +1,19 @@
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { CLIAspect, CLIMain, MainRuntime, globalFlags } from '@teambit/cli';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime, globalFlags } from '@teambit/cli';
 import { v4 } from 'uuid';
 import chalk from 'chalk';
 import os from 'os';
 import open from 'open';
-import * as http from 'http';
-import { Express } from 'express';
-import { GetScopesGQLResponse } from '@teambit/cloud.models.cloud-scope';
-import { CloudUser, CloudUserAPIResponse } from '@teambit/cloud.models.cloud-user';
+import type * as http from 'http';
+import type { Express } from 'express';
+import type { GetScopesGQLResponse } from '@teambit/cloud.models.cloud-scope';
+import type { CloudUser, CloudUserAPIResponse } from '@teambit/cloud.models.cloud-user';
 import { ScopeDescriptor } from '@teambit/scopes.scope-descriptor';
 import { ScopeID } from '@teambit/scopes.scope-id';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import {
   getCloudDomain,
   DEFAULT_HUB_DOMAIN,
@@ -27,20 +30,26 @@ import {
   DEFAULT_CLOUD_DOMAIN,
   CFG_CLOUD_DOMAIN_KEY,
 } from '@teambit/legacy.constants';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 import { fetchWithAgent as fetch } from '@teambit/scope.network';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { ExpressAspect, ExpressMain } from '@teambit/express';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { ExpressMain } from '@teambit/express';
+import { ExpressAspect } from '@teambit/express';
 import { execSync } from 'child_process';
-import { UIAspect, UiMain } from '@teambit/ui';
+import type { UiMain } from '@teambit/ui';
+import { UIAspect } from '@teambit/ui';
 import { cloudSchema } from './cloud.graphql';
 import { CloudAspect } from './cloud.aspect';
 import { LoginCmd } from './login.cmd';
 import { LogoutCmd } from './logout.cmd';
 import { WhoamiCmd } from './whoami.cmd';
 import { NpmrcCmd, NpmrcGenerateCmd } from './npmrc.cmd';
-import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
+import type { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store';
 
 export interface CloudWorkspaceConfig {
   cloudDomain: string;
