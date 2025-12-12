@@ -1922,10 +1922,7 @@
         "scope": "teambit.api-reference",
         "version": "0.0.3",
         "mainFile": "index.ts",
-        "rootDir": "components/renderers/default-node-renderers",
-        "config": {
-            "bitdev.react/react-env@4.1.36": {}
-        }
+        "rootDir": "components/renderers/default-node-renderers"
     },
     "renderers/tuple-type": {
         "name": "renderers/tuple-type",
