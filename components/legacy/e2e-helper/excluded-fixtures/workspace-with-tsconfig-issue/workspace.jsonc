@@ -39,9 +39,9 @@
     "packageManager": "teambit.dependencies/pnpm",
     "policy": {
       "dependencies": {
-        "@teambit/mdx.ui.mdx-scope-context": "1.0.0",
-        "@teambit/react.react-env": "1.0.77",
-        "@teambit/typescript.typescript-compiler": "2.0.38"
+        "@teambit/mdx.ui.mdx-scope-context": "1.0.7",
+        "@teambit/react.react-env": "1.2.0",
+        "@teambit/typescript.typescript-compiler": "2.0.64"
       },
       "peerDependencies": {}
     },
