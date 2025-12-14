@@ -14,7 +14,13 @@ import type { ApplyVersionResults } from '@teambit/component.modules.merge-helpe
 import type { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
 import type { LaneLog } from '@teambit/objects';
 import type { ComponentCompareMain } from '@teambit/component-compare';
-import type { GeneratorMain, PromptOption, PromptResults } from '@teambit/generator';
+import type {
+  GenerateResult,
+  GeneratorMain,
+  PromptOption,
+  PromptResults,
+  TemplateDescriptor,
+} from '@teambit/generator';
 import { getParsedHistoryMetadata } from '@teambit/legacy.consumer';
 import type { RemovedObjects } from '@teambit/legacy.scope';
 import type { RemoveMain } from '@teambit/remove';
@@ -28,7 +34,7 @@ import fetch from 'node-fetch';
 import type { GraphMain } from '@teambit/graph';
 import type { ScopeMain } from '@teambit/scope';
 import { ComponentNotFound } from '@teambit/scope';
-import type { ComponentMain } from '@teambit/component';
+import type { ComponentMain, ComponentMap } from '@teambit/component';
 import type { SchemaMain } from '@teambit/schema';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import type { Logger } from '@teambit/logger';
@@ -407,7 +413,7 @@ export class APIForIDE {
     this.workspace.clearAllComponentsCache();
   }
 
-  async install(options = {}, packages?: string[]) {
+  async install(options = {}, packages?: string[]): Promise<ComponentMap<string>> {
     const opts = {
       optimizeReportForNonTerminal: true,
       dedupe: true,
@@ -443,7 +449,7 @@ export class APIForIDE {
     return this.workspace.importObjectsIfOutdatedAgainstBitmap();
   }
 
-  async getTemplates() {
+  async getTemplates(): Promise<TemplateDescriptor[]> {
     const templates = await this.generator.listTemplates();
     return templates;
   }
@@ -453,7 +459,11 @@ export class APIForIDE {
     return template.template.promptOptions?.();
   }
 
-  async createComponent(templateName: string, idIncludeScope: string, promptResults?: PromptResults) {
+  async createComponent(
+    templateName: string,
+    idIncludeScope: string,
+    promptResults?: PromptResults
+  ): Promise<GenerateResult[]> {
     if (!idIncludeScope.includes('/')) {
       throw new Error('id should include the scope name');
     }

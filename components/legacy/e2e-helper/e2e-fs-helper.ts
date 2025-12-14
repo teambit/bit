@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import { use, expect } from 'chai';
-import glob from 'glob';
+import { globSync } from 'glob';
 import * as path from 'path';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import * as fixtures from './fixtures';
@@ -23,10 +23,10 @@ export default class FsHelper {
       params.ignore = 'node_modules/**/*';
     }
 
-    return glob.sync(path.normalize(`**/${ext}`), params).map((x) => path.normalize(x));
+    return globSync(path.normalize(`**/${ext}`), params).map((x) => path.normalize(x));
   }
   getObjectFiles() {
-    return glob.sync(path.normalize('*/*'), { cwd: path.join(this.scopes.localPath, '.bit/objects') });
+    return globSync(path.normalize('*/*'), { cwd: path.join(this.scopes.localPath, '.bit/objects') });
   }
   /**
    * @deprecated use outputFile instead

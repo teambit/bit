@@ -10,8 +10,10 @@ import { removeTemplate } from './remove-template';
 
 export class RemoveCmd implements Command {
   name = 'remove <component-pattern>';
-  description = 'remove component(s) from the local workspace';
-  extendedDescription = `to mark components as deleted on the remote scope, use "bit delete".`;
+  description = 'untrack components from the workspace';
+  extendedDescription = `removes components from the local workspace only - stops tracking them in .bitmap and deletes their files by default.
+does not affect remote scopes - to delete components from remotes, use "bit delete" instead.
+use --keep-files to preserve component files while only removing the tracking.`;
   arguments = [
     {
       name: 'component-pattern',

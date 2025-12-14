@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit lane command', function () {
   this.timeout(0);
@@ -336,7 +336,20 @@ describe('bit lane command', function () {
         helper.scopeHelper.getClonedWorkspace(beforeImport);
         helper.command.importComponent('**', '-x');
       });
-      it('should import only the components from the lane, not main', () => {
+      it('should import components from both lane and main (lane versions preferred)', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(2);
+        const ids = list.map((c) => c.id);
+        expect(ids).to.include(`${helper.scopes.remote}/comp1`); // from lane
+        expect(ids).to.include(`${helper.scopes.remote}/bar/foo`); // from main
+      });
+    });
+    describe('when using --lane-only flag', () => {
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(beforeImport);
+        helper.command.importComponent('** --lane-only', '-x');
+      });
+      it('should import only components from the lane, not main', () => {
         const list = helper.command.listParsed();
         expect(list).to.have.lengthOf(1);
         const ids = list.map((c) => c.id);

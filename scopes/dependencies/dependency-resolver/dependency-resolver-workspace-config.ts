@@ -177,11 +177,22 @@ export interface DependencyResolverWorkspaceConfig {
    */
   isolatedCapsules?: boolean;
 
-  /*
+  /**
    * Ignore the builds of specific dependencies. The "preinstall", "install", and "postinstall" scripts
    * of the listed packages will not be executed during installation.
    */
   neverBuiltDependencies?: string[];
+
+  /**
+   * Fine-grained control over dependency lifecycle scripts. Allows explicitly permitting (true), blocking (false), or warning ('warn')
+   * for specific dependencies' "preinstall", "install", and "postinstall" scripts during installation.
+   */
+  allowScripts?: Record<string, boolean | 'warn'>;
+
+  /**
+   * Set this to true in order to allow all dependencies to run install scripts.
+   */
+  dangerouslyAllowAllScripts?: boolean;
 
   /**
    * If true, staleness checks for cached data will be bypassed, but missing data will be requested from the server.
@@ -220,4 +231,19 @@ export interface DependencyResolverWorkspaceConfig {
    * set this to the desired range symbol.
    */
   componentRangePrefix?: ComponentRangePrefix;
+
+  externalPackageManager?: boolean;
+
+  /**
+   * Defines the minimum number of minutes that must pass after a version is published before pnpm will install it.
+   * This applies to all dependencies, including transitive ones.
+   */
+  minimumReleaseAge?: number;
+
+  /**
+   * If you set minimumReleaseAge but need certain dependencies to always install the newest version immediately,
+   * you can list them under minimumReleaseAgeExclude. The exclusion works by package name or package name pattern
+   * and applies to all versions of that package.
+   */
+  minimumReleaseAgeExclude?: string[];
 }

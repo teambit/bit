@@ -8,10 +8,10 @@ import type { SchemaMain } from './schema.main.runtime';
 
 export class SchemaCommand implements Command {
   name = 'schema <pattern>';
-  description =
-    'extracts and displays the API schema (types, functions, classes, interfaces) of the specified component/s.';
-  extendedDescription = `Extracts TypeScript definitions to provide a comprehensive view of a component's public API.
-Shows detailed information about exported elements including classes, interfaces, functions, types, and enums with their respective signatures and documentation.
+  description = 'display component API schema and type definitions';
+  extendedDescription = `extracts and displays the public API structure of components including types, functions, classes, and interfaces.
+shows detailed type information, function signatures, and JSDoc documentation for exported elements.
+useful for understanding component interfaces and generating documentation.
 
 ${PATTERN_HELP('schema')}`;
   group = 'info-analysis';

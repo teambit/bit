@@ -1,5 +1,6 @@
 import multimatch from 'multimatch';
 import { isSnap } from '@teambit/component-version';
+import { BitError } from '@teambit/bit-error';
 import mapSeries from 'p-map-series';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { MainRuntime } from '@teambit/cli';
@@ -39,6 +40,7 @@ import fs from 'fs-extra';
 import { assign } from 'comment-json';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
+import { parseBareSpecifier } from '@pnpm/npm-resolver';
 import type { SourceFile } from '@teambit/component.sources';
 import type { ProjectManifest, DependencyManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
@@ -570,8 +572,14 @@ export class DependencyResolverMain {
     }
   ) {
     const envId = this.envs.getEnvId(component);
+    const envIdWithoutVersion = ComponentID.fromString(envId).toStringWithoutVersion();
     const rootComponentsRelativePath = relative(options.workspacePath, options.rootComponentsPath);
-    return getRootComponentDir(rootComponentsRelativePath ?? '', envId);
+    const rootComponentDirWithVersion = getRootComponentDir(rootComponentsRelativePath ?? '', envId);
+    const rootComponentDirWithoutVersion = getRootComponentDir(rootComponentsRelativePath ?? '', envIdWithoutVersion);
+    if (fs.pathExistsSync(rootComponentDirWithoutVersion)) {
+      return rootComponentDirWithoutVersion;
+    }
+    return rootComponentDirWithVersion;
   }
 
   /**
@@ -585,8 +593,10 @@ export class DependencyResolverMain {
   }
 
   async addDependenciesGraph(
-    component: Component,
-    componentRelativeDir: string,
+    components: Array<{
+      component: Component;
+      componentRelativeDir: string;
+    }>,
     options: {
       rootDir: string;
       rootComponentsPath?: string;
@@ -594,8 +604,8 @@ export class DependencyResolverMain {
     }
   ): Promise<void> {
     try {
-      component.state._consumer.dependenciesGraph = await this.getPackageManager()?.calcDependenciesGraph?.({
-        rootDir: options.rootDir,
+      let componentsForCalc = components.map(({ component, componentRelativeDir }) => ({
+        component,
         componentRootDir: options.rootComponentsPath
           ? this.getComponentDirInBitRoots(component, {
               workspacePath: options.rootDir,
@@ -604,6 +614,15 @@ export class DependencyResolverMain {
           : undefined,
         pkgName: this.getPackageName(component),
         componentRelativeDir,
+      }));
+      if (!isFeatureEnabled(DEPS_GRAPH)) {
+        // We need to optimize the performance of dependency graph calculation.
+        // Temporarily we only calculate it for a limited number of components.
+        componentsForCalc = componentsForCalc.slice(0, 10);
+      }
+      await this.getPackageManager()?.calcDependenciesGraph?.({
+        components: componentsForCalc,
+        rootDir: options.rootDir,
         componentIdByPkgName: options.componentIdByPkgName,
       });
     } catch (err) {
@@ -649,7 +668,11 @@ export class DependencyResolverMain {
       this.config.engineStrict,
       this.config.peerDependencyRules,
       this.config.neverBuiltDependencies,
+      this.config.allowScripts,
+      this.config.dangerouslyAllowAllScripts,
       this.config.preferOffline,
+      this.config.minimumReleaseAge,
+      this.config.minimumReleaseAgeExclude,
       options.installingContext
     );
   }
@@ -990,6 +1013,36 @@ export class DependencyResolverMain {
 
   get packageManagerName(): string {
     return this.config.packageManager ?? DEFAULT_HARMONY_PACKAGE_MANAGER;
+  }
+
+  getAllowedScripts() {
+    if (!process.env.BIT_ALLOW_SCRIPTS) {
+      return this.config.allowScripts;
+    }
+    let allowScriptsFromEnv: Record<string, boolean>;
+    try {
+      allowScriptsFromEnv = JSON.parse(process.env.BIT_ALLOW_SCRIPTS);
+    } catch {
+      throw new BitError('Failed to parse the JSON object in the BIT_ALLOW_SCRIPTS environment variable');
+    }
+    if (typeof allowScriptsFromEnv !== 'object' || allowScriptsFromEnv === null || Array.isArray(allowScriptsFromEnv)) {
+      throw new BitError('BIT_ALLOW_SCRIPTS must be a JSON object');
+    }
+    return {
+      ...this.config.allowScripts,
+      ...allowScriptsFromEnv,
+    };
+  }
+
+  updateAllowedScripts(newAllowedScripts: Record<string, boolean>): void {
+    this.config.allowScripts = {
+      ...this.config.allowScripts,
+      ...newAllowedScripts,
+    };
+    this.configAspect.setExtension(DependencyResolverAspect.id, this.config, {
+      mergeIntoExisting: true,
+      ignoreVersion: true,
+    });
   }
 
   addToRootPolicy(entries: WorkspacePolicyEntry[], options?: WorkspacePolicyAddEntryOptions): WorkspacePolicy {
@@ -1369,8 +1422,7 @@ export class DependencyResolverMain {
     const allowedPrefixes = ['https://', 'git:', 'git+ssh://', 'git+https://'];
     let errorMsg: undefined | string;
     data.dependencies?.forEach((dep) => {
-      const isVersionValid = Boolean(semver.valid(dep.version) || semver.validRange(dep.version));
-      if (isVersionValid) return;
+      if (this.isValidVersionSpecifier(dep.version)) return;
       if (dep.__type === COMPONENT_DEP_TYPE && isSnap(dep.version)) return;
       if (allowedPrefixes.some((prefix) => dep.version.startsWith(prefix))) return; // some packages are installed from https/git
       errorMsg = `${errorPrefix} the dependency version "${dep.version}" of ${dep.id} is not a valid semver version or range`;
@@ -1388,7 +1440,7 @@ export class DependencyResolverMain {
 as an alternative, you can use "+" to keep the same version installed in the workspace`;
       }
       const isVersionValid = Boolean(
-        semver.valid(policyVersion) || semver.validRange(policyVersion) || allowedSpecialChars.includes(policyVersion)
+        this.isValidVersionSpecifier(policyVersion) || allowedSpecialChars.includes(policyVersion)
       );
       if (isVersionValid) return;
       errorMsg = `${errorPrefix} the policy version "${policyVersion}" of ${policy.dependencyId} is not a valid semver version or range`;
@@ -1397,6 +1449,26 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     if (errorMsg) {
       return { errorMsg, minBitVersion: '1.9.107' };
     }
+  }
+
+  /**
+   * This function returns true for any of the following version specifiers:
+   * - exact version
+   * - version range
+   * - dist-tag
+   * - alias: npm:<pkgName>@<version>
+   * - direct URL specifiers to the public npm registry.
+   *   E.g.: https://registry.npmjs.org/is-odd/-/is-odd-0.1.0.tgz)
+   */
+  isValidVersionSpecifier(spec: string): boolean {
+    return (
+      parseBareSpecifier(
+        spec,
+        'pkgname', // This argument is the package but we don't need it
+        'latest',
+        'https://registry.npmjs.org/'
+      ) != null
+    );
   }
 
   /**

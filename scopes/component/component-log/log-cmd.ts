@@ -14,9 +14,11 @@ type LogFlags = {
 };
 export default class LogCmd implements Command {
   name = 'log <id>';
-  description = 'show components(s) version history';
+  description = 'display component version history';
   helpUrl = 'reference/components/navigating-history';
-  extendedDescription: string;
+  extendedDescription = `shows chronological history of component versions including tags and snaps with metadata.
+displays commit messages, authors, dates, and version information. supports both local and remote component logs.
+use various format options for compact or detailed views of version history.`;
   group = 'version-control';
   alias = '';
   options = [

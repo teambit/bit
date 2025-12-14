@@ -6,7 +6,7 @@ import type { StdioOptions } from 'child_process';
 import childProcess from 'child_process';
 import rightpad from 'pad-right';
 import * as path from 'path';
-import tar from 'tar';
+import { extract } from 'tar';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { NOTHING_TO_TAG_MSG } from '@teambit/snapping';
 import type { Descriptor } from '@teambit/envs';
@@ -519,7 +519,7 @@ export default class CommandHelper {
     return this.runCmd(`bit reset ${id} ${head ? '--head' : ''} ${flag}`);
   }
   resetAll(options = '') {
-    return this.runCmd(`bit reset ${options} --all`);
+    return this.runCmd(`bit reset ${options} --silent`);
   }
   resetSoft(id: string) {
     return this.runCmd(`bit reset ${id} --soft`);
@@ -533,6 +533,13 @@ export default class CommandHelper {
     const result = this.export();
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
+  }
+  laneHistory(options = '') {
+    return this.runCmd(`bit lane history ${options}`);
+  }
+  laneHistoryParsed(): Array<Record<string, any>> {
+    const output = this.runCmd('bit lane history --json');
+    return JSON.parse(output);
   }
   export(options = '') {
     return this.runCmd(`bit export ${options}`);
@@ -880,9 +887,14 @@ export default class CommandHelper {
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
   }
-  install(packages = '', options?: Record<string, any>, cwd = this.scopes.localPath) {
+  install(
+    packages = '',
+    options?: Record<string, any>,
+    cwd = this.scopes.localPath,
+    runCmdOpts?: { envVariables?: Record<string, string> }
+  ) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit install ${packages} ${parsedOpts}`, cwd);
+    return this.runCmd(`bit install ${packages} ${parsedOpts}`, cwd, 'pipe', undefined, false, runCmdOpts?.envVariables);
   }
   update(flags?: string) {
     return this.runCmd(`bit update ${flags || ''}`);
@@ -899,7 +911,7 @@ export default class CommandHelper {
     return this.compile(compileId, compileFlags);
   }
 
-  packComponent(id: string, options: Record<string, any>, extract = false) {
+  packComponent(id: string, options: Record<string, any>, shouldExtract = false) {
     const defaultOptions = {
       o: '',
       p: '',
@@ -911,7 +923,7 @@ export default class CommandHelper {
       .map((key) => `-${key} ${options[key]}`)
       .join(' ');
     const result = this.runCmd(`bit pack ${id} ${value}`);
-    if (extract) {
+    if (shouldExtract) {
       if (
         !options ||
         // We don't just check that it's falsy because usually it's an empty string.
@@ -942,7 +954,7 @@ export default class CommandHelper {
       if (this.debugMode) {
         console.log(`untaring the file ${tarballFilePath} into ${dir}`); // eslint-disable-line no-console
       }
-      tar.x({ file: tarballFilePath, C: dir, sync: true });
+      extract({ file: tarballFilePath, C: dir, sync: true });
     }
     return result;
   }
@@ -994,5 +1006,14 @@ export default class CommandHelper {
   init(options = '', shouldBeInteractive = false) {
     const interactiveFlag = shouldBeInteractive ? '' : '--skip-interactive';
     return this.runCmd(`bit init ${options} ${interactiveFlag}`);
+  }
+
+  pattern(pattern: string, flags = ''): string {
+    return this.runCmd(`bit pattern "${pattern}" ${flags}`);
+  }
+
+  patternJson(pattern: string, flags = ''): Record<string, any> {
+    const result = this.runCmd(`bit pattern "${pattern}" --json ${flags}`);
+    return JSON.parse(result);
   }
 }

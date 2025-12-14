@@ -19,7 +19,7 @@ import {
   CFG_USER_NAME_KEY,
   DEFAULT_BIT_ENV,
 } from '@teambit/legacy.constants';
-import { analyticsPrompt, errorReportingPrompt } from '@teambit/legacy.cli.prompts';
+import yesno from 'yesno';
 import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
 
 const LEVEL = {
@@ -83,17 +83,23 @@ class Analytics {
     if (shouldPromptForAnalytics()) {
       const uniqId = uniqid();
       if (!getConfig(CFG_ANALYTICS_USERID_KEY)) setGlobalConfig(CFG_ANALYTICS_USERID_KEY, uniqId);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return analyticsPrompt().then(({ analyticsResponse }) => {
-        setGlobalConfig(CFG_ANALYTICS_REPORTING_KEY, yn(analyticsResponse));
-        if (!yn(analyticsResponse)) {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          return errorReportingPrompt().then(({ errResponse }) => {
-            return setGlobalConfig(CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse));
+      return yesno({
+        question: `Help us prioritize new features and bug fixes by enabling us to collect anonymous statistics about your usage. Sharing anonymous usage information is completely voluntary and helps us improve Bit and build a better product.
+
+For more information see analytics documentation - https://bit.dev/reference/usage-analytics
+
+Would you like to help Bit with anonymous usage analytics? [yes(y)/no(n)]`,
+      }).then((analyticsResponse: boolean) => {
+        setGlobalConfig(CFG_ANALYTICS_REPORTING_KEY, analyticsResponse.toString());
+        if (!analyticsResponse) {
+          return yesno({
+            question: "Would you like to share error information to Bit's error reporting platform? [yes(y)/no(n)]",
+          }).then((errResponse: boolean) => {
+            setGlobalConfig(CFG_ANALYTICS_ERROR_REPORTS_KEY, errResponse.toString());
+            return;
           });
         }
-        return null;
+        return;
       });
     }
     return Promise.resolve();

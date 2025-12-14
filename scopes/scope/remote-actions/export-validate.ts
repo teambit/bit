@@ -1,5 +1,5 @@
 import path from 'path';
-import glob from 'glob';
+import { globSync } from 'glob';
 import type { Scope } from '@teambit/legacy.scope';
 import { ServerIsBusy } from '@teambit/legacy.scope';
 import { PENDING_OBJECTS_DIR } from '@teambit/legacy.constants';
@@ -40,6 +40,7 @@ export class ExportValidate implements Action<Options> {
       await mergeObjects(scope, bitObjectList, true); // if fails, it throws merge-conflict/component-not-found
       logger.profile('export-validate.mergeObjects');
     } catch (err) {
+      logger.warn(`export-validate, mergeObjects failed, clearing objects before throwing the error`);
       scope.objects.clearObjectsFromCache(); // we don't want to persist anything by mistake.
       throw err;
     }
@@ -102,6 +103,6 @@ export class ExportValidate implements Action<Options> {
 
   private getClientIdsDirs() {
     const cwd = this.getPendingDir();
-    return glob.sync('*', { cwd });
+    return globSync('*', { cwd });
   }
 }

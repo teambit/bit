@@ -1,8 +1,9 @@
 import path from 'path';
 import chai, { expect } from 'chai';
+import chaiFs from 'chai-fs';
 import { Helper } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('uninstall command', function () {
   let helper: Helper;

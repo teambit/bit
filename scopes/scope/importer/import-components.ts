@@ -66,6 +66,7 @@ export type ImportOptions = {
   includeDeprecated?: boolean;
   isLaneFromRemote?: boolean; // whether the `lanes.lane` object is coming directly from the remote.
   writeDeps?: 'package.json' | 'workspace.jsonc';
+  laneOnly?: boolean; // when on a lane, only import components that exist on the lane (preserves legacy behavior)
 };
 type ComponentMergeStatus = {
   component: Component;
@@ -368,9 +369,8 @@ if you just want to get a quick look into this snap, create a new workspace and 
    * consider the following use cases:
    * 1) no ids were provided. it should import all the lanes components objects AND main components objects
    * (otherwise, if main components are not imported and are missing, then bit-status complains about it)
-   * 2) ids are provided with wildcards. we assume the user wants only the ids that are available on the lane.
-   * because a user may entered "bit import scope/*" and this scope has many component on the lane and many not on the lane.
-   * we want to bring only the components on the lane.
+   * 2) ids are provided with wildcards. by default, imports from both lane and main (lane versions preferred).
+   * if --lane-only flag is specified, import only components that exist on the lane.
    * 3) ids are provided without wildcards. here, the user knows exactly what's needed and it's ok to get the ids from
    * main if not found on the lane.
    */
@@ -406,13 +406,20 @@ if you just want to get a quick look into this snap, create a new workspace and 
 
     await pMapSeries(idsWithWildcard, async (idStr: string) => {
       const existingOnLanes = await this.workspace.filterIdsFromPoolIdsByPattern(idStr, remoteLaneIds, false);
-      // in case the wildcard contains components from the lane, the user wants to import only them. not from main.
-      // otherwise, if the wildcard translates to main components only, it's ok to import from main.
-      if (existingOnLanes.length) {
+
+      if (this.options.laneOnly) {
+        // When --lane-only is specified, import only components that exist on the lane, never from main
         bitIds.push(...existingOnLanes);
       } else {
+        // New default behavior: Import from both lane and main
+        // Get all components matching the pattern from main
         const idsFromRemote = await this.lister.getRemoteCompIdsByWildcards(idStr, this.options.includeDeprecated);
-        bitIds.push(...idsFromRemote);
+
+        // Prefer lane versions where they exist, use main versions for the rest
+        const laneIds = new Set(existingOnLanes.map((id) => id.toStringWithoutVersion()));
+        const mainOnlyIds = idsFromRemote.filter((id) => !laneIds.has(id.toStringWithoutVersion()));
+
+        bitIds.push(...existingOnLanes, ...mainOnlyIds);
       }
     });
 

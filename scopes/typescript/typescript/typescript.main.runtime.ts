@@ -253,7 +253,8 @@ export class TypescriptMain {
     tsserverPath?: string,
     contextPath?: string,
     schemaTransformers: SchemaTransformer[] = [],
-    apiTransformers: SchemaNodeTransformer[] = []
+    apiTransformers: SchemaNodeTransformer[] = [],
+    includeFiles: string[] = []
   ): SchemaExtractor {
     const schemaTransformersFromSlot = this.getAllTransformers();
     const apiTransformersFromSlot = flatten(Array.from(this.apiTransformerSlot.values()));
@@ -272,7 +273,8 @@ export class TypescriptMain {
       this.workspace,
       this.scope,
       this.aspectLoader,
-      this.logger
+      this.logger,
+      includeFiles
     );
   }
 

@@ -107,6 +107,12 @@ export default function createWebpackConfig(
         ),
         '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
         '@teambit/base-ui.graph.tree.recursive-tree': require.resolve('@teambit/base-ui.graph.tree.recursive-tree'),
+        '@teambit/semantics.entities.semantic-schema': require.resolve('@teambit/semantics.entities.semantic-schema'),
+        '@teambit/code.ui.code-editor': require.resolve('@teambit/code.ui.code-editor'),
+        '@teambit/api-reference.hooks.use-api': require.resolve('@teambit/api-reference.hooks.use-api'),
+        '@teambit/api-reference.hooks.use-api-renderers': require.resolve(
+          '@teambit/api-reference.hooks.use-api-renderers'
+        ),
       },
       fallback: {
         module: false,

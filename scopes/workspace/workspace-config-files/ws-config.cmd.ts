@@ -25,7 +25,10 @@ const COMMAND_NAME = 'ws-config';
 export class WsConfigCmd implements Command {
   name = `${COMMAND_NAME} <sub-command>`;
   alias = 'workspace-config';
-  description = 'manage workspace config files';
+  description = 'generate IDE configuration files';
+  extendedDescription = `writes configuration files (tsconfig.json, eslintrc.js, etc.) to your workspace for better IDE support.
+automatically generates configs based on your components' environments and settings.
+useful for enabling proper IntelliSense, linting, and type-checking in your IDE.`;
   options = [];
   group = 'workspace-tools';
   commands: Command[] = [];

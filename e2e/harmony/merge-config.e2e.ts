@@ -3,8 +3,8 @@ import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('merge config scenarios', function () {
   this.timeout(0);
@@ -730,6 +730,59 @@ describe('merge config scenarios', function () {
     it('should not delete the previously deps set', () => {
       const deps = helper.command.getCompDepsIdsFromData('comp1');
       expect(deps).to.include('lodash');
+    });
+  });
+  describe('diverge: lane merges main when config unchanged but auto-dep bumped (deps set via variants)', () => {
+    let mainBeforeDiverge: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/index.js', `import R from 'ramda';`);
+      helper.npm.addFakeNpmPackage('ramda', '0.31.0');
+      helper.npm.addFakeNpmPackage('@types/express', '4.17.21');
+
+      // Set a dev dependency (force: true)
+      // important!!! don't use "helper.command.dependenciesSet" for this. If you do, it'll be saved into the model with
+      // "__specific": true, and it won't reproduce the bug.
+      helper.workspaceJsonc.addToVariant('comp1', Extensions.dependencyResolver, {
+        policy: { devDependencies: { '@types/express': '4.17.21' } },
+      });
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      mainBeforeDiverge = helper.scopeHelper.cloneWorkspace();
+
+      helper.command.createLane();
+      // Lane doesn't change the manual dep, only makes an unmodified snap
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.getClonedWorkspace(mainBeforeDiverge);
+      // Main bumps the auto-detected dependency
+      helper.npm.addFakeNpmPackage('ramda', '0.32.0');
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { ramda: '0.32.0' } });
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('dev', '--skip-dependency-installation');
+      helper.npm.addFakeNpmPackage('ramda', '0.31.0');
+      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation');
+    });
+    // This is the bug fix: when config is unchanged between current/other/base,
+    // but auto deps are being merged, the unchanged force:true deps should be preserved
+    it('should preserve the manual devDependency (force:true) in the merged config', () => {
+      const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+      const typesExpressDep = showConfig.data.dependencies.find((d) => d.id === '@types/express');
+      expect(typesExpressDep).to.not.be.undefined;
+      expect(typesExpressDep.version).to.equal('4.17.21');
+      expect(typesExpressDep.lifecycle).to.equal('dev');
+    });
+    it('should also include the bumped auto dependency from main', () => {
+      const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+      const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
+      expect(ramdaDep).to.not.be.undefined;
+      expect(ramdaDep.version).to.equal('0.32.0');
     });
   });
 });

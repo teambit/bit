@@ -58,7 +58,10 @@ export class RemoteList implements Command {
 
 export class RemoteCmd implements Command {
   name = 'remote';
-  description = 'manage set of tracked bit scope(s)';
+  description = 'manage remote scopes for self-hosted environments';
+  extendedDescription = `configure connections to self-hosted remote scopes via HTTP or file protocol.
+note: this command is only needed for self-hosted scopes. when using bit.cloud, remote scopes are automatically configured.
+remotes are bare scopes that store exported components and enable collaboration across teams.`;
   group = 'collaborate';
   helpUrl = 'reference/scope/remote-scopes';
   alias = '';

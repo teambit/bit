@@ -1,4 +1,5 @@
 import type { CLIMain } from '@teambit/cli';
+import { createProxyServer } from 'http-proxy';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { Port } from '@teambit/toolbox.network.get-port';
 import fs from 'fs-extra';
@@ -114,15 +115,10 @@ export class ApiServerMain {
       sendEventsToClients('onPostInstall', {});
     });
 
-    this.watcher
-      .watch({
-        preCompile: false,
-        compile: options.compile,
-      })
-      .catch((err) => {
-        // don't throw an error, we don't want to break the "run" process
-        this.logger.error('watcher found an error', err);
-      });
+    await this.watcher.watch({
+      preCompile: false,
+      compile: options.compile,
+    });
 
     const port = options.port || (await this.getRandomPort());
 
@@ -187,13 +183,47 @@ export class ApiServerMain {
       })
     );
 
+    app.use(
+      '/websocket-server/subscriptions',
+      createProxyMiddleware({
+        pathFilter: '/',
+        target: symphonyUrl,
+        ws: true,
+        secure: false, // Disable SSL verification for proxy to remote server
+        changeOrigin: true,
+      })
+    );
+
     const server = await app.listen(port);
+
+    const proxServer = createProxyServer();
+    server.on('upgrade', (req, socket, head) => {
+      req.url = req.url!.replace(/^.+?[/]/, '/');
+      try {
+        proxServer.ws(
+          req,
+          socket,
+          head,
+          {
+            target: `${symphonyUrl}/websocket-server`,
+            secure: false, // Disable SSL verification for proxy to remote server
+            changeOrigin: true,
+          },
+          (error) => {
+            this.logger.error(`failed to proxy ws: ${error.message}`, error);
+          }
+        );
+      } catch (error: any) {
+        this.logger.error(`failed to proxy ws: ${error.message}`, error);
+      }
+    });
 
     return new Promise((resolve, reject) => {
       server.on('error', (err) => {
         reject(err);
       });
       server.on('listening', () => {
+        // important! if you change the message here, change it also in server-forever.ts and also in the vscode extension.
         this.logger.consoleSuccess(`Bit Server is listening on port ${port}`);
         this.writeUsedPort(port);
         resolve(port);

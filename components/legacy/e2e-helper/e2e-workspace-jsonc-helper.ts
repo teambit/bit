@@ -114,7 +114,7 @@ export default class WorkspaceJsoncHelper {
     this.addKeyValToWorkspace('defaultDirectory', compDir);
   }
 
-  setPackageManager(packageManager = 'teambit.dependencies/yarn') {
+  setPackageManager(packageManager = 'teambit.dependencies/pnpm') {
     this.addKeyValToDependencyResolver('packageManager', packageManager);
   }
 

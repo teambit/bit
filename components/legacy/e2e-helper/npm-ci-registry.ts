@@ -109,7 +109,7 @@ export class NpmCiRegistry {
       email: 'ci@ci.com',
     });
     execa.sync('npm', ['config', 'set', `${this.ciDefaultScope}:registry=${this.ciRegistry}`]);
-    execa.sync('npm', ['config', 'set', `${this.ciRegistry.replace('http://', '//')}:_authToken=${token}`]);
+    execa.sync('npm', ['config', 'set', `${this.ciRegistry.replace('http://', '//')}/:_authToken=${token}`]);
     if (this.helper.debugMode) console.log('default user has been added successfully to Verdaccio');
   }
 

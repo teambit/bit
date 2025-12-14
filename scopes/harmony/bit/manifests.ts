@@ -49,6 +49,7 @@ import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
 import { InstallAspect } from '@teambit/install';
 import { LinterAspect } from '@teambit/linter';
 import { FormatterAspect } from '@teambit/formatter';
+import { ValidatorAspect } from '@teambit/validator';
 import { ChangelogAspect } from '@teambit/changelog';
 import { CodeAspect } from '@teambit/code';
 import { CommandBarAspect } from '@teambit/command-bar';
@@ -106,6 +107,7 @@ import { BitAspect } from './bit.aspect';
 import { ConfigStoreAspect } from '@teambit/config-store';
 import { CliMcpServerAspect } from '@teambit/cli-mcp-server';
 import { CiAspect } from '@teambit/ci';
+import { ScriptsAspect } from '@teambit/scripts';
 
 /**
  * this is the place to register core aspects.
@@ -125,6 +127,7 @@ export const manifestsMap = {
   [CompilerAspect.id]: CompilerAspect,
   [LinterAspect.id]: LinterAspect,
   [FormatterAspect.id]: FormatterAspect,
+  [ValidatorAspect.id]: ValidatorAspect,
   [ComponentAspect.id]: ComponentAspect,
   [MDXAspect.id]: MDXAspect,
   [ReadmeAspect.id]: ReadmeAspect,
@@ -220,6 +223,7 @@ export const manifestsMap = {
   [ConfigStoreAspect.id]: ConfigStoreAspect,
   [CliMcpServerAspect.id]: CliMcpServerAspect,
   [CiAspect.id]: CiAspect,
+  [ScriptsAspect.id]: ScriptsAspect,
 };
 
 export function isCoreAspect(id: string) {

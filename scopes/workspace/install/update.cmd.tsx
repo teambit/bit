@@ -13,7 +13,10 @@ type UpdateCmdOptions = {
 
 export default class UpdateCmd implements Command {
   name = 'update [package-patterns...]';
-  description = 'update dependencies. By default, dependencies are updated to the highest semver compatible versions.';
+  description = 'update workspace dependencies to newer versions';
+  extendedDescription = `updates dependencies in workspace.jsonc to newer versions and runs install to apply changes.
+by default, updates to highest semver-compatible versions. use --major, --minor, or --patch for specific version types.
+supports glob patterns to update specific packages. prompts for confirmation unless --yes is specified.`;
   helpUrl = 'reference/dependencies/configuring-dependencies/#update-dependencies';
   alias = 'up';
   group = 'dependencies';

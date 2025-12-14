@@ -8,8 +8,10 @@ import type { ComponentCompareMain } from './component-compare.main.runtime';
 export class DiffCmd implements Command {
   name = 'diff [component-pattern] [version] [to-version]';
   group = 'info-analysis';
-  description =
-    "show the diff between the components' current source files and config, and their latest snapshot or tag";
+  description = 'compare component changes between versions or against the current workspace';
+  extendedDescription = `shows a detailed diff of component files, dependencies, and configuration changes. 
+by default, compares workspace changes against the latest version. specify versions to compare historical changes.
+supports pattern matching to filter components and various output formats for better readability.`;
   helpUrl = 'docs/components/merging-changes#compare-component-snaps';
   arguments = [
     {

@@ -3,8 +3,8 @@ import path from 'path';
 import { statusWorkspaceIsCleanMsg } from '@teambit/legacy.constants';
 import { LANE_KEY } from '@teambit/legacy.bit-map';
 import { Helper, fixtures, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit lane command', function () {
   this.timeout(0);

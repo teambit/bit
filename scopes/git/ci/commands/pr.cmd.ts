@@ -12,7 +12,8 @@ type Options = {
 
 export class CiPrCmd implements Command {
   name = 'pr';
-  description = 'This command is meant to run when a PR was open/updated and meant to export a lane to bit-cloud.';
+  description = 'Exports a feature lane to Bit Cloud when a Pull Request is opened or updated.';
+  extendedDescription = `Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. Cleans up by switching back to main. Use in pull-request CI pipelines after tests and before deploy.`;
   group = 'collaborate';
 
   options: CommandOptions = [
@@ -45,9 +46,7 @@ export class CiPrCmd implements Command {
       if (!currentBranch) {
         throw new Error('Failed to get branch name');
       }
-      // Sanitize branch name to make it valid for Bit lane IDs by replacing slashes and dots with dashes
-      const sanitizedBranch = currentBranch.replace(/[/.]/g, '-');
-      laneIdStr = `${this.workspace.defaultScope}/${sanitizedBranch}`;
+      laneIdStr = this.ci.convertBranchToLaneId(currentBranch);
     }
 
     if (options.message) {

@@ -45,7 +45,9 @@
     "check-types": "tsc --noEmit",
     "oxlint": "oxlint --deny-warnings",
     "oxlint:fix": "oxlint --fix --fix-suggestions --fix-dangerously",
+    "oxlint:with-ts": "oxlint --type-aware --deny-warnings",
     "oxlint:with-react": "oxlint --deny-warnings --react-plugin",
+    "oxlint:with-ts-react": "oxlint --deny-warnings --type-aware --react-plugin",
     "lint:only": "eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\"",
     "lint": "tsc --noEmit && eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\"",
     "lint:table": "eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\" --format table",
@@ -91,7 +93,8 @@
     "lint-staged": "lint-staged"
   },
   "dependencies": {
-    "oxlint": "1.11.2",
+    "oxlint": "1.12.0",
+    "oxlint-tsgolint": "0.0.4",
     "husky": "9.1.7"
   },
   "devDependencies": {},

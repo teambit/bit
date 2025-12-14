@@ -82,8 +82,8 @@ export class LinterService implements EnvService<LintResults> {
     );
   }
 
-  render(env: EnvDefinition) {
-    const descriptor = this.getDescriptor(env);
+  async render(env: EnvDefinition) {
+    const descriptor = await this.getDescriptor(env);
     const name = `${chalk.green('configured linter:')} ${descriptor?.id} (${descriptor?.displayName} @ ${
       descriptor?.version
     })`;
@@ -102,7 +102,7 @@ export class LinterService implements EnvService<LintResults> {
     };
   }
 
-  getDescriptor(env: EnvDefinition) {
+  async getDescriptor(env: EnvDefinition) {
     if (!env.env.getLinter) return undefined;
     const mergedOpts = this.optionsWithDefaults({});
     const linterContext = this.mergeContext(mergedOpts);
@@ -112,7 +112,7 @@ export class LinterService implements EnvService<LintResults> {
       id: linter.id,
       icon: linter.icon,
       config: linter.displayConfig ? linter.displayConfig() : undefined,
-      version: linter.version ? linter.version() : '?',
+      version: linter.version ? await linter.version() : '?',
       displayName: linter.displayName ? linter.displayName : '?',
     };
   }

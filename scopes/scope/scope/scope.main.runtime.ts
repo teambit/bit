@@ -93,6 +93,8 @@ type OnPostDelete = RemoteEvent<OnPostDeleteData>;
 type OnPostObjectsPersist = RemoteEvent<undefined>;
 type OnPreFetchObjects = RemoteEvent<OnPreFetchObjectData>;
 type OnCompAspectReCalc = (component: Component) => Promise<AspectData | undefined>;
+type OnPreObjectPersist = (content: Buffer) => Buffer;
+type OnPostObjectRead = (content: Buffer) => Buffer;
 
 export type OnPostPutSlot = SlotRegistry<OnPostPut>;
 export type OnPostDeleteSlot = SlotRegistry<OnPostDelete>;
@@ -100,6 +102,8 @@ export type OnPostExportSlot = SlotRegistry<OnPostExport>;
 export type OnPostObjectsPersistSlot = SlotRegistry<OnPostObjectsPersist>;
 export type OnPreFetchObjectsSlot = SlotRegistry<OnPreFetchObjects>;
 export type OnCompAspectReCalcSlot = SlotRegistry<OnCompAspectReCalc>;
+export type OnPreObjectPersistSlot = SlotRegistry<OnPreObjectPersist>;
+export type OnPostObjectReadSlot = SlotRegistry<OnPostObjectRead>;
 export type LoadOptions = {
   /**
    * In case the component we are loading is app, whether to load it as app (in a scope aspects capsule)
@@ -174,11 +178,15 @@ export class ScopeMain implements ComponentFactory {
 
     private OnCompAspectReCalcSlot: OnCompAspectReCalcSlot,
 
+    private preObjectPersistSlot: OnPreObjectPersistSlot,
+
+    private postObjectReadSlot: OnPostObjectReadSlot,
+
     private isolator: IsolatorMain,
 
     private aspectLoader: AspectLoaderMain,
 
-    private logger: Logger,
+    readonly logger: Logger,
 
     private envs: EnvsMain,
 
@@ -454,6 +462,60 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
+   * register to the pre-object persist slot.
+   */
+  registerOnPreObjectPersist(preObjectPersistFn: OnPreObjectPersist) {
+    /**
+     * Register a synchronous hook to transform object content before it is persisted to the filesystem.
+     *
+     * This is typically used for tasks such as encryption, compression, or other pre-save transformations.
+     *
+     * To ensure data integrity, you should also register a corresponding hook with `registerOnPostObjectRead`
+     * to reverse the transformation (e.g., decrypt or decompress) when reading objects back.
+     *
+     * Example:
+     * ```ts
+     * // Encrypt before persisting
+     * scope.registerOnPreObjectPersist((content) => encrypt(content));
+     * // Decrypt after reading
+     * scope.registerOnPostObjectRead((content) => decrypt(content));
+     * ```
+     *
+     * @param preObjectPersistFn - Function to transform content before persisting
+     * @returns this
+     */
+    this.preObjectPersistSlot.register(preObjectPersistFn);
+    return this;
+  }
+
+  /**
+   * register to the post-object read slot.
+   */
+  registerOnPostObjectRead(postObjectReadFn: OnPostObjectRead) {
+    /**
+     * Register a synchronous hook to transform object content after it is read from the filesystem.
+     *
+     * This is typically used for tasks such as decryption, decompression, or other post-read transformations.
+     *
+     * To maintain consistency, you should also register a corresponding hook with `registerOnPreObjectPersist`
+     * to apply the transformation before persisting (e.g., encrypt or compress).
+     *
+     * Example:
+     * ```ts
+     * // Encrypt before persisting
+     * scope.registerOnPreObjectPersist((content) => encrypt(content));
+     * // Decrypt after reading
+     * scope.registerOnPostObjectRead((content) => decrypt(content));
+     * ```
+     *
+     * @param postObjectReadFn - Function to transform content after reading
+     * @returns this
+     */
+    this.postObjectReadSlot.register(postObjectReadFn);
+    return this;
+  }
+
+  /**
    * Will fetch a list of components into the current scope.
    * This will only fetch the object and won't write the files to the actual FS
    */
@@ -504,7 +566,10 @@ export class ScopeMain implements ComponentFactory {
     const globalConfigFile = globalStore.getPath();
     const scopeJsonPath = scopeStore.getPath();
     const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile, scopeJsonPath];
-    const watcher = chokidar.watch(pathsToWatch, watchOptions);
+    // Use polling to reduce FSEvents stream consumption on macOS.
+    // These files change infrequently (mainly during import/export operations),
+    // so the small CPU overhead of polling is acceptable.
+    const watcher = chokidar.watch(pathsToWatch, { ...watchOptions, usePolling: true, interval: 300 });
     watcher.on('ready', () => {
       this.logger.debug(`watchSystemFiles has started, watching ${pathsToWatch.join(', ')}`);
     });
@@ -656,8 +721,17 @@ export class ScopeMain implements ComponentFactory {
     }));
     const nodes = consumerComponent.flattenedDependencies;
 
+    // Convert component ID from hash to tag if a tag exists, to match flattenedEdges format
+    let componentIdForGraph = component.id;
+    if (component.id.version) {
+      const tag = component.tags.byHash(component.id.version);
+      if (tag) {
+        componentIdForGraph = component.id.changeVersion(tag.version.raw);
+      }
+    }
+
     const graph = new Graph<ComponentID, DepEdgeType>();
-    graph.setNode(new Node(component.id.toString(), component.id));
+    graph.setNode(new Node(componentIdForGraph.toString(), componentIdForGraph));
     nodes.forEach((node) => graph.setNode(new Node(node.toString(), node)));
     edges.forEach((edge) => graph.setEdge(new Edge(edge.source.toString(), edge.target.toString(), edge.type)));
     return graph;
@@ -752,7 +826,7 @@ export class ScopeMain implements ComponentFactory {
     includeDeleted = false
   ): Promise<Component[]> {
     const patternsWithScope =
-      (filter?.namespaces && filter?.namespaces.map((pattern) => `**/${pattern || '**'}`)) || undefined;
+      (filter?.namespaces && filter?.namespaces.map((pattern) => `${this.name}/${pattern || '**'}`)) || undefined;
     const componentsIds = await this.listIds(includeCache, includeFromLanes, patternsWithScope);
 
     const comps = await this.getMany(
@@ -984,12 +1058,13 @@ export class ScopeMain implements ComponentFactory {
       // otherwise it'll never match anything. don't use ".push()". it must be the first item in the array.
       patterns.unshift('**');
     }
-    // check also as legacyId.toString, as it doesn't have the defaultScope
-    const idsToCheck = (id: ComponentID) => [id._legacy.toStringWithoutVersion(), id.toStringWithoutVersion()];
     const [statePatterns, nonStatePatterns] = partition(patterns, (p) => p.startsWith('$') || p.includes(' AND '));
     const nonStatePatternsNoVer = nonStatePatterns.map((p) => p.split('@')[0]); // no need for the version
+    const idsMap: { [id: string]: ComponentID } = Object.fromEntries(
+      ids.map((id) => [id.toStringWithoutVersion(), id])
+    );
     const idsFiltered = nonStatePatternsNoVer.length
-      ? ids.filter((id) => multimatch(idsToCheck(id), nonStatePatternsNoVer).length)
+      ? multimatch(Object.keys(idsMap), nonStatePatternsNoVer).map((idStr) => idsMap[idStr])
       : [];
 
     const idsStateFiltered = await mapSeries(statePatterns, async (statePattern) => {
@@ -999,6 +1074,8 @@ export class ScopeMain implements ComponentFactory {
       if (statePattern.includes(' AND ')) {
         let filteredByAnd: ComponentID[] = ids;
         const patternSplit = statePattern.split(' AND ').map((p) => p.trim());
+        // check also as legacyId.toString, as it doesn't have the defaultScope
+        const idsToCheck = (id: ComponentID) => [id._legacy.toStringWithoutVersion(), id.toStringWithoutVersion()];
         for await (const onePattern of patternSplit) {
           filteredByAnd = onePattern.startsWith('$')
             ? await filterByStateFunc(onePattern.replace('$', ''), filteredByAnd)
@@ -1225,6 +1302,8 @@ export class ScopeMain implements ComponentFactory {
     Slot.withType<OnPostObjectsPersist>(),
     Slot.withType<OnPreFetchObjects>(),
     Slot.withType<OnCompAspectReCalc>(),
+    Slot.withType<OnPreObjectPersist>(),
+    Slot.withType<OnPostObjectRead>(),
   ];
   static runtime = MainRuntime;
 
@@ -1268,6 +1347,8 @@ export class ScopeMain implements ComponentFactory {
       postObjectsPersistSlot,
       preFetchObjectsSlot,
       OnCompAspectReCalcSlot,
+      preObjectPersistSlot,
+      postObjectReadSlot,
     ]: [
       OnPostPutSlot,
       OnPostDeleteSlot,
@@ -1275,6 +1356,8 @@ export class ScopeMain implements ComponentFactory {
       OnPostObjectsPersistSlot,
       OnPreFetchObjectsSlot,
       OnCompAspectReCalcSlot,
+      OnPreObjectPersistSlot,
+      OnPostObjectReadSlot,
     ],
     harmony: Harmony
   ) {
@@ -1299,6 +1382,8 @@ export class ScopeMain implements ComponentFactory {
       postObjectsPersistSlot,
       preFetchObjectsSlot,
       OnCompAspectReCalcSlot,
+      preObjectPersistSlot,
+      postObjectReadSlot,
       isolator,
       aspectLoader,
       logger,
@@ -1352,10 +1437,30 @@ export class ScopeMain implements ComponentFactory {
       logger.debug(`onPostObjectsPersistHook, completed`);
     };
 
+    /**
+     * Hook for transforming content before objects are persisted to the filesystem.
+     * Note: This function cannot be async because it is used by synchronous code paths (e.g., Repository.loadSync)
+     */
+    const onPreObjectPersistHook = (content: Buffer): Buffer => {
+      const fns = preObjectPersistSlot.values();
+      return fns.reduce((acc, fn) => fn(acc), content);
+    };
+
+    /**
+     * Hook for transforming content after objects are read from the filesystem.
+     * Note: This function cannot be async because it is used by synchronous code paths (e.g., Repository.loadSync)
+     */
+    const onPostObjectReadHook = (content: Buffer): Buffer => {
+      const fns = postObjectReadSlot.values();
+      return fns.reduce((acc, fn) => fn(acc), content);
+    };
+
     ExportPersist.onPutHook = onPutHook;
     PostSign.onPutHook = onPutHook;
     Scope.onPostExport = onPostExportHook;
     Repository.onPostObjectsPersist = onPostObjectsPersistHook;
+    Repository.onPreObjectPersist = onPreObjectPersistHook;
+    Repository.onPostObjectRead = onPostObjectReadHook;
     ExternalActions.externalActions.push(new ClearCacheAction(scope));
 
     express.register([

@@ -102,7 +102,15 @@ export class DependencyInstaller {
 
     private neverBuiltDependencies?: string[],
 
+    private allowScripts?: Record<string, boolean | 'warn'>,
+
+    private dangerouslyAllowAllScripts?: boolean,
+
     private preferOffline?: boolean,
+
+    private minimumReleaseAge?: number,
+
+    private minimumReleaseAgeExclude?: string[],
 
     private installingContext: DepInstallerContext = {}
   ) {}
@@ -200,13 +208,17 @@ export class DependencyInstaller {
       cacheRootDir: this.cacheRootDir,
       nodeLinker: this.nodeLinker,
       packageImportMethod: this.packageImportMethod,
+      minimumReleaseAge: this.minimumReleaseAge,
+      minimumReleaseAgeExclude: this.minimumReleaseAgeExclude,
       sideEffectsCache: this.sideEffectsCache,
       nodeVersion: this.nodeVersion,
       engineStrict: this.engineStrict,
       packageManagerConfigRootDir: options.packageManagerConfigRootDir,
       peerDependencyRules: this.peerDependencyRules,
       hidePackageManagerOutput,
-      neverBuiltDependencies: ['core-js', ...(this.neverBuiltDependencies ?? [])],
+      neverBuiltDependencies: this.neverBuiltDependencies,
+      allowScripts: this.allowScripts,
+      dangerouslyAllowAllScripts: this.dangerouslyAllowAllScripts,
       preferOffline: this.preferOffline,
       dedupeInjectedDeps: options.dedupeInjectedDeps,
       dependenciesGraph: options.dependenciesGraph,

@@ -2,7 +2,13 @@ import fs from 'fs-extra';
 import { join, normalize } from 'path';
 import globby from 'globby';
 import chalk from 'chalk';
-import { PromptCanceled } from '@teambit/legacy.cli.prompts';
+import { BitError } from '@teambit/bit-error';
+
+class PromptCanceled extends BitError {
+  constructor() {
+    super(chalk.yellow('operation aborted'));
+  }
+}
 import pMapSeries from 'p-map-series';
 import { ConsumerNotFound } from '@teambit/legacy.consumer';
 import yesno from 'yesno';

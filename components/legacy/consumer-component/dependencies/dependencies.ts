@@ -6,7 +6,6 @@ import { ValidationError } from '@teambit/legacy.cli.error';
 import type { Scope } from '@teambit/legacy.scope';
 import { validateType } from '@teambit/legacy.scope';
 import { fetchRemoteVersions } from '@teambit/scope.remotes';
-import { isValidPath } from '@teambit/legacy.utils';
 import Dependency from './dependency';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
@@ -138,15 +137,12 @@ export default class Dependencies {
 
   validate(bitId?: ComponentID): void {
     const compIdStr = bitId ? ` of ${bitId.toString()}` : '';
-    let message = `failed validating the dependencies${compIdStr}.`;
+    const message = `failed validating the dependencies${compIdStr}.`;
     validateType(message, this.dependencies, 'dependencies', 'array');
     const allIds = this.getAllIds();
     this.dependencies.forEach((dependency) => {
       validateType(message, dependency, 'dependency', 'object');
       if (!dependency.id) throw new ValidationError('one of the dependencies is missing ID');
-      if (!dependency.relativePaths) {
-        throw new ValidationError(`a dependency ${dependency.id.toString()} is missing relativePaths`);
-      }
       const sameIds = allIds.filterExact(dependency.id);
       if (sameIds.length > 1) {
         throw new ValidationError(`a dependency ${dependency.id.toString()} is duplicated`);
@@ -163,53 +159,6 @@ export default class Dependencies {
           throw new ValidationError(
             `a dependency ${dependency.id.toString()} has an undetected property "${currentProp}"`
           );
-        }
-      });
-      validateType(message, dependency.relativePaths, 'dependency.relativePaths', 'array');
-      dependency.relativePaths.forEach((relativePath) => {
-        message = `failed validating dependency ${dependency.id.toString()}.`;
-        validateType(message, dependency, 'dependency', 'object');
-        const requiredProps = ['sourceRelativePath', 'destinationRelativePath'];
-        const pathProps = ['sourceRelativePath', 'destinationRelativePath'];
-        const optionalProps = ['importSpecifiers', 'importSource'];
-        const allProps = requiredProps.concat(optionalProps);
-        requiredProps.forEach((prop) => {
-          if (!relativePath[prop]) {
-            throw new ValidationError(`${message} relativePaths.${prop} is missing`);
-          }
-        });
-        pathProps.forEach((prop) => {
-          if (!isValidPath(relativePath[prop])) {
-            throw new ValidationError(`${message} relativePaths.${prop} has an invalid path ${relativePath[prop]}`);
-          }
-        });
-        Object.keys(relativePath).forEach((prop) => {
-          if (!allProps.includes(prop)) {
-            throw new ValidationError(`${message} undetected property of relativePaths "${prop}"`);
-          }
-        });
-        if (relativePath.importSpecifiers) {
-          validateType(message, relativePath.importSpecifiers, 'relativePath.importSpecifiers', 'array');
-          // $FlowFixMe it's already confirmed that relativePath.importSpecifiers is set
-          relativePath.importSpecifiers.forEach((importSpecifier) => {
-            validateType(message, importSpecifier, 'importSpecifier', 'object');
-            if (!importSpecifier.mainFile) {
-              throw new ValidationError(`${message} mainFile property is missing from the importSpecifier`);
-            }
-            const specifierProps = ['isDefault', 'name'].sort().toString();
-            const mainFileProps = Object.keys(importSpecifier.mainFile).sort().toString();
-            if (mainFileProps !== specifierProps) {
-              throw new ValidationError(
-                `${message} expected properties of importSpecifier.mainFile "${specifierProps}", got "${mainFileProps}"`
-              );
-            }
-            const specifierPermittedProps = ['mainFile'];
-            Object.keys(importSpecifier).forEach((prop) => {
-              if (!specifierPermittedProps.includes(prop)) {
-                throw new ValidationError(`${message} undetected property of importSpecifier "${prop}"`);
-              }
-            });
-          });
         }
       });
     });

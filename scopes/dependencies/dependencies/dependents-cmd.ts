@@ -14,7 +14,10 @@ export class DependentsCmd implements Command {
       description: 'component name or component id',
     },
   ];
-  description = 'show dependents of the given component';
+  description = 'show components that depend on the specified component';
+  extendedDescription = `displays components from both workspace and scope that depend on the specified component.
+useful for understanding impact before making changes to a component or when planning refactoring.
+shows both direct and transitive dependents organized by their origin (workspace vs scope).`;
   group = 'dependencies';
   alias = '';
   options = [['j', 'json', 'return the dependents in JSON format']] as CommandOptions;

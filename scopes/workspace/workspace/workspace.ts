@@ -61,7 +61,7 @@ import type { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog, Lane } from '@teambit/objects';
 import type { JsonVinyl } from '@teambit/component.sources';
 import { SourceFile, DataToPersist, PackageJsonFile } from '@teambit/component.sources';
-import { ScopeComponentsImporter } from '@teambit/legacy.scope';
+import { ScopeComponentsImporter, VersionNotFoundOnFS } from '@teambit/legacy.scope';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { isHash } from '@teambit/component-version';
@@ -125,6 +125,16 @@ export type ClearCacheOptions = {
   skipClearFailedToLoadEnvs?: boolean;
 };
 
+/**
+ * Field used to mark aspect config as "specific" (set via .bitmap or component.json).
+ * When __specific is true, this config takes precedence over workspace variants during merging.
+ * See https://github.com/teambit/bit/pull/5342 for original implementation.
+ *
+ * Important behavior for dependency-resolver aspect:
+ * - Dependencies set via workspace variants are saved WITHOUT __specific (until first `bit deps set`)
+ * - Once `bit deps set` is called, the entire dependency-resolver config gets __specific: true
+ * - From that point forward, ALL deps in that aspect are considered "specific"
+ */
 export const AspectSpecificField = '__specific';
 export const ComponentAdded = 'componentAdded';
 export const ComponentChanged = 'componentChanged';
@@ -673,13 +683,14 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   async getDependentsIds(ids: ComponentID[], filterOutNowWorkspaceIds = true): Promise<ComponentID[]> {
     const graph = await this.getGraphIds();
     const dependents = ids
-      .map((id) => graph.predecessors(id.toString()))
+      .map((id) =>
+        graph.predecessors(id.toString(), {
+          nodeFilter: (node) => (filterOutNowWorkspaceIds ? this.hasId(node.attr) : true),
+        })
+      )
       .flat()
       .map((node) => node.attr);
-    const uniqIds = ComponentIdList.uniqFromArray(dependents);
-    if (!filterOutNowWorkspaceIds) return uniqIds;
-    const workspaceIds = this.listIds();
-    return uniqIds.filter((id) => workspaceIds.has(id));
+    return ComponentIdList.uniqFromArray(dependents);
   }
 
   public async createAspectList(extensionDataList: ExtensionDataList) {
@@ -1113,6 +1124,11 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
    * some commands such as build/test needs to run also on the dependents.
    */
   async getComponentsByUserInput(all?: boolean, pattern?: string, includeDependents = false): Promise<Component[]> {
+    if (all && pattern) {
+      throw new BitError(
+        'Cannot use both "all" flag and component pattern simultaneously. Use either --all/--unmodified for all components, or specify component pattern.'
+      );
+    }
     if (all) {
       return this.list();
     }
@@ -1659,13 +1675,24 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     }
   }
 
-  async removeSpecificComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist = false) {
+  async removeSpecificComponentConfig(
+    id: ComponentID,
+    aspectId: string,
+    markWithMinusIfNotExist = false
+  ): Promise<boolean> {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {
-      await componentConfigFile.removeAspect(aspectId, markWithMinusIfNotExist, this.resolveComponentId.bind(this));
-      await componentConfigFile.write({ override: true });
+      const removed = await componentConfigFile.removeAspect(
+        aspectId,
+        markWithMinusIfNotExist,
+        this.resolveComponentId.bind(this)
+      );
+      if (removed) {
+        await componentConfigFile.write({ override: true });
+      }
+      return removed;
     } else {
-      this.bitMap.removeComponentConfig(id, aspectId, markWithMinusIfNotExist);
+      return this.bitMap.removeComponentConfig(id, aspectId, markWithMinusIfNotExist);
     }
   }
 
@@ -2198,10 +2225,20 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
     // We need to load the env component with the slot and extensions to get the env manifest of the parent
     // already resolved
-    const envComponent = await this.get(resolvedEnvComponentId, undefined, true, true, {
-      executeLoadSlot: true,
-      loadExtensions: true,
-    });
+    let envComponent: Component;
+    try {
+      envComponent = await this.get(resolvedEnvComponentId, undefined, true, true, {
+        executeLoadSlot: true,
+        loadExtensions: true,
+      });
+    } catch (error) {
+      // If component not found in workspace (e.g. during bit new with extends), try remote
+      if (error instanceof VersionNotFoundOnFS || (error as any).name === 'VersionNotFoundOnFS') {
+        envComponent = await this.scope.getRemoteComponent(resolvedEnvComponentId);
+      } else {
+        throw error;
+      }
+    }
 
     // TODO: caching this
     const alreadyResolved = this.envs.getEnvManifest(envComponent);
@@ -2239,12 +2276,17 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
         // env by `this.getAspectIdFromConfig`, it returns the env with version.
         // to make sure we remove the env from the .bitmap, we need to remove both with and without version.
         const currentEnvWithPotentialVersion = await this.getAspectIdFromConfig(id, currentEnv, true);
-        await this.removeSpecificComponentConfig(id, currentEnv);
+        let anyRemoved = false;
+        anyRemoved = (await this.removeSpecificComponentConfig(id, currentEnv)) || anyRemoved;
         if (currentEnvWithPotentialVersion && currentEnvWithPotentialVersion.includes('@')) {
-          await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion);
+          anyRemoved = (await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion)) || anyRemoved;
         }
-        await this.removeSpecificComponentConfig(id, EnvsAspect.id);
-        changed.push(id);
+        anyRemoved = (await this.removeSpecificComponentConfig(id, EnvsAspect.id)) || anyRemoved;
+        if (anyRemoved) {
+          changed.push(id);
+        } else {
+          unchanged.push(id);
+        }
       })
     );
     await this.bitMap.write(`env-unset`);
@@ -2456,9 +2498,15 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     await this.dependencyResolver.persistConfig('Write dependencies');
   }
 
-  async writeDependenciesToPackageJson(): Promise<void> {
+  externalPackageManagerIsUsed(): boolean {
+    return this.dependencyResolver.config.externalPackageManager === true;
+  }
+
+  async writeDependenciesToPackageJson(dependencies?: Record<string, string>): Promise<void> {
     const pkgJson = await PackageJsonFile.load(this.path);
-    const allDeps = await this.getAllDedupedDirectDependencies();
+    const allDeps = dependencies
+      ? Object.entries(dependencies).map(([name, currentRange]) => ({ name, currentRange }))
+      : await this.getAllDedupedDirectDependencies();
     pkgJson.packageJsonObject.dependencies ??= {};
     for (const dep of allDeps) {
       pkgJson.packageJsonObject.dependencies[dep.name] = dep.currentRange;

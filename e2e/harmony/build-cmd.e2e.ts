@@ -1,6 +1,8 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
 import { loadBit } from '@teambit/bit';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
@@ -9,8 +11,8 @@ import { BuilderAspect } from '@teambit/builder';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import { specFileFailingFixture } from './jest-fixtures';
 
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('build command', function () {
   this.timeout(0);
@@ -232,6 +234,82 @@ describe('build command', function () {
       expect(comp1Capsule).to.be.a.directory();
       expect(comp2Capsule).to.be.a.directory();
       expect(comp3Capsule).to.be.a.directory();
+    });
+  });
+
+  describe('build should only include workspace components and direct dependents', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      // Create 3 components: comp1 -> comp2 -> comp3 (comp1 uses comp2, comp2 uses comp3)
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // Create a new workspace and import only comp1 and comp3 (not comp2)
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp1', '-x');
+      helper.command.importComponent('comp3');
+      helper.npm.addFakeNpmPackage(`@${helper.scopes.remote}/comp2`, '0.0.1', true);
+
+      // Modify comp3 to trigger a build
+      helper.fs.appendFile(path.join(helper.scopes.remote, 'comp3/index.js'), '\n// modification to comp3');
+    });
+    it('should only include modified component (comp3) in build, not its dependents through non-workspace components', () => {
+      const output = helper.command.build();
+
+      // Should include comp3 since it was modified
+      expect(output).to.have.string('comp3');
+
+      // Should NOT include comp1, even though comp1 depends on comp2 which depends on comp3,
+      // because comp2 is not in the workspace (it's an external dependency)
+      expect(output).to.not.have.string('comp1');
+
+      expect(output).to.have.string('Total 1 components to build');
+    });
+  });
+
+  describe('build with --unmodified flag and component pattern', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      // Create 2 independent components (not related to each other)
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile('comp2/index.js', 'module.exports = function comp2() { return "comp2"; }');
+      helper.command.add('comp2');
+      helper.command.tagAllWithoutBuild();
+    });
+    it('should only build the specified component when using --unmodified with a component pattern', () => {
+      const output = helper.command.build('comp1 --unmodified');
+
+      // Should include comp1 since it was specified
+      expect(output).to.have.string('comp1');
+
+      // Should NOT include comp2, even with --unmodified flag
+      expect(output).to.not.have.string('comp2');
+
+      expect(output).to.have.string('Total 1 components to build');
+    });
+    it('should build both components when using --unmodified without a pattern', () => {
+      const output = helper.command.build('--unmodified');
+
+      // Should include both components
+      expect(output).to.have.string('comp1');
+      expect(output).to.have.string('comp2');
+
+      expect(output).to.have.string('Total 2 components to build');
+    });
+  });
+
+  describe('build with invalid --tasks flag', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+    });
+    it('should throw an error when --tasks does not match any available tasks', () => {
+      const output = helper.general.runWithTryCatch('bit build --tasks non-existent-task');
+      expect(output).to.have.string('Pipeline error - no tasks found matching the specified filter');
+      expect(output).to.have.string('non-existent-task');
+      expect(output).to.have.string('Available tasks:');
     });
   });
 });

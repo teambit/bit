@@ -131,8 +131,11 @@ class ConfigDel implements Command {
 
 export class ConfigCmd implements Command {
   name = 'config';
-  description = 'config management';
-  extendedDescription = `${BASE_DOCS_DOMAIN}reference/config/bit-config`;
+  description = 'manage Bit configuration settings';
+  extendedDescription = `view and modify Bit configuration at different levels: global, workspace, or scope.
+configurations control various aspects of Bit including user settings, registries, and feature flags.
+use environment variables prefixed with BIT_CONFIG_ for temporary overrides.
+${BASE_DOCS_DOMAIN}reference/config/bit-config`;
   group = 'system';
   alias = '';
   loadAspects = false;

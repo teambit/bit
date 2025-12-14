@@ -10,7 +10,10 @@ export type NewOptions = BaseWorkspaceOptions;
 
 export class NewCmd implements Command {
   name = 'new <template-name> <workspace-name>';
-  description = 'create a new workspace from a template';
+  description = 'create a new Bit workspace from a template';
+  extendedDescription = `initializes a new Bit workspace with pre-configured settings, environments, and optionally starter components.
+templates provide different setups for React, Angular, Node.js, or custom development workflows.
+installs dependencies and configures the workspace for immediate development.`;
   arguments = [
     {
       name: 'template-name',

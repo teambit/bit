@@ -179,18 +179,18 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
     return {
       getBuildPipe: () => {
         // TODO: refactor after defining for an env property
-        const pipeline = env.build();
+        const pipeline = env.build?.();
         if (!pipeline || !pipeline.compute) return [];
         return pipeline?.compute(envContext);
       },
       getTagPipe: () => {
         // TODO: refactor after defining for an env property
-        const pipeline = env.tag();
+        const pipeline = env.tag?.();
         if (!pipeline || !pipeline.compute) return [];
         return pipeline?.compute(envContext);
       },
       getSnapPipe: () => {
-        const pipeline = env.snap();
+        const pipeline = env.snap?.();
         if (!pipeline || !pipeline.compute) return [];
         return pipeline?.compute(envContext);
       },

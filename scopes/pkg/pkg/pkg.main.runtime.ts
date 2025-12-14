@@ -335,8 +335,12 @@ export class PkgMain {
   async mergePackageJsonProps(component: Component): Promise<PackageJsonProps> {
     let newProps: PackageJsonProps = {};
     const mergeToNewProps = (otherProps: PackageJsonProps) => {
+      // Deep clone otherProps to prevent shared object references between components.
+      // Without this, nested objects (like exports) can be unintentionally shared across different components,
+      // causing modifications to one component's package.json to leak into others.
+      const otherPropsCloned = JSON.parse(JSON.stringify(otherProps));
       const files = [...(newProps.files || []), ...(otherProps.files || [])];
-      const merged = { ...newProps, ...otherProps };
+      const merged = { ...newProps, ...otherPropsCloned };
       if (files.length) merged.files = files;
       return merged;
     };

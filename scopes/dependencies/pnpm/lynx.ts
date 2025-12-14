@@ -82,6 +82,8 @@ async function createStoreController(
     fetchTimeout: options.networkConfig.fetchTimeout,
     virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
     registries: options.registries.toMap(),
+    fetchWarnTimeoutMs: options.networkConfig.fetchWarnTimeoutMs,
+    fetchMinSpeedKiBps: options.networkConfig.fetchMinSpeedKiBps,
   };
   return createOrConnectStoreController(opts);
 }
@@ -125,6 +127,8 @@ export async function generateResolverAndFetcher({
     },
     registries: registries.toMap(),
     fullMetadata,
+    fetchWarnTimeoutMs: networkConfig?.fetchWarnTimeoutMs,
+    fetchMinSpeedKiBps: networkConfig?.fetchMinSpeedKiBps,
   };
   const result = createClient(opts);
   return result;
@@ -199,6 +203,8 @@ export async function install(
     dryRun?: boolean;
     dedupeInjectedDeps?: boolean;
     forcedHarmonyVersion?: string;
+    allowScripts?: Record<string, boolean | 'warn'>;
+    dangerouslyAllowAllScripts?: boolean;
   } & Pick<
     InstallOptions,
     | 'autoInstallPeers'
@@ -209,6 +215,8 @@ export async function install(
     | 'enableModulesDir'
     | 'engineStrict'
     | 'excludeLinksFromLockfile'
+    | 'minimumReleaseAge'
+    | 'minimumReleaseAgeExclude'
     | 'neverBuiltDependencies'
     | 'ignorePackageManifest'
     | 'hoistWorkspacePackages'
@@ -296,7 +304,11 @@ export async function install(
     userAgent: networkConfig.userAgent,
     ...options,
     injectWorkspacePackages: true,
-    neverBuiltDependencies: options.neverBuiltDependencies ?? [],
+    ...resolveScriptPolicies({
+      allowScripts: options.allowScripts,
+      neverBuiltDependencies: options.neverBuiltDependencies,
+      dangerouslyAllowAllScripts: options.dangerouslyAllowAllScripts,
+    }),
     returnListOfDepsRequiringBuild: true,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     depth: options.updateAll ? Infinity : 0,
@@ -369,6 +381,48 @@ export async function install(
   };
 }
 
+type ScriptPolicyConfig = {
+  allowScripts?: Record<string, boolean | 'warn'>;
+  neverBuiltDependencies?: string[];
+  dangerouslyAllowAllScripts?: boolean;
+};
+
+function resolveScriptPolicies({
+  allowScripts,
+  neverBuiltDependencies,
+  dangerouslyAllowAllScripts,
+}: ScriptPolicyConfig) {
+  let resolvedNeverBuilt = neverBuiltDependencies;
+  let onlyBuiltDependencies: string[] | undefined;
+  let ignoredBuiltDependencies: string[] | undefined;
+  if (dangerouslyAllowAllScripts) {
+    if (resolvedNeverBuilt == null) {
+      // If neverBuiltDependencies is not explicitly set, use a default list
+      // we tell pnpm to allow all scripts to be executed, except the packages listed below.
+      resolvedNeverBuilt = ['core-js'];
+    }
+  } else {
+    onlyBuiltDependencies = [];
+    ignoredBuiltDependencies = [];
+    for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts ?? {})) {
+      switch (allowedScript) {
+        case true:
+          onlyBuiltDependencies.push(packageDescriptor);
+          break;
+        case false:
+          ignoredBuiltDependencies.push(packageDescriptor);
+          break;
+        default:
+          // Ignore any non-boolean values. String values are placeholders that the user
+          // should replace with booleans.
+          // pnpm will print a warning about these during installation.
+          break;
+      }
+    }
+  }
+  return { neverBuiltDependencies: resolvedNeverBuilt, onlyBuiltDependencies, ignoredBuiltDependencies };
+}
+
 function initReporter(opts?: ReportOptions) {
   return initDefaultReporter({
     context: {
@@ -381,6 +435,8 @@ function initReporter(opts?: ReportOptions) {
       hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
       hideProgressPrefix: opts?.hideProgressPrefix,
       hideLifecycleOutput: opts?.hideLifecycleOutput,
+      approveBuildsInstructionText:
+        'Update the "allowScripts" field under "teambit.dependencies/dependency-resolver" in workspace.jsonc. \nSet to true to allow, false to explicitly disallow. \nExample: allowScripts: { "esbuild": true, "core-js": false }. \nThis is a security-sensitive setting: enabling scripts may allow arbitrary code execution during install.',
     },
     streamParser: streamParser as any, // eslint-disable-line
     // Linked in core aspects are excluded from the output to reduce noise.

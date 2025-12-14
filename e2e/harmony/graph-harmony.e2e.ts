@@ -5,9 +5,10 @@ import { loadBit } from '@teambit/bit';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import type { IdGraph } from '@teambit/objects';
 import { ModelComponent, Version, objectListToGraph } from '@teambit/objects';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('graph aspect', function () {
   this.timeout(0);

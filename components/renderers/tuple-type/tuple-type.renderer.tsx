@@ -52,7 +52,8 @@ function TupleTypeArray(props: APINodeRenderProps) {
   );
 }
 
-function ElementRenderer({ element, renderers, ...props }) {
+function ElementRenderer({ element, ...props }) {
+  const { renderers } = props;
   const elementRenderer = renderers.find((renderer) => renderer.predicate(element));
   if (elementRenderer) {
     return (

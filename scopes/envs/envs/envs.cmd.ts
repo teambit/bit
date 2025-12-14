@@ -59,7 +59,7 @@ export class GetEnvCmd implements Command {
     const env = this.envs.getEnv(component);
     const envRuntime = await this.envs.createEnvironment([component]);
     const envExecutionContext = envRuntime.getEnvExecutionContext();
-    const services = this.envs.getServices(env);
+    const services = await this.envs.getServices(env);
     const allP = services.services.map(async ([serviceId, service]) => {
       if (servicesArr && !servicesArr.includes(serviceId)) return null;
       const serviceTitle = chalk.cyan.bold.underline(serviceId);
@@ -86,7 +86,9 @@ export class GetEnvCmd implements Command {
 export class EnvsCmd implements Command {
   name = 'envs';
   alias = 'env';
-  description = 'list all components maintained by the workspace and their corresponding envs';
+  description = 'show components and their assigned environments';
+  extendedDescription = `displays a table showing each workspace component and its corresponding environment.
+environments control how components are built, tested, linted, and deployed.`;
   options = [];
   group = 'component-config';
   commands: Command[] = [];
@@ -118,7 +120,13 @@ export class EnvsCmd implements Command {
       if (!isLoaded) {
         this.nonLoadedEnvs.add(envIdStr);
       }
-      const envWithErr = isLoaded ? envIdStr : `${envIdStr} ${chalk.red('(not loaded)')}`;
+      let envWithErr = isLoaded ? envIdStr : `${envIdStr} ${chalk.red('(not loaded)')}`;
+
+      const envComp = await this.envs.getEnvComponentByEnvId(envId.toString());
+      if (envComp && envComp.isDeleted()) {
+        envWithErr = `${envIdStr} ${chalk.red('(deleted)')}`;
+      }
+
       return {
         component: component.id.toString(),
         env: envWithErr,

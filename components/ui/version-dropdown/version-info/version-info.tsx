@@ -5,7 +5,6 @@ import React, { useMemo, useRef, useEffect } from 'react';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import classNames from 'classnames';
-
 import type { DropdownComponentVersion } from '../version-dropdown';
 import styles from './version-info.module.scss';
 

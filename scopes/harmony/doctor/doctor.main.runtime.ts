@@ -25,12 +25,20 @@ import { getNpmVersion } from './core-diagnoses/validate-npm-exec';
 import { getYarnVersion } from './core-diagnoses/validate-yarn-exec';
 import { DiagnosisNotFound } from './exceptions/diagnosis-not-found';
 import { MissingDiagnosisName } from './exceptions/missing-diagnosis-name';
+import { getRemoteByName } from '@teambit/scope.remotes';
+import { loadConsumerIfExist } from '@teambit/legacy.consumer';
+import type { Network } from '@teambit/scope.network';
 
 import { DoctorAspect } from './doctor.aspect';
 import { DoctorCmd } from './doctor-cmd';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 import chalk from 'chalk';
+import { doctorSchema } from './doctor.graphql';
 
 // run specific check
 export type DoctorMetaData = {
@@ -38,8 +46,8 @@ export type DoctorMetaData = {
   runningTimestamp: number;
   platform: string;
   bitVersion: string;
-  npmVersion: string;
-  yarnVersion: string;
+  npmVersion: string | null | undefined;
+  yarnVersion: string | null | undefined;
   userDetails: string;
 };
 export type DoctorRunAllResults = {
@@ -52,6 +60,10 @@ export type DoctorRunOneResult = {
   savedFilePath: string | null | undefined;
   metaData: DoctorMetaData;
 };
+export type DoctorResponse = {
+  examineResults: ExamineResult[];
+  metaData: DoctorMetaData;
+};
 
 let runningTimeStamp;
 
@@ -62,6 +74,7 @@ export type DoctorOptions = {
   includeNodeModules?: boolean;
   includePublic?: boolean;
   excludeLocalScope?: boolean;
+  remote?: string;
 };
 
 export class DoctorMain {
@@ -70,21 +83,42 @@ export class DoctorMain {
   async runAll(options: DoctorOptions): Promise<DoctorRunAllResults> {
     registerCoreAndExtensionsDiagnoses();
     runningTimeStamp = this._getTimeStamp();
-    const doctorRegistrar = DoctorRegistrar.getInstance();
-    const examineResultsWithNulls = await Promise.all(
-      doctorRegistrar.diagnoses.map(async (diagnosis) => {
-        try {
-          return await diagnosis.examine();
-        } catch (err: any) {
-          this.logger.error(`doctor failed running diagnosis "${diagnosis.name}"`, err);
-          this.logger.consoleFailure(
-            chalk.red(`doctor failed running diagnosis "${diagnosis.name}".\nerror-message: ${err.message}`)
-          );
-        }
-      })
-    );
-    const examineResults = compact(examineResultsWithNulls);
-    const envMeta = await this._getEnvMeta();
+
+    this._validateOptions(options);
+
+    let examineResults: ExamineResult[];
+    let envMeta: DoctorMetaData;
+
+    // Handle remote scope if specified
+    if (options.remote) {
+      try {
+        const network = await this._connectToRemote(options.remote);
+        const response = await network.doctor();
+        examineResults = response.examineResults;
+        envMeta = response.metaData;
+      } catch (err: any) {
+        this.logger.error(`Failed to run doctor on remote scope "${options.remote}"`, err);
+        throw err;
+      }
+    } else {
+      // Run locally
+      const doctorRegistrar = DoctorRegistrar.getInstance();
+      const examineResultsWithNulls = await Promise.all(
+        doctorRegistrar.diagnoses.map(async (diagnosis) => {
+          try {
+            return await diagnosis.examine();
+          } catch (err: any) {
+            this.logger.error(`doctor failed running diagnosis "${diagnosis.name}"`, err);
+            this.logger.consoleFailure(
+              chalk.red(`doctor failed running diagnosis "${diagnosis.name}".\nerror-message: ${err.message}`)
+            );
+          }
+        })
+      );
+      examineResults = compact(examineResultsWithNulls);
+      envMeta = await this._getEnvMeta();
+    }
+
     const savedFilePath = await this._saveExamineResultsToFile(examineResults, envMeta, options);
     return { examineResults, savedFilePath, metaData: envMeta };
   }
@@ -95,15 +129,71 @@ export class DoctorMain {
     }
     registerCoreAndExtensionsDiagnoses();
     runningTimeStamp = this._getTimeStamp();
-    const doctorRegistrar = DoctorRegistrar.getInstance();
-    const diagnosis = doctorRegistrar.getDiagnosisByName(diagnosisName);
-    if (!diagnosis) {
-      throw new DiagnosisNotFound(diagnosisName);
+
+    this._validateOptions({ diagnosisName, ...options });
+
+    let examineResult: ExamineResult;
+    let envMeta: DoctorMetaData;
+
+    // Handle remote scope if specified
+    if (options.remote) {
+      try {
+        const network = await this._connectToRemote(options.remote);
+        const response = await network.doctor(diagnosisName);
+        if (response.examineResults.length === 0) {
+          throw new DiagnosisNotFound(diagnosisName);
+        }
+        examineResult = response.examineResults[0];
+        envMeta = response.metaData;
+      } catch (err: any) {
+        this.logger.error(`Failed to run doctor on remote scope "${options.remote}"`, err);
+        throw err;
+      }
+    } else {
+      // Run locally
+      const doctorRegistrar = DoctorRegistrar.getInstance();
+      const diagnosis = doctorRegistrar.getDiagnosisByName(diagnosisName);
+      if (!diagnosis) {
+        throw new DiagnosisNotFound(diagnosisName);
+      }
+      examineResult = await diagnosis.examine();
+      envMeta = await this._getEnvMeta();
     }
-    const examineResult = await diagnosis.examine();
-    const envMeta = await this._getEnvMeta();
+
     const savedFilePath = await this._saveExamineResultsToFile([examineResult], envMeta, options);
     return { examineResult, savedFilePath, metaData: envMeta };
+  }
+
+  private async _connectToRemote(remoteName: string): Promise<Network> {
+    const consumer = await loadConsumerIfExist();
+    const remote = await getRemoteByName(remoteName, consumer);
+    return remote.connect();
+  }
+
+  private _validateOptions(options: DoctorOptions): void {
+    if (!options.remote) return;
+
+    // Archive-related flags are incompatible with --remote
+    const incompatibleFlags: string[] = [];
+
+    if (options.archiveWorkspace) {
+      incompatibleFlags.push('--archive');
+    }
+    if (options.includeNodeModules) {
+      incompatibleFlags.push('--include-node-modules');
+    }
+    if (options.includePublic) {
+      incompatibleFlags.push('--include-public');
+    }
+    if (options.excludeLocalScope) {
+      incompatibleFlags.push('--exclude-local-scope');
+    }
+
+    if (incompatibleFlags.length > 0) {
+      throw new Error(
+        `The following flags cannot be used with --remote: ${incompatibleFlags.join(', ')}. Archive-related options are only applicable when running doctor locally.`
+      );
+    }
   }
 
   async listDiagnoses(): Promise<Diagnosis[]> {
@@ -239,7 +329,8 @@ export class DoctorMain {
       return false;
     };
 
-    const myPack = tarFS.pack('.', {
+    const workspaceRoot = consumerInfo?.path || '.';
+    const myPack = tarFS.pack(workspaceRoot, {
       ignore,
       finalize: false,
       finish: packExamineResults,
@@ -287,12 +378,13 @@ export class DoctorMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, LoggerAspect];
+  static dependencies = [CLIAspect, LoggerAspect, GraphqlAspect, ScopeAspect];
   static runtime = MainRuntime;
-  static async provider([cliMain, loggerMain]: [CLIMain, LoggerMain]) {
+  static async provider([cliMain, loggerMain, graphql, scope]: [CLIMain, LoggerMain, GraphqlMain, ScopeMain]) {
     const logger = loggerMain.createLogger(DoctorAspect.id);
     const doctor = new DoctorMain(logger);
     cliMain.register(new DoctorCmd(doctor));
+    graphql.register(() => doctorSchema(scope));
     return doctor;
   }
 }

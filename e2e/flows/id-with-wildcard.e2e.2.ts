@@ -37,7 +37,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.tagWithoutBuild('"utils/is/*"');
+          output = helper.command.tagWithoutBuild('"**/utils/is/*"');
         });
         it('should indicate the tagged components', () => {
           expect(output).to.have.string('2 component(s) tagged');
@@ -69,7 +69,7 @@ describe('component id with wildcard', function () {
           const status = helper.command.statusJson();
           expect(status.stagedComponents).to.have.lengthOf(5);
 
-          output = helper.command.removeComponent('"utils/fs/*"');
+          output = helper.command.removeComponent('"**/utils/fs/*"');
         });
         it('should indicate the removed components', () => {
           expect(output).to.have.string('utils/fs/read');
@@ -200,7 +200,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.reset('"*/is/*"');
+          output = helper.command.reset('"**/*/is/*"');
         });
         it('should indicate the untagged components', () => {
           expect(output).to.have.string('2 component(s) were reset');
@@ -234,7 +234,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.checkout('0.0.1 "utils/is/*"');
+          output = helper.command.checkout('0.0.1 "**/utils/is/*"');
         });
         it('should indicate the number of checked out components', () => {
           expect(output).to.have.string('successfully switched 2 components');
@@ -288,7 +288,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.diff('"utils/is/*"');
+          output = helper.command.diff('"**/utils/is/*"');
         });
         it('should show diff only for the matched components', () => {
           expect(output).to.have.string('utils/is/string');

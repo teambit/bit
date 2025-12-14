@@ -170,7 +170,7 @@ export interface Linter {
   /**
    * returns the version of the current linter instance (e.g. '4.0.1').
    */
-  version?(): string;
+  version?(): string | Promise<string>;
 
   /**
    * returns the display name of the current linter instance (e.g. 'ESlint')

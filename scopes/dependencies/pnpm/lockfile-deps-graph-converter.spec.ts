@@ -1,6 +1,6 @@
 import path from 'path';
 import { ComponentID } from '@teambit/component';
-import { DependenciesGraph } from '@teambit/objects';
+import { DependenciesGraph, type PackagesMap, type DependencyEdge } from '@teambit/objects';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
 import { type BitLockfileFile } from './lynx';
 import { expect } from 'chai';
@@ -317,5 +317,51 @@ describe('convertLockfileToGraph simple case', () => {
         },
       },
     });
+  });
+});
+
+describe('convertGraphToLockfile on invalid graph', () => {
+  it('should throw an error if resolution is missing', async () => {
+    const packages: PackagesMap = new Map([['foo@1.0.0', {} as any]]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [
+          {
+            id: 'foo@1.0.0',
+            name: 'foo',
+            specifier: '1.0.0',
+            lifecycle: 'runtime',
+          },
+        ],
+      },
+      {
+        id: 'foo@1.0.0',
+        neighbours: [],
+      },
+    ];
+    const graph = new DependenciesGraph({
+      packages,
+      edges,
+    });
+    let error: Error | undefined;
+    try {
+      await convertGraphToLockfile(new DependenciesGraph(graph), {
+        manifests: {
+          [path.resolve('comps/comp1')]: {
+            dependencies: {
+              foo: '1.0.0',
+            },
+          },
+        },
+        rootDir: process.cwd(),
+        resolve: () => ({ resolution: {} }) as any,
+      });
+    } catch (_error) {
+      error = _error as Error;
+    }
+    expect(error?.message).eq(
+      `Failed to generate a valid lockfile. The "packages['foo@1.0.0'] entry doesn't have a "resolution" field.`
+    );
   });
 });

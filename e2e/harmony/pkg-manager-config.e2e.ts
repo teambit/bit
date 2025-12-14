@@ -1,11 +1,12 @@
 import path from 'path';
 import chai, { expect } from 'chai';
 import { readModulesManifest } from '@pnpm/modules-yaml';
+import chaiString from 'chai-string';
 
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)(
   'package manager rc file is read from the workspace directory when installation is in a capsule',
@@ -18,7 +19,7 @@ chai.use(require('chai-string'));
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();

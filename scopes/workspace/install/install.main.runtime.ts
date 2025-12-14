@@ -104,6 +104,7 @@ export type WorkspaceInstallOptions = {
   writeConfigFiles?: boolean;
   skipPrune?: boolean;
   dependenciesGraph?: DependenciesGraph;
+  allowScripts?: Record<string, boolean>;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -174,6 +175,7 @@ export class InstallMain {
         // For explicit "bit install" commands, show the prompt
         await this.handleExternalPackageManagerPrompt();
       } else {
+        await this.writeDependenciesToPackageJson();
         this.logger.console(
           chalk.yellow(
             'Installation was skipped due to external package manager configuration. Please run your package manager to install dependencies.'
@@ -222,6 +224,17 @@ export class InstallMain {
     await this.ipcEvents.publishIpcEvent('onPostInstall');
 
     return res;
+  }
+
+  async writeDependenciesToPackageJson(): Promise<void> {
+    const installer = this.dependencyResolver.getInstaller({});
+    const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy();
+    await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
+    const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, {
+      dedupe: true,
+    });
+    const { dependencies, devDependencies } = componentsAndManifests.manifests[this.workspace.path];
+    return this.workspace.writeDependenciesToPackageJson({ ...devDependencies, ...dependencies });
   }
 
   registerPreLink(fn: PreLink) {
@@ -332,6 +345,10 @@ export class InstallMain {
   }
 
   private async _installModules(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
+    if (options?.allowScripts) {
+      this.dependencyResolver.updateAllowedScripts(options.allowScripts);
+      await this.dependencyResolver.persistConfig('update allowScripts configuration');
+    }
     const pm = this.dependencyResolver.getPackageManager();
     this.logger.console(
       `installing dependencies in workspace using ${pm?.name} (${chalk.cyan(
@@ -374,6 +391,8 @@ export class InstallMain {
       dependenciesGraph: options?.dependenciesGraph,
       includeOptionalDeps: options?.includeOptionalDeps,
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
+      allowScripts: this.dependencyResolver.getAllowedScripts(),
+      dangerouslyAllowAllScripts: this.dependencyResolver.config.dangerouslyAllowAllScripts,
       overrides: this.dependencyResolver.config.overrides,
       hoistPatterns: this.dependencyResolver.config.hoistPatterns,
       hoistInjectedDependencies: this.dependencyResolver.config.hoistInjectedDependencies,
@@ -905,9 +924,7 @@ export class InstallMain {
     };
   }
 
-  private async _getEnvManifests(
-    workspaceDeps: Record<string, string>
-  ): Promise<Record<string, ProjectManifest>> {
+  private async _getEnvManifests(workspaceDeps: Record<string, string>): Promise<Record<string, ProjectManifest>> {
     const envs = await this._getAllUsedEnvIds();
     return Object.fromEntries(
       await Promise.all(
@@ -1199,6 +1216,11 @@ export class InstallMain {
   }
 
   private async getComponentsDirectory(ids: ComponentID[]): Promise<ComponentMap<string>> {
+    // We intentionally use loadSeedersAsAspects: false here to avoid loading env aspects during installation.
+    // While this causes issues with --add-missing-deps for custom detectors (see PR #10044),
+    // loading seeders during installation causes regressions where lane imports fail with errors like:
+    // "Cannot find module '/private/tmp/a27cc147/node_modules/@teambit/node.envs.node-babel-mocha/dist/node-babel-mocha.bit-env.js'"
+    // The env aspect files are not yet available during the initial installation phase.
     const components = ids.length
       ? await this.workspace.getMany(ids)
       : await this.workspace.list(undefined, { loadSeedersAsAspects: false });
