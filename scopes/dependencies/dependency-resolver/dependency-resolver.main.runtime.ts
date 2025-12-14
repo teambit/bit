@@ -572,7 +572,7 @@ export class DependencyResolverMain {
     }
   ) {
     const envId = this.envs.getEnvId(component);
-    const envIdWithoutVersion = envId.split('@')[0];
+    const envIdWithoutVersion = ComponentID.fromString(envId).toStringWithoutVersion();
     const rootComponentsRelativePath = relative(options.workspacePath, options.rootComponentsPath);
     const rootComponentDirWithVersion = getRootComponentDir(rootComponentsRelativePath ?? '', envId);
     const rootComponentDirWithoutVersion = getRootComponentDir(rootComponentsRelativePath ?? '', envIdWithoutVersion);
