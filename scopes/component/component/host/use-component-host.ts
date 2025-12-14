@@ -27,7 +27,7 @@ const COMPONENT_HOST = gql`
 `;
 
 export function useComponentHost() {
-  const { data, loading } = useDataQuery(COMPONENT_HOST);
+  const { data, loading } = useDataQuery(COMPONENT_HOST as any);
 
   if (!data || loading) {
     return {};

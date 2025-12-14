@@ -16,12 +16,14 @@ export const GET_CLOUD_SCOPES_QUERY = gql`
 `;
 
 export function useCloudScopes(ids?: string[]): { cloudScopes?: ScopeDescriptor[] } {
-  const { data } = useDataQuery<{ getCloudScopes?: (ScopeDescriptor & { id: string })[] }>(GET_CLOUD_SCOPES_QUERY, {
-    variables: {
-      ids,
-    },
-    skip: !ids?.length,
-  });
+  const { data } = useDataQuery<{ getCloudScopes?: (ScopeDescriptor & { id: string })[] }>(
+    GET_CLOUD_SCOPES_QUERY as any, {
+      variables: {
+        ids,
+      },
+      skip: !ids?.length,
+    }
+  );
   return {
     cloudScopes: (data?.getCloudScopes || []).map((scope) => {
       const scopeId = ScopeID.fromString(scope.id);

@@ -37,7 +37,7 @@ export function useCurrentUser(): {
     });
   }, [window.location.href]);
 
-  const { data, loading } = useDataQuery(CURRENT_USER_QUERY, {
+  const { data, loading } = useDataQuery(CURRENT_USER_QUERY as any, {
     fetchPolicy: 'cache-first',
   });
 

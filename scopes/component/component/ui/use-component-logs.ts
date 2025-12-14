@@ -15,7 +15,7 @@ export function useComponentLogs(
 ): ComponentLogsResult {
   const { variables, skip } = useComponentLogsInit(componentId, host, filters, skipFromProps);
 
-  const { data, error, loading } = useDataQuery(GET_COMPONENT_WITH_LOGS, {
+  const { data, error, loading } = useDataQuery(GET_COMPONENT_WITH_LOGS as any, {
     variables,
     skip,
     errorPolicy: 'all',
