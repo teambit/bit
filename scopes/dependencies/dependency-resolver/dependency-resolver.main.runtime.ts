@@ -572,8 +572,14 @@ export class DependencyResolverMain {
     }
   ) {
     const envId = this.envs.getEnvId(component);
+    const envIdWithoutVersion = ComponentID.fromString(envId).toStringWithoutVersion();
     const rootComponentsRelativePath = relative(options.workspacePath, options.rootComponentsPath);
-    return getRootComponentDir(rootComponentsRelativePath ?? '', envId);
+    const rootComponentDirWithVersion = getRootComponentDir(rootComponentsRelativePath ?? '', envId);
+    const rootComponentDirWithoutVersion = getRootComponentDir(rootComponentsRelativePath ?? '', envIdWithoutVersion);
+    if (fs.pathExistsSync(rootComponentDirWithoutVersion)) {
+      return rootComponentDirWithoutVersion;
+    }
+    return rootComponentDirWithVersion;
   }
 
   /**
