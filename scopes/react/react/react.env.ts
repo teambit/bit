@@ -285,7 +285,7 @@ export class ReactEnv
       fix: !!context.fix,
       fixTypes: context.fixTypes as ESLintLib.Options['fixTypes'],
     };
-    return Object.assign({}, options, { config: mergedConfig, extensions: context.extensionFormats }) as any;
+    return Object.assign({}, options, { config: mergedConfig, extensions: context.extensionFormats });
   }
 
   /**

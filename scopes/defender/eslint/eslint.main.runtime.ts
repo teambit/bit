@@ -62,7 +62,7 @@ export class ESLintMain {
       `The 'Eslint' aspect is deprecated. Please use the 'Eslint linter' component instead. For more details, visit: https://${getCloudDomain()}/teambit/defender/eslint-linter`
     );
     const mergedOptions = getOptions(options, context);
-    const configMutator = new EslintConfigMutator(mergedOptions as any);
+    const configMutator = new EslintConfigMutator(mergedOptions);
     const transformerContext: EslintConfigTransformContext = { fix: !!context.fix };
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
 
