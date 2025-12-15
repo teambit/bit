@@ -13,7 +13,6 @@ import { postCssConfig } from './postcss.config';
 import '@teambit/react.babel.bit-react-transformer';
 // eslint-disable-next-line import/no-unresolved
 import '@mdx-js/loader';
-// import '@teambit/mdx.modules.mdx-pre-loader';
 import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
 
 const styleLoaderPath = require.resolve('style-loader');
@@ -163,7 +162,7 @@ export default function (isEnvProduction = false): Configuration {
                   options: mdxOptions,
                 },
                 {
-                  // loader: require.resolve('@teambit/mdx.modules.mdx-pre-loader'),
+                  // inlined @teambit/mdx.modules.mdx-pre-loader in CJS format
                   loader: require.resolve('./mdx-pre-loader.cjs'),
                 },
               ],

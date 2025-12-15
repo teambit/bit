@@ -76,7 +76,7 @@ export default function (workDir: string, envId: string): Configuration {
               options: mdxOptions,
             },
             {
-              // loader: require.resolve('@teambit/mdx.modules.mdx-pre-loader'),
+              // inlined @teambit/mdx.modules.mdx-pre-loader in CJS format
               loader: require.resolve('./mdx-pre-loader.cjs'),
             },
           ],

@@ -1,5 +1,7 @@
 "use strict";
 
+// inlined @teambit/mdx.modules.mdx-pre-loader in CJS format
+
 function t(r) {
   return r.replace(/:::(\w+) (.+)/, ":::$1[$2]")
 }
