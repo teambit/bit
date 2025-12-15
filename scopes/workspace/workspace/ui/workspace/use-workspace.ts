@@ -127,12 +127,12 @@ const COMPONENT_SERVER_STARTED = gql`
 `;
 
 export function useWorkspace(options: UseWorkspaceOptions = {}) {
-  const { data, subscribeToMore, ...rest } = useDataQuery(WORKSPACE as any);
+  const { data, subscribeToMore, ...rest } = useDataQuery(WORKSPACE);
   const optionsRef = useLatest(options);
 
   useEffect(() => {
     const unSubCompAddition = subscribeToMore({
-      document: COMPONENT_SUBSCRIPTION_ADDED as any,
+      document: COMPONENT_SUBSCRIPTION_ADDED,
       updateQuery: (prev, { subscriptionData }) => {
         const update = subscriptionData.data;
         const addedComponent = update?.componentAdded?.component;
@@ -157,7 +157,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     });
 
     const unSubCompChange = subscribeToMore({
-      document: COMPONENT_SUBSCRIPTION_CHANGED as any,
+      document: COMPONENT_SUBSCRIPTION_CHANGED,
       updateQuery: (prev, { subscriptionData }) => {
         const update = subscriptionData.data;
         if (!update) return prev;
@@ -179,7 +179,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     });
 
     const unSubCompRemoved = subscribeToMore({
-      document: COMPONENT_SUBSCRIPTION_REMOVED as any,
+      document: COMPONENT_SUBSCRIPTION_REMOVED,
       updateQuery: (prev, { subscriptionData }) => {
         const idsToRemove: ComponentIdObj[] | undefined = subscriptionData?.data?.componentRemoved?.componentIds;
         if (!idsToRemove || idsToRemove.length === 0) return prev;
@@ -200,7 +200,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     });
 
     const unSubServerStarted = subscribeToMore({
-      document: COMPONENT_SERVER_STARTED as any,
+      document: COMPONENT_SERVER_STARTED,
       updateQuery: (prev, { subscriptionData }) => {
         const update = subscriptionData.data;
         if (!update) return prev;

@@ -40,7 +40,7 @@ export function useComponentArtifacts(
   componentId: string,
   skip?: boolean
 ): { data: Artifact[]; loading?: boolean } {
-  const { data, loading } = useDataQuery(ARTIFACTS_QUERY as any, {
+  const { data, loading } = useDataQuery(ARTIFACTS_QUERY, {
     variables: { id: componentId, extensionId: host },
     skip,
     fetchPolicy: 'no-cache',
@@ -93,7 +93,7 @@ export function useComponentArtifactFileContent(
   skip?: boolean
 ): { data: Artifact[]; loading?: boolean } {
   const { componentId, taskId, filePath } = options;
-  const { data, ...rest } = useDataQuery(ARTIFACTS_QUERY_WITH_FILE_CONTENT as any, {
+  const { data, ...rest } = useDataQuery(ARTIFACTS_QUERY_WITH_FILE_CONTENT, {
     variables: { id: componentId, extensionId: host, taskId, path: filePath },
     skip,
     fetchPolicy: 'no-cache',

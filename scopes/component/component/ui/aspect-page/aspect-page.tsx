@@ -26,7 +26,7 @@ const GET_COMPONENT = gql`
 // TODO: get the docs domain from the community aspect and pass it here as a prop
 export function AspectPage() {
   const component = useContext(ComponentContext);
-  const { data } = useDataQuery(GET_COMPONENT as any, {
+  const { data } = useDataQuery(GET_COMPONENT, {
     variables: { id: component.id.toString() },
   });
   const aspectList = data?.getHost?.get?.aspects;

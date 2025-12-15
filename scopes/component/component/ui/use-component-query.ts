@@ -22,7 +22,7 @@ export function useComponentQuery(
     extensionId: host,
   };
 
-  const { data, error, loading } = useDataQuery(GET_COMPONENT as any, {
+  const { data, error, loading } = useDataQuery(GET_COMPONENT, {
     variables,
     skip,
     errorPolicy: 'all',
