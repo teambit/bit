@@ -8,7 +8,7 @@ export class MDXDocReader implements DocReader {
 
   async read(path: string, contents: Buffer) {
     const output = compileSync(contents.toString('utf-8'), mdxOptions);
-    const metadata = output.data.frontmatter as any;
+    const metadata = output.data?.frontmatter ?? {};
 
     const doc = Doc.from(path, metadata);
     return doc;
