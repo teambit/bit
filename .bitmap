@@ -2252,7 +2252,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-compare",
         "config": {
-            "teambit.react/v17/react-env@1.2.0": {}
+            "teambit.react/v17/react-env@1.2.1": {}
         }
     },
     "ui/code-editor": {
@@ -2290,7 +2290,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/component-compare",
         "config": {
-            "teambit.react/v17/react-env@1.2.0": {}
+            "teambit.react/v17/react-env@1.2.1": {}
         }
     },
     "ui/component-compare/context": {
@@ -2307,7 +2307,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/models/component-compare-props",
         "config": {
-            "teambit.react/v17/react-env@1.2.0": {}
+            "teambit.react/v17/react-env@1.2.1": {}
         }
     },
     "ui/component-compare/utils/lazy-loading": {
@@ -2541,7 +2541,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/react-router/slot-router",
         "config": {
-            "teambit.react/v17/react-env@1.2.0": {}
+            "teambit.react/v17/react-env@1.2.1": {}
         }
     },
     "ui/rendering/html": {
@@ -2558,7 +2558,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/side-bar",
         "config": {
-            "teambit.react/v17/react-env@1.2.0": {}
+            "teambit.react/v17/react-env@1.2.1": {}
         }
     },
     "ui/test-compare": {
