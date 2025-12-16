@@ -184,7 +184,7 @@ was re-set by a more specific variant.
 ### Propagate
 
 When using selectors which can propagate down to sub-sets, such as with directory selectors (where all sub-directories are included) or `{namespace/\*\*}` type selectors,
-you can prevent this propagation for specific set of inheritors, by setting set the `propogate` value of an inheriting group of components to `false`.
+you can prevent this propagation for specific set of inheritors, by setting the `propagate` value of an inheriting group of components to `false`.
 Once bit sees `"propagate": false` it uses only the configuration for this set and does not inherit.
 
 ```json title="workspace.json"
