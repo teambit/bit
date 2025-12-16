@@ -29,7 +29,7 @@ export class MDXDependencyDetector implements DependencyDetector {
   detect(source: string): string[] {
     const output = compileSync(source, mdxOptions);
     const imports = (output.data?.imports as ImportSpecifier[]) || [];
-    if (!imports) return [];
+    if (!imports.length) return [];
     const files: string[] = imports.map((importSpec) => {
       return importSpec.fromModule;
     });
