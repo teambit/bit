@@ -4,3 +4,4 @@ export { getRemoteByName } from './get-remote-by-name';
 export { getScopeRemotes, fetchRemoteVersions } from './scope-remotes';
 export { ScopeNotFoundOrDenied } from './exceptions';
 export { GlobalRemotes } from './global-remotes';
+export { listScopesByOwner } from './remote-resolver/remote-resolver';

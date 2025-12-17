@@ -67,6 +67,7 @@ export type ImportOptions = {
   isLaneFromRemote?: boolean; // whether the `lanes.lane` object is coming directly from the remote.
   writeDeps?: 'package.json' | 'workspace.jsonc';
   laneOnly?: boolean; // when on a lane, only import components that exist on the lane (preserves legacy behavior)
+  owner?: boolean; // treat the id as an owner name and import all components from all scopes of that owner
 };
 type ComponentMergeStatus = {
   component: Component;
@@ -189,6 +190,11 @@ export default class ImportComponents {
   }
 
   async importSpecificComponents(): Promise<ImportResult> {
+    // Handle --owner flag with scope-by-scope error handling
+    if (this.options.owner && this.options.ids.length === 1) {
+      return this.importByOwner(this.options.ids[0]);
+    }
+
     this.logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
     const bitIds: ComponentIdList = await this.getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
@@ -218,6 +224,82 @@ export default class ImportComponents {
       writtenComponents,
       componentWriterResults
     );
+  }
+
+  /**
+   * Import all components from all scopes of an owner, handling errors per-scope.
+   * If a scope fails during import, log a warning and continue with other scopes.
+   */
+  private async importByOwner(ownerName: string): Promise<ImportResult> {
+    this.logger.debug(`importByOwner, owner: ${ownerName}`);
+
+    // Get components grouped by scope
+    const { scopeIds, failedScopes, failedScopesErrors } = await this.lister.getRemoteCompIdsByOwnerGrouped(
+      ownerName,
+      this.options.includeDeprecated
+    );
+
+    const allVersionDeps: VersionDependencies[] = [];
+    const allBeforeVersions: ImportedVersions = {};
+    const importFailedScopes: string[] = [...failedScopes];
+    const allFailedScopesErrors: Map<string, string> = new Map(failedScopesErrors);
+
+    // Import each scope separately with error handling
+    const scopeEntries = Array.from(scopeIds.entries());
+    const totalScopes = scopeEntries.length;
+    let completedScopes = 0;
+    for (const [scopeName, ids] of scopeEntries) {
+      try {
+        completedScopes++;
+        this.logger.setStatusLine(
+          `importing from ${scopeName} (${ids.length} components) [${completedScopes}/${totalScopes}]`
+        );
+        const idList = ComponentIdList.fromArray(ids);
+        const beforeVersions = await this._getCurrentVersions(idList);
+        Object.assign(allBeforeVersions, beforeVersions);
+
+        const versionDeps = await this._importComponentsObjects(idList, {
+          lane: this.remoteLane,
+        });
+        allVersionDeps.push(...versionDeps);
+      } catch (err: any) {
+        importFailedScopes.push(scopeName);
+        allFailedScopesErrors.set(scopeName, err.message);
+      }
+    }
+
+    if (!allVersionDeps.length) {
+      throw new BitError(`failed to import any components from owner "${ownerName}"`);
+    }
+
+    if (importFailedScopes.length) {
+      const failedDetails = importFailedScopes.map((scope) => {
+        const errMsg = allFailedScopesErrors.get(scope);
+        return errMsg ? `${scope}: ${errMsg}` : scope;
+      });
+      this.logger.consoleWarning(
+        `completed with ${importFailedScopes.length} failed scope(s):\n${failedDetails.join('\n')}`
+      );
+    }
+
+    if (this.remoteLane && this.options.objectsOnly) {
+      await this.mergeAndSaveLaneObject(this.remoteLane);
+    }
+
+    let writtenComponents: Component[] = [];
+    let componentWriterResults: ComponentWriterResults | undefined;
+    if (!this.options.objectsOnly) {
+      const components = await multipleVersionDependenciesToConsumer(allVersionDeps, this.scope.objects);
+      await this._fetchDivergeData(components);
+      this._throwForDivergedHistory();
+      await this.throwForComponentsFromAnotherLane(components.map((c) => c.id));
+      const filteredComponents = await this._filterComponentsByFilters(components);
+      componentWriterResults = await this._writeToFileSystem(filteredComponents);
+      await this._saveLaneDataIfNeeded(filteredComponents);
+      writtenComponents = filteredComponents;
+    }
+
+    return this.returnCompleteResults(allBeforeVersions, allVersionDeps, writtenComponents, componentWriterResults);
   }
 
   private async mergeAndSaveLaneObject(lane: Lane) {
@@ -433,6 +515,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
 
   private async getBitIdsForNonLanes() {
     const bitIds: ComponentID[] = [];
+
     await pMapPool(
       this.options.ids,
       async (idStr: string) => {
