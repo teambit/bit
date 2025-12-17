@@ -73,11 +73,11 @@ export class SetAspectCmd implements Command {
     },
     {
       name: 'aspect-id',
-      description: "the aspect's component id",
+      description: `the aspect's component id`,
     },
     {
       name: 'config',
-      description: `the aspect config. enter the config as a stringified JSON (e.g. '{"foo":"bar"}' ). when no config is provided, an aspect is set with an empty config ({}).`,
+      description: `the aspect config. enter the config as a stringified JSON (e.g. \`{"foo":"bar"}\` ). when no config is provided, an aspect is set with an empty config ({}).`,
     },
   ];
   options = [
