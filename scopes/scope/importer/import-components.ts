@@ -202,28 +202,8 @@ export default class ImportComponents {
     const versionDependenciesArr = await this._importComponentsObjects(bitIds, {
       lane: this.remoteLane,
     });
-    if (this.remoteLane && this.options.objectsOnly) {
-      await this.mergeAndSaveLaneObject(this.remoteLane);
-    }
-    let writtenComponents: Component[] = [];
-    let componentWriterResults: ComponentWriterResults | undefined;
-    if (!this.options.objectsOnly) {
-      const components = await multipleVersionDependenciesToConsumer(versionDependenciesArr, this.scope.objects);
-      await this._fetchDivergeData(components);
-      this._throwForDivergedHistory();
-      await this.throwForComponentsFromAnotherLane(components.map((c) => c.id));
-      const filteredComponents = await this._filterComponentsByFilters(components);
-      componentWriterResults = await this._writeToFileSystem(filteredComponents);
-      await this._saveLaneDataIfNeeded(filteredComponents);
-      writtenComponents = filteredComponents;
-    }
 
-    return this.returnCompleteResults(
-      beforeImportVersions,
-      versionDependenciesArr,
-      writtenComponents,
-      componentWriterResults
-    );
+    return this.processAndWriteComponents(beforeImportVersions, versionDependenciesArr);
   }
 
   /**
@@ -282,6 +262,16 @@ export default class ImportComponents {
       );
     }
 
+    return this.processAndWriteComponents(allBeforeVersions, allVersionDeps);
+  }
+
+  /**
+   * Process imported components: merge lane if needed, write to filesystem, and return results.
+   */
+  private async processAndWriteComponents(
+    beforeImportVersions: ImportedVersions,
+    versionDependenciesArr: VersionDependencies[]
+  ): Promise<ImportResult> {
     if (this.remoteLane && this.options.objectsOnly) {
       await this.mergeAndSaveLaneObject(this.remoteLane);
     }
@@ -289,7 +279,7 @@ export default class ImportComponents {
     let writtenComponents: Component[] = [];
     let componentWriterResults: ComponentWriterResults | undefined;
     if (!this.options.objectsOnly) {
-      const components = await multipleVersionDependenciesToConsumer(allVersionDeps, this.scope.objects);
+      const components = await multipleVersionDependenciesToConsumer(versionDependenciesArr, this.scope.objects);
       await this._fetchDivergeData(components);
       this._throwForDivergedHistory();
       await this.throwForComponentsFromAnotherLane(components.map((c) => c.id));
@@ -299,7 +289,12 @@ export default class ImportComponents {
       writtenComponents = filteredComponents;
     }
 
-    return this.returnCompleteResults(allBeforeVersions, allVersionDeps, writtenComponents, componentWriterResults);
+    return this.returnCompleteResults(
+      beforeImportVersions,
+      versionDependenciesArr,
+      writtenComponents,
+      componentWriterResults
+    );
   }
 
   private async mergeAndSaveLaneObject(lane: Lane) {
