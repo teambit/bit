@@ -1,5 +1,23 @@
 import type { DependencyDetector, FileContext } from '@teambit/dependency-resolver';
-import { compileSync } from '@teambit/mdx.compilers.mdx-transpiler';
+import { compileSync } from '@mdx-js/mdx';
+import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
+
+type ImportSpecifier = {
+  /**
+   * relative/absolute or module name. e.g. the `y` in the example of `import x from 'y';`
+   */
+  fromModule: string;
+
+  /**
+   * is default import (e.g. `import x from 'y';`)
+   */
+  isDefault?: boolean;
+
+  /**
+   * the name used to identify the module, e.g. the `x` in the example of `import x from 'y';`
+   */
+  identifier?: string;
+};
 
 export class MDXDependencyDetector implements DependencyDetector {
   constructor(private supportedExtensions: string[]) {}
@@ -9,9 +27,9 @@ export class MDXDependencyDetector implements DependencyDetector {
   }
 
   detect(source: string): string[] {
-    const output = compileSync(source);
-    const imports = output.getImportSpecifiers();
-    if (!imports) return [];
+    const output = compileSync(source, mdxOptions);
+    const imports = (output.data?.imports as ImportSpecifier[]) || [];
+    if (!imports.length) return [];
     const files: string[] = imports.map((importSpec) => {
       return importSpec.fromModule;
     });

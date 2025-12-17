@@ -2403,7 +2403,7 @@
     "arguments": [
       {
         "name": "to",
-        "description": "permitted values: [head, latest, reset, {specific-version}, {head~x}]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes"
+        "description": "permitted values: `[head, latest, reset, {specific-version}, {head~x}]`. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes"
       },
       {
         "name": "component-pattern",
@@ -5433,7 +5433,7 @@
           },
           {
             "name": "config",
-            "description": "the aspect config. enter the config as a stringified JSON (e.g. '{\"foo\":\"bar\"}' ). when no config is provided, an aspect is set with an empty config ({})."
+            "description": "the aspect config. enter the config as a stringified JSON (e.g. `{\"foo\":\"bar\"}` ). when no config is provided, an aspect is set with an empty config ({})."
           }
         ]
       },
