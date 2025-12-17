@@ -22,7 +22,7 @@ export class CheckoutCmd implements Command {
     {
       name: 'to',
       description:
-        "permitted values: [head, latest, reset, {specific-version}, {head~x}]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes",
+        "permitted values: `[head, latest, reset, {specific-version}, {head~x}]`. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes",
     },
     {
       name: 'component-pattern',
