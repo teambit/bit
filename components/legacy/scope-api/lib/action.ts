@@ -8,6 +8,7 @@ import {
   FetchMissingDeps,
   PostSign,
   FetchMissingHistory,
+  FetchVersionHistory,
 } from '@teambit/scope.remote-actions';
 import type { AuthData } from '@teambit/scope.network';
 
@@ -36,6 +37,7 @@ export async function action(
     FetchMissingDeps,
     PostSign,
     FetchMissingHistory,
+    FetchVersionHistory,
   ];
   const ActionClass = actionList.find((a) => a.name === name);
   if (!ActionClass) {
