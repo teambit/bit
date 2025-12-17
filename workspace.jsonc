@@ -164,6 +164,7 @@
         "@teambit/component-version": "^1.0.4",
         "@teambit/component.content.component-overview": "1.95.0",
         "@teambit/component.content.dev-files": "1.95.9",
+        "@teambit/component.filters.base-filter": "^0.0.6",
         "@teambit/component.instructions.exporting-components": "0.0.7",
         "@teambit/component.ui.artifacts.artifacts-tree": "^0.0.28",
         "@teambit/component.ui.artifacts.models.component-artifacts-model": "^0.0.12",
