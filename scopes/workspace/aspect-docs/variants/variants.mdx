@@ -84,7 +84,7 @@ The `!` deselector works both for directories and namespaces, for example:
 
 For example, apply the `teambit.harmony/node` environment on the `utility-functions` set, but exclude the `utility-functions/react-utils` folder from that set:
 
-```json title="workspace.json
+```json title="workspace.json"
 "teambit.workspace/variants": {
     "components/utility-functions, !components/utility-functions/react-utils": {
         "teambit.harmony/node": {}
@@ -96,7 +96,7 @@ For example, apply the `teambit.harmony/node` environment on the `utility-functi
 
 The following example applies the `teambit.harmony/node` environment on every component under the `utils` namespace, but excludes the `utils/react` namespace and its children from this set:
 
-```json title="workspace.json
+```json title="workspace.json"
 "teambit.workspace/variants": {
     "{utils/**}, !{utils/react/**}": {
         "teambit.harmony/node": {}
@@ -128,7 +128,7 @@ but the more specific variant "wins" when there are rule 'conflicts'.
 The following example shows how Bit does not apply `aspect1-components-key` nor the `aspect1-root-key` for components under the `components/ui` directory, as the `my-aspect1` extension
 was re-set by a more specific variant.
 
-```json title="workspace.json
+```json title="workspace.json"
 {
   "teambit.workspace/variants": {
     "*": {
@@ -183,11 +183,11 @@ was re-set by a more specific variant.
 
 ### Propagate
 
-When using selectors which can propagate down to sub-sets, such as with directory selectors (where all sub-directories are included) or {namespace/\*\*} type selectors,
-you can prevent this propagation for specific set of inheritors, by setting set the `propogate` value of an inheriting group of components to `false`.
+When using selectors which can propagate down to sub-sets, such as with directory selectors (where all sub-directories are included) or `{namespace/\*\*}` type selectors,
+you can prevent this propagation for specific set of inheritors, by setting the `propagate` value of an inheriting group of components to `false`.
 Once bit sees `"propagate": false` it uses only the configuration for this set and does not inherit.
 
-```json title="workspace.json
+```json title="workspace.json"
 "teambit.workspace/variants": {
   "components/react": {
     "my-aspect2": {
@@ -222,7 +222,7 @@ In that case, removing a specific aspect can be achieved using `"-"` as the valu
 
 For instance, the following will remove `my-aspect2` from components in the `components/react/ui` set, while still inheriting other configs such as the `my-aspect3` aspect.
 
-```json title="workspace.json
+```json title="workspace.json"
 "teambit.workspace/variants": {
   "components/react": {
     "my-aspect2": {
