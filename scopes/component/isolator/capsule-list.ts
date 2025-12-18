@@ -78,6 +78,15 @@ export default class CapsuleList extends Array<Capsule> {
   /**
    * determines whether or not a capsule can theoretically use the dists saved in the last snap, rather than re-compile them.
    * practically, this optimization is used for components that have typescript as their compiler.
+   *
+   * TODO: Consider removing this optimization. It was introduced to avoid TypeScript recompilation of
+   * unmodified components by downloading their dist artifacts from objects. However, this optimization
+   * is likely ineffective because:
+   * 1. TypeScript uses `tsconfig.tsbuildinfo` to determine if recompilation is needed, not just the presence of dists
+   * 2. `tsconfig.tsbuildinfo` is NOT saved in objects, so TypeScript will recompile anyway
+   * 3. After PR #9820, unmodified exported dependencies are installed as npm packages (not capsules),
+   *    so this optimization only applies to dependents - which need compilation anyway
+   * See: CR #1009 (8e0b16fdc), CR #1010 (8e0f866dd), and PR #9820 for historical context.
    */
   static async capsuleUsePreviouslySavedDists(component: Component): Promise<boolean> {
     const isModified = await component.isModified();
