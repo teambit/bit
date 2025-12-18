@@ -91,8 +91,8 @@ export class ListerMain {
     }
 
     const totalScopes = scopes.length;
-    this.logger.setStatusLine(`found ${totalScopes} scopes for owner "${owner}", fetching components...`);
-
+    this.logger.consoleSuccess(`found ${totalScopes} scopes for owner "${owner}"`);
+    this.logger.setStatusLine(`fetching component-ids from ${totalScopes} scopes for owner "${owner}"`);
     const scopeIds = new Map<string, ComponentID[]>();
     const failedScopes: string[] = [];
     const failedScopesErrors = new Map<string, string>();
@@ -115,17 +115,15 @@ export class ListerMain {
           failedScopesErrors.set(scopeName, this.extractErrorMessage(err));
         }
       },
-      {
-        concurrency: 10,
-        onCompletedChunk: (completed) => {
-          this.logger.setStatusLine(`fetching components: ${completed}/${totalScopes} scopes completed`);
-        },
-      }
+      { concurrency: 10 }
     );
 
     if (!scopeIds.size) {
       throw new NoIdMatchWildcard([`${owner}/**`]);
     }
+
+    const totalComponents = Array.from(scopeIds.values()).reduce((sum, ids) => sum + ids.length, 0);
+    this.logger.consoleSuccess(`found ${totalComponents} components across ${scopeIds.size} scopes`);
 
     return { scopeIds, failedScopes, failedScopesErrors };
   }

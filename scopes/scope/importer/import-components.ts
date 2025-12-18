@@ -229,11 +229,9 @@ export default class ImportComponents {
     const totalScopes = scopeEntries.length;
     let completedScopes = 0;
     for (const [scopeName, ids] of scopeEntries) {
+      completedScopes++;
+      this.logger.setStatusLine(`importing from ${scopeName} [${completedScopes}/${totalScopes}]`);
       try {
-        completedScopes++;
-        this.logger.setStatusLine(
-          `importing from ${scopeName} (${ids.length} components) [${completedScopes}/${totalScopes}]`
-        );
         const idList = ComponentIdList.fromArray(ids);
         const beforeVersions = await this._getCurrentVersions(idList);
         Object.assign(allBeforeVersions, beforeVersions);
@@ -242,9 +240,11 @@ export default class ImportComponents {
           lane: this.remoteLane,
         });
         allVersionDeps.push(...versionDeps);
+        this.logger.consoleSuccess(`imported ${scopeName} (${ids.length} components)`);
       } catch (err: any) {
         importFailedScopes.push(scopeName);
         allFailedScopesErrors.set(scopeName, err.message);
+        this.logger.consoleFailure(`failed to import ${scopeName}`);
       }
     }
 
