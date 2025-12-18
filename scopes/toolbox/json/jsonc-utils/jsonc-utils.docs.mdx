@@ -3,8 +3,6 @@ labels: ['typescript', 'utils', 'json', 'jsonc', 'formatting', 'comments', 'pars
 description: 'Utilities for parsing and stringifying JSONC files while preserving formatting and comments.'
 ---
 
-import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@teambit/design.ui.surfaces.tabs';
-
 # JSONC Utils
 
 Utilities for working with JSONC (JSON with Comments) files while preserving their original formatting, including:
@@ -62,7 +60,7 @@ async function updateEnvDependency(
   newVersion: string
 ) {
   const content = await fs.readFile(envJsoncPath, 'utf-8');
-  
+
   const updated = updateJsoncPreservingFormatting(content, (envJsonc) => {
     const dep = envJsonc.policy?.runtime?.find((d) => d.name === pkgName);
     if (dep) {
@@ -70,7 +68,7 @@ async function updateEnvDependency(
     }
     return envJsonc;
   });
-  
+
   await fs.writeFile(envJsoncPath, updated);
 }
 ```
