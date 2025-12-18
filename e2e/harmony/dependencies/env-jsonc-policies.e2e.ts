@@ -498,4 +498,71 @@ describe('env-jsonc-policies', function () {
       });
     });
   });
+  describe('bit update', function () {
+    let envId;
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      envId = 'react-based-env';
+      helper.env.setCustomNewEnv(undefined, undefined, {
+        policy: {
+          runtime: [
+            {
+              name: 'is-string',
+              version: '1.0.5',
+              force: true,
+            },
+          ],
+        },
+      }, false, envId);
+      helper.command.install();
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+
+    it('should update env.jsonc dependency to latest version', () => {
+      const envJsoncPath = path.join(helper.scopes.localPath, envId, 'env.jsonc');
+      const originalEnvJsonc = fs.readJsonSync(envJsoncPath);
+      expect(originalEnvJsonc.policy.runtime[0].version).to.equal('1.0.5');
+
+      helper.command.update('is-string --yes');
+
+      const updatedEnvJsonc = fs.readJsonSync(envJsoncPath);
+      expect(updatedEnvJsonc.policy.runtime[0].version).to.not.equal('1.0.5');
+    });
+
+    it('should update supportedRange for peerDependencies when new version is outside existing range', () => {
+      const envId2 = 'react-based-env-peers';
+      helper.env.setCustomNewEnv(undefined, undefined, {
+        policy: {
+          peers: [
+            {
+              name: 'react',
+              version: '16.8.0',
+              supportedRange: '^16.8.0',
+            },
+          ],
+        },
+      }, false, envId2);
+      helper.command.install();
+
+      const envJsoncPath = path.join(helper.scopes.localPath, envId2, 'env.jsonc');
+      const originalEnvJsonc = fs.readJsonSync(envJsoncPath);
+      expect(originalEnvJsonc.policy.peers[0].supportedRange).to.equal('^16.8.0');
+
+      // Update react to latest (which is > 16.8.0, likely 18.x)
+      helper.command.update('react --yes');
+
+      const updatedEnvJsonc = fs.readJsonSync(envJsoncPath);
+      const newVersion = updatedEnvJsonc.policy.peers[0].version;
+      const newSupportedRange = updatedEnvJsonc.policy.peers[0].supportedRange;
+
+      expect(newVersion).to.not.equal('16.8.0');
+      // Should now contain the old range OR the new range/version
+      expect(newSupportedRange).to.include(' || ');
+      expect(newSupportedRange).to.include('^16.8.0');
+      expect(newSupportedRange).to.include(newVersion);
+    });
+  });
 });

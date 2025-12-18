@@ -81,7 +81,7 @@ const orderedChoices = [
     choices: [
       {
         message: 'foo (runtime) 1.0.0 ❯ 2.0.0   ',
-        name: 'foo',
+        name: 'foo-2',
         value: {
           currentRange: '1.0.0',
           latestRange: '2.0.0',
@@ -92,7 +92,7 @@ const orderedChoices = [
       },
       {
         message: 'qar (runtime) 1.0.0 ❯ 1.1.0   ',
-        name: 'qar',
+        name: 'qar-1',
         value: {
           currentRange: '1.0.0',
           latestRange: '1.1.0',
@@ -103,7 +103,7 @@ const orderedChoices = [
       },
       {
         message: 'zoo (dev)     1.0.0 ❯ 1.1.0   ',
-        name: 'zoo',
+        name: 'zoo-0',
         value: {
           currentRange: '1.0.0',
           latestRange: '1.1.0',
@@ -114,7 +114,7 @@ const orderedChoices = [
       },
       {
         message: 'bar (peer)    1.0.0 ❯ 1.1.0   ',
-        name: 'bar',
+        name: 'bar-3',
         value: {
           currentRange: '1.0.0',
           latestRange: '1.1.0',
@@ -133,7 +133,7 @@ const contextOrders = [
     choices: [
       {
         message: 'foo (runtime) 1.0.0 ❯ 2.0.0   ',
-        name: 'foo',
+        name: 'foo-0',
         value: {
           componentId: ComponentID.fromString('scope/comp1'),
           currentRange: '1.0.0',
@@ -150,7 +150,7 @@ const contextOrders = [
     choices: [
       {
         message: 'bar (peer)    1.0.0 ❯ 1.1.0   ',
-        name: 'bar',
+        name: 'bar-1',
         value: {
           currentRange: '1.0.0',
           latestRange: '1.1.0',
