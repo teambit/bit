@@ -72,6 +72,46 @@ async function getScope(name: string) {
   }
 }
 
+const LIST_SCOPES = gql`
+  query listScopes($owners: [String!]!, $limit: Int!, $offset: Int!) {
+    listScopes(filters: { owners: $owners }, limit: $limit, offset: $offset) {
+      id
+    }
+  }
+`;
+
+/**
+ * List all scopes owned by a specific owner from the central Bit Cloud hub.
+ */
+export async function listScopesByOwner(owner: string): Promise<string[]> {
+  const token = getConfig(CFG_USER_TOKEN_KEY);
+  const headers = token ? getAuthHeader(token) : {};
+  const graphQlUrl = `${symphonyUrl}/graphql`;
+  const graphQlFetcher = await getFetcherWithAgent(graphQlUrl);
+  const client = new GraphQLClient(graphQlUrl, { headers, fetch: graphQlFetcher });
+
+  const limit = 100;
+  let offset = 0;
+  const allScopes: string[] = [];
+  let hasMore = true;
+
+  while (hasMore) {
+    const res = (await client.request(LIST_SCOPES, {
+      owners: [owner],
+      limit,
+      offset,
+    })) as { listScopes?: Array<{ id: string }> };
+
+    const scopes = res.listScopes?.map((s) => s.id) || [];
+    allScopes.push(...scopes);
+
+    hasMore = scopes.length >= limit;
+    offset += limit;
+  }
+
+  return allScopes;
+}
+
 const hubResolver = async (scopeName) => {
   // check if has harmony
   const scope = await getScope(scopeName);
