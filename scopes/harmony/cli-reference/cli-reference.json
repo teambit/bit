@@ -2174,6 +2174,11 @@
         "",
         "lane-only",
         "when using wildcards on a lane, only import components that exist on the lane (never from main)"
+      ],
+      [
+        "",
+        "owner",
+        "treat the argument as an owner name and import all components from all scopes of that owner"
       ]
     ],
     "description": "bring components from remote scopes into your workspace",
