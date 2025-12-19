@@ -3,6 +3,7 @@ import parsePackageName from 'parse-package-name';
 import { initDefaultReporter } from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
 import type { StoreController, WantedDependency } from '@pnpm/package-store';
+import { TRUSTED_PACKAGE_NAMES } from '@pnpm/plugin-trusted-deps'
 import { rebuild } from '@pnpm/plugin-commands-rebuild';
 import type { CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { createOrConnectStoreController } from '@pnpm/store-connection-manager';
@@ -419,7 +420,13 @@ function resolveScriptPolicies({
           break;
       }
     }
+    for (const trustedPkgName of TRUSTED_PACKAGE_NAMES) {
+      if (allowScripts?.[trustedPkgName] == null) {
+        onlyBuiltDependencies.push(trustedPkgName)
+      }
+    }
   }
+
   return { neverBuiltDependencies: resolvedNeverBuilt, onlyBuiltDependencies, ignoredBuiltDependencies };
 }
 
