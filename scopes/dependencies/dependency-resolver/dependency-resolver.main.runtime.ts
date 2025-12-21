@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import multimatch from 'multimatch';
 import { isSnap } from '@teambit/component-version';
 import { BitError } from '@teambit/bit-error';
@@ -37,7 +38,7 @@ import { Http } from '@teambit/scope.network';
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
 import fs from 'fs-extra';
-import { assign } from 'comment-json';
+import { assign, parse } from 'comment-json';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
 import { parseBareSpecifier } from '@pnpm/npm-resolver';
@@ -1493,6 +1494,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       variantPoliciesByPatterns,
       componentPolicies,
       components,
+      includeEnvJsoncDeps: true,
     });
     if (patterns?.length) {
       const selectedPkgNames = new Set(
@@ -1514,10 +1516,12 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     variantPoliciesByPatterns,
     componentPolicies,
     components,
+    includeEnvJsoncDeps = false,
   }: {
     variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
     componentPolicies: Array<{ componentId: ComponentID; policy: any }>;
     components: Component[];
+    includeEnvJsoncDeps?: boolean;
   }): CurrentPkg[] {
     const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
     const componentModelVersions: ComponentModelVersion[] = components
@@ -1542,12 +1546,50 @@ as an alternative, you can use "+" to keep the same version installed in the wor
           }));
       })
       .flat();
-    return getAllPolicyPkgs({
-      rootPolicy: this.getWorkspacePolicyFromConfig(),
-      variantPoliciesByPatterns,
-      componentPolicies,
-      componentModelVersions,
+    return [
+      ...getAllPolicyPkgs({
+        rootPolicy: this.getWorkspacePolicyFromConfig(),
+        variantPoliciesByPatterns,
+        componentPolicies,
+        componentModelVersions,
+      }),
+      ...(includeEnvJsoncDeps ? this.getEnvJsoncPolicyPkgs(components) : []),
+    ];
+  }
+
+  getEnvJsoncPolicyPkgs(components: Component[]): CurrentPkg[] {
+    const pkgs: CurrentPkg[] = [];
+    components.forEach((component) => {
+      const isEnv = this.envs.isEnv(component);
+      if (!isEnv) return;
+
+      const envJsoncFile = component.filesystem.files.find((file) => file.relative === 'env.jsonc');
+      if (!envJsoncFile) return;
+
+      const envJsonc = parse(envJsoncFile.contents.toString()) as EnvJsonc;
+      if (!envJsonc.policy) return;
+
+      const policies = [
+        { field: 'peers', targetField: 'peerDependencies' },
+        { field: 'dev', targetField: 'devDependencies' },
+        { field: 'runtime', targetField: 'dependencies' },
+      ];
+
+      policies.forEach(({ field, targetField }) => {
+        // @ts-ignore
+        const deps = envJsonc.policy?.[field] || [];
+        deps.forEach((dep: any) => {
+          pkgs.push({
+            name: dep.name,
+            currentRange: dep.version,
+            source: 'env-jsonc',
+            componentId: component.id,
+            targetField: targetField as any,
+          });
+        });
+      });
     });
+    return pkgs;
   }
 
   getAllDedupedDirectDependencies(opts: {
@@ -1618,9 +1660,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       rootDir: string;
       forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible';
     },
-    pkgs: Array<
-      { name: string; currentRange: string; source: 'variants' | 'component' | 'rootPolicy' | 'component-model' } & T
-    >
+    pkgs: Array<{ name: string; currentRange: string; source: CurrentPkgSource; } & T>
   ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
     this.logger.setStatusLine('checking the latest versions of dependencies');
     const resolver = await this.getVersionResolver();
