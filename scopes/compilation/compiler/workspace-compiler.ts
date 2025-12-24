@@ -234,8 +234,12 @@ ${this.compileErrors.map(formatError).join('\n')}`);
           matches.map(async (match) => {
             const source = path.join(sourceDistDirAbs, match);
             const dest = path.join(distDirAbs, match);
-            await fs.ensureDir(path.dirname(dest));
-            await fs.copyFile(source, dest);
+            try {
+              await fs.ensureDir(path.dirname(dest));
+              await fs.copyFile(source, dest);
+            } catch (err: any) {
+              throw new Error(`failed to copy compiled file from "${source}" to "${dest}": ${err.message}`);
+            }
           })
         );
       })
