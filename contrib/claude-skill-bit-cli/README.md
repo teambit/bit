@@ -11,10 +11,10 @@ This skill provides Claude Code with accurate Bit CLI command reference, elimina
 mkdir -p ~/.claude/skills/bit-cli
 
 # Download the skill files
-curl -sL https://raw.githubusercontent.com/teambit/bit/master/contrib/claude-skill-bit-cli/SKILL.md \
+curl -fsL https://raw.githubusercontent.com/teambit/bit/master/contrib/claude-skill-bit-cli/SKILL.md \
   -o ~/.claude/skills/bit-cli/SKILL.md
 
-curl -sL https://raw.githubusercontent.com/teambit/bit/master/contrib/claude-skill-bit-cli/bit-cli-lookup \
+curl -fsL https://raw.githubusercontent.com/teambit/bit/master/contrib/claude-skill-bit-cli/bit-cli-lookup \
   -o ~/.claude/skills/bit-cli/bit-cli-lookup
 
 # Make the lookup script executable
@@ -27,7 +27,7 @@ chmod +x ~/.claude/skills/bit-cli/bit-cli-lookup
 ### One-liner
 
 ```bash
-mkdir -p ~/.claude/skills/bit-cli && cd ~/.claude/skills/bit-cli && curl -sLO https://raw.githubusercontent.com/teambit/bit/master/contrib/claude-skill-bit-cli/{SKILL.md,bit-cli-lookup} && chmod +x bit-cli-lookup && ./bit-cli-lookup --update
+mkdir -p ~/.claude/skills/bit-cli && cd ~/.claude/skills/bit-cli && curl -fsLO https://raw.githubusercontent.com/teambit/bit/master/contrib/claude-skill-bit-cli/SKILL.md && curl -fsLO https://raw.githubusercontent.com/teambit/bit/master/contrib/claude-skill-bit-cli/bit-cli-lookup && chmod +x bit-cli-lookup && ./bit-cli-lookup --update
 ```
 
 ### Manual Install
@@ -50,13 +50,13 @@ mkdir -p ~/.claude/skills/bit-cli && cd ~/.claude/skills/bit-cli && curl -sLO ht
 
 ## Requirements
 
-- `jq` - JSON processor (install with `brew install jq` or `apt-get install jq`)
+- `jq` - JSON processor (install with `brew install jq` or `apt install jq`)
 - `curl` - For downloading updates
 
 ## How It Works
 
 1. Claude Code automatically discovers this skill when you ask about bit commands
-2. Instead of loading the full 5000+ line CLI reference, Claude runs the lookup script
+2. Instead of loading the full 5000+-line CLI reference, Claude runs the lookup script
 3. The script returns only the relevant command info (~20-50 lines)
 4. Claude uses the accurate flags without trial-and-error
 

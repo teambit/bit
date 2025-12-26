@@ -39,7 +39,7 @@ usage() {
 check_jq() {
     if ! command -v jq &> /dev/null; then
         echo "Error: jq is required but not installed."
-        echo "Install with: brew install jq (macOS) or apt-get install jq (Linux)"
+        echo "Install jq using your system's package manager (e.g. 'brew install jq' on macOS or 'apt install jq' on Debian/Ubuntu)"
         exit 1
     fi
 }
@@ -53,9 +53,16 @@ check_cli_ref() {
 
 update_cli_ref() {
     echo "Updating CLI reference from GitHub..."
-    if curl -sL "$CLI_REF_URL" -o "$CLI_REF.tmp"; then
-        mv "$CLI_REF.tmp" "$CLI_REF"
-        echo "Updated successfully."
+    if curl -fsL "$CLI_REF_URL" -o "$CLI_REF.tmp"; then
+        # Validate that the downloaded file is valid JSON before replacing the existing reference
+        if jq empty "$CLI_REF.tmp" >/dev/null 2>&1; then
+            mv "$CLI_REF.tmp" "$CLI_REF"
+            echo "Updated successfully."
+        else
+            echo "Error: Downloaded CLI reference is not valid JSON."
+            rm -f "$CLI_REF.tmp"
+            exit 1
+        fi
     else
         echo "Error: Failed to download CLI reference."
         rm -f "$CLI_REF.tmp"
