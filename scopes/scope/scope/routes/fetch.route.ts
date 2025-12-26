@@ -37,6 +37,11 @@ export class FetchRoute implements Route {
       } catch (err: any) {
         if (req.aborted) {
           this.logger.warn('FetchRoute, the client aborted the request', err);
+        } else if (err.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+          this.logger.error(
+            'FetchRoute, stream closed prematurely. This may cause "Invalid tar header" on client side.',
+            err
+          );
         } else {
           this.logger.error(
             `FetchRoute encountered an error during the pipeline streaming, this should never happen.
