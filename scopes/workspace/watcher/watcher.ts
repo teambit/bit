@@ -185,7 +185,8 @@ export class Watcher {
   private async ensureWatchmanConfig(): Promise<void> {
     // Only needed if no .git directory (Watchman uses .git for cookies by default)
     const gitPath = join(this.workspace.path, '.git');
-    if (fs.existsSync(gitPath)) {
+    const gitExists = await fs.pathExists(gitPath);
+    if (gitExists) {
       return;
     }
 
@@ -209,8 +210,13 @@ export class Watcher {
 
       await fs.writeFile(configPath, JSON.stringify(existingConfig, null, 2) + '\n');
       this.logger.debug(`Updated .watchmanconfig to include ${scopeDirName} in ignore_vcs`);
-    } catch {
-      // File doesn't exist or is invalid JSON, create it
+    } catch (err: any) {
+      // File doesn't exist or is invalid JSON - create new config
+      // For other errors (permissions, disk space), log and attempt to create anyway
+      const isExpectedError = err.code === 'ENOENT' || err instanceof SyntaxError;
+      if (!isExpectedError) {
+        this.logger.debug(`Unexpected error reading .watchmanconfig: ${err.message}, creating new file`);
+      }
       await fs.writeFile(configPath, JSON.stringify({ ignore_vcs: desiredIgnoreVcs }, null, 2) + '\n');
       this.logger.debug(`Created .watchmanconfig with ${scopeDirName} in ignore_vcs`);
     }
