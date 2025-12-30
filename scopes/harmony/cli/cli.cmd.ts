@@ -24,23 +24,38 @@ export class CliGenerateCmd implements Command {
     ],
     ['', 'docs', 'generate the cli-reference.docs.mdx file'],
     ['j', 'json', 'output the commands info as JSON'],
+    [
+      '',
+      'skill <type>',
+      'generate output for Claude Code skill: "commands" (like bit --help) or "flags" (condensed flag reference)',
+    ],
   ] as CommandOptions;
   private = true;
 
   constructor(private cliMain: CLIMain) {}
 
-  async report(args, { metadata, docs }: GenerateOpts & { docs?: boolean }): Promise<string> {
+  async report(args, { metadata, docs, skill }: GenerateOpts & { docs?: boolean; skill?: string }): Promise<string> {
     if (docs) {
       return `---
 description: 'Bit command synopses. Bit version: ${getBitVersion()}'
 labels: ['cli', 'mdx', 'docs']
 ---`;
     }
-    return new GenerateCommandsDoc(this.cliMain.commands, { metadata }).generate();
+    const generator = new GenerateCommandsDoc(this.cliMain.commands, { metadata }, this.cliMain.groups);
+    if (skill) {
+      if (skill === 'commands') {
+        return generator.generateSkillCommands();
+      }
+      if (skill === 'flags') {
+        return generator.generateSkillFlags();
+      }
+      throw new Error(`Unknown skill type: "${skill}". Use "commands" or "flags".`);
+    }
+    return generator.generate();
   }
 
   async json() {
-    return new GenerateCommandsDoc(this.cliMain.commands, {}).generateJson();
+    return new GenerateCommandsDoc(this.cliMain.commands, {}, this.cliMain.groups).generateJson();
   }
 }
 
