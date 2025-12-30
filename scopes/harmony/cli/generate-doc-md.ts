@@ -111,11 +111,16 @@ Run \`bit <command> --help\` for more details.`;
       usage += ` ${args}`;
     }
     lines.push(`## ${usage}`);
+    lines.push(''); // Blank line after heading for proper Markdown
 
-    // Description
-    const description = cmd.description || '';
-    const extendedDesc = cmd.extendedDescription ? ` ${cmd.extendedDescription.replace(/\n/g, ' ')}` : '';
-    lines.push(`${description}${extendedDesc}`);
+    // Description with proper separation between description and extended description
+    const description = (cmd.description || '').trim();
+    const extended = cmd.extendedDescription ? cmd.extendedDescription.replace(/\n/g, ' ').trim() : '';
+    if (description && extended) {
+      lines.push(`${description}\n\n${extended}`);
+    } else if (description || extended) {
+      lines.push(description || extended);
+    }
 
     // Flags (filtering out DEPRECATED and UNSUPPORTED)
     if (cmd.options && cmd.options.length > 0) {
