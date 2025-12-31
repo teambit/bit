@@ -191,6 +191,9 @@ export class ApiServerMain {
               proxyReq.setHeader(key, value);
             });
           },
+          error: (err) => {
+            this.logger.error('websocket cloud proxy error', err);
+          },
         },
         pathFilter: '/',
         target: symphonyUrl,
