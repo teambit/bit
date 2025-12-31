@@ -44,6 +44,7 @@ import { IDERoute } from './ide.route';
 import { APIForIDE } from './api-for-ide';
 import { SSEEventsRoute } from './sse-events.route';
 import { join } from 'path';
+import { execSync } from 'child_process';
 import { CLIRawRoute } from './cli-raw.route';
 import type { ApplicationMain } from '@teambit/application';
 import { ApplicationAspect } from '@teambit/application';
@@ -213,6 +214,7 @@ export class ApiServerMain {
         // important! if you change the message here, change it also in server-forever.ts and also in the vscode extension.
         this.logger.consoleSuccess(`Bit Server is listening on port ${port}`);
         this.writeUsedPort(port);
+        this.startParentProcessMonitor();
         resolve(port);
       });
     });
@@ -221,6 +223,60 @@ export class ApiServerMain {
   writeUsedPort(port: number) {
     const filePath = this.getServerPortFilePath();
     fs.writeFileSync(filePath, port.toString());
+  }
+
+  /**
+   * Monitor the parent process (typically VSCode) and shut down if it dies.
+   * When a parent process dies on macOS/Linux, orphaned children get re-parented to PID 1 (init/launchd).
+   * By detecting this, we can clean up stale bit server processes that would otherwise run forever.
+   */
+  private startParentProcessMonitor() {
+    const originalPpid = process.ppid;
+    const checkInterval = 5000; // Check every 5 seconds
+
+    // Log parent process info at startup
+    const parentInfo = this.getProcessInfo(originalPpid);
+    this.logger.debug(
+      `bit server started. PID: ${process.pid}, Parent PID: ${originalPpid}, Parent command: ${parentInfo}`
+    );
+
+    const intervalId = setInterval(() => {
+      const currentPpid = process.ppid;
+      // If PPID changed to 1, our parent (e.g., VSCode) died and we were re-parented to init
+      if (currentPpid === 1 && originalPpid !== 1) {
+        this.logger.debug(
+          `Parent process died (was PID ${originalPpid}: ${parentInfo}). Current PPID is now 1 (init/launchd). Shutting down bit server.`
+        );
+        clearInterval(intervalId);
+        process.exit(0);
+      }
+    }, checkInterval);
+
+    // Don't let this interval keep the process alive if everything else is done
+    intervalId.unref();
+  }
+
+  /**
+   * Get the command/path of a process by its PID.
+   */
+  private getProcessInfo(pid: number): string {
+    try {
+      if (process.platform === 'win32') {
+        // Windows: use wmic
+        const output = execSync(`wmic process where processid=${pid} get commandline /format:list`, {
+          encoding: 'utf8',
+          timeout: 2000,
+        });
+        const match = output.match(/CommandLine=(.+)/);
+        return match ? match[1].trim() : 'unknown';
+      } else {
+        // macOS/Linux: use ps
+        const output = execSync(`ps -o command= -p ${pid}`, { encoding: 'utf8', timeout: 2000 });
+        return output.trim() || 'unknown';
+      }
+    } catch {
+      return 'unknown (process may have exited)';
+    }
   }
 
   async getRandomPort() {
