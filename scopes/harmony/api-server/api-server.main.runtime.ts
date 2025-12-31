@@ -227,12 +227,17 @@ export class ApiServerMain {
 
   /**
    * Monitor the parent process (typically VSCode) and shut down if it dies.
-   * When a parent process dies on macOS/Linux, orphaned children get re-parented to PID 1 (init/launchd).
-   * By detecting this, we can clean up stale bit server processes that would otherwise run forever.
+   *
+   * On Unix-like systems (macOS, Linux), when a parent process dies, orphaned children are
+   * re-parented to PID 1 (init/launchd). By watching for `process.ppid` changing from
+   * the original value to 1, we can detect that the parent exited and proactively
+   * shut down the bit server to avoid leaving stale background processes running.
+   *
+   * Note: This orphan detection does not work on Windows, as Windows does not re-parent
+   * processes to PID 1. On Windows, this method only logs the parent process info at startup.
    */
   private startParentProcessMonitor() {
     const originalPpid = process.ppid;
-    const checkInterval = 5000; // Check every 5 seconds
 
     // Log parent process info at startup
     const parentInfo = this.getProcessInfo(originalPpid);
@@ -240,6 +245,12 @@ export class ApiServerMain {
       `bit server started. PID: ${process.pid}, Parent PID: ${originalPpid}, Parent command: ${parentInfo}`
     );
 
+    // Skip orphan detection on Windows - PPID doesn't change to 1 when parent dies
+    if (process.platform === 'win32') {
+      return;
+    }
+
+    const checkInterval = 5000; // Check every 5 seconds
     const intervalId = setInterval(() => {
       const currentPpid = process.ppid;
       // If PPID changed to 1, our parent (e.g., VSCode) died and we were re-parented to init
@@ -262,13 +273,13 @@ export class ApiServerMain {
   private getProcessInfo(pid: number): string {
     try {
       if (process.platform === 'win32') {
-        // Windows: use wmic
-        const output = execSync(`wmic process where processid=${pid} get commandline /format:list`, {
+        // Windows: use PowerShell Get-CimInstance (WMIC is deprecated/removed on modern Windows)
+        const psCommand = `Get-CimInstance Win32_Process -Filter 'ProcessId = ${pid}' | Select-Object -ExpandProperty CommandLine`;
+        const output = execSync(`powershell.exe -NoProfile -Command "${psCommand}"`, {
           encoding: 'utf8',
           timeout: 2000,
         });
-        const match = output.match(/CommandLine=(.+)/);
-        return match ? match[1].trim() : 'unknown';
+        return output.trim() || 'unknown';
       } else {
         // macOS/Linux: use ps
         const output = execSync(`ps -o command= -p ${pid}`, { encoding: 'utf8', timeout: 2000 });
