@@ -1,5 +1,4 @@
 import type { CLIMain } from '@teambit/cli';
-import { createProxyServer } from 'http-proxy';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { Port } from '@teambit/toolbox.network.get-port';
 import fs from 'fs-extra';
@@ -186,6 +185,13 @@ export class ApiServerMain {
     app.use(
       '/websocket-server/subscriptions',
       createProxyMiddleware({
+        on: {
+          proxyReqWs: (proxyReq) => {
+            Object.entries(proxyHeaders).forEach(([key, value]) => {
+              proxyReq.setHeader(key, value);
+            });
+          },
+        },
         pathFilter: '/',
         target: symphonyUrl,
         ws: true,
@@ -195,28 +201,6 @@ export class ApiServerMain {
     );
 
     const server = await app.listen(port);
-
-    const proxServer = createProxyServer();
-    server.on('upgrade', (req, socket, head) => {
-      req.url = req.url!.replace(/^.+?[/]/, '/');
-      try {
-        proxServer.ws(
-          req,
-          socket,
-          head,
-          {
-            target: `${symphonyUrl}/websocket-server`,
-            secure: false, // Disable SSL verification for proxy to remote server
-            changeOrigin: true,
-          },
-          (error) => {
-            this.logger.error(`failed to proxy ws: ${error.message}`, error);
-          }
-        );
-      } catch (error: any) {
-        this.logger.error(`failed to proxy ws: ${error.message}`, error);
-      }
-    });
 
     return new Promise((resolve, reject) => {
       server.on('error', (err) => {
