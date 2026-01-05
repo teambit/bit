@@ -116,21 +116,35 @@ export default class VersionHistory extends BitObject {
   getAllHashesFrom(start: Ref): { found?: string[]; missing?: string[] } {
     const item = this.getVersionData(start);
     if (!item) return { missing: [start.toString()] };
-    const allHashes: string[] = [item.hash.toString()];
+    const hashSet = new Set<string>();
+    const allHashes: string[] = [];
     const missing: string[] = [];
-    const addHashesRecursively = (ver: VersionParents) => {
-      ver.parents.forEach((parent) => {
-        if (allHashes.includes(parent.toString())) return;
+
+    // Use iterative approach with a stack to avoid stack overflow on deep histories
+    const stack: VersionParents[] = [item];
+
+    while (stack.length > 0) {
+      const ver = stack.pop()!;
+      const verHash = ver.hash.toString();
+
+      if (hashSet.has(verHash)) {
+        continue;
+      }
+      hashSet.add(verHash);
+      allHashes.push(verHash);
+
+      for (const parent of ver.parents) {
+        const parentHash = parent.toString();
+        if (hashSet.has(parentHash)) continue;
         const parentVer = this.getVersionData(parent);
         if (!parentVer) {
-          missing.push(parent.toString());
-          return;
+          missing.push(parentHash);
+          continue;
         }
-        allHashes.push(parent.toString());
-        if (parentVer.parents.length) addHashesRecursively(parentVer);
-      });
-    };
-    addHashesRecursively(item);
+        stack.push(parentVer);
+      }
+    }
+
     return { found: allHashes, missing };
   }
 
