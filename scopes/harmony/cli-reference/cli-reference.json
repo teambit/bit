@@ -35,6 +35,11 @@
             "j",
             "json",
             "output the commands info as JSON"
+          ],
+          [
+            "",
+            "skill <type>",
+            "generate output for Claude Code skill: \"commands\" (like bit --help) or \"flags\" (condensed flag reference)"
           ]
         ],
         "description": "generate an .md file with all commands details",
@@ -2174,6 +2179,11 @@
         "",
         "lane-only",
         "when using wildcards on a lane, only import components that exist on the lane (never from main)"
+      ],
+      [
+        "",
+        "owner",
+        "treat the argument as an owner name and import all components from all scopes of that owner"
       ]
     ],
     "description": "bring components from remote scopes into your workspace",

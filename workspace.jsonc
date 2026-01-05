@@ -70,6 +70,7 @@
         "@pnpm/parse-overrides": "1001.0.3",
         "@pnpm/plugin-commands-publishing": "1000.2.25",
         "@pnpm/plugin-commands-rebuild": "1006.0.0",
+        "@pnpm/plugin-trusted-deps": "^0.2.0",
         "@pnpm/registry-mock": "3.48.0",
         "@pnpm/reviewing.dependencies-hierarchy": "^1001.2.2",
         "@pnpm/semver-diff": "1.1.0",

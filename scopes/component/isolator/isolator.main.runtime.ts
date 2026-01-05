@@ -958,6 +958,12 @@ export class IsolatorMain {
     return capsulesWithModifiedPackageJson;
   }
 
+  /**
+   * TODO: The modified/unmodified separation and `importMultipleDistsArtifacts` optimization below
+   * is likely ineffective and could be removed. See TODO comment on `CapsuleList.capsuleUsePreviouslySavedDists`
+   * for details. The optimization downloads dist artifacts for unmodified components, but TypeScript
+   * will recompile them anyway because `tsconfig.tsbuildinfo` is not saved in objects.
+   */
   private async writeComponentsInCapsules(
     components: Component[],
     capsuleList: CapsuleList,
