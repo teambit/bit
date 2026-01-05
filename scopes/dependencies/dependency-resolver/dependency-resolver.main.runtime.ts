@@ -89,7 +89,7 @@ import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment
 import { dependencyResolverSchema } from './dependency-resolver.graphql';
 import type { DependencyDetector } from './detector-hook';
 import { DependenciesService } from './dependencies.service';
-import { EnvPolicy } from './policy/env-policy';
+import { EnvPolicy, type EnvJsoncPolicyEntry } from './policy/env-policy';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 
@@ -1570,21 +1570,20 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       if (!envJsonc.policy) return;
 
       const policies = [
-        { field: 'peers', targetField: 'peerDependencies' },
-        { field: 'dev', targetField: 'devDependencies' },
-        { field: 'runtime', targetField: 'dependencies' },
+        { field: 'peers', targetField: 'peerDependencies' as const },
+        { field: 'dev', targetField: 'devDependencies' as const },
+        { field: 'runtime', targetField: 'dependencies' as const },
       ];
 
       policies.forEach(({ field, targetField }) => {
-        // @ts-ignore
-        const deps = envJsonc.policy?.[field] || [];
+        const deps: EnvJsoncPolicyEntry[] = envJsonc.policy?.[field] || [];
         deps.forEach((dep: any) => {
           pkgs.push({
             name: dep.name,
             currentRange: dep.version,
             source: 'env-jsonc',
             componentId: component.id,
-            targetField: targetField as any,
+            targetField,
           });
         });
       });

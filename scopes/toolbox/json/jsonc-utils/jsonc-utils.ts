@@ -50,9 +50,9 @@ export function stringifyJsonc(data: any, formatting: JsoncFormatting): string {
  * });
  * ```
  */
-export function updateJsoncPreservingFormatting(
+export function updateJsoncPreservingFormatting<T>(
   originalContent: string,
-  updateFn: (data: any) => any
+  updateFn: (data: T) => T
 ): string {
   const { data, formatting } = parseJsoncWithFormatting(originalContent);
   const updatedData = updateFn(data);

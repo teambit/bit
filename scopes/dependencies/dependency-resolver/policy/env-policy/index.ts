@@ -1,1 +1,1 @@
-export { EnvPolicy, EnvPolicyConfigObject } from './env-policy';
+export { EnvPolicy, EnvPolicyConfigObject, EnvJsoncPolicyEntry } from './env-policy';

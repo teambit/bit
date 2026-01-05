@@ -23,6 +23,7 @@ import { VariantsAspect } from '@teambit/variants';
 import type { Component } from '@teambit/component';
 import { ComponentID, ComponentMap } from '@teambit/component';
 import { PackageJsonFile } from '@teambit/component.sources';
+import { type EnvJsonc } from '@teambit/envs'
 import { updateJsoncPreservingFormatting } from '@teambit/toolbox.json.jsonc-utils';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
@@ -1010,44 +1011,54 @@ export class InstallMain {
   }
 
   async updateEnvJsoncPolicies(outdatedPkgs: MergedOutdatedPkg[]) {
-    const updatesByComponentId = groupBy(outdatedPkgs, (pkg) => pkg.componentId?.toString());
+    // Group packages by componentId, skipping those without one
+    const updatesByComponentId = new Map<string, MergedOutdatedPkg[]>();
+    for (const pkg of outdatedPkgs) {
+      if (!pkg.componentId) continue;
+      const key = pkg.componentId.toString();
+      const existing = updatesByComponentId.get(key);
+      if (existing) {
+        existing.push(pkg);
+      } else {
+        updatesByComponentId.set(key, [pkg]);
+      }
+    }
 
-    await pMapSeries(Object.entries(updatesByComponentId), async ([componentIdStr, pkgs]) => {
-      const componentId = await this.workspace.resolveComponentId(componentIdStr);
+    await Promise.all(Array.from(updatesByComponentId.values()).map(async (pkgs) => {
+      const componentId = pkgs[0].componentId!;
       const component = await this.workspace.get(componentId);
       const envJsoncFile = component.filesystem.files.find((file) => file.relative === 'env.jsonc');
       if (!envJsoncFile) return;
 
       const envJsoncContent = envJsoncFile.contents.toString();
-      const updatedContent = updateJsoncPreservingFormatting(envJsoncContent, (envJsonc) => {
+      const updatedContent = updateJsoncPreservingFormatting(envJsoncContent, (envJsonc: EnvJsonc): EnvJsonc => {
         pkgs.forEach((pkg) => {
-        let field: string | undefined;
-        if (pkg.targetField === 'devDependencies') field = 'dev';
-        if (pkg.targetField === 'dependencies') field = 'runtime';
-        if (pkg.targetField === 'peerDependencies') field = 'peers';
+          let field: string | undefined;
+          if (pkg.targetField === 'devDependencies') field = 'dev';
+          if (pkg.targetField === 'dependencies') field = 'runtime';
+          if (pkg.targetField === 'peerDependencies') field = 'peers';
 
-        if (!field) return;
+          if (!field) return;
 
-        // @ts-ignore
-        const deps = envJsonc.policy?.[field];
-        if (!Array.isArray(deps)) return;
+          const deps = envJsonc.policy?.[field];
+          if (!Array.isArray(deps)) return;
 
-        const depEntry = deps.find((d: any) => d.name === pkg.name);
-        if (depEntry) {
-          depEntry.version = pkg.latestRange;
-          if (field === 'peers' && depEntry.supportedRange) {
-            if (!semver.intersects(pkg.latestRange, depEntry.supportedRange)) {
-              depEntry.supportedRange = `${depEntry.supportedRange} || ${pkg.latestRange}`;
+          const depEntry = deps.find(({ name }) => name === pkg.name);
+          if (depEntry) {
+            depEntry.version = pkg.latestRange;
+            if (field === 'peers' && depEntry.supportedRange) {
+              if (!semver.intersects(pkg.latestRange, depEntry.supportedRange)) {
+                depEntry.supportedRange = `${depEntry.supportedRange} || ${pkg.latestRange}`;
+              }
             }
           }
-        }
         });
         return envJsonc;
       });
 
       const absPath = path.join(this.workspace.componentDir(component.id), 'env.jsonc');
       await fs.writeFile(absPath, updatedContent);
-    });
+    }));
   }
 
   private async _getAllUsedEnvIds(): Promise<ComponentID[]> {
