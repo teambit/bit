@@ -1558,26 +1558,25 @@ as an alternative, you can use "+" to keep the same version installed in the wor
   }
 
   getEnvJsoncPolicyPkgs(components: Component[]): CurrentPkg[] {
+    const policies = [
+      { field: 'peers', targetField: 'peerDependencies' as const },
+      { field: 'dev', targetField: 'devDependencies' as const },
+      { field: 'runtime', targetField: 'dependencies' as const },
+    ];
     const pkgs: CurrentPkg[] = [];
-    components.forEach((component) => {
+    for (const component of components) {
       const isEnv = this.envs.isEnv(component);
-      if (!isEnv) return;
+      if (!isEnv) continue;
 
       const envJsoncFile = component.filesystem.files.find((file) => file.relative === 'env.jsonc');
-      if (!envJsoncFile) return;
+      if (!envJsoncFile) continue;
 
       const envJsonc = parse(envJsoncFile.contents.toString()) as EnvJsonc;
-      if (!envJsonc.policy) return;
+      if (!envJsonc.policy) continue;
 
-      const policies = [
-        { field: 'peers', targetField: 'peerDependencies' as const },
-        { field: 'dev', targetField: 'devDependencies' as const },
-        { field: 'runtime', targetField: 'dependencies' as const },
-      ];
-
-      policies.forEach(({ field, targetField }) => {
+      for (const { field, targetField } of policies) {
         const deps: EnvJsoncPolicyEntry[] = envJsonc.policy?.[field] || [];
-        deps.forEach((dep) => {
+        for (const dep of deps) {
           pkgs.push({
             name: dep.name,
             currentRange: dep.version,
@@ -1585,9 +1584,9 @@ as an alternative, you can use "+" to keep the same version installed in the wor
             componentId: component.id,
             targetField,
           });
-        });
-      });
-    });
+        }
+      }
+    }
     return pkgs;
   }
 
