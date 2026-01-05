@@ -122,15 +122,11 @@ export default class VersionHistory extends BitObject {
 
     // Use iterative approach with a stack to avoid stack overflow on deep histories
     const stack: VersionParents[] = [item];
+    hashSet.add(item.hash.toString());
 
     while (stack.length > 0) {
       const ver = stack.pop()!;
       const verHash = ver.hash.toString();
-
-      if (hashSet.has(verHash)) {
-        continue;
-      }
-      hashSet.add(verHash);
       allHashes.push(verHash);
 
       for (const parent of ver.parents) {
@@ -141,6 +137,8 @@ export default class VersionHistory extends BitObject {
           missing.push(parentHash);
           continue;
         }
+        // Mark as processed before pushing to prevent duplicate stack entries
+        hashSet.add(parentHash);
         stack.push(parentVer);
       }
     }

@@ -283,15 +283,10 @@ export function getSubsetOfVersionParents(
 
   // Use iterative approach with a stack to avoid stack overflow on deep histories
   const stack: VersionParents[] = [head];
+  processedHashes.add(head.hash.toString());
 
   while (stack.length > 0) {
     const version = stack.pop()!;
-    const hashStr = version.hash.toString();
-
-    if (processedHashes.has(hashStr)) {
-      continue;
-    }
-    processedHashes.add(hashStr);
     results.push(version);
 
     // Add parents to stack in reverse order to maintain original traversal order
@@ -307,6 +302,8 @@ export function getSubsetOfVersionParents(
       }
       const parentVersion = getVersionParent(parent);
       if (parentVersion) {
+        // Mark as processed before pushing to prevent duplicate stack entries
+        processedHashes.add(parentHashStr);
         stack.push(parentVersion);
       }
     }
