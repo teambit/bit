@@ -29,6 +29,11 @@ export type ComponentLoadOptions = {
   storeInCache?: boolean;
   storeDepsInFsCache?: boolean;
   resolveExtensionsVersions?: boolean;
+  /**
+   * Skip dependency resolution during component loading.
+   * Used by V2 loader to prevent recursive workspace.get() calls.
+   */
+  skipDependencyResolution?: boolean;
 };
 export type LoadManyResult = {
   components: Component[];
@@ -252,7 +257,10 @@ export class ComponentLoader {
     };
 
     try {
-      await loadDependencies();
+      // Skip dependency resolution when loading via V2 loader to prevent recursive workspace.get() calls
+      if (!loadOpts?.skipDependencyResolution) {
+        await loadDependencies();
+      }
       if (loadOpts?.loadExtensions) {
         await runOnComponentLoadEvent();
       }

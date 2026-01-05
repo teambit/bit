@@ -61,6 +61,12 @@ export class WorkspaceComponentLoaderV2 {
   private assemblyPhase: AssemblyPhase;
   private executionPhase: ExecutionPhase;
 
+  /**
+   * Track components currently being loaded to prevent redundant concurrent loads.
+   * Key is component ID string, value is the promise that resolves when loading completes.
+   */
+  private loadingComponents = new Map<string, Promise<Component | undefined>>();
+
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -76,21 +82,28 @@ export class WorkspaceComponentLoaderV2 {
     this.scopeSource = createScopeSource(workspace.scope);
 
     // Create extension resolver for resolution phase
+    // Uses workspace.componentExtensions with loadExtensions: false to avoid triggering
+    // recursive component loads when discovering env IDs for load ordering
     const extensionResolver: ExtensionResolver = {
       getExtensions: async (id) => {
         try {
-          return await this.workspaceSource.getExtensions(id);
+          // Use componentExtensions with loadExtensions: false to avoid recursion
+          const result = await workspace.componentExtensions(id, undefined, [], {
+            loadExtensions: false,
+          });
+          return result.extensions;
         } catch {
           return null;
         }
       },
       getEnvId: async (id) => {
         try {
-          const extensions = await extensionResolver.getExtensions(id);
-          if (!extensions) return null;
-
-          const envExt = extensions.find((ext) => ext.extensionId?.name === 'envs');
-          return envExt?.data?.id || null;
+          // Use componentExtensions with loadExtensions: false to avoid recursion
+          const result = await workspace.componentExtensions(id, undefined, [], {
+            loadExtensions: false,
+          });
+          // The envId is already extracted by componentExtensions
+          return result.envId || null;
         } catch {
           return null;
         }
@@ -154,10 +167,11 @@ export class WorkspaceComponentLoaderV2 {
     this.logger.setStatusLine(`loading ${ids.length} component(s) [V2]`);
 
     // Default load options
+    // Match V1 loader defaults: loadExtensions and executeLoadSlot default to true
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
       {
-        loadExtensions: false,
-        executeLoadSlot: false,
+        loadExtensions: true,
+        executeLoadSlot: true,
         loadSeedersAsAspects: true,
         resolveExtensionsVersions: false,
       },
@@ -165,19 +179,32 @@ export class WorkspaceComponentLoaderV2 {
     );
 
     // Check cache first
+    // Similar to V1 loader, we check both the specific options and the "fully loaded" version
+    // If a component was loaded with more options than requested, it's still usable
     const loadOrCached: { idsToLoad: ComponentID[]; fromCache: Component[] } = {
       idsToLoad: [],
       fromCache: [],
     };
 
+    const fullyLoadedOpts = { loadExtensions: true, executeLoadSlot: true };
+
     idsWithoutEmpty.forEach((id) => {
-      const componentFromCache = this.cache.getComponent(id, loadOptsWithDefaults);
+      // First try with exact options, then try with fully loaded options
+      const componentFromCache =
+        this.cache.getComponent(id, loadOptsWithDefaults) || this.cache.getComponent(id, fullyLoadedOpts);
       if (componentFromCache) {
         loadOrCached.fromCache.push(componentFromCache);
       } else {
         loadOrCached.idsToLoad.push(id);
       }
     });
+
+    if (process.env.BIT_LOG && idsWithoutEmpty.length === 1) {
+      const stats = this.cache.getStats();
+      this.logger.console(
+        `[V2-CACHE] Single component load: ${idsWithoutEmpty[0].toString()}, fromCache: ${loadOrCached.fromCache.length}, toLoad: ${loadOrCached.idsToLoad.length}, hits: ${stats.componentHits}, misses: ${stats.componentMisses}`
+      );
+    }
 
     // Load components that weren't in cache
     const { components: loadedComponents, invalidComponents } = await this.loadComponents(
@@ -272,7 +299,12 @@ export class WorkspaceComponentLoaderV2 {
   }
 
   /**
-   * Execute the pipeline to load components
+   * Execute the pipeline to load components.
+   *
+   * The pipeline processes LoadPlan phases sequentially to ensure envs are
+   * fully loaded and registered before their dependent components. Each phase
+   * goes through the full pipeline (Hydration → Enrichment → Assembly → Execution)
+   * before the next phase starts.
    */
   private async loadComponents(
     ids: ComponentID[],
@@ -284,6 +316,7 @@ export class WorkspaceComponentLoaderV2 {
     }
 
     const invalidComponents: InvalidComponent[] = [];
+    const allComponents: Component[] = [];
 
     try {
       // Phase 1: Discovery - Find all ComponentIDs to load
@@ -315,69 +348,98 @@ export class WorkspaceComponentLoaderV2 {
         });
       }
 
-      // Phase 3: Hydration - Load raw data from sources
-      this.logger.profileTrace(`phase-3-hydration-${callId}`);
-      const hydrationResult = await this.hydrationPhase.execute(loadPlan);
-      this.logger.profileTrace(`phase-3-hydration-${callId}`);
+      // Process each LoadPlan phase through the full pipeline
+      // This ensures envs are registered before dependent components
+      for (let i = 0; i < loadPlan.phases.length; i++) {
+        const phase = loadPlan.phases[i];
+        const phaseIds = [...phase.workspaceIds, ...phase.scopeIds];
 
-      if (process.env.BIT_LOG) {
-        this.logger.console(
-          `[V2] Hydration: loaded ${hydrationResult.loaded.size}, failed ${hydrationResult.failed.size}, notFound ${hydrationResult.notFound.length}`
-        );
-        if (hydrationResult.failed.size > 0) {
+        if (phaseIds.length === 0) continue;
+
+        if (process.env.BIT_LOG) {
+          this.logger.console(`[V2] Processing phase ${i + 1}: ${phase.name} (${phaseIds.length} components)`);
+        }
+
+        // Create a mini-plan with just this phase
+        const miniPlan = { ...loadPlan, phases: [phase] };
+
+        // Hydration - Load raw data for this phase
+        this.logger.profileTrace(`phase-3-hydration-${callId}-${i}`);
+        const hydrationResult = await this.hydrationPhase.execute(miniPlan);
+        this.logger.profileTrace(`phase-3-hydration-${callId}-${i}`);
+
+        if (process.env.BIT_LOG && hydrationResult.failed.size > 0) {
           hydrationResult.failed.forEach((err, idStr) => {
-            this.logger.console(`  Failed: ${idStr} - ${err.message}`);
+            this.logger.console(`  Failed hydration: ${idStr} - ${err.message}`);
           });
         }
-        if (hydrationResult.notFound.length > 0) {
-          this.logger.console(`  Not found: ${hydrationResult.notFound.map((id) => id.toString()).join(', ')}`);
-        }
-      }
 
-      // Phase 4: Enrichment - Add env and dependency information
-      this.logger.profileTrace(`phase-4-enrichment-${callId}`);
-      const enrichmentResult = await this.enrichmentPhase.execute(hydrationResult.loaded);
-      this.logger.profileTrace(`phase-4-enrichment-${callId}`);
+        // Enrichment - Add env and dependency information for this phase
+        this.logger.profileTrace(`phase-4-enrichment-${callId}-${i}`);
+        const enrichmentResult = await this.enrichmentPhase.execute(hydrationResult.loaded);
+        this.logger.profileTrace(`phase-4-enrichment-${callId}-${i}`);
 
-      if (process.env.BIT_LOG) {
-        this.logger.console(
-          `[V2] Enrichment: enriched ${enrichmentResult.enriched.size}, failed ${enrichmentResult.failed.size}`
-        );
-        if (enrichmentResult.failed.size > 0) {
+        if (process.env.BIT_LOG && enrichmentResult.failed.size > 0) {
           enrichmentResult.failed.forEach((err, idStr) => {
             this.logger.console(`  Failed enrichment: ${idStr} - ${err.message}`);
-            if (err.stack) {
-              this.logger.console(`    Stack: ${err.stack.split('\n').slice(0, 5).join('\n    ')}`);
-            }
           });
         }
-      }
 
-      // Phase 5: Assembly - Build Component objects
-      this.logger.profileTrace(`phase-5-assembly-${callId}`);
-      const assemblyResult = await this.assemblyPhase.execute(enrichmentResult.enriched);
-      this.logger.profileTrace(`phase-5-assembly-${callId}`);
+        // Assembly - Build Component objects for this phase
+        this.logger.profileTrace(`phase-5-assembly-${callId}-${i}`);
+        const assemblyResult = await this.assemblyPhase.execute(enrichmentResult.enriched);
+        this.logger.profileTrace(`phase-5-assembly-${callId}-${i}`);
 
-      if (process.env.BIT_LOG) {
-        this.logger.console(
-          `[V2] Assembly: components ${assemblyResult.components.size}, failed ${assemblyResult.failed.size}`
-        );
-        if (assemblyResult.failed.size > 0) {
+        if (process.env.BIT_LOG && assemblyResult.failed.size > 0) {
           assemblyResult.failed.forEach((err, idStr) => {
             this.logger.console(`  Failed assembly: ${idStr} - ${err.message}`);
           });
         }
+
+        // Execution - Run onComponentLoad slots for this phase
+        // This registers envs so they're available for subsequent phases
+        if (loadOpts.executeLoadSlot || phase.loadAsAspects) {
+          this.logger.profileTrace(`phase-6-execution-${callId}-${i}`);
+          await this.executionPhase.execute(assemblyResult.components);
+          this.logger.profileTrace(`phase-6-execution-${callId}-${i}`);
+        }
+
+        // Load extensions as aspects for workspace components
+        // This is critical for loading external envs (like teambit.harmony/envs/core-aspect-env)
+        // that aren't in the workspace but are used by workspace components
+        if (loadOpts.loadExtensions !== false && phase.workspaceIds.length > 0) {
+          this.logger.profileTrace(`phase-7-load-extensions-${callId}-${i}`);
+          const componentsArray = Array.from(assemblyResult.components.values());
+          // Filter to only workspace components and collect their extensions
+          const workspaceIdStrs = new Set(phase.workspaceIds.map((id) => id.toString()));
+          const workspaceComps = componentsArray.filter((comp) => workspaceIdStrs.has(comp.id.toString()));
+
+          const allExtensions = workspaceComps.flatMap((comp) => {
+            const consumer = comp.state._consumer;
+            // Get extensions from consumer - extensions is an ExtensionDataList
+            return consumer?.extensions?.toArray?.() || consumer?.extensions || [];
+          });
+
+          if (allExtensions.length > 0) {
+            try {
+              // Create an ExtensionDataList from the collected extensions
+              const { ExtensionDataList } = await import('@teambit/legacy.extension-data');
+              const extensionsList = ExtensionDataList.fromArray(allExtensions);
+              await this.workspace.loadComponentsExtensions(extensionsList);
+            } catch (err: any) {
+              // Log but don't fail - extensions loading can fail for various reasons
+              this.logger.warn(`[V2] Failed to load extensions for phase: ${err.message}`);
+            }
+          }
+          this.logger.profileTrace(`phase-7-load-extensions-${callId}-${i}`);
+        }
+
+        // Collect components from this phase
+        allComponents.push(...assemblyResult.components.values());
       }
 
-      // Phase 6: Execution - Run onComponentLoad slots
-      if (loadOpts.executeLoadSlot) {
-        this.logger.profileTrace(`phase-6-execution-${callId}`);
-        await this.executionPhase.execute(assemblyResult.components);
-        this.logger.profileTrace(`phase-6-execution-${callId}`);
-      }
-
-      // Return components
-      return { components: Array.from(assemblyResult.components.values()), invalidComponents };
+      // Return all components
+      return { components: allComponents, invalidComponents };
     } catch (err: any) {
       this.logger.error(`[V2] Component loading failed: ${err.message}`, err);
 

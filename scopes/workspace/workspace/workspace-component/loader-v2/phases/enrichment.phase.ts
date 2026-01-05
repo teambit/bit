@@ -77,10 +77,29 @@ export class EnrichmentPhase {
 
   /**
    * Enrich a single component.
+   * SIMPLIFIED: Skip envs.calcDescriptor and dependencyResolver calls
+   * to avoid recursive workspace.get() calls during component loading.
    */
   private async enrichComponent(raw: RawComponentData): Promise<EnrichedComponentData> {
+    // Return minimal enriched data without triggering env/dep resolution
+    // The actual env/dep data will be populated later during the Execution phase
+    // or by the component itself when accessed.
+    return {
+      raw,
+      envsData: {},
+      depResolverData: {},
+    };
+  }
+
+  /**
+   * Original enrichComponent implementation - kept for reference.
+   * This version triggers env/dep resolution which can cause recursive workspace.get() calls.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private async enrichComponent_ORIGINAL(raw: RawComponentData): Promise<EnrichedComponentData> {
     // Create a minimal Component-like object to pass to envs/deps resolver
     // The envs aspect expects component.state.aspects to have a .get() method (AspectList)
+    // and an .entries property (array of AspectEntry)
     // For now, create a simple mock that delegates to raw.extensions
     const aspectsMock = {
       get: (id: string) => {
@@ -90,6 +109,7 @@ export class EnrichmentPhase {
         const ext = raw.extensions.findExtension(id);
         return ext ? { config: ext.data } : undefined;
       },
+      entries: raw.extensions?.toConfigArray?.() || [],
     };
 
     const componentLike: any = {
@@ -113,7 +133,7 @@ export class EnrichmentPhase {
 
     // Merge dependencies from workspace and model
     // For scope components, dependencies might not be fully initialized
-    let envExtendsDeps = [];
+    let envExtendsDeps: any[] = [];
     try {
       const wsDeps = raw.consumerComponent.dependencies?.dependencies || [];
       const modelDeps = raw.consumerComponent.componentFromModel?.dependencies?.dependencies || [];

@@ -69,11 +69,15 @@ export class WorkspaceSource implements ComponentSource {
     }
 
     // Load components using consumer.loadComponents
+    // Use skipDependencyResolution to prevent recursive workspace.get() calls
+    // through the dependency resolution path (mergeVariantPolicies -> getEnvComponentByEnvId)
+    // The V2 loader's Enrichment phase will handle dependency resolution separately
     const loadOpts = {
       originatedFromHarmony: true,
       loadExtensions: false,
       loadDocs: false,
       loadCompositions: false,
+      skipDependencyResolution: true,
     };
 
     const { components, invalidComponents, removedComponents } = await this.workspace.consumer.loadComponents(

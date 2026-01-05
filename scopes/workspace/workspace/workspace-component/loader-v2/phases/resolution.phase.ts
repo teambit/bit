@@ -45,8 +45,96 @@ export class ResolutionPhase {
 
   /**
    * Build a LoadPlan from discovered components.
+   *
+   * Uses workspace.componentExtensions with loadExtensions: false to discover
+   * env IDs without triggering recursive component loads. This allows building
+   * proper load groups where envs are loaded before their dependent components.
    */
-  async execute(discovery: DiscoveryResult, options: LoadPlanOptions = {}): Promise<ResolutionResult> {
+  async execute(discovery: DiscoveryResult, _options: LoadPlanOptions = {}): Promise<ResolutionResult> {
+    const plan = createEmptyPlan(discovery.requestedIds);
+    const warnings: string[] = [];
+
+    const { workspaceIds, scopeIds } = discovery;
+    const allIds = [...workspaceIds, ...scopeIds];
+
+    if (allIds.length === 0) {
+      return { plan, warnings };
+    }
+
+    // Step 1: Separate core envs from other components
+    const { coreEnvs, nonCoreEnvs } = this.separateCoreEnvs(allIds);
+
+    // Step 2: If there are core envs among the requested, add them first
+    if (coreEnvs.length > 0) {
+      const coreEnvPhase = createPhase('core-envs', 'core-envs', 'Core environments must load first', {
+        workspaceIds: coreEnvs.filter((id) => this.isInList(id, workspaceIds)),
+        scopeIds: coreEnvs.filter((id) => this.isInList(id, scopeIds)),
+        loadAsAspects: true,
+      });
+      plan.phases.push(coreEnvPhase);
+    }
+
+    // Step 3: Discover env IDs for non-core components
+    // Uses componentExtensions with loadExtensions: false to avoid recursion
+    const envIdStrings = new Set<string>();
+
+    for (const id of nonCoreEnvs) {
+      try {
+        const envId = await this.extensionResolver.getEnvId(id);
+        if (envId && !this.envs.isCoreEnv(envId)) {
+          envIdStrings.add(envId);
+        }
+      } catch (err: any) {
+        warnings.push(`Failed to get env for ${id.toString()}: ${err.message}`);
+      }
+    }
+
+    // Step 4: Check which envs are in the current load list
+    // These need to be loaded first as aspects
+    const envsInList: ComponentID[] = [];
+    const nonEnvComponents: ComponentID[] = [];
+
+    for (const id of nonCoreEnvs) {
+      const idStr = id.toStringWithoutVersion();
+      if (envIdStrings.has(idStr) || envIdStrings.has(id.toString())) {
+        envsInList.push(id);
+      } else {
+        nonEnvComponents.push(id);
+      }
+    }
+
+    // Step 5: Add envs phase (if any workspace components are envs of others)
+    if (envsInList.length > 0) {
+      const envsPhase = createPhase('envs', 'envs', 'Environments must load before their components', {
+        workspaceIds: envsInList.filter((id) => this.isInList(id, workspaceIds)),
+        scopeIds: envsInList.filter((id) => this.isInList(id, scopeIds)),
+        loadAsAspects: true,
+      });
+      plan.phases.push(envsPhase);
+    }
+
+    // Step 6: Add main components phase
+    if (nonEnvComponents.length > 0) {
+      const componentsPhase = createPhase('components', 'components', 'Main requested components', {
+        workspaceIds: nonEnvComponents.filter((id) => this.isInList(id, workspaceIds)),
+        scopeIds: nonEnvComponents.filter((id) => this.isInList(id, scopeIds)),
+        loadAsAspects: false,
+      });
+      plan.phases.push(componentsPhase);
+    }
+
+    // Update plan stats
+    this.updateStats(plan);
+
+    return { plan, warnings };
+  }
+
+  /**
+   * Original execute implementation - kept for reference.
+   * This version performs env/extension lookups which can trigger recursive loads.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async execute_ORIGINAL(discovery: DiscoveryResult, options: LoadPlanOptions = {}): Promise<ResolutionResult> {
     const plan = createEmptyPlan(discovery.requestedIds);
     const warnings: string[] = [];
 
