@@ -1577,7 +1577,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
 
       policies.forEach(({ field, targetField }) => {
         const deps: EnvJsoncPolicyEntry[] = envJsonc.policy?.[field] || [];
-        deps.forEach((dep: any) => {
+        deps.forEach((dep) => {
           pkgs.push({
             name: dep.name,
             currentRange: dep.version,

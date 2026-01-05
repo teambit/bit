@@ -23,7 +23,6 @@ import { VariantsAspect } from '@teambit/variants';
 import type { Component } from '@teambit/component';
 import { ComponentID, ComponentMap } from '@teambit/component';
 import { PackageJsonFile } from '@teambit/component.sources';
-import { type EnvJsonc } from '@teambit/envs'
 import { updateJsoncPreservingFormatting } from '@teambit/toolbox.json.jsonc-utils';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
@@ -32,7 +31,7 @@ import { Slot } from '@teambit/harmony';
 import { type DependenciesGraph } from '@teambit/objects';
 import type { CodemodResult, NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
 import { linkToNodeModulesWithCodemod } from '@teambit/workspace.modules.node-modules-linker';
-import type { EnvsMain } from '@teambit/envs';
+import type { EnvJsonc, EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import type { IpcEventsMain } from '@teambit/ipc-events';
 import { IpcEventsAspect } from '@teambit/ipc-events';
@@ -1115,8 +1114,15 @@ export class InstallMain {
       return null;
     }
 
-    const envJsoncUpdates = outdatedPkgsToUpdate.filter((pkg: any) => pkg.source === 'env-jsonc');
-    const policiesUpdates = outdatedPkgsToUpdate.filter((pkg: any) => pkg.source !== 'env-jsonc');
+    const envJsoncUpdates: MergedOutdatedPkg[] = [];
+    const policiesUpdates: MergedOutdatedPkg[] = [];
+    for (const outdatedPkg of outdatedPkgsToUpdate) {
+      if (outdatedPkg.source === 'env-jsonc') {
+        envJsoncUpdates.push(outdatedPkg);
+      } else {
+        policiesUpdates.push(outdatedPkg);
+      }
+    }
 
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(policiesUpdates, {
       variantPoliciesByPatterns,
