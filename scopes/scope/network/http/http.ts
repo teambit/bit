@@ -73,6 +73,7 @@ export type PushCentralOptions = {
   origin: ExportOrigin;
   signComponents?: string[]; // relevant for bit-sign.
   idsHashMaps?: { [hash: string]: string }; // relevant for bit-sign. keys are the component hash, values are component-ids as strings
+  allowMainExport?: boolean; // allow exporting directly to main, bypassing the lane requirement
 
   /**
    * @deprecated prefer using "origin"

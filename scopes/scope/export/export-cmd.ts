@@ -53,6 +53,7 @@ exporting is the final step after development and versioning to share components
       "don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote",
     ],
     ['', 'fork-lane-new-scope', 'allow exporting a forked lane into a different scope than the original scope'],
+    ['', 'allow-main', 'EXPERIMENTAL. allow exporting directly to main (skip lane requirement on bit.cloud)'],
     ['', 'open-browser', 'open a browser once the export is completed in the cloud job url'],
     ['', 'verbose', 'per exported component, show the versions being exported'],
     ['j', 'json', 'show output in json format'],
@@ -74,6 +75,7 @@ exporting is the final step after development and versioning to share components
       resume,
       headOnly,
       forkLaneNewScope = false,
+      allowMain = false,
       openBrowser = false,
       verbose = false,
     }: any
@@ -97,6 +99,7 @@ exporting is the final step after development and versioning to share components
       headOnly,
       ignoreMissingArtifacts,
       forkLaneNewScope,
+      allowMainExport: allowMain,
     });
 
     if (isEmpty(componentsIds) && isEmpty(nonExistOnBitMap) && isEmpty(missingScope) && !exportedLanes.length) {
@@ -185,6 +188,7 @@ exporting is the final step after development and versioning to share components
       originDirectly = false,
       ignoreMissingArtifacts = false,
       resume,
+      allowMain = false,
     }: any
   ): Promise<ExportResult> {
     const results = await this.exportMain.export({
@@ -195,6 +199,7 @@ exporting is the final step after development and versioning to share components
       originDirectly,
       resumeExportId: resume,
       ignoreMissingArtifacts,
+      allowMainExport: allowMain,
     });
 
     return results;

@@ -70,6 +70,7 @@ export type PushToScopesParams = {
   includeParents?: boolean;
   filterOutExistingVersions?: boolean;
   exportOrigin?: ExportOrigin;
+  allowMainExport?: boolean;
 };
 type ObjectsPerRemoteExtended = ObjectsPerRemote & {
   objectListPerName: ObjectListPerName;
@@ -87,6 +88,7 @@ type ExportParams = {
   headOnly?: boolean;
   ignoreMissingArtifacts?: boolean;
   forkLaneNewScope?: boolean;
+  allowMainExport?: boolean;
 };
 
 export interface ExportResult {
@@ -276,6 +278,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     includeParents, // relevant when exportHeadsOnly is used. sometimes the parents head are needed as well
     filterOutExistingVersions, // go to the remote and check whether the version exists there. if so, don't export it
     exportOrigin = 'export',
+    allowMainExport,
   }: PushToScopesParams): Promise<PushToScopesResult> {
     this.logger.debug(`scope.exportMany, ids: ${ids.toString()}`);
     const scopeRemotes: Remotes = await getScopeRemotes(scope);
@@ -480,7 +483,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const pushAllToCentralHub = async () => {
       const objectList = this.transformToOneObjectListWithScopeData(manyObjectsPerRemote);
       const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
-      const pushResults = await http.pushToCentralHub(objectList, { origin: exportOrigin });
+      const pushResults = await http.pushToCentralHub(objectList, { origin: exportOrigin, allowMainExport });
       const { failedScopes, successIds, errors, metadata } = pushResults;
       if (failedScopes.length) {
         throw new PersistFailed(failedScopes, errors);
