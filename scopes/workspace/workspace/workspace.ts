@@ -1586,7 +1586,9 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       return false; // it's a new component
     }
     const consumerComp = component.state._consumer as ConsumerComponent;
-    if (typeof consumerComp._isModified === 'boolean') return consumerComp._isModified;
+    if (typeof consumerComp._isModified === 'boolean') {
+      return consumerComp._isModified;
+    }
     const componentStatus = await this.getComponentStatusById(component.id);
     return componentStatus.modified === true;
   }

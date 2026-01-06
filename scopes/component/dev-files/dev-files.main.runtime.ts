@@ -168,7 +168,6 @@ export class DevFilesMain {
       envJsonc = await this.envs.calculateEnvManifest(undefined, legacyFiles, envExtendsDeps);
     } else {
       const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
-      if (!envComponent) return undefined; // Env is being loaded, skip
       envJsonc = await this.envs.calculateEnvManifest(envComponent, undefined, envExtendsDeps);
     }
 

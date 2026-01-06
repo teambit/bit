@@ -1170,11 +1170,6 @@ export class DependencyResolverMain {
       return undefined;
     }
     const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
-    // If envComponent is null, the env is currently being loaded (recursion prevention)
-    // Return undefined to allow the component to load without env policy
-    if (!envComponent) {
-      return undefined;
-    }
     return this.getEnvManifest(envComponent);
   }
 

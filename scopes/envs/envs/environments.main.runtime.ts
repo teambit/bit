@@ -120,10 +120,6 @@ export class EnvsMain {
    * Ids of envs (not neccesrraly loaded successfully)
    */
   public envIds = new Set<string>();
-  /**
-   * Env components currently being loaded - used to prevent recursive loading
-   */
-  private loadingEnvComponents = new Set<string>();
 
   static runtime = MainRuntime;
 
@@ -389,7 +385,6 @@ export class EnvsMain {
 
   async hasEnvManifestById(envId: string, requesting: string): Promise<boolean | undefined> {
     const component = await this.getEnvComponentByEnvId(envId, requesting);
-    if (!component) return undefined;
     return this.hasEnvManifest(component);
   }
 
@@ -473,44 +468,23 @@ export class EnvsMain {
 
   /**
    * get the env component of the given component.
-   * Throws if the env component can't be loaded.
    */
   async getEnvComponent(component: Component): Promise<Component> {
     const envId = this.getEnvId(component);
-    const envComponent = await this.getEnvComponentByEnvId(envId, component.id.toString());
-    if (!envComponent) {
-      throw new BitError(
-        `can't load env component "${envId}" for component "${component.id.toString()}" - env is already being loaded (possible recursion)`
-      );
-    }
-    return envComponent;
+    return this.getEnvComponentByEnvId(envId, component.id.toString());
   }
 
   /**
    * get the env component by the env id.
-   * Returns null if the env is already being loaded (to prevent recursion).
    */
-  async getEnvComponentByEnvId(envId: string, requesting?: string): Promise<Component | null> {
-    // Normalize envId for comparison
-    const envIdWithoutVersion = envId.split('@')[0];
-
-    // Check if this env is already being loaded (recursion prevention)
-    if (this.loadingEnvComponents.has(envIdWithoutVersion)) {
-      return null;
+  async getEnvComponentByEnvId(envId: string, requesting?: string): Promise<Component> {
+    const host = this.componentMain.getHost();
+    const newId = await host.resolveComponentId(envId);
+    const envComponent = await host.get(newId);
+    if (!envComponent) {
+      throw new BitError(`can't load env. env id is ${envId} used by component ${requesting || 'unknown'}`);
     }
-
-    try {
-      this.loadingEnvComponents.add(envIdWithoutVersion);
-      const host = this.componentMain.getHost();
-      const newId = await host.resolveComponentId(envId);
-      const envComponent = await host.get(newId);
-      if (!envComponent) {
-        throw new BitError(`can't load env. env id is ${envId} used by component ${requesting || 'unknown'}`);
-      }
-      return envComponent;
-    } finally {
-      this.loadingEnvComponents.delete(envIdWithoutVersion);
-    }
+    return envComponent;
   }
 
   /**
@@ -963,7 +937,6 @@ if needed, use "bit env set" command to align the env id`;
         return true;
       }
       const envComponent = await this.getEnvComponentByEnvId(id);
-      if (!envComponent) return false; // Env is being loaded, skip
       const hasManifest = this.hasEnvManifest(envComponent);
       if (hasManifest) return true;
       const isUsingEnvEnv = this.isUsingEnvEnv(envComponent);

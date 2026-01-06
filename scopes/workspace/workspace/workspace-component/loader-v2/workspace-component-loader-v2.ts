@@ -67,6 +67,12 @@ export class WorkspaceComponentLoaderV2 {
    */
   private loadingComponents = new Map<string, Promise<Component | undefined>>();
 
+  /**
+   * Cache for scope components (used to get head and tags for workspace components).
+   * Similar to V1's scopeComponentsCache.
+   */
+  private scopeComponentsCache = new Map<string, Component>();
+
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -127,7 +133,14 @@ export class WorkspaceComponentLoaderV2 {
     this.enrichmentPhase = new EnrichmentPhase(envs, dependencyResolver, false);
 
     this.assemblyPhase = new AssemblyPhase(
-      (id, state) => new WorkspaceComponent(id, null, state, new TagMap(), workspace),
+      (id, state) => {
+        // Get head and tags from scope component cache (if exists)
+        // This is critical for isModified() to work correctly
+        const scopeComp = this.scopeComponentsCache.get(id.toString());
+        const head = scopeComp?.head || null;
+        const tags = scopeComp?.tags || new TagMap();
+        return new WorkspaceComponent(id, head, state, tags, workspace);
+      },
       (extensions) => workspace.createAspectList(extensions)
     );
 
@@ -360,6 +373,12 @@ export class WorkspaceComponentLoaderV2 {
           this.logger.console(`[V2] Processing phase ${i + 1}: ${phase.name} (${phaseIds.length} components)`);
         }
 
+        // Pre-fetch scope components for workspace IDs to get head and tags
+        // This is needed for isModified() to work correctly
+        if (phase.workspaceIds.length > 0) {
+          await this.populateScopeComponentsCache(phase.workspaceIds);
+        }
+
         // Create a mini-plan with just this phase
         const miniPlan = { ...loadPlan, phases: [phase] };
 
@@ -456,6 +475,45 @@ export class WorkspaceComponentLoaderV2 {
   }
 
   /**
+   * Pre-fetch scope components for workspace IDs.
+   * This is needed to get head and tags for isModified() to work correctly.
+   * Similar to V1's populateScopeAndExtensionsCache but only fetches scope components.
+   */
+  private async populateScopeComponentsCache(workspaceIds: ComponentID[]): Promise<void> {
+    const idsToFetch = workspaceIds.filter((id) => !this.scopeComponentsCache.has(id.toString()));
+    if (idsToFetch.length === 0) return;
+
+    if (process.env.BIT_LOG) {
+      this.logger.console(`[V2-CACHE] Populating scope cache for ${idsToFetch.length} components`);
+    }
+
+    let found = 0;
+    let notFound = 0;
+    // Use mapSeries like V1 to avoid potential race conditions
+    await mapSeries(idsToFetch, async (id) => {
+      try {
+        // importIfMissing=false to avoid importing from remote during load
+        const scopeComp = await this.workspace.scope.get(id, undefined, false);
+        if (scopeComp) {
+          this.scopeComponentsCache.set(id.toString(), scopeComp);
+          found++;
+        } else {
+          notFound++;
+        }
+      } catch {
+        // Component not in scope (new component) - this is fine
+        notFound++;
+      }
+    });
+
+    if (process.env.BIT_LOG) {
+      this.logger.console(
+        `[V2-CACHE] Found ${found} in scope, ${notFound} not found. Cache size: ${this.scopeComponentsCache.size}`
+      );
+    }
+  }
+
+  /**
    * Check if error indicates component doesn't exist
    */
   private isComponentNotExistsError(err: Error): boolean {
@@ -471,6 +529,7 @@ export class WorkspaceComponentLoaderV2 {
    */
   clearCache(): void {
     this.cache.invalidateAll();
+    this.scopeComponentsCache.clear();
   }
 
   /**

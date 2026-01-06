@@ -73,8 +73,13 @@ export class ComponentStatusLoader {
       // loadOne to not find model component as it assumes there is no version
       // also, don't leave the id as is, otherwise, it'll cause issues with import --merge, when
       // imported version is bigger than .bitmap, it won't find it and will consider as deleted
+      // Pass originatedFromHarmony: true to prevent the onComponentLoad subscriber
+      // from calling workspace.get() which would use V2 loader and skip dependency resolution.
+      // The status check needs full dependencies for accurate hash comparison.
       const { components, removedComponents } = await this.consumer.loadComponents(
-        new ComponentIdList(id.changeVersion(LATEST))
+        new ComponentIdList(id.changeVersion(LATEST)),
+        true, // throwOnFailure
+        { originatedFromHarmony: true }
       );
       if (removedComponents.length) {
         status.deleted = true;

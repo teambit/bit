@@ -72,12 +72,17 @@ export class WorkspaceSource implements ComponentSource {
     // Use skipDependencyResolution to prevent recursive workspace.get() calls
     // through the dependency resolution path (mergeVariantPolicies -> getEnvComponentByEnvId)
     // The V2 loader's Enrichment phase will handle dependency resolution separately
+    //
+    // IMPORTANT: storeInCache must be false to prevent caching these incomplete components
+    // in the consumer's componentLoader cache. If cached, subsequent loads (like status checks)
+    // would get the incomplete version and incorrectly mark components as modified.
     const loadOpts = {
       originatedFromHarmony: true,
       loadExtensions: false,
       loadDocs: false,
       loadCompositions: false,
       skipDependencyResolution: true,
+      storeInCache: false,
     };
 
     const { components, invalidComponents, removedComponents } = await this.workspace.consumer.loadComponents(

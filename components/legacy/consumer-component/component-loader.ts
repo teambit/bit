@@ -260,6 +260,13 @@ export class ComponentLoader {
       // Skip dependency resolution when loading via V2 loader to prevent recursive workspace.get() calls
       if (!loadOpts?.skipDependencyResolution) {
         await loadDependencies();
+      } else {
+        // When skipping dependency resolution, we still need to ensure overrides is set
+        // because ApplyOverrides.setOverridesDependencies() won't be called
+        if (!component.overrides) {
+          const { ComponentOverrides } = await import('@teambit/legacy.consumer-config');
+          component.overrides = new ComponentOverrides(null);
+        }
       }
       if (loadOpts?.loadExtensions) {
         await runOnComponentLoadEvent();
