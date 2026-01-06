@@ -81,7 +81,7 @@ const orderedChoices = [
     choices: [
       {
         message: 'foo (runtime) 1.0.0 ❯ 2.0.0   ',
-        name: 'foo-2',
+        name: 'foo-0',
         value: {
           currentRange: '1.0.0',
           latestRange: '2.0.0',
@@ -103,7 +103,7 @@ const orderedChoices = [
       },
       {
         message: 'zoo (dev)     1.0.0 ❯ 1.1.0   ',
-        name: 'zoo-0',
+        name: 'zoo-2',
         value: {
           currentRange: '1.0.0',
           latestRange: '1.1.0',
