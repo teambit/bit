@@ -10,7 +10,7 @@ import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ComponentNotFound } from '@teambit/legacy.scope';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
-import { isFeatureEnabled, COMPONENT_LOADER_V2 } from '@teambit/harmony.modules.feature-toggle';
+import { isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { TagMap } from '@teambit/component';
 import type { Workspace } from '../../workspace';
 import type { ComponentLoadOptions } from '../workspace-component-loader';
@@ -160,10 +160,13 @@ export class WorkspaceComponentLoaderV2 {
   }
 
   /**
-   * Check if V2 loader is enabled via feature flag
+   * Check if V2 loader is enabled.
+   * V2 is now the default. Use BIT_FEATURES=component-loader-v1 to use V1.
    */
   static isEnabled(): boolean {
-    return isFeatureEnabled(COMPONENT_LOADER_V2);
+    // V2 is the default, check if V1 is explicitly requested
+    const useV1 = isFeatureEnabled('component-loader-v1');
+    return !useV1;
   }
 
   /**
