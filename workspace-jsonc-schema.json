@@ -260,6 +260,34 @@
             "type": "string"
           },
           "description": "Ignore the builds of specific dependencies. The 'preinstall', 'install', and 'postinstall' scripts of the listed packages will not be executed during installation."
+        },
+        "allowScripts": {
+          "type": "object",
+          "description": "Fine-grained control over dependency lifecycle scripts. Provide a map whose keys are package descriptors (e.g., 'react', 'left-pad@1.2.0 || 1.3.0', '@org/pkg@1.0.0') and whose values determine whether their 'preinstall', 'install', and 'postinstall' scripts may run. Set the value to true to explicitly allow scripts, false to block them, or 'warn' to block and surface a warning while keeping the install running.",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "enum": [
+                  "warn"
+                ]
+              }
+            ]
+          },
+          "examples": [
+            {
+              "react": false,
+              "left-pad@1.2.0 || 1.3.0": true,
+              "@org/pkg@1.0.0": "warn"
+            }
+          ]
+        },
+        "dangerouslyAllowAllScripts": {
+          "type": "boolean",
+          "description": "⚠️ SECURITY WARNING: When set to true, allows all dependencies to run their lifecycle scripts ('preinstall', 'install', 'postinstall') during installation. This is potentially dangerous as install scripts can execute arbitrary code. Use 'allowScripts' for fine-grained control instead of this option. Only enable this if you trust all dependencies in your project.",
+          "default": false
         }
       },
       "required": []

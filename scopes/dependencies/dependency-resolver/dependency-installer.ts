@@ -102,6 +102,10 @@ export class DependencyInstaller {
 
     private neverBuiltDependencies?: string[],
 
+    private allowScripts?: Record<string, boolean | 'warn'>,
+
+    private dangerouslyAllowAllScripts?: boolean,
+
     private preferOffline?: boolean,
 
     private minimumReleaseAge?: number,
@@ -212,7 +216,9 @@ export class DependencyInstaller {
       packageManagerConfigRootDir: options.packageManagerConfigRootDir,
       peerDependencyRules: this.peerDependencyRules,
       hidePackageManagerOutput,
-      neverBuiltDependencies: ['core-js', ...(this.neverBuiltDependencies ?? [])],
+      neverBuiltDependencies: this.neverBuiltDependencies,
+      allowScripts: this.allowScripts,
+      dangerouslyAllowAllScripts: this.dangerouslyAllowAllScripts,
       preferOffline: this.preferOffline,
       dedupeInjectedDeps: options.dedupeInjectedDeps,
       dependenciesGraph: options.dependenciesGraph,

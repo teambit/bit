@@ -519,7 +519,7 @@ export default class CommandHelper {
     return this.runCmd(`bit reset ${id} ${head ? '--head' : ''} ${flag}`);
   }
   resetAll(options = '') {
-    return this.runCmd(`bit reset ${options} --all`);
+    return this.runCmd(`bit reset ${options} --silent`);
   }
   resetSoft(id: string) {
     return this.runCmd(`bit reset ${id} --soft`);
@@ -887,9 +887,14 @@ export default class CommandHelper {
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
   }
-  install(packages = '', options?: Record<string, any>, cwd = this.scopes.localPath) {
+  install(
+    packages = '',
+    options?: Record<string, any>,
+    cwd = this.scopes.localPath,
+    runCmdOpts?: { envVariables?: Record<string, string> }
+  ) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit install ${packages} ${parsedOpts}`, cwd);
+    return this.runCmd(`bit install ${packages} ${parsedOpts}`, cwd, 'pipe', undefined, false, runCmdOpts?.envVariables);
   }
   update(flags?: string) {
     return this.runCmd(`bit update ${flags || ''}`);

@@ -368,7 +368,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.80-v1
+          key: core-aspect-env-v0.1.3-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -451,7 +451,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.80-v1
+          key: core-aspect-env-v0.1.3-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -557,7 +557,7 @@ jobs:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.0.80-v1
+          key: core-aspect-env-v0.1.3-v1
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a107
       # - run: cd bit && bbit compile
@@ -612,7 +612,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.80-v1
+          key: core-aspect-env-v0.1.3-v1
       - run:
           name: 'check circular dependencies'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
@@ -709,8 +709,12 @@ jobs:
           name: If no component has changed, exit the job
           command: |
             if cd bit && bit diff | grep -q "there are no modified components to diff"; then
-              echo "No changes detected, halting job to prevent further workflow execution."
-              circleci-agent step halt
+              if grep -q '"nextVersion": {' .bitmap; then
+                echo "No changes detected, but soft-tagged components found. Continuing workflow."
+              else
+                echo "No changes detected, halting job to prevent further workflow execution."
+                circleci-agent step halt
+              fi
             fi
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
@@ -720,7 +724,7 @@ jobs:
       - run:
           name: 'bit ci merge'
           command: 'cd bit && bit ci merge --build --auto-merge-resolve manual ${BIT_CI_MERGE_EXTRA_FLAGS}'
-          # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 3 ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 2 ${BIT_CI_MERGE_EXTRA_FLAGS}'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000

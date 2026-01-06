@@ -1,5 +1,6 @@
 import type { CommandOptions, Command, CommandArg } from './command';
-import { pick } from 'lodash';
+import type { GroupsType } from './command-groups';
+import { capitalize, pick } from 'lodash';
 import { getCommandId } from './get-command-id';
 
 export type GenerateOpts = {
@@ -11,7 +12,8 @@ type CommandObject = ReturnType<typeof oneCommandToObject> & { commands?: any };
 export class GenerateCommandsDoc {
   constructor(
     private commands: Command[],
-    private options: GenerateOpts
+    private options: GenerateOpts,
+    private groups: GroupsType = {}
   ) {}
 
   generate(): string {
@@ -44,6 +46,121 @@ bit COMMAND SUB_COMMAND --help
 
   generateJson() {
     return this.commandsToObjects();
+  }
+
+  /**
+   * Generate command list in the style of `bit --help` but without chalk colors.
+   * For use in Claude Code skills.
+   */
+  generateSkillCommands(): string {
+    const grouped = this.groupCommandsByGroup();
+    const sections = Object.keys(grouped)
+      .map((groupName) => {
+        const groupDescription = this.groups[groupName] || capitalize(groupName);
+        const cmds = grouped[groupName];
+        const commandLines = cmds
+          .map((cmd) => {
+            const cmdId = getCommandId(cmd.name);
+            const paddedName = cmdId.padEnd(16, ' ');
+            return `    ${paddedName}${cmd.description || ''}`;
+          })
+          .join('\n');
+        return `  ${groupDescription}\n${commandLines}`;
+      })
+      .join('\n\n');
+
+    return `usage: bit [--version] [--help] <command> [<args>]
+
+bit documentation: https://bit.dev/
+
+${sections}
+
+For flag details, see [CLI_FLAGS.md](CLI_FLAGS.md).
+Run 'bit <command> --help' for more information on a specific command.`;
+  }
+
+  /**
+   * Generate command reference with description, args, and flags.
+   * For use in Claude Code skills.
+   */
+  generateSkillFlags(): string {
+    const publicCommands = this.getAllPublicCommandsSorted();
+    const sections: string[] = [];
+
+    for (const cmd of publicCommands) {
+      this.collectSkillCommandSections(cmd, '', sections);
+    }
+
+    return `# Bit CLI Command Reference
+
+${sections.join('\n\n')}
+
+---
+Run \`bit <command> --help\` for more details.`;
+  }
+
+  private collectSkillCommandSections(cmd: Command, prefix: string, sections: string[]): void {
+    const cmdId = prefix ? `${prefix} ${getCommandId(cmd.name)}` : getCommandId(cmd.name);
+    const lines: string[] = [];
+
+    // Command usage - use full cmd.name which may include args like "set <key> <val>"
+    let usage = prefix ? `bit ${prefix} ${cmd.name}` : `bit ${cmd.name}`;
+    // Only append arguments if they're not already in cmd.name
+    if (cmd.arguments && cmd.arguments.length > 0 && !cmd.name.includes('<') && !cmd.name.includes('[')) {
+      const args = cmd.arguments.map((arg) => (arg.name.includes('...') ? `[${arg.name}]` : `<${arg.name}>`)).join(' ');
+      usage += ` ${args}`;
+    }
+    lines.push(`## ${usage}`);
+    lines.push(''); // Blank line after heading for proper Markdown
+
+    // Description with proper separation between description and extended description
+    const description = (cmd.description || '').trim();
+    const extended = cmd.extendedDescription ? cmd.extendedDescription.replace(/\n/g, ' ').trim() : '';
+    if (description && extended) {
+      lines.push(`${description}\n\n${extended}`);
+    } else if (description || extended) {
+      lines.push(description || extended);
+    }
+
+    // Flags (filtering out DEPRECATED and UNSUPPORTED)
+    if (cmd.options && cmd.options.length > 0) {
+      const flags = cmd.options
+        .filter((opt) => {
+          const desc = opt[2] || '';
+          return !desc.startsWith('DEPRECATED') && !desc.startsWith('UNSUPPORTED');
+        })
+        .map((opt) => `--${opt[1]}`);
+
+      if (flags.length > 0) {
+        lines.push(`Flags: ${flags.join(', ')}`);
+      }
+    }
+
+    sections.push(lines.join('\n'));
+
+    // Process subcommands
+    if (cmd.commands && cmd.commands.length > 0) {
+      for (const subCmd of cmd.commands) {
+        if (!subCmd.private) {
+          this.collectSkillCommandSections(subCmd, cmdId, sections);
+        }
+      }
+    }
+  }
+
+  private groupCommandsByGroup(): { [group: string]: Command[] } {
+    const publicCommands = this.commands.filter((cmd) => !cmd.private && cmd.description);
+    const grouped: { [group: string]: Command[] } = {};
+
+    for (const cmd of publicCommands) {
+      const group = cmd.group || 'ungrouped';
+      if (!grouped[group]) {
+        grouped[group] = [];
+      }
+      grouped[group].push(cmd);
+    }
+
+    return grouped;
   }
 
   private commandsToObjects(commands: Command[] = this.commands): CommandObject[] {

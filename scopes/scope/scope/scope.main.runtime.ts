@@ -566,7 +566,10 @@ export class ScopeMain implements ComponentFactory {
     const globalConfigFile = globalStore.getPath();
     const scopeJsonPath = scopeStore.getPath();
     const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile, scopeJsonPath];
-    const watcher = chokidar.watch(pathsToWatch, watchOptions);
+    // Use polling to reduce FSEvents stream consumption on macOS.
+    // These files change infrequently (mainly during import/export operations),
+    // so the small CPU overhead of polling is acceptable.
+    const watcher = chokidar.watch(pathsToWatch, { ...watchOptions, usePolling: true, interval: 300 });
     watcher.on('ready', () => {
       this.logger.debug(`watchSystemFiles has started, watching ${pathsToWatch.join(', ')}`);
     });
@@ -1055,8 +1058,6 @@ export class ScopeMain implements ComponentFactory {
       // otherwise it'll never match anything. don't use ".push()". it must be the first item in the array.
       patterns.unshift('**');
     }
-    // check also as legacyId.toString, as it doesn't have the defaultScope
-    const idsToCheck = (id: ComponentID) => [id._legacy.toStringWithoutVersion(), id.toStringWithoutVersion()];
     const [statePatterns, nonStatePatterns] = partition(patterns, (p) => p.startsWith('$') || p.includes(' AND '));
     const nonStatePatternsNoVer = nonStatePatterns.map((p) => p.split('@')[0]); // no need for the version
     const idsMap: { [id: string]: ComponentID } = Object.fromEntries(
@@ -1073,6 +1074,8 @@ export class ScopeMain implements ComponentFactory {
       if (statePattern.includes(' AND ')) {
         let filteredByAnd: ComponentID[] = ids;
         const patternSplit = statePattern.split(' AND ').map((p) => p.trim());
+        // check also as legacyId.toString, as it doesn't have the defaultScope
+        const idsToCheck = (id: ComponentID) => [id._legacy.toStringWithoutVersion(), id.toStringWithoutVersion()];
         for await (const onePattern of patternSplit) {
           filteredByAnd = onePattern.startsWith('$')
             ? await filterByStateFunc(onePattern.replace('$', ''), filteredByAnd)

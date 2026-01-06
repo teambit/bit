@@ -1691,13 +1691,24 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     }
   }
 
-  async removeSpecificComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist = false) {
+  async removeSpecificComponentConfig(
+    id: ComponentID,
+    aspectId: string,
+    markWithMinusIfNotExist = false
+  ): Promise<boolean> {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {
-      await componentConfigFile.removeAspect(aspectId, markWithMinusIfNotExist, this.resolveComponentId.bind(this));
-      await componentConfigFile.write({ override: true });
+      const removed = await componentConfigFile.removeAspect(
+        aspectId,
+        markWithMinusIfNotExist,
+        this.resolveComponentId.bind(this)
+      );
+      if (removed) {
+        await componentConfigFile.write({ override: true });
+      }
+      return removed;
     } else {
-      this.bitMap.removeComponentConfig(id, aspectId, markWithMinusIfNotExist);
+      return this.bitMap.removeComponentConfig(id, aspectId, markWithMinusIfNotExist);
     }
   }
 
@@ -2281,12 +2292,17 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
         // env by `this.getAspectIdFromConfig`, it returns the env with version.
         // to make sure we remove the env from the .bitmap, we need to remove both with and without version.
         const currentEnvWithPotentialVersion = await this.getAspectIdFromConfig(id, currentEnv, true);
-        await this.removeSpecificComponentConfig(id, currentEnv);
+        let anyRemoved = false;
+        anyRemoved = (await this.removeSpecificComponentConfig(id, currentEnv)) || anyRemoved;
         if (currentEnvWithPotentialVersion && currentEnvWithPotentialVersion.includes('@')) {
-          await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion);
+          anyRemoved = (await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion)) || anyRemoved;
         }
-        await this.removeSpecificComponentConfig(id, EnvsAspect.id);
-        changed.push(id);
+        anyRemoved = (await this.removeSpecificComponentConfig(id, EnvsAspect.id)) || anyRemoved;
+        if (anyRemoved) {
+          changed.push(id);
+        } else {
+          unchanged.push(id);
+        }
       })
     );
     await this.bitMap.write(`env-unset`);

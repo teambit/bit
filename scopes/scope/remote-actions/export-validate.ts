@@ -1,5 +1,5 @@
 import path from 'path';
-import glob from 'glob';
+import { globSync } from 'glob';
 import type { Scope } from '@teambit/legacy.scope';
 import { ServerIsBusy } from '@teambit/legacy.scope';
 import { PENDING_OBJECTS_DIR } from '@teambit/legacy.constants';
@@ -103,6 +103,6 @@ export class ExportValidate implements Action<Options> {
 
   private getClientIdsDirs() {
     const cwd = this.getPendingDir();
-    return glob.sync('*', { cwd });
+    return globSync('*', { cwd });
   }
 }

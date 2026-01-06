@@ -20,7 +20,7 @@ describe('publish functionality', function () {
     let scopeWithoutOwner: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager();
+      helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       appOutput = helper.fixtures.populateComponentsTS(3);
       npmCiRegistry = new NpmCiRegistry(helper);
