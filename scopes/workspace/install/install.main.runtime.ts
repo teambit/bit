@@ -1009,7 +1009,11 @@ export class InstallMain {
     );
   }
 
-  async updateEnvJsoncPolicies(outdatedPkgs: MergedOutdatedPkg[]) {
+  /**
+   * Update env.jsonc policy files for environment components based on a list of outdated packages.
+   * @param outdatedPkgs - List of outdated packages.
+   */
+  async updateEnvJsoncPolicies(outdatedPkgs: MergedOutdatedPkg[]): Promise<void> {
     // Group packages by componentId, skipping those without one
     const updatesByComponentId = new Map<string, MergedOutdatedPkg[]>();
     for (const pkg of outdatedPkgs) {
@@ -1091,17 +1095,16 @@ export class InstallMain {
       patterns: options.patterns,
       forceVersionBump: options.forceVersionBump,
     });
-    const allOutdatedPkgs = outdatedPkgs || [];
-    if (!allOutdatedPkgs || !allOutdatedPkgs.length) {
+    if (!outdatedPkgs || !outdatedPkgs.length) {
       this.logger.consoleFailure('No dependencies found that match the patterns');
       return null;
     }
     let outdatedPkgsToUpdate: MergedOutdatedPkg[];
     if (options.all) {
-      outdatedPkgsToUpdate = allOutdatedPkgs;
+      outdatedPkgsToUpdate = outdatedPkgs;
     } else {
       this.logger.off();
-      outdatedPkgsToUpdate = await pickOutdatedPkgs(allOutdatedPkgs);
+      outdatedPkgsToUpdate = await pickOutdatedPkgs(outdatedPkgs);
       this.logger.on();
     }
     if (outdatedPkgsToUpdate.length === 0) {
@@ -1127,9 +1130,11 @@ export class InstallMain {
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(policiesUpdates, {
       variantPoliciesByPatterns,
     });
-    await this.updateEnvJsoncPolicies(envJsoncUpdates);
-    await this._updateVariantsPolicies(updatedVariants);
-    await this._updateComponentsConfig(updatedComponents);
+    await Promise.all([
+      this.updateEnvJsoncPolicies(envJsoncUpdates),
+      this._updateVariantsPolicies(updatedVariants),
+      this._updateComponentsConfig(updatedComponents),
+    ]);
     await this.workspace._reloadConsumer();
     return this._installModules({ dedupe: true });
   }

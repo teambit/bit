@@ -1571,7 +1571,14 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       const envJsoncFile = component.filesystem.files.find((file) => file.relative === 'env.jsonc');
       if (!envJsoncFile) continue;
 
-      const envJsonc = parse(envJsoncFile.contents.toString()) as EnvJsonc;
+      let envJsonc: EnvJsonc;
+      try {
+        envJsonc = parse(envJsoncFile.contents.toString()) as EnvJsonc;
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`Failed to parse env.jsonc for component ${component.id.toString()}: ${errorMessage}`);
+        continue;
+      }
       if (!envJsonc.policy) continue;
 
       for (const { field, targetField } of policies) {
