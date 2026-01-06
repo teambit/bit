@@ -73,7 +73,6 @@ import { LinkCommand } from './link';
 import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
 import UpdateCmd from './update.cmd';
-import { EnvPolicyEnvJsoncConfigObject } from '@teambit/dependency-resolver/policy/env-policy/env-policy';
 
 export type WorkspaceLinkOptions = LinkingOptions & {
   rootPolicy?: WorkspacePolicy;
