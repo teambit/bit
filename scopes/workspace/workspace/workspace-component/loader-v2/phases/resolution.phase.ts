@@ -1,7 +1,8 @@
 import type { ComponentID } from '@teambit/component-id';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { EnvsMain } from '@teambit/envs';
-import { LoadPlan, LoadPlanOptions, createEmptyPlan, createPhase } from '../load-plan';
+import type { LoadPlan, LoadPlanOptions } from '../load-plan';
+import { createEmptyPlan, createPhase } from '../load-plan';
 import type { DiscoveryResult } from './discovery.phase';
 
 /**
@@ -50,7 +51,8 @@ export class ResolutionPhase {
    * env IDs without triggering recursive component loads. This allows building
    * proper load groups where envs are loaded before their dependent components.
    */
-  async execute(discovery: DiscoveryResult, _options: LoadPlanOptions = {}): Promise<ResolutionResult> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async execute(discovery: DiscoveryResult, _options?: LoadPlanOptions): Promise<ResolutionResult> {
     const plan = createEmptyPlan(discovery.requestedIds);
     const warnings: string[] = [];
 

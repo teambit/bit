@@ -257,9 +257,9 @@ export class WorkspaceComponentLoaderV2 {
    */
   async get(
     componentId: ComponentID,
-    legacyComponent?: ConsumerComponent,
-    useCache = true,
-    storeInCache = true,
+    _legacyComponent?: ConsumerComponent,
+    _useCache?: boolean,
+    _storeInCache?: boolean,
     loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
     const { components } = await this.getMany([componentId], loadOpts, true);
