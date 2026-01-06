@@ -73,22 +73,6 @@ async function updateEnvDependency(
 }
 ```
 
-### Updating workspace.jsonc
-
-Preserve team preferences for indentation when updating workspace config:
-
-```ts
-import { updateJsoncPreservingFormatting } from '@teambit/toolbox.json.jsonc-utils';
-
-const updatedWorkspace = updateJsoncPreservingFormatting(
-  workspaceContent,
-  (config) => {
-    config['teambit.workspace/workspace'].defaultScope = 'my-org.my-scope';
-    return config;
-  }
-);
-```
-
 ### Working with Different Indentation Styles
 
 Handle files with different formatting preferences:
@@ -105,63 +89,3 @@ const updatedData = { ...parsedData, version: '2.0.0' };
 // Stringify with original formatting
 const result = stringifyJsonc(updatedData, formatting);
 ```
-
-## Real-World Example
-
-This is exactly how Bit's `bit update` command preserves your env.jsonc formatting when updating dependencies:
-
-```ts
-async updateEnvJsoncPolicies(outdatedPkgs) {
-  await pMapSeries(components, async (component) => {
-    const envJsoncFile = component.filesystem.files.find(
-      (file) => file.relative === 'env.jsonc'
-    );
-    if (!envJsoncFile) return;
-
-    const envJsoncContent = envJsoncFile.contents.toString();
-    const updatedContent = updateJsoncPreservingFormatting(
-      envJsoncContent,
-      (envJsonc) => {
-        // Update dependency versions
-        const dep = envJsonc.policy?.runtime?.find(
-          (d) => d.name === pkg.name
-        );
-        if (dep) {
-          dep.version = pkg.latestRange;
-        }
-        return envJsonc;
-      }
-    );
-
-    await fs.writeFile(absPath, updatedContent);
-  });
-}
-```
-
-## Type Definitions
-
-```ts
-export type JsoncFormatting = {
-  indent: string;
-  newline: string;
-};
-```
-
-## Why Preserve Formatting?
-
-When working in teams, developers often have different preferences for code formatting:
-- Some prefer 2 spaces, others 4 spaces or tabs
-- Windows users might have CRLF line endings
-- Comments provide important context
-
-By preserving the original formatting, you avoid:
-- ❌ Unnecessary git diffs
-- ❌ Formatting debates in code reviews
-- ❌ Lost comments and documentation
-- ❌ Breaking team conventions
-
-Instead, you get:
-- ✅ Clean, minimal diffs showing only actual changes
-- ✅ Preserved comments and documentation
-- ✅ Respect for team and individual preferences
-- ✅ Better collaboration
