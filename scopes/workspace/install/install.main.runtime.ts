@@ -37,6 +37,7 @@ import type { IpcEventsMain } from '@teambit/ipc-events';
 import { IpcEventsAspect } from '@teambit/ipc-events';
 import { IssuesClasses } from '@teambit/component-issues';
 import type {
+  EnvPolicyEnvJsoncConfigObject,
   GetComponentManifestsOptions,
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
@@ -72,6 +73,7 @@ import { LinkCommand } from './link';
 import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
 import UpdateCmd from './update.cmd';
+import { EnvPolicyEnvJsoncConfigObject } from '@teambit/dependency-resolver/policy/env-policy/env-policy';
 
 export type WorkspaceLinkOptions = LinkingOptions & {
   rootPolicy?: WorkspacePolicy;
@@ -1036,7 +1038,7 @@ export class InstallMain {
       const envJsoncContent = envJsoncFile.contents.toString();
       const updatedContent = updateJsoncPreservingFormatting(envJsoncContent, (envJsonc: EnvJsonc): EnvJsonc => {
         pkgs.forEach((pkg) => {
-          let field: string | undefined;
+          let field: keyof EnvPolicyEnvJsoncConfigObject | undefined;
           if (pkg.targetField === 'devDependencies') field = 'dev';
           if (pkg.targetField === 'dependencies') field = 'runtime';
           if (pkg.targetField === 'peerDependencies') field = 'peers';
