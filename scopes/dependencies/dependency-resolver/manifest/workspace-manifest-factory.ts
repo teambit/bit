@@ -115,6 +115,11 @@ export class WorkspaceManifestFactory {
   }
 
   private getEnvsSelfPeersPolicy(componentsManifestsMap: ComponentsManifestsMap) {
+    // When using external package manager, skip collecting env self peers.
+    // Users manage their own tooling dependencies.
+    if (this.dependencyResolver.config.externalPackageManager) {
+      return undefined;
+    }
     const foundEnvs: EnvPolicy[] = [];
     for (const component of componentsManifestsMap.values()) {
       foundEnvs.push(component.envPolicy);
@@ -243,6 +248,12 @@ export class WorkspaceManifestFactory {
     component: Component,
     packageNamesFromWorkspace: string[]
   ): Promise<Record<string, string>> {
+    // When using external package manager, don't add env's tooling dependencies to components.
+    // The user manages their own tooling (eslint, vitest, webpack, etc.) and we should only
+    // include the component's actual source code dependencies (detected from imports).
+    if (this.dependencyResolver.config.externalPackageManager) {
+      return {};
+    }
     const envPolicy = await this.dependencyResolver.getComponentEnvPolicy(component);
     const selfPolicyWithoutLocal = envPolicy.selfPolicy.filter(
       (dep) => !packageNamesFromWorkspace.includes(dep.dependencyId)

@@ -2508,7 +2508,14 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       ? Object.entries(dependencies).map(([name, currentRange]) => ({ name, currentRange }))
       : await this.getAllDedupedDirectDependencies();
     pkgJson.packageJsonObject.dependencies ??= {};
+    const existingDeps = pkgJson.packageJsonObject.dependencies;
+    const existingDevDeps = pkgJson.packageJsonObject.devDependencies ?? {};
+    const existingPeerDeps = pkgJson.packageJsonObject.peerDependencies ?? {};
     for (const dep of allDeps) {
+      // Skip if already exists - don't override user's existing dependency versions
+      if (existingDeps[dep.name] || existingDevDeps[dep.name] || existingPeerDeps[dep.name]) {
+        continue;
+      }
       pkgJson.packageJsonObject.dependencies[dep.name] = dep.currentRange;
     }
     await pkgJson.write();

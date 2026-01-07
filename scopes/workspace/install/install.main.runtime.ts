@@ -229,7 +229,11 @@ export class InstallMain {
   async writeDependenciesToPackageJson(): Promise<void> {
     const installer = this.dependencyResolver.getInstaller({});
     const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy();
-    await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
+    // When using external package manager, don't add the env package itself.
+    // Users don't need the env installed - they manage their own tooling.
+    if (!this.dependencyResolver.config.externalPackageManager) {
+      await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
+    }
     const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, {
       dedupe: true,
     });
