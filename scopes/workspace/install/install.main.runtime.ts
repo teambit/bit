@@ -63,6 +63,7 @@ import type { BundlerMain } from '@teambit/bundler';
 import { BundlerAspect } from '@teambit/bundler';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
+import { EXTERNAL_PM_POSTINSTALL_SCRIPT } from '@teambit/host-initializer';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
@@ -1447,7 +1448,7 @@ export class InstallMain {
       }
 
       // Only remove our specific postInstall script, preserve user's custom scripts
-      if (packageJsonFile.packageJsonObject.scripts?.postinstall === 'bit link && bit compile') {
+      if (packageJsonFile.packageJsonObject.scripts?.postinstall === EXTERNAL_PM_POSTINSTALL_SCRIPT) {
         delete packageJsonFile.packageJsonObject.scripts.postinstall;
 
         // Clean up empty scripts object
