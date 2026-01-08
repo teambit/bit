@@ -75,7 +75,7 @@ export async function createConsumer(
         const content = { ...existingPackageJson.packageJsonObject };
         content.type = 'module';
         content.scripts = content.scripts || {};
-        content.scripts.postinstall = 'bit link && bit compile';
+        content.scripts.postinstall = 'bit link && bit compile && bit ws-config write';
 
         const packageJson = PackageJsonFile.create(consumer.projectPath, undefined, content);
         consumer.setPackageJson(packageJson);
@@ -84,7 +84,7 @@ export async function createConsumer(
         const jsonContent = {
           type: 'module',
           scripts: {
-            postinstall: 'bit link && bit compile',
+            postinstall: 'bit link && bit compile && bit ws-config write',
           },
         };
         const packageJson = PackageJsonFile.create(consumer.projectPath, undefined, jsonContent);
