@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import { CURRENT_BITMAP_SCHEMA, SCHEMA_FIELD, InvalidBitMap } from '@teambit/legacy.bit-map';
 import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP } from '@teambit/legacy.constants';
+import { EXTERNAL_PM_POSTINSTALL_SCRIPT } from '@teambit/host-initializer';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 import assertArrays from 'chai-arrays';
@@ -320,7 +321,7 @@ describe('run bit init', function () {
       it('should create package.json with postinstall script', () => {
         const packageJson = helper.packageJson.read();
         expect(packageJson).to.have.property('scripts');
-        expect(packageJson.scripts).to.have.property('postinstall', 'bit link && bit compile');
+        expect(packageJson.scripts).to.have.property('postinstall', EXTERNAL_PM_POSTINSTALL_SCRIPT);
       });
     });
     describe('bit install in external package manager mode', () => {
@@ -354,7 +355,7 @@ describe('run bit init', function () {
         expect(workspaceConfig['teambit.dependencies/dependency-resolver']).to.have.property('rootComponent', false);
 
         const packageJson = helper.packageJson.read();
-        expect(packageJson.scripts).to.have.property('postinstall', 'bit link && bit compile');
+        expect(packageJson.scripts).to.have.property('postinstall', EXTERNAL_PM_POSTINSTALL_SCRIPT);
 
         // Test answering 'yes' to switch to Bit package manager
         const output = helper.command.runCmd('echo "y" | bit install');
@@ -415,7 +416,7 @@ describe('run bit init', function () {
         const packageJson = helper.packageJson.read();
         expect(packageJson.scripts).to.have.property('start', 'node index.js');
         expect(packageJson.scripts).to.have.property('build', 'webpack');
-        expect(packageJson.scripts).to.have.property('postinstall', 'bit link && bit compile');
+        expect(packageJson.scripts).to.have.property('postinstall', EXTERNAL_PM_POSTINSTALL_SCRIPT);
       });
       it('should add type module to existing package.json', () => {
         const packageJson = helper.packageJson.read();
@@ -478,7 +479,7 @@ describe('run bit init', function () {
 
         // Verify postinstall was added
         const packageJson = helper.packageJson.read();
-        expect(packageJson.scripts).to.have.property('postinstall', 'bit link && bit compile');
+        expect(packageJson.scripts).to.have.property('postinstall', EXTERNAL_PM_POSTINSTALL_SCRIPT);
 
         // Simulate removing only our postinstall script
         delete packageJson.scripts.postinstall;
