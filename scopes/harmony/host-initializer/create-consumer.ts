@@ -77,9 +77,8 @@ export async function createConsumer(
       // Handle package.json for external package manager mode
       const existingPackageJson = PackageJsonFile.loadSync(consumer.projectPath);
       if (existingPackageJson.fileExist) {
-        // Merge with existing package.json
+        // Merge with existing package.json - only add postinstall script, don't modify type
         const content = { ...existingPackageJson.packageJsonObject };
-        content.type = 'module';
         content.scripts = content.scripts || {};
         content.scripts.postinstall = EXTERNAL_PM_POSTINSTALL_SCRIPT;
 

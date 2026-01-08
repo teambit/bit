@@ -418,9 +418,9 @@ describe('run bit init', function () {
         expect(packageJson.scripts).to.have.property('build', 'webpack');
         expect(packageJson.scripts).to.have.property('postinstall', EXTERNAL_PM_POSTINSTALL_SCRIPT);
       });
-      it('should add type module to existing package.json', () => {
+      it('should not add type module to existing package.json', () => {
         const packageJson = helper.packageJson.read();
-        expect(packageJson).to.have.property('type', 'module');
+        expect(packageJson).to.not.have.property('type');
       });
     });
     describe('disabling external package manager mode', () => {
