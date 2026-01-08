@@ -36,6 +36,11 @@ export type CreateFromComponentsOptions = {
   referenceLocalPackages?: boolean;
   hasRootComponents?: boolean;
   excludeExtensionsDependencies?: boolean;
+  /**
+   * Skip adding env's self peer dependencies (tooling deps like eslint, vitest, webpack, etc.)
+   * to component dependencies. Used for external package manager mode where users manage their own deps.
+   */
+  skipEnvSelfPeers?: boolean;
 };
 
 const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
@@ -70,6 +75,7 @@ export class WorkspaceManifestFactory {
       excludeExtensionsDependencies: optsWithDefaults.excludeExtensionsDependencies,
       referenceLocalPackages: optsWithDefaults.referenceLocalPackages && hasRootComponents,
       rootDependencies: hasRootComponents ? rootPolicy.toManifest().dependencies : undefined,
+      skipEnvSelfPeers: optsWithDefaults.skipEnvSelfPeers,
     });
     let dedupedDependencies = getEmptyDedupedDependencies();
     if (hasRootComponents) {
@@ -142,6 +148,7 @@ export class WorkspaceManifestFactory {
       referenceLocalPackages,
       rootDependencies,
       rootPolicy,
+      skipEnvSelfPeers,
     }: {
       dependencyFilterFn?: DepsFilterFn;
       filterComponentsFromManifests?: boolean;
@@ -149,6 +156,7 @@ export class WorkspaceManifestFactory {
       referenceLocalPackages?: boolean;
       rootDependencies?: Record<string, string>;
       rootPolicy?: WorkspacePolicy;
+      skipEnvSelfPeers?: boolean;
     }
   ): Promise<ComponentDependenciesMap> {
     const packageNames = components.map((component) => this.dependencyResolver.getPackageName(component));
@@ -211,7 +219,11 @@ export class WorkspaceManifestFactory {
         );
       });
 
-      const defaultPeerDependencies = await this._getDefaultPeerDependencies(component, packageNames);
+      // Skip env's self peer dependencies (tooling deps) when skipEnvSelfPeers is true
+      // This is used for external package manager mode where users manage their own deps
+      const defaultPeerDependencies = skipEnvSelfPeers
+        ? {}
+        : await this._getDefaultPeerDependencies(component, packageNames);
 
       depManifest.dependencies = {
         ...defaultPeerDependencies,

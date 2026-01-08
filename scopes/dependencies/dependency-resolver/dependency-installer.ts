@@ -56,6 +56,11 @@ export type GetComponentManifestsOptions = {
   referenceLocalPackages?: boolean;
   hasRootComponents?: boolean;
   excludeExtensionsDependencies?: boolean;
+  /**
+   * Skip adding env's self peer dependencies (tooling deps like eslint, vitest, webpack, etc.)
+   * to component dependencies. Used for external package manager mode where users manage their own deps.
+   */
+  skipEnvSelfPeers?: boolean;
 } & Pick<
   PackageManagerInstallOptions,
   'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents' | 'copyPeerToRuntimeOnRoot' | 'installPeersFromEnvs'
@@ -303,6 +308,7 @@ export class DependencyInstaller {
     referenceLocalPackages,
     hasRootComponents,
     excludeExtensionsDependencies,
+    skipEnvSelfPeers,
   }: GetComponentManifestsOptions) {
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
@@ -313,6 +319,7 @@ export class DependencyInstaller {
       referenceLocalPackages,
       hasRootComponents,
       excludeExtensionsDependencies,
+      skipEnvSelfPeers,
     };
     const workspaceManifest = await this.dependencyResolver.getWorkspaceManifest(
       undefined,
