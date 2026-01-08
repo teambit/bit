@@ -52,9 +52,9 @@ describe('lane history with merge operations', function () {
       expect(mergeEntry).to.not.be.undefined;
     });
 
-    it('should include the source lane name in the merge history message', () => {
+    it('should include the full source lane identifier in the merge history message', () => {
       const mergeEntry = historyAfterMerge.find((entry) => entry.message && entry.message.includes('merge'));
-      expect(mergeEntry?.message).to.include('lane-b');
+      expect(mergeEntry?.message).to.include(`${helper.scopes.remote}/lane-b`);
     });
   });
 });
