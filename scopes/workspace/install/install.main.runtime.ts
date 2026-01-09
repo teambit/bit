@@ -230,15 +230,8 @@ export class InstallMain {
     const installer = this.dependencyResolver.getInstaller({});
     const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy();
     await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
-    // Use the same options as _installModules to ensure consistent dependency calculation
-    const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
-    const hasRootComponents = this.dependencyResolver.hasRootComponents();
     const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, {
-      copyPeerToRuntimeOnComponents: false,
-      copyPeerToRuntimeOnRoot: true,
-      dedupe: !hasRootComponents,
-      dependencyFilterFn: depsFilterFn,
-      nodeLinker: this.dependencyResolver.nodeLinker(),
+      dedupe: true,
     });
     const { dependencies, devDependencies } = componentsAndManifests.manifests[this.workspace.path];
     return this.workspace.writeDependenciesToPackageJson({ ...devDependencies, ...dependencies });
