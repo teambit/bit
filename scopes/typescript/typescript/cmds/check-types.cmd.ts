@@ -94,7 +94,7 @@ otherwise, only new and modified components will be checked`);
     // If pattern is provided, don't pass the unmodified flag - the pattern should take precedence
     const components = await this.workspace.getComponentsByUserInput(pattern ? false : unmodified, pattern);
     if (!components.length) {
-      return { tsserver: null, componentsCount: 0 };
+      return { tsserver: undefined, componentsCount: 0 };
     }
     const files = this.typescript.getSupportedFilesForTsserver(components);
     await this.typescript.initTsserverClientFromWorkspace(
