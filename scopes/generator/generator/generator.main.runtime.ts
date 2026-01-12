@@ -71,6 +71,7 @@ export type TemplateDescriptor = {
   /**
    * the env that will be used for components created with this template.
    * only relevant for component templates (not workspace templates).
+   * expected format is an aspect ID string, e.g., "bitdev.react/react-env".
    */
   env?: string;
 };

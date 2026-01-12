@@ -11,6 +11,11 @@ function getFriendlyName(aspectId: string): string {
   const lastSegment = aspectId.split('/').pop() || aspectId;
   // Handle special cases
   if (lastSegment.toLowerCase() === 'mdx') return 'MDX';
+  // Handle kebab-case by capitalizing each word
+  const parts = lastSegment.split('-').filter(Boolean);
+  if (parts.length > 1) {
+    return parts.map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+  }
   // Capitalize first letter
   return lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1);
 }
@@ -37,7 +42,7 @@ export class TemplatesCmd implements Command {
   name = 'templates';
   description = 'list available templates for "bit create" and "bit new"';
   extendedDescription =
-    'list components templates when inside bit-workspace (for bit-create), otherwise, list workspace templates (for bit-new)';
+    'list component templates when inside bit-workspace (for bit-create), otherwise, list workspace templates (for bit-new)';
   alias = '';
   loader = true;
   group = 'component-development';
