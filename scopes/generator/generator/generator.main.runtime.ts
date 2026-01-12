@@ -167,8 +167,12 @@ export class GeneratorMain {
       if (this.config.hideCoreTemplates && this.bitApi.isCoreAspect(id)) return true;
       return false;
     };
+    // For component templates with an env specified, use the env as the display id
+    // This shows templates grouped by their actual env rather than the registering aspect
+    const componentTemplate = template as ComponentTemplate;
+    const displayId = componentTemplate.env || id;
     return {
-      aspectId: id,
+      aspectId: displayId,
       name: template.name,
       description: template.description,
       hidden: shouldBeHidden(),
