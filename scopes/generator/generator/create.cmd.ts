@@ -15,7 +15,9 @@ export type CreateOptions = BaseComponentTemplateOptions & {
 
 export class CreateCmd implements Command {
   name = 'create <template-name> <component-names...>';
-  description = 'create a new component (source files and config) using a template.';
+  description = 'scaffold new component(s) from a template (sources, config, and env)';
+  extendedDescription =
+    "Generates one or more components from a chosen template with ready-to-use source files, configuration, and environment. Use it to quickly scaffold consistent components across your workspace. Run 'bit templates' to discover available templates.";
   alias = '';
   loader = true;
   helpUrl = 'reference/starters/create-starter';
@@ -44,6 +46,11 @@ export class CreateCmd implements Command {
       cmd: 'bit create mdx docs/create-components --aspect teambit.mdx/mdx-env --scope my-org.my-scope',
       description:
         "creates an mdx component named 'docs/create-components' and sets it scope to 'my-org.my-scope'. \nby default, the scope is the `defaultScope` value, configured in your `workspace.jsonc`.",
+    },
+    {
+      cmd: 'bit create react my-org.my-scope/hooks/use-session',
+      description:
+        "creates a component named 'hooks/use-session' with scope 'my-org.my-scope'. \nthe scope is parsed from the component name (bit.cloud scopes contain a dot).",
     },
     {
       cmd: 'bit create react ui/button --aspect teambit.react/react-env --env teambit.community/envs/community-react@3.0.3',
