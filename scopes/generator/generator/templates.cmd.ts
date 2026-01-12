@@ -1,7 +1,31 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { groupBy } from 'lodash';
+import { groupBy, countBy } from 'lodash';
 import type { GeneratorMain, TemplateDescriptor } from './generator.main.runtime';
+
+/**
+ * Extracts a friendly display name from an aspect ID.
+ * e.g., "teambit.react/react" → "React", "teambit.harmony/node" → "Node"
+ */
+function getFriendlyName(aspectId: string): string {
+  const lastSegment = aspectId.split('/').pop() || aspectId;
+  // Handle special cases
+  if (lastSegment.toLowerCase() === 'mdx') return 'MDX';
+  // Capitalize first letter
+  return lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1);
+}
+
+/**
+ * Gets unique envs from templates, sorted by frequency (most common first).
+ */
+function getUniqueEnvs(templates: TemplateDescriptor[]): string[] {
+  const envs = templates.map((t) => t.env).filter(Boolean) as string[];
+  if (envs.length === 0) return [];
+  const counts = countBy(envs);
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([env]) => env);
+}
 
 export type TemplatesOptions = {
   showAll?: boolean;
@@ -11,9 +35,9 @@ export type TemplatesOptions = {
 
 export class TemplatesCmd implements Command {
   name = 'templates';
-  description = 'list available templates for creating components and workspaces';
+  description = 'list available templates for "bit create" and "bit new"';
   extendedDescription =
-    "Lists available templates. Inside a workspace it shows component templates for 'bit create'; outside a workspace it shows workspace templates for 'bit new'.";
+    'list components templates when inside bit-workspace (for bit-create), otherwise, list workspace templates (for bit-new)';
   alias = '';
   loader = true;
   group = 'component-development';
@@ -45,10 +69,14 @@ export class TemplatesCmd implements Command {
     };
     const output = Object.keys(grouped)
       .map((aspectId) => {
-        const names = grouped[aspectId].map(templateOutput).join('\n');
-        const groupTitle = grouped[aspectId][0].titlePrefix
-          ? `${grouped[aspectId][0].titlePrefix} (${aspectId})`
-          : aspectId;
+        const templates = grouped[aspectId];
+        const names = templates.map(templateOutput).join('\n');
+        // Get unique envs from templates in this group
+        const uniqueEnvs = getUniqueEnvs(templates);
+        const envSuffix = uniqueEnvs.length > 0 ? chalk.dim(` (env: ${uniqueEnvs.join(', ')})`) : '';
+        // Use titlePrefix if available, otherwise generate friendly name from aspectId
+        const friendlyName = templates[0].titlePrefix || getFriendlyName(aspectId);
+        const groupTitle = `${friendlyName}${envSuffix}`;
         return `${chalk.blue.bold(groupTitle)}\n${names}\n`;
       })
       .join('\n');
