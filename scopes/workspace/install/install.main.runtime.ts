@@ -934,7 +934,7 @@ export class InstallMain {
             await this.getRootComponentDirByRootId(this.workspace.rootComponentsPath, envId),
             {
               dependencies: {
-                ...(await this._getEnvDependencies(envId)),
+                ...(await this._getEnvDependencies(envId, workspaceDeps)),
                 ...workspaceDeps,
                 ...(await this._getEnvPackage(envId)),
               },
@@ -948,36 +948,29 @@ export class InstallMain {
     );
   }
 
-  private async _getEnvDependencies(envId: ComponentID): Promise<Record<string, string>> {
+  /**
+   * Get the env's own peer dependencies from its policy (env.jsonc).
+   * Resolves "+" version placeholders using workspaceDeps.
+   */
+  private async _getEnvDependencies(
+    envId: ComponentID,
+    workspaceDeps: Record<string, string>
+  ): Promise<Record<string, string>> {
     const policy = await this.dependencyResolver.getEnvPolicyFromEnvId(envId);
     if (!policy) return {};
 
-    const filteredEntries = policy.selfPolicy.entries.filter(({ force, value }) => force && value.version !== '-');
-
-    // Check if any entry has a "+" version that needs resolving
-    const hasPlusVersion = filteredEntries.some(({ value }) => value.version === '+');
-
-    // Only load the env component if we need to resolve "+" versions
-    // Loading the env component can have side effects (importing it into scope)
-    let envDeps: DependencyList | undefined;
-    if (hasPlusVersion) {
-      const envComponent = await this.envs.getEnvComponentByEnvId(envId.toString(), envId.toString());
-      envDeps = envComponent ? this.dependencyResolver.getDependencies(envComponent) : undefined;
-    }
-
     return Object.fromEntries(
-      filteredEntries.map(({ dependencyId, value }) => {
-        let version = value.version;
-        // Resolve "+" version placeholders by looking up the already resolved version
-        // from the env component's dependencies (resolved in apply-overrides.resolveEnvPeerDepVersion)
-        if (version === '+' && envDeps) {
-          const found = envDeps.findByPkgNameOrCompId(dependencyId);
-          version = found?.version ? snapToSemver(found.version) : '*';
-        } else if (version === '+') {
-          version = '*';
-        }
-        return [dependencyId, version];
-      })
+      policy.selfPolicy.entries
+        .filter(({ force, value }) => force && value.version !== '-')
+        .map(({ dependencyId, value }) => {
+          let version = value.version;
+          // Resolve "+" version placeholders using workspace dependencies
+          // Similar to WorkspaceManifest._resolvePlusVersions
+          if (version === '+') {
+            version = workspaceDeps[dependencyId] || '*';
+          }
+          return [dependencyId, version];
+        })
     );
   }
 
