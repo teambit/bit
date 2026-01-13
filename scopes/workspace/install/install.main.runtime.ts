@@ -951,10 +951,27 @@ export class InstallMain {
   private async _getEnvDependencies(envId: ComponentID): Promise<Record<string, string>> {
     const policy = await this.dependencyResolver.getEnvPolicyFromEnvId(envId);
     if (!policy) return {};
+
+    // Get the env component to access its resolved dependencies
+    // The "+" versions are resolved during dependency detection in apply-overrides.resolveEnvPeerDepVersion
+    const envComponent = await this.envs.getEnvComponentByEnvId(envId.toString(), envId.toString());
+    const envDeps = envComponent ? this.dependencyResolver.getDependencies(envComponent) : undefined;
+
     return Object.fromEntries(
       policy.selfPolicy.entries
         .filter(({ force, value }) => force && value.version !== '-')
-        .map(({ dependencyId, value }) => [dependencyId, value.version])
+        .map(({ dependencyId, value }) => {
+          let version = value.version;
+          // Resolve "+" version placeholders by looking up the already resolved version
+          // from the env component's dependencies (resolved in apply-overrides.resolveEnvPeerDepVersion)
+          if (version === '+' && envDeps) {
+            const found = envDeps.findByPkgNameOrCompId(dependencyId);
+            version = found?.version ? snapToSemver(found.version) : '*';
+          } else if (version === '+') {
+            version = '*';
+          }
+          return [dependencyId, version];
+        })
     );
   }
 
