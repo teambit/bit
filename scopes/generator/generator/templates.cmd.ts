@@ -5,9 +5,14 @@ import type { GeneratorMain, TemplateDescriptor } from './generator.main.runtime
 
 /**
  * Extracts a friendly display name from an aspect ID.
- * e.g., "teambit.react/react" → "React", "teambit.harmony/node" → "Node"
+ * Only converts teambit aspects to friendly names (e.g., "teambit.react/react" → "React").
+ * For non-teambit aspects, returns the original aspectId.
  */
 function getFriendlyName(aspectId: string): string {
+  // Only apply friendly names for teambit aspects
+  if (!aspectId.startsWith('teambit.')) {
+    return aspectId;
+  }
   const lastSegment = aspectId.split('/').pop() || aspectId;
   // Handle special cases
   if (lastSegment.toLowerCase() === 'mdx') return 'MDX';
