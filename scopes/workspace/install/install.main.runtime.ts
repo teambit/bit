@@ -1009,7 +1009,7 @@ export class InstallMain {
               {
                 ...omit(appManifest, ['name', 'version']),
                 dependencies: {
-                  ...(await this._getEnvDependencies(envId)),
+                  ...(await this._getEnvDependencies(envId, workspaceDeps)),
                   ...appManifest.dependencies,
                   ...workspaceDeps,
                 },
