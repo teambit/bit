@@ -346,7 +346,7 @@ describe('bit lane import operations', function () {
       helper.command.export();
     });
     // This test verifies the fix for the bug where "+" version resolution
-    // was not properly resolving to the actual version from workspace/bitmap,
+    // was not properly resolving to the actual version from workspace dependencies,
     // causing pnpm to receive "+" as a version which it cannot handle
     it('should resolve "+" version and not pass it directly to pnpm', () => {
       helper.scopeHelper.reInitWorkspace();
