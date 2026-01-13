@@ -952,26 +952,32 @@ export class InstallMain {
     const policy = await this.dependencyResolver.getEnvPolicyFromEnvId(envId);
     if (!policy) return {};
 
-    // Get the env component to access its resolved dependencies
-    // The "+" versions are resolved during dependency detection in apply-overrides.resolveEnvPeerDepVersion
-    const envComponent = await this.envs.getEnvComponentByEnvId(envId.toString(), envId.toString());
-    const envDeps = envComponent ? this.dependencyResolver.getDependencies(envComponent) : undefined;
+    const filteredEntries = policy.selfPolicy.entries.filter(({ force, value }) => force && value.version !== '-');
+
+    // Check if any entry has a "+" version that needs resolving
+    const hasPlusVersion = filteredEntries.some(({ value }) => value.version === '+');
+
+    // Only load the env component if we need to resolve "+" versions
+    // Loading the env component can have side effects (importing it into scope)
+    let envDeps: DependencyList | undefined;
+    if (hasPlusVersion) {
+      const envComponent = await this.envs.getEnvComponentByEnvId(envId.toString(), envId.toString());
+      envDeps = envComponent ? this.dependencyResolver.getDependencies(envComponent) : undefined;
+    }
 
     return Object.fromEntries(
-      policy.selfPolicy.entries
-        .filter(({ force, value }) => force && value.version !== '-')
-        .map(({ dependencyId, value }) => {
-          let version = value.version;
-          // Resolve "+" version placeholders by looking up the already resolved version
-          // from the env component's dependencies (resolved in apply-overrides.resolveEnvPeerDepVersion)
-          if (version === '+' && envDeps) {
-            const found = envDeps.findByPkgNameOrCompId(dependencyId);
-            version = found?.version ? snapToSemver(found.version) : '*';
-          } else if (version === '+') {
-            version = '*';
-          }
-          return [dependencyId, version];
-        })
+      filteredEntries.map(({ dependencyId, value }) => {
+        let version = value.version;
+        // Resolve "+" version placeholders by looking up the already resolved version
+        // from the env component's dependencies (resolved in apply-overrides.resolveEnvPeerDepVersion)
+        if (version === '+' && envDeps) {
+          const found = envDeps.findByPkgNameOrCompId(dependencyId);
+          version = found?.version ? snapToSemver(found.version) : '*';
+        } else if (version === '+') {
+          version = '*';
+        }
+        return [dependencyId, version];
+      })
     );
   }
 
