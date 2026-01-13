@@ -10,7 +10,7 @@ import type { Express } from 'express';
 import express from 'express';
 import { graphqlHTTP, type RequestInfo } from 'express-graphql';
 import { Port } from '@teambit/toolbox.network.get-port';
-import { execute, subscribe } from 'graphql';
+import { execute, parse, specifiedRules, subscribe, validate } from 'graphql';
 import type { PubSubEngine } from 'graphql-subscriptions';
 import { PubSub } from 'graphql-subscriptions';
 import type { Server } from 'http';
@@ -33,6 +33,7 @@ export type GraphQLConfig = {
   subscriptionsPortRange: number[];
   subscriptionsPath: string;
   disableCors?: boolean;
+  enableBatching?: boolean;
 };
 
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
@@ -141,6 +142,82 @@ export class GraphqlMain {
           credentials: true,
         })
       );
+    }
+
+    const batchingEnabled = this.config.enableBatching;
+
+    if (batchingEnabled) {
+      app.use('/graphql', express.json());
+      app.use('/graphql', async (req, res, next) => {
+        if (req.method !== 'POST') return next();
+        if (!Array.isArray(req.body)) return next();
+
+        const formatError =
+          options.customFormatErrorFn ??
+          ((err: any) => {
+            this.logger.error('graphql got an error during running the following query:', req.body);
+            this.logger.error('graphql error ', err);
+            return Object.assign(err, {
+              // @ts-ignore
+              ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
+              // @ts-ignore
+              HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err?.originalError?.code,
+            });
+          });
+
+        const validationRules = disableIntrospection ? [NoIntrospection] : specifiedRules;
+
+        (req as any).res = res;
+
+        const execFn = options.customExecuteFn ?? (execute as any);
+
+        try {
+          const ops = req.body as Array<{
+            query?: string;
+            variables?: Record<string, any>;
+            operationName?: string;
+          }>;
+
+          const results = await Promise.all(
+            ops.map(async (op) => {
+              if (!op?.query || typeof op.query !== 'string') {
+                return { errors: [{ message: 'Must provide query string.' }] };
+              }
+
+              try {
+                const document = parse(op.query);
+
+                const validationErrors = validate(schema, document, validationRules as any);
+                if (validationErrors.length) {
+                  return { errors: validationErrors.map(formatError) };
+                }
+
+                const result = await execFn({
+                  schema,
+                  document,
+                  rootValue: req,
+                  contextValue: req,
+                  variableValues: op.variables,
+                  operationName: op.operationName,
+                });
+
+                if ((result as any)?.errors?.length) {
+                  return { ...(result as any), errors: (result as any).errors.map(formatError) };
+                }
+
+                return result;
+              } catch (err: any) {
+                this.logger.error('graphql batch error', err);
+                return { errors: [{ message: err?.message ?? String(err) }].map(formatError) };
+              }
+            })
+          );
+
+          return res.status(200).json(results);
+        } catch (err) {
+          return next(err);
+        }
+      });
     }
 
     app.use(
@@ -329,6 +406,7 @@ export class GraphqlMain {
     subscriptionsPortRange: [2000, 2100],
     disableCors: false,
     subscriptionsPath: '/subscriptions',
+    enableBatching: false,
   };
 
   static runtime = MainRuntime;
