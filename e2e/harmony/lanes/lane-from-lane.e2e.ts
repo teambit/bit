@@ -157,9 +157,51 @@ describe('bit lane command', function () {
       helper.fixtures.populateComponents(1, false, 'v2');
       helper.command.snapAllComponentsWithoutBuild();
     });
-    it('bit create should throw an error suggesting to export or reset first', () => {
-      const output = helper.general.runWithTryCatch('bit lane create lane-b');
-      expect(output).to.have.string('please export or reset the following components first');
+    it('bit lane create should succeed and the new lane should include the local snap', () => {
+      const localSnapOnLaneA = helper.command.getHeadOfLane('lane-a', 'comp1');
+      helper.command.createLane('lane-b');
+      const headOnLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
+      expect(headOnLaneB).to.equal(localSnapOnLaneA);
+    });
+  });
+  describe('creating a lane when the current lane has diverged from the remote', () => {
+    let workspace1State: string;
+    let localSnap: string;
+    before(() => {
+      // workspace1: create lane "dev", snap and export
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.command.createLane('dev');
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      // save workspace1 state
+      workspace1State = helper.scopeHelper.cloneWorkspace();
+
+      // workspace2: import lane, make changes, snap and export
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.switchRemoteLane('dev');
+      helper.fixtures.populateComponents(1, false, 'v2-from-workspace2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      // back to workspace1: make changes and snap (without merging workspace2's work)
+      helper.scopeHelper.getClonedWorkspace(workspace1State);
+      helper.fixtures.populateComponents(1, false, 'v2-from-workspace1');
+      helper.command.snapAllComponentsWithoutBuild();
+      localSnap = helper.command.getHeadOfLane('dev', 'comp1');
+
+      // at this point, export would fail because the lane has diverged
+      // the user wants to create a new lane instead of merging
+    });
+    it('should allow creating a new lane with the local diverged snap', () => {
+      expect(() => helper.command.createLane('dev-v2')).to.not.throw();
+    });
+    it('the new lane should include the local snap (not the remote one)', () => {
+      helper.command.createLane('dev-v3');
+      const headOnNewLane = helper.command.getHeadOfLane('dev-v3', 'comp1');
+      expect(headOnNewLane).to.equal(localSnap);
     });
   });
   describe("fork a lane when the default-scope is different than the original lane's scope", () => {
