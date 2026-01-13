@@ -212,9 +212,16 @@ export class WorkspaceManifestFactory {
       });
 
       const defaultPeerDependencies = await this._getDefaultPeerDependencies(component, packageNames);
+      const usedPeerDependencies = pickBy(defaultPeerDependencies, (_val, pkgName) => {
+        return (
+          depManifestBeforeFiltering.dependencies[pkgName] ||
+          depManifestBeforeFiltering.devDependencies[pkgName] ||
+          depManifestBeforeFiltering.peerDependencies[pkgName]
+        );
+      });
 
       depManifest.dependencies = {
-        ...defaultPeerDependencies,
+        ...usedPeerDependencies,
         ...unresolvedRuntimeMissingRootDeps,
         ...additionalDeps,
         ...depManifest.dependencies,
