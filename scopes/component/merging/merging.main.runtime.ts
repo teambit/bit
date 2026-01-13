@@ -258,7 +258,12 @@ export class MergingMain {
     }
     if (this.workspace) await this.configMerger.generateConfigMergeConflictFileForAll(allConfigMerge);
 
-    if (currentLane) legacyScope.objects.add(currentLane);
+    if (currentLane) {
+      const laneHistoryMsg = `merge from "${otherLaneId.toString()}"`;
+      const laneHistory = await legacyScope.lanes.updateLaneHistory(currentLane, laneHistoryMsg);
+      legacyScope.objects.add(laneHistory);
+      legacyScope.objects.add(currentLane);
+    }
 
     await legacyScope.objects.persist(); // persist anyway, if currentLane is null it should save all main heads
 
