@@ -214,7 +214,8 @@ export class GraphqlMain {
                 return result;
               } catch (err: any) {
                 this.logger.error('graphql batch error', err);
-                return { errors: [{ message: err?.message ?? String(err) }].map(formatError) };
+                const e = err instanceof Error ? err : new Error(err?.message ?? String(err));
+                return { errors: [formatError(e)] };
               }
             })
           );
