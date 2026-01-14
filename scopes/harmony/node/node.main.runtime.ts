@@ -24,6 +24,7 @@ import { ReactAspect } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
 import { getTemplates } from './node.templates';
+import { getStarters } from './node.starters';
 import { NodeAppType } from './node.app-type';
 
 export class NodeMain {
@@ -189,6 +190,7 @@ export class NodeMain {
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerAspect, workerMain, harmony);
       generator.registerComponentTemplate(() => getTemplates(envContext));
+      generator.registerWorkspaceTemplate(getStarters(envContext));
     }
     return new NodeMain(react, tsAspect, nodeEnv, envs);
   }

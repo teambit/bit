@@ -40,6 +40,7 @@ import {
   UpdateAspectCmd,
 } from './aspect.cmd';
 import { getTemplates } from './aspect.templates';
+import { getStarters } from './aspect.starters';
 import type { DevFilesMain } from '@teambit/dev-files';
 import { DevFilesAspect } from '@teambit/dev-files';
 import type { ValidateBeforePersistResult } from '@teambit/legacy.extension-data';
@@ -308,6 +309,7 @@ export class AspectMain {
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerMain, workerMain, harmony);
       generator.registerComponentTemplate(() => getTemplates(envContext));
+      generator.registerWorkspaceTemplate(getStarters(envContext));
     }
     const aspectMain = new AspectMain(aspectEnv as AspectEnv, envs, workspace, aspectLoader, depResolver);
     const aspectCmd = new AspectCmd();

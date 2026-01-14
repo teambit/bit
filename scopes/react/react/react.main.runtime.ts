@@ -45,6 +45,7 @@ import { ReactEnv } from './react.env';
 import { ReactAppType } from './apps/web';
 import { reactSchema } from './react.graphql';
 import { getTemplates } from './react.templates';
+import { getStarters } from './react.starters';
 import type { ReactAppOptions } from './apps/web/react-app-options';
 import { ReactSchema } from './react.schema';
 import { ReactAPITransformer } from './react.api.transformer';
@@ -472,6 +473,7 @@ export class ReactMain {
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerMain, workerMain, harmony);
       generator.registerComponentTemplate(() => getTemplates(envContext));
+      generator.registerWorkspaceTemplate(getStarters(envContext));
     }
 
     if (application) application.registerAppType(appType);
