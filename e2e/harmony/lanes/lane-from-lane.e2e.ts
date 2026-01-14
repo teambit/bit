@@ -195,12 +195,9 @@ describe('bit lane command', function () {
       // at this point, export would fail because the lane has diverged
       // the user wants to create a new lane instead of merging
     });
-    it('should allow creating a new lane with the local diverged snap', () => {
-      expect(() => helper.command.createLane('dev-v2')).to.not.throw();
-    });
-    it('the new lane should include the local snap (not the remote one)', () => {
-      helper.command.createLane('dev-v3');
-      const headOnNewLane = helper.command.getHeadOfLane('dev-v3', 'comp1');
+    it('should allow creating a new lane and include the local diverged snap', () => {
+      helper.command.createLane('dev-v2');
+      const headOnNewLane = helper.command.getHeadOfLane('dev-v2', 'comp1');
       expect(headOnNewLane).to.equal(localSnap);
     });
   });
