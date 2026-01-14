@@ -3,9 +3,11 @@ import React from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { BatchHttpLink } from '@apollo/client/link/batch-http';
 import { InMemoryCache, ApolloClient, ApolloLink, HttpLink, createHttpLink } from '@apollo/client';
-import type { DefaultOptions, NormalizedCacheObject } from '@apollo/client';
+import type { DefaultOptions, NormalizedCacheObject, Operation } from '@apollo/client';
 import { WebSocketLink } from '@apollo/client/link/ws';
 import { onError } from '@apollo/client/link/error';
+import { getMainDefinition } from '@apollo/client/utilities';
+import type { OperationDefinitionNode } from 'graphql';
 
 import crossFetch from 'cross-fetch';
 
@@ -97,7 +99,7 @@ export class GraphqlUI {
     });
 
     const httpLink = ApolloLink.split(
-      (op) => op.operationName === 'mutation',
+      this.isMutation,
       new HttpLink({
         uri: serverUrl,
         credentials: 'include',
@@ -121,6 +123,11 @@ export class GraphqlUI {
 
     return cache;
   }
+
+  private readonly isMutation = (op: Operation) => {
+    const def = getMainDefinition(op.query) as OperationDefinitionNode;
+    return def.kind === 'OperationDefinition' && def.operation === 'mutation';
+  };
 
   private createLink(uri: string, { subscriptionUri }: { subscriptionUri?: string } = {}) {
     if (this.config.enableBatching) {
@@ -153,7 +160,7 @@ export class GraphqlUI {
       credentials: 'include',
     });
 
-    const httpLink = ApolloLink.split((op) => op.operationName === 'mutation', unbatchedHttpLink, batchedHttpLink);
+    const httpLink = ApolloLink.split(this.isMutation, unbatchedHttpLink, batchedHttpLink);
 
     const wsLink = subscriptionUri
       ? new WebSocketLink({ uri: subscriptionUri, options: { reconnect: true } })
@@ -177,7 +184,7 @@ export class GraphqlUI {
   static defaultConfig: GraphQLConfig = {
     enableBatching: false,
     batchInterval: 50,
-    batchMax: 10,
+    batchMax: 20,
   };
 
   static async provider(_, config: GraphQLConfig) {

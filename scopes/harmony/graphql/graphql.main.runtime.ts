@@ -34,6 +34,7 @@ export type GraphQLConfig = {
   subscriptionsPath: string;
   disableCors?: boolean;
   enableBatching?: boolean;
+  batchMax?: number;
 };
 
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
@@ -151,6 +152,11 @@ export class GraphqlMain {
       app.use('/graphql', async (req, res, next) => {
         if (req.method !== 'POST') return next();
         if (!Array.isArray(req.body)) return next();
+        if (!req.is('application/json')) return next();
+        const max = this.config.batchMax ?? 20;
+        if (req.body.length > max) {
+          return res.status(413).json([{ errors: [{ message: `Batch size ${req.body.length} exceeds max ${max}` }] }]);
+        }
 
         const formatError =
           options.customFormatErrorFn ??
@@ -407,6 +413,7 @@ export class GraphqlMain {
     disableCors: false,
     subscriptionsPath: '/subscriptions',
     enableBatching: false,
+    batchMax: 20,
   };
 
   static runtime = MainRuntime;
