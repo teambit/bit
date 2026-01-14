@@ -68,6 +68,12 @@ export type TemplateDescriptor = {
   name: string;
   description?: string;
   hidden?: boolean;
+  /**
+   * the env that will be used for components created with this template.
+   * only relevant for component templates (not workspace templates).
+   * expected format is an aspect ID string, e.g., "bitdev.react/react-env".
+   */
+  env?: string;
 };
 
 type TemplateWithId = { id: string; envName?: string };
@@ -167,11 +173,13 @@ export class GeneratorMain {
       if (this.config.hideCoreTemplates && this.bitApi.isCoreAspect(id)) return true;
       return false;
     };
+    const componentTemplate = template as ComponentTemplate;
     return {
       aspectId: id,
       name: template.name,
       description: template.description,
       hidden: shouldBeHidden(),
+      env: componentTemplate.env,
     };
   };
 
