@@ -98,16 +98,14 @@ export class GraphqlUI {
       fetch: crossFetch,
     });
 
-    const httpLink = ApolloLink.split(
-      this.isMutation,
-      new HttpLink({
-        uri: serverUrl,
-        credentials: 'include',
-        headers,
-        fetch: crossFetch,
-      }),
-      batchedHttpLink
-    );
+    const unbatchedHttpLink = new HttpLink({
+      uri: serverUrl,
+      credentials: 'include',
+      headers,
+      fetch: crossFetch,
+    });
+
+    const httpLink = ApolloLink.split(this.isMutation, unbatchedHttpLink, batchedHttpLink);
 
     return new ApolloClient({
       ssrMode: true,
