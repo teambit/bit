@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import React from 'react';
 import { UIRuntime } from '@teambit/ui';
-
+import { BatchHttpLink } from '@apollo/client/link/batch-http';
 import { InMemoryCache, ApolloClient, ApolloLink, HttpLink, createHttpLink } from '@apollo/client';
 import type { DefaultOptions, NormalizedCacheObject } from '@apollo/client';
 import { WebSocketLink } from '@apollo/client/link/ws';
@@ -30,7 +30,15 @@ type ClientOptions = {
   host?: string;
 };
 
+export type GraphQLConfig = {
+  enableBatching?: boolean;
+  batchInterval?: number;
+  batchMax?: number;
+};
+
 export class GraphqlUI {
+  constructor(readonly config: GraphQLConfig = {}) {}
+
   createClient(uri: string, { state, subscriptionUri, host }: ClientOptions = {}) {
     const defaultOptions: DefaultOptions | undefined =
       host === 'teambit.workspace/workspace'
@@ -56,6 +64,9 @@ export class GraphqlUI {
   }
 
   createSsrClient({ serverUrl, headers }: { serverUrl: string; headers: any }) {
+    if (this.config.enableBatching) {
+      return this.createSsrClientBatched({ serverUrl, headers });
+    }
     const link = ApolloLink.from([
       onError(logError),
       createHttpLink({
@@ -75,6 +86,34 @@ export class GraphqlUI {
     return client;
   }
 
+  private createSsrClientBatched({ serverUrl, headers }: { serverUrl: string; headers: any }) {
+    const batchedHttpLink = new BatchHttpLink({
+      uri: serverUrl,
+      credentials: 'include',
+      batchInterval: this.config.batchInterval,
+      batchMax: this.config.batchMax,
+      headers,
+      fetch: crossFetch,
+    });
+
+    const httpLink = ApolloLink.split(
+      (op) => op.operationName === 'mutation',
+      new HttpLink({
+        uri: serverUrl,
+        credentials: 'include',
+        headers,
+        fetch: crossFetch,
+      }),
+      batchedHttpLink
+    );
+
+    return new ApolloClient({
+      ssrMode: true,
+      link: ApolloLink.from([onError(logError), httpLink]),
+      cache: this.createCache(),
+    });
+  }
+
   private createCache({ state }: { state?: NormalizedCacheObject } = {}) {
     const cache = new InMemoryCache();
 
@@ -84,6 +123,9 @@ export class GraphqlUI {
   }
 
   private createLink(uri: string, { subscriptionUri }: { subscriptionUri?: string } = {}) {
+    if (this.config.enableBatching) {
+      return this.createLinkBatched(uri, { subscriptionUri });
+    }
     const httpLink = new HttpLink({ credentials: 'include', uri });
     const subsLink = subscriptionUri
       ? new WebSocketLink({
@@ -98,9 +140,30 @@ export class GraphqlUI {
     return ApolloLink.from([errorLogger, hybridLink]);
   }
 
-  /**
-   * get the graphQL provider
-   */
+  private createLinkBatched(uri: string, { subscriptionUri }: { subscriptionUri?: string } = {}) {
+    const batchedHttpLink = new BatchHttpLink({
+      uri,
+      credentials: 'include',
+      batchInterval: this.config.batchInterval,
+      batchMax: this.config.batchMax,
+    });
+
+    const unbatchedHttpLink = new HttpLink({
+      uri,
+      credentials: 'include',
+    });
+
+    const httpLink = ApolloLink.split((op) => op.operationName === 'mutation', unbatchedHttpLink, batchedHttpLink);
+
+    const wsLink = subscriptionUri
+      ? new WebSocketLink({ uri: subscriptionUri, options: { reconnect: true } })
+      : undefined;
+
+    const transport = wsLink ? createSplitLink(httpLink, wsLink) : httpLink;
+
+    return ApolloLink.from([onError(logError), transport]);
+  }
+
   getProvider = ({ client, children }: { client: GraphQLClient<any>; children: ReactNode }) => {
     return <GraphQLProvider client={client}>{children}</GraphQLProvider>;
   };
@@ -111,10 +174,14 @@ export class GraphqlUI {
   static dependencies = [];
   static slots = [];
 
-  static async provider() {
-    const graphqlUI = new GraphqlUI();
+  static defaultConfig: GraphQLConfig = {
+    enableBatching: false,
+    batchInterval: 50,
+    batchMax: 10,
+  };
 
-    return graphqlUI;
+  static async provider(_, config: GraphQLConfig) {
+    return new GraphqlUI(config);
   }
 }
 
