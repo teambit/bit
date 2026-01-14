@@ -258,7 +258,8 @@ export class WorkspaceManifestFactory {
       const currentDeps = this.dependencyResolver.getDependencies(component);
       const found = currentDeps.findByPkgNameOrCompId(name);
       // If not found, use '*' as fallback
-      return [name, found?.version || '*'];
+      // Use snapToSemver to convert raw hash versions to valid semver format (0.0.0-{hash})
+      return [name, found?.version ? snapToSemver(found.version) : '*'];
     });
     return fromPairs(resolved);
   }
