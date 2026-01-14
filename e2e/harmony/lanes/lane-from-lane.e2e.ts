@@ -200,6 +200,26 @@ describe('bit lane command', function () {
       const headOnNewLane = helper.command.getHeadOfLane('dev-v2', 'comp1');
       expect(headOnNewLane).to.equal(localSnap);
     });
+    describe('after creating the new lane, check the old lane state', () => {
+      before(() => {
+        helper.command.switchLocalLane('dev');
+      });
+      it('should show the old lane still has the local snap as head', () => {
+        const headOnOldLane = helper.command.getHeadOfLane('dev', 'comp1');
+        expect(headOnOldLane).to.equal(localSnap);
+      });
+      it('without importing, bit status shows the component as staged (does not know about remote divergence)', () => {
+        const status = helper.command.statusJson();
+        expect(status.stagedComponents).to.have.lengthOf(1);
+      });
+      it('after importing, bit status still shows as staged (not ideal but acceptable - user can reset or delete the lane)', () => {
+        helper.command.import();
+        const status = helper.command.statusJson();
+        // ideally this would show as merge-pending, but currently it shows as staged
+        // the user can either reset the component or delete the old lane
+        expect(status.stagedComponents).to.have.lengthOf(1);
+      });
+    });
   });
   describe("fork a lane when the default-scope is different than the original lane's scope", () => {
     before(() => {
