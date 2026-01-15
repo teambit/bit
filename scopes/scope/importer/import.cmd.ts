@@ -128,8 +128,8 @@ without arguments, fetches all workspace components' latest versions from their 
     ],
     [
       '',
-      'write-deps <workspace.jsonc|package.json>',
-      'write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions',
+      'write-deps <target>',
+      'write all workspace component dependencies to the specified target ("package.json" or "workspace.jsonc"), resolving conflicts by picking the ranges that match the highest versions',
     ],
     [
       '',
