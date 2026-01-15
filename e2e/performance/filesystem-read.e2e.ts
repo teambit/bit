@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { fileURLToPath } from 'url';
 
 // @ts-ignore
