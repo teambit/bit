@@ -93,6 +93,7 @@ import type {
 } from './workspace.main.runtime';
 import type { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
+import { WorkspaceComponentLoaderV2 } from './workspace-component/loader-v2/workspace-component-loader-v2';
 import type { ShouldLoadFunc } from './build-graph-from-fs';
 import { GraphFromFsBuilder } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
@@ -262,7 +263,20 @@ export class Workspace implements ComponentFactory {
     private configStore: ConfigStoreMain
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-    this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
+
+    // Use V2 loader if feature flag is enabled
+    if (WorkspaceComponentLoaderV2.isEnabled()) {
+      this.componentLoader = new WorkspaceComponentLoaderV2(
+        this,
+        logger,
+        dependencyResolver,
+        envs,
+        aspectLoader
+      ) as any;
+    } else {
+      this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
+    }
+
     this.validateConfig();
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
@@ -1572,7 +1586,9 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       return false; // it's a new component
     }
     const consumerComp = component.state._consumer as ConsumerComponent;
-    if (typeof consumerComp._isModified === 'boolean') return consumerComp._isModified;
+    if (typeof consumerComp._isModified === 'boolean') {
+      return consumerComp._isModified;
+    }
     const componentStatus = await this.getComponentStatusById(component.id);
     return componentStatus.modified === true;
   }
