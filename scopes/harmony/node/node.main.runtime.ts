@@ -190,7 +190,7 @@ export class NodeMain {
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerAspect, workerMain, harmony);
       generator.registerComponentTemplate(() => getTemplates(envContext));
-      generator.registerWorkspaceTemplate(getStarters(envContext));
+      generator.registerWorkspaceTemplate(() => getStarters(envContext));
     }
     return new NodeMain(react, tsAspect, nodeEnv, envs);
   }

@@ -473,7 +473,7 @@ export class ReactMain {
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerMain, workerMain, harmony);
       generator.registerComponentTemplate(() => getTemplates(envContext));
-      generator.registerWorkspaceTemplate(getStarters(envContext));
+      generator.registerWorkspaceTemplate(() => getStarters(envContext));
     }
 
     if (application) application.registerAppType(appType);
