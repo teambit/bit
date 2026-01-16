@@ -43,7 +43,7 @@ import { generatorSchema } from './generator.graphql';
 import type { GenerateResult, InstallOptions, OnComponentCreateFn } from './component-generator';
 import { ComponentGenerator } from './component-generator';
 import { WorkspaceGenerator } from './workspace-generator';
-import type { WorkspaceTemplate } from './workspace-template';
+import type { GetWorkspaceTemplates, WorkspaceTemplate } from './workspace-template';
 import type { NewOptions } from './new.cmd';
 import { NewCmd } from './new.cmd';
 import {
@@ -59,7 +59,7 @@ import { WorkspacePathExists } from './exceptions/workspace-path-exists';
 import { GLOBAL_SCOPE } from '@teambit/legacy.constants';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[] | GetComponentTemplates>;
-export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
+export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[] | GetWorkspaceTemplates>;
 export type OnComponentCreateSlot = SlotRegistry<OnComponentCreateFn>;
 
 export type TemplateDescriptor = {
@@ -146,7 +146,7 @@ export class GeneratorMain {
   /**
    * register a new workspace starter.
    */
-  registerWorkspaceTemplate(templates: WorkspaceTemplate[]) {
+  registerWorkspaceTemplate(templates: WorkspaceTemplate[] | GetWorkspaceTemplates) {
     this.workspaceTemplateSlot.register(templates);
     return this;
   }
@@ -561,7 +561,9 @@ the reason is that after refactoring, the code will have this invalid class: "cl
   private getAllWorkspaceTemplatesFlattened(): Array<{ id: string; template: WorkspaceTemplate }> {
     const templatesByAspects = this.workspaceTemplateSlot.toArray();
     return templatesByAspects.flatMap(([id, workspaceTemplates]) => {
-      return workspaceTemplates.map((template) => ({
+      const resolvedWorkspaceTemplates =
+        typeof workspaceTemplates === 'function' ? workspaceTemplates() : workspaceTemplates;
+      return resolvedWorkspaceTemplates.map((template) => ({
         id,
         template,
       }));
@@ -775,7 +777,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
         starterTemplate,
         starterTemplateStandalone,
       ]);
-    generator.registerWorkspaceTemplate([BasicWorkspaceStarter]);
+    generator.registerWorkspaceTemplate(() => [BasicWorkspaceStarter]);
 
     return generator;
   }
