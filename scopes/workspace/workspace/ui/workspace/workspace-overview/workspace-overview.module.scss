@@ -1,5 +1,5 @@
 .container {
-  padding: 80px 5% 150px 5%;
+  padding: 24px 5% 150px 5%;
   overflow-y: auto;
   height: 100%;
   box-sizing: border-box;
@@ -191,6 +191,8 @@
   display: flex;
   align-items: center;
   margin-left: auto;
+  height: 32px;
+  font-size: 14px;
 }
 
 .cardGrid {
