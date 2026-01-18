@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=node:22.14.0-alpine
+ARG BASE_IMAGE=node:22.22.0-alpine
 FROM $BASE_IMAGE
 ARG BIT_VERSION='1.11.31'
 # Install Git
