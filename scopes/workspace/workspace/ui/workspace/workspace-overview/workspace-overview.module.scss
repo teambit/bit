@@ -1,3 +1,5 @@
+@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
 .container {
   padding: 24px 5% 150px 5%;
   overflow-y: auto;
@@ -23,7 +25,7 @@
   padding: 4px;
   height: 15px;
   margin-right: 4px;
-  z-index: 100;
+  z-index: $nav-z-index;
   border-radius: 8px;
   margin-bottom: 4px;
   box-shadow: 0px 2px 18px rgb(0 0 0 / 10%);
@@ -44,7 +46,7 @@
   justify-content: space-between;
   margin-bottom: 24px;
   position: relative;
-  z-index: 4000;
+  z-index: $modal-z-index - 1;
 }
 
 .aggButtons {
@@ -129,7 +131,7 @@
 }
 
 .filterPanel :global(.menu) {
-  z-index: 4000 !important;
+  z-index: $modal-z-index - 1 !important;
   border-radius: 8px !important;
   padding: 8px 0 !important;
 }
