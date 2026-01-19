@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import { sortNamespacesAdvanced, sortItemsByNamespace } from './namespace-sort';
-import { filterItems, parseActiveFilters } from './filter-utils';
+import { filterItems, type ActiveFilters } from './filter-utils';
 import type { WorkspaceItem, AggregationType, AggregationGroup, AggregationResult } from './workspace-overview.types';
 
-export function useWorkspaceAggregation(items: WorkspaceItem[], aggregation: AggregationType): AggregationResult {
-  const search = new URLSearchParams(window.location.search);
-  const filters = parseActiveFilters(search);
-
+export function useWorkspaceAggregation(
+  items: WorkspaceItem[],
+  aggregation: AggregationType,
+  filters: ActiveFilters
+): AggregationResult {
   const filtered = useMemo(() => filterItems(items, filters), [items, filters]);
 
   if (aggregation === 'none') {
