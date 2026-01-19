@@ -34,8 +34,11 @@
         "@babel/register": "7.28.3",
         "@babel/runtime": "7.28.3",
         "@babel/types": "7.28.2",
+        "@bitdev/node.generators.node-starters": "^0.0.12",
         "@bitdev/node.generators.node-templates": "^4.0.1",
+        "@bitdev/react.generators.react-starters": "^1.1.2",
         "@bitdev/react.generators.react-templates": "^4.0.2",
+        "@bitdev/symphony.generators.symphony-starters": "^0.0.9",
         "@bitdev/symphony.generators.symphony-templates": "^3.0.4",
         "@dagrejs/dagre": "^1.1.2",
         "@graphql-modules/core": "0.7.17",
@@ -700,7 +703,7 @@
       "uri-js": "npm:uri-js-replace",
       "encoding": "-"
     },
-    "nodeVersion": "22.14.0",
+    "nodeVersion": "22.22.0",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
@@ -779,7 +782,7 @@
         "packageJson": {
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "bvm": {
-            "node": "22.14.0"
+            "node": "22.22.0"
           },
           "engines": {
             "node": ">=18.12.0"
