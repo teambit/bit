@@ -44,7 +44,7 @@
   justify-content: space-between;
   margin-bottom: 24px;
   position: relative;
-  z-index: 100000;
+  z-index: 4000;
 }
 
 .aggButtons {
@@ -129,7 +129,7 @@
 }
 
 .filterPanel :global(.menu) {
-  z-index: 200000 !important;
+  z-index: 4000 !important;
   border-radius: 8px !important;
   padding: 8px 0 !important;
 }
