@@ -757,15 +757,19 @@ export class IsolatorMain {
 
     // rewrite the package-json with the component dependencies in it. the original package.json
     // that was written before, didn't have these dependencies in order for the package-manager to
-    // be able to install them without crushing when the versions don't exist yet
-    capsulesWithPackagesData.forEach((capsuleWithPackageData) => {
-      const { currentPackageJson, capsule } = capsuleWithPackageData;
-      if (!currentPackageJson)
-        throw new Error(
-          `isolator.createCapsules, unable to find currentPackageJson for ${capsule.component.id.toString()}`
-        );
-      capsuleWithPackageData.capsule.fs.writeFileSync(PACKAGE_JSON, JSON.stringify(currentPackageJson, null, 2));
-    });
+    // be able to install them without crushing when the versions don't exist yet.
+    // skip this rewrite when populateArtifactsFrom is set, because the package.json was already
+    // written with the correct (merged) dependencies from the last build in writeComponentsInCapsules.
+    if (!opts.populateArtifactsFrom) {
+      capsulesWithPackagesData.forEach((capsuleWithPackageData) => {
+        const { currentPackageJson, capsule } = capsuleWithPackageData;
+        if (!currentPackageJson)
+          throw new Error(
+            `isolator.createCapsules, unable to find currentPackageJson for ${capsule.component.id.toString()}`
+          );
+        capsuleWithPackageData.capsule.fs.writeFileSync(PACKAGE_JSON, JSON.stringify(currentPackageJson, null, 2));
+      });
+    }
     await this.markCapsulesAsReady(capsuleList);
     if (longProcessLogger) {
       longProcessLogger.end();
