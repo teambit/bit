@@ -111,6 +111,11 @@ export class ComponentWriterMain {
         import: false,
         writeConfigFiles: !skipWriteConfigFiles,
         dependenciesGraph: await this.workspace.scope.getDependenciesGraphByComponentIds(componentIds),
+        // Enable addMissingDeps to handle cases where env detectors aren't available on first install
+        // (e.g., when importing a component that uses a custom env with custom file extension
+        // detectors like .vue files). The env gets installed during the first pass, and then
+        // addMissingDeps will re-detect dependencies with the env now available.
+        addMissingDeps: true,
       };
       await this.installer.install(undefined, installOpts);
       this.logger.debug('installPackagesGracefully, completed installing packages successfully');
