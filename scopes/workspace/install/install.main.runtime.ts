@@ -374,7 +374,7 @@ export class InstallMain {
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     };
-    const { linkedRootDeps } = await this.calculateLinks(linkOpts);
+    const { linkedRootDeps } = await this.calculateLinks([], linkOpts);
     // eslint-disable-next-line prefer-const
     let { mergedRootPolicy, componentsAndManifests: current } = await this._getComponentsManifestsAndRootPolicy(
       installer,
@@ -1139,10 +1139,11 @@ export class InstallMain {
    * This information may then be passed to the package manager, which will create the links on its own.
    */
   async calculateLinks(
+    ids: ComponentID[],
     options: WorkspaceLinkOptions = {}
   ): Promise<{ linkResults: WorkspaceLinkResults; linkedRootDeps: Record<string, string> }> {
     await pMapSeries(this.preLinkSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
-    const compDirMap = await this.getComponentsDirectory([]);
+    const compDirMap = await this.getComponentsDirectory(ids);
     const linker = this.dependencyResolver.getLinker({
       rootDir: this.workspace.path,
       linkingOptions: options,
@@ -1169,8 +1170,9 @@ export class InstallMain {
     return linkToNodeModulesWithCodemod(this.workspace, bitIds, options?.rewire ?? false);
   }
 
-  async link(options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
-    const { linkResults, linkedRootDeps } = await this.calculateLinks(options);
+  async link(ids: string[], options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
+    const componentIds = await Promise.all(ids.map((id) => this.workspace.resolveComponentId(id)));
+    const { linkResults, linkedRootDeps } = await this.calculateLinks(componentIds, options);
     await createLinks(options.linkToDir ?? this.workspace.path, linkedRootDeps, {
       avoidHardLink: true,
       skipIfSymlinkValid: true,
@@ -1274,7 +1276,7 @@ export class InstallMain {
       return;
     }
     if (needLink) {
-      await this.link();
+      await this.link([]);
     }
   }
 

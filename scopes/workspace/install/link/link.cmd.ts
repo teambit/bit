@@ -114,7 +114,7 @@ useful for development when components need to reference each other or when debu
       fetchObject: !opts.skipFetchingObjects,
       includePeers: opts.peers,
     };
-    const linkResults = await this.install.link(linkOpts);
+    const linkResults = await this.install.link(ids ?? [], linkOpts);
     return linkResults;
   }
 }
