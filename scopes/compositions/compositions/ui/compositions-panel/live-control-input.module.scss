@@ -1,3 +1,20 @@
+@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
 .wrapper {
   padding: 4px 0;
+}
+
+.portalMenu {
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--surface-neutral-color, #fff);
+  border: 1px solid var(--border-medium-color, #ededed);
+  border-radius: 8px;
+  box-shadow: var(--bit-shadow-hover-low);
+  position: fixed;
+  z-index: $modal-z-index - 1;
+}
+
+.portalMenuItem {
+  cursor: pointer;
 }
