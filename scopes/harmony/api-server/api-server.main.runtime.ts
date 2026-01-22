@@ -1,5 +1,4 @@
 import type { CLIMain } from '@teambit/cli';
-import { createProxyServer } from 'http-proxy';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { Port } from '@teambit/toolbox.network.get-port';
 import fs from 'fs-extra';
@@ -45,6 +44,7 @@ import { IDERoute } from './ide.route';
 import { APIForIDE } from './api-for-ide';
 import { SSEEventsRoute } from './sse-events.route';
 import { join } from 'path';
+import { execSync } from 'child_process';
 import { CLIRawRoute } from './cli-raw.route';
 import type { ApplicationMain } from '@teambit/application';
 import { ApplicationAspect } from '@teambit/application';
@@ -186,6 +186,16 @@ export class ApiServerMain {
     app.use(
       '/websocket-server/subscriptions',
       createProxyMiddleware({
+        on: {
+          proxyReqWs: (proxyReq) => {
+            Object.entries(proxyHeaders).forEach(([key, value]) => {
+              proxyReq.setHeader(key, value);
+            });
+          },
+          error: (err) => {
+            this.logger.error('websocket cloud proxy error', err);
+          },
+        },
         pathFilter: '/',
         target: symphonyUrl,
         ws: true,
@@ -196,28 +206,6 @@ export class ApiServerMain {
 
     const server = await app.listen(port);
 
-    const proxServer = createProxyServer();
-    server.on('upgrade', (req, socket, head) => {
-      req.url = req.url!.replace(/^.+?[/]/, '/');
-      try {
-        proxServer.ws(
-          req,
-          socket,
-          head,
-          {
-            target: `${symphonyUrl}/websocket-server`,
-            secure: false, // Disable SSL verification for proxy to remote server
-            changeOrigin: true,
-          },
-          (error) => {
-            this.logger.error(`failed to proxy ws: ${error.message}`, error);
-          }
-        );
-      } catch (error: any) {
-        this.logger.error(`failed to proxy ws: ${error.message}`, error);
-      }
-    });
-
     return new Promise((resolve, reject) => {
       server.on('error', (err) => {
         reject(err);
@@ -226,6 +214,7 @@ export class ApiServerMain {
         // important! if you change the message here, change it also in server-forever.ts and also in the vscode extension.
         this.logger.consoleSuccess(`Bit Server is listening on port ${port}`);
         this.writeUsedPort(port);
+        this.startParentProcessMonitor();
         resolve(port);
       });
     });
@@ -234,6 +223,71 @@ export class ApiServerMain {
   writeUsedPort(port: number) {
     const filePath = this.getServerPortFilePath();
     fs.writeFileSync(filePath, port.toString());
+  }
+
+  /**
+   * Monitor the parent process (typically VSCode) and shut down if it dies.
+   *
+   * On Unix-like systems (macOS, Linux), when a parent process dies, orphaned children are
+   * re-parented to PID 1 (init/launchd). By watching for `process.ppid` changing from
+   * the original value to 1, we can detect that the parent exited and proactively
+   * shut down the bit server to avoid leaving stale background processes running.
+   *
+   * Note: This orphan detection does not work on Windows, as Windows does not re-parent
+   * processes to PID 1. On Windows, this method only logs the parent process info at startup.
+   */
+  private startParentProcessMonitor() {
+    const originalPpid = process.ppid;
+
+    // Log parent process info at startup
+    const parentInfo = this.getProcessInfo(originalPpid);
+    this.logger.debug(
+      `bit server started. PID: ${process.pid}, Parent PID: ${originalPpid}, Parent command: ${parentInfo}`
+    );
+
+    // Skip orphan detection on Windows - PPID doesn't change to 1 when parent dies
+    if (process.platform === 'win32') {
+      return;
+    }
+
+    const checkInterval = 5000; // Check every 5 seconds
+    const intervalId = setInterval(() => {
+      const currentPpid = process.ppid;
+      // If PPID changed to 1, our parent (e.g., VSCode) died and we were re-parented to init
+      if (currentPpid === 1 && originalPpid !== 1) {
+        this.logger.debug(
+          `Parent process died (was PID ${originalPpid}: ${parentInfo}). Current PPID is now 1 (init/launchd). Shutting down bit server.`
+        );
+        clearInterval(intervalId);
+        process.exit(0);
+      }
+    }, checkInterval);
+
+    // Don't let this interval keep the process alive if everything else is done
+    intervalId.unref();
+  }
+
+  /**
+   * Get the command/path of a process by its PID.
+   */
+  private getProcessInfo(pid: number): string {
+    try {
+      if (process.platform === 'win32') {
+        // Windows: use PowerShell Get-CimInstance (WMIC is deprecated/removed on modern Windows)
+        const psCommand = `Get-CimInstance Win32_Process -Filter 'ProcessId = ${pid}' | Select-Object -ExpandProperty CommandLine`;
+        const output = execSync(`powershell.exe -NoProfile -Command "${psCommand}"`, {
+          encoding: 'utf8',
+          timeout: 2000,
+        });
+        return output.trim() || 'unknown';
+      } else {
+        // macOS/Linux: use ps
+        const output = execSync(`ps -o command= -p ${pid}`, { encoding: 'utf8', timeout: 2000 });
+        return output.trim() || 'unknown';
+      }
+    } catch {
+      return 'unknown (process may have exited)';
+    }
   }
 
   async getRandomPort() {

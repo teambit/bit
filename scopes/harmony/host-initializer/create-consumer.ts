@@ -9,6 +9,12 @@ import { ConfigMain, WorkspaceConfig } from '@teambit/config';
 import { PackageJsonFile } from '@teambit/component.sources';
 import { pickBy } from 'lodash';
 
+/**
+ * The postinstall script added to package.json when using external package manager mode.
+ * This constant is exported so it can be used for checking/removing the script elsewhere.
+ */
+export const EXTERNAL_PM_POSTINSTALL_SCRIPT = 'bit link && bit compile && bit ws-config write';
+
 export async function createConsumer(
   projectPath: PathOsBasedAbsolute,
   standAlone = false, // no git
@@ -71,11 +77,10 @@ export async function createConsumer(
       // Handle package.json for external package manager mode
       const existingPackageJson = PackageJsonFile.loadSync(consumer.projectPath);
       if (existingPackageJson.fileExist) {
-        // Merge with existing package.json
+        // Merge with existing package.json - only add postinstall script, don't modify type
         const content = { ...existingPackageJson.packageJsonObject };
-        content.type = 'module';
         content.scripts = content.scripts || {};
-        content.scripts.postinstall = 'bit link && bit compile';
+        content.scripts.postinstall = EXTERNAL_PM_POSTINSTALL_SCRIPT;
 
         const packageJson = PackageJsonFile.create(consumer.projectPath, undefined, content);
         consumer.setPackageJson(packageJson);
@@ -84,7 +89,7 @@ export async function createConsumer(
         const jsonContent = {
           type: 'module',
           scripts: {
-            postinstall: 'bit link && bit compile',
+            postinstall: EXTERNAL_PM_POSTINSTALL_SCRIPT,
           },
         };
         const packageJson = PackageJsonFile.create(consumer.projectPath, undefined, jsonContent);

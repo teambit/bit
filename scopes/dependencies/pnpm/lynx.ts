@@ -3,6 +3,7 @@ import parsePackageName from 'parse-package-name';
 import { initDefaultReporter } from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
 import type { StoreController, WantedDependency } from '@pnpm/package-store';
+import { TRUSTED_PACKAGE_NAMES } from '@pnpm/plugin-trusted-deps';
 import { rebuild } from '@pnpm/plugin-commands-rebuild';
 import type { CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { createOrConnectStoreController } from '@pnpm/store-connection-manager';
@@ -38,6 +39,13 @@ import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-pat
 import { isEqual } from 'lodash';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
+
+/**
+ * Packages that are known to have risky or unnecessary build scripts.
+ * These packages will be disallowed from running scripts by default,
+ * unless the user explicitly allows them in `allowScripts`.
+ */
+const UNTRUSTED_PACKAGE_NAMES = ['es5-ext', 'less', 'protobufjs', 'ssh', 'core-js-pure', 'core-js'];
 
 const installsRunning: Record<string, Promise<any>> = {};
 const cafsLocker = new Map<string, number>();
@@ -419,7 +427,19 @@ function resolveScriptPolicies({
           break;
       }
     }
+    for (const trustedPkgName of TRUSTED_PACKAGE_NAMES) {
+      if (allowScripts?.[trustedPkgName] == null) {
+        onlyBuiltDependencies.push(trustedPkgName);
+      }
+    }
+    // Add untrusted packages to ignoredBuiltDependencies unless the user explicitly allows them
+    for (const untrustedPkgName of UNTRUSTED_PACKAGE_NAMES) {
+      if (allowScripts?.[untrustedPkgName] !== true) {
+        ignoredBuiltDependencies.push(untrustedPkgName);
+      }
+    }
   }
+
   return { neverBuiltDependencies: resolvedNeverBuilt, onlyBuiltDependencies, ignoredBuiltDependencies };
 }
 

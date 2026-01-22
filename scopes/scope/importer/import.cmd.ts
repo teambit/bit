@@ -42,6 +42,7 @@ type ImportFlags = {
   includeDeprecated?: boolean;
   writeDeps?: 'package.json' | 'workspace.jsonc';
   laneOnly?: boolean;
+  owner?: boolean;
 };
 
 export class ImportCmd implements Command {
@@ -127,8 +128,8 @@ without arguments, fetches all workspace components' latest versions from their 
     ],
     [
       '',
-      'write-deps <workspace.jsonc|package.json>',
-      'write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions',
+      'write-deps <target>',
+      'write all workspace component dependencies to the specified target ("package.json" or "workspace.jsonc"), resolving conflicts by picking the ranges that match the highest versions',
     ],
     [
       '',
@@ -141,6 +142,7 @@ without arguments, fetches all workspace components' latest versions from their 
       'lane-only',
       'when using wildcards on a lane, only import components that exist on the lane (never from main)',
     ],
+    ['', 'owner', 'treat the argument as an owner name and import all components from all scopes of that owner'],
   ] as CommandOptions;
   loader = true;
   remoteOp = true;
@@ -242,6 +244,7 @@ without arguments, fetches all workspace components' latest versions from their 
       includeDeprecated = false,
       writeDeps,
       laneOnly = false,
+      owner = false,
     }: ImportFlags
   ): Promise<ImportResult> {
     if (dependentsDryRun) {
@@ -267,6 +270,9 @@ without arguments, fetches all workspace components' latest versions from their 
     }
     if (!ids.length && trackOnly) {
       throw new BitError('you have to specify ids to use "--track-only" flag');
+    }
+    if (owner && ids.length !== 1) {
+      throw new BitError('--owner flag requires exactly one argument (the owner name)');
     }
     let mergeStrategy;
     if (merge && typeof merge === 'string') {
@@ -304,6 +310,7 @@ without arguments, fetches all workspace components' latest versions from their 
       includeDeprecated,
       writeDeps,
       laneOnly,
+      owner,
     };
     return this.importer.import(importOptions, this._packageManagerArgs);
   }

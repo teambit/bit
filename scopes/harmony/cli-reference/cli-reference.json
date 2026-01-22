@@ -35,6 +35,11 @@
             "j",
             "json",
             "output the commands info as JSON"
+          ],
+          [
+            "",
+            "skill <type>",
+            "generate output for Claude Code skill: \"commands\" (like bit --help) or \"flags\" (condensed flag reference)"
           ]
         ],
         "description": "generate an .md file with all commands details",
@@ -2157,8 +2162,8 @@
       ],
       [
         "",
-        "write-deps <workspace.jsonc|package.json>",
-        "write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions"
+        "write-deps <target>",
+        "write all workspace component dependencies to the specified target (\"package.json\" or \"workspace.jsonc\"), resolving conflicts by picking the ranges that match the highest versions"
       ],
       [
         "",
@@ -2174,6 +2179,11 @@
         "",
         "lane-only",
         "when using wildcards on a lane, only import components that exist on the lane (never from main)"
+      ],
+      [
+        "",
+        "owner",
+        "treat the argument as an owner name and import all components from all scopes of that owner"
       ]
     ],
     "description": "bring components from remote scopes into your workspace",
@@ -2403,7 +2413,7 @@
     "arguments": [
       {
         "name": "to",
-        "description": "permitted values: [head, latest, reset, {specific-version}, {head~x}]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes"
+        "description": "permitted values: `[head, latest, reset, {specific-version}, {head~x}]`. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes"
       },
       {
         "name": "component-pattern",
@@ -5433,7 +5443,7 @@
           },
           {
             "name": "config",
-            "description": "the aspect config. enter the config as a stringified JSON (e.g. '{\"foo\":\"bar\"}' ). when no config is provided, an aspect is set with an empty config ({})."
+            "description": "the aspect config. enter the config as a stringified JSON (e.g. `{\"foo\":\"bar\"}` ). when no config is provided, an aspect is set with an empty config ({})."
           }
         ]
       },

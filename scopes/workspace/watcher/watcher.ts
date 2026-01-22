@@ -30,7 +30,8 @@ import type { Event, Options as ParcelWatcherOptions } from '@parcel/watcher';
 import ParcelWatcher from '@parcel/watcher';
 import { spawnSync } from 'child_process';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
-import { WatcherDaemon, WatcherClient, getOrCreateWatcherConnection, type WatcherError } from './watcher-daemon';
+import { getOrCreateWatcherConnection } from './watcher-daemon';
+import type { WatcherDaemon, WatcherClient, WatcherError } from './watcher-daemon';
 import { formatFSEventsErrorMessage } from './fsevents-error';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: ComponentID; componentIds: ComponentID[] };
@@ -175,6 +176,52 @@ export class Watcher {
     return this.watchmanAvailable;
   }
 
+  /**
+   * Ensure .watchmanconfig exists when using Watchman without a .git directory.
+   * Watchman places cookie files (used for sync) in .git, .hg, or .svn directories.
+   * Without these, cookies appear in the workspace root. This config tells Watchman
+   * to use .bit directory instead, keeping cookie files hidden.
+   */
+  private async ensureWatchmanConfig(): Promise<void> {
+    // Only needed if no .git directory (Watchman uses .git for cookies by default)
+    const gitPath = join(this.workspace.path, '.git');
+    const gitExists = await fs.pathExists(gitPath);
+    if (gitExists) {
+      return;
+    }
+
+    const configPath = join(this.workspace.path, '.watchmanconfig');
+    const scopeDirName = basename(this.workspace.scope.path); // typically ".bit"
+    const desiredIgnoreVcs = ['.git', '.hg', '.svn', scopeDirName];
+
+    try {
+      const existingContent = await fs.readFile(configPath, 'utf-8');
+      const existingConfig = JSON.parse(existingContent);
+
+      // Check if scopeDirName already in ignore_vcs
+      if (existingConfig.ignore_vcs?.includes(scopeDirName)) {
+        return; // Already configured
+      }
+
+      // Merge with existing config
+      existingConfig.ignore_vcs = existingConfig.ignore_vcs
+        ? [...new Set([...existingConfig.ignore_vcs, scopeDirName])]
+        : desiredIgnoreVcs;
+
+      await fs.writeFile(configPath, JSON.stringify(existingConfig, null, 2) + '\n');
+      this.logger.debug(`Updated .watchmanconfig to include ${scopeDirName} in ignore_vcs`);
+    } catch (err: any) {
+      // File doesn't exist or is invalid JSON - create new config
+      // For other errors (permissions, disk space), log and attempt to create anyway
+      const isExpectedError = err.code === 'ENOENT' || err instanceof SyntaxError;
+      if (!isExpectedError) {
+        this.logger.debug(`Unexpected error reading .watchmanconfig: ${err.message}, creating new file`);
+      }
+      await fs.writeFile(configPath, JSON.stringify({ ignore_vcs: desiredIgnoreVcs }, null, 2) + '\n');
+      this.logger.debug(`Created .watchmanconfig with ${scopeDirName} in ignore_vcs`);
+    }
+  }
+
   async watch() {
     await this.setRootDirs();
     const componentIds = Object.values(this.rootDirs);
@@ -185,6 +232,12 @@ export class Watcher {
 
   private async watchParcel() {
     this.msgs?.onStart(this.workspace);
+
+    // Ensure .watchmanconfig exists before starting watch (for cookie file placement in .bit)
+    // Must be done before Parcel watcher starts, as Watchman only reads config at watch start
+    if (process.platform === 'darwin' && this.isWatchmanAvailable()) {
+      await this.ensureWatchmanConfig();
+    }
 
     // Use shared watcher daemon pattern to avoid FSEvents limit on macOS
     // FSEvents has a system-wide limit on concurrent watchers, which causes

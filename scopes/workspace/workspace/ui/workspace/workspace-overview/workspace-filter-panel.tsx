@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { ToggleButton } from '@teambit/design.inputs.toggle-button';
 import { BaseFilter } from '@teambit/component.filters.base-filter';
 import type { WorkspaceItem, AggregationType } from './workspace-overview.types';
@@ -7,8 +6,13 @@ import styles from './workspace-overview.module.scss';
 
 export interface WorkspaceFilterPanelProps {
   aggregation: AggregationType;
+  onAggregationChange: (agg: AggregationType) => void;
   availableAggregations: AggregationType[];
   items: WorkspaceItem[];
+  activeNamespaces: string[];
+  onNamespacesChange: (namespaces: string[]) => void;
+  activeScopes: string[];
+  onScopesChange: (scopes: string[]) => void;
 }
 
 const LABELS: Record<AggregationType, string> = {
@@ -17,9 +21,16 @@ const LABELS: Record<AggregationType, string> = {
   none: 'None',
 };
 
-export function WorkspaceFilterPanel({ aggregation, availableAggregations, items }: WorkspaceFilterPanelProps) {
-  const [searchParams, setSearchParams] = useSearchParams();
-
+export function WorkspaceFilterPanel({
+  aggregation,
+  onAggregationChange,
+  availableAggregations,
+  items,
+  activeNamespaces,
+  onNamespacesChange,
+  activeScopes,
+  onScopesChange,
+}: WorkspaceFilterPanelProps) {
   const namespaceOptions = useMemo(
     () =>
       [...new Set(items.map((i) => i.component.id.namespace || '/'))].map((v) => ({
@@ -36,32 +47,17 @@ export function WorkspaceFilterPanel({ aggregation, availableAggregations, items
     [items]
   );
 
-  const activeNamespaces = (searchParams.get('ns') || '')
-    .split(',')
-    .filter(Boolean)
-    .map((v) => ({ value: v }));
-
-  const activeScopes = (searchParams.get('scopes') || '')
-    .split(',')
-    .filter(Boolean)
-    .map((v) => ({ value: v }));
+  const activeNsOptions = activeNamespaces.map((v) => ({ value: v }));
+  const activeScopeOptions = activeScopes.map((v) => ({ value: v }));
 
   const applyNs = (opts) => {
     const list = opts.map((o) => o.value).filter((v): v is string => typeof v === 'string');
-
-    if (list.length) searchParams.set('ns', list.join(','));
-    else searchParams.delete('ns');
-
-    setSearchParams(searchParams);
+    onNamespacesChange(list);
   };
 
   const applyScopes = (opts) => {
     const list = opts.map((o) => o.value).filter((v): v is string => typeof v === 'string');
-
-    if (list.length) searchParams.set('scopes', list.join(','));
-    else searchParams.delete('scopes');
-
-    setSearchParams(searchParams);
+    onScopesChange(list);
   };
 
   const currentIndex = Math.max(
@@ -71,8 +67,7 @@ export function WorkspaceFilterPanel({ aggregation, availableAggregations, items
 
   const applyAgg = (i: number) => {
     const agg = availableAggregations[i];
-    searchParams.set('aggregation', agg);
-    setSearchParams(searchParams);
+    onAggregationChange(agg);
   };
 
   return (
@@ -82,7 +77,7 @@ export function WorkspaceFilterPanel({ aggregation, availableAggregations, items
           id="namespaces"
           placeholder="Namespaces"
           options={namespaceOptions}
-          activeOptions={activeNamespaces}
+          activeOptions={activeNsOptions}
           onChange={applyNs}
           isSearchable
         />
@@ -91,7 +86,7 @@ export function WorkspaceFilterPanel({ aggregation, availableAggregations, items
           id="scopes"
           placeholder="Scopes"
           options={scopeOptions}
-          activeOptions={activeScopes}
+          activeOptions={activeScopeOptions}
           onChange={applyScopes}
           isSearchable
         />
