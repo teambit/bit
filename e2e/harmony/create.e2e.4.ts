@@ -203,15 +203,19 @@ describe('create extension', function () {
     });
   });
   describe('external package manager mode', () => {
+    let pkgJson;
     before(() => {
       // create a new workspace that uses an external package manager
       helper.scopeHelper.cleanWorkspace();
       helper.command.init('--external-package-manager');
       helper.command.create('module', 'simple');
+      pkgJson = helper.fs.readJsonFile('package.json');
     });
-    it('should write dependencies to package.json', () => {
-      const pkgJson = helper.fs.readJsonFile('package.json');
-      expect(pkgJson.dependencies.eslint != null).to.eq(true);
+    it('should write dependencies of the component to package.json', () => {
+      expect(pkgJson.dependencies['@bitdev/node.node-env'] != null).to.eq(true);
+    });
+    it('should not write dependencies of the env to package.json', () => {
+      expect(pkgJson.dependencies.eslint == null).to.eq(true);
     });
     it('should not run installation', () => {
       expect(helper.fs.exists('node_modules/eslint')).to.eq(false);
