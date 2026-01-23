@@ -72,7 +72,10 @@ function SelectInput({ value, onChange, meta }: InputComponentProps) {
 
   const placeholderContent = options.find((o) => o.value === selectedValue)?.label;
 
-  const { position, style } = useOverlay(triggerRef, open);
+  const { position, style } = useOverlay(triggerRef, open, 0, {
+    paddingTop: 8,
+    paddingBottom: 8,
+  });
 
   const commitSelection = (v: string) => {
     onChange(v);
@@ -87,6 +90,7 @@ function SelectInput({ value, onChange, meta }: InputComponentProps) {
         open={open}
         onChange={(_, isOpen) => setOpen(isOpen)}
         position={position}
+        dropClass={overlayStyles.suppressNativeMenu}
       />
 
       {open && style && (
@@ -135,7 +139,9 @@ function ColorPickerPortal(props: any) {
   const [open, setOpen] = React.useState(false);
   const triggerRef = React.useRef<HTMLDivElement>(null);
 
-  const { position, style } = useOverlay(triggerRef, open);
+  const { position, style } = useOverlay(triggerRef, open, 4, {
+    padding: 16,
+  });
 
   return (
     <div ref={triggerRef}>
