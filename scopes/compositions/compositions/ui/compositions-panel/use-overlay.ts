@@ -7,15 +7,18 @@ export type OverlayStyle = {
   top?: number;
   bottom?: number;
   left: number;
-  width: number;
+  maxWidth: number;
   maxHeight: number;
-};
+} & React.CSSProperties;
 
-const GAP = 8;
-const MIN_HEIGHT = 120;
-const MAX_HEIGHT = 240;
+const GAP = 4;
 
-export function useOverlay(anchorRef: React.RefObject<HTMLElement>, open: boolean) {
+export function useOverlay(
+  anchorRef: React.RefObject<HTMLElement>,
+  open: boolean,
+  gap: number = GAP,
+  extraStyle?: React.CSSProperties
+) {
   const [position, setPosition] = React.useState<OverlayPosition>('bottom');
   const [style, setStyle] = React.useState<OverlayStyle | null>(null);
 
@@ -24,21 +27,21 @@ export function useOverlay(anchorRef: React.RefObject<HTMLElement>, open: boolea
 
     const rect = anchorRef.current.getBoundingClientRect();
 
-    const below = window.innerHeight - rect.bottom - GAP;
-    const above = rect.top - GAP;
+    const below = window.innerHeight - rect.bottom - gap;
+    const above = rect.top - gap;
 
-    const maxHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, below));
-    const shouldFlip = below < MIN_HEIGHT && above > below;
+    const shouldFlip = below < 240 && above > below;
 
     const pos: OverlayPosition = shouldFlip ? 'top' : 'bottom';
 
     setPosition(pos);
     setStyle({
+      ...extraStyle,
       left: rect.left,
-      width: rect.width,
-      maxHeight,
-      top: pos === 'bottom' ? rect.bottom + GAP : undefined,
-      bottom: pos === 'top' ? window.innerHeight - rect.top + GAP : undefined,
+      maxWidth: rect.width,
+      maxHeight: 240,
+      top: pos === 'bottom' ? rect.bottom + gap : undefined,
+      bottom: pos === 'top' ? window.innerHeight - rect.top + gap : undefined,
     });
   }, [open]);
 
