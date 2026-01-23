@@ -41,7 +41,6 @@ export {
 export {
   type LiveControlsSubscriber,
   type ChannelState,
-  liveControlsRegistry,
   LiveControlsRegistry,
   type ChannelName,
 } from './live-controls-registry.js';

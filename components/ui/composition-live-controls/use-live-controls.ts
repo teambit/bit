@@ -5,7 +5,7 @@ import {
   BROADCAST_DESTROY_KEY,
   type Control,
 } from './composition-live-controls';
-import { liveControlsRegistry } from './live-controls-registry';
+import { LiveControlsRegistry } from './live-controls-registry';
 
 export type UseLiveControlsResult = {
   defs: Array<Control>;
@@ -17,9 +17,10 @@ export type UseLiveControlsResult = {
 };
 
 export function useLiveControls(channels?: string[]): UseLiveControlsResult {
-  const activeChannels = useMemo(() => (channels?.length ? channels : ['default']), [channels]);
+  const liveControlsRegistry = LiveControlsRegistry.getInstance();
 
-  const [hasLiveControls, setHasLiveControls] = useState(false);
+  const activeChannels = useMemo(() => (channels?.length ? channels : ['default']), [channels]);
+  const hasLiveControls = liveControlsRegistry.hasAnySubscribers;
   const [state, setState] = useState(() => liveControlsRegistry.getMergedState(activeChannels));
 
   const onEvent = useCallback(
@@ -28,7 +29,7 @@ export function useLiveControls(channels?: string[]): UseLiveControlsResult {
       if (!data?.type) return;
 
       if (data.type === 'composition-live-controls:activate') {
-        setHasLiveControls(true);
+        setState(liveControlsRegistry.getMergedState(activeChannels));
         return;
       }
 
@@ -65,22 +66,16 @@ export function useLiveControls(channels?: string[]): UseLiveControlsResult {
     return () => window.removeEventListener('message', onEvent);
   }, [onEvent]);
 
-  const onChange = useCallback(
-    (key: string, value: any) => {
-      liveControlsRegistry.broadcastUpdateToChannels(activeChannels, key, value);
-    },
-    [activeChannels]
-  );
+  const onChange = (key: string, value: any) => {
+    liveControlsRegistry.broadcastUpdateToChannels(activeChannels, key, value);
+  };
 
-  const setTimestamp = useCallback(
-    (ts: number) => {
-      if (ts === 0) {
-        liveControlsRegistry.resetTimestamps(activeChannels);
-        setState(liveControlsRegistry.getMergedState(activeChannels));
-      }
-    },
-    [activeChannels]
-  );
+  const setTimestamp = (ts: number) => {
+    if (ts === 0) {
+      liveControlsRegistry.resetTimestamps(activeChannels);
+      setState(liveControlsRegistry.getMergedState(activeChannels));
+    }
+  };
 
   return {
     defs: state.defs,

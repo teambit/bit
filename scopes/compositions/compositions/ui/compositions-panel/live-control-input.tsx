@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 
 import React from 'react';
+import ReactDOM from 'react-dom';
 import classNames from 'classnames';
 
 import { InputText } from '@teambit/design.inputs.input-text';
@@ -56,48 +57,86 @@ function LongTextInput({ value, onChange }: InputComponentProps) {
   return <TextArea value={inputValue} onChange={handleChange} />;
 }
 
-function SelectInput({ value, onChange, meta }: InputComponentProps) {
+export function SelectInput({ value, onChange, meta }: InputComponentProps) {
+  const triggerRef = React.useRef<HTMLParagraphElement>(null);
+
   const [selectedValue, setSelectedValue] = React.useState(value || '');
+  const [open, setOpen] = React.useState(false);
+  const [pos, setPos] = React.useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
 
   React.useEffect(() => {
     setSelectedValue(value || '');
   }, [value]);
 
-  const handleChange = (newValue: any) => {
-    onChange(newValue || '');
-    setSelectedValue(newValue || '');
-  };
-
-  const options: {
-    label: string;
-    value: string;
-  }[] = React.useMemo(() => {
-    if (!meta || !meta.options) return [];
-    return meta.options.map((option: SelectOption) => {
-      if (typeof option === 'string') {
-        return { label: option, value: option };
-      }
-      return option;
-    });
+  const options = React.useMemo<{ label: string; value: string }[]>(() => {
+    if (!meta?.options) return [];
+    return meta.options.map((option: SelectOption) =>
+      typeof option === 'string' ? { label: option, value: option } : option
+    );
   }, [meta]);
 
   const placeholderContent = options.find((o) => o.value === selectedValue)?.label;
 
+  // measure trigger when opening
+  React.useLayoutEffect(() => {
+    if (!open || !triggerRef.current) return;
+
+    const rect = triggerRef.current.getBoundingClientRect();
+    setPos({
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+    });
+  }, [open]);
+
+  const commitSelection = (newValue: any) => {
+    const v = newValue || '';
+    onChange(v);
+    setSelectedValue(v);
+    setOpen(false);
+  };
+
   return (
-    <p className={classNames(styles.wrapper)}>
-      <Dropdown placeholderContent={placeholderContent}>
-        {options.map((option) => {
-          return (
-            <MenuItem
-              active={option.value === selectedValue}
-              key={option.value}
-              onClick={() => handleChange(option.value)}
-            >
-              {option.label}
-            </MenuItem>
-          );
-        })}
-      </Dropdown>
+    <p ref={triggerRef} className={classNames(styles.wrapper)}>
+      <Dropdown placeholderContent={placeholderContent} open={open} onChange={(_, isOpen) => setOpen(isOpen)} />
+
+      {open &&
+        pos &&
+        ReactDOM.createPortal(
+          <div
+            className={styles.portalMenu}
+            style={{
+              position: 'fixed',
+              top: pos.top,
+              left: pos.left,
+              width: pos.width,
+              zIndex: 1000,
+            }}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            {options.map((option) => (
+              <MenuItem
+                className={styles.portalMenuItem}
+                key={option.value}
+                active={option.value === selectedValue}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  commitSelection(option.value);
+                }}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
+          </div>,
+          document.body
+        )}
     </p>
   );
 }

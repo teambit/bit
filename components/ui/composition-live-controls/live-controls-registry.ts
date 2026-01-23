@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { Control } from './composition-live-controls';
+import { type Control } from './composition-live-controls';
 
 export type ChannelName = string;
 
@@ -16,6 +16,15 @@ export type ChannelState = {
 };
 
 export class LiveControlsRegistry {
+  private static _instance: LiveControlsRegistry | undefined;
+
+  static getInstance() {
+    if (!this._instance) {
+      this._instance = new LiveControlsRegistry();
+    }
+    return this._instance;
+  }
+
   private channels = new Map<ChannelName, LiveControlsSubscriber[]>();
 
   private state = new Map<ChannelName, ChannelState>();
@@ -80,6 +89,10 @@ export class LiveControlsRegistry {
   getSubscribers(channel?: ChannelName): LiveControlsSubscriber[] {
     const key = this.normalize(channel);
     return this.channels.get(key) || [];
+  }
+
+  get hasAnySubscribers(): boolean {
+    return [...this.channels.values()].some((list) => list.length > 0);
   }
 
   registerReadyState(channel: ChannelName, defs: any[], values: Record<string, any>, timestamp: number, win: Window) {
@@ -172,5 +185,3 @@ export class LiveControlsRegistry {
     this.state.clear();
   }
 }
-
-export const liveControlsRegistry = new LiveControlsRegistry();

@@ -1,3 +1,21 @@
 .wrapper {
   padding: 4px 0;
 }
+
+.dropdownMenuScrollable {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.portalMenu {
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--surface-neutral-color, #fff);
+  border: 1px solid var(--border-medium-color, #ededed);
+  border-radius: 8px;
+  box-shadow: var(--bit-shadow-hover-low);
+}
+
+.portalMenuItem {
+  cursor: pointer;
+}

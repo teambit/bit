@@ -246,7 +246,9 @@ export function CompositionCompare(props: CompositionCompareProps) {
         </div>
       )}
       <CompositionToolbar />
-      <LiveControlsRenderer />
+      <div className={styles.liveControlsContainer}>
+        <LiveControlsRenderer />
+      </div>
       <CompareSplitLayoutPreset base={BaseLayout} compare={CompareLayout} />
     </React.Fragment>
   );
