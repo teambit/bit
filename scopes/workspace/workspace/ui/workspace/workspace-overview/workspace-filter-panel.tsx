@@ -94,6 +94,7 @@ export function WorkspaceFilterPanel({
 
       <div className={styles.rightAggToggle}>
         <ToggleButton
+          className={styles.toggleBtn}
           defaultIndex={currentIndex}
           onOptionSelect={(idx) => applyAgg(idx)}
           options={availableAggregations.map((agg) => ({
