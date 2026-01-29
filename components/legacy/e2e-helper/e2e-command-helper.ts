@@ -894,14 +894,7 @@ export default class CommandHelper {
     runCmdOpts?: { envVariables?: Record<string, string> }
   ) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(
-      `bit install ${packages} ${parsedOpts}`,
-      cwd,
-      'pipe',
-      undefined,
-      false,
-      runCmdOpts?.envVariables
-    );
+    return this.runCmd(`bit install ${packages} ${parsedOpts}`, cwd, 'pipe', undefined, false, runCmdOpts?.envVariables);
   }
   update(flags?: string) {
     return this.runCmd(`bit update ${flags || ''}`);
