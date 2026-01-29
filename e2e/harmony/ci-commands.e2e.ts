@@ -148,6 +148,70 @@ describe('ci commands', function () {
     });
   });
 
+  describe('bit ci merge with --skip-push flag', () => {
+    let mergeOutput: string;
+    let defaultBranch: string;
+    let localCommitSha: string;
+    let remoteCommitSha: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      defaultBranch = setupComponentsAndInitialCommit();
+
+      // Create feature branch and make changes
+      helper.command.runCmd('git checkout -b feature/test-skip-push');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("skip push test");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "fix: component update for skip-push test"');
+
+      // Simulate PR merge scenario by going back to default branch
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.runCmd('git merge feature/test-skip-push');
+
+      // Get the remote commit SHA before running ci merge
+      remoteCommitSha = helper.command.runCmd(`git rev-parse origin/${defaultBranch}`).trim();
+
+      // Run bit ci merge command with --skip-push
+      mergeOutput = helper.command.runCmd('bit ci merge --skip-push --message "test skip-push message"');
+
+      // Get the local commit SHA after running ci merge
+      localCommitSha = helper.command.runCmd('git rev-parse HEAD').trim();
+    });
+    it('should complete successfully', () => {
+      expect(mergeOutput).to.include('Merged PR');
+    });
+    it('should show skip-push message in output', () => {
+      expect(mergeOutput).to.include('Skipping git push');
+    });
+    it('should tag the component', () => {
+      const list = helper.command.listParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      expect(comp1).to.exist;
+      expect(comp1?.currentVersion).to.equal('0.0.2');
+    });
+    it('should export tagged components to remote scope', () => {
+      const list = helper.command.listRemoteScopeParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      expect(comp1?.localVersion).to.equal('0.0.2');
+    });
+    it('should create local git commit but NOT push to remote', () => {
+      // Local should be ahead of remote
+      expect(localCommitSha).to.not.equal(remoteCommitSha);
+
+      // Verify remote is still at the old commit
+      const currentRemoteSha = helper.command.runCmd(`git rev-parse origin/${defaultBranch}`).trim();
+      expect(currentRemoteSha).to.equal(remoteCommitSha);
+    });
+    it('should allow manual push after ci merge', () => {
+      // Simulate user pushing manually after ci merge
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+
+      // Now remote should be at the same commit as local
+      const currentRemoteSha = helper.command.runCmd(`git rev-parse origin/${defaultBranch}`).trim();
+      expect(currentRemoteSha).to.equal(localCommitSha);
+    });
+  });
+
   describe('multi-workspace scenario', () => {
     let prOutput: string;
     before(() => {
