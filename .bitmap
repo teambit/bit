@@ -583,6 +583,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/eject"
     },
+    "empty-env": {
+        "name": "empty-env",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.envs",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/envs/empty-env",
+        "config": {
+            "teambit.envs/env": {},
+            "teambit.envs/envs": {
+                "env": "teambit.envs/env"
+            }
+        }
+    },
     "entities/lane-diff": {
         "name": "entities/lane-diff",
         "scope": "teambit.lanes",
