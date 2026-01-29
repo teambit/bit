@@ -5,7 +5,13 @@ import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 
 import styles from './composition-dropdown.module.scss';
 
-export type DropdownItem = { id: string; label: string; href?: string; onClick?: (id: string, e) => void };
+export type DropdownItem = {
+  id: string;
+  label: string;
+  href?: string;
+  onClick?: (id: string, e) => void;
+  tag?: string;
+};
 
 export type CompositionDropdownProps = {
   selected?: Omit<DropdownItem, 'value'>;
@@ -21,7 +27,10 @@ export function CompositionDropdown(props: CompositionDropdownProps) {
       dropClass={styles.menu}
       placeholder={
         <div className={styles.placeholder}>
-          <div>{selected && selected.label}</div>
+          <div className={styles.placeholderText}>
+            <span className={styles.placeholderLabel}>{selected && selected.label}</span>
+            {selected?.tag && <span className={styles.tag}>{selected.tag}</span>}
+          </div>
           <Icon of="fat-arrow-down" />
         </div>
       }
@@ -56,7 +65,10 @@ function MenuItem(props: MenuItemProps) {
     <div ref={currentVersionRef} key={`${current.href}-container`}>
       {/* @ts-ignore */}
       <MenuLinkItem key={current.href} active={current.id === selected?.id} href={current.href} onClick={onClick}>
-        <div>{current.label}</div>
+        <div className={styles.menuItem}>
+          <span>{current.label}</span>
+          {current.tag && <span className={styles.tag}>{current.tag}</span>}
+        </div>
       </MenuLinkItem>
     </div>
   );

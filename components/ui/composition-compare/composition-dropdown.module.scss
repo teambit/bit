@@ -14,6 +14,34 @@
   background-color: var(--bit-bg-color, #ffffff);
 }
 
+.placeholderText {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.placeholderLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag {
+  font-size: 11px;
+  line-height: 16px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--on-background-color, #222222);
+}
+
 .menu {
   font-size: var(--bit-p-xs);
   border-radius: 6px;

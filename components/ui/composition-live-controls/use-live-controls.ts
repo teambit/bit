@@ -29,13 +29,17 @@ export function useLiveControls(channels?: string[]): UseLiveControlsResult {
       if (!data?.type) return;
 
       if (data.type === 'composition-live-controls:activate') {
-        setState(liveControlsRegistry.getMergedState(activeChannels));
+        // Only sync state if activate is for a channel we care about
+        const activateChannel = data.payload?.channel || 'default';
+        if (activeChannels.includes(activateChannel)) {
+          setState(liveControlsRegistry.getMergedState(activeChannels));
+        }
         return;
       }
 
       const channel = data.payload?.channel || 'default';
-      if (!activeChannels.includes(channel)) return;
 
+      // Always register data in the singleton registry - other hook instances may need it
       if (data.type === BROADCAST_READY_KEY) {
         liveControlsRegistry.register(channel, event.source as Window, data.payload.timestamp);
 
@@ -56,7 +60,10 @@ export function useLiveControls(channels?: string[]): UseLiveControlsResult {
         liveControlsRegistry.unregister(channel, event.source as Window);
       }
 
-      setState(liveControlsRegistry.getMergedState(activeChannels));
+      // Only update this hook's state if the channel matches what we're listening for
+      if (activeChannels.includes(channel)) {
+        setState(liveControlsRegistry.getMergedState(activeChannels));
+      }
     },
     [activeChannels]
   );
@@ -65,6 +72,11 @@ export function useLiveControls(channels?: string[]): UseLiveControlsResult {
     window.addEventListener('message', onEvent);
     return () => window.removeEventListener('message', onEvent);
   }, [onEvent]);
+
+  // Sync state when activeChannels change - registry may already have data for new channels
+  useEffect(() => {
+    setState(liveControlsRegistry.getMergedState(activeChannels));
+  }, [activeChannels]);
 
   const onChange = (key: string, value: any) => {
     liveControlsRegistry.broadcastUpdateToChannels(activeChannels, key, value);

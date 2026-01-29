@@ -45,4 +45,6 @@ export {
   type ChannelName,
 } from './live-controls-registry.js';
 
+export { type ControlSource, type ControlWithSource, DiffControlsModel } from './diff-controls-model.js';
+
 export { useLiveControls, type UseLiveControlsResult } from './use-live-controls.js';

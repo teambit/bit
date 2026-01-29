@@ -19,3 +19,31 @@
 .portalMenuItem {
   cursor: pointer;
 }
+
+.rangeWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rangeInput {
+  flex: 1;
+}
+
+.rangeValue {
+  min-width: 32px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--on-background-color, #222222);
+  opacity: 0.7;
+}
+
+.multiSelect {
+  width: 100%;
+  min-height: 72px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-medium-color, #ededed);
+  background: var(--background-color, #ffffff);
+  font-size: 12px;
+}

@@ -15,6 +15,16 @@ export type ChannelState = {
   timestamps: Map<Window, number>;
 };
 
+const DEBUG = false;
+const debug = (...args: any[]) => {
+  if (DEBUG) console.debug('[LiveControlsRegistry]', ...args);
+};
+
+/**
+ * Low-level registry for live controls channel state.
+ * Manages channel subscriptions, state storage, and broadcasts.
+ * Does not contain any diff-specific logic - that belongs in DiffControlsModel.
+ */
 export class LiveControlsRegistry {
   private static _instance: LiveControlsRegistry | undefined;
 
@@ -26,23 +36,20 @@ export class LiveControlsRegistry {
   }
 
   private channels = new Map<ChannelName, LiveControlsSubscriber[]>();
-
   private state = new Map<ChannelName, ChannelState>();
+  readonly DEFAULT_CHANNEL = 'default';
 
-  private readonly DEFAULT_CHANNEL = 'default';
-
-  private normalize(channel?: ChannelName) {
+  normalizeChannel(channel?: ChannelName): ChannelName {
     return channel || this.DEFAULT_CHANNEL;
+  }
+
+  getChannelNames(): ChannelName[] {
+    return Array.from(new Set([...this.channels.keys(), ...this.state.keys()]));
   }
 
   private ensureState(key: ChannelName): ChannelState {
     if (!this.state.has(key)) {
-      this.state.set(key, {
-        defs: [],
-        values: {},
-        ready: false,
-        timestamps: new Map(),
-      });
+      this.state.set(key, { defs: [], values: {}, ready: false, timestamps: new Map() });
     }
     return this.state.get(key)!;
   }
@@ -55,7 +62,8 @@ export class LiveControlsRegistry {
   }
 
   register(channel: ChannelName, iframeWindow: Window, timestamp: number) {
-    const key = this.normalize(channel);
+    const key = this.normalizeChannel(channel);
+    debug('register', { channel, key, timestamp });
 
     const list = this.ensureSubscribers(key);
     if (!list.find((s) => s.iframeWindow === iframeWindow)) {
@@ -67,8 +75,7 @@ export class LiveControlsRegistry {
   }
 
   unregister(channel: ChannelName, iframeWindow: Window) {
-    const key = this.normalize(channel);
-
+    const key = this.normalizeChannel(channel);
     const list = this.channels.get(key);
     if (list) {
       this.channels.set(
@@ -80,15 +87,12 @@ export class LiveControlsRegistry {
     const st = this.state.get(key);
     if (st) {
       st.timestamps.delete(iframeWindow);
-      if (st.timestamps.size === 0) {
-        st.ready = false;
-      }
+      if (st.timestamps.size === 0) st.ready = false;
     }
   }
 
   getSubscribers(channel?: ChannelName): LiveControlsSubscriber[] {
-    const key = this.normalize(channel);
-    return this.channels.get(key) || [];
+    return this.channels.get(this.normalizeChannel(channel)) || [];
   }
 
   get hasAnySubscribers(): boolean {
@@ -96,63 +100,36 @@ export class LiveControlsRegistry {
   }
 
   registerReadyState(channel: ChannelName, defs: any[], values: Record<string, any>, timestamp: number, win: Window) {
-    const key = this.normalize(channel);
+    const key = this.normalizeChannel(channel);
+    debug('registerReadyState', { channel, key, defsCount: defs.length, timestamp });
+
     const st = this.ensureState(key);
-
     st.timestamps.set(win, timestamp);
-
     st.defs = defs.length ? defs : st.defs;
     st.values = { ...st.values, ...values };
-
     st.ready = st.timestamps.size > 0;
-
     this.state.set(key, st);
   }
 
   updateValue(channel: ChannelName, key: string, value: any) {
-    const st = this.state.get(channel);
-    if (!st) return;
-
-    st.values[key] = value;
+    const st = this.state.get(this.normalizeChannel(channel));
+    if (st) st.values[key] = value;
   }
 
-  getState(channel: ChannelName): ChannelState | undefined {
-    return this.state.get(channel);
-  }
-
-  getMergedState(channels: string[]) {
-    const defsMap: Record<string, any> = {};
-    const values: Record<string, any> = {};
-    let ready = false;
-
-    channels.forEach((ch) => {
-      const s = this.state.get(ch);
-      if (!s) return;
-
-      s.defs.forEach((d) => {
-        defsMap[d.id] = d;
-      });
-
-      Object.assign(values, s.values);
-
-      if (s.ready) ready = true;
-    });
-
-    return {
-      defs: Object.values(defsMap),
-      values,
-      ready,
-    };
+  getState(channel?: ChannelName): ChannelState | undefined {
+    return this.state.get(this.normalizeChannel(channel));
   }
 
   broadcastUpdate(channel: ChannelName, key: string, value: any) {
-    const subs = this.getSubscribers(channel);
+    const normalizedChannel = this.normalizeChannel(channel);
+    const subs = this.getSubscribers(normalizedChannel);
+
     subs.forEach((sub) => {
       try {
         sub.iframeWindow.postMessage(
           {
             type: 'composition-live-controls:update',
-            payload: { channel, key, value },
+            payload: { channel: normalizedChannel, key, value },
           },
           '*'
         );
@@ -162,22 +139,56 @@ export class LiveControlsRegistry {
     });
   }
 
-  broadcastUpdateToChannels(channels: string[], key: string, value: any) {
-    channels.forEach((ch) => {
-      this.broadcastUpdate(ch, key, value);
-    });
+  resetChannel(channel: ChannelName) {
+    const key = this.normalizeChannel(channel);
+    const st = this.state.get(key);
+    if (!st) return;
+    st.timestamps.clear();
+    st.ready = false;
+    st.defs = [];
+    st.values = {};
   }
 
-  resetTimestamps(channels: string[]) {
-    channels.forEach((ch) => {
-      const st = this.state.get(ch);
-      if (!st) return;
+  // ---- Multi-channel utilities ----
 
-      st.timestamps.clear();
-      st.ready = false;
-      st.defs = [];
-      st.values = {};
-    });
+  /**
+   * Merge state from multiple channels into a single result.
+   * Used by useLiveControls hook to aggregate multiple channels.
+   */
+  getMergedState(channels: string[]) {
+    const defsMap: Record<string, any> = {};
+    const values: Record<string, any> = {};
+    let ready = false;
+
+    channels
+      .map((ch) => this.normalizeChannel(ch))
+      .forEach((ch) => {
+        const s = this.state.get(ch);
+        if (!s) return;
+        s.defs.forEach((d) => {
+          defsMap[d.id] = d;
+        });
+        Object.assign(values, s.values);
+        if (s.ready) ready = true;
+      });
+
+    return { defs: Object.values(defsMap), values, ready };
+  }
+
+  /**
+   * Broadcast an update to multiple channels.
+   */
+  broadcastUpdateToChannels(channels: string[], key: string, value: any) {
+    const uniqueChannels = [...new Set(channels.map((ch) => this.normalizeChannel(ch)))];
+    uniqueChannels.forEach((ch) => this.broadcastUpdate(ch, key, value));
+  }
+
+  /**
+   * Reset multiple channels at once.
+   */
+  resetTimestamps(channels: string[]) {
+    const uniqueChannels = [...new Set(channels.map((ch) => this.normalizeChannel(ch)))];
+    uniqueChannels.forEach((ch) => this.resetChannel(ch));
   }
 
   cleanupAll() {
