@@ -4367,6 +4367,11 @@
             "",
             "lane-name <name>",
             "specify the lane name to delete after merge (auto-detected if not provided)"
+          ],
+          [
+            "",
+            "skip-push",
+            "skip pushing the changes to the remote repository (useful when CI handles the push separately)"
           ]
         ],
         "description": "Tags and exports new semantic versions after merging a PR to main.",

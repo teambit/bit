@@ -414,6 +414,7 @@ By default, bumps patch versions when merging to main. If specific configuration
 | `--auto-merge-resolve <merge-strategy>` |       `-r`       | in case of merge conflict during checkout, resolve according to the provided strategy: [ours, theirs, manual] |
 | `--force-theirs`                        |                  | do not merge during checkout, just overwrite with incoming files                                              |
 | `--lane-name <name>`                    |                  | specify the lane name to delete after merge (auto-detected if not provided)                                   |
+| `--skip-push`                           |                  | skip pushing the changes to the remote repository (useful when CI handles the push separately)                |
 
 ---
 
