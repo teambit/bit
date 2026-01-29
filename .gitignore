@@ -74,4 +74,9 @@ package-lock.json
 !.yarn/versions
 
 # Claude Code files
-.claude/
+.claude/*
+!.claude/skills/
+
+# Release notes temp files (for review only)
+releases-docs/temp-files/
+

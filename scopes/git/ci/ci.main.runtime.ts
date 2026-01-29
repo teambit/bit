@@ -470,6 +470,7 @@ export class CiMain {
     autoMergeResolve,
     forceTheirs,
     laneName,
+    skipPush,
   }: {
     message?: string;
     build?: boolean;
@@ -483,6 +484,7 @@ export class CiMain {
     autoMergeResolve?: MergeStrategy;
     forceTheirs?: boolean;
     laneName?: string;
+    skipPush?: boolean;
   }) {
     // Capture the initial commit SHA before any operations modify the repository
     const initialCommitSha = await git.revparse(['HEAD']);
@@ -668,7 +670,11 @@ export class CiMain {
       });
 
       await git.pull('origin', defaultBranch, { '--rebase': 'true' });
-      await git.push('origin', defaultBranch);
+      if (skipPush) {
+        this.logger.console(chalk.yellow('Skipping git push (--skip-push flag)'));
+      } else {
+        await git.push('origin', defaultBranch);
+      }
     } else {
       this.logger.console(chalk.yellow('No components were tagged, skipping export and git operations'));
     }

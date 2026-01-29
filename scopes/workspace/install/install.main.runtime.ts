@@ -63,6 +63,7 @@ import type { BundlerMain } from '@teambit/bundler';
 import { BundlerAspect } from '@teambit/bundler';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
+import { EXTERNAL_PM_POSTINSTALL_SCRIPT } from '@teambit/host-initializer';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
@@ -104,6 +105,7 @@ export type WorkspaceInstallOptions = {
   writeConfigFiles?: boolean;
   skipPrune?: boolean;
   dependenciesGraph?: DependenciesGraph;
+  allowScripts?: Record<string, boolean>;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -344,6 +346,10 @@ export class InstallMain {
   }
 
   private async _installModules(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
+    if (options?.allowScripts) {
+      this.dependencyResolver.updateAllowedScripts(options.allowScripts);
+      await this.dependencyResolver.persistConfig('update allowScripts configuration');
+    }
     const pm = this.dependencyResolver.getPackageManager();
     this.logger.console(
       `installing dependencies in workspace using ${pm?.name} (${chalk.cyan(
@@ -386,7 +392,8 @@ export class InstallMain {
       dependenciesGraph: options?.dependenciesGraph,
       includeOptionalDeps: options?.includeOptionalDeps,
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
-      allowScripts: this.dependencyResolver.config.allowScripts,
+      allowScripts: this.dependencyResolver.getAllowedScripts(),
+      dangerouslyAllowAllScripts: this.dependencyResolver.config.dangerouslyAllowAllScripts,
       overrides: this.dependencyResolver.config.overrides,
       hoistPatterns: this.dependencyResolver.config.hoistPatterns,
       hoistInjectedDependencies: this.dependencyResolver.config.hoistInjectedDependencies,
@@ -927,7 +934,7 @@ export class InstallMain {
             await this.getRootComponentDirByRootId(this.workspace.rootComponentsPath, envId),
             {
               dependencies: {
-                ...(await this._getEnvDependencies(envId)),
+                ...(await this._getEnvDependencies(envId, workspaceDeps)),
                 ...workspaceDeps,
                 ...(await this._getEnvPackage(envId)),
               },
@@ -941,13 +948,29 @@ export class InstallMain {
     );
   }
 
-  private async _getEnvDependencies(envId: ComponentID): Promise<Record<string, string>> {
+  /**
+   * Get the env's own peer dependencies from its policy (env.jsonc).
+   * Resolves "+" version placeholders using workspaceDeps.
+   */
+  private async _getEnvDependencies(
+    envId: ComponentID,
+    workspaceDeps: Record<string, string>
+  ): Promise<Record<string, string>> {
     const policy = await this.dependencyResolver.getEnvPolicyFromEnvId(envId);
     if (!policy) return {};
+
     return Object.fromEntries(
       policy.selfPolicy.entries
         .filter(({ force, value }) => force && value.version !== '-')
-        .map(({ dependencyId, value }) => [dependencyId, value.version])
+        .map(({ dependencyId, value }) => {
+          let version = value.version;
+          // Resolve "+" version placeholders using workspace dependencies
+          // Similar to WorkspaceManifest._resolvePlusVersions
+          if (version === '+') {
+            version = workspaceDeps[dependencyId] || '*';
+          }
+          return [dependencyId, version];
+        })
     );
   }
 
@@ -986,7 +1009,7 @@ export class InstallMain {
               {
                 ...omit(appManifest, ['name', 'version']),
                 dependencies: {
-                  ...(await this._getEnvDependencies(envId)),
+                  ...(await this._getEnvDependencies(envId, workspaceDeps)),
                   ...appManifest.dependencies,
                   ...workspaceDeps,
                 },
@@ -1441,7 +1464,7 @@ export class InstallMain {
       }
 
       // Only remove our specific postInstall script, preserve user's custom scripts
-      if (packageJsonFile.packageJsonObject.scripts?.postinstall === 'bit link && bit compile') {
+      if (packageJsonFile.packageJsonObject.scripts?.postinstall === EXTERNAL_PM_POSTINSTALL_SCRIPT) {
         delete packageJsonFile.packageJsonObject.scripts.postinstall;
 
         // Clean up empty scripts object

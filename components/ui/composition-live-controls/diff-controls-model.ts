@@ -77,7 +77,6 @@ export class DiffControlsModel {
     if (source === 'compare') {
       return compareState?.values?.[controlId] ?? defaultState?.values?.[controlId];
     }
-    // For common, prefer base value, then compare, then default
     return baseState?.values?.[controlId] ?? compareState?.values?.[controlId] ?? defaultState?.values?.[controlId];
   }
 
@@ -110,11 +109,9 @@ export class DiffControlsModel {
     const compareState = this.isSameChannel ? baseState : this.registry.getState(this._compareChannel);
     const defaultState = this.registry.getState('default');
 
-    // Get defs, falling back to 'default' channel for backwards compatibility
     const baseDefs = baseState?.defs?.length ? baseState.defs : defaultState?.defs || [];
     const compareDefs = compareState?.defs?.length ? compareState.defs : defaultState?.defs || [];
 
-    // If using same source for both (same channel or both falling back to default)
     const baseSource = baseState?.defs?.length ? 'specific' : 'default';
     const compareSource = compareState?.defs?.length ? 'specific' : 'default';
     const usingSameSource = this.isSameChannel || (baseSource === 'default' && compareSource === 'default');
@@ -135,10 +132,19 @@ export class DiffControlsModel {
       if (!this.isSameChannel) {
         this.registry.broadcastUpdate(this._compareChannel, controlId, value);
       }
+      if (this._baseChannel !== 'default' && this._compareChannel !== 'default') {
+        this.registry.broadcastUpdate('default', controlId, value);
+      }
     } else if (source === 'base') {
       this.registry.broadcastUpdate(this._baseChannel, controlId, value);
+      if (this._baseChannel !== 'default') {
+        this.registry.broadcastUpdate('default', controlId, value);
+      }
     } else if (source === 'compare') {
       this.registry.broadcastUpdate(this._compareChannel, controlId, value);
+      if (this._compareChannel !== 'default') {
+        this.registry.broadcastUpdate('default', controlId, value);
+      }
     }
   }
 
@@ -162,26 +168,21 @@ export class DiffControlsModel {
     const result: ControlWithSource[] = [];
     const processed = new Set<string>();
 
-    // Process base controls
     baseMap.forEach((baseDef, id) => {
       const compareDef = compareMap.get(id);
       processed.add(id);
 
       if (!compareDef) {
-        // Only in base
         result.push({ ...baseDef, source: 'base' });
       } else if (this.areControlsEquivalent(baseDef, compareDef)) {
-        // Equivalent controls - merge into common, prefer label from either
         const def = baseDef.label ? baseDef : { ...baseDef, label: compareDef.label };
         result.push({ ...def, source: 'common' });
       } else {
-        // Different control definitions - show both separately
         result.push({ ...baseDef, source: 'base' });
         result.push({ ...compareDef, source: 'compare' });
       }
     });
 
-    // Process compare-only controls
     compareMap.forEach((compareDef, id) => {
       if (!processed.has(id)) {
         result.push({ ...compareDef, source: 'compare' });
@@ -197,17 +198,14 @@ export class DiffControlsModel {
    * Label is intentionally excluded - it's just display text.
    */
   private areControlsEquivalent(a: Control, b: Control): boolean {
-    // Compare input type
     if (this.getInputType(a) !== this.getInputType(b)) {
       return false;
     }
 
-    // Compare default values
     if (!this.areValuesEqual(a.defaultValue, b.defaultValue)) {
       return false;
     }
 
-    // Compare type-specific metadata
     const input = this.getInputType(a);
 
     if (input === 'select' || input === 'multiselect') {
@@ -239,13 +237,11 @@ export class DiffControlsModel {
     if (a === undefined || b === undefined) return a === b;
     if (a === null || b === null) return a === b;
 
-    // Handle arrays
     if (Array.isArray(a) && Array.isArray(b)) {
       if (a.length !== b.length) return false;
       return a.every((val, i) => this.areValuesEqual(val, b[i]));
     }
 
-    // Handle objects
     if (typeof a === 'object' && typeof b === 'object') {
       const keysA = Object.keys(a);
       const keysB = Object.keys(b);
@@ -263,7 +259,6 @@ export class DiffControlsModel {
 
     return a.every((optA, i) => {
       const optB = b[i];
-      // Options can be strings or { label, value } objects
       if (typeof optA === 'string' && typeof optB === 'string') {
         return optA === optB;
       }

@@ -212,9 +212,16 @@ export class WorkspaceManifestFactory {
       });
 
       const defaultPeerDependencies = await this._getDefaultPeerDependencies(component, packageNames);
+      const usedPeerDependencies = pickBy(defaultPeerDependencies, (_val, pkgName) => {
+        return (
+          depManifestBeforeFiltering.dependencies[pkgName] ||
+          depManifestBeforeFiltering.devDependencies[pkgName] ||
+          depManifestBeforeFiltering.peerDependencies[pkgName]
+        );
+      });
 
       depManifest.dependencies = {
-        ...defaultPeerDependencies,
+        ...usedPeerDependencies,
         ...unresolvedRuntimeMissingRootDeps,
         ...additionalDeps,
         ...depManifest.dependencies,
@@ -258,7 +265,8 @@ export class WorkspaceManifestFactory {
       const currentDeps = this.dependencyResolver.getDependencies(component);
       const found = currentDeps.findByPkgNameOrCompId(name);
       // If not found, use '*' as fallback
-      return [name, found?.version || '*'];
+      // Use snapToSemver to convert raw hash versions to valid semver format (0.0.0-{hash})
+      return [name, found?.version ? snapToSemver(found.version) : '*'];
     });
     return fromPairs(resolved);
   }

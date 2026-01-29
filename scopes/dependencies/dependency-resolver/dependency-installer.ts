@@ -104,6 +104,8 @@ export class DependencyInstaller {
 
     private allowScripts?: Record<string, boolean | 'warn'>,
 
+    private dangerouslyAllowAllScripts?: boolean,
+
     private preferOffline?: boolean,
 
     private minimumReleaseAge?: number,
@@ -216,6 +218,7 @@ export class DependencyInstaller {
       hidePackageManagerOutput,
       neverBuiltDependencies: this.neverBuiltDependencies,
       allowScripts: this.allowScripts,
+      dangerouslyAllowAllScripts: this.dangerouslyAllowAllScripts,
       preferOffline: this.preferOffline,
       dedupeInjectedDeps: options.dedupeInjectedDeps,
       dependenciesGraph: options.dependenciesGraph,

@@ -196,6 +196,56 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     );
   }
 
+  /**
+   * Copy all compiled files from the outputDir (where the compiler wrote) to all other dist directories.
+   * This is needed for compilers that use transpileComponent and write directly to the filesystem,
+   * as they only receive one outputDir but files need to be available in all dist locations.
+   */
+  async copyCompiledFilesToOtherDists() {
+    const distDirs = await this.distDirs();
+    if (distDirs.length <= 1) return;
+
+    // The compiler writes to the outputDir from getComponentPackagePath + distDirName
+    const outputDir = await this.workspace.getComponentPackagePath(this.component);
+    const distDirName = this.compilerInstance.getDistDir?.() || DEFAULT_DIST_DIRNAME;
+    const sourceDistDirAbs = path.join(outputDir, distDirName);
+
+    // Check if the dist directory exists (compiler may not have written anything)
+    if (!(await fs.pathExists(sourceDistDirAbs))) return;
+
+    // Find which distDir corresponds to the outputDir and get the others
+    const outputDirRelative = path.relative(this.workspace.path, outputDir);
+    const sourceDistDirRelative = path.join(outputDirRelative, distDirName);
+    const otherDirs = distDirs.filter((dir) => dir !== sourceDistDirRelative);
+
+    if (!otherDirs.length) return;
+
+    const matches = await globby(`**/*`, {
+      cwd: sourceDistDirAbs,
+      onlyFiles: true,
+      ignore: ['node_modules/**'],
+    });
+    if (!matches.length) return;
+
+    await Promise.all(
+      otherDirs.map(async (distDir) => {
+        const distDirAbs = path.join(this.workspace.path, distDir);
+        await Promise.all(
+          matches.map(async (match) => {
+            const source = path.join(sourceDistDirAbs, match);
+            const dest = path.join(distDirAbs, match);
+            try {
+              await fs.ensureDir(path.dirname(dest));
+              await fs.copyFile(source, dest);
+            } catch (err: any) {
+              throw new Error(`failed to copy compiled file from "${source}" to "${dest}": ${err.message}`);
+            }
+          })
+        );
+      })
+    );
+  }
+
   private async compileOneFile(
     file: AbstractVinyl,
     initiator: CompilationInitiator,
@@ -259,6 +309,8 @@ ${this.compileErrors.map(formatError).join('\n')}`);
           outputDir: await this.workspace.getComponentPackagePath(this.component),
           initiator,
         });
+        // Copy compiled files to all other dist directories (injected dirs)
+        await this.copyCompiledFilesToOtherDists();
       } catch (error: any) {
         this.compileErrors.push({ path: this.componentDir, error });
       }

@@ -17,6 +17,7 @@ chai.use(chaiFs);
       await npmCiRegistry.init();
 
       helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('dangerouslyAllowAllScripts', true);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
         '@pnpm.e2e/pre-and-postinstall-scripts-example',
       ]);

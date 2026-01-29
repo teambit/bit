@@ -183,3 +183,5 @@ export interface WorkspaceTemplate extends WorkspaceTemplateOptions {
    */
   create?: (context: WorkspaceContext) => CreateComponentInfo[];
 }
+
+export type GetWorkspaceTemplates = () => WorkspaceTemplate[];

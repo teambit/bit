@@ -182,6 +182,7 @@ export class PnpmPackageManager implements PackageManager {
         minimumReleaseAgeExclude: installOptions.minimumReleaseAgeExclude,
         neverBuiltDependencies: installOptions.neverBuiltDependencies,
         allowScripts: installOptions.allowScripts,
+        dangerouslyAllowAllScripts: installOptions.dangerouslyAllowAllScripts,
         nodeLinker: installOptions.nodeLinker,
         nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
         includeOptionalDeps: installOptions.includeOptionalDeps,

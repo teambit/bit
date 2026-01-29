@@ -13,64 +13,76 @@ export class TypeScriptParser implements Parser {
     const exportModels: Export[] = [];
 
     sourceFile.statements.forEach((statement) => {
-      // export default
-      if (ts.isExportAssignment(statement)) {
+      try {
         // export default
-      }
+        if (ts.isExportAssignment(statement)) {
+          // export default
+        }
 
-      // export declarations or re-exports
-      if (ts.isExportDeclaration(statement)) {
-        if (statement.exportClause) {
-          if (ts.isNamedExports(statement.exportClause)) {
-            statement.exportClause.elements.forEach((element) => {
+        // export declarations or re-exports
+        if (ts.isExportDeclaration(statement)) {
+          if (statement.exportClause) {
+            if (ts.isNamedExports(statement.exportClause)) {
+              const elements = statement.exportClause.elements;
+              if (!elements || elements.length === 0) return;
+              elements.forEach((element) => {
+                // Handle both Identifier and StringLiteral export names (TypeScript 5.6+ arbitrary module namespace identifiers)
+                const name = ts.isIdentifier(element.name)
+                  ? element.name.escapedText.toString()
+                  : (element.name as ts.StringLiteral).text;
+                if (name !== 'default') {
+                  exportModels.push(new Export(name, staticProperties.get(name)));
+                }
+              });
+            }
+            if (ts.isNamespaceExport(statement.exportClause)) {
+              const nameNode = statement.exportClause.name;
+              if (!nameNode) return;
+
               // Handle both Identifier and StringLiteral export names (TypeScript 5.6+ arbitrary module namespace identifiers)
-              const name = ts.isIdentifier(element.name)
-                ? element.name.escapedText.toString()
-                : (element.name as ts.StringLiteral).text;
-              if (name !== 'default') {
-                exportModels.push(new Export(name, staticProperties.get(name)));
-              }
-            });
-          }
-          if (ts.isNamespaceExport(statement.exportClause)) {
-            // Handle both Identifier and StringLiteral export names (TypeScript 5.6+ arbitrary module namespace identifiers)
-            const name = ts.isIdentifier(statement.exportClause.name)
-              ? statement.exportClause.name.escapedText.toString()
-              : (statement.exportClause.name as ts.StringLiteral).text;
-            exportModels.push(new Export(name, staticProperties.get(name)));
+              const name = ts.isIdentifier(nameNode)
+                ? nameNode.escapedText.toString()
+                : (nameNode as ts.StringLiteral).text;
+              exportModels.push(new Export(name, staticProperties.get(name)));
+            }
           }
         }
-      }
 
-      // export modifiers
-      // - variable statement
-      // - function statement
-      // - class statement
-      const statementModifiers = ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined;
-      if (statementModifiers) {
-        statementModifiers.some((modifier) => {
-          if (modifier.kind === ts.SyntaxKind.ExportKeyword) {
-            if (ts.isVariableStatement(statement)) {
-              const child = statement.declarationList.declarations[0];
-              if (ts.isIdentifier(child.name)) {
-                const name = child.name.escapedText.toString();
-                exportModels.push(new Export(name, staticProperties.get(name)));
+        // export modifiers
+        // - variable statement
+        // - function statement
+        // - class statement
+        const statementModifiers = ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined;
+        if (statementModifiers) {
+          statementModifiers.some((modifier) => {
+            if (modifier.kind === ts.SyntaxKind.ExportKeyword) {
+              if (ts.isVariableStatement(statement)) {
+                const declarations = statement.declarationList?.declarations;
+                if (!declarations || declarations.length === 0) return true;
+                const child = declarations[0];
+                if (!child) return true;
+                if (ts.isIdentifier(child.name)) {
+                  const name = child.name.escapedText.toString();
+                  exportModels.push(new Export(name, staticProperties.get(name)));
+                }
+              } else if (ts.isFunctionDeclaration(statement)) {
+                if (statement.name) {
+                  const name = statement.name.escapedText.toString();
+                  exportModels.push(new Export(name, staticProperties.get(name)));
+                }
+              } else if (ts.isClassDeclaration(statement)) {
+                if (statement.name) {
+                  const name = statement.name.escapedText.toString();
+                  exportModels.push(new Export(name, staticProperties.get(name)));
+                }
               }
-            } else if (ts.isFunctionDeclaration(statement)) {
-              if (statement.name) {
-                const name = statement.name.escapedText.toString();
-                exportModels.push(new Export(name, staticProperties.get(name)));
-              }
-            } else if (ts.isClassDeclaration(statement)) {
-              if (statement.name) {
-                const name = statement.name.escapedText.toString();
-                exportModels.push(new Export(name, staticProperties.get(name)));
-              }
+              return true;
             }
-            return true;
-          }
-          return false;
-        });
+            return false;
+          });
+        }
+      } catch (e) {
+        this.logger?.error('failed parsing statement', e);
       }
     });
 

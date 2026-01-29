@@ -3,6 +3,7 @@ import parsePackageName from 'parse-package-name';
 import { initDefaultReporter } from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
 import type { StoreController, WantedDependency } from '@pnpm/package-store';
+import { TRUSTED_PACKAGE_NAMES } from '@pnpm/plugin-trusted-deps';
 import { rebuild } from '@pnpm/plugin-commands-rebuild';
 import type { CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { createOrConnectStoreController } from '@pnpm/store-connection-manager';
@@ -38,6 +39,13 @@ import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-pat
 import { isEqual } from 'lodash';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
+
+/**
+ * Packages that are known to have risky or unnecessary build scripts.
+ * These packages will be disallowed from running scripts by default,
+ * unless the user explicitly allows them in `allowScripts`.
+ */
+const UNTRUSTED_PACKAGE_NAMES = ['es5-ext', 'less', 'protobufjs', 'ssh', 'core-js-pure', 'core-js'];
 
 const installsRunning: Record<string, Promise<any>> = {};
 const cafsLocker = new Map<string, number>();
@@ -204,6 +212,7 @@ export async function install(
     dedupeInjectedDeps?: boolean;
     forcedHarmonyVersion?: string;
     allowScripts?: Record<string, boolean | 'warn'>;
+    dangerouslyAllowAllScripts?: boolean;
   } & Pick<
     InstallOptions,
     | 'autoInstallPeers'
@@ -306,6 +315,7 @@ export async function install(
     ...resolveScriptPolicies({
       allowScripts: options.allowScripts,
       neverBuiltDependencies: options.neverBuiltDependencies,
+      dangerouslyAllowAllScripts: options.dangerouslyAllowAllScripts,
     }),
     returnListOfDepsRequiringBuild: true,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
@@ -382,22 +392,27 @@ export async function install(
 type ScriptPolicyConfig = {
   allowScripts?: Record<string, boolean | 'warn'>;
   neverBuiltDependencies?: string[];
+  dangerouslyAllowAllScripts?: boolean;
 };
 
-function resolveScriptPolicies({ allowScripts, neverBuiltDependencies }: ScriptPolicyConfig) {
+function resolveScriptPolicies({
+  allowScripts,
+  neverBuiltDependencies,
+  dangerouslyAllowAllScripts,
+}: ScriptPolicyConfig) {
   let resolvedNeverBuilt = neverBuiltDependencies;
   let onlyBuiltDependencies: string[] | undefined;
   let ignoredBuiltDependencies: string[] | undefined;
-  if (allowScripts == null) {
+  if (dangerouslyAllowAllScripts) {
     if (resolvedNeverBuilt == null) {
-      // If neither neverBuiltDependencies nor allowScripts are set by the user
+      // If neverBuiltDependencies is not explicitly set, use a default list
       // we tell pnpm to allow all scripts to be executed, except the packages listed below.
       resolvedNeverBuilt = ['core-js'];
     }
   } else {
     onlyBuiltDependencies = [];
     ignoredBuiltDependencies = [];
-    for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts)) {
+    for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts ?? {})) {
       switch (allowedScript) {
         case true:
           onlyBuiltDependencies.push(packageDescriptor);
@@ -412,7 +427,19 @@ function resolveScriptPolicies({ allowScripts, neverBuiltDependencies }: ScriptP
           break;
       }
     }
+    for (const trustedPkgName of TRUSTED_PACKAGE_NAMES) {
+      if (allowScripts?.[trustedPkgName] == null) {
+        onlyBuiltDependencies.push(trustedPkgName);
+      }
+    }
+    // Add untrusted packages to ignoredBuiltDependencies unless the user explicitly allows them
+    for (const untrustedPkgName of UNTRUSTED_PACKAGE_NAMES) {
+      if (allowScripts?.[untrustedPkgName] !== true) {
+        ignoredBuiltDependencies.push(untrustedPkgName);
+      }
+    }
   }
+
   return { neverBuiltDependencies: resolvedNeverBuilt, onlyBuiltDependencies, ignoredBuiltDependencies };
 }
 
@@ -428,7 +455,8 @@ function initReporter(opts?: ReportOptions) {
       hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
       hideProgressPrefix: opts?.hideProgressPrefix,
       hideLifecycleOutput: opts?.hideLifecycleOutput,
-      approveBuildsInstructionText: 'Update the "allowScripts" field under "teambit.dependencies/dependency-resolver" in workspace.jsonc to control which packages are allowed to run scripts.',
+      approveBuildsInstructionText:
+        'Update the "allowScripts" field under "teambit.dependencies/dependency-resolver" in workspace.jsonc. \nSet to true to allow, false to explicitly disallow. \nExample: allowScripts: { "esbuild": true, "core-js": false }. \nThis is a security-sensitive setting: enabling scripts may allow arbitrary code execution during install.',
     },
     streamParser: streamParser as any, // eslint-disable-line
     // Linked in core aspects are excluded from the output to reduce noise.

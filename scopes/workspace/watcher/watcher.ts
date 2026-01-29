@@ -26,10 +26,12 @@ import type { CheckTypes } from './check-types';
 import type { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';
 import type { Logger } from '@teambit/logger';
-import type { Event } from '@parcel/watcher';
+import type { Event, Options as ParcelWatcherOptions } from '@parcel/watcher';
 import ParcelWatcher from '@parcel/watcher';
+import { spawnSync } from 'child_process';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
-import { WatcherDaemon, WatcherClient, getOrCreateWatcherConnection, type WatcherError } from './watcher-daemon';
+import { getOrCreateWatcherConnection } from './watcher-daemon';
+import type { WatcherDaemon, WatcherClient, WatcherError } from './watcher-daemon';
 import { formatFSEventsErrorMessage } from './fsevents-error';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: ComponentID; componentIds: ComponentID[] };
@@ -98,6 +100,8 @@ export class Watcher {
   private parcelSubscription: { unsubscribe: () => Promise<void> } | null = null;
   // Signal handlers for cleanup (to avoid accumulation)
   private signalCleanupHandler: (() => void) | null = null;
+  // Cached Watchman availability (checked once per process lifetime)
+  private watchmanAvailable: boolean | null = null;
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
@@ -130,6 +134,94 @@ export class Watcher {
     ];
   }
 
+  /**
+   * Get Parcel watcher options, preferring Watchman on macOS when available.
+   * On macOS, FSEvents is the default but has a system-wide limit of ~500 streams.
+   * Watchman is a single-daemon solution that avoids this limit.
+   */
+  private getParcelWatcherOptions(): ParcelWatcherOptions {
+    const options: ParcelWatcherOptions = {
+      ignore: this.getParcelIgnorePatterns(),
+    };
+
+    // On macOS, prefer Watchman if available to avoid FSEvents stream limit
+    if (process.platform === 'darwin') {
+      if (this.isWatchmanAvailable()) {
+        options.backend = 'watchman';
+        this.logger.debug('Using Watchman backend for file watching');
+      } else {
+        this.logger.debug('Using FSEvents backend for file watching (Watchman not available)');
+      }
+    }
+
+    return options;
+  }
+
+  /**
+   * Check if Watchman is installed.
+   * Result is cached to avoid repeated executions.
+   */
+  private isWatchmanAvailable(): boolean {
+    if (this.watchmanAvailable !== null) {
+      return this.watchmanAvailable;
+    }
+    try {
+      // Use spawnSync with shell: false (default) for security - prevents command injection
+      const result = spawnSync('watchman', ['version'], { stdio: 'ignore', timeout: 5000 });
+      // Check for spawn errors (e.g., command not found) or non-zero exit status
+      this.watchmanAvailable = !result.error && result.status === 0;
+    } catch {
+      this.watchmanAvailable = false;
+    }
+    return this.watchmanAvailable;
+  }
+
+  /**
+   * Ensure .watchmanconfig exists when using Watchman without a .git directory.
+   * Watchman places cookie files (used for sync) in .git, .hg, or .svn directories.
+   * Without these, cookies appear in the workspace root. This config tells Watchman
+   * to use .bit directory instead, keeping cookie files hidden.
+   */
+  private async ensureWatchmanConfig(): Promise<void> {
+    // Only needed if no .git directory (Watchman uses .git for cookies by default)
+    const gitPath = join(this.workspace.path, '.git');
+    const gitExists = await fs.pathExists(gitPath);
+    if (gitExists) {
+      return;
+    }
+
+    const configPath = join(this.workspace.path, '.watchmanconfig');
+    const scopeDirName = basename(this.workspace.scope.path); // typically ".bit"
+    const desiredIgnoreVcs = ['.git', '.hg', '.svn', scopeDirName];
+
+    try {
+      const existingContent = await fs.readFile(configPath, 'utf-8');
+      const existingConfig = JSON.parse(existingContent);
+
+      // Check if scopeDirName already in ignore_vcs
+      if (existingConfig.ignore_vcs?.includes(scopeDirName)) {
+        return; // Already configured
+      }
+
+      // Merge with existing config
+      existingConfig.ignore_vcs = existingConfig.ignore_vcs
+        ? [...new Set([...existingConfig.ignore_vcs, scopeDirName])]
+        : desiredIgnoreVcs;
+
+      await fs.writeFile(configPath, JSON.stringify(existingConfig, null, 2) + '\n');
+      this.logger.debug(`Updated .watchmanconfig to include ${scopeDirName} in ignore_vcs`);
+    } catch (err: any) {
+      // File doesn't exist or is invalid JSON - create new config
+      // For other errors (permissions, disk space), log and attempt to create anyway
+      const isExpectedError = err.code === 'ENOENT' || err instanceof SyntaxError;
+      if (!isExpectedError) {
+        this.logger.debug(`Unexpected error reading .watchmanconfig: ${err.message}, creating new file`);
+      }
+      await fs.writeFile(configPath, JSON.stringify({ ignore_vcs: desiredIgnoreVcs }, null, 2) + '\n');
+      this.logger.debug(`Created .watchmanconfig with ${scopeDirName} in ignore_vcs`);
+    }
+  }
+
   async watch() {
     await this.setRootDirs();
     const componentIds = Object.values(this.rootDirs);
@@ -140,6 +232,12 @@ export class Watcher {
 
   private async watchParcel() {
     this.msgs?.onStart(this.workspace);
+
+    // Ensure .watchmanconfig exists before starting watch (for cookie file placement in .bit)
+    // Must be done before Parcel watcher starts, as Watchman only reads config at watch start
+    if (process.platform === 'darwin' && this.isWatchmanAvailable()) {
+      await this.ensureWatchmanConfig();
+    }
 
     // Use shared watcher daemon pattern to avoid FSEvents limit on macOS
     // FSEvents has a system-wide limit on concurrent watchers, which causes
@@ -178,9 +276,7 @@ export class Watcher {
 
     // Original direct Parcel watcher logic (fallback)
     try {
-      await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), {
-        ignore: this.getParcelIgnorePatterns(),
-      });
+      await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), this.getParcelWatcherOptions());
 
       // Write initial snapshot for FSEvents buffer overflow recovery
       await this.writeSnapshotIfNeeded();
@@ -210,9 +306,7 @@ export class Watcher {
       this.parcelSubscription = await ParcelWatcher.subscribe(
         this.workspace.path,
         this.onParcelWatchAsDaemon.bind(this),
-        {
-          ignore: this.getParcelIgnorePatterns(),
-        }
+        this.getParcelWatcherOptions()
       );
 
       // Write initial snapshot for FSEvents buffer overflow recovery
@@ -880,9 +974,7 @@ export class Watcher {
     }
 
     try {
-      await ParcelWatcher.writeSnapshot(this.workspace.path, this.snapshotPath, {
-        ignore: this.getParcelIgnorePatterns(),
-      });
+      await ParcelWatcher.writeSnapshot(this.workspace.path, this.snapshotPath, this.getParcelWatcherOptions());
       this.logger.debug('Watcher snapshot written successfully');
     } catch (err: any) {
       this.logger.debug(`Failed to write watcher snapshot: ${err.message}`);
@@ -931,9 +1023,11 @@ export class Watcher {
       }
 
       // Get all events since last snapshot
-      const missedEvents = await ParcelWatcher.getEventsSince(this.workspace.path, this.snapshotPath, {
-        ignore: this.getParcelIgnorePatterns(),
-      });
+      const missedEvents = await ParcelWatcher.getEventsSince(
+        this.workspace.path,
+        this.snapshotPath,
+        this.getParcelWatcherOptions()
+      );
 
       // Write new snapshot immediately after reading events to prevent re-processing same events
       await this.writeSnapshotIfNeeded();

@@ -72,6 +72,8 @@ export type PackageManagerInstallOptions = {
 
   allowScripts?: Record<string, boolean | 'warn'>;
 
+  dangerouslyAllowAllScripts?: boolean;
+
   preferOffline?: boolean;
 
   nmSelfReferences?: boolean;

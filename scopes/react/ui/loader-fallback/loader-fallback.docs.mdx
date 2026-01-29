@@ -21,10 +21,10 @@ const safeTarget = useFallback(Target && <Target />, <DefaultComponent />, { tim
 1. when the component changes to be `undefined` -> show Loader for _x_ seconds
    1. then, after _x_ seconds - show the default.
 
-<!-- live playground doesn't keep state when editing :( -->
-<!-- Try it out:
+{/* live playground doesn't keep state when editing :( */}
+{/\* Try it out:
 
-```tsx live
+````tsx live
 function Example() {
   return (
     <LoaderFallback
@@ -42,4 +42,5 @@ function Example() {
     return <div>this shows when component is undefined</div>;
   }
 }
-``` -->
+``` */}
+````

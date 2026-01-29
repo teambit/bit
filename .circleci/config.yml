@@ -7,7 +7,7 @@ version: 2.1
 # Base configurations
 default_image: &default_image
   docker:
-    - image: cimg/node:22.14.0
+    - image: cimg/node:22.22.0
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -244,13 +244,13 @@ commands:
   windows_set_node_version:
     parameters:
       version:
-        default: 22.14.0
+        default: 22.22.0
         type: string
     steps:
       - run: choco upgrade nvm -y
       - run: nvm -v
-      - run: nvm install 22.14.0
-      - run: nvm use 22.14.0
+      - run: nvm install 22.22.0
+      - run: nvm use 22.22.0
       - run: node -v
 
   windows_add_bvm_to_path:
@@ -290,7 +290,7 @@ commands:
         default: 'BASE_IMAGE'
         type: string
       docker_build_base_image_arg_value:
-        default: 'node:22.14.0'
+        default: 'node:22.22.0'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -323,7 +323,7 @@ commands:
         default: 'BASE_IMAGE'
         type: string
       docker_build_base_image_arg_value:
-        default: 'node:22.14.0'
+        default: 'node:22.22.0'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -368,7 +368,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.80-v1
+          key: core-aspect-env-v0.1.4-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -451,7 +451,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.80-v1
+          key: core-aspect-env-v0.1.4-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -557,7 +557,7 @@ jobs:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.0.80-v1
+          key: core-aspect-env-v0.1.4-v1
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a107
       # - run: cd bit && bbit compile
@@ -612,7 +612,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.80-v1
+          key: core-aspect-env-v0.1.4-v1
       - run:
           name: 'check circular dependencies'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
@@ -709,8 +709,12 @@ jobs:
           name: If no component has changed, exit the job
           command: |
             if cd bit && bit diff | grep -q "there are no modified components to diff"; then
-              echo "No changes detected, halting job to prevent further workflow execution."
-              circleci-agent step halt
+              if grep -q '"nextVersion": {' .bitmap; then
+                echo "No changes detected, but soft-tagged components found. Continuing workflow."
+              else
+                echo "No changes detected, halting job to prevent further workflow execution."
+                circleci-agent step halt
+              fi
             fi
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
@@ -720,7 +724,7 @@ jobs:
       - run:
           name: 'bit ci merge'
           command: 'cd bit && bit ci merge --build --auto-merge-resolve manual ${BIT_CI_MERGE_EXTRA_FLAGS}'
-          # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 3 ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 2 ${BIT_CI_MERGE_EXTRA_FLAGS}'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
@@ -971,8 +975,8 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "node:22.14.0"
-          docker_tag_suffix: "-node-22.14.0"
+          docker_build_base_image_arg_value: "node:22.22.0"
+          docker_tag_suffix: "-node-22.22.0"
 
   docker_non_root_build_node_22:
     machine:
@@ -981,10 +985,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "node:22.14.0"
+          docker_build_base_image_arg_value: "node:22.22.0"
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-22.14.0"
+          docker_tag_suffix: "-node-22.22.0"
 
   docker_build_alpine:
     machine:
@@ -993,10 +997,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "node:22.14.0-alpine"
+          docker_build_base_image_arg_value: "node:22.22.0-alpine"
           # image_name: "bitcli/bit-alpine"
           docker_file_name: "Dockerfile-bit-alpine"
-          docker_tag_suffix: "-alpine-node-22.14.0"
+          docker_tag_suffix: "-alpine-node-22.22.0"
 
   server_docker_build_node_22:
     machine:
@@ -1005,10 +1009,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "`npm show @teambit/bit version`-node-22.14.0"
+          docker_build_base_image_arg_value: "`npm show @teambit/bit version`-node-22.22.0"
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-22.14.0"
+          docker_tag_suffix: "-node-22.22.0"
 
   # ========== Windows Jobs ==========
   windows_checkout_code:
@@ -1155,9 +1159,9 @@ jobs:
       # - run: node -v
       # - run: npm -v
       # - run: yarn -v
-      # # - run: choco install nodejs --version 22.14.0
+      # # - run: choco install nodejs --version 22.22.0
       # # - run: node -v
-      # - run: cinst nodejs --version 22.14.0
+      # - run: cinst nodejs --version 22.22.0
       # - run: node -v
 
 # ========================================

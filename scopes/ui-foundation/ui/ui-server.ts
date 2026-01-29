@@ -316,11 +316,6 @@ export class UIServer {
         target: `http://${this.host}:${port}`,
         changeOrigin: true,
       },
-      {
-        context: ['/_hmr'],
-        target: `ws://${this.host}:${port}`,
-        ws: true,
-      },
     ];
 
     const gqlProxies: ProxyEntry[] = [

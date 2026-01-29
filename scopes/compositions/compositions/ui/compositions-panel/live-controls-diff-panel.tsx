@@ -27,27 +27,20 @@ export function LiveControlsDiffPanel({
   showEmptyState = true,
   onStatusChange,
 }: LiveControlsDiffPanelProps) {
-  // Track which key we last reset for - prevents stale data from being used
   const lastResetKeyRef = useRef<string | null>(null);
   const [isWaitingForFreshData, setIsWaitingForFreshData] = useState(true);
-
-  // Current composition key
   const currentKey = `${baseChannel || ''}-${compareChannel || ''}-${resetKey || ''}`;
 
-  // Create model instance - encapsulates all diff logic
   const model = useMemo(() => new DiffControlsModel(baseChannel, compareChannel), [baseChannel, compareChannel]);
 
-  // Include 'default' channel for backwards compatibility with older versions
   const allChannels = useMemo(() => {
     const channels = [model.baseChannel, model.compareChannel];
     if (!channels.includes('default')) channels.push('default');
     return [...new Set(channels)];
   }, [model.baseChannel, model.compareChannel]);
 
-  // Hook watches all channels and triggers re-renders when registry changes
   const combined = useLiveControls(allChannels);
 
-  // When composition changes, reset and mark that we're waiting for fresh data
   useEffect(() => {
     if (lastResetKeyRef.current !== currentKey) {
       lastResetKeyRef.current = currentKey;
@@ -56,25 +49,19 @@ export function LiveControlsDiffPanel({
     }
   }, [currentKey, combined]);
 
-  // Track when registry becomes ready
   const channelsReady = Boolean(baseChannel && compareChannel);
   const registryReady = combined.ready || model.isReady;
   const controls = model.controls;
   const hasControls = controls.length > 0;
 
-  // When registry becomes ready AFTER a reset, mark that we have fresh data
-  // The key insight: after reset, registryReady briefly becomes false, then true again
-  // We only clear isWaitingForFreshData when registryReady transitions from false to true
   const prevRegistryReady = useRef(registryReady);
   useEffect(() => {
-    // If registry just became ready (was false, now true), we have fresh data
     if (registryReady && !prevRegistryReady.current && isWaitingForFreshData) {
       setIsWaitingForFreshData(false);
     }
     prevRegistryReady.current = registryReady;
   }, [registryReady, isWaitingForFreshData]);
 
-  // Deterministic status computation
   const status: PanelStatus = useMemo(() => {
     if (!channelsReady) return 'loading';
     if (isWaitingForFreshData) return 'loading';
@@ -117,14 +104,11 @@ export function LiveControlsDiffPanel({
     );
   }
 
-  // Group controls by source
   const commonControls = controls.filter((c) => c.source === 'common');
   const baseControls = controls.filter((c) => c.source === 'base');
   const compareControls = controls.filter((c) => c.source === 'compare');
-
   const hasBaseOrCompare = baseControls.length > 0 || compareControls.length > 0;
 
-  // Get the correct value for a control based on its source
   const getControlValue = (control: ControlWithSource) => {
     return model.getValueForControl(control.id, control.source);
   };
@@ -157,26 +141,19 @@ export function LiveControlsDiffPanel({
   return (
     <div className={styles.container}>
       <div className={styles.columnsLayout}>
-        {/* Common controls column */}
         {commonControls.length > 0 && (
           <div className={styles.column}>
             <div className={styles.columnHeader}>Common</div>
             {renderControlList(commonControls)}
           </div>
         )}
-
-        {/* Divider between common and base/compare */}
         {commonControls.length > 0 && hasBaseOrCompare && <div className={styles.columnDivider} />}
-
-        {/* Base controls column */}
         {baseControls.length > 0 && (
           <div className={styles.column}>
             <div className={styles.columnHeader}>Base</div>
             {renderControlList(baseControls)}
           </div>
         )}
-
-        {/* Compare controls column */}
         {compareControls.length > 0 && (
           <div className={styles.column}>
             <div className={styles.columnHeader}>Compare</div>

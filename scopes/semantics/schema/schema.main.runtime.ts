@@ -21,7 +21,7 @@ import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import type { Formatter } from '@teambit/formatter';
 import type { SchemaNodeTransformer, SchemaTransformer } from '@teambit/typescript';
-import { CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
+import { BuildStatus, CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 import { Http } from '@teambit/scope.network';
 import type { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
@@ -134,7 +134,7 @@ export class SchemaMain {
       return APISchema.empty(component.id as any);
     }
 
-    if (alwaysRunExtractor || this.workspace) {
+    if (alwaysRunExtractor || (this.workspace && component.buildStatus !== BuildStatus.Succeed)) {
       const env = this.envs.getEnv(component).env;
       // types need to be fixed
       const formatter: Formatter | undefined = env.getFormatter?.(null, [

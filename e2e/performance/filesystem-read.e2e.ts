@@ -4,7 +4,12 @@ import fs from 'fs-extra';
 import path from 'path';
 import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import * as _ from 'lodash';
+import _ from 'lodash';
+import { fileURLToPath } from 'url';
+
+// @ts-ignore
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const MAX_FILES_READ = 1050;
 const MAX_FILES_READ_STATUS = 1500;

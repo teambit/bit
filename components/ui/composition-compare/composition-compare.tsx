@@ -22,7 +22,6 @@ import { uniqBy } from 'lodash';
 
 import styles from './composition-compare.module.scss';
 
-// No-op for context setQueryParams - compare view doesn't need to update params
 const noop = () => {};
 
 export type CompositionCompareProps = {
@@ -35,146 +34,32 @@ export type CompositionCompareProps = {
   PreviewView?: React.ComponentType<CompositionContentProps>;
 };
 
-export function CompositionCompare(props: CompositionCompareProps) {
-  const { emptyState, PreviewView = CompositionContent, Widgets, previewViewProps = {} } = props;
+function MissingComposition({ compositionId, version }: { compositionId?: string; version: string }) {
+  const message = compositionId
+    ? `The selected composition "${compositionId}" does not exist for the ${version} version.`
+    : `The selected composition does not exist for the ${version} version.`;
+  return (
+    <div className={styles.subView}>
+      <div className={styles.missingComposition}>
+        <div className={styles.missingCompositionTitle}>Composition not available</div>
+        <div className={styles.missingCompositionSubtitle}>{message}</div>
+      </div>
+    </div>
+  );
+}
 
-  const componentCompareContext = useComponentCompare();
+function getCompositionTag(hasInBase: boolean, hasInCompare: boolean): string | undefined {
+  if (hasInBase && hasInCompare) return undefined;
+  if (hasInBase) return 'Base only';
+  if (hasInCompare) return 'Compare only';
+  return undefined;
+}
 
-  const { base, compare, baseContext, compareContext, loading: contextLoading } = componentCompareContext || {};
-  const [isControlsOpen, setControlsOpen] = useState(true);
-  const [controlsStatus, setControlsStatus] = useState<'loading' | 'available' | 'empty'>('loading');
-  const [panelHeight, setPanelHeight] = useState(200);
+function useResizePanel(initialHeight: number) {
+  const [panelHeight, setPanelHeight] = useState(initialHeight);
+  const [isResizing, setIsResizing] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
-
-  // Don't compute anything dependent on component IDs until loading is complete
-  // to avoid rendering iframes with stale/changing IDs
-  const isStableData = !contextLoading && base !== undefined && compare !== undefined;
-
-  const baseCompositions = base?.model.compositions;
-  const compareCompositions = compare?.model.compositions;
-
-  const selectedCompositionBaseFile = useCompareQueryParam('compositionBaseFile');
-  const selectedCompositionCompareFile = useCompareQueryParam('compositionCompareFile');
-
-  const baseState = baseContext?.state?.preview;
-  const compareState = compareContext?.state?.preview;
-  const baseHooks = baseContext?.hooks?.preview;
-  const compareHooks = compareContext?.hooks?.preview;
-  const selectedBaseFromState = baseState?.id;
-  const selectedCompareFromState = compareState?.id;
-
-  const explicitCompositionId = selectedCompositionCompareFile || selectedCompositionBaseFile;
-  const stateCompositionId = selectedCompareFromState || selectedBaseFromState;
-  const defaultCompositionId = compareCompositions?.[0]?.identifier || baseCompositions?.[0]?.identifier;
-  const requestedCompositionId = explicitCompositionId || stateCompositionId || defaultCompositionId;
-
-  const selectedBaseComp = requestedCompositionId
-    ? baseCompositions?.find((c) => c.identifier === requestedCompositionId)
-    : baseCompositions?.[0];
-
-  const selectedCompareComp = requestedCompositionId
-    ? compareCompositions?.find((c) => c.identifier === requestedCompositionId)
-    : compareCompositions?.[0];
-
-  const baseMissing = Boolean(requestedCompositionId && !selectedBaseComp);
-  const compareMissing = Boolean(requestedCompositionId && !selectedCompareComp);
-
-  const baseCompositionIds = useMemo(
-    () => new Set((baseCompositions || []).map((c) => c.identifier)),
-    [baseCompositions]
-  );
-  const compareCompositionIds = useMemo(
-    () => new Set((compareCompositions || []).map((c) => c.identifier)),
-    [compareCompositions]
-  );
-
-  const compositionsDropdownSource = uniqBy(
-    (baseCompositions || []).concat(compareCompositions || []),
-    'identifier'
-  )?.map((c) => {
-    const hasInBase = baseCompositionIds.has(c.identifier);
-    const hasInCompare = compareCompositionIds.has(c.identifier);
-    const tag =
-      hasInBase && hasInCompare ? undefined : hasInBase ? 'Base only' : hasInCompare ? 'Compare only' : undefined;
-
-    const href = !compareState?.controlled
-      ? useUpdatedUrlFromQuery({
-          compositionBaseFile: c.identifier,
-          compositionCompareFile: c.identifier,
-        })
-      : useUpdatedUrlFromQuery({});
-
-    const onClick = compareState?.controlled
-      ? (id, e) => {
-          compareHooks?.onClick?.(id, e);
-          baseHooks?.onClick?.(id, e);
-        }
-      : undefined;
-    return { id: c.identifier, label: c.displayName, href, onClick, tag };
-  });
-
-  const selectedCompareDropdown =
-    compositionsDropdownSource.find((item) => item.id === selectedCompareComp?.identifier) ||
-    compositionsDropdownSource.find((item) => item.id === selectedBaseComp?.identifier) ||
-    (requestedCompositionId
-      ? { id: requestedCompositionId, label: requestedCompositionId, tag: 'Missing' }
-      : undefined);
-
-  const baseIdStr = base?.model.id?.toString();
-  const compareIdStr = compare?.model.id?.toString();
-  const baseCompId = selectedBaseComp?.identifier || requestedCompositionId;
-  const compareCompId = selectedCompareComp?.identifier || requestedCompositionId;
-
-  // Channel keys - only valid when we have real IDs
-  const baseChannelKey = useMemo(
-    () => (baseIdStr && baseCompId ? `base:${baseIdStr}:${baseCompId}` : undefined),
-    [baseIdStr, baseCompId]
-  );
-  const compareChannelKey = useMemo(
-    () => (compareIdStr && compareCompId ? `compare:${compareIdStr}:${compareCompId}` : undefined),
-    [compareIdStr, compareCompId]
-  );
-
-  // Compute query params directly - no need for useState + useEffect sync
-  const baseCompositionParams = useMemo(
-    () => ({ livecontrols: true, ...(baseChannelKey && { lcchannel: baseChannelKey }) }),
-    [baseChannelKey]
-  );
-  const baseCompQueryParams = useMemo(() => queryString.stringify(baseCompositionParams), [baseCompositionParams]);
-
-  const compareCompositionParams = useMemo(
-    () => ({ livecontrols: true, ...(compareChannelKey && { lcchannel: compareChannelKey }) }),
-    [compareChannelKey]
-  );
-  const compareCompQueryParams = useMemo(
-    () => queryString.stringify(compareCompositionParams),
-    [compareCompositionParams]
-  );
-
-  const controlsResetKey = `${baseChannelKey || ''}-${compareChannelKey || ''}`;
-
-  // Track if we've ever had controls - once shown, keep panel visible during transitions
-  const [everHadControls, setEverHadControls] = useState(false);
-
-  // Reset everHadControls when component IDs change (not just composition)
-  useEffect(() => {
-    setEverHadControls(false);
-    setControlsStatus('loading');
-  }, [baseIdStr, compareIdStr]);
-
-  const handleControlsStatusChange = useCallback((status: 'loading' | 'available' | 'empty') => {
-    setControlsStatus(status);
-    if (status === 'available') {
-      setEverHadControls(true);
-    }
-  }, []);
-
-  // Show panel if: currently available/loading, OR we've had controls before (during composition transitions)
-  const showControlsPanel = controlsStatus === 'available' || controlsStatus === 'loading' || everHadControls;
-
-  // Resize handlers for the controls panel
-  const [isResizing, setIsResizing] = useState(false);
 
   const handleResizeStart = useCallback(
     (e: React.MouseEvent) => {
@@ -189,12 +74,10 @@ export function CompositionCompare(props: CompositionCompareProps) {
       const handleMouseMove = (moveEvent: MouseEvent) => {
         if (!isDragging.current) return;
         moveEvent.preventDefault();
-
         const delta = startY - moveEvent.clientY;
         const containerHeight = panelRef.current?.parentElement?.clientHeight || 600;
         const maxHeight = Math.max(100, containerHeight - 200);
-        const newHeight = Math.max(60, Math.min(maxHeight, startHeight + delta));
-        setPanelHeight(newHeight);
+        setPanelHeight(Math.max(60, Math.min(maxHeight, startHeight + delta)));
       };
 
       const handleMouseUp = () => {
@@ -214,54 +97,213 @@ export function CompositionCompare(props: CompositionCompareProps) {
     [panelHeight]
   );
 
-  // Use component model reference directly to ensure proper memoization
+  return { panelRef, panelHeight, isResizing, handleResizeStart };
+}
+
+function findComposition(compositions: any[] | undefined, id: string | undefined) {
+  if (!id || !compositions) return compositions?.[0];
+  return compositions.find((c) => c.identifier === id) || undefined;
+}
+
+function useCompositionSelection() {
+  const selectedCompositionBaseFile = useCompareQueryParam('compositionBaseFile');
+  const selectedCompositionCompareFile = useCompareQueryParam('compositionCompareFile');
+  return { selectedCompositionBaseFile, selectedCompositionCompareFile };
+}
+
+function buildChannelKey(prefix: string, idStr: string | undefined, compId: string | undefined): string | undefined {
+  if (!idStr || !compId) return undefined;
+  return `${prefix}:${idStr}:${compId}`;
+}
+
+function buildQueryParams(channelKey: string | undefined) {
+  const params = { livecontrols: true, ...(channelKey ? { lcchannel: channelKey } : {}) };
+  return { params, queryString: queryString.stringify(params) };
+}
+
+type CompositionLayoutProps = {
+  model: any;
+  selected: any;
+  queryParams: string;
+  compositionParams: Record<string, any>;
+  previewViewProps: CompositionContentProps;
+  emptyState?: EmptyStateSlot;
+  PreviewView: React.ComponentType<CompositionContentProps>;
+  contextKey: string;
+  isBase?: boolean;
+  isCompare?: boolean;
+};
+
+function CompositionLayout({
+  model,
+  selected,
+  queryParams,
+  compositionParams,
+  previewViewProps,
+  emptyState,
+  PreviewView,
+  contextKey,
+  isBase,
+  isCompare,
+}: CompositionLayoutProps) {
+  return (
+    <div className={styles.subView}>
+      <CompositionCompareContext.Provider
+        value={{
+          compositionProps: {
+            forceHeight: undefined,
+            innerBottomPadding: 50,
+            ...previewViewProps,
+            emptyState,
+            component: model,
+            queryParams,
+            selected,
+          },
+          isBase,
+          isCompare,
+        }}
+      >
+        <CompositionContextProvider queryParams={compositionParams} setQueryParams={noop}>
+          <PreviewView
+            key={contextKey}
+            forceHeight={undefined}
+            innerBottomPadding={50}
+            {...previewViewProps}
+            emptyState={emptyState}
+            component={model}
+            selected={selected}
+            queryParams={queryParams}
+          />
+        </CompositionContextProvider>
+      </CompositionCompareContext.Provider>
+    </div>
+  );
+}
+
+export function CompositionCompare(props: CompositionCompareProps) {
+  const {
+    emptyState,
+    PreviewView = CompositionContent,
+    Widgets,
+    previewViewProps = {} as CompositionContentProps,
+  } = props;
+
+  const componentCompareContext = useComponentCompare();
+  const { base, compare, baseContext, compareContext, loading: contextLoading } = componentCompareContext || {};
+
+  const [isControlsOpen, setControlsOpen] = useState(true);
+  const [controlsStatus, setControlsStatus] = useState<'loading' | 'available' | 'empty'>('loading');
+  const [everHadControls, setEverHadControls] = useState(false);
+  const { panelRef, panelHeight, isResizing, handleResizeStart } = useResizePanel(200);
+
+  const isStableData = !contextLoading && base !== undefined && compare !== undefined;
+  const baseCompositions = base?.model.compositions;
+  const compareCompositions = compare?.model.compositions;
+
+  const { selectedCompositionBaseFile, selectedCompositionCompareFile } = useCompositionSelection();
+
+  const compareState = compareContext?.state?.preview;
+  const baseHooks = baseContext?.hooks?.preview;
+  const compareHooks = compareContext?.hooks?.preview;
+
+  const explicitId = selectedCompositionCompareFile || selectedCompositionBaseFile;
+  const stateId = compareState?.id || baseContext?.state?.preview?.id;
+  const defaultId = compareCompositions?.[0]?.identifier || baseCompositions?.[0]?.identifier;
+  const requestedCompositionId = explicitId || stateId || defaultId;
+
+  const selectedBaseComp = findComposition(baseCompositions, requestedCompositionId);
+  const selectedCompareComp = findComposition(compareCompositions, requestedCompositionId);
+
+  const baseMissing = Boolean(requestedCompositionId && !selectedBaseComp);
+  const compareMissing = Boolean(requestedCompositionId && !selectedCompareComp);
+
+  const baseCompositionIds = useMemo(
+    () => new Set((baseCompositions || []).map((c) => c.identifier)),
+    [baseCompositions]
+  );
+  const compareCompositionIds = useMemo(
+    () => new Set((compareCompositions || []).map((c) => c.identifier)),
+    [compareCompositions]
+  );
+
+  const compositionsDropdownSource = useMemo(() => {
+    return uniqBy((baseCompositions || []).concat(compareCompositions || []), 'identifier')?.map((c) => {
+      const hasInBase = baseCompositionIds.has(c.identifier);
+      const hasInCompare = compareCompositionIds.has(c.identifier);
+      const tag = getCompositionTag(hasInBase, hasInCompare);
+      const href = !compareState?.controlled
+        ? useUpdatedUrlFromQuery({ compositionBaseFile: c.identifier, compositionCompareFile: c.identifier })
+        : useUpdatedUrlFromQuery({});
+      const onClick = compareState?.controlled
+        ? (id, e) => {
+            compareHooks?.onClick?.(id, e);
+            baseHooks?.onClick?.(id, e);
+          }
+        : undefined;
+      return { id: c.identifier, label: c.displayName, href, onClick, tag };
+    });
+  }, [baseCompositions, compareCompositions, baseCompositionIds, compareCompositionIds, compareState?.controlled]);
+
+  const selectedCompareDropdown = useMemo(() => {
+    const found =
+      compositionsDropdownSource.find((item) => item.id === selectedCompareComp?.identifier) ||
+      compositionsDropdownSource.find((item) => item.id === selectedBaseComp?.identifier);
+    if (found) return found;
+    if (requestedCompositionId) return { id: requestedCompositionId, label: requestedCompositionId, tag: 'Missing' };
+    return undefined;
+  }, [
+    compositionsDropdownSource,
+    selectedCompareComp?.identifier,
+    selectedBaseComp?.identifier,
+    requestedCompositionId,
+  ]);
+
+  const baseIdStr = base?.model.id?.toString();
+  const compareIdStr = compare?.model.id?.toString();
+  const baseCompId = selectedBaseComp?.identifier || requestedCompositionId;
+  const compareCompId = selectedCompareComp?.identifier || requestedCompositionId;
+
+  const baseChannelKey = useMemo(() => buildChannelKey('base', baseIdStr, baseCompId), [baseIdStr, baseCompId]);
+  const compareChannelKey = useMemo(
+    () => buildChannelKey('compare', compareIdStr, compareCompId),
+    [compareIdStr, compareCompId]
+  );
+
+  const baseQuery = useMemo(() => buildQueryParams(baseChannelKey), [baseChannelKey]);
+  const compareQuery = useMemo(() => buildQueryParams(compareChannelKey), [compareChannelKey]);
+
+  const controlsResetKey = `${baseChannelKey || ''}-${compareChannelKey || ''}`;
+
+  useEffect(() => {
+    setEverHadControls(false);
+    setControlsStatus('loading');
+  }, [baseIdStr, compareIdStr]);
+
+  const handleControlsStatusChange = useCallback((status: 'loading' | 'available' | 'empty') => {
+    setControlsStatus(status);
+    if (status === 'available') setEverHadControls(true);
+  }, []);
+
+  const showControlsPanel = controlsStatus === 'available' || controlsStatus === 'loading' || everHadControls;
+
   const baseModel = base?.model;
   const compareModel = compare?.model;
 
   const BaseLayout = useMemo(() => {
-    // Don't render iframe until data is stable and channel is ready
-    // Otherwise iframe loads with wrong/missing lcchannel and broadcasts on 'default'
-    if (!isStableData || !baseChannelKey || !baseModel) {
-      return null;
-    }
-    if (baseMissing) {
-      return (
-        <div className={styles.subView}>
-          <div className={styles.missingComposition}>
-            <div className={styles.missingCompositionTitle}>Composition not available</div>
-            <div className={styles.missingCompositionSubtitle}>
-              {`The selected composition${requestedCompositionId ? ` "${requestedCompositionId}"` : ''} does not exist for the base version.`}
-            </div>
-          </div>
-        </div>
-      );
-    }
-    const compositionProps = {
-      forceHeight: undefined,
-      innerBottomPadding: 50,
-      ...previewViewProps,
-      emptyState,
-      component: baseModel,
-      queryParams: baseCompQueryParams,
-      selected: selectedBaseComp,
-    };
+    if (!isStableData || !baseChannelKey || !baseModel) return null;
+    if (baseMissing) return <MissingComposition compositionId={requestedCompositionId} version="base" />;
     return (
-      <div className={styles.subView}>
-        <CompositionCompareContext.Provider value={{ compositionProps, isBase: true }}>
-          <CompositionContextProvider queryParams={baseCompositionParams} setQueryParams={noop}>
-            <PreviewView
-              key={`base-${baseIdStr}-${baseCompId}`}
-              forceHeight={undefined}
-              innerBottomPadding={50}
-              {...previewViewProps}
-              emptyState={emptyState}
-              component={baseModel}
-              selected={selectedBaseComp}
-              queryParams={baseCompQueryParams}
-            />
-          </CompositionContextProvider>
-        </CompositionCompareContext.Provider>
-      </div>
+      <CompositionLayout
+        model={baseModel}
+        selected={selectedBaseComp}
+        queryParams={baseQuery.queryString}
+        compositionParams={baseQuery.params}
+        previewViewProps={previewViewProps}
+        emptyState={emptyState}
+        PreviewView={PreviewView}
+        contextKey={`base-${baseIdStr}-${baseCompId}`}
+        isBase
+      />
     );
   }, [
     isStableData,
@@ -270,8 +312,7 @@ export function CompositionCompare(props: CompositionCompareProps) {
     baseCompId,
     baseChannelKey,
     selectedBaseComp?.identifier,
-    baseCompQueryParams,
-    baseCompositionParams,
+    baseQuery,
     previewViewProps,
     emptyState,
     baseMissing,
@@ -279,49 +320,20 @@ export function CompositionCompare(props: CompositionCompareProps) {
   ]);
 
   const CompareLayout = useMemo(() => {
-    // Don't render iframe until data is stable and channel is ready
-    // Otherwise iframe loads with wrong/missing lcchannel and broadcasts on 'default'
-    if (!isStableData || !compareChannelKey || !compareModel) {
-      return null;
-    }
-    if (compareMissing) {
-      return (
-        <div className={styles.subView}>
-          <div className={styles.missingComposition}>
-            <div className={styles.missingCompositionTitle}>Composition not available</div>
-            <div className={styles.missingCompositionSubtitle}>
-              {`The selected composition${requestedCompositionId ? ` "${requestedCompositionId}"` : ''} does not exist for the compare version.`}
-            </div>
-          </div>
-        </div>
-      );
-    }
-    const compositionProps = {
-      forceHeight: undefined,
-      innerBottomPadding: 50,
-      ...previewViewProps,
-      emptyState,
-      component: compareModel,
-      queryParams: compareCompQueryParams,
-      selected: selectedCompareComp,
-    };
+    if (!isStableData || !compareChannelKey || !compareModel) return null;
+    if (compareMissing) return <MissingComposition compositionId={requestedCompositionId} version="compare" />;
     return (
-      <div className={styles.subView}>
-        <CompositionCompareContext.Provider value={{ compositionProps, isCompare: true }}>
-          <CompositionContextProvider queryParams={compareCompositionParams} setQueryParams={noop}>
-            <PreviewView
-              key={`compare-${compareIdStr}-${compareCompId}`}
-              forceHeight={undefined}
-              innerBottomPadding={50}
-              {...previewViewProps}
-              emptyState={emptyState}
-              component={compareModel}
-              queryParams={compareCompQueryParams}
-              selected={selectedCompareComp}
-            />
-          </CompositionContextProvider>
-        </CompositionCompareContext.Provider>
-      </div>
+      <CompositionLayout
+        model={compareModel}
+        selected={selectedCompareComp}
+        queryParams={compareQuery.queryString}
+        compositionParams={compareQuery.params}
+        previewViewProps={previewViewProps}
+        emptyState={emptyState}
+        PreviewView={PreviewView}
+        contextKey={`compare-${compareIdStr}-${compareCompId}`}
+        isCompare
+      />
     );
   }, [
     isStableData,
@@ -330,20 +342,32 @@ export function CompositionCompare(props: CompositionCompareProps) {
     compareCompId,
     compareChannelKey,
     selectedCompareComp?.identifier,
-    compareCompQueryParams,
-    compareCompositionParams,
+    compareQuery,
     previewViewProps,
     emptyState,
     compareMissing,
     requestedCompositionId,
   ]);
 
-  const CompositionToolbar = () => {
-    if (!base && !compare) {
-      return null;
-    }
+  const toggleControls = useCallback(() => setControlsOpen((x) => !x), []);
+  const handleHeaderKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') toggleControls();
+    },
+    [toggleControls]
+  );
 
-    return (
+  if (!base && !compare) return null;
+
+  const key = `${base?.model.id.toString()}-${compare?.model.id.toString()}-composition-compare`;
+
+  return (
+    <div key={key} className={classNames(styles.container, { [styles.isResizing]: isResizing })}>
+      {contextLoading && (
+        <div className={styles.loader}>
+          <RoundLoader />
+        </div>
+      )}
       <div className={styles.toolbar}>
         <div className={styles.left}>
           <div className={styles.dropdown}>
@@ -357,19 +381,6 @@ export function CompositionCompare(props: CompositionCompareProps) {
           <div className={styles.widgets}>{Widgets?.Right}</div>
         </div>
       </div>
-    );
-  };
-
-  const key = `${componentCompareContext?.base?.model.id.toString()}-${componentCompareContext?.compare?.model.id.toString()}-composition-compare`;
-
-  return (
-    <div key={key} className={classNames(styles.container, { [styles.isResizing]: isResizing })}>
-      {componentCompareContext?.loading && (
-        <div className={styles.loader}>
-          <RoundLoader />
-        </div>
-      )}
-      <CompositionToolbar />
       <div className={styles.compareLayout}>
         <div className={styles.compareMain}>
           <CompareSplitLayoutPreset base={BaseLayout} compare={CompareLayout} />
@@ -388,10 +399,8 @@ export function CompositionCompare(props: CompositionCompareProps) {
             />
             <div
               className={styles.controlsPanelHeader}
-              onClick={() => setControlsOpen((x) => !x)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') setControlsOpen((x) => !x);
-              }}
+              onClick={toggleControls}
+              onKeyDown={handleHeaderKeyDown}
               role="button"
               tabIndex={0}
             >
