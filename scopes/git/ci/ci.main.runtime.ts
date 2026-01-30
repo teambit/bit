@@ -23,6 +23,7 @@ import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
 import { ComponentIdList } from '@teambit/component-id';
 import { SourceBranchDetector } from './source-branch-detector';
+import { generateRandomStr } from '@teambit/toolbox.string.random';
 
 export interface CiWorkspaceConfig {
   /**
@@ -344,13 +345,6 @@ export class CiMain {
     return { code: 0, data: '' };
   }
 
-  /** Generates a random alphanumeric suffix for temporary lane names to avoid CI race conditions. */
-  private generateRandomSuffix(length = 5): string {
-    return Math.random()
-      .toString(36)
-      .substring(2, 2 + length);
-  }
-
   async snapPrCommit({
     laneIdStr,
     message,
@@ -383,7 +377,7 @@ export class CiMain {
     this.logger.console('🔄 Lane Management');
 
     // Use unique temp lane name to avoid race conditions when multiple CI jobs run concurrently
-    const tempLaneName = `${laneId.name}-${this.generateRandomSuffix()}`;
+    const tempLaneName = `${laneId.name}-${generateRandomStr(5)}`;
     this.logger.console(chalk.blue(`Creating temporary lane ${laneId.scope}/${tempLaneName}`));
 
     let foundErr: Error | undefined;
@@ -411,6 +405,9 @@ export class CiMain {
       });
 
       if (!results) {
+        // No changes to snap - remove the temp lane we created and return
+        this.logger.console(chalk.yellow('No changes detected, removing temporary lane'));
+        await this.lanes.removeLanes([tempLaneName], { remote: false, force: true });
         return 'No changes detected, nothing to snap';
       }
 
@@ -430,7 +427,7 @@ export class CiMain {
       const laneExists = availableLanesInScope.find((lane) => lane.id.name === laneId.name);
       if (laneExists) {
         this.logger.console(chalk.blue(`Deleting existing remote lane ${laneId.toString()}`));
-        await this.archiveLane(laneId.toString());
+        await this.archiveLane(laneId.toString(), true); // throwOnError: delete must succeed before export
       }
 
       // Rename temp lane to original name
@@ -744,9 +741,10 @@ export class CiMain {
   }
 
   /**
-   * Archives (deletes) a lane with proper error handling and logging
+   * Archives (deletes) a lane with proper error handling and logging.
+   * @param throwOnError - if true, throws on failure (use for critical operations like pre-export cleanup)
    */
-  private async archiveLane(laneId: string) {
+  private async archiveLane(laneId: string, throwOnError = false) {
     try {
       this.logger.console(chalk.blue(`Archiving lane ${laneId}`));
       // force means to remove the lane even if it was not merged. in this case, we don't care much because main already has the changes.
@@ -758,6 +756,9 @@ export class CiMain {
       }
     } catch (e: any) {
       this.logger.console(chalk.red(`Error archiving lane '${laneId}': ${e.message}`));
+      if (throwOnError) {
+        throw new Error(`Failed to delete remote lane '${laneId}': ${e.message}`);
+      }
       // Don't throw the error - lane cleanup is not critical to the merge process
     }
   }
