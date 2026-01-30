@@ -344,6 +344,16 @@ export class CiMain {
     return { code: 0, data: '' };
   }
 
+  /**
+   * Generates a random alphanumeric suffix for temporary lane names.
+   * Used to avoid race conditions when multiple CI jobs run concurrently.
+   */
+  private generateRandomSuffix(length: number = 5): string {
+    return Math.random()
+      .toString(36)
+      .substring(2, 2 + length);
+  }
+
   async snapPrCommit({
     laneIdStr,
     message,
@@ -374,31 +384,16 @@ export class CiMain {
       });
 
     this.logger.console('🔄 Lane Management');
-    const availableLanesInScope = await this.lanes
-      .getLanes({
-        remote: laneId.scope,
-      })
-      .catch((e) => {
-        throw new Error(`Failed to get lanes in scope ${laneId.scope}: ${e.toString()}`);
-      });
 
-    const laneExists = availableLanesInScope.find((lane) => lane.id.name === laneId.name);
+    // Generate unique temp lane name to avoid race conditions during long snap operations.
+    // Multiple CI jobs running concurrently on the same branch will each use a different
+    // temp lane name, preventing conflicts during the long snap phase.
+    const tempLaneName = `${laneId.name}-${this.generateRandomSuffix()}`;
+    this.logger.console(chalk.blue(`Creating temporary lane ${laneId.scope}/${tempLaneName}`));
 
     let foundErr: Error | undefined;
     try {
-      if (laneExists) {
-        // When making subsequent commits on the same PR branch, the existing lane contains outdated
-        // configurations from when it was first created. Meanwhile, main may have progressed with
-        // config changes (e.g., components changed to different envs) that are stored in .bit objects
-        // but not tracked by git. By deleting and recreating the lane, we ensure it always starts
-        // fresh from main with all the latest configurations.
-        this.logger.console(chalk.blue(`Lane ${laneId.toString()} already exists, deleting and recreating it`));
-        await this.archiveLane(laneId.toString());
-      }
-
-      // Create lane (either for the first time or after deletion)
-      this.logger.console(chalk.blue(`Creating lane ${laneId.toString()}`));
-      await this.lanes.createLane(laneId.name, {
+      await this.lanes.createLane(tempLaneName, {
         scope: laneId.scope,
         forkLaneNewScope: true,
       });
@@ -407,9 +402,9 @@ export class CiMain {
 
       this.logger.console(chalk.blue(`Current lane: ${currentLane?.name ?? 'main'}`));
 
-      if (currentLane?.name !== laneId.name) {
+      if (currentLane?.name !== tempLaneName) {
         throw new Error(
-          `Expected to be on lane ${laneId.name} after creation, but current lane is ${currentLane?.name ?? 'main'}`
+          `Expected to be on lane ${tempLaneName} after creation, but current lane is ${currentLane?.name ?? 'main'}`
         );
       }
 
@@ -429,10 +424,28 @@ export class CiMain {
       const snapOutput = snapResultOutput(results);
       this.logger.console(snapOutput);
 
+      // Now that snap is complete, handle the remote lane atomically.
+      // This minimizes the race window - only quick operations happen here.
+      this.logger.console('🔄 Finalizing Lane');
+
+      // Check if original lane exists on remote and delete it
+      const availableLanesInScope = await this.lanes.getLanes({ remote: laneId.scope }).catch((e) => {
+        throw new Error(`Failed to get lanes in scope ${laneId.scope}: ${e.toString()}`);
+      });
+
+      const laneExists = availableLanesInScope.find((lane) => lane.id.name === laneId.name);
+      if (laneExists) {
+        this.logger.console(chalk.blue(`Deleting existing remote lane ${laneId.toString()}`));
+        await this.archiveLane(laneId.toString());
+      }
+
+      // Rename temp lane to original name
+      this.logger.console(chalk.blue(`Renaming lane from ${tempLaneName} to ${laneId.name}`));
+      await this.lanes.rename(laneId.name, tempLaneName);
+
+      // Export with the correct name
       this.logger.console(chalk.blue(`Exporting ${snappedComponents.length} components`));
-
       const exportResults = await this.exporter.export();
-
       this.logger.console(chalk.green(`Exported ${exportResults.componentsIds.length} components`));
     } catch (e: any) {
       foundErr = e;
