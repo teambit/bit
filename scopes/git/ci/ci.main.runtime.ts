@@ -344,11 +344,8 @@ export class CiMain {
     return { code: 0, data: '' };
   }
 
-  /**
-   * Generates a random alphanumeric suffix for temporary lane names.
-   * Used to avoid race conditions when multiple CI jobs run concurrently.
-   */
-  private generateRandomSuffix(length: number = 5): string {
+  /** Generates a random alphanumeric suffix for temporary lane names to avoid CI race conditions. */
+  private generateRandomSuffix(length = 5): string {
     return Math.random()
       .toString(36)
       .substring(2, 2 + length);
@@ -385,9 +382,7 @@ export class CiMain {
 
     this.logger.console('🔄 Lane Management');
 
-    // Generate unique temp lane name to avoid race conditions during long snap operations.
-    // Multiple CI jobs running concurrently on the same branch will each use a different
-    // temp lane name, preventing conflicts during the long snap phase.
+    // Use unique temp lane name to avoid race conditions when multiple CI jobs run concurrently
     const tempLaneName = `${laneId.name}-${this.generateRandomSuffix()}`;
     this.logger.console(chalk.blue(`Creating temporary lane ${laneId.scope}/${tempLaneName}`));
 
@@ -424,8 +419,7 @@ export class CiMain {
       const snapOutput = snapResultOutput(results);
       this.logger.console(snapOutput);
 
-      // Now that snap is complete, handle the remote lane atomically.
-      // This minimizes the race window - only quick operations happen here.
+      // Finalize atomically: delete existing lane, rename temp lane, export
       this.logger.console('🔄 Finalizing Lane');
 
       // Check if original lane exists on remote and delete it
@@ -454,18 +448,17 @@ export class CiMain {
       if (foundErr) {
         this.logger.console(chalk.red(`Found error: ${foundErr.message}`));
       }
-      // Whatever happens, switch back to the original lane
+      // Always switch back to the original lane
       this.logger.console('🔄 Cleanup');
-      this.logger.console(chalk.blue(`Switching back to ${originalLane?.name ?? 'main'}`));
-      const lane = await this.lanes.getCurrentLane();
-      if (!lane) {
-        this.logger.console(chalk.yellow('Already on main, no need to switch. Checking out to head'));
-        await this.lanes.checkout.checkout({
-          head: true,
-          skipNpmInstall: true,
-        });
+      const targetLane = originalLane?.name ?? 'main';
+      this.logger.console(chalk.blue(`Switching back to ${targetLane}`));
+
+      const currentLane = await this.lanes.getCurrentLane();
+      if (currentLane) {
+        await this.switchToLane(targetLane);
       } else {
-        await this.switchToLane(originalLane?.name ?? 'main');
+        this.logger.console(chalk.yellow('Already on main, checking out to head'));
+        await this.lanes.checkout.checkout({ head: true, skipNpmInstall: true });
       }
     }
   }
