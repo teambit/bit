@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import { removeChalkCharacters } from '@teambit/legacy.utils';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
 
@@ -140,10 +141,13 @@ describe('ci commands', function () {
     it('should create a temporary lane during snap (indicated by random suffix pattern)', () => {
       // The temp lane name follows pattern: {original-name}-{5-char-random}
       // e.g., "feature-temp-lane-test-a1b2c"
-      expect(prOutput).to.match(/Creating temporary lane .+\/feature-temp-lane-test-[a-z0-9]{5}/);
+      // Strip chalk/ANSI codes before regex matching to avoid false negatives
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.match(/Creating temporary lane .+\/feature-temp-lane-test-[a-z0-9]{5}/);
     });
     it('should rename the temp lane to the final name before export', () => {
-      expect(prOutput).to.match(/Renaming lane from feature-temp-lane-test-[a-z0-9]{5} to feature-temp-lane-test/);
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.match(/Renaming lane from feature-temp-lane-test-[a-z0-9]{5} to feature-temp-lane-test/);
     });
     it('should complete successfully', () => {
       expect(prOutput).to.include('PR command executed successfully');

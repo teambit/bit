@@ -405,8 +405,9 @@ export class CiMain {
       });
 
       if (!results) {
-        // No changes to snap - remove the temp lane we created and return
+        // No changes to snap - switch back to main and remove the temp lane we created
         this.logger.console(chalk.yellow('No changes detected, removing temporary lane'));
+        await this.switchToLane(originalLane?.name ?? 'main');
         await this.lanes.removeLanes([tempLaneName], { remote: false, force: true });
         return 'No changes detected, nothing to snap';
       }
@@ -758,6 +759,11 @@ export class CiMain {
         this.logger.console(chalk.yellow(`Failed to archive lane '${laneId}' - no lanes were removed`));
       }
     } catch (e: any) {
+      // "not found" is success - another concurrent job may have deleted it
+      if (e.message?.includes('was not found') || e.toString().includes('was not found')) {
+        this.logger.console(chalk.yellow(`Lane '${laneId}' was already deleted (likely by concurrent job)`));
+        return;
+      }
       this.logger.console(chalk.red(`Error archiving lane '${laneId}': ${e.message}`));
       if (throwOnError) {
         throw new Error(`Failed to delete remote lane '${laneId}': ${e.message}`);
