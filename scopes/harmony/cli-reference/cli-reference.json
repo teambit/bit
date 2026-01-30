@@ -35,6 +35,11 @@
             "j",
             "json",
             "output the commands info as JSON"
+          ],
+          [
+            "",
+            "skill <type>",
+            "generate output for Claude Code skill: \"commands\" (like bit --help) or \"flags\" (condensed flag reference)"
           ]
         ],
         "description": "generate an .md file with all commands details",
@@ -939,12 +944,18 @@
         "j",
         "json",
         "return the output as JSON"
+      ],
+      [
+        "r",
+        "remote",
+        "query a remote scope (the pattern must start with the scope name, e.g. \"scope-name/**\")"
       ]
     ],
     "description": "test and validate component patterns",
     "extendedDescription": "this command helps validating a pattern before using it in other commands.\nNOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes.\na pattern can be a simple component-id or component-name. e.g. 'ui/button'.\na pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes.\nto enter multiple patterns, separate them by a comma, e.g. 'ui/*, lib/*'\nto exclude, use '!'. e.g. 'ui/**, !ui/button'\nthe matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch).\n\nto filter by a state or attribute, prefix the pattern with \"$\". e.g. '$deprecated', '$modified'.\nlist of supported states: [new, modified, deprecated, deleted, snappedOnMain, softTagged, codeModified, localOnly].\nto filter by multi-params state/attribute, separate the params with \":\", e.g. '$env:teambit.react/react'.\nlist of supported multi-params states: [env].\nto match a state and another criteria, use \" AND \" keyword. e.g. '$modified AND teambit.workspace/** AND $env:teambit.react/react'.\n",
     "group": "info-analysis",
     "private": false,
+    "remoteOp": true,
     "examples": [
       {
         "cmd": "bit pattern '**'",
@@ -965,6 +976,10 @@
       {
         "cmd": "bit pattern 'my-scope.org/**'",
         "description": "matches all components of the scope \"my-scope.org\""
+      },
+      {
+        "cmd": "bit pattern --remote 'teambit.workspace/**'",
+        "description": "matches all components from the remote scope \"teambit.workspace\""
       }
     ]
   },
@@ -1377,6 +1392,10 @@
       {
         "cmd": "bit create mdx docs/create-components --aspect teambit.mdx/mdx-env --scope my-org.my-scope",
         "description": "creates an mdx component named 'docs/create-components' and sets it scope to 'my-org.my-scope'. \nby default, the scope is the `defaultScope` value, configured in your `workspace.jsonc`."
+      },
+      {
+        "cmd": "bit create react my-org.my-scope/hooks/use-session",
+        "description": "creates a component named 'hooks/use-session' with scope 'my-org.my-scope'. \nthe scope is parsed from the component name (bit.cloud scopes contain a dot)."
       },
       {
         "cmd": "bit create react ui/button --aspect teambit.react/react-env --env teambit.community/envs/community-react@3.0.3",
@@ -1893,6 +1912,16 @@
         "",
         "lockfile-only",
         "dependencies are not written to node_modules. Only the lockfile is updated"
+      ],
+      [
+        "",
+        "allow-scripts [pkgNames]",
+        "a comma separated list of package names that are allowed to run installation scripts"
+      ],
+      [
+        "",
+        "disallow-scripts [pkgNames]",
+        "a comma separated list of package names that are NOT allowed to run installation scripts"
       ]
     ],
     "description": "install workspace dependencies",
@@ -2133,8 +2162,8 @@
       ],
       [
         "",
-        "write-deps <workspace.jsonc|package.json>",
-        "write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions"
+        "write-deps <target>",
+        "write all workspace component dependencies to the specified target (\"package.json\" or \"workspace.jsonc\"), resolving conflicts by picking the ranges that match the highest versions"
       ],
       [
         "",
@@ -2150,6 +2179,11 @@
         "",
         "lane-only",
         "when using wildcards on a lane, only import components that exist on the lane (never from main)"
+      ],
+      [
+        "",
+        "owner",
+        "treat the argument as an owner name and import all components from all scopes of that owner"
       ]
     ],
     "description": "bring components from remote scopes into your workspace",
@@ -2250,7 +2284,7 @@
       [
         "",
         "lane",
-        "when on a lane, delete the component from this lane only. avoid merging it to main or other lanes"
+        "when on a lane, delete the component from this lane only. this removal will not affect main when the lane is merged"
       ],
       [
         "",
@@ -2379,7 +2413,7 @@
     "arguments": [
       {
         "name": "to",
-        "description": "permitted values: [head, latest, reset, {specific-version}, {head~x}]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes"
+        "description": "permitted values: `[head, latest, reset, {specific-version}, {head~x}]`. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes"
       },
       {
         "name": "component-pattern",
@@ -3101,7 +3135,7 @@
       [
         "a",
         "all",
-        "revert all unexported tags/snaps for all components"
+        "DEPRECATED. this is now the default behavior when no component-pattern is provided"
       ],
       [
         "",
@@ -3122,10 +3156,15 @@
         "",
         "never-exported",
         "reset only components that were never exported"
+      ],
+      [
+        "s",
+        "silent",
+        "skip confirmation when resetting all components"
       ]
     ],
     "description": "revert local tags and snaps to previous versions",
-    "extendedDescription": "removes local component versions (tags/snaps) that haven't been exported yet.\nby default reverts all local versions. use --head to revert only the latest version.\nuseful for undoing mistakes before exporting. exported versions cannot be reset.",
+    "extendedDescription": "removes local component versions (tags/snaps) that haven't been exported yet.\nif no component-pattern is provided, resets all components (with confirmation prompt).\nby default reverts all local versions of each component. use --head to revert only the latest version.\nuseful for undoing mistakes before exporting. exported versions cannot be reset.",
     "group": "version-control",
     "private": false,
     "arguments": [
@@ -4328,6 +4367,11 @@
             "",
             "lane-name <name>",
             "specify the lane name to delete after merge (auto-detected if not provided)"
+          ],
+          [
+            "",
+            "skip-push",
+            "skip pushing the changes to the remote repository (useful when CI handles the push separately)"
           ]
         ],
         "description": "Tags and exports new semantic versions after merging a PR to main.",
@@ -4494,6 +4538,11 @@
         "e",
         "exclude-local-scope",
         "relevant for --archive. exclude .bit or .git/bit from the archive file"
+      ],
+      [
+        "r",
+        "remote <remoteName>",
+        "run doctor checks on a remote scope"
       ]
     ],
     "description": "diagnose and troubleshoot workspace issues",
@@ -5195,7 +5244,7 @@
     ]
   },
   {
-    "name": "fork <source-component-id> [target-component-name]",
+    "name": "fork <pattern> [target-component-name]",
     "alias": "",
     "options": [
       [
@@ -5245,19 +5294,19 @@
       ]
     ],
     "description": "create a new component by copying from an existing one",
-    "extendedDescription": "duplicates an existing component's source files and configuration to create a new independent component.\nuseful for creating variations or starting development from a similar component.\nautomatically handles import/require statement updates and provides refactoring options.",
+    "extendedDescription": "duplicates an existing component's source files and configuration to create a new independent component.\nuseful for creating variations or starting development from a similar component.\nautomatically handles import/require statement updates and provides refactoring options.\n\nwhen using a pattern, all matching components are forked with the same name to a target scope.\nthe target-component-name argument is not allowed when using patterns.",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
     "skipWorkspace": true,
     "arguments": [
       {
-        "name": "source-component-id",
-        "description": "the component id of the source component"
+        "name": "pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       },
       {
         "name": "target-component-name",
-        "description": "the name for the new component (component name without scope, e.g. name/spaces/my-button). to set a different scope, use the '--scope' flag"
+        "description": "the name for the new component (component name without scope, e.g. name/spaces/my-button). to set a different scope, use the '--scope' flag. not allowed when using patterns"
       }
     ]
   },
@@ -5268,6 +5317,11 @@
       [
         "a",
         "all",
+        "DEPRECATED. (use --unmodified)"
+      ],
+      [
+        "u",
+        "unmodified",
         "check-types for all components, not only modified and new"
       ],
       [
@@ -5282,7 +5336,7 @@
       ]
     ],
     "description": "validate TypeScript type correctness",
-    "extendedDescription": "checks for TypeScript type errors in component files, similar to running tsc.\nby default only checks new and modified components. use --all to check all components.\nuseful for catching type issues before tagging, snapping or building components.",
+    "extendedDescription": "checks for TypeScript type errors in component files, similar to running tsc.\nby default only checks new and modified components. use --unmodified to check all components.\nuseful for catching type issues before tagging, snapping or building components.",
     "group": "testing",
     "private": false,
     "arguments": [
@@ -5394,7 +5448,7 @@
           },
           {
             "name": "config",
-            "description": "the aspect config. enter the config as a stringified JSON (e.g. '{\"foo\":\"bar\"}' ). when no config is provided, an aspect is set with an empty config ({})."
+            "description": "the aspect config. enter the config as a stringified JSON (e.g. `{\"foo\":\"bar\"}` ). when no config is provided, an aspect is set with an empty config ({})."
           }
         ]
       },

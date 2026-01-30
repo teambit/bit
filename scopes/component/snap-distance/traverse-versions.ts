@@ -49,9 +49,7 @@ export async function getAllVersionsInfo({
   stopAt?: Ref[] | null; // by default, stop when the parents is empty
 }): Promise<VersionInfo[]> {
   const results: VersionInfo[] = [];
-  const isAlreadyProcessed = (ref: Ref): boolean => {
-    return Boolean(results.find((result) => result.ref.isEqual(ref)));
-  };
+  const processedHashes = new Set<string>();
   const getVersionObj = async (ref: Ref): Promise<Version | undefined> => {
     if (!versionObjects && !repo) {
       throw new TypeError('getAllVersionsInfo expect to get either repo or versionObjects');
@@ -86,16 +84,26 @@ export async function getAllVersionsInfo({
     headInfo.error = new HeadNotFound(modelComponent.id(), laneHead.toString());
     if (throws) throw headInfo.error;
   }
+  processedHashes.add(laneHead.toString());
   results.push(headInfo);
-  const addParentsRecursively = async (version: Version) => {
-    await pMapSeries(version.parents, async (parent) => {
+
+  // Use iterative approach with a queue to avoid stack overflow on deep histories
+  const queue: Version[] = head ? [head] : [];
+
+  while (queue.length > 0) {
+    const version = queue.shift()!;
+
+    for (const parent of version.parents) {
       if (shouldStop(parent)) {
-        return;
+        continue;
       }
-      if (isAlreadyProcessed(parent)) {
+      const parentHashStr = parent.toString();
+      if (processedHashes.has(parentHashStr)) {
         // happens when there are two parents at some point, and then they merged
-        return;
+        continue;
       }
+      processedHashes.add(parentHashStr);
+
       const parentVersion = await getVersionObj(parent);
       if (!foundOnMain) foundOnMain = parentVersion?._hash === headOnMain;
       const versionInfo: VersionInfo = {
@@ -114,10 +122,12 @@ export async function getAllVersionsInfo({
         if (throws) throw versionInfo.error;
       }
       results.push(versionInfo);
-      if (parentVersion) await addParentsRecursively(parentVersion);
-    });
-  };
-  if (head) await addParentsRecursively(head);
+      if (parentVersion) {
+        queue.push(parentVersion);
+      }
+    }
+  }
+
   return results;
 }
 
@@ -264,28 +274,41 @@ export function getSubsetOfVersionParents(
   stopAt?: Ref[]
 ): VersionParents[] {
   const results: VersionParents[] = [];
+  const processedHashes = new Set<string>();
   const shouldStop = (ref: Ref): boolean => Boolean(stopAt?.find((r) => r.isEqual(ref)));
   const getVersionParent = (ref: Ref) => versionParents.find((v) => v.hash.isEqual(ref));
-  const isAlreadyProcessed = (ref: Ref): boolean => {
-    return Boolean(results.find((result) => result.hash.isEqual(ref)));
-  };
-  const addVersionParentRecursively = (version: VersionParents) => {
-    results.push(version);
-    version.parents.forEach((parent) => {
-      if (shouldStop(parent)) {
-        return;
-      }
-      if (isAlreadyProcessed(parent)) {
-        // happens when there are two parents at some point, and then they merged
-        return;
-      }
-      const parentVersion = getVersionParent(parent);
-      if (parentVersion) addVersionParentRecursively(parentVersion);
-    });
-  };
+
   const head = getVersionParent(from);
   if (!head || shouldStop(head.hash)) return [];
-  addVersionParentRecursively(head);
+
+  // Use iterative approach with a stack to avoid stack overflow on deep histories
+  const stack: VersionParents[] = [head];
+  processedHashes.add(head.hash.toString());
+
+  while (stack.length > 0) {
+    const version = stack.pop()!;
+    results.push(version);
+
+    // Add parents to stack in reverse order to maintain original traversal order
+    for (let i = version.parents.length - 1; i >= 0; i--) {
+      const parent = version.parents[i];
+      if (shouldStop(parent)) {
+        continue;
+      }
+      const parentHashStr = parent.toString();
+      if (processedHashes.has(parentHashStr)) {
+        // happens when there are two parents at some point, and then they merged
+        continue;
+      }
+      const parentVersion = getVersionParent(parent);
+      if (parentVersion) {
+        // Mark as processed before pushing to prevent duplicate stack entries
+        processedHashes.add(parentHashStr);
+        stack.push(parentVersion);
+      }
+    }
+  }
+
   return results;
 }
 

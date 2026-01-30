@@ -21,6 +21,7 @@ import type {
   BitObjectList,
   ObjectItemsStream,
   Repository,
+  LaneHistory,
 } from '@teambit/objects';
 import { ObjectList, Ref } from '@teambit/objects';
 import type { ComponentDef } from '../repositories/sources';
@@ -505,7 +506,17 @@ export class ScopeComponentsImporter {
     await Promise.all(lanes.map((lane) => this.repo.remoteLanes.syncWithLaneObject(lane.scope as string, lane)));
     if (includeLaneHistory) {
       const laneHistories = bitObjects.getLaneHistories();
-      await this.scope.objects.writeObjectsToTheFS(laneHistories);
+      await Promise.all(
+        laneHistories.map(async (laneHistory) => {
+          const existingLaneHistory = (await this.repo.load(laneHistory.hash())) as LaneHistory | undefined;
+          if (existingLaneHistory) {
+            existingLaneHistory.merge(laneHistory);
+            await this.scope.objects.writeObjectsToTheFS([existingLaneHistory]);
+          } else {
+            await this.scope.objects.writeObjectsToTheFS([laneHistory]);
+          }
+        })
+      );
     }
     return lanes;
   }

@@ -29,6 +29,7 @@ import { TrackerAspect } from '@teambit/tracker';
 import type { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { NewComponentHelperAspect } from '@teambit/new-component-helper';
 import { compact, uniq } from 'lodash';
+import { isValidScopeName } from '@teambit/legacy-bit-id';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import type { DeprecationMain } from '@teambit/deprecation';
@@ -42,7 +43,7 @@ import { generatorSchema } from './generator.graphql';
 import type { GenerateResult, InstallOptions, OnComponentCreateFn } from './component-generator';
 import { ComponentGenerator } from './component-generator';
 import { WorkspaceGenerator } from './workspace-generator';
-import type { WorkspaceTemplate } from './workspace-template';
+import type { GetWorkspaceTemplates, WorkspaceTemplate } from './workspace-template';
 import type { NewOptions } from './new.cmd';
 import { NewCmd } from './new.cmd';
 import {
@@ -58,7 +59,7 @@ import { WorkspacePathExists } from './exceptions/workspace-path-exists';
 import { GLOBAL_SCOPE } from '@teambit/legacy.constants';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[] | GetComponentTemplates>;
-export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
+export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[] | GetWorkspaceTemplates>;
 export type OnComponentCreateSlot = SlotRegistry<OnComponentCreateFn>;
 
 export type TemplateDescriptor = {
@@ -67,6 +68,12 @@ export type TemplateDescriptor = {
   name: string;
   description?: string;
   hidden?: boolean;
+  /**
+   * the env that will be used for components created with this template.
+   * only relevant for component templates (not workspace templates).
+   * expected format is an aspect ID string, e.g., "bitdev.react/react-env".
+   */
+  env?: string;
 };
 
 type TemplateWithId = { id: string; envName?: string };
@@ -139,7 +146,7 @@ export class GeneratorMain {
   /**
    * register a new workspace starter.
    */
-  registerWorkspaceTemplate(templates: WorkspaceTemplate[]) {
+  registerWorkspaceTemplate(templates: WorkspaceTemplate[] | GetWorkspaceTemplates) {
     this.workspaceTemplateSlot.register(templates);
     return this;
   }
@@ -166,11 +173,13 @@ export class GeneratorMain {
       if (this.config.hideCoreTemplates && this.bitApi.isCoreAspect(id)) return true;
       return false;
     };
+    const componentTemplate = template as ComponentTemplate;
     return {
       aspectId: id,
       name: template.name,
       description: template.description,
       hidden: shouldBeHidden(),
+      env: componentTemplate.env,
     };
   };
 
@@ -382,6 +391,29 @@ export class GeneratorMain {
     return templateWithId;
   }
 
+  /**
+   * Parse the scope from a component name if provided in the format: scope/name
+   * This only works for bit.cloud scopes (containing a dot), e.g., "my-org.my-scope/hooks/use-session"
+   * Local bare-scopes don't contain a dot, so we can't distinguish between scope/name and namespace/name.
+   * @returns { scope, name } where scope is the extracted scope (or undefined) and name is the remaining component name
+   */
+  private parseScopeFromComponentIdStr(componentIdStr: string): { scope: string | undefined; name: string } {
+    const firstSlashIndex = componentIdStr.indexOf('/');
+    if (firstSlashIndex === -1) {
+      // no slash, so no scope prefix, e.g., "button"
+      return { scope: undefined, name: componentIdStr };
+    }
+    const potentialScope = componentIdStr.substring(0, firstSlashIndex);
+    // bit.cloud scopes always contain a dot (e.g., "my-org.my-scope")
+    // local bare-scopes don't contain a dot, so we can't distinguish them from namespace/name
+    if (potentialScope.includes('.') && isValidScopeName(potentialScope)) {
+      const name = componentIdStr.substring(firstSlashIndex + 1);
+      return { scope: potentialScope, name };
+    }
+    // no dot in the first segment, treat the whole string as the component name
+    return { scope: undefined, name: componentIdStr };
+  }
+
   async generateComponentTemplate(
     componentNames: string[],
     templateName: string,
@@ -395,9 +427,13 @@ export class GeneratorMain {
 
     const templateWithId = await this.getTemplateWithId(templateName, aspect);
 
-    const componentIds = componentNames.map((componentName) =>
-      this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
-    );
+    const componentIds = componentNames.map((componentName) => {
+      // Support scope/name syntax for bit.cloud scopes (containing a dot)
+      // e.g., "my-org.my-scope/hooks/use-session" -> scope: "my-org.my-scope", name: "hooks/use-session"
+      const { scope: parsedScope, name: parsedName } = this.parseScopeFromComponentIdStr(componentName);
+      const scope = parsedScope || options.scope;
+      return this.newComponentHelper.getNewComponentId(parsedName, namespace, scope);
+    });
 
     const componentNameSameAsTemplateName = componentIds.find((componentId) => componentId.name === templateName);
     if (componentNameSameAsTemplateName) {
@@ -525,7 +561,9 @@ the reason is that after refactoring, the code will have this invalid class: "cl
   private getAllWorkspaceTemplatesFlattened(): Array<{ id: string; template: WorkspaceTemplate }> {
     const templatesByAspects = this.workspaceTemplateSlot.toArray();
     return templatesByAspects.flatMap(([id, workspaceTemplates]) => {
-      return workspaceTemplates.map((template) => ({
+      const resolvedWorkspaceTemplates =
+        typeof workspaceTemplates === 'function' ? workspaceTemplates() : workspaceTemplates;
+      return resolvedWorkspaceTemplates.map((template) => ({
         id,
         template,
       }));
@@ -739,7 +777,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
         starterTemplate,
         starterTemplateStandalone,
       ]);
-    generator.registerWorkspaceTemplate([BasicWorkspaceStarter]);
+    generator.registerWorkspaceTemplate(() => [BasicWorkspaceStarter]);
 
     return generator;
   }

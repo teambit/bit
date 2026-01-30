@@ -32,7 +32,6 @@ export async function createLane(
   if (!isValidScopeName(scopeName)) {
     throw new InvalidScopeName(scopeName);
   }
-  await throwForStagedComponents(workspace);
   const getDataToPopulateLaneObjectIfNeeded = async (): Promise<LaneComponent[]> => {
     if (remoteLane) return remoteLane.components;
     // when branching from one lane to another, copy components from the origin lane

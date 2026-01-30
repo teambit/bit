@@ -312,6 +312,56 @@ describe('bit lane import operations', function () {
     });
   });
 
+  describe('lane import with env using "+" version for component peer dependency (snaps)', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      // Create comp1 which will be used as a peer dependency in the env
+      helper.fs.outputFile('comp1/index.js', 'module.exports = function() { return "comp1"; };');
+      helper.command.addComponent('comp1');
+      // Create an env with "+" version for comp1 in the peers
+      helper.env.setEmptyEnv();
+      const comp1PkgName = helper.general.getPackageNameByCompName('comp1', false);
+      helper.fs.outputFile(
+        'empty-env/env.jsonc',
+        `{
+  "policy": {
+    "peers": [
+      {
+        "name": "${comp1PkgName}",
+        "version": "+",
+        "supportedRange": "^0.0.1"
+      }
+    ]
+  }
+}
+`
+      );
+      // Create comp2 (independent) that uses the env
+      helper.fs.outputFile('comp2/index.js', 'module.exports = function() { return "comp2"; };');
+      helper.command.addComponent('comp2');
+      helper.command.setEnv('comp2', 'empty-env');
+      // Create a lane and snap (not tag) - this creates hash-based versions
+      helper.command.createLane('dev');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+    });
+    // This test verifies the fix for the bug where "+" version resolution
+    // was not properly resolving to the actual version from workspace dependencies,
+    // causing pnpm to receive "+" as a version which it cannot handle
+    it('should resolve "+" version and not pass it directly to pnpm', () => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      // Import the component using the env - this triggers installation
+      // where the "+" version must be resolved to actual version
+      const output = helper.command.importLane('dev', `--pattern ${helper.scopes.remote}/comp2`);
+      // The "+" should be resolved to actual version, not passed to pnpm directly
+      // The specific error we're fixing is "isn't supported by any available resolver"
+      // which happens when "+" is passed as a version to pnpm
+      expect(output).to.not.have.string("isn't supported by any available resolver");
+      expect(output).to.not.have.string('@+'); // No "@+" should appear in error messages
+    });
+  });
+
   describe('getting new components from the lane', () => {
     let firstWorkspaceAfterExport: string;
     let secondWorkspace: string;

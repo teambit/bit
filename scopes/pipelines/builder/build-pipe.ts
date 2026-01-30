@@ -109,6 +109,21 @@ export class BuildPipe {
     this.longProcessLogger.logProgress(`${taskLogPrefix}${task.description ? ` ${task.description}` : ''}`, false);
     this.updateFailedDependencyTask(task);
     if (this.shouldSkipTask(taskId, env.id)) {
+      // Save skipped tasks with pending status so they appear in the UI
+      const components = buildContext.capsuleNetwork.seedersCapsules.getAllComponents();
+      const componentsResults: ComponentResult[] = components.map((component) => ({
+        component,
+        status: 'pending',
+      }));
+      const taskResults: TaskResults = {
+        task,
+        env,
+        componentsResults,
+        artifacts: undefined,
+        startTime: Date.now(),
+        endTime: Date.now(),
+      };
+      this.taskResults.push(taskResults);
       return;
     }
     const startTask = process.hrtime();
@@ -143,10 +158,18 @@ export class BuildPipe {
       artifacts = this.artifactFactory.generate(buildContext, defs, task);
     }
 
+    // For tasks that run on a single component (e.g., test/lint in single-component builds),
+    // add the task-level timing to the component result if it doesn't already have timing
+    const componentsResults = buildTaskResult.componentsResults;
+    if (componentsResults.length === 1 && !componentsResults[0].startTime && !componentsResults[0].endTime) {
+      componentsResults[0].startTime = taskStartTime;
+      componentsResults[0].endTime = endTime;
+    }
+
     const taskResults: TaskResults = {
       task,
       env,
-      componentsResults: buildTaskResult.componentsResults,
+      componentsResults,
       artifacts,
       startTime: taskStartTime,
       endTime,

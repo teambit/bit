@@ -177,11 +177,22 @@ export interface DependencyResolverWorkspaceConfig {
    */
   isolatedCapsules?: boolean;
 
-  /*
+  /**
    * Ignore the builds of specific dependencies. The "preinstall", "install", and "postinstall" scripts
    * of the listed packages will not be executed during installation.
    */
   neverBuiltDependencies?: string[];
+
+  /**
+   * Fine-grained control over dependency lifecycle scripts. Allows explicitly permitting (true), blocking (false), or warning ('warn')
+   * for specific dependencies' "preinstall", "install", and "postinstall" scripts during installation.
+   */
+  allowScripts?: Record<string, boolean | 'warn'>;
+
+  /**
+   * Set this to true in order to allow all dependencies to run install scripts.
+   */
+  dangerouslyAllowAllScripts?: boolean;
 
   /**
    * If true, staleness checks for cached data will be bypassed, but missing data will be requested from the server.

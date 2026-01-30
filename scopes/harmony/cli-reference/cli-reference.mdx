@@ -166,7 +166,7 @@ rarely used for manual aspect management as most aspects are configured automati
 | ----------- | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `pattern`   | the components to extend. component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 | `aspect-id` |                                                                                                                                                                                                                         the aspect's component id                                                                                                                                                                                                                         |
-| `config`    |                                                                                                                                                        the aspect config. enter the config as a stringified JSON (e.g. '{"foo":"bar"}' ). when no config is provided, an aspect is set with an empty config ({}).                                                                                                                                                         |
+| `config`    |                                                                                                                                                        the aspect config. enter the config as a stringified JSON (e.g. `{"foo":"bar"}` ). when no config is provided, an aspect is set with an empty config ({}).                                                                                                                                                         |
 
 | **Option** | **Option alias** | **Description**                                                                                |
 | ---------- | :--------------: | ---------------------------------------------------------------------------------------------- |
@@ -309,7 +309,7 @@ with no args, only workspace's capsules are deleted
 
 **Description**: validate TypeScript type correctness  
 checks for TypeScript type errors in component files, similar to running tsc.  
-by default only checks new and modified components. use --all to check all components.  
+by default only checks new and modified components. use --unmodified to check all components.  
 useful for catching type issues before tagging, snapping or building components.
 
 `bit check-types [component-pattern]`
@@ -318,11 +318,12 @@ useful for catching type issues before tagging, snapping or building components.
 | ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
-| **Option** | **Option alias** | **Description**                                           |
-| ---------- | :--------------: | --------------------------------------------------------- |
-| `--all`    |       `-a`       | check-types for all components, not only modified and new |
-| `--strict` |                  | in case issues found, exit with code 1                    |
-| `--json`   |       `-j`       | return the output in json format                          |
+| **Option**     | **Option alias** | **Description**                                           |
+| -------------- | :--------------: | --------------------------------------------------------- |
+| `--all`        |       `-a`       | DEPRECATED. (use --unmodified)                            |
+| `--unmodified` |       `-u`       | check-types for all components, not only modified and new |
+| `--strict`     |                  | in case issues found, exit with code 1                    |
+| `--json`       |       `-j`       | return the output in json format                          |
 
 ---
 
@@ -344,7 +345,7 @@ the `<to>` argument accepts these values:
 
 | **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
 | ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| `to`                |                                                                                                                                          permitted values: [head, latest, reset, {specific-version}, {head~x}]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes                                                                                                                                           |
+| `to`                |                                                                                                                                         permitted values: `[head, latest, reset, {specific-version}, {head~x}]`. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes                                                                                                                                          |
 | `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
 | **Option**                              | **Option alias** | **Description**                                                                                                                          |
@@ -413,6 +414,7 @@ By default, bumps patch versions when merging to main. If specific configuration
 | `--auto-merge-resolve <merge-strategy>` |       `-r`       | in case of merge conflict during checkout, resolve according to the provided strategy: [ours, theirs, manual] |
 | `--force-theirs`                        |                  | do not merge during checkout, just overwrite with incoming files                                              |
 | `--lane-name <name>`                    |                  | specify the lane name to delete after merge (auto-detected if not provided)                                   |
+| `--skip-push`                           |                  | skip pushing the changes to the remote repository (useful when CI handles the push separately)                |
 
 ---
 
@@ -551,7 +553,7 @@ to remove components from your local workspace only, use "bit remove" instead.
 
 | **Option**         | **Option alias** | **Description**                                                                                                                                             |
 | ------------------ | :--------------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--lane`           |                  | when on a lane, delete the component from this lane only. avoid merging it to main or other lanes                                                           |
+| `--lane`           |                  | when on a lane, delete the component from this lane only. this removal will not affect main when the lane is merged                                         |
 | `--update-main`    |                  | delete component/s on the main lane after merging this lane into main                                                                                       |
 | `--range <string>` |                  | EXPERIMENTAL. enter a Semver range to delete specific tags (cannot be used for snaps). see https://www.npmjs.com/package/semver#ranges for the range syntax |
 | `--silent`         |       `-s`       | skip confirmation                                                                                                                                           |
@@ -790,6 +792,7 @@ can generate diagnostic reports and workspace archives for debugging and support
 | `--include-node-modules` |       `-n`       | relevant for --archive. include node_modules in the archive file                                  |
 | `--include-public`       |       `-p`       | relevant for --archive. include public folder in the archive file                                 |
 | `--exclude-local-scope`  |       `-e`       | relevant for --archive. exclude .bit or .git/bit from the archive file                            |
+| `--remote <remoteName>`  |       `-r`       | run doctor checks on a remote scope                                                               |
 
 ---
 
@@ -957,12 +960,15 @@ duplicates an existing component's source files and configuration to create a ne
 useful for creating variations or starting development from a similar component.  
 automatically handles import/require statement updates and provides refactoring options.
 
-`bit fork <source-component-id> [target-component-name]`
+when using a pattern, all matching components are forked with the same name to a target scope.  
+the target-component-name argument is not allowed when using patterns.
 
-| **Arg**                 |                                                               **Description**                                                               |
-| ----------------------- | :-----------------------------------------------------------------------------------------------------------------------------------------: |
-| `source-component-id`   |                                                  the component id of the source component                                                   |
-| `target-component-name` | the name for the new component (component name without scope, e.g. name/spaces/my-button). to set a different scope, use the '--scope' flag |
+`bit fork <pattern> [target-component-name]`
+
+| **Arg**                 |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
+| ----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| `pattern`               | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
+| `target-component-name` |                                                                                                                                  the name for the new component (component name without scope, e.g. name/spaces/my-button). to set a different scope, use the '--scope' flag. not allowed when using patterns                                                                                                                                   |
 
 | **Option**                       | **Option alias** | **Description**                                                                                                     |
 | -------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------- |
@@ -1088,31 +1094,32 @@ without arguments, fetches all workspace components' latest versions from their 
 | ----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-patterns...` | component IDs or component patterns (separated by space). Use patterns to import groups of components using a common scope or namespace. E.g., "utils/\*" (wrap with double quotes) |
 
-| **Option**                       | **Option alias** | **Description**                                                                                                                                                                   |
-| -------------------------------- | :--------------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--path <path>`                  |       `-p`       | import components into a specific directory (a relative path in the workspace)                                                                                                    |
-| `--objects`                      |       `-o`       | import components objects to the local scope without checkout (without writing them to the file system). This is the default behavior for import with no id argument              |
-| `--override`                     |       `-O`       | override local changes                                                                                                                                                            |
-| `--verbose`                      |       `-v`       | show verbose output for inspection                                                                                                                                                |
-| `--json`                         |       `-j`       | return the output as JSON                                                                                                                                                         |
-| `--skip-dependency-installation` |       `-x`       | do not auto-install dependencies of the imported components                                                                                                                       |
-| `--skip-write-config-files`      |                  | do not write config files (such as eslint, tsconfig, prettier, etc...)                                                                                                            |
-| `--merge [strategy]`             |       `-m`       | merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"                                                                                    |
-| `--dependencies`                 |                  | import all dependencies (bit components only) of imported components and write them to the workspace                                                                              |
-| `--dependencies-head`            |                  | same as --dependencies, except it imports the dependencies with their head version                                                                                                |
-| `--dependents`                   |                  | import components found while traversing from the imported components upwards to the workspace components                                                                         |
-| `--dependents-via <string>`      |                  | same as --dependents except the traversal must go through the specified component. to specify multiple components, wrap with quotes and separate by a comma                       |
-| `--dependents-all`               |                  | same as --dependents except not prompting for selecting paths but rather selecting all paths and showing final confirmation before importing                                      |
-| `--dependents-dry-run`           |                  | DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and wait for confirmation before importing them                                |
-| `--silent`                       |                  | no prompt for --dependents/--dependents-via flags                                                                                                                                 |
-| `--filter-envs <envs>`           |                  | only import components that have the specified environment (e.g., "teambit.react/react-env")                                                                                      |
-| `--save-in-lane`                 |                  | when checked out to a lane and the component is not on the remote-lane, save it in the lane (defaults to save on main)                                                            |
-| `--all-history`                  |                  | relevant for fetching all components objects. avoid optimizations, fetch all history versions, always                                                                             |
-| `--fetch-deps`                   |                  | fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data                             |
-| `--write-deps <workspace.jsonc   |  package.json>`  |                                                                                                                                                                                   | write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions |
-| `--track-only`                   |                  | do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap |
-| `--include-deprecated`           |                  | when importing with patterns, include deprecated components (default to exclude them)                                                                                             |
-| `--lane-only`                    |                  | when using wildcards on a lane, only import components that exist on the lane (never from main)                                                                                   |
+| **Option**                       | **Option alias** | **Description**                                                                                                                                                                     |
+| -------------------------------- | :--------------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--path <path>`                  |       `-p`       | import components into a specific directory (a relative path in the workspace)                                                                                                      |
+| `--objects`                      |       `-o`       | import components objects to the local scope without checkout (without writing them to the file system). This is the default behavior for import with no id argument                |
+| `--override`                     |       `-O`       | override local changes                                                                                                                                                              |
+| `--verbose`                      |       `-v`       | show verbose output for inspection                                                                                                                                                  |
+| `--json`                         |       `-j`       | return the output as JSON                                                                                                                                                           |
+| `--skip-dependency-installation` |       `-x`       | do not auto-install dependencies of the imported components                                                                                                                         |
+| `--skip-write-config-files`      |                  | do not write config files (such as eslint, tsconfig, prettier, etc...)                                                                                                              |
+| `--merge [strategy]`             |       `-m`       | merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"                                                                                      |
+| `--dependencies`                 |                  | import all dependencies (bit components only) of imported components and write them to the workspace                                                                                |
+| `--dependencies-head`            |                  | same as --dependencies, except it imports the dependencies with their head version                                                                                                  |
+| `--dependents`                   |                  | import components found while traversing from the imported components upwards to the workspace components                                                                           |
+| `--dependents-via <string>`      |                  | same as --dependents except the traversal must go through the specified component. to specify multiple components, wrap with quotes and separate by a comma                         |
+| `--dependents-all`               |                  | same as --dependents except not prompting for selecting paths but rather selecting all paths and showing final confirmation before importing                                        |
+| `--dependents-dry-run`           |                  | DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and wait for confirmation before importing them                                  |
+| `--silent`                       |                  | no prompt for --dependents/--dependents-via flags                                                                                                                                   |
+| `--filter-envs <envs>`           |                  | only import components that have the specified environment (e.g., "teambit.react/react-env")                                                                                        |
+| `--save-in-lane`                 |                  | when checked out to a lane and the component is not on the remote-lane, save it in the lane (defaults to save on main)                                                              |
+| `--all-history`                  |                  | relevant for fetching all components objects. avoid optimizations, fetch all history versions, always                                                                               |
+| `--fetch-deps`                   |                  | fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data                               |
+| `--write-deps <target>`          |                  | write all workspace component dependencies to the specified target ("package.json" or "workspace.jsonc"), resolving conflicts by picking the ranges that match the highest versions |
+| `--track-only`                   |                  | do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap   |
+| `--include-deprecated`           |                  | when importing with patterns, include deprecated components (default to exclude them)                                                                                               |
+| `--lane-only`                    |                  | when using wildcards on a lane, only import components that exist on the lane (never from main)                                                                                     |
+| `--owner`                        |                  | treat the argument as an owner name and import all components from all scopes of that owner                                                                                         |
 
 ---
 
@@ -1160,22 +1167,24 @@ automatically imports components, compiles components, links to node_modules, an
 | ------------- | :-------------------------------------------------: |
 | `packages...` | a list of packages to install (separated by spaces) |
 
-| **Option**                   | **Option alias** | **Description**                                                                                        |
-| ---------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------ |
-| `--type [lifecycleType]`     |       `-t`       | "runtime" (default) or "peer" (dev is not a valid option)                                              |
-| `--update`                   |       `-u`       | update all dependencies to latest version according to their semver range                              |
-| `--update-existing`          |                  | DEPRECATED (not needed anymore, it is the default now). update existing dependencies version and types |
-| `--save-prefix [savePrefix]` |                  | set the prefix to use when adding dependency to workspace.jsonc                                        |
-| `--skip-dedupe`              |                  | do not dedupe dependencies on installation                                                             |
-| `--skip-import`              |                  | do not import bit objects post installation                                                            |
-| `--skip-compile`             |                  | do not compile components                                                                              |
-| `--skip-write-config-files`  |                  | do not write config files (such as eslint, tsconfig, prettier, etc...)                                 |
-| `--add-missing-deps`         |       `-a`       | install all missing dependencies                                                                       |
-| `--skip-unavailable`         |                  | when adding missing dependencies, skip those that are not found in the regisry                         |
-| `--add-missing-peers`        |                  | install all missing peer dependencies                                                                  |
-| `--recurring-install`        |                  | automatically run install again if there are non loaded old envs in your workspace                     |
-| `--no-optional [noOptional]` |                  | do not install optional dependencies (works with pnpm only)                                            |
-| `--lockfile-only`            |                  | dependencies are not written to node_modules. Only the lockfile is updated                             |
+| **Option**                      | **Option alias** | **Description**                                                                                        |
+| ------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------ |
+| `--type [lifecycleType]`        |       `-t`       | "runtime" (default) or "peer" (dev is not a valid option)                                              |
+| `--update`                      |       `-u`       | update all dependencies to latest version according to their semver range                              |
+| `--update-existing`             |                  | DEPRECATED (not needed anymore, it is the default now). update existing dependencies version and types |
+| `--save-prefix [savePrefix]`    |                  | set the prefix to use when adding dependency to workspace.jsonc                                        |
+| `--skip-dedupe`                 |                  | do not dedupe dependencies on installation                                                             |
+| `--skip-import`                 |                  | do not import bit objects post installation                                                            |
+| `--skip-compile`                |                  | do not compile components                                                                              |
+| `--skip-write-config-files`     |                  | do not write config files (such as eslint, tsconfig, prettier, etc...)                                 |
+| `--add-missing-deps`            |       `-a`       | install all missing dependencies                                                                       |
+| `--skip-unavailable`            |                  | when adding missing dependencies, skip those that are not found in the regisry                         |
+| `--add-missing-peers`           |                  | install all missing peer dependencies                                                                  |
+| `--recurring-install`           |                  | automatically run install again if there are non loaded old envs in your workspace                     |
+| `--no-optional [noOptional]`    |                  | do not install optional dependencies (works with pnpm only)                                            |
+| `--lockfile-only`               |                  | dependencies are not written to node_modules. Only the lockfile is updated                             |
+| `--allow-scripts [pkgNames]`    |                  | a comma separated list of package names that are allowed to run installation scripts                   |
+| `--disallow-scripts [pkgNames]` |                  | a comma separated list of package names that are NOT allowed to run installation scripts               |
 
 ---
 
@@ -1901,9 +1910,10 @@ to match a state and another criteria, use " AND " keyword. e.g. '$modified AND 
 
 `bit pattern <pattern>`
 
-| **Option** | **Option alias** | **Description**           |
-| ---------- | :--------------: | ------------------------- |
-| `--json`   |       `-j`       | return the output as JSON |
+| **Option** | **Option alias** | **Description**                                                                           |
+| ---------- | :--------------: | ----------------------------------------------------------------------------------------- |
+| `--json`   |       `-j`       | return the output as JSON                                                                 |
+| `--remote` |       `-r`       | query a remote scope (the pattern must start with the scope name, e.g. "scope-name/\*\*") |
 
 ---
 
@@ -2043,7 +2053,8 @@ for local components: simply renames the existing component in place.
 
 **Description**: revert local tags and snaps to previous versions  
 removes local component versions (tags/snaps) that haven't been exported yet.  
-by default reverts all local versions. use --head to revert only the latest version.  
+if no component-pattern is provided, resets all components (with confirmation prompt).  
+by default reverts all local versions of each component. use --head to revert only the latest version.  
 useful for undoing mistakes before exporting. exported versions cannot be reset.
 
 `bit reset [component-pattern]`
@@ -2054,11 +2065,12 @@ useful for undoing mistakes before exporting. exported versions cannot be reset.
 
 | **Option**         | **Option alias** | **Description**                                                                                                 |
 | ------------------ | :--------------: | --------------------------------------------------------------------------------------------------------------- |
-| `--all`            |       `-a`       | revert all unexported tags/snaps for all components                                                             |
+| `--all`            |       `-a`       | DEPRECATED. this is now the default behavior when no component-pattern is provided                              |
 | `--head`           |                  | revert the head tag/snap only (by default, all local tags/snaps are reverted)                                   |
 | `--soft`           |                  | revert only soft-tags (components tagged with --soft flag)                                                      |
 | `--force`          |       `-f`       | revert the tag even if it's used as a dependency. WARNING: components that depend on this tag will be corrupted |
 | `--never-exported` |                  | reset only components that were never exported                                                                  |
+| `--silent`         |       `-s`       | skip confirmation when resetting all components                                                                 |
 
 ---
 

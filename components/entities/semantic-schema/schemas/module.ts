@@ -85,4 +85,8 @@ export class ModuleSchema extends SchemaNode {
     module.namespace = namespace;
     return module;
   }
+
+  static isModuleSchema(node: SchemaNode): node is ModuleSchema {
+    return 'exports' in node && 'internals' in node;
+  }
 }

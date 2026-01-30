@@ -125,6 +125,16 @@ export type ClearCacheOptions = {
   skipClearFailedToLoadEnvs?: boolean;
 };
 
+/**
+ * Field used to mark aspect config as "specific" (set via .bitmap or component.json).
+ * When __specific is true, this config takes precedence over workspace variants during merging.
+ * See https://github.com/teambit/bit/pull/5342 for original implementation.
+ *
+ * Important behavior for dependency-resolver aspect:
+ * - Dependencies set via workspace variants are saved WITHOUT __specific (until first `bit deps set`)
+ * - Once `bit deps set` is called, the entire dependency-resolver config gets __specific: true
+ * - From that point forward, ALL deps in that aspect are considered "specific"
+ */
 export const AspectSpecificField = '__specific';
 export const ComponentAdded = 'componentAdded';
 export const ComponentChanged = 'componentChanged';
@@ -1665,13 +1675,24 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     }
   }
 
-  async removeSpecificComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist = false) {
+  async removeSpecificComponentConfig(
+    id: ComponentID,
+    aspectId: string,
+    markWithMinusIfNotExist = false
+  ): Promise<boolean> {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {
-      await componentConfigFile.removeAspect(aspectId, markWithMinusIfNotExist, this.resolveComponentId.bind(this));
-      await componentConfigFile.write({ override: true });
+      const removed = await componentConfigFile.removeAspect(
+        aspectId,
+        markWithMinusIfNotExist,
+        this.resolveComponentId.bind(this)
+      );
+      if (removed) {
+        await componentConfigFile.write({ override: true });
+      }
+      return removed;
     } else {
-      this.bitMap.removeComponentConfig(id, aspectId, markWithMinusIfNotExist);
+      return this.bitMap.removeComponentConfig(id, aspectId, markWithMinusIfNotExist);
     }
   }
 
@@ -2255,12 +2276,17 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
         // env by `this.getAspectIdFromConfig`, it returns the env with version.
         // to make sure we remove the env from the .bitmap, we need to remove both with and without version.
         const currentEnvWithPotentialVersion = await this.getAspectIdFromConfig(id, currentEnv, true);
-        await this.removeSpecificComponentConfig(id, currentEnv);
+        let anyRemoved = false;
+        anyRemoved = (await this.removeSpecificComponentConfig(id, currentEnv)) || anyRemoved;
         if (currentEnvWithPotentialVersion && currentEnvWithPotentialVersion.includes('@')) {
-          await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion);
+          anyRemoved = (await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion)) || anyRemoved;
         }
-        await this.removeSpecificComponentConfig(id, EnvsAspect.id);
-        changed.push(id);
+        anyRemoved = (await this.removeSpecificComponentConfig(id, EnvsAspect.id)) || anyRemoved;
+        if (anyRemoved) {
+          changed.push(id);
+        } else {
+          unchanged.push(id);
+        }
       })
     );
     await this.bitMap.write(`env-unset`);

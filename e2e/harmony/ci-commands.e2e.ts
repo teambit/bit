@@ -148,6 +148,70 @@ describe('ci commands', function () {
     });
   });
 
+  describe('bit ci merge with --skip-push flag', () => {
+    let mergeOutput: string;
+    let defaultBranch: string;
+    let localCommitSha: string;
+    let remoteCommitSha: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      defaultBranch = setupComponentsAndInitialCommit();
+
+      // Create feature branch and make changes
+      helper.command.runCmd('git checkout -b feature/test-skip-push');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("skip push test");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "fix: component update for skip-push test"');
+
+      // Simulate PR merge scenario by going back to default branch
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.runCmd('git merge feature/test-skip-push');
+
+      // Get the remote commit SHA before running ci merge
+      remoteCommitSha = helper.command.runCmd(`git rev-parse origin/${defaultBranch}`).trim();
+
+      // Run bit ci merge command with --skip-push
+      mergeOutput = helper.command.runCmd('bit ci merge --skip-push --message "test skip-push message"');
+
+      // Get the local commit SHA after running ci merge
+      localCommitSha = helper.command.runCmd('git rev-parse HEAD').trim();
+    });
+    it('should complete successfully', () => {
+      expect(mergeOutput).to.include('Merged PR');
+    });
+    it('should show skip-push message in output', () => {
+      expect(mergeOutput).to.include('Skipping git push');
+    });
+    it('should tag the component', () => {
+      const list = helper.command.listParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      expect(comp1).to.exist;
+      expect(comp1?.currentVersion).to.equal('0.0.2');
+    });
+    it('should export tagged components to remote scope', () => {
+      const list = helper.command.listRemoteScopeParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      expect(comp1?.localVersion).to.equal('0.0.2');
+    });
+    it('should create local git commit but NOT push to remote', () => {
+      // Local should be ahead of remote
+      expect(localCommitSha).to.not.equal(remoteCommitSha);
+
+      // Verify remote is still at the old commit
+      const currentRemoteSha = helper.command.runCmd(`git rev-parse origin/${defaultBranch}`).trim();
+      expect(currentRemoteSha).to.equal(remoteCommitSha);
+    });
+    it('should allow manual push after ci merge', () => {
+      // Simulate user pushing manually after ci merge
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+
+      // Now remote should be at the same commit as local
+      const currentRemoteSha = helper.command.runCmd(`git rev-parse origin/${defaultBranch}`).trim();
+      expect(currentRemoteSha).to.equal(localCommitSha);
+    });
+  });
+
   describe('multi-workspace scenario', () => {
     let prOutput: string;
     before(() => {
@@ -340,6 +404,69 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
       const comp1 = list.find((comp) => comp.id.includes('comp1'));
       expect(comp1).to.exist;
       expect(comp1?.currentVersion).to.equal('0.0.1');
+    });
+  });
+
+  describe('bit ci merge with workspace.jsonc conflicts due to dependency version changes', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+
+      // Create a fake npm package that we'll use as a dependency
+      helper.npm.addFakeNpmPackage('is-positive', '1.0.0');
+
+      // Create comp-a with a dependency on the fake package
+      helper.fs.outputFile(
+        'comp-a/comp-a.js',
+        `const isPositive = require('is-positive');
+module.exports = { isPositive };`
+      );
+      helper.command.addComponent('comp-a');
+
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-positive': '1.0.0' } });
+
+      // Create .gitignore and initial commit
+      helper.fs.outputFile('.gitignore', 'node_modules/\n.bit/\n');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "initial commit with is-positive@1.0.0"');
+      const defaultBranch = helper.command.runCmd('git branch --show-current').trim();
+      helper.command.runCmd(`git push -u origin ${defaultBranch}`);
+
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+
+      // Clone the workspace to simulate a parallel development scenario
+      const workspaceBeforeDivergence = helper.scopeHelper.cloneWorkspace();
+
+      // Bump the dependency version and tag/export again
+      helper.npm.addFakeNpmPackage('is-positive', '2.0.0');
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-positive': '2.0.0' } });
+
+      // Update workspace.jsonc with new version
+      const wsConfigUpdated = helper.workspaceJsonc.read();
+      wsConfigUpdated['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive'] = '2.0.0';
+      helper.workspaceJsonc.write(wsConfigUpdated);
+
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+
+      // Go back to the cloned workspace (still on 1.0.0)
+      helper.scopeHelper.getClonedWorkspace(workspaceBeforeDivergence);
+    });
+
+    it('should fail with clear error message about workspace.jsonc conflicts', () => {
+      let error: Error | undefined;
+      try {
+        helper.command.runCmd('bit ci merge --auto-merge-resolve manual');
+      } catch (err: any) {
+        error = err;
+      }
+
+      expect(error).to.exist;
+      expect(error?.message).to.include('workspace.jsonc conflicts');
+      expect(error?.message).to.include('bit checkout head');
     });
   });
 });

@@ -6,6 +6,7 @@ import type { ModelComponent, Repository, VersionParents } from '@teambit/object
 import { Ref, versionParentsToGraph } from '@teambit/objects';
 import { SnapsDistance } from './snaps-distance';
 import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
+import { TargetHeadNotFound } from './target-head-not-found';
 
 /**
  * *** NEW WAY ***
@@ -85,8 +86,7 @@ export async function getDivergeData({
   });
   const unmergedData = repo.unmergedComponents.getEntry(modelComponent.toComponentId());
   if (!versionParents.find((p) => p.hash.isEqual(targetHead))) {
-    throw new Error(`error: a remote of "${modelComponent.id()}" points to ${targetHead}, which is missing from the VersionHistory object for some reason.
-running "bit import" should fix the issue.`);
+    throw new TargetHeadNotFound(modelComponent.id(), targetHead.toString());
   }
 
   return getDivergeDataBetweenTwoSnaps(
@@ -116,7 +116,9 @@ export function getDivergeDataBetweenTwoSnaps(
   let targetSubgraph = graph.successorsSubgraph(targetHead.toString(), { edgeFilter: (e) => e.attr === 'parent' });
   let sourceArr = sourceSubgraph.nodes.map((n) => n.id);
   let targetArr = targetSubgraph.nodes.map((n) => n.id);
-  let commonSnaps = sourceArr.filter((snap) => targetArr.includes(snap));
+
+  const targetSet = new Set(targetArr);
+  let commonSnaps = sourceArr.filter((snap) => targetSet.has(snap));
 
   if (!commonSnaps.length) {
     sourceSubgraph = graph.successorsSubgraph(localHead.toString());
