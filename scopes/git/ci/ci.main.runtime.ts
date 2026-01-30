@@ -419,13 +419,12 @@ export class CiMain {
       // Finalize atomically: delete existing lane, rename temp lane, export
       this.logger.console('🔄 Finalizing Lane');
 
-      // Check if original lane exists on remote and delete it
-      const availableLanesInScope = await this.lanes.getLanes({ remote: laneId.scope }).catch((e) => {
-        throw new Error(`Failed to get lanes in scope ${laneId.scope}: ${e.toString()}`);
+      // Check if original lane exists on remote and delete it (query by name to avoid fetching all lanes)
+      const [existingLane] = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name }).catch((e) => {
+        throw new Error(`Failed to check lane ${laneId.toString()}: ${e.toString()}`);
       });
 
-      const laneExists = availableLanesInScope.find((lane) => lane.id.name === laneId.name);
-      if (laneExists) {
+      if (existingLane) {
         this.logger.console(chalk.blue(`Deleting existing remote lane ${laneId.toString()}`));
         await this.archiveLane(laneId.toString(), true); // throwOnError: delete must succeed before export
       }
