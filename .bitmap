@@ -591,9 +591,8 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/empty-env",
         "config": {
-            "teambit.envs/env": {},
             "teambit.envs/envs": {
-                "env": "teambit.envs/env"
+                "env": "teambit.envs/empty-env"
             }
         }
     },

@@ -5,10 +5,17 @@
     "icon": "https://static.bit.dev/bit-logo.svg",
     "defaultScope": "teambit.bit",
     "defaultDirectory": "components",
-    // Setting this to false since the external core aspect env uses the core aspects
-    // so we need it to be installed in a capsule
-    "resolveEnvsFromRoots": false
+    // Setting this to true to load envs from node_modules instead of capsules
+    // This allows envs with only .bit-env.ts files (like core-aspect-env) to load via plugin mechanism
+    "resolveEnvsFromRoots": true
   },
+  // These envs are loaded from node_modules (no longer bundled as core aspects)
+  "teambit.harmony/envs/core-aspect-env": {},
+  "teambit.envs/env": {},
+  "teambit.harmony/node": {},
+  "teambit.react/react": {},
+  "teambit.mdx/mdx": {},
+  "teambit.harmony/aspect": {},
   "teambit.dependencies/dependency-resolver": {
     "policy": {
       "dependencies": {
