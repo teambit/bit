@@ -39,9 +39,24 @@ const detectorMdxOptions = {
  * Matches both standard imports (import x from "y") and side-effect imports (import "y").
  */
 function detectImportsWithRegex(source: string): string[] {
-  // Matches two patterns:
-  // 1. import [type] {...|*|identifier}[, ...] from "module" (captured in group 1)
-  // 2. import "module" for side-effect imports (captured in group 2)
+  // This regex matches two import patterns in an alternation:
+  //
+  // Pattern 1 (captured in group 1): import [type] <specifiers> from "module"
+  //   - Optional "type" keyword for TypeScript type imports
+  //   - Specifiers can be: default (x), named ({x}), namespace (* as x), or mixed (x, {y})
+  //   - Module path is captured in group 1
+  //
+  // Pattern 2 (captured in group 2): import "module"
+  //   - Side-effect only imports with no specifiers
+  //   - Module path is captured in group 2
+  //
+  // Example matches:
+  //   import x from "y" -> group 1: "y"
+  //   import { x } from "y" -> group 1: "y"
+  //   import * as x from "y" -> group 1: "y"
+  //   import x, { y } from "z" -> group 1: "z"
+  //   import type { T } from "y" -> group 1: "y"
+  //   import "y" -> group 2: "y"
   const importRegex = /import\s+(?:(?:type\s+)?(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)(?:\s*,\s*\{[^}]*\}|\s*,\s*\w+)?\s+from\s+['"]([^'"]+)['"]|['"]([^'"]+)['"])/g;
   const modules: string[] = [];
   let match: RegExpExecArray | null;
