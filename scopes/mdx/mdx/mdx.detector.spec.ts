@@ -165,7 +165,7 @@ Some text with \\escaped characters
       expect(detected).to.include('@teambit/design.ui.button');
     });
 
-    it('should detect all imports including those in code blocks when using regex fallback', () => {
+    it('should match imports in code blocks during regex fallback', () => {
       // Note: The regex fallback is intentionally simple and will match imports in code blocks.
       // This is an acceptable trade-off for the fallback mode, as the primary goal is dependency
       // detection rather than perfect accuracy. The normal MDX compilation path filters these correctly.

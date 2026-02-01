@@ -32,6 +32,30 @@ const detectorMdxOptions = {
 };
 
 /**
+ * Regex pattern for matching import statements in JavaScript/TypeScript.
+ * 
+ * This regex matches two import patterns in an alternation:
+ *
+ * Pattern 1 (captured in group 1): import [type] <specifiers> from "module"
+ *   - Optional "type" keyword for TypeScript type imports
+ *   - Specifiers can be: default (x), named ({x}), namespace (* as x), or mixed (x, {y})
+ *   - Module path is captured in group 1
+ *
+ * Pattern 2 (captured in group 2): import "module"
+ *   - Side-effect only imports with no specifiers
+ *   - Module path is captured in group 2
+ *
+ * Example matches:
+ *   import x from "y" -> group 1: "y"
+ *   import { x } from "y" -> group 1: "y"
+ *   import * as x from "y" -> group 1: "y"
+ *   import x, { y } from "z" -> group 1: "z"
+ *   import type { T } from "y" -> group 1: "y"
+ *   import "y" -> group 2: "y"
+ */
+const IMPORT_STATEMENT_REGEX = /import\s+(?:(?:type\s+)?(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)(?:\s*,\s*\{[^}]*\}|\s*,\s*\w+)?\s+from\s+['"]([^'"]+)['"]|['"]([^'"]+)['"])/g;
+
+/**
  * Regex-based fallback for extracting import sources from MDX files.
  * Used when compileSync fails due to MDX v3 syntax incompatibilities in user content
  * (e.g. HTML comments, escaped characters, bare variable declarations, unclosed tags).
@@ -39,28 +63,11 @@ const detectorMdxOptions = {
  * Matches both standard imports (import x from "y") and side-effect imports (import "y").
  */
 function detectImportsWithRegex(source: string): string[] {
-  // This regex matches two import patterns in an alternation:
-  //
-  // Pattern 1 (captured in group 1): import [type] <specifiers> from "module"
-  //   - Optional "type" keyword for TypeScript type imports
-  //   - Specifiers can be: default (x), named ({x}), namespace (* as x), or mixed (x, {y})
-  //   - Module path is captured in group 1
-  //
-  // Pattern 2 (captured in group 2): import "module"
-  //   - Side-effect only imports with no specifiers
-  //   - Module path is captured in group 2
-  //
-  // Example matches:
-  //   import x from "y" -> group 1: "y"
-  //   import { x } from "y" -> group 1: "y"
-  //   import * as x from "y" -> group 1: "y"
-  //   import x, { y } from "z" -> group 1: "z"
-  //   import type { T } from "y" -> group 1: "y"
-  //   import "y" -> group 2: "y"
-  const importRegex = /import\s+(?:(?:type\s+)?(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)(?:\s*,\s*\{[^}]*\}|\s*,\s*\w+)?\s+from\s+['"]([^'"]+)['"]|['"]([^'"]+)['"])/g;
   const modules: string[] = [];
   let match: RegExpExecArray | null;
-  while ((match = importRegex.exec(source)) !== null) {
+  // Reset regex state before use
+  IMPORT_STATEMENT_REGEX.lastIndex = 0;
+  while ((match = IMPORT_STATEMENT_REGEX.exec(source)) !== null) {
     // Use whichever capture group matched (group 1 for "from" imports, group 2 for side-effect imports)
     modules.push(match[1] || match[2]);
   }
