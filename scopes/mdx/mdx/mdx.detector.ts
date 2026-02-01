@@ -37,11 +37,13 @@ const detectorMdxOptions = {
  * (e.g. HTML comments, escaped characters, bare variable declarations, unclosed tags).
  */
 function detectImportsWithRegex(source: string): string[] {
-  const importRegex = /import\s+(?:(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)\s*,?\s*)*\s*from\s*['"]([^'"]+)['"]/g;
+  const importRegex =
+    /import\s+(?:type\s+)?(?:(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)\s*,?\s*)?\s*from\s*['"]([^'"]+)['"]|import\s+['"]([^'"]+)['"]/g;
   const modules: string[] = [];
   let match: RegExpExecArray | null;
   while ((match = importRegex.exec(source)) !== null) {
-    modules.push(match[1]);
+    const moduleName = match[1] || match[2];
+    if (moduleName) modules.push(moduleName);
   }
   return modules;
 }
