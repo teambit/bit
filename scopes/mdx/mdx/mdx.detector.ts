@@ -82,7 +82,6 @@ export class MDXDependencyDetector implements DependencyDetector {
       // Fall back to regex-based import detection which is sufficient for dependency resolution.
       const fileRef = filename ? ` File: ${filename}` : '';
       const msg = `MDX compilation failed, falling back to regex-based import detection.${fileRef} Error: ${err.message}`;
-      this.logger?.warn(msg);
       this.logger?.consoleWarning(msg);
       return detectImportsWithRegex(source);
     }
