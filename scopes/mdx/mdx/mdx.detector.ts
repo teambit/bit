@@ -35,13 +35,19 @@ const detectorMdxOptions = {
  * Regex-based fallback for extracting import sources from MDX files.
  * Used when compileSync fails due to MDX v3 syntax incompatibilities in user content
  * (e.g. HTML comments, escaped characters, bare variable declarations, unclosed tags).
+ * 
+ * Matches both standard imports (import x from "y") and side-effect imports (import "y").
  */
 function detectImportsWithRegex(source: string): string[] {
-  const importRegex = /import\s+(?:(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)\s*,?\s*)*\s*from\s*['"]([^'"]+)['"]/g;
+  // Matches two patterns:
+  // 1. import [type] {...|*|identifier}[, ...] from "module" (captured in group 1)
+  // 2. import "module" for side-effect imports (captured in group 2)
+  const importRegex = /import\s+(?:(?:type\s+)?(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)(?:\s*,\s*\{[^}]*\}|\s*,\s*\w+)?\s+from\s+['"]([^'"]+)['"]|['"]([^'"]+)['"])/g;
   const modules: string[] = [];
   let match: RegExpExecArray | null;
   while ((match = importRegex.exec(source)) !== null) {
-    modules.push(match[1]);
+    // Use whichever capture group matched (group 1 for "from" imports, group 2 for side-effect imports)
+    modules.push(match[1] || match[2]);
   }
   return modules;
 }
