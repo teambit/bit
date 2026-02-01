@@ -1,6 +1,8 @@
 import type { DependencyDetector, FileContext } from '@teambit/dependency-resolver';
 import { compileSync } from '@mdx-js/mdx';
 import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
+import type { Options } from '@mdx-js/mdx';
+import type { Logger } from '@teambit/logger';
 
 type ImportSpecifier = {
   /**
@@ -19,21 +21,69 @@ type ImportSpecifier = {
   identifier?: string;
 };
 
+/**
+ * MDX options for dependency detection only.
+ * Uses the remark plugins from mdxOptions (for frontmatter and import extraction)
+ * but excludes rehype plugins like rehypeMdxCodeProps that fail on legacy
+ * code fence meta syntax (e.g. `live=true`).
+ */
+const detectorMdxOptions: Options = {
+  remarkPlugins: mdxOptions.remarkPlugins,
+  jsxImportSource: mdxOptions.jsxImportSource,
+};
+
+/**
+ * Regex-based fallback for extracting import sources from MDX files.
+ * Used when compileSync fails due to MDX v3 syntax incompatibilities in user content
+ * (e.g. HTML comments, escaped characters, bare variable declarations, unclosed tags).
+ */
+function detectImportsWithRegex(source: string): string[] {
+  const importRegex = /import\s+(?:(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)\s*,?\s*)*\s*from\s*['"]([^'"]+)['"]/g;
+  const modules: string[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = importRegex.exec(source)) !== null) {
+    modules.push(match[1]);
+  }
+  return modules;
+}
+
 export class MDXDependencyDetector implements DependencyDetector {
-  constructor(private supportedExtensions: string[]) {}
+  private logger?: Logger;
+  private currentFilename?: string;
+
+  constructor(
+    private supportedExtensions: string[],
+    logger?: Logger
+  ) {
+    this.logger = logger;
+    // Bind methods to preserve `this` context when called as detached functions.
+    this.detect = this.detect.bind(this);
+    this.isSupported = this.isSupported.bind(this);
+  }
 
   isSupported(context: FileContext): boolean {
+    // Capture filename for use in detect() warning messages.
+    // isSupported is always called immediately before detect() for the same file.
+    this.currentFilename = context.filename;
     return this.supportedExtensions.includes(context.ext);
   }
 
   detect(source: string): string[] {
-    const output = compileSync(source, mdxOptions);
-    const imports = (output.data?.imports as ImportSpecifier[]) || [];
-    if (!imports.length) return [];
-    const files: string[] = imports.map((importSpec) => {
-      return importSpec.fromModule;
-    });
-
-    return files;
+    const filename = this.currentFilename;
+    try {
+      const output = compileSync(source, detectorMdxOptions);
+      const imports = (output.data?.imports as ImportSpecifier[]) || [];
+      if (!imports.length) return [];
+      return imports.map((importSpec) => importSpec.fromModule);
+    } catch (err: any) {
+      // MDX v3 may fail to compile files with legacy syntax (HTML comments, escaped
+      // characters in prose, bare variable declarations, unclosed tags, etc.).
+      // Fall back to regex-based import detection which is sufficient for dependency resolution.
+      const fileRef = filename ? ` File: ${filename}` : '';
+      const msg = `MDX compilation failed, falling back to regex-based import detection.${fileRef} Error: ${err.message}`;
+      this.logger?.warn(msg);
+      this.logger?.console(msg);
+      return detectImportsWithRegex(source);
+    }
   }
 }
