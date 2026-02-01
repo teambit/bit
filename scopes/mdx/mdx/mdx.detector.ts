@@ -1,7 +1,6 @@
 import type { DependencyDetector, FileContext } from '@teambit/dependency-resolver';
 import { compileSync } from '@mdx-js/mdx';
 import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
-import type { Options } from '@mdx-js/mdx';
 import type { Logger } from '@teambit/logger';
 
 type ImportSpecifier = {
@@ -27,7 +26,7 @@ type ImportSpecifier = {
  * but excludes rehype plugins like rehypeMdxCodeProps that fail on legacy
  * code fence meta syntax (e.g. `live=true`).
  */
-const detectorMdxOptions: Options = {
+const detectorMdxOptions = {
   remarkPlugins: mdxOptions.remarkPlugins,
   jsxImportSource: mdxOptions.jsxImportSource,
 };
