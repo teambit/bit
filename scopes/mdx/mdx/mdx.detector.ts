@@ -25,11 +25,20 @@ type ImportSpecifier = {
  * Uses the remark plugins from mdxOptions (for frontmatter and import extraction)
  * but excludes rehype plugins like rehypeMdxCodeProps that fail on legacy
  * code fence meta syntax (e.g. `live=true`).
+ *
+ * Computed lazily to avoid triggering the mdx-v3-options dependency chain
+ * (~180 files) during bootstrap for commands that don't need MDX processing.
  */
-const detectorMdxOptions = {
-  ...(mdxOptions.remarkPlugins && { remarkPlugins: mdxOptions.remarkPlugins }),
-  ...(mdxOptions.jsxImportSource && { jsxImportSource: mdxOptions.jsxImportSource }),
-};
+let _detectorMdxOptions: Record<string, any> | undefined;
+function getDetectorMdxOptions() {
+  if (!_detectorMdxOptions) {
+    _detectorMdxOptions = {
+      ...(mdxOptions.remarkPlugins && { remarkPlugins: mdxOptions.remarkPlugins }),
+      ...(mdxOptions.jsxImportSource && { jsxImportSource: mdxOptions.jsxImportSource }),
+    };
+  }
+  return _detectorMdxOptions;
+}
 
 /**
  * Regex pattern for matching import statements in JavaScript/TypeScript.
@@ -111,7 +120,7 @@ export class MDXDependencyDetector implements DependencyDetector {
   detect(source: string): string[] {
     const filename = this.currentFilename;
     try {
-      const output = compileSync(source, detectorMdxOptions);
+      const output = compileSync(source, getDetectorMdxOptions());
       const imports = (output.data?.imports as ImportSpecifier[]) || [];
       if (!imports.length) return [];
       return imports.map((importSpec) => importSpec.fromModule);
