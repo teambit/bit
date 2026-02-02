@@ -27,8 +27,8 @@ type ImportSpecifier = {
  * code fence meta syntax (e.g. `live=true`).
  */
 const detectorMdxOptions = {
-  remarkPlugins: mdxOptions.remarkPlugins,
-  jsxImportSource: mdxOptions.jsxImportSource,
+  ...(mdxOptions.remarkPlugins && { remarkPlugins: mdxOptions.remarkPlugins }),
+  ...(mdxOptions.jsxImportSource && { jsxImportSource: mdxOptions.jsxImportSource }),
 };
 
 /**
