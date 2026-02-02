@@ -82,7 +82,8 @@ export function detectImportsWithRegex(source: string): string[] {
   IMPORT_STATEMENT_REGEX.lastIndex = 0;
   while ((match = IMPORT_STATEMENT_REGEX.exec(source)) !== null) {
     // Use whichever capture group matched (group 1 for "from" imports, group 2 for side-effect imports)
-    modules.push(match[1] || match[2]);
+    const moduleName = match[1] || match[2];
+    if (moduleName) modules.push(moduleName);
   }
   return modules;
 }
@@ -121,7 +122,6 @@ export class MDXDependencyDetector implements DependencyDetector {
       // Fall back to regex-based import detection which is sufficient for dependency resolution.
       const fileRef = filename ? ` File: ${filename}` : '';
       const msg = `MDX compilation failed, falling back to regex-based import detection.${fileRef} Error: ${err.message}`;
-      this.logger?.warn(msg);
       this.logger?.consoleWarning(msg);
       return detectImportsWithRegex(source);
     }
