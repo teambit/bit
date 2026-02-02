@@ -32,16 +32,56 @@ const detectorMdxOptions = {
 };
 
 /**
+ * Regex pattern for matching import statements in JavaScript/TypeScript.
+ *
+ * Structure: /import\s+(?:PATTERN_A|PATTERN_B)/g
+ *   - The `import\s+` prefix is OUTSIDE the alternation, so both patterns require the import keyword
+ *
+ * This regex matches two import patterns in an alternation:
+ *
+ * PATTERN_A (captured in group 1): [type] <specifiers> from "module"
+ *   - Optional "type" keyword for TypeScript type imports
+ *   - Specifiers can be: default (x), named ({x}), namespace (* as x), or mixed (x, {y})
+ *   - Followed by the `from` keyword and quoted module path
+ *   - Module path is captured in group 1
+ *
+ * PATTERN_B (captured in group 2): "module"
+ *   - Side-effect only imports with no specifiers, just quoted module path
+ *   - The quotes directly follow `import` with only whitespace in between
+ *   - Module path is captured in group 2
+ *   - Note: This will NOT match random quoted strings in code (e.g., const x = "foo")
+ *     because the `import\s+` prefix is required
+ *
+ * Example matches:
+ *   import x from "y" -> group 1: "y"
+ *   import { x } from "y" -> group 1: "y"
+ *   import * as x from "y" -> group 1: "y"
+ *   import x, { y } from "z" -> group 1: "z"
+ *   import type { T } from "y" -> group 1: "y"
+ *   import "y" -> group 2: "y"
+ *
+ * Limitations:
+ *   - Will match imports in comments (e.g., // import "x")
+ *   - Will match imports in code blocks/strings if they appear to be syntactically valid
+ *   - These are acceptable trade-offs for the fallback mode
+ */
+const IMPORT_STATEMENT_REGEX =
+  /import\s+(?:(?:type\s+)?(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)(?:\s*,\s*\{[^}]*\}|\s*,\s*\w+)?\s+from\s+['"]([^'"]+)['"]|['"]([^'"]+)['"])/g;
+
+/**
  * Regex-based fallback for extracting import sources from MDX files.
  * Used when compileSync fails due to MDX v3 syntax incompatibilities in user content
  * (e.g. HTML comments, escaped characters, bare variable declarations, unclosed tags).
+ *
+ * Matches both standard imports (import x from "y") and side-effect imports (import "y").
  */
-function detectImportsWithRegex(source: string): string[] {
-  const importRegex =
-    /import\s+(?:type\s+)?(?:(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)\s*,?\s*)?\s*from\s*['"]([^'"]+)['"]|import\s+['"]([^'"]+)['"]/g;
+export function detectImportsWithRegex(source: string): string[] {
   const modules: string[] = [];
   let match: RegExpExecArray | null;
-  while ((match = importRegex.exec(source)) !== null) {
+  // Reset regex state before use
+  IMPORT_STATEMENT_REGEX.lastIndex = 0;
+  while ((match = IMPORT_STATEMENT_REGEX.exec(source)) !== null) {
+    // Use whichever capture group matched (group 1 for "from" imports, group 2 for side-effect imports)
     const moduleName = match[1] || match[2];
     if (moduleName) modules.push(moduleName);
   }
