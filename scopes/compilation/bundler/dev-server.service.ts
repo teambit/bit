@@ -19,8 +19,28 @@ import { dedupEnvs } from './dedup-envs';
 import type { DevServer } from './dev-server';
 import type { DevServerContext } from './dev-server-context';
 import { getEntry } from './get-entry';
+import { createSharedDepsBundle, collectHostDependencies, SharedDepsBundleResult } from './shared-deps-bundler';
 
-export type DevServerServiceOptions = { dedicatedEnvDevServers?: string[] };
+export type DevServerServiceOptions = {
+  dedicatedEnvDevServers?: string[];
+  /**
+   * Enable parallel dev server creation for faster startup.
+   * When true, uses Promise.all instead of sequential pMapSeries.
+   * Only enable for `bit start` command to avoid side effects in other flows.
+   */
+  parallelDevServers?: boolean;
+  /**
+   * PERFORMANCE: Enable shared externalized dependency bundling.
+   * Creates a shared bundle of common dependencies using esbuild
+   * so webpack can externalize them for faster compilation.
+   * NOTE: This is different from Bit's "pre-bundling" of Bit aspects.
+   */
+  sharedDepsBundle?: boolean;
+  /**
+   * Workspace root directory for shared deps bundling
+   */
+  workspaceDir?: string;
+};
 
 type DevServiceTransformationMap = ServiceTransformationMap & {
   /**
@@ -61,6 +81,9 @@ export type DevServerDescriptor = {
 
 export class DevServerService implements EnvService<ComponentServer, DevServerDescriptor> {
   name = 'dev server';
+
+  /** Cached shared deps bundle result to share across all dev servers */
+  private sharedDepsResult: SharedDepsBundleResult | null = null;
 
   constructor(
     private pubsub: PubsubMain,
@@ -127,23 +150,68 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
   //   return new ComponentServer(this.pubsub, context, port, devServer);
   // }
 
-  async runOnce(
-    contexts: ExecutionContext[],
-    { dedicatedEnvDevServers }: DevServerServiceOptions
-  ): Promise<ComponentServer[]> {
+  async runOnce(contexts: ExecutionContext[], options?: DevServerServiceOptions): Promise<ComponentServer[]> {
+    const { dedicatedEnvDevServers, parallelDevServers, sharedDepsBundle, workspaceDir } = options || {};
+    console.log('[dev-server.service] runOnce options:', {
+      parallelDevServers,
+      sharedDepsBundle,
+      workspaceDir: !!workspaceDir,
+    });
     const groupedEnvs = await dedupEnvs(contexts, this.dependencyResolver, dedicatedEnvDevServers);
 
-    // TODO: (gilad) - change this back to promise all once we make the preview pre-bundle to run before that loop
-    const servers = await pMapSeries(Object.entries(groupedEnvs), async ([id, contextList]) => {
+    // PERFORMANCE: Create shared externalized bundle of host dependencies before creating dev servers
+    // This matches the PRODUCTION pattern (create-peers-link.ts, env-preview-template.task.ts):
+    // - Use hostDependencies from environments (getPreviewHostDependenciesFromEnv)
+    // - These are curated by environment developers, guaranteed browser-safe
+    // - Expose them on window using the same naming convention as production
+    // - Configure webpack externals to reference them
+    if (sharedDepsBundle && workspaceDir && !this.sharedDepsResult) {
+      try {
+        // Collect host dependencies - curated by environment developers, guaranteed browser-safe
+        const hostDeps = await collectHostDependencies(contexts, this.dependencyResolver);
+        console.log('[dev-server.service] host deps:', hostDeps);
+
+        // Create shared bundle - matches production pattern (create-peers-link.ts)
+        const outputDir = require('path').join(workspaceDir, 'node_modules', '.cache', 'bit-shared-deps');
+        this.sharedDepsResult = await createSharedDepsBundle({
+          rootDir: workspaceDir,
+          packages: hostDeps,
+          outputDir,
+          useCache: true,
+        });
+        console.log(
+          '[dev-server.service] sharedDepsResult:',
+          this.sharedDepsResult?.depsCount,
+          'deps bundled in',
+          this.sharedDepsResult?.timeTaken,
+          'ms'
+        );
+      } catch (error) {
+        // Shared deps bundling failed, continue without it
+        console.error('[dev-server.service] shared deps bundling failed:', error);
+        this.sharedDepsResult = null;
+      }
+    }
+
+    const createServer = async ([id, contextList]: [string, ExecutionContext[]]) => {
       const mainContext = contextList.find((context) => context.envDefinition.id === id) || contextList[0];
       const additionalContexts = contextList.filter((context) => context.envDefinition.id !== id);
 
       const devServerContext = await this.buildContext(mainContext, additionalContexts);
       const devServer: DevServer = await devServerContext.envRuntime.env.getDevServer(devServerContext);
       const transformedDevServer: DevServer = this.transformDevServer(devServer, { envId: id });
+      const server = new ComponentServer(this.pubsub, devServerContext, [3300, 3400], transformedDevServer);
 
-      return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], transformedDevServer);
-    });
+      return server;
+    };
+
+    // PERFORMANCE: Use Promise.all for parallel dev server creation when enabled
+    // The original pMapSeries was added in commit 962c26131 due to "preview pre-bundle timing issues"
+    // parallelDevServers flag enables parallel mode only for `bit start` to avoid side effects
+    // Impact: With N environments, startup time is O(1) instead of O(N) for server creation
+    const servers = parallelDevServers
+      ? await Promise.all(Object.entries(groupedEnvs).map(createServer))
+      : await pMapSeries(Object.entries(groupedEnvs), createServer);
 
     return servers;
   }
@@ -178,6 +246,15 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
       componentDirectoryMap[component.id.toString()] = workspace.componentDir(component.id);
     });
 
+    // Build shared deps info if available (for webpack externalization)
+    const sharedDeps = this.sharedDepsResult?.bundlePath
+      ? {
+          bundlePath: this.sharedDepsResult.bundlePath,
+          publicPath: this.sharedDepsResult.publicPath,
+          externalsMap: this.sharedDepsResult.externalsMap,
+        }
+      : undefined;
+
     return Object.assign(context, {
       entry,
       componentDirectoryMap,
@@ -187,6 +264,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
       hostRootDir,
       hostDependencies: peers,
       aliasHostDependencies: true,
+      sharedDeps,
     });
   }
 

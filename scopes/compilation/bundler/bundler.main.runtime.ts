@@ -88,11 +88,25 @@ export class BundlerMain {
     return this.devServer(newComponents, { configureProxy: true });
   }
 
-  async devServer(components: Component[], opts: { configureProxy?: boolean } = {}): Promise<ComponentServer[]> {
+  async devServer(
+    components: Component[],
+    opts: {
+      configureProxy?: boolean;
+      parallelDevServers?: boolean;
+      /** PERFORMANCE: Enable shared externalized dependency bundling */
+      sharedDepsBundle?: boolean;
+      /** Workspace root directory for shared deps bundling */
+      workspaceDir?: string;
+    } = {}
+  ): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
-    const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer>(this.devService, {
+    const serviceOptions = {
       dedicatedEnvDevServers: this.config.dedicatedEnvDevServers,
-    });
+      parallelDevServers: opts.parallelDevServers,
+      sharedDepsBundle: opts.sharedDepsBundle,
+      workspaceDir: opts.workspaceDir,
+    };
+    const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer>(this.devService, serviceOptions);
     if (opts.configureProxy) {
       this.pubsub.pub(BundlerAspect.id, new NewDevServersCreatedEvent(servers, Date.now(), this.graphql, true));
     }

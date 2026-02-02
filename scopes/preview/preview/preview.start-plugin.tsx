@@ -126,7 +126,12 @@ export class PreviewStartPlugin implements StartPlugin {
     this.listenToDevServers(options.showInternalUrls);
     const components = await this.workspace.getComponentsByUserInput(!options.pattern, options.pattern);
     // TODO: logic for creating preview servers must be refactored to this aspect from the DevServer aspect.
-    const previewServers = await this.bundler.devServer(components);
+    // PERFORMANCE: Enable parallel dev servers and shared dependency bundling for faster startup
+    const previewServers = await this.bundler.devServer(components, {
+      parallelDevServers: true,
+      sharedDepsBundle: true,
+      workspaceDir: this.workspace.path,
+    });
     previewServers.forEach((server) => {
       const envId = server.context.envRuntime.id;
       this.serversMap[envId] = server;
