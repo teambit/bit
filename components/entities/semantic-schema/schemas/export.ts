@@ -1,7 +1,7 @@
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
 import { DocSchema } from './docs';
-import { SchemaRegistry } from '../schema-registry';
+import { SchemaRegistry } from '@teambit/schema';
 
 export class ExportSchema extends SchemaNode {
   alias?: string;

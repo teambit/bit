@@ -4,7 +4,7 @@ import { SchemaNode } from '../schema-node';
 import { ParameterSchema } from './parameter';
 import { DocSchema } from './docs';
 import { TagName } from './docs/tag';
-import { SchemaRegistry } from '../schema-registry';
+import { SchemaRegistry } from '@teambit/schema';
 
 export type Modifier =
   | 'static'

@@ -4,9 +4,9 @@ import {
   FunctionLikeSchema,
   ParameterSchema,
   SchemaNode,
-  SchemaRegistry,
   TagName,
 } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaRegistry } from '@teambit/schema';
 import chalk from 'chalk';
 import { compact } from 'lodash';
 

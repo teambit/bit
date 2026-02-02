@@ -1,6 +1,6 @@
 import type { SchemaLocation } from '../../schema-node';
 import { SchemaNode } from '../../schema-node';
-import { SchemaRegistry } from '../../schema-registry';
+import { SchemaRegistry } from '@teambit/schema';
 import type { TagName, TagSchema } from './tag';
 
 export class DocSchema extends SchemaNode {

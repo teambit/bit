@@ -1,5 +1,6 @@
 import { SchemaAspect } from './schema.aspect';
 
+export { SchemaRegistry } from './schema-registry';
 export type { Parser } from './parser';
 export type { SchemaExtractor } from './schema-extractor';
 export type { SchemaExtractorOptions } from './schema-extractor';

@@ -11,7 +11,8 @@ import type { APINodeRenderer } from '@teambit/api-reference.models.api-node-ren
 import { defaultNodeRenderers } from '@teambit/api-reference.renderers.default-node-renderers';
 import { APIRefRenderersProvider } from '@teambit/api-reference.hooks.use-api-renderers';
 import type { SchemaNodeConstructor } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaRegistry, Schemas } from '@teambit/semantics.entities.semantic-schema';
+import { Schemas } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaRegistry } from '@teambit/schema';
 import type { CodeUI } from '@teambit/code';
 import { CodeAspect } from '@teambit/code';
 import { TaggedExports } from '@teambit/tagged-exports';

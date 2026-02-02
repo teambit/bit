@@ -1,5 +1,5 @@
 import type { DocSchema } from '..';
-import { SchemaRegistry } from '..';
+import { SchemaRegistry } from '@teambit/schema';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
 

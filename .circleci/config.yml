@@ -666,8 +666,8 @@ jobs:
   # ========== Bit CI Jobs ==========
   bit_pr:
     # uncomment in case this job fails with "Killed".
-    # resource_class: 2xlarge
-    resource_class: xlarge
+    resource_class: 2xlarge
+    # resource_class: xlarge
     <<: *defaults
     environment:
       # BIT_FEATURES: cloud-importer-v2
@@ -690,8 +690,8 @@ jobs:
 
   bit_merge:
     # uncomment in case this job fails with "Killed".
-    # resource_class: 2xlarge
-    resource_class: xlarge
+    resource_class: 2xlarge
+    # resource_class: xlarge
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
