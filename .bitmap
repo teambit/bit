@@ -2284,6 +2284,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/utils"
     },
+    "utils/sort-api-nodes": {
+        "name": "utils/sort-api-nodes",
+        "scope": "teambit.api-reference",
+        "version": "0.0.53",
+        "mainFile": "index.ts",
+        "rootDir": "components/utils/sort-api-nodes"
+    },
     "validator": {
         "name": "validator",
         "scope": "teambit.defender",

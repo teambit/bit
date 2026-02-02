@@ -90,7 +90,6 @@
         "@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme": "^0.0.16",
         "@teambit/api-reference.utils.group-schema-node-by-signature": "^0.0.45",
         "@teambit/api-reference.utils.schema-node-signature-transform": "^0.0.47",
-        "@teambit/api-reference.utils.sort-api-nodes": "^0.0.53",
         "@teambit/base-react.navigation.link": "^2.0.33",
         "@teambit/base-react.themes.theme-switcher": "^1.1.2",
         "@teambit/base-ui.constants.storage": "1.0.0",
