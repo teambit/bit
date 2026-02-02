@@ -1,5 +1,5 @@
-import type { SchemaNodeConstructor } from './schema-node-constructor';
-import { UnknownSchemaFactory } from './unknown-schema-factory';
+import type { SchemaNodeConstructor } from '@teambit/semantics.entities.semantic-schema';
+import { UnknownSchemaFactory } from '@teambit/semantics.entities.semantic-schema';
 
 type GetSchemaFunc = () => SchemaNodeConstructor[];
 

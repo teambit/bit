@@ -4,7 +4,7 @@ import { ExportSchema, ModuleSchema } from './schemas';
 import type { SchemaLocation } from './schema-node';
 import { SchemaNode } from './schema-node';
 import { TagName } from './schemas/docs/tag';
-import { SchemaRegistry } from './schema-registry';
+import { SchemaRegistry } from '@teambit/schema';
 
 export class APISchema extends SchemaNode {
   readonly module: ModuleSchema; // index

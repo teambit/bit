@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
 import { DocSchema } from './docs';
-import { SchemaRegistry } from '../schema-registry';
+import { SchemaRegistry } from '@teambit/schema';
 
 export class TypeSchema extends SchemaNode {
   readonly type: SchemaNode;
