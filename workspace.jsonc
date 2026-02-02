@@ -85,8 +85,6 @@
         "@react-hook/latest": "1.0.3",
         "@svgr/webpack": "8.1.0",
         "@teambit/any-fs": "0.0.5",
-        "@teambit/api-reference.explorer.api-reference-explorer": "^0.0.39",
-        "@teambit/api-reference.sections.api-reference-section": "^0.0.16",
         "@teambit/api-reference.utils.code-editor-options": "^0.0.16",
         "@teambit/api-reference.utils.copy-schema-node": "^0.0.45",
         "@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme": "^0.0.16",

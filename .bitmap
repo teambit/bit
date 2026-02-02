@@ -632,6 +632,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/eslint-config-mutator"
     },
+    "explorer/api-reference-explorer": {
+        "name": "explorer/api-reference-explorer",
+        "scope": "teambit.api-reference",
+        "version": "0.0.39",
+        "mainFile": "index.ts",
+        "rootDir": "components/explorer/api-reference-explorer"
+    },
     "export": {
         "name": "export",
         "scope": "teambit.scope",
@@ -1667,6 +1674,13 @@
         "version": "0.0.120",
         "mainFile": "index.ts",
         "rootDir": "components/sections/api-reference-page"
+    },
+    "sections/api-reference-section": {
+        "name": "sections/api-reference-section",
+        "scope": "teambit.api-reference",
+        "version": "0.0.16",
+        "mainFile": "index.ts",
+        "rootDir": "components/sections/api-reference-section"
     },
     "sidebar": {
         "name": "sidebar",
