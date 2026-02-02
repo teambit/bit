@@ -97,9 +97,9 @@ export class MDXDependencyDetector implements DependencyDetector {
     logger?: Logger
   ) {
     this.logger = logger;
-    // Bind methods to preserve `this` context when called as detached functions.
+    // Bind detect to preserve `this` context when passed as a detached function.
     this.detect = this.detect.bind(this);
-    this.isSupported = this.isSupported.bind(this);
+  }
   }
 
   isSupported(context: FileContext): boolean {
