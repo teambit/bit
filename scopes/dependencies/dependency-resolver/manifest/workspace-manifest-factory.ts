@@ -179,8 +179,14 @@ export class WorkspaceManifestFactory {
       if (excludeExtensionsDependencies) {
         depList = filterExtensions(depList);
       }
-      // Remove bit bin from dep list
-      depList = depList.filter((dep) => dep.id !== '@teambit/legacy');
+      // Remove core aspects from dep list - they should be linked, not installed
+      const coreAspectIds = this.aspectLoader.getCoreAspectIds();
+      const coreAspectPkgNames = new Set(coreAspectIds.map((id) => getCoreAspectPackageName(id)));
+      coreAspectPkgNames.add('@teambit/legacy');
+      depList = depList.filter((dep) => {
+        const pkgName = dep.getPackageName?.() ?? dep.id;
+        return !coreAspectPkgNames.has(pkgName);
+      });
       if (dependencyFilterFn) {
         depList = dependencyFilterFn(depList);
       }
