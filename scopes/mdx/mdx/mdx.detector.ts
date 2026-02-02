@@ -100,7 +100,6 @@ export class MDXDependencyDetector implements DependencyDetector {
     // Bind detect to preserve `this` context when passed as a detached function.
     this.detect = this.detect.bind(this);
   }
-  }
 
   isSupported(context: FileContext): boolean {
     // Capture filename for use in detect() warning messages.
