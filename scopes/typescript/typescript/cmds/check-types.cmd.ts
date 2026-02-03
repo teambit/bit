@@ -46,16 +46,19 @@ use "--unmodified" flag to check all components or specify the ids to check.
 otherwise, only new and modified components will be checked`);
       return { code: 0, data };
     }
-    const elapsed = (Date.now() - start) / 1000;
-    const msg = `completed type checking ${componentsCount} component(s) (${elapsed} sec)`;
-    this.typescript.killTsservers(tsservers);
-    const hasErrors = totalDiagnostics > 0;
-    return {
-      code: hasErrors && strict ? 1 : 0,
-      data: hasErrors
-        ? chalk.red(`${msg}. found errors in ${totalDiagnostics} files.`)
-        : chalk.green(`${msg}. no errors were found.`),
-    };
+    try {
+      const elapsed = (Date.now() - start) / 1000;
+      const msg = `completed type checking ${componentsCount} component(s) (${elapsed} sec)`;
+      const hasErrors = totalDiagnostics > 0;
+      return {
+        code: hasErrors && strict ? 1 : 0,
+        data: hasErrors
+          ? chalk.red(`${msg}. found errors in ${totalDiagnostics} files.`)
+          : chalk.green(`${msg}. no errors were found.`),
+      };
+    } finally {
+      this.typescript.killTsservers(tsservers);
+    }
   }
 
   async json(
@@ -71,11 +74,14 @@ otherwise, only new and modified components will be checked`);
     if (!tsservers.length) {
       return { code: 0, data: [] };
     }
-    this.typescript.killTsservers(tsservers);
-    return {
-      code: totalDiagnostics > 0 && strict ? 1 : 0,
-      data: diagnosticData,
-    };
+    try {
+      return {
+        code: totalDiagnostics > 0 && strict ? 1 : 0,
+        data: diagnosticData,
+      };
+    } finally {
+      this.typescript.killTsservers(tsservers);
+    }
   }
 
   private handleDeprecatedAllFlag(all: boolean, unmodified: boolean): boolean {

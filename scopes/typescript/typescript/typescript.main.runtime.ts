@@ -312,9 +312,9 @@ export class TypescriptMain {
   }
 
   /**
-   * Groups components by environment and returns a map of envId to component files.
+   * Groups components by environment and collects their files.
    */
-  groupComponentsByEnv(components: Component[]): Map<string, { components: Component[]; files: string[] }> {
+  private groupComponentsByEnv(components: Component[]): Map<string, { components: Component[]; files: string[] }> {
     const envMap = new Map<string, { components: Component[]; files: string[] }>();
 
     for (const component of components) {
@@ -332,6 +332,29 @@ export class TypescriptMain {
   }
 
   /**
+   * Find the common ancestor directory of multiple paths.
+   */
+  private findCommonAncestorDir(dirs: string[]): string {
+    if (dirs.length === 0) return this.workspace?.path ?? '';
+    if (dirs.length === 1) return dirs[0];
+
+    const segments = dirs.map((d) => d.split(path.sep));
+    const minLength = Math.min(...segments.map((s) => s.length));
+    const commonSegments: string[] = [];
+
+    for (let i = 0; i < minLength; i++) {
+      const segment = segments[0][i];
+      if (segments.every((s) => s[i] === segment)) {
+        commonSegments.push(segment);
+      } else {
+        break;
+      }
+    }
+
+    return commonSegments.join(path.sep) || '/';
+  }
+
+  /**
    * Check types for components, creating separate tsserver instances per environment.
    * This ensures each environment uses its own tsconfig settings (e.g., strictNullChecks).
    * Runs all tsserver instances in parallel for better performance.
@@ -345,63 +368,68 @@ export class TypescriptMain {
     }
 
     const envGroups = this.groupComponentsByEnv(components);
-
-    // Create and run all tsserver instances in parallel
-    // Always aggregate data to enable deduplication, disable per-tsserver printing
     const envEntries = Array.from(envGroups.entries()).filter(([, { files }]) => files.length > 0);
 
     const tsservers: TsserverClient[] = [];
-    let results: Array<{ tsserver: TsserverClient; files: Set<string>; componentDir: string }>;
+    let results: Array<{ tsserver: TsserverClient; files: Set<string>; projectRootPath: string }>;
 
     try {
       results = await Promise.all(
         envEntries.map(async ([envId, { components: envComponents, files }]) => {
-          const firstComponent = envComponents[0];
-          const componentDir = this.workspace!.componentDir(firstComponent.id, { ignoreVersion: true });
+          // Find common ancestor of all component directories in this environment
+          const componentDirs = envComponents.map((comp) =>
+            this.workspace!.componentDir(comp.id, { ignoreVersion: true })
+          );
+          const projectRootPath = this.findCommonAncestorDir(componentDirs);
 
           this.logger.debug(
-            `Creating tsserver for env ${envId} with projectRootPath: ${componentDir}, files: ${files.length}`
+            `Creating tsserver for env ${envId} with projectRootPath: ${projectRootPath}, files: ${files.length}`
           );
 
           const tsserverOpts = { ...options, printTypeErrors: false, aggregateDiagnosticData: true };
-          const tsserver = new TsserverClient(componentDir, this.logger, tsserverOpts, files);
-          tsservers.push(tsserver); // Track for cleanup on error
+          const tsserver = new TsserverClient(projectRootPath, this.logger, tsserverOpts, files);
+          tsservers.push(tsserver);
           await tsserver.init();
           await tsserver.getDiagnostic(files);
 
-          return { tsserver, files: new Set(files), componentDir };
+          return { tsserver, files: new Set(files), projectRootPath };
         })
       );
     } catch (err) {
-      // Clean up any created tsserver instances on error
       this.killTsservers(tsservers);
       throw err;
     }
 
-    // Deduplicate diagnostics - only include errors from files that belong to this env's components
-    // This prevents the same error from appearing multiple times when a file is imported across envs
+    // Process diagnostics
     const seenDiagnosticKeys = new Set<string>();
     const filesWithDiagnostics = new Set<string>();
     const allDiagnosticData: DiagnosticData[] = [];
 
-    for (const { tsserver, files: envFiles, componentDir } of results) {
-      for (const data of tsserver.diagnosticData) {
-        const fullPath = path.resolve(componentDir, data.file);
-        if (!envFiles.has(fullPath)) continue;
+    try {
+      for (const { tsserver, files: envFiles, projectRootPath } of results) {
+        for (const data of tsserver.diagnosticData) {
+          const fullPath = path.resolve(projectRootPath, data.file);
+          if (!envFiles.has(fullPath)) continue;
 
-        const diagnosticKey = `${fullPath}:${data.diagnostic.start?.line}:${data.diagnostic.start?.offset}:${data.diagnostic.text}`;
-        if (seenDiagnosticKeys.has(diagnosticKey)) continue;
-        seenDiagnosticKeys.add(diagnosticKey);
+          const start = data.diagnostic.start;
+          const locationKey = start ? `${start.line}:${start.offset}` : 'global';
+          const diagnosticKey = `${fullPath}:${locationKey}:${data.diagnostic.code ?? ''}:${data.diagnostic.text}`;
+          if (seenDiagnosticKeys.has(diagnosticKey)) continue;
+          seenDiagnosticKeys.add(diagnosticKey);
 
-        filesWithDiagnostics.add(fullPath);
-        const wsRelativePath = path.relative(this.workspace!.path, fullPath);
-        const formatted = formatDiagnostic(data.diagnostic, wsRelativePath);
-        allDiagnosticData.push({ ...data, file: wsRelativePath, formatted });
+          filesWithDiagnostics.add(fullPath);
+          const wsRelativePath = path.relative(this.workspace!.path, fullPath);
+          const formatted = formatDiagnostic(data.diagnostic, wsRelativePath);
+          allDiagnosticData.push({ ...data, file: wsRelativePath, formatted });
 
-        if (options.printTypeErrors) {
-          this.logger.console(formatted);
+          if (options.printTypeErrors) {
+            this.logger.console(formatted);
+          }
         }
       }
+    } catch (err) {
+      this.killTsservers(tsservers);
+      throw err;
     }
 
     return { tsservers, diagnosticData: allDiagnosticData, totalDiagnostics: filesWithDiagnostics.size };
