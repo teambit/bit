@@ -33,15 +33,12 @@ useful for catching type issues before tagging, snapping or building components.
     [pattern]: [string],
     { all = false, unmodified = false, strict = false }: { all: boolean; unmodified: boolean; strict: boolean }
   ) {
-    if (all) {
-      unmodified = all;
-      this.logger.consoleWarning(`--all is deprecated, use --unmodified instead`);
-    }
+    const effectiveUnmodified = this.handleDeprecatedAllFlag(all, unmodified);
     const start = Date.now();
     const { tsservers, totalDiagnostics, componentsCount } = await this.runDiagnosticOnTsServer(
       false,
       pattern,
-      unmodified
+      effectiveUnmodified
     );
     if (!tsservers.length) {
       const data = chalk.bold(`no components found to check.
@@ -49,18 +46,15 @@ use "--unmodified" flag to check all components or specify the ids to check.
 otherwise, only new and modified components will be checked`);
       return { code: 0, data };
     }
-    const end = Date.now() - start;
-    const msg = `completed type checking ${componentsCount} component(s) (${end / 1000} sec)`;
+    const elapsed = (Date.now() - start) / 1000;
+    const msg = `completed type checking ${componentsCount} component(s) (${elapsed} sec)`;
     this.typescript.killTsservers(tsservers);
-    if (totalDiagnostics) {
-      return {
-        code: strict ? 1 : 0,
-        data: chalk.red(`${msg}. found errors in ${totalDiagnostics} files.`),
-      };
-    }
+    const hasErrors = totalDiagnostics > 0;
     return {
-      code: 0,
-      data: chalk.green(`${msg}. no errors were found.`),
+      code: hasErrors && strict ? 1 : 0,
+      data: hasErrors
+        ? chalk.red(`${msg}. found errors in ${totalDiagnostics} files.`)
+        : chalk.green(`${msg}. no errors were found.`),
     };
   }
 
@@ -68,29 +62,28 @@ otherwise, only new and modified components will be checked`);
     [pattern]: [string],
     { all = false, unmodified = false, strict = false }: { all: boolean; unmodified: boolean; strict: boolean }
   ) {
-    if (all) {
-      unmodified = all;
-      this.logger.consoleWarning(`--all is deprecated, use --unmodified instead`);
-    }
+    const effectiveUnmodified = this.handleDeprecatedAllFlag(all, unmodified);
     const { tsservers, diagnosticData, totalDiagnostics } = await this.runDiagnosticOnTsServer(
       true,
       pattern,
-      unmodified
+      effectiveUnmodified
     );
     if (!tsservers.length) {
       return { code: 0, data: [] };
     }
     this.typescript.killTsservers(tsservers);
-    if (totalDiagnostics) {
-      return {
-        code: strict ? 1 : 0,
-        data: diagnosticData,
-      };
-    }
     return {
-      code: 0,
+      code: totalDiagnostics > 0 && strict ? 1 : 0,
       data: diagnosticData,
     };
+  }
+
+  private handleDeprecatedAllFlag(all: boolean, unmodified: boolean): boolean {
+    if (all) {
+      this.logger.consoleWarning(`--all is deprecated, use --unmodified instead`);
+      return true;
+    }
+    return unmodified;
   }
 
   private async runDiagnosticOnTsServer(

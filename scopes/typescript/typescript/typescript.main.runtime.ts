@@ -374,46 +374,31 @@ export class TypescriptMain {
 
     // Deduplicate diagnostics - only include errors from files that belong to this env's components
     // This prevents the same error from appearing multiple times when a file is imported across envs
-    const seenDiagnostics = new Set<string>();
+    const seenDiagnosticKeys = new Set<string>();
+    const filesWithDiagnostics = new Set<string>();
     const allDiagnosticData: DiagnosticData[] = [];
-    let totalDiagnostics = 0;
 
     for (const { tsserver, files: envFiles, componentDir } of results) {
-      // Filter diagnostic data to only include files from this env's components
       for (const data of tsserver.diagnosticData) {
-        // data.file is relative to componentDir, reconstruct absolute path
         const fullPath = path.resolve(componentDir, data.file);
-        if (envFiles.has(fullPath)) {
-          const dataKey = `${fullPath}:${data.diagnostic.start?.line}:${data.diagnostic.start?.offset}:${data.diagnostic.text}`;
-          if (!seenDiagnostics.has(dataKey)) {
-            seenDiagnostics.add(dataKey);
-            // Recalculate file path relative to workspace
-            const wsRelativePath = path.relative(this.workspace!.path, fullPath);
-            const formatted = formatDiagnostic(data.diagnostic, wsRelativePath);
-            const updatedData = { ...data, file: wsRelativePath, formatted };
-            allDiagnosticData.push(updatedData);
-            // Print if requested, with workspace-relative path
-            if (options.printTypeErrors) {
-              this.logger.console(formatted);
-            }
-          }
-        }
-      }
+        if (!envFiles.has(fullPath)) continue;
 
-      // Count unique files with diagnostics for the summary
-      for (const diag of tsserver.lastDiagnostics) {
-        // diag.file is absolute
-        if (envFiles.has(diag.file)) {
-          const diagKey = `${diag.file}`;
-          if (!seenDiagnostics.has(diagKey)) {
-            seenDiagnostics.add(diagKey);
-            totalDiagnostics++;
-          }
+        const diagnosticKey = `${fullPath}:${data.diagnostic.start?.line}:${data.diagnostic.start?.offset}:${data.diagnostic.text}`;
+        if (seenDiagnosticKeys.has(diagnosticKey)) continue;
+        seenDiagnosticKeys.add(diagnosticKey);
+
+        filesWithDiagnostics.add(fullPath);
+        const wsRelativePath = path.relative(this.workspace!.path, fullPath);
+        const formatted = formatDiagnostic(data.diagnostic, wsRelativePath);
+        allDiagnosticData.push({ ...data, file: wsRelativePath, formatted });
+
+        if (options.printTypeErrors) {
+          this.logger.console(formatted);
         }
       }
     }
 
-    return { tsservers, diagnosticData: allDiagnosticData, totalDiagnostics };
+    return { tsservers, diagnosticData: allDiagnosticData, totalDiagnostics: filesWithDiagnostics.size };
   }
 
   /**
