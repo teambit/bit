@@ -2,6 +2,7 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError } from '@teambit/workspace';
+import type { TsserverClient, DiagnosticData } from '@teambit/ts-server';
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { TypescriptMain } from '../typescript.main.runtime';
@@ -37,8 +38,12 @@ useful for catching type issues before tagging, snapping or building components.
       this.logger.consoleWarning(`--all is deprecated, use --unmodified instead`);
     }
     const start = Date.now();
-    const { tsserver, componentsCount } = await this.runDiagnosticOnTsServer(false, pattern, unmodified);
-    if (!tsserver) {
+    const { tsservers, totalDiagnostics, componentsCount } = await this.runDiagnosticOnTsServer(
+      false,
+      pattern,
+      unmodified
+    );
+    if (!tsservers.length) {
       const data = chalk.bold(`no components found to check.
 use "--unmodified" flag to check all components or specify the ids to check.
 otherwise, only new and modified components will be checked`);
@@ -46,11 +51,11 @@ otherwise, only new and modified components will be checked`);
     }
     const end = Date.now() - start;
     const msg = `completed type checking ${componentsCount} component(s) (${end / 1000} sec)`;
-    tsserver.killTsServer();
-    if (tsserver.lastDiagnostics.length) {
+    this.typescript.killTsservers(tsservers);
+    if (totalDiagnostics) {
       return {
         code: strict ? 1 : 0,
-        data: chalk.red(`${msg}. found errors in ${tsserver.lastDiagnostics.length} files.`),
+        data: chalk.red(`${msg}. found errors in ${totalDiagnostics} files.`),
       };
     }
     return {
@@ -67,21 +72,24 @@ otherwise, only new and modified components will be checked`);
       unmodified = all;
       this.logger.consoleWarning(`--all is deprecated, use --unmodified instead`);
     }
-    const { tsserver } = await this.runDiagnosticOnTsServer(true, pattern, unmodified);
-    if (!tsserver) {
+    const { tsservers, diagnosticData, totalDiagnostics } = await this.runDiagnosticOnTsServer(
+      true,
+      pattern,
+      unmodified
+    );
+    if (!tsservers.length) {
       return { code: 0, data: [] };
     }
-    const diagData = tsserver.diagnosticData;
-    tsserver.killTsServer();
-    if (tsserver.lastDiagnostics.length) {
+    this.typescript.killTsservers(tsservers);
+    if (totalDiagnostics) {
       return {
         code: strict ? 1 : 0,
-        data: diagData,
+        data: diagnosticData,
       };
     }
     return {
       code: 0,
-      data: diagData,
+      data: diagnosticData,
     };
   }
 
@@ -89,24 +97,24 @@ otherwise, only new and modified components will be checked`);
     isJson: boolean,
     pattern: string,
     unmodified: boolean
-  ): Promise<{ tsserver: ReturnType<TypescriptMain['getTsserverClient']>; componentsCount: number }> {
+  ): Promise<{
+    tsservers: TsserverClient[];
+    diagnosticData: DiagnosticData[];
+    totalDiagnostics: number;
+    componentsCount: number;
+  }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     // If pattern is provided, don't pass the unmodified flag - the pattern should take precedence
     const components = await this.workspace.getComponentsByUserInput(pattern ? false : unmodified, pattern);
     if (!components.length) {
-      return { tsserver: undefined, componentsCount: 0 };
+      return { tsservers: [], diagnosticData: [], totalDiagnostics: 0, componentsCount: 0 };
     }
-    const files = this.typescript.getSupportedFilesForTsserver(components);
-    await this.typescript.initTsserverClientFromWorkspace(
-      {
-        aggregateDiagnosticData: isJson,
-        printTypeErrors: !isJson,
-      },
-      files
-    );
-    const tsserver = this.typescript.getTsserverClient();
-    if (!tsserver) throw new Error(`unable to start tsserver`);
-    await tsserver.getDiagnostic(files);
-    return { tsserver, componentsCount: components.length };
+
+    const { tsservers, diagnosticData, totalDiagnostics } = await this.typescript.checkTypesPerEnvironment(components, {
+      aggregateDiagnosticData: isJson,
+      printTypeErrors: !isJson,
+    });
+
+    return { tsservers, diagnosticData, totalDiagnostics, componentsCount: components.length };
   }
 }

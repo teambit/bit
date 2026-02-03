@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import path from 'path';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { CLIMain } from '@teambit/cli';
@@ -15,8 +16,8 @@ import type { Workspace } from '@teambit/workspace';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import pMapSeries from 'p-map-series';
-import type { TsserverClientOpts } from '@teambit/ts-server';
-import { TsserverClient } from '@teambit/ts-server';
+import type { TsserverClientOpts, DiagnosticData } from '@teambit/ts-server';
+import { TsserverClient, formatDiagnostic } from '@teambit/ts-server';
 import { TypescriptCompiler } from '@teambit/typescript.typescript-compiler';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
@@ -308,6 +309,120 @@ export class TypescriptMain {
       .flat()
       .map((f) => f.path);
     return files.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
+  }
+
+  /**
+   * Groups components by environment and returns a map of envId to component files.
+   */
+  groupComponentsByEnv(components: Component[]): Map<string, { components: Component[]; files: string[] }> {
+    const envMap = new Map<string, { components: Component[]; files: string[] }>();
+
+    for (const component of components) {
+      const envId = this.envs.getEnvId(component).toString();
+      if (!envMap.has(envId)) {
+        envMap.set(envId, { components: [], files: [] });
+      }
+      const entry = envMap.get(envId)!;
+      entry.components.push(component);
+      const compFiles = this.getSupportedFilesForTsserver([component]);
+      entry.files.push(...compFiles);
+    }
+
+    return envMap;
+  }
+
+  /**
+   * Check types for components, creating separate tsserver instances per environment.
+   * This ensures each environment uses its own tsconfig settings (e.g., strictNullChecks).
+   * Runs all tsserver instances in parallel for better performance.
+   */
+  async checkTypesPerEnvironment(
+    components: Component[],
+    options: TsserverClientOpts = {}
+  ): Promise<{ tsservers: TsserverClient[]; diagnosticData: DiagnosticData[]; totalDiagnostics: number }> {
+    if (!this.workspace) {
+      throw new Error('checkTypesPerEnvironment: workspace was not found');
+    }
+
+    const envGroups = this.groupComponentsByEnv(components);
+
+    // Create and run all tsserver instances in parallel
+    // Always aggregate data to enable deduplication, disable per-tsserver printing
+    const envEntries = Array.from(envGroups.entries()).filter(([_, { files }]) => files.length > 0);
+
+    const results = await Promise.all(
+      envEntries.map(async ([envId, { components: envComponents, files }]) => {
+        // Use the first component's directory as the projectRootPath for this environment
+        const firstComponent = envComponents[0];
+        const componentDir = this.workspace!.componentDir(firstComponent.id, { ignoreVersion: true });
+
+        this.logger.debug(
+          `Creating tsserver for env ${envId} with projectRootPath: ${componentDir}, files: ${files.length}`
+        );
+
+        // Disable per-tsserver printing to avoid duplicates - we'll print after deduplication
+        const tsserverOpts = { ...options, printTypeErrors: false, aggregateDiagnosticData: true };
+        const tsserver = new TsserverClient(componentDir, this.logger, tsserverOpts, files);
+        await tsserver.init();
+        await tsserver.getDiagnostic(files);
+
+        return { tsserver, files: new Set(files), componentDir };
+      })
+    );
+
+    const tsservers = results.map((r) => r.tsserver);
+
+    // Deduplicate diagnostics - only include errors from files that belong to this env's components
+    // This prevents the same error from appearing multiple times when a file is imported across envs
+    const seenDiagnostics = new Set<string>();
+    const allDiagnosticData: DiagnosticData[] = [];
+    let totalDiagnostics = 0;
+
+    for (const { tsserver, files: envFiles, componentDir } of results) {
+      // Filter diagnostic data to only include files from this env's components
+      for (const data of tsserver.diagnosticData) {
+        // data.file is relative to componentDir, reconstruct absolute path
+        const fullPath = path.resolve(componentDir, data.file);
+        if (envFiles.has(fullPath)) {
+          const dataKey = `${fullPath}:${data.diagnostic.start?.line}:${data.diagnostic.start?.offset}:${data.diagnostic.text}`;
+          if (!seenDiagnostics.has(dataKey)) {
+            seenDiagnostics.add(dataKey);
+            // Recalculate file path relative to workspace
+            const wsRelativePath = path.relative(this.workspace!.path, fullPath);
+            const formatted = formatDiagnostic(data.diagnostic, wsRelativePath);
+            const updatedData = { ...data, file: wsRelativePath, formatted };
+            allDiagnosticData.push(updatedData);
+            // Print if requested, with workspace-relative path
+            if (options.printTypeErrors) {
+              this.logger.console(formatted);
+            }
+          }
+        }
+      }
+
+      // Count unique files with diagnostics for the summary
+      for (const diag of tsserver.lastDiagnostics) {
+        // diag.file is absolute
+        if (envFiles.has(diag.file)) {
+          const diagKey = `${diag.file}`;
+          if (!seenDiagnostics.has(diagKey)) {
+            seenDiagnostics.add(diagKey);
+            totalDiagnostics++;
+          }
+        }
+      }
+    }
+
+    return { tsservers, diagnosticData: allDiagnosticData, totalDiagnostics };
+  }
+
+  /**
+   * Kill all tsserver instances from checkTypesPerEnvironment.
+   */
+  killTsservers(tsservers: TsserverClient[]) {
+    for (const tsserver of tsservers) {
+      tsserver.killTsServer();
+    }
   }
 
   private async onPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
