@@ -106,7 +106,9 @@ otherwise, only new and modified components will be checked`);
     );
     const tsserver = this.typescript.getTsserverClient();
     if (!tsserver) throw new Error(`unable to start tsserver`);
-    await tsserver.getDiagnostic(files);
+    // Use batching for large file sets to avoid overwhelming tsserver
+    const BATCH_SIZE = 50;
+    await tsserver.getDiagnostic(files, files.length > BATCH_SIZE ? BATCH_SIZE : undefined);
     return { tsserver, componentsCount: components.length };
   }
 }
