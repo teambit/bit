@@ -348,7 +348,7 @@ export class TypescriptMain {
 
     // Create and run all tsserver instances in parallel
     // Always aggregate data to enable deduplication, disable per-tsserver printing
-    const envEntries = Array.from(envGroups.entries()).filter(([_, { files }]) => files.length > 0);
+    const envEntries = Array.from(envGroups.entries()).filter(([, { files }]) => files.length > 0);
 
     const tsservers: TsserverClient[] = [];
     let results: Array<{ tsserver: TsserverClient; files: Set<string>; componentDir: string }>;
