@@ -350,27 +350,33 @@ export class TypescriptMain {
     // Always aggregate data to enable deduplication, disable per-tsserver printing
     const envEntries = Array.from(envGroups.entries()).filter(([_, { files }]) => files.length > 0);
 
-    const results = await Promise.all(
-      envEntries.map(async ([envId, { components: envComponents, files }]) => {
-        // Use the first component's directory as the projectRootPath for this environment
-        const firstComponent = envComponents[0];
-        const componentDir = this.workspace!.componentDir(firstComponent.id, { ignoreVersion: true });
+    const tsservers: TsserverClient[] = [];
+    let results: Array<{ tsserver: TsserverClient; files: Set<string>; componentDir: string }>;
 
-        this.logger.debug(
-          `Creating tsserver for env ${envId} with projectRootPath: ${componentDir}, files: ${files.length}`
-        );
+    try {
+      results = await Promise.all(
+        envEntries.map(async ([envId, { components: envComponents, files }]) => {
+          const firstComponent = envComponents[0];
+          const componentDir = this.workspace!.componentDir(firstComponent.id, { ignoreVersion: true });
 
-        // Disable per-tsserver printing to avoid duplicates - we'll print after deduplication
-        const tsserverOpts = { ...options, printTypeErrors: false, aggregateDiagnosticData: true };
-        const tsserver = new TsserverClient(componentDir, this.logger, tsserverOpts, files);
-        await tsserver.init();
-        await tsserver.getDiagnostic(files);
+          this.logger.debug(
+            `Creating tsserver for env ${envId} with projectRootPath: ${componentDir}, files: ${files.length}`
+          );
 
-        return { tsserver, files: new Set(files), componentDir };
-      })
-    );
+          const tsserverOpts = { ...options, printTypeErrors: false, aggregateDiagnosticData: true };
+          const tsserver = new TsserverClient(componentDir, this.logger, tsserverOpts, files);
+          tsservers.push(tsserver); // Track for cleanup on error
+          await tsserver.init();
+          await tsserver.getDiagnostic(files);
 
-    const tsservers = results.map((r) => r.tsserver);
+          return { tsserver, files: new Set(files), componentDir };
+        })
+      );
+    } catch (err) {
+      // Clean up any created tsserver instances on error
+      this.killTsservers(tsservers);
+      throw err;
+    }
 
     // Deduplicate diagnostics - only include errors from files that belong to this env's components
     // This prevents the same error from appearing multiple times when a file is imported across envs
