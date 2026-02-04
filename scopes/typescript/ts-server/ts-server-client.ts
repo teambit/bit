@@ -143,10 +143,22 @@ export class TsserverClient {
    *
    * the return value here just shows whether the request was succeeded, it doesn't have any info about whether errors
    * were found or not.
+   *
+   * @param files files to check
+   * @param batchSize if provided, files will be processed in batches to avoid overwhelming tsserver
    */
-  async getDiagnostic(files = this.files): Promise<any> {
+  async getDiagnostic(files = this.files, batchSize?: number): Promise<any> {
     this.lastDiagnostics = [];
-    return this.tsServer?.request(CommandTypes.Geterr, { delay: 0, files });
+
+    if (!batchSize || files.length <= batchSize) {
+      return this.tsServer?.request(CommandTypes.Geterr, { delay: 0, files });
+    }
+
+    // Process files in batches
+    for (let i = 0; i < files.length; i += batchSize) {
+      const batch = files.slice(i, i + batchSize);
+      await this.tsServer?.request(CommandTypes.Geterr, { delay: 0, files: batch });
+    }
   }
 
   /**
