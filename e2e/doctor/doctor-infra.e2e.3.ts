@@ -92,7 +92,7 @@ describe('bit doctor infra', function () {
       const nestedDir = path.join(helper.scopes.localPath, 'comp1');
       helper.command.runCmd(`bit doctor --archive ${archivePath} --exclude-local-scope`, nestedDir);
       // List tar entries using tar command (doctor adds .tar extension)
-      const tarOutput = execSync(`tar -tzf "${archivePath}.tar"`, { encoding: 'utf8' });
+      const tarOutput = execSync(`tar -tf "${archivePath}.tar"`, { encoding: 'utf8' });
       tarEntries = tarOutput.trim().split('\n');
     });
     it('should exclude .bit/objects contents', () => {
