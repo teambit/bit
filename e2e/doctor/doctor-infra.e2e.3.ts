@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
+import { execSync } from 'child_process';
 
 import { DiagnosisNotFound } from '@teambit/doctor';
 import { Helper } from '@teambit/legacy.e2e-helper';
@@ -77,6 +78,42 @@ describe('bit doctor infra', function () {
       const useFunc = () => helper.command.doctorOne(nonExistingDiagnosis, { j: '' });
       const error = new DiagnosisNotFound(nonExistingDiagnosis);
       helper.general.expectToThrow(useFunc, error);
+    });
+  });
+
+  describe('archive with --exclude-local-scope flag', () => {
+    let tarEntries: string[];
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      const archivePath = path.join(helper.scopes.localPath, 'doctor-archive');
+      // Run from a nested directory to trigger the bug (workspaceRoot becomes absolute path)
+      const nestedDir = path.join(helper.scopes.localPath, 'comp1');
+      helper.command.runCmd(`bit doctor --archive ${archivePath} --exclude-local-scope`, nestedDir);
+      // List tar entries using tar command (doctor adds .tar extension)
+      const tarOutput = execSync(`tar -tzf "${archivePath}.tar"`, { encoding: 'utf8' });
+      tarEntries = tarOutput.trim().split('\n');
+    });
+    it('should exclude .bit/objects contents', () => {
+      const objectsContents = tarEntries.filter((e) => e.includes('.bit/objects/'));
+      expect(objectsContents).to.have.lengthOf(0);
+    });
+    it('should exclude .bit/cache contents', () => {
+      const cacheContents = tarEntries.filter((e) => e.includes('.bit/cache/'));
+      expect(cacheContents).to.have.lengthOf(0);
+    });
+    it('should exclude .bit/tmp contents', () => {
+      const tmpContents = tarEntries.filter((e) => e.includes('.bit/tmp/'));
+      expect(tmpContents).to.have.lengthOf(0);
+    });
+    it('should include .bit/command-history', () => {
+      const commandHistoryEntries = tarEntries.filter((e) => e.includes('.bit/command-history'));
+      expect(commandHistoryEntries).to.have.lengthOf.at.least(1);
+    });
+    it('should include .bit/scope.json', () => {
+      const scopeJsonEntries = tarEntries.filter((e) => e.includes('.bit/scope.json'));
+      expect(scopeJsonEntries).to.have.lengthOf(1);
     });
   });
 

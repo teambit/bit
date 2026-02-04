@@ -330,8 +330,13 @@ export class DoctorMain {
     };
 
     const workspaceRoot = consumerInfo?.path || '.';
+    const ignoreWithRelativePath = (fileName: string) => {
+      // tar-fs passes absolute paths when workspaceRoot is absolute, normalize to relative
+      const relativePath = path.isAbsolute(fileName) ? path.relative(workspaceRoot, fileName) : fileName;
+      return ignore(relativePath);
+    };
     const myPack = tarFS.pack(workspaceRoot, {
-      ignore,
+      ignore: ignoreWithRelativePath,
       finalize: false,
       finish: packExamineResults,
     });
