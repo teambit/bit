@@ -754,17 +754,6 @@ export class DependencyResolverMain {
   }
 
   /**
-   * Returns package names of core Bit framework aspects.
-   * These are packages like @teambit/react, @teambit/harmony, etc.
-   * that are part of the Bit infrastructure and should typically NOT be
-   * shared/externalized in dev server bundles (they're bundled per-environment).
-   */
-  getCoreAspectPackageNames(): string[] {
-    const packagesAndIds = this.aspectLoader.getCoreAspectsPackagesAndIds();
-    return Object.keys(packagesAndIds);
-  }
-
-  /**
    * return the system configured package manager. by default pnpm.
    */
   getSystemPackageManager(): PackageManager {
