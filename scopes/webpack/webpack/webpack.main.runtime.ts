@@ -60,8 +60,6 @@ export type WebpackConfigDevServerTransformer = (
   context: WebpackConfigDevServerTransformContext
 ) => WebpackConfigMutator;
 
-export type WebpackConfig = {};
-
 export class WebpackMain {
   constructor(
     /**
@@ -82,9 +80,7 @@ export class WebpackMain {
     /**
      * Logger extension
      */
-    public logger: Logger,
-
-    readonly config: WebpackConfig
+    public logger: Logger
   ) {}
 
   /**
@@ -230,14 +226,9 @@ export class WebpackMain {
   static runtime = MainRuntime;
   static dependencies = [PubsubAspect, WorkspaceAspect, BundlerAspect, LoggerAspect];
 
-  static defaultConfig: WebpackConfig = {};
-
-  static async provider(
-    [pubsub, workspace, bundler, logger]: [PubsubMain, Workspace, BundlerMain, LoggerMain],
-    config: WebpackConfig
-  ) {
+  static async provider([pubsub, workspace, bundler, logger]: [PubsubMain, Workspace, BundlerMain, LoggerMain]) {
     const logPublisher = logger.createLogger(WebpackAspect.id);
-    return new WebpackMain(pubsub, workspace, bundler, logPublisher, config);
+    return new WebpackMain(pubsub, workspace, bundler, logPublisher);
   }
 }
 
