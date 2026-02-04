@@ -126,12 +126,7 @@ export class PreviewStartPlugin implements StartPlugin {
     this.listenToDevServers(options.showInternalUrls);
     const components = await this.workspace.getComponentsByUserInput(!options.pattern, options.pattern);
     // TODO: logic for creating preview servers must be refactored to this aspect from the DevServer aspect.
-    // PERFORMANCE: Enable parallel dev servers and shared dependency bundling for faster startup
-    const previewServers = await this.bundler.devServer(components, {
-      parallelDevServers: true,
-      sharedDepsBundle: true,
-      workspaceDir: this.workspace.path,
-    });
+    const previewServers = await this.bundler.devServer(components);
     previewServers.forEach((server) => {
       const envId = server.context.envRuntime.id;
       this.serversMap[envId] = server;
@@ -206,10 +201,19 @@ export class PreviewStartPlugin implements StartPlugin {
   }
 
   private handleOnStartCompiling(id: string) {
+    // Track compiling state
     this.serversState[id] = {
       ...this.serversState[id],
       isCompiling: true,
     };
+
+    // Only show spinner for initial compilation, not for subsequent compiles
+    // (e.g., lazy compilation chunks, HMR rebuilds). This prevents console spam
+    // when webpack fires many compile events rapidly.
+    if (this.serversState[id]?.isCompilationDone) {
+      return;
+    }
+
     const spinnerId = getSpinnerId(id);
     const text = getSpinnerCompilingMessage(this.serversMap[id] || this.pendingServers.get(id));
     const exists = this.logger.multiSpinner.spinners[spinnerId];

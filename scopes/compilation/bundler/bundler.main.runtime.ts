@@ -28,6 +28,11 @@ export type OnPreDevServerCreatedSlot = SlotRegistry<OnPreDevServerCreated>;
 
 export type BundlerConfig = {
   dedicatedEnvDevServers: string[];
+  /**
+   * Enable parallel dev server creation for faster startup.
+   * When true, dev servers for different environments start in parallel.
+   */
+  parallelDevServers?: boolean;
 };
 
 /**
@@ -92,19 +97,12 @@ export class BundlerMain {
     components: Component[],
     opts: {
       configureProxy?: boolean;
-      parallelDevServers?: boolean;
-      /** PERFORMANCE: Enable shared externalized dependency bundling */
-      sharedDepsBundle?: boolean;
-      /** Workspace root directory for shared deps bundling */
-      workspaceDir?: string;
     } = {}
   ): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
     const serviceOptions = {
       dedicatedEnvDevServers: this.config.dedicatedEnvDevServers,
-      parallelDevServers: opts.parallelDevServers,
-      sharedDepsBundle: opts.sharedDepsBundle,
-      workspaceDir: opts.workspaceDir,
+      parallelDevServers: this.config.parallelDevServers ?? false,
     };
     const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer>(this.devService, serviceOptions);
     if (opts.configureProxy) {
@@ -186,7 +184,7 @@ export class BundlerMain {
   static runtime = MainRuntime;
   static dependencies = [PubsubAspect, EnvsAspect, GraphqlAspect, DependencyResolverAspect];
 
-  static defaultConfig = {
+  static defaultConfig: BundlerConfig = {
     dedicatedEnvDevServers: [],
   };
 

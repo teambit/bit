@@ -15,7 +15,12 @@ import { merge } from 'webpack-merge';
 import WsDevServer from 'webpack-dev-server';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 
-import { generateAddAliasesFromPeersTransformer, generateExternalsTransformer } from './transformers';
+import {
+  generateAddAliasesFromPeersTransformer,
+  generateExternalsTransformer,
+  generatePathInfoTransformer,
+  generateFilesystemCacheTransformer,
+} from './transformers';
 import { configFactory as devServerConfigFactory } from './config/webpack.dev.config';
 import { configFactory as baseConfigFactory } from './config/webpack.config';
 
@@ -55,6 +60,8 @@ export type WebpackConfigDevServerTransformer = (
   context: WebpackConfigDevServerTransformContext
 ) => WebpackConfigMutator;
 
+export type WebpackConfig = {};
+
 export class WebpackMain {
   constructor(
     /**
@@ -75,7 +82,9 @@ export class WebpackMain {
     /**
      * Logger extension
      */
-    public logger: Logger
+    public logger: Logger,
+
+    readonly config: WebpackConfig
   ) {}
 
   /**
@@ -175,6 +184,12 @@ export class WebpackMain {
         transformers.push(externalsTransformer);
       }
     }
+
+    if (devServerContext) {
+      transformers.push(generatePathInfoTransformer());
+      transformers.push(generateFilesystemCacheTransformer(__filename));
+    }
+
     return transformers;
   }
 
@@ -215,9 +230,14 @@ export class WebpackMain {
   static runtime = MainRuntime;
   static dependencies = [PubsubAspect, WorkspaceAspect, BundlerAspect, LoggerAspect];
 
-  static async provider([pubsub, workspace, bundler, logger]: [PubsubMain, Workspace, BundlerMain, LoggerMain]) {
+  static defaultConfig: WebpackConfig = {};
+
+  static async provider(
+    [pubsub, workspace, bundler, logger]: [PubsubMain, Workspace, BundlerMain, LoggerMain],
+    config: WebpackConfig
+  ) {
     const logPublisher = logger.createLogger(WebpackAspect.id);
-    return new WebpackMain(pubsub, workspace, bundler, logPublisher);
+    return new WebpackMain(pubsub, workspace, bundler, logPublisher, config);
   }
 }
 

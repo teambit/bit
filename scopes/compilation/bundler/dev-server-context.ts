@@ -53,25 +53,4 @@ export interface DevServerContext extends ExecutionContext {
    * this will usually replace the instance of import one of the host dependencies by the instance of the env provided it
    */
   aliasHostDependencies?: boolean;
-
-  /**
-   * PERFORMANCE: Shared externalized dependencies info.
-   * When provided, webpack should externalize these deps and load them from the shared bundle.
-   * NOTE: This is different from Bit's "pre-bundling" which handles Bit aspects.
-   */
-  sharedDeps?: {
-    /**
-     * Path to the shared dependencies bundle file
-     */
-    bundlePath: string;
-    /**
-     * Public URL path to serve the shared deps from
-     */
-    publicPath: string;
-    /**
-     * Map of package name to the global variable name it's exported as
-     * e.g., { "react": "React", "react-dom": "ReactDom" }
-     */
-    externalsMap: Record<string, string>;
-  };
 }

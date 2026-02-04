@@ -5,3 +5,4 @@ export {
   generateExposePeersTransformer,
   generateExternalsTransformer,
 } from './transformers';
+export { generatePathInfoTransformer, generateFilesystemCacheTransformer } from './dev-server-optimizations';

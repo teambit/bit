@@ -47,8 +47,6 @@ export function configFactory(
       // Development filename output
       filename: 'static/js/[name].bundle.js',
 
-      pathinfo: true,
-
       path: resolveWorkspacePath(publicDirectory),
 
       // publicPath: resolveWorkspacePath(publicDirectory),
@@ -165,7 +163,10 @@ export function configFactory(
     snapshot: componentPathsRegExps && componentPathsRegExps.length > 0 ? { managedPaths: componentPathsRegExps } : {},
 
     watchOptions: {
-      poll: true,
+      // Use native watching by default - poll only if env var is set
+      poll: process.env.BIT_WEBPACK_POLL ? 1000 : false,
+      // Ignore paths that shouldn't trigger rebuilds
+      ignored: ['**/.git/**', '**/node_modules/**/.cache/**'],
     },
   };
 }
