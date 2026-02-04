@@ -461,6 +461,19 @@ export class CiMain {
         this.logger.console(chalk.yellow('Already on main, checking out to head'));
         await this.lanes.checkout.checkout({ head: true, skipNpmInstall: true });
       }
+
+      // Clean up orphaned temporary lane on error
+      if (foundErr) {
+        const tempLaneFullName = `${laneId.scope}/${tempLaneName}`;
+        this.logger.console(chalk.blue(`Cleaning up temporary lane ${tempLaneFullName}`));
+        try {
+          await this.lanes.removeLanes([tempLaneFullName], { remote: false, force: true });
+          this.logger.console(chalk.green(`Removed temporary lane ${tempLaneFullName}`));
+        } catch (cleanupErr: any) {
+          // Ignore cleanup errors to avoid masking the original error
+          this.logger.console(chalk.yellow(`Failed to clean up temporary lane: ${cleanupErr?.message || cleanupErr}`));
+        }
+      }
     }
   }
 
