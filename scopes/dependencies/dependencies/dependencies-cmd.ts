@@ -9,6 +9,40 @@ import { generateDependenciesInfoTable } from './template';
 import type { DependenciesMain } from './dependencies.main.runtime';
 import type { Workspace } from '@teambit/workspace';
 
+/** Create a borderless CLI table (columns aligned with whitespace only). */
+function borderlessTable(
+  opts: { head?: string[]; paddingLeft?: number; paddingRight?: number } = {}
+): InstanceType<typeof Table> {
+  const noChar = {
+    top: '',
+    'top-mid': '',
+    'top-left': '',
+    'top-right': '',
+    bottom: '',
+    'bottom-mid': '',
+    'bottom-left': '',
+    'bottom-right': '',
+    left: '',
+    'left-mid': '',
+    mid: '',
+    'mid-mid': '',
+    right: '',
+    'right-mid': '',
+    middle: ' ',
+  };
+  return new Table({
+    chars: noChar,
+    style: { 'padding-left': opts.paddingLeft ?? 0, 'padding-right': opts.paddingRight ?? 0 },
+    ...(opts.head ? { head: opts.head } : {}),
+  });
+}
+
+const IMPACT_COLOR: Record<string, (s: string) => string> = {
+  HIGH: chalk.red,
+  MEDIUM: chalk.yellow,
+  LOW: chalk.green,
+};
+
 type GetDependenciesFlags = {
   tree: boolean;
   scope?: boolean;
@@ -247,28 +281,7 @@ export class DependenciesBlameCmd implements Command {
     if (!results.length) {
       return chalk.yellow(`the specified component ${compName} does not use the entered dependency ${depName}`);
     }
-    // table with no style and no borders, just to align the columns.
-    const table = new Table({
-      chars: {
-        top: '',
-        'top-mid': '',
-        'top-left': '',
-        'top-right': '',
-        bottom: '',
-        'bottom-mid': '',
-        'bottom-left': '',
-        'bottom-right': '',
-        left: '',
-        'left-mid': '',
-        mid: '',
-        'mid-mid': '',
-        right: '',
-        'right-mid': '',
-        middle: ' ',
-      },
-      style: { 'padding-left': 0, 'padding-right': 0 },
-    });
-
+    const table = borderlessTable();
     results.map(({ snap, tag, author, date, message, version }) =>
       table.push([snap, tag || '', author, date, message, version])
     );
@@ -333,123 +346,68 @@ export class DependenciesDiagnoseCmd implements Command {
       return this.reportPackageDrillDown(options.package);
     }
 
-    const result = await this.deps.diagnose();
+    const r = await this.deps.diagnose();
+    const bloatFactor = (r.pnpmStoreEntries / r.uniquePackages).toFixed(1);
+    const sections: string[] = [
+      chalk.bold('Dependency Diagnosis for workspace'),
+      '',
+      chalk.bold('Summary:'),
+      `  Components in workspace: ${r.componentCount}`,
+      `  Unique packages: ${r.uniquePackages.toLocaleString()}`,
+      `  Installed copies (.pnpm entries): ${r.pnpmStoreEntries.toLocaleString()} (${bloatFactor}x bloat factor)`,
+      `  Packages with duplicates: ${r.duplicatedPackages}`,
+    ];
 
-    const lines: string[] = [];
-    lines.push(chalk.bold('Dependency Diagnosis for workspace'));
-    lines.push('');
-
-    // Summary
-    lines.push(chalk.bold('Summary:'));
-    lines.push(`  Components in workspace: ${result.componentCount}`);
-    lines.push(`  Unique packages: ${result.uniquePackages.toLocaleString()}`);
-    lines.push(
-      `  Installed copies (.pnpm entries): ${result.pnpmStoreEntries.toLocaleString()} (${(result.pnpmStoreEntries / result.uniquePackages).toFixed(1)}x bloat factor)`
-    );
-    lines.push(`  Packages with duplicates: ${result.duplicatedPackages}`);
-    lines.push('');
-
-    // Version spread table
-    if (result.versionSpread.length) {
-      lines.push(chalk.bold('Top version-spread packages:'));
-      const spreadTable = new Table({
-        chars: {
-          top: '',
-          'top-mid': '',
-          'top-left': '',
-          'top-right': '',
-          bottom: '',
-          'bottom-mid': '',
-          'bottom-left': '',
-          'bottom-right': '',
-          left: '',
-          'left-mid': '',
-          mid: '',
-          'mid-mid': '',
-          right: '',
-          'right-mid': '',
-          middle: ' ',
-        },
-        style: { 'padding-left': 2, 'padding-right': 1 },
+    if (r.versionSpread.length) {
+      const spreadTable = borderlessTable({
         head: ['Package', 'Versions', 'Copies', 'Impact'],
+        paddingLeft: 2,
+        paddingRight: 1,
       });
-      result.versionSpread.forEach((entry) => {
-        const impactStr =
-          entry.impact === 'HIGH'
-            ? chalk.red(entry.impact)
-            : entry.impact === 'MEDIUM'
-              ? chalk.yellow(entry.impact)
-              : chalk.green(entry.impact);
-        spreadTable.push([entry.packageName, String(entry.versionCount), String(entry.installedCopies), impactStr]);
+      r.versionSpread.forEach((e) => {
+        spreadTable.push([
+          e.packageName,
+          String(e.versionCount),
+          String(e.installedCopies),
+          (IMPACT_COLOR[e.impact] || chalk.green)(e.impact),
+        ]);
       });
-      lines.push(spreadTable.toString());
-      lines.push('');
+      sections.push('', chalk.bold('Top version-spread packages:'), spreadTable.toString());
     }
 
-    // Peer permutations
-    if (result.peerPermutations.length) {
-      lines.push(chalk.bold('Peer dependencies causing permutations:'));
-      const peerTable = new Table({
-        chars: {
-          top: '',
-          'top-mid': '',
-          'top-left': '',
-          'top-right': '',
-          bottom: '',
-          'bottom-mid': '',
-          'bottom-left': '',
-          'bottom-right': '',
-          left: '',
-          'left-mid': '',
-          mid: '',
-          'mid-mid': '',
-          right: '',
-          'right-mid': '',
-          middle: ' ',
-        },
-        style: { 'padding-left': 2, 'padding-right': 1 },
-        head: ['Package', 'Versions'],
+    if (r.peerPermutations.length) {
+      const peerTable = borderlessTable({ head: ['Package', 'Versions'], paddingLeft: 2, paddingRight: 1 });
+      r.peerPermutations.forEach((e) => {
+        peerTable.push([e.packageName, `${e.versions.length} (${e.versions.join(', ')})`]);
       });
-      result.peerPermutations.forEach((entry) => {
-        peerTable.push([entry.packageName, `${entry.versions.length} (${entry.versions.join(', ')})`]);
-      });
-      lines.push(peerTable.toString());
-      lines.push('');
+      sections.push('', chalk.bold('Peer dependencies causing permutations:'), peerTable.toString());
     }
 
-    return lines.join('\n');
+    return sections.join('\n');
   }
 
   private async reportPackageDrillDown(packageName: string): Promise<string> {
-    const result = await this.deps.diagnoseDrillDown(packageName);
-    const lines: string[] = [];
-    lines.push(chalk.bold(`Package drill-down: ${packageName}`));
-    lines.push('');
-    lines.push(`  Installed copies: ${result.pnpmDirs.length}`);
-    lines.push('');
+    const { pnpmDirs } = await this.deps.diagnoseDrillDown(packageName);
+    const header = [chalk.bold(`Package drill-down: ${packageName}`), '', `  Installed copies: ${pnpmDirs.length}`, ''];
 
-    if (result.pnpmDirs.length === 0) {
-      lines.push(chalk.yellow('  No .pnpm entries found for this package.'));
-      return lines.join('\n');
+    if (!pnpmDirs.length) {
+      return [...header, chalk.yellow('  No .pnpm entries found for this package.')].join('\n');
     }
 
     // Group by version
     const byVersion = new Map<string, string[]>();
-    for (const dir of result.pnpmDirs) {
-      const existing = byVersion.get(dir.version) || [];
-      existing.push(dir.peerSuffix || '(no peers)');
-      byVersion.set(dir.version, existing);
+    for (const dir of pnpmDirs) {
+      const suffixes = byVersion.get(dir.version) || [];
+      suffixes.push(dir.peerSuffix || '(no peers)');
+      byVersion.set(dir.version, suffixes);
     }
 
-    for (const [version, peerSuffixes] of byVersion) {
-      lines.push(chalk.bold(`  ${packageName}@${version}`) + chalk.dim(` — ${peerSuffixes.length} copies`));
-      for (const suffix of peerSuffixes) {
-        lines.push(`    ${chalk.dim(suffix)}`);
-      }
-      lines.push('');
-    }
+    const versionLines = Array.from(byVersion, ([version, suffixes]) => [
+      chalk.bold(`  ${packageName}@${version}`) + chalk.dim(` — ${suffixes.length} copies`),
+      ...suffixes.map((s) => `    ${chalk.dim(s)}`),
+    ]).flat();
 
-    return lines.join('\n');
+    return [...header, ...versionLines].join('\n');
   }
 
   async json(_args: [], options: { package?: string }) {

@@ -90,6 +90,11 @@ export interface DiagnosisReport {
   }>;
 }
 
+/** Compare two version strings: semver-aware when both are valid, lexicographic otherwise. */
+function compareVersions(a: string, b: string): number {
+  return semver.valid(a) && semver.valid(b) ? semver.compare(a, b) : a.localeCompare(b);
+}
+
 export class DependenciesMain {
   constructor(
     private workspace: Workspace,
@@ -422,39 +427,30 @@ export class DependenciesMain {
     }
 
     const uniquePackages = pnpmPackageCopies.size;
-    let duplicatedPackages = 0;
-    for (const [, count] of pnpmPackageCopies) {
-      if (count > 1) duplicatedPackages++;
-    }
+    const duplicatedPackages = Array.from(pnpmPackageCopies.values()).filter((c) => c > 1).length;
 
     // 2. Collect component-level dep info (for version spread + peer lifecycle detection)
     const packageVersionMap = new Map<string, { versions: Set<string>; lifecycles: Set<string> }>();
-
-    allComps.forEach((comp) => {
+    for (const comp of allComps) {
       const depList = this.dependencyResolver.getDependencies(comp);
       depList.forEach((dep) => {
         const pkgName = dep.getPackageName?.() || dep.id;
-        const existing = packageVersionMap.get(pkgName);
-        if (existing) {
-          existing.versions.add(dep.version);
-          existing.lifecycles.add(dep.lifecycle);
-        } else {
-          packageVersionMap.set(pkgName, {
-            versions: new Set([dep.version]),
-            lifecycles: new Set([dep.lifecycle]),
-          });
+        let entry = packageVersionMap.get(pkgName);
+        if (!entry) {
+          entry = { versions: new Set(), lifecycles: new Set() };
+          packageVersionMap.set(pkgName, entry);
         }
+        entry.versions.add(dep.version);
+        entry.lifecycles.add(dep.lifecycle);
       });
-    });
+    }
 
     // 3. Version spread — packages with the most distinct versions, enriched with .pnpm copy count
     const versionSpread = Array.from(packageVersionMap.entries())
       .filter(([, data]) => data.versions.size > 1)
       .map(([pkgName, data]) => {
         const versionCount = data.versions.size;
-        const versions = Array.from(data.versions).sort((a, b) =>
-          semver.valid(a) && semver.valid(b) ? semver.compare(a, b) : a.localeCompare(b)
-        );
+        const versions = Array.from(data.versions).sort(compareVersions);
         const installedCopies = pnpmPackageCopies.get(pkgName) || versionCount;
         const impact: 'HIGH' | 'MEDIUM' | 'LOW' =
           installedCopies >= 10 ? 'HIGH' : installedCopies >= 5 ? 'MEDIUM' : 'LOW';
@@ -466,12 +462,10 @@ export class DependenciesMain {
     // 4. Peer deps with multiple versions
     const peerPermutations = Array.from(packageVersionMap.entries())
       .filter(([, data]) => data.lifecycles.has('peer') && data.versions.size > 1)
-      .map(([pkgName, data]) => {
-        const versions = Array.from(data.versions).sort((a, b) =>
-          semver.valid(a) && semver.valid(b) ? semver.compare(a, b) : a.localeCompare(b)
-        );
-        return { packageName: pkgName, versions };
-      })
+      .map(([pkgName, data]) => ({
+        packageName: pkgName,
+        versions: Array.from(data.versions).sort(compareVersions),
+      }))
       .sort((a, b) => b.versions.length - a.versions.length);
 
     return {
@@ -534,15 +528,9 @@ export class DependenciesMain {
       }
     }
 
-    // Sort by version, then peer suffix
-    pnpmDirs.sort((a, b) => {
-      const vCmp =
-        semver.valid(a.version) && semver.valid(b.version)
-          ? semver.compare(a.version, b.version)
-          : a.version.localeCompare(b.version);
-      if (vCmp !== 0) return vCmp;
-      return (a.peerSuffix || '').localeCompare(b.peerSuffix || '');
-    });
+    pnpmDirs.sort(
+      (a, b) => compareVersions(a.version, b.version) || (a.peerSuffix || '').localeCompare(b.peerSuffix || '')
+    );
 
     return { packageName, pnpmDirs };
   }
