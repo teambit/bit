@@ -122,10 +122,23 @@ export class UIServer {
     }
 
     try {
-      const dynamicProxy = httpProxy.createProxyServer();
+      const dynamicProxy = httpProxy.createProxyServer({
+        xfwd: true,
+        proxyTimeout: 0,
+        timeout: 0,
+      });
 
       dynamicProxy.on('error', (e) => {
         this.logger.error(e.message);
+      });
+
+      // Cache JS/CSS assets in the browser so subsequent preview iframes
+      // reuse the same bundle without re-downloading from the component dev server.
+      dynamicProxy.on('proxyRes', (proxyRes, req) => {
+        const url = req.url || '';
+        if (/\.(js|css)(\?.*)?$/.test(url)) {
+          proxyRes.headers['cache-control'] = 'no-cache';
+        }
       });
 
       const wsHandler = (req, socket, head) => {
@@ -164,7 +177,8 @@ export class UIServer {
         try {
           const originalUrl = req.originalUrl;
           this.logger.debug(`Proxying request to ${envId}: ${originalUrl}`);
-          req.url = originalUrl;
+          // Normalize double slashes that occur when publicPath and asset paths join
+          req.url = originalUrl.replace(/([^:])\/\/+/g, '$1/');
           dynamicProxy.web(req, res, { target: entries[0].target });
         } catch (err: any) {
           this.logger.error(`Error in component router for ${envId}: ${err.message}`);
@@ -202,7 +216,11 @@ export class UIServer {
   }
 
   private async configureProxy(app: Express, server: Server) {
-    const proxyServer = httpProxy.createProxyServer();
+    const proxyServer = httpProxy.createProxyServer({
+      xfwd: true,
+      proxyTimeout: 0,
+      timeout: 0,
+    });
     proxyServer.on('error', (e) => {
       this.logger.error(e.message);
     });
@@ -225,7 +243,7 @@ export class UIServer {
       entry.context.forEach((route) => {
         this._proxyRoutes.add(route);
         app.use(`${route}/*`, (req, res) => {
-          req.url = req.originalUrl;
+          req.url = req.originalUrl.replace(/([^:])\/\/+/g, '$1/');
           proxyServer.web(req, res, entry);
         });
       });

@@ -105,7 +105,7 @@ export class GraphqlUI {
       fetch: crossFetch,
     });
 
-    const httpLink = ApolloLink.split(this.isMutation, unbatchedHttpLink, batchedHttpLink);
+    const httpLink = ApolloLink.split(this.shouldSkipBatch, unbatchedHttpLink, batchedHttpLink);
 
     return new ApolloClient({
       ssrMode: true,
@@ -125,6 +125,11 @@ export class GraphqlUI {
   private readonly isMutation = (op: Operation) => {
     const def = getMainDefinition(op.query) as OperationDefinitionNode;
     return def.kind === 'OperationDefinition' && def.operation === 'mutation';
+  };
+
+  private readonly shouldSkipBatch = (op: Operation) => {
+    if (this.isMutation(op)) return true;
+    return op.getContext().skipBatch === true;
   };
 
   private createLink(uri: string, { subscriptionUri }: { subscriptionUri?: string } = {}) {
@@ -158,7 +163,7 @@ export class GraphqlUI {
       credentials: 'include',
     });
 
-    const httpLink = ApolloLink.split(this.isMutation, unbatchedHttpLink, batchedHttpLink);
+    const httpLink = ApolloLink.split(this.shouldSkipBatch, unbatchedHttpLink, batchedHttpLink);
 
     const wsLink = subscriptionUri
       ? new WebSocketLink({ uri: subscriptionUri, options: { reconnect: true } })
@@ -181,8 +186,8 @@ export class GraphqlUI {
 
   static defaultConfig: GraphQLConfig = {
     enableBatching: false,
-    batchInterval: 50,
-    batchMax: 20,
+    batchInterval: 10,
+    batchMax: 10,
   };
 
   static async provider(_, config: GraphQLConfig) {

@@ -1,5 +1,4 @@
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql } from '@apollo/client';
+import { gql, useQuery } from '@apollo/client';
 import { ScopeDescriptor } from '@teambit/scopes.scope-descriptor';
 import { ScopeID } from '@teambit/scopes.scope-id';
 
@@ -16,7 +15,7 @@ export const GET_CLOUD_SCOPES_QUERY = gql`
 `;
 
 export function useCloudScopes(ids?: string[]): { cloudScopes?: ScopeDescriptor[] } {
-  const { data } = useDataQuery<{ getCloudScopes?: (ScopeDescriptor & { id: string })[] }>(GET_CLOUD_SCOPES_QUERY, {
+  const { data } = useQuery<{ getCloudScopes?: (ScopeDescriptor & { id: string })[] }>(GET_CLOUD_SCOPES_QUERY, {
     variables: {
       ids,
     },
