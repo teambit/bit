@@ -20,6 +20,14 @@
   height: 14px;
 }
 
+.envIconPlaceholder {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--border-medium-color, #ededed);
+  opacity: 0.5;
+}
+
 .badge {
   background-color: var(--surface-color);
   padding: 4px;

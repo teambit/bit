@@ -5,6 +5,7 @@ import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { ComponentID } from '@teambit/component-id';
 import type { ComponentModel } from '@teambit/component';
+import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import compact from 'lodash.compact';
 import { ScopeID } from '@teambit/scopes.scope-id';
 import { useCloudScopes } from '@teambit/cloud.hooks.use-cloud-scopes';
@@ -67,7 +68,7 @@ export function WorkspaceOverview() {
     filters
   );
 
-  const plugins = useCardPlugins({ compModelsById, showPreview: isMinimal });
+  const plugins = useCardPlugins({ compModelsById, componentDescriptors, showPreview: isMinimal });
 
   return (
     <div className={styles.container}>
@@ -108,9 +109,11 @@ export function WorkspaceOverview() {
 
 export function useCardPlugins({
   compModelsById,
+  componentDescriptors,
   showPreview,
 }: {
   compModelsById: Map<string, ComponentModel>;
+  componentDescriptors: ComponentDescriptor[];
   showPreview?: boolean;
 }): ComponentCardPluginType<PluginProps>[] {
   const serverUrlsSignature = React.useMemo(() => {
@@ -120,6 +123,18 @@ export function useCardPlugins({
       .join(',');
     return serversCount;
   }, [compModelsById]);
+
+  // Build a signature that changes when aspect data arrives (e.g. heavy query resolves).
+  // This ensures plugins are recreated so closures capture the latest compModelsById,
+  // and React sees a new plugins array reference for proper re-rendering.
+  const descriptorAspectsSignature = React.useMemo(() => {
+    return componentDescriptors
+      .map((d) => {
+        const env = d.get<{ id?: string }>('teambit.envs/envs');
+        return env?.id || '';
+      })
+      .join(',');
+  }, [componentDescriptors]);
 
   const plugins = React.useMemo(
     () => [
@@ -141,11 +156,21 @@ export function useCardPlugins({
           const env = component.get('teambit.envs/envs');
           const envComponentId = env?.id ? ComponentID.fromString(env?.id) : undefined;
 
+          if (!env?.icon) {
+            return (
+              <div className={styles.rightPreviewPlugins}>
+                <div className={styles.badge}>
+                  <div className={styles.envIconPlaceholder} />
+                </div>
+              </div>
+            );
+          }
+
           return (
             <div className={styles.rightPreviewPlugins}>
               <div className={styles.badge}>
                 <Tooltip delay={300} content={envComponentId?.name}>
-                  <img src={env?.icon} className={styles.envIcon} />
+                  <img src={env.icon} className={styles.envIcon} />
                 </Tooltip>
               </div>
             </div>
@@ -154,7 +179,7 @@ export function useCardPlugins({
       },
       new LinkPlugin(),
     ],
-    [compModelsById.size, serverUrlsSignature, showPreview]
+    [compModelsById, serverUrlsSignature, descriptorAspectsSignature, showPreview]
   );
 
   return plugins;
