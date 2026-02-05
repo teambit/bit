@@ -518,7 +518,14 @@ export class DependenciesMain {
   ): Promise<{ packageName: string; pnpmDirs: Array<{ version: string; peerSuffix: string | null }> }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const pnpmDir = path.join(this.workspace.path, 'node_modules', '.pnpm');
-    const entries = await fs.readdir(pnpmDir).catch(() => [] as string[]);
+    const pnpmDirExists = await fs.pathExists(pnpmDir);
+    if (!pnpmDirExists) {
+      throw new Error(
+        `"bit deps diagnose --package" requires a pnpm-managed workspace. ` +
+          `Expected "${pnpmDir}" to exist. Run "bit install" first.`
+      );
+    }
+    const entries = await fs.readdir(pnpmDir);
 
     // Convert package name to .pnpm format: @scope/name → @scope+name
     const pnpmPrefix = packageName.replace('/', '+');

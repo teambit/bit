@@ -334,7 +334,9 @@ export class DependenciesDiagnoseCmd implements Command {
   name = 'diagnose';
   group = 'info-analysis';
   description = 'analyze workspace dependencies for version spread, peer permutations, and bloat';
+  extendedDescription = `scans node_modules/.pnpm to report actual installed copies, identifies packages with multiple versions, and highlights peer dependencies causing permutation explosion. Use --package to drill down into a specific package.`;
   alias = '';
+  arguments = [] as CommandOptions;
   options = [
     ['', 'package <string>', 'drill down into a specific package to see all .pnpm copies and peer combos'],
   ] as CommandOptions;
