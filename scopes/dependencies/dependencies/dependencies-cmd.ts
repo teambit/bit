@@ -317,6 +317,149 @@ export class WhyCmd extends DependenciesUsageCmd {
   name = 'why <dependency-name>';
 }
 
+export class DependenciesDiagnoseCmd implements Command {
+  name = 'diagnose';
+  group = 'info-analysis';
+  description = 'analyze workspace dependencies for version spread, peer permutations, and bloat';
+  alias = '';
+  options = [
+    ['', 'package <string>', 'drill down into a specific package to see all .pnpm copies and peer combos'],
+  ] as CommandOptions;
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report(_args: [], options: { package?: string }) {
+    if (options.package) {
+      return this.reportPackageDrillDown(options.package);
+    }
+
+    const result = await this.deps.diagnose();
+
+    const lines: string[] = [];
+    lines.push(chalk.bold('Dependency Diagnosis for workspace'));
+    lines.push('');
+
+    // Summary
+    lines.push(chalk.bold('Summary:'));
+    lines.push(`  Components in workspace: ${result.componentCount}`);
+    lines.push(`  Unique packages: ${result.uniquePackages.toLocaleString()}`);
+    lines.push(
+      `  Installed copies (.pnpm entries): ${result.pnpmStoreEntries.toLocaleString()} (${(result.pnpmStoreEntries / result.uniquePackages).toFixed(1)}x bloat factor)`
+    );
+    lines.push(`  Packages with duplicates: ${result.duplicatedPackages}`);
+    lines.push('');
+
+    // Version spread table
+    if (result.versionSpread.length) {
+      lines.push(chalk.bold('Top version-spread packages:'));
+      const spreadTable = new Table({
+        chars: {
+          top: '',
+          'top-mid': '',
+          'top-left': '',
+          'top-right': '',
+          bottom: '',
+          'bottom-mid': '',
+          'bottom-left': '',
+          'bottom-right': '',
+          left: '',
+          'left-mid': '',
+          mid: '',
+          'mid-mid': '',
+          right: '',
+          'right-mid': '',
+          middle: ' ',
+        },
+        style: { 'padding-left': 2, 'padding-right': 1 },
+        head: ['Package', 'Versions', 'Copies', 'Impact'],
+      });
+      result.versionSpread.forEach((entry) => {
+        const impactStr =
+          entry.impact === 'HIGH'
+            ? chalk.red(entry.impact)
+            : entry.impact === 'MEDIUM'
+              ? chalk.yellow(entry.impact)
+              : chalk.green(entry.impact);
+        spreadTable.push([entry.packageName, String(entry.versionCount), String(entry.installedCopies), impactStr]);
+      });
+      lines.push(spreadTable.toString());
+      lines.push('');
+    }
+
+    // Peer permutations
+    if (result.peerPermutations.length) {
+      lines.push(chalk.bold('Peer dependencies causing permutations:'));
+      const peerTable = new Table({
+        chars: {
+          top: '',
+          'top-mid': '',
+          'top-left': '',
+          'top-right': '',
+          bottom: '',
+          'bottom-mid': '',
+          'bottom-left': '',
+          'bottom-right': '',
+          left: '',
+          'left-mid': '',
+          mid: '',
+          'mid-mid': '',
+          right: '',
+          'right-mid': '',
+          middle: ' ',
+        },
+        style: { 'padding-left': 2, 'padding-right': 1 },
+        head: ['Package', 'Versions'],
+      });
+      result.peerPermutations.forEach((entry) => {
+        peerTable.push([entry.packageName, `${entry.versions.length} (${entry.versions.join(', ')})`]);
+      });
+      lines.push(peerTable.toString());
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  }
+
+  private async reportPackageDrillDown(packageName: string): Promise<string> {
+    const result = await this.deps.diagnoseDrillDown(packageName);
+    const lines: string[] = [];
+    lines.push(chalk.bold(`Package drill-down: ${packageName}`));
+    lines.push('');
+    lines.push(`  Installed copies: ${result.pnpmDirs.length}`);
+    lines.push('');
+
+    if (result.pnpmDirs.length === 0) {
+      lines.push(chalk.yellow('  No .pnpm entries found for this package.'));
+      return lines.join('\n');
+    }
+
+    // Group by version
+    const byVersion = new Map<string, string[]>();
+    for (const dir of result.pnpmDirs) {
+      const existing = byVersion.get(dir.version) || [];
+      existing.push(dir.peerSuffix || '(no peers)');
+      byVersion.set(dir.version, existing);
+    }
+
+    for (const [version, peerSuffixes] of byVersion) {
+      lines.push(chalk.bold(`  ${packageName}@${version}`) + chalk.dim(` — ${peerSuffixes.length} copies`));
+      for (const suffix of peerSuffixes) {
+        lines.push(`    ${chalk.dim(suffix)}`);
+      }
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  }
+
+  async json(_args: [], options: { package?: string }) {
+    if (options.package) {
+      return this.deps.diagnoseDrillDown(options.package);
+    }
+    return this.deps.diagnose();
+  }
+}
+
 export class DependenciesCmd implements Command {
   name = 'deps <sub-command>';
   alias = 'dependencies';
