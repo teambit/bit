@@ -9,9 +9,9 @@ import { stripTrailingChar } from '@teambit/toolbox.string.strip-trailing-char';
 import type { Server } from 'http';
 import httpProxy from 'http-proxy';
 import { join } from 'path';
-import webpack from 'webpack';
-import type { Configuration as WdsConfiguration } from 'webpack-dev-server';
-import WebpackDevServer from 'webpack-dev-server';
+import { rspack } from '@rspack/core';
+import type { Configuration as WdsConfiguration } from '@rspack/dev-server';
+import { RspackDevServer } from '@rspack/dev-server';
 import type { ComponentServer } from '@teambit/bundler';
 import { createSsrMiddleware } from './ssr-middleware';
 import type { StartPlugin } from './start-plugin';
@@ -19,7 +19,7 @@ import type { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import type { UiMain } from './ui.main.runtime';
 
-import { devConfig } from './webpack/webpack.dev.config';
+import { devConfig } from './webpack/rspack.dev.config';
 
 export type UIServerProps = {
   graphql: GraphqlMain;
@@ -288,9 +288,9 @@ export class UIServer {
     const expressAppPort = this._port;
 
     const config = await this.getDevConfig();
-    const compiler = webpack(config as any);
+    const compiler = rspack(config as any);
     const devServerConfig = await this.getDevServerConfig(devServerPort, expressAppPort, config.devServer);
-    const devServer = new WebpackDevServer(devServerConfig, compiler);
+    const devServer = new RspackDevServer(devServerConfig, compiler);
 
     await devServer.start();
     this._port = devServerPort;
