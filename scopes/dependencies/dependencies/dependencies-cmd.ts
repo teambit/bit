@@ -346,39 +346,42 @@ export class DependenciesDiagnoseCmd implements Command {
       return this.reportPackageDrillDown(options.package);
     }
 
-    const r = await this.deps.diagnose();
-    const bloatFactor = (r.pnpmStoreEntries / r.uniquePackages).toFixed(1);
+    const report = await this.deps.diagnose();
+    const bloatFactor =
+      report.uniquePackages > 0
+        ? `${(report.pnpmStoreEntries / report.uniquePackages).toFixed(1)}x bloat factor`
+        : 'N/A';
     const sections: string[] = [
       chalk.bold('Dependency Diagnosis for workspace'),
       '',
       chalk.bold('Summary:'),
-      `  Components in workspace: ${r.componentCount}`,
-      `  Unique packages: ${r.uniquePackages.toLocaleString()}`,
-      `  Installed copies (.pnpm entries): ${r.pnpmStoreEntries.toLocaleString()} (${bloatFactor}x bloat factor)`,
-      `  Packages with duplicates: ${r.duplicatedPackages}`,
+      `  Components in workspace: ${report.componentCount}`,
+      `  Unique packages: ${report.uniquePackages.toLocaleString()}`,
+      `  Installed copies (.pnpm entries): ${report.pnpmStoreEntries.toLocaleString()} (${bloatFactor})`,
+      `  Packages with duplicates: ${report.duplicatedPackages}`,
     ];
 
-    if (r.versionSpread.length) {
+    if (report.versionSpread.length) {
       const spreadTable = borderlessTable({
         head: ['Package', 'Versions', 'Copies', 'Impact'],
         paddingLeft: 2,
         paddingRight: 1,
       });
-      r.versionSpread.forEach((e) => {
+      report.versionSpread.forEach((entry) => {
         spreadTable.push([
-          e.packageName,
-          String(e.versionCount),
-          String(e.installedCopies),
-          (IMPACT_COLOR[e.impact] || chalk.green)(e.impact),
+          entry.packageName,
+          String(entry.versionCount),
+          String(entry.installedCopies),
+          (IMPACT_COLOR[entry.impact] || chalk.green)(entry.impact),
         ]);
       });
       sections.push('', chalk.bold('Top version-spread packages:'), spreadTable.toString());
     }
 
-    if (r.peerPermutations.length) {
+    if (report.peerPermutations.length) {
       const peerTable = borderlessTable({ head: ['Package', 'Versions'], paddingLeft: 2, paddingRight: 1 });
-      r.peerPermutations.forEach((e) => {
-        peerTable.push([e.packageName, `${e.versions.length} (${e.versions.join(', ')})`]);
+      report.peerPermutations.forEach((entry) => {
+        peerTable.push([entry.packageName, `${entry.versions.length} (${entry.versions.join(', ')})`]);
       });
       sections.push('', chalk.bold('Peer dependencies causing permutations:'), peerTable.toString());
     }
@@ -391,7 +394,11 @@ export class DependenciesDiagnoseCmd implements Command {
     const header = [chalk.bold(`Package drill-down: ${packageName}`), '', `  Installed copies: ${pnpmDirs.length}`, ''];
 
     if (!pnpmDirs.length) {
-      return [...header, chalk.yellow('  No .pnpm entries found for this package.')].join('\n');
+      return [
+        ...header,
+        chalk.yellow('  No .pnpm entries found for this package.'),
+        chalk.dim('  The package may not exist in this workspace, or it may be installed only once.'),
+      ].join('\n');
     }
 
     // Group by version

@@ -405,6 +405,11 @@ export class DependenciesMain {
     return results;
   }
 
+  /**
+   * Analyze the workspace's installed dependencies to detect bloat and duplication.
+   * Scans node_modules/.pnpm for ground truth on actual installed copies.
+   * Only works with pnpm-managed workspaces.
+   */
   async diagnose(): Promise<DiagnosisReport> {
     if (!this.workspace) throw new OutsideWorkspaceError();
 
@@ -413,7 +418,14 @@ export class DependenciesMain {
 
     // 1. Scan node_modules/.pnpm for ground truth — each directory is an actual installed copy
     const pnpmDir = path.join(this.workspace.path, 'node_modules', '.pnpm');
-    const pnpmEntries = await fs.readdir(pnpmDir).catch(() => [] as string[]);
+    const pnpmDirExists = await fs.pathExists(pnpmDir);
+    if (!pnpmDirExists) {
+      throw new Error(
+        `"bit deps diagnose" requires a pnpm-managed workspace. ` +
+          `Expected "${pnpmDir}" to exist. Run "bit install" first.`
+      );
+    }
+    const pnpmEntries = await fs.readdir(pnpmDir);
 
     const pnpmPackageCopies = new Map<string, number>();
     let pnpmStoreEntries = 0;
@@ -500,6 +512,7 @@ export class DependenciesMain {
     return dirName.substring(0, atIdx);
   }
 
+  /** Inspect all .pnpm entries for a specific package, showing each installed copy and its peer combo. */
   async diagnoseDrillDown(
     packageName: string
   ): Promise<{ packageName: string; pnpmDirs: Array<{ version: string; peerSuffix: string | null }> }> {
@@ -520,10 +533,9 @@ export class DependenciesMain {
         pnpmDirs.push({ version: afterName, peerSuffix: null });
       } else {
         const version = afterName.substring(0, underscoreIdx);
-        const peerSuffix = afterName
-          .substring(underscoreIdx + 1)
-          .replace(/\+/g, '/')
-          .replace(/_/g, ' + ');
+        const rawPeerSuffix = afterName.substring(underscoreIdx + 1);
+        const peerSegments = rawPeerSuffix.split('_').filter(Boolean);
+        const peerSuffix = peerSegments.map((seg) => seg.replace(/\+/g, '/')).join(' + ') || null;
         pnpmDirs.push({ version, peerSuffix });
       }
     }
