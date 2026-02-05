@@ -142,7 +142,6 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
       return server;
     };
 
-    // Parallel dev server creation when enabled
     const servers = parallelDevServers
       ? await Promise.all(Object.entries(groupedEnvs).map(createServer))
       : await pMapSeries(Object.entries(groupedEnvs), createServer);

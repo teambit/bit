@@ -201,18 +201,10 @@ export class PreviewStartPlugin implements StartPlugin {
   }
 
   private handleOnStartCompiling(id: string) {
-    // Track compiling state
     this.serversState[id] = {
       ...this.serversState[id],
       isCompiling: true,
     };
-
-    // Only show spinner for initial compilation, not for subsequent compiles
-    // (e.g., lazy compilation chunks, HMR rebuilds). This prevents console spam
-    // when webpack fires many compile events rapidly.
-    if (this.serversState[id]?.isCompilationDone) {
-      return;
-    }
 
     const spinnerId = getSpinnerId(id);
     const text = getSpinnerCompilingMessage(this.serversMap[id] || this.pendingServers.get(id));
