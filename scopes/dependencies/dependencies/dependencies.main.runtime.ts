@@ -6,6 +6,9 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect, KEY_NAME_BY_LIFECYCLE_TYPE } from '@teambit/dependency-resolver';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
+import fs from 'fs-extra';
+import path from 'path';
+import semver from 'semver';
 import { cloneDeep, compact, set, uniq } from 'lodash';
 import pMapSeries from 'p-map-series';
 import type { ConsumerComponent, DependencyLoaderOpts } from '@teambit/legacy.consumer-component';
@@ -26,6 +29,7 @@ import {
   DependenciesBlameCmd,
   DependenciesCmd,
   DependenciesDebugCmd,
+  DependenciesDiagnoseCmd,
   DependenciesEjectCmd,
   DependenciesGetCmd,
   DependenciesRemoveCmd,
@@ -62,6 +66,34 @@ export type BlameResult = {
   message: string;
   version: string;
 };
+
+export interface DiagnosisReport {
+  componentCount: number;
+  /** total directories in node_modules/.pnpm — the actual installed copies on disk */
+  pnpmStoreEntries: number;
+  /** unique package names (regardless of version/peer combo) */
+  uniquePackages: number;
+  /** packages that appear in more than one .pnpm directory (version spread + peer permutations) */
+  duplicatedPackages: number;
+  versionSpread: Array<{
+    packageName: string;
+    /** how many distinct versions exist across components */
+    versionCount: number;
+    versions: string[];
+    /** how many actual .pnpm directories this package has (includes peer permutations) */
+    installedCopies: number;
+    impact: 'HIGH' | 'MEDIUM' | 'LOW';
+  }>;
+  peerPermutations: Array<{
+    packageName: string;
+    versions: string[];
+  }>;
+}
+
+/** Compare two version strings: semver-aware when both are valid, lexicographic otherwise. */
+function compareVersions(a: string, b: string): number {
+  return semver.valid(a) && semver.valid(b) ? semver.compare(a, b) : a.localeCompare(b);
+}
 
 export class DependenciesMain {
   constructor(
@@ -373,6 +405,155 @@ export class DependenciesMain {
     return results;
   }
 
+  /**
+   * Analyze the workspace's installed dependencies to detect bloat and duplication.
+   * Scans node_modules/.pnpm for ground truth on actual installed copies.
+   * Only works with pnpm-managed workspaces.
+   */
+  async diagnose(): Promise<DiagnosisReport> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+
+    const allComps = await this.workspace.list();
+    const componentCount = allComps.length;
+
+    // 1. Scan node_modules/.pnpm for ground truth — each directory is an actual installed copy
+    const pnpmDir = path.join(this.workspace.path, 'node_modules', '.pnpm');
+    const pnpmDirExists = await fs.pathExists(pnpmDir);
+    if (!pnpmDirExists) {
+      throw new Error(
+        `"bit deps diagnose" requires a pnpm-managed workspace. ` +
+          `Expected "${pnpmDir}" to exist. Run "bit install" first.`
+      );
+    }
+    const pnpmEntries = await fs.readdir(pnpmDir);
+
+    const pnpmPackageCopies = new Map<string, number>();
+    let pnpmStoreEntries = 0;
+    for (const entry of pnpmEntries) {
+      if (entry.startsWith('.') || entry === 'node_modules') continue;
+      pnpmStoreEntries++;
+      const pkgName = this.parsePnpmDirPackageName(entry);
+      if (pkgName) {
+        pnpmPackageCopies.set(pkgName, (pnpmPackageCopies.get(pkgName) || 0) + 1);
+      }
+    }
+
+    const uniquePackages = pnpmPackageCopies.size;
+    const duplicatedPackages = Array.from(pnpmPackageCopies.values()).filter((c) => c > 1).length;
+
+    // 2. Collect component-level dep info (for version spread + peer lifecycle detection)
+    const packageVersionMap = new Map<string, { versions: Set<string>; lifecycles: Set<string> }>();
+    for (const comp of allComps) {
+      const depList = this.dependencyResolver.getDependencies(comp);
+      depList.forEach((dep) => {
+        const pkgName = dep.getPackageName?.() || dep.id;
+        let entry = packageVersionMap.get(pkgName);
+        if (!entry) {
+          entry = { versions: new Set(), lifecycles: new Set() };
+          packageVersionMap.set(pkgName, entry);
+        }
+        entry.versions.add(dep.version);
+        entry.lifecycles.add(dep.lifecycle);
+      });
+    }
+
+    // 3. Version spread — packages with the most distinct versions, enriched with .pnpm copy count
+    const versionSpread = Array.from(packageVersionMap.entries())
+      .filter(([, data]) => data.versions.size > 1)
+      .map(([pkgName, data]) => {
+        const versionCount = data.versions.size;
+        const versions = Array.from(data.versions).sort(compareVersions);
+        const installedCopies = pnpmPackageCopies.get(pkgName) || versionCount;
+        const impact: 'HIGH' | 'MEDIUM' | 'LOW' =
+          installedCopies >= 10 ? 'HIGH' : installedCopies >= 5 ? 'MEDIUM' : 'LOW';
+        return { packageName: pkgName, versionCount, versions, installedCopies, impact };
+      })
+      .sort((a, b) => b.installedCopies - a.installedCopies)
+      .slice(0, 30);
+
+    // 4. Peer deps with multiple versions
+    const peerPermutations = Array.from(packageVersionMap.entries())
+      .filter(([, data]) => data.lifecycles.has('peer') && data.versions.size > 1)
+      .map(([pkgName, data]) => ({
+        packageName: pkgName,
+        versions: Array.from(data.versions).sort(compareVersions),
+      }))
+      .sort((a, b) => b.versions.length - a.versions.length);
+
+    return {
+      componentCount,
+      pnpmStoreEntries,
+      uniquePackages,
+      duplicatedPackages,
+      versionSpread,
+      peerPermutations,
+    };
+  }
+
+  /**
+   * Parse a .pnpm directory name to extract the package name.
+   * Format: @scope+name@version_peers...  or  name@version_peers...
+   */
+  private parsePnpmDirPackageName(dirName: string): string | null {
+    if (dirName.startsWith('@')) {
+      // Scoped package: @scope+name@version...
+      const plusIdx = dirName.indexOf('+');
+      if (plusIdx === -1) return null;
+      const scope = dirName.substring(0, plusIdx);
+      const rest = dirName.substring(plusIdx + 1);
+      const atIdx = rest.indexOf('@');
+      if (atIdx === -1) return null;
+      const name = rest.substring(0, atIdx);
+      return `${scope}/${name}`;
+    }
+    // Regular package: name@version...
+    const atIdx = dirName.indexOf('@');
+    if (atIdx === -1) return null;
+    return dirName.substring(0, atIdx);
+  }
+
+  /** Inspect all .pnpm entries for a specific package, showing each installed copy and its peer combo. */
+  async diagnoseDrillDown(
+    packageName: string
+  ): Promise<{ packageName: string; pnpmDirs: Array<{ version: string; peerSuffix: string | null }> }> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    const pnpmDir = path.join(this.workspace.path, 'node_modules', '.pnpm');
+    const pnpmDirExists = await fs.pathExists(pnpmDir);
+    if (!pnpmDirExists) {
+      throw new Error(
+        `"bit deps diagnose --package" requires a pnpm-managed workspace. ` +
+          `Expected "${pnpmDir}" to exist. Run "bit install" first.`
+      );
+    }
+    const entries = await fs.readdir(pnpmDir);
+
+    // Convert package name to .pnpm format: @scope/name → @scope+name
+    const pnpmPrefix = packageName.replace('/', '+');
+
+    const pnpmDirs: Array<{ version: string; peerSuffix: string | null }> = [];
+    for (const entry of entries) {
+      if (!entry.startsWith(pnpmPrefix + '@')) continue;
+      // Extract version and peer suffix from: @scope+name@version_peer1@ver_peer2@ver
+      const afterName = entry.substring(pnpmPrefix.length + 1); // skip "name@"
+      const underscoreIdx = afterName.indexOf('_');
+      if (underscoreIdx === -1) {
+        pnpmDirs.push({ version: afterName, peerSuffix: null });
+      } else {
+        const version = afterName.substring(0, underscoreIdx);
+        const rawPeerSuffix = afterName.substring(underscoreIdx + 1);
+        const peerSegments = rawPeerSuffix.split('_').filter(Boolean);
+        const peerSuffix = peerSegments.map((seg) => seg.replace(/\+/g, '/')).join(' + ') || null;
+        pnpmDirs.push({ version, peerSuffix });
+      }
+    }
+
+    pnpmDirs.sort(
+      (a, b) => compareVersions(a.version, b.version) || (a.peerSuffix || '').localeCompare(b.peerSuffix || '')
+    );
+
+    return { packageName, pnpmDirs };
+  }
+
   private async getPackageNameAndVerResolved(pkg: string): Promise<[string, string]> {
     const resolveLatest = async (pkgName: string) => {
       const versionResolver = await this.dependencyResolver.getVersionResolver({});
@@ -433,6 +614,7 @@ export class DependenciesMain {
       new DependenciesEjectCmd(depsMain),
       new DependenciesBlameCmd(depsMain),
       new DependenciesUsageCmd(depsMain),
+      new DependenciesDiagnoseCmd(depsMain),
       new DependenciesWriteCmd(workspace),
     ];
     cli.register(
