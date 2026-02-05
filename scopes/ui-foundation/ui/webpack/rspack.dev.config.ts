@@ -46,10 +46,11 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
 
   return {
     mode: 'development',
-    // improves HMR - assume node_modules might change
-    snapshot: { managedPaths: [] },
 
     devtool: 'eval-cheap-module-source-map',
+
+    // Enable persistent cache
+    cache: true,
 
     entry: {
       main: entryFiles,
@@ -59,6 +60,7 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
       filename: 'static/js/[name].bundle.js',
       path: resolveWorkspacePath('/'),
       publicPath: publicUrlOrPath,
+      pathinfo: false, // faster compilation
       chunkFilename: 'static/js/[name].chunk.js',
       cssFilename: 'static/css/[name].bundle.css',
       cssChunkFilename: 'static/css/[name].chunk.css',
@@ -91,6 +93,7 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
 
       compress: true,
       hot: true,
+      liveReload: false, // HMR only — liveReload causes full page reloads on HMR failure
       host,
 
       historyApiFallback: {
@@ -99,11 +102,17 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
       },
 
       client: {
-        webSocketURL: {
-          hostname: clientHost,
-          pathname: clientPath,
-          port,
-        },
+        overlay: { errors: true, warnings: false },
+        reconnect: 5,
+        ...(clientHost || clientPath || port
+          ? {
+              webSocketURL: {
+                hostname: clientHost,
+                pathname: clientPath,
+                port,
+              },
+            }
+          : {}),
       },
 
       setupMiddlewares: (middlewares, devServer) => {
@@ -153,9 +162,12 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
       },
     },
 
+    watchOptions: {
+      ignored: ['**/.bit/**', '**/.git/**', '**/node_modules/.cache/**'],
+      poll: false, // native FS watching for the UI server
+    },
+
     module: {
-      // Ensure HMR works when writing/linking into node modules
-      unsafeCache: false,
       rules: [
         {
           test: /\.m?js/,
