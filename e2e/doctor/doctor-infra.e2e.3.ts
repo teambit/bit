@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 
 import { DiagnosisNotFound } from '@teambit/doctor';
 import { Helper } from '@teambit/legacy.e2e-helper';
@@ -92,7 +92,7 @@ describe('bit doctor infra', function () {
       const nestedDir = path.join(helper.scopes.localPath, 'comp1');
       helper.command.runCmd(`bit doctor --archive ${archivePath} --exclude-local-scope`, nestedDir);
       // List tar entries using tar command (doctor adds .tar extension)
-      const tarOutput = execSync(`tar -tf "${archivePath}.tar"`, { encoding: 'utf8' });
+      const tarOutput = execFileSync('tar', ['-tf', `${archivePath}.tar`], { encoding: 'utf8' });
       tarEntries = tarOutput.trim().split('\n');
     });
     it('should exclude .bit/objects contents', () => {
