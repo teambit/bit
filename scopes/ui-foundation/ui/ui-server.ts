@@ -128,6 +128,15 @@ export class UIServer {
         this.logger.error(e.message);
       });
 
+      // Cache JS/CSS assets in the browser for 120s so subsequent preview iframes
+      // reuse the same bundle without re-downloading from the component dev server.
+      dynamicProxy.on('proxyRes', (proxyRes, req) => {
+        const url = req.url || '';
+        if (/\.(js|css)(\?.*)?$/.test(url)) {
+          proxyRes.headers['cache-control'] = 'public, max-age=120';
+        }
+      });
+
       const wsHandler = (req, socket, head) => {
         try {
           const reqUrl = req.url?.replace(/\?.+$/, '') || '';

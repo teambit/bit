@@ -65,6 +65,21 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
       chunkFilename: 'static/js/[name].chunk.js',
     },
 
+    optimization: {
+      splitChunks: {
+        chunks: 'all',
+        maxSize: 2000000, // 2MB max — smaller chunks for parallel download + caching
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+            priority: 10,
+          },
+        },
+      },
+    },
+
     infrastructureLogging: {
       level: 'error',
     },
@@ -114,6 +129,14 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
         if (!devServer) {
           throw new Error('rspack-dev-server is not defined');
         }
+
+        // Cache JS/CSS assets in the browser so subsequent page loads are instant
+        middlewares.unshift((req: any, res: any, next: any) => {
+          if (/\.(js|css)(\?.*)?$/.test(req.url || '')) {
+            res.setHeader('Cache-Control', 'public, max-age=120');
+          }
+          next();
+        });
 
         middlewares.push(
           // @ts-ignore @types/wds mismatch
