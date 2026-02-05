@@ -610,6 +610,16 @@ export class ApplyOverrides {
         if (field === 'peerDependencies') {
           delete this.allPackagesDependencies.devPackageDependencies[pkgName];
           delete this.allPackagesDependencies.packageDependencies[pkgName];
+          // @types/* packages should not be added to components at all when in env peers.
+          // When a component is installed in a workspace, its env is installed as well.
+          // Packages listed as peers in env.jsonc become runtime dependencies of the env itself,
+          // so they're always installed alongside the env. Since @types/* packages are only needed
+          // for TypeScript compilation (which the env handles), there's no need for components
+          // to have them in their own dependencies.
+          if (pkgName.startsWith('@types/')) {
+            delete this.allPackagesDependencies.peerPackageDependencies[pkgName];
+            return;
+          }
           if (existsInCompsDeps) {
             this.allDependencies.dependencies = this.allDependencies.dependencies.filter(
               (dep) => dep.packageName !== pkgName
