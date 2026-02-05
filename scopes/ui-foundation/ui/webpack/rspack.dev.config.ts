@@ -1,6 +1,7 @@
 import rspack, { type Configuration } from '@rspack/core';
 import type { Configuration as DevServerConfig } from '@rspack/dev-server';
 import RefreshPlugin from '@rspack/plugin-react-refresh';
+import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
 import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
 import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
@@ -62,12 +63,6 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
       publicPath: publicUrlOrPath,
       pathinfo: false, // faster compilation
       chunkFilename: 'static/js/[name].chunk.js',
-      cssFilename: 'static/css/[name].bundle.css',
-      cssChunkFilename: 'static/css/[name].chunk.css',
-    },
-
-    experiments: {
-      css: true,
     },
 
     infrastructureLogging: {
@@ -200,19 +195,28 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
           },
           type: 'javascript/auto',
         },
-        // Bit component JS files in node_modules - need source maps + react refresh
+        // Bit component JS files in node_modules - need source maps
         {
           test: /\.js$/,
           enforce: 'pre' as const,
           include: /node_modules/,
-          // only apply to packages with componentId in their package.json (ie. bit components)
           descriptionData: { componentId: (value) => !!value },
           use: [require.resolve('source-map-loader')],
         },
-        // SASS/SCSS support via rspack native CSS
+        // SASS/SCSS modules (*.module.scss / *.module.sass)
         {
-          test: /\.(sass|scss)$/,
+          test: stylesRegexps.sassModuleRegex,
           use: [
+            require.resolve('style-loader'),
+            {
+              loader: require.resolve('css-loader'),
+              options: {
+                modules: {
+                  localIdentName: '[name]__[local]--[hash:base64:5]',
+                },
+                sourceMap: true,
+              },
+            },
             {
               loader: require.resolve('sass-loader'),
               options: {
@@ -220,12 +224,35 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
               },
             },
           ],
-          type: 'css/auto',
         },
-        // LESS support via rspack native CSS
+        // SASS/SCSS non-modules (*.scss / *.sass but NOT *.module.scss)
         {
-          test: /\.less$/,
+          test: stylesRegexps.sassNoModuleRegex,
           use: [
+            require.resolve('style-loader'),
+            require.resolve('css-loader'),
+            {
+              loader: require.resolve('sass-loader'),
+              options: {
+                sourceMap: true,
+              },
+            },
+          ],
+        },
+        // LESS modules (*.module.less)
+        {
+          test: stylesRegexps.lessModuleRegex,
+          use: [
+            require.resolve('style-loader'),
+            {
+              loader: require.resolve('css-loader'),
+              options: {
+                modules: {
+                  localIdentName: '[name]__[local]--[hash:base64:5]',
+                },
+                sourceMap: true,
+              },
+            },
             {
               loader: require.resolve('less-loader'),
               options: {
@@ -233,7 +260,41 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
               },
             },
           ],
-          type: 'css/auto',
+        },
+        // LESS non-modules (*.less but NOT *.module.less)
+        {
+          test: stylesRegexps.lessNoModuleRegex,
+          use: [
+            require.resolve('style-loader'),
+            require.resolve('css-loader'),
+            {
+              loader: require.resolve('less-loader'),
+              options: {
+                sourceMap: true,
+              },
+            },
+          ],
+        },
+        // CSS modules (*.module.css)
+        {
+          test: stylesRegexps.cssModuleRegex,
+          use: [
+            require.resolve('style-loader'),
+            {
+              loader: require.resolve('css-loader'),
+              options: {
+                modules: {
+                  localIdentName: '[name]__[local]--[hash:base64:5]',
+                },
+                sourceMap: true,
+              },
+            },
+          ],
+        },
+        // CSS non-modules (*.css but NOT *.module.css)
+        {
+          test: stylesRegexps.cssNoModulesRegex,
+          use: [require.resolve('style-loader'), require.resolve('css-loader')],
         },
         // Font files
         {
