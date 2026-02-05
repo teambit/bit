@@ -169,7 +169,7 @@ export class CustomReactExtension {
 }
 ```
 
-{/* ## Composition Providers
+{/\* ## Composition Providers
 
 The React environment is able to "wrap" component compositions with an array of providers, each of which is simply a component which wraps its `children` with functionality, such as a context, styling, theme, etc.
 
@@ -186,47 +186,43 @@ As such, they run in the environment's Preview runtime and not the Main runtime.
 For example, a provider that centers compositions in their rendering page, will look like this:
 
 ```tsx title="A composition provider example"
-import React, { ReactReact, ReactElement } from 'react'
+import React, { ReactReact, ReactElement } from 'react';
 
 const style = {
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  height: '100vh'
-}
+  height: '100vh',
+};
 
-export const Center = ({
-  children
-}: {
-  children: ReactReact
-}): ReactElement => {
-  return <div style={style}>{children}</div>
-}
+export const Center = ({ children }: { children: ReactReact }): ReactElement => {
+  return <div style={style}>{children}</div>;
+};
 ```
 
 This `Center` provider component will be registered using the registerProvider method in the React extension's `*.preview.runtime.tsx` file:
 
 ```tsx title="react-with-providers.preview.runtime.tsx"
-import { PreviewRuntime } from '@teambit/preview'
-import { ReactAspect, ReactPreview } from '@teambit/react'
-import { ReactWithProvidersAspect } from './react-with-providers.aspect'
-import { Center } from './composition-providers/center'
+import { PreviewRuntime } from '@teambit/preview';
+import { ReactAspect, ReactPreview } from '@teambit/react';
+import { ReactWithProvidersAspect } from './react-with-providers.aspect';
+import { Center } from './composition-providers/center';
 
 export class ReactWithProvidersPreview {
-  static runtime = PreviewRuntime
-  static dependencies = [ReactAspect]
+  static runtime = PreviewRuntime;
+  static dependencies = [ReactAspect];
 
   static async provider([react]: [ReactPreview]) {
-    react.registerProvider([Center])
+    react.registerProvider([Center]);
 
-    return ReactWithProvidersPreview
+    return ReactWithProvidersPreview;
   }
 }
 
-ReactWithProvidersAspect.addRuntime(ReactWithProvidersPreview)
+ReactWithProvidersAspect.addRuntime(ReactWithProvidersPreview);
 ```
 
-> See the full demo project [here](https://github.com/teambit/react-env-with-providers). */}
+> See the full demo project [here](https://github.com/teambit/react-env-with-providers). \*/}
 
 ### Transformers API docs
 
