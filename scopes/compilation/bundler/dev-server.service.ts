@@ -20,14 +20,7 @@ import type { DevServer } from './dev-server';
 import type { DevServerContext } from './dev-server-context';
 import { getEntry } from './get-entry';
 
-export type DevServerServiceOptions = {
-  dedicatedEnvDevServers?: string[];
-  /**
-   * Enable parallel dev server creation for faster startup.
-   * When true, uses Promise.all instead of sequential pMapSeries.
-   */
-  parallelDevServers?: boolean;
-};
+export type DevServerServiceOptions = { dedicatedEnvDevServers?: string[] };
 
 type DevServiceTransformationMap = ServiceTransformationMap & {
   /**
@@ -126,25 +119,31 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     };
   }
 
-  async runOnce(contexts: ExecutionContext[], options?: DevServerServiceOptions): Promise<ComponentServer[]> {
-    const { dedicatedEnvDevServers, parallelDevServers } = options || {};
+  // async run(context: ExecutionContext): Promise<ComponentServer[]> {
+  //   const devServerContext = await this.buildContext(context);
+  //   const devServer: DevServer = context.env.getDevServer(devServerContext);
+  //   const port = await selectPort();
+  //   // TODO: refactor to replace with a component server instance.
+  //   return new ComponentServer(this.pubsub, context, port, devServer);
+  // }
+
+  async runOnce(
+    contexts: ExecutionContext[],
+    { dedicatedEnvDevServers }: DevServerServiceOptions
+  ): Promise<ComponentServer[]> {
     const groupedEnvs = await dedupEnvs(contexts, this.dependencyResolver, dedicatedEnvDevServers);
 
-    const createServer = async ([id, contextList]: [string, ExecutionContext[]]) => {
+    // TODO: (gilad) - change this back to promise all once we make the preview pre-bundle to run before that loop
+    const servers = await pMapSeries(Object.entries(groupedEnvs), async ([id, contextList]) => {
       const mainContext = contextList.find((context) => context.envDefinition.id === id) || contextList[0];
       const additionalContexts = contextList.filter((context) => context.envDefinition.id !== id);
 
       const devServerContext = await this.buildContext(mainContext, additionalContexts);
       const devServer: DevServer = await devServerContext.envRuntime.env.getDevServer(devServerContext);
       const transformedDevServer: DevServer = this.transformDevServer(devServer, { envId: id });
-      const server = new ComponentServer(this.pubsub, devServerContext, [3300, 3400], transformedDevServer);
 
-      return server;
-    };
-
-    const servers = parallelDevServers
-      ? await Promise.all(Object.entries(groupedEnvs).map(createServer))
-      : await pMapSeries(Object.entries(groupedEnvs), createServer);
+      return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], transformedDevServer);
+    });
 
     return servers;
   }

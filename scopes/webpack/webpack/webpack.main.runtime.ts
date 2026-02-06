@@ -15,12 +15,7 @@ import { merge } from 'webpack-merge';
 import WsDevServer from 'webpack-dev-server';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 
-import {
-  generateAddAliasesFromPeersTransformer,
-  generateExternalsTransformer,
-  generatePathInfoTransformer,
-  generateFilesystemCacheTransformer,
-} from './transformers';
+import { generateAddAliasesFromPeersTransformer, generateExternalsTransformer } from './transformers';
 import { configFactory as devServerConfigFactory } from './config/webpack.dev.config';
 import { configFactory as baseConfigFactory } from './config/webpack.config';
 
@@ -180,12 +175,6 @@ export class WebpackMain {
         transformers.push(externalsTransformer);
       }
     }
-
-    if (devServerContext) {
-      transformers.push(generatePathInfoTransformer());
-      transformers.push(generateFilesystemCacheTransformer(__filename));
-    }
-
     return transformers;
   }
 

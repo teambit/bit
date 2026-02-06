@@ -24,8 +24,6 @@ export {
   generateAddAliasesFromPeersTransformer,
   generateExposePeersTransformer,
   generateExternalsTransformer,
-  generatePathInfoTransformer,
-  generateFilesystemCacheTransformer,
   GenerateHeadInjectionTransformer,
   HeadInjectionOptions,
 } from './transformers';
