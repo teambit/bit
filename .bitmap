@@ -1339,6 +1339,27 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/plugins/inject-head-webpack-plugin"
     },
+    "plugins/manifest-plugin": {
+        "name": "plugins/manifest-plugin",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.rspack",
+        "mainFile": "index.ts",
+        "rootDir": "components/plugins/manifest-plugin",
+        "config": {
+            "bitdev.node/node-env@4.0.33": {},
+            "teambit.envs/envs": {
+                "env": "bitdev.node/node-env"
+            },
+            "teambit.dependencies/dependency-resolver": {
+                "policy": {
+                    "peerDependencies": {
+                        "@rspack/core": "1.7.5"
+                    }
+                }
+            }
+        }
+    },
     "pnpm": {
         "name": "pnpm",
         "scope": "teambit.dependencies",
