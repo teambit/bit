@@ -12,7 +12,7 @@ import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import normalizePath from 'normalize-path';
 import { rspack } from '@rspack/core';
 import { PreviewAspect } from './preview.aspect';
-import { createRspackConfig } from './webpack/rspack.config';
+import { createRspackConfig } from './rspack/rspack.config';
 import { clearConsole } from './pre-bundle-utils';
 import { getPreviewDistDir } from './mk-temp-dir';
 
