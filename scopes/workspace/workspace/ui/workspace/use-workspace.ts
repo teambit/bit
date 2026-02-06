@@ -1,7 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { ComponentModel } from '@teambit/component';
 import useLatest from '@react-hook/latest';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql, useQuery } from '@apollo/client';
 import type { ComponentIdObj } from '@teambit/component-id';
 import { ComponentID } from '@teambit/component-id';
@@ -42,6 +41,9 @@ const wcComponentFieldsLight = gql`
       id
       icon
     }
+    compositions {
+      identifier
+    }
   }
 `;
 
@@ -56,9 +58,6 @@ const wcComponentFieldsHeavy = gql`
     aspects(include: ["teambit.preview/preview", "teambit.envs/envs"]) {
       aspectId: id
       data
-    }
-    compositions {
-      identifier
     }
     description
     issuesCount
@@ -225,23 +224,34 @@ const COMPONENT_SERVER_STARTED = gql`
 `;
 
 export function useWorkspace(options: UseWorkspaceOptions = {}) {
-  // Light query — skipBatch so it fires immediately, not queued with slow queries
-  const { data, subscribeToMore, ...rest } = useDataQuery(WORKSPACE);
+  // Use useQuery directly (NOT useDataQuery) to avoid triggering the global LoaderRibbon.
+  // This ensures the workspace layout renders instantly — no loading spinner at all.
+  // Data arrives in ~120ms and the UI fills in seamlessly.
+  const { data, subscribeToMore, loading, ...rest } = useQuery(WORKSPACE, {
+    // cache-and-network: serve cached data instantly on reload, then refresh from network.
+    // nextFetchPolicy: after initial fetch, settle to cache-first — subsequent cache updates
+    // (from subscriptions) won't trigger new network requests, preventing re-render storms.
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
+  });
   const optionsRef = useLatest(options);
 
   // Heavy query — fires after light query returns; uses useQuery (not useDataQuery)
   // to avoid showing the global loading spinner while heavy fields resolve.
   // Fast (~30ms) because status is excluded.
+  // IMPORTANT: use 'no-cache' to prevent writing to Apollo cache, which would
+  // overwrite the light query's components array and lose env/server/buildStatus fields.
   const { data: heavyResult } = useQuery(WORKSPACE_HEAVY, {
     skip: !data?.workspace,
-    fetchPolicy: 'network-only',
+    fetchPolicy: 'no-cache',
   });
 
   // Status query — fires independently, takes ~13s (N+1 filesystem/scope lookups).
   // Separated so heavy data (compositions, aspects, descriptions) renders immediately.
+  // IMPORTANT: use 'no-cache' — same reason as heavy query above.
   const { data: statusResult } = useQuery(WORKSPACE_STATUS, {
     skip: !data?.workspace,
-    fetchPolicy: 'network-only',
+    fetchPolicy: 'no-cache',
   });
 
   useEffect(() => {
@@ -395,6 +405,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
 
   return {
     workspace,
+    loading,
     subscribeToMore,
     ...rest,
   };

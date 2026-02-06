@@ -30,6 +30,9 @@ const port = process.env.WDS_SOCKET_PORT;
 // );
 
 const publicUrlOrPath = getPublicUrlOrPath(true, sep, `${sep}public`);
+const assetRequestRegex = /^\/.*\.(?:js|css|map|json|txt|ico|png|jpe?g|gif|svg|webp|woff2?|ttf|eot)(?:\?.*)?$/i;
+const hotUpdateRequestRegex = /^\/.*hot-update\.(?:js|json)(?:\?.*)?$/i;
+const hmrRequestRegex = /^\/(?:sockjs-node|_hmr)(?:\/|$)/i;
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -126,6 +129,20 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
       historyApiFallback: {
         disableDotRule: true,
         index: publicUrlOrPath,
+        rewrites: [
+          {
+            from: assetRequestRegex,
+            to: (context) => context.parsedUrl.pathname || '/',
+          },
+          {
+            from: hotUpdateRequestRegex,
+            to: (context) => context.parsedUrl.pathname || '/',
+          },
+          {
+            from: hmrRequestRegex,
+            to: (context) => context.parsedUrl.pathname || '/',
+          },
+        ],
       },
 
       client: {
@@ -274,6 +291,9 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
               loader: require.resolve('sass-loader'),
               options: {
                 sourceMap: true,
+                sassOptions: {
+                  silenceDeprecations: ['legacy-js-api', 'import'],
+                },
               },
             },
           ],
@@ -287,6 +307,9 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
               loader: require.resolve('sass-loader'),
               options: {
                 sourceMap: true,
+                sassOptions: {
+                  silenceDeprecations: ['legacy-js-api', 'import'],
+                },
               },
             },
           ],

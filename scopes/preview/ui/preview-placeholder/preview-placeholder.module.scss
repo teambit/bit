@@ -78,17 +78,28 @@
   cursor: pointer;
 }
 
-.skeletonContainer {
-  width: 100%;
+.placeholderShimmer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
   height: 100%;
-  position: relative;
-  color: var(--skeleton-color, #e0e0e0);
-  opacity: 0.7;
+  justify-content: center;
 }
 
-.skeletonBlock {
-  width: 100%;
-  height: 100%;
-  min-height: 200px;
-  display: block;
+.placeholderBar {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }

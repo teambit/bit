@@ -1,7 +1,48 @@
+@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
 .loader {
   color: var(--on-surface-neutral-low-color, #9598a1);
 }
 
+.userBarAnchor {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .currentUser {
   cursor: pointer;
+}
+
+.devServerStatus {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+
+.devServerStatusOffline {
+  background: #fff1f1;
+  border-color: #ffcbcb;
+  color: #ab1a1a;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.devServerStatusRecovering {
+  background: #edf9f0;
+  border-color: #b8e8c1;
+  color: #126129;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fadeOut {
+  opacity: 0;
+  transform: translateY(-3px);
 }

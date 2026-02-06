@@ -127,8 +127,9 @@ export class PreviewPreview {
               return module;
             });
 
-    // during build / tag, the component is isolated, so all aspects are relevant, and do not require filtering
-    const componentAspects = this.isDev ? await this.getComponentAspects(componentId.toString()) : undefined;
+    // Aspect filtering is not needed in dev mode — all providers in the bundle are safe to use,
+    // and the GQL call to fetch aspects blocks rendering of every preview iframe.
+    const componentAspects = undefined;
     const previewModule = await this.getPreviewModule(name, componentId);
     const render = preview.render(
       componentId,

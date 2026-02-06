@@ -284,10 +284,16 @@ export class UiMain {
     );
   }
 
-  private async initiatePlugins(options: StartPluginOptions) {
-    const plugins = this.startPluginSlot.values();
-    await pMapSeries(plugins, (plugin) => plugin.initiate(options));
-    return plugins;
+  private initiatePlugins(plugins: StartPlugin[], options: StartPluginOptions) {
+    // Fire-and-forget: preview servers register proxies dynamically via addComponentServerProxy
+    // when each env's compilation finishes. The catch-all /preview and /_hmr proxies in WDS
+    // forward to express, which routes to individual preview servers as they come online.
+    // This decouples the main UI server startup from preview dev server creation/compilation.
+    plugins.forEach((plugin) => {
+      Promise.resolve(plugin.initiate(options)).catch((err: any) => {
+        this.logger.error(`Plugin initiation error: ${err?.message || err}`);
+      });
+    });
   }
 
   runtimeOptions: RuntimeOptions = {};
@@ -308,11 +314,7 @@ export class UiMain {
 
     const [uiRootAspectId, uiRoot] = maybeUiRoot;
 
-    const plugins = await this.initiatePlugins({
-      verbose,
-      pattern,
-      showInternalUrls,
-    });
+    const plugins = this.startPluginSlot.values();
 
     if (this.componentExtension.isHost(uiRootAspectId)) this.componentExtension.setHostPriority(uiRootAspectId);
 
@@ -346,6 +348,12 @@ export class UiMain {
         this.logger.debug(`UI createRuntime of ${uiRootAspectId}, bundle will be served from ${bundleUiRoot}`);
       await uiServer.start({ portRange: port || this.config.portRange, bundleUiRoot });
     }
+
+    this.initiatePlugins(plugins, {
+      verbose,
+      pattern,
+      showInternalUrls,
+    });
 
     this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, uiServer.port, uiRoot));
 

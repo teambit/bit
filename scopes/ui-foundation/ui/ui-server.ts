@@ -21,6 +21,9 @@ import type { UiMain } from './ui.main.runtime';
 
 import { devConfig } from './webpack/webpack.dev.config';
 
+const assetRequestRegex = /^\/.*\.(?:js|css|map|json|txt|ico|png|jpe?g|gif|svg|webp|woff2?|ttf|eot)(?:\?.*)?$/i;
+const hotUpdateRequestRegex = /^\/.*hot-update\.(?:js|json)(?:\?.*)?$/i;
+
 export type UIServerProps = {
   graphql: GraphqlMain;
   express: ExpressMain;
@@ -96,7 +99,7 @@ export class UIServer {
   private setReady: () => void;
   private startPromise = new Promise<void>((resolve) => (this.setReady = resolve));
   get whenReady() {
-    return Promise.all([this.startPromise, ...this.plugins.map((x) => x?.whenReady)]);
+    return this.startPromise;
   }
 
   addComponentServerProxy(server: ComponentServer): void {
@@ -179,7 +182,20 @@ export class UIServer {
           this.logger.debug(`Proxying request to ${envId}: ${originalUrl}`);
           // Normalize double slashes that occur when publicPath and asset paths join
           req.url = originalUrl.replace(/([^:])\/\/+/g, '$1/');
-          dynamicProxy.web(req, res, { target: entries[0].target });
+          dynamicProxy.web(req, res, { target: entries[0].target }, () => {
+            if (res.headersSent) return;
+            const reqPath = req.originalUrl || req.url || '';
+            const isScript = /\.js(?:\?.*)?$/i.test(reqPath) || hotUpdateRequestRegex.test(reqPath);
+            if (isScript) {
+              res.status(503);
+              res.setHeader('content-type', 'application/javascript; charset=utf-8');
+              res.end(
+                `window.dispatchEvent(new CustomEvent('bit-dev-server-connection-status',{detail:{online:false,reason:'preview',timestamp:Date.now()}}));`
+              );
+              return;
+            }
+            res.status(503).send(`Preview dev server "${envId}" is offline`);
+          });
         } catch (err: any) {
           this.logger.error(`Error in component router for ${envId}: ${err.message}`);
           if (!res.headersSent) {
@@ -266,6 +282,33 @@ export class UIServer {
     app.use(express.static(root, { index: false }));
     const port = await Port.getPortFromRange(portRange || [3100, 3200]);
     await this.setupServerSideRendering({ root, port, app });
+    // Never rewrite asset/preview/HMR requests to index.html.
+    // Returning HTML for JS files causes "Unexpected token '<'" parse failures in browser.
+    app.use((req, res, next) => {
+      const requestPath = req.path || req.url || '';
+      const isPreviewRequest = requestPath.startsWith('/preview/') || requestPath.startsWith('/_hmr/');
+      const isAssetRequest = assetRequestRegex.test(requestPath) || hotUpdateRequestRegex.test(requestPath);
+
+      if (isPreviewRequest) {
+        if (/\.js(?:\?.*)?$/i.test(requestPath) || hotUpdateRequestRegex.test(requestPath)) {
+          res.status(503);
+          res.setHeader('content-type', 'application/javascript; charset=utf-8');
+          res.end(
+            `window.dispatchEvent(new CustomEvent('bit-dev-server-connection-status',{detail:{online:false,reason:'preview',timestamp:Date.now()}}));`
+          );
+          return;
+        }
+        res.status(503).send('Preview dev server is offline');
+        return;
+      }
+
+      if (isAssetRequest) {
+        res.status(404).send('Asset not found');
+        return;
+      }
+
+      next();
+    });
     app.use(fallback('index.html', { root }));
     server.listen(port);
     this._port = port;
@@ -333,6 +376,12 @@ export class UIServer {
         context: ['/preview'],
         target: `http://${this.host}:${port}`,
         changeOrigin: true,
+      },
+      {
+        context: ['/_hmr'],
+        target: `http://${this.host}:${port}`,
+        changeOrigin: true,
+        ws: true,
       },
     ];
 

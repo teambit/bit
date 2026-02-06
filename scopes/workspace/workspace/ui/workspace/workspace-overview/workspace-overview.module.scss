@@ -3,6 +3,7 @@
 .container {
   padding: 24px 5% 150px 5%;
   overflow-y: auto;
+  overflow-x: hidden;
   height: 100%;
   box-sizing: border-box;
   z-index: 1;
@@ -32,7 +33,7 @@
   background-color: var(--surface-color);
   padding: 4px;
   height: 15px;
-  margin-right: 4px;
+  margin-right: 8px;
   z-index: $nav-z-index;
   border-radius: 8px;
   margin-bottom: 4px;
@@ -216,4 +217,27 @@
   grid-row-gap: 32px;
   grid-column-gap: 24px;
   max-width: 1280px;
+}
+
+.virtualCardRow {
+  display: grid;
+  width: 100%;
+  gap: 24px;
+  max-width: 1280px;
+  padding-bottom: 32px;
+  align-items: stretch;
+}
+
+.virtualCardRow > * {
+  min-width: 0;
+}
+
+.virtualGroupHeader {
+  padding-bottom: 15px;
+  padding-top: 28px;
+}
+
+.virtualGroupHeaderFirst {
+  padding-bottom: 15px;
+  padding-top: 0;
 }

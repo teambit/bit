@@ -3,19 +3,33 @@ import React from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { BatchHttpLink } from '@apollo/client/link/batch-http';
 import { InMemoryCache, ApolloClient, ApolloLink, HttpLink, createHttpLink } from '@apollo/client';
-import type { DefaultOptions, NormalizedCacheObject, Operation } from '@apollo/client';
+import type { NormalizedCacheObject, Operation } from '@apollo/client';
 import { WebSocketLink } from '@apollo/client/link/ws';
 import { onError } from '@apollo/client/link/error';
-import { getMainDefinition } from '@apollo/client/utilities';
+import { RetryLink } from '@apollo/client/link/retry';
+import { asyncMap, getMainDefinition } from '@apollo/client/utilities';
 import type { OperationDefinitionNode } from 'graphql';
 
 import crossFetch from 'cross-fetch';
+
+import { persistCache, LocalStorageWrapper } from 'apollo3-cache-persist';
 
 import { createSplitLink } from './create-link';
 import { GraphQLProvider } from './graphql-provider';
 import { GraphqlAspect } from './graphql.aspect';
 import { GraphqlRenderPlugins } from './render-lifecycle';
 import { logError } from './logging';
+
+const CONNECTION_STATUS_EVENT = 'bit-dev-server-connection-status';
+
+function reportConnectionStatus(online: boolean, reason?: 'network' | 'preview') {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(
+    new CustomEvent(CONNECTION_STATUS_EVENT, {
+      detail: { online, reason, timestamp: Date.now() },
+    })
+  );
+}
 
 /**
  * Type of gql client.
@@ -41,26 +55,54 @@ export type GraphQLConfig = {
 export class GraphqlUI {
   constructor(readonly config: GraphQLConfig = {}) {}
 
-  createClient(uri: string, { state, subscriptionUri, host }: ClientOptions = {}) {
-    const defaultOptions: DefaultOptions | undefined =
-      host === 'teambit.workspace/workspace'
-        ? {
-            query: {
-              fetchPolicy: 'network-only',
-            },
-            watchQuery: {
-              fetchPolicy: 'network-only',
-            },
-            mutate: {
-              fetchPolicy: 'network-only',
-            },
+  async createClient(uri: string, { state, subscriptionUri, host }: ClientOptions = {}) {
+    const cache = this.createCache({ state });
+
+    // Persist Apollo cache to localStorage for instant workspace reloads.
+    // On refresh, data renders from cache immediately while network refreshes in background.
+    if (typeof window !== 'undefined') {
+      try {
+        const t0 = performance.now();
+        await persistCache({
+          cache,
+          storage: new LocalStorageWrapper(window.localStorage),
+          key: `apollo-cache-${host || 'default'}`,
+          maxSize: 1048576 * 5, // 5MB
+          debounce: 1000,
+        });
+        const cacheData = cache.extract();
+        const cacheEntries = Object.keys(cacheData).length;
+        // eslint-disable-next-line no-console
+        console.log(`[apollo-cache] restored ${cacheEntries} entries in ${(performance.now() - t0).toFixed(0)}ms`);
+
+        // Clear stale server URLs from cache to prevent cancelled iframe requests on restart.
+        // Component metadata (names, compositions, etc.) renders instantly from cache;
+        // server.url comes fresh from network via cache-and-network policy.
+        if (cacheEntries > 0) {
+          let cleared = 0;
+          for (const key of Object.keys(cacheData)) {
+            const entry = cacheData[key] as Record<string, any> | undefined;
+            if (entry && entry.url && typeof entry.url === 'string' && entry.url.startsWith('/preview/')) {
+              entry.url = null;
+              cleared++;
+            }
           }
-        : undefined;
+          if (cleared > 0) {
+            cache.restore(cacheData);
+            // eslint-disable-next-line no-console
+            console.log(`[apollo-cache] cleared ${cleared} stale server URLs`);
+          }
+        }
+      } catch {
+        // localStorage may be full or unavailable — continue without persistence
+      }
+    }
+
     const client = new ApolloClient({
       link: this.createLink(uri, { subscriptionUri }),
-      cache: this.createCache({ state }),
-      defaultOptions,
+      cache,
     });
+    reportConnectionStatus(true, 'network');
 
     return client;
   }
@@ -145,9 +187,34 @@ export class GraphqlUI {
       : undefined;
 
     const hybridLink = subsLink ? createSplitLink(httpLink, subsLink) : httpLink;
-    const errorLogger = onError(logError);
+    const errorLogger = onError((error) => {
+      logError(error);
+      if (error.networkError) reportConnectionStatus(false, 'network');
+    });
 
-    return ApolloLink.from([errorLogger, hybridLink]);
+    // Retry transient network failures (dev server restarts, brief disconnections).
+    // Only retries queries/subscriptions — mutations are not retried (not idempotent).
+    const retryLink = new RetryLink({
+      delay: { initial: 300, max: 5000, jitter: true },
+      attempts: {
+        max: 5,
+        retryIf: (error, operation) => {
+          const def = getMainDefinition(operation.query) as OperationDefinitionNode;
+          if (def.kind === 'OperationDefinition' && def.operation === 'mutation') return false;
+          return !!error;
+        },
+      },
+    });
+
+    const connectionReporter = new ApolloLink((operation, forward) => {
+      if (!forward) return null;
+      return asyncMap(forward(operation), (result) => {
+        reportConnectionStatus(true, 'network');
+        return result;
+      });
+    });
+
+    return ApolloLink.from([retryLink, errorLogger, connectionReporter, hybridLink]);
   }
 
   private createLinkBatched(uri: string, { subscriptionUri }: { subscriptionUri?: string } = {}) {
@@ -171,7 +238,32 @@ export class GraphqlUI {
 
     const transport = wsLink ? createSplitLink(httpLink, wsLink) : httpLink;
 
-    return ApolloLink.from([onError(logError), transport]);
+    const retryLink = new RetryLink({
+      delay: { initial: 300, max: 5000, jitter: true },
+      attempts: {
+        max: 5,
+        retryIf: (error, operation) => {
+          const def = getMainDefinition(operation.query) as OperationDefinitionNode;
+          if (def.kind === 'OperationDefinition' && def.operation === 'mutation') return false;
+          return !!error;
+        },
+      },
+    });
+
+    const errorLogger = onError((error) => {
+      logError(error);
+      if (error.networkError) reportConnectionStatus(false, 'network');
+    });
+
+    const connectionReporter = new ApolloLink((operation, forward) => {
+      if (!forward) return null;
+      return asyncMap(forward(operation), (result) => {
+        reportConnectionStatus(true, 'network');
+        return result;
+      });
+    });
+
+    return ApolloLink.from([retryLink, errorLogger, connectionReporter, transport]);
   }
 
   getProvider = ({ client, children }: { client: GraphQLClient<any>; children: ReactNode }) => {
