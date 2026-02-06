@@ -71,7 +71,9 @@ export class LaneHistory extends BitObject {
   }
 
   getHistoryIds(): string[] {
-    return Object.keys(this.history);
+    return Object.entries(this.history)
+      .sort(([, a], [, b]) => Number(a.log.date) - Number(b.log.date))
+      .map(([id]) => id);
   }
 
   async addHistory(laneObj: Lane, msg?: string) {
