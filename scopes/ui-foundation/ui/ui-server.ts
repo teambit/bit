@@ -348,7 +348,7 @@ export class UIServer {
     config?: WdsConfiguration
   ): Promise<WdsConfiguration> {
     const proxy = await this.getProxy(gqlPort);
-    const devServerConf = { ...config, proxy, port: appPort };
+    const devServerConf = { ...config, proxy: proxy as any, port: appPort };
 
     return devServerConf;
   }

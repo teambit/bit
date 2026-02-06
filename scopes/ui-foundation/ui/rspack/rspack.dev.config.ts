@@ -1,4 +1,4 @@
-import rspack, { type Configuration } from '@rspack/core';
+import { rspack, type Configuration } from '@rspack/core';
 import type { Configuration as DevServerConfig } from '@rspack/dev-server';
 import RefreshPlugin from '@rspack/plugin-react-refresh';
 import { fallbacksProvidePluginConfig } from '@teambit/webpack';

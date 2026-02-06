@@ -115,7 +115,7 @@ export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[],
   if (!results) throw new Error();
   if (results?.hasErrors()) {
     clearConsole();
-    throw new Error(results?.toString());
+    throw new Error(results?.toString({}));
   }
   return results;
 }

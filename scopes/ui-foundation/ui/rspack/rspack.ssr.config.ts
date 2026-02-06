@@ -1,4 +1,4 @@
-import rspack, { type Configuration } from '@rspack/core';
+import { rspack, type Configuration } from '@rspack/core';
 import { fallbacksProvidePluginConfig } from '@teambit/webpack';
 import path from 'path';
 import {

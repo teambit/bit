@@ -1,7 +1,7 @@
-import rspack, { type Configuration } from '@rspack/core';
+import { rspack, type Configuration } from '@rspack/core';
 import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
-import { RspackManifestPlugin } from '@teambit/ui';
 import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
+import { RspackManifestPlugin } from './rspack-manifest-plugin';
 
 const moduleFileExtensions = [
   'web.mjs',
