@@ -94,10 +94,10 @@ IMPORTANT: When you need flags, arguments, or subcommand details, READ the file 
   }
 
   /**
-   * Generate command reference with description, args, and flags.
+   * Generate command reference with subcommands, arguments, and flags.
    * For use in Claude Code skills.
    */
-  generateSkillFlags(): string {
+  generateSkillReference(): string {
     const publicCommands = this.getAllPublicCommandsSorted();
     const sections: string[] = [];
 

@@ -47,7 +47,7 @@ labels: ['cli', 'mdx', 'docs']
         return generator.generateSkillCommands();
       }
       if (skill === 'reference') {
-        return generator.generateSkillFlags();
+        return generator.generateSkillReference();
       }
       throw new Error(`Unknown skill type: "${skill}". Use "commands" or "reference".`);
     }
