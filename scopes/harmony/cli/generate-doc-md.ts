@@ -77,7 +77,7 @@ bit COMMAND SUB_COMMAND --help
 
     return `---
 name: bit-cli
-description: Bit CLI command reference. Use before running bit commands to get correct syntax and flags.
+description: "MUST consult before running ANY bit command. Do NOT guess bit commands from memory. This skill tells you the right command, correct syntax, subcommands, and flags."
 ---
 
 # Bit CLI Quick Reference
