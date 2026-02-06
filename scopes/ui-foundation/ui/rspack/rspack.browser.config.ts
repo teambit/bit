@@ -93,7 +93,7 @@ export default function createRspackBrowserConfig(
         }),
         // Catch-all for other assets
         {
-          exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/, /\.css$/],
+          exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/, /\.css$/, /\.s[ac]ss$/, /\.less$/],
           type: 'asset/resource',
         },
       ],
