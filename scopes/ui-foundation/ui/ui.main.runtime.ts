@@ -27,6 +27,7 @@ import { Port } from '@teambit/toolbox.network.get-port';
 import { createRoot } from '@teambit/harmony.modules.harmony-root-generator';
 import { join, resolve as pathResolve } from 'path';
 import webpack from 'webpack';
+import { rspack } from '@rspack/core';
 import { UiServerStartedEvent } from './events';
 import { UnknownUI, UnknownBuildError } from './exceptions';
 import { StartCmd } from './start.cmd';
@@ -35,6 +36,7 @@ import type { UIRoot } from './ui-root';
 import { UIServer } from './ui-server';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import createWebpackConfig from './webpack/webpack.browser.config';
+import createRspackBrowserConfig from './webpack/rspack.browser.config';
 import createSsrWebpackConfig from './webpack/webpack.ssr.config';
 import type { StartPlugin, StartPluginOptions } from './start-plugin';
 import { BundleUiTask, BUNDLE_UI_HASH_FILENAME } from './bundle-ui.task';
@@ -226,8 +228,7 @@ export class UiMain {
   /**
    * create a build of the given UI root.
    */
-  async build(uiRootAspectIdOrName?: string, customOutputPath?: string): Promise<webpack.MultiStats | undefined> {
-    // TODO: change to MultiStats from webpack once they export it in their types
+  async build(uiRootAspectIdOrName?: string, customOutputPath?: string): Promise<any> {
     this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}"`);
     const maybeUiRoot = this.getUi(uiRootAspectIdOrName);
 
@@ -239,16 +240,36 @@ export class UiMain {
     const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), uiRootAspectId);
     const outputPath = customOutputPath || uiRoot.path;
 
-    const browserConfig = createWebpackConfig(outputPath, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
     const ssrConfig = ssr && createSsrWebpackConfig(outputPath, [mainEntry], await this.publicDir(uiRoot));
 
-    const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
+    if (ssrConfig) {
+      // SSR enabled: use webpack for both browser and SSR (webpack MultiCompiler)
+      const browserConfig = createWebpackConfig(outputPath, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
+      const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
+      const compiler = webpack(config);
+      this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" running webpack (with SSR)`);
+      const [results, errors] = await this.runWebpackPromise(compiler);
 
-    const compiler = webpack(config);
-    this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" running webpack`);
-    const [results, errors] = await this.runWebpackPromise(compiler);
+      this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" completed webpack`);
+      if (!results) throw new UnknownBuildError();
+      if (errors) {
+        this.clearConsole();
+        throw new Error(errors);
+      }
+      if (results?.hasErrors()) {
+        this.clearConsole();
+        throw new Error(results?.toString());
+      }
+      return results;
+    }
 
-    this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" completed webpack`);
+    // Browser-only: use rspack (fast path, most common)
+    const browserConfig = createRspackBrowserConfig(outputPath, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
+    const compiler = rspack(browserConfig as any);
+    this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" running rspack`);
+    const [results, errors] = await this.runRspackPromise(compiler);
+
+    this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" completed rspack`);
     if (!results) throw new UnknownBuildError();
     if (errors) {
       this.clearConsole();
@@ -258,7 +279,6 @@ export class UiMain {
       this.clearConsole();
       throw new Error(results?.toString());
     }
-
     return results;
   }
 
@@ -277,6 +297,18 @@ export class UiMain {
         if (err) {
           this.logger.error('get error from webpack compiler, when bundling ui server, full error:', err);
 
+          return resolve([undefined, `${err.toString()}\n${err.stack}`]);
+        }
+        return resolve([stats, undefined]);
+      })
+    );
+  }
+
+  private async runRspackPromise(compiler: any): Promise<[any | undefined, string | undefined]> {
+    return new Promise((resolve) =>
+      compiler.run((err, stats) => {
+        if (err) {
+          this.logger.error('get error from rspack compiler, when bundling ui server, full error:', err);
           return resolve([undefined, `${err.toString()}\n${err.stack}`]);
         }
         return resolve([stats, undefined]);
@@ -627,13 +659,13 @@ export class UiMain {
   private async buildIfNoBundle(uiRootAspectId: string, uiRoot: UIRoot): Promise<boolean> {
     if (this._isBundleUiServed) return false;
 
-    const config = createWebpackConfig(
+    const config = createRspackBrowserConfig(
       uiRoot.path,
       [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), uiRootAspectId)],
       uiRoot.name,
       await this.publicDir(uiRoot)
     );
-    if (config.output?.path && fs.pathExistsSync(config.output.path)) return false;
+    if (config.output?.path && fs.pathExistsSync(config.output.path as string)) return false;
     const hash = await this.createBuildUiHash(uiRoot);
     await this.build(uiRootAspectId);
     await this.cache.set(uiRoot.path, hash);

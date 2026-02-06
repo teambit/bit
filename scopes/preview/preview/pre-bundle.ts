@@ -9,10 +9,9 @@ import {
 } from '@teambit/harmony.modules.harmony-root-generator';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import normalizePath from 'normalize-path';
-import webpack from 'webpack';
-import { promisify } from 'util';
+import { rspack } from '@rspack/core';
 import { PreviewAspect } from './preview.aspect';
-import { createWebpackConfig } from './webpack/webpack.config';
+import { createRspackConfig } from './webpack/rspack.config';
 import { clearConsole } from './pre-bundle-utils';
 import { getPreviewDistDir } from './mk-temp-dir';
 
@@ -108,10 +107,14 @@ export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[],
     PreviewAspect.id,
     __dirname
   );
-  const config = createWebpackConfig(outputDir, mainEntry);
-  const compiler = webpack(config);
-  const compilerRun = promisify(compiler.run.bind(compiler));
-  const results = await compilerRun();
+  const config = createRspackConfig(outputDir, mainEntry);
+  const compiler = rspack(config as any);
+  const results = await new Promise<any>((_resolve, reject) => {
+    compiler.run((err, stats) => {
+      if (err) return reject(err);
+      _resolve(stats);
+    });
+  });
   if (!results) throw new Error();
   if (results?.hasErrors()) {
     clearConsole();
