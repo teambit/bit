@@ -1,11 +1,27 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
-import { execFileSync } from 'child_process';
+import * as fs from 'fs';
+import * as tar from 'tar-stream';
 
 import { DiagnosisNotFound } from '@teambit/doctor';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
+
+function getTarEntries(tarPath: string): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    const entries: string[] = [];
+    const extract = tar.extract();
+    extract.on('entry', (header, stream, next) => {
+      entries.push(header.name);
+      stream.on('end', next);
+      stream.resume();
+    });
+    extract.on('finish', () => resolve(entries));
+    extract.on('error', reject);
+    fs.createReadStream(tarPath).pipe(extract);
+  });
+}
 
 describe('bit doctor infra', function () {
   this.timeout(0);
@@ -83,7 +99,7 @@ describe('bit doctor infra', function () {
 
   describe('archive with --exclude-local-scope flag', () => {
     let tarEntries: string[];
-    before(() => {
+    before(async () => {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
@@ -91,9 +107,8 @@ describe('bit doctor infra', function () {
       // Run from a nested directory to trigger the bug (workspaceRoot becomes absolute path)
       const nestedDir = path.join(helper.scopes.localPath, 'comp1');
       helper.command.runCmd(`bit doctor --archive ${archivePath} --exclude-local-scope`, nestedDir);
-      // List tar entries using tar command (doctor adds .tar extension)
-      const tarOutput = execFileSync('tar', ['-tf', `${archivePath}.tar`], { encoding: 'utf8' });
-      tarEntries = tarOutput.trim().split('\n');
+      // List tar entries using tar-stream (doctor adds .tar extension)
+      tarEntries = await getTarEntries(`${archivePath}.tar`);
     });
     it('should exclude .bit/objects contents', () => {
       const objectsContents = tarEntries.filter((e) => e.includes('.bit/objects/'));
