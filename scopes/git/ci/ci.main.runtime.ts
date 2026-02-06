@@ -23,6 +23,7 @@ import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
 import { ComponentIdList } from '@teambit/component-id';
 import { SourceBranchDetector } from './source-branch-detector';
+import { generateRandomStr } from '@teambit/toolbox.string.random';
 
 export interface CiWorkspaceConfig {
   /**
@@ -374,31 +375,14 @@ export class CiMain {
       });
 
     this.logger.console('🔄 Lane Management');
-    const availableLanesInScope = await this.lanes
-      .getLanes({
-        remote: laneId.scope,
-      })
-      .catch((e) => {
-        throw new Error(`Failed to get lanes in scope ${laneId.scope}: ${e.toString()}`);
-      });
 
-    const laneExists = availableLanesInScope.find((lane) => lane.id.name === laneId.name);
+    // Use unique temp lane name to avoid race conditions when multiple CI jobs run concurrently
+    const tempLaneName = `${laneId.name}-${generateRandomStr(5)}`;
+    this.logger.console(chalk.blue(`Creating temporary lane ${laneId.scope}/${tempLaneName}`));
 
     let foundErr: Error | undefined;
     try {
-      if (laneExists) {
-        // When making subsequent commits on the same PR branch, the existing lane contains outdated
-        // configurations from when it was first created. Meanwhile, main may have progressed with
-        // config changes (e.g., components changed to different envs) that are stored in .bit objects
-        // but not tracked by git. By deleting and recreating the lane, we ensure it always starts
-        // fresh from main with all the latest configurations.
-        this.logger.console(chalk.blue(`Lane ${laneId.toString()} already exists, deleting and recreating it`));
-        await this.archiveLane(laneId.toString());
-      }
-
-      // Create lane (either for the first time or after deletion)
-      this.logger.console(chalk.blue(`Creating lane ${laneId.toString()}`));
-      await this.lanes.createLane(laneId.name, {
+      await this.lanes.createLane(tempLaneName, {
         scope: laneId.scope,
         forkLaneNewScope: true,
       });
@@ -407,9 +391,9 @@ export class CiMain {
 
       this.logger.console(chalk.blue(`Current lane: ${currentLane?.name ?? 'main'}`));
 
-      if (currentLane?.name !== laneId.name) {
+      if (currentLane?.name !== tempLaneName) {
         throw new Error(
-          `Expected to be on lane ${laneId.name} after creation, but current lane is ${currentLane?.name ?? 'main'}`
+          `Expected to be on lane ${tempLaneName} after creation, but current lane is ${currentLane?.name ?? 'main'}`
         );
       }
 
@@ -421,6 +405,10 @@ export class CiMain {
       });
 
       if (!results) {
+        // No changes to snap - switch back to main and remove the temp lane we created
+        this.logger.console(chalk.yellow('No changes detected, removing temporary lane'));
+        await this.switchToLane(originalLane?.name ?? 'main');
+        await this.lanes.removeLanes([tempLaneName], { remote: false, force: true });
         return 'No changes detected, nothing to snap';
       }
 
@@ -429,10 +417,30 @@ export class CiMain {
       const snapOutput = snapResultOutput(results);
       this.logger.console(snapOutput);
 
+      // Finalize atomically: delete existing lane, rename temp lane, export
+      this.logger.console('🔄 Finalizing Lane');
+
+      // Check if original lane exists on remote and delete it (query by name to avoid fetching all lanes)
+      const existingLanes = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name }).catch((e) => {
+        // Lane not found is expected on first run - just means nothing to delete
+        if (e.toString().includes('was not found')) {
+          return [];
+        }
+        throw new Error(`Failed to check lane ${laneId.toString()}: ${e.toString()}`);
+      });
+
+      if (existingLanes.length) {
+        this.logger.console(chalk.blue(`Deleting existing remote lane ${laneId.toString()}`));
+        await this.archiveLane(laneId.toString(), true); // throwOnError: delete must succeed before export
+      }
+
+      // Rename temp lane to original name
+      this.logger.console(chalk.blue(`Renaming lane from ${tempLaneName} to ${laneId.name}`));
+      await this.lanes.rename(laneId.name, tempLaneName);
+
+      // Export with the correct name
       this.logger.console(chalk.blue(`Exporting ${snappedComponents.length} components`));
-
       const exportResults = await this.exporter.export();
-
       this.logger.console(chalk.green(`Exported ${exportResults.componentsIds.length} components`));
     } catch (e: any) {
       foundErr = e;
@@ -441,18 +449,30 @@ export class CiMain {
       if (foundErr) {
         this.logger.console(chalk.red(`Found error: ${foundErr.message}`));
       }
-      // Whatever happens, switch back to the original lane
+      // Always switch back to the original lane
       this.logger.console('🔄 Cleanup');
-      this.logger.console(chalk.blue(`Switching back to ${originalLane?.name ?? 'main'}`));
-      const lane = await this.lanes.getCurrentLane();
-      if (!lane) {
-        this.logger.console(chalk.yellow('Already on main, no need to switch. Checking out to head'));
-        await this.lanes.checkout.checkout({
-          head: true,
-          skipNpmInstall: true,
-        });
+      const targetLane = originalLane?.name ?? 'main';
+      this.logger.console(chalk.blue(`Switching back to ${targetLane}`));
+
+      const currentLane = await this.lanes.getCurrentLane();
+      if (currentLane) {
+        await this.switchToLane(targetLane);
       } else {
-        await this.switchToLane(originalLane?.name ?? 'main');
+        this.logger.console(chalk.yellow('Already on main, checking out to head'));
+        await this.lanes.checkout.checkout({ head: true, skipNpmInstall: true });
+      }
+
+      // Clean up orphaned temporary lane on error
+      if (foundErr) {
+        const tempLaneFullName = `${laneId.scope}/${tempLaneName}`;
+        this.logger.console(chalk.blue(`Cleaning up temporary lane ${tempLaneFullName}`));
+        try {
+          await this.lanes.removeLanes([tempLaneFullName], { remote: false, force: true });
+          this.logger.console(chalk.green(`Removed temporary lane ${tempLaneFullName}`));
+        } catch (cleanupErr: any) {
+          // Ignore cleanup errors to avoid masking the original error
+          this.logger.console(chalk.yellow(`Failed to clean up temporary lane: ${cleanupErr?.message || cleanupErr}`));
+        }
       }
     }
   }
@@ -738,9 +758,10 @@ export class CiMain {
   }
 
   /**
-   * Archives (deletes) a lane with proper error handling and logging
+   * Archives (deletes) a lane with proper error handling and logging.
+   * @param throwOnError - if true, throws on failure (use for critical operations like pre-export cleanup)
    */
-  private async archiveLane(laneId: string) {
+  private async archiveLane(laneId: string, throwOnError = false) {
     try {
       this.logger.console(chalk.blue(`Archiving lane ${laneId}`));
       // force means to remove the lane even if it was not merged. in this case, we don't care much because main already has the changes.
@@ -751,7 +772,15 @@ export class CiMain {
         this.logger.console(chalk.yellow(`Failed to archive lane '${laneId}' - no lanes were removed`));
       }
     } catch (e: any) {
+      // "not found" is success - another concurrent job may have deleted it
+      if (e.message?.includes('was not found') || e.toString().includes('was not found')) {
+        this.logger.console(chalk.yellow(`Lane '${laneId}' was already deleted (likely by concurrent job)`));
+        return;
+      }
       this.logger.console(chalk.red(`Error archiving lane '${laneId}': ${e.message}`));
+      if (throwOnError) {
+        throw new Error(`Failed to delete remote lane '${laneId}': ${e.message}`);
+      }
       // Don't throw the error - lane cleanup is not critical to the merge process
     }
   }

@@ -548,6 +548,7 @@
         "lru-cache": "10.4.3",
         "memoizee": "0.4.15",
         "mime": "2.5.2",
+        "micromatch": "^4.0.5",
         "mini-css-extract-plugin": "2.2.2",
         "minimatch": "3.0.5",
         "mocha": "11.1.0",
