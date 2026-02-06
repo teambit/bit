@@ -39,7 +39,7 @@
           [
             "",
             "skill <type>",
-            "generate output for Claude Code skill: \"commands\" (like bit --help) or \"flags\" (condensed flag reference)"
+            "generate output for Claude Code skill: \"commands\" (like bit --help) or \"reference\" (subcommands, args, and flags)"
           ]
         ],
         "description": "generate an .md file with all commands details",
