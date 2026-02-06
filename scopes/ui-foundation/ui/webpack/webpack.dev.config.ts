@@ -129,6 +129,7 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
       historyApiFallback: {
         disableDotRule: true,
         index: publicUrlOrPath,
+        htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
         rewrites: [
           {
             from: assetRequestRegex,
@@ -389,7 +390,7 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
       // filename output defined above.
       new HtmlWebpackPlugin({
         inject: true,
-        templateContent: html(title || 'My component workspace'),
+        templateContent: html(title || 'My component workspace', false, { serviceWorkerMode: 'disable' }),
         chunks: ['main'],
         filename: 'index.html',
       }),

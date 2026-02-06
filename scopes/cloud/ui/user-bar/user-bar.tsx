@@ -34,7 +34,8 @@ export function UserBar({ sections = [], items = [] }: UserBarProps) {
   const { isMinimal } = useWorkspaceMode();
   const { currentUser, loginUrl, loading, isLoggedIn } = useCurrentUser();
   const { logout, loading: loadingLoggingOut, loggedOut } = useLogout();
-  const { showIndicator, isOffline, mode, message, runHealthCheck } = useDevServerConnectionStatus();
+  const { showIndicator, indicatorLabel, indicatorTone, shouldFade, message, runHealthCheck } =
+    useDevServerConnectionStatus();
 
   const navigate = useNavigate();
 
@@ -134,11 +135,14 @@ export function UserBar({ sections = [], items = [] }: UserBarProps) {
                 }}
                 className={classNames(
                   styles.devServerStatus,
-                  isOffline ? styles.devServerStatusOffline : styles.devServerStatusRecovering,
-                  mode === 'recovering' && styles.fadeOut
+                  indicatorTone === 'offline' && styles.devServerStatusOffline,
+                  indicatorTone === 'recovering' && styles.devServerStatusRecovering,
+                  indicatorTone === 'preview-loading' && styles.devServerStatusPreviewLoading,
+                  indicatorTone === 'preview-offline' && styles.devServerStatusPreviewOffline,
+                  shouldFade && styles.fadeOut
                 )}
               >
-                {isOffline ? 'Offline' : 'Online'}
+                {indicatorLabel}
               </button>
             </Tooltip>
           )}

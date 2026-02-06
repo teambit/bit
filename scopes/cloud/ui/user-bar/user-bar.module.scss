@@ -42,6 +42,22 @@
   transform: translateY(0);
 }
 
+.devServerStatusPreviewLoading {
+  background: #fff8e7;
+  border-color: #f4d898;
+  color: #8a5a00;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.devServerStatusPreviewOffline {
+  background: #fff4ec;
+  border-color: #ffc9a1;
+  color: #9d3f00;
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .fadeOut {
   opacity: 0;
   transform: translateY(-3px);

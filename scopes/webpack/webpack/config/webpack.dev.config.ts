@@ -107,6 +107,7 @@ export function configFactory(
       historyApiFallback: {
         disableDotRule: true,
         index: resolveWorkspacePath(publicDirectory),
+        htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
         rewrites: [
           {
             from: assetRequestRegex,

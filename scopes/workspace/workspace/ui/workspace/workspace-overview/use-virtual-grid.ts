@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import * as ReactVirtual from '@tanstack/react-virtual';
 import type { AggregationGroup, AggregationType, WorkspaceItem } from './workspace-overview.types';
 
 export type VirtualRowHeader = { type: 'header'; group: AggregationGroup; isFirst: boolean };
@@ -81,8 +81,8 @@ export function useVirtualGrid({
 
   const virtualRows = useMemo(() => buildVirtualRows(groups, groupType, columns), [groups, groupType, columns]);
 
-  const HEADER_HEIGHT = 48;
-  const CARD_ROW_HEIGHT = isMinimal ? 500 : 320;
+  const HEADER_HEIGHT = 64;
+  const CARD_ROW_HEIGHT = isMinimal ? 500 : 296;
 
   const estimateSize = useCallback(
     (index: number) => {
@@ -93,13 +93,60 @@ export function useVirtualGrid({
     [virtualRows, HEADER_HEIGHT, CARD_ROW_HEIGHT]
   );
 
-  const virtualizer = useVirtualizer({
+  // Runtime compatibility shim:
+  // some loaded bundles expose legacy `useVirtual` instead of `useVirtualizer`.
+  const useVirtualizerCompat = (ReactVirtual as any).useVirtualizer as
+    | ((opts: {
+        count: number;
+        getScrollElement: () => HTMLElement | null;
+        estimateSize: (index: number) => number;
+        overscan: number;
+        measureElement: (el: Element) => number;
+      }) => {
+        getTotalSize: () => number;
+        getVirtualItems: () => Array<{ key: string | number; index: number; start: number }>;
+        measureElement: (el: Element) => void;
+      })
+    | undefined;
+
+  const useVirtualizerRuntime =
+    useVirtualizerCompat ||
+    ((opts: {
+      count: number;
+      estimateSize: (index: number) => number;
+      getScrollElement?: () => HTMLElement | null;
+      overscan?: number;
+      measureElement?: (el: Element) => number;
+    }) => {
+      // Safe runtime fallback: render all rows if virtualizer API is unavailable.
+      const starts: number[] = [];
+      let offset = 0;
+      for (let i = 0; i < opts.count; i += 1) {
+        starts[i] = offset;
+        offset += opts.estimateSize(i);
+      }
+
+      return {
+        getTotalSize: () => offset,
+        getVirtualItems: () =>
+          starts.map((start, index) => ({
+            key: index,
+            index,
+            start,
+          })),
+        measureElement: () => undefined,
+      };
+    });
+
+  const isVirtualized = Boolean(useVirtualizerCompat);
+
+  const virtualizer = useVirtualizerRuntime({
     count: virtualRows.length,
     getScrollElement: () => scrollRef.current,
     estimateSize,
     overscan: 5,
-    measureElement: (el) => el.getBoundingClientRect().height,
+    measureElement: (el: Element) => el.getBoundingClientRect().height,
   });
 
-  return { virtualizer, virtualRows, columns };
+  return { virtualizer, virtualRows, columns, isVirtualized };
 }

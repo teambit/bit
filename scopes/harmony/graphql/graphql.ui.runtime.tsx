@@ -62,11 +62,20 @@ export class GraphqlUI {
     // On refresh, data renders from cache immediately while network refreshes in background.
     if (typeof window !== 'undefined') {
       try {
+        const workspaceKeyRaw =
+          (window as Window & { __BIT_WORKSPACE_CACHE_KEY__?: string }).__BIT_WORKSPACE_CACHE_KEY__ ||
+          host ||
+          'default';
+        const workspaceKey = String(workspaceKeyRaw)
+          .toLowerCase()
+          .replace(/[^a-z0-9_-]+/g, '-')
+          .slice(0, 80);
+        const originKey = window.location.host.replace(/[^a-z0-9_-]+/gi, '_');
         const t0 = performance.now();
         await persistCache({
           cache,
           storage: new LocalStorageWrapper(window.localStorage),
-          key: `apollo-cache-${host || 'default'}`,
+          key: `apollo-cache-${originKey}-${workspaceKey}`,
           maxSize: 1048576 * 5, // 5MB
           debounce: 1000,
         });

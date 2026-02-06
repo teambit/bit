@@ -224,7 +224,7 @@
   width: 100%;
   gap: 24px;
   max-width: 1280px;
-  padding-bottom: 32px;
+  padding-bottom: 20px;
   align-items: stretch;
 }
 
@@ -233,11 +233,47 @@
 }
 
 .virtualGroupHeader {
-  padding-bottom: 15px;
-  padding-top: 28px;
+  padding-bottom: 10px;
+  padding-top: 16px;
 }
 
 .virtualGroupHeaderFirst {
-  padding-bottom: 15px;
+  padding-bottom: 10px;
   padding-top: 0;
+}
+
+.offlineShell {
+  margin-top: 24px;
+  border: 1px solid var(--border-medium-color);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 520px;
+  background: var(--surface-color);
+}
+
+.offlineShellTitle {
+  margin: 0 0 8px;
+}
+
+.offlineShellText {
+  margin: 0;
+  color: var(--on-surface-medium-color);
+}
+
+.loadingShell {
+  margin-top: 24px;
+  border: 1px solid var(--border-medium-color);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 520px;
+  background: var(--surface-color);
+}
+
+.loadingShellTitle {
+  margin: 0 0 8px;
+}
+
+.loadingShellText {
+  margin: 0;
+  color: var(--on-surface-medium-color);
 }

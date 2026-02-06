@@ -141,6 +141,9 @@ export function ComponentPreview({
       if ((event.data && event.data.event === LOAD_EVENT) || (event.data && event.data.event === 'webpackInvalid')) {
         if (event.data.event === LOAD_EVENT) {
           reportConnectionStatus(true, 'preview');
+        } else {
+          // Preview bundle is rebuilding; not a main dev-server offline condition.
+          reportConnectionStatus(false, 'preview');
         }
         onLoad && onLoad(event);
       }
