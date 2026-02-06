@@ -26,7 +26,6 @@ import fs from 'fs-extra';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { createRoot } from '@teambit/harmony.modules.harmony-root-generator';
 import { join, resolve as pathResolve } from 'path';
-import webpack from 'webpack';
 import { rspack } from '@rspack/core';
 import { UiServerStartedEvent } from './events';
 import { UnknownUI, UnknownBuildError } from './exceptions';
@@ -35,9 +34,8 @@ import { UIBuildCmd } from './ui-build.cmd';
 import type { UIRoot } from './ui-root';
 import { UIServer } from './ui-server';
 import { UIAspect, UIRuntime } from './ui.aspect';
-import createWebpackConfig from './webpack/webpack.browser.config';
-import createRspackBrowserConfig from './webpack/rspack.browser.config';
-import createSsrWebpackConfig from './webpack/webpack.ssr.config';
+import createRspackBrowserConfig from './rspack/rspack.browser.config';
+import createRspackSsrConfig from './rspack/rspack.ssr.config';
 import type { StartPlugin, StartPluginOptions } from './start-plugin';
 import { BundleUiTask, BUNDLE_UI_HASH_FILENAME } from './bundle-ui.task';
 
@@ -239,37 +237,15 @@ export class UiMain {
     const ssr = uiRoot.buildOptions?.ssr || false;
     const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), uiRootAspectId);
     const outputPath = customOutputPath || uiRoot.path;
+    const publicDir = await this.publicDir(uiRoot);
 
-    const ssrConfig = ssr && createSsrWebpackConfig(outputPath, [mainEntry], await this.publicDir(uiRoot));
-
-    if (ssrConfig) {
-      // SSR enabled: use webpack for both browser and SSR (webpack MultiCompiler)
-      const browserConfig = createWebpackConfig(outputPath, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
-      const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
-      const compiler = webpack(config);
-      this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" running webpack (with SSR)`);
-      const [results, errors] = await this.runWebpackPromise(compiler);
-
-      this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" completed webpack`);
-      if (!results) throw new UnknownBuildError();
-      if (errors) {
-        this.clearConsole();
-        throw new Error(errors);
-      }
-      if (results?.hasErrors()) {
-        this.clearConsole();
-        throw new Error(results?.toString());
-      }
-      return results;
-    }
-
-    // Browser-only: use rspack (fast path, most common)
-    const browserConfig = createRspackBrowserConfig(outputPath, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
+    // Browser build (rspack)
+    const browserConfig = createRspackBrowserConfig(outputPath, [mainEntry], uiRoot.name, publicDir);
     const compiler = rspack(browserConfig as any);
-    this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" running rspack`);
+    this.logger.debug(`build: running rspack for browser`);
     const [results, errors] = await this.runRspackPromise(compiler);
 
-    this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" completed rspack`);
+    this.logger.debug(`build: completed rspack browser build`);
     if (!results) throw new UnknownBuildError();
     if (errors) {
       this.clearConsole();
@@ -279,29 +255,31 @@ export class UiMain {
       this.clearConsole();
       throw new Error(results?.toString());
     }
+
+    // SSR build (rspack, sequential after browser build)
+    if (ssr) {
+      const ssrConfig = createRspackSsrConfig(outputPath, [mainEntry], publicDir);
+      const ssrCompiler = rspack(ssrConfig as any);
+      this.logger.debug(`build: running rspack for SSR`);
+      const [ssrResults, ssrErrors] = await this.runRspackPromise(ssrCompiler);
+
+      this.logger.debug(`build: completed rspack SSR build`);
+      if (ssrErrors) {
+        this.clearConsole();
+        throw new Error(ssrErrors);
+      }
+      if (ssrResults?.hasErrors()) {
+        this.clearConsole();
+        throw new Error(ssrResults?.toString());
+      }
+    }
+
     return results;
   }
 
   registerStartPlugin(startPlugin: StartPlugin) {
     this.startPluginSlot.register(startPlugin);
     return this;
-  }
-
-  private async runWebpackPromise(
-    compiler: webpack.MultiCompiler
-  ): Promise<[webpack.MultiStats | undefined, string | undefined]> {
-    return new Promise((resolve) =>
-      // TODO: split to multiple processes to reduce time and configure concurrent builds.
-      // @see https://github.com/trivago/parallel-webpack
-      compiler.run((err, stats) => {
-        if (err) {
-          this.logger.error('get error from webpack compiler, when bundling ui server, full error:', err);
-
-          return resolve([undefined, `${err.toString()}\n${err.stack}`]);
-        }
-        return resolve([stats, undefined]);
-      })
-    );
   }
 
   private async runRspackPromise(compiler: any): Promise<[any | undefined, string | undefined]> {
@@ -593,13 +571,13 @@ export class UiMain {
 
     if (!cachedBuildUiHash) {
       this.logger.console(
-        `Building UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(
+        `${chalk.magenta('[Rspack]')} Building UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(
           await this.publicDir(uiRoot)
         )}. The first time we build the UI it may take a few minutes.`
       );
     } else {
       this.logger.console(
-        `Rebuilding UI assets for '${chalk.cyan(uiRoot.name)} in target directory: ${chalk.cyan(
+        `${chalk.magenta('[Rspack]')} Rebuilding UI assets for '${chalk.cyan(uiRoot.name)} in target directory: ${chalk.cyan(
           await this.publicDir(uiRoot)
         )}' as ${uiRoot.configFile} has been changed.`
       );

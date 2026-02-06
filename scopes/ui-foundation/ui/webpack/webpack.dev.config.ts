@@ -12,7 +12,7 @@ import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddle
 import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
 import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
 import path, { sep } from 'path';
-import { html } from './html';
+import { html } from '../rspack/html';
 
 /*
  * Webpack config for the bit ui

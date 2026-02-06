@@ -139,24 +139,24 @@ export function styleRules(opts: StyleRulesOptions): RuleSetRule[] {
     // CSS non-modules
     {
       test: stylesRegexps.cssNoModulesRegex,
-      use: [first, css(1 + postCss.length), ...postCss],
+      use: [first, css(postCss.length), ...postCss],
       sideEffects: true,
     },
     // CSS modules
     {
       test: stylesRegexps.cssModuleRegex,
-      use: [first, css(1 + postCss.length, true), ...postCss],
+      use: [first, css(postCss.length, true), ...postCss],
     },
     // SCSS/SASS non-modules
     {
       test: stylesRegexps.sassNoModuleRegex,
-      use: [first, css(postCss.length + resolveUrl.length + 2), ...postCss, ...resolveUrl, sassLoader],
+      use: [first, css(postCss.length + resolveUrl.length + 1), ...postCss, ...resolveUrl, sassLoader],
       sideEffects: true,
     },
     // SCSS/SASS modules
     {
       test: stylesRegexps.sassModuleRegex,
-      use: [first, css(postCss.length + resolveUrl.length + 2, true), ...postCss, ...resolveUrl, sassLoader],
+      use: [first, css(postCss.length + resolveUrl.length + 1, true), ...postCss, ...resolveUrl, sassLoader],
     },
     // LESS non-modules
     {

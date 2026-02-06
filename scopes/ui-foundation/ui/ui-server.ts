@@ -19,7 +19,7 @@ import type { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import type { UiMain } from './ui.main.runtime';
 
-import { devConfig } from './webpack/rspack.dev.config';
+import { devConfig } from './rspack/rspack.dev.config';
 
 export type UIServerProps = {
   graphql: GraphqlMain;

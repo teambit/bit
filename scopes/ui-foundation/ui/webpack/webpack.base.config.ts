@@ -9,7 +9,7 @@ import path from 'path';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 import { generateStyleLoaders } from '@teambit/webpack.modules.generate-style-loaders';
 import { fallbacks } from '@teambit/webpack';
-import { postCssConfig } from './postcss.config';
+import { postCssConfig } from '../rspack/postcss.config';
 
 const baseStyleLoadersOptions = {
   injectingLoader: MiniCssExtractPlugin.loader,

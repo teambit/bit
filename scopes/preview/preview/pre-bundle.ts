@@ -1,4 +1,5 @@
 import { join, resolve } from 'path';
+import { promisify } from 'util';
 import fs, { existsSync, outputFileSync, readJsonSync } from 'fs-extra';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import {
@@ -109,12 +110,8 @@ export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[],
   );
   const config = createRspackConfig(outputDir, mainEntry);
   const compiler = rspack(config as any);
-  const results = await new Promise<any>((_resolve, reject) => {
-    compiler.run((err, stats) => {
-      if (err) return reject(err);
-      _resolve(stats);
-    });
-  });
+  const compilerRun = promisify(compiler.run.bind(compiler));
+  const results = await compilerRun();
   if (!results) throw new Error();
   if (results?.hasErrors()) {
     clearConsole();
