@@ -60,9 +60,15 @@ bit COMMAND SUB_COMMAND --help
         const cmds = grouped[groupName];
         const commandLines = cmds
           .map((cmd) => {
-            const cmdId = getCommandId(cmd.name);
-            const paddedName = cmdId.padEnd(16, ' ');
-            return `    ${paddedName}${cmd.description || ''}`;
+            const paddedName = cmd.name.padEnd(30, ' ');
+            let line = `    ${paddedName} - ${cmd.description || ''}`;
+            if (cmd.commands && cmd.commands.length > 0) {
+              const subNames = cmd.commands.filter((sub) => !sub.private).map((sub) => getCommandId(sub.name));
+              if (subNames.length > 0) {
+                line += `\n      Subcommands: ${subNames.join(', ')}`;
+              }
+            }
+            return line;
           })
           .join('\n');
         return `  ${groupDescription}\n${commandLines}`;
@@ -75,7 +81,7 @@ bit documentation: https://bit.dev/
 
 ${sections}
 
-For flag details, see [CLI_FLAGS.md](CLI_FLAGS.md).
+For subcommands, arguments, and flags, see [CLI_REFERENCE.md](CLI_REFERENCE.md).
 Run 'bit <command> --help' for more information on a specific command.`;
   }
 
