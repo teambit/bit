@@ -34,7 +34,7 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
   ) {}
 
   async report(
-    [historyId, toHistoryId]: [string | undefined, string | undefined],
+    [historyId, toHistoryId]: string[],
     { lane, pattern }: { lane?: string; pattern?: string }
   ): Promise<string> {
     const laneId = lane ? await this.lanes.parseLaneId(lane) : this.lanes.getCurrentLaneId();
