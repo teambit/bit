@@ -70,6 +70,10 @@ export class LaneHistory extends BitObject {
     return this.history;
   }
 
+  getHistoryIds(): string[] {
+    return Object.keys(this.history);
+  }
+
   async addHistory(laneObj: Lane, msg?: string) {
     const log: Log = await getBasicLog();
     if (msg) log.message = msg;
