@@ -1,4 +1,5 @@
 import type { RuleSetRule, Compiler } from '@rspack/core';
+import { fallbacks } from '@teambit/webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 
 export const moduleFileExtensions = [
@@ -17,6 +18,52 @@ export const moduleFileExtensions = [
 
 export const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 export const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
+
+/** Shared resolve.alias for all rspack configs (react, teambit UI packages) */
+export function resolveAlias(opts?: { profile?: boolean }): Record<string, string | false> {
+  return {
+    'react/jsx-runtime': require.resolve('react/jsx-runtime'),
+    react: require.resolve('react'),
+    'react-dom/server': require.resolve('react-dom/server'),
+    'react-dom': require.resolve('react-dom'),
+    ...(opts?.profile && {
+      'react-dom$': 'react-dom/profiling',
+      'scheduler/tracing': 'scheduler/tracing-profiling',
+    }),
+    '@teambit/component.ui.component-compare.context': require.resolve(
+      '@teambit/component.ui.component-compare.context'
+    ),
+    '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
+    '@teambit/base-ui.graph.tree.recursive-tree': require.resolve('@teambit/base-ui.graph.tree.recursive-tree'),
+    '@teambit/semantics.entities.semantic-schema': require.resolve('@teambit/semantics.entities.semantic-schema'),
+    '@teambit/code.ui.code-editor': require.resolve('@teambit/code.ui.code-editor'),
+    '@teambit/api-reference.hooks.use-api': require.resolve('@teambit/api-reference.hooks.use-api'),
+    '@teambit/api-reference.hooks.use-api-renderers': require.resolve('@teambit/api-reference.hooks.use-api-renderers'),
+  };
+}
+
+/** Full resolve.fallback for production/SSR configs (all Node builtins stubbed) */
+export const resolveFallback = {
+  module: false,
+  path: fallbacks.path,
+  dgram: false,
+  dns: false,
+  fs: false,
+  stream: false,
+  http2: false,
+  net: false,
+  tls: false,
+  child_process: false,
+  process: fallbacks.process,
+} as const;
+
+/** Minimal resolve.fallback for dev config */
+export const resolveFallbackDev = {
+  fs: false,
+  path: fallbacks.path,
+  stream: false,
+  process: fallbacks.process,
+} as const;
 
 /**
  * Simple rspack-compatible manifest plugin (replaces webpack-manifest-plugin which is incompatible with rspack 1.7+).

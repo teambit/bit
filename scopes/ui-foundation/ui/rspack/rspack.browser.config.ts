@@ -1,6 +1,6 @@
 import rspack, { type Configuration } from '@rspack/core';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
-import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
+import { fallbacksProvidePluginConfig } from '@teambit/webpack';
 import path from 'path';
 import { postCssConfig } from './postcss.config';
 import { html } from './html';
@@ -8,6 +8,8 @@ import {
   moduleFileExtensions,
   shouldUseSourceMap,
   imageInlineSizeLimit,
+  resolveAlias,
+  resolveFallback,
   RspackManifestPlugin,
   mjsRule,
   swcRule,
@@ -67,40 +69,8 @@ export default function createRspackBrowserConfig(
 
     resolve: {
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
-      alias: {
-        'react/jsx-runtime': require.resolve('react/jsx-runtime'),
-        react: require.resolve('react'),
-        'react-dom/server': require.resolve('react-dom/server'),
-        'react-dom': require.resolve('react-dom'),
-        ...(isEnvProductionProfile && {
-          'react-dom$': 'react-dom/profiling',
-          'scheduler/tracing': 'scheduler/tracing-profiling',
-        }),
-        '@teambit/component.ui.component-compare.context': require.resolve(
-          '@teambit/component.ui.component-compare.context'
-        ),
-        '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
-        '@teambit/base-ui.graph.tree.recursive-tree': require.resolve('@teambit/base-ui.graph.tree.recursive-tree'),
-        '@teambit/semantics.entities.semantic-schema': require.resolve('@teambit/semantics.entities.semantic-schema'),
-        '@teambit/code.ui.code-editor': require.resolve('@teambit/code.ui.code-editor'),
-        '@teambit/api-reference.hooks.use-api': require.resolve('@teambit/api-reference.hooks.use-api'),
-        '@teambit/api-reference.hooks.use-api-renderers': require.resolve(
-          '@teambit/api-reference.hooks.use-api-renderers'
-        ),
-      },
-      fallback: {
-        module: false,
-        path: fallbacks.path,
-        dgram: false,
-        dns: false,
-        fs: false,
-        stream: false,
-        http2: false,
-        net: false,
-        tls: false,
-        child_process: false,
-        process: fallbacks.process,
-      },
+      alias: resolveAlias({ profile: isEnvProductionProfile }),
+      fallback: resolveFallback,
     },
 
     module: {

@@ -1,7 +1,7 @@
 import rspack, { type Configuration } from '@rspack/core';
 import type { Configuration as DevServerConfig } from '@rspack/dev-server';
 import RefreshPlugin from '@rspack/plugin-react-refresh';
-import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
+import { fallbacksProvidePluginConfig } from '@teambit/webpack';
 import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
 import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
 import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
@@ -9,7 +9,16 @@ import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
 import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
 import path, { sep } from 'path';
 import { html } from './html';
-import { moduleFileExtensions, mjsRule, swcRule, sourceMapRule, fontRule, styleRules } from './rspack.common';
+import {
+  moduleFileExtensions,
+  resolveAlias,
+  resolveFallbackDev,
+  mjsRule,
+  swcRule,
+  sourceMapRule,
+  fontRule,
+  styleRules,
+} from './rspack.common';
 
 /*
  * Rspack config for the bit ui (replaces webpack.dev.config.ts)
@@ -141,29 +150,8 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
 
     resolve: {
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
-      alias: {
-        'react/jsx-runtime': require.resolve('react/jsx-runtime'),
-        react: require.resolve('react'),
-        'react-dom/server': require.resolve('react-dom/server'),
-        'react-dom': require.resolve('react-dom'),
-        '@teambit/component.ui.component-compare.context': require.resolve(
-          '@teambit/component.ui.component-compare.context'
-        ),
-        '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
-        '@teambit/base-ui.graph.tree.recursive-tree': require.resolve('@teambit/base-ui.graph.tree.recursive-tree'),
-        '@teambit/semantics.entities.semantic-schema': require.resolve('@teambit/semantics.entities.semantic-schema'),
-        '@teambit/code.ui.code-editor': require.resolve('@teambit/code.ui.code-editor'),
-        '@teambit/api-reference.hooks.use-api': require.resolve('@teambit/api-reference.hooks.use-api'),
-        '@teambit/api-reference.hooks.use-api-renderers': require.resolve(
-          '@teambit/api-reference.hooks.use-api-renderers'
-        ),
-      },
-      fallback: {
-        fs: false,
-        path: fallbacks.path,
-        stream: false,
-        process: fallbacks.process,
-      },
+      alias: resolveAlias(),
+      fallback: resolveFallbackDev,
     },
 
     watchOptions: {
