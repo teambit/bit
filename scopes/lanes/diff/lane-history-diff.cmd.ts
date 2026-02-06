@@ -12,7 +12,7 @@ export class LaneHistoryDiffCmd implements Command {
   description = 'show diff between lane-history entries';
   extendedDescription = `with no arguments - diff the latest history entry against its predecessor
 with one argument - diff the given history entry against its predecessor
-with two arguments - diff between two specific history entries (first=from, second=to)
+with two arguments - diff between two specific history entries (first=from, second=to), useful for comparing any two points in history
 run "bit lane history" to find history-ids`;
   alias = '';
   options = [
@@ -47,7 +47,7 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
     const historyIds = laneHistory.getHistoryIds();
 
     if (historyId && toHistoryId) {
-      // two args: explicit from and to (backward compatible)
+      // two args: explicit from and to
       fromId = historyId;
       toId = toHistoryId;
     } else if (historyId) {
