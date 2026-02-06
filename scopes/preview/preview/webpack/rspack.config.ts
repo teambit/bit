@@ -1,5 +1,6 @@
 import rspack, { type Configuration, type Compiler } from '@rspack/core';
 import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
+import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
 
 /**
  * Simple rspack-compatible manifest plugin (replaces webpack-manifest-plugin which is incompatible with rspack 1.7+).
@@ -342,6 +343,11 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
             },
             {
               loader: require.resolve('@mdx-js/loader'),
+              options: mdxOptions,
+            },
+            {
+              // Transforms admonition syntax (:::type content → :::type[content]) for MDX v3
+              loader: require.resolve('@teambit/react/dist/webpack/mdx-pre-loader.cjs'),
             },
           ],
           type: 'javascript/auto',
