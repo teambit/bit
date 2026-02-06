@@ -90,8 +90,7 @@ bit documentation: https://bit.dev/
 
 ${sections}
 
-For subcommands, arguments, and flags, see [CLI_REFERENCE.md](CLI_REFERENCE.md).
-Run 'bit <command> --help' for more information on a specific command.`;
+IMPORTANT: When you need flags, arguments, or subcommand details, READ the file CLI_REFERENCE.md in this same directory using the Read tool. Only fall back to 'bit <command> --help' if the reference file doesn't cover what you need.`;
   }
 
   /**

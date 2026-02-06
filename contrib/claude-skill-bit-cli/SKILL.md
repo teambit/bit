@@ -136,5 +136,4 @@ whoami - display the currently authenticated Bit Cloud user
 npmrc [sub-command] - configure .npmrc file with Bit Cloud registry and authentication settings
 Subcommands: generate
 
-For subcommands, arguments, and flags, see [CLI_REFERENCE.md](CLI_REFERENCE.md).
-Run 'bit <command> --help' for more information on a specific command.
+IMPORTANT: When you need flags, arguments, or subcommand details, READ the file CLI_REFERENCE.md in this same directory using the Read tool. Only fall back to 'bit <command> --help' if the reference file doesn't cover what you need.
