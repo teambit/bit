@@ -1,0 +1,165 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+
+  &.isResizing {
+    cursor: ns-resize;
+
+    // Prevent iframes from capturing pointer events during resize
+    iframe {
+      pointer-events: none;
+    }
+  }
+}
+
+.toolbar {
+  display: flex;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.left,
+.right {
+  display: flex;
+  flex: 1;
+  padding: 4px;
+  background-color: var(--background-color);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.right {
+  justify-content: flex-end;
+}
+
+.subView {
+  height: 100%;
+  background-color: var(--background-color);
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.widgets {
+  display: flex;
+  padding: 4px;
+}
+
+.dropdown {
+  display: flex;
+}
+
+.compareLayout {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.compareMain {
+  flex: 1 1 auto;
+  min-height: 150px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.controlsPanel {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-color);
+  min-height: 36px;
+  max-height: calc(100% - 150px);
+  overflow: hidden;
+  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  contain: layout;
+}
+
+.controlsResizeHandle {
+  height: 6px;
+  cursor: ns-resize;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+  touch-action: none;
+
+  &::before {
+    content: '';
+    display: block;
+    width: 32px;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--border-medium-color, rgba(0, 0, 0, 0.12));
+  }
+
+  &:hover::before,
+  &:active::before {
+    background: var(--primary-color, #6a57fd);
+  }
+}
+
+.controlsPanelHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  user-select: none;
+  background: var(--background-color);
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--background-hover-color, rgba(0, 0, 0, 0.02));
+  }
+}
+
+.controlsArrow {
+  font-size: 10px;
+  color: var(--on-background-color, #222);
+  opacity: 0.5;
+}
+
+.controlsPanelTitle {
+  font-size: var(--bit-p-xs, 13px);
+  font-weight: 500;
+  color: var(--on-background-color, #222);
+}
+
+.controlsPanelContent {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 12px 16px;
+  min-height: 0;
+}
+
+.missingComposition {
+  margin: 24px;
+  padding: 20px;
+  border: 1px dashed var(--border-color, rgba(0, 0, 0, 0.12));
+  border-radius: 10px;
+  background: var(--background-color, #ffffff);
+  text-align: center;
+}
+
+.missingCompositionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--on-background-color, #222222);
+}
+
+.missingCompositionSubtitle {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--on-background-color, #222222);
+  opacity: 0.7;
+}

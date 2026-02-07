@@ -1,0 +1,131 @@
+---
+description: Utils for composition live controls.
+---
+
+Utils for composition live controls.
+
+## Usage
+
+Types for live controls.
+
+```ts
+type Controls,
+
+type Control,
+type ControlInputType,
+
+type ControlBase,
+type ControlUnknown,
+type ControlBoolean,
+type ControlSelect,
+type ControlMultiSelect,
+type ControlText,
+type ControlLongText,
+type ControlNumber,
+type ControlRange,
+type ControlDate,
+type ControlJSON,
+type ControlColor,
+type ControlCustom,
+
+type SelectOption,
+```
+
+Utils to resolve controls and values.
+
+```ts
+/**
+ * Controls can be an array or a map.
+ * This function is designed to resolve controls into array.
+ */
+function resolveControls(controls: Controls): Control[];
+
+/**
+ * Resolves controls from values.
+ * It will return an array of controls based on the type of values in each key.
+ */
+function resolveControlsFromValues(values: Record<string, any>): Control[];
+
+/**
+ * Applies default values from controls to props.
+ */
+function resolveValues(values: Record<string, any>, controls: Control[]): Record<string, any>;
+
+/**
+ * Resolves all the data from given values and controls.
+ */
+function resolveAll(values: Record<string, any>, controls: Controls): [Record<string, any>, Control[]];
+```
+
+Communication between the preview and the control panel via postMessage.
+Usually each message includes type and payload data.
+All the utils use `JSON.parse(JSON.stringify())` to deep clone the data.
+And all the listeners filter the messages by type.
+
+```ts
+const BROADCAST_READY_KEY = 'composition-live-controls:ready'
+const BROADCAST_UPDATE_KEY = 'composition-live-controls:update'
+const BROADCAST_DESTROY_KEY = 'composition-live-controls:destroy'
+
+function broadcastReady(
+  target: Window,
+  id: number,
+  controls: Control[],
+  values: Record<string, any>,
+)
+
+function broadcastUpdate(
+  target: Window,
+  id: number,
+  values: Record<string, any>,
+)
+
+function broadcastDestroy(
+  target: Window,
+  id: number,
+)
+
+type LiveControlReadyEventData,
+type LiveControlUpdateEventData,
+type LiveControlDestroyEventData,
+type LiveControlEventData,
+
+function getReadyListener(
+  event: MessageEvent<LiveControlReadyEventData>,
+  callback: (data: {
+    controls: Control[],
+    values: Record<string, any>,
+    timestamp: number,
+  }) => void
+)
+
+function getUpdateListener(
+  event: MessageEvent<LiveControlUpdateEventData>,
+  callback: (data: {
+    key: string,
+    value: any,
+    timestamp: number,
+  }) => void
+)
+
+function getDestroyListener
+  event: MessageEvent<LiveControlDestroyEventData>,
+  callback: (data: {
+    timestamp: number,
+  }) => void
+)
+```
+
+Generic type of live compositions.
+
+```ts
+type LiveComposition<Component = any, RenderResult = any>
+```
+
+Detect whether live controls is needed according to the current URL
+
+```
+// e.g. `http://localhost:3000/preview/bitdev.react/react-env@xxx/#teambit.vite/examples/foo?preview=compositions&env=bitdev.react/react-env@xxx&name=BasicFoo&fullscreen=true&livecontrols=true`
+// e.g. `http://xxx.bit.cloud/api/bitdev.react/react-env@xxx/#teambit.vite/examples/foo?preview=compositions&env=bitdev.react/react-env@xxx&name=BasicFoo&fullscreen=true&livecontrols=true`
+function needLiveControls(loc: Location): boolean
+```

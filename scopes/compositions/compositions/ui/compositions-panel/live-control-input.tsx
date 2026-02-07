@@ -10,6 +10,8 @@ import { MenuItem } from '@teambit/design.inputs.selectors.menu-item';
 import { ColorPicker, ColorsBox } from '@teambit/design.ui.input.color-picker';
 import { DatePicker } from '@teambit/design.inputs.date-picker';
 import { Toggle } from '@teambit/design.inputs.toggle-switch';
+import type { SelectOption } from '@teambit/compositions.ui.composition-live-controls';
+
 import { useOverlay, BitPortal } from './use-overlay';
 
 import styles from './live-control-input.module.scss';
@@ -24,7 +26,7 @@ type InputComponentProps = {
 
 type InputComponent = React.FC<InputComponentProps>;
 
-function ShortTextInput({ value, onChange }: InputComponentProps) {
+function ShortTextInput({ value, onChange, id }: InputComponentProps) {
   const [inputValue, setInputValue] = React.useState(value || '');
 
   React.useEffect(() => {
@@ -37,10 +39,10 @@ function ShortTextInput({ value, onChange }: InputComponentProps) {
     setInputValue(newValue || '');
   };
 
-  return <InputText value={inputValue} onChange={handleChange} />;
+  return <InputText id={id} value={inputValue} onChange={handleChange} />;
 }
 
-function LongTextInput({ value, onChange }: InputComponentProps) {
+function LongTextInput({ value, onChange, id }: InputComponentProps) {
   const [inputValue, setInputValue] = React.useState(value || '');
 
   React.useEffect(() => {
@@ -53,13 +55,14 @@ function LongTextInput({ value, onChange }: InputComponentProps) {
     setInputValue(newValue || '');
   };
 
-  return <TextArea value={inputValue} onChange={handleChange} />;
+  return <TextArea id={id} value={inputValue} onChange={handleChange} />;
 }
 
-function SelectInput({ value, onChange, meta }: InputComponentProps) {
+export function SelectInput({ value, onChange, meta }: InputComponentProps) {
+  const triggerRef = React.useRef<HTMLDivElement>(null);
+
   const [selectedValue, setSelectedValue] = React.useState(value || '');
   const [open, setOpen] = React.useState(false);
-  const triggerRef = React.useRef<HTMLParagraphElement>(null);
 
   React.useEffect(() => {
     setSelectedValue(value || '');
@@ -113,7 +116,7 @@ function SelectInput({ value, onChange, meta }: InputComponentProps) {
   );
 }
 
-function NumberInput({ value, onChange }: InputComponentProps) {
+function NumberInput({ value, onChange, id }: InputComponentProps) {
   const [inputValue, setInputValue] = React.useState(value || 0);
 
   React.useEffect(() => {
@@ -132,7 +135,7 @@ function NumberInput({ value, onChange }: InputComponentProps) {
     }
   };
 
-  return <InputText type="number" value={inputValue} onChange={handleChange} />;
+  return <InputText id={id} type="number" value={inputValue} onChange={handleChange} />;
 }
 
 function ColorPickerPortal(props: any) {
@@ -206,9 +209,9 @@ function DateInput({ value, onChange }: InputComponentProps) {
   };
 
   return (
-    <p className={classNames(styles.wrapper)}>
+    <div className={classNames(styles.wrapper)}>
       <DatePicker date={inputValue} onChange={handleChange} />
-    </p>
+    </div>
   );
 }
 
@@ -225,13 +228,89 @@ function ToggleInput({ value, onChange }: InputComponentProps) {
   };
 
   return (
-    <p className={classNames(styles.wrapper)}>
+    <div className={classNames(styles.wrapper)}>
       <Toggle defaultChecked={isChecked} onChange={handleChange} />
-    </p>
+    </div>
   );
 }
 
-function JsonInput({ value, onChange }: InputComponentProps) {
+function RangeInput({ value, onChange, meta, id }: InputComponentProps) {
+  const [inputValue, setInputValue] = React.useState<number>(typeof value === 'number' ? value : 0);
+
+  React.useEffect(() => {
+    setInputValue(typeof value === 'number' ? value : 0);
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = Number(e.target.value);
+    if (!isNaN(newValue)) {
+      onChange(newValue);
+      setInputValue(newValue);
+    }
+  };
+
+  return (
+    <div className={classNames(styles.wrapper, styles.rangeWrapper)}>
+      <input
+        id={id}
+        className={styles.rangeInput}
+        type="range"
+        value={inputValue}
+        min={meta?.min}
+        max={meta?.max}
+        step={meta?.step}
+        onChange={handleChange}
+      />
+      <div className={styles.rangeValue}>{inputValue}</div>
+    </div>
+  );
+}
+
+function MultiSelectInput({ value, onChange, meta, id }: InputComponentProps) {
+  const [selectedValues, setSelectedValues] = React.useState<string[]>(Array.isArray(value) ? value : []);
+
+  React.useEffect(() => {
+    setSelectedValues(Array.isArray(value) ? value : []);
+  }, [value]);
+
+  const options = React.useMemo<{ label: string; value: string }[]>(() => {
+    if (!meta?.options) return [];
+    return meta.options.map((option: SelectOption) =>
+      typeof option === 'string' ? { label: option, value: option } : option
+    );
+  }, [meta]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const values = Array.from(e.target.selectedOptions).map((opt) => opt.value);
+    onChange(values);
+    setSelectedValues(values);
+  };
+
+  return (
+    <div className={classNames(styles.wrapper)}>
+      <select id={id} className={styles.multiSelect} multiple value={selectedValues} onChange={handleChange}>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function CustomInput({ value, onChange, meta, id }: InputComponentProps) {
+  if (typeof meta?.render === 'function') {
+    return (
+      <div className={classNames(styles.wrapper)}>
+        {meta.render({ value, onChange, id, options: meta.renderOptions })}
+      </div>
+    );
+  }
+  return <ShortTextInput id={id} value={value} onChange={onChange} />;
+}
+
+function JsonInput({ value, onChange, id }: InputComponentProps) {
   const [inputValue, setInputValue] = React.useState(JSON.stringify(value, null, 2));
 
   React.useEffect(() => {
@@ -254,7 +333,7 @@ function JsonInput({ value, onChange }: InputComponentProps) {
 
   return (
     <div>
-      <TextArea value={inputValue} onChange={handleChange} />
+      <TextArea id={id} value={inputValue} onChange={handleChange} />
       {message && <div style={{ color: 'red' }}>{message}</div>}
     </div>
   );
@@ -276,8 +355,14 @@ export function getInputComponent(type: string): InputComponent {
       return DateInput;
     case 'boolean':
       return ToggleInput;
+    case 'range':
+      return RangeInput;
+    case 'multiselect':
+      return MultiSelectInput;
     case 'json':
       return JsonInput;
+    case 'custom':
+      return CustomInput;
     default:
       // eslint-disable-next-line no-console
       console.warn(`Unknown input type: ${type}`);
