@@ -142,7 +142,7 @@ Flags: --message <message>, --lane <lane>, --build, --strict
 Tags and exports new semantic versions after merging a PR to main.
 
 By default, bumps patch versions when merging to main. If specific configuration variables are set, it can use commit messages or explicit flags to determine the version bump. Runs install, tag, build, and export, then archives the remote lane and syncs lockfiles. Use in merge-to-main CI pipelines to publish releases.
-Flags: --message <message>, --build, --strict, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --increment-by <number>, --versions-file <path>, --verbose, --auto-merge-resolve <merge-strategy>, --force-theirs, --lane-name <name>
+Flags: --message <message>, --build, --strict, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --increment-by <number>, --versions-file <path>, --verbose, --auto-merge-resolve <merge-strategy>, --force-theirs, --lane-name <name>, --skip-push
 
 ## bit clear-cache
 
@@ -265,6 +265,13 @@ find components that use the specified dependency
 
 searches workspace components to find which ones depend on the specified package or component. useful for understanding dependency usage before removing packages or when refactoring components. supports both exact version matching and package name patterns.
 Flags: --depth <number>
+
+## bit deps diagnose
+
+analyze workspace dependencies for version spread, peer permutations, and bloat
+
+scans node_modules/.pnpm to report actual installed copies, identifies packages with multiple versions, and highlights peer dependencies causing permutation explosion. Use --package to drill down into a specific package.
+Flags: --package <string>
 
 ## bit deps write
 
@@ -390,7 +397,7 @@ Flags: --internal
 bring components from remote scopes into your workspace
 
 brings component source files from remote scopes into your workspace and installs their dependencies as packages. supports pattern matching for bulk imports, merge strategies for handling conflicts, and various optimization options. without arguments, fetches all workspace components' latest versions from their remote scopes.
-Flags: --path <path>, --objects, --override, --verbose, --json, --skip-dependency-installation, --skip-write-config-files, --merge [strategy], --dependencies, --dependencies-head, --dependents, --dependents-via <string>, --dependents-all, --silent, --filter-envs <envs>, --save-in-lane, --all-history, --fetch-deps, --write-deps <workspace.jsonc|package.json>, --track-only, --include-deprecated, --lane-only, --owner
+Flags: --path <path>, --objects, --override, --verbose, --json, --skip-dependency-installation, --skip-write-config-files, --merge [strategy], --dependencies, --dependencies-head, --dependents, --dependents-via <string>, --dependents-all, --silent, --filter-envs <envs>, --save-in-lane, --all-history, --fetch-deps, --write-deps <target>, --track-only, --include-deprecated, --lane-only, --owner
 
 ## bit init [path]
 
@@ -484,26 +491,26 @@ NOTE: unlike "bit eject" on main, this command doesn't only remove the component
 
 ## bit lane history [lane-name]
 
-EXPERIMENTAL. show lane history, default to the current lane
+show lane history, default to the current lane
 
 list from the oldest to the newest history items
 Flags: --id <string>, --json
 
-## bit lane history-diff <from-history-id> <to-history-id>
+## bit lane history-diff [history-id] [to-history-id]
 
-EXPERIMENTAL. show diff between two lane-history ids
+show diff between lane-history entries
 
-run "bit lane history" to find these history-ids
+with no arguments - diff the latest history entry against its predecessor with one argument - diff the given history entry against its predecessor with two arguments - diff between two specific history entries (first=from, second=to), useful for comparing any two points in history run "bit lane history" to find history-ids
 Flags: --lane <lane-name>, --pattern <component-pattern>
 
 ## bit lane checkout <history-id>
 
-EXPERIMENTAL. checkout to a previous history of the current lane. see also "bit lane revert"
+checkout to a previous history of the current lane. see also "bit lane revert"
 Flags: --skip-dependency-installation
 
 ## bit lane revert <history-id>
 
-EXPERIMENTAL. revert to a previous history of the current lane. see also "bit lane checkout"
+revert to a previous history of the current lane. see also "bit lane checkout"
 
 revert is similar to "lane checkout", but it keeps the versions and only change the files. choose one or the other based on your needs. if you want to continue working on this lane and needs the changes from the history to be the head, then use "lane revert". if you want to fork the lane from a certain point in history, use "lane checkout" and create a new lane from it.
 Flags: --skip-dependency-installation, --restore-deleted-components, --json
