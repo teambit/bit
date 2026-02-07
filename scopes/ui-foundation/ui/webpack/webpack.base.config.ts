@@ -9,7 +9,7 @@ import path from 'path';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 import { generateStyleLoaders } from '@teambit/webpack.modules.generate-style-loaders';
 import { fallbacks } from '@teambit/webpack';
-import { postCssConfig } from './postcss.config';
+import { postCssConfig } from '../rspack/postcss.config';
 
 const baseStyleLoadersOptions = {
   injectingLoader: MiniCssExtractPlugin.loader,
@@ -378,7 +378,7 @@ export default function createWebpackConfig(
             // as they're likely a resource and not a SPA route.
             // URLs containing a "?" character won't be blacklisted as they're likely
             // a route with query params (e.g. auth callbacks).
-            new RegExp('/[^/?]+\\.[^/]+$'),
+            new RegExp('/[^/.?]+\\.[^/]+$'),
           ],
         }),
     ].filter(Boolean),

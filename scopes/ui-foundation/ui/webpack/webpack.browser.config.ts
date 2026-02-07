@@ -6,7 +6,7 @@ import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { merge } from 'webpack-merge';
 import { fallbacksProvidePluginConfig } from '@teambit/webpack';
-import { html } from './html';
+import { html } from '../rspack/html';
 import createBaseConfig from './webpack.base.config';
 
 export default function createWebpackConfig(
