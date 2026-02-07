@@ -1,9 +1,5 @@
 import type { Compiler } from '@rspack/core';
 
-/**
- * Simple rspack-compatible manifest plugin (replaces webpack-manifest-plugin which is incompatible with rspack 1.7+).
- * Generates asset-manifest.json with { files: { name: path }, entrypoints: string[] }.
- */
 export class RspackManifestPlugin {
   private fileName: string;
   constructor(options: { fileName: string }) {
