@@ -40,7 +40,7 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
 
     devtool: 'eval-cheap-module-source-map',
 
-    // Enable persistent cache
+    // enable persistent cache
     cache: true,
 
     entry: {
@@ -120,7 +120,7 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
           throw new Error('rspack-dev-server is not defined');
         }
 
-        // Cache JS/CSS assets in the browser so subsequent page loads are instant
+        // cache JS/CSS assets in the browser so subsequent page loads are instant
         middlewares.unshift((req: any, res: any, next: any) => {
           if (/\.(js|css)(\?.*)?$/.test(req.url || '')) {
             res.setHeader('Cache-Control', 'public, max-age=120');
