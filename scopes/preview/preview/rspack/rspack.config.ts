@@ -106,7 +106,6 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
             fullySpecified: false,
           },
         },
-        // TypeScript and JSX - use rspack's builtin SWC loader
         {
           test: /\.(js|mjs|jsx|ts|tsx)$/,
           exclude: /node_modules/,
@@ -129,7 +128,6 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
           },
           type: 'javascript/auto',
         },
-        // Source maps for Bit component files in node_modules
         {
           test: /\.js$/,
           enforce: 'pre' as const,
@@ -137,7 +135,6 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
           descriptionData: { componentId: (value: any) => !!value },
           use: [require.resolve('source-map-loader')],
         },
-        // Images
         {
           test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
           type: 'asset',
@@ -147,7 +144,6 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
             },
           },
         },
-        // SVG as asset
         {
           test: /\.svg$/,
           type: 'asset',
@@ -157,7 +153,6 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
             },
           },
         },
-        // CSS non-modules
         {
           test: /\.css$/,
           exclude: /\.module\.css$/,
@@ -173,7 +168,6 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
           ],
           sideEffects: true,
         },
-        // CSS modules
         {
           test: /\.module\.css$/,
           use: [
@@ -190,7 +184,6 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
             },
           ],
         },
-        // SASS/SCSS non-modules
         {
           test: /\.(scss|sass)$/,
           exclude: /\.module\.(scss|sass)$/,
@@ -214,7 +207,6 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
           ],
           sideEffects: true,
         },
-        // SASS/SCSS modules
         {
           test: /\.module\.(scss|sass)$/,
           use: [
@@ -239,7 +231,6 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
             },
           ],
         },
-        // LESS non-modules
         {
           test: /\.less$/,
           exclude: /\.module\.less$/,
@@ -259,7 +250,6 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
           ],
           sideEffects: true,
         },
-        // LESS modules
         {
           test: /\.module\.less$/,
           use: [
@@ -280,7 +270,6 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
             },
           ],
         },
-        // Font files
         {
           test: /\.(woff(2)?|ttf|eot)(\?v=\d+\.\d+\.\d+)?$/,
           type: 'asset',
@@ -288,7 +277,6 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
             filename: 'static/fonts/[hash][ext][query]',
           },
         },
-        // MDX support
         {
           test: /\.mdx?$/,
           use: [
@@ -314,13 +302,12 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
               options: mdxOptions,
             },
             {
-              // Transforms admonition syntax (:::type content → :::type[content]) for MDX v3
+              // transforms admonition syntax (:::type content → :::type[content]) for mdx v3
               loader: require.resolve('@teambit/react/dist/webpack/mdx-pre-loader.cjs'),
             },
           ],
           type: 'javascript/auto',
         },
-        // Catch-all for other assets
         {
           exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/, /\.css$/, /\.s[ac]ss$/, /\.less$/, /\.mdx?$/],
           type: 'asset/resource',
