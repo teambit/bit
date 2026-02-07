@@ -14,7 +14,10 @@
         "scope": "teambit.legacy",
         "version": "0.0.87",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/analytics"
+        "rootDir": "components/legacy/analytics",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "api-reference": {
         "name": "api-reference",
@@ -210,7 +213,10 @@
         "scope": "teambit.react",
         "version": "1.0.46",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/bit-react-transformer"
+        "rootDir": "scopes/react/bit-react-transformer",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "bit": {
         "name": "bit",
@@ -224,7 +230,10 @@
         "scope": "teambit.legacy",
         "version": "0.0.154",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/bit-map"
+        "rootDir": "components/legacy/bit-map",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "builder": {
         "name": "builder",
@@ -238,7 +247,10 @@
         "scope": "teambit.pipelines",
         "version": "0.0.404",
         "mainFile": "index.ts",
-        "rootDir": "scopes/pipelines/modules/builder-data"
+        "rootDir": "scopes/pipelines/modules/builder-data",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "bundler": {
         "name": "bundler",
@@ -378,21 +390,30 @@
         "scope": "teambit.legacy",
         "version": "0.0.151",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/component-diff"
+        "rootDir": "components/legacy/component-diff",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "component-issues": {
         "name": "component-issues",
         "scope": "teambit.component",
         "version": "0.0.169",
         "mainFile": "index.ts",
-        "rootDir": "components/component-issues"
+        "rootDir": "components/component-issues",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "component-list": {
         "name": "component-list",
         "scope": "teambit.legacy",
         "version": "0.0.151",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/component-list"
+        "rootDir": "components/legacy/component-list",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "component-log": {
         "name": "component-log",
@@ -406,7 +427,10 @@
         "scope": "teambit.component",
         "version": "0.0.448",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-package-version"
+        "rootDir": "scopes/component/component-package-version",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "component-sizer": {
         "name": "component-sizer",
@@ -469,28 +493,40 @@
         "scope": "teambit.legacy",
         "version": "0.0.23",
         "mainFile": "constants.ts",
-        "rootDir": "components/legacy/constants"
+        "rootDir": "components/legacy/constants",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "consumer": {
         "name": "consumer",
         "scope": "teambit.legacy",
         "version": "0.0.97",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/consumer"
+        "rootDir": "components/legacy/consumer",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "consumer-component": {
         "name": "consumer-component",
         "scope": "teambit.legacy",
         "version": "0.0.98",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/consumer-component"
+        "rootDir": "components/legacy/consumer-component",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "consumer-config": {
         "name": "consumer-config",
         "scope": "teambit.legacy",
         "version": "0.0.97",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/consumer-config"
+        "rootDir": "components/legacy/consumer-config",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "content/cli-reference": {
         "name": "content/cli-reference",
@@ -504,7 +540,10 @@
         "scope": "teambit.toolbox",
         "version": "0.0.14",
         "mainFile": "index.ts",
-        "rootDir": "components/crypto/sha1"
+        "rootDir": "components/crypto/sha1",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "dependencies": {
         "name": "dependencies",
@@ -518,7 +557,10 @@
         "scope": "teambit.legacy",
         "version": "0.0.100",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/dependency-graph"
+        "rootDir": "components/legacy/dependency-graph",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "dependency-resolver": {
         "name": "dependency-resolver",
@@ -553,7 +595,10 @@
         "scope": "teambit.semantics",
         "version": "0.0.105",
         "mainFile": "index.ts",
-        "rootDir": "components/semantics/doc-parser"
+        "rootDir": "components/semantics/doc-parser",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "docs": {
         "name": "docs",
@@ -574,7 +619,10 @@
         "scope": "teambit.legacy",
         "version": "0.0.133",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/e2e-helper"
+        "rootDir": "components/legacy/e2e-helper",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "eject": {
         "name": "eject",
@@ -588,14 +636,20 @@
         "scope": "teambit.lanes",
         "version": "0.0.186",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/entities/lane-diff"
+        "rootDir": "scopes/lanes/entities/lane-diff",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "entities/semantic-schema": {
         "name": "entities/semantic-schema",
         "scope": "teambit.semantics",
         "version": "0.0.99",
         "mainFile": "index.ts",
-        "rootDir": "components/entities/semantic-schema"
+        "rootDir": "components/entities/semantic-schema",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "env": {
         "name": "env",
@@ -623,14 +677,20 @@
         "scope": "teambit.react",
         "version": "2.0.8",
         "mainFile": "index.js",
-        "rootDir": "scopes/react/eslint-config-bit-react"
+        "rootDir": "scopes/react/eslint-config-bit-react",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "eslint/config-mutator": {
         "name": "eslint/config-mutator",
         "scope": "teambit.defender",
         "version": "0.0.121",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/eslint-config-mutator"
+        "rootDir": "scopes/defender/eslint-config-mutator",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "export": {
         "name": "export",
@@ -651,7 +711,10 @@
         "scope": "teambit.legacy",
         "version": "0.0.99",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/extension-data"
+        "rootDir": "components/legacy/extension-data",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "forking": {
         "name": "forking",
@@ -672,7 +735,10 @@
         "scope": "teambit.toolbox",
         "version": "0.0.12",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/fs/extension-getter"
+        "rootDir": "scopes/toolbox/fs/extension-getter",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "fs/hard-link-directory": {
         "name": "fs/hard-link-directory",
@@ -686,35 +752,50 @@
         "scope": "teambit.toolbox",
         "version": "0.0.12",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/fs/is-dir-empty"
+        "rootDir": "scopes/toolbox/fs/is-dir-empty",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "fs/last-modified": {
         "name": "fs/last-modified",
         "scope": "teambit.toolbox",
         "version": "0.0.13",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/fs/last-modified"
+        "rootDir": "scopes/toolbox/fs/last-modified",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "fs/link-or-symlink": {
         "name": "fs/link-or-symlink",
         "scope": "teambit.toolbox",
         "version": "0.0.39",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/fs/link-or-symlink"
+        "rootDir": "scopes/toolbox/fs/link-or-symlink",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "fs/linked-dependencies": {
         "name": "fs/linked-dependencies",
         "scope": "teambit.dependencies",
         "version": "0.0.47",
         "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/fs/linked-dependencies"
+        "rootDir": "scopes/dependencies/fs/linked-dependencies",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "fs/remove-empty-dir": {
         "name": "fs/remove-empty-dir",
         "scope": "teambit.toolbox",
         "version": "0.0.12",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/fs/remove-empty-dir"
+        "rootDir": "scopes/toolbox/fs/remove-empty-dir",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "generator": {
         "name": "generator",
@@ -728,7 +809,10 @@
         "scope": "teambit.bit",
         "version": "0.0.14",
         "mainFile": "index.ts",
-        "rootDir": "components/bit/get-bit-version"
+        "rootDir": "components/bit/get-bit-version",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "git": {
         "name": "git",
@@ -770,14 +854,20 @@
         "scope": "teambit.cloud",
         "version": "0.0.18",
         "mainFile": "index.ts",
-        "rootDir": "scopes/cloud/hooks/use-cloud-scopes"
+        "rootDir": "scopes/cloud/hooks/use-cloud-scopes",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "hooks/use-current-user": {
         "name": "hooks/use-current-user",
         "scope": "teambit.cloud",
         "version": "0.0.22",
         "mainFile": "index.ts",
-        "rootDir": "scopes/cloud/hooks/use-current-user"
+        "rootDir": "scopes/cloud/hooks/use-current-user",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "hooks/use-lane-components": {
         "name": "hooks/use-lane-components",
@@ -798,7 +888,10 @@
         "scope": "teambit.cloud",
         "version": "0.0.16",
         "mainFile": "index.ts",
-        "rootDir": "scopes/cloud/hooks/use-logout"
+        "rootDir": "scopes/cloud/hooks/use-logout",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "hooks/use-navigation-message-listener": {
         "name": "hooks/use-navigation-message-listener",
@@ -819,7 +912,10 @@
         "scope": "teambit.lanes",
         "version": "0.0.253",
         "mainFile": "index.ts",
-        "rootDir": "components/hooks/use-viewed-lane-from-url_1"
+        "rootDir": "components/hooks/use-viewed-lane-from-url_1",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "host-initializer": {
         "name": "host-initializer",
@@ -889,7 +985,10 @@
         "scope": "teambit.component",
         "version": "0.0.416",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy-component-log"
+        "rootDir": "components/legacy-component-log",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "linter": {
         "name": "linter",
@@ -910,7 +1009,10 @@
         "scope": "teambit.legacy",
         "version": "0.0.17",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/loader"
+        "rootDir": "components/legacy/loader",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "mcp-config-writer": {
         "name": "mcp-config-writer",
@@ -959,28 +1061,40 @@
         "scope": "teambit.compositions",
         "version": "0.0.518",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compositions/model/composition-type"
+        "rootDir": "scopes/compositions/model/composition-type",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "models/cloud-scope": {
         "name": "models/cloud-scope",
         "scope": "teambit.cloud",
         "version": "0.0.18",
         "mainFile": "index.ts",
-        "rootDir": "scopes/cloud/models/cloud-scope"
+        "rootDir": "scopes/cloud/models/cloud-scope",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "models/cloud-user": {
         "name": "models/cloud-user",
         "scope": "teambit.cloud",
         "version": "0.0.18",
         "mainFile": "index.ts",
-        "rootDir": "scopes/cloud/models/cloud-user"
+        "rootDir": "scopes/cloud/models/cloud-user",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "models/scope-model": {
         "name": "models/scope-model",
         "scope": "teambit.scope",
         "version": "0.0.547",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/models/scope-model"
+        "rootDir": "scopes/scope/models/scope-model",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/babel-compiler": {
         "name": "modules/babel-compiler",
@@ -994,21 +1108,30 @@
         "scope": "teambit.pkg",
         "version": "0.0.104",
         "mainFile": "index.ts",
-        "rootDir": "components/modules/component-package-name"
+        "rootDir": "components/modules/component-package-name",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/component-url": {
         "name": "modules/component-url",
         "scope": "teambit.component",
         "version": "0.0.186",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-url"
+        "rootDir": "scopes/component/component-url",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/concurrency": {
         "name": "modules/concurrency",
         "scope": "teambit.harmony",
         "version": "0.0.24",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/modules/concurrency"
+        "rootDir": "scopes/harmony/modules/concurrency",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/config-mutator": {
         "name": "modules/config-mutator",
@@ -1022,21 +1145,30 @@
         "scope": "teambit.html",
         "version": "0.0.123",
         "mainFile": "index.ts",
-        "rootDir": "scopes/html/modules/create-element-from-string"
+        "rootDir": "scopes/html/modules/create-element-from-string",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/create-lane": {
         "name": "modules/create-lane",
         "scope": "teambit.lanes",
         "version": "0.0.132",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/modules/create-lane"
+        "rootDir": "scopes/lanes/modules/create-lane",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/diff": {
         "name": "modules/diff",
         "scope": "teambit.lanes",
         "version": "0.0.595",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/diff"
+        "rootDir": "scopes/lanes/diff",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/feature-toggle": {
         "name": "modules/feature-toggle",
@@ -1050,35 +1182,50 @@
         "scope": "teambit.html",
         "version": "0.0.123",
         "mainFile": "index.ts",
-        "rootDir": "scopes/html/modules/fetch-html-from-url"
+        "rootDir": "scopes/html/modules/fetch-html-from-url",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/find-scope-path": {
         "name": "modules/find-scope-path",
         "scope": "teambit.scope",
         "version": "0.0.24",
         "mainFile": "index.ts",
-        "rootDir": "components/modules/find-scope-path"
+        "rootDir": "components/modules/find-scope-path",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/fs-cache": {
         "name": "modules/fs-cache",
         "scope": "teambit.workspace",
         "version": "0.0.45",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/modules/fs-cache"
+        "rootDir": "scopes/workspace/modules/fs-cache",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/generate-expose-loaders": {
         "name": "modules/generate-expose-loaders",
         "scope": "teambit.webpack",
         "version": "0.0.30",
         "mainFile": "index.ts",
-        "rootDir": "scopes/webpack/modules/generate-expose-loaders"
+        "rootDir": "scopes/webpack/modules/generate-expose-loaders",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/generate-externals": {
         "name": "modules/generate-externals",
         "scope": "teambit.webpack",
         "version": "0.0.30",
         "mainFile": "index.ts",
-        "rootDir": "scopes/webpack/modules/generate-externals"
+        "rootDir": "scopes/webpack/modules/generate-externals",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/generate-style-loaders": {
         "name": "modules/generate-style-loaders",
@@ -1092,56 +1239,80 @@
         "scope": "teambit.harmony",
         "version": "0.0.98",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/modules/get-basic-log"
+        "rootDir": "scopes/harmony/modules/get-basic-log",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/get-cloud-user": {
         "name": "modules/get-cloud-user",
         "scope": "teambit.cloud",
         "version": "0.0.98",
         "mainFile": "index.ts",
-        "rootDir": "scopes/cloud/modules/get-cloud-user"
+        "rootDir": "scopes/cloud/modules/get-cloud-user",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/git-executable": {
         "name": "modules/git-executable",
         "scope": "teambit.git",
         "version": "0.0.24",
         "mainFile": "index.ts",
-        "rootDir": "scopes/git/modules/git-executable"
+        "rootDir": "scopes/git/modules/git-executable",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/harmony-root-generator": {
         "name": "modules/harmony-root-generator",
         "scope": "teambit.harmony",
         "version": "0.0.28",
         "mainFile": "index.ts",
-        "rootDir": "components/modules/harmony-root-generator"
+        "rootDir": "components/modules/harmony-root-generator",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/ignore-file-reader": {
         "name": "modules/ignore-file-reader",
         "scope": "teambit.git",
         "version": "0.0.24",
         "mainFile": "index.ts",
-        "rootDir": "scopes/git/modules/ignore-file-reader"
+        "rootDir": "scopes/git/modules/ignore-file-reader",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/in-memory-cache": {
         "name": "modules/in-memory-cache",
         "scope": "teambit.harmony",
         "version": "0.0.27",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/modules/in-memory-cache"
+        "rootDir": "scopes/harmony/modules/in-memory-cache",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/match-pattern": {
         "name": "modules/match-pattern",
         "scope": "teambit.workspace",
         "version": "0.0.519",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/modules/match-pattern"
+        "rootDir": "scopes/workspace/modules/match-pattern",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/merge-component-results": {
         "name": "modules/merge-component-results",
         "scope": "teambit.pipelines",
         "version": "0.0.511",
         "mainFile": "index.ts",
-        "rootDir": "scopes/pipelines/modules/merge-component-results"
+        "rootDir": "scopes/pipelines/modules/merge-component-results",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/merge-helper": {
         "name": "modules/merge-helper",
@@ -1155,49 +1326,70 @@
         "scope": "teambit.toolbox",
         "version": "0.0.18",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/modules/module-resolver"
+        "rootDir": "scopes/toolbox/modules/module-resolver",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "modules/node-modules-linker": {
         "name": "modules/node-modules-linker",
         "scope": "teambit.workspace",
         "version": "0.0.326",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/modules/node-modules-linker"
+        "rootDir": "scopes/workspace/modules/node-modules-linker",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/requireable-component": {
         "name": "modules/requireable-component",
         "scope": "teambit.harmony",
         "version": "0.0.512",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/modules/requireable-component"
+        "rootDir": "scopes/harmony/modules/requireable-component",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/resolved-component": {
         "name": "modules/resolved-component",
         "scope": "teambit.harmony",
         "version": "0.0.512",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/modules/resolved-component"
+        "rootDir": "scopes/harmony/modules/resolved-component",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/semver-helper": {
         "name": "modules/semver-helper",
         "scope": "teambit.pkg",
         "version": "0.0.21",
         "mainFile": "index.ts",
-        "rootDir": "scopes/pkg/modules/semver-helper"
+        "rootDir": "scopes/pkg/modules/semver-helper",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/send-server-sent-events": {
         "name": "modules/send-server-sent-events",
         "scope": "teambit.harmony",
         "version": "0.0.16",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/modules/send-server-sent-events"
+        "rootDir": "scopes/harmony/modules/send-server-sent-events",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/style-regexps": {
         "name": "modules/style-regexps",
         "scope": "teambit.webpack",
         "version": "1.0.19",
         "mainFile": "index.ts",
-        "rootDir": "scopes/webpack/style-regexps"
+        "rootDir": "scopes/webpack/style-regexps",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "modules/ts-config-mutator": {
         "name": "modules/ts-config-mutator",
@@ -1211,7 +1403,10 @@
         "scope": "teambit.workspace",
         "version": "0.0.24",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/modules/workspace-locator"
+        "rootDir": "scopes/workspace/modules/workspace-locator",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "mover": {
         "name": "mover",
@@ -1239,14 +1434,20 @@
         "scope": "teambit.scope",
         "version": "0.0.97",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/network"
+        "rootDir": "scopes/scope/network",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "network/get-port": {
         "name": "network/get-port",
         "scope": "teambit.toolbox",
         "version": "1.0.19",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/network/get-port"
+        "rootDir": "scopes/toolbox/network/get-port",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "new-component-helper": {
         "name": "new-component-helper",
@@ -1302,28 +1503,40 @@
         "scope": "teambit.toolbox",
         "version": "0.0.507",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/path/is-path-inside"
+        "rootDir": "scopes/toolbox/path/is-path-inside",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "path/match-patterns": {
         "name": "path/match-patterns",
         "scope": "teambit.toolbox",
         "version": "0.0.26",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/path/match-patterns"
+        "rootDir": "scopes/toolbox/path/match-patterns",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "path/path": {
         "name": "path/path",
         "scope": "teambit.toolbox",
         "version": "0.0.15",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/path/path"
+        "rootDir": "scopes/toolbox/path/path",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "path/to-windows-compatible-path": {
         "name": "path/to-windows-compatible-path",
         "scope": "teambit.toolbox",
         "version": "0.0.507",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/path/to-windows-compatible-path"
+        "rootDir": "scopes/toolbox/path/to-windows-compatible-path",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "pkg": {
         "name": "pkg",
@@ -1337,7 +1550,10 @@
         "scope": "teambit.webpack",
         "version": "0.0.23",
         "mainFile": "index.ts",
-        "rootDir": "scopes/webpack/plugins/inject-head-webpack-plugin"
+        "rootDir": "scopes/webpack/plugins/inject-head-webpack-plugin",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "pnpm": {
         "name": "pnpm",
@@ -1358,7 +1574,10 @@
         "scope": "teambit.defender",
         "version": "0.0.115",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/prettier-config-mutator"
+        "rootDir": "scopes/defender/prettier-config-mutator",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "preview": {
         "name": "preview",
@@ -1372,7 +1591,10 @@
         "scope": "teambit.toolbox",
         "version": "0.0.13",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/promise/map-pool"
+        "rootDir": "scopes/toolbox/promise/map-pool",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "pubsub": {
         "name": "pubsub",
@@ -1414,14 +1636,20 @@
         "scope": "teambit.scope",
         "version": "0.0.97",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/remote-actions"
+        "rootDir": "scopes/scope/remote-actions",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "remotes": {
         "name": "remotes",
         "scope": "teambit.scope",
         "version": "0.0.97",
         "mainFile": "index.ts",
-        "rootDir": "components/scope/remotes"
+        "rootDir": "components/scope/remotes",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "remove": {
         "name": "remove",
@@ -1463,7 +1691,10 @@
         "scope": "teambit.legacy",
         "version": "0.0.152",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/scope-api"
+        "rootDir": "components/legacy/scope-api",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "scripts": {
         "name": "scripts",
@@ -1484,7 +1715,10 @@
         "scope": "teambit.component",
         "version": "0.0.98",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/snap-distance"
+        "rootDir": "scopes/component/snap-distance",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "snapping": {
         "name": "snapping",
@@ -1498,7 +1732,10 @@
         "scope": "teambit.component",
         "version": "0.0.149",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/sources"
+        "rootDir": "scopes/component/sources",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "stash": {
         "name": "stash",
@@ -1519,42 +1756,60 @@
         "scope": "teambit.toolbox",
         "version": "0.0.507",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/string/capitalize"
+        "rootDir": "scopes/toolbox/string/capitalize",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "string/ellipsis": {
         "name": "string/ellipsis",
         "scope": "teambit.toolbox",
         "version": "0.0.198",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/string/ellipsis"
+        "rootDir": "scopes/toolbox/string/ellipsis",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "string/eol": {
         "name": "string/eol",
         "scope": "teambit.toolbox",
         "version": "0.0.12",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/string/eol"
+        "rootDir": "scopes/toolbox/string/eol",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "string/get-initials": {
         "name": "string/get-initials",
         "scope": "teambit.toolbox",
         "version": "0.0.508",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/string/get-initials"
+        "rootDir": "scopes/toolbox/string/get-initials",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "string/random": {
         "name": "string/random",
         "scope": "teambit.toolbox",
         "version": "0.0.12",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/string/random"
+        "rootDir": "scopes/toolbox/string/random",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "string/strip-trailing-char": {
         "name": "string/strip-trailing-char",
         "scope": "teambit.toolbox",
         "version": "0.0.507",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/string/strip-trailing-char"
+        "rootDir": "scopes/toolbox/string/strip-trailing-char",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "teambit.harmony/logger": {
         "name": "logger",
@@ -1568,14 +1823,20 @@
         "scope": "teambit.legacy",
         "version": "0.0.34",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/logger"
+        "rootDir": "components/legacy/logger",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "teambit.legacy/scope": {
         "name": "scope",
         "scope": "teambit.legacy",
         "version": "0.0.97",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/scope"
+        "rootDir": "components/legacy/scope",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "teambit.scope/scope": {
         "name": "scope",
@@ -1596,28 +1857,40 @@
         "scope": "teambit.harmony",
         "version": "0.0.359",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/testing/load-aspect"
+        "rootDir": "scopes/harmony/testing/load-aspect",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "testing/mock-components": {
         "name": "testing/mock-components",
         "scope": "teambit.component",
         "version": "0.0.364",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/testing/mock-components"
+        "rootDir": "scopes/component/testing/mock-components",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "testing/mock-workspace": {
         "name": "testing/mock-workspace",
         "scope": "teambit.workspace",
         "version": "0.0.160",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/testing/mock-workspace"
+        "rootDir": "scopes/workspace/testing/mock-workspace",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "time/timer": {
         "name": "time/timer",
         "scope": "teambit.toolbox",
         "version": "0.0.12",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/time/timer"
+        "rootDir": "scopes/toolbox/time/timer",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "tracker": {
         "name": "tracker",
@@ -1631,14 +1904,20 @@
         "scope": "teambit.typescript",
         "version": "0.0.76",
         "mainFile": "index.ts",
-        "rootDir": "scopes/typescript/ts-server"
+        "rootDir": "scopes/typescript/ts-server",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "types/serializable": {
         "name": "types/serializable",
         "scope": "teambit.toolbox",
         "version": "0.0.508",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/types/serializable"
+        "rootDir": "scopes/toolbox/types/serializable",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "typescript": {
         "name": "typescript",
@@ -2044,14 +2323,20 @@
         "scope": "teambit.toolbox",
         "version": "0.0.509",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/url/add-avatar-query-params"
+        "rootDir": "scopes/toolbox/url/add-avatar-query-params",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "url/query-string": {
         "name": "url/query-string",
         "scope": "teambit.toolbox",
         "version": "0.0.507",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/url/query-string"
+        "rootDir": "scopes/toolbox/url/query-string",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {}
+        }
     },
     "user-agent": {
         "name": "user-agent",
@@ -2065,7 +2350,10 @@
         "scope": "teambit.legacy",
         "version": "0.0.33",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/utils"
+        "rootDir": "components/legacy/utils",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.5": {}
+        }
     },
     "validator": {
         "name": "validator",
