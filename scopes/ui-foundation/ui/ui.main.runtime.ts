@@ -239,13 +239,11 @@ export class UiMain {
     const outputPath = customOutputPath || uiRoot.path;
     const publicDir = await this.publicDir(uiRoot);
 
-    // Browser build (rspack)
     const browserConfig = createRspackBrowserConfig(outputPath, [mainEntry], uiRoot.name, publicDir);
     const compiler = rspack(browserConfig as any);
-    this.logger.debug(`build: running rspack for browser`);
+    this.logger.debug(`rspack (build): running for browser`);
     const [results, errors] = await this.runRspackPromise(compiler);
-
-    this.logger.debug(`build: completed rspack browser build`);
+    this.logger.debug(`rspack (build): completed browser`);
     if (!results) throw new UnknownBuildError();
     if (errors) {
       this.clearConsole();
@@ -256,14 +254,12 @@ export class UiMain {
       throw new Error(results?.toString());
     }
 
-    // SSR build (rspack, sequential after browser build)
     if (ssr) {
       const ssrConfig = createRspackSsrConfig(outputPath, [mainEntry], publicDir);
       const ssrCompiler = rspack(ssrConfig as any);
-      this.logger.debug(`build: running rspack for SSR`);
+      this.logger.debug(`rspack (build): running for SSR`);
       const [ssrResults, ssrErrors] = await this.runRspackPromise(ssrCompiler);
-
-      this.logger.debug(`build: completed rspack SSR build`);
+      this.logger.debug(`rspack (build): completed SSR build`);
       if (ssrErrors) {
         this.clearConsole();
         throw new Error(ssrErrors);
@@ -577,7 +573,7 @@ export class UiMain {
       );
     } else {
       this.logger.console(
-        `${chalk.magenta('[Rspack]')} Rebuilding UI assets for '${chalk.cyan(uiRoot.name)} in target directory: ${chalk.cyan(
+        `${chalk.magenta('[Rspack]')} Rebuilding UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(
           await this.publicDir(uiRoot)
         )}' as ${uiRoot.configFile} has been changed.`
       );

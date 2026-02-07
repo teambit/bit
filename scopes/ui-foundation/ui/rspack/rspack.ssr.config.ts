@@ -13,11 +13,6 @@ import {
   styleRules,
 } from './rspack.common';
 
-/*
- * Rspack SSR config for the bit ui (replaces webpack.ssr.config.ts)
- * Used for Scope UI SSR builds: outputs a CommonJS Node bundle at {publicDir}/ssr/index.js
- */
-
 export default function createRspackSsrConfig(
   workspaceDir: string,
   entryFiles: string[],
@@ -58,13 +53,11 @@ export default function createRspackSsrConfig(
         swcRule(),
         sourceMapRule(),
         fontRule(),
-        // SSR: use null-loader for styles (Node doesn't need CSS extraction)
         ...styleRules({
           styleLoader: require.resolve('null-loader'),
           sourceMap: shouldUseSourceMap,
           resolveUrlLoader: true,
         }),
-        // Catch-all for other assets
         {
           exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/, /\.css$/, /\.s[ac]ss$/, /\.less$/],
           type: 'asset/resource',

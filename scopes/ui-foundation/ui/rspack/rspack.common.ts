@@ -21,7 +21,6 @@ export const moduleFileExtensions = [
 export const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 export const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
 
-/** Shared resolve.alias for all rspack configs (react, teambit UI packages) */
 export function resolveAlias(opts?: { profile?: boolean }): Record<string, string | false> {
   return {
     'react/jsx-runtime': require.resolve('react/jsx-runtime'),
@@ -44,7 +43,6 @@ export function resolveAlias(opts?: { profile?: boolean }): Record<string, strin
   };
 }
 
-/** Full resolve.fallback for production/SSR configs (all Node builtins stubbed) */
 export const resolveFallback = {
   module: false,
   path: fallbacks.path,
@@ -59,7 +57,6 @@ export const resolveFallback = {
   process: fallbacks.process,
 } as const;
 
-/** Minimal resolve.fallback for dev config */
 export const resolveFallbackDev = {
   fs: false,
   path: fallbacks.path,
@@ -67,7 +64,6 @@ export const resolveFallbackDev = {
   process: fallbacks.process,
 } as const;
 
-/** builtin:swc-loader rule for TS/JSX */
 export function swcRule(options?: { dev?: boolean; refresh?: boolean }): RuleSetRule {
   return {
     test: /\.(js|mjs|jsx|ts|tsx)$/,
@@ -92,7 +88,6 @@ export function swcRule(options?: { dev?: boolean; refresh?: boolean }): RuleSet
   };
 }
 
-/** Source-map-loader for Bit component JS in node_modules */
 export function sourceMapRule(): RuleSetRule {
   return {
     test: /\.js$/,
@@ -103,7 +98,6 @@ export function sourceMapRule(): RuleSetRule {
   };
 }
 
-/** Font files rule */
 export function fontRule(): RuleSetRule {
   return {
     test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
@@ -112,7 +106,6 @@ export function fontRule(): RuleSetRule {
   };
 }
 
-/** .m?js fullySpecified:false rule */
 export function mjsRule(): RuleSetRule {
   return { test: /\.m?js/, resolve: { fullySpecified: false } };
 }
@@ -152,35 +145,29 @@ export function styleRules(opts: StyleRulesOptions): RuleSetRule[] {
   const lessLoader = { loader: require.resolve('less-loader'), options: { sourceMap: true } };
 
   return [
-    // CSS non-modules
     {
       test: stylesRegexps.cssNoModulesRegex,
       use: [first, css(postCss.length), ...postCss],
       sideEffects: true,
     },
-    // CSS modules
     {
       test: stylesRegexps.cssModuleRegex,
       use: [first, css(postCss.length, true), ...postCss],
     },
-    // SCSS/SASS non-modules
     {
       test: stylesRegexps.sassNoModuleRegex,
       use: [first, css(postCss.length + resolveUrl.length + 1), ...postCss, ...resolveUrl, sassLoader],
       sideEffects: true,
     },
-    // SCSS/SASS modules
     {
       test: stylesRegexps.sassModuleRegex,
       use: [first, css(postCss.length + resolveUrl.length + 1, true), ...postCss, ...resolveUrl, sassLoader],
     },
-    // LESS non-modules
     {
       test: stylesRegexps.lessNoModuleRegex,
       use: [first, css(postCss.length + resolveUrl.length + 1), ...postCss, ...resolveUrl, lessLoader],
       sideEffects: true,
     },
-    // LESS modules
     {
       test: stylesRegexps.lessModuleRegex,
       use: [first, css(postCss.length + resolveUrl.length + 1, true), ...postCss, ...resolveUrl, lessLoader],

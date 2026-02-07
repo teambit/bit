@@ -1,5 +1,6 @@
 import { join, resolve } from 'path';
 import { promisify } from 'util';
+import { rspack } from '@rspack/core';
 import fs, { existsSync, outputFileSync, readJsonSync } from 'fs-extra';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import {
@@ -10,11 +11,10 @@ import {
 } from '@teambit/harmony.modules.harmony-root-generator';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import normalizePath from 'normalize-path';
-import { rspack } from '@rspack/core';
 import { PreviewAspect } from './preview.aspect';
-import { createRspackConfig } from './rspack/rspack.config';
 import { clearConsole } from './pre-bundle-utils';
 import { getPreviewDistDir } from './mk-temp-dir';
+import { createRspackConfig } from './rspack/rspack.config';
 
 const previewDistDir = getPreviewDistDir();
 

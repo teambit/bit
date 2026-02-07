@@ -20,11 +20,6 @@ import {
   styleRules,
 } from './rspack.common';
 
-/*
- * Rspack config for the bit ui (replaces webpack.dev.config.ts)
- * i.e. `bit start --dev`,
- */
-
 const clientHost = process.env.WDS_SOCKET_HOST;
 const clientPath = process.env.WDS_SOCKET_PATH;
 const port = process.env.WDS_SOCKET_PORT;
