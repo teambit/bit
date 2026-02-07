@@ -491,26 +491,26 @@ NOTE: unlike "bit eject" on main, this command doesn't only remove the component
 
 ## bit lane history [lane-name]
 
-EXPERIMENTAL. show lane history, default to the current lane
+show lane history, default to the current lane
 
 list from the oldest to the newest history items
 Flags: --id <string>, --json
 
-## bit lane history-diff <from-history-id> <to-history-id>
+## bit lane history-diff [history-id] [to-history-id]
 
-EXPERIMENTAL. show diff between two lane-history ids
+show diff between lane-history entries
 
-run "bit lane history" to find these history-ids
+with no arguments - diff the latest history entry against its predecessor with one argument - diff the given history entry against its predecessor with two arguments - diff between two specific history entries (first=from, second=to), useful for comparing any two points in history run "bit lane history" to find history-ids
 Flags: --lane <lane-name>, --pattern <component-pattern>
 
 ## bit lane checkout <history-id>
 
-EXPERIMENTAL. checkout to a previous history of the current lane. see also "bit lane revert"
+checkout to a previous history of the current lane. see also "bit lane revert"
 Flags: --skip-dependency-installation
 
 ## bit lane revert <history-id>
 
-EXPERIMENTAL. revert to a previous history of the current lane. see also "bit lane checkout"
+revert to a previous history of the current lane. see also "bit lane checkout"
 
 revert is similar to "lane checkout", but it keeps the versions and only change the files. choose one or the other based on your needs. if you want to continue working on this lane and needs the changes from the history to be the head, then use "lane revert". if you want to fork the lane from a certain point in history, use "lane checkout" and create a new lane from it.
 Flags: --skip-dependency-installation, --restore-deleted-components, --json
