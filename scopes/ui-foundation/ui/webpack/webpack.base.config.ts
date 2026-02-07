@@ -1,6 +1,7 @@
 import { merge } from 'lodash';
 import type { Configuration } from 'webpack';
 import webpack from 'webpack';
+import { createHash } from 'crypto';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
@@ -47,6 +48,9 @@ export default function createWebpackConfig(
   entryFiles: string[] | string,
   publicDir = 'public'
 ): Configuration {
+  const workspaceCacheSuffix = createHash('sha1').update(path.resolve(outputDir)).digest('hex').slice(0, 10);
+  const workspaceCacheId = `bit-ui-${workspaceCacheSuffix}`;
+
   // Variable used for enabling profiling in Production
   // passed into alias object. Uses a flag if passed into the build command
   const isEnvProductionProfile = process.argv.includes('--profile');
@@ -132,7 +136,7 @@ export default function createWebpackConfig(
       strictExportPresence: true,
       rules: [
         {
-          test: /\.m?js/,
+          test: /\.(?:mjs|js|cjs)$/,
           resolve: {
             fullySpecified: false,
           },
@@ -189,7 +193,7 @@ export default function createWebpackConfig(
             // Process application JS with Babel.
             // The preset includes JSX, Flow, TypeScript, and some ESnext features.
             {
-              test: /\.(js|mjs|jsx|ts|tsx)$/,
+              test: /\.(cjs|js|mjs|jsx|ts|tsx)$/,
               loader: require.resolve('babel-loader'),
               options: {
                 babelrc: false,
@@ -316,7 +320,7 @@ export default function createWebpackConfig(
               // its runtime that would otherwise be processed through "file" loader.
               // Also exclude `html` and `json` extensions so they get processed
               // by webpacks internal loaders.
-              exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/, /\.css$/],
+              exclude: [/\.(cjs|js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/, /\.css$/],
               type: 'asset/resource',
             },
             // ** STOP ** Are you adding a new loader?
@@ -366,19 +370,40 @@ export default function createWebpackConfig(
       // the HTML & assets that are part of the webpack build.
       isEnvProduction &&
         new WorkboxWebpackPlugin.GenerateSW({
+          cacheId: workspaceCacheId,
+          skipWaiting: true,
           clientsClaim: true,
+          cleanupOutdatedCaches: true,
           maximumFileSizeToCacheInBytes: 5000000,
           exclude: [/\.map$/, /asset-manifest\.json$/],
           // importWorkboxFrom: 'cdn',
-          navigateFallback: 'public/index.html',
-          navigateFallbackDenylist: [
-            // Exclude URLs starting with /_, as they're likely an API call
-            new RegExp('^/_'),
-            // Exclude any URLs whose last part seems to be a file extension
-            // as they're likely a resource and not a SPA route.
-            // URLs containing a "?" character won't be blacklisted as they're likely
-            // a route with query params (e.g. auth callbacks).
-            new RegExp('/[^/?]+\\.[^/]+$'),
+          runtimeCaching: [
+            {
+              // Keep app shell fresh when online, but still serve cached shell on offline refresh.
+              urlPattern: ({ request, url }) => {
+                if (request.mode !== 'navigate') return false;
+                const pathname = url.pathname || '';
+                if (
+                  pathname.startsWith('/_') ||
+                  pathname.startsWith('/preview/') ||
+                  pathname.startsWith('/_hmr/') ||
+                  pathname.startsWith('/api/') ||
+                  pathname === '/graphql' ||
+                  pathname === '/subscriptions'
+                ) {
+                  return false;
+                }
+                return !/\/[^/?]+\.[^/]+$/.test(pathname);
+              },
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: `bit-ui-navigation-${workspaceCacheSuffix}`,
+                networkTimeoutSeconds: 3,
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
           ],
         }),
     ].filter(Boolean),

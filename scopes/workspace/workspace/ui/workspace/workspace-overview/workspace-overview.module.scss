@@ -3,6 +3,7 @@
 .container {
   padding: 24px 5% 150px 5%;
   overflow-y: auto;
+  overflow-x: hidden;
   height: 100%;
   box-sizing: border-box;
   z-index: 1;
@@ -20,11 +21,19 @@
   height: 14px;
 }
 
+.envIconPlaceholder {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--border-medium-color, #ededed);
+  opacity: 0.5;
+}
+
 .badge {
   background-color: var(--surface-color);
   padding: 4px;
   height: 15px;
-  margin-right: 4px;
+  margin-right: 8px;
   z-index: $nav-z-index;
   border-radius: 8px;
   margin-bottom: 4px;
@@ -208,4 +217,63 @@
   grid-row-gap: 32px;
   grid-column-gap: 24px;
   max-width: 1280px;
+}
+
+.virtualCardRow {
+  display: grid;
+  width: 100%;
+  gap: 24px;
+  max-width: 1280px;
+  padding-bottom: 20px;
+  align-items: stretch;
+}
+
+.virtualCardRow > * {
+  min-width: 0;
+}
+
+.virtualGroupHeader {
+  padding-bottom: 10px;
+  padding-top: 16px;
+}
+
+.virtualGroupHeaderFirst {
+  padding-bottom: 10px;
+  padding-top: 0;
+}
+
+.offlineShell {
+  margin-top: 24px;
+  border: 1px solid var(--border-medium-color);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 520px;
+  background: var(--surface-color);
+}
+
+.offlineShellTitle {
+  margin: 0 0 8px;
+}
+
+.offlineShellText {
+  margin: 0;
+  color: var(--on-surface-medium-color);
+}
+
+.loadingShell {
+  margin-top: 24px;
+  border: 1px solid var(--border-medium-color);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 520px;
+  background: var(--surface-color);
+}
+
+.loadingShellTitle {
+  margin: 0 0 8px;
+}
+
+.loadingShellText {
+  margin: 0;
+  color: var(--on-surface-medium-color);
 }

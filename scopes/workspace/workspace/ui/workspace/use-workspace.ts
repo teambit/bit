@@ -1,8 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { ComponentModel } from '@teambit/component';
 import useLatest from '@react-hook/latest';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql } from '@apollo/client';
+import { gql, useQuery } from '@apollo/client';
 import type { ComponentIdObj } from '@teambit/component-id';
 import { ComponentID } from '@teambit/component-id';
 
@@ -15,6 +14,79 @@ type UseWorkspaceOptions = {
 };
 type RawComponent = { id: ComponentIdObj };
 
+// Light fragment — fast initial render (no status/issues — those are the slow N+1 resolvers)
+const wcComponentFieldsLight = gql`
+  fragment wcComponentFieldsLight on Component {
+    id {
+      name
+      version
+      scope
+    }
+    buildStatus
+    preview {
+      includesEnvTemplate
+      legacyHeader
+      isScaling
+      skipIncludes
+    }
+    deprecation {
+      isDeprecate
+      newId
+    }
+    server {
+      env
+      url
+    }
+    env {
+      id
+      icon
+    }
+    compositions {
+      identifier
+    }
+  }
+`;
+
+// Heavy fragment — deferred but fast (no status — status is the slow N+1 resolver)
+const wcComponentFieldsHeavy = gql`
+  fragment wcComponentFieldsHeavy on Component {
+    id {
+      name
+      version
+      scope
+    }
+    aspects(include: ["teambit.preview/preview", "teambit.envs/envs"]) {
+      aspectId: id
+      data
+    }
+    description
+    issuesCount
+  }
+`;
+
+// Status fragment — separate because status resolution is ~13s for all components
+const wcComponentFieldsStatus = gql`
+  fragment wcComponentFieldsStatus on Component {
+    id {
+      name
+      version
+      scope
+    }
+    status {
+      isOutdated
+      isNew
+      isInScope
+      isStaged
+      modifyInfo {
+        hasModifiedFiles
+        hasModifiedDependencies
+      }
+      isDeleted
+    }
+  }
+`;
+
+// Full fragment — used for subscriptions (need complete data for updates)
 const wcComponentFields = gql`
   fragment wcComponentFields on Component {
     id {
@@ -23,9 +95,6 @@ const wcComponentFields = gql`
       scope
     }
     aspects(include: ["teambit.preview/preview", "teambit.envs/envs"]) {
-      # 'id' property in gql refers to a *global* identifier and used for caching.
-      # this makes aspect data cache under the same key, even when they are under different components.
-      # renaming the property fixes that.
       aspectId: id
       data
     }
@@ -67,6 +136,7 @@ const wcComponentFields = gql`
   }
 `;
 
+// Initial query — uses light fragment for fast render
 const WORKSPACE = gql`
   query workspace {
     workspace {
@@ -74,11 +144,38 @@ const WORKSPACE = gql`
       path
       icon
       components {
-        ...wcComponentFields
+        ...wcComponentFieldsLight
       }
     }
   }
-  ${wcComponentFields}
+  ${wcComponentFieldsLight}
+`;
+
+// Deferred query — fills in heavy fields after initial render (fast: ~30ms)
+const WORKSPACE_HEAVY = gql`
+  query workspaceHeavy {
+    workspace {
+      name
+      components {
+        ...wcComponentFieldsHeavy
+      }
+    }
+  }
+  ${wcComponentFieldsHeavy}
+`;
+
+// Status query — separate because status resolution is slow (~13s for 212 components)
+// Fires independently so it doesn't block heavy data from rendering.
+const WORKSPACE_STATUS = gql`
+  query workspaceStatus {
+    workspace {
+      name
+      components {
+        ...wcComponentFieldsStatus
+      }
+    }
+  }
+  ${wcComponentFieldsStatus}
 `;
 
 const COMPONENT_SUBSCRIPTION_ADDED = gql`
@@ -127,8 +224,35 @@ const COMPONENT_SERVER_STARTED = gql`
 `;
 
 export function useWorkspace(options: UseWorkspaceOptions = {}) {
-  const { data, subscribeToMore, ...rest } = useDataQuery(WORKSPACE);
+  // Use useQuery directly (NOT useDataQuery) to avoid triggering the global LoaderRibbon.
+  // This ensures the workspace layout renders instantly — no loading spinner at all.
+  // Data arrives in ~120ms and the UI fills in seamlessly.
+  const { data, subscribeToMore, loading, ...rest } = useQuery(WORKSPACE, {
+    // cache-and-network: serve cached data instantly on reload, then refresh from network.
+    // nextFetchPolicy: after initial fetch, settle to cache-first — subsequent cache updates
+    // (from subscriptions) won't trigger new network requests, preventing re-render storms.
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
+  });
   const optionsRef = useLatest(options);
+
+  // Heavy query — fires after light query returns; uses useQuery (not useDataQuery)
+  // to avoid showing the global loading spinner while heavy fields resolve.
+  // Fast (~30ms) because status is excluded.
+  // IMPORTANT: use 'no-cache' to prevent writing to Apollo cache, which would
+  // overwrite the light query's components array and lose env/server/buildStatus fields.
+  const { data: heavyResult } = useQuery(WORKSPACE_HEAVY, {
+    skip: !data?.workspace,
+    fetchPolicy: 'no-cache',
+  });
+
+  // Status query — fires independently, takes ~13s (N+1 filesystem/scope lookups).
+  // Separated so heavy data (compositions, aspects, descriptions) renders immediately.
+  // IMPORTANT: use 'no-cache' — same reason as heavy query above.
+  const { data: statusResult } = useQuery(WORKSPACE_STATUS, {
+    skip: !data?.workspace,
+    fetchPolicy: 'no-cache',
+  });
 
   useEffect(() => {
     const unSubCompAddition = subscribeToMore({
@@ -242,11 +366,46 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
   }, [optionsRef]);
 
   const workspace = useMemo(() => {
-    return data?.workspace ? Workspace.from(data?.workspace) : undefined;
-  }, [data?.workspace]);
+    if (!data?.workspace) return undefined;
+
+    const heavyComponents = heavyResult?.workspace?.components;
+    const statusComponents = statusResult?.workspace?.components;
+
+    // If we have any deferred data, merge it into the light data
+    if (heavyComponents || statusComponents) {
+      // Build lookup maps for deferred data
+      const heavyMap = new Map<string, any>();
+      if (heavyComponents) {
+        for (const comp of heavyComponents) {
+          heavyMap.set(`${comp.id.scope}/${comp.id.name}`, comp);
+        }
+      }
+      const statusMap = new Map<string, any>();
+      if (statusComponents) {
+        for (const comp of statusComponents) {
+          statusMap.set(`${comp.id.scope}/${comp.id.name}`, comp);
+        }
+      }
+
+      // Merge: light base ← heavy fields ← status fields
+      const merged = {
+        ...data.workspace,
+        components: data.workspace.components.map((comp: any) => {
+          const key = `${comp.id.scope}/${comp.id.name}`;
+          const heavy = heavyMap.get(key);
+          const status = statusMap.get(key);
+          return { ...comp, ...heavy, ...status };
+        }),
+      };
+      return Workspace.from(merged);
+    }
+
+    return Workspace.from(data.workspace);
+  }, [data?.workspace, heavyResult?.workspace?.components, statusResult?.workspace?.components]);
 
   return {
     workspace,
+    loading,
     subscribeToMore,
     ...rest,
   };

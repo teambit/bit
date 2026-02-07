@@ -1,8 +1,7 @@
 import { useMemo, useCallback } from 'react';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import type { LaneModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
-import { gql } from '@apollo/client';
+import { gql, useQuery } from '@apollo/client';
 import type { LaneId } from '@teambit/lane-id';
 import { isEqual } from 'lodash';
 import type { LanesContextModel } from './lanes-context';
@@ -173,7 +172,7 @@ const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}, scope) => 
   const { ids, offset, limit, sort } = options;
 
   // @ts-ignore - remove once graphql versions are aligned (see #8753)
-  const { data, fetchMore, loading } = useDataQuery<LanesQuery>(GET_LANES, {
+  const { data, fetchMore, loading } = useQuery<LanesQuery>(GET_LANES, {
     variables: {
       laneIds: ids,
       offset,
@@ -262,7 +261,7 @@ const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}, scope) => 
 
 export const useSearchLanes: SearchLanes = (search, skip) => {
   // @ts-ignore - remove once graphql versions are aligned (see #8753)
-  const { data: searchData, loading: loadingSearch } = useDataQuery<LanesQuery>(GET_LANES, {
+  const { data: searchData, loading: loadingSearch } = useQuery<LanesQuery>(GET_LANES, {
     variables: {
       search,
       skipViewedLane: true,

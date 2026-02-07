@@ -70,19 +70,20 @@ export const workspaceDrawer = ({
       const workspace = useContext(WorkspaceContext);
       const { components: workspaceComponents } = workspace;
 
-      const loading = lanesLoading || laneCompsLoading || mainCompsLoading;
-
       /**
        * if viewing locally checked out lane, return all components from the workspace
        * when viewing main when locally checked out to another lane, explicitly return components from the "main" lane
        * when viewing another lane when locally checked out to a different lane, return "main" + "lane" components
        * */
       if (isViewingWorkspaceVersions) {
+        // Don't wait on lanes — workspace components are already available from the light query
         return {
-          loading,
+          loading: false,
           components: workspaceComponents,
         };
       }
+
+      const loading = lanesLoading || laneCompsLoading || mainCompsLoading;
 
       if (isViewingDefaultLane) {
         return {

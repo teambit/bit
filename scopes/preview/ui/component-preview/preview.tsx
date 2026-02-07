@@ -12,6 +12,17 @@ import { computePreviewScale } from './compute-preview-scale';
 import { useIframeContentHeight } from './use-iframe-content-height';
 import styles from './preview.module.scss';
 
+const CONNECTION_STATUS_EVENT = 'bit-dev-server-connection-status';
+
+function reportConnectionStatus(online: boolean, reason?: 'preview' | 'network') {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(
+    new CustomEvent(CONNECTION_STATUS_EVENT, {
+      detail: { online, reason, timestamp: Date.now() },
+    })
+  );
+}
+
 export type OnPreviewLoadProps = { height?: string; width?: string };
 // omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
 export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'src' | 'referrerPolicy'> {
@@ -128,10 +139,17 @@ export function ComponentPreview({
   useEffect(() => {
     const handleMessage = (event) => {
       if ((event.data && event.data.event === LOAD_EVENT) || (event.data && event.data.event === 'webpackInvalid')) {
+        if (event.data.event === LOAD_EVENT) {
+          reportConnectionStatus(true, 'preview');
+        } else {
+          // Preview bundle is rebuilding; not a main dev-server offline condition.
+          reportConnectionStatus(false, 'preview');
+        }
         onLoad && onLoad(event);
       }
 
       if (event.data && (event.data.event === ERROR_EVENT || event.data.event === 'AI_FIX_REQUEST')) {
+        reportConnectionStatus(false, 'preview');
         const errorData = event.data.payload;
         onPreviewError?.(errorData);
         setForceVisible(true);
