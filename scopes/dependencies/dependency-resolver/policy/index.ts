@@ -15,4 +15,4 @@ export {
   VariantPolicyConfigArr,
 } from './variant-policy';
 
-export { EnvPolicy, EnvPolicyConfigObject } from './env-policy';
+export { EnvPolicy, EnvPolicyConfigObject, EnvPolicyEnvJsoncConfigObject } from './env-policy';
