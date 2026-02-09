@@ -1347,16 +1347,16 @@
         "mainFile": "index.ts",
         "rootDir": "components/plugins/manifest-plugin",
         "config": {
-            "bitdev.node/node-env@4.0.33": {},
-            "teambit.envs/envs": {
-                "env": "bitdev.node/node-env"
-            },
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "peerDependencies": {
                         "@rspack/core": "1.7.5"
                     }
                 }
+            },
+            "teambit.node/envs/node-babel-mocha@0.2.5": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
             }
         }
     },
