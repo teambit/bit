@@ -11,6 +11,7 @@ import {
   resolveAlias,
   resolveFallback,
   RspackManifestPlugin,
+  cssParser,
   mjsRule,
   swcRule,
   sourceMapRule,
@@ -39,6 +40,9 @@ export default function createRspackBrowserConfig(
     mode: 'production',
 
     devtool: shouldUseSourceMap ? 'source-map' : false,
+    experiments: {
+      css: true,
+    },
 
     entry: {
       main: entryFiles,
@@ -48,6 +52,8 @@ export default function createRspackBrowserConfig(
       path: path.resolve(outputDir, publicDir),
       filename: 'static/js/[name].[contenthash:8].js',
       chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
+      cssFilename: 'static/css/[name].[contenthash:8].css',
+      cssChunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
       publicPath: '/',
     },
 
@@ -74,6 +80,7 @@ export default function createRspackBrowserConfig(
     },
 
     module: {
+      parser: cssParser,
       rules: [
         mjsRule(),
         swcRule(),
@@ -86,7 +93,6 @@ export default function createRspackBrowserConfig(
         },
         fontRule(),
         ...styleRules({
-          styleLoader: rspack.CssExtractRspackPlugin.loader,
           sourceMap: shouldUseSourceMap,
           postCssConfig,
           resolveUrlLoader: true,
@@ -100,11 +106,6 @@ export default function createRspackBrowserConfig(
     },
 
     plugins: [
-      new rspack.CssExtractRspackPlugin({
-        filename: 'static/css/[name].[contenthash:8].css',
-        chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
-      }),
-
       new rspack.HtmlRspackPlugin({
         inject: true,
         templateContent: html(title)(),

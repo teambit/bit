@@ -64,6 +64,13 @@ export const resolveFallbackDev = {
   process: fallbacks.process,
 } as const;
 
+// Keep CSS module imports webpack-compatible: `import styles from './x.module.scss'`.
+export const cssParser = {
+  css: { namedExports: false },
+  'css/auto': { namedExports: false },
+  'css/module': { namedExports: false },
+} as const;
+
 export function swcRule(options?: { dev?: boolean; refresh?: boolean }): RuleSetRule {
   return {
     test: /\.(js|mjs|jsx|ts|tsx)$/,
@@ -94,7 +101,7 @@ export function sourceMapRule(): RuleSetRule {
     enforce: 'pre' as const,
     include: /node_modules/,
     descriptionData: { componentId: (value: any) => !!value },
-    use: [require.resolve('source-map-loader')],
+    extractSourceMap: true,
   };
 }
 
@@ -111,20 +118,19 @@ export function mjsRule(): RuleSetRule {
 }
 
 interface StyleRulesOptions {
-  /** First loader in the chain: 'style-loader' path or CssExtractRspackPlugin.loader */
-  styleLoader: string | { loader: string };
   sourceMap: boolean;
-  /** If provided, postcss-loader is inserted after css-loader */
+  /** If provided, postcss-loader is inserted before preprocessing loaders. */
   postCssConfig?: object;
   /** If true, resolve-url-loader is inserted before sass/less-loader */
   resolveUrlLoader?: boolean;
+  /** If true, CSS is emitted as JS exports only (for SSR builds). */
+  exportsOnly?: boolean;
 }
 
 /**
  * Returns all 6 style rules: CSS, SCSS, LESS — each as modules and non-modules.
  */
 export function styleRules(opts: StyleRulesOptions): RuleSetRule[] {
-  const first = typeof opts.styleLoader === 'string' ? require.resolve(opts.styleLoader) : opts.styleLoader;
   const postCss = opts.postCssConfig
     ? [{ loader: require.resolve('postcss-loader'), options: opts.postCssConfig }]
     : [];
@@ -132,14 +138,13 @@ export function styleRules(opts: StyleRulesOptions): RuleSetRule[] {
     ? [{ loader: require.resolve('resolve-url-loader'), options: { sourceMap: opts.sourceMap } }]
     : [];
 
-  const css = (importLoaders: number, modules?: boolean) => ({
-    loader: require.resolve('css-loader'),
-    options: {
-      importLoaders,
-      sourceMap: opts.sourceMap,
-      ...(modules && { modules: { localIdentName: '[name]__[local]--[hash:base64:5]' } }),
-    },
-  });
+  const moduleGenerator = {
+    localIdentName: '[name]__[local]--[hash:base64:5]',
+    // Keep interop with CJS outputs that use __importDefault(require('*.module.scss')).
+    esModule: false,
+    ...(opts.exportsOnly && { exportsOnly: true }),
+  };
+  const regularGenerator = opts.exportsOnly ? { exportsOnly: true } : undefined;
 
   const sassLoader = { loader: require.resolve('sass-loader'), options: { sourceMap: true } };
   const lessLoader = { loader: require.resolve('less-loader'), options: { sourceMap: true } };
@@ -147,30 +152,42 @@ export function styleRules(opts: StyleRulesOptions): RuleSetRule[] {
   return [
     {
       test: stylesRegexps.cssNoModulesRegex,
-      use: [first, css(postCss.length), ...postCss],
+      type: 'css',
+      use: [...postCss],
+      ...(regularGenerator && { generator: regularGenerator }),
       sideEffects: true,
     },
     {
       test: stylesRegexps.cssModuleRegex,
-      use: [first, css(postCss.length, true), ...postCss],
+      type: 'css/module',
+      use: [...postCss],
+      generator: moduleGenerator,
     },
     {
       test: stylesRegexps.sassNoModuleRegex,
-      use: [first, css(postCss.length + resolveUrl.length + 1), ...postCss, ...resolveUrl, sassLoader],
+      type: 'css',
+      use: [...postCss, ...resolveUrl, sassLoader],
+      ...(regularGenerator && { generator: regularGenerator }),
       sideEffects: true,
     },
     {
       test: stylesRegexps.sassModuleRegex,
-      use: [first, css(postCss.length + resolveUrl.length + 1, true), ...postCss, ...resolveUrl, sassLoader],
+      type: 'css/module',
+      use: [...postCss, ...resolveUrl, sassLoader],
+      generator: moduleGenerator,
     },
     {
       test: stylesRegexps.lessNoModuleRegex,
-      use: [first, css(postCss.length + resolveUrl.length + 1), ...postCss, ...resolveUrl, lessLoader],
+      type: 'css',
+      use: [...postCss, ...resolveUrl, lessLoader],
+      ...(regularGenerator && { generator: regularGenerator }),
       sideEffects: true,
     },
     {
       test: stylesRegexps.lessModuleRegex,
-      use: [first, css(postCss.length + resolveUrl.length + 1, true), ...postCss, ...resolveUrl, lessLoader],
+      type: 'css/module',
+      use: [...postCss, ...resolveUrl, lessLoader],
+      generator: moduleGenerator,
     },
   ];
 }

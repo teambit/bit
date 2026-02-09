@@ -21,6 +21,12 @@ const moduleFileExtensions = [
 
 const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
+const cssModuleGenerator = { localIdentName: '[name]__[local]--[hash:base64:5]', esModule: false };
+const cssParser = {
+  css: { namedExports: false },
+  'css/auto': { namedExports: false },
+  'css/module': { namedExports: false },
+} as const;
 
 export function createRspackConfig(outputDir: string, entryFile: string): Configuration {
   const mode = process.env.BIT_DEBUG_PREVIEW_BUNDLE ? 'development' : 'production';
@@ -33,6 +39,9 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
     mode,
 
     devtool: shouldUseSourceMap ? 'source-map' : false,
+    experiments: {
+      css: true,
+    },
 
     entry: {
       main: entryFile,
@@ -43,6 +52,8 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
       publicPath: '/',
       chunkFilename: 'static/js/[name].[contenthash:8].chunk.cjs',
       filename: 'static/js/[name].[contenthash:8].cjs',
+      cssFilename: 'static/css/[name].[contenthash:8].css',
+      cssChunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
       library: {
         type: 'commonjs-static',
       },
@@ -99,6 +110,7 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
     },
 
     module: {
+      parser: cssParser,
       rules: [
         {
           test: /\.m?js/,
@@ -133,7 +145,7 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
           enforce: 'pre' as const,
           include: /node_modules/,
           descriptionData: { componentId: (value: any) => !!value },
-          use: [require.resolve('source-map-loader')],
+          extractSourceMap: true,
         },
         {
           test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
@@ -156,46 +168,18 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
         {
           test: /\.css$/,
           exclude: /\.module\.css$/,
-          use: [
-            require.resolve('style-loader'),
-            {
-              loader: require.resolve('css-loader'),
-              options: {
-                importLoaders: 1,
-                sourceMap: shouldUseSourceMap,
-              },
-            },
-          ],
+          type: 'css',
           sideEffects: true,
         },
         {
           test: /\.module\.css$/,
-          use: [
-            require.resolve('style-loader'),
-            {
-              loader: require.resolve('css-loader'),
-              options: {
-                importLoaders: 1,
-                sourceMap: shouldUseSourceMap,
-                modules: {
-                  localIdentName: '[name]__[local]--[hash:base64:5]',
-                },
-              },
-            },
-          ],
+          type: 'css/module',
+          generator: cssModuleGenerator,
         },
         {
           test: /\.(scss|sass)$/,
           exclude: /\.module\.(scss|sass)$/,
           use: [
-            require.resolve('style-loader'),
-            {
-              loader: require.resolve('css-loader'),
-              options: {
-                importLoaders: 3,
-                sourceMap: shouldUseSourceMap,
-              },
-            },
             {
               loader: require.resolve('resolve-url-loader'),
               options: { sourceMap: shouldUseSourceMap },
@@ -205,22 +189,12 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
               options: { sourceMap: true },
             },
           ],
+          type: 'css',
           sideEffects: true,
         },
         {
           test: /\.module\.(scss|sass)$/,
           use: [
-            require.resolve('style-loader'),
-            {
-              loader: require.resolve('css-loader'),
-              options: {
-                importLoaders: 3,
-                sourceMap: shouldUseSourceMap,
-                modules: {
-                  localIdentName: '[name]__[local]--[hash:base64:5]',
-                },
-              },
-            },
             {
               loader: require.resolve('resolve-url-loader'),
               options: { sourceMap: shouldUseSourceMap },
@@ -230,45 +204,31 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
               options: { sourceMap: true },
             },
           ],
+          type: 'css/module',
+          generator: cssModuleGenerator,
         },
         {
           test: /\.less$/,
           exclude: /\.module\.less$/,
           use: [
-            require.resolve('style-loader'),
-            {
-              loader: require.resolve('css-loader'),
-              options: {
-                importLoaders: 1,
-                sourceMap: shouldUseSourceMap,
-              },
-            },
             {
               loader: require.resolve('less-loader'),
               options: { sourceMap: true },
             },
           ],
+          type: 'css',
           sideEffects: true,
         },
         {
           test: /\.module\.less$/,
           use: [
-            require.resolve('style-loader'),
-            {
-              loader: require.resolve('css-loader'),
-              options: {
-                importLoaders: 1,
-                sourceMap: shouldUseSourceMap,
-                modules: {
-                  localIdentName: '[name]__[local]--[hash:base64:5]',
-                },
-              },
-            },
             {
               loader: require.resolve('less-loader'),
               options: { sourceMap: true },
             },
           ],
+          type: 'css/module',
+          generator: cssModuleGenerator,
         },
         {
           test: /\.(woff(2)?|ttf|eot)(\?v=\d+\.\d+\.\d+)?$/,

@@ -13,6 +13,7 @@ import {
   moduleFileExtensions,
   resolveAlias,
   resolveFallbackDev,
+  cssParser,
   mjsRule,
   swcRule,
   sourceMapRule,
@@ -39,6 +40,10 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
     mode: 'development',
 
     devtool: 'eval-cheap-module-source-map',
+
+    experiments: {
+      css: true,
+    },
 
     // enable persistent cache
     cache: true,
@@ -155,11 +160,12 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
     },
 
     module: {
+      parser: cssParser,
       rules: [
         mjsRule(),
         swcRule({ dev: true, refresh: true }),
         sourceMapRule(),
-        ...styleRules({ styleLoader: 'style-loader', sourceMap: true }),
+        ...styleRules({ sourceMap: true }),
         fontRule(),
       ],
     },

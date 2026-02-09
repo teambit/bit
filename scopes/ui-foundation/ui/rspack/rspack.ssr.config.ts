@@ -6,6 +6,7 @@ import {
   shouldUseSourceMap,
   resolveAlias,
   resolveFallback,
+  cssParser,
   mjsRule,
   swcRule,
   sourceMapRule,
@@ -28,6 +29,9 @@ export default function createRspackSsrConfig(
     mode: 'production',
     target: 'node',
     devtool: 'eval-cheap-module-source-map',
+    experiments: {
+      css: true,
+    },
 
     entry: {
       main: entryFiles,
@@ -48,15 +52,16 @@ export default function createRspackSsrConfig(
     },
 
     module: {
+      parser: cssParser,
       rules: [
         mjsRule(),
         swcRule(),
         sourceMapRule(),
         fontRule(),
         ...styleRules({
-          styleLoader: require.resolve('null-loader'),
           sourceMap: shouldUseSourceMap,
           resolveUrlLoader: true,
+          exportsOnly: true,
         }),
         {
           exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/, /\.css$/, /\.s[ac]ss$/, /\.less$/],
