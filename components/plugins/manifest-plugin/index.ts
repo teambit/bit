@@ -1,1 +1,1 @@
-export { RspackManifestPlugin } from './manifest-plugin.js';
+export { RspackManifestPlugin } from './manifest-plugin';
