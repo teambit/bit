@@ -208,29 +208,6 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
           generator: cssModuleGenerator,
         },
         {
-          test: /\.less$/,
-          exclude: /\.module\.less$/,
-          use: [
-            {
-              loader: require.resolve('less-loader'),
-              options: { sourceMap: true },
-            },
-          ],
-          type: 'css',
-          sideEffects: true,
-        },
-        {
-          test: /\.module\.less$/,
-          use: [
-            {
-              loader: require.resolve('less-loader'),
-              options: { sourceMap: true },
-            },
-          ],
-          type: 'css/module',
-          generator: cssModuleGenerator,
-        },
-        {
           test: /\.(woff(2)?|ttf|eot)(\?v=\d+\.\d+\.\d+)?$/,
           type: 'asset',
           generator: {

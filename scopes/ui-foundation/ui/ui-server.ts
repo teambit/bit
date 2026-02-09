@@ -291,7 +291,7 @@ export class UIServer {
   /**
    * start a UI dev server.
    */
-  async dev({ portRange }: StartOptions = {}) {
+  async dev({ portRange }: StartOptions = {}): Promise<RspackDevServer> {
     const devServerPort = await this.selectPort(portRange);
     await this.start({ portRange: [4100, 4200] });
     const expressAppPort = this._port;

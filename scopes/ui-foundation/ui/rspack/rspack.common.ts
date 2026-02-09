@@ -121,7 +121,7 @@ interface StyleRulesOptions {
   sourceMap: boolean;
   /** If provided, postcss-loader is inserted before preprocessing loaders. */
   postCssConfig?: object;
-  /** If true, resolve-url-loader is inserted before sass/less-loader */
+  /** If true, resolve-url-loader is inserted before sass */
   resolveUrlLoader?: boolean;
   /** If true, CSS is emitted as JS exports only (for SSR builds). */
   exportsOnly?: boolean;
@@ -147,7 +147,6 @@ export function styleRules(opts: StyleRulesOptions): RuleSetRule[] {
   const regularGenerator = opts.exportsOnly ? { exportsOnly: true } : undefined;
 
   const sassLoader = { loader: require.resolve('sass-loader'), options: { sourceMap: true } };
-  const lessLoader = { loader: require.resolve('less-loader'), options: { sourceMap: true } };
 
   return [
     {
@@ -174,19 +173,6 @@ export function styleRules(opts: StyleRulesOptions): RuleSetRule[] {
       test: stylesRegexps.sassModuleRegex,
       type: 'css/module',
       use: [...postCss, ...resolveUrl, sassLoader],
-      generator: moduleGenerator,
-    },
-    {
-      test: stylesRegexps.lessNoModuleRegex,
-      type: 'css',
-      use: [...postCss, ...resolveUrl, lessLoader],
-      ...(regularGenerator && { generator: regularGenerator }),
-      sideEffects: true,
-    },
-    {
-      test: stylesRegexps.lessModuleRegex,
-      type: 'css/module',
-      use: [...postCss, ...resolveUrl, lessLoader],
       generator: moduleGenerator,
     },
   ];
