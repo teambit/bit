@@ -102,13 +102,12 @@ includes hot module reloading for development.`;
     uiServer
       .then(async (server) => {
         const url = this.ui.publicUrl || server.fullUrl;
-        spinnies.succeed('ui-server', { text: `UI server is ready at ${chalk.cyan(url)}` });
+        spinnies.succeed('ui-server', { text: `UI server ready ${chalk.dim('\u2192')} ${chalk.cyan(url)}` });
         if (!server.buildOptions?.launchBrowserOnStart) return undefined;
 
         await server.whenReady;
         const name = server.getName();
-        const message = chalk.green(`You can now view '${chalk.cyan(name)}' components in the browser.
-Bit server is running on ${chalk.cyan(url)}`);
+        const message = chalk.green(`\nView '${chalk.bold(name)}' components at ${chalk.cyan(url)}`);
         spinnies.add('summary', { text: message, status: 'non-spinnable' });
         if (!noBrowser) {
           await open(url);

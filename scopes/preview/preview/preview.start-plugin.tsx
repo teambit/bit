@@ -281,13 +281,12 @@ function getSpinnerId(envId: string) {
 }
 
 function getSpinnerCompilingMessage(server: ComponentServer, verbose = false) {
-  const prefix = 'COMPILING';
   const envId = chalk.cyan(server.context.envRuntime.id);
   let includedEnvs = '';
   if (server.context.relatedContexts && server.context.relatedContexts.length > 1) {
     includedEnvs = `on behalf of ${chalk.cyan(stringifyIncludedEnvs(server.context.relatedContexts, verbose))}`;
   }
-  return `${prefix} ${envId} ${includedEnvs}`;
+  return `${chalk.yellow('Compiling')} ${envId} ${includedEnvs}`;
 }
 
 function getSpinnerDoneMessage(
@@ -300,19 +299,21 @@ function getSpinnerDoneMessage(
 ) {
   const hasErrors = !!errors.length;
   const hasWarnings = !!warnings.length;
-  const prefix = hasErrors ? 'FAILED' : 'RUNNING';
   const envId = chalk.cyan(server.context.envRuntime.id);
   let includedEnvs = '';
   if (server.context.relatedContexts && server.context.relatedContexts.length > 1) {
-    includedEnvs = ` on behalf of ${chalk.cyan(stringifyIncludedEnvs(server.context.relatedContexts, verbose))}`;
+    includedEnvs = ` ${chalk.dim('via')} ${chalk.cyan(stringifyIncludedEnvs(server.context.relatedContexts, verbose))}`;
   }
   const errorsTxt = hasErrors ? errors.map((err) => err.message).join('\n') : '';
   const errorsTxtWithTitle = hasErrors ? chalk.red(`\nErrors:\n${errorsTxt}`) : '';
   const warningsTxt = hasWarnings ? warnings.map((warning) => warning.message).join('\n') : '';
   const warningsTxtWithTitle = hasWarnings ? chalk.yellow(`\nWarnings:\n${warningsTxt}`) : '';
 
+  if (hasErrors) {
+    return `${chalk.red('Failed')} ${envId}${includedEnvs}${errorsTxtWithTitle}${warningsTxtWithTitle}`;
+  }
   const urlMessage = hasErrors || !showInternalUrls ? '' : `at ${chalk.cyan(url)}`;
-  return `${prefix} ${envId}${includedEnvs} ${urlMessage} ${errorsTxtWithTitle} ${warningsTxtWithTitle}`;
+  return `${chalk.green('Ready')} ${envId}${includedEnvs} ${urlMessage}${warningsTxtWithTitle}`;
 }
 
 function stringifyIncludedEnvs(includedEnvs: string[] = [], verbose = false) {
