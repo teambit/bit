@@ -94,10 +94,9 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
               comparisons: false,
               inline: 2,
             },
-            mangle: {
-              safari10: true,
-              keep_classnames: true,
-            },
+            // We need to keep class names and disable mangling to prevent issues with consuming the rspack bundle in
+            // other bundlers (e.g. webpack) that rely on class names for tree shaking and other optimizations.
+            mangle: false,
             format: {
               ecma: 5,
               comments: false,
@@ -246,7 +245,7 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
           type: 'javascript/auto',
         },
         {
-          exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/, /\.css$/, /\.s[ac]ss$/, /\.less$/, /\.mdx?$/],
+          exclude: [/\.(cjs|js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/, /\.css$/, /\.s[ac]ss$/, /\.less$/, /\.mdx?$/],
           type: 'asset/resource',
         },
       ],
