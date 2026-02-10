@@ -18,7 +18,7 @@ export const moduleFileExtensions = [
   'jsx',
 ];
 
-export const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
+export const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP === 'true';
 export const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
 
 export function resolveAlias(opts?: { profile?: boolean }): Record<string, string | false> {
