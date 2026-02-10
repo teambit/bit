@@ -39,7 +39,7 @@
           [
             "",
             "skill <type>",
-            "generate output for Claude Code skill: \"commands\" (like bit --help) or \"flags\" (condensed flag reference)"
+            "generate output for Claude Code skill: \"commands\" (like bit --help) or \"reference\" (subcommands, args, and flags)"
           ]
         ],
         "description": "generate an .md file with all commands details",
@@ -3817,13 +3817,13 @@
             "return the lane history in json format"
           ]
         ],
-        "description": "EXPERIMENTAL. show lane history, default to the current lane",
+        "description": "show lane history, default to the current lane",
         "extendedDescription": "list from the oldest to the newest history items",
         "group": "ungrouped",
         "private": false
       },
       {
-        "name": "history-diff <from-history-id> <to-history-id>",
+        "name": "history-diff [history-id] [to-history-id]",
         "alias": "",
         "options": [
           [
@@ -3837,8 +3837,8 @@
             "show lane-diff for components conforming to the specified component-pattern only\ncomponent-pattern format: component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           ]
         ],
-        "description": "EXPERIMENTAL. show diff between two lane-history ids",
-        "extendedDescription": "run \"bit lane history\" to find these history-ids",
+        "description": "show diff between lane-history entries",
+        "extendedDescription": "with no arguments - diff the latest history entry against its predecessor\nwith one argument - diff the given history entry against its predecessor\nwith two arguments - diff between two specific history entries (first=from, second=to), useful for comparing any two points in history\nrun \"bit lane history\" to find history-ids",
         "group": "ungrouped",
         "private": false
       },
@@ -3852,7 +3852,7 @@
             "do not install dependencies of the checked out components"
           ]
         ],
-        "description": "EXPERIMENTAL. checkout to a previous history of the current lane. see also \"bit lane revert\"",
+        "description": "checkout to a previous history of the current lane. see also \"bit lane revert\"",
         "extendedDescription": "",
         "group": "ungrouped",
         "private": false,
@@ -3883,7 +3883,7 @@
             "return the revert result in json format"
           ]
         ],
-        "description": "EXPERIMENTAL. revert to a previous history of the current lane. see also \"bit lane checkout\"",
+        "description": "revert to a previous history of the current lane. see also \"bit lane checkout\"",
         "extendedDescription": "revert is similar to \"lane checkout\", but it keeps the versions and only change the files.\nchoose one or the other based on your needs.\nif you want to continue working on this lane and needs the changes from the history to be the head, then use \"lane revert\".\nif you want to fork the lane from a certain point in history, use \"lane checkout\" and create a new lane from it.",
         "group": "ungrouped",
         "private": false,

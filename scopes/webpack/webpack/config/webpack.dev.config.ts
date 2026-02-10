@@ -51,7 +51,6 @@ export function configFactory(
       filename: 'static/js/[name].bundle.js',
 
       pathinfo: false, // faster compilation
-
       path: resolveWorkspacePath(publicDirectory),
 
       // publicPath: resolveWorkspacePath(publicDirectory),
