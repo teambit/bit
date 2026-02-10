@@ -19,7 +19,7 @@ const moduleFileExtensions = [
   'md',
 ];
 
-const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
+const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP === 'true';
 const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
 const cssModuleGenerator = { localIdentName: '[name]__[local]--[hash:base64:5]', esModule: false };
 const cssParser = {
@@ -144,7 +144,7 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
           enforce: 'pre' as const,
           include: /node_modules/,
           descriptionData: { componentId: (value: any) => !!value },
-          extractSourceMap: true,
+          extractSourceMap: shouldUseSourceMap,
         },
         {
           test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
@@ -185,7 +185,7 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
             },
             {
               loader: require.resolve('sass-loader'),
-              options: { sourceMap: true },
+              options: { sourceMap: shouldUseSourceMap },
             },
           ],
           type: 'css',
@@ -200,7 +200,7 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
             },
             {
               loader: require.resolve('sass-loader'),
-              options: { sourceMap: true },
+              options: { sourceMap: shouldUseSourceMap },
             },
           ],
           type: 'css/module',
