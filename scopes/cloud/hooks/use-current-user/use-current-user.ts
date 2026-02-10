@@ -1,6 +1,5 @@
 import React from 'react';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { useMutation, gql } from '@apollo/client';
+import { gql, useQuery, useApolloClient } from '@apollo/client';
 import type { CloudUser } from '@teambit/cloud.models.cloud-user';
 
 export const SET_REDIRECT_URL_MUTATION = gql`
@@ -27,17 +26,17 @@ export function useCurrentUser(): {
   isLoggedIn?: boolean;
   loading?: boolean;
 } {
-  const [setRedirectUrl] = useMutation(SET_REDIRECT_URL_MUTATION);
+  const client = useApolloClient();
 
+  // Fire-and-forget: don't block UI rendering. This just sets an in-memory URL on the server.
   React.useEffect(() => {
     const redirectUrl = window.location.href;
-    setRedirectUrl({ variables: { redirectUrl } }).catch((error) => {
-      // eslint-disable-next-line no-console
-      console.error('Error setting redirect URL:', error);
-    });
+    client
+      .mutate({ mutation: SET_REDIRECT_URL_MUTATION, variables: { redirectUrl }, fetchPolicy: 'no-cache' })
+      .catch(() => {});
   }, [window.location.href]);
 
-  const { data, loading } = useDataQuery(CURRENT_USER_QUERY, {
+  const { data, loading } = useQuery(CURRENT_USER_QUERY, {
     fetchPolicy: 'cache-first',
   });
 

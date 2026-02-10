@@ -60,3 +60,30 @@ export function generateExternalsTransformer(depes: string[]) {
     return config;
   };
 }
+
+/**
+ * Generate a transformer that sets output.pathinfo = false for faster dev compilation.
+ */
+export function generatePathInfoTransformer() {
+  return (config: WebpackConfigMutator): WebpackConfigMutator => {
+    if (config.raw.output) {
+      config.raw.output.pathinfo = false;
+    }
+    return config;
+  };
+}
+
+/**
+ * Generate a transformer that enables webpack filesystem cache for faster rebuilds.
+ */
+export function generateFilesystemCacheTransformer(callerFile: string) {
+  return (config: WebpackConfigMutator): WebpackConfigMutator => {
+    config.raw.cache = {
+      type: 'filesystem',
+      buildDependencies: {
+        config: [callerFile],
+      },
+    };
+    return config;
+  };
+}

@@ -1,7 +1,9 @@
 import React from 'react';
+import classNames from 'classnames';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { CircleSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { useNavigate } from '@teambit/design.ui.navigation.link';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 import { Login } from '@teambit/cloud.ui.login';
 import { CurrentUser } from '@teambit/cloud.ui.current-user';
 import { useCurrentUser } from '@teambit/cloud.hooks.use-current-user';
@@ -11,6 +13,8 @@ import { Menu } from '@teambit/design.controls.menu';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 import type { UserBarSection } from './section';
 import type { UserBarItem } from './item';
+import { useDevServerConnectionStatus } from './use-dev-server-connection-status';
+import zIndexes from '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 import styles from './user-bar.module.scss';
 
@@ -30,6 +34,8 @@ export function UserBar({ sections = [], items = [] }: UserBarProps) {
   const { isMinimal } = useWorkspaceMode();
   const { currentUser, loginUrl, loading, isLoggedIn } = useCurrentUser();
   const { logout, loading: loadingLoggingOut, loggedOut } = useLogout();
+  const { showIndicator, indicatorLabel, indicatorTone, shouldFade, message, runHealthCheck } =
+    useDevServerConnectionStatus();
 
   const navigate = useNavigate();
 
@@ -110,14 +116,39 @@ export function UserBar({ sections = [], items = [] }: UserBarProps) {
       offsetY={10}
       position="anchor"
       align="end"
+      menuStyle={{ zIndex: Number(zIndexes.modalZIndex) + 80 }}
       onItemClick={(e) => {
         if (!e.value.link) return undefined;
         if (e.value.link.startsWith('http')) return window.open(e.value.link, '_blank');
         return navigate(e.value.link);
       }}
       menuButton={
-        <div className={styles.currentUser}>
-          <UserAvatar account={currentUser} size={32} />
+        <div className={styles.userBarAnchor}>
+          {showIndicator && (
+            <Tooltip content={message} placement="bottom">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  void runHealthCheck();
+                }}
+                className={classNames(
+                  styles.devServerStatus,
+                  indicatorTone === 'offline' && styles.devServerStatusOffline,
+                  indicatorTone === 'recovering' && styles.devServerStatusRecovering,
+                  indicatorTone === 'preview-loading' && styles.devServerStatusPreviewLoading,
+                  indicatorTone === 'preview-offline' && styles.devServerStatusPreviewOffline,
+                  shouldFade && styles.fadeOut
+                )}
+              >
+                {indicatorLabel}
+              </button>
+            </Tooltip>
+          )}
+          <div className={styles.currentUser}>
+            <UserAvatar account={currentUser} size={32} />
+          </div>
         </div>
       }
       items={allItems}

@@ -84,7 +84,11 @@ includes hot module reloading for development.`;
       );
     }
     const appName = this.ui.getUiName(uiRootAspectIdOrName);
-    await this.ui.invokePreStart({ skipCompilation });
+    // Run pre-start work in the background so the UI server appears immediately.
+    // Compilation continues while the UI is already available.
+    this.ui.invokePreStart({ skipCompilation }).catch((error) => {
+      this.logger.error('pre-start background task failed', error);
+    });
     this.logger.off();
     spinnies.add('ui-server', { text: `Starting UI server for ${appName}` });
 

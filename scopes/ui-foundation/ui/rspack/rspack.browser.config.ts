@@ -1,6 +1,7 @@
 import { rspack, type Configuration } from '@rspack/core';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import { fallbacksProvidePluginConfig } from '@teambit/webpack';
+import { createHash } from 'crypto';
 import path from 'path';
 import { postCssConfig } from './postcss.config';
 import { html } from './html';
@@ -31,6 +32,8 @@ export default function createRspackBrowserConfig(
   publicDir: string
 ): Configuration {
   const isEnvProductionProfile = process.argv.includes('--profile');
+  const workspaceCacheSuffix = createHash('sha1').update(path.resolve(outputDir)).digest('hex').slice(0, 10);
+  const workspaceCacheId = `bit-ui-${workspaceCacheSuffix}`;
 
   return {
     stats: {
@@ -122,11 +125,39 @@ export default function createRspackBrowserConfig(
       new RspackManifestPlugin({ fileName: 'asset-manifest.json' }),
 
       new WorkboxWebpackPlugin.GenerateSW({
+        cacheId: workspaceCacheId,
+        skipWaiting: true,
         clientsClaim: true,
+        cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5000000,
         exclude: [/\.map$/, /asset-manifest\.json$/],
-        navigateFallback: 'public/index.html',
-        navigateFallbackDenylist: [new RegExp('^/_'), new RegExp('/[^/.?]+\\.[^/]+$')],
+        runtimeCaching: [
+          {
+            urlPattern: ({ request, url }) => {
+              if (request.mode !== 'navigate') return false;
+              const pathname = url.pathname || '';
+              if (
+                pathname.startsWith('/_') ||
+                pathname.startsWith('/preview/') ||
+                pathname.startsWith('/_hmr/') ||
+                pathname.startsWith('/api/') ||
+                pathname === '/graphql' ||
+                pathname === '/subscriptions'
+              ) {
+                return false;
+              }
+              return !/\/[^/?]+\.[^/]+$/.test(pathname);
+            },
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: `bit-ui-navigation-${workspaceCacheSuffix}`,
+              networkTimeoutSeconds: 3,
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
       }),
     ],
 
