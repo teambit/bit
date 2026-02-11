@@ -14,11 +14,11 @@ import styles from './preview.module.scss';
 
 const CONNECTION_STATUS_EVENT = 'bit-dev-server-connection-status';
 
-function reportConnectionStatus(online: boolean, reason?: 'preview' | 'network') {
+function reportConnectionStatus(online: boolean, reason?: 'preview' | 'network', options?: { previewKey?: string }) {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(
     new CustomEvent(CONNECTION_STATUS_EVENT, {
-      detail: { online, reason, timestamp: Date.now() },
+      detail: { online, reason, previewKey: options?.previewKey, timestamp: Date.now() },
     })
   );
 }
@@ -130,28 +130,46 @@ export function ComponentPreview({
   const isScaling = component.preview?.isScaling;
   const currentRef = isScaling ? iframeRef : heightIframeRef;
   const [forceVisible, setForceVisible] = useState(false);
+  const [isPreviewReady, setIsPreviewReady] = useState(false);
+  const [showSlowMessage, setShowSlowMessage] = useState(false);
+  const previewKey = `${component.id.toString()}:${previewName || 'overview'}`;
   // @ts-ignore (https://github.com/frenic/csstype/issues/156)
   // const height = iframeHeight || style?.height;
   usePubSubIframe(pubsub ? currentRef : undefined);
   // const pubsubContext = usePubSub();
   // pubsubContext?.connect(iframeHeight);
 
+  const getCurrentIframeWindow = () => {
+    const iframeElement = (currentRef as React.MutableRefObject<HTMLIFrameElement | null>)?.current;
+    return iframeElement?.contentWindow;
+  };
+
   useEffect(() => {
+    let isMounted = true;
     const handleMessage = (event) => {
+      if (!isMounted) return;
+      const iframeWindow = getCurrentIframeWindow();
+      if (iframeWindow && event.source !== iframeWindow) return;
       if ((event.data && event.data.event === LOAD_EVENT) || (event.data && event.data.event === 'webpackInvalid')) {
         if (event.data.event === LOAD_EVENT) {
-          reportConnectionStatus(true, 'preview');
+          reportConnectionStatus(true, 'preview', { previewKey });
+          setIsPreviewReady(true);
         } else {
           // Preview bundle is rebuilding; not a main dev-server offline condition.
-          reportConnectionStatus(false, 'preview');
+          reportConnectionStatus(false, 'preview', { previewKey });
+          setIsPreviewReady(false);
         }
         onLoad && onLoad(event);
       }
 
       if (event.data && (event.data.event === ERROR_EVENT || event.data.event === 'AI_FIX_REQUEST')) {
-        reportConnectionStatus(false, 'preview');
+        reportConnectionStatus(false, 'preview', { previewKey });
         const errorData = event.data.payload;
         onPreviewError?.(errorData);
+        // Keep skeleton visible for offline/restart paths; avoid exposing raw
+        // fallback iframe responses (blank/black/offline text) as "ready" UI.
+        setIsPreviewReady(false);
+        setShowSlowMessage(true);
         setForceVisible(true);
         if (propagateError && window.parent && window !== window.parent) {
           try {
@@ -178,28 +196,37 @@ export function ComponentPreview({
 
     window.addEventListener('message', handleMessage);
     return () => {
+      isMounted = false;
       window.removeEventListener('message', handleMessage);
     };
-  }, [component.id.toString(), onLoad, propagateError, onPreviewError]);
+  }, [component.id.toString(), onLoad, previewKey, propagateError, onPreviewError]);
 
   useEffect(() => {
-    if (!iframeRef.current) return;
-    connectToChild({
-      iframe: iframeRef.current,
+    const iframeElement = iframeRef.current;
+    if (!iframeElement) return;
+    let isMounted = true;
+    const connection = connectToChild({
+      iframe: iframeElement,
       methods: {
         pub: (event, message) => {
+          if (!isMounted) return;
           if (message.type === 'preview-size') {
             // disable this for now until we figure out how to correctly calculate the height
             // const previewHeight = component.preview?.onlyOverview ? message.data.height - 150 : message.data.height;
             setWidth(message.data.width);
             // setHeight(previewHeight);
             setHeight(message.data.height);
+            setIsPreviewReady(true);
           }
           onLoad && event && onLoad(event, { height: message.data.height, width: message.data.width });
         },
       },
     });
-  }, [iframeRef?.current]);
+    return () => {
+      isMounted = false;
+      connection.destroy();
+    };
+  }, [iframeRef]);
 
   const params = Array.isArray(queryParams)
     ? queryParams.concat(`viewport=${viewport}`)
@@ -207,6 +234,20 @@ export function ComponentPreview({
 
   const targetParams = viewport === null ? queryParams : params;
   const url = toPreviewUrl(component, previewName, isScaling ? targetParams : queryParams, includeEnv);
+
+  useEffect(() => {
+    setForceVisible(false);
+    setIsPreviewReady(false);
+    setShowSlowMessage(false);
+    reportConnectionStatus(false, 'preview', { previewKey });
+  }, [previewKey, url]);
+
+  useEffect(() => {
+    if (isPreviewReady) return undefined;
+    const timeout = window.setTimeout(() => setShowSlowMessage(true), 2200);
+    return () => window.clearTimeout(timeout);
+  }, [isPreviewReady, url]);
+
   // const currentHeight = fullContentHeight ? '100%' : height || 1024;
   const containerWidth = containerRef.current?.offsetWidth || 0;
   const containerHeight = containerRef.current?.offsetHeight || 0;
@@ -220,10 +261,34 @@ export function ComponentPreview({
 
   return (
     <div ref={containerRef} className={classNames(styles.preview, className)} style={{ height: forceHeight }}>
+      {!isPreviewReady && (
+        <div className={styles.loadingPlaceholder} aria-hidden>
+          <div className={styles.loadingShimmer}>
+            <div className={styles.loadingChrome}>
+              <div className={styles.loadingDot} />
+              <div className={styles.loadingDot} />
+              <div className={styles.loadingDot} />
+            </div>
+            <div className={styles.loadingCanvas}>
+              <div className={styles.loadingBar} style={{ width: '62%' }} />
+              <div className={styles.loadingBar} style={{ width: '44%' }} />
+              <div className={styles.loadingBar} style={{ width: '74%' }} />
+            </div>
+            <div className={styles.loadingCaption}>
+              {showSlowMessage ? 'Preview is waiting for the dev server.' : 'Loading preview bundle...'}
+            </div>
+          </div>
+        </div>
+      )}
       <iframe
         {...rest}
         sandbox={sandbox || undefined}
         ref={currentRef}
+        onLoad={(event) => {
+          // Do not mark ready on generic iframe load; readiness should come from
+          // LOAD_EVENT/preview-size messages from the preview runtime.
+          onLoad && onLoad(event);
+        }}
         style={{
           ...style,
           height: forceHeight || (isScaling ? finalHeight + innerBottomPadding : legacyIframeHeight),

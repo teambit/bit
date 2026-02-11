@@ -57,7 +57,15 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
     []
   );
 
-  const { workspace: rawWorkspace } = useWorkspace(reactions);
+  const {
+    workspace: rawWorkspace,
+    loading: workspaceLoading,
+    statusLoading,
+    statusReady,
+  } = useWorkspace({
+    ...reactions,
+    enableStatusQuery: !isMinimal,
+  });
   // Always render the full layout — never block on loading.
   // Data arrives in ~120ms, so the UI fills in seamlessly with no visible delay.
   const workspace = rawWorkspace || WorkspaceModel.empty();
@@ -86,7 +94,12 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
   const inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
 
   return (
-    <WorkspaceProvider workspace={workspace}>
+    <WorkspaceProvider
+      workspace={workspace}
+      loading={workspaceLoading && !rawWorkspace}
+      statusLoading={statusLoading}
+      statusReady={statusReady}
+    >
       {!isMinimal && <NotificationsBinder reactionsRef={reactionsRef} />}
       <PreserveWorkspaceMode>
         <ThemeFromUrlSync />

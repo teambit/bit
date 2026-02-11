@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
 import React, { useMemo } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { gql, useQuery as useApolloQuery } from '@apollo/client';
 import classnames from 'classnames';
-import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
-import { compact, flatten, groupBy, isFunction, orderBy } from 'lodash';
+import { useQuery as useRouterQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
+import { flatten, groupBy, isFunction, orderBy } from 'lodash';
 import * as semver from 'semver';
 import type { SlotRegistry } from '@teambit/harmony';
 import type { DropdownComponentVersion, GetActiveTabIndex } from '@teambit/component.ui.version-dropdown';
@@ -21,6 +22,7 @@ import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 import type { UseComponentType, Filters } from '../use-component';
 import { useComponent as useComponentQuery } from '../use-component';
+import { useComponentLogs } from '../use-component-logs';
 import { CollapsibleMenuNav } from './menu-nav';
 import type {
   OrderedNavigationSlot,
@@ -132,7 +134,7 @@ export function ComponentMenu({
     [pinnedWidgetSlot]
   );
   const componentFilters = useComponentFilters?.() || {};
-  const query = useQuery();
+  const query = useRouterQuery();
   const componentVersion = query.get('version');
   const host = componentVersion ? 'teambit.scope/scope' : hostFromProps;
 
@@ -206,6 +208,7 @@ export type UseComponentVersionsProps = {
   skip?: boolean;
   id?: string;
   initialLoad?: boolean;
+  fetchLogs?: boolean;
 };
 export type UseComponentVersionProps = {
   skip?: boolean;
@@ -216,12 +219,34 @@ export type UseComponentVersion = (props?: UseComponentVersionProps) => Dropdown
 export type UseComponentVersionsResult = {
   tags?: DropdownComponentVersion[];
   snaps?: DropdownComponentVersion[];
+  hasMoreVersions?: boolean;
   id?: ComponentID;
   packageName?: string;
   latest?: string;
   currentVersion?: string;
   loading?: boolean;
 };
+
+const GET_COMPONENT_VERSION_METADATA = gql`
+  query ComponentVersionMetadata($extensionId: String!, $id: String!) {
+    getHost(id: $extensionId) {
+      id
+      get(id: $id) {
+        id {
+          scope
+          name
+          version
+        }
+        packageName
+        latest
+        buildStatus
+        tags {
+          version
+        }
+      }
+    }
+  }
+`;
 
 export function defaultLoadVersions(
   host: string,
@@ -232,28 +257,89 @@ export function defaultLoadVersions(
 ): UseComponentVersions {
   return React.useCallback(
     (_props) => {
-      const { skip, initialLoad } = _props || {};
-      const fetchOptions = {
-        logFilters: {
-          ...componentFilters,
-          log: {
-            ...componentFilters.log,
-            limit: initialLoad ? 3 : undefined,
+      const { skip, initialLoad, fetchLogs = false } = _props || {};
+      const shouldFetchLogs = fetchLogs && !loadingFromProps && !skip && !componentFilters.loading;
+      const shouldSkip = loadingFromProps || skip || !!componentFilters.loading || !componentId;
+
+      const { data: componentMetadataData, loading: loadingComponentMetadata } = useApolloQuery(
+        GET_COMPONENT_VERSION_METADATA,
+        {
+          variables: {
+            extensionId: host,
+            id: componentId,
           },
-        },
-        skip: loadingFromProps || skip,
-        customUseComponent: useComponent,
-      };
-      const {
-        component,
-        loading: loadingComponent,
-        componentLogs = {},
-      } = useComponentQuery(host, componentId, fetchOptions);
-      const logs = componentLogs?.logs;
-      const loading = React.useMemo(
-        () => loadingComponent || loadingFromProps || componentLogs.loading,
-        [loadingComponent, loadingFromProps, componentLogs.loading]
+          skip: shouldSkip,
+          fetchPolicy: 'cache-and-network',
+          nextFetchPolicy: 'cache-first',
+          errorPolicy: 'all',
+          returnPartialData: true,
+          notifyOnNetworkStatusChange: false,
+          context: { skipBatch: true },
+        }
       );
+
+      const componentFromMetadata = componentMetadataData?.getHost?.get;
+
+      const fallbackQueryResult = useComponentQuery(host, componentId, {
+        skip: shouldSkip || !useComponent,
+        customUseComponent: useComponent,
+        logFilters: componentFilters,
+      });
+
+      const component = useMemo(() => {
+        if (useComponent) return fallbackQueryResult.component;
+        if (!componentFromMetadata?.id) return undefined;
+
+        const id = ComponentID.fromObject(componentFromMetadata.id);
+        const tagsMap = (componentFromMetadata.tags || []).map((tag) => ({
+          version: {
+            version: tag.version,
+          },
+          hash: tag.version,
+        }));
+
+        return {
+          id,
+          packageName: componentFromMetadata.packageName,
+          latest: componentFromMetadata.latest,
+          version: id.version,
+          buildStatus: componentFromMetadata.buildStatus,
+          tags: {
+            toArray: () => tagsMap,
+          },
+        };
+      }, [useComponent, fallbackQueryResult.component, componentFromMetadata]);
+
+      const loadingComponent = useComponent ? fallbackQueryResult.loading : loadingComponentMetadata;
+
+      const logsFilter = shouldFetchLogs
+        ? {
+            ...componentFilters,
+            log: {
+              ...componentFilters.log,
+              limit: initialLoad ? 3 : undefined,
+            },
+          }
+        : undefined;
+
+      const { componentLogs = {}, loading: loadingLogs } = useComponentLogs(
+        componentId || '',
+        host,
+        logsFilter,
+        !shouldFetchLogs || shouldSkip
+      );
+      const logs = componentLogs?.logs;
+
+      const tagVersionsFromComponent = useMemo(() => {
+        if (!component?.tags?.toArray) return [];
+        return (component.tags.toArray() || [])
+          .slice()
+          .reverse()
+          .map((tag) => {
+            const version = tag.version.version;
+            return { version, tag: version } as DropdownComponentVersion;
+          });
+      }, [component?.id?.toString(), component?.tags?.toArray?.()?.length]);
 
       const snaps = useMemo(() => {
         return (logs || []).filter((log) => !log.tag).map((snap) => ({ ...snap, version: snap.hash }));
@@ -266,30 +352,47 @@ export function defaultLoadVersions(
           .forEach((tag) => {
             tagLookup.set(tag?.tag as string, tag);
           });
-        return compact(
-          (component?.tags?.toArray() || []).reverse().map((tag) => tagLookup.get(tag.version.version))
-        ).map((tag) => ({ ...tag, version: tag.tag as string }));
-      }, [logs]);
+        return tagVersionsFromComponent.map((tagVersion) => {
+          const logTag = tagLookup.get(tagVersion.tag as string);
+          return logTag ? ({ ...logTag, version: logTag.tag as string } as DropdownComponentVersion) : tagVersion;
+        });
+      }, [logs, tagVersionsFromComponent, component?.id?.toString?.()]);
+
+      const loading = React.useMemo(() => {
+        const logsLoadingWithoutAnyData = !!loadingLogs && tags.length === 0 && snaps.length === 0;
+        return loadingComponent || !!loadingFromProps || (shouldFetchLogs && logsLoadingWithoutAnyData);
+      }, [loadingComponent, loadingFromProps, loadingLogs, tags.length, snaps.length, shouldFetchLogs]);
+
+      const hasMoreVersions = React.useMemo(() => {
+        if (shouldFetchLogs) {
+          return snaps.length + tags.length > 1;
+        }
+        if (tagVersionsFromComponent.length > 1) return true;
+        if (tagVersionsFromComponent.length === 0 && !component?.id?.version) return false;
+        return undefined;
+      }, [shouldFetchLogs, snaps.length, tags.length, tagVersionsFromComponent.length, component?.id?.version]);
 
       return {
         loading,
         id: component?.id,
         packageName: component?.packageName,
-        latestVersion: component?.latest,
+        latest: component?.latest,
         currentVersion: component?.version,
         snaps,
         tags,
+        hasMoreVersions,
         buildStatus: component?.buildStatus,
       };
     },
-    [componentId, loadingFromProps, componentFilters, host]
+    [componentId, loadingFromProps, componentFilters, host, useComponent]
   );
 }
 
 export const defaultLoadCurrentVersion: (props: VersionRelatedDropdownsProps) => UseComponentVersion = (props) => {
   return (_props) => {
     const { skip, version: _version } = _props || {};
-    const { snaps, tags, currentVersion, loading } = props.useComponent?.({ skip, id: props.componentId }) ?? {};
+    const { snaps, tags, currentVersion, loading } =
+      props.useComponent?.({ skip, id: props.componentId, fetchLogs: true }) ?? {};
     const version = _version ?? currentVersion;
     const isTag = React.useMemo(() => semver.valid(version), [loading, version]);
     if (isTag) {
@@ -318,9 +421,10 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
     tags,
     snaps,
     latest,
+    hasMoreVersions,
     packageName,
     currentVersion: _currentVersion,
-  } = props.useComponent?.({ initialLoad: true }) || {};
+  } = props.useComponent?.({ initialLoad: true, fetchLogs: false }) || {};
   const location = useLocation();
   const { lanesModel } = useLanes();
   const lanes = id ? lanesModel?.getLanesByComponentId(id as any)?.filter((lane) => !lane.id.isDefault()) || [] : [];
@@ -329,7 +433,7 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
 
   const isWorkspace = host === 'teambit.workspace/workspace';
 
-  const isNew = tags?.length === 0 && snaps?.length === 0;
+  const isNew = hasMoreVersions === false && tags?.length === 0 && snaps?.length === 0;
 
   const localVersion = isWorkspace && !isNew && (!viewedLane || lanesModel?.isViewingCurrentLane());
 
@@ -366,7 +470,7 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
         lanes={lanes}
         loading={loading}
         useComponentVersions={props.useComponent}
-        hasMoreVersions={!isNew}
+        hasMoreVersions={hasMoreVersions}
         useCurrentVersionLog={loadVersion}
         localVersion={localVersion}
         currentVersion={currentVersion}

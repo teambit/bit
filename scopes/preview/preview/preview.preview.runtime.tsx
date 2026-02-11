@@ -56,6 +56,24 @@ export class PreviewPreview {
   }
 
   private isDev = false;
+  private sizeObserver?: ResizeObserver;
+  private sizePublishRaf?: number;
+  private sizePublishDebounced?: ReturnType<typeof debounce>;
+
+  private cleanupSizeObserver() {
+    if (this.sizeObserver) {
+      this.sizeObserver.disconnect();
+      this.sizeObserver = undefined;
+    }
+    if (this.sizePublishRaf) {
+      window.cancelAnimationFrame(this.sizePublishRaf);
+      this.sizePublishRaf = undefined;
+    }
+    if (this.sizePublishDebounced) {
+      this.sizePublishDebounced.cancel();
+      this.sizePublishDebounced = undefined;
+    }
+  }
 
   private isReady() {
     const { previewName } = this.getLocation();
@@ -171,18 +189,21 @@ export class PreviewPreview {
 
   reportSize() {
     if (!window?.parent || !window?.document) return;
-    // In Preview, the <body> is always exactly as tall as the iframe viewport, not as tall as the content.
-    // by measuring the scrollHeight of the root element, we can get the height of the content.
+    this.cleanupSizeObserver();
+    // In Preview, the <body> can stay viewport-sized while the actual content extends beyond it.
+    // Avoid style mutations in ResizeObserver callbacks (which can create ResizeObserver loop errors).
     const measure = () => {
       const root = window.document.getElementById('root') ?? window.document.documentElement;
-      const prevHeight = root.style.height;
-      // set height auto to make the browser calculate the natural block formatting height
-      // scrollHeight of an element that has height: 100% reports the viewport height, not the content height
-      root.style.height = 'auto';
-      const height = root.scrollHeight;
-      const width = root.scrollWidth;
-      // restore the previous height so nothing visually changes within the same tick
-      root.style.height = prevHeight;
+      const docEl = window.document.documentElement;
+      const body = window.document.body;
+      const rootRect = root.getBoundingClientRect();
+      const height = Math.max(
+        root.scrollHeight,
+        docEl.scrollHeight,
+        body?.scrollHeight || 0,
+        Math.ceil(rootRect.height)
+      );
+      const width = Math.max(root.scrollWidth, docEl.scrollWidth, body?.scrollWidth || 0, Math.ceil(rootRect.width));
       return { width, height };
     };
     const publish = () => {
@@ -192,11 +213,21 @@ export class PreviewPreview {
     // publish right away so the parent gets the first real size as soon as possible
     publish();
     // publish dimension changes when the content size actually changes
-    const debounced = debounce(publish, 100);
-    const resizedObserver = new ResizeObserver(debounced);
-    resizedObserver.observe(window.document.documentElement);
+    this.sizePublishDebounced = debounce(publish, 100);
+    const schedulePublish = () => {
+      if (this.sizePublishRaf) {
+        window.cancelAnimationFrame(this.sizePublishRaf);
+      }
+      this.sizePublishRaf = window.requestAnimationFrame(() => {
+        this.sizePublishRaf = undefined;
+        this.sizePublishDebounced?.();
+      });
+    };
+    this.sizeObserver = new ResizeObserver(schedulePublish);
+    this.sizeObserver.observe(window.document.documentElement);
     const root = window.document.getElementById('root');
-    if (root) resizedObserver.observe(root);
+    if (root) this.sizeObserver.observe(root);
+    if (window.document.body) this.sizeObserver.observe(window.document.body);
   }
 
   async getPreviewModule(previewName: string, id: ComponentID): Promise<PreviewModule> {

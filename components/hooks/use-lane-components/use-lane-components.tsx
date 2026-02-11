@@ -45,11 +45,19 @@ export type UseLaneComponentsResult = {
   loading?: boolean;
 };
 
-export function useLaneComponents(laneId?: LaneId): UseLaneComponentsResult {
+export type UseLaneComponentsOptions = {
+  skip?: boolean;
+};
+
+export function useLaneComponents(laneId?: LaneId, options: UseLaneComponentsOptions = {}): UseLaneComponentsResult {
+  const shouldSkip = options.skip || !laneId;
   // @ts-ignore - remove once graphql versions are aligned (see #8753)
   const { data, loading } = useQuery(GET_LANE_COMPONENTS, {
-    variables: { ids: [laneId?.toString()], skipList: laneId?.isDefault() },
-    skip: !laneId,
+    variables: { ids: [laneId?.toString()], skipList: laneId?.isDefault() ?? false },
+    skip: shouldSkip,
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
+    returnPartialData: true,
   });
 
   const rawComps = data?.lanes.list && data?.lanes.list.length > 0 ? data?.lanes.list[0] : data?.lanes.default;

@@ -24,6 +24,7 @@ export type UseComponentDropdownVersionsResult = {
 };
 export type UseComponentDropdownVersionsProps = {
   skip?: boolean;
+  fetchLogs?: boolean;
 };
 export type UseComponentDropdownVersions = (
   props?: UseComponentDropdownVersionsProps
@@ -79,8 +80,13 @@ function _VersionDropdown({
   ...rest
 }: VersionDropdownProps) {
   const [key, setKey] = useState(0);
-  const singleVersion = !hasMoreVersions;
+  const singleVersion = hasMoreVersions === false;
   const [open, setOpen] = useState(false);
+  const [prefetchRequested, setPrefetchRequested] = useState(false);
+
+  const requestPrefetch = useCallback(() => {
+    setPrefetchRequested(true);
+  }, []);
 
   useEffect(() => {
     if (loading && open) {
@@ -89,6 +95,7 @@ function _VersionDropdown({
   }, [loading]);
 
   const handlePlaceholderClicked = (e: React.MouseEvent<HTMLDivElement>) => {
+    requestPrefetch();
     if (loading) return;
     if (e.target === e.currentTarget) {
       setOpen((o) => !o);
@@ -128,16 +135,36 @@ function _VersionDropdown({
   }
 
   return (
-    <div {...rest} className={classNames(styles.versionDropdown, className)}>
+    <div
+      {...rest}
+      className={classNames(styles.versionDropdown, className)}
+      onMouseEnter={requestPrefetch}
+      onFocus={requestPrefetch}
+      onPointerDown={requestPrefetch}
+      onTouchStart={requestPrefetch}
+    >
       <Dropdown
         className={classNames(styles.dropdown, dropdownClassName)}
         dropClass={classNames(styles.menu, menuClassName)}
         open={open}
         onClick={handlePlaceholderClicked}
         onClickOutside={() => setOpen(false)}
-        onChange={(_e, _open) => _open && setKey((x) => x + 1)} // to reset menu to initial state when toggling
+        onChange={(_e, _open) => {
+          if (_open) {
+            requestPrefetch();
+            setKey((x) => x + 1);
+          }
+        }} // to reset menu to initial state when toggling
         PlaceholderComponent={({ children, ...other }) => (
-          <div {...other} className={placeholderClassName} onClick={handlePlaceholderClicked}>
+          <div
+            {...other}
+            className={placeholderClassName}
+            onClick={handlePlaceholderClicked}
+            onMouseEnter={requestPrefetch}
+            onFocus={requestPrefetch}
+            onPointerDown={requestPrefetch}
+            onTouchStart={requestPrefetch}
+          >
             {children}
           </div>
         )}
@@ -155,6 +182,7 @@ function _VersionDropdown({
           getActiveTabIndex={getActiveTabIndex}
           lanes={lanes}
           useVersions={useComponentVersions}
+          shouldPrefetchVersions={prefetchRequested}
           onVersionClicked={() => setOpen(false)}
           open={open}
         />
@@ -175,6 +203,7 @@ type VersionMenuProps = {
   loading?: boolean;
   getActiveTabIndex?: GetActiveTabIndex;
   open?: boolean;
+  shouldPrefetchVersions?: boolean;
   onVersionClicked?: () => void;
 } & HTMLAttributes<HTMLDivElement>;
 
@@ -211,11 +240,20 @@ function _VersionMenu({
   getActiveTabIndex = defaultActiveTabIndex,
   loading: loadingFromProps,
   open,
+  shouldPrefetchVersions,
   onVersionClicked,
   ...rest
 }: VersionMenuProps) {
-  const { snaps, tags, loading: loadingVersions } = useVersions?.() || {};
-  const loading = loadingFromProps || loadingVersions;
+  const shouldFetchVersions = !!(open || shouldPrefetchVersions);
+  const {
+    snaps,
+    tags,
+    loading: loadingVersions,
+  } = useVersions?.({
+    skip: !shouldFetchVersions,
+    fetchLogs: shouldFetchVersions,
+  }) || {};
+  const loading = loadingFromProps || (shouldFetchVersions && loadingVersions);
 
   const tabs = useMemo(
     () =>

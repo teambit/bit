@@ -8,6 +8,26 @@ import { flatten, slice } from 'lodash';
 import type { LaneComponentDiffStatus, LaneDiffStatus, LaneDiffStatusOptions, LanesMain } from './lanes.main.runtime';
 
 export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
+  type LaneResolverCacheState = {
+    laneComponentIdsByLane: Map<string, Promise<ComponentID[]>>;
+    laneComponentsByLane: Map<string, Promise<any[]>>;
+    laneReadmeByLane: Map<string, Promise<any | undefined>>;
+  };
+
+  const getLaneResolverCacheState = (context: any): LaneResolverCacheState => {
+    if (!context.__lanesResolverCacheState) {
+      context.__lanesResolverCacheState = {
+        laneComponentIdsByLane: new Map<string, Promise<ComponentID[]>>(),
+        laneComponentsByLane: new Map<string, Promise<any[]>>(),
+        laneReadmeByLane: new Map<string, Promise<any | undefined>>(),
+      };
+    }
+
+    return context.__lanesResolverCacheState as LaneResolverCacheState;
+  };
+
+  const getLaneCacheKey = (lane: LaneData) => lane.id.toString();
+
   return {
     typeDefs: gql`
       type FileDiff {
@@ -264,16 +284,40 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
       },
       Lane: {
         id: (lane: LaneData) => lane.id.toObject(),
-        laneComponentIds: async (lane: LaneData) => {
-          const componentIds = await lanesMainRuntime.getLaneComponentIds(lane);
+        laneComponentIds: async (lane: LaneData, _args, context) => {
+          const cache = getLaneResolverCacheState(context);
+          const laneKey = getLaneCacheKey(lane);
+          let componentIdsPromise = cache.laneComponentIdsByLane.get(laneKey);
+          if (!componentIdsPromise) {
+            componentIdsPromise = lanesMainRuntime.getLaneComponentIds(lane);
+            cache.laneComponentIdsByLane.set(laneKey, componentIdsPromise);
+          }
+
+          const componentIds = await componentIdsPromise;
           return componentIds.map((componentId) => componentId.toObject());
         },
-        components: async (lane: LaneData) => {
-          const laneComponents = await lanesMainRuntime.getLaneComponentModels(lane);
+        components: async (lane: LaneData, _args, context) => {
+          const cache = getLaneResolverCacheState(context);
+          const laneKey = getLaneCacheKey(lane);
+          let laneComponentsPromise = cache.laneComponentsByLane.get(laneKey);
+          if (!laneComponentsPromise) {
+            laneComponentsPromise = lanesMainRuntime.getLaneComponentModels(lane);
+            cache.laneComponentsByLane.set(laneKey, laneComponentsPromise);
+          }
+
+          const laneComponents = await laneComponentsPromise;
           return laneComponents;
         },
-        readmeComponent: async (lane: LaneData) => {
-          const laneReadmeComponent = await lanesMainRuntime.getLaneReadmeComponent(lane);
+        readmeComponent: async (lane: LaneData, _args, context) => {
+          const cache = getLaneResolverCacheState(context);
+          const laneKey = getLaneCacheKey(lane);
+          let laneReadmePromise = cache.laneReadmeByLane.get(laneKey);
+          if (!laneReadmePromise) {
+            laneReadmePromise = lanesMainRuntime.getLaneReadmeComponent(lane);
+            cache.laneReadmeByLane.set(laneKey, laneReadmePromise);
+          }
+
+          const laneReadmeComponent = await laneReadmePromise;
           return laneReadmeComponent;
         },
         createdAt: async (lane: LaneData) => {

@@ -1,4 +1,5 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import classNames from 'classnames';
 import { EmptyWorkspace } from '@teambit/workspace.ui.empty-workspace';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 import { Tooltip } from '@teambit/design.ui.tooltip';
@@ -12,7 +13,7 @@ import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-componen
 import type { ComponentCardPluginType, PluginProps } from '@teambit/explorer.ui.component-card';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 import { H3 } from '@teambit/design.ui.heading';
-import { WorkspaceContext } from '../workspace-context';
+import { WorkspaceUIContext } from '../workspace-context';
 import { LinkPlugin } from './link-plugin';
 import { useWorkspaceAggregation } from './use-workspace-aggregation';
 import { useQueryParamWithDefault } from './use-query-param-with-default';
@@ -29,7 +30,7 @@ type ConnectionEventDetail = {
 };
 
 export function WorkspaceOverview() {
-  const workspace = useContext(WorkspaceContext);
+  const { workspace, loading: workspaceLoading } = useContext(WorkspaceUIContext);
   const { components, componentDescriptors } = workspace;
 
   const { isMinimal } = useWorkspaceMode();
@@ -64,7 +65,10 @@ export function WorkspaceOverview() {
   const [activeNamespaces, setActiveNamespaces] = useState<string[]>([]);
   const [activeScopes, setActiveScopes] = useState<string[]>([]);
   const [connectionState, setConnectionState] = useState<'loading' | 'online' | 'offline'>('loading');
-  const didAutoRefreshRef = useRef(false);
+  const [connectionReason, setConnectionReason] = useState<'network' | 'browser-offline'>('network');
+  const [isRetryingConnection, setIsRetryingConnection] = useState(false);
+  const offlineTimerRef = useRef<number | undefined>(undefined);
+  const pendingOfflineReasonRef = useRef<'network' | 'browser-offline'>('network');
 
   const filters = useMemo(
     () => ({ namespaces: activeNamespaces, scopes: activeScopes }),
@@ -80,19 +84,107 @@ export function WorkspaceOverview() {
   const plugins = useCardPlugins({ compModelsById, componentDescriptors });
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { virtualizer, virtualRows, columns, isVirtualized } = useVirtualGrid({
+  const { virtualizer, virtualRows, columns, isVirtualized, rowStarts } = useVirtualGrid({
     groups,
     groupType,
     scrollRef,
     isMinimal,
   });
+  const [retainedRowIndexes, setRetainedRowIndexes] = useState<number[]>([]);
+  const retainedRowStartsRef = useRef<Record<number, number>>({});
+
+  const liveVirtualItems = isVirtualized ? virtualizer.getVirtualItems() : [];
+  const liveVirtualItemsByIndex = useMemo(() => {
+    return new Map(liveVirtualItems.map((item) => [item.index, item]));
+  }, [liveVirtualItems]);
+  const liveRowKey = useMemo(() => liveVirtualItems.map((item) => item.index).join(','), [liveVirtualItems]);
+  const rowIndexesToRender = useMemo(() => {
+    if (!isVirtualized) return [];
+    if (retainedRowIndexes.length > 0) return retainedRowIndexes;
+    if (liveVirtualItems.length > 0) return liveVirtualItems.map((item) => item.index);
+    return virtualRows.slice(0, Math.min(8, virtualRows.length)).map((_, index) => index);
+  }, [isVirtualized, retainedRowIndexes, liveVirtualItems, virtualRows]);
+
+  useEffect(() => {
+    if (!isVirtualized) return;
+    for (const item of liveVirtualItems) {
+      retainedRowStartsRef.current[item.index] = item.start;
+    }
+  }, [liveRowKey, liveVirtualItems, isVirtualized]);
+
+  useEffect(() => {
+    if (!isVirtualized) return;
+    if (!liveVirtualItems.length) return;
+    setRetainedRowIndexes((prev) => {
+      const next = new Set(prev);
+      let changed = false;
+      for (const item of liveVirtualItems) {
+        if (!next.has(item.index)) {
+          next.add(item.index);
+          changed = true;
+        }
+      }
+      if (!changed) return prev;
+      return Array.from(next).sort((a, b) => a - b);
+    });
+  }, [liveRowKey, liveVirtualItems, isVirtualized]);
+
+  // Filters/aggregation semantics changed — drop retained row cache to avoid index drift.
+  useEffect(() => {
+    if (!isVirtualized) return;
+    setRetainedRowIndexes([]);
+    retainedRowStartsRef.current = {};
+  }, [aggregation, groupType, activeNamespaces.join(','), activeScopes.join(','), isVirtualized]);
 
   useEffect(() => {
     if (components.length > 0 || workspace.name) {
       setConnectionState('online');
-      didAutoRefreshRef.current = false;
     }
   }, [components.length, workspace.name]);
+
+  const runConnectionProbe = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    if (isRetryingConnection) return;
+
+    setIsRetryingConnection(true);
+    try {
+      if (!window.navigator.onLine) {
+        setConnectionReason('browser-offline');
+        setConnectionState('offline');
+        return;
+      }
+
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 2500);
+      const result = await fetch('/graphql', {
+        method: 'POST',
+        cache: 'no-store',
+        signal: controller.signal,
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: 'query __BitHealth { __typename }',
+        }),
+      }).catch(() => undefined);
+      window.clearTimeout(timeout);
+
+      if (result?.ok) {
+        if (offlineTimerRef.current) {
+          window.clearTimeout(offlineTimerRef.current);
+          offlineTimerRef.current = undefined;
+        }
+        setConnectionState('online');
+        setConnectionReason('network');
+        return;
+      }
+
+      setConnectionReason('network');
+      setConnectionState('offline');
+    } finally {
+      setIsRetryingConnection(false);
+    }
+  }, [isRetryingConnection]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -102,51 +194,125 @@ export function WorkspaceOverview() {
       if (detail?.reason === 'preview') return;
 
       if (detail?.online === true) {
-        setConnectionState('online');
-
-        // If initial queries failed while server was booting, recover automatically.
-        if (!workspace.name && components.length === 0 && !didAutoRefreshRef.current) {
-          didAutoRefreshRef.current = true;
-          window.setTimeout(() => window.location.reload(), 60);
+        if (offlineTimerRef.current) {
+          window.clearTimeout(offlineTimerRef.current);
+          offlineTimerRef.current = undefined;
         }
+        setConnectionReason('network');
+        setConnectionState('online');
         return;
       }
 
       if (detail?.online === false) {
-        setConnectionState('offline');
+        pendingOfflineReasonRef.current = detail?.reason === 'browser-offline' ? 'browser-offline' : 'network';
+        if (!offlineTimerRef.current) {
+          // Debounce brief network/proxy hiccups to prevent shell flicker.
+          offlineTimerRef.current = window.setTimeout(() => {
+            setConnectionReason(pendingOfflineReasonRef.current);
+            setConnectionState('offline');
+            offlineTimerRef.current = undefined;
+          }, 900);
+        }
       }
     };
 
     window.addEventListener(CONNECTION_STATUS_EVENT, handleConnectionEvent as EventListener);
-    return () => window.removeEventListener(CONNECTION_STATUS_EVENT, handleConnectionEvent as EventListener);
+    return () => {
+      window.removeEventListener(CONNECTION_STATUS_EVENT, handleConnectionEvent as EventListener);
+      if (offlineTimerRef.current) {
+        window.clearTimeout(offlineTimerRef.current);
+        offlineTimerRef.current = undefined;
+      }
+    };
   }, [components.length, workspace.name]);
 
-  // Empty state: don't flash EmptyWorkspace during the ~120ms initial load.
-  // workspace.name is '' while loading (Workspace.empty()), non-empty when data arrives.
+  const primaryShellCards = useMemo(() => Array.from({ length: 8 }, (_, idx) => idx), []);
+  const secondaryShellCards = useMemo(() => Array.from({ length: 4 }, (_, idx) => idx), []);
+
+  const bootShell = (
+    <div className={styles.bootShellWrap}>
+      <div className={classNames(styles.bootStatusRow, connectionState === 'offline' && styles.bootStatusRowOffline)}>
+        <div className={styles.bootStatusCopy}>
+          <span
+            className={classNames(
+              styles.bootShellStatus,
+              connectionState === 'offline' ? styles.bootShellStatusOffline : styles.bootShellStatusLoading
+            )}
+          >
+            {connectionState === 'offline' ? 'Offline' : 'Connecting'}
+          </span>
+          <span className={styles.bootStatusText}>
+            {connectionState === 'offline'
+              ? connectionReason === 'browser-offline'
+                ? 'No browser network connection. Reconnect to continue.'
+                : 'Dev server is temporarily unavailable. The workspace will recover as soon as it responds.'
+              : 'Loading workspace structure and preview slots.'}
+          </span>
+        </div>
+        <button
+          type="button"
+          className={styles.bootShellAction}
+          onClick={() => void runConnectionProbe()}
+          disabled={isRetryingConnection}
+        >
+          {isRetryingConnection ? 'Checking...' : 'Retry now'}
+        </button>
+      </div>
+      <div className={styles.bootLayoutShell} aria-hidden>
+        <div className={styles.bootFilterRow}>
+          <div className={styles.bootFilterPill} />
+          <div className={styles.bootFilterPill} />
+          <div className={styles.bootFilterSpacer} />
+          <div className={styles.bootFilterToggle} />
+        </div>
+        <div className={styles.bootSection}>
+          <H3 className={styles.bootSectionSlash}>/</H3>
+          <div className={styles.bootSkeletonGrid}>
+            {primaryShellCards.map((cardIndex) => (
+              <div key={`boot-shell-card-primary-${cardIndex}`} className={styles.bootSkeletonCard}>
+                <div className={styles.bootSkeletonCardBody}>
+                  <div className={styles.bootSkeletonCardTopLabel} />
+                  <div className={styles.bootSkeletonCardTitle} />
+                  <div className={styles.bootSkeletonCardTitleShort} />
+                  <div className={styles.bootSkeletonCardPreview} />
+                </div>
+                <div className={styles.bootSkeletonCardFooter}>
+                  <div className={styles.bootSkeletonCardTag} />
+                  <div className={styles.bootSkeletonCardMeta} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className={styles.bootSection}>
+          <div className={styles.bootSectionHeading} />
+          <div className={styles.bootSkeletonGrid}>
+            {secondaryShellCards.map((cardIndex) => (
+              <div key={`boot-shell-card-secondary-${cardIndex}`} className={styles.bootSkeletonCard}>
+                <div className={styles.bootSkeletonCardBody}>
+                  <div className={styles.bootSkeletonCardTopLabel} />
+                  <div className={styles.bootSkeletonCardTitle} />
+                  <div className={styles.bootSkeletonCardTitleShort} />
+                  <div className={styles.bootSkeletonCardPreview} />
+                </div>
+                <div className={styles.bootSkeletonCardFooter}>
+                  <div className={styles.bootSkeletonCardTag} />
+                  <div className={styles.bootSkeletonCardMeta} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Empty state: keep loading shell while workspace query is still warming up.
   if (!components.length) {
-    if (!workspace.name && connectionState === 'loading') {
-      return (
-        <div ref={scrollRef} className={styles.container}>
-          <div className={styles.loadingShell}>
-            <H3 className={styles.loadingShellTitle}>Starting workspace UI</H3>
-            <p className={styles.loadingShellText}>Connecting to dev server and loading components.</p>
-          </div>
-        </div>
-      );
+    if (!workspace.name || workspaceLoading) {
+      return <div className={styles.container}>{bootShell}</div>;
     }
 
-    if (!workspace.name && connectionState === 'offline') {
-      return (
-        <div ref={scrollRef} className={styles.container}>
-          <div className={styles.offlineShell}>
-            <H3 className={styles.offlineShellTitle}>Offline mode</H3>
-            <p className={styles.offlineShellText}>Waiting for the dev server to reconnect.</p>
-          </div>
-        </div>
-      );
-    }
-
-    if (!workspace.name) return null;
     return <EmptyWorkspace name={workspace.name} />;
   }
 
@@ -168,21 +334,23 @@ export function WorkspaceOverview() {
       {filteredCount > 0 &&
         (isVirtualized ? (
           <div style={{ height: virtualizer.getTotalSize(), width: '100%', position: 'relative' }}>
-            {virtualizer.getVirtualItems().map((virtualRow) => {
-              const row = virtualRows[virtualRow.index];
+            {rowIndexesToRender.map((rowIndex) => {
+              const row = virtualRows[rowIndex];
               if (!row) return null;
+              const liveItem = liveVirtualItemsByIndex.get(rowIndex);
+              const start = liveItem?.start ?? retainedRowStartsRef.current[rowIndex] ?? rowStarts[rowIndex] ?? 0;
+              const itemKey = liveItem?.key ?? `retained-${rowIndex}`;
 
               return (
                 <div
-                  key={virtualRow.key}
-                  data-index={virtualRow.index}
-                  ref={virtualizer.measureElement}
+                  key={itemKey}
+                  data-index={rowIndex}
                   style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
                     width: '100%',
-                    transform: `translateY(${virtualRow.start}px)`,
+                    transform: `translateY(${start}px)`,
                   }}
                 >
                   {row.type === 'header' ? (
@@ -222,7 +390,7 @@ export function WorkspaceOverview() {
               ) : (
                 <div
                   key={`cards-${index}`}
-                  className={styles.virtualCardRow}
+                  className={`${styles.virtualCardRow} ${styles.nonVirtualRow}`}
                   style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
                 >
                   {row.items.map((item) => (

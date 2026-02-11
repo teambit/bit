@@ -1,5 +1,78 @@
 .preview {
   // preview background should always be white to avoid collisions with themes.
   background-color: var(--bit-bg-color, #fff);
-  // height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.loadingPlaceholder {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: var(--surface-color, #fff);
+  pointer-events: none;
+}
+
+.loadingShimmer {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 10px;
+  height: 100%;
+  padding: 10px;
+}
+
+.loadingChrome,
+.loadingCanvas {
+  border-radius: 8px;
+  border: 1px solid var(--border-medium-color, #ececec);
+  background: var(--surface-color, #fff);
+}
+
+.loadingChrome {
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+}
+
+.loadingDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #e2e2e2;
+}
+
+.loadingCanvas {
+  flex: 1;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 12px;
+}
+
+.loadingBar {
+  height: 11px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e3e3e3 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: preview-shimmer 1.4s ease-in-out infinite;
+}
+
+.loadingCaption {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--on-surface-medium-color, #717784);
+}
+
+@keyframes preview-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
 }

@@ -1,11 +1,18 @@
 /** fallback html template for the main UI, in case ssr is not active */
 type HtmlOptions = {
   serviceWorkerMode?: 'register' | 'disable';
+  workspaceCacheKey?: string;
+  serviceWorkerBuildToken?: string;
+  autoReloadOnSwControllerChange?: boolean;
+  serviceWorkerDevSessionReset?: boolean;
 };
 
 export function html(title: string, withDevTools?: boolean, options?: HtmlOptions) {
   const serviceWorkerMode = options?.serviceWorkerMode ?? 'register';
-  const workspaceCacheKey = title;
+  const workspaceCacheKey = options?.workspaceCacheKey || title;
+  const serviceWorkerBuildToken = options?.serviceWorkerBuildToken || 'dev';
+  const autoReloadOnSwControllerChange = options?.autoReloadOnSwControllerChange ?? false;
+  const serviceWorkerDevSessionReset = options?.serviceWorkerDevSessionReset ?? false;
 
   const serviceWorkerScript =
     serviceWorkerMode === 'disable'
@@ -15,7 +22,6 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
       (function() {
         if (!('serviceWorker' in navigator)) return;
         var hadController = Boolean(navigator.serviceWorker.controller);
-        var RELOAD_GUARD = '__bit_sw_dev_cleanup_reload__';
         void (async function() {
           try {
             var registrations = await navigator.serviceWorker.getRegistrations();
@@ -27,9 +33,10 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
               await Promise.all(cacheNames.map(function(name) { return caches.delete(name); }));
             }
           } catch {}
-          if (hadController && !window[RELOAD_GUARD]) {
-            window[RELOAD_GUARD] = true;
-            window.location.reload();
+          // Never auto-reload here; browser should stay stable and let runtime recover.
+          // A forced reload can create infinite loops when multiple local Bit instances run in parallel.
+          if (hadController) {
+            try { console.info('[bit-sw] cleared stale dev service worker controller'); } catch {}
           }
         })();
       })();
@@ -42,21 +49,8 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
         if (!('serviceWorker' in navigator)) return;
         var RELOAD_GUARD = '__bit_sw_controller_reload__';
 
-        function getBuildToken() {
-          try {
-            var scripts = Array.prototype.slice.call(document.querySelectorAll('script[src]'));
-            for (var i = 0; i < scripts.length; i += 1) {
-              var src = scripts[i] && scripts[i].getAttribute('src');
-              if (!src) continue;
-              var match = src.match(/runtime-main\\.([a-z0-9]+)\\.js/i);
-              if (match && match[1]) return match[1];
-            }
-          } catch {}
-          return String(Date.now());
-        }
-
         function getSwUrl() {
-          var token = getBuildToken();
+          var token = String(window.__BIT_SW_BUILD_TOKEN__ || 'dev');
           return '/service-worker.js?ws=' + encodeURIComponent(window.__BIT_WORKSPACE_CACHE_KEY__ || '') + '&v=' + encodeURIComponent(token);
         }
 
@@ -71,6 +65,37 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
           } catch {}
         }
 
+        async function clearMismatchedWorkspaceSw() {
+          try {
+            var expectedWorkspaceKey = String(window.__BIT_WORKSPACE_CACHE_KEY__ || '');
+            var registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map(async function(reg) {
+              var scriptUrl = (reg.active && reg.active.scriptURL) || (reg.waiting && reg.waiting.scriptURL) || (reg.installing && reg.installing.scriptURL) || '';
+              if (!scriptUrl) return;
+              try {
+                var parsed = new URL(scriptUrl, window.location.origin);
+                var wsParam = parsed.searchParams.get('ws') || '';
+                if (wsParam && wsParam !== expectedWorkspaceKey) {
+                  await reg.unregister();
+                }
+              } catch {}
+            }));
+          } catch {}
+        }
+
+        async function resetForNewDevSessionIfNeeded() {
+          if (!window.__BIT_SW_DEV_SESSION_RESET__) return;
+          try {
+            var workspaceKey = String(window.__BIT_WORKSPACE_CACHE_KEY__ || '');
+            var token = String(window.__BIT_SW_BUILD_TOKEN__ || 'dev');
+            var storageKey = '__bit_sw_dev_session_token__:' + workspaceKey;
+            var previousToken = window.localStorage.getItem(storageKey);
+            if (previousToken === token) return;
+            await clearServiceWorkersAndCaches();
+            window.localStorage.setItem(storageKey, token);
+          } catch {}
+        }
+
         async function migrateBrokenSwIfNeeded() {
           var swUrl = getSwUrl();
           try {
@@ -80,7 +105,8 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
             // Migration for older broken SW fallback that points to "public/index.html".
             if (
               swScript.indexOf('public/index.html') !== -1 ||
-              swScript.indexOf('createHandlerBoundToURL("public/index.html")') !== -1
+              swScript.indexOf('createHandlerBoundToURL("public/index.html")') !== -1 ||
+              swScript.indexOf("createHandlerBoundToURL('public/index.html')") !== -1
             ) {
               await clearServiceWorkersAndCaches();
             }
@@ -90,6 +116,8 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
         async function registerServiceWorker() {
           var swUrl = getSwUrl();
           try {
+            await resetForNewDevSessionIfNeeded();
+            await clearMismatchedWorkspaceSw();
             await migrateBrokenSwIfNeeded();
             var reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: 'none' });
             try { await reg.update(); } catch {}
@@ -100,9 +128,12 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
         }
 
         navigator.serviceWorker.addEventListener('controllerchange', function() {
+          if (!window.__BIT_SW_AUTO_RELOAD_ON_CONTROLLER_CHANGE__) return;
           if (window[RELOAD_GUARD]) return;
           window[RELOAD_GUARD] = true;
-          window.location.reload();
+          // Do not force full page reloads from SW controller changes.
+          // Keep the app running and allow in-app health/reconnect flows to recover state.
+          try { console.info('[bit-sw] controller changed'); } catch {}
         });
 
         window.addEventListener('load', function() {
@@ -130,6 +161,12 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
       <script>
       // Workspace-level cache partition key used by SW/Apollo to avoid cross-workspace cache collisions.
       window.__BIT_WORKSPACE_CACHE_KEY__ = ${JSON.stringify(workspaceCacheKey)};
+      window.__BIT_SW_BUILD_TOKEN__ = ${JSON.stringify(serviceWorkerBuildToken)};
+      window.__BIT_SW_AUTO_RELOAD_ON_CONTROLLER_CHANGE__ = ${JSON.stringify(autoReloadOnSwControllerChange)};
+      window.__BIT_SW_DEV_SESSION_RESET__ = ${JSON.stringify(serviceWorkerDevSessionReset)};
+      // Guard against dev hot-clients forcing top-level full-page refresh loops.
+      // Preview iframes can opt-in via __BIT_ALLOW_DEV_AUTO_RELOAD__ when needed.
+      window.__BIT_DISABLE_DEV_AUTO_RELOAD__ = true;
       </script>
       ${serviceWorkerScript}
     </head>

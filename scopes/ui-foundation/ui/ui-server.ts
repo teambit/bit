@@ -50,6 +50,14 @@ export class UIServer {
   private _app: Express;
   private _server: Server;
   private _proxyRoutes = new Set<string>();
+  private _componentProxyEntries = new Map<
+    string,
+    {
+      preview: ProxyEntry;
+      hmr: ProxyEntry;
+      active: boolean;
+    }
+  >();
 
   constructor(
     private graphql: GraphqlMain,
@@ -102,27 +110,98 @@ export class UIServer {
     return this.startPromise;
   }
 
+  private isExpectedProxySocketError(err: any) {
+    const code = err?.code;
+    return code === 'EPIPE' || code === 'ECONNRESET' || code === 'ECONNABORTED';
+  }
+
+  private closeUpgradeSocket(socket: any, status = 503) {
+    if (!socket || socket.destroyed) return;
+    try {
+      socket.end(`HTTP/1.1 ${status} Service Unavailable\r\nConnection: close\r\n\r\n`);
+    } catch (err) {
+      this.logger.debug(`failed to close upgrade socket: ${(err as Error).message}`);
+    }
+    try {
+      socket.destroy();
+    } catch {
+      // noop
+    }
+  }
+
+  private normalizeProxyPath(path: string) {
+    const rawPath = (path || '').replace(/\?.+$/, '');
+    try {
+      return stripTrailingChar(decodeURIComponent(rawPath), '/');
+    } catch {
+      return stripTrailingChar(rawPath, '/');
+    }
+  }
+
+  private setResponseStatus(res: any, status: number) {
+    if (typeof res?.status === 'function') {
+      res.status(status);
+      return;
+    }
+    res.statusCode = status;
+  }
+
+  private sendResponse(res: any, status: number, body: string, contentType = 'text/plain; charset=utf-8') {
+    this.setResponseStatus(res, status);
+    if (!res.headersSent) {
+      res.setHeader('content-type', contentType);
+    }
+    if (typeof res?.send === 'function') {
+      res.send(body);
+      return;
+    }
+    res.end(body);
+  }
+
+  private sendPreviewOfflineScript(res: any) {
+    this.sendResponse(
+      res,
+      503,
+      `window.dispatchEvent(new CustomEvent('bit-dev-server-connection-status',{detail:{online:false,reason:'preview',timestamp:Date.now()}}));`,
+      'application/javascript; charset=utf-8'
+    );
+  }
+
   addComponentServerProxy(server: ComponentServer): void {
     const envId = server.context.envRuntime.id;
     const previewRoute = `/preview/${envId}`;
     const hmrRoute = `/_hmr/${envId}`;
+    const previewTarget = `http://${this.host}:${server.port}`;
+    const hmrTarget = `ws://${this.host}:${server.port}`;
+
+    // Preview dev servers can restart and come back on a new port.
+    // Keep routes stable, but update targets in-place so existing proxy handlers
+    // forward to the latest server instead of stale sockets/ports.
+    const existing = this._componentProxyEntries.get(envId);
+    if (existing) {
+      existing.preview.target = previewTarget;
+      existing.hmr.target = hmrTarget;
+      existing.active = true;
+      this.logger.debug(`Updated component proxy for ${envId} to ${previewTarget}`);
+      return;
+    }
 
     const entries = [
       {
         context: [previewRoute],
-        target: `http://${this.host}:${server.port}`,
+        target: previewTarget,
       },
       {
         context: [hmrRoute],
-        target: `ws://${this.host}:${server.port}`,
+        target: hmrTarget,
         ws: true,
       },
     ];
-
-    if (this._proxyRoutes.has(previewRoute) || this._proxyRoutes.has(hmrRoute)) {
-      this.logger.debug(`Routes for environment ${envId} already exist, skipping`);
-      return;
-    }
+    this._componentProxyEntries.set(envId, {
+      preview: entries[0],
+      hmr: entries[1],
+      active: true,
+    });
 
     try {
       const dynamicProxy = httpProxy.createProxyServer({
@@ -131,7 +210,8 @@ export class UIServer {
         timeout: 0,
       });
 
-      dynamicProxy.on('error', (e) => {
+      dynamicProxy.on('error', (e: any) => {
+        if (this.isExpectedProxySocketError(e)) return;
         this.logger.error(e.message);
       });
 
@@ -145,19 +225,25 @@ export class UIServer {
       });
       const wsHandler = (req, socket, head) => {
         try {
-          const reqUrl = req.url?.replace(/\?.+$/, '') || '';
-          const path = stripTrailingChar(reqUrl, '/');
+          if (!socket || socket.destroyed) return;
+          const path = this.normalizeProxyPath(req.url || '');
 
           const entry = entries.find(
             (proxy) =>
               proxy.ws &&
               proxy.context.some((item) => {
-                const itemPath = stripTrailingChar(item, '/');
-                return path === itemPath || path.startsWith(itemPath);
+                return this.pathMatchesContext(path, item);
               })
           );
 
           if (!entry) {
+            this.closeUpgradeSocket(socket);
+            return;
+          }
+
+          const runtimeEntry = this._componentProxyEntries.get(envId);
+          if (!runtimeEntry?.active) {
+            this.closeUpgradeSocket(socket);
             return;
           }
 
@@ -177,6 +263,18 @@ export class UIServer {
 
       router.use((req, res) => {
         try {
+          const runtimeEntry = this._componentProxyEntries.get(envId);
+          if (!runtimeEntry?.active) {
+            const reqPath = req.originalUrl || req.url || '';
+            const isScript = /\.js(?:\?.*)?$/i.test(reqPath) || hotUpdateRequestRegex.test(reqPath);
+            if (isScript) {
+              this.sendPreviewOfflineScript(res);
+              return;
+            }
+            this.sendResponse(res, 503, `Preview dev server "${envId}" is offline`);
+            return;
+          }
+
           const originalUrl = req.originalUrl;
           this.logger.debug(`Proxying request to ${envId}: ${originalUrl}`);
           // Normalize double slashes that occur when publicPath and asset paths join
@@ -186,19 +284,15 @@ export class UIServer {
             const reqPath = req.originalUrl || req.url || '';
             const isScript = /\.js(?:\?.*)?$/i.test(reqPath) || hotUpdateRequestRegex.test(reqPath);
             if (isScript) {
-              res.status(503);
-              res.setHeader('content-type', 'application/javascript; charset=utf-8');
-              res.end(
-                `window.dispatchEvent(new CustomEvent('bit-dev-server-connection-status',{detail:{online:false,reason:'preview',timestamp:Date.now()}}));`
-              );
+              this.sendPreviewOfflineScript(res);
               return;
             }
-            res.status(503).send(`Preview dev server "${envId}" is offline`);
+            this.sendResponse(res, 503, `Preview dev server "${envId}" is offline`);
           });
         } catch (err: any) {
           this.logger.error(`Error in component router for ${envId}: ${err.message}`);
           if (!res.headersSent) {
-            res.status(502).send(`Component server proxy error: ${err.message}`);
+            this.sendResponse(res, 502, `Component server proxy error: ${err.message}`);
           }
         }
       });
@@ -236,21 +330,38 @@ export class UIServer {
       proxyTimeout: 0,
       timeout: 0,
     });
-    proxyServer.on('error', (e) => {
+    proxyServer.on('error', (e: any) => {
+      if (this.isExpectedProxySocketError(e)) return;
       this.logger.error(e.message);
     });
 
+    const pluginProxyEntries = this.getProxyFromPlugins();
     server.on('upgrade', (req, socket, head) => {
-      const reqUrl = req.url?.replace(/\?.+$/, '') || '';
-      const path = stripTrailingChar(reqUrl, '/');
-      const proxyEntries = this.getProxyFromPlugins();
-      const entry = proxyEntries.find((proxy) => proxy.context.some((item) => item === stripTrailingChar(path, '/')));
-      if (!entry) {
+      if (!socket || socket.destroyed) return;
+      const path = this.normalizeProxyPath(req.url || '');
+      const entry = this.findPluginProxyEntryForPath(path, pluginProxyEntries);
+      if (entry) {
+        proxyServer.ws(req, socket, head, {
+          target: entry.target,
+        });
         return;
       }
-      proxyServer.ws(req, socket, head, {
-        target: entry.target,
-      });
+
+      const isHmrEnvPath = path.startsWith('/_hmr/');
+      const hasComponentProxy = this.hasComponentProxyForPath(path);
+      if (isHmrEnvPath) {
+        // Component preview servers register dynamic upgrade handlers separately.
+        // Do not close /_hmr/* sockets here; allow those handlers to pick them up
+        // (or let the client reconnect naturally while a preview server is still booting).
+        if (!hasComponentProxy) {
+          this.closeUpgradeSocket(socket);
+        }
+        return;
+      }
+
+      if (!hasComponentProxy) {
+        this.closeUpgradeSocket(socket);
+      }
     });
 
     const proxyEntries = this.getProxyFromPlugins();
@@ -290,19 +401,15 @@ export class UIServer {
 
       if (isPreviewRequest) {
         if (/\.js(?:\?.*)?$/i.test(requestPath) || hotUpdateRequestRegex.test(requestPath)) {
-          res.status(503);
-          res.setHeader('content-type', 'application/javascript; charset=utf-8');
-          res.end(
-            `window.dispatchEvent(new CustomEvent('bit-dev-server-connection-status',{detail:{online:false,reason:'preview',timestamp:Date.now()}}));`
-          );
+          this.sendPreviewOfflineScript(res);
           return;
         }
-        res.status(503).send('Preview dev server is offline');
+        this.sendResponse(res, 503, 'Preview dev server is offline');
         return;
       }
 
       if (isAssetRequest) {
-        res.status(404).send('Asset not found');
+        this.sendResponse(res, 404, 'Asset not found');
         return;
       }
 
@@ -397,6 +504,31 @@ export class UIServer {
       },
     ];
     return gqlProxies.concat(proxyEntries).concat(catchAllProxies);
+  }
+
+  private findPluginProxyEntryForPath(path: string, entries: ProxyEntry[]) {
+    return entries.find((proxy) => proxy.context.some((item) => this.pathMatchesContext(path, item)));
+  }
+
+  private hasComponentProxyForPath(path: string) {
+    const normalizedPath = this.normalizeProxyPath(path);
+    for (const { preview, hmr } of this._componentProxyEntries.values()) {
+      if (preview.context.some((ctx) => this.pathMatchesContext(normalizedPath, ctx))) return true;
+      if (hmr.context.some((ctx) => this.pathMatchesContext(normalizedPath, ctx))) return true;
+    }
+    return false;
+  }
+
+  setComponentServerProxyActive(envId: string, active: boolean) {
+    const entry = this._componentProxyEntries.get(envId);
+    if (!entry) return;
+    entry.active = active;
+  }
+
+  private pathMatchesContext(path: string, context: string) {
+    const normalizedPath = this.normalizeProxyPath(path);
+    const normalizedContext = this.normalizeProxyPath(context);
+    return normalizedContext === normalizedPath || normalizedPath.startsWith(`${normalizedContext}/`);
   }
 
   private async getDevServerConfig(

@@ -1,8 +1,8 @@
 .previewPlaceholder {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: flex-start;
   height: 100%;
   width: 100%;
   color: #c7c7c7;
@@ -81,14 +81,46 @@
 .placeholderShimmer {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 24px;
+  gap: 10px;
+  padding: 10px;
   height: 100%;
-  justify-content: center;
+  justify-content: flex-start;
+}
+
+.placeholderChrome,
+.placeholderCanvas {
+  border-radius: 8px;
+  border: 1px solid var(--border-medium-color, #ececec);
+  background: var(--surface-color, #fff);
+}
+
+.placeholderChrome {
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+}
+
+.placeholderDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #e2e2e2;
+}
+
+.placeholderCanvas {
+  flex: 1;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 12px;
 }
 
 .placeholderBar {
-  height: 12px;
+  height: 11px;
   border-radius: 6px;
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;

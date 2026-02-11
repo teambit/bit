@@ -2,12 +2,12 @@ import type { ReactNode } from 'react';
 import React from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { BatchHttpLink } from '@apollo/client/link/batch-http';
-import { InMemoryCache, ApolloClient, ApolloLink, HttpLink, createHttpLink } from '@apollo/client';
+import { InMemoryCache, ApolloClient, ApolloLink, HttpLink, createHttpLink, Observable } from '@apollo/client';
 import type { NormalizedCacheObject, Operation } from '@apollo/client';
 import { WebSocketLink } from '@apollo/client/link/ws';
 import { onError } from '@apollo/client/link/error';
 import { RetryLink } from '@apollo/client/link/retry';
-import { asyncMap, getMainDefinition } from '@apollo/client/utilities';
+import { getMainDefinition } from '@apollo/client/utilities';
 import type { OperationDefinitionNode } from 'graphql';
 
 import crossFetch from 'cross-fetch';
@@ -183,6 +183,31 @@ export class GraphqlUI {
     return op.getContext().skipBatch === true;
   };
 
+  private createConnectionReporterLink() {
+    return new ApolloLink((operation, forward) => {
+      if (!forward) return null;
+      const observable = forward(operation);
+      return new Observable((observer) => {
+        const subscription = observable.subscribe({
+          next: (result) => {
+            reportConnectionStatus(true, 'network');
+            observer.next(result);
+          },
+          error: (error) => observer.error(error),
+          complete: () => observer.complete(),
+        });
+
+        return () => {
+          if (typeof subscription === 'function') {
+            subscription();
+            return;
+          }
+          subscription?.unsubscribe?.();
+        };
+      });
+    });
+  }
+
   private createLink(uri: string, { subscriptionUri }: { subscriptionUri?: string } = {}) {
     if (this.config.enableBatching) {
       return this.createLinkBatched(uri, { subscriptionUri });
@@ -215,13 +240,7 @@ export class GraphqlUI {
       },
     });
 
-    const connectionReporter = new ApolloLink((operation, forward) => {
-      if (!forward) return null;
-      return asyncMap(forward(operation), (result) => {
-        reportConnectionStatus(true, 'network');
-        return result;
-      });
-    });
+    const connectionReporter = this.createConnectionReporterLink();
 
     return ApolloLink.from([retryLink, errorLogger, connectionReporter, hybridLink]);
   }
@@ -264,13 +283,7 @@ export class GraphqlUI {
       if (error.networkError) reportConnectionStatus(false, 'network');
     });
 
-    const connectionReporter = new ApolloLink((operation, forward) => {
-      if (!forward) return null;
-      return asyncMap(forward(operation), (result) => {
-        reportConnectionStatus(true, 'network');
-        return result;
-      });
-    });
+    const connectionReporter = this.createConnectionReporterLink();
 
     return ApolloLink.from([retryLink, errorLogger, connectionReporter, transport]);
   }

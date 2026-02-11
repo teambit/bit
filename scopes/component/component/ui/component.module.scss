@@ -5,3 +5,247 @@ $topbarHeight: 64px;
   display: flex;
   flex-direction: column;
 }
+
+.loading {
+  padding: 24px;
+  color: #6c707c;
+  font-size: 14px;
+}
+
+.bootShellViewport {
+  min-height: calc(100vh - #{$topbarHeight} - 26px);
+  width: min(100%, 1240px);
+  margin: 0 auto;
+  padding: 18px clamp(16px, 4.5vw, 64px) 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+.bootShell {
+  width: 100%;
+}
+
+.bootStatusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  border: 1px solid var(--border-medium-color, #dbe0ea);
+  background: var(--surface-color, #fff);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.bootStatusRowError {
+  border-color: #ffd2d2;
+  background: #fff8f8;
+}
+
+.bootStatusCopy {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.bootStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.bootStatusBadgeLoading {
+  color: #7b5400;
+  border: 1px solid #f1d189;
+  background: #fff6dd;
+}
+
+.bootStatusBadgeError {
+  color: #ab1a1a;
+  border: 1px solid #ffc3c3;
+  background: #ffecec;
+}
+
+.bootStatusText {
+  font-size: 12px;
+  color: var(--on-surface-medium-color, #6c707c);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.bootShellTitle {
+  margin: 0 0 8px;
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.bootShellText {
+  margin: 0;
+  max-width: 760px;
+  color: var(--on-surface-medium-color, #6c707c);
+}
+
+.bootShellAction {
+  margin-top: 14px;
+  border: 1px solid var(--border-medium-color, #d6d9e2);
+  border-radius: 8px;
+  height: 32px;
+  min-width: 96px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface-medium-color, #4f5561);
+  background: var(--surface-color, #fff);
+  cursor: pointer;
+}
+
+.loadingSkeleton {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.loadingPageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.loadingTitle {
+  width: clamp(220px, 36%, 420px);
+  height: 28px;
+  border-radius: 10px;
+}
+
+.loadingToolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.loadingChip,
+.loadingTitle,
+.loadingHero,
+.loadingPanel,
+.loadingPanelTall,
+.loadingPanelShort {
+  border-radius: 9px;
+  background: linear-gradient(90deg, #f1f1f1 25%, #e5e5e5 50%, #f1f1f1 75%);
+  background-size: 200% 100%;
+  animation: component-shell-shimmer 1.2s ease-in-out infinite;
+}
+
+.loadingChip {
+  height: 28px;
+  border-radius: 999px;
+}
+
+.loadingHero {
+  width: 100%;
+  height: clamp(240px, 38vh, 380px);
+}
+
+.loadingContentGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(300px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.loadingMainColumn,
+.loadingSideColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.loadingTabRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.loadingPanelTall {
+  height: clamp(170px, 24vh, 240px);
+}
+
+.loadingPanel {
+  height: clamp(210px, 28vh, 290px);
+}
+
+.loadingPanelShort {
+  height: 120px;
+}
+
+.loadingBar {
+  height: 11px;
+  border-radius: 7px;
+  background: linear-gradient(90deg, #f1f1f1 25%, #e5e5e5 50%, #f1f1f1 75%);
+  background-size: 200% 100%;
+  animation: component-shell-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes component-shell-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 1024px) {
+  .bootShellViewport {
+    min-height: calc(100vh - #{$topbarHeight} - 10px);
+  }
+
+  .bootStatusRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .bootStatusCopy {
+    width: 100%;
+  }
+
+  .bootStatusText {
+    white-space: normal;
+  }
+
+  .loadingContentGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .loadingPanel {
+    height: 200px;
+  }
+}
+
+@media (max-width: 640px) {
+  .bootShell {
+    padding: 16px;
+  }
+
+  .loadingChip {
+    height: 24px;
+  }
+
+  .loadingPanelTall {
+    height: 140px;
+  }
+
+  .loadingPanel {
+    height: 180px;
+  }
+}

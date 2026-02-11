@@ -30,6 +30,7 @@ type ServerState = {
 };
 
 type ServerStateMap = Record<string, ServerState>;
+const PREVIEW_BOOTSTRAP_SPINNER_ID = 'preview-bootstrap';
 
 export class PreviewStartPlugin implements StartPlugin {
   previewServers: ComponentServer[] = [];
@@ -77,9 +78,14 @@ export class PreviewStartPlugin implements StartPlugin {
     const uiServer = this.ui.getUIServer();
     if (uiServer) {
       uiServer.addComponentServerProxy(componentServer);
+      const isCompilationDone = !!this.serversState[startedEnvId]?.isCompilationDone;
+      // Ordering race guard:
+      // compile "done" can arrive before component-server-started.
+      // In that case we must keep proxy active, otherwise HMR sockets stay closed forever.
+      uiServer.setComponentServerProxyActive(startedEnvId, isCompilationDone);
 
       if (wasPending) {
-        if (this.serversState[startedEnvId]?.isCompilationDone) {
+        if (isCompilationDone) {
           await this.publishServerStarted(componentServer);
         } else {
           this.serversState[startedEnvId] = {
@@ -123,40 +129,110 @@ export class PreviewStartPlugin implements StartPlugin {
   }
 
   async initiate(options: StartPluginOptions) {
-    this.listenToDevServers(options.showInternalUrls);
-    const components = await this.workspace.getComponentsByUserInput(!options.pattern, options.pattern);
-    // TODO: logic for creating preview servers must be refactored to this aspect from the DevServer aspect.
-    const previewServers = await this.bundler.devServer(components);
-    previewServers.forEach((server) => {
-      const envId = server.context.envRuntime.id;
-      this.serversMap[envId] = server;
+    this.upsertBootstrapSpinner('Preview dev servers: preparing...');
+    try {
+      this.listenToDevServers(options.showInternalUrls);
+      const workspaceIdsCount = this.workspace.listIds().length;
+      this.upsertBootstrapSpinner(
+        `Preview dev servers: loading workspace components ${chalk.dim('→')} ${chalk.cyan(workspaceIdsCount.toString())}`
+      );
+      const componentsLoadStart = Date.now();
+      const components = options.pattern
+        ? await this.workspace.getComponentsByUserInput(false, options.pattern)
+        : await this.workspace.list(undefined, { loadSeedersAsAspects: false });
+      const componentsLoadMs = Date.now() - componentsLoadStart;
+      const componentsCount = components.length;
+      this.upsertBootstrapSpinner(
+        `Preview dev servers: runtime ready ${chalk.dim('→')} ${chalk.cyan(componentsCount.toString())} component${
+          componentsCount === 1 ? '' : 's'
+        } ${chalk.dim(`in ${(componentsLoadMs / 1000).toFixed(1)}s`)}`
+      );
 
-      this.serversState[envId] = {
-        isCompiling: false,
-        isReady: false,
-        isStarted: false,
-        isCompilationDone: false,
-        isPendingPublish: false,
-      };
+      // TODO: logic for creating preview servers must be refactored to this aspect from the DevServer aspect.
+      this.upsertBootstrapSpinner('Preview dev servers: creating environments...');
+      const envCreateStart = Date.now();
+      const previewServers = await this.bundler.devServer(components);
+      const envCreateMs = Date.now() - envCreateStart;
+      const envCount = previewServers.length;
 
-      // DON'T add wait! this promise never resolves, so it would stop the start process!
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      server.listen();
-    });
-    this.watcher
-      .watch({
-        spawnTSServer: true,
-        checkTypes: CheckTypes.None,
-        preCompile: false,
-        compile: true,
-        initiator: CompilationInitiator.Start,
-      })
-      .catch((err) => {
-        const msg = `watcher found an error`;
-        this.logger.error(msg, err);
-        this.logger.console(`${msg}, ${err.message}`);
+      if (!envCount) {
+        this.succeedBootstrapSpinner('No preview dev servers were created (no preview environments matched).');
+        this.setReady();
+      } else {
+        this.upsertBootstrapSpinner(
+          `Preview dev servers: bootstrapped ${chalk.dim('→')} ${chalk.cyan(envCount.toString())} environment${
+            envCount === 1 ? '' : 's'
+          } ${chalk.dim(`in ${(envCreateMs / 1000).toFixed(1)}s`)}. Waiting for compilation...`
+        );
+      }
+
+      previewServers.forEach((server) => {
+        const envId = server.context.envRuntime.id;
+        this.serversMap[envId] = server;
+
+        this.serversState[envId] = {
+          isCompiling: false,
+          isReady: false,
+          isStarted: false,
+          isCompilationDone: false,
+          isPendingPublish: false,
+        };
+
+        // DON'T add wait! this promise never resolves, so it would stop the start process!
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        server.listen();
       });
-    this.previewServers = this.previewServers.concat(previewServers);
+      this.watcher
+        .watch({
+          spawnTSServer: true,
+          checkTypes: CheckTypes.None,
+          preCompile: false,
+          compile: true,
+          initiator: CompilationInitiator.Start,
+        })
+        .catch((err) => {
+          const msg = `watcher found an error`;
+          this.logger.error(msg, err);
+          this.logger.console(`${msg}, ${err.message}`);
+        });
+      this.previewServers = this.previewServers.concat(previewServers);
+    } catch (err: any) {
+      this.failBootstrapSpinner(`Preview dev server bootstrap failed: ${err?.message || err}`);
+      throw err;
+    }
+  }
+
+  private upsertBootstrapSpinner(text: string) {
+    const spinner = this.logger.multiSpinner.spinners[PREVIEW_BOOTSTRAP_SPINNER_ID];
+    if (!spinner) {
+      this.logger.multiSpinner.add(PREVIEW_BOOTSTRAP_SPINNER_ID, { text });
+      return;
+    }
+    spinner.update({ text });
+  }
+
+  private succeedBootstrapSpinner(text: string) {
+    const spinner = this.logger.multiSpinner.spinners[PREVIEW_BOOTSTRAP_SPINNER_ID];
+    if (spinner?.isActive()) {
+      this.logger.multiSpinner.succeed(PREVIEW_BOOTSTRAP_SPINNER_ID, { text });
+      return;
+    }
+    if (!spinner) {
+      this.logger.multiSpinner.add(PREVIEW_BOOTSTRAP_SPINNER_ID, { text });
+    }
+    this.logger.multiSpinner.succeed(PREVIEW_BOOTSTRAP_SPINNER_ID, { text });
+  }
+
+  private failBootstrapSpinner(text: string) {
+    const spinner = this.logger.multiSpinner.spinners[PREVIEW_BOOTSTRAP_SPINNER_ID];
+    if (spinner?.isActive()) {
+      this.logger.multiSpinner.fail(PREVIEW_BOOTSTRAP_SPINNER_ID, { text });
+      return;
+    }
+    if (!spinner) {
+      this.logger.multiSpinner.add(PREVIEW_BOOTSTRAP_SPINNER_ID, { text });
+    }
+    this.logger.multiSpinner.fail(PREVIEW_BOOTSTRAP_SPINNER_ID, { text });
   }
 
   getProxy(): ProxyEntry[] {
@@ -201,6 +277,14 @@ export class PreviewStartPlugin implements StartPlugin {
   }
 
   private handleOnStartCompiling(id: string) {
+    const uiServer = this.ui.getUIServer();
+    uiServer?.setComponentServerProxyActive(id, false);
+    const bootstrapSpinner = this.logger.multiSpinner.spinners[PREVIEW_BOOTSTRAP_SPINNER_ID];
+    if (bootstrapSpinner?.isActive()) {
+      const envId = chalk.cyan(id);
+      this.succeedBootstrapSpinner(`Preview compilation started ${chalk.dim('→')} ${envId}`);
+    }
+
     this.serversState[id] = {
       ...this.serversState[id],
       isCompiling: true,
@@ -214,6 +298,9 @@ export class PreviewStartPlugin implements StartPlugin {
   }
 
   private handleOnDoneCompiling(id: string, results, showInternalUrls?: boolean) {
+    const uiServer = this.ui.getUIServer();
+    uiServer?.setComponentServerProxyActive(id, true);
+
     this.serversState[id] = {
       ...this.serversState[id],
       isCompiling: false,

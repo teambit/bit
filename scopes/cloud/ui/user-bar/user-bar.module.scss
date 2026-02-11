@@ -8,6 +8,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  position: relative;
+  z-index: $modal-z-index + 6;
 }
 
 .currentUser {
@@ -24,6 +26,14 @@
   transition:
     opacity 220ms ease,
     transform 220ms ease;
+}
+
+.devServerStatusOnline {
+  background: #edf9f0;
+  border-color: #b8e8c1;
+  color: #126129;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .devServerStatusOffline {

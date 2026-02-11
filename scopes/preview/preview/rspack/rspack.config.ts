@@ -32,10 +32,8 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
   const shouldUseSourceMap = mode === 'development' || process.env.GENERATE_SOURCEMAP === 'true';
 
   return {
-    stats: {
-      children: true,
-      errorDetails: true,
-    },
+    // Keep start output concise in dev flows; detailed traces are still available on errors.
+    stats: 'errors-warnings',
     mode,
 
     devtool: shouldUseSourceMap ? 'source-map' : false,

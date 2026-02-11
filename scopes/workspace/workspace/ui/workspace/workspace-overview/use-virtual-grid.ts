@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import * as ReactVirtual from '@tanstack/react-virtual';
 import type { AggregationGroup, AggregationType, WorkspaceItem } from './workspace-overview.types';
 
@@ -37,17 +37,6 @@ function buildVirtualRows(groups: AggregationGroup[], groupType: AggregationType
   return rows;
 }
 
-// Suppress the benign "ResizeObserver loop completed with undelivered notifications" error.
-// This fires when measureElement triggers layout changes within the same frame — expected
-// behavior with virtual scrolling. Browsers treat it as a warning, not a real error.
-if (typeof window !== 'undefined') {
-  const origOnError = window.onerror;
-  window.onerror = (msg, ...args) => {
-    if (typeof msg === 'string' && msg.includes('ResizeObserver loop')) return true;
-    return origOnError ? (origOnError as Function)(msg, ...args) : false;
-  };
-}
-
 export function useVirtualGrid({
   groups,
   groupType,
@@ -60,6 +49,43 @@ export function useVirtualGrid({
   isMinimal: boolean;
 }) {
   const [columns, setColumns] = useState(4);
+  const resizeRafRef = useRef<number | undefined>(undefined);
+
+  // Runtime compatibility shim:
+  // some loaded bundles expose legacy `useVirtual` instead of `useVirtualizer`.
+  const useVirtualizerCompat =
+    typeof (ReactVirtual as any).useVirtualizer === 'function'
+      ? ((ReactVirtual as any).useVirtualizer as
+          | ((opts: {
+              count: number;
+              getScrollElement: () => HTMLElement | null;
+              estimateSize: (index: number) => number;
+              overscan: number;
+              measureElement?: (el: Element) => number;
+            }) => {
+              getTotalSize: () => number;
+              getVirtualItems: () => Array<{ key: string | number; index: number; start: number }>;
+              measureElement?: (el: Element) => void;
+            })
+          | undefined)
+      : undefined;
+  const useVirtualCompat =
+    typeof (ReactVirtual as any).useVirtual === 'function'
+      ? ((ReactVirtual as any).useVirtual as
+          | ((opts: {
+              size: number;
+              parentRef: React.RefObject<HTMLElement>;
+              estimateSize: (index: number) => number;
+              overscan?: number;
+            }) => {
+              totalSize: number;
+              virtualItems: Array<{ key?: string | number; index: number; start: number }>;
+              measureRef?: (el: Element | null) => void;
+            })
+          | undefined)
+      : undefined;
+  const shouldUseModernVirtualizer = !!useVirtualizerCompat;
+  const shouldUseLegacyVirtualizer = !shouldUseModernVirtualizer && !!useVirtualCompat;
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -69,20 +95,37 @@ export function useVirtualGrid({
       const width = el.clientWidth;
       // Account for container padding (5% each side)
       const padded = width * 0.9;
-      setColumns(calcColumns(padded));
+      const nextColumns = calcColumns(padded);
+      setColumns((prev) => (prev === nextColumns ? prev : nextColumns));
+    };
+
+    const scheduleUpdate = () => {
+      if (resizeRafRef.current) {
+        window.cancelAnimationFrame(resizeRafRef.current);
+      }
+      resizeRafRef.current = window.requestAnimationFrame(() => {
+        resizeRafRef.current = undefined;
+        update();
+      });
     };
 
     update();
 
-    const ro = new ResizeObserver(update);
+    const ro = new ResizeObserver(scheduleUpdate);
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+      if (resizeRafRef.current) {
+        window.cancelAnimationFrame(resizeRafRef.current);
+        resizeRafRef.current = undefined;
+      }
+    };
   }, [scrollRef]);
 
   const virtualRows = useMemo(() => buildVirtualRows(groups, groupType, columns), [groups, groupType, columns]);
 
-  const HEADER_HEIGHT = 64;
-  const CARD_ROW_HEIGHT = isMinimal ? 500 : 296;
+  const HEADER_HEIGHT = 52;
+  const CARD_ROW_HEIGHT = isMinimal ? 328 : 304;
 
   const estimateSize = useCallback(
     (index: number) => {
@@ -93,60 +136,55 @@ export function useVirtualGrid({
     [virtualRows, HEADER_HEIGHT, CARD_ROW_HEIGHT]
   );
 
-  // Runtime compatibility shim:
-  // some loaded bundles expose legacy `useVirtual` instead of `useVirtualizer`.
-  const useVirtualizerCompat = (ReactVirtual as any).useVirtualizer as
-    | ((opts: {
-        count: number;
-        getScrollElement: () => HTMLElement | null;
-        estimateSize: (index: number) => number;
-        overscan: number;
-        measureElement: (el: Element) => number;
-      }) => {
-        getTotalSize: () => number;
-        getVirtualItems: () => Array<{ key: string | number; index: number; start: number }>;
-        measureElement: (el: Element) => void;
+  const fallbackOffsets = useMemo(() => {
+    const starts: number[] = [];
+    let total = 0;
+    for (let i = 0; i < virtualRows.length; i += 1) {
+      starts[i] = total;
+      total += estimateSize(i);
+    }
+    return { starts, total };
+  }, [virtualRows, estimateSize]);
+
+  const legacyVirtualizer = shouldUseLegacyVirtualizer
+    ? useVirtualCompat({
+        size: virtualRows.length,
+        parentRef: scrollRef as unknown as React.RefObject<HTMLElement>,
+        estimateSize,
+        overscan: 5,
       })
-    | undefined;
+    : undefined;
 
-  const useVirtualizerRuntime =
-    useVirtualizerCompat ||
-    ((opts: {
-      count: number;
-      estimateSize: (index: number) => number;
-      getScrollElement?: () => HTMLElement | null;
-      overscan?: number;
-      measureElement?: (el: Element) => number;
-    }) => {
-      // Safe runtime fallback: render all rows if virtualizer API is unavailable.
-      const starts: number[] = [];
-      let offset = 0;
-      for (let i = 0; i < opts.count; i += 1) {
-        starts[i] = offset;
-        offset += opts.estimateSize(i);
-      }
+  const virtualizer = shouldUseModernVirtualizer
+    ? useVirtualizerCompat({
+        count: virtualRows.length,
+        getScrollElement: () => scrollRef.current,
+        estimateSize,
+        overscan: 5,
+      })
+    : legacyVirtualizer
+      ? {
+          getTotalSize: () => legacyVirtualizer.totalSize,
+          getVirtualItems: () =>
+            legacyVirtualizer.virtualItems.map((item) => ({
+              key: item.key ?? item.index,
+              index: item.index,
+              start: item.start,
+            })),
+          measureElement: (el: Element) => legacyVirtualizer.measureRef?.(el),
+        }
+      : {
+          getTotalSize: () => fallbackOffsets.total,
+          getVirtualItems: () =>
+            virtualRows.map((_, index) => ({
+              key: index,
+              index,
+              start: fallbackOffsets.starts[index] || 0,
+            })),
+          measureElement: () => undefined,
+        };
 
-      return {
-        getTotalSize: () => offset,
-        getVirtualItems: () =>
-          starts.map((start, index) => ({
-            key: index,
-            index,
-            start,
-          })),
-        measureElement: () => undefined,
-      };
-    });
+  const isVirtualized = shouldUseModernVirtualizer || shouldUseLegacyVirtualizer;
 
-  const isVirtualized = Boolean(useVirtualizerCompat);
-
-  const virtualizer = useVirtualizerRuntime({
-    count: virtualRows.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize,
-    overscan: 5,
-    measureElement: (el: Element) => el.getBoundingClientRect().height,
-  });
-
-  return { virtualizer, virtualRows, columns, isVirtualized };
+  return { virtualizer, virtualRows, columns, isVirtualized, rowStarts: fallbackOffsets.starts };
 }

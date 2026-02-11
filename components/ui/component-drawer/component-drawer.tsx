@@ -155,7 +155,8 @@ function ComponentsDrawerContent({
 
   const emptyDrawer = <span className={classNames(mutedItalic, ellipsis, styles.emptyDrawer)}>{emptyMessage}</span>;
 
-  const loading = loadingComponents || loadingLanesModel || !lanes || !components;
+  const hasComponents = Array.isArray(components);
+  const loading = loadingComponents || !hasComponents || (components.length === 0 && loadingLanesModel);
 
   if (loading) return <ComponentTreeLoader />;
 

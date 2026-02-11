@@ -1,7 +1,7 @@
 @import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 .container {
-  padding: 24px 5% 150px 5%;
+  padding: 20px clamp(16px, 4.5vw, 64px) 120px;
   overflow-y: auto;
   overflow-x: hidden;
   height: 100%;
@@ -34,28 +34,21 @@
   padding: 4px;
   height: 15px;
   margin-right: 8px;
-  z-index: $nav-z-index;
+  z-index: $nav-z-index + 1;
   border-radius: 8px;
   margin-bottom: 4px;
   box-shadow: 0px 2px 18px rgb(0 0 0 / 10%);
-}
-
-.cardGrid {
-  display: grid;
-  gap: 32px 24px;
-  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-  max-width: 1280px;
-  grid-column-gap: 28px;
-  grid-row-gap: 32px;
 }
 
 .filterPanel {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+  gap: 16px;
+  flex-wrap: wrap;
   position: relative;
-  z-index: $modal-z-index - 1;
+  z-index: $modal-z-index + 2;
 }
 
 .aggButtons {
@@ -120,7 +113,7 @@
 
 .aggregationTitle {
   margin-top: 0;
-  margin-bottom: 15px;
+  margin-bottom: 2px;
 }
 
 :global(.componentGrid) {
@@ -185,11 +178,7 @@
 }
 
 .filterPanel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  gap: 16px;
+  margin-bottom: 20px;
 }
 
 .leftFilters {
@@ -222,9 +211,10 @@
 .virtualCardRow {
   display: grid;
   width: 100%;
-  gap: 24px;
+  column-gap: 20px;
+  row-gap: 20px;
   max-width: 1280px;
-  padding-bottom: 20px;
+  padding-bottom: 0;
   align-items: stretch;
 }
 
@@ -232,48 +222,303 @@
   min-width: 0;
 }
 
+.nonVirtualRow {
+  content-visibility: auto;
+  contain-intrinsic-size: 320px;
+}
+
 .virtualGroupHeader {
-  padding-bottom: 10px;
-  padding-top: 16px;
+  padding-bottom: 14px;
+  padding-top: 6px;
 }
 
 .virtualGroupHeaderFirst {
-  padding-bottom: 10px;
+  padding-bottom: 14px;
   padding-top: 0;
 }
 
-.offlineShell {
-  margin-top: 24px;
+.bootShellWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 2px auto 0;
+  width: min(100%, 1280px);
+}
+
+.bootStatusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
   border: 1px solid var(--border-medium-color);
-  border-radius: 12px;
-  padding: 20px;
-  max-width: 520px;
-  background: var(--surface-color);
+  border-radius: 10px;
+  min-height: 44px;
+  padding: 8px 12px;
+  background: var(--surface-color, #fff);
+  animation: shellFadeIn 120ms ease-out;
 }
 
-.offlineShellTitle {
-  margin: 0 0 8px;
+.bootStatusRowOffline {
+  background: #fff8f8;
+  border-color: #ffd5d5;
 }
 
-.offlineShellText {
-  margin: 0;
-  color: var(--on-surface-medium-color);
+.bootStatusCopy {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 
-.loadingShell {
-  margin-top: 24px;
+.bootStatusText {
+  font-size: 12px;
+  color: var(--on-surface-medium-color, #6f7480);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bootShellStatus {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  letter-spacing: 0.01em;
+}
+
+.bootShellStatusLoading {
+  color: #7b5400;
+  border: 1px solid #f1d189;
+  background: #fff6dd;
+}
+
+.bootShellStatusOffline {
+  color: #ab1a1a;
+  border: 1px solid #ffc3c3;
+  background: #ffecec;
+}
+
+.bootShellAction {
   border: 1px solid var(--border-medium-color);
-  border-radius: 12px;
-  padding: 20px;
-  max-width: 520px;
-  background: var(--surface-color);
-}
-
-.loadingShellTitle {
-  margin: 0 0 8px;
-}
-
-.loadingShellText {
-  margin: 0;
+  border-radius: 8px;
+  height: 30px;
+  min-width: 92px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--on-surface-medium-color);
+  background: var(--surface-color, #fff);
+  cursor: pointer;
+}
+
+.bootShellAction:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.bootLayoutShell {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.bootFilterRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bootFilterPill,
+.bootFilterToggle,
+.bootSectionHeading,
+.bootSkeletonCardTopLabel,
+.bootSkeletonCardTitle,
+.bootSkeletonCardTitleShort,
+.bootSkeletonCardPreview,
+.bootSkeletonCardTag,
+.bootSkeletonCardMeta {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f1f1f1 25%, #e6e6e6 50%, #f1f1f1 75%);
+  background-size: 200% 100%;
+  animation: bootShimmer 1.2s ease-in-out infinite;
+}
+
+.bootFilterPill {
+  width: 116px;
+  height: 32px;
+}
+
+.bootFilterSpacer {
+  flex: 1;
+}
+
+.bootFilterToggle {
+  width: 210px;
+  height: 34px;
+}
+
+.bootSection {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bootSectionSlash {
+  margin: 0;
+  line-height: 1;
+}
+
+.bootSectionHeading {
+  height: 30px;
+  width: 144px;
+  border-radius: 6px;
+}
+
+.bootSkeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(252px, 1fr));
+  gap: 24px 16px;
+}
+
+.bootSkeletonCard {
+  border: 1px solid var(--border-medium-color, #e8e8e8);
+  border-radius: 12px;
+  background: var(--surface-color, #fff);
+  min-height: 268px;
+  display: flex;
+  flex-direction: column;
+}
+
+.bootSkeletonCardBody {
+  padding: 14px 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bootSkeletonCardTopLabel {
+  width: 42%;
+  height: 16px;
+}
+
+.bootSkeletonCardTitle {
+  width: 72%;
+  height: 17px;
+  margin-top: 10px;
+}
+
+.bootSkeletonCardTitleShort {
+  width: 56%;
+  height: 17px;
+}
+
+.bootSkeletonCardPreview {
+  height: 122px;
+  margin-top: 8px;
+  border-radius: 10px;
+}
+
+.bootSkeletonCardFooter {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--border-medium-color, #efefef);
+  min-height: 38px;
+  padding: 0 12px;
+}
+
+.bootSkeletonCardTag {
+  width: 38%;
+  height: 16px;
+  border-radius: 999px;
+}
+
+.bootSkeletonCardMeta {
+  width: 24%;
+  height: 16px;
+  border-radius: 999px;
+}
+
+@media (max-width: 1400px) {
+  .bootSkeletonGrid {
+    grid-template-columns: repeat(auto-fill, minmax(246px, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .bootStatusRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .bootStatusCopy {
+    width: 100%;
+  }
+
+  .bootStatusText {
+    white-space: normal;
+  }
+
+  .bootFilterRow {
+    flex-wrap: wrap;
+  }
+
+  .bootFilterToggle {
+    margin-left: auto;
+  }
+
+  .bootSection {
+    gap: 12px;
+  }
+
+  .bootSkeletonGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .bootShellWrap {
+    width: 100%;
+  }
+
+  .bootFilterPill {
+    width: 42%;
+    min-width: 118px;
+  }
+
+  .bootFilterToggle {
+    width: 100%;
+  }
+
+  .bootSkeletonGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .bootSkeletonCard {
+    min-height: 252px;
+  }
+}
+
+@keyframes shellFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bootShimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
 }

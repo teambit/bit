@@ -34,6 +34,7 @@ export default function createRspackBrowserConfig(
   const isEnvProductionProfile = process.argv.includes('--profile');
   const workspaceCacheSuffix = createHash('sha1').update(path.resolve(outputDir)).digest('hex').slice(0, 10);
   const workspaceCacheId = `bit-ui-${workspaceCacheSuffix}`;
+  const workspaceCacheKey = `${title}-${workspaceCacheSuffix}`;
 
   return {
     stats: {
@@ -111,7 +112,7 @@ export default function createRspackBrowserConfig(
     plugins: [
       new rspack.HtmlRspackPlugin({
         inject: true,
-        templateContent: html(title)(),
+        templateContent: html(title, false, { workspaceCacheKey })(),
         minify: true,
       }),
 

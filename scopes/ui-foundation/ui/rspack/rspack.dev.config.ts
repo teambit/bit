@@ -4,11 +4,12 @@ import RefreshPlugin from '@rspack/plugin-react-refresh';
 import { fallbacksProvidePluginConfig } from '@teambit/webpack';
 import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
 import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
-import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
 import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
 import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
+import { createHash } from 'crypto';
 import path, { sep } from 'path';
 import { html } from './html';
+import { buildDevServiceWorkerScript } from './dev-service-worker';
 import {
   moduleFileExtensions,
   resolveAlias,
@@ -36,6 +37,9 @@ export interface RspackConfigWithDevServer extends Configuration {
 
 export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
+  const workspaceCacheSuffix = createHash('sha1').update(path.resolve(workspaceDir)).digest('hex').slice(0, 10);
+  const workspaceCacheKey = `${title || 'workspace'}-${workspaceCacheSuffix}`;
+  const devSessionToken = `${workspaceCacheKey}-${Date.now().toString(36)}`;
 
   const host = process.env.HOST || 'localhost';
 
@@ -82,9 +86,8 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
       level: 'error',
     },
 
-    stats: {
-      errorDetails: true,
-    },
+    // Keep dev-start output readable; detailed diagnostics still surface on compile errors.
+    stats: 'errors-warnings',
 
     devServer: {
       allowedHosts: 'all',
@@ -143,9 +146,28 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
           throw new Error('rspack-dev-server is not defined');
         }
 
-        // cache JS/CSS assets in the browser so subsequent page loads are instant
+        // Serve a lightweight SW in dev mode so workspace UI can reload from cache
+        // while the local dev process is temporarily down.
         middlewares.unshift((req: any, res: any, next: any) => {
-          if (/\.(js|css)(\?.*)?$/.test(req.url || '')) {
+          const reqPath = (req.url || '').split('?')[0];
+          if (reqPath !== '/service-worker.js') {
+            next();
+            return;
+          }
+
+          res.setHeader('content-type', 'application/javascript; charset=utf-8');
+          res.setHeader('cache-control', 'no-store, no-cache, must-revalidate');
+          res.statusCode = 200;
+          res.end(buildDevServiceWorkerScript());
+        });
+
+        // Keep mutable dev bundles uncached to prevent stale-runtime reload loops.
+        // Preview assets are cached separately at the proxy layer.
+        middlewares.unshift((req: any, res: any, next: any) => {
+          const reqPath = (req.url || '').split('?')[0];
+          if (/^\/static\/(js|css)\//.test(reqPath)) {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+          } else if (/\.(png|jpe?g|gif|svg|webp|woff2?|ttf|eot)(\?.*)?$/i.test(reqPath)) {
             res.setHeader('Cache-Control', 'public, max-age=120');
           }
           next();
@@ -155,8 +177,7 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
           // @ts-ignore @types/wds mismatch
           evalSourceMapMiddleware(devServer),
           errorOverlayMiddleware(),
-          redirectServedPath(publicUrlOrPath),
-          noopServiceWorkerMiddleware(publicUrlOrPath)
+          redirectServedPath(publicUrlOrPath)
         );
         return middlewares;
       },
@@ -192,7 +213,13 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
       new RefreshPlugin(),
       new rspack.HtmlRspackPlugin({
         inject: true,
-        templateContent: html(title || 'My component workspace', false, { serviceWorkerMode: 'disable' })(),
+        templateContent: html(title || 'My component workspace', false, {
+          serviceWorkerMode: 'register',
+          workspaceCacheKey,
+          serviceWorkerBuildToken: devSessionToken,
+          autoReloadOnSwControllerChange: false,
+          serviceWorkerDevSessionReset: true,
+        })(),
         chunks: ['main'],
         filename: 'index.html',
       }),

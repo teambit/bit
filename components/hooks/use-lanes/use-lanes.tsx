@@ -184,6 +184,9 @@ const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}, scope) => 
     skip,
     errorPolicy: 'all',
     fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
+    returnPartialData: true,
+    notifyOnNetworkStatusChange: false,
   });
 
   const lanesModel = useMemo(() => {

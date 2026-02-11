@@ -92,6 +92,36 @@ connection.onclose = function () {
 var isFirstCompilation = true;
 var mostRecentCompilationHash = null;
 var hasCompileErrors = false;
+var lastForcedReloadAt = 0;
+var MIN_RELOAD_INTERVAL_MS = 15000;
+
+function shouldAutoReload() {
+  if (typeof window === 'undefined') return true;
+  if (window.__BIT_ALLOW_DEV_AUTO_RELOAD__ === true) return true;
+  if (window.__BIT_DISABLE_DEV_AUTO_RELOAD__ === true) return false;
+  // By default, avoid forcing full-page reloads in top-level workspace UI.
+  // Preview iframes can still reload their own frame when needed.
+  return window.parent && window !== window.parent;
+}
+
+function safeReload(reason) {
+  if (!shouldAutoReload()) {
+    if (typeof console !== 'undefined' && typeof console.info === 'function') {
+      console.info('[hmr] skipped forced reload' + (reason ? ': ' + reason : ''));
+    }
+    return;
+  }
+
+  var now = Date.now();
+  if (now - lastForcedReloadAt < MIN_RELOAD_INTERVAL_MS) {
+    if (typeof console !== 'undefined' && typeof console.info === 'function') {
+      console.info('[hmr] throttled forced reload' + (reason ? ': ' + reason : ''));
+    }
+    return;
+  }
+  lastForcedReloadAt = now;
+  window.location.reload();
+}
 
 function clearOutdatedErrors() {
   // Clean up outdated compile errors, if any.
@@ -214,7 +244,7 @@ connection.onmessage = function (e) {
       break;
     case 'content-changed':
       // Triggered when a file from `contentBase` changed.
-      window.location.reload();
+      safeReload('content-changed');
       break;
     case 'warnings':
       handleWarnings(message.data);
@@ -256,7 +286,7 @@ function canAcceptErrors() {
 function tryApplyUpdates(onHotUpdateSuccess) {
   if (!module.hot) {
     // HotModuleReplacementPlugin is not in webpack configuration.
-    window.location.reload();
+    safeReload('hot-disabled');
     return;
   }
 
@@ -272,7 +302,7 @@ function tryApplyUpdates(onHotUpdateSuccess) {
     // and hence we need to do a forced reload.
     const needsForcedReload = !err && !updatedModules;
     if ((haveErrors && !canAcceptErrors()) || needsForcedReload) {
-      window.location.reload();
+      safeReload(haveErrors ? 'hot-apply-error' : 'missing-updated-modules');
       return;
     }
 

@@ -116,7 +116,7 @@ export function UserBar({ sections = [], items = [] }: UserBarProps) {
       offsetY={10}
       position="anchor"
       align="end"
-      menuStyle={{ zIndex: Number(zIndexes.modalZIndex) + 80 }}
+      menuStyle={{ zIndex: Number(zIndexes.modalZIndex) + 120 }}
       onItemClick={(e) => {
         if (!e.value.link) return undefined;
         if (e.value.link.startsWith('http')) return window.open(e.value.link, '_blank');
@@ -135,6 +135,7 @@ export function UserBar({ sections = [], items = [] }: UserBarProps) {
                 }}
                 className={classNames(
                   styles.devServerStatus,
+                  indicatorTone === 'online' && styles.devServerStatusOnline,
                   indicatorTone === 'offline' && styles.devServerStatusOffline,
                   indicatorTone === 'recovering' && styles.devServerStatusRecovering,
                   indicatorTone === 'preview-loading' && styles.devServerStatusPreviewLoading,
