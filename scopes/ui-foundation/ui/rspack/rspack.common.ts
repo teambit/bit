@@ -2,7 +2,7 @@ import type { RuleSetRule } from '@rspack/core';
 import { fallbacks } from '@teambit/webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 
-export { RspackManifestPlugin } from '@teambit/rspack.plugins.manifest-plugin';
+export { RspackManifestPlugin } from 'rspack-manifest-plugin';
 
 export const moduleFileExtensions = [
   'web.mjs',

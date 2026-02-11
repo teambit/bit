@@ -119,7 +119,22 @@ export default function createRspackBrowserConfig(
         contextRegExp: /moment$/,
       }),
 
-      new RspackManifestPlugin({ fileName: 'asset-manifest.json' }),
+      new RspackManifestPlugin({
+        fileName: 'asset-manifest.json',
+        generate: (_seed, _files, _entrypoints, extra: any) => {
+          const compilation = extra.compilation;
+          const files: Record<string, string> = {};
+          for (const asset of compilation.getAssets()) {
+            if (asset.name) files[asset.name] = `/${asset.name}`;
+          }
+          const stats = compilation.getStats().toJson({ all: false, entrypoints: true });
+          const mainEntry = stats.entrypoints?.main;
+          const entrypoints = (mainEntry?.assets || [])
+            .map((a: any) => a.name || a)
+            .filter((name: string) => !name.endsWith('.map'));
+          return { files, entrypoints };
+        },
+      }),
 
       new WorkboxWebpackPlugin.GenerateSW({
         clientsClaim: true,

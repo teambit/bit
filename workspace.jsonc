@@ -615,6 +615,7 @@
         "resolve-url-loader": "5.0.0",
         "rewire": "7.0.0",
         "rimraf": "3.0.2",
+        "rspack-manifest-plugin": "^5.2.1",
         "sass": "1.63.6",
         "semver": "7.7.1",
         "semver-intersect": "1.4.0",
