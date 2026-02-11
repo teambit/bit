@@ -1,0 +1,23 @@
+---
+labels: ['rspack', 'manifest', 'plugin']
+description: 'Generate a CRA-compatible asset-manifest.json for Rspack builds.'
+---
+
+import { RspackManifestPlugin } from './index';
+
+### Overview
+
+`RspackManifestPlugin` emits an `asset-manifest.json` file with:
+
+- `files`: map of emitted asset names to public paths.
+- `entrypoints`: main entry assets (excluding source maps).
+
+Use it when Bit build/preview pipelines expect the same manifest contract used by existing UI runtime code.
+
+### Usage
+
+```ts
+import { RspackManifestPlugin } from '@teambit/rspack.plugins.manifest-plugin';
+
+plugins: [new RspackManifestPlugin({ fileName: 'asset-manifest.json' })];
+```

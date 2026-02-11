@@ -26,7 +26,7 @@ import fs from 'fs-extra';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { createRoot } from '@teambit/harmony.modules.harmony-root-generator';
 import { join, resolve as pathResolve } from 'path';
-import webpack from 'webpack';
+import { rspack } from '@rspack/core';
 import { UiServerStartedEvent } from './events';
 import { UnknownUI, UnknownBuildError } from './exceptions';
 import { StartCmd } from './start.cmd';
@@ -34,8 +34,8 @@ import { UIBuildCmd } from './ui-build.cmd';
 import type { UIRoot } from './ui-root';
 import { UIServer } from './ui-server';
 import { UIAspect, UIRuntime } from './ui.aspect';
-import createWebpackConfig from './webpack/webpack.browser.config';
-import createSsrWebpackConfig from './webpack/webpack.ssr.config';
+import createRspackBrowserConfig from './rspack/rspack.browser.config';
+import createRspackSsrConfig from './rspack/rspack.ssr.config';
 import type { StartPlugin, StartPluginOptions } from './start-plugin';
 import { BundleUiTask, BUNDLE_UI_HASH_FILENAME } from './bundle-ui.task';
 
@@ -226,8 +226,7 @@ export class UiMain {
   /**
    * create a build of the given UI root.
    */
-  async build(uiRootAspectIdOrName?: string, customOutputPath?: string): Promise<webpack.MultiStats | undefined> {
-    // TODO: change to MultiStats from webpack once they export it in their types
+  async build(uiRootAspectIdOrName?: string, customOutputPath?: string): Promise<any> {
     this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}"`);
     const maybeUiRoot = this.getUi(uiRootAspectIdOrName);
 
@@ -238,17 +237,13 @@ export class UiMain {
     const ssr = uiRoot.buildOptions?.ssr || false;
     const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), uiRootAspectId);
     const outputPath = customOutputPath || uiRoot.path;
+    const publicDir = await this.publicDir(uiRoot);
 
-    const browserConfig = createWebpackConfig(outputPath, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
-    const ssrConfig = ssr && createSsrWebpackConfig(outputPath, [mainEntry], await this.publicDir(uiRoot));
-
-    const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
-
-    const compiler = webpack(config);
-    this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" running webpack`);
-    const [results, errors] = await this.runWebpackPromise(compiler);
-
-    this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" completed webpack`);
+    const browserConfig = createRspackBrowserConfig(outputPath, [mainEntry], uiRoot.name, publicDir);
+    const compiler = rspack(browserConfig as any);
+    this.logger.debug(`rspack (build): running for browser`);
+    const [results, errors] = await this.runRspackPromise(compiler);
+    this.logger.debug(`rspack (build): completed browser`);
     if (!results) throw new UnknownBuildError();
     if (errors) {
       this.clearConsole();
@@ -259,6 +254,22 @@ export class UiMain {
       throw new Error(results?.toString());
     }
 
+    if (ssr) {
+      const ssrConfig = createRspackSsrConfig(outputPath, [mainEntry], publicDir);
+      const ssrCompiler = rspack(ssrConfig as any);
+      this.logger.debug(`rspack (build): running for SSR`);
+      const [ssrResults, ssrErrors] = await this.runRspackPromise(ssrCompiler);
+      this.logger.debug(`rspack (build): completed SSR build`);
+      if (ssrErrors) {
+        this.clearConsole();
+        throw new Error(ssrErrors);
+      }
+      if (ssrResults?.hasErrors()) {
+        this.clearConsole();
+        throw new Error(ssrResults?.toString());
+      }
+    }
+
     return results;
   }
 
@@ -267,16 +278,11 @@ export class UiMain {
     return this;
   }
 
-  private async runWebpackPromise(
-    compiler: webpack.MultiCompiler
-  ): Promise<[webpack.MultiStats | undefined, string | undefined]> {
+  private async runRspackPromise(compiler: any): Promise<[any | undefined, string | undefined]> {
     return new Promise((resolve) =>
-      // TODO: split to multiple processes to reduce time and configure concurrent builds.
-      // @see https://github.com/trivago/parallel-webpack
       compiler.run((err, stats) => {
         if (err) {
-          this.logger.error('get error from webpack compiler, when bundling ui server, full error:', err);
-
+          this.logger.error('get error from rspack compiler, when bundling ui server, full error:', err);
           return resolve([undefined, `${err.toString()}\n${err.stack}`]);
         }
         return resolve([stats, undefined]);
@@ -561,13 +567,13 @@ export class UiMain {
 
     if (!cachedBuildUiHash) {
       this.logger.console(
-        `Building UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(
+        `${chalk.magenta('[Rspack]')} Building UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(
           await this.publicDir(uiRoot)
         )}. The first time we build the UI it may take a few minutes.`
       );
     } else {
       this.logger.console(
-        `Rebuilding UI assets for '${chalk.cyan(uiRoot.name)} in target directory: ${chalk.cyan(
+        `${chalk.magenta('[Rspack]')} Rebuilding UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(
           await this.publicDir(uiRoot)
         )}' as ${uiRoot.configFile} has been changed.`
       );
@@ -627,13 +633,13 @@ export class UiMain {
   private async buildIfNoBundle(uiRootAspectId: string, uiRoot: UIRoot): Promise<boolean> {
     if (this._isBundleUiServed) return false;
 
-    const config = createWebpackConfig(
+    const config = createRspackBrowserConfig(
       uiRoot.path,
       [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), uiRootAspectId)],
       uiRoot.name,
       await this.publicDir(uiRoot)
     );
-    if (config.output?.path && fs.pathExistsSync(config.output.path)) return false;
+    if (config.output?.path && fs.pathExistsSync(config.output.path as string)) return false;
     const hash = await this.createBuildUiHash(uiRoot);
     await this.build(uiRootAspectId);
     await this.cache.set(uiRoot.path, hash);

@@ -414,6 +414,7 @@ By default, bumps patch versions when merging to main. If specific configuration
 | `--auto-merge-resolve <merge-strategy>` |       `-r`       | in case of merge conflict during checkout, resolve according to the provided strategy: [ours, theirs, manual] |
 | `--force-theirs`                        |                  | do not merge during checkout, just overwrite with incoming files                                              |
 | `--lane-name <name>`                    |                  | specify the lane name to delete after merge (auto-detected if not provided)                                   |
+| `--skip-push`                           |                  | skip pushing the changes to the remote repository (useful when CI handles the push separately)                |
 
 ---
 
@@ -737,6 +738,17 @@ supports both exact version matching and package name patterns.
 | **Option**         | **Option alias** | **Description**                           |
 | ------------------ | :--------------: | ----------------------------------------- |
 | `--depth <number>` |                  | max display depth of the dependency graph |
+
+### deps diagnose
+
+**Usage**: `deps diagnose`
+
+**Description**: analyze workspace dependencies for version spread, peer permutations, and bloat  
+scans node_modules/.pnpm to report actual installed copies, identifies packages with multiple versions, and highlights peer dependencies causing permutation explosion. Use --package to drill down into a specific package.
+
+| **Option**           | **Option alias** | **Description**                                                            |
+| -------------------- | :--------------: | -------------------------------------------------------------------------- |
+| `--package <string>` |                  | drill down into a specific package to see all .pnpm copies and peer combos |
 
 ### deps write
 
@@ -1394,7 +1406,7 @@ workspace, but also mark it as deleted from the lane, so it won't be merged late
 
 **Usage**: `lane history [lane-name]`
 
-**Description**: EXPERIMENTAL. show lane history, default to the current lane  
+**Description**: show lane history, default to the current lane  
 list from the oldest to the newest history items
 
 | **Option**      | **Option alias** | **Description**                        |
@@ -1404,10 +1416,13 @@ list from the oldest to the newest history items
 
 ### lane history-diff
 
-**Usage**: `lane history-diff <from-history-id> <to-history-id>`
+**Usage**: `lane history-diff [history-id] [to-history-id]`
 
-**Description**: EXPERIMENTAL. show diff between two lane-history ids  
-run "bit lane history" to find these history-ids
+**Description**: show diff between lane-history entries  
+with no arguments - diff the latest history entry against its predecessor  
+with one argument - diff the given history entry against its predecessor  
+with two arguments - diff between two specific history entries (first=from, second=to), useful for comparing any two points in history  
+run "bit lane history" to find history-ids
 
 | **Option**                      | **Option alias** | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ------------------------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1418,7 +1433,7 @@ run "bit lane history" to find these history-ids
 
 **Usage**: `lane checkout <history-id>`
 
-**Description**: EXPERIMENTAL. checkout to a previous history of the current lane. see also "bit lane revert"
+**Description**: checkout to a previous history of the current lane. see also "bit lane revert"
 
 | **Arg**      |                            **Description**                            |
 | ------------ | :-------------------------------------------------------------------: |
@@ -1432,7 +1447,7 @@ run "bit lane history" to find these history-ids
 
 **Usage**: `lane revert <history-id>`
 
-**Description**: EXPERIMENTAL. revert to a previous history of the current lane. see also "bit lane checkout"  
+**Description**: revert to a previous history of the current lane. see also "bit lane checkout"  
 revert is similar to "lane checkout", but it keeps the versions and only change the files.  
 choose one or the other based on your needs.  
 if you want to continue working on this lane and needs the changes from the history to be the head, then use "lane revert".  

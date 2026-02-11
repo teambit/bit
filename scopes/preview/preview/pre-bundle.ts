@@ -1,4 +1,6 @@
 import { join, resolve } from 'path';
+import { promisify } from 'util';
+import { rspack } from '@rspack/core';
 import fs, { existsSync, outputFileSync, readJsonSync } from 'fs-extra';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import {
@@ -9,12 +11,10 @@ import {
 } from '@teambit/harmony.modules.harmony-root-generator';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import normalizePath from 'normalize-path';
-import webpack from 'webpack';
-import { promisify } from 'util';
 import { PreviewAspect } from './preview.aspect';
-import { createWebpackConfig } from './webpack/webpack.config';
 import { clearConsole } from './pre-bundle-utils';
 import { getPreviewDistDir } from './mk-temp-dir';
+import { createRspackConfig } from './rspack/rspack.config';
 
 const previewDistDir = getPreviewDistDir();
 
@@ -108,14 +108,14 @@ export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[],
     PreviewAspect.id,
     __dirname
   );
-  const config = createWebpackConfig(outputDir, mainEntry);
-  const compiler = webpack(config);
+  const config = createRspackConfig(outputDir, mainEntry);
+  const compiler = rspack(config as any);
   const compilerRun = promisify(compiler.run.bind(compiler));
   const results = await compilerRun();
   if (!results) throw new Error();
   if (results?.hasErrors()) {
     clearConsole();
-    throw new Error(results?.toString());
+    throw new Error(results?.toString({}));
   }
   return results;
 }
