@@ -30,13 +30,14 @@ type ServerState = {
 };
 
 type ServerStateMap = Record<string, ServerState>;
-const PREVIEW_BOOTSTRAP_SPINNER_ID = 'preview-bootstrap';
 
 export class PreviewStartPlugin implements StartPlugin {
   previewServers: ComponentServer[] = [];
   serversState: ServerStateMap = {};
   serversMap: Record<string, ComponentServer> = {};
   private pendingServers: Map<string, ComponentServer> = new Map();
+  private bootstrapActive = false;
+  private lastBootstrapText = '';
 
   constructor(
     private workspace: Workspace,
@@ -137,9 +138,7 @@ export class PreviewStartPlugin implements StartPlugin {
         `Preview dev servers: loading workspace components ${chalk.dim('→')} ${chalk.cyan(workspaceIdsCount.toString())}`
       );
       const componentsLoadStart = Date.now();
-      const components = options.pattern
-        ? await this.workspace.getComponentsByUserInput(false, options.pattern)
-        : await this.workspace.list(undefined, { loadSeedersAsAspects: false });
+      const components = await this.workspace.getComponentsByUserInput(!options.pattern, options.pattern);
       const componentsLoadMs = Date.now() - componentsLoadStart;
       const componentsCount = components.length;
       this.upsertBootstrapSpinner(
@@ -203,36 +202,22 @@ export class PreviewStartPlugin implements StartPlugin {
   }
 
   private upsertBootstrapSpinner(text: string) {
-    const spinner = this.logger.multiSpinner.spinners[PREVIEW_BOOTSTRAP_SPINNER_ID];
-    if (!spinner) {
-      this.logger.multiSpinner.add(PREVIEW_BOOTSTRAP_SPINNER_ID, { text });
-      return;
-    }
-    spinner.update({ text });
+    if (this.lastBootstrapText === text) return;
+    this.bootstrapActive = true;
+    this.lastBootstrapText = text;
+    this.logger.console(chalk.cyan(`preview bootstrap: ${text}`));
   }
 
   private succeedBootstrapSpinner(text: string) {
-    const spinner = this.logger.multiSpinner.spinners[PREVIEW_BOOTSTRAP_SPINNER_ID];
-    if (spinner?.isActive()) {
-      this.logger.multiSpinner.succeed(PREVIEW_BOOTSTRAP_SPINNER_ID, { text });
-      return;
-    }
-    if (!spinner) {
-      this.logger.multiSpinner.add(PREVIEW_BOOTSTRAP_SPINNER_ID, { text });
-    }
-    this.logger.multiSpinner.succeed(PREVIEW_BOOTSTRAP_SPINNER_ID, { text });
+    this.bootstrapActive = false;
+    this.lastBootstrapText = text;
+    this.logger.console(chalk.green(`preview bootstrap: ${text}`));
   }
 
   private failBootstrapSpinner(text: string) {
-    const spinner = this.logger.multiSpinner.spinners[PREVIEW_BOOTSTRAP_SPINNER_ID];
-    if (spinner?.isActive()) {
-      this.logger.multiSpinner.fail(PREVIEW_BOOTSTRAP_SPINNER_ID, { text });
-      return;
-    }
-    if (!spinner) {
-      this.logger.multiSpinner.add(PREVIEW_BOOTSTRAP_SPINNER_ID, { text });
-    }
-    this.logger.multiSpinner.fail(PREVIEW_BOOTSTRAP_SPINNER_ID, { text });
+    this.bootstrapActive = false;
+    this.lastBootstrapText = text;
+    this.logger.console(chalk.red(`preview bootstrap: ${text}`));
   }
 
   getProxy(): ProxyEntry[] {
@@ -279,8 +264,7 @@ export class PreviewStartPlugin implements StartPlugin {
   private handleOnStartCompiling(id: string) {
     const uiServer = this.ui.getUIServer();
     uiServer?.setComponentServerProxyActive(id, false);
-    const bootstrapSpinner = this.logger.multiSpinner.spinners[PREVIEW_BOOTSTRAP_SPINNER_ID];
-    if (bootstrapSpinner?.isActive()) {
+    if (this.bootstrapActive) {
       const envId = chalk.cyan(id);
       this.succeedBootstrapSpinner(`Preview compilation started ${chalk.dim('→')} ${envId}`);
     }
