@@ -10,10 +10,10 @@ export type ManifestResult = {
  *
  * Designed to be passed as the `generate` option of `rspack-manifest-plugin`:
  * ```ts
- * new RspackManifestPlugin({ fileName: 'asset-manifest.json', generate: generateManifest })
+ * new RspackManifestPlugin({ fileName: 'asset-manifest.json', generate: generateAssetManifest })
  * ```
  */
-export function generateManifest(
+export function generateAssetManifest(
   _seed: Record<string, any>,
   _files: any[],
   _entrypoints: Record<string, string[]>,

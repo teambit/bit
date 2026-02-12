@@ -2,7 +2,7 @@ import { rspack, type Configuration } from '@rspack/core';
 import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
 import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
 import { RspackManifestPlugin } from 'rspack-manifest-plugin';
-import { generateManifest } from '@teambit/rspack.modules.generate-manifest';
+import { generateAssetManifest } from '@teambit/rspack.modules.generate-asset-manifest';
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -253,7 +253,7 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
     },
 
     plugins: [
-      new RspackManifestPlugin({ fileName: 'asset-manifest.json', generate: generateManifest }),
+      new RspackManifestPlugin({ fileName: 'asset-manifest.json', generate: generateAssetManifest }),
 
       new rspack.ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
 

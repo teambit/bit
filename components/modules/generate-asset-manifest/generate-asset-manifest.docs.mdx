@@ -9,7 +9,7 @@ Pass directly as the `generate` option of `rspack-manifest-plugin`:
 
 ```ts
 import { RspackManifestPlugin } from 'rspack-manifest-plugin';
-import { generateManifest } from '@teambit/rspack.modules.generate-manifest';
+import { generateAssetManifest } from '@teambit/rspack.modules.generate-asset-manifest';
 
-new RspackManifestPlugin({ fileName: 'asset-manifest.json', generate: generateManifest });
+new RspackManifestPlugin({ fileName: 'asset-manifest.json', generate: generateAssetManifest });
 ```

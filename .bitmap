@@ -1066,6 +1066,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/modules/fs-cache"
     },
+    "modules/generate-asset-manifest": {
+        "name": "modules/generate-asset-manifest",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.rspack",
+        "mainFile": "index.ts",
+        "rootDir": "components/modules/generate-asset-manifest",
+        "config": {
+            "bitdev.node/node-env@4.0.33": {},
+            "teambit.envs/envs": {
+                "env": "bitdev.node/node-env"
+            }
+        }
+    },
     "modules/generate-expose-loaders": {
         "name": "modules/generate-expose-loaders",
         "scope": "teambit.webpack",
@@ -1079,20 +1093,6 @@
         "version": "0.0.30",
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/modules/generate-externals"
-    },
-    "modules/generate-manifest": {
-        "name": "modules/generate-manifest",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.rspack",
-        "mainFile": "index.ts",
-        "rootDir": "components/modules/generate-manifest",
-        "config": {
-            "bitdev.node/node-env@4.0.33": {},
-            "teambit.envs/envs": {
-                "env": "bitdev.node/node-env"
-            }
-        }
     },
     "modules/generate-style-loaders": {
         "name": "modules/generate-style-loaders",
