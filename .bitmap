@@ -1362,6 +1362,10 @@
         "config": {
             "teambit.component/deprecation": {
                 "deprecate": true
+            },
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-typescript-mocha"
             }
         }
     },
