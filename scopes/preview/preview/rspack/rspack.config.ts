@@ -2,6 +2,7 @@ import { rspack, type Configuration } from '@rspack/core';
 import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
 import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
 import { RspackManifestPlugin } from 'rspack-manifest-plugin';
+import { generateManifest } from '@teambit/rspack.modules.generate-manifest';
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -252,22 +253,7 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
     },
 
     plugins: [
-      new RspackManifestPlugin({
-        fileName: 'asset-manifest.json',
-        generate: (_seed, _files, _entrypoints, extra: any) => {
-          const compilation = extra.compilation;
-          const files: Record<string, string> = {};
-          for (const asset of compilation.getAssets()) {
-            if (asset.name) files[asset.name] = `/${asset.name}`;
-          }
-          const stats = compilation.getStats().toJson({ all: false, entrypoints: true });
-          const mainEntry = stats.entrypoints?.main;
-          const entrypoints = (mainEntry?.assets || [])
-            .map((a: any) => a.name || a)
-            .filter((name: string) => !name.endsWith('.map'));
-          return { files, entrypoints };
-        },
-      }),
+      new RspackManifestPlugin({ fileName: 'asset-manifest.json', generate: generateManifest }),
 
       new rspack.ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
 

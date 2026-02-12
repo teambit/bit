@@ -3,6 +3,7 @@ import { fallbacks } from '@teambit/webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 
 export { RspackManifestPlugin } from 'rspack-manifest-plugin';
+export { generateManifest } from '@teambit/rspack.modules.generate-manifest';
 
 export const moduleFileExtensions = [
   'web.mjs',

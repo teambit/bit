@@ -1080,6 +1080,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/modules/generate-externals"
     },
+    "modules/generate-manifest": {
+        "name": "modules/generate-manifest",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.rspack",
+        "mainFile": "index.ts",
+        "rootDir": "components/modules/generate-manifest",
+        "config": {
+            "bitdev.node/node-env@4.0.33": {},
+            "teambit.envs/envs": {
+                "env": "bitdev.node/node-env"
+            }
+        }
+    },
     "modules/generate-style-loaders": {
         "name": "modules/generate-style-loaders",
         "scope": "teambit.webpack",
@@ -1344,7 +1358,12 @@
         "scope": "teambit.rspack",
         "version": "0.0.1",
         "mainFile": "index.ts",
-        "rootDir": "components/plugins/manifest-plugin"
+        "rootDir": "components/plugins/manifest-plugin",
+        "config": {
+            "teambit.component/deprecation": {
+                "deprecate": true
+            }
+        }
     },
     "pnpm": {
         "name": "pnpm",
