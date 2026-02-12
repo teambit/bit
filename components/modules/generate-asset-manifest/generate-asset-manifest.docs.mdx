@@ -1,0 +1,15 @@
+---
+labels: ['rspack', 'manifest', 'generate']
+description: 'Shared generate function for rspack-manifest-plugin that produces CRA-compatible asset manifests.'
+---
+
+Produces a CRA-compatible `asset-manifest.json` with `files` (all emitted assets) and `entrypoints` (main entry assets, excluding source maps).
+
+Pass directly as the `generate` option of `rspack-manifest-plugin`:
+
+```ts
+import { RspackManifestPlugin } from 'rspack-manifest-plugin';
+import { generateAssetManifest } from '@teambit/rspack.modules.generate-asset-manifest';
+
+new RspackManifestPlugin({ fileName: 'asset-manifest.json', generate: generateAssetManifest });
+```

@@ -1066,6 +1066,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/modules/fs-cache"
     },
+    "modules/generate-asset-manifest": {
+        "name": "modules/generate-asset-manifest",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.rspack",
+        "mainFile": "index.ts",
+        "rootDir": "components/modules/generate-asset-manifest",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-typescript-mocha"
+            }
+        }
+    },
     "modules/generate-expose-loaders": {
         "name": "modules/generate-expose-loaders",
         "scope": "teambit.webpack",
@@ -1344,7 +1358,16 @@
         "scope": "teambit.rspack",
         "version": "0.0.1",
         "mainFile": "index.ts",
-        "rootDir": "components/plugins/manifest-plugin"
+        "rootDir": "components/plugins/manifest-plugin",
+        "config": {
+            "teambit.component/deprecation": {
+                "deprecate": true
+            },
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-typescript-mocha"
+            }
+        }
     },
     "pnpm": {
         "name": "pnpm",
