@@ -1074,9 +1074,9 @@
         "mainFile": "index.ts",
         "rootDir": "components/modules/generate-asset-manifest",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.2.5": {},
+            "teambit.node/envs/node-typescript-mocha@0.1.5": {},
             "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
+                "env": "teambit.node/envs/node-typescript-mocha"
             }
         }
     },
