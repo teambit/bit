@@ -47,6 +47,8 @@ export function configFactory(
       // Development filename output
       filename: 'static/js/[name].bundle.js',
 
+      pathinfo: true,
+
       path: resolveWorkspacePath(publicDirectory),
 
       // publicPath: resolveWorkspacePath(publicDirectory),
