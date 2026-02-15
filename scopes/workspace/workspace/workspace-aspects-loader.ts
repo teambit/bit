@@ -312,7 +312,10 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const groupedByIsPlugin = groupBy(components, (component) => {
       return this.aspectLoader.hasPluginFiles(component);
     });
-    const graph = await this.getAspectsGraphWithoutCore(groupedByIsPlugin.false, this.isAspect.bind(this));
+    const graph = await this.getAspectsGraphWithoutCore(
+      groupedByIsPlugin.false,
+      this.filterOutNonAspectDeps.bind(this)
+    );
     const aspectsComponents = graph.nodes.map((node) => node.attr).concat(groupedByIsPlugin.true || []);
     this.logger.debug(`${loggerPrefix} found ${aspectsComponents.length} aspects in the aspects-graph`);
     const { workspaceComps, nonWorkspaceComps } = await this.groupComponentsByWorkspaceExistence(
@@ -403,6 +406,18 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
     const filteredDefs = this.aspectLoader.filterAspectDefs(allDefs, idsToFilter, runtimeName, mergedOpts);
     return filteredDefs;
+  }
+
+  async filterOutNonAspectDeps(component: Component, deps: ComponentID[]): Promise<ComponentID[]> {
+    const aspectsDefs = await this.aspectLoader.resolveAspects([component], this.getWorkspaceAspectResolver([]));
+
+    const { manifests } = await this.loadAspectDefsByOrder(aspectsDefs, [component.id.toString()], true, true);
+    const manifest = manifests[0];
+    const runtimeDeps = manifest.getRuntime(MainRuntime)?.dependencies?.map((dep) => dep.id);
+    const aspectDeps = manifest.dependencies?.map((d) => d.id) || [];
+    const allDeps = [...runtimeDeps, ...aspectDeps];
+
+    return deps.filter((dep) => allDeps.includes(dep.toString()));
   }
 
   shouldUseHashForCapsules(): boolean {
@@ -680,12 +695,12 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   /**
    * Create a graph of aspects without the core aspects.
    * @param components
-   * @param isAspect
+   * @param shouldLoadFunc
    * @returns
    */
   private async getAspectsGraphWithoutCore(
     components: Component[] = [],
-    isAspect?: ShouldLoadFunc
+    shouldLoadFunc?: ShouldLoadFunc
   ): Promise<Graph<Component, string>> {
     const ids = components.map((component) => component.id);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -707,7 +722,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     // const depsWhichAreNotAspectsBitIds = depsWhichAreNotAspects.map((strId) => otherDependenciesMap[strId]);
     // We only want to load into the graph components which are aspects and not regular dependencies
     // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
-    return this.workspace.buildOneGraphForComponents(ids, coreAspectsStringIds, isAspect);
+    return this.workspace.buildOneGraphForComponents(ids, coreAspectsStringIds, shouldLoadFunc);
   }
 
   /**
