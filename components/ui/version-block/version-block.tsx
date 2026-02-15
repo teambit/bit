@@ -20,17 +20,27 @@ export type VersionBlockProps = {
   isLatest: boolean;
   snap: LegacyComponentLog;
   isCurrent: boolean;
+  getLaneComponentUrl?: (laneId: string, componentId: string) => string;
 } & HTMLAttributes<HTMLDivElement>;
 /**
  * change log section
  * @name VersionBlock
  */
-export function VersionBlock({ isLatest, className, snap, componentId, isCurrent, ...rest }: VersionBlockProps) {
+export function VersionBlock({
+  isLatest,
+  className,
+  snap,
+  componentId,
+  isCurrent,
+  getLaneComponentUrl,
+  ...rest
+}: VersionBlockProps) {
   const { username, email, message, tag, hash, date } = snap;
   const { lanesModel } = useLanes();
   const currentLaneUrl = lanesModel?.isViewingNonDefaultLane()
     ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      `${LanesModel.getLaneUrl(lanesModel.viewedLane!.id)}${LanesModel.baseLaneComponentRoute}`
+      getLaneComponentUrl?.(lanesModel.viewedLane!.id.toString(), componentId) ??
+      `${LanesModel.getLaneUrl(lanesModel.viewedLane!.id)}${LanesModel.baseLaneComponentRoute}/${componentId}`
     : '';
 
   const version = tag || hash;
@@ -46,16 +56,14 @@ export function VersionBlock({ isLatest, className, snap, componentId, isCurrent
   const { pathname } = location || {};
 
   const testsUrl = currentLaneUrl
-    ? `${currentLaneUrl}/${componentId}/~tests?version=${version}`
+    ? `${currentLaneUrl}/~tests?version=${version}`
     : `${pathname?.replace('~changelog', '~tests')}?version=${version}`;
 
   const compositionsUrl = currentLaneUrl
-    ? `${currentLaneUrl}/${componentId}/~compositions?version=${version}`
+    ? `${currentLaneUrl}/~compositions?version=${version}`
     : `${pathname?.replace('~changelog', '~compositions')}?version=${version}`;
 
-  const versionUrl = currentLaneUrl
-    ? `${currentLaneUrl}/${componentId}?version=${version}`
-    : `${pathname}?version=${version}`;
+  const versionUrl = currentLaneUrl ? `${currentLaneUrl}?version=${version}` : `${pathname}?version=${version}`;
 
   return (
     <div className={classNames(styles.versionWrapper, className)}>

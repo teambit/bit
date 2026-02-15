@@ -15,11 +15,13 @@ import styles from './change-log-page.module.scss';
 export type ChangeLogPageProps = {
   host?: string;
   useComponentLogs?: (id: string, host: string, filters?: Filters, skip?: boolean) => ComponentLogsResult;
+  getLaneComponentUrl?: (laneId: string, componentId: string) => string;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function ChangeLogPage({
   className,
   useComponentLogs = defaultUseComponentLogs,
+  getLaneComponentUrl,
   host = '',
 }: ChangeLogPageProps) {
   const component = useContext(ComponentContext);
@@ -64,6 +66,7 @@ export function ChangeLogPage({
               isLatest={isLatest}
               snap={snap}
               isCurrent={isCurrent}
+              getLaneComponentUrl={getLaneComponentUrl}
             />
           );
         })}
