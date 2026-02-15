@@ -64,6 +64,30 @@ describe('makeOutdatedPkgChoices', () => {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     expect(stripped).to.deep.equal(contextOrders);
   });
+  it('should render env-jsonc packages with correct context', () => {
+    const choices = makeOutdatedPkgChoices([
+      {
+        name: 'react',
+        currentRange: '^18.0.0',
+        latestRange: '^18.2.0',
+        source: 'env-jsonc',
+        componentId: ComponentID.fromString('teambit.react/react-env'),
+        targetField: 'peerDependencies',
+      },
+      {
+        name: 'typescript',
+        currentRange: '~5.0.0',
+        latestRange: '~5.3.0',
+        source: 'env-jsonc',
+        componentId: ComponentID.fromString('teambit.typescript/typescript'),
+        targetField: 'devDependencies',
+      },
+    ]);
+    // Removing the ansi chars for better work on bit build on ci
+    const stripped = stripAnsiFromChoices(choices);
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    expect(stripped).to.deep.equal(envJsoncContextOrders);
+  });
 });
 
 function stripAnsiFromChoices(choices) {
@@ -81,7 +105,7 @@ const orderedChoices = [
     choices: [
       {
         message: 'foo (runtime) 1.0.0 ❯ 2.0.0   ',
-        name: 'foo',
+        name: 'foo-0',
         value: {
           currentRange: '1.0.0',
           latestRange: '2.0.0',
@@ -92,7 +116,7 @@ const orderedChoices = [
       },
       {
         message: 'qar (runtime) 1.0.0 ❯ 1.1.0   ',
-        name: 'qar',
+        name: 'qar-1',
         value: {
           currentRange: '1.0.0',
           latestRange: '1.1.0',
@@ -103,7 +127,7 @@ const orderedChoices = [
       },
       {
         message: 'zoo (dev)     1.0.0 ❯ 1.1.0   ',
-        name: 'zoo',
+        name: 'zoo-2',
         value: {
           currentRange: '1.0.0',
           latestRange: '1.1.0',
@@ -114,7 +138,7 @@ const orderedChoices = [
       },
       {
         message: 'bar (peer)    1.0.0 ❯ 1.1.0   ',
-        name: 'bar',
+        name: 'bar-3',
         value: {
           currentRange: '1.0.0',
           latestRange: '1.1.0',
@@ -133,7 +157,7 @@ const contextOrders = [
     choices: [
       {
         message: 'foo (runtime) 1.0.0 ❯ 2.0.0   ',
-        name: 'foo',
+        name: 'foo-0',
         value: {
           componentId: ComponentID.fromString('scope/comp1'),
           currentRange: '1.0.0',
@@ -150,7 +174,7 @@ const contextOrders = [
     choices: [
       {
         message: 'bar (peer)    1.0.0 ❯ 1.1.0   ',
-        name: 'bar',
+        name: 'bar-1',
         value: {
           currentRange: '1.0.0',
           latestRange: '1.1.0',
@@ -162,5 +186,42 @@ const contextOrders = [
       },
     ],
     message: '{comp2} (variant)',
+  },
+];
+
+const envJsoncContextOrders = [
+  {
+    choices: [
+      {
+        message: 'typescript (dev)   ~5.0.0 ❯ ~5.3.0    ',
+        name: 'typescript-0',
+        value: {
+          componentId: ComponentID.fromString('teambit.typescript/typescript'),
+          currentRange: '~5.0.0',
+          latestRange: '~5.3.0',
+          name: 'typescript',
+          source: 'env-jsonc',
+          targetField: 'devDependencies',
+        },
+      },
+    ],
+    message: 'teambit.typescript/typescript (env.jsonc)',
+  },
+  {
+    choices: [
+      {
+        message: 'react      (peer) ^18.0.0 ❯ ^18.2.0   ',
+        name: 'react-1',
+        value: {
+          componentId: ComponentID.fromString('teambit.react/react-env'),
+          currentRange: '^18.0.0',
+          latestRange: '^18.2.0',
+          name: 'react',
+          source: 'env-jsonc',
+          targetField: 'peerDependencies',
+        },
+      },
+    ],
+    message: 'teambit.react/react-env (env.jsonc)',
   },
 ];

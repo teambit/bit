@@ -11,6 +11,7 @@ import yesno from 'yesno';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { compact, mapValues, omit, uniq, intersection, groupBy } from 'lodash';
+import semver from 'semver';
 import type { ProjectManifest } from '@pnpm/types';
 import type { GenerateResult, GeneratorMain } from '@teambit/generator';
 import { GeneratorAspect } from '@teambit/generator';
@@ -22,6 +23,7 @@ import { VariantsAspect } from '@teambit/variants';
 import type { Component } from '@teambit/component';
 import { ComponentID, ComponentMap } from '@teambit/component';
 import { PackageJsonFile } from '@teambit/component.sources';
+import { updateJsoncPreservingFormatting } from '@teambit/toolbox.json.jsonc-utils';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
@@ -29,12 +31,13 @@ import { Slot } from '@teambit/harmony';
 import { type DependenciesGraph } from '@teambit/objects';
 import type { CodemodResult, NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
 import { linkToNodeModulesWithCodemod } from '@teambit/workspace.modules.node-modules-linker';
-import type { EnvsMain } from '@teambit/envs';
+import type { EnvJsonc, EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import type { IpcEventsMain } from '@teambit/ipc-events';
 import { IpcEventsAspect } from '@teambit/ipc-events';
 import { IssuesClasses } from '@teambit/component-issues';
 import type {
+  EnvPolicyEnvJsoncConfigObject,
   GetComponentManifestsOptions,
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
@@ -1024,6 +1027,61 @@ export class InstallMain {
     );
   }
 
+  /**
+   * Update env.jsonc policy files for environment components based on a list of outdated packages.
+   * @param outdatedPkgs - List of outdated packages.
+   */
+  async updateEnvJsoncPolicies(outdatedPkgs: MergedOutdatedPkg[]): Promise<void> {
+    // Group packages by componentId, skipping those without one
+    const updatesByComponentId = new Map<string, MergedOutdatedPkg[]>();
+    for (const pkg of outdatedPkgs) {
+      if (!pkg.componentId) continue;
+      const key = pkg.componentId.toString();
+      const existing = updatesByComponentId.get(key);
+      if (existing) {
+        existing.push(pkg);
+      } else {
+        updatesByComponentId.set(key, [pkg]);
+      }
+    }
+
+    await Promise.all(Array.from(updatesByComponentId.values()).map(async (pkgs) => {
+      const componentId = pkgs[0].componentId!;
+      const component = await this.workspace.get(componentId);
+      const envJsoncFile = component.filesystem.files.find((file) => file.relative === 'env.jsonc');
+      if (!envJsoncFile) return;
+
+      const envJsoncContent = envJsoncFile.contents.toString();
+      const updatedContent = updateJsoncPreservingFormatting(envJsoncContent, (envJsonc: EnvJsonc): EnvJsonc => {
+        pkgs.forEach((pkg) => {
+          let field: keyof EnvPolicyEnvJsoncConfigObject | undefined;
+          if (pkg.targetField === 'devDependencies') field = 'dev';
+          if (pkg.targetField === 'dependencies') field = 'runtime';
+          if (pkg.targetField === 'peerDependencies') field = 'peers';
+
+          if (!field) return;
+
+          const deps = envJsonc.policy?.[field];
+          if (!Array.isArray(deps)) return;
+
+          const depEntry = deps.find(({ name }) => name === pkg.name);
+          if (depEntry) {
+            depEntry.version = pkg.latestRange;
+            if (field === 'peers' && depEntry.supportedRange) {
+              if (!semver.intersects(pkg.latestRange, depEntry.supportedRange)) {
+                depEntry.supportedRange = `${depEntry.supportedRange} || ${pkg.latestRange}`;
+              }
+            }
+          }
+        });
+        return envJsonc;
+      });
+
+      const absPath = path.join(this.workspace.componentDir(component.id), 'env.jsonc');
+      await fs.writeFile(absPath, updatedContent);
+    }));
+  }
+
   private async _getAllUsedEnvIds(): Promise<ComponentID[]> {
     const envs = new Map<string, ComponentID>();
     const components = await this.workspace.list();
@@ -1055,11 +1113,11 @@ export class InstallMain {
       patterns: options.patterns,
       forceVersionBump: options.forceVersionBump,
     });
-    if (outdatedPkgs == null) {
+    if (!outdatedPkgs || !outdatedPkgs.length) {
       this.logger.consoleFailure('No dependencies found that match the patterns');
       return null;
     }
-    let outdatedPkgsToUpdate!: MergedOutdatedPkg[];
+    let outdatedPkgsToUpdate: MergedOutdatedPkg[];
     if (options.all) {
       outdatedPkgsToUpdate = outdatedPkgs;
     } else {
@@ -1076,11 +1134,25 @@ export class InstallMain {
       }
       return null;
     }
-    const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgsToUpdate, {
+
+    const envJsoncUpdates: MergedOutdatedPkg[] = [];
+    const policiesUpdates: MergedOutdatedPkg[] = [];
+    for (const outdatedPkg of outdatedPkgsToUpdate) {
+      if (outdatedPkg.source === 'env-jsonc') {
+        envJsoncUpdates.push(outdatedPkg);
+      } else {
+        policiesUpdates.push(outdatedPkg);
+      }
+    }
+
+    const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(policiesUpdates, {
       variantPoliciesByPatterns,
     });
-    await this._updateVariantsPolicies(updatedVariants);
-    await this._updateComponentsConfig(updatedComponents);
+    await Promise.all([
+      this.updateEnvJsoncPolicies(envJsoncUpdates),
+      this._updateVariantsPolicies(updatedVariants),
+      this._updateComponentsConfig(updatedComponents),
+    ]);
     await this.workspace._reloadConsumer();
     return this._installModules({ dedupe: true });
   }

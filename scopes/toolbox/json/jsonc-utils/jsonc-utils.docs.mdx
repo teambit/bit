@@ -1,0 +1,91 @@
+---
+labels: ['typescript', 'utils', 'json', 'jsonc', 'formatting', 'comments', 'parser']
+description: 'Utilities for parsing and stringifying JSONC files while preserving formatting and comments.'
+---
+
+# JSONC Utils
+
+Utilities for working with JSONC (JSON with Comments) files while preserving their original formatting, including:
+- **Indentation style** (2 spaces, 4 spaces, tabs)
+- **Newline characters** (LF, CRLF)
+- **Comments**
+
+This is particularly useful when you need to programmatically update configuration files without losing their human-readable formatting.
+
+## Installation
+
+```bash
+bit install @teambit/toolbox.json.jsonc-utils
+```
+
+## Quick Start
+
+The easiest way to update a JSONC file while preserving its formatting:
+
+```ts
+import { updateJsoncPreservingFormatting } from '@teambit/toolbox.json.jsonc-utils';
+
+const originalContent = `{
+  // This is a comment
+  "name": "my-package",
+  "version": "1.0.0"
+}`;
+
+const updatedContent = updateJsoncPreservingFormatting(originalContent, (data) => {
+  data.version = "2.0.0";
+  return data;
+});
+
+// Output preserves comments and formatting:
+// {
+//   // This is a comment
+//   "name": "my-package",
+//   "version": "2.0.0"
+// }
+```
+
+## Use Cases
+
+### Updating env.jsonc Files
+
+When updating component environment configurations, preserve the original formatting:
+
+```ts
+import fs from 'fs-extra';
+import { updateJsoncPreservingFormatting } from '@teambit/toolbox.json.jsonc-utils';
+
+async function updateEnvDependency(
+  envJsoncPath: string,
+  pkgName: string,
+  newVersion: string
+) {
+  const content = await fs.readFile(envJsoncPath, 'utf-8');
+
+  const updated = updateJsoncPreservingFormatting(content, (envJsonc) => {
+    const dep = envJsonc.policy?.runtime?.find((d) => d.name === pkgName);
+    if (dep) {
+      dep.version = newVersion;
+    }
+    return envJsonc;
+  });
+
+  await fs.writeFile(envJsoncPath, updated);
+}
+```
+
+### Working with Different Indentation Styles
+
+Handle files with different formatting preferences:
+
+```ts
+import { detectJsoncFormatting, stringifyJsonc } from '@teambit/toolbox.json.jsonc-utils';
+
+// Detect existing formatting
+const formatting = detectJsoncFormatting(originalContent);
+
+// Modify data
+const updatedData = { ...parsedData, version: '2.0.0' };
+
+// Stringify with original formatting
+const result = stringifyJsonc(updatedData, formatting);
+```

@@ -877,6 +877,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/jest"
     },
+    "json/jsonc-utils": {
+        "name": "json/jsonc-utils",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/json/jsonc-utils"
+    },
     "lanes": {
         "name": "lanes",
         "scope": "teambit.lanes",
