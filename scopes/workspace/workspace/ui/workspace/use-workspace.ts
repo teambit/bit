@@ -307,6 +307,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
   const [shellReady, setShellReady] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
   const [useServerFallbackQuery, setUseServerFallbackQuery] = useState(false);
+  const [hasFreshWorkspaceSnapshot, setHasFreshWorkspaceSnapshot] = useState(false);
   const serverPollingIntervalRef = useRef<number | null>(null);
   const recoveryRetryTimerRef = useRef<number | undefined>(undefined);
   const recoveryRetryDelayRef = useRef(1200);
@@ -417,14 +418,25 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     fetchPolicy: 'no-cache',
   });
 
+  useEffect(() => {
+    if (!data?.workspace) {
+      setHasFreshWorkspaceSnapshot(false);
+      return;
+    }
+    if (!loading && !error?.networkError) {
+      setHasFreshWorkspaceSnapshot(true);
+    }
+  }, [data?.workspace?.name, loading, error?.networkError]);
+
   const {
     data: serverResult,
     startPolling: startServerPolling,
     stopPolling: stopServerPolling,
   } = useQuery(WORKSPACE_SERVER, {
     skip: !data?.workspace || !useServerFallbackQuery,
-    fetchPolicy: 'cache-first',
-    nextFetchPolicy: 'cache-first',
+    // Fallback query is purely runtime-state (preview server readiness/compiling),
+    // so it must always come from the current process, never restored Apollo cache.
+    fetchPolicy: 'no-cache',
     notifyOnNetworkStatusChange: false,
     errorPolicy: 'ignore',
   });
@@ -814,6 +826,10 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     if (!workspace) return;
 
     const currentComponents = workspace.components || [];
+    // A cache-hydrated workspace snapshot can be stale during process restarts.
+    // Until we have a fresh network snapshot for this session (or server fallback data),
+    // force preview state to loading instead of publishing stale ready/online status.
+    const canTrustRuntimeServerState = hasFreshWorkspaceSnapshot || !!serverResult?.workspace?.components;
     const nextPresence = new Set<string>();
     const nextReady = new Set<string>();
     const nextCompiling = new Set<string>();
@@ -822,6 +838,12 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
       if ((component.compositions?.length ?? 0) === 0) continue;
       const previewKey = `${component.id.toString()}:overview`;
       nextPresence.add(previewKey);
+
+      if (!canTrustRuntimeServerState) {
+        nextCompiling.add(previewKey);
+        continue;
+      }
+
       const isCompiling = component.server?.isCompiling === true;
       if (isCompiling) {
         nextCompiling.add(previewKey);
@@ -848,7 +870,12 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     dispatchPreviewConnectionEvent({ previewSnapshot: snapshot });
     // Keep latest preview-state snapshot available for late listeners (e.g. user-bar effect ordering on refresh).
     (window as any).__BIT_PREVIEW_STATUS__ = snapshot;
-  }, [workspace?.components, dispatchPreviewConnectionEvent]);
+  }, [
+    workspace?.components,
+    dispatchPreviewConnectionEvent,
+    hasFreshWorkspaceSnapshot,
+    serverResult?.workspace?.components,
+  ]);
 
   useEffect(() => {
     return () => {

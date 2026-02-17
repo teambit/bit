@@ -31,6 +31,37 @@ function reportConnectionStatus(online: boolean, reason?: 'network' | 'preview')
   );
 }
 
+function sanitizeRestoredApolloCache(cacheData: NormalizedCacheObject) {
+  let clearedServerField = 0;
+  let clearedPreviewUrl = 0;
+  let clearedCompilingFlag = 0;
+
+  for (const key of Object.keys(cacheData)) {
+    const entry = cacheData[key] as Record<string, any> | undefined;
+    if (!entry || typeof entry !== 'object') continue;
+
+    // `Component.server` is runtime-volatile by nature.
+    // Keeping stale server blocks (url/isCompiling) across process restarts causes
+    // false online states and stale preview readiness during cache hydration.
+    if (entry.server && typeof entry.server === 'object') {
+      delete entry.server;
+      clearedServerField += 1;
+    }
+
+    if (entry.url && typeof entry.url === 'string' && entry.url.startsWith('/preview/')) {
+      entry.url = null;
+      clearedPreviewUrl += 1;
+    }
+
+    if (typeof entry.isCompiling === 'boolean') {
+      delete entry.isCompiling;
+      clearedCompilingFlag += 1;
+    }
+  }
+
+  return { clearedServerField, clearedPreviewUrl, clearedCompilingFlag };
+}
+
 /**
  * Type of gql client.
  * Used to abstract Apollo client, so consumers could import the type from graphql.ui, and not have to depend on @apollo/client directly
@@ -84,22 +115,19 @@ export class GraphqlUI {
         // eslint-disable-next-line no-console
         console.log(`[apollo-cache] restored ${cacheEntries} entries in ${(performance.now() - t0).toFixed(0)}ms`);
 
-        // Clear stale server URLs from cache to prevent cancelled iframe requests on restart.
-        // Component metadata (names, compositions, etc.) renders instantly from cache;
-        // server.url comes fresh from network via cache-and-network policy.
+        // Clear volatile preview-server state from restored cache.
+        // We keep stable metadata (names/compositions/etc.) for instant render, but force
+        // runtime preview readiness/compilation state to come from fresh network/session events.
         if (cacheEntries > 0) {
-          let cleared = 0;
-          for (const key of Object.keys(cacheData)) {
-            const entry = cacheData[key] as Record<string, any> | undefined;
-            if (entry && entry.url && typeof entry.url === 'string' && entry.url.startsWith('/preview/')) {
-              entry.url = null;
-              cleared++;
-            }
-          }
-          if (cleared > 0) {
+          const { clearedServerField, clearedPreviewUrl, clearedCompilingFlag } =
+            sanitizeRestoredApolloCache(cacheData);
+          const clearedTotal = clearedServerField + clearedPreviewUrl + clearedCompilingFlag;
+          if (clearedTotal > 0) {
             cache.restore(cacheData);
             // eslint-disable-next-line no-console
-            console.log(`[apollo-cache] cleared ${cleared} stale server URLs`);
+            console.log(
+              `[apollo-cache] sanitized volatile fields (server=${clearedServerField}, previewUrl=${clearedPreviewUrl}, isCompiling=${clearedCompilingFlag})`
+            );
           }
         }
       } catch {
