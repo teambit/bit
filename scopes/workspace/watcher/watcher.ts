@@ -929,6 +929,7 @@ export class Watcher {
     await this.processEvents(events, startTime);
 
     // Write snapshot after successful processing (non-blocking)
+    // eslint-disable-next-line promise/no-promise-in-callback
     this.writeSnapshotIfNeeded().catch((writeErr) => {
       this.logger.debug(`Failed to write watcher snapshot: ${writeErr.message}`);
     });
