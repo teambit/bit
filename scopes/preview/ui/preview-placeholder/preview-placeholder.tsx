@@ -12,12 +12,21 @@ import styles from './preview-placeholder.module.scss';
 // can remount immediately without waiting for intersection again.
 const warmedPreviews = new Set<string>();
 const autoWarmPreviews = new Set<string>();
-const HYDRATION_CONCURRENCY = 16;
+function getHydrationConcurrency() {
+  if (typeof navigator === 'undefined') return 6;
+  const cores = navigator.hardwareConcurrency || 6;
+  if (cores <= 4) return 4;
+  if (cores <= 8) return 6;
+  return 8;
+}
+
+const HYDRATION_CONCURRENCY = getHydrationConcurrency();
 const HYDRATION_SLOT_FALLBACK_RELEASE_MS = 1800;
-const AUTO_WARM_PREVIEW_LIMIT = 96;
-const hydrationQueue: Array<{ previewKey: string; run: () => void }> = [];
+const AUTO_WARM_PREVIEW_LIMIT = Math.max(16, HYDRATION_CONCURRENCY * 3);
+const hydrationQueue: Array<{ previewKey: string; run: () => void; priority: number; seq: number }> = [];
 const queuedPreviewKeys = new Set<string>();
 let activeHydrationSlots = 0;
+let hydrationSeq = 0;
 
 function processHydrationQueue() {
   while (activeHydrationSlots < HYDRATION_CONCURRENCY && hydrationQueue.length > 0) {
@@ -29,7 +38,7 @@ function processHydrationQueue() {
   }
 }
 
-function requestHydrationSlot(previewKey: string, run: () => void) {
+function requestHydrationSlot(previewKey: string, run: () => void, priority = 0) {
   if (!previewKey) return;
   if (warmedPreviews.has(previewKey)) {
     run();
@@ -43,7 +52,8 @@ function requestHydrationSlot(previewKey: string, run: () => void) {
   if (queuedPreviewKeys.has(previewKey)) return;
 
   queuedPreviewKeys.add(previewKey);
-  hydrationQueue.push({ previewKey, run });
+  hydrationQueue.push({ previewKey, run, priority, seq: hydrationSeq++ });
+  hydrationQueue.sort((a, b) => b.priority - a.priority || a.seq - b.seq);
 }
 
 function reserveAutoWarmPreview(previewKey: string) {
@@ -163,13 +173,15 @@ export function PreviewPlaceholder({
         const entry = entries[0];
         if (!entry?.isIntersecting) return;
 
-        requestHydrationSlot(previewKey, hydratePreview);
+        const distanceFromViewportTop = Math.abs(entry.boundingClientRect.top);
+        const priority = Math.max(0, 100000 - distanceFromViewportTop);
+        requestHydrationSlot(previewKey, hydratePreview, priority);
         observer.disconnect();
       },
       {
         root: getNearestScrollParent(node),
         // Warm previews well before they enter viewport so scrolling doesn't show blanks.
-        rootMargin: '3200px 0px',
+        rootMargin: '1600px 0px',
         threshold: 0.01,
       }
     );
@@ -213,7 +225,12 @@ export function PreviewPlaceholder({
 
   const name = component.id.toString();
 
-  if (!canHydratePreview || !serverUrl || (!shouldShowPreview && component.buildStatus === 'pending'))
+  if (
+    !canHydratePreview ||
+    !serverUrl ||
+    component.server?.isCompiling === true ||
+    (!shouldShowPreview && component.buildStatus === 'pending')
+  )
     return (
       <div ref={intersectionRef} className={styles.previewPlaceholder} data-tip="" data-for={name}>
         <div className={styles.placeholderShimmer}>

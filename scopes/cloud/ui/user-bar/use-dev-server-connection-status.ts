@@ -17,13 +17,17 @@ type ConnectionEventDetail = {
   online?: boolean;
   reason?: ConnectionReason;
   previewKey?: string;
-  previewPresenceDelta?: number;
+  previewSnapshot?: {
+    presenceKeys: string[];
+    readyKeys: string[];
+    compilingKeys: string[];
+  };
 };
 
 export function useDevServerConnectionStatus() {
   const [mode, setMode] = useState<ConnectionMode>('online');
   const [reason, setReason] = useState<ConnectionReason>('network');
-  const [previewMode, setPreviewMode] = useState<PreviewMode>('online');
+  const [previewMode, setPreviewMode] = useState<PreviewMode>('loading');
   const modeRef = useRef<ConnectionMode>('online');
   const inFlightRef = useRef(false);
   const recoveryTimerRef = useRef<number | undefined>(undefined);
@@ -34,7 +38,11 @@ export function useDevServerConnectionStatus() {
   const mainFailureCountRef = useRef(0);
   const previewPresenceKeysRef = useRef(new Set<string>());
   const previewReadyKeysRef = useRef(new Set<string>());
+  const previewCompilingKeysRef = useRef(new Set<string>());
   const previewWentOnlineOnceRef = useRef(false);
+  const previewSnapshotSeenRef = useRef(false);
+  const previewBootTimerRef = useRef<number | undefined>(undefined);
+  const previewOnlineSettleTimerRef = useRef<number | undefined>(undefined);
 
   const applyMode = useCallback((next: ConnectionMode) => {
     modeRef.current = next;
@@ -57,6 +65,18 @@ export function useDevServerConnectionStatus() {
     if (!offlineTimerRef.current) return;
     window.clearTimeout(offlineTimerRef.current);
     offlineTimerRef.current = undefined;
+  }, []);
+
+  const clearPreviewBootTimer = useCallback(() => {
+    if (!previewBootTimerRef.current) return;
+    window.clearTimeout(previewBootTimerRef.current);
+    previewBootTimerRef.current = undefined;
+  }, []);
+
+  const clearPreviewOnlineSettleTimer = useCallback(() => {
+    if (!previewOnlineSettleTimerRef.current) return;
+    window.clearTimeout(previewOnlineSettleTimerRef.current);
+    previewOnlineSettleTimerRef.current = undefined;
   }, []);
 
   const pingDevServer = useCallback(async () => {
@@ -142,11 +162,20 @@ export function useDevServerConnectionStatus() {
   const evaluatePreviewMode = useCallback(() => {
     const presence = previewPresenceKeysRef.current;
     const ready = previewReadyKeysRef.current;
+    const compiling = previewCompilingKeysRef.current;
 
     if (presence.size === 0) {
       clearPreviewOfflineTimer();
+      clearPreviewOnlineSettleTimer();
       previewWentOnlineOnceRef.current = false;
       setPreviewMode('online');
+      return;
+    }
+
+    if (compiling.size > 0) {
+      clearPreviewOfflineTimer();
+      clearPreviewOnlineSettleTimer();
+      setPreviewMode('loading');
       return;
     }
 
@@ -160,11 +189,16 @@ export function useDevServerConnectionStatus() {
 
     if (allReady) {
       clearPreviewOfflineTimer();
-      previewWentOnlineOnceRef.current = true;
-      setPreviewMode('online');
+      if (previewOnlineSettleTimerRef.current) return;
+      previewOnlineSettleTimerRef.current = window.setTimeout(() => {
+        previewOnlineSettleTimerRef.current = undefined;
+        previewWentOnlineOnceRef.current = true;
+        setPreviewMode('online');
+      }, 220);
       return;
     }
 
+    clearPreviewOnlineSettleTimer();
     setPreviewMode('loading');
     if (!previewWentOnlineOnceRef.current) {
       clearPreviewOfflineTimer();
@@ -190,33 +224,18 @@ export function useDevServerConnectionStatus() {
       previewWentOnlineOnceRef.current = true;
       setPreviewMode('online');
     }, PREVIEW_OFFLINE_DELAY_MS);
-  }, [clearPreviewOfflineTimer]);
-
-  const markPreviewPresence = useCallback(
-    (delta: number, previewKey?: string) => {
-      if (!previewKey) return;
-      if (delta > 0) {
-        previewPresenceKeysRef.current.add(previewKey);
-      } else if (delta < 0) {
-        previewPresenceKeysRef.current.delete(previewKey);
-        previewReadyKeysRef.current.delete(previewKey);
-      }
-      evaluatePreviewMode();
-    },
-    [evaluatePreviewMode]
-  );
+  }, [clearPreviewOfflineTimer, clearPreviewOnlineSettleTimer]);
 
   const markPreviewSignal = useCallback(
     (online: boolean, previewKey?: string) => {
+      if (previewSnapshotSeenRef.current) {
+        // Once workspace snapshot mode is active, keyed snapshot data is the source of truth.
+        // Ignore legacy per-preview/unkeyed fallback events to prevent stale loading regressions.
+        return;
+      }
       if (previewKey) {
-        // Signals can arrive before explicit presence registration. Treat signal as implicit presence.
-        previewPresenceKeysRef.current.add(previewKey);
-        if (online) {
-          previewReadyKeysRef.current.add(previewKey);
-        } else {
-          previewReadyKeysRef.current.delete(previewKey);
-        }
-        evaluatePreviewMode();
+        // Snapshot is authoritative for keyed previews (presence + readiness).
+        // Ignore per-iframe online/offline signals to avoid stale loading states.
         return;
       }
 
@@ -234,7 +253,20 @@ export function useDevServerConnectionStatus() {
         setPreviewMode('offline');
       }, PREVIEW_OFFLINE_DELAY_MS);
     },
-    [clearPreviewOfflineTimer, evaluatePreviewMode]
+    [clearPreviewOfflineTimer]
+  );
+
+  const applyPreviewSnapshot = useCallback(
+    (snapshot?: { presenceKeys: string[]; readyKeys: string[]; compilingKeys: string[] }) => {
+      if (!snapshot) return;
+      previewSnapshotSeenRef.current = true;
+      clearPreviewBootTimer();
+      previewPresenceKeysRef.current = new Set(snapshot.presenceKeys || []);
+      previewReadyKeysRef.current = new Set(snapshot.readyKeys || []);
+      previewCompilingKeysRef.current = new Set(snapshot.compilingKeys || []);
+      evaluatePreviewMode();
+    },
+    [clearPreviewBootTimer, evaluatePreviewMode]
   );
 
   const runHealthCheck = useCallback(async () => {
@@ -269,8 +301,8 @@ export function useDevServerConnectionStatus() {
     const handleStatusEvent = (event: Event) => {
       const { detail } = event as CustomEvent<ConnectionEventDetail>;
       if (detail?.reason === 'preview') {
-        if (typeof detail.previewPresenceDelta === 'number') {
-          markPreviewPresence(detail.previewPresenceDelta, detail.previewKey);
+        if (detail?.previewSnapshot) {
+          applyPreviewSnapshot(detail.previewSnapshot);
           return;
         }
         markPreviewSignal(detail?.online === true, detail?.previewKey);
@@ -294,6 +326,21 @@ export function useDevServerConnectionStatus() {
     window.addEventListener('offline', onOffline);
     window.addEventListener('online', onOnline);
 
+    const bootSnapshot = (window as any).__BIT_PREVIEW_STATUS__ as
+      | { presenceKeys: string[]; readyKeys: string[]; compilingKeys: string[] }
+      | undefined;
+    if (bootSnapshot) {
+      applyPreviewSnapshot(bootSnapshot);
+    } else {
+      previewBootTimerRef.current = window.setTimeout(() => {
+        previewBootTimerRef.current = undefined;
+        if (previewSnapshotSeenRef.current) return;
+        if (previewPresenceKeysRef.current.size === 0) {
+          setPreviewMode('online');
+        }
+      }, 2500);
+    }
+
     return () => {
       window.removeEventListener(CONNECTION_STATUS_EVENT, handleStatusEvent as EventListener);
       window.removeEventListener('offline', onOffline);
@@ -301,14 +348,18 @@ export function useDevServerConnectionStatus() {
       clearOfflineTimer();
       clearRecoveryTimer();
       clearPreviewOfflineTimer();
+      clearPreviewBootTimer();
+      clearPreviewOnlineSettleTimer();
     };
   }, [
     clearOfflineTimer,
     clearRecoveryTimer,
     clearPreviewOfflineTimer,
+    clearPreviewBootTimer,
+    clearPreviewOnlineSettleTimer,
     markOffline,
     markOnline,
-    markPreviewPresence,
+    applyPreviewSnapshot,
     markPreviewSignal,
     runHealthCheck,
   ]);

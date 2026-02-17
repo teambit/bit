@@ -131,6 +131,7 @@ export default function createRspackBrowserConfig(
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5000000,
+        navigateFallback: undefined,
         exclude: [/\.map$/, /asset-manifest\.json$/],
         runtimeCaching: [
           {

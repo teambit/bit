@@ -2,7 +2,7 @@ import type { Component } from '@teambit/component';
 import type { GraphqlMain, Schema } from '@teambit/graphql';
 import { gql } from '@apollo/client';
 import type { BundlerMain } from './bundler.main.runtime';
-import { ComponentServerStartedEvent } from './events';
+import { ComponentServerCompilationChangedEvent, ComponentServerStartedEvent } from './events';
 
 export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Schema {
   return {
@@ -17,10 +17,23 @@ export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Sch
         url: String
         host: String
         basePath: String
+        isCompiling: Boolean
+      }
+
+      type ComponentServerCompilationStatus {
+        env: String!
+        affectedEnvs: [String!]
+        url: String
+        host: String
+        basePath: String
+        isCompiling: Boolean!
+        errorCount: Int!
+        warningCount: Int!
       }
 
       type Subscription {
         componentServerStarted(id: String): [ComponentServer!]!
+        componentServerCompilationChanged(id: String): ComponentServerCompilationStatus
       }
     `,
     resolvers: {
@@ -49,6 +62,9 @@ export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Sch
             id: `server-${componentServer.context.envRuntime.id}`,
             env: componentServer.context.envRuntime.id,
             url: componentServer.url,
+            host: componentServer.hostname,
+            basePath: componentServer.context.rootPath,
+            isCompiling: !!componentServer.isCompiling,
           };
         },
       },
@@ -67,8 +83,29 @@ export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Sch
                 id: `server-${server.context.envRuntime.id}`,
                 env: server.context.envRuntime.id,
                 url: server.url,
+                host: server.hostname,
+                basePath: server.context.rootPath,
+                isCompiling: !!server.isCompiling,
               },
             ];
+          },
+        },
+        componentServerCompilationChanged: {
+          subscribe: () => graphql.pubsub.asyncIterator([ComponentServerCompilationChangedEvent]),
+          resolve: (payload, { id }) => {
+            const status = payload?.componentServerCompilation;
+            if (!status?.env) return null;
+            if (id && status.env !== id) return null;
+            return {
+              env: status.env,
+              affectedEnvs: Array.isArray(status.affectedEnvs) ? status.affectedEnvs : [],
+              url: status.url,
+              host: status.host,
+              basePath: status.basePath,
+              isCompiling: !!status.isCompiling,
+              errorCount: Number(status.errorCount || 0),
+              warningCount: Number(status.warningCount || 0),
+            };
           },
         },
       },

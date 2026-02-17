@@ -6,6 +6,7 @@ import type { ComponentServer } from '../component-server';
 import type { ExecutionContext } from '@teambit/envs';
 
 export const ComponentServerStartedEvent = 'ComponentServerStartedEvent';
+export const ComponentServerCompilationChangedEvent = 'ComponentServerCompilationChangedEvent';
 
 class ComponentsServerStartedEventData {
   constructor(

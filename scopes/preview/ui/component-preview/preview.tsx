@@ -13,12 +13,25 @@ import { useIframeContentHeight } from './use-iframe-content-height';
 import styles from './preview.module.scss';
 
 const CONNECTION_STATUS_EVENT = 'bit-dev-server-connection-status';
+const PREVIEW_SRCDOC_SKELETON = `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;height:100%;background:#fff;font:13px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#667085}.chrome{height:24px;border-bottom:1px solid #ececec;background:#fafafa}.body{padding:10px}.bar{height:10px;border-radius:6px;background:linear-gradient(90deg,#f0f0f0 25%,#e3e3e3 50%,#f0f0f0 75%);background-size:200% 100%;animation:s 1.2s ease-in-out infinite;margin-bottom:8px}@keyframes s{from{background-position:200% 0}to{background-position:-200% 0}}</style></head><body><div class="chrome"></div><div class="body"><div class="bar" style="width:62%"></div><div class="bar" style="width:44%"></div><div class="bar" style="width:74%"></div></div></body></html>`;
+const MAX_AUTO_RETRIES = 4;
+const RETRY_BASE_MS = 1400;
 
-function reportConnectionStatus(online: boolean, reason?: 'preview' | 'network', options?: { previewKey?: string }) {
+function reportConnectionStatus(
+  online: boolean,
+  reason?: 'preview' | 'network',
+  options?: { previewKey?: string; previewEnvId?: string }
+) {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(
     new CustomEvent(CONNECTION_STATUS_EVENT, {
-      detail: { online, reason, previewKey: options?.previewKey, timestamp: Date.now() },
+      detail: {
+        online,
+        reason,
+        previewKey: options?.previewKey,
+        previewEnvId: options?.previewEnvId,
+        timestamp: Date.now(),
+      },
     })
   );
 }
@@ -132,7 +145,16 @@ export function ComponentPreview({
   const [forceVisible, setForceVisible] = useState(false);
   const [isPreviewReady, setIsPreviewReady] = useState(false);
   const [showSlowMessage, setShowSlowMessage] = useState(false);
+  const [scheduledSrc, setScheduledSrc] = useState<string | undefined>(undefined);
+  const [retryNonce, setRetryNonce] = useState(0);
+  const navRafRef = useRef<number | undefined>(undefined);
+  const retryTimerRef = useRef<number | undefined>(undefined);
+  const retryCountRef = useRef(0);
+  const componentId = component.id.toString();
   const previewKey = `${component.id.toString()}:${previewName || 'overview'}`;
+  const previewEnvId = component.server?.env || component.environment?.id;
+  const hasLoadedOnceRef = useRef(false);
+  const prevComponentIdRef = useRef(componentId);
   // @ts-ignore (https://github.com/frenic/csstype/issues/156)
   // const height = iframeHeight || style?.height;
   usePubSubIframe(pubsub ? currentRef : undefined);
@@ -152,18 +174,19 @@ export function ComponentPreview({
       if (iframeWindow && event.source !== iframeWindow) return;
       if ((event.data && event.data.event === LOAD_EVENT) || (event.data && event.data.event === 'webpackInvalid')) {
         if (event.data.event === LOAD_EVENT) {
-          reportConnectionStatus(true, 'preview', { previewKey });
+          reportConnectionStatus(true, 'preview', { previewKey, previewEnvId });
+          hasLoadedOnceRef.current = true;
           setIsPreviewReady(true);
         } else {
           // Preview bundle is rebuilding; not a main dev-server offline condition.
-          reportConnectionStatus(false, 'preview', { previewKey });
+          reportConnectionStatus(false, 'preview', { previewKey, previewEnvId });
           setIsPreviewReady(false);
         }
         onLoad && onLoad(event);
       }
 
       if (event.data && (event.data.event === ERROR_EVENT || event.data.event === 'AI_FIX_REQUEST')) {
-        reportConnectionStatus(false, 'preview', { previewKey });
+        reportConnectionStatus(false, 'preview', { previewKey, previewEnvId });
         const errorData = event.data.payload;
         onPreviewError?.(errorData);
         // Keep skeleton visible for offline/restart paths; avoid exposing raw
@@ -199,7 +222,7 @@ export function ComponentPreview({
       isMounted = false;
       window.removeEventListener('message', handleMessage);
     };
-  }, [component.id.toString(), onLoad, previewKey, propagateError, onPreviewError]);
+  }, [componentId, onLoad, previewKey, previewEnvId, propagateError, onPreviewError]);
 
   useEffect(() => {
     const iframeElement = iframeRef.current;
@@ -216,6 +239,7 @@ export function ComponentPreview({
             setWidth(message.data.width);
             // setHeight(previewHeight);
             setHeight(message.data.height);
+            hasLoadedOnceRef.current = true;
             setIsPreviewReady(true);
           }
           onLoad && event && onLoad(event, { height: message.data.height, width: message.data.width });
@@ -234,19 +258,92 @@ export function ComponentPreview({
 
   const targetParams = viewport === null ? queryParams : params;
   const url = toPreviewUrl(component, previewName, isScaling ? targetParams : queryParams, includeEnv);
+  const srcWithRetryNonce =
+    retryNonce > 0 ? `${url}${url.includes('?') ? '&' : '?'}bitPreviewRetry=${retryNonce}` : url;
+
+  const clearNavSchedule = () => {
+    if (navRafRef.current) {
+      window.cancelAnimationFrame(navRafRef.current);
+      navRafRef.current = undefined;
+    }
+  };
+  const clearRetryTimer = () => {
+    if (!retryTimerRef.current) return;
+    window.clearTimeout(retryTimerRef.current);
+    retryTimerRef.current = undefined;
+  };
 
   useEffect(() => {
+    const componentChanged = prevComponentIdRef.current !== componentId;
+    prevComponentIdRef.current = componentId;
+    if (componentChanged) {
+      hasLoadedOnceRef.current = false;
+      retryCountRef.current = 0;
+      setRetryNonce(0);
+    }
+
     setForceVisible(false);
-    setIsPreviewReady(false);
+    if (componentChanged || !hasLoadedOnceRef.current) {
+      setIsPreviewReady(false);
+    }
     setShowSlowMessage(false);
-    reportConnectionStatus(false, 'preview', { previewKey });
-  }, [previewKey, url]);
+    reportConnectionStatus(false, 'preview', { previewKey, previewEnvId });
+  }, [componentId, previewKey, previewEnvId, url]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      setScheduledSrc(srcWithRetryNonce);
+      return;
+    }
+
+    clearNavSchedule();
+    navRafRef.current = window.requestAnimationFrame(() => {
+      setScheduledSrc((current) => (current === srcWithRetryNonce ? current : srcWithRetryNonce));
+    });
+
+    return () => {
+      clearNavSchedule();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [srcWithRetryNonce]);
+
+  // If the preview loaded while the dev server was still spinning up, it can get
+  // stuck on an offline/error response. Retry navigation a few times once the
+  // server reports it is no longer compiling.
+  useEffect(() => {
+    clearRetryTimer();
+    if (typeof window === 'undefined') return undefined;
+    if (isPreviewReady) {
+      retryCountRef.current = 0;
+      return undefined;
+    }
+    if (!component.server?.url || component.server?.isCompiling === true) return undefined;
+    if (retryCountRef.current >= MAX_AUTO_RETRIES) return undefined;
+
+    const attempt = retryCountRef.current + 1;
+    const delay = RETRY_BASE_MS + attempt * 600;
+    retryTimerRef.current = window.setTimeout(() => {
+      retryCountRef.current = attempt;
+      setRetryNonce((value) => value + 1);
+    }, delay);
+
+    return () => {
+      clearRetryTimer();
+    };
+  }, [component.server?.url, component.server?.isCompiling, isPreviewReady]);
 
   useEffect(() => {
     if (isPreviewReady) return undefined;
     const timeout = window.setTimeout(() => setShowSlowMessage(true), 2200);
     return () => window.clearTimeout(timeout);
   }, [isPreviewReady, url]);
+
+  useEffect(() => {
+    return () => {
+      clearRetryTimer();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // const currentHeight = fullContentHeight ? '100%' : height || 1024;
   const containerWidth = containerRef.current?.offsetWidth || 0;
@@ -282,11 +379,10 @@ export function ComponentPreview({
       )}
       <iframe
         {...rest}
+        className={classNames(styles.previewFrame, isPreviewReady && styles.previewFrameReady)}
         sandbox={sandbox || undefined}
         ref={currentRef}
         onLoad={(event) => {
-          // Do not mark ready on generic iframe load; readiness should come from
-          // LOAD_EVENT/preview-size messages from the preview runtime.
           onLoad && onLoad(event);
         }}
         style={{
@@ -298,7 +394,8 @@ export function ComponentPreview({
           border: 0,
           transformOrigin: 'top left',
         }}
-        src={url}
+        src={scheduledSrc}
+        srcDoc={!scheduledSrc ? PREVIEW_SRCDOC_SKELETON : undefined}
         scrolling={disableScroll ? 'no' : undefined}
       />
     </div>

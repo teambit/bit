@@ -106,7 +106,7 @@ export class PreviewPreview {
    */
   render = async (rootExt?: string) => {
     // fit content always.
-    window.document.body.style.width = 'fit-content';
+    window.document.body.style.width = 'auto';
 
     const { previewName, componentId, envId } = this.getLocation();
     const name = previewName || this.getDefault();
@@ -179,12 +179,16 @@ export class PreviewPreview {
   setViewport() {
     const query = this.getQuery();
     const viewPort = this.getParam(query, 'viewport');
+    const body = window.document.body;
+
     if (!viewPort) {
-      window.document.body.style.width = '100%';
+      body.style.width = '100%';
+      body.style.maxWidth = '';
       return;
     }
 
-    window.document.body.style.maxWidth = `${viewPort}px`;
+    body.style.width = 'auto';
+    body.style.maxWidth = `${viewPort}px`;
   }
 
   reportSize() {

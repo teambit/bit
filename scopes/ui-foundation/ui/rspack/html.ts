@@ -97,18 +97,30 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
         }
 
         async function migrateBrokenSwIfNeeded() {
-          var swUrl = getSwUrl();
+          // Detect stale production SWs by checking the currently *installed* SW's scriptURL.
+          // A production Workbox SW won't have a ?ws= query param (dev SWs always do).
+          // We can't fetch the SW URL and inspect its content — in dev mode, the server
+          // serves the dev SW at that path, so the fetch would never see production content.
           try {
-            var swScript = await fetch(swUrl, { cache: 'no-store' }).then(function(res) {
-              return res.ok ? res.text() : '';
-            });
-            // Migration for older broken SW fallback that points to "public/index.html".
-            if (
-              swScript.indexOf('public/index.html') !== -1 ||
-              swScript.indexOf('createHandlerBoundToURL("public/index.html")') !== -1 ||
-              swScript.indexOf("createHandlerBoundToURL('public/index.html')") !== -1
-            ) {
+            var reg = await navigator.serviceWorker.getRegistration();
+            if (!reg) return;
+            var scriptUrl = (reg.active && reg.active.scriptURL) || (reg.waiting && reg.waiting.scriptURL) || (reg.installing && reg.installing.scriptURL) || '';
+            if (!scriptUrl) return;
+            var parsed = new URL(scriptUrl, window.location.origin);
+            var hasWsParam = parsed.searchParams.has('ws');
+            if (!hasWsParam) {
+              // This is a stale production SW (no workspace param) — unregister and clear caches.
               await clearServiceWorkersAndCaches();
+              // The stale SW may have served cached HTML referencing production asset paths
+              // (e.g. /public/static/js/310.xxxxx.js) that don't exist on the dev server.
+              // Reload once to get fresh HTML. Guard with sessionStorage to prevent loops.
+              var reloadKey = '__bit_sw_stale_reload__';
+              if (!window.sessionStorage.getItem(reloadKey)) {
+                window.sessionStorage.setItem(reloadKey, '1');
+                window.location.reload();
+                return;
+              }
+              window.sessionStorage.removeItem(reloadKey);
             }
           } catch {}
         }
@@ -136,9 +148,10 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
           try { console.info('[bit-sw] controller changed'); } catch {}
         });
 
-        window.addEventListener('load', function() {
-          void registerServiceWorker();
-        });
+        // Register immediately — globals (__BIT_WORKSPACE_CACHE_KEY__, __BIT_SW_BUILD_TOKEN__)
+        // are set in the previous <script> block, so they're available now.
+        // Running before 'load' event reduces the window where a stale SW can intercept requests.
+        void registerServiceWorker();
       })();
       </script>
       `;

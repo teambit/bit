@@ -17,7 +17,11 @@ type ConnectionEventDetail = {
   online?: boolean;
   reason?: 'network' | 'browser-offline' | 'preview';
   previewKey?: string;
-  previewPresenceDelta?: number;
+  previewSnapshot?: {
+    presenceKeys: string[];
+    readyKeys: string[];
+    compilingKeys: string[];
+  };
 };
 
 type UseWorkspaceOptions = {
@@ -50,6 +54,7 @@ const wcComponentFieldsLight = gql`
     server {
       env
       url
+      isCompiling
     }
     env {
       id
@@ -100,6 +105,22 @@ const wcComponentFieldsStatus = gql`
   }
 `;
 
+// Server fragment — lightweight fallback source of truth for preview compilation state.
+const wcComponentFieldsServer = gql`
+  fragment wcComponentFieldsServer on Component {
+    id {
+      name
+      version
+      scope
+    }
+    server {
+      env
+      url
+      isCompiling
+    }
+  }
+`;
+
 // Full fragment — used for subscriptions (need complete data for updates)
 const wcComponentFields = gql`
   fragment wcComponentFields on Component {
@@ -142,6 +163,7 @@ const wcComponentFields = gql`
     server {
       env
       url
+      isCompiling
     }
     env {
       id
@@ -192,6 +214,20 @@ const WORKSPACE_STATUS = gql`
   ${wcComponentFieldsStatus}
 `;
 
+// Lightweight server-status poll query.
+// Used as a fallback when startup subscriptions are delayed or dropped.
+const WORKSPACE_SERVER = gql`
+  query workspaceServer {
+    workspace {
+      name
+      components {
+        ...wcComponentFieldsServer
+      }
+    }
+  }
+  ${wcComponentFieldsServer}
+`;
+
 const COMPONENT_SUBSCRIPTION_ADDED = gql`
   subscription OnComponentAdded {
     componentAdded {
@@ -233,6 +269,22 @@ const COMPONENT_SERVER_STARTED = gql`
       url
       host
       basePath
+      isCompiling
+    }
+  }
+`;
+
+const COMPONENT_SERVER_COMPILATION_CHANGED = gql`
+  subscription OnComponentServerCompilationChanged {
+    componentServerCompilationChanged {
+      env
+      affectedEnvs
+      isCompiling
+      url
+      host
+      basePath
+      errorCount
+      warningCount
     }
   }
 `;
@@ -254,15 +306,20 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
   const [shouldFetchStatus, setShouldFetchStatus] = useState(false);
   const [shellReady, setShellReady] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
+  const serverPollingIntervalRef = useRef<number | null>(null);
   const recoveryRetryTimerRef = useRef<number | undefined>(undefined);
   const recoveryRetryDelayRef = useRef(1200);
   const recoveryInFlightRef = useRef(false);
   const hasWorkspaceNetworkError = !!error?.networkError;
-  const previewPresenceKeysRef = useRef<Set<string>>(new Set());
-  const previewReadyKeysRef = useRef<Set<string>>(new Set());
 
   const dispatchPreviewConnectionEvent = useCallback(
-    (detail: { online?: boolean; previewKey?: string; previewPresenceDelta?: number }) => {
+    (detail: {
+      previewSnapshot?: {
+        presenceKeys: string[];
+        readyKeys: string[];
+        compilingKeys: string[];
+      };
+    }) => {
       if (typeof window === 'undefined') return;
       window.dispatchEvent(
         new CustomEvent(CONNECTION_STATUS_EVENT, {
@@ -359,6 +416,53 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     fetchPolicy: 'no-cache',
   });
 
+  const {
+    data: serverResult,
+    startPolling: startServerPolling,
+    stopPolling: stopServerPolling,
+  } = useQuery(WORKSPACE_SERVER, {
+    skip: !data?.workspace,
+    fetchPolicy: 'no-cache',
+    notifyOnNetworkStatusChange: false,
+    errorPolicy: 'ignore',
+  });
+
+  const setServerPollingInterval = useCallback(
+    (nextMs: number | null) => {
+      if (serverPollingIntervalRef.current === nextMs) return;
+      serverPollingIntervalRef.current = nextMs;
+      if (nextMs === null) {
+        stopServerPolling();
+        return;
+      }
+      startServerPolling(nextMs);
+    },
+    [startServerPolling, stopServerPolling]
+  );
+
+  useEffect(() => {
+    if (!data?.workspace) {
+      setServerPollingInterval(null);
+      return;
+    }
+
+    const serverComponents = serverResult?.workspace?.components;
+    if (!serverComponents?.length) {
+      setServerPollingInterval(1500);
+      return;
+    }
+
+    const hasCompilingServers = serverComponents.some((component: any) => component?.server?.isCompiling === true);
+    // Keep status highly fresh while compiling; back off once all previews are ready.
+    setServerPollingInterval(hasCompilingServers ? 1500 : 10000);
+  }, [data?.workspace?.name, serverResult?.workspace?.components, setServerPollingInterval]);
+
+  useEffect(() => {
+    return () => {
+      setServerPollingInterval(null);
+    };
+  }, [setServerPollingInterval]);
+
   // Delay status query until startup-critical UI is ready.
   // We wait for:
   // 1) sidebar shell readiness signal (from workspace drawer), and
@@ -385,7 +489,17 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     const onShellReady = () => setShellReady(true);
     const onConnectionEvent = (event: Event) => {
       const { detail } = event as CustomEvent<ConnectionEventDetail>;
-      if (detail?.reason === 'preview' && detail?.online === true) {
+      if (detail?.reason !== 'preview') return;
+
+      const snapshot = detail?.previewSnapshot;
+      if (!snapshot) return;
+
+      if ((snapshot.presenceKeys?.length ?? 0) === 0) {
+        setPreviewReady(true);
+        return;
+      }
+
+      if ((snapshot.readyKeys?.length ?? 0) >= (snapshot.presenceKeys?.length ?? 0)) {
         setPreviewReady(true);
       }
     };
@@ -522,23 +636,89 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
         const update = subscriptionData.data;
         if (!update) return prev;
 
-        const serverInfo = update.componentServerStarted;
-        if (!serverInfo || serverInfo.length === 0) return prev;
+        const serverPayload = update.componentServerStarted;
+        const serverInfo = Array.isArray(serverPayload) ? serverPayload[0] : serverPayload;
+        if (!serverInfo?.env) return prev;
 
+        let changed = false;
         const updatedComponents = prev.workspace.components.map((component) => {
-          if (component.env?.id === serverInfo[0].env) {
-            return {
-              ...component,
-              server: {
-                env: serverInfo[0].env,
-                url: serverInfo[0].url,
-                host: serverInfo[0].host,
-                basePath: serverInfo[0].basePath,
-              },
-            };
-          }
-          return component;
+          const componentEnvIds = [component.server?.env, component.env?.id].filter(Boolean);
+          const matches = componentEnvIds.includes(serverInfo.env);
+          if (!matches) return component;
+
+          const nextServer = {
+            ...component.server,
+            env: serverInfo.env,
+            url: serverInfo.url || component.server?.url,
+            host: serverInfo.host || component.server?.host,
+            basePath: serverInfo.basePath || component.server?.basePath,
+            isCompiling: serverInfo.isCompiling ?? component.server?.isCompiling ?? true,
+          };
+
+          const sameServer =
+            component.server?.env === nextServer.env &&
+            component.server?.url === nextServer.url &&
+            component.server?.host === nextServer.host &&
+            component.server?.basePath === nextServer.basePath &&
+            component.server?.isCompiling === nextServer.isCompiling;
+          if (sameServer) return component;
+          changed = true;
+          return { ...component, server: nextServer };
         });
+
+        if (!changed) return prev;
+
+        return {
+          ...prev,
+          workspace: {
+            ...prev.workspace,
+            components: updatedComponents,
+          },
+        };
+      },
+    });
+
+    const unSubServerCompilationChanged = subscribeToMore({
+      document: COMPONENT_SERVER_COMPILATION_CHANGED,
+      updateQuery: (prev, { subscriptionData }) => {
+        const status = subscriptionData?.data?.componentServerCompilationChanged;
+        if (!status?.env) return prev;
+
+        const affectedEnvs = new Set<string>([status.env]);
+        if (Array.isArray(status.affectedEnvs)) {
+          status.affectedEnvs.forEach((envId) => {
+            if (envId) affectedEnvs.add(envId);
+          });
+        }
+
+        let changed = false;
+        const updatedComponents = prev.workspace.components.map((component) => {
+          const componentEnvIds = [component.server?.env, component.env?.id].filter(Boolean);
+          const matches = componentEnvIds.some((envId) => affectedEnvs.has(envId));
+          if (!matches) return component;
+
+          const nextServer = {
+            ...component.server,
+            env: component.server?.env || status.env,
+            url: status.url || component.server?.url,
+            host: status.host || component.server?.host,
+            basePath: status.basePath || component.server?.basePath,
+            isCompiling: !!status.isCompiling,
+          };
+
+          const sameServer =
+            component.server?.env === nextServer.env &&
+            component.server?.url === nextServer.url &&
+            component.server?.host === nextServer.host &&
+            component.server?.basePath === nextServer.basePath &&
+            component.server?.isCompiling === nextServer.isCompiling;
+          if (sameServer) return component;
+
+          changed = true;
+          return { ...component, server: nextServer };
+        });
+
+        if (!changed) return prev;
 
         return {
           ...prev,
@@ -555,6 +735,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
       unSubCompChange();
       unSubCompRemoved();
       unSubServerStarted();
+      unSubServerCompilationChanged();
     };
   }, [optionsRef]);
 
@@ -563,9 +744,10 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
 
     const heavyComponents = heavyResult?.workspace?.components;
     const statusComponents = statusResult?.workspace?.components;
+    const serverComponents = serverResult?.workspace?.components;
 
     // If we have any deferred data, merge it into the light data
-    if (heavyComponents || statusComponents) {
+    if (heavyComponents || statusComponents || serverComponents) {
       // Build lookup maps for deferred data
       const heavyMap = new Map<string, any>();
       if (heavyComponents) {
@@ -579,6 +761,12 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
           statusMap.set(`${comp.id.scope}/${comp.id.name}`, comp);
         }
       }
+      const serverMap = new Map<string, any>();
+      if (serverComponents) {
+        for (const comp of serverComponents) {
+          serverMap.set(`${comp.id.scope}/${comp.id.name}`, comp?.server);
+        }
+      }
 
       // Merge: light base ← heavy fields ← status fields
       const merged = {
@@ -587,66 +775,57 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
           const key = `${comp.id.scope}/${comp.id.name}`;
           const heavy = heavyMap.get(key);
           const status = statusMap.get(key);
-          return { ...comp, ...heavy, ...status };
+          const server = serverMap.get(key);
+          return { ...comp, ...heavy, ...status, ...(server ? { server } : {}) };
         }),
       };
       return Workspace.from(merged);
     }
 
     return Workspace.from(data.workspace);
-  }, [data?.workspace, heavyResult?.workspace?.components, statusResult?.workspace?.components]);
+  }, [
+    data?.workspace,
+    heavyResult?.workspace?.components,
+    statusResult?.workspace?.components,
+    serverResult?.workspace?.components,
+  ]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (!workspace) return;
 
-    const currentComponents = workspace?.components || [];
+    const currentComponents = workspace.components || [];
     const nextPresence = new Set<string>();
     const nextReady = new Set<string>();
+    const nextCompiling = new Set<string>();
 
     for (const component of currentComponents) {
       if ((component.compositions?.length ?? 0) === 0) continue;
       const previewKey = `${component.id.toString()}:overview`;
       nextPresence.add(previewKey);
-      if (component.server?.url) {
+      const isCompiling = component.server?.isCompiling === true;
+      if (isCompiling) {
+        nextCompiling.add(previewKey);
+      }
+      if (component.server?.url && !isCompiling) {
         nextReady.add(previewKey);
       }
     }
 
-    const prevPresence = previewPresenceKeysRef.current;
-    const prevReady = previewReadyKeysRef.current;
-
-    for (const previewKey of nextPresence) {
-      if (!prevPresence.has(previewKey)) {
-        dispatchPreviewConnectionEvent({ previewKey, previewPresenceDelta: 1 });
-      }
-    }
-
-    for (const previewKey of prevPresence) {
-      if (!nextPresence.has(previewKey)) {
-        dispatchPreviewConnectionEvent({ previewKey, previewPresenceDelta: -1 });
-      }
-    }
-
-    for (const previewKey of nextPresence) {
-      const isReady = nextReady.has(previewKey);
-      const wasReady = prevReady.has(previewKey);
-      if (isReady !== wasReady) {
-        dispatchPreviewConnectionEvent({ previewKey, online: isReady });
-      }
-    }
-
-    previewPresenceKeysRef.current = nextPresence;
-    previewReadyKeysRef.current = nextReady;
+    const snapshot = {
+      presenceKeys: Array.from(nextPresence),
+      readyKeys: Array.from(nextReady),
+      compilingKeys: Array.from(nextCompiling),
+    };
+    dispatchPreviewConnectionEvent({ previewSnapshot: snapshot });
+    // Keep latest preview-state snapshot available for late listeners (e.g. user-bar effect ordering on refresh).
+    (window as any).__BIT_PREVIEW_STATUS__ = snapshot;
   }, [workspace?.components, dispatchPreviewConnectionEvent]);
 
   useEffect(() => {
     return () => {
       if (typeof window === 'undefined') return;
-      for (const previewKey of previewPresenceKeysRef.current) {
-        dispatchPreviewConnectionEvent({ previewKey, previewPresenceDelta: -1 });
-      }
-      previewPresenceKeysRef.current = new Set();
-      previewReadyKeysRef.current = new Set();
+      (window as any).__BIT_PREVIEW_STATUS__ = { presenceKeys: [], readyKeys: [], compilingKeys: [] };
     };
   }, [dispatchPreviewConnectionEvent]);
 

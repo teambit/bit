@@ -111,39 +111,23 @@ export function Component({
 
   if (!component) {
     return (
-      <div className={styles.bootShellViewport}>
-        <div className={styles.bootStatusRow}>
-          <div className={styles.bootStatusCopy}>
-            <span className={`${styles.bootStatusBadge} ${styles.bootStatusBadgeLoading}`}>Connecting</span>
-            <span className={styles.bootStatusText}>Fetching component metadata and preview slots.</span>
+      <div className={styles.skeletonViewport} aria-busy aria-label="Loading component">
+        <div className={styles.skeletonContent}>
+          <div className={styles.skeletonSection}>
+            <div className={styles.skeletonBar} style={{ width: '26%', height: '18px' }} />
+            <div className={styles.skeletonBar} style={{ width: '48%' }} />
           </div>
-        </div>
-        <div className={styles.bootShell}>
-          <h3 className={styles.bootShellTitle}>Loading component</h3>
-          <p className={styles.bootShellText}>Preparing component route and initial preview layout.</p>
-          <div className={styles.loadingSkeleton} aria-hidden>
-            <div className={styles.loadingPageHeader}>
-              <div className={styles.loadingTitle} />
-              <div className={styles.loadingToolbar}>
-                <div className={styles.loadingChip} style={{ width: '132px' }} />
-                <div className={styles.loadingChip} style={{ width: '104px' }} />
-                <div className={styles.loadingChip} style={{ width: '88px' }} />
-              </div>
-            </div>
-            <div className={styles.loadingContentGrid}>
-              <div className={styles.loadingMainColumn}>
-                <div className={styles.loadingHero} />
-                <div className={styles.loadingTabRow}>
-                  <div className={styles.loadingChip} style={{ width: '116px' }} />
-                  <div className={styles.loadingChip} style={{ width: '96px' }} />
-                  <div className={styles.loadingChip} style={{ width: '102px' }} />
-                </div>
-                <div className={styles.loadingPanelTall} />
-              </div>
-              <div className={styles.loadingSideColumn}>
-                <div className={styles.loadingPanel} />
-                <div className={styles.loadingPanelShort} />
-              </div>
+          <div className={styles.skeletonHero} />
+          <div className={styles.skeletonSection}>
+            <div className={styles.skeletonBar} style={{ width: '60%' }} />
+            <div className={styles.skeletonBar} style={{ width: '80%' }} />
+            <div className={styles.skeletonBar} style={{ width: '45%' }} />
+          </div>
+          <div className={styles.skeletonSection}>
+            <div className={styles.skeletonBar} style={{ width: '30%', height: '16px' }} />
+            <div className={styles.skeletonContentGrid}>
+              <div className={styles.skeletonCardWide} />
+              <div className={styles.skeletonCardWide} />
             </div>
           </div>
         </div>

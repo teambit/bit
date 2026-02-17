@@ -1,0 +1,18 @@
+date,os,workspace,bit_source,cache_cleared,total_boot_s,slowest_env_s,first_preview_ok,hmr_ok,notes,commit_or_branch,log_path
+2026-02-03,darwin,dev-server-test2,BVM,true,~90,78.3,TBD,TBD,baseline - 4 envs - 82 errors,fix-hmr-ws,/tmp/baseline.log
+2026-02-03,darwin,dev-server-test,__bd,true,~85,77.4,TBD,TBD,optimized - 6 compiles - externals=undefined - sharedDeps 6 bundled (NOT LINKED),fix-hmr-ws (7aed0f56f),/tmp/optimized.log
+2026-02-03,darwin,dev-server-test,__bd,true,~70,62.2,TBD,TBD,optimized - PROPERLY LINKED - 4 compiles - externals WORKING - 1353+759 matches,fix-hmr-ws (7aed0f56f),/tmp/optimized2.log
+2026-02-03,darwin,dev-server-test,__bd,true,~65,56.8,TBD,TBD,+selective sourcemaps (exclude node_modules) - 27.5% improvement from baseline,fix-hmr-ws,/tmp/optimized3.log
+2026-02-03,darwin,dev-server-test,__bd,true,~60,55.7,YES,YES,VERIFIED: shared deps + selective sourcemaps - 28.9% improvement - runtime OK,fix-hmr-ws,/tmp/optimized4.log
+2026-02-03,darwin,dev-server-test2,BVM,true,~70,67.0,TBD,TBD,FRESH BASELINE - bit 1.13.46 - 4 compiles (43/56/62/67s),fix-hmr-ws,/tmp/baseline-final.log
+2026-02-03,darwin,dev-server-test,__bd,true,~70,64.5,YES,YES,FRESH OPTIMIZED - bit 1.13.46 - 4 compiles (47/58/63/65s) - HMR 889ms verified,fix-hmr-ws,/tmp/optimized-final.log
+2026-02-03,darwin,dev-server-test,__bd,true,~65,61.4,TBD,TBD,+EXPANDED EXTERNALS (20 pkgs from templates) - 1585+1076 matches - 8% improvement from baseline,fix-hmr-ws,/tmp/optimized-expanded2.log
+2026-02-03,darwin,dev-server-test,__bd,true,~60,60.0,TBD,TBD,CONFIG: optimizeDevServer=false - baseline in same workspace - 4 compiles (38/52/55/60s),fix-hmr-ws,/tmp/opt-off.log
+2026-02-03,darwin,dev-server-test,__bd,true,~72,72.0,TBD,TBD,CONFIG: optimizeDevServer=true - SLOWER than baseline! - shared deps overhead + react/dom excluded,fix-hmr-ws,/tmp/optimized-all-on.log
+2026-02-03,darwin,dev-server-test,__bd,true,~60,60.2,TBD,TBD,CONFIG: optimizeDevServer=true + lazyCompilation=true - same as baseline - lazy has no effect,fix-hmr-ws,/tmp/lazy-on.log
+2026-02-03,darwin,dev-server-test2,BVM,true,~60,60.0,YES,TBD,CLEANUP BASELINE - BVM bit - 4 compiles (39/50/55/60s) - some errors,fix-hmr-ws,/tmp/baseline.log
+2026-02-03,darwin,dev-server-test,__bd,true,~69,69.3,YES,TBD,CLEANUP OPTIMIZED - parallelDevServers only - 4 compiles (36/50/55/69s) - removed sharedDeps/lazyCompilation,fix-hmr-ws,/tmp/optimized.log
+2026-02-03,darwin,dev-server-test2,bit2-master,true,~74,74.1,TBD,TBD,BASELINE bit2 master - 4 compiles (44/61/68/74s) - some errors,fix-hmr-ws,/tmp/baseline-bit2.log
+2026-02-03,darwin,dev-server-test,__bd,true,~58,58.2,TBD,TBD,LAZY+PREBUNDLE - 6 compiles (5.6/1.8/0.25/48/53/58s) - lazy compilation working! Initial boot <6s - 21% faster than baseline,fix-hmr-ws,/tmp/optimized-lazy-prebundle.log
+2026-02-03,darwin,dev-server-test2,bit2-master,true,~69,69.2,TBD,TBD,BASELINE bit2 master - 4 compiles (40/55/62/69s) - no optimizations,master,/tmp/baseline-bit2.log
+2026-02-03,darwin,dev-server-test,__bd,true,~60,60.3,YES,TBD,SPLITCHUNKS PRE-BUNDLE - react-vendor.bundle.js created - 4 compiles (37/52/56/60s) - 13% improvement,fix-hmr-ws,/tmp/optimized-splitchunks.log

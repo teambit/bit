@@ -1,0 +1,1109 @@
+{
+  "goal": "Two workstreams: (1) Runtime optimization stabilization on merged rspack stack, (2) Rspack follow-up hardening",
+  "branch_strategy": {
+    "runtime_optimizations": {
+      "branch": "perf/runtime-optimizations",
+      "base": "master",
+      "status": "IN PROGRESS — merged with master rspack migration; final offline/UX/sign-off and stability hardening pending",
+      "commits": [
+        "158e60988 — perf(workspace-ui): ~100x faster time-to-first-render via progressive query loading",
+        "4f9195ebf — fix(workspace-overview): refresh env icon when heavy query resolves"
+      ],
+      "uncommitted_changes": [
+        "Move compositions to light query (previews unblocked from GQL)",
+        "Fix triple remount cascade (no blank flash on server URL arrival)",
+        "Shimmer loading placeholder (beautiful UX while dev servers compile)",
+        "Apollo cache persistence + retry/reconnect infra",
+        "Increased virtual scroll overscan (5 rows, smoother scrolling)",
+        "Sass deprecation warnings suppressed",
+        "Start command pre-start compilation no longer blocks UI readiness",
+        "UI server starts first; preview plugins initiate after UI startup",
+        "Cloud user-bar offline indicator with fade-out recovery",
+        "GraphQL + preview iframe connectivity event wiring",
+        "Virtual grid card spacing/gap fix"
+      ],
+      "focus": "Offline-resilient instant UI with correct server-status semantics"
+    },
+    "rspack_migration": {
+      "branch": "perf/rspack-migration",
+      "base": "master (includes runtime commits)",
+      "status": "COMPLETED (merged from master into perf/runtime-optimizations)",
+      "scope_doc": ".agent/rspack-migration-scope.md",
+      "focus": "Follow-up hardening only (no bootstrap migration work)",
+      "todo": [
+        "Verify offline refresh + auto-recovery on merged rspack path",
+        "Validate cross-workspace SW/cache isolation under parallel Bit runs",
+        "Address EMFILE watcher pressure in --dev",
+        "Continue env-level rspack perf hardening only where still needed"
+      ]
+    }
+  },
+  "current_iteration": 76,
+  "current_experiment": "Stabilize preview compile-state with canonical env IDs and server.isCompiling source-of-truth",
+  "measurements": {
+    "start_output_bootstrap_feedback_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Added staged preview-bootstrap terminal feedback so users see immediate progress between UI-ready and first preview compile events.",
+      "implementation": [
+        "PreviewStartPlugin now shows immediate bootstrap spinner states (preparing runtime, creating dev servers, waiting for compilation).",
+        "Bootstrap spinner transitions to success when first compile starts and fails explicitly on bootstrap errors."
+      ],
+      "validation": {
+        "compile": "bit compile teambit.preview/preview",
+        "result": "success"
+      }
+    },
+    "startup_gap_root_cause_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Identified and fixed the fundamental startup-gap cause: runtime was still executing stale dist with sequential plugin initiation behind uiServer.dev().",
+      "implementation": [
+        "Compiled teambit.ui-foundation/ui so node_modules dist now uses parallel startup (initiatePlugins invoked before awaiting uiServer.dev).",
+        "Compiled teambit.preview/preview and improved bootstrap stage text to explicitly show workspace component-loading stage and timings.",
+        "Validated start output now shows preview bootstrap activity immediately (no silent gap), with remaining latency isolated to component discovery."
+      ],
+      "validation": {
+        "compile": "bit compile teambit.ui-foundation/ui && bit compile teambit.preview/preview",
+        "smoke": "node .../bit/dist/app.js start --dev --no-browser --port 3017",
+        "result": "success"
+      }
+    },
+    "start_output_overlap_fix_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Resolved terminal line-overlap corruption (`Rspack compiled successfully` + spinner suffix) by removing animated bootstrap spinner updates during preview bootstrap.",
+      "implementation": [
+        "Preview bootstrap progress now logs stable stage lines via logger.console instead of active multiSpinner updates.",
+        "Kept per-env compile spinners intact; only bootstrap stage changed to avoid concurrent cursor-control writes."
+      ],
+      "validation": {
+        "compile": "bit compile teambit.preview/preview",
+        "smoke": "node .../bit/dist/app.js start --dev --no-browser --port 3019",
+        "result": "success"
+      }
+    },
+    "preview_state_from_workspace_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Moved preview presence/readiness source-of-truth to useWorkspace lifecycle to align user-bar state with dev-server compile reality.",
+      "implementation": [
+        "useWorkspace now emits keyed preview presence and readiness events derived from component list (`compositions`) and `server.url` availability.",
+        "PreviewPlaceholder no longer emits duplicate preview presence events (single source of truth avoids race/double-count behavior)."
+      ],
+      "validation": {
+        "compile": "bit compile teambit.workspace/workspace teambit.preview/ui/preview-placeholder",
+        "result": "success"
+      }
+    },
+    "preview_state_semantics_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Resolved online-vs-compiling mismatch by moving from aggregate preview booleans to keyed expected/ready tracking.",
+      "implementation": [
+        "ComponentPreview now emits preview connectivity events with stable previewKey.",
+        "PreviewPlaceholder emits preview presence (+/-) with previewKey even before iframe hydration (captures compile windows).",
+        "User-bar connection hook now computes preview mode from presence/ready key sets and only reports online when all expected previews are ready."
+      ],
+      "validation": {
+        "compile": "bit compile teambit.preview/ui/component-preview teambit.preview/ui/preview-placeholder teambit.cloud/ui/user-bar",
+        "result": "success"
+      }
+    },
+    "skeleton_layout_fidelity_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Reworked loading placeholders to match real layout geometry instead of centered blocks.",
+      "implementation": [
+        "Workspace overview loading now uses inline status row + native filter/header/grid skeleton flow aligned to real page layout.",
+        "Component page loading/error states now render top-aligned status row and full-width skeleton layout instead of centered card shell.",
+        "Preview iframe/card placeholders now render structured chrome/canvas skeletons aligned to real preview composition area."
+      ],
+      "validation": {
+        "compile": "bit compile teambit.workspace/workspace teambit.component/component teambit.preview/ui/component-preview teambit.preview/ui/preview-placeholder",
+        "result": "success"
+      }
+    },
+    "status_backend_rollback_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Removed backend GraphQL/status-loader optimizations in workspace status path after status rendering regression.",
+      "implementation": [
+        "Reverted Workspace GraphQL status-path resolver optimizations (status-only selection-set shortcut removed).",
+        "Reverted ComponentStatusLoader local changes in status loader path."
+      ],
+      "validation": {
+        "compile": "bit compile teambit.workspace/workspace",
+        "result": "success"
+      }
+    },
+    "preview_status_stability_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Fixed preview status/event fan-out and hardened user-bar connection-state transitions.",
+      "implementation": [
+        "Scoped preview postMessage handling to each preview's own iframe window (prevented cross-preview readiness/connection contamination).",
+        "Added preview presence signals from preview placeholders so user-bar can represent 'previews loading' during compile windows.",
+        "Added two-strike offline transition guard for main dev health checks to reduce online/offline flap on transient transport errors."
+      ],
+      "validation": {
+        "compile": "bit compile teambit.preview/ui/component-preview teambit.preview/ui/preview-placeholder teambit.cloud/ui/user-bar",
+        "result": "success"
+      }
+    },
+    "loading_shell_alignment_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Reworked workspace and component loading shells to mirror final layout geometry and reduce visual jump on hydration.",
+      "implementation": [
+        "Workspace overview shell now uses sectioned skeleton grids with realistic card geometry (title, preview area, footer tags) and responsive centering.",
+        "Component loading shell now matches component page hierarchy (header/meta, preview region, tab row, side panels) with responsive scaling."
+      ],
+      "validation": {
+        "compile": "bit compile teambit.workspace/workspace teambit.component/component",
+        "result": "success"
+      }
+    },
+    "baseline_fresh": {
+      "date": "2026-02-03",
+      "bit_version": "1.13.46",
+      "workspace": "dev-server-test2",
+      "compile_times_s": [
+        43,
+        56,
+        62,
+        67
+      ],
+      "slowest_env_s": 67,
+      "log": "/tmp/baseline-final.log"
+    },
+    "rspack_migration": {
+      "date": "2026-02-05",
+      "bit_version": "1.13.46",
+      "workspace": "dev-server-test",
+      "rspack_compile_times_s": [
+        2.12,
+        3.15,
+        12.18,
+        12.82,
+        12.85,
+        14.03
+      ],
+      "webpack_remaining_envs_s": [
+        59.78,
+        68.69,
+        75.47,
+        83.8
+      ],
+      "slowest_rspack_env_s": 14.03,
+      "improvement_vs_baseline_pct": 79,
+      "approach": "Replace webpack with rspack for att-react preview + UI server",
+      "status": "MERGED TO MASTER + MERGED INTO perf/runtime-optimizations (verified compile/startup)"
+    },
+    "runtime_three_query_split": {
+      "date": "2026-02-05",
+      "workspace": "dev-server-test",
+      "approach": "Three-query progressive loading: light (instant) → heavy (fast) → status (deferred)",
+      "status": "VERIFIED — COMMITTED",
+      "query_times_ms": {
+        "light": 120,
+        "heavy": 78,
+        "status": 13000
+      },
+      "time_to_usable_data_ms": 120,
+      "baseline_time_to_any_data_ms": "12000-16000",
+      "improvement_factor": "~100x faster global loader dismissal",
+      "notes": "Light query gives full component list. Heavy adds aspects/descriptions. Status is deferred."
+    },
+    "instant_ui_changes": {
+      "date": "2026-02-06",
+      "status": "VERIFIED IN BUILD + LOCAL REBUILD — final browser UX sign-off pending",
+      "ui_server_start": "__bd start reports UI ready immediately; pre-start compilation moved to background",
+      "approach": "Startup path decoupling, cloud user-bar offline indicator, preview/graphql connectivity events, fallback hardening, service worker wiring",
+      "notes": "Compiled teambit.ui-foundation/ui + teambit.workspace/workspace + teambit.harmony/graphql; rebuilt dev-server-test app shell (chunk 510.5fa69646.js, workbox-895dea98.js). Emitted SW now uses NetworkFirst navigation route (no NavigationRoute/createHandlerBoundToURL), and chunk no longer contains cjs asset-module crash pattern; final process-down refresh UX still needs user sign-off."
+    },
+    "merge_master_runtime_checkpoint": {
+      "date": "2026-02-10",
+      "branch": "perf/runtime-optimizations",
+      "head": "7b9a59e0f",
+      "master_merge": "225881d03",
+      "summary": "Merged master rspack migration and ported runtime hardening to rspack paths; compile validated; startup smoke passed without plugin-react-refresh missing-module error",
+      "known_risk": "Watchpack EMFILE under --dev"
+    },
+    "runtime_stabilization_2026_02_10b": {
+      "date": "2026-02-10",
+      "branch": "perf/runtime-optimizations",
+      "summary": "Patched HMR upgrade routing, hardened Apollo connection reporter, accelerated sidebar lane/workspace query path, and isolated SW caches by workspace hash.",
+      "compile_validation": [
+        "bit compile teambit.ui-foundation/ui",
+        "bit compile teambit.harmony/graphql",
+        "bit compile teambit.lanes/hooks/use-lanes",
+        "bit compile teambit.lanes/hooks/use-lane-components",
+        "bit compile teambit.component/ui/component-drawer",
+        "bit compile teambit.workspace/workspace",
+        "bit compile teambit.cloud/ui/user-bar",
+        "bit compile teambit.component/graph"
+      ],
+      "smoke": {
+        "command": "__bd start --dev --no-browser --port 3101",
+        "result": "UI server ready instantly on 3101; full browser-loop verification still required for HMR reconnect and offline refresh UX."
+      },
+      "focus_next": [
+        "Measure sidebar load time and lane/component query timings before/after on dev-server-test2 vs dev-server-test",
+        "Interactive browser verification for HMR reconnect without manual hard refresh",
+        "Interactive browser verification for offline refresh shell behavior and status indicator transitions"
+      ]
+    },
+    "graphql_startup_contention_2026_02_10": {
+      "date": "2026-02-10",
+      "endpoint": "http://localhost:3201/graphql",
+      "samples": {
+        "workspace_light_ms": {
+          "min": 327.2,
+          "avg": 561.3,
+          "max": 945.5
+        },
+        "workspace_status_ms": {
+          "min": 12565.2,
+          "avg": 16743.9,
+          "max": 24398.4
+        },
+        "lanes_legacy_heavy_ms": {
+          "min": 381.5,
+          "avg": 638.6,
+          "max": 1053.6
+        },
+        "lanes_drawer_minimal_ms": {
+          "min": 107.5,
+          "avg": 242.4,
+          "max": 356.6
+        }
+      },
+      "contention_probe": {
+        "lanesHeavyDuringStatusMs": 13125.9,
+        "lanesMinimalDuringStatusMs": 159.7,
+        "workspaceLightDuringStatusMs": 12559.7,
+        "workspaceLightSoloMs": 209
+      },
+      "conclusion": "Status resolver contention is the dominant startup blocker. Deferring status and using minimal drawer lanes query removes 12-13s startup stalls for sidebar-critical queries."
+    },
+    "minimal_mode_status_skip_2026_02_10": {
+      "date": "2026-02-10",
+      "summary": "Disabled deferred workspace status query in minimal mode to remove unnecessary backend load and startup contention.",
+      "implementation": {
+        "hook_option": "useWorkspace(enableStatusQuery)",
+        "caller": "Workspace passes enableStatusQuery: !isMinimal",
+        "behavior": "status pipeline (readiness gate + chunked fetch) is bypassed when minimal mode is active"
+      },
+      "validation": {
+        "compile": "bit compile teambit.workspace/workspace",
+        "result": "success"
+      }
+    },
+    "runtime_hmr_offline_preview_checkpoint_2026_02_10c": {
+      "date": "2026-02-10",
+      "branch": "perf/runtime-optimizations",
+      "summary": "Patched HMR proxy activation race, decode-safe env-id path matching, enabled dev-mode SW offline shell, and increased preview hydration throughput + virtualizer compatibility fallback.",
+      "compile_validation": [
+        "bit compile teambit.ui-foundation/ui",
+        "bit compile teambit.preview/preview",
+        "bit compile teambit.preview/ui/preview-placeholder",
+        "bit compile teambit.workspace/workspace"
+      ],
+      "smoke": {
+        "command": "node /Users/luv/bit.dev/code/__bit/node_modules/@teambit/bit/dist/app.js start --dev --no-browser --port 3001",
+        "result": "UI server reached ready quickly; no immediate terminal startup crash. Full browser verification remains required for HMR reconnect loops and offline-refresh UX sign-off."
+      },
+      "focus_next": [
+        "Browser-validate that _hmr websocket loops are gone after preview-server restart cycles",
+        "Browser-validate refresh while dev server is down renders cached shell + offline state (no blank)",
+        "Measure preview first-wave load timings after hydration concurrency/auto-warm changes"
+      ]
+    },
+    "component_route_menu_prefetch_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Component page no longer eagerly fetches version logs; dropdown logs are prefetched on hover/focus/open intent.",
+      "compile_validation": [
+        "bit compile teambit.component/component ui/version-dropdown"
+      ],
+      "api_probe": {
+        "endpoint": "http://localhost:3000/graphql",
+        "component_query_cold_s": 6.413,
+        "component_query_warm_s": [
+          0.505,
+          0.123
+        ],
+        "component_logs_query_cold_s": 17.603,
+        "note": "Cold-start numbers captured during dev-server warmup indicate logs are substantially slower than core component payload."
+      },
+      "behavior_change": [
+        "use-component-query/use-component-logs use Apollo useQuery with cache-and-network + cache-first follow-up",
+        "logs are opt-in (fetched only when menu/version workflow requests them)",
+        "version dropdown remains interactive when hasMoreVersions is unknown and prefetches logs on intent"
+      ],
+      "status": "IMPLEMENTED + COMPILED; browser UX sign-off pending"
+    },
+    "component_menu_versions_followup_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Version dropdown now indicates availability before logs resolve and uses component.tags for immediate menu data while keeping logs lazy.",
+      "compile_validation": [
+        "bit compile teambit.component/component ui/version-dropdown"
+      ],
+      "behavior": [
+        "hasMoreVersions hint derived from lightweight component metadata",
+        "tag versions rendered from component.tags before log hydration",
+        "dropdown indicator visible when version count is unknown (hasMoreVersions !== false)"
+      ],
+      "status": "IMPLEMENTED + COMPILED; user verification pending"
+    },
+    "graphql_resolver_perf_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Reduced workspace status query latency using minimal status loader path and resolver-level request caching.",
+      "compile_validation": [
+        "bit compile teambit.workspace/workspace",
+        "bit compile teambit.lanes/lanes",
+        "bit compile teambit.component/component"
+      ],
+      "timings_seconds": {
+        "workspace_status_before": [
+          24.222282,
+          12.904963,
+          13.158984
+        ],
+        "workspace_status_after": [
+          10.283767,
+          9.182862,
+          9.044233
+        ],
+        "workspace_light_after": [
+          0.180676,
+          0.198285,
+          0.233746
+        ],
+        "lanes_after": [
+          0.263352,
+          0.185393,
+          0.278816
+        ]
+      },
+      "backend_changes": [
+        "workspace.graphql status-only selection uses ws.list(loadExtensions:false, executeLoadSlot:false)",
+        "workspace.graphql status resolver caches per request and computes autoTag pending set once",
+        "component-status-loader uses workspace.getLegacyMinimal(id) fast path before heavy consumer.loadComponents fallback",
+        "lanes.graphql caches laneComponentIds/components/readme per request"
+      ],
+      "frontend_changes": [
+        "component menu versions path uses lightweight metadata query (id/package/latest/tags/buildStatus)",
+        "logs stay lazy and prefetch on intent"
+      ],
+      "status": "IMPLEMENTED + COMPILED + measured"
+    },
+    "ux_stability_userbar_preview_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Stabilized user-bar online/offline transitions and added consistent shimmer loading for iframe previews while improving virtual row positioning stability.",
+      "compile_validation": [
+        "bit compile teambit.cloud/ui/user-bar teambit.preview/ui/component-preview teambit.workspace/workspace"
+      ],
+      "changes": [
+        "user-bar connection hook now debounces network-origin offline transitions and verifies local /graphql before switching offline",
+        "ComponentPreview now renders a shimmer placeholder until iframe readiness and falls back cleanly during rebuild/error",
+        "workspace overview retained virtual rows now reuse last measured starts instead of static estimates"
+      ],
+      "status": "IMPLEMENTED + COMPILED; browser sign-off pending"
+    },
+    "runtime_ui_stability_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Removed ResizeObserver suppression and row re-measure loops, stabilized user-bar connection transitions, and added shared iframe loading skeleton across preview surfaces.",
+      "compile_validation": [
+        "bit compile teambit.workspace/workspace teambit.cloud/ui/user-bar",
+        "bit compile teambit.cloud/ui/user-bar teambit.preview/ui/component-preview teambit.workspace/workspace"
+      ],
+      "implementation": [
+        "workspace virtual grid switched to fixed-size/no-measure path with RAF-throttled ResizeObserver updates",
+        "workspace overview no longer attaches virtualizer.measureElement refs to rows",
+        "user-bar connection hook adds debounced offline confirmation + post-recovery offline guard window",
+        "user-bar now supports persistent online indicator tone",
+        "component-preview renders shimmer skeleton until iframe readiness"
+      ],
+      "status": "IMPLEMENTED + COMPILED; browser sign-off pending"
+    },
+    "sidebar_first_paint_jitter_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Removed per-node mounted state from sidebar ComponentView to eliminate immediate second render wave on initial paint.",
+      "compile_validation": [
+        "bit compile teambit.ui-foundation/ui/side-bar"
+      ],
+      "implementation": [
+        "component-view removed useState/useEffect mounted flip",
+        "env URL and localhost flags are now derived from typeof window checks without state updates"
+      ],
+      "dist_verification": "@teambit/ui-foundation.ui.side-bar dist no longer contains mounted/setMounted in component-view output",
+      "status": "IMPLEMENTED + COMPILED + LINKED; browser sign-off pending"
+    },
+    "workspace_overview_shell_ux_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Redesigned workspace overview boot shell with explicit state pill, reconnect action, and skeleton card grid for loading/offline periods.",
+      "compile_validation": [
+        "bit compile teambit.workspace/workspace"
+      ],
+      "implementation": [
+        "workspace-overview adds boot-shell component for empty+loading and empty+offline states",
+        "offline reason handling differentiates browser-offline from server-unavailable",
+        "manual retry action runs graphql health probe",
+        "new responsive shimmer skeleton grid keeps page non-blank while startup progresses"
+      ],
+      "status": "IMPLEMENTED + COMPILED + LINKED; browser sign-off pending"
+    },
+    "no_blank_offline_shells_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Eliminated virtualized overview first-paint empty frame, introduced graceful component offline/loading shell, and improved preview slow-load messaging while preserving placeholders.",
+      "compile_validation": [
+        "bit compile teambit.workspace/workspace teambit.component/component teambit.preview/ui/component-preview"
+      ],
+      "implementation": [
+        "workspace-overview virtualized render now has retained/live/fallback row indexes to avoid empty frames",
+        "workspace-overview spacing tuned for filter/header/card gaps",
+        "component route uses styled loading/offline shell with retry (non-404 errors)",
+        "preview placeholder now escalates to explicit waiting-for-dev-server copy on slow loads"
+      ],
+      "status": "IMPLEMENTED + COMPILED + LINKED; browser sign-off pending"
+    },
+    "runtime_reload_resize_hardening_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Removed SW controller-change forced reload behavior and fixed preview size observer measurement loop path.",
+      "compile_validation": [
+        "bit compile teambit.ui-foundation/ui",
+        "bit compile teambit.preview/preview"
+      ],
+      "workspace_link": "__bd link (dev-server-test)",
+      "implementation": [
+        "html.ts: disabled forced reload on service-worker controllerchange and stale-controller cleanup path",
+        "preview.preview.runtime.tsx: removed style-mutation-based size measurement inside ResizeObserver callback",
+        "preview.preview.runtime.tsx: added observer/debounce/raf cleanup before re-registering size observer"
+      ],
+      "status": "IMPLEMENTED + COMPILED + LINKED; browser validation pending"
+    },
+    "dev_reload_loop_guard_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Added safeReload guard in webpack hot client and top-level __BIT_DISABLE_DEV_AUTO_RELOAD__ flag in rspack HTML bootstrap.",
+      "compile_validation": [
+        "bit compile teambit.react/react teambit.ui-foundation/ui"
+      ],
+      "implementation": [
+        "webpackHotDevClient now uses safeReload() with top-level disable flag + 15s throttle",
+        "rspack html sets window.__BIT_DISABLE_DEV_AUTO_RELOAD__=true for workspace UI shell"
+      ],
+      "status": "IMPLEMENTED + COMPILED + LINKED; browser verification pending"
+    },
+    "status_source_of_truth_revert_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Reverted ComponentStatusLoader getLegacyMinimal fast path and switched GraphQL Component.status resolver to wsComponent.getStatus().",
+      "compile_validation": [
+        "bit compile teambit.workspace/workspace"
+      ],
+      "runtime_link": "__bd link executed in dev-server-test",
+      "status": "IMPLEMENTED + COMPILED + LINKED"
+    },
+    "dev_profile_reload_cache_hardening_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Made dev service-worker assets network-first and disabled browser caching for mutable /static/js|css bundles in rspack dev server.",
+      "compile_validation": [
+        "bit compile teambit.ui-foundation/ui"
+      ],
+      "runtime_link": "__bd link executed in dev-server-test",
+      "status": "IMPLEMENTED + COMPILED + LINKED; browser verification pending"
+    },
+    "startup_gap_dx_heartbeat_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Improved CLI startup DX so users always see progress during long preview bootstrap phases.",
+      "implementation": [
+        "Added runBootstrapStage() heartbeat wrapper in preview.start-plugin with elapsed-time updates.",
+        "Applied staged progress labels across bootstrap phases (workspace components, env runtimes, environment creation).",
+        "Added per-stage completion timing logs to reduce silent gaps and clarify forward progress."
+      ],
+      "validation": {
+        "compile": "bit compile teambit.preview/preview",
+        "smoke": "node /Users/luv/bit.dev/code/__bit/node_modules/@teambit/bit/dist/app.js start --dev --no-browser --port 3045",
+        "observed": "UI ready quickly; preview bootstrap emits periodic elapsed-time progress during component-loading gap."
+      },
+      "scope": "Underlying 20-30s delay is now isolated to workspace component loading path and should be handled as a dedicated deeper optimization stream."
+    },
+    "component_status_loader_rollback_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Reverted remaining loader optimizations tied to component status-loader experiments.",
+      "reverted_files": [
+        "components/legacy/consumer-component/component-loader.ts",
+        "scopes/workspace/workspace/workspace-component/workspace-component-loader.ts"
+      ],
+      "kept": [
+        "wsComponent.getStatus() source-of-truth path",
+        "preview start DX staged progress logs"
+      ],
+      "validation": {
+        "compile": "bit compile teambit.workspace/workspace teambit.legacy/consumer-component teambit.preview/preview",
+        "result": "success"
+      }
+    },
+    "preview_iframe_runtime_tuning_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Applied dev-safe preview iframe runtime optimizations to reduce network/main-thread pressure and improve perceived preview readiness.",
+      "changes": [
+        "Adaptive hydration concurrency in preview-placeholder (4/6/8 based on hardwareConcurrency).",
+        "Visibility-prioritized hydration queue and reduced eager offscreen warmup pressure.",
+        "Paint-boundary iframe navigation scheduling (rAF + setTimeout) in component-preview.",
+        "srcdoc in-iframe skeleton before navigation and fade-in on ready.",
+        "Preview wrapper containment hints (contain/content-visibility/contain-intrinsic-size)."
+      ],
+      "files": [
+        "scopes/preview/ui/preview-placeholder/preview-placeholder.tsx",
+        "scopes/preview/ui/component-preview/preview.tsx",
+        "scopes/preview/ui/component-preview/preview.module.scss"
+      ],
+      "validation": {
+        "compile": "bit compile teambit.preview/ui/component-preview teambit.preview/ui/preview-placeholder",
+        "smoke": "node /Users/luv/bit.dev/code/__bit/node_modules/@teambit/bit/dist/app.js start --dev --no-browser --port 3052",
+        "result": "compile success; startup smoke passed"
+      },
+      "notes": "Browser-level perf verification for large (200+) preview grids still required to quantify latency reductions."
+    },
+    "preview_loading_state_regressions_fix_2026_02_11": {
+      "date": "2026-02-11",
+      "summary": "Fixed stuck previews-loading user-bar state and composition-switch skeleton regressions while simplifying component overview loading shell.",
+      "changes": [
+        "use-workspace emits previewSnapshot and writes window.__BIT_PREVIEW_STATUS__ for late-listener hydration.",
+        "user-bar hook applies snapshot sync and ignores unknown ad-hoc preview signal keys.",
+        "component-preview keeps previous src across URL transitions and only resets readiness on first load/preview-key change.",
+        "component page loading skeleton no longer uses window-like top chrome."
+      ],
+      "files": [
+        "scopes/workspace/workspace/ui/workspace/use-workspace.ts",
+        "scopes/cloud/ui/user-bar/use-dev-server-connection-status.ts",
+        "scopes/preview/ui/component-preview/preview.tsx",
+        "scopes/component/component/ui/component.tsx"
+      ],
+      "validation": {
+        "compile": "bit compile teambit.cloud/ui/user-bar teambit.workspace/workspace teambit.component/component teambit.preview/ui/component-preview",
+        "smoke": "node /Users/luv/bit.dev/code/__bit/node_modules/@teambit/bit/dist/app.js start --dev --no-browser --port 3053",
+        "link": "node /Users/luv/bit.dev/code/__bit/node_modules/@teambit/bit/dist/app.js link (ws/dev-server-test)",
+        "result": "success"
+      },
+      "next": "Browser verification required for user-bar state transitions and composition switching UX under real navigation flows."
+    },
+    "preview_status_transition_hardening_2026_02_17": {
+      "date": "2026-02-17",
+      "summary": "Fixed preview status online/loading stuck transitions by making workspace snapshot authoritative, hardening server-start parsing, and adding reconcile refetch while previews pending.",
+      "implementation": [
+        "use-workspace now emits previewSnapshot only and stores __BIT_PREVIEW_STATUS__ for late listener hydration.",
+        "use-workspace now polls refetch while expected preview servers exceed ready servers to self-heal missed startup events.",
+        "componentServerStarted subscription consumer now accepts array/object payload shape.",
+        "user-bar preview status consumes snapshot as source-of-truth and ignores keyed per-iframe online/offline event noise.",
+        "preview start plugin removed deprecated SubscribeToWebpackEvents listener.",
+        "component-preview navigation scheduling simplified to RAF-only."
+      ],
+      "validation": {
+        "compile": "bit compile teambit.workspace/workspace teambit.cloud/ui/user-bar teambit.preview/preview teambit.preview/ui/component-preview",
+        "link": "node /Users/luv/bit.dev/code/__bit/node_modules/@teambit/bit/dist/app.js link (ws/dev-server-test)",
+        "smoke": "node /Users/luv/bit.dev/code/__bit/node_modules/@teambit/bit/dist/app.js start --dev --no-browser --port 3060",
+        "result": "success (compile/link), smoke startup observed; browser transition sign-off pending"
+      }
+    },
+    "preview_compilation_status_rspack_events_2026_02_17": {
+      "date": "2026-02-17",
+      "summary": "Wired compiler lifecycle events to UI status snapshots so user-bar reflects real preview compiling state and transitions smoothly.",
+      "implementation": [
+        "Added GraphQL subscription componentServerCompilationChanged in bundler schema/events.",
+        "PreviewStartPlugin publishes compile start/done status from onStart/onDone hooks.",
+        "useWorkspace tracks per-env compiling state and emits previewSnapshot with compilingKeys.",
+        "useDevServerConnectionStatus now uses compilingKeys as loading authority and adds small online settle + boot snapshot wait."
+      ],
+      "validation": {
+        "compile": "bit compile teambit.compilation/bundler teambit.preview/preview teambit.workspace/workspace teambit.cloud/ui/user-bar",
+        "link": "node /Users/luv/bit.dev/code/__bit/node_modules/@teambit/bit/dist/app.js link (ws/dev-server-test)",
+        "schema_probe": "curl POST /graphql introspection confirms componentServerCompilationChanged subscription",
+        "smoke": "node /Users/luv/bit.dev/code/__bit/node_modules/@teambit/bit/dist/app.js start --dev --no-browser --port 3061",
+        "result": "success"
+      }
+    },
+    "preview_compile_mapping_root_fix_2026_02_17": {
+      "date": "2026-02-17",
+      "summary": "Fixed incorrect online/loading transitions by mapping compiler events to component env IDs via affectedEnvs.",
+      "implementation": [
+        "componentServerCompilationChanged now exposes affectedEnvs in GraphQL.",
+        "PreviewStartPlugin publishes affectedEnvs from context.id + relatedContexts.",
+        "useWorkspace applies compile state to all affected env IDs and marks preview ready only when server.url exists and env is not compiling.",
+        "useWorkspace no longer emits empty snapshots before workspace data exists."
+      ],
+      "validation": {
+        "compile": "bit compile teambit.compilation/bundler teambit.preview/preview teambit.workspace/workspace",
+        "link": "node /Users/luv/bit.dev/code/__bit/node_modules/@teambit/bit/dist/app.js link (ws/dev-server-test)",
+        "result": "success"
+      }
+    },
+    "preview_compile_state_source_of_truth_2026_02_17": {
+      "date": "2026-02-17",
+      "summary": "Fixed stuck \"Previews loading\" and incorrect online/loading transitions by removing compile heuristics and wiring compile state to canonical env IDs and server.isCompiling.",
+      "implementation": [
+        "PreviewStartPlugin now resolves compiler event IDs to canonical envRuntime IDs and publishes componentServerCompilationChanged with canonical env + affectedEnvs.",
+        "PreviewStartPlugin now updates ComponentServer.isCompiling on start/done and initializes new servers as compiling=true.",
+        "dev-server GraphQL server field now exposes isCompiling and compilation-changed subscription payload is consumed by workspace UI.",
+        "useWorkspace now updates component.server fields from server-started + compilation-changed subscriptions and derives preview snapshots from component.server.isCompiling (startup guard and compile-map heuristics removed).",
+        "ComponentPreview no longer marks ready on bare iframe onLoad fallback; readiness stays tied to preview runtime LOAD_EVENT/preview-size messages."
+      ],
+      "validation": {
+        "compile": [
+          "bit compile teambit.preview/preview",
+          "bit compile teambit.compilation/bundler",
+          "bit compile teambit.workspace/workspace",
+          "bit compile teambit.preview/ui/component-preview"
+        ],
+        "link": "node /Users/luv/bit.dev/code/__bit/node_modules/@teambit/bit/dist/app.js link (ws/dev-server-test)",
+        "graphql_probe": {
+          "port": 3070,
+          "query": "workspace.components{compositions,server{url,isCompiling}}",
+          "samples": [
+            {
+              "t": "startup",
+              "total_preview": 110,
+              "compiling": 108,
+              "ready": 2
+            },
+            {
+              "t": "mid-compile",
+              "total_preview": 110,
+              "compiling": 103,
+              "ready": 7
+            },
+            {
+              "t": "compile-complete",
+              "total_preview": 110,
+              "compiling": 0,
+              "ready": 110
+            }
+          ]
+        },
+        "result": "success"
+      }
+    }
+  },
+  "completed": [
+    {
+      "id": "exp-1",
+      "name": "Selective Source Maps",
+      "result": "SUCCESS"
+    },
+    {
+      "id": "exp-2",
+      "name": "Expanded Externals via Template Dependencies",
+      "result": "REVERTED — runtime errors"
+    },
+    {
+      "id": "exp-3",
+      "name": "Host Dependencies Prebundling (isolated)",
+      "result": "~5% improvement — marginal"
+    },
+    {
+      "id": "exp-4",
+      "name": "EsbuildDevServer prototype",
+      "result": "INCOMPLETE — needs bundling fix"
+    },
+    {
+      "id": "exp-5",
+      "name": "Lazy Compilation + Host Deps",
+      "result": "REJECTED — defers work to runtime"
+    },
+    {
+      "id": "exp-6",
+      "name": "Rspack migration (UI server + preview)",
+      "result": "SUCCESS — 5x faster (67s → 14s)"
+    },
+    {
+      "id": "exp-7",
+      "name": "GraphQL three-query progressive split",
+      "result": "SHIPPED — ~100x faster time-to-first-render"
+    },
+    {
+      "id": "exp-8",
+      "name": "Disable Apollo batching by default",
+      "result": "SHIPPED — fast queries no longer blocked"
+    },
+    {
+      "id": "exp-9",
+      "name": "Migrate hooks useDataQuery → useQuery",
+      "result": "SHIPPED — lanes/cloud don't trigger global loader"
+    },
+    {
+      "id": "exp-10",
+      "name": "Drawer loading fix",
+      "result": "SHIPPED"
+    },
+    {
+      "id": "exp-11",
+      "name": "Proxy improvements (cache-control, double-slash)",
+      "result": "SHIPPED"
+    },
+    {
+      "id": "exp-12",
+      "name": "Env icon refresh fix",
+      "result": "SHIPPED"
+    },
+    {
+      "id": "exp-13",
+      "name": "queueMicrotask batch cache",
+      "result": "REVERTED — timing bug, cleanup runs before continuations"
+    },
+    {
+      "id": "exp-14",
+      "name": "pMap parallelization of status",
+      "result": "REVERTED — per David: slow part is loading components"
+    },
+    {
+      "id": "exp-15",
+      "name": "getCachedLanes / getCachedCurrentUser",
+      "result": "REVERTED — same queueMicrotask timing bug"
+    },
+    {
+      "id": "exp-16",
+      "name": "Move compositions to light query",
+      "result": "IMPLEMENTED — previews unblocked from heavy query"
+    },
+    {
+      "id": "exp-17",
+      "name": "Fix triple remount cascade",
+      "result": "IMPLEMENTED — no blank flash on server URL change"
+    },
+    {
+      "id": "exp-18",
+      "name": "Decouple UI server from dev servers",
+      "result": "REVERTED — fire-and-forget broke --dev mode: WDS proxy missing /_hmr/ entries"
+    },
+    {
+      "id": "exp-19",
+      "name": "Apollo cache persistence",
+      "result": "IMPLEMENTED — cache infra kept, but fetch policy reverted to network-only (stale server.url on restart)"
+    },
+    {
+      "id": "exp-20",
+      "name": "Shimmer placeholder + overscan + sass warnings",
+      "result": "IMPLEMENTED — UX polish (startTransition reverted: React 17 doesn't support it)"
+    },
+    {
+      "id": "exp-21",
+      "name": "UI startup decoupling v2 (UI-first startup ordering)",
+      "result": "IMPLEMENTED — UI server starts first, plugins initiate after startup"
+    },
+    {
+      "id": "exp-22",
+      "name": "Non-blocking pre-start compilation on `bit start`",
+      "result": "IMPLEMENTED — pre-start moved to background for near-instant UI readiness"
+    },
+    {
+      "id": "exp-23",
+      "name": "Cloud user-bar offline/online indicator",
+      "result": "IMPLEMENTED — offline-only pill near avatar with fade-out on recovery"
+    },
+    {
+      "id": "exp-24",
+      "name": "Virtualized overview gap hardening",
+      "result": "IMPLEMENTED — stable grid gaps via `gap` + `minmax(0, 1fr)` + card min-width fix"
+    },
+    {
+      "id": "exp-25",
+      "name": "Apollo connection link hotfix",
+      "result": "FIXED — replaced forward(...).map with asyncMap to stop subscription crashes"
+    },
+    {
+      "id": "exp-26",
+      "name": "Preview/asset fallback guard",
+      "result": "FIXED — unresolved bundle requests no longer rewritten to HTML"
+    },
+    {
+      "id": "exp-27",
+      "name": "User bar z-index lift",
+      "result": "FIXED — uses modal z-index token + 80 to ensure overlay priority"
+    },
+    {
+      "id": "exp-28",
+      "name": "Strict history fallback accept headers",
+      "result": "IMPLEMENTED — non-HTML requests no longer fallback to index.html in dev configs"
+    },
+    {
+      "id": "exp-29",
+      "name": "Service worker offline shell hardening",
+      "result": "IMPLEMENTED — SW registration and navigation denylist expanded; final process-down refresh verification pending"
+    },
+    {
+      "id": "exp-30",
+      "name": "Workspace virtualizer runtime compatibility",
+      "result": "FIXED — prevents crash when useVirtualizer export is unavailable at runtime"
+    },
+    {
+      "id": "exp-31",
+      "name": "Workbox navigate fallback path fix",
+      "result": "FIXED — changed fallback to index.html to eliminate non-precached-url error"
+    },
+    {
+      "id": "exp-32",
+      "name": "Service worker navigation strategy upgrade",
+      "result": "FIXED — switched to NetworkFirst navigation runtime caching to avoid stale app-shell lock-in"
+    },
+    {
+      "id": "exp-33",
+      "name": "Workspace overview non-virtualized fallback",
+      "result": "FIXED — when useVirtualizer export is missing, rows render in normal flow (no overlap/gap artifacts)"
+    },
+    {
+      "id": "exp-34",
+      "name": "Disable service worker in webpack-dev-server mode",
+      "result": "FIXED — /public dev mode now unregisters SW + clears caches to prevent stale workbox/public-index control"
+    },
+    {
+      "id": "exp-35",
+      "name": "Split dev-server vs preview status signals",
+      "result": "IMPLEMENTED — user bar now distinguishes Offline, Previews loading, and Previews offline"
+    },
+    {
+      "id": "exp-36",
+      "name": "Workspace startup connection-state gating",
+      "result": "IMPLEMENTED — removed blind offline timeout; added loading shell and one-time auto-refresh on reconnect"
+    },
+    {
+      "id": "exp-37",
+      "name": "Service-worker registration build token",
+      "result": "IMPLEMENTED — register /service-worker.js with runtime-main hash query to reduce cross-branch stale controller reuse"
+    },
+    {
+      "id": "exp-38",
+      "name": "Per-workspace cache namespace partitioning",
+      "result": "IMPLEMENTED — Workbox cacheId/runtime cache + Apollo localStorage keys are now workspace-scoped"
+    },
+    {
+      "id": "exp-39",
+      "name": "Merge master rspack migration into runtime branch",
+      "result": "COMPLETED — merge commit 7b9a59e0f"
+    },
+    {
+      "id": "exp-40",
+      "name": "Proxy websocket root-cause fix + loading-shell stabilization + graph CSS warning fix",
+      "result": "IMPLEMENTED — stale proxy target updates + clean _hmr upgrade close + offline debounce + no blank shell"
+    },
+    {
+      "id": "exp-41",
+      "name": "HMR proxy root-cause fix + sidebar query fast-path + SW workspace-key isolation",
+      "result": "IMPLEMENTED — compiled successfully; interactive browser sign-off pending"
+    },
+    {
+      "id": "exp-42",
+      "name": "Critical startup query contention fix (status defer + drawer lanes minimal query + sidebar loader correctness)",
+      "result": "IMPLEMENTED — compiled and GraphQL benchmarks captured; browser sign-off pending"
+    },
+    {
+      "id": "exp-43",
+      "name": "Skip workspace status query in minimal mode",
+      "result": "IMPLEMENTED — minimal mode now bypasses deferred status pipeline entirely"
+    },
+    {
+      "id": "exp-44",
+      "name": "HMR proxy race + decode-safe matching + dev SW offline shell + preview hydration throughput",
+      "result": "IMPLEMENTED — compiled; browser sign-off pending"
+    },
+    {
+      "id": "exp-45",
+      "name": "Dev SW startup reload loop hotfix",
+      "result": "IMPLEMENTED — stable SW token + no controllerchange auto-reload in dev; compile validated"
+    },
+    {
+      "id": "exp-46",
+      "name": "ui-server response compatibility + reconnect reload-loop removal",
+      "result": "IMPLEMENTED — compile validated, startup logs no longer show res.status crash"
+    },
+    {
+      "id": "exp-47",
+      "name": "Dev session token SW reset policy",
+      "result": "IMPLEMENTED — new dev run clears SW/cache once, same-run refresh remains cacheable"
+    },
+    {
+      "id": "exp-48",
+      "name": "Workspace query stale-cache recovery loop",
+      "result": "IMPLEMENTED — retries network sync after cached boot only when network error occurs; compile validated"
+    },
+    {
+      "id": "exp-49",
+      "name": "Component menu version/log lazy fetch + intent prefetch",
+      "result": "IMPLEMENTED — eager logs removed; dropdown prefetches on hover/focus/open"
+    },
+    {
+      "id": "exp-50",
+      "name": "Version dropdown early availability hint + non-blocking tags before logs",
+      "result": "IMPLEMENTED — fixed missing dropdown affordance and loading-only menu state"
+    },
+    {
+      "id": "exp-51",
+      "name": "Workspace status resolver fast path + request caching",
+      "result": "IMPLEMENTED — workspaceStatus reduced from ~13–24s to ~9–10s in measured runs"
+    },
+    {
+      "id": "exp-52",
+      "name": "Component menu lightweight metadata query",
+      "result": "IMPLEMENTED — removed full component query from version-menu path; logs remain lazy/prefetched"
+    },
+    {
+      "id": "exp-53",
+      "name": "User-bar state flap hardening + iframe shimmer loading + virtual-row start retention",
+      "result": "IMPLEMENTED — compile validated; browser UX verification pending"
+    },
+    {
+      "id": "exp-54",
+      "name": "Sidebar first-paint jitter fix (remove node mount flip)",
+      "result": "IMPLEMENTED — eliminated forced second render wave in sidebar component nodes"
+    },
+    {
+      "id": "exp-55",
+      "name": "Workspace overview loading/offline UX redesign",
+      "result": "IMPLEMENTED — boot shell now presents clear status, retry action, and graceful skeleton grid"
+    },
+    {
+      "id": "exp-56",
+      "name": "No-blank offline hardening + overview gap tuning",
+      "result": "IMPLEMENTED — workspace overview fallback rows, component shell fallback, and preview slow-load messaging added"
+    },
+    {
+      "id": "exp-57",
+      "name": "SW reload-loop + preview ResizeObserver hardening",
+      "result": "IMPLEMENTED — compiled and linked; pending browser sign-off"
+    },
+    {
+      "id": "exp-58",
+      "name": "Status source-of-truth reversion",
+      "result": "IMPLEMENTED — GraphQL status now resolves through wsComponent.getStatus()"
+    },
+    {
+      "id": "exp-59",
+      "name": "Dev SW/cache stale-asset loop hardening",
+      "result": "IMPLEMENTED — network-first asset fetch + no-store mutable bundles"
+    },
+    {
+      "id": "exp-60",
+      "name": "Workspace/component loading shell centering and layout parity",
+      "result": "IMPLEMENTED — responsive centered shells with skeleton structure aligned to final page/card layout; compile validated"
+    },
+    {
+      "id": "exp-61",
+      "name": "Preview event isolation + user-bar status-flap hardening",
+      "result": "IMPLEMENTED — preview message handling is iframe-scoped, preview presence drives loading semantics, and transient health failures no longer flip offline immediately"
+    },
+    {
+      "id": "exp-62",
+      "name": "Backend status-resolver rollback",
+      "result": "IMPLEMENTED — removed backend status-path shortcuts; resolver remains wsComponent.getStatus() and workspace list path restored"
+    },
+    {
+      "id": "exp-63",
+      "name": "Skeleton layout fidelity pass",
+      "result": "IMPLEMENTED — loading placeholders now follow actual layout structure instead of centered shells"
+    },
+    {
+      "id": "exp-64",
+      "name": "Preview compile-state semantics hardening",
+      "result": "IMPLEMENTED — keyed preview presence/readiness model prevents false 'Online' while previews are still compiling"
+    },
+    {
+      "id": "exp-65",
+      "name": "Workspace-driven preview state source of truth",
+      "result": "IMPLEMENTED — expected/ready preview keys now emitted from workspace data; placeholder presence events removed to avoid conflicting signals"
+    },
+    {
+      "id": "exp-66",
+      "name": "Start output staged preview bootstrap feedback",
+      "result": "IMPLEMENTED — no silent command-output gap between UI-ready and first preview compile events"
+    },
+    {
+      "id": "exp-67",
+      "name": "Canonical preview compile-state source-of-truth",
+      "result": "IMPLEMENTED — preview loading/online status now derives from server.isCompiling and canonical compile events"
+    }
+  ],
+  "known_bugs": [
+    {
+      "id": "bug-1",
+      "description": "HMR hot-update JSON redirects may be caught by historyApiFallback",
+      "status": "MITIGATED — added asset/hot-update/HMR rewrite guards and server-side fallback protection"
+    },
+    {
+      "id": "bug-2",
+      "description": "Status resolution takes 13s for 212 components",
+      "status": "MITIGATED AT STARTUP — deferred status query to avoid blocking light/lanes startup requests"
+    },
+    {
+      "id": "bug-3",
+      "description": "No offline/reconnection UI when dev server goes down",
+      "status": "FIXED — cloud user-bar status indicator implemented with preview/graphql event wiring"
+    },
+    {
+      "id": "bug-4",
+      "description": "Refreshing browser after killing dev process can still fail to load full app shell",
+      "status": "IN VALIDATION — production shell fixed; dev /public mode now forces SW cleanup and should self-recover"
+    },
+    {
+      "id": "bug-5",
+      "description": "Workspace overview crash: useVirtualizer is not a function",
+      "status": "FIXED — strict runtime guard for useVirtualizer export + non-virtual fallback"
+    },
+    {
+      "id": "bug-6",
+      "description": "Service worker error: non-precached-url public/index.html",
+      "status": "FIXED — production fallback corrected and dev mode now unregisters stale SW before boot"
+    },
+    {
+      "id": "bug-7",
+      "description": "User bar marks dev server offline while preview servers are only compiling/restarting",
+      "status": "FIXED IN CODE — added offline debounce/health verification and recovery guard to prevent startup state flapping"
+    },
+    {
+      "id": "bug-8",
+      "description": "Proxy websocket EPIPE/ECONNRESET spam during --dev startup/restart windows",
+      "status": "FIXED IN CODE — onComponentServerStarted/onDone race patched + decode-safe matching; browser verification pending"
+    },
+    {
+      "id": "bug-9",
+      "description": "Dev mode refresh while server is down can show blank page instead of offline shell",
+      "status": "IN VALIDATION — dev SW shell fallback implemented; browser sign-off pending"
+    },
+    {
+      "id": "bug-10",
+      "description": "Startup auto-refresh loop in dev due to unstable service-worker registration token",
+      "status": "MITIGATED — SW reload loop removed in html.ts and compiled; requires browser sign-off"
+    },
+    {
+      "id": "bug-11",
+      "description": "Component menu versions/logs can feel slow if logs are fetched only after dropdown click",
+      "status": "FIXED IN CODE — early version hints + non-blocking tag data + lazy logs intent-prefetch"
+    },
+    {
+      "id": "bug-12",
+      "description": "ResizeObserver loop errors in workspace overview virtual grid",
+      "status": "MITIGATED — preview/runtime ResizeObserver root-cause patched (no style mutation in observer callback); browser sign-off pending"
+    }
+  ],
+  "lessons_learned": [
+    "useDataQuery = useQuery + useLoader(loading) — triggers global LoaderRibbon",
+    "Apollo BatchHttpLink blocks ALL queries until slowest completes — disable by default",
+    "queueMicrotask timing bug: cleanup runs BEFORE promise continuations — don't use for cache invalidation",
+    "Per David First: status slowness is from loading components, not checking status — don't parallelize",
+    "Don't blindly add optimizations — measure before and after, verify in browser",
+    "Source changes in __bit/scopes/ must be compiled to produce dist files",
+    "Runtime loads from node_modules/@teambit/*/dist/ NOT from source",
+    "New exports must be added to aspect's index.ts before they're available",
+    "HtmlRspackPlugin strips inline scripts — use external <script src> tags",
+    "Express middleware: unshift() for priority over historyApiFallback",
+    "watchOptions poll: true exists for Docker/NFS/VM — don't change without testing",
+    "THREE remount layers caused blank flash: toggle useEffect, key={serverKey}, key={name-serverUrl-forceRender}",
+    "PreviewPlaceholder/ComponentComposition/ComponentPreview don't need key remounting — iframe src changes naturally",
+    "StartPlugin.initiate() returns void but implementation is async — can fire-and-forget safely",
+    "SSR RenderPlugin.browserInit can return Promise — triggerBrowserInit uses Promise.all()",
+    "compositions field is lightweight (just identifier strings) — safe to move to light query",
+    "serverUrlsSignature in plugins memo caused ALL cards to re-render when ANY server URL changed",
+    "WDS proxy entries are STATIC — set at creation time via getProxy(), must call AFTER initiate() creates servers",
+    "cache-and-network serves stale server.url from localStorage on restart — use network-only with cache persistence",
+    "UI startup decoupling works when plugin initialization is moved after UI server startup and routed through catch-all preview/HMR proxies",
+    "`bit start` perceived speed improves significantly when pre-start compilation runs in background instead of blocking server startup",
+    "Guard history fallbacks so asset requests (js/css/map/hot-update) are never rewritten to index.html",
+    "Workspace UI runs React 17 — startTransition is React 18+ only",
+    "Do not rely on forward(...).map in Apollo links; use a subscribe-based Observable wrapper for transport compatibility.",
+    "Never close /_hmr/* sockets in the generic upgrade handler before dynamic component proxy handlers run.",
+    "For workspace sidebar first paint, treat URL lane state as authoritative and skip lanes network query when no lane is in URL.",
+    "HMR proxy active state must be derived from actual compile state; startup event ordering can otherwise leave _hmr permanently offline.",
+    "Proxy path matching must decode URI-encoded env ids (e.g. %40) before context comparison.",
+    "Dev-mode offline refresh requires a dedicated SW strategy; disabling SW in dev guarantees blank refresh when local server is down."
+  ]
+}

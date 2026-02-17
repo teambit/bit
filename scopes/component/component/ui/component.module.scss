@@ -6,11 +6,7 @@ $topbarHeight: 64px;
   flex-direction: column;
 }
 
-.loading {
-  padding: 24px;
-  color: #6c707c;
-  font-size: 14px;
-}
+// --- Error state (offline / waiting for dev server) ---
 
 .bootShellViewport {
   min-height: calc(100vh - #{$topbarHeight} - 26px);
@@ -61,12 +57,6 @@ $topbarHeight: 64px;
   letter-spacing: 0.01em;
 }
 
-.bootStatusBadgeLoading {
-  color: #7b5400;
-  border: 1px solid #f1d189;
-  background: #fff6dd;
-}
-
 .bootStatusBadgeError {
   color: #ab1a1a;
   border: 1px solid #ffc3c3;
@@ -107,96 +97,9 @@ $topbarHeight: 64px;
   cursor: pointer;
 }
 
-.loadingSkeleton {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+// --- Skeleton loading state ---
 
-.loadingPageHeader {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.loadingTitle {
-  width: clamp(220px, 36%, 420px);
-  height: 28px;
-  border-radius: 10px;
-}
-
-.loadingToolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.loadingChip,
-.loadingTitle,
-.loadingHero,
-.loadingPanel,
-.loadingPanelTall,
-.loadingPanelShort {
-  border-radius: 9px;
-  background: linear-gradient(90deg, #f1f1f1 25%, #e5e5e5 50%, #f1f1f1 75%);
-  background-size: 200% 100%;
-  animation: component-shell-shimmer 1.2s ease-in-out infinite;
-}
-
-.loadingChip {
-  height: 28px;
-  border-radius: 999px;
-}
-
-.loadingHero {
-  width: 100%;
-  height: clamp(240px, 38vh, 380px);
-}
-
-.loadingContentGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.8fr) minmax(300px, 1fr);
-  gap: 16px;
-  align-items: start;
-}
-
-.loadingMainColumn,
-.loadingSideColumn {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.loadingTabRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.loadingPanelTall {
-  height: clamp(170px, 24vh, 240px);
-}
-
-.loadingPanel {
-  height: clamp(210px, 28vh, 290px);
-}
-
-.loadingPanelShort {
-  height: 120px;
-}
-
-.loadingBar {
-  height: 11px;
-  border-radius: 7px;
-  background: linear-gradient(90deg, #f1f1f1 25%, #e5e5e5 50%, #f1f1f1 75%);
-  background-size: 200% 100%;
-  animation: component-shell-shimmer 1.2s ease-in-out infinite;
-}
-
-@keyframes component-shell-shimmer {
+@keyframes skeleton-shimmer {
   from {
     background-position: 200% 0;
   }
@@ -204,6 +107,92 @@ $topbarHeight: 64px;
     background-position: -200% 0;
   }
 }
+
+@mixin shimmer {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+.skeletonViewport {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.skeletonTopBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border-light-color, #edeff4);
+  flex-shrink: 0;
+}
+
+.skeletonNavTabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.skeletonNavRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skeletonTab {
+  height: 26px;
+  border-radius: 4px;
+  @include shimmer;
+}
+
+.skeletonContent {
+  flex: 1;
+  padding: 24px clamp(16px, 4vw, 48px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1200px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.skeletonHero {
+  width: 100%;
+  height: clamp(200px, 34vh, 340px);
+  border-radius: 8px;
+  @include shimmer;
+}
+
+.skeletonSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeletonBar {
+  height: 12px;
+  border-radius: 6px;
+  @include shimmer;
+}
+
+.skeletonContentGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.skeletonCardWide {
+  height: 120px;
+  border-radius: 8px;
+  @include shimmer;
+}
+
+// --- Responsive ---
 
 @media (max-width: 1024px) {
   .bootShellViewport {
@@ -223,29 +212,21 @@ $topbarHeight: 64px;
     white-space: normal;
   }
 
-  .loadingContentGrid {
+  .skeletonContentGrid {
     grid-template-columns: 1fr;
-  }
-
-  .loadingPanel {
-    height: 200px;
   }
 }
 
 @media (max-width: 640px) {
-  .bootShell {
-    padding: 16px;
+  .skeletonNavRight {
+    display: none;
   }
 
-  .loadingChip {
-    height: 24px;
-  }
-
-  .loadingPanelTall {
-    height: 140px;
-  }
-
-  .loadingPanel {
+  .skeletonHero {
     height: 180px;
+  }
+
+  .skeletonCardWide {
+    height: 100px;
   }
 }

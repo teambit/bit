@@ -3,6 +3,9 @@
   background-color: var(--bit-bg-color, #fff);
   position: relative;
   overflow: hidden;
+  contain: layout paint style;
+  content-visibility: auto;
+  contain-intrinsic-size: 360px 260px;
 }
 
 .loadingPlaceholder {
@@ -66,6 +69,16 @@
   margin-top: 2px;
   font-size: 12px;
   color: var(--on-surface-medium-color, #717784);
+}
+
+.previewFrame {
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+  background: #fff;
+}
+
+.previewFrameReady {
+  opacity: 1;
 }
 
 @keyframes preview-shimmer {

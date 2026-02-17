@@ -2,6 +2,7 @@ import { flatten } from 'lodash';
 import type { BundlerMain, ComponentServer } from '@teambit/bundler';
 import {
   BundlerAspect,
+  ComponentServerCompilationChangedEvent,
   ComponentServerStartedEvent,
   ComponentsServerStartedEvent,
   NewDevServersCreatedEvent,
@@ -10,7 +11,6 @@ import type { PubsubMain } from '@teambit/pubsub';
 import type { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
 import type { Workspace } from '@teambit/workspace';
 import { SubscribeToEvents } from '@teambit/preview.cli.dev-server-events-listener';
-import { SubscribeToWebpackEvents } from '@teambit/preview.cli.webpack-events-listener';
 import { CompilationInitiator } from '@teambit/compiler';
 import type { Logger } from '@teambit/logger';
 import type { WatcherMain } from '@teambit/watcher';
@@ -39,6 +39,34 @@ export class PreviewStartPlugin implements StartPlugin {
   private bootstrapActive = false;
   private lastBootstrapText = '';
 
+  private cacheServerLookup(server: ComponentServer) {
+    const lookupKeys = new Set<string>([
+      server.context.envRuntime.id,
+      server.context.id,
+      ...(server.context.relatedContexts || []),
+    ]);
+    lookupKeys.forEach((key) => {
+      if (!key) return;
+      this.serversMap[key] = server;
+    });
+  }
+
+  private resolveServerByEventId(eventId: string): ComponentServer | undefined {
+    const direct = this.serversMap[eventId] || this.pendingServers.get(eventId);
+    if (direct) return direct;
+
+    return Object.values(this.serversMap).find((server) => {
+      if (!server) return false;
+      if (server.context.envRuntime.id === eventId) return true;
+      if (server.context.id === eventId) return true;
+      return !!server.context.relatedContexts?.includes(eventId);
+    });
+  }
+
+  private resolveEnvRuntimeId(eventId: string): string {
+    return this.resolveServerByEventId(eventId)?.context.envRuntime.id || eventId;
+  }
+
   constructor(
     private workspace: Workspace,
     private bundler: BundlerMain,
@@ -60,7 +88,7 @@ export class PreviewStartPlugin implements StartPlugin {
 
   async onComponentServerStarted(componentServer: ComponentServer) {
     const startedEnvId = componentServer.context.envRuntime.id;
-    this.serversMap[startedEnvId] = componentServer;
+    this.cacheServerLookup(componentServer);
     const wasPending = this.pendingServers.has(startedEnvId);
     this.pendingServers.delete(startedEnvId);
 
@@ -107,13 +135,40 @@ export class PreviewStartPlugin implements StartPlugin {
     });
   }
 
+  private async publishCompilationStatus(
+    eventId: string,
+    isCompiling: boolean,
+    results?: { errors?: Error[]; warnings?: Error[] }
+  ) {
+    const server = this.resolveServerByEventId(eventId);
+    const env = server?.context.envRuntime.id || eventId;
+    const affectedEnvs = new Set<string>([env, eventId]);
+    if (server?.context?.id) affectedEnvs.add(server.context.id);
+    for (const relatedEnv of server?.context?.relatedContexts || []) {
+      if (relatedEnv) affectedEnvs.add(relatedEnv);
+    }
+    await this.graphql.pubsub.publish(ComponentServerCompilationChangedEvent, {
+      componentServerCompilation: {
+        env,
+        affectedEnvs: Array.from(affectedEnvs),
+        url: server?.url,
+        host: server?.host,
+        basePath: server?.basePath,
+        isCompiling,
+        errorCount: results?.errors?.length || 0,
+        warningCount: results?.warnings?.length || 0,
+      },
+    });
+  }
+
   async onNewDevServersCreated(servers: ComponentServer[]) {
     for (const server of servers) {
       const envId = server.context.envRuntime.id;
+      this.cacheServerLookup(server);
       this.pendingServers.set(envId, server);
 
       this.serversState[envId] = {
-        isCompiling: false,
+        isCompiling: true,
         isReady: false,
         isStarted: false,
         isCompilationDone: false,
@@ -167,10 +222,10 @@ export class PreviewStartPlugin implements StartPlugin {
 
       previewServers.forEach((server) => {
         const envId = server.context.envRuntime.id;
-        this.serversMap[envId] = server;
+        this.cacheServerLookup(server);
 
         this.serversState[envId] = {
-          isCompiling: false,
+          isCompiling: true,
           isReady: false,
           isStarted: false,
           isCompilationDone: false,
@@ -249,60 +304,62 @@ export class PreviewStartPlugin implements StartPlugin {
         this.handleOnDoneCompiling(id, results, showInternalUrls);
       },
     });
-    // @deprecated
-    // for legacy webpack bit report plugin
-    SubscribeToWebpackEvents(this.pubsub, {
-      onStart: (id) => {
-        this.handleOnStartCompiling(id);
-      },
-      onDone: (id, results) => {
-        this.handleOnDoneCompiling(id, results, showInternalUrls);
-      },
-    });
   }
 
   private handleOnStartCompiling(id: string) {
+    const server = this.resolveServerByEventId(id);
+    const envId = this.resolveEnvRuntimeId(id);
+    if (server) {
+      server.isCompiling = true;
+    }
     const uiServer = this.ui.getUIServer();
-    uiServer?.setComponentServerProxyActive(id, false);
+    uiServer?.setComponentServerProxyActive(envId, false);
     if (this.bootstrapActive) {
-      const envId = chalk.cyan(id);
-      this.succeedBootstrapSpinner(`Preview compilation started ${chalk.dim('→')} ${envId}`);
+      const label = chalk.cyan(envId);
+      this.succeedBootstrapSpinner(`Preview compilation started ${chalk.dim('→')} ${label}`);
     }
 
-    this.serversState[id] = {
-      ...this.serversState[id],
+    this.serversState[envId] = {
+      ...this.serversState[envId],
       isCompiling: true,
     };
-    const spinnerId = getSpinnerId(id);
-    const text = getSpinnerCompilingMessage(this.serversMap[id] || this.pendingServers.get(id));
+    const spinnerId = getSpinnerId(envId);
+    const text = getSpinnerCompilingMessage(server, envId);
     const exists = this.logger.multiSpinner.spinners[spinnerId];
     if (!exists) {
       this.logger.multiSpinner.add(spinnerId, { text });
     }
+    this.publishCompilationStatus(id, true).catch((err) => {
+      this.logger.error(`failed to publish compilation-start status for ${id}`, err);
+    });
   }
 
   private handleOnDoneCompiling(id: string, results, showInternalUrls?: boolean) {
+    const previewServer = this.resolveServerByEventId(id);
+    const envId = this.resolveEnvRuntimeId(id);
+    if (previewServer) {
+      previewServer.isCompiling = false;
+    }
     const uiServer = this.ui.getUIServer();
-    uiServer?.setComponentServerProxyActive(id, true);
+    uiServer?.setComponentServerProxyActive(envId, true);
 
-    this.serversState[id] = {
-      ...this.serversState[id],
+    this.serversState[envId] = {
+      ...this.serversState[envId],
       isCompiling: false,
       isReady: true,
       isCompilationDone: true,
       errors: results.errors,
       warnings: results.warnings,
     };
-    const previewServer = this.serversMap[id] || this.pendingServers.get(id);
-    const spinnerId = getSpinnerId(id);
+    const spinnerId = getSpinnerId(envId);
     const spinner = this.logger.multiSpinner.spinners[spinnerId];
     if (spinner && spinner.isActive()) {
       const errors = results.errors || [];
       const hasErrors = !!errors.length;
       const warnings = getWarningsWithoutIgnored(results.warnings);
       const hasWarnings = !!warnings.length;
-      const url = `http://localhost:${previewServer.port}`;
-      const text = getSpinnerDoneMessage(this.serversMap[id], errors, warnings, url, undefined, showInternalUrls);
+      const url = previewServer ? `http://localhost:${previewServer.port}` : '';
+      const text = getSpinnerDoneMessage(previewServer, errors, warnings, url, envId, undefined, showInternalUrls);
       if (hasErrors) {
         this.logger.multiSpinner.fail(spinnerId, { text });
       } else if (hasWarnings) {
@@ -314,10 +371,13 @@ export class PreviewStartPlugin implements StartPlugin {
 
     const noneAreCompiling = Object.values(this.serversState).every((x) => !x.isCompiling);
     if (noneAreCompiling) this.setReady();
-    if (this.serversState[id]?.isPendingPublish) {
-      const server = this.serversMap[id];
+    this.publishCompilationStatus(id, false, results).catch((err) => {
+      this.logger.error(`failed to publish compilation-done status for ${id}`, err);
+    });
+    if (this.serversState[envId]?.isPendingPublish) {
+      const server = this.resolveServerByEventId(id);
       if (server) {
-        this.serversState[id].isPendingPublish = false;
+        this.serversState[envId].isPendingPublish = false;
         this.publishServerStarted(server).catch((err) => {
           this.logger.error(`failed to publish server started event for ${server.context.envRuntime.id}`, err);
         });
@@ -351,7 +411,11 @@ function getSpinnerId(envId: string) {
   return `preview-${envId}`;
 }
 
-function getSpinnerCompilingMessage(server: ComponentServer, verbose = false) {
+function getSpinnerCompilingMessage(server?: ComponentServer, fallbackEnvId?: string, verbose = false) {
+  if (!server) {
+    const envId = chalk.cyan(fallbackEnvId || 'unknown-env');
+    return `${chalk.yellow('Compiling')} ${envId}`;
+  }
   const envId = chalk.cyan(server.context.envRuntime.id);
   let includedEnvs = '';
   if (server.context.relatedContexts && server.context.relatedContexts.length > 1) {
@@ -361,18 +425,19 @@ function getSpinnerCompilingMessage(server: ComponentServer, verbose = false) {
 }
 
 function getSpinnerDoneMessage(
-  server: ComponentServer,
+  server: ComponentServer | undefined,
   errors: Error[],
   warnings: Error[],
   url: string,
+  fallbackEnvId?: string,
   verbose = false,
   showInternalUrls?: boolean
 ) {
   const hasErrors = !!errors.length;
   const hasWarnings = !!warnings.length;
-  const envId = chalk.cyan(server.context.envRuntime.id);
+  const envId = chalk.cyan(server?.context.envRuntime.id || fallbackEnvId || 'unknown-env');
   let includedEnvs = '';
-  if (server.context.relatedContexts && server.context.relatedContexts.length > 1) {
+  if (server?.context.relatedContexts && server.context.relatedContexts.length > 1) {
     includedEnvs = ` ${chalk.dim('via')} ${chalk.cyan(stringifyIncludedEnvs(server.context.relatedContexts, verbose))}`;
   }
   const errorsTxt = hasErrors ? errors.map((err) => err.message).join('\n') : '';
