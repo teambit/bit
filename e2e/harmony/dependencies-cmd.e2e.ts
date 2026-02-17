@@ -242,7 +242,7 @@ describe('bit dependencies command', function () {
         helper.command.install('is-odd@3.0.1');
       });
       it('should return paths to subdependency', () => {
-        expect(helper.command.dependenciesUsage('is-number')).to.contain('is-number 6.0.0');
+        expect(helper.command.dependenciesUsage('is-number')).to.contain('is-number@6.0.0');
       });
     });
   });
