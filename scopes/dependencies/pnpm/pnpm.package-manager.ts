@@ -408,6 +408,11 @@ export class PnpmPackageManager implements PackageManager {
       },
       importerInfoMap,
       lockfile,
+      nameFormatter ({ manifest }) {
+        return manifest?.componentId
+          ? `${manifest.componentId.scope}/${manifest.componentId.name}`
+          : manifest.name
+      },
     });
     return renderDependentsTree(trees, {
       depth: opts.depth ?? Infinity,
