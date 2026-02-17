@@ -12,7 +12,6 @@ import type {
   CalcDepsGraphOptions,
 } from '@teambit/dependency-resolver';
 import { Registries, Registry } from '@teambit/pkg.entities.registry';
-import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import type { Logger } from '@teambit/logger';
 import { type LockfileFile } from '@pnpm/lockfile.types';
@@ -409,9 +408,11 @@ export class PnpmPackageManager implements PackageManager {
       importerInfoMap,
       lockfile,
       nameFormatter ({ manifest }) {
-        return manifest?.componentId
-          ? `${manifest.componentId.scope}/${manifest.componentId.name}`
-          : manifest.name
+        if ('componentId' in manifest) {
+          const { scope, name } = manifest.componentId as { scope: string; name: string };
+          return `${scope}/${name}`;
+        }
+        return manifest.name;
       },
     });
     return renderDependentsTree(trees, {
