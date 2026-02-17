@@ -339,7 +339,7 @@ export function WorkspaceOverview() {
               if (!row) return null;
               const liveItem = liveVirtualItemsByIndex.get(rowIndex);
               const start = liveItem?.start ?? retainedRowStartsRef.current[rowIndex] ?? rowStarts[rowIndex] ?? 0;
-              const itemKey = liveItem?.key ?? `retained-${rowIndex}`;
+              const itemKey = `row-${rowIndex}`;
 
               return (
                 <div

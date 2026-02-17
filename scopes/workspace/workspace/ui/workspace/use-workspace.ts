@@ -306,6 +306,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
   const [shouldFetchStatus, setShouldFetchStatus] = useState(false);
   const [shellReady, setShellReady] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
+  const [useServerFallbackQuery, setUseServerFallbackQuery] = useState(false);
   const serverPollingIntervalRef = useRef<number | null>(null);
   const recoveryRetryTimerRef = useRef<number | undefined>(undefined);
   const recoveryRetryDelayRef = useRef(1200);
@@ -421,8 +422,9 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     startPolling: startServerPolling,
     stopPolling: stopServerPolling,
   } = useQuery(WORKSPACE_SERVER, {
-    skip: !data?.workspace,
-    fetchPolicy: 'no-cache',
+    skip: !data?.workspace || !useServerFallbackQuery,
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
     notifyOnNetworkStatusChange: false,
     errorPolicy: 'ignore',
   });
@@ -441,7 +443,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
   );
 
   useEffect(() => {
-    if (!data?.workspace) {
+    if (!data?.workspace || !useServerFallbackQuery) {
       setServerPollingInterval(null);
       return;
     }
@@ -453,9 +455,25 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     }
 
     const hasCompilingServers = serverComponents.some((component: any) => component?.server?.isCompiling === true);
-    // Keep status highly fresh while compiling; back off once all previews are ready.
-    setServerPollingInterval(hasCompilingServers ? 1500 : 10000);
-  }, [data?.workspace?.name, serverResult?.workspace?.components, setServerPollingInterval]);
+    // Keep fallback polling active only while previews are actively compiling.
+    // Once all previews are ready, subscriptions become the primary source of truth.
+    if (hasCompilingServers) {
+      setServerPollingInterval(1500);
+      return;
+    }
+
+    setServerPollingInterval(null);
+    setUseServerFallbackQuery(false);
+  }, [data?.workspace?.name, serverResult?.workspace?.components, setServerPollingInterval, useServerFallbackQuery]);
+
+  useEffect(() => {
+    if (!data?.workspace) {
+      setUseServerFallbackQuery(false);
+      return;
+    }
+    // Arm fallback at workspace boot; cache-first keeps this cheap on subsequent visits.
+    setUseServerFallbackQuery(true);
+  }, [data?.workspace?.name]);
 
   useEffect(() => {
     return () => {
@@ -744,7 +762,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
 
     const heavyComponents = heavyResult?.workspace?.components;
     const statusComponents = statusResult?.workspace?.components;
-    const serverComponents = serverResult?.workspace?.components;
+    const serverComponents = useServerFallbackQuery ? serverResult?.workspace?.components : undefined;
 
     // If we have any deferred data, merge it into the light data
     if (heavyComponents || statusComponents || serverComponents) {
@@ -788,6 +806,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     heavyResult?.workspace?.components,
     statusResult?.workspace?.components,
     serverResult?.workspace?.components,
+    useServerFallbackQuery,
   ]);
 
   useEffect(() => {
@@ -817,6 +836,15 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
       readyKeys: Array.from(nextReady),
       compilingKeys: Array.from(nextCompiling),
     };
+
+    if (nextPresence.size === 0) {
+      setUseServerFallbackQuery(false);
+    } else if (nextCompiling.size > 0 || nextReady.size < nextPresence.size) {
+      setUseServerFallbackQuery(true);
+    } else {
+      setUseServerFallbackQuery(false);
+    }
+
     dispatchPreviewConnectionEvent({ previewSnapshot: snapshot });
     // Keep latest preview-state snapshot available for late listeners (e.g. user-bar effect ordering on refresh).
     (window as any).__BIT_PREVIEW_STATUS__ = snapshot;
