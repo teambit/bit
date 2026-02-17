@@ -219,6 +219,19 @@ export class WorkspaceManifestFactory {
           depManifestBeforeFiltering.peerDependencies[pkgName]
         );
       });
+      // In case the env has peer dependencies on both react and react-dom, we want to make sure to keep the versions
+      // in sync with each other, otherwise it may cause issues in the workspace
+      // This is a special case for react and react-dom, as most component do import from react, making it a peer dependency,
+      // but not necessarily import from react-dom, which from env.jsonc peers in that case not added to the peers of the component.
+      // and if the versions are not in sync, it may cause issues in the workspace
+      // an example:
+      // my-comp depend on react, and using @testing-library/react which depend on react-dom (as peer),
+      // the component don't have react-dom as peer dependency, but when we install the dependencies in the workspace,
+      // it will install the latest version of react-dom which may not be compatible with the version of react that my-comp
+      // is using, and it may cause issues in the workspace.
+      if (usedPeerDependencies.react && defaultPeerDependencies['react-dom']) {
+        usedPeerDependencies['react-dom'] = defaultPeerDependencies['react-dom'];
+      }
 
       depManifest.dependencies = {
         ...usedPeerDependencies,

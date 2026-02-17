@@ -9,9 +9,9 @@ import { stripTrailingChar } from '@teambit/toolbox.string.strip-trailing-char';
 import type { Server } from 'http';
 import httpProxy from 'http-proxy';
 import { join } from 'path';
-import { rspack } from '@rspack/core';
-import type { Configuration as WdsConfiguration } from '@rspack/dev-server';
-import { RspackDevServer } from '@rspack/dev-server';
+import webpack from 'webpack';
+import type { Configuration as WdsConfiguration } from 'webpack-dev-server';
+import WebpackDevServer from 'webpack-dev-server';
 import type { ComponentServer } from '@teambit/bundler';
 import { createSsrMiddleware } from './ssr-middleware';
 import type { StartPlugin } from './start-plugin';
@@ -19,7 +19,7 @@ import type { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import type { UiMain } from './ui.main.runtime';
 
-import { devConfig } from './rspack/rspack.dev.config';
+import { devConfig } from './webpack/webpack.dev.config';
 
 const assetRequestRegex = /^\/.*\.(?:js|css|map|json|txt|ico|png|jpe?g|gif|svg|webp|woff2?|ttf|eot)(?:\?.*)?$/i;
 const hotUpdateRequestRegex = /^\/.*hot-update\.(?:js|json)(?:\?.*)?$/i;
@@ -449,15 +449,15 @@ export class UIServer {
   /**
    * start a UI dev server.
    */
-  async dev({ portRange }: StartOptions = {}): Promise<RspackDevServer> {
+  async dev({ portRange }: StartOptions = {}) {
     const devServerPort = await this.selectPort(portRange);
     await this.start({ portRange: [4100, 4200] });
     const expressAppPort = this._port;
 
     const config = await this.getDevConfig();
-    const compiler = rspack(config as any);
+    const compiler = webpack(config as any);
     const devServerConfig = await this.getDevServerConfig(devServerPort, expressAppPort, config.devServer);
-    const devServer = new RspackDevServer(devServerConfig, compiler);
+    const devServer = new WebpackDevServer(devServerConfig, compiler);
 
     await devServer.start();
     this._port = devServerPort;
@@ -537,7 +537,7 @@ export class UIServer {
     config?: WdsConfiguration
   ): Promise<WdsConfiguration> {
     const proxy = await this.getProxy(gqlPort);
-    const devServerConf = { ...config, proxy: proxy as any, port: appPort };
+    const devServerConf = { ...config, proxy, port: appPort };
 
     return devServerConf;
   }

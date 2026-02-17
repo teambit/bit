@@ -328,8 +328,8 @@ export class GraphqlUI {
 
   static defaultConfig: GraphQLConfig = {
     enableBatching: false,
-    batchInterval: 10,
-    batchMax: 10,
+    batchInterval: 50,
+    batchMax: 20,
   };
 
   static async provider(_, config: GraphQLConfig) {

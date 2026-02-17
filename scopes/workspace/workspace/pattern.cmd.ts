@@ -1,7 +1,7 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
-import { type ComponentID } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import type { Workspace } from './workspace';
 import { statesFilter } from './filter';
