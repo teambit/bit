@@ -413,7 +413,7 @@ export class GraphqlMain {
     subscriptionsPortRange: [2000, 2100],
     disableCors: false,
     subscriptionsPath: '/subscriptions',
-    enableBatching: false,
+    enableBatching: true,
     batchMax: 20,
   };
 

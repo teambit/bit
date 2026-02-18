@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import { removeChalkCharacters } from '@teambit/legacy.utils';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
 
@@ -99,6 +100,68 @@ describe('ci commands', function () {
         const lastLog = log[log.length - 1];
         expect(lastLog.message).to.include('test pr message');
       });
+    });
+  });
+
+  /**
+   * This test verifies that `bit ci pr` uses temporary lane names during the snap operation
+   * to avoid race conditions when multiple CI jobs run concurrently on the same branch.
+   *
+   * The race condition problem:
+   * When two CI jobs run `bit ci pr` on the same branch concurrently, with the old approach:
+   * 1. Job1 deletes existing lane, creates new lane, starts long snap (~30+ min)
+   * 2. Job2 checks for lane (not found - Job1 deleted it), creates lane, snaps, exports
+   * 3. Job1 finishes snap, tries to export → FAILS with "lane exists with different hash"
+   *
+   * The fix:
+   * Use a temporary lane name with a random suffix during the snap operation, then rename
+   * to the final name right before export. This minimizes the race window to just the
+   * quick delete-rename-export operations at the end.
+   *
+   * Why we don't test the actual race condition:
+   * The race condition requires precise timing during the long snap operation (30+ min in real CI).
+   * In e2e tests, snap completes nearly instantly, making the race window too small to trigger
+   * reliably. Instead, we verify that the temp lane mechanism is correctly implemented.
+   */
+  describe('bit ci pr uses temp lane names to avoid race conditions', () => {
+    let prOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setupComponentsAndInitialCommit();
+
+      // Create a feature branch with changes
+      helper.command.runCmd('git checkout -b feature/temp-lane-test');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("temp lane test");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: temp lane test changes"');
+
+      prOutput = helper.command.runCmd('bit ci pr --message "temp lane test"');
+    });
+    it('should create a temporary lane during snap (indicated by random suffix pattern)', () => {
+      // The temp lane name follows pattern: {original-name}-{5-char-random}
+      // e.g., "feature-temp-lane-test-a1b2c"
+      // Strip chalk/ANSI codes before regex matching to avoid false negatives
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.match(/Creating temporary lane .+\/feature-temp-lane-test-[a-z0-9]{5}/);
+    });
+    it('should rename the temp lane to the final name before export', () => {
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.match(/Renaming lane from feature-temp-lane-test-[a-z0-9]{5} to feature-temp-lane-test/);
+    });
+    it('should complete successfully', () => {
+      expect(prOutput).to.include('PR command executed successfully');
+    });
+    it('should export the lane with the correct final name', () => {
+      const remoteLanes = helper.command.listRemoteLanesParsed();
+      const lane = remoteLanes.lanes.find((l: any) => l.name === 'feature-temp-lane-test');
+      expect(lane).to.exist;
+      expect(lane.components).to.have.lengthOf(1);
+    });
+    it('should not leave any temp lanes on the remote', () => {
+      const remoteLanes = helper.command.listRemoteLanesParsed();
+      const tempLanes = remoteLanes.lanes.filter((l: any) => /feature-temp-lane-test-[a-z0-9]{5}/.test(l.name));
+      expect(tempLanes).to.have.lengthOf(0);
     });
   });
 

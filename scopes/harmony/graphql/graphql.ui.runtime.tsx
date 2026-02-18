@@ -180,7 +180,7 @@ export class GraphqlUI {
   static slots = [];
 
   static defaultConfig: GraphQLConfig = {
-    enableBatching: false,
+    enableBatching: true,
     batchInterval: 50,
     batchMax: 20,
   };

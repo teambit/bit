@@ -9,6 +9,40 @@ import { generateDependenciesInfoTable } from './template';
 import type { DependenciesMain } from './dependencies.main.runtime';
 import type { Workspace } from '@teambit/workspace';
 
+/** Create a borderless CLI table (columns aligned with whitespace only). */
+function borderlessTable(
+  opts: { head?: string[]; paddingLeft?: number; paddingRight?: number } = {}
+): InstanceType<typeof Table> {
+  const noChar = {
+    top: '',
+    'top-mid': '',
+    'top-left': '',
+    'top-right': '',
+    bottom: '',
+    'bottom-mid': '',
+    'bottom-left': '',
+    'bottom-right': '',
+    left: '',
+    'left-mid': '',
+    mid: '',
+    'mid-mid': '',
+    right: '',
+    'right-mid': '',
+    middle: ' ',
+  };
+  return new Table({
+    chars: noChar,
+    style: { 'padding-left': opts.paddingLeft ?? 0, 'padding-right': opts.paddingRight ?? 0 },
+    ...(opts.head ? { head: opts.head } : {}),
+  });
+}
+
+const IMPACT_COLOR: Record<string, (s: string) => string> = {
+  HIGH: chalk.red,
+  MEDIUM: chalk.yellow,
+  LOW: chalk.green,
+};
+
 type GetDependenciesFlags = {
   tree: boolean;
   scope?: boolean;
@@ -247,28 +281,7 @@ export class DependenciesBlameCmd implements Command {
     if (!results.length) {
       return chalk.yellow(`the specified component ${compName} does not use the entered dependency ${depName}`);
     }
-    // table with no style and no borders, just to align the columns.
-    const table = new Table({
-      chars: {
-        top: '',
-        'top-mid': '',
-        'top-left': '',
-        'top-right': '',
-        bottom: '',
-        'bottom-mid': '',
-        'bottom-left': '',
-        'bottom-right': '',
-        left: '',
-        'left-mid': '',
-        mid: '',
-        'mid-mid': '',
-        right: '',
-        'right-mid': '',
-        middle: ' ',
-      },
-      style: { 'padding-left': 0, 'padding-right': 0 },
-    });
-
+    const table = borderlessTable();
     results.map(({ snap, tag, author, date, message, version }) =>
       table.push([snap, tag || '', author, date, message, version])
     );
@@ -315,6 +328,102 @@ supports both exact version matching and package name patterns.`;
 
 export class WhyCmd extends DependenciesUsageCmd {
   name = 'why <dependency-name>';
+}
+
+export class DependenciesDiagnoseCmd implements Command {
+  name = 'diagnose';
+  group = 'info-analysis';
+  description = 'analyze workspace dependencies for version spread, peer permutations, and bloat';
+  extendedDescription = `scans node_modules/.pnpm to report actual installed copies, identifies packages with multiple versions, and highlights peer dependencies causing permutation explosion. Use --package to drill down into a specific package.`;
+  alias = '';
+  options = [
+    ['', 'package <string>', 'drill down into a specific package to see all .pnpm copies and peer combos'],
+  ] as CommandOptions;
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report(_args: [], options: { package?: string }) {
+    if (options.package) {
+      return this.reportPackageDrillDown(options.package);
+    }
+
+    const report = await this.deps.diagnose();
+    const bloatFactor =
+      report.uniquePackages > 0
+        ? `${(report.pnpmStoreEntries / report.uniquePackages).toFixed(1)}x bloat factor`
+        : 'N/A';
+    const sections: string[] = [
+      chalk.bold('Dependency Diagnosis for workspace'),
+      '',
+      chalk.bold('Summary:'),
+      `  Components in workspace: ${report.componentCount}`,
+      `  Unique packages: ${report.uniquePackages.toLocaleString()}`,
+      `  Installed copies (.pnpm entries): ${report.pnpmStoreEntries.toLocaleString()} (${bloatFactor})`,
+      `  Packages with duplicates: ${report.duplicatedPackages}`,
+    ];
+
+    if (report.versionSpread.length) {
+      const spreadTable = borderlessTable({
+        head: ['Package', 'Versions', 'Copies', 'Impact'],
+        paddingLeft: 2,
+        paddingRight: 1,
+      });
+      report.versionSpread.forEach((entry) => {
+        spreadTable.push([
+          entry.packageName,
+          String(entry.versionCount),
+          String(entry.installedCopies),
+          (IMPACT_COLOR[entry.impact] || chalk.green)(entry.impact),
+        ]);
+      });
+      sections.push('', chalk.bold('Top version-spread packages:'), spreadTable.toString());
+    }
+
+    if (report.peerPermutations.length) {
+      const peerTable = borderlessTable({ head: ['Package', 'Versions'], paddingLeft: 2, paddingRight: 1 });
+      report.peerPermutations.forEach((entry) => {
+        peerTable.push([entry.packageName, `${entry.versions.length} (${entry.versions.join(', ')})`]);
+      });
+      sections.push('', chalk.bold('Peer dependencies causing permutations:'), peerTable.toString());
+    }
+
+    return sections.join('\n');
+  }
+
+  private async reportPackageDrillDown(packageName: string): Promise<string> {
+    const { pnpmDirs } = await this.deps.diagnoseDrillDown(packageName);
+    const header = [chalk.bold(`Package drill-down: ${packageName}`), '', `  Installed copies: ${pnpmDirs.length}`, ''];
+
+    if (!pnpmDirs.length) {
+      return [
+        ...header,
+        chalk.yellow('  No .pnpm entries found for this package.'),
+        chalk.dim('  The package may not exist in this workspace, or it may be installed only once.'),
+      ].join('\n');
+    }
+
+    // Group by version
+    const byVersion = new Map<string, string[]>();
+    for (const dir of pnpmDirs) {
+      const suffixes = byVersion.get(dir.version) || [];
+      suffixes.push(dir.peerSuffix || '(no peers)');
+      byVersion.set(dir.version, suffixes);
+    }
+
+    const versionLines = Array.from(byVersion, ([version, suffixes]) => [
+      chalk.bold(`  ${packageName}@${version}`) + chalk.dim(` — ${suffixes.length} copies`),
+      ...suffixes.map((s) => `    ${chalk.dim(s)}`),
+    ]).flat();
+
+    return [...header, ...versionLines].join('\n');
+  }
+
+  async json(_args: [], options: { package?: string }) {
+    if (options.package) {
+      return this.deps.diagnoseDrillDown(options.package);
+    }
+    return this.deps.diagnose();
+  }
 }
 
 export class DependenciesCmd implements Command {

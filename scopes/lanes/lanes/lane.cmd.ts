@@ -292,7 +292,7 @@ export type LaneCheckoutOpts = {
 
 export class LaneCheckoutCmd implements Command {
   name = 'checkout <history-id>';
-  description = 'EXPERIMENTAL. checkout to a previous history of the current lane. see also "bit lane revert"';
+  description = 'checkout to a previous history of the current lane. see also "bit lane revert"';
   arguments = [
     { name: 'history-id', description: 'the history-id to checkout to. run "bit lane history" to list the ids' },
   ];
@@ -312,7 +312,7 @@ export class LaneCheckoutCmd implements Command {
 
 export class LaneRevertCmd implements Command {
   name = 'revert <history-id>';
-  description = 'EXPERIMENTAL. revert to a previous history of the current lane. see also "bit lane checkout"';
+  description = 'revert to a previous history of the current lane. see also "bit lane checkout"';
   extendedDescription = `revert is similar to "lane checkout", but it keeps the versions and only change the files.
 choose one or the other based on your needs.
 if you want to continue working on this lane and needs the changes from the history to be the head, then use "lane revert".
@@ -393,7 +393,7 @@ if you want to fork the lane from a certain point in history, use "lane checkout
 
 export class LaneHistoryCmd implements Command {
   name = 'history [lane-name]';
-  description = 'EXPERIMENTAL. show lane history, default to the current lane';
+  description = 'show lane history, default to the current lane';
   extendedDescription = `list from the oldest to the newest history items`;
   alias = '';
   options = [

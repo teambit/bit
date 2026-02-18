@@ -96,7 +96,7 @@ export class MDXMain {
     );
 
     envs.registerEnv(mdxEnv);
-    depResolver.registerDetector(new MDXDependencyDetector(config.extensions));
+    depResolver.registerDetector(new MDXDependencyDetector(config.extensions, logger));
     docs.registerDocReader(new MDXDocReader(config.extensions));
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerAspect, workerMain, harmony);

@@ -90,6 +90,7 @@ commands:
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss@8" --values "^8.4.19" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.ajv@6" --values "^6.12.6" &&
+            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@teambit/semantics.entities.semantic-schema']='^0.0.99'" &&
             pnpm add @teambit/bit --os=<<parameters.os>> --cpu=<<parameters.cpu>>
 
   # Bundle installation for Windows (with Windows-specific configs)
@@ -118,6 +119,7 @@ commands:
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss@8" --values "^8.4.19" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.ajv@6" --values "^6.12.6" &&
+            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@teambit/semantics.entities.semantic-schema']='^0.0.99'" &&
             pnpm add @teambit/bit --os=win32 --cpu=<<parameters.cpu>>
 
   # Bit configuration
@@ -719,6 +721,7 @@ jobs:
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
+      - run: cd bit && npm run generate-cli-skill
       - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
       - run: cd bit && npm run generate-core-aspects-ids
       - run:
