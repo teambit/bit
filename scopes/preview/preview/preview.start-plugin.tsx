@@ -442,7 +442,7 @@ function getSpinnerDoneMessage(
   const envId = chalk.cyan(server?.context.envRuntime.id || fallbackEnvId || 'unknown-env');
   let includedEnvs = '';
   if (server?.context.relatedContexts && server.context.relatedContexts.length > 1) {
-    includedEnvs = ` on behalf of ${chalk.cyan(stringifyIncludedEnvs(server.context.relatedContexts, verbose))}`;
+    includedEnvs = ` ${chalk.dim('via')} ${chalk.cyan(stringifyIncludedEnvs(server.context.relatedContexts, verbose))}`;
   }
   const errorsTxt = hasErrors ? errors.map((err) => err.message).join('\n') : '';
   const errorsTxtWithTitle = hasErrors ? chalk.red(`\nErrors:\n${errorsTxt}`) : '';
