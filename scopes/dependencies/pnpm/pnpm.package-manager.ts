@@ -384,7 +384,8 @@ export class PnpmPackageManager implements PackageManager {
   async findUsages(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string> {
     const lockfile = await readWantedLockfile(opts.lockfileDir, { ignoreIncompatible: false });
     if (!lockfile) return '';
-    const importerIds = Object.keys(lockfile.importers ?? {}).filter((id) => !id.includes(`${BIT_ROOTS_DIR}/`));
+    const importerIds = Object.keys(lockfile.importers ?? {})
+      .filter((id) => !id.includes(`${BIT_ROOTS_DIR}/`));
     const projectPaths = importerIds.map((id) => join(opts.lockfileDir, id));
     const importerInfoMap = new Map<string, ImporterInfo>();
     for (const importerId of importerIds) {
@@ -406,7 +407,7 @@ export class PnpmPackageManager implements PackageManager {
       },
       importerInfoMap,
       lockfile,
-      nameFormatter({ manifest }) {
+      nameFormatter ({ manifest }) {
         if ('componentId' in manifest) {
           const { scope, name } = manifest.componentId as { scope: string; name: string };
           return `${scope}/${name}`;
