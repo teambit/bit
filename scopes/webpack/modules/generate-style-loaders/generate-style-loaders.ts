@@ -50,9 +50,6 @@ export function generateStyleLoaders(options: GenerateStyleLoadersOptions) {
         loader: options.preProcessOptions.preProcessorPath,
         options: {
           sourceMap: true,
-          sassOptions: {
-            silenceDeprecations: ['legacy-js-api', 'import'],
-          },
           ...additionalOptions,
         },
       }

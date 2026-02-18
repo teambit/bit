@@ -4,6 +4,4 @@ export {
   generateAddAliasesFromPeersTransformer,
   generateExposePeersTransformer,
   generateExternalsTransformer,
-  generatePathInfoTransformer,
-  generateFilesystemCacheTransformer,
 } from './transformers';

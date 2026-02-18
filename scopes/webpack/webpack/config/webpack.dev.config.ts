@@ -18,9 +18,6 @@ import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
 
 const publicUrlOrPath = getPublicUrlOrPath(true, '/', '/public');
-const assetRequestRegex = /^\/.*\.(?:js|css|map|json|txt|ico|png|jpe?g|gif|svg|webp|woff2?|ttf|eot)(?:\?.*)?$/i;
-const hotUpdateRequestRegex = /^\/.*hot-update\.(?:js|json)(?:\?.*)?$/i;
-const hmrRequestRegex = /^\/(?:sockjs-node|_hmr)(?:\/|$)/i;
 
 export function configFactory(
   devServerID: string,
@@ -50,7 +47,6 @@ export function configFactory(
       // Development filename output
       filename: 'static/js/[name].bundle.js',
 
-      pathinfo: false, // faster compilation
       path: resolveWorkspacePath(publicDirectory),
 
       // publicPath: resolveWorkspacePath(publicDirectory),
@@ -106,21 +102,6 @@ export function configFactory(
       historyApiFallback: {
         disableDotRule: true,
         index: resolveWorkspacePath(publicDirectory),
-        htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
-        rewrites: [
-          {
-            from: assetRequestRegex,
-            to: (context) => context.parsedUrl.pathname || '/',
-          },
-          {
-            from: hotUpdateRequestRegex,
-            to: (context) => context.parsedUrl.pathname || '/',
-          },
-          {
-            from: hmrRequestRegex,
-            to: (context) => context.parsedUrl.pathname || '/',
-          },
-        ],
       },
 
       client: {
@@ -182,8 +163,7 @@ export function configFactory(
     snapshot: componentPathsRegExps && componentPathsRegExps.length > 0 ? { managedPaths: componentPathsRegExps } : {},
 
     watchOptions: {
-      ignored: ['**/.bit/**', '**/.git/**', '**/node_modules/.cache/**'],
-      poll: false, // native FS watching — faster, less CPU than polling
+      poll: true,
     },
   };
 }
