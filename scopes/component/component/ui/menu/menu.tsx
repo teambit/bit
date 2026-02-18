@@ -302,7 +302,7 @@ export function defaultLoadVersions(
           id,
           packageName: componentFromMetadata.packageName,
           latest: componentFromMetadata.latest,
-          version: id.version,
+          version: id.version || 'new',
           buildStatus: componentFromMetadata.buildStatus,
           tags: {
             toArray: () => tagsMap,
@@ -368,9 +368,17 @@ export function defaultLoadVersions(
           return snaps.length + tags.length > 1;
         }
         if (tagVersionsFromComponent.length > 1) return true;
-        if (tagVersionsFromComponent.length === 0 && !component?.id?.version) return false;
+        if (tagVersionsFromComponent.length === 1) return false;
+        if (!component?.id?.version || component?.version === 'new') return false;
         return undefined;
-      }, [shouldFetchLogs, snaps.length, tags.length, tagVersionsFromComponent.length, component?.id?.version]);
+      }, [
+        shouldFetchLogs,
+        snaps.length,
+        tags.length,
+        tagVersionsFromComponent.length,
+        component?.id?.version,
+        component?.version,
+      ]);
 
       return {
         loading,
@@ -438,7 +446,7 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
   const localVersion = isWorkspace && !isNew && (!viewedLane || lanesModel?.isViewingCurrentLane());
 
   const currentVersion =
-    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : (_currentVersion ?? '');
+    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : (_currentVersion ?? 'new');
 
   const authToken = props.authToken;
 
