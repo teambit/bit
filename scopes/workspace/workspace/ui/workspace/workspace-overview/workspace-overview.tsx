@@ -1,5 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import classNames from 'classnames';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyWorkspace } from '@teambit/workspace.ui.empty-workspace';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 import { Tooltip } from '@teambit/design.ui.tooltip';
@@ -21,13 +20,6 @@ import type { AggregationType } from './workspace-overview.types';
 import { WorkspaceFilterPanel } from './workspace-filter-panel';
 import { useVirtualGrid } from './use-virtual-grid';
 import styles from './workspace-overview.module.scss';
-
-const CONNECTION_STATUS_EVENT = 'bit-dev-server-connection-status';
-
-type ConnectionEventDetail = {
-  online?: boolean;
-  reason?: 'network' | 'browser-offline' | 'preview';
-};
 
 export function WorkspaceOverview() {
   const { workspace, loading: workspaceLoading } = useContext(WorkspaceUIContext);
@@ -64,11 +56,6 @@ export function WorkspaceOverview() {
   const [aggregation, setAggregation] = useQueryParamWithDefault<AggregationType>('aggregation', 'namespaces');
   const [activeNamespaces, setActiveNamespaces] = useState<string[]>([]);
   const [activeScopes, setActiveScopes] = useState<string[]>([]);
-  const [connectionState, setConnectionState] = useState<'loading' | 'online' | 'offline'>('loading');
-  const [connectionReason, setConnectionReason] = useState<'network' | 'browser-offline'>('network');
-  const [isRetryingConnection, setIsRetryingConnection] = useState(false);
-  const offlineTimerRef = useRef<number | undefined>(undefined);
-  const pendingOfflineReasonRef = useRef<'network' | 'browser-offline'>('network');
 
   const filters = useMemo(
     () => ({ namespaces: activeNamespaces, scopes: activeScopes }),
@@ -136,128 +123,11 @@ export function WorkspaceOverview() {
     retainedRowStartsRef.current = {};
   }, [aggregation, groupType, activeNamespaces.join(','), activeScopes.join(','), isVirtualized]);
 
-  useEffect(() => {
-    if (components.length > 0 || workspace.name) {
-      setConnectionState('online');
-    }
-  }, [components.length, workspace.name]);
-
-  const runConnectionProbe = useCallback(async () => {
-    if (typeof window === 'undefined') return;
-    if (isRetryingConnection) return;
-
-    setIsRetryingConnection(true);
-    try {
-      if (!window.navigator.onLine) {
-        setConnectionReason('browser-offline');
-        setConnectionState('offline');
-        return;
-      }
-
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 2500);
-      const result = await fetch('/graphql', {
-        method: 'POST',
-        cache: 'no-store',
-        signal: controller.signal,
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: 'query __BitHealth { __typename }',
-        }),
-      }).catch(() => undefined);
-      window.clearTimeout(timeout);
-
-      if (result?.ok) {
-        if (offlineTimerRef.current) {
-          window.clearTimeout(offlineTimerRef.current);
-          offlineTimerRef.current = undefined;
-        }
-        setConnectionState('online');
-        setConnectionReason('network');
-        return;
-      }
-
-      setConnectionReason('network');
-      setConnectionState('offline');
-    } finally {
-      setIsRetryingConnection(false);
-    }
-  }, [isRetryingConnection]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
-
-    const handleConnectionEvent = (event: Event) => {
-      const { detail } = event as CustomEvent<ConnectionEventDetail>;
-      if (detail?.reason === 'preview') return;
-
-      if (detail?.online === true) {
-        if (offlineTimerRef.current) {
-          window.clearTimeout(offlineTimerRef.current);
-          offlineTimerRef.current = undefined;
-        }
-        setConnectionReason('network');
-        setConnectionState('online');
-        return;
-      }
-
-      if (detail?.online === false) {
-        pendingOfflineReasonRef.current = detail?.reason === 'browser-offline' ? 'browser-offline' : 'network';
-        if (!offlineTimerRef.current) {
-          // Debounce brief network/proxy hiccups to prevent shell flicker.
-          offlineTimerRef.current = window.setTimeout(() => {
-            setConnectionReason(pendingOfflineReasonRef.current);
-            setConnectionState('offline');
-            offlineTimerRef.current = undefined;
-          }, 900);
-        }
-      }
-    };
-
-    window.addEventListener(CONNECTION_STATUS_EVENT, handleConnectionEvent as EventListener);
-    return () => {
-      window.removeEventListener(CONNECTION_STATUS_EVENT, handleConnectionEvent as EventListener);
-      if (offlineTimerRef.current) {
-        window.clearTimeout(offlineTimerRef.current);
-        offlineTimerRef.current = undefined;
-      }
-    };
-  }, [components.length, workspace.name]);
-
   const primaryShellCards = useMemo(() => Array.from({ length: 8 }, (_, idx) => idx), []);
   const secondaryShellCards = useMemo(() => Array.from({ length: 4 }, (_, idx) => idx), []);
 
   const bootShell = (
     <div className={styles.bootShellWrap}>
-      <div className={classNames(styles.bootStatusRow, connectionState === 'offline' && styles.bootStatusRowOffline)}>
-        <div className={styles.bootStatusCopy}>
-          <span
-            className={classNames(
-              styles.bootShellStatus,
-              connectionState === 'offline' ? styles.bootShellStatusOffline : styles.bootShellStatusLoading
-            )}
-          >
-            {connectionState === 'offline' ? 'Offline' : 'Connecting'}
-          </span>
-          <span className={styles.bootStatusText}>
-            {connectionState === 'offline'
-              ? connectionReason === 'browser-offline'
-                ? 'No browser network connection. Reconnect to continue.'
-                : 'Dev server is temporarily unavailable. The workspace will recover as soon as it responds.'
-              : 'Loading workspace structure and preview slots.'}
-          </span>
-        </div>
-        <button
-          type="button"
-          className={styles.bootShellAction}
-          onClick={() => void runConnectionProbe()}
-          disabled={isRetryingConnection}
-        >
-          {isRetryingConnection ? 'Checking...' : 'Retry now'}
-        </button>
-      </div>
       <div className={styles.bootLayoutShell} aria-hidden>
         <div className={styles.bootFilterRow}>
           <div className={styles.bootFilterPill} />
