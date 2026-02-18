@@ -260,6 +260,7 @@ export function ComponentPreview({
   const url = toPreviewUrl(component, previewName, isScaling ? targetParams : queryParams, includeEnv);
   const srcWithRetryNonce =
     retryNonce > 0 ? `${url}${url.includes('?') ? '&' : '?'}bitPreviewRetry=${retryNonce}` : url;
+  const isServerCompiling = (component.server as { isCompiling?: boolean } | undefined)?.isCompiling === true;
 
   const clearNavSchedule = () => {
     if (navRafRef.current) {
@@ -304,7 +305,6 @@ export function ComponentPreview({
     return () => {
       clearNavSchedule();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [srcWithRetryNonce]);
 
   // If the preview loaded while the dev server was still spinning up, it can get
@@ -317,7 +317,7 @@ export function ComponentPreview({
       retryCountRef.current = 0;
       return undefined;
     }
-    if (!component.server?.url || component.server?.isCompiling === true) return undefined;
+    if (!component.server?.url || isServerCompiling) return undefined;
     if (retryCountRef.current >= MAX_AUTO_RETRIES) return undefined;
 
     const attempt = retryCountRef.current + 1;
@@ -330,7 +330,7 @@ export function ComponentPreview({
     return () => {
       clearRetryTimer();
     };
-  }, [component.server?.url, component.server?.isCompiling, isPreviewReady]);
+  }, [component.server?.url, isServerCompiling, isPreviewReady]);
 
   useEffect(() => {
     if (isPreviewReady) return undefined;
@@ -342,7 +342,6 @@ export function ComponentPreview({
     return () => {
       clearRetryTimer();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // const currentHeight = fullContentHeight ? '100%' : height || 1024;

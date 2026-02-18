@@ -31,6 +31,10 @@ type ServerState = {
 
 type ServerStateMap = Record<string, ServerState>;
 
+function getContextRootPath(context: unknown): string | undefined {
+  return (context as { rootPath?: string } | undefined)?.rootPath;
+}
+
 export class PreviewStartPlugin implements StartPlugin {
   previewServers: ComponentServer[] = [];
   serversState: ServerStateMap = {};
@@ -152,8 +156,8 @@ export class PreviewStartPlugin implements StartPlugin {
         env,
         affectedEnvs: Array.from(affectedEnvs),
         url: server?.url,
-        host: server?.host,
-        basePath: server?.basePath,
+        host: server?.hostname,
+        basePath: getContextRootPath(server?.context),
         isCompiling,
         errorCount: results?.errors?.length || 0,
         warningCount: results?.warnings?.length || 0,

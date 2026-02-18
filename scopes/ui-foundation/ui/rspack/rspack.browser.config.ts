@@ -11,7 +11,6 @@ import {
   resolveAlias,
   resolveFallback,
   RspackManifestPlugin,
-  generateAssetManifest,
   cssParser,
   mjsRule,
   swcRule,
@@ -120,7 +119,7 @@ export default function createRspackBrowserConfig(
         contextRegExp: /moment$/,
       }),
 
-      new RspackManifestPlugin({ fileName: 'asset-manifest.json', generate: generateAssetManifest }),
+      new RspackManifestPlugin({ fileName: 'asset-manifest.json' }),
 
       new WorkboxWebpackPlugin.GenerateSW({
         clientsClaim: true,

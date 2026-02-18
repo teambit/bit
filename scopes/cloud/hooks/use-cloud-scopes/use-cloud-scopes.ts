@@ -14,8 +14,16 @@ export const GET_CLOUD_SCOPES_QUERY = gql`
   }
 `;
 
+type CloudScopeQueryResult = {
+  id: string;
+  icon?: string;
+  backgroundIconColor?: string;
+  stripColor?: string;
+  displayName?: string;
+};
+
 export function useCloudScopes(ids?: string[]): { cloudScopes?: ScopeDescriptor[] } {
-  const { data } = useQuery<{ getCloudScopes?: (ScopeDescriptor & { id: string })[] }>(GET_CLOUD_SCOPES_QUERY, {
+  const { data } = useQuery<{ getCloudScopes?: CloudScopeQueryResult[] }>(GET_CLOUD_SCOPES_QUERY, {
     variables: {
       ids,
     },
@@ -25,7 +33,7 @@ export function useCloudScopes(ids?: string[]): { cloudScopes?: ScopeDescriptor[
     cloudScopes: (data?.getCloudScopes || []).map((scope) => {
       const scopeId = ScopeID.fromString(scope.id);
       const scopeDescriptorObj = {
-        ...scope,
+        displayName: scope.displayName,
         id: scopeId.toObject(),
         scopeStyle: {
           icon: scope.icon,

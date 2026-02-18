@@ -844,7 +844,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
         continue;
       }
 
-      const isCompiling = component.server?.isCompiling === true;
+      const isCompiling = (component.server as { isCompiling?: boolean } | undefined)?.isCompiling === true;
       if (isCompiling) {
         nextCompiling.add(previewKey);
       }

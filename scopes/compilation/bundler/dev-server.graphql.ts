@@ -4,6 +4,10 @@ import { gql } from '@apollo/client';
 import type { BundlerMain } from './bundler.main.runtime';
 import { ComponentServerCompilationChangedEvent, ComponentServerStartedEvent } from './events';
 
+function getContextRootPath(context: unknown): string | undefined {
+  return (context as { rootPath?: string } | undefined)?.rootPath;
+}
+
 export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Schema {
   return {
     typeDefs: gql`
@@ -63,7 +67,7 @@ export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Sch
             env: componentServer.context.envRuntime.id,
             url: componentServer.url,
             host: componentServer.hostname,
-            basePath: componentServer.context.rootPath,
+            basePath: getContextRootPath(componentServer.context),
             isCompiling: !!componentServer.isCompiling,
           };
         },
@@ -84,7 +88,7 @@ export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Sch
                 env: server.context.envRuntime.id,
                 url: server.url,
                 host: server.hostname,
-                basePath: server.context.rootPath,
+                basePath: getContextRootPath(server.context),
                 isCompiling: !!server.isCompiling,
               },
             ];

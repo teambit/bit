@@ -51,10 +51,16 @@ const WORKSPACE_DRAWER_LANES = gql`
   }
 `;
 
+type LanesQueryCompat = Omit<LanesQuery, 'lanes'> & {
+  lanes?: Omit<NonNullable<LanesQuery['lanes']>, 'viewedLane'> & {
+    viewedLane?: NonNullable<LanesQuery['lanes']>['list'];
+  };
+};
+
 function useWorkspaceDrawerLanes(viewedLaneFromUrl?: LaneId) {
   const viewedLaneString = viewedLaneFromUrl?.toString();
   // @ts-ignore - graphql typing mismatch in workspace packages
-  const { data, loading } = useQuery<LanesQuery>(WORKSPACE_DRAWER_LANES, {
+  const { data, loading } = useQuery<LanesQueryCompat>(WORKSPACE_DRAWER_LANES, {
     variables: {
       viewedLaneId: viewedLaneString ? [viewedLaneString] : undefined,
       skipViewedLane: !viewedLaneString || viewedLaneFromUrl?.isDefault(),
@@ -64,7 +70,9 @@ function useWorkspaceDrawerLanes(viewedLaneFromUrl?: LaneId) {
     returnPartialData: true,
   });
 
-  const lanesModel = data ? LanesModel.from({ data, viewedLaneId: viewedLaneFromUrl }) : undefined;
+  const lanesModel = data
+    ? LanesModel.from({ data: data as unknown as LanesQuery, viewedLaneId: viewedLaneFromUrl })
+    : undefined;
   return { lanesModel, loading };
 }
 

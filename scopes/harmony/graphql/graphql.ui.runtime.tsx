@@ -226,10 +226,6 @@ export class GraphqlUI {
         });
 
         return () => {
-          if (typeof subscription === 'function') {
-            subscription();
-            return;
-          }
           subscription?.unsubscribe?.();
         };
       });

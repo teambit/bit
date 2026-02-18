@@ -123,6 +123,7 @@ export function PreviewPlaceholder({
   const description = componentDescriptor && getDescription(componentDescriptor);
   const displayName = componentDescriptor && getDisplayName(componentDescriptor);
   const serverUrl = component?.server?.url;
+  const isServerCompiling = (component?.server as { isCompiling?: boolean } | undefined)?.isCompiling === true;
   const previewKey = component?.id?.toString?.() || componentDescriptor?.id?.toString?.() || '';
   const intersectionRef = useRef<HTMLDivElement>(null);
   const [canHydratePreview, setCanHydratePreview] = useState(() => !!previewKey && warmedPreviews.has(previewKey));
@@ -197,14 +198,12 @@ export function PreviewPlaceholder({
     return () => {
       releaseSlotIfHeld();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const compositionsKey = compositions?.map((c) => c.identifier).join(',');
   const selectedPreview = useMemo(() => {
     if (!shouldShowPreview || !component) return undefined;
     return selectDefaultComposition(component);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [compositionsKey, shouldShowPreview]);
 
   if (!component || !componentDescriptor) return null;
@@ -228,7 +227,7 @@ export function PreviewPlaceholder({
   if (
     !canHydratePreview ||
     !serverUrl ||
-    component.server?.isCompiling === true ||
+    isServerCompiling ||
     (!shouldShowPreview && component.buildStatus === 'pending')
   )
     return (
