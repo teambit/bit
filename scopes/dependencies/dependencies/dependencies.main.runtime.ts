@@ -115,6 +115,7 @@ export class DependenciesMain {
     });
 
     await this.workspace.bitMap.write(`set-peer (${componentId})`);
+    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
   }
 
   async unsetPeer(componentId: string): Promise<void> {
@@ -132,6 +133,7 @@ export class DependenciesMain {
     this.workspace.bitMap.addComponentConfig(compId, DependencyResolverAspect.id, config);
 
     await this.workspace.bitMap.write(`unset-peer (${componentId})`);
+    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
   }
 
   async setDependency(
@@ -171,6 +173,7 @@ export class DependenciesMain {
     );
 
     await this.workspace.bitMap.write(`deps-set (${componentPattern})`);
+    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
 
     return {
       changedComps: compIds.map((compId) => compId.toStringWithoutVersion()),
@@ -238,6 +241,7 @@ export class DependenciesMain {
       return { id: compId, removedPackages };
     });
     await this.workspace.bitMap.write(`deps-remove (${componentPattern})`);
+    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
 
     return compact(results);
   }
@@ -248,6 +252,7 @@ export class DependenciesMain {
       await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, { policy: {} });
     });
     await this.workspace.bitMap.write(`deps-reset (${componentPattern})`);
+    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
 
     return compIds;
   }
@@ -266,6 +271,7 @@ export class DependenciesMain {
       );
     });
     await this.workspace.bitMap.write(`deps-eject (${componentPattern})`);
+    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
 
     return compIds;
   }
