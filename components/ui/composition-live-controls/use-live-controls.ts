@@ -78,16 +78,22 @@ export function useLiveControls(channels?: string[]): UseLiveControlsResult {
     setState(liveControlsRegistry.getMergedState(activeChannels));
   }, [activeChannels]);
 
-  const onChange = (key: string, value: any) => {
-    liveControlsRegistry.broadcastUpdateToChannels(activeChannels, key, value);
-  };
+  const onChange = useCallback(
+    (key: string, value: any) => {
+      liveControlsRegistry.broadcastUpdateToChannels(activeChannels, key, value);
+    },
+    [activeChannels, liveControlsRegistry]
+  );
 
-  const setTimestamp = (ts: number) => {
-    if (ts === 0) {
-      liveControlsRegistry.resetTimestamps(activeChannels);
-      setState(liveControlsRegistry.getMergedState(activeChannels));
-    }
-  };
+  const setTimestamp = useCallback(
+    (ts: number) => {
+      if (ts === 0) {
+        liveControlsRegistry.resetTimestamps(activeChannels);
+        setState(liveControlsRegistry.getMergedState(activeChannels));
+      }
+    },
+    [activeChannels, liveControlsRegistry]
+  );
 
   return {
     defs: state.defs,

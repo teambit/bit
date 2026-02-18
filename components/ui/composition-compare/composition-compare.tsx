@@ -8,21 +8,22 @@ import {
   type EmptyStateSlot,
 } from '@teambit/compositions';
 import { CompositionContextProvider } from '@teambit/compositions.ui.hooks.use-composition';
-import {
-  useCompareQueryParam,
-  useUpdatedUrlFromQuery,
-} from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
+import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { CompareSplitLayoutPreset } from '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { Icon } from '@teambit/evangelist.elements.icon';
+import { useLocation } from '@teambit/base-react.navigation.link';
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import queryString from 'query-string';
 import { CompositionDropdown } from './composition-dropdown';
 import { CompositionCompareContext } from './composition-compare.context';
 import { uniqBy } from 'lodash';
+import * as semver from 'semver';
 
 import styles from './composition-compare.module.scss';
 
 const noop = () => {};
+const LOCAL_VERSION = 'workspace';
 
 export type CompositionCompareProps = {
   emptyState?: EmptyStateSlot;
@@ -33,6 +34,8 @@ export type CompositionCompareProps = {
   previewViewProps?: CompositionContentProps;
   PreviewView?: React.ComponentType<CompositionContentProps>;
 };
+
+type ControlsStatus = 'loading' | 'available' | 'empty';
 
 function MissingComposition({ compositionId, version }: { compositionId?: string; version: string }) {
   const message = compositionId
@@ -56,10 +59,84 @@ function getCompositionTag(hasInBase: boolean, hasInCompare: boolean): string | 
 }
 
 function useResizePanel(initialHeight: number) {
+  const MIN_PANEL_HEIGHT = 80;
+  const MIN_COMPARE_HEIGHT = 150;
+  const DEFAULT_PANEL_RATIO = 0.34;
   const [panelHeight, setPanelHeight] = useState(initialHeight);
   const [isResizing, setIsResizing] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
+  const panelHeightRef = useRef(initialHeight);
+  const removeListenersRef = useRef<(() => void) | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const initializedRef = useRef(false);
+  const userResizedRef = useRef(false);
+
+  const getMaxPanelHeight = useCallback(() => {
+    const containerHeight = panelRef.current?.parentElement?.clientHeight;
+    if (!containerHeight) return Math.max(MIN_PANEL_HEIGHT, initialHeight);
+    return Math.max(MIN_PANEL_HEIGHT, containerHeight - MIN_COMPARE_HEIGHT);
+  }, [MIN_COMPARE_HEIGHT, MIN_PANEL_HEIGHT, initialHeight]);
+
+  const getDefaultPanelHeight = useCallback(() => {
+    const containerHeight = panelRef.current?.parentElement?.clientHeight;
+    if (!containerHeight || containerHeight <= 0) return initialHeight;
+    return Math.max(initialHeight, Math.round(containerHeight * DEFAULT_PANEL_RATIO));
+  }, [initialHeight, DEFAULT_PANEL_RATIO]);
+
+  const clampPanelHeight = useCallback(
+    (height: number) => {
+      const maxHeight = getMaxPanelHeight();
+      return Math.max(MIN_PANEL_HEIGHT, Math.min(maxHeight, height));
+    },
+    [MIN_PANEL_HEIGHT, getMaxPanelHeight]
+  );
+
+  const applyPanelHeight = useCallback(
+    (height: number, commitToState = false) => {
+      const clamped = clampPanelHeight(height);
+      panelHeightRef.current = clamped;
+      if (panelRef.current) panelRef.current.style.height = `${clamped}px`;
+      if (commitToState) setPanelHeight(clamped);
+      return clamped;
+    },
+    [clampPanelHeight]
+  );
+
+  const syncPanelHeight = useCallback(() => {
+    if (isDragging.current) return;
+    const nextHeight = userResizedRef.current ? panelHeightRef.current : getDefaultPanelHeight();
+    applyPanelHeight(nextHeight, true);
+  }, [applyPanelHeight, getDefaultPanelHeight]);
+
+  useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+    syncPanelHeight();
+  }, [syncPanelHeight]);
+
+  useEffect(() => {
+    const handleWindowResize = () => {
+      syncPanelHeight();
+    };
+
+    handleWindowResize();
+    window.addEventListener('resize', handleWindowResize);
+    return () => window.removeEventListener('resize', handleWindowResize);
+  }, [syncPanelHeight]);
+
+  useEffect(() => {
+    if (typeof ResizeObserver === 'undefined') return;
+    const parent = panelRef.current?.parentElement;
+    if (!parent) return;
+
+    const observer = new ResizeObserver(() => {
+      syncPanelHeight();
+    });
+    observer.observe(parent);
+
+    return () => observer.disconnect();
+  }, [syncPanelHeight]);
 
   const handleResizeStart = useCallback(
     (e: React.MouseEvent) => {
@@ -69,33 +146,64 @@ function useResizePanel(initialHeight: number) {
       setIsResizing(true);
 
       const startY = e.clientY;
-      const startHeight = panelHeight;
+      const startHeight = panelHeightRef.current;
 
       const handleMouseMove = (moveEvent: MouseEvent) => {
         if (!isDragging.current) return;
         moveEvent.preventDefault();
         const delta = startY - moveEvent.clientY;
-        const containerHeight = panelRef.current?.parentElement?.clientHeight || 600;
-        const maxHeight = Math.max(100, containerHeight - 200);
-        setPanelHeight(Math.max(60, Math.min(maxHeight, startHeight + delta)));
+        const targetHeight = startHeight + delta;
+        if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+        rafRef.current = requestAnimationFrame(() => {
+          applyPanelHeight(targetHeight);
+          rafRef.current = null;
+        });
       };
 
       const handleMouseUp = () => {
+        if (rafRef.current !== null) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
+        userResizedRef.current = true;
         isDragging.current = false;
+        applyPanelHeight(panelHeightRef.current, true);
         setIsResizing(false);
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener('blur', handleMouseUp);
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
       };
 
+      removeListenersRef.current?.();
       document.body.style.cursor = 'ns-resize';
       document.body.style.userSelect = 'none';
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('blur', handleMouseUp);
+      removeListenersRef.current = () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener('blur', handleMouseUp);
+      };
     },
-    [panelHeight]
+    [applyPanelHeight]
   );
+
+  useEffect(() => {
+    return () => {
+      isDragging.current = false;
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      removeListenersRef.current?.();
+      removeListenersRef.current = null;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, []);
 
   return { panelRef, panelHeight, isResizing, handleResizeStart };
 }
@@ -119,6 +227,111 @@ function buildChannelKey(prefix: string, idStr: string | undefined, compId: stri
 function buildQueryParams(channelKey: string | undefined) {
   const params = { livecontrols: true, ...(channelKey ? { lcchannel: channelKey } : {}) };
   return { params, queryString: queryString.stringify(params) };
+}
+
+function buildUpdatedUrlFromQuery(
+  query: URLSearchParams,
+  pathname: string,
+  queryParams: {
+    compositionBaseFile?: string;
+    compositionCompareFile?: string;
+  }
+) {
+  const queryObj = Object.fromEntries(query.entries());
+  const updatedObj = { ...queryObj, ...queryParams };
+  const updatedQueryString = new URLSearchParams(updatedObj).toString();
+  return `${pathname}?${updatedQueryString}`;
+}
+
+function resolveVersion(model: any): string | undefined {
+  const id = model?.id;
+  const versionFromField = id?.version?.toString?.();
+  const versionFromToString = typeof id?.toString === 'function' ? id.toString().split('@')[1] : undefined;
+  return versionFromField || versionFromToString;
+}
+
+function hasStableCompareData(contextLoading: boolean | undefined, base: any, compare: any) {
+  return !contextLoading && base !== undefined && compare !== undefined;
+}
+
+function resolveRequestedCompositionId({
+  selectedCompositionCompareFile,
+  selectedCompositionBaseFile,
+  compareStateId,
+  baseStateId,
+  compareCompositions,
+  baseCompositions,
+}: {
+  selectedCompositionCompareFile?: string;
+  selectedCompositionBaseFile?: string;
+  compareStateId?: string;
+  baseStateId?: string;
+  compareCompositions?: any[];
+  baseCompositions?: any[];
+}) {
+  const explicitId = selectedCompositionCompareFile || selectedCompositionBaseFile;
+  const stateId = compareStateId || baseStateId;
+  const defaultId = compareCompositions?.[0]?.identifier || baseCompositions?.[0]?.identifier;
+  return explicitId || stateId || defaultId;
+}
+
+function resolveCompositionId(selectedComposition: any, requestedCompositionId?: string) {
+  return selectedComposition?.identifier || requestedCompositionId;
+}
+
+function hasMissingComposition(requestedCompositionId: string | undefined, selectedComposition: any) {
+  return Boolean(requestedCompositionId && !selectedComposition);
+}
+
+function buildControlsResetKey(baseChannelKey: string | undefined, compareChannelKey: string | undefined) {
+  return `${baseChannelKey || ''}-${compareChannelKey || ''}`;
+}
+
+function shouldShowControlsPanel(status: ControlsStatus, everHadControls: boolean) {
+  return status !== 'empty' || everHadControls;
+}
+
+function formatVersionForLabel(version: string | undefined, opts?: { forceWorkspace?: boolean }) {
+  if (opts?.forceWorkspace) return LOCAL_VERSION;
+  if (!version) return undefined;
+  if (version === LOCAL_VERSION) return LOCAL_VERSION;
+  return semver.valid(version) ? version : version.slice(0, 6);
+}
+
+function useStableControlLabels(baseModel: any, compareModel: any, compareHasLocalChanges?: boolean) {
+  const baseVersion = useMemo(() => formatVersionForLabel(resolveVersion(baseModel)), [baseModel]);
+  const compareVersion = useMemo(
+    () => formatVersionForLabel(resolveVersion(compareModel), { forceWorkspace: compareHasLocalChanges }),
+    [compareModel, compareHasLocalChanges]
+  );
+  const [stableVersions, setStableVersions] = useState<{
+    base?: string;
+    compare?: string;
+  }>({
+    base: baseVersion,
+    compare: compareVersion,
+  });
+
+  useEffect(() => {
+    setStableVersions((prev) => {
+      const nextBase = baseVersion ?? prev.base;
+      const nextCompare = compareVersion ?? prev.compare;
+      if (nextBase === prev.base && nextCompare === prev.compare) return prev;
+      return { base: nextBase, compare: nextCompare };
+    });
+  }, [baseVersion, compareVersion]);
+
+  const effectiveBaseVersion = baseVersion ?? stableVersions.base;
+  const effectiveCompareVersion = compareVersion ?? stableVersions.compare;
+
+  return useMemo(
+    () => ({
+      common: 'Common',
+      base: effectiveBaseVersion ? `Base version: ${effectiveBaseVersion}` : 'Base version',
+      compare: effectiveCompareVersion ? `Compare version: ${effectiveCompareVersion}` : 'Compare version',
+    }),
+    [effectiveBaseVersion, effectiveCompareVersion]
+  );
 }
 
 type CompositionLayoutProps = {
@@ -189,14 +402,16 @@ export function CompositionCompare(props: CompositionCompareProps) {
   } = props;
 
   const componentCompareContext = useComponentCompare();
+  const query = useQuery();
+  const location = useLocation() || { pathname: '/' };
   const { base, compare, baseContext, compareContext, loading: contextLoading } = componentCompareContext || {};
 
   const [isControlsOpen, setControlsOpen] = useState(true);
-  const [controlsStatus, setControlsStatus] = useState<'loading' | 'available' | 'empty'>('loading');
+  const [controlsStatus, setControlsStatus] = useState<ControlsStatus>('loading');
   const [everHadControls, setEverHadControls] = useState(false);
-  const { panelRef, panelHeight, isResizing, handleResizeStart } = useResizePanel(200);
+  const { panelRef, panelHeight, isResizing, handleResizeStart } = useResizePanel(240);
 
-  const isStableData = !contextLoading && base !== undefined && compare !== undefined;
+  const isStableData = hasStableCompareData(contextLoading, base, compare);
   const baseCompositions = base?.model.compositions;
   const compareCompositions = compare?.model.compositions;
 
@@ -206,16 +421,31 @@ export function CompositionCompare(props: CompositionCompareProps) {
   const baseHooks = baseContext?.hooks?.preview;
   const compareHooks = compareContext?.hooks?.preview;
 
-  const explicitId = selectedCompositionCompareFile || selectedCompositionBaseFile;
-  const stateId = compareState?.id || baseContext?.state?.preview?.id;
-  const defaultId = compareCompositions?.[0]?.identifier || baseCompositions?.[0]?.identifier;
-  const requestedCompositionId = explicitId || stateId || defaultId;
+  const requestedCompositionId = useMemo(
+    () =>
+      resolveRequestedCompositionId({
+        selectedCompositionCompareFile,
+        selectedCompositionBaseFile,
+        compareStateId: compareState?.id,
+        baseStateId: baseContext?.state?.preview?.id,
+        compareCompositions,
+        baseCompositions,
+      }),
+    [
+      selectedCompositionCompareFile,
+      selectedCompositionBaseFile,
+      compareState?.id,
+      baseContext?.state?.preview?.id,
+      compareCompositions,
+      baseCompositions,
+    ]
+  );
 
   const selectedBaseComp = findComposition(baseCompositions, requestedCompositionId);
   const selectedCompareComp = findComposition(compareCompositions, requestedCompositionId);
 
-  const baseMissing = Boolean(requestedCompositionId && !selectedBaseComp);
-  const compareMissing = Boolean(requestedCompositionId && !selectedCompareComp);
+  const baseMissing = hasMissingComposition(requestedCompositionId, selectedBaseComp);
+  const compareMissing = hasMissingComposition(requestedCompositionId, selectedCompareComp);
 
   const baseCompositionIds = useMemo(
     () => new Set((baseCompositions || []).map((c) => c.identifier)),
@@ -232,8 +462,11 @@ export function CompositionCompare(props: CompositionCompareProps) {
       const hasInCompare = compareCompositionIds.has(c.identifier);
       const tag = getCompositionTag(hasInBase, hasInCompare);
       const href = !compareState?.controlled
-        ? useUpdatedUrlFromQuery({ compositionBaseFile: c.identifier, compositionCompareFile: c.identifier })
-        : useUpdatedUrlFromQuery({});
+        ? buildUpdatedUrlFromQuery(query, location.pathname, {
+            compositionBaseFile: c.identifier,
+            compositionCompareFile: c.identifier,
+          })
+        : buildUpdatedUrlFromQuery(query, location.pathname, {});
       const onClick = compareState?.controlled
         ? (id, e) => {
             compareHooks?.onClick?.(id, e);
@@ -242,7 +475,17 @@ export function CompositionCompare(props: CompositionCompareProps) {
         : undefined;
       return { id: c.identifier, label: c.displayName, href, onClick, tag };
     });
-  }, [baseCompositions, compareCompositions, baseCompositionIds, compareCompositionIds, compareState?.controlled]);
+  }, [
+    baseCompositions,
+    compareCompositions,
+    baseCompositionIds,
+    compareCompositionIds,
+    compareState?.controlled,
+    compareHooks,
+    baseHooks,
+    query,
+    location.pathname,
+  ]);
 
   const selectedCompareDropdown = useMemo(() => {
     const found =
@@ -260,8 +503,8 @@ export function CompositionCompare(props: CompositionCompareProps) {
 
   const baseIdStr = base?.model.id?.toString();
   const compareIdStr = compare?.model.id?.toString();
-  const baseCompId = selectedBaseComp?.identifier || requestedCompositionId;
-  const compareCompId = selectedCompareComp?.identifier || requestedCompositionId;
+  const baseCompId = resolveCompositionId(selectedBaseComp, requestedCompositionId);
+  const compareCompId = resolveCompositionId(selectedCompareComp, requestedCompositionId);
 
   const baseChannelKey = useMemo(() => buildChannelKey('base', baseIdStr, baseCompId), [baseIdStr, baseCompId]);
   const compareChannelKey = useMemo(
@@ -272,22 +515,23 @@ export function CompositionCompare(props: CompositionCompareProps) {
   const baseQuery = useMemo(() => buildQueryParams(baseChannelKey), [baseChannelKey]);
   const compareQuery = useMemo(() => buildQueryParams(compareChannelKey), [compareChannelKey]);
 
-  const controlsResetKey = `${baseChannelKey || ''}-${compareChannelKey || ''}`;
+  const controlsResetKey = buildControlsResetKey(baseChannelKey, compareChannelKey);
 
   useEffect(() => {
     setEverHadControls(false);
     setControlsStatus('loading');
   }, [baseIdStr, compareIdStr]);
 
-  const handleControlsStatusChange = useCallback((status: 'loading' | 'available' | 'empty') => {
+  const handleControlsStatusChange = useCallback((status: ControlsStatus) => {
     setControlsStatus(status);
     if (status === 'available') setEverHadControls(true);
   }, []);
 
-  const showControlsPanel = controlsStatus === 'available' || controlsStatus === 'loading' || everHadControls;
+  const showControlsPanel = shouldShowControlsPanel(controlsStatus, everHadControls);
 
   const baseModel = base?.model;
   const compareModel = compare?.model;
+  const stableLabels = useStableControlLabels(baseModel, compareModel, compare?.hasLocalChanges);
 
   const BaseLayout = useMemo(() => {
     if (!isStableData || !baseChannelKey || !baseModel) return null;
@@ -412,6 +656,9 @@ export function CompositionCompare(props: CompositionCompareProps) {
                 resetKey={controlsResetKey}
                 baseChannel={baseChannelKey}
                 compareChannel={compareChannelKey}
+                commonLabel={stableLabels.common}
+                baseLabel={stableLabels.base}
+                compareLabel={stableLabels.compare}
                 showEmptyState={false}
                 onStatusChange={handleControlsStatusChange}
               />

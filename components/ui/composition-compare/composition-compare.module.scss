@@ -76,7 +76,6 @@
   flex-direction: column;
   background: var(--background-color);
   min-height: 36px;
-  max-height: calc(100% - 150px);
   overflow: hidden;
   border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
   contain: layout;

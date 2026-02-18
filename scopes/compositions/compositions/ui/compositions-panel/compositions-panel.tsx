@@ -76,7 +76,7 @@ export function CompositionsPanel({
       if (selected === active) return;
       setTimestamp(0);
     },
-    [onSelect]
+    [onSelect, active, setTimestamp]
   );
   const onCompositionCodeClicked = useCallback(
     (composition: Composition) => (e: React.MouseEvent<HTMLDivElement>) => {
@@ -89,7 +89,7 @@ export function CompositionsPanel({
       const basePath = location?.pathname.split('/~compositions')[0];
       navigate(`${basePath}/~code/${composition.filepath}?${queryParams.toString()}#search=${composition.identifier}`);
     },
-    [location?.pathname, versionFromQueryParams]
+    [location?.pathname, navigate, setTimestamp, versionFromQueryParams]
   );
 
   return (

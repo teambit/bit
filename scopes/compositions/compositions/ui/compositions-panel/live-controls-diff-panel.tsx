@@ -16,6 +16,9 @@ export type LiveControlsDiffPanelProps = {
   resetKey?: string;
   baseChannel?: string;
   compareChannel?: string;
+  commonLabel?: string;
+  baseLabel?: string;
+  compareLabel?: string;
   showEmptyState?: boolean;
   onStatusChange?: (status: PanelStatus) => void;
 };
@@ -24,6 +27,9 @@ export function LiveControlsDiffPanel({
   resetKey,
   baseChannel,
   compareChannel,
+  commonLabel = 'Common',
+  baseLabel = 'Base',
+  compareLabel = 'Compare',
   showEmptyState = true,
   onStatusChange,
 }: LiveControlsDiffPanelProps) {
@@ -40,17 +46,18 @@ export function LiveControlsDiffPanel({
   }, [model.baseChannel, model.compareChannel]);
 
   const combined = useLiveControls(allChannels);
+  const { ready: combinedReady, setTimestamp } = combined;
 
   useEffect(() => {
     if (lastResetKeyRef.current !== currentKey) {
       lastResetKeyRef.current = currentKey;
       setIsWaitingForFreshData(true);
-      combined.setTimestamp(0);
+      setTimestamp(0);
     }
-  }, [currentKey, combined]);
+  }, [currentKey, setTimestamp]);
 
   const channelsReady = Boolean(baseChannel && compareChannel);
-  const registryReady = combined.ready || model.isReady;
+  const registryReady = combinedReady || model.isReady;
   const controls = model.controls;
   const hasControls = controls.length > 0;
 
@@ -143,20 +150,20 @@ export function LiveControlsDiffPanel({
       <div className={styles.columnsLayout}>
         {commonControls.length > 0 && (
           <div className={styles.column}>
-            <div className={styles.columnHeader}>Common</div>
+            <div className={styles.columnHeader}>{commonLabel}</div>
             {renderControlList(commonControls)}
           </div>
         )}
         {commonControls.length > 0 && hasBaseOrCompare && <div className={styles.columnDivider} />}
         {baseControls.length > 0 && (
           <div className={styles.column}>
-            <div className={styles.columnHeader}>Base</div>
+            <div className={styles.columnHeader}>{baseLabel}</div>
             {renderControlList(baseControls)}
           </div>
         )}
         {compareControls.length > 0 && (
           <div className={styles.column}>
-            <div className={styles.columnHeader}>Compare</div>
+            <div className={styles.columnHeader}>{compareLabel}</div>
             {renderControlList(compareControls)}
           </div>
         )}
