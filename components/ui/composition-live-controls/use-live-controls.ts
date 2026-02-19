@@ -27,28 +27,31 @@ export function useLiveControls(channels?: string[]): UseLiveControlsResult {
     (event: MessageEvent) => {
       const { data } = event;
       if (!data?.type) return;
+      const sourceWindow = event.source as Window | null;
 
       if (data.type === 'composition-live-controls:activate') {
+        const activateChannel = liveControlsRegistry.resolveChannel(data.payload?.channel, sourceWindow || undefined);
+        if (sourceWindow) liveControlsRegistry.setWindowChannel(sourceWindow, activateChannel);
         // Only sync state if activate is for a channel we care about
-        const activateChannel = data.payload?.channel || 'default';
         if (activeChannels.includes(activateChannel)) {
           setState(liveControlsRegistry.getMergedState(activeChannels));
         }
         return;
       }
 
-      const channel = data.payload?.channel || 'default';
+      const channel = liveControlsRegistry.resolveChannel(data.payload?.channel, sourceWindow || undefined);
 
       // Always register data in the singleton registry - other hook instances may need it
       if (data.type === BROADCAST_READY_KEY) {
-        liveControlsRegistry.register(channel, event.source as Window, data.payload.timestamp);
+        if (!sourceWindow) return;
+        liveControlsRegistry.register(channel, sourceWindow, data.payload.timestamp);
 
         liveControlsRegistry.registerReadyState(
           channel,
           data.payload.controls,
           data.payload.values,
           data.payload.timestamp,
-          event.source as Window
+          sourceWindow
         );
       }
 
@@ -57,7 +60,8 @@ export function useLiveControls(channels?: string[]): UseLiveControlsResult {
       }
 
       if (data.type === BROADCAST_DESTROY_KEY) {
-        liveControlsRegistry.unregister(channel, event.source as Window);
+        if (!sourceWindow) return;
+        liveControlsRegistry.unregister(channel, sourceWindow);
       }
 
       // Only update this hook's state if the channel matches what we're listening for
@@ -65,7 +69,7 @@ export function useLiveControls(channels?: string[]): UseLiveControlsResult {
         setState(liveControlsRegistry.getMergedState(activeChannels));
       }
     },
-    [activeChannels]
+    [activeChannels, liveControlsRegistry]
   );
 
   useEffect(() => {

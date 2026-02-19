@@ -6,6 +6,7 @@ import {
 } from '@teambit/compositions.ui.composition-live-controls';
 import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { Icon } from '@teambit/evangelist.elements.icon';
+import classNames from 'classnames';
 import { getInputComponent } from './live-control-input';
 
 import styles from './live-controls-diff-panel.module.scss';
@@ -115,6 +116,7 @@ export function LiveControlsDiffPanel({
   const baseControls = controls.filter((c) => c.source === 'base');
   const compareControls = controls.filter((c) => c.source === 'compare');
   const hasBaseOrCompare = baseControls.length > 0 || compareControls.length > 0;
+  const hasBaseAndCompare = baseControls.length > 0 && compareControls.length > 0;
 
   const getControlValue = (control: ControlWithSource) => {
     return model.getValueForControl(control.id, control.source);
@@ -123,21 +125,25 @@ export function LiveControlsDiffPanel({
   const renderControlList = (list: ControlWithSource[]) => (
     <ul className={styles.controlsList}>
       {list.map((control) => {
-        const InputComponent = getInputComponent(control.input || 'text');
+        const inputType = control.input || 'text';
+        const isWideControl = inputType === 'longtext' || inputType === 'multiselect' || inputType === 'json';
+        const InputComponent = getInputComponent(inputType);
         const key = `${control.id}-${control.source}`;
         const value = getControlValue(control);
         return (
-          <li key={key} className={styles.controlRow}>
+          <li key={key} className={classNames(styles.controlRow, isWideControl && styles.controlRowWide)}>
             <div className={styles.controlMain}>
               <div className={styles.controlLabel}>
                 <label htmlFor={`control-${key}`}>{control.label || control.id}</label>
               </div>
-              <InputComponent
-                id={`control-${key}`}
-                value={value}
-                onChange={(val: any) => handleChange(control, val)}
-                meta={control}
-              />
+              <div className={styles.controlInput}>
+                <InputComponent
+                  id={`control-${key}`}
+                  value={value}
+                  onChange={(val: any) => handleChange(control, val)}
+                  meta={control}
+                />
+              </div>
             </div>
           </li>
         );
@@ -161,6 +167,7 @@ export function LiveControlsDiffPanel({
             {renderControlList(baseControls)}
           </div>
         )}
+        {hasBaseAndCompare && <div className={styles.columnDivider} />}
         {compareControls.length > 0 && (
           <div className={styles.column}>
             <div className={styles.columnHeader}>{compareLabel}</div>

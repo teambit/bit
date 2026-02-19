@@ -39,7 +39,11 @@ function ShortTextInput({ value, onChange, id }: InputComponentProps) {
     setInputValue(newValue || '');
   };
 
-  return <InputText id={id} value={inputValue} onChange={handleChange} />;
+  return (
+    <div className={styles.wrapper}>
+      <InputText className={styles.inputText} id={id} value={inputValue} onChange={handleChange} />
+    </div>
+  );
 }
 
 function LongTextInput({ value, onChange, id }: InputComponentProps) {
@@ -55,7 +59,11 @@ function LongTextInput({ value, onChange, id }: InputComponentProps) {
     setInputValue(newValue || '');
   };
 
-  return <TextArea id={id} value={inputValue} onChange={handleChange} />;
+  return (
+    <div className={styles.wrapper}>
+      <TextArea id={id} value={inputValue} onChange={handleChange} />
+    </div>
+  );
 }
 
 export function SelectInput({ value, onChange, meta }: InputComponentProps) {
@@ -87,14 +95,17 @@ export function SelectInput({ value, onChange, meta }: InputComponentProps) {
   };
 
   return (
-    <p ref={triggerRef} className={classNames(styles.wrapper)}>
-      <Dropdown
-        placeholderContent={placeholderContent}
-        open={open}
-        onChange={(_, isOpen) => setOpen(isOpen)}
-        position={position}
-        dropClass={overlayStyles.suppressNativeMenu}
-      />
+    <div ref={triggerRef} className={classNames(styles.wrapper)}>
+      <div className={styles.fullWidthControl}>
+        <Dropdown
+          className={styles.dropdownField}
+          placeholderContent={placeholderContent}
+          open={open}
+          onChange={(_, isOpen) => setOpen(isOpen)}
+          position={position}
+          dropClass={overlayStyles.suppressNativeMenu}
+        />
+      </div>
 
       {open && style && (
         <BitPortal>
@@ -112,7 +123,7 @@ export function SelectInput({ value, onChange, meta }: InputComponentProps) {
           </div>
         </BitPortal>
       )}
-    </p>
+    </div>
   );
 }
 
@@ -135,7 +146,11 @@ function NumberInput({ value, onChange, id }: InputComponentProps) {
     }
   };
 
-  return <InputText id={id} type="number" value={inputValue} onChange={handleChange} />;
+  return (
+    <div className={styles.wrapper}>
+      <InputText id={id} type="number" value={inputValue} onChange={handleChange} />
+    </div>
+  );
 }
 
 function ColorPickerPortal(props: any) {
@@ -188,9 +203,9 @@ function ColorInput({ value, onChange }: InputComponentProps) {
   };
 
   return (
-    <p className={styles.wrapper}>
+    <div className={styles.wrapper}>
       <ColorPickerPortal value={inputValue} onColorSelect={handleChange} allowCustomColor />
-    </p>
+    </div>
   );
 }
 
@@ -222,14 +237,17 @@ function ToggleInput({ value, onChange }: InputComponentProps) {
     setIsChecked(!!value);
   }, [value]);
 
-  const handleChange = () => {
-    setIsChecked(!isChecked);
-    onChange(!isChecked);
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextChecked = event?.target?.checked ?? !isChecked;
+    setIsChecked(nextChecked);
+    onChange(nextChecked);
   };
 
   return (
-    <div className={classNames(styles.wrapper)}>
-      <Toggle defaultChecked={isChecked} onChange={handleChange} />
+    <div className={classNames(styles.wrapper, styles.toggleWrapper)}>
+      <div className={styles.toggleControl}>
+        <Toggle checked={isChecked} onInputChanged={handleChange} />
+      </div>
     </div>
   );
 }
@@ -332,7 +350,7 @@ function JsonInput({ value, onChange, id }: InputComponentProps) {
   };
 
   return (
-    <div>
+    <div className={styles.wrapper}>
       <TextArea id={id} value={inputValue} onChange={handleChange} />
       {message && <div style={{ color: 'red' }}>{message}</div>}
     </div>

@@ -37,6 +37,7 @@ export class LiveControlsRegistry {
 
   private channels = new Map<ChannelName, LiveControlsSubscriber[]>();
   private state = new Map<ChannelName, ChannelState>();
+  private windowToChannel = new Map<Window, ChannelName>();
   readonly DEFAULT_CHANNEL = 'default';
 
   normalizeChannel(channel?: ChannelName): ChannelName {
@@ -61,9 +62,25 @@ export class LiveControlsRegistry {
     return this.channels.get(key)!;
   }
 
+  setWindowChannel(iframeWindow: Window, channel?: ChannelName) {
+    const normalized = this.normalizeChannel(channel);
+    const existing = this.windowToChannel.get(iframeWindow);
+    if (normalized !== this.DEFAULT_CHANNEL || !existing) {
+      this.windowToChannel.set(iframeWindow, normalized);
+    }
+  }
+
+  resolveChannel(channel?: ChannelName, iframeWindow?: Window): ChannelName {
+    const normalized = this.normalizeChannel(channel);
+    if (normalized !== this.DEFAULT_CHANNEL) return normalized;
+    if (!iframeWindow) return normalized;
+    return this.windowToChannel.get(iframeWindow) || normalized;
+  }
+
   register(channel: ChannelName, iframeWindow: Window, timestamp: number) {
     const key = this.normalizeChannel(channel);
     debug('register', { channel, key, timestamp });
+    this.setWindowChannel(iframeWindow, key);
 
     const list = this.ensureSubscribers(key);
     if (!list.find((s) => s.iframeWindow === iframeWindow)) {
@@ -88,6 +105,11 @@ export class LiveControlsRegistry {
     if (st) {
       st.timestamps.delete(iframeWindow);
       if (st.timestamps.size === 0) st.ready = false;
+    }
+
+    const mappedChannel = this.windowToChannel.get(iframeWindow);
+    if (!mappedChannel || mappedChannel === key || key === this.DEFAULT_CHANNEL) {
+      this.windowToChannel.delete(iframeWindow);
     }
   }
 
@@ -194,5 +216,6 @@ export class LiveControlsRegistry {
   cleanupAll() {
     this.channels.clear();
     this.state.clear();
+    this.windowToChannel.clear();
   }
 }

@@ -1,7 +1,96 @@
 @import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 .wrapper {
-  padding: 4px 0;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.wrapper > * {
+  width: 100%;
+  min-width: 0;
+}
+
+.fullWidthControl {
+  width: 100%;
+}
+
+.dropdownField {
+  display: block;
+  width: 100%;
+}
+
+.dropdownField :global([class*='dropdownPlaceholder']) {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.wrapper :global(textarea) {
+  min-height: 78px;
+  resize: vertical;
+}
+
+.toggleWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 36px;
+}
+
+.toggleControl {
+  width: 42px;
+  max-width: 42px;
+  min-width: 42px;
+}
+
+.toggleControl > * {
+  width: 100%;
+}
+
+.rangeWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.rangeInput {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--primary-color, #6a57fd);
+}
+
+.rangeValue {
+  font-size: var(--bit-p-xs, 13px);
+  line-height: 1.2;
+  color: var(--on-background-color, #222222);
+  opacity: 0.85;
+}
+
+.multiSelect {
+  width: 100%;
+  min-height: 112px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-medium-color, rgba(0, 0, 0, 0.16));
+  border-radius: 8px;
+  background: var(--surface-neutral-color, #ffffff);
+  color: var(--on-background-color, #222222);
+  font: inherit;
+  line-height: 1.35;
+  box-sizing: border-box;
+  scrollbar-gutter: stable;
+}
+
+.multiSelect:focus {
+  outline: none;
+  border-color: var(--primary-color, #6a57fd);
+  box-shadow: 0 0 0 2px rgba(106, 87, 253, 0.18);
+}
+
+.multiSelect option {
+  padding: 4px 6px;
 }
 
 .portalMenu {
@@ -18,4 +107,8 @@
 .portalMenuItem {
   cursor: pointer;
   font-family: 'CircularPro', 'Gill Sans', 'Gill Sans MT', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.inputText {
+  padding-top: 0px !important;
 }
