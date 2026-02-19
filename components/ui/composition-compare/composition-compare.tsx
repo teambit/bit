@@ -287,10 +287,6 @@ function buildControlsResetKey(baseChannelKey: string | undefined, compareChanne
   return `${baseChannelKey || ''}-${compareChannelKey || ''}`;
 }
 
-function shouldShowControlsPanel(status: ControlsStatus, everHadControls: boolean) {
-  return status !== 'empty' || everHadControls;
-}
-
 function formatVersionForLabel(version: string | undefined, opts?: { forceWorkspace?: boolean }) {
   if (opts?.forceWorkspace) return LOCAL_VERSION;
   if (!version) return undefined;
@@ -516,18 +512,19 @@ export function CompositionCompare(props: CompositionCompareProps) {
   const compareQuery = useMemo(() => buildQueryParams(compareChannelKey), [compareChannelKey]);
 
   const controlsResetKey = buildControlsResetKey(baseChannelKey, compareChannelKey);
+  const hasControlChannels = Boolean(baseChannelKey && compareChannelKey);
 
   useEffect(() => {
     setEverHadControls(false);
     setControlsStatus('loading');
-  }, [baseIdStr, compareIdStr]);
+  }, [controlsResetKey]);
 
   const handleControlsStatusChange = useCallback((status: ControlsStatus) => {
     setControlsStatus(status);
     if (status === 'available') setEverHadControls(true);
   }, []);
 
-  const showControlsPanel = shouldShowControlsPanel(controlsStatus, everHadControls);
+  const showControlsPanel = controlsStatus === 'available' || everHadControls;
 
   const baseModel = base?.model;
   const compareModel = compare?.model;
@@ -629,11 +626,11 @@ export function CompositionCompare(props: CompositionCompareProps) {
         <div className={styles.compareMain}>
           <CompareSplitLayoutPreset base={BaseLayout} compare={CompareLayout} />
         </div>
-        {showControlsPanel && (
+        {hasControlChannels && (
           <div
             ref={panelRef}
             className={styles.controlsPanel}
-            style={isControlsOpen ? { height: panelHeight } : undefined}
+            style={showControlsPanel ? (isControlsOpen ? { height: panelHeight } : undefined) : { display: 'none' }}
           >
             <div
               className={styles.controlsResizeHandle}

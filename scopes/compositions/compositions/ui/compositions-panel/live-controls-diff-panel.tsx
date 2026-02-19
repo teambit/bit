@@ -12,6 +12,7 @@ import { getInputComponent } from './live-control-input';
 import styles from './live-controls-diff-panel.module.scss';
 
 type PanelStatus = 'loading' | 'available' | 'empty';
+const WAIT_FOR_CONTROLS_MS = 1200;
 
 export type LiveControlsDiffPanelProps = {
   resetKey?: string;
@@ -36,6 +37,7 @@ export function LiveControlsDiffPanel({
 }: LiveControlsDiffPanelProps) {
   const lastResetKeyRef = useRef<string | null>(null);
   const [isWaitingForFreshData, setIsWaitingForFreshData] = useState(true);
+  const waitTimeoutRef = useRef<number | null>(null);
   const currentKey = `${baseChannel || ''}-${compareChannel || ''}-${resetKey || ''}`;
 
   const model = useMemo(() => new DiffControlsModel(baseChannel, compareChannel), [baseChannel, compareChannel]);
@@ -61,6 +63,7 @@ export function LiveControlsDiffPanel({
   const registryReady = combinedReady || model.isReady;
   const controls = model.controls;
   const hasControls = controls.length > 0;
+  const hasSubscribers = model.hasSubscribers;
 
   const prevRegistryReady = useRef(registryReady);
   useEffect(() => {
@@ -70,11 +73,34 @@ export function LiveControlsDiffPanel({
     prevRegistryReady.current = registryReady;
   }, [registryReady, isWaitingForFreshData]);
 
+  useEffect(() => {
+    if (!channelsReady || registryReady || !isWaitingForFreshData) {
+      if (waitTimeoutRef.current !== null) {
+        window.clearTimeout(waitTimeoutRef.current);
+        waitTimeoutRef.current = null;
+      }
+      return;
+    }
+
+    waitTimeoutRef.current = window.setTimeout(() => {
+      setIsWaitingForFreshData(false);
+      waitTimeoutRef.current = null;
+    }, WAIT_FOR_CONTROLS_MS);
+
+    return () => {
+      if (waitTimeoutRef.current !== null) {
+        window.clearTimeout(waitTimeoutRef.current);
+        waitTimeoutRef.current = null;
+      }
+    };
+  }, [channelsReady, registryReady, isWaitingForFreshData, currentKey]);
+
   const status: PanelStatus = useMemo(() => {
-    if (!channelsReady) return 'loading';
+    if (!channelsReady) return 'empty';
     if (isWaitingForFreshData) return 'loading';
+    if (!registryReady && !hasSubscribers) return 'empty';
     return hasControls ? 'available' : 'empty';
-  }, [channelsReady, isWaitingForFreshData, hasControls]);
+  }, [channelsReady, isWaitingForFreshData, registryReady, hasSubscribers, hasControls]);
 
   useEffect(() => {
     onStatusChange?.(status);
