@@ -2344,17 +2344,18 @@ includes hot module reloading for development.
 | ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
-| **Option**              | **Option alias** | **Description**                                                                                         |
-| ----------------------- | :--------------: | ------------------------------------------------------------------------------------------------------- |
-| `--dev`                 |       `-d`       | start UI server in dev mode.                                                                            |
-| `--port [port-number]`  |       `-p`       | port of the UI server.                                                                                  |
-| `--rebuild`             |       `-r`       | rebuild the UI (useful e.g. when updating the workspace UI - can use the dev flag for HMR in this case) |
-| `--skip-ui-build`       |                  | skip building UI                                                                                        |
-| `--verbose`             |       `-v`       | show verbose output for inspection and prints stack trace                                               |
-| `--no-browser`          |       `-n`       | do not automatically open browser when ready                                                            |
-| `--show-internal-urls`  |                  | show urls for all internal dev servers                                                                  |
-| `--skip-compilation`    |                  | skip the auto-compilation before starting the web-server                                                |
-| `--ui-root-name [type]` |       `-u`       | name of the ui root to use, e.g. "teambit.scope/scope" or "teambit.workspace/workspace"                 |
+| **Option**              | **Option alias** | **Description**                                                                                                                                                            |
+| ----------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--dev`                 |       `-d`       | start UI server in dev mode.                                                                                                                                               |
+| `--port [port-number]`  |       `-p`       | port of the UI server.                                                                                                                                                     |
+| `--rebuild`             |       `-r`       | rebuild the UI (useful e.g. when updating the workspace UI - can use the dev flag for HMR in this case)                                                                    |
+| `--skip-ui-build`       |                  | skip building UI                                                                                                                                                           |
+| `--verbose`             |       `-v`       | show verbose output for inspection and prints stack trace                                                                                                                  |
+| `--no-browser`          |       `-n`       | do not automatically open browser when ready                                                                                                                               |
+| `--show-internal-urls`  |                  | show urls for all internal dev servers                                                                                                                                     |
+| `--skip-compilation`    |                  | skip the auto-compilation before starting the web-server                                                                                                                   |
+| `--ui-root-name [type]` |       `-u`       | name of the ui root to use, e.g. "teambit.scope/scope" or "teambit.workspace/workspace"                                                                                    |
+| `--use-root-modules`    |                  | EXPERIMENTAL. resolve component previews from root node_modules instead of .bit_roots. mainly for internal usage, use with caution only if you understand the implications |
 
 ---
 
