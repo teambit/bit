@@ -115,6 +115,17 @@ export class DependenciesMain {
     });
 
     await this.workspace.bitMap.write(`set-peer (${componentId})`);
+    // Peer status is determined by reading the `bit.peer` field from the component's node_modules
+    // package.json, which the linker writes AFTER dep resolution runs during `bit install`. This
+    // means dep resolution during install re-populates the cache with stale data (no bit.peer yet),
+    // and the linker's subsequent package.json update doesn't clear the cache on its own unless the
+    // content actually changed (see node-modules-linker). Clearing here ensures the cache is empty
+    // going into install so that after the linker writes the correct package.json, any subsequent
+    // `bit show` will compute deps fresh.
+    // Other dep mutations (setDependency, removeDependency, etc.) don't need this because they only
+    // change the component's own .bitmap policy, which dep resolution reads directly; the normal
+    // invalidateDependenciesCacheIfNeeded mechanism (checking .bitmap mtime) is sufficient there.
+    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
   }
 
   async unsetPeer(componentId: string): Promise<void> {
@@ -132,6 +143,9 @@ export class DependenciesMain {
     this.workspace.bitMap.addComponentConfig(compId, DependencyResolverAspect.id, config);
 
     await this.workspace.bitMap.write(`unset-peer (${componentId})`);
+    // Same reasoning as in setPeer: clears the stale cache before the next install rewrites the
+    // component's node_modules package.json without the bit.peer field.
+    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
   }
 
   async setDependency(

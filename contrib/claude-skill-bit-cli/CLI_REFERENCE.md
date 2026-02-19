@@ -802,7 +802,7 @@ Flags: --message <message>, --unmodified, --unmerged, --build, --editor [editor]
 launch the Bit development server
 
 starts the local development server providing a UI to browse, preview, and interact with components. works in both workspaces and scopes. opens automatically in your browser at http://localhost:3000 (or specified port). includes hot module reloading for development.
-Flags: --dev, --port [port-number], --rebuild, --skip-ui-build, --verbose, --no-browser, --show-internal-urls, --skip-compilation, --ui-root-name [type]
+Flags: --dev, --port [port-number], --rebuild, --skip-ui-build, --verbose, --no-browser, --show-internal-urls, --skip-compilation, --ui-root-name [type], --use-root-modules
 
 ## bit stash <sub-command>
 

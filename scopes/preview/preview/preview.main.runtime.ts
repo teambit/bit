@@ -791,7 +791,6 @@ export class PreviewMain {
   writeLinkContents(contents: string, targetDir: string, prefix: string) {
     const hash = objectHash(contents);
     const targetPath = join(targetDir, `${prefix}-${this.timestamp}.js`);
-
     // write only if link has changed (prevents triggering fs watches)
     if (this.writeHash.get(targetPath) !== hash) {
       writeFileSync(targetPath, contents);
@@ -880,8 +879,10 @@ export class PreviewMain {
           visitedEnvs.add(envId);
         }
         const compilerInstance = environment.getCompiler?.();
-        const modulePath =
-          compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getRuntimeModulePath(component);
+        const useRootModules = this.ui.runtimeOptions?.useRootModules;
+        const modulePath = useRootModules
+          ? this.pkg.getModulePath(component)
+          : compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getRuntimeModulePath(component);
         return files.map((file) => {
           if (!this.workspace || !compilerInstance) {
             return file.path;

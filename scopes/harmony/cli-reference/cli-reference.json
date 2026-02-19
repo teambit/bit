@@ -506,6 +506,11 @@
         "u",
         "ui-root-name [type]",
         "name of the ui root to use, e.g. \"teambit.scope/scope\" or \"teambit.workspace/workspace\""
+      ],
+      [
+        "",
+        "use-root-modules",
+        "EXPERIMENTAL. resolve component previews from root node_modules instead of .bit_roots. mainly for internal usage, use with caution only if you understand the implications"
       ]
     ],
     "description": "launch the Bit development server",
