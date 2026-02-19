@@ -14,7 +14,9 @@ export type ControlWithSource = Control & {
  */
 export class DiffControlsModel {
   private registry: LiveControlsRegistry;
+
   private _baseChannel: string;
+
   private _compareChannel: string;
 
   constructor(baseChannel?: string, compareChannel?: string) {

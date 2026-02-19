@@ -80,7 +80,7 @@ export function useLiveControls(channels?: string[]): UseLiveControlsResult {
   // Sync state when activeChannels change - registry may already have data for new channels
   useEffect(() => {
     setState(liveControlsRegistry.getMergedState(activeChannels));
-  }, [activeChannels]);
+  }, [activeChannels, liveControlsRegistry]);
 
   const onChange = useCallback(
     (key: string, value: any) => {

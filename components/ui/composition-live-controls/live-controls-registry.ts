@@ -36,8 +36,11 @@ export class LiveControlsRegistry {
   }
 
   private channels = new Map<ChannelName, LiveControlsSubscriber[]>();
+
   private state = new Map<ChannelName, ChannelState>();
+
   private windowToChannel = new Map<Window, ChannelName>();
+
   readonly DEFAULT_CHANNEL = 'default';
 
   normalizeChannel(channel?: ChannelName): ChannelName {
