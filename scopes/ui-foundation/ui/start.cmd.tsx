@@ -17,6 +17,7 @@ type StartFlags = {
   skipCompilation: boolean;
   skipUiBuild: boolean;
   uiRootName: string;
+  useRootModules: boolean;
 };
 
 export class StartCmd implements Command {
@@ -51,6 +52,11 @@ includes hot module reloading for development.`;
       'ui-root-name [type]',
       'name of the ui root to use, e.g. "teambit.scope/scope" or "teambit.workspace/workspace"',
     ],
+    [
+      '',
+      'use-root-modules',
+      'EXPERIMENTAL. resolve component previews from root node_modules instead of .bit_roots. mainly for internal usage, use with caution only if you understand the implications',
+    ],
   ] as CommandOptions;
 
   constructor(
@@ -74,6 +80,7 @@ includes hot module reloading for development.`;
       skipUiBuild,
       showInternalUrls,
       uiRootName: uiRootAspectIdOrName,
+      useRootModules,
     }: StartFlags
   ) {
     const spinnies = this.logger.multiSpinner;
@@ -97,6 +104,7 @@ includes hot module reloading for development.`;
       rebuild,
       verbose,
       showInternalUrls,
+      useRootModules,
     });
 
     uiServer
