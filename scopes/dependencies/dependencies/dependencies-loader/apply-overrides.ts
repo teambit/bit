@@ -350,7 +350,6 @@ export class ApplyOverrides {
         }
       });
     });
-    });
     return { components, packages };
   }
 
