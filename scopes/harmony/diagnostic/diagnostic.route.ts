@@ -7,12 +7,12 @@ export class DiagnosticRoute implements Route {
 
   method = 'GET';
   route = '/_diagnostic';
-  verb = Verb.READ;
+  verb = Verb.WRITE;
 
   middlewares = [
     async (req: Request, res: Response) => {
       const diagnosticData = this.diagnosticMain.getDiagnosticData();
-      res.json(diagnosticData);
+      return res.json(diagnosticData);
     },
   ];
 }
