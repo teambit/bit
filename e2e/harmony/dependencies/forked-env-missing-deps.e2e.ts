@@ -86,11 +86,6 @@ describe('forked env with "+" dependency markers (PR #10150 regression)', functi
       // dep-resolver config (including the "+" entry for is-positive) from
       // the tagged version into the new component's .bitmap.
       helper.command.fork(`${helper.scopes.remote}/${envName} my-forked-env`);
-
-      // Run install.  Due to the bug, is-positive won't be installed:
-      // "+" can't resolve (not in workspace package.json yet) and the
-      // usedPeerDependencies filter excludes it.
-      helper.command.install();
     });
 
     it('bit status should not have MissingManuallyConfiguredPackages issue for the forked env', () => {

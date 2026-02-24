@@ -304,6 +304,7 @@ export class ApplyOverrides {
     if (!overrides) return undefined;
     const components = {};
     const packages = {};
+    const missingPkgRemovals = new Set<string>();
     DEPENDENCIES_FIELDS.forEach((depField) => {
       if (!overrides[depField]) return;
       Object.keys(overrides[depField]).forEach((dependency) => {
@@ -345,11 +346,14 @@ export class ApplyOverrides {
           this.allPackagesDependencies.devPackageDependencies[dependency] ||
           this.allPackagesDependencies.peerPackageDependencies[dependency]
         ) {
-          this.overridesDependencies.missingPackageDependencies =
-            this.overridesDependencies.missingPackageDependencies.filter((pkg) => pkg !== dependency);
+          missingPkgRemovals.add(dependency);
         }
       });
     });
+    if (missingPkgRemovals.size > 0) {
+      this.overridesDependencies.missingPackageDependencies =
+        this.overridesDependencies.missingPackageDependencies.filter((pkg) => !missingPkgRemovals.has(pkg));
+    }
     return { components, packages };
   }
 
