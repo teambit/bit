@@ -23,7 +23,6 @@ import { WorkspaceManifest } from './workspace-manifest';
 
 export type DepsFilterFn = (dependencies: DependencyList) => DependencyList;
 
-
 export type ComponentDependenciesMap = Map<PackageName, ManifestDependenciesObject>;
 export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {
   includeDir?: boolean;
@@ -271,7 +270,7 @@ export class WorkspaceManifestFactory {
 
   /**
    * Collect package names explicitly listed in the component's dep-resolver policy,
-   * excluding entries that represent removals ("-" or `{ remove: true }`).
+   * excluding entries that represent removals ("-" or `{ version: "-" }`).
    */
   private getComponentExplicitPackages(component: Component): Set<string> {
     const depResolverEntry = component.get(DependencyResolverAspect.id);
