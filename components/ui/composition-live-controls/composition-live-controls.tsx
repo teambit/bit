@@ -265,7 +265,10 @@ export function resolveValues(values: Record<string, any>, controls: Control[]):
  * Resolves all the data from given values and controls.
  */
 export function resolveAll(values: Record<string, any>, controls: Controls): [Record<string, any>, Control[]] {
-  const cs = controls ? resolveControls(controls) : resolveControlsFromValues(values);
+  const hasControls = Array.isArray(controls)
+    ? controls.length > 0
+    : Boolean(controls && Object.keys(controls).length > 0);
+  const cs = hasControls ? resolveControls(controls) : resolveControlsFromValues(values);
   const vs = resolveValues(values, cs);
   return [vs, cs];
 }
