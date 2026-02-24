@@ -23,6 +23,7 @@ export type ControlBase = {
   input?: string;
   defaultValue?: any;
   label?: string;
+  displayName?: string;
   type?: string | Function; // e.g. 'string', 'number', 'boolean', Date, Object, etc.
 };
 
@@ -130,6 +131,28 @@ function resolveControlMap(controls: Controls): Control[] {
   return [];
 }
 
+function humanizeControlId(id: string): string {
+  const normalized = id
+    .replace(/[_\-.]+/g, ' ')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z0-9])/g, '$1 $2')
+    .trim();
+
+  if (!normalized) return id;
+
+  return normalized
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+function resolveControlLabel(control: Control): string {
+  const explicitLabel = (control.displayName ?? control.label)?.trim();
+  if (explicitLabel) return explicitLabel;
+  return humanizeControlId(control.id);
+}
+
 function resolveControlInput(control: Control): Control {
   const { type } = control;
   let newInput = control.input;
@@ -172,7 +195,7 @@ function resolveControlInput(control: Control): Control {
       newInput = 'text';
     }
   }
-  return { ...control, input: newInput };
+  return { ...control, input: newInput, label: resolveControlLabel(control) };
 }
 
 /**

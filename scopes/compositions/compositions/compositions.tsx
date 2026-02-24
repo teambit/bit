@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import React, { useContext, useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import React, { useContext, useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import head from 'lodash.head';
 import queryString from 'query-string';
@@ -25,31 +25,16 @@ import { Link as BaseLink, useNavigate, useLocation } from '@teambit/base-react.
 import { OptionButton } from '@teambit/design.ui.input.option-button';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { Tooltip } from '@teambit/design.ui.tooltip';
-import { useAPI } from '@teambit/api-reference.hooks.use-api';
 import type { EmptyStateSlot, CompositionsMenuSlot, UsePreviewSandboxSlot } from './compositions.ui.runtime';
 import type { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import type { ComponentCompositionProps } from './ui/composition-preview';
+import { useDefaultControlsSchemaResponder } from './use-default-controls-schema-responder';
 
 // @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
 const Link = BaseLink as any;
-
-const DEFAULT_CONTROLS_REQUEST = 'composition-live-controls:request-default-controls';
-const DEFAULT_CONTROLS_RESPONSE = 'composition-live-controls:default-controls';
-
-type DefaultControlsRequestPayload = {
-  id: string;
-  name: string;
-};
-
-type PendingDefaultControlsRequest = {
-  id: string;
-  name: string;
-  source: Window;
-  origin: string;
-};
 
 export type MenuBarWidget = {
   location: 'start' | 'end';
@@ -59,9 +44,15 @@ export type CompositionsProp = {
   menuBarWidgets?: CompositionsMenuSlot;
   emptyState?: EmptyStateSlot;
   usePreviewSandboxSlot?: UsePreviewSandboxSlot;
+  enableLiveControls?: boolean;
 };
 
-export function Compositions({ menuBarWidgets, emptyState, usePreviewSandboxSlot }: CompositionsProp) {
+export function Compositions({
+  menuBarWidgets,
+  emptyState,
+  usePreviewSandboxSlot,
+  enableLiveControls = true,
+}: CompositionsProp) {
   const component = useContext(ComponentContext);
   const componentIdStr = component.id.toString();
   const [searchParams] = useSearchParams();
@@ -76,56 +67,7 @@ export function Compositions({ menuBarWidgets, emptyState, usePreviewSandboxSlot
   const [sandboxValue, setSandboxValue] = useState('');
   const selectedRef = useRef(currentComposition);
   selectedRef.current = currentComposition;
-  const pendingDefaultControlsRequests = useRef<PendingDefaultControlsRequest[]>([]);
-
-  const { apiModel } = useAPI(componentIdStr, [], { skipInternals: false });
-  const schemaObject = useMemo(() => apiModel?._api?.toObject(), [apiModel]);
-
-  const respondWithSchema = useCallback(
-    (request: PendingDefaultControlsRequest) => {
-      if (!schemaObject) return false;
-      try {
-        request.source.postMessage(
-          {
-            type: DEFAULT_CONTROLS_RESPONSE,
-            payload: { id: request.id, name: request.name, schema: schemaObject },
-          },
-          request.origin || '*'
-        );
-        return true;
-      } catch {
-        return false;
-      }
-    },
-    [schemaObject]
-  );
-
-  const onDefaultControlsRequest = useCallback(
-    (event: MessageEvent) => {
-      const { data } = event;
-      if (!data || data.type !== DEFAULT_CONTROLS_REQUEST) return;
-      const payload = data.payload as DefaultControlsRequestPayload | undefined;
-      if (!payload?.id || !payload?.name) return;
-      if (payload.id !== componentIdStr) return;
-      const source = event.source as Window | null;
-      if (!source || source === window) return;
-
-      const request: PendingDefaultControlsRequest = {
-        id: payload.id,
-        name: payload.name,
-        source,
-        origin: event.origin || '*',
-      };
-
-      if (!schemaObject) {
-        pendingDefaultControlsRequests.current.push(request);
-        return;
-      }
-
-      respondWithSchema(request);
-    },
-    [componentIdStr, respondWithSchema, schemaObject]
-  );
+  useDefaultControlsSchemaResponder(componentIdStr, enableLiveControls);
 
   const properties = useDocs(component.id);
   const previewSandboxHooks = usePreviewSandboxSlot?.values() ?? [];
@@ -146,28 +88,31 @@ export function Compositions({ menuBarWidgets, emptyState, usePreviewSandboxSlot
 
   const currentCompositionFullUrl = toPreviewUrl(component, 'compositions', compositionIdentifierParam);
 
-  const [compositionParams, setCompositionParams] = useState<Record<string, any>>({
-    fullscreen: true,
-    livecontrols: true,
-  });
+  const [compositionParams, setCompositionParams] = useState<Record<string, any>>(() =>
+    enableLiveControls ? { fullscreen: true, livecontrols: true } : { fullscreen: true }
+  );
 
   const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);
 
   // collapse sidebar when empty, reopen when not
   useEffect(() => setSidebarOpenness(showSidebar), [showSidebar]);
   useEffect(() => {
-    window.addEventListener('message', onDefaultControlsRequest);
-    return () => {
-      window.removeEventListener('message', onDefaultControlsRequest);
-    };
-  }, [onDefaultControlsRequest]);
+    if (enableLiveControls) {
+      setCompositionParams((current) => {
+        if (current.livecontrols === true) return current;
+        return { ...current, livecontrols: true };
+      });
+      return;
+    }
 
-  useEffect(() => {
-    if (!schemaObject || pendingDefaultControlsRequests.current.length === 0) return;
-    const pending = pendingDefaultControlsRequests.current;
-    pendingDefaultControlsRequests.current = [];
-    pending.forEach(respondWithSchema);
-  }, [schemaObject, respondWithSchema]);
+    setCompositionParams((current) => {
+      if (!('livecontrols' in current)) return current;
+      const next = { ...current };
+      delete next.livecontrols;
+      return next;
+    });
+  }, [enableLiveControls]);
+
   return (
     <CompositionContextProvider queryParams={compositionParams} setQueryParams={setCompositionParams}>
       <SplitPane layout={sidebarOpenness} size="80%" className={styles.compositionsPage}>

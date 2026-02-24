@@ -4,6 +4,7 @@ import { useComponentCompare } from '@teambit/component.ui.component-compare.con
 import {
   CompositionContent,
   LiveControlsDiffPanel,
+  useDefaultControlsSchemaResponder,
   type CompositionContentProps,
   type EmptyStateSlot,
 } from '@teambit/compositions';
@@ -499,6 +500,9 @@ export function CompositionCompare(props: CompositionCompareProps) {
 
   const baseIdStr = base?.model.id?.toString();
   const compareIdStr = compare?.model.id?.toString();
+  useDefaultControlsSchemaResponder(baseIdStr, Boolean(baseIdStr));
+  useDefaultControlsSchemaResponder(compareIdStr, Boolean(compareIdStr));
+
   const baseCompId = resolveCompositionId(selectedBaseComp, requestedCompositionId);
   const compareCompId = resolveCompositionId(selectedCompareComp, requestedCompositionId);
 

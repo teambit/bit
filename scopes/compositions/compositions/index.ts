@@ -12,6 +12,7 @@ export type { CompositionProps } from './composition';
 export { Composition } from './composition';
 export type { CompositionContentProps } from './compositions';
 export { CompositionContent } from './compositions';
+export { useDefaultControlsSchemaResponder } from './use-default-controls-schema-responder';
 export type { CompositionsPreview } from './compositions.preview.runtime';
 export { ComponentComposition, LiveControls, LiveControlsDiffPanel, LiveControlsRenderer } from './ui';
 export default CompositionsAspect;
