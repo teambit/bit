@@ -9,7 +9,7 @@ import pMapSeries from 'p-map-series';
 import { snapToSemver } from '@teambit/component-package-version';
 import type { DependencyList, PackageName } from '../dependencies';
 import { ComponentDependency } from '../dependencies';
-import type { WorkspacePolicy, EnvPolicy } from '../policy';
+import type { WorkspacePolicy, EnvPolicy, VariantPolicyConfigEntryValue, VariantPolicyEntryValue } from '../policy';
 import { VariantPolicy } from '../policy';
 import { DependencyResolverAspect } from '../dependency-resolver.aspect';
 import type { DependencyResolverMain } from '../dependency-resolver.main.runtime';
@@ -22,6 +22,7 @@ import { updateDependencyVersion } from './update-dependency-version';
 import { WorkspaceManifest } from './workspace-manifest';
 
 export type DepsFilterFn = (dependencies: DependencyList) => DependencyList;
+
 
 export type ComponentDependenciesMap = Map<PackageName, ManifestDependenciesObject>;
 export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {
@@ -218,27 +219,7 @@ export class WorkspaceManifestFactory {
       // workspace after `bit new`/`bit fork` hits a chicken-and-egg problem:
       // "+" can't resolve → package absent from manifest → filter excludes it
       // → package never installed.
-      const depResolverEntry = component.get(DependencyResolverAspect.id);
-      const explicitPolicy = depResolverEntry?.config?.policy ?? {};
-      const nonRemovedEntryNames = (policySection?: Record<string, unknown>): string[] => {
-        if (!policySection) return [];
-        return Object.entries(policySection)
-          .filter(([, val]) => {
-            // Skip explicit removals expressed as "-" or as removal objects.
-            if (val === '-') return false;
-            if (val && typeof val === 'object') {
-              const v = val as { version?: string; remove?: boolean };
-              if (v.version === '-' || v.remove) return false;
-            }
-            return true;
-          })
-          .map(([name]) => name);
-      };
-      const componentExplicitPkgs = new Set<string>([
-        ...nonRemovedEntryNames(explicitPolicy.dependencies),
-        ...nonRemovedEntryNames(explicitPolicy.devDependencies),
-        ...nonRemovedEntryNames(explicitPolicy.peerDependencies),
-      ]);
+      const componentExplicitPkgs = this.getComponentExplicitPackages(component);
 
       const usedPeerDependencies = pickBy(defaultPeerDependencies, (_val, pkgName) => {
         return (
@@ -286,6 +267,37 @@ export class WorkspaceManifestFactory {
     }
 
     return result;
+  }
+
+  /**
+   * Collect package names explicitly listed in the component's dep-resolver policy,
+   * excluding entries that represent removals ("-" or `{ remove: true }`).
+   */
+  private getComponentExplicitPackages(component: Component): Set<string> {
+    const depResolverEntry = component.get(DependencyResolverAspect.id);
+    const explicitPolicy = depResolverEntry?.config?.policy ?? {};
+    return new Set<string>([
+      ...nonRemovedEntryNames(explicitPolicy.dependencies),
+      ...nonRemovedEntryNames(explicitPolicy.devDependencies),
+      ...nonRemovedEntryNames(explicitPolicy.peerDependencies),
+    ]);
+
+    function nonRemovedEntryNames(policySection?: Record<string, VariantPolicyConfigEntryValue>): string[] {
+      if (!policySection) return [];
+      const names: string[] = [];
+      for (const [name, versionSpec] of Object.entries(policySection)) {
+        // Skip explicit removals expressed as "-" or as removal objects.
+        if (versionSpec !== '-' && !isRemovalObject(versionSpec)) {
+          names.push(name);
+        }
+      }
+      return names;
+    }
+
+    function isRemovalObject(val: VariantPolicyConfigEntryValue): val is VariantPolicyEntryValue {
+      if (!val || typeof val !== 'object') return false;
+      return val.version === '-';
+    }
   }
 
   private async _getDefaultPeerDependencies(
