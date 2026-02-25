@@ -136,8 +136,9 @@ function isDestLinkedCorrectly(src: string, dest: string): boolean {
   try {
     const srcStat = fs.statSync(src);
     const destStat = fs.statSync(dest);
-    // covers both hard links (same inode) and symlinks (stat follows the symlink)
-    if (srcStat.ino === destStat.ino && srcStat.dev === destStat.dev) return true;
+    // covers both hard links (same inode) and symlinks (stat follows the symlink).
+    // guard against zero values — on Windows ino/dev can be 0, which would cause false positives.
+    if (srcStat.ino !== 0 && srcStat.ino === destStat.ino && srcStat.dev === destStat.dev) return true;
   } catch {
     // ignore
   }

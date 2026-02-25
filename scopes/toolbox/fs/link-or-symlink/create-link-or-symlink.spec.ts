@@ -31,7 +31,7 @@ describe('createLinkOrSymlink EEXIST handling', () => {
       const srcDir = path.join(tempDir, 'source');
       const destDir = path.join(tempDir, 'dest');
       fs.mkdirpSync(srcDir);
-      fs.symlinkSync(srcDir, destDir);
+      fs.symlinkSync(srcDir, destDir, 'junction');
 
       const restore = stubRemoveSyncFor(destDir);
       try {
@@ -49,7 +49,7 @@ describe('createLinkOrSymlink EEXIST handling', () => {
       const destDir = path.join(tempDir, 'dest');
       fs.mkdirpSync(srcDir);
       fs.mkdirpSync(otherDir);
-      fs.symlinkSync(otherDir, destDir);
+      fs.symlinkSync(otherDir, destDir, 'junction');
 
       const restore = stubRemoveSyncFor(destDir);
       try {
