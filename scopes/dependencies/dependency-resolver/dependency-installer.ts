@@ -54,7 +54,7 @@ export type GetComponentManifestsOptions = {
   rootDir: string;
   resolveVersionsFromDependenciesOnly?: boolean;
   referenceLocalPackages?: boolean;
-  rootComponentsForCapsules?: boolean;
+  includeAllEnvPeers?: boolean;
   hasRootComponents?: boolean;
   excludeExtensionsDependencies?: boolean;
 } & Pick<
@@ -134,6 +134,7 @@ export class DependencyInstaller {
       rootDir: finalRootDir,
       resolveVersionsFromDependenciesOnly: options.resolveVersionsFromDependenciesOnly,
       referenceLocalPackages: packageManagerOptions.rootComponentsForCapsules,
+      includeAllEnvPeers: packageManagerOptions.rootComponentsForCapsules,
       excludeExtensionsDependencies: options.excludeExtensionsDependencies,
     });
     return this.installComponents(
@@ -302,7 +303,7 @@ export class DependencyInstaller {
     installPeersFromEnvs,
     resolveVersionsFromDependenciesOnly,
     referenceLocalPackages,
-    rootComponentsForCapsules,
+    includeAllEnvPeers,
     hasRootComponents,
     excludeExtensionsDependencies,
   }: GetComponentManifestsOptions) {
@@ -313,7 +314,7 @@ export class DependencyInstaller {
       dependencyFilterFn,
       resolveVersionsFromDependenciesOnly,
       referenceLocalPackages,
-      rootComponentsForCapsules,
+      includeAllEnvPeers,
       hasRootComponents,
       excludeExtensionsDependencies,
     };
