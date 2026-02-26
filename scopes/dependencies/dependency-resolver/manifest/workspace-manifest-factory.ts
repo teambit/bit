@@ -215,8 +215,8 @@ export class WorkspaceManifestFactory {
         );
       });
 
-      const defaultPeerDependencies = await this._getDefaultPeerDependencies(component, packageNames);
-      // When includeAllEnvPeers is true, use ALL default peer deps to ensure consistent
+      const envPeerDependencies = await this._getEnvPeerDependencies(component, packageNames);
+      // When includeAllEnvPeers is true, use ALL env peer deps to ensure consistent
       // peer dependency contexts across all components. Otherwise, pnpm creates separate
       // "injected" copies in .pnpm/ for components with different peer sets, causing
       // TypeScript to see duplicate types from different physical paths.
@@ -224,9 +224,9 @@ export class WorkspaceManifestFactory {
       // writing unnecessary deps to the generated install manifest.
       let peerDepsForManifest: Record<string, string>;
       if (includeAllEnvPeers) {
-        peerDepsForManifest = defaultPeerDependencies;
+        peerDepsForManifest = envPeerDependencies;
       } else {
-        peerDepsForManifest = pickBy(defaultPeerDependencies, (_val, pkgName) => {
+        peerDepsForManifest = pickBy(envPeerDependencies, (_val, pkgName) => {
           return (
             depManifestBeforeFiltering.dependencies[pkgName] ||
             depManifestBeforeFiltering.devDependencies[pkgName] ||
@@ -243,8 +243,8 @@ export class WorkspaceManifestFactory {
         // the component don't have react-dom as peer dependency, but when we install the dependencies in the workspace,
         // it will install the latest version of react-dom which may not be compatible with the version of react that my-comp
         // is using, and it may cause issues in the workspace.
-        if (peerDepsForManifest.react && defaultPeerDependencies['react-dom']) {
-          peerDepsForManifest['react-dom'] = defaultPeerDependencies['react-dom'];
+        if (peerDepsForManifest.react && envPeerDependencies['react-dom']) {
+          peerDepsForManifest['react-dom'] = envPeerDependencies['react-dom'];
         }
       }
 
@@ -274,7 +274,7 @@ export class WorkspaceManifestFactory {
     return result;
   }
 
-  private async _getDefaultPeerDependencies(
+  private async _getEnvPeerDependencies(
     component: Component,
     packageNamesFromWorkspace: string[]
   ): Promise<Record<string, string>> {
