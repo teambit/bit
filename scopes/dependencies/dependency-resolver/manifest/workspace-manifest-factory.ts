@@ -34,6 +34,7 @@ export type CreateFromComponentsOptions = {
   dependencyFilterFn?: DepsFilterFn;
   resolveVersionsFromDependenciesOnly?: boolean;
   referenceLocalPackages?: boolean;
+  rootComponentsForCapsules?: boolean;
   hasRootComponents?: boolean;
   excludeExtensionsDependencies?: boolean;
 };
@@ -69,6 +70,7 @@ export class WorkspaceManifestFactory {
       dependencyFilterFn: optsWithDefaults.dependencyFilterFn,
       excludeExtensionsDependencies: optsWithDefaults.excludeExtensionsDependencies,
       referenceLocalPackages: optsWithDefaults.referenceLocalPackages && hasRootComponents,
+      rootComponentsForCapsules: optsWithDefaults.rootComponentsForCapsules,
       rootDependencies: hasRootComponents ? rootPolicy.toManifest().dependencies : undefined,
     });
     let dedupedDependencies = getEmptyDedupedDependencies();
@@ -140,6 +142,7 @@ export class WorkspaceManifestFactory {
       filterComponentsFromManifests,
       excludeExtensionsDependencies,
       referenceLocalPackages,
+      rootComponentsForCapsules,
       rootDependencies,
       rootPolicy,
     }: {
@@ -147,6 +150,7 @@ export class WorkspaceManifestFactory {
       filterComponentsFromManifests?: boolean;
       excludeExtensionsDependencies?: boolean;
       referenceLocalPackages?: boolean;
+      rootComponentsForCapsules?: boolean;
       rootDependencies?: Record<string, string>;
       rootPolicy?: WorkspacePolicy;
     }
@@ -212,14 +216,14 @@ export class WorkspaceManifestFactory {
       });
 
       const defaultPeerDependencies = await this._getDefaultPeerDependencies(component, packageNames);
-      // In capsule mode (referenceLocalPackages=true), use ALL default peer deps to ensure
+      // In capsule mode (rootComponentsForCapsules=true), use ALL default peer deps to ensure
       // consistent peer dependency contexts across all components. Otherwise, pnpm creates
       // separate "injected" copies in .pnpm/ for components with different peer sets, causing
       // TypeScript to see duplicate types from different physical paths.
       // In workspace/external-package-manager mode, only include peer deps that the component
-      // actually uses, to avoid writing unnecessary deps to the root package.json.
+      // actually uses, to avoid writing unnecessary deps to the generated install manifest.
       let peerDepsForManifest: Record<string, string>;
-      if (referenceLocalPackages) {
+      if (rootComponentsForCapsules) {
         peerDepsForManifest = defaultPeerDependencies;
       } else {
         peerDepsForManifest = pickBy(defaultPeerDependencies, (_val, pkgName) => {

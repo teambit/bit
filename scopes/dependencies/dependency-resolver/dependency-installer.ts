@@ -54,6 +54,7 @@ export type GetComponentManifestsOptions = {
   rootDir: string;
   resolveVersionsFromDependenciesOnly?: boolean;
   referenceLocalPackages?: boolean;
+  rootComponentsForCapsules?: boolean;
   hasRootComponents?: boolean;
   excludeExtensionsDependencies?: boolean;
 } & Pick<
@@ -301,6 +302,7 @@ export class DependencyInstaller {
     installPeersFromEnvs,
     resolveVersionsFromDependenciesOnly,
     referenceLocalPackages,
+    rootComponentsForCapsules,
     hasRootComponents,
     excludeExtensionsDependencies,
   }: GetComponentManifestsOptions) {
@@ -311,6 +313,7 @@ export class DependencyInstaller {
       dependencyFilterFn,
       resolveVersionsFromDependenciesOnly,
       referenceLocalPackages,
+      rootComponentsForCapsules,
       hasRootComponents,
       excludeExtensionsDependencies,
     };
