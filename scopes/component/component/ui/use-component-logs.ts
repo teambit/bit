@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { useQuery } from '@apollo/client';
 import type { ComponentLogsResult, Filters } from './use-component.model';
 import { GET_COMPONENT_WITH_LOGS } from './use-component.fragments';
 import { ComponentError } from './component-error';
@@ -15,10 +15,15 @@ export function useComponentLogs(
 ): ComponentLogsResult {
   const { variables, skip } = useComponentLogsInit(componentId, host, filters, skipFromProps);
 
-  const { data, error, loading } = useDataQuery(GET_COMPONENT_WITH_LOGS, {
+  const { data, error, loading } = useQuery(GET_COMPONENT_WITH_LOGS, {
     variables,
     skip,
     errorPolicy: 'all',
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
+    returnPartialData: true,
+    notifyOnNetworkStatusChange: false,
+    context: { skipBatch: true },
   });
 
   const rawComponent = data?.getHost?.get;

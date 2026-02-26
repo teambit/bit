@@ -1,13 +1,86 @@
 import type { ComponentType, ReactNode } from 'react';
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { CompositionsAspect, ComponentComposition, Composition } from '@teambit/compositions';
 import { H3, H5 } from '@teambit/design.ui.heading';
 import { capitalize } from '@teambit/toolbox.string.capitalize';
 import type { ComponentModel } from '@teambit/component';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
-import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { DocsAspect } from '@teambit/docs';
 import styles from './preview-placeholder.module.scss';
+
+// Keep a lightweight in-memory warm set so previews that were already hydrated once
+// can remount immediately without waiting for intersection again.
+const warmedPreviews = new Set<string>();
+const autoWarmPreviews = new Set<string>();
+function getHydrationConcurrency() {
+  if (typeof navigator === 'undefined') return 6;
+  const cores = navigator.hardwareConcurrency || 6;
+  if (cores <= 4) return 4;
+  if (cores <= 8) return 6;
+  return 8;
+}
+
+const HYDRATION_CONCURRENCY = getHydrationConcurrency();
+const HYDRATION_SLOT_FALLBACK_RELEASE_MS = 1800;
+const AUTO_WARM_PREVIEW_LIMIT = Math.max(16, HYDRATION_CONCURRENCY * 3);
+const hydrationQueue: Array<{ previewKey: string; run: () => void; priority: number; seq: number }> = [];
+const queuedPreviewKeys = new Set<string>();
+let activeHydrationSlots = 0;
+let hydrationSeq = 0;
+
+function processHydrationQueue() {
+  while (activeHydrationSlots < HYDRATION_CONCURRENCY && hydrationQueue.length > 0) {
+    const next = hydrationQueue.shift();
+    if (!next) break;
+    queuedPreviewKeys.delete(next.previewKey);
+    activeHydrationSlots += 1;
+    next.run();
+  }
+}
+
+function requestHydrationSlot(previewKey: string, run: () => void, priority = 0) {
+  if (!previewKey) return;
+  if (warmedPreviews.has(previewKey)) {
+    run();
+    return;
+  }
+  if (activeHydrationSlots < HYDRATION_CONCURRENCY) {
+    activeHydrationSlots += 1;
+    run();
+    return;
+  }
+  if (queuedPreviewKeys.has(previewKey)) return;
+
+  queuedPreviewKeys.add(previewKey);
+  hydrationQueue.push({ previewKey, run, priority, seq: hydrationSeq++ });
+  hydrationQueue.sort((a, b) => b.priority - a.priority || a.seq - b.seq);
+}
+
+function reserveAutoWarmPreview(previewKey: string) {
+  if (!previewKey) return false;
+  if (autoWarmPreviews.has(previewKey)) return true;
+  if (autoWarmPreviews.size >= AUTO_WARM_PREVIEW_LIMIT) return false;
+  autoWarmPreviews.add(previewKey);
+  return true;
+}
+
+function releaseHydrationSlot() {
+  if (activeHydrationSlots > 0) {
+    activeHydrationSlots -= 1;
+  }
+  processHydrationQueue();
+}
+
+function getNearestScrollParent(node: HTMLElement | null): HTMLElement | null {
+  let current = node?.parentElement || null;
+  while (current) {
+    const style = window.getComputedStyle(current);
+    const overflowY = style.overflowY || '';
+    if (overflowY.includes('auto') || overflowY.includes('scroll')) return current;
+    current = current.parentElement;
+  }
+  return null;
+}
 
 export function getCompositions(component: ComponentDescriptor) {
   const entry: any = component.get(CompositionsAspect.id);
@@ -50,21 +123,88 @@ export function PreviewPlaceholder({
   const description = componentDescriptor && getDescription(componentDescriptor);
   const displayName = componentDescriptor && getDisplayName(componentDescriptor);
   const serverUrl = component?.server?.url;
+  const isServerCompiling = (component?.server as { isCompiling?: boolean } | undefined)?.isCompiling === true;
+  const previewKey = component?.id?.toString?.() || componentDescriptor?.id?.toString?.() || '';
+  const intersectionRef = useRef<HTMLDivElement>(null);
+  const [canHydratePreview, setCanHydratePreview] = useState(() => !!previewKey && warmedPreviews.has(previewKey));
+  const slotHeldRef = useRef(false);
+  const slotReleaseTimerRef = useRef<number | undefined>(undefined);
 
-  const prevServerUrlRef = useRef(serverUrl);
-  const [forceRender, setForceRender] = React.useState(0);
+  const clearSlotReleaseTimer = () => {
+    if (!slotReleaseTimerRef.current) return;
+    window.clearTimeout(slotReleaseTimerRef.current);
+    slotReleaseTimerRef.current = undefined;
+  };
+
+  const releaseSlotIfHeld = () => {
+    clearSlotReleaseTimer();
+    if (!slotHeldRef.current) return;
+    slotHeldRef.current = false;
+    releaseHydrationSlot();
+  };
 
   useEffect(() => {
-    if (prevServerUrlRef.current !== serverUrl && shouldShowPreview) {
-      prevServerUrlRef.current = serverUrl;
-      setForceRender((prev) => prev + 1);
-    }
-  }, [serverUrl, shouldShowPreview]);
+    if (!previewKey || canHydratePreview || !shouldShowPreview) return;
+    if (typeof window === 'undefined') return;
 
+    const node = intersectionRef.current;
+    if (!node) return;
+    let isMounted = true;
+    const hydratePreview = () => {
+      if (!isMounted) return;
+      warmedPreviews.add(previewKey);
+      slotHeldRef.current = true;
+      setCanHydratePreview(true);
+      slotReleaseTimerRef.current = window.setTimeout(() => {
+        releaseSlotIfHeld();
+      }, HYDRATION_SLOT_FALLBACK_RELEASE_MS);
+    };
+
+    // Eagerly warm the first visible wave of previews so startup feels instant.
+    // Remaining previews are still intersection-gated to keep network pressure controlled.
+    if (reserveAutoWarmPreview(previewKey)) {
+      requestHydrationSlot(previewKey, hydratePreview);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting) return;
+
+        const distanceFromViewportTop = Math.abs(entry.boundingClientRect.top);
+        const priority = Math.max(0, 100000 - distanceFromViewportTop);
+        requestHydrationSlot(previewKey, hydratePreview, priority);
+        observer.disconnect();
+      },
+      {
+        root: getNearestScrollParent(node),
+        // Warm previews well before they enter viewport so scrolling doesn't show blanks.
+        rootMargin: '1600px 0px',
+        threshold: 0.01,
+      }
+    );
+
+    observer.observe(node);
+    return () => {
+      isMounted = false;
+      observer.disconnect();
+    };
+  }, [previewKey, shouldShowPreview, canHydratePreview]);
+
+  useEffect(() => {
+    return () => {
+      releaseSlotIfHeld();
+    };
+  }, []);
+
+  const compositionsKey = compositions?.map((c) => c.identifier).join(',');
   const selectedPreview = useMemo(() => {
     if (!shouldShowPreview || !component) return undefined;
     return selectDefaultComposition(component);
-  }, [component, shouldShowPreview, forceRender]);
+  }, [compositionsKey, shouldShowPreview]);
 
   if (!component || !componentDescriptor) return null;
 
@@ -84,17 +224,31 @@ export function PreviewPlaceholder({
 
   const name = component.id.toString();
 
-  if (!serverUrl || (!shouldShowPreview && component.buildStatus === 'pending'))
+  if (
+    !canHydratePreview ||
+    !serverUrl ||
+    isServerCompiling ||
+    (!shouldShowPreview && component.buildStatus === 'pending')
+  )
     return (
-      <div className={styles.previewPlaceholder} data-tip="" data-for={name}>
-        <div className={styles.skeletonContainer}>
-          <BlockSkeleton lines={12} className={styles.skeletonBlock} />
+      <div ref={intersectionRef} className={styles.previewPlaceholder} data-tip="" data-for={name}>
+        <div className={styles.placeholderShimmer}>
+          <div className={styles.placeholderChrome}>
+            <div className={styles.placeholderDot} />
+            <div className={styles.placeholderDot} />
+            <div className={styles.placeholderDot} />
+          </div>
+          <div className={styles.placeholderCanvas}>
+            <div className={styles.placeholderBar} style={{ width: '60%' }} />
+            <div className={styles.placeholderBar} style={{ width: '40%' }} />
+            <div className={styles.placeholderBar} style={{ width: '80%' }} />
+          </div>
         </div>
       </div>
     );
 
   return (
-    <div key={`${name}-${serverUrl}-${forceRender}`}>
+    <div ref={intersectionRef}>
       <ComponentComposition
         component={component}
         composition={selectedPreview}
@@ -102,7 +256,10 @@ export function PreviewPlaceholder({
         includeEnv={true}
         loading={'lazy'}
         viewport={1280}
-        queryParams={'disableCta=true'}
+        queryParams={['disableCta=true', 'onlyOverview=true']}
+        onLoad={() => {
+          releaseSlotIfHeld();
+        }}
       />
       <div className={styles.previewOverlay} />
     </div>

@@ -7,7 +7,7 @@ import classNames from 'classnames';
 import { ComponentID } from '@teambit/component-id';
 import type { ComponentModel } from '@teambit/component';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext } from 'react';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
@@ -31,14 +31,9 @@ export function ComponentView(props: ComponentViewProps) {
   const { onSelect } = useContext(TreeContext);
   const lanesContextModel = useContext(LanesContext);
   const lanesModel = lanesContextModel?.lanesModel;
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    return () => {
-      setMounted(false);
-    };
-  }, []);
+  const hasWindow = typeof window !== 'undefined';
+  const locationOrigin = hasWindow ? window.location.origin : undefined;
+  const isLocalhost = hasWindow ? window.location.host.startsWith('localhost') : false;
 
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
@@ -63,11 +58,11 @@ export function ComponentView(props: ComponentViewProps) {
     ? undefined
     : (isEnvOnCurrentLane &&
         lanesModel?.viewedLane?.id &&
-        mounted &&
-        `${window.location.origin}${LanesModel.getLaneComponentUrl(envId, lanesModel.viewedLane?.id, undefined, lanesModel.viewedLane)}`) ||
+        locationOrigin &&
+        `${locationOrigin}${LanesModel.getLaneComponentUrl(envId, lanesModel.viewedLane?.id, undefined, lanesModel.viewedLane)}`) ||
       ComponentUrl.toUrl(envId, {
         includeVersion: true,
-        useLocationOrigin: mounted ? window.location.host.startsWith('localhost') : false,
+        useLocationOrigin: isLocalhost,
       });
 
   const envTooltip = envId ? (
@@ -97,7 +92,7 @@ export function ComponentView(props: ComponentViewProps) {
   const viewingMainCompOnLane = React.useMemo(() => {
     if (isMissingCompOrEnvId) return false;
     return (
-      !component.status?.isNew &&
+      component.status?.isNew === false &&
       !lanesModel?.viewedLane?.id.isDefault() &&
       lanesModel?.isComponentOnMainButNotOnLane(component.id as any, undefined, lanesModel?.viewedLane?.id)
     );

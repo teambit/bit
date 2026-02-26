@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { useQuery } from '@apollo/client';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { ComponentModel } from './component-model';
@@ -22,13 +22,26 @@ export function useComponentQuery(
     extensionId: host,
   };
 
-  const { data, error, loading } = useDataQuery(GET_COMPONENT, {
+  // Use useQuery directly to avoid global loader side effects from useDataQuery.
+  // cache-and-network gives instant cache hydration, then reconciles with current server data.
+  const { data, error, loading } = useQuery(GET_COMPONENT, {
     variables,
     skip,
     errorPolicy: 'all',
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
+    returnPartialData: true,
+    notifyOnNetworkStatusChange: false,
+    context: { skipBatch: true },
   });
 
-  const { loading: loadingLogs, componentLogs: { logs } = {} } = useComponentLogs(componentId, host, filters, skip);
+  const shouldFetchLogs = !!filters?.log && !filters?.loading;
+  const { loading: loadingLogs, componentLogs: { logs } = {} } = useComponentLogs(
+    componentId,
+    host,
+    filters,
+    skip || !shouldFetchLogs
+  );
 
   const rawComponent = data?.getHost?.get;
 
@@ -48,12 +61,12 @@ export function useComponentQuery(
 
   const component = useMemo(
     () => (rawComponent ? ComponentModel.from({ ...rawComponent, host, logs }) : undefined),
-    [id?.toString(), logs]
+    [id?.toString(), logs, rawComponent, host]
   );
 
   const componentDescriptor = useMemo(() => {
     const aspectList = {
-      entries: rawComponent?.aspects.map((aspectObject) => {
+      entries: (rawComponent?.aspects || []).map((aspectObject) => {
         return {
           ...aspectObject,
           aspectId: aspectObject.id,
@@ -63,7 +76,7 @@ export function useComponentQuery(
     };
 
     return id ? ComponentDescriptor.fromObject({ id: id.toString(), aspectList }) : undefined;
-  }, [id?.toString()]);
+  }, [id?.toString(), rawComponent?.aspects]);
 
   return useMemo(() => {
     return {
@@ -76,5 +89,5 @@ export function useComponentQuery(
       error: componentError || undefined,
       loading,
     };
-  }, [host, component, componentDescriptor, componentError]);
+  }, [component, componentDescriptor, componentError, loading, loadingLogs, logs]);
 }

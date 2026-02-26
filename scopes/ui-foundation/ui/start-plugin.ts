@@ -18,7 +18,7 @@ export type StartPluginOptions = {
 };
 
 export interface StartPlugin {
-  initiate(startOptions: StartPluginOptions): void;
+  initiate(startOptions: StartPluginOptions): void | Promise<void>;
 
   getProxy?(): ProxyEntry[];
 

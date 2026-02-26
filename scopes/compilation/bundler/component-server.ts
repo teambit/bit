@@ -37,6 +37,7 @@ export class ComponentServer {
   hostname: string | undefined;
   private _server?: Server;
   private _isRestarting: boolean = false;
+  isCompiling: boolean = true;
 
   get server() {
     return this._server;

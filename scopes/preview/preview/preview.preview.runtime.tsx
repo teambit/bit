@@ -56,6 +56,24 @@ export class PreviewPreview {
   }
 
   private isDev = false;
+  private sizeObserver?: ResizeObserver;
+  private sizePublishRaf?: number;
+  private sizePublishDebounced?: ReturnType<typeof debounce>;
+
+  private cleanupSizeObserver() {
+    if (this.sizeObserver) {
+      this.sizeObserver.disconnect();
+      this.sizeObserver = undefined;
+    }
+    if (this.sizePublishRaf) {
+      window.cancelAnimationFrame(this.sizePublishRaf);
+      this.sizePublishRaf = undefined;
+    }
+    if (this.sizePublishDebounced) {
+      this.sizePublishDebounced.cancel();
+      this.sizePublishDebounced = undefined;
+    }
+  }
 
   private isReady() {
     const { previewName } = this.getLocation();
@@ -88,7 +106,7 @@ export class PreviewPreview {
    */
   render = async (rootExt?: string) => {
     // fit content always.
-    window.document.body.style.width = 'fit-content';
+    window.document.body.style.width = 'auto';
 
     const { previewName, componentId, envId } = this.getLocation();
     const name = previewName || this.getDefault();
@@ -127,8 +145,9 @@ export class PreviewPreview {
               return module;
             });
 
-    // during build / tag, the component is isolated, so all aspects are relevant, and do not require filtering
-    const componentAspects = this.isDev ? await this.getComponentAspects(componentId.toString()) : undefined;
+    // Aspect filtering is not needed in dev mode — all providers in the bundle are safe to use,
+    // and the GQL call to fetch aspects blocks rendering of every preview iframe.
+    const componentAspects = undefined;
     const previewModule = await this.getPreviewModule(name, componentId);
     const render = preview.render(
       componentId,
@@ -160,28 +179,35 @@ export class PreviewPreview {
   setViewport() {
     const query = this.getQuery();
     const viewPort = this.getParam(query, 'viewport');
+    const body = window.document.body;
+
     if (!viewPort) {
-      window.document.body.style.width = '100%';
+      body.style.width = '100%';
+      body.style.maxWidth = '';
       return;
     }
 
-    window.document.body.style.maxWidth = `${viewPort}px`;
+    body.style.width = 'auto';
+    body.style.maxWidth = `${viewPort}px`;
   }
 
   reportSize() {
     if (!window?.parent || !window?.document) return;
-    // In Preview, the <body> is always exactly as tall as the iframe viewport, not as tall as the content.
-    // by measuring the scrollHeight of the root element, we can get the height of the content.
+    this.cleanupSizeObserver();
+    // In Preview, the <body> can stay viewport-sized while the actual content extends beyond it.
+    // Avoid style mutations in ResizeObserver callbacks (which can create ResizeObserver loop errors).
     const measure = () => {
       const root = window.document.getElementById('root') ?? window.document.documentElement;
-      const prevHeight = root.style.height;
-      // set height auto to make the browser calculate the natural block formatting height
-      // scrollHeight of an element that has height: 100% reports the viewport height, not the content height
-      root.style.height = 'auto';
-      const height = root.scrollHeight;
-      const width = root.scrollWidth;
-      // restore the previous height so nothing visually changes within the same tick
-      root.style.height = prevHeight;
+      const docEl = window.document.documentElement;
+      const body = window.document.body;
+      const rootRect = root.getBoundingClientRect();
+      const height = Math.max(
+        root.scrollHeight,
+        docEl.scrollHeight,
+        body?.scrollHeight || 0,
+        Math.ceil(rootRect.height)
+      );
+      const width = Math.max(root.scrollWidth, docEl.scrollWidth, body?.scrollWidth || 0, Math.ceil(rootRect.width));
       return { width, height };
     };
     const publish = () => {
@@ -191,11 +217,21 @@ export class PreviewPreview {
     // publish right away so the parent gets the first real size as soon as possible
     publish();
     // publish dimension changes when the content size actually changes
-    const debounced = debounce(publish, 100);
-    const resizedObserver = new ResizeObserver(debounced);
-    resizedObserver.observe(window.document.documentElement);
+    this.sizePublishDebounced = debounce(publish, 100);
+    const schedulePublish = () => {
+      if (this.sizePublishRaf) {
+        window.cancelAnimationFrame(this.sizePublishRaf);
+      }
+      this.sizePublishRaf = window.requestAnimationFrame(() => {
+        this.sizePublishRaf = undefined;
+        this.sizePublishDebounced?.();
+      });
+    };
+    this.sizeObserver = new ResizeObserver(schedulePublish);
+    this.sizeObserver.observe(window.document.documentElement);
     const root = window.document.getElementById('root');
-    if (root) resizedObserver.observe(root);
+    if (root) this.sizeObserver.observe(root);
+    if (window.document.body) this.sizeObserver.observe(window.document.body);
   }
 
   async getPreviewModule(previewName: string, id: ComponentID): Promise<PreviewModule> {

@@ -22,6 +22,7 @@ import { useNavigationMessageListener } from '@teambit/workspace.hooks.use-navig
 import { useWorkspace } from './use-workspace';
 import { WorkspaceOverview } from './workspace-overview';
 import { WorkspaceProvider } from './workspace-provider';
+import { Workspace as WorkspaceModel } from './workspace-model';
 import styles from './workspace.module.scss';
 import type { WorkspaceUI } from '../../workspace.ui.runtime';
 import { ThemeFromUrlSync } from './theme-from-url';
@@ -56,7 +57,18 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
     []
   );
 
-  const { workspace } = useWorkspace(reactions);
+  const {
+    workspace: rawWorkspace,
+    loading: workspaceLoading,
+    statusLoading,
+    statusReady,
+  } = useWorkspace({
+    ...reactions,
+    enableStatusQuery: !isMinimal,
+  });
+  // Always render the full layout — never block on loading.
+  // Data arrives in ~120ms, so the UI fills in seamlessly with no visible delay.
+  const workspace = rawWorkspace || WorkspaceModel.empty();
   const theme = useThemePicker();
   const currentTheme = theme?.current;
   const [isSidebarOpen, setSidebarOpen] = useState<boolean | null>(null);
@@ -78,15 +90,16 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
     setSidebarOpen(!isMinimal);
   }, [isMinimal]);
 
-  if (!workspace) {
-    return <div className={styles.emptyContainer}></div>;
-  }
-
   workspaceUI.setComponents(workspace.components);
   const inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
 
   return (
-    <WorkspaceProvider workspace={workspace}>
+    <WorkspaceProvider
+      workspace={workspace}
+      loading={workspaceLoading && !rawWorkspace}
+      statusLoading={statusLoading}
+      statusReady={statusReady}
+    >
       {!isMinimal && <NotificationsBinder reactionsRef={reactionsRef} />}
       <PreserveWorkspaceMode>
         <ThemeFromUrlSync />

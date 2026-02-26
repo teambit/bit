@@ -1,12 +1,17 @@
 import { useMemo, useCallback } from 'react';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import type { LaneModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
-import { gql } from '@apollo/client';
+import { gql, useQuery } from '@apollo/client';
 import type { LaneId } from '@teambit/lane-id';
 import { isEqual } from 'lodash';
 import type { LanesContextModel } from './lanes-context';
 import { useLanesContext } from './lanes-context';
+
+type LanesQueryCompat = Omit<LanesQuery, 'lanes'> & {
+  lanes?: Omit<NonNullable<LanesQuery['lanes']>, 'viewedLane'> & {
+    viewedLane?: NonNullable<LanesQuery['lanes']>['list'];
+  };
+};
 
 const GET_LANES = gql`
   query Lanes(
@@ -173,7 +178,7 @@ const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}, scope) => 
   const { ids, offset, limit, sort } = options;
 
   // @ts-ignore - remove once graphql versions are aligned (see #8753)
-  const { data, fetchMore, loading } = useDataQuery<LanesQuery>(GET_LANES, {
+  const { data, fetchMore, loading } = useQuery<LanesQueryCompat>(GET_LANES, {
     variables: {
       laneIds: ids,
       offset,
@@ -185,11 +190,14 @@ const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}, scope) => 
     skip,
     errorPolicy: 'all',
     fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
+    returnPartialData: true,
+    notifyOnNetworkStatusChange: false,
   });
 
   const lanesModel = useMemo(() => {
     if (!loading && !!data) {
-      const newLanesModel = LanesModel.from({ data, scope });
+      const newLanesModel = LanesModel.from({ data: data as unknown as LanesQuery, scope });
       return newLanesModel;
     }
     return undefined;
@@ -219,7 +227,7 @@ const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}, scope) => 
           const loadingMore = networkStatus === 3;
 
           if (!loadingMore && moreData.lanes) {
-            const newLanesModel = LanesModel.from({ data: moreData });
+            const newLanesModel = LanesModel.from({ data: moreData as unknown as LanesQuery });
             return {
               lanesModel: newLanesModel,
               loading: loadingMore,
@@ -262,7 +270,7 @@ const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}, scope) => 
 
 export const useSearchLanes: SearchLanes = (search, skip) => {
   // @ts-ignore - remove once graphql versions are aligned (see #8753)
-  const { data: searchData, loading: loadingSearch } = useDataQuery<LanesQuery>(GET_LANES, {
+  const { data: searchData, loading: loadingSearch } = useQuery<LanesQueryCompat>(GET_LANES, {
     variables: {
       search,
       skipViewedLane: true,
@@ -280,7 +288,9 @@ export const useSearchLanes: SearchLanes = (search, skip) => {
     loading: loadingSearch,
     lanesModel:
       searchData &&
-      LanesModel.from({ data: { lanes: { ...searchData.lanes, current: undefined, default: undefined } } }),
+      LanesModel.from({
+        data: { lanes: { ...searchData.lanes, current: undefined, default: undefined } } as unknown as LanesQuery,
+      }),
   };
 };
 
