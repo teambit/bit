@@ -135,35 +135,44 @@ export class SchemaMain {
     }
 
     if (alwaysRunExtractor || (this.workspace && component.buildStatus !== BuildStatus.Succeed)) {
-      const env = this.envs.getEnv(component).env;
-      // types need to be fixed
-      const formatter: Formatter | undefined = env.getFormatter?.(null, [
-        (config: PrettierConfigMutator) => {
-          config.setKey('parser', 'typescript');
-          return config;
-        },
-      ]);
-      if (typeof env.getSchemaExtractor === 'undefined') {
-        throw new Error(`No SchemaExtractor defined for ${env.name}`);
+      try {
+        const env = this.envs.getEnv(component).env;
+        // types need to be fixed
+        const formatter: Formatter | undefined = env.getFormatter?.(null, [
+          (config: PrettierConfigMutator) => {
+            config.setKey('parser', 'typescript');
+            return config;
+          },
+        ]);
+        if (typeof env.getSchemaExtractor === 'undefined') {
+          throw new Error(`No SchemaExtractor defined for ${env.name}`);
+        }
+        const schemaExtractor: SchemaExtractor = env.getSchemaExtractor(
+          undefined,
+          tsserverPath,
+          contextPath,
+          schemaTransformers,
+          apiTransformers
+        );
+
+        const result = await schemaExtractor.extract(component, {
+          formatter,
+          tsserverPath,
+          contextPath,
+          skipInternals,
+          includeFiles,
+        });
+        if (shouldDisposeResourcesOnceDone) schemaExtractor.dispose();
+
+        return result;
+      } catch (err) {
+        if (alwaysRunExtractor) throw err;
+        const message = err instanceof Error ? err.message : String(err);
+        this.logger.warn(
+          `failed extracting schema for ${component.id.toString()}, falling back to artifacts. extractor error: ${message}`,
+          err
+        );
       }
-      const schemaExtractor: SchemaExtractor = env.getSchemaExtractor(
-        undefined,
-        tsserverPath,
-        contextPath,
-        schemaTransformers,
-        apiTransformers
-      );
-
-      const result = await schemaExtractor.extract(component, {
-        formatter,
-        tsserverPath,
-        contextPath,
-        skipInternals,
-        includeFiles,
-      });
-      if (shouldDisposeResourcesOnceDone) schemaExtractor.dispose();
-
-      return result;
     }
 
     // on scope get schema from builder api
