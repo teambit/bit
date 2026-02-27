@@ -328,7 +328,6 @@
         "@teambit/styling.deps-detectors.detective-sass": "~0.0.9",
         "@teambit/styling.deps-detectors.detective-scss": "~0.0.9",
         "@teambit/styling.deps-lookups.lookup-styling": "~0.0.4",
-        "@teambit/tagged-exports": "^0.0.47",
         "@teambit/tests-results": "^1.0.5",
         "@teambit/toolbox.fs.readdir-skip-system-files": "~0.0.2",
         "@teambit/toolbox.network.agent": "~0.0.554",
