@@ -35,7 +35,7 @@ $borderLabelHeight: 20px;
 .external {
   border-color: $d40;
 
-  box-shadow: 0px 0px 0px 2px var(border--color);
+  box-shadow: 0px 0px 0px 2px var(--border--color, #6c707c);
 }
 
 :export {

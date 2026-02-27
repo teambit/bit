@@ -1585,6 +1585,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/string/strip-trailing-char"
     },
+    "tagged-exports": {
+        "name": "tagged-exports",
+        "scope": "teambit.api-reference",
+        "version": "0.0.47",
+        "mainFile": "index.ts",
+        "rootDir": "components/tagged-exports"
+    },
     "teambit.harmony/logger": {
         "name": "logger",
         "scope": "teambit.harmony",
