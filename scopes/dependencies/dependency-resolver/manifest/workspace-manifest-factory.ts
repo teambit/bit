@@ -34,6 +34,7 @@ export type CreateFromComponentsOptions = {
   dependencyFilterFn?: DepsFilterFn;
   resolveVersionsFromDependenciesOnly?: boolean;
   referenceLocalPackages?: boolean;
+  includeAllEnvPeers?: boolean;
   hasRootComponents?: boolean;
   excludeExtensionsDependencies?: boolean;
 };
@@ -69,6 +70,7 @@ export class WorkspaceManifestFactory {
       dependencyFilterFn: optsWithDefaults.dependencyFilterFn,
       excludeExtensionsDependencies: optsWithDefaults.excludeExtensionsDependencies,
       referenceLocalPackages: optsWithDefaults.referenceLocalPackages && hasRootComponents,
+      includeAllEnvPeers: optsWithDefaults.includeAllEnvPeers,
       rootDependencies: hasRootComponents ? rootPolicy.toManifest().dependencies : undefined,
     });
     let dedupedDependencies = getEmptyDedupedDependencies();
@@ -140,6 +142,7 @@ export class WorkspaceManifestFactory {
       filterComponentsFromManifests,
       excludeExtensionsDependencies,
       referenceLocalPackages,
+      includeAllEnvPeers,
       rootDependencies,
       rootPolicy,
     }: {
@@ -147,6 +150,7 @@ export class WorkspaceManifestFactory {
       filterComponentsFromManifests?: boolean;
       excludeExtensionsDependencies?: boolean;
       referenceLocalPackages?: boolean;
+      includeAllEnvPeers?: boolean;
       rootDependencies?: Record<string, string>;
       rootPolicy?: WorkspacePolicy;
     }
@@ -211,30 +215,41 @@ export class WorkspaceManifestFactory {
         );
       });
 
-      const defaultPeerDependencies = await this._getDefaultPeerDependencies(component, packageNames);
-      const usedPeerDependencies = pickBy(defaultPeerDependencies, (_val, pkgName) => {
-        return (
-          depManifestBeforeFiltering.dependencies[pkgName] ||
-          depManifestBeforeFiltering.devDependencies[pkgName] ||
-          depManifestBeforeFiltering.peerDependencies[pkgName]
-        );
-      });
-      // In case the env has peer dependencies on both react and react-dom, we want to make sure to keep the versions
-      // in sync with each other, otherwise it may cause issues in the workspace
-      // This is a special case for react and react-dom, as most component do import from react, making it a peer dependency,
-      // but not necessarily import from react-dom, which from env.jsonc peers in that case not added to the peers of the component.
-      // and if the versions are not in sync, it may cause issues in the workspace
-      // an example:
-      // my-comp depend on react, and using @testing-library/react which depend on react-dom (as peer),
-      // the component don't have react-dom as peer dependency, but when we install the dependencies in the workspace,
-      // it will install the latest version of react-dom which may not be compatible with the version of react that my-comp
-      // is using, and it may cause issues in the workspace.
-      if (usedPeerDependencies.react && defaultPeerDependencies['react-dom']) {
-        usedPeerDependencies['react-dom'] = defaultPeerDependencies['react-dom'];
+      const envPeerDependencies = await this._getEnvPeerDependencies(component, packageNames);
+      // When includeAllEnvPeers is true, use ALL env peer deps to ensure consistent
+      // peer dependency contexts across all components. Otherwise, pnpm creates separate
+      // "injected" copies in .pnpm/ for components with different peer sets, causing
+      // TypeScript to see duplicate types from different physical paths.
+      // When false, only include peer deps that the component actually uses, to avoid
+      // writing unnecessary deps to the generated install manifest.
+      let peerDepsForManifest: Record<string, string>;
+      if (includeAllEnvPeers) {
+        peerDepsForManifest = envPeerDependencies;
+      } else {
+        peerDepsForManifest = pickBy(envPeerDependencies, (_val, pkgName) => {
+          return (
+            depManifestBeforeFiltering.dependencies[pkgName] ||
+            depManifestBeforeFiltering.devDependencies[pkgName] ||
+            depManifestBeforeFiltering.peerDependencies[pkgName]
+          );
+        });
+        // In case the env has peer dependencies on both react and react-dom, we want to make sure to keep the versions
+        // in sync with each other, otherwise it may cause issues in the workspace
+        // This is a special case for react and react-dom, as most component do import from react, making it a peer dependency,
+        // but not necessarily import from react-dom, which from env.jsonc peers in that case not added to the peers of the component.
+        // and if the versions are not in sync, it may cause issues in the workspace
+        // an example:
+        // my-comp depend on react, and using @testing-library/react which depend on react-dom (as peer),
+        // the component don't have react-dom as peer dependency, but when we install the dependencies in the workspace,
+        // it will install the latest version of react-dom which may not be compatible with the version of react that my-comp
+        // is using, and it may cause issues in the workspace.
+        if (peerDepsForManifest.react && envPeerDependencies['react-dom']) {
+          peerDepsForManifest['react-dom'] = envPeerDependencies['react-dom'];
+        }
       }
 
       depManifest.dependencies = {
-        ...usedPeerDependencies,
+        ...peerDepsForManifest,
         ...unresolvedRuntimeMissingRootDeps,
         ...additionalDeps,
         ...depManifest.dependencies,
@@ -259,7 +274,7 @@ export class WorkspaceManifestFactory {
     return result;
   }
 
-  private async _getDefaultPeerDependencies(
+  private async _getEnvPeerDependencies(
     component: Component,
     packageNamesFromWorkspace: string[]
   ): Promise<Record<string, string>> {
