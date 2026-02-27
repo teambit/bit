@@ -604,4 +604,58 @@ describe('bit lane command', function () {
       expect(removeData.config.removeOnMain).to.be.true;
     });
   });
+  describe('delete on a lane, re-import the deleted component, then merge from main', () => {
+    let onMain: string;
+    let onLane: string;
+    let importOutput: string;
+    let mergeOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      onMain = helper.scopeHelper.cloneWorkspace();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.softRemoveOnLane('comp1');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      onLane = helper.scopeHelper.cloneWorkspace();
+      // advance comp1 on main so main is ahead
+      helper.scopeHelper.getClonedWorkspace(onMain);
+      helper.fixtures.populateComponents(1, undefined, ' v3');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      // go back to the lane and re-import the deleted component
+      helper.scopeHelper.getClonedWorkspace(onLane);
+      importOutput = helper.command.importComponent('comp1', '-x');
+    });
+    it('import output should warn that the component is deleted', () => {
+      expect(importOutput).to.have.string('deleted');
+    });
+    it('import output should suggest running bit recover', () => {
+      expect(importOutput).to.have.string('bit recover');
+    });
+    describe('lane merge main', () => {
+      before(() => {
+        mergeOutput = helper.command.mergeLane('main', '-x');
+      });
+      it('should mention that the removed component was skipped', () => {
+        expect(mergeOutput).to.have.string('soft-removed');
+      });
+      it('should suggest running bit recover', () => {
+        expect(mergeOutput).to.have.string('bit recover');
+      });
+      describe('after recovering and re-merging', () => {
+        before(() => {
+          helper.command.recover(`${helper.scopes.remote}/comp1`);
+          mergeOutput = helper.command.mergeLane('main', '-x --ignore-config-changes');
+        });
+        it('should successfully merge the component from main', () => {
+          expect(mergeOutput).to.have.string('Total Merged: 1');
+        });
+      });
+    });
+  });
 });
