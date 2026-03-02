@@ -28,6 +28,7 @@ export const componentOverviewFields = gql`
     labels
     displayName
     server {
+      id
       env
       url
       host

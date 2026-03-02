@@ -33,6 +33,7 @@ export class CompositionsSection implements Section {
         menuBarWidgets={this.options.menuBarWidgetSlot}
         emptyState={this.emptyStateSlot}
         usePreviewSandboxSlot={this.usePreviewSandboxSlot}
+        enableLiveControls
       />
     ),
   };
