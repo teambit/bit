@@ -18,6 +18,7 @@ import {
   getWorkspaceConfigUpdateOutput,
 } from '@teambit/component.modules.merge-helper';
 import type { MergingMain } from './merging.main.runtime';
+import { compHasBeenRemovedMsg } from './merge-status-provider';
 import type { ConfigStoreMain } from '@teambit/config-store';
 
 export class MergeCmd implements Command {
@@ -222,9 +223,8 @@ ${mergeSnapError.message}
   const getFailureOutput = () => {
     if (!failedComponents || !failedComponents.length) return '';
     // always show removed components - the user needs to know about these
-    const removedMsg = 'component has been removed';
-    const skippedRemoved = failedComponents.filter((fc) => fc.unchangedMessage === removedMsg);
-    const otherComponents = failedComponents.filter((fc) => fc.unchangedMessage !== removedMsg);
+    const skippedRemoved = failedComponents.filter((fc) => fc.unchangedMessage === compHasBeenRemovedMsg);
+    const otherComponents = failedComponents.filter((fc) => fc.unchangedMessage !== compHasBeenRemovedMsg);
 
     const parts: string[] = [];
 

@@ -123,8 +123,8 @@ describe('bit lane command', function () {
         expect(list).to.have.lengthOf(1);
         expect(list[0].id).to.not.have.string('comp2');
       });
-      it('should explain why it was not merged if --verbose was used', () => {
-        expect(mergeOutput).to.have.string('has been removed');
+      it('should explain why it was not merged', () => {
+        expect(mergeOutput).to.have.string('soft-removed');
       });
     });
     describe('importing the lane to a new workspace', () => {
@@ -393,8 +393,8 @@ describe('bit lane command', function () {
       helper.scopeHelper.getClonedWorkspace(laneBws);
       output = helper.command.mergeLane('lane-a', '-x --verbose');
     });
-    it('should show why the component was not merged when using --verbose flag', () => {
-      expect(output).to.have.string('component has been removed');
+    it('should show why the component was not merged', () => {
+      expect(output).to.have.string('soft-removed');
     });
     it('should not bring the marked-removed component to the workspace', () => {
       const list = helper.command.list();
