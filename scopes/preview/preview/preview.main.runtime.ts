@@ -449,11 +449,12 @@ export class PreviewMain {
   async calcPreviewDataFromEnv(
     component: Component
   ): Promise<Omit<PreviewAnyComponentData, 'doesScaling' | 'onlyOverview' | 'useNameParam'> | undefined> {
-    // Prevent infinite loop that caused by the fact that the env of the aspect env or the env env is the same as the component
+    // Prevent infinite loop that caused by the fact that the env of the aspect env, env env, or empty-env is the same as the component
     // so we can't load it since during load we are trying to get env component and load it again
     if (
       component.id.toStringWithoutVersion() === 'teambit.harmony/aspect' ||
-      component.id.toStringWithoutVersion() === 'teambit.envs/env'
+      component.id.toStringWithoutVersion() === 'teambit.envs/env' ||
+      component.id.toStringWithoutVersion() === 'teambit.envs/empty-env'
     ) {
       return {
         strategyName: COMPONENT_PREVIEW_STRATEGY_NAME,
@@ -461,7 +462,8 @@ export class PreviewMain {
       };
     }
 
-    const env = this.envs.getEnv(component).env;
+    // Use getOrCalculateEnv to handle components whose env may not be loaded yet
+    const env = this.envs.getOrCalculateEnv(component).env;
     const envPreviewConfig = this.getEnvPreviewConfig(env);
     const data = {
       strategyName: envPreviewConfig?.strategyName,

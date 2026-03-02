@@ -8,7 +8,7 @@ import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { TimeAgo } from '@teambit/design.ui.time-ago';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { Icon } from '@teambit/design.elements.icon'
+import { Icon } from '@teambit/design.elements.icon';
 import styles from './lane-menu-item.module.scss';
 
 export type LaneMenuItemProps = {
