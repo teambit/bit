@@ -26,6 +26,10 @@
   &.dark {
     --bit-border-color-lightest: #333333;
     --bit-text-color-heavy: white;
+
+    > a > img {
+      filter: invert(1);
+    }
   }
 
   &.light {
@@ -109,6 +113,10 @@
     z-index: $pane-splitter-zIndex;
     position: absolute;
   }
+}
+
+.splitterClosed {
+  background: transparent !important;
 }
 
 .sidebar {

@@ -41,6 +41,7 @@ export function resolveAlias(opts?: { profile?: boolean }): Record<string, strin
     '@teambit/code.ui.code-editor': require.resolve('@teambit/code.ui.code-editor'),
     '@teambit/api-reference.hooks.use-api': require.resolve('@teambit/api-reference.hooks.use-api'),
     '@teambit/api-reference.hooks.use-api-renderers': require.resolve('@teambit/api-reference.hooks.use-api-renderers'),
+    '@teambit/lanes.hooks.use-lanes': require.resolve('@teambit/lanes.hooks.use-lanes'),
   };
 }
 
