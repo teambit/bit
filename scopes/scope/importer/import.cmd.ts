@@ -203,12 +203,12 @@ without arguments, fetches all workspace components' latest versions from their 
       if (!removedDetails.length) return '';
       const removedIds = removedDetails.map((d) => chalk.bold(d.id));
       const title = chalk.yellow(
-        `the following imported component(s) are marked as deleted and may not be up to date with main:`
+        `the following imported component(s) are marked as deleted and may not be up to date with the latest changes:`
       );
       const body = removedIds.join('\n');
-      const hint = chalk.yellow(
-        `run "bit recover <component-id>" to restore, then "bit lane merge main" to get latest updates`
-      );
+      const hintBase = `run "bit recover <component-id>" to restore`;
+      const hintSuffix = lane ? `, then "bit lane merge main" to get latest updates` : '';
+      const hint = chalk.yellow(`${hintBase}${hintSuffix}`);
       return `${title}\n${body}\n${hint}`;
     };
 

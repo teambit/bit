@@ -632,7 +632,7 @@ describe('bit lane command', function () {
       importOutput = helper.command.importComponent('comp1', '-x');
     });
     it('import output should warn that the component is deleted', () => {
-      expect(importOutput).to.have.string('deleted');
+      expect(importOutput).to.have.string('marked as deleted');
     });
     it('import output should suggest running bit recover', () => {
       expect(importOutput).to.have.string('bit recover');
