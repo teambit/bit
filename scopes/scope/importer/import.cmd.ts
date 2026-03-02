@@ -201,11 +201,11 @@ without arguments, fetches all workspace components' latest versions from their 
     const getRemovedWarning = () => {
       const removedDetails = importDetails.filter((d) => d.removed);
       if (!removedDetails.length) return '';
-      const ids = removedDetails.map((d) => chalk.bold(d.id));
+      const removedIds = removedDetails.map((d) => chalk.bold(d.id));
       const title = chalk.yellow(
         `the following imported component(s) are marked as deleted and may not be up to date with main:`
       );
-      const body = ids.join('\n');
+      const body = removedIds.join('\n');
       const hint = chalk.yellow(
         `run "bit recover <component-id>" to restore, then "bit lane merge main" to get latest updates`
       );
