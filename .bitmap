@@ -1811,23 +1811,16 @@
     "ui/composition-compare": {
         "name": "ui/composition-compare",
         "scope": "teambit.compositions",
-        "version": "0.0.258",
+        "version": "0.0.259",
         "mainFile": "index.ts",
         "rootDir": "components/ui/composition-compare"
     },
     "ui/composition-compare-section": {
         "name": "ui/composition-compare-section",
         "scope": "teambit.compositions",
-        "version": "0.0.101",
+        "version": "0.0.102",
         "mainFile": "index.ts",
         "rootDir": "components/ui/composition-compare-section"
-    },
-    "ui/composition-live-controls": {
-        "name": "ui/composition-live-controls",
-        "scope": "teambit.compositions",
-        "version": "0.0.3",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/composition-live-controls"
     },
     "ui/compositions-app": {
         "name": "ui/compositions-app",
@@ -1951,7 +1944,7 @@
     "ui/menus/use-lanes-menu": {
         "name": "ui/menus/use-lanes-menu",
         "scope": "teambit.lanes",
-        "version": "0.0.293",
+        "version": "0.0.294",
         "mainFile": "index.ts",
         "rootDir": "components/ui/menus/use-lanes-menu"
     },
