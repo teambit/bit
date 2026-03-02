@@ -31,6 +31,7 @@ import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import type { ComponentCompositionProps } from './ui/composition-preview';
+import { useDefaultControlsSchemaResponder } from './use-default-controls-schema-responder';
 
 // @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
 const Link = BaseLink as any;
@@ -43,10 +44,17 @@ export type CompositionsProp = {
   menuBarWidgets?: CompositionsMenuSlot;
   emptyState?: EmptyStateSlot;
   usePreviewSandboxSlot?: UsePreviewSandboxSlot;
+  enableLiveControls?: boolean;
 };
 
-export function Compositions({ menuBarWidgets, emptyState, usePreviewSandboxSlot }: CompositionsProp) {
+export function Compositions({
+  menuBarWidgets,
+  emptyState,
+  usePreviewSandboxSlot,
+  enableLiveControls = true,
+}: CompositionsProp) {
   const component = useContext(ComponentContext);
+  const componentIdStr = component.id.toString();
   const [searchParams] = useSearchParams();
   const params = useParams();
   const versionFromQueryParams = searchParams.get('version');
@@ -59,6 +67,7 @@ export function Compositions({ menuBarWidgets, emptyState, usePreviewSandboxSlot
   const [sandboxValue, setSandboxValue] = useState('');
   const selectedRef = useRef(currentComposition);
   selectedRef.current = currentComposition;
+  useDefaultControlsSchemaResponder(componentIdStr, enableLiveControls);
 
   const properties = useDocs(component.id);
   const previewSandboxHooks = usePreviewSandboxSlot?.values() ?? [];
@@ -79,15 +88,31 @@ export function Compositions({ menuBarWidgets, emptyState, usePreviewSandboxSlot
 
   const currentCompositionFullUrl = toPreviewUrl(component, 'compositions', compositionIdentifierParam);
 
-  const [compositionParams, setCompositionParams] = useState<Record<string, any>>({
-    fullscreen: true,
-    livecontrols: true,
-  });
+  const [compositionParams, setCompositionParams] = useState<Record<string, any>>(() =>
+    enableLiveControls ? { fullscreen: true, livecontrols: true } : { fullscreen: true }
+  );
 
   const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);
 
   // collapse sidebar when empty, reopen when not
   useEffect(() => setSidebarOpenness(showSidebar), [showSidebar]);
+  useEffect(() => {
+    if (enableLiveControls) {
+      setCompositionParams((current) => {
+        if (current.livecontrols === true) return current;
+        return { ...current, livecontrols: true };
+      });
+      return;
+    }
+
+    setCompositionParams((current) => {
+      if (!('livecontrols' in current)) return current;
+      const next = { ...current };
+      delete next.livecontrols;
+      return next;
+    });
+  }, [enableLiveControls]);
+
   return (
     <CompositionContextProvider queryParams={compositionParams} setQueryParams={setCompositionParams}>
       <SplitPane layout={sidebarOpenness} size="80%" className={styles.compositionsPage}>
