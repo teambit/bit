@@ -23,6 +23,7 @@ type Options = {
   autoMergeResolve?: MergeStrategy;
   forceTheirs?: boolean;
   laneName?: string;
+  skipPush?: boolean;
 };
 
 export class CiMergeCmd implements Command {
@@ -59,6 +60,7 @@ export class CiMergeCmd implements Command {
     ],
     ['', 'force-theirs', 'do not merge during checkout, just overwrite with incoming files'],
     ['', 'lane-name <name>', 'specify the lane name to delete after merge (auto-detected if not provided)'],
+    ['', 'skip-push', 'skip pushing the changes to the remote repository (useful when CI handles the push separately)'],
   ];
 
   constructor(
@@ -102,6 +104,7 @@ export class CiMergeCmd implements Command {
       autoMergeResolve: options.autoMergeResolve,
       forceTheirs: options.forceTheirs,
       laneName: options.laneName,
+      skipPush: options.skipPush,
     });
   }
 }

@@ -30,6 +30,10 @@ export class SSEEventsRoute implements Route {
       };
       response.writeHead(200, headers);
 
+      // Send an initial event to complete the SSE handshake.
+      // Without this, some EventSource clients stay in CONNECTING state until they receive data.
+      response.write('event: connected\ndata: {}\n\n');
+
       const clientId = Date.now();
 
       const newClient: CLIENT = {

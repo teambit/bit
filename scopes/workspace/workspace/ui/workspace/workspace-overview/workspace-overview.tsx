@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import { EmptyWorkspace } from '@teambit/workspace.ui.empty-workspace';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
@@ -8,7 +8,6 @@ import type { ComponentModel } from '@teambit/component';
 import compact from 'lodash.compact';
 import { ScopeID } from '@teambit/scopes.scope-id';
 import { useCloudScopes } from '@teambit/cloud.hooks.use-cloud-scopes';
-import { useSearchParams } from 'react-router-dom';
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';
 import type { ComponentCardPluginType, PluginProps } from '@teambit/explorer.ui.component-card';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
@@ -16,6 +15,8 @@ import { H3 } from '@teambit/design.ui.heading';
 import { WorkspaceContext } from '../workspace-context';
 import { LinkPlugin } from './link-plugin';
 import { useWorkspaceAggregation } from './use-workspace-aggregation';
+import { useQueryParamWithDefault } from './use-query-param-with-default';
+import type { AggregationType } from './workspace-overview.types';
 import { WorkspaceFilterPanel } from './workspace-filter-panel';
 import styles from './workspace-overview.module.scss';
 
@@ -51,16 +52,35 @@ export function WorkspaceOverview() {
     })
   );
 
-  const [searchParams] = useSearchParams();
-  const aggregation = (searchParams.get('aggregation') as any) || 'namespaces';
+  const [aggregation, setAggregation] = useQueryParamWithDefault<AggregationType>('aggregation', 'namespaces');
+  const [activeNamespaces, setActiveNamespaces] = useState<string[]>([]);
+  const [activeScopes, setActiveScopes] = useState<string[]>([]);
 
-  const { groups, groupType, availableAggregations, filteredCount } = useWorkspaceAggregation(items, aggregation);
+  const filters = useMemo(
+    () => ({ namespaces: activeNamespaces, scopes: activeScopes }),
+    [activeNamespaces, activeScopes]
+  );
+
+  const { groups, groupType, availableAggregations, filteredCount } = useWorkspaceAggregation(
+    items,
+    aggregation,
+    filters
+  );
 
   const plugins = useCardPlugins({ compModelsById, showPreview: isMinimal });
 
   return (
     <div className={styles.container}>
-      <WorkspaceFilterPanel aggregation={aggregation} availableAggregations={availableAggregations} items={items} />
+      <WorkspaceFilterPanel
+        aggregation={aggregation}
+        onAggregationChange={setAggregation}
+        availableAggregations={availableAggregations}
+        items={items}
+        activeNamespaces={activeNamespaces}
+        onNamespacesChange={setActiveNamespaces}
+        activeScopes={activeScopes}
+        onScopesChange={setActiveScopes}
+      />
 
       {filteredCount === 0 && <EmptyWorkspace name={workspace.name} />}
 

@@ -1,10 +1,14 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
+import { fileURLToPath } from 'url';
 chai.use(chaiFs);
+
+// @ts-ignore
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe('big text file', function () {
   this.timeout(0);

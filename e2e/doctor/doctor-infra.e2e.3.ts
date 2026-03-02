@@ -1,10 +1,27 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
+import * as fs from 'fs';
+import * as tar from 'tar-stream';
 
 import { DiagnosisNotFound } from '@teambit/doctor';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
+
+function getTarEntries(tarPath: string): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    const entries: string[] = [];
+    const extract = tar.extract();
+    extract.on('entry', (header, stream, next) => {
+      entries.push(header.name);
+      stream.on('end', next);
+      stream.resume();
+    });
+    extract.on('finish', () => resolve(entries));
+    extract.on('error', reject);
+    fs.createReadStream(tarPath).pipe(extract);
+  });
+}
 
 describe('bit doctor infra', function () {
   this.timeout(0);
@@ -77,6 +94,41 @@ describe('bit doctor infra', function () {
       const useFunc = () => helper.command.doctorOne(nonExistingDiagnosis, { j: '' });
       const error = new DiagnosisNotFound(nonExistingDiagnosis);
       helper.general.expectToThrow(useFunc, error);
+    });
+  });
+
+  describe('archive with --exclude-local-scope flag', () => {
+    let tarEntries: string[];
+    before(async () => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      const archivePath = path.join(helper.scopes.localPath, 'doctor-archive');
+      // Run from a nested directory to trigger the bug (workspaceRoot becomes absolute path)
+      const nestedDir = path.join(helper.scopes.localPath, 'comp1');
+      helper.command.runCmd(`bit doctor --archive ${archivePath} --exclude-local-scope`, nestedDir);
+      // List tar entries using tar-stream (doctor adds .tar extension)
+      tarEntries = await getTarEntries(`${archivePath}.tar`);
+    });
+    it('should exclude .bit/objects contents', () => {
+      const objectsContents = tarEntries.filter((e) => e.includes('.bit/objects/'));
+      expect(objectsContents).to.have.lengthOf(0);
+    });
+    it('should exclude .bit/cache contents', () => {
+      const cacheContents = tarEntries.filter((e) => e.includes('.bit/cache/'));
+      expect(cacheContents).to.have.lengthOf(0);
+    });
+    it('should exclude .bit/tmp contents', () => {
+      const tmpContents = tarEntries.filter((e) => e.includes('.bit/tmp/'));
+      expect(tmpContents).to.have.lengthOf(0);
+    });
+    it('should include .bit/command-history', () => {
+      const commandHistoryEntries = tarEntries.filter((e) => e.includes('.bit/command-history'));
+      expect(commandHistoryEntries).to.have.lengthOf.at.least(1);
+    });
+    it('should include .bit/scope.json', () => {
+      const scopeJsonEntries = tarEntries.filter((e) => e.includes('.bit/scope.json'));
+      expect(scopeJsonEntries).to.have.lengthOf(1);
     });
   });
 

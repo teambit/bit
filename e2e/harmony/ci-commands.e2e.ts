@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import { removeChalkCharacters } from '@teambit/legacy.utils';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
 
@@ -102,6 +103,68 @@ describe('ci commands', function () {
     });
   });
 
+  /**
+   * This test verifies that `bit ci pr` uses temporary lane names during the snap operation
+   * to avoid race conditions when multiple CI jobs run concurrently on the same branch.
+   *
+   * The race condition problem:
+   * When two CI jobs run `bit ci pr` on the same branch concurrently, with the old approach:
+   * 1. Job1 deletes existing lane, creates new lane, starts long snap (~30+ min)
+   * 2. Job2 checks for lane (not found - Job1 deleted it), creates lane, snaps, exports
+   * 3. Job1 finishes snap, tries to export → FAILS with "lane exists with different hash"
+   *
+   * The fix:
+   * Use a temporary lane name with a random suffix during the snap operation, then rename
+   * to the final name right before export. This minimizes the race window to just the
+   * quick delete-rename-export operations at the end.
+   *
+   * Why we don't test the actual race condition:
+   * The race condition requires precise timing during the long snap operation (30+ min in real CI).
+   * In e2e tests, snap completes nearly instantly, making the race window too small to trigger
+   * reliably. Instead, we verify that the temp lane mechanism is correctly implemented.
+   */
+  describe('bit ci pr uses temp lane names to avoid race conditions', () => {
+    let prOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setupComponentsAndInitialCommit();
+
+      // Create a feature branch with changes
+      helper.command.runCmd('git checkout -b feature/temp-lane-test');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("temp lane test");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: temp lane test changes"');
+
+      prOutput = helper.command.runCmd('bit ci pr --message "temp lane test"');
+    });
+    it('should create a temporary lane during snap (indicated by random suffix pattern)', () => {
+      // The temp lane name follows pattern: {original-name}-{5-char-random}
+      // e.g., "feature-temp-lane-test-a1b2c"
+      // Strip chalk/ANSI codes before regex matching to avoid false negatives
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.match(/Creating temporary lane .+\/feature-temp-lane-test-[a-z0-9]{5}/);
+    });
+    it('should rename the temp lane to the final name before export', () => {
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.match(/Renaming lane from feature-temp-lane-test-[a-z0-9]{5} to feature-temp-lane-test/);
+    });
+    it('should complete successfully', () => {
+      expect(prOutput).to.include('PR command executed successfully');
+    });
+    it('should export the lane with the correct final name', () => {
+      const remoteLanes = helper.command.listRemoteLanesParsed();
+      const lane = remoteLanes.lanes.find((l: any) => l.name === 'feature-temp-lane-test');
+      expect(lane).to.exist;
+      expect(lane.components).to.have.lengthOf(1);
+    });
+    it('should not leave any temp lanes on the remote', () => {
+      const remoteLanes = helper.command.listRemoteLanesParsed();
+      const tempLanes = remoteLanes.lanes.filter((l: any) => /feature-temp-lane-test-[a-z0-9]{5}/.test(l.name));
+      expect(tempLanes).to.have.lengthOf(0);
+    });
+  });
+
   describe('bit ci merge workflow', () => {
     let mergeOutput: string;
     before(() => {
@@ -145,6 +208,70 @@ describe('ci commands', function () {
       const log = helper.command.logParsed('comp1');
       const lastLog = log[log.length - 1];
       expect(lastLog.message).to.include('test merge message');
+    });
+  });
+
+  describe('bit ci merge with --skip-push flag', () => {
+    let mergeOutput: string;
+    let defaultBranch: string;
+    let localCommitSha: string;
+    let remoteCommitSha: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      defaultBranch = setupComponentsAndInitialCommit();
+
+      // Create feature branch and make changes
+      helper.command.runCmd('git checkout -b feature/test-skip-push');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("skip push test");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "fix: component update for skip-push test"');
+
+      // Simulate PR merge scenario by going back to default branch
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.runCmd('git merge feature/test-skip-push');
+
+      // Get the remote commit SHA before running ci merge
+      remoteCommitSha = helper.command.runCmd(`git rev-parse origin/${defaultBranch}`).trim();
+
+      // Run bit ci merge command with --skip-push
+      mergeOutput = helper.command.runCmd('bit ci merge --skip-push --message "test skip-push message"');
+
+      // Get the local commit SHA after running ci merge
+      localCommitSha = helper.command.runCmd('git rev-parse HEAD').trim();
+    });
+    it('should complete successfully', () => {
+      expect(mergeOutput).to.include('Merged PR');
+    });
+    it('should show skip-push message in output', () => {
+      expect(mergeOutput).to.include('Skipping git push');
+    });
+    it('should tag the component', () => {
+      const list = helper.command.listParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      expect(comp1).to.exist;
+      expect(comp1?.currentVersion).to.equal('0.0.2');
+    });
+    it('should export tagged components to remote scope', () => {
+      const list = helper.command.listRemoteScopeParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      expect(comp1?.localVersion).to.equal('0.0.2');
+    });
+    it('should create local git commit but NOT push to remote', () => {
+      // Local should be ahead of remote
+      expect(localCommitSha).to.not.equal(remoteCommitSha);
+
+      // Verify remote is still at the old commit
+      const currentRemoteSha = helper.command.runCmd(`git rev-parse origin/${defaultBranch}`).trim();
+      expect(currentRemoteSha).to.equal(remoteCommitSha);
+    });
+    it('should allow manual push after ci merge', () => {
+      // Simulate user pushing manually after ci merge
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+
+      // Now remote should be at the same commit as local
+      const currentRemoteSha = helper.command.runCmd(`git rev-parse origin/${defaultBranch}`).trim();
+      expect(currentRemoteSha).to.equal(localCommitSha);
     });
   });
 

@@ -12,7 +12,6 @@ import type {
   CalcDepsGraphOptions,
 } from '@teambit/dependency-resolver';
 import { Registries, Registry } from '@teambit/pkg.entities.registry';
-import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import type { Logger } from '@teambit/logger';
 import { type LockfileFile } from '@pnpm/lockfile.types';
@@ -24,9 +23,9 @@ import type { Config } from '@pnpm/config';
 import { type ProjectId, type ProjectManifest, type DepPath } from '@pnpm/types';
 import type { Modules } from '@pnpm/modules-yaml';
 import { readModulesManifest } from '@pnpm/modules-yaml';
-import type { DependenciesHierarchy, PackageNode } from '@pnpm/reviewing.dependencies-hierarchy';
-import { buildDependenciesHierarchy, createPackagesSearcher } from '@pnpm/reviewing.dependencies-hierarchy';
-import { renderTree } from '@pnpm/list';
+import type { ImporterInfo } from '@pnpm/reviewing.dependencies-hierarchy';
+import { buildDependentsTree } from '@pnpm/reviewing.dependencies-hierarchy';
+import { renderDependentsTree } from '@pnpm/list';
 import {
   readWantedLockfile,
   writeLockfileFile,
@@ -383,45 +382,42 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async findUsages(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string> {
-    const search = createPackagesSearcher([depName]);
     const lockfile = await readWantedLockfile(opts.lockfileDir, { ignoreIncompatible: false });
-    const projectPaths = Object.keys(lockfile?.importers ?? {})
-      .filter((id) => !id.includes(`${BIT_ROOTS_DIR}/`))
-      .map((id) => join(opts.lockfileDir, id));
-    const cache = new Map();
-    const modulesManifest = await this._readModulesManifest(opts.lockfileDir);
-    const isHoisted = modulesManifest?.nodeLinker === 'hoisted';
-    const getPkgLocation: GetPkgLocation = isHoisted
-      ? ({ name }) => join(opts.lockfileDir, 'node_modules', name)
-      : ({ path }) => path;
-    const results = Object.entries(
-      await buildDependenciesHierarchy(projectPaths, {
-        depth: opts.depth ?? Infinity,
-        include: {
-          dependencies: true,
-          devDependencies: true,
-          optionalDependencies: true,
-        },
-        lockfileDir: opts.lockfileDir,
-        registries: {
-          default: 'https://registry.npmjs.org',
-        },
-        search,
-        virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
-      })
-    ).map(([projectPath, builtDependenciesHierarchy]) => {
-      pkgNamesToComponentIds(builtDependenciesHierarchy, { cache, getPkgLocation });
-      return {
-        path: projectPath,
-        ...builtDependenciesHierarchy,
-      };
+    if (!lockfile) return '';
+    const importerIds = Object.keys(lockfile.importers ?? {})
+      .filter((id) => !id.includes(`${BIT_ROOTS_DIR}/`));
+    const projectPaths = importerIds.map((id) => join(opts.lockfileDir, id));
+    const importerInfoMap = new Map<string, ImporterInfo>();
+    for (const importerId of importerIds) {
+      const pkgJson = tryReadPackageJson(join(opts.lockfileDir, importerId));
+      importerInfoMap.set(importerId, {
+        name: pkgJson?.name ?? importerId,
+        version: pkgJson?.version ?? '',
+      });
+    }
+    const trees = await buildDependentsTree([depName], projectPaths, {
+      include: {
+        dependencies: true,
+        devDependencies: true,
+        optionalDependencies: true,
+      },
+      lockfileDir: opts.lockfileDir,
+      registries: {
+        default: 'https://registry.npmjs.org',
+      },
+      importerInfoMap,
+      lockfile,
+      nameFormatter ({ manifest }) {
+        if ('componentId' in manifest) {
+          const { scope, name } = manifest.componentId as { scope: string; name: string };
+          return `${scope}/${name}`;
+        }
+        return manifest.name;
+      },
     });
-    return renderTree(results, {
-      alwaysPrintRootPackage: false,
-      depth: Infinity,
-      search: true,
+    return renderDependentsTree(trees, {
+      depth: opts.depth ?? Infinity,
       long: false,
-      showExtraneous: false,
     });
   }
 
@@ -484,29 +480,6 @@ export class PnpmPackageManager implements PackageManager {
         pkgName,
       });
       component.state._consumer.dependenciesGraph = graph;
-    }
-  }
-}
-
-type GetPkgLocation = (pkgNode: PackageNode) => string;
-
-function pkgNamesToComponentIds(
-  deps: DependenciesHierarchy,
-  { cache, getPkgLocation }: { cache: Map<string, string>; getPkgLocation: GetPkgLocation }
-) {
-  for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
-    if (deps[depType]) {
-      for (const dep of deps[depType]) {
-        if (!cache.has(dep.name)) {
-          const pkgJson = tryReadPackageJson(getPkgLocation(dep));
-          cache.set(
-            dep.name,
-            pkgJson?.componentId ? `${pkgJson.componentId.scope}/${pkgJson.componentId.name}` : dep.name
-          );
-        }
-        dep.name = cache.get(dep.name);
-        pkgNamesToComponentIds(dep, { cache, getPkgLocation });
-      }
     }
   }
 }

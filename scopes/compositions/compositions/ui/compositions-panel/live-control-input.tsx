@@ -7,13 +7,13 @@ import { InputText } from '@teambit/design.inputs.input-text';
 import { TextArea } from '@teambit/design.inputs.text-area';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
 import { MenuItem } from '@teambit/design.inputs.selectors.menu-item';
-import { ColorPicker } from '@teambit/design.ui.input.color-picker';
+import { ColorPicker, ColorsBox } from '@teambit/design.ui.input.color-picker';
 import { DatePicker } from '@teambit/design.inputs.date-picker';
 import { Toggle } from '@teambit/design.inputs.toggle-switch';
-
-import { type SelectOption } from '@teambit/compositions.ui.composition-live-controls';
+import { useOverlay, BitPortal } from './use-overlay';
 
 import styles from './live-control-input.module.scss';
+import overlayStyles from './overlay.module.scss';
 
 type InputComponentProps = {
   id: string;
@@ -58,46 +58,57 @@ function LongTextInput({ value, onChange }: InputComponentProps) {
 
 function SelectInput({ value, onChange, meta }: InputComponentProps) {
   const [selectedValue, setSelectedValue] = React.useState(value || '');
+  const [open, setOpen] = React.useState(false);
+  const triggerRef = React.useRef<HTMLParagraphElement>(null);
 
   React.useEffect(() => {
     setSelectedValue(value || '');
   }, [value]);
 
-  const handleChange = (newValue: any) => {
-    onChange(newValue || '');
-    setSelectedValue(newValue || '');
-  };
-
-  const options: {
-    label: string;
-    value: string;
-  }[] = React.useMemo(() => {
-    if (!meta || !meta.options) return [];
-    return meta.options.map((option: SelectOption) => {
-      if (typeof option === 'string') {
-        return { label: option, value: option };
-      }
-      return option;
-    });
+  const options = React.useMemo(() => {
+    if (!meta?.options) return [];
+    return meta.options.map((o: any) => (typeof o === 'string' ? { label: o, value: o } : o));
   }, [meta]);
 
   const placeholderContent = options.find((o) => o.value === selectedValue)?.label;
 
+  const { position, style } = useOverlay(triggerRef, open, 0, {
+    paddingTop: 8,
+    paddingBottom: 8,
+  });
+
+  const commitSelection = (v: string) => {
+    onChange(v);
+    setSelectedValue(v);
+    setOpen(false);
+  };
+
   return (
-    <p className={classNames(styles.wrapper)}>
-      <Dropdown placeholderContent={placeholderContent}>
-        {options.map((option) => {
-          return (
-            <MenuItem
-              active={option.value === selectedValue}
-              key={option.value}
-              onClick={() => handleChange(option.value)}
-            >
-              {option.label}
-            </MenuItem>
-          );
-        })}
-      </Dropdown>
+    <p ref={triggerRef} className={classNames(styles.wrapper)}>
+      <Dropdown
+        placeholderContent={placeholderContent}
+        open={open}
+        onChange={(_, isOpen) => setOpen(isOpen)}
+        position={position}
+        dropClass={overlayStyles.suppressNativeMenu}
+      />
+
+      {open && style && (
+        <BitPortal>
+          <div className={overlayStyles.overlay} style={style} onMouseDown={(e) => e.stopPropagation()}>
+            {options.map((option) => (
+              <MenuItem
+                className={styles.portalMenuItem}
+                key={option.value}
+                active={option.value === selectedValue}
+                onClick={() => commitSelection(option.value)}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
+          </div>
+        </BitPortal>
+      )}
     </p>
   );
 }
@@ -124,6 +135,43 @@ function NumberInput({ value, onChange }: InputComponentProps) {
   return <InputText type="number" value={inputValue} onChange={handleChange} />;
 }
 
+function ColorPickerPortal(props: any) {
+  const [open, setOpen] = React.useState(false);
+  const triggerRef = React.useRef<HTMLDivElement>(null);
+
+  const { position, style } = useOverlay(triggerRef, open, 4, {
+    padding: 16,
+  });
+
+  return (
+    <div ref={triggerRef}>
+      <ColorPicker
+        {...props}
+        open={open}
+        onChange={(_, isOpen) => setOpen(isOpen)}
+        position={position}
+        dropClass={overlayStyles.suppressNativeMenu}
+      />
+
+      {open && style && (
+        <BitPortal>
+          <div className={overlayStyles.overlay} style={style} onMouseDown={(e) => e.stopPropagation()}>
+            <ColorsBox
+              onColorSelect={(color: string) => {
+                props.onColorSelect?.(color);
+                setOpen(false);
+              }}
+              colorsList={props.colorsList}
+              showNoColor={props.showNoColor}
+              selected={props.value ?? ''}
+            />
+          </div>
+        </BitPortal>
+      )}
+    </div>
+  );
+}
+
 function ColorInput({ value, onChange }: InputComponentProps) {
   const [inputValue, setInputValue] = React.useState(value || '');
 
@@ -131,14 +179,14 @@ function ColorInput({ value, onChange }: InputComponentProps) {
     setInputValue(value || '');
   }, [value]);
 
-  const handleChange = (newValue: string) => {
-    onChange(newValue || '');
-    setInputValue(newValue || '');
+  const handleChange = (v: string) => {
+    onChange(v);
+    setInputValue(v);
   };
 
   return (
-    <p className={classNames(styles.wrapper)}>
-      <ColorPicker value={inputValue} onColorSelect={handleChange} allowCustomColor />
+    <p className={styles.wrapper}>
+      <ColorPickerPortal value={inputValue} onColorSelect={handleChange} allowCustomColor />
     </p>
   );
 }

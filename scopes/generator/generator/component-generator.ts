@@ -35,6 +35,7 @@ export type GenerateResult = {
 export type InstallOptions = { optimizeReportForNonTerminal?: boolean };
 
 export type OnComponentCreateFn = (generateResults: GenerateResult[], installOptions?: InstallOptions) => Promise<void>;
+export type OnWorkspaceCreateFn = (generateResults: GenerateResult[], installOptions?: InstallOptions) => Promise<void>;
 
 export class ComponentGenerator {
   constructor(

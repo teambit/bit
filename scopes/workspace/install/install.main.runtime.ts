@@ -937,7 +937,7 @@ export class InstallMain {
             await this.getRootComponentDirByRootId(this.workspace.rootComponentsPath, envId),
             {
               dependencies: {
-                ...(await this._getEnvDependencies(envId)),
+                ...(await this._getEnvDependencies(envId, workspaceDeps)),
                 ...workspaceDeps,
                 ...(await this._getEnvPackage(envId)),
               },
@@ -951,13 +951,29 @@ export class InstallMain {
     );
   }
 
-  private async _getEnvDependencies(envId: ComponentID): Promise<Record<string, string>> {
+  /**
+   * Get the env's own peer dependencies from its policy (env.jsonc).
+   * Resolves "+" version placeholders using workspaceDeps.
+   */
+  private async _getEnvDependencies(
+    envId: ComponentID,
+    workspaceDeps: Record<string, string>
+  ): Promise<Record<string, string>> {
     const policy = await this.dependencyResolver.getEnvPolicyFromEnvId(envId);
     if (!policy) return {};
+
     return Object.fromEntries(
       policy.selfPolicy.entries
         .filter(({ force, value }) => force && value.version !== '-')
-        .map(({ dependencyId, value }) => [dependencyId, value.version])
+        .map(({ dependencyId, value }) => {
+          let version = value.version;
+          // Resolve "+" version placeholders using workspace dependencies
+          // Similar to WorkspaceManifest._resolvePlusVersions
+          if (version === '+') {
+            version = workspaceDeps[dependencyId] || '*';
+          }
+          return [dependencyId, version];
+        })
     );
   }
 
@@ -996,7 +1012,7 @@ export class InstallMain {
               {
                 ...omit(appManifest, ['name', 'version']),
                 dependencies: {
-                  ...(await this._getEnvDependencies(envId)),
+                  ...(await this._getEnvDependencies(envId, workspaceDeps)),
                   ...appManifest.dependencies,
                   ...workspaceDeps,
                 },

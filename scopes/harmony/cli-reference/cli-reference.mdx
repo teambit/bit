@@ -414,6 +414,7 @@ By default, bumps patch versions when merging to main. If specific configuration
 | `--auto-merge-resolve <merge-strategy>` |       `-r`       | in case of merge conflict during checkout, resolve according to the provided strategy: [ours, theirs, manual] |
 | `--force-theirs`                        |                  | do not merge during checkout, just overwrite with incoming files                                              |
 | `--lane-name <name>`                    |                  | specify the lane name to delete after merge (auto-detected if not provided)                                   |
+| `--skip-push`                           |                  | skip pushing the changes to the remote repository (useful when CI handles the push separately)                |
 
 ---
 
@@ -737,6 +738,17 @@ supports both exact version matching and package name patterns.
 | **Option**         | **Option alias** | **Description**                           |
 | ------------------ | :--------------: | ----------------------------------------- |
 | `--depth <number>` |                  | max display depth of the dependency graph |
+
+### deps diagnose
+
+**Usage**: `deps diagnose`
+
+**Description**: analyze workspace dependencies for version spread, peer permutations, and bloat  
+scans node_modules/.pnpm to report actual installed copies, identifies packages with multiple versions, and highlights peer dependencies causing permutation explosion. Use --package to drill down into a specific package.
+
+| **Option**           | **Option alias** | **Description**                                                            |
+| -------------------- | :--------------: | -------------------------------------------------------------------------- |
+| `--package <string>` |                  | drill down into a specific package to see all .pnpm copies and peer combos |
 
 ### deps write
 
@@ -1093,32 +1105,32 @@ without arguments, fetches all workspace components' latest versions from their 
 | ----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-patterns...` | component IDs or component patterns (separated by space). Use patterns to import groups of components using a common scope or namespace. E.g., "utils/\*" (wrap with double quotes) |
 
-| **Option**                       | **Option alias** | **Description**                                                                                                                                                                   |
-| -------------------------------- | :--------------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--path <path>`                  |       `-p`       | import components into a specific directory (a relative path in the workspace)                                                                                                    |
-| `--objects`                      |       `-o`       | import components objects to the local scope without checkout (without writing them to the file system). This is the default behavior for import with no id argument              |
-| `--override`                     |       `-O`       | override local changes                                                                                                                                                            |
-| `--verbose`                      |       `-v`       | show verbose output for inspection                                                                                                                                                |
-| `--json`                         |       `-j`       | return the output as JSON                                                                                                                                                         |
-| `--skip-dependency-installation` |       `-x`       | do not auto-install dependencies of the imported components                                                                                                                       |
-| `--skip-write-config-files`      |                  | do not write config files (such as eslint, tsconfig, prettier, etc...)                                                                                                            |
-| `--merge [strategy]`             |       `-m`       | merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"                                                                                    |
-| `--dependencies`                 |                  | import all dependencies (bit components only) of imported components and write them to the workspace                                                                              |
-| `--dependencies-head`            |                  | same as --dependencies, except it imports the dependencies with their head version                                                                                                |
-| `--dependents`                   |                  | import components found while traversing from the imported components upwards to the workspace components                                                                         |
-| `--dependents-via <string>`      |                  | same as --dependents except the traversal must go through the specified component. to specify multiple components, wrap with quotes and separate by a comma                       |
-| `--dependents-all`               |                  | same as --dependents except not prompting for selecting paths but rather selecting all paths and showing final confirmation before importing                                      |
-| `--dependents-dry-run`           |                  | DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and wait for confirmation before importing them                                |
-| `--silent`                       |                  | no prompt for --dependents/--dependents-via flags                                                                                                                                 |
-| `--filter-envs <envs>`           |                  | only import components that have the specified environment (e.g., "teambit.react/react-env")                                                                                      |
-| `--save-in-lane`                 |                  | when checked out to a lane and the component is not on the remote-lane, save it in the lane (defaults to save on main)                                                            |
-| `--all-history`                  |                  | relevant for fetching all components objects. avoid optimizations, fetch all history versions, always                                                                             |
-| `--fetch-deps`                   |                  | fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data                             |
-| `--write-deps <workspace.jsonc   |  package.json>`  |                                                                                                                                                                                   | write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions |
-| `--track-only`                   |                  | do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap |
-| `--include-deprecated`           |                  | when importing with patterns, include deprecated components (default to exclude them)                                                                                             |
-| `--lane-only`                    |                  | when using wildcards on a lane, only import components that exist on the lane (never from main)                                                                                   |
-| `--owner`                        |                  | treat the argument as an owner name and import all components from all scopes of that owner                                                                                       |
+| **Option**                       | **Option alias** | **Description**                                                                                                                                                                     |
+| -------------------------------- | :--------------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--path <path>`                  |       `-p`       | import components into a specific directory (a relative path in the workspace)                                                                                                      |
+| `--objects`                      |       `-o`       | import components objects to the local scope without checkout (without writing them to the file system). This is the default behavior for import with no id argument                |
+| `--override`                     |       `-O`       | override local changes                                                                                                                                                              |
+| `--verbose`                      |       `-v`       | show verbose output for inspection                                                                                                                                                  |
+| `--json`                         |       `-j`       | return the output as JSON                                                                                                                                                           |
+| `--skip-dependency-installation` |       `-x`       | do not auto-install dependencies of the imported components                                                                                                                         |
+| `--skip-write-config-files`      |                  | do not write config files (such as eslint, tsconfig, prettier, etc...)                                                                                                              |
+| `--merge [strategy]`             |       `-m`       | merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"                                                                                      |
+| `--dependencies`                 |                  | import all dependencies (bit components only) of imported components and write them to the workspace                                                                                |
+| `--dependencies-head`            |                  | same as --dependencies, except it imports the dependencies with their head version                                                                                                  |
+| `--dependents`                   |                  | import components found while traversing from the imported components upwards to the workspace components                                                                           |
+| `--dependents-via <string>`      |                  | same as --dependents except the traversal must go through the specified component. to specify multiple components, wrap with quotes and separate by a comma                         |
+| `--dependents-all`               |                  | same as --dependents except not prompting for selecting paths but rather selecting all paths and showing final confirmation before importing                                        |
+| `--dependents-dry-run`           |                  | DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and wait for confirmation before importing them                                  |
+| `--silent`                       |                  | no prompt for --dependents/--dependents-via flags                                                                                                                                   |
+| `--filter-envs <envs>`           |                  | only import components that have the specified environment (e.g., "teambit.react/react-env")                                                                                        |
+| `--save-in-lane`                 |                  | when checked out to a lane and the component is not on the remote-lane, save it in the lane (defaults to save on main)                                                              |
+| `--all-history`                  |                  | relevant for fetching all components objects. avoid optimizations, fetch all history versions, always                                                                               |
+| `--fetch-deps`                   |                  | fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data                               |
+| `--write-deps <target>`          |                  | write all workspace component dependencies to the specified target ("package.json" or "workspace.jsonc"), resolving conflicts by picking the ranges that match the highest versions |
+| `--track-only`                   |                  | do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap   |
+| `--include-deprecated`           |                  | when importing with patterns, include deprecated components (default to exclude them)                                                                                               |
+| `--lane-only`                    |                  | when using wildcards on a lane, only import components that exist on the lane (never from main)                                                                                     |
+| `--owner`                        |                  | treat the argument as an owner name and import all components from all scopes of that owner                                                                                         |
 
 ---
 
@@ -1394,7 +1406,7 @@ workspace, but also mark it as deleted from the lane, so it won't be merged late
 
 **Usage**: `lane history [lane-name]`
 
-**Description**: EXPERIMENTAL. show lane history, default to the current lane  
+**Description**: show lane history, default to the current lane  
 list from the oldest to the newest history items
 
 | **Option**      | **Option alias** | **Description**                        |
@@ -1404,10 +1416,13 @@ list from the oldest to the newest history items
 
 ### lane history-diff
 
-**Usage**: `lane history-diff <from-history-id> <to-history-id>`
+**Usage**: `lane history-diff [history-id] [to-history-id]`
 
-**Description**: EXPERIMENTAL. show diff between two lane-history ids  
-run "bit lane history" to find these history-ids
+**Description**: show diff between lane-history entries  
+with no arguments - diff the latest history entry against its predecessor  
+with one argument - diff the given history entry against its predecessor  
+with two arguments - diff between two specific history entries (first=from, second=to), useful for comparing any two points in history  
+run "bit lane history" to find history-ids
 
 | **Option**                      | **Option alias** | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ------------------------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1418,7 +1433,7 @@ run "bit lane history" to find these history-ids
 
 **Usage**: `lane checkout <history-id>`
 
-**Description**: EXPERIMENTAL. checkout to a previous history of the current lane. see also "bit lane revert"
+**Description**: checkout to a previous history of the current lane. see also "bit lane revert"
 
 | **Arg**      |                            **Description**                            |
 | ------------ | :-------------------------------------------------------------------: |
@@ -1432,7 +1447,7 @@ run "bit lane history" to find these history-ids
 
 **Usage**: `lane revert <history-id>`
 
-**Description**: EXPERIMENTAL. revert to a previous history of the current lane. see also "bit lane checkout"  
+**Description**: revert to a previous history of the current lane. see also "bit lane checkout"  
 revert is similar to "lane checkout", but it keeps the versions and only change the files.  
 choose one or the other based on your needs.  
 if you want to continue working on this lane and needs the changes from the history to be the head, then use "lane revert".  
@@ -2329,17 +2344,18 @@ includes hot module reloading for development.
 | ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
-| **Option**              | **Option alias** | **Description**                                                                                         |
-| ----------------------- | :--------------: | ------------------------------------------------------------------------------------------------------- |
-| `--dev`                 |       `-d`       | start UI server in dev mode.                                                                            |
-| `--port [port-number]`  |       `-p`       | port of the UI server.                                                                                  |
-| `--rebuild`             |       `-r`       | rebuild the UI (useful e.g. when updating the workspace UI - can use the dev flag for HMR in this case) |
-| `--skip-ui-build`       |                  | skip building UI                                                                                        |
-| `--verbose`             |       `-v`       | show verbose output for inspection and prints stack trace                                               |
-| `--no-browser`          |       `-n`       | do not automatically open browser when ready                                                            |
-| `--show-internal-urls`  |                  | show urls for all internal dev servers                                                                  |
-| `--skip-compilation`    |                  | skip the auto-compilation before starting the web-server                                                |
-| `--ui-root-name [type]` |       `-u`       | name of the ui root to use, e.g. "teambit.scope/scope" or "teambit.workspace/workspace"                 |
+| **Option**              | **Option alias** | **Description**                                                                                                                                                            |
+| ----------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--dev`                 |       `-d`       | start UI server in dev mode.                                                                                                                                               |
+| `--port [port-number]`  |       `-p`       | port of the UI server.                                                                                                                                                     |
+| `--rebuild`             |       `-r`       | rebuild the UI (useful e.g. when updating the workspace UI - can use the dev flag for HMR in this case)                                                                    |
+| `--skip-ui-build`       |                  | skip building UI                                                                                                                                                           |
+| `--verbose`             |       `-v`       | show verbose output for inspection and prints stack trace                                                                                                                  |
+| `--no-browser`          |       `-n`       | do not automatically open browser when ready                                                                                                                               |
+| `--show-internal-urls`  |                  | show urls for all internal dev servers                                                                                                                                     |
+| `--skip-compilation`    |                  | skip the auto-compilation before starting the web-server                                                                                                                   |
+| `--ui-root-name [type]` |       `-u`       | name of the ui root to use, e.g. "teambit.scope/scope" or "teambit.workspace/workspace"                                                                                    |
+| `--use-root-modules`    |                  | EXPERIMENTAL. resolve component previews from root node_modules instead of .bit_roots. mainly for internal usage, use with caution only if you understand the implications |
 
 ---
 

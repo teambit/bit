@@ -12,6 +12,9 @@ export function getRootNamespace(ns: string): string {
 export function namespacePriority(ns: string): number {
   const root = getRootNamespace(ns);
 
+  // internal namespaces (starting with _) go last
+  if (root.startsWith('_')) return 4;
+
   if (PRIORITY_HIGH.includes(root)) return 0;
   if (PRIORITY_MED.includes(root)) return 1;
   if (PRIORITY_LOW.includes(root)) return 3;

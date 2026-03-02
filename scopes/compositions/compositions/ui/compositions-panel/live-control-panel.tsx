@@ -15,10 +15,7 @@ export function LiveControls({
   onChange: (key: string, value: any) => void;
 }) {
   return (
-    <ul
-      className={classNames(styles.container)}
-      style={{ paddingBottom: '20em' /* temp walkaround for cutting popups */ }}
-    >
+    <ul className={classNames(styles.container)}>
       {defs.map((field) => {
         const key = field.id;
         const InputComponent = getInputComponent(field.input || 'text');

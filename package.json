@@ -89,6 +89,7 @@
     "generate-cli-reference": "bit cli generate > scopes/harmony/cli-reference/cli-reference.mdx && prettier scopes/harmony/cli-reference/cli-reference.mdx --write",
     "generate-cli-reference-json": "bit cli generate --json > scopes/harmony/cli-reference/cli-reference.json",
     "generate-cli-reference-docs": "bit cli generate --docs > scopes/harmony/cli-reference/cli-reference.docs.mdx",
+    "generate-cli-skill": "bit cli generate --skill commands > contrib/claude-skill-bit-cli/SKILL.md && bit cli generate --skill reference > contrib/claude-skill-bit-cli/CLI_REFERENCE.md && prettier contrib/claude-skill-bit-cli/SKILL.md contrib/claude-skill-bit-cli/CLI_REFERENCE.md --write",
     "generate-core-aspects-ids": "bit aspect list-core --json > scopes/harmony/testing/load-aspect/core-aspects-ids.json",
     "lint-staged": "lint-staged"
   },

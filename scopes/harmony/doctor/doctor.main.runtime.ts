@@ -306,7 +306,6 @@ export class DoctorMain {
     }
 
     const ignore = (fileName: string) => {
-      if (fileName === tarFilePath) return true;
       if (fileName === '.DS_Store') return true;
       if (
         !includeNodeModules &&
@@ -330,8 +329,16 @@ export class DoctorMain {
     };
 
     const workspaceRoot = consumerInfo?.path || '.';
+    const relativeTarFilePath = path.isAbsolute(tarFilePath) ? path.relative(workspaceRoot, tarFilePath) : tarFilePath;
+    const ignoreWithRelativePath = (fileName: string) => {
+      // tar-fs passes absolute paths when workspaceRoot is absolute, normalize to relative
+      const relativePath = path.isAbsolute(fileName) ? path.relative(workspaceRoot, fileName) : fileName;
+      // Check tarFilePath with both relative and original path to handle all cases
+      if (relativePath === relativeTarFilePath || fileName === tarFilePath) return true;
+      return ignore(relativePath);
+    };
     const myPack = tarFS.pack(workspaceRoot, {
-      ignore,
+      ignore: ignoreWithRelativePath,
       finalize: false,
       finish: packExamineResults,
     });
