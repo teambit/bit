@@ -539,7 +539,7 @@ export function CompositionCompare(props: CompositionCompareProps) {
   const stableLabels = useStableControlLabels(baseModel, compareModel, compare?.hasLocalChanges);
 
   const BaseLayout = useMemo(() => {
-    if (!isStableData || !baseModel) return null;
+    if (!isStableData) return null;
     if (baseMissingSelectedCompoisition)
       return <MissingComposition compositionId={requestedCompositionId} version="base" />;
     return (
