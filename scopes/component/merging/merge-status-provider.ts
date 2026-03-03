@@ -38,6 +38,7 @@ export type DataMergeResult = {
 };
 
 export const compIsAlreadyMergedMsg = 'component is already merged';
+export const compHasBeenRemovedMsg = 'component has been removed';
 export class MergeStatusProvider {
   constructor(
     private scope: ScopeMain,
@@ -277,7 +278,7 @@ other:   ${otherLaneHead.toString()}`);
       } else {
         // on main, don't merge soft-removed components unless it's marked with removeOnMain.
         // on lane, if it's not part of the current lane, don't merge it.
-        return this.returnUnmerged(id, `component has been removed`, true);
+        return this.returnUnmerged(id, compHasBeenRemovedMsg, true);
       }
     }
     const getCurrentId = () => {
@@ -331,7 +332,7 @@ other:   ${otherLaneHead.toString()}`);
         ? isTargetNotAhead // option #2 and #3 above
         : !isRemovedOnMain; // it's main. option #1 above.
       if (shouldIgnore) {
-        return this.returnUnmerged(id, `component has been removed`, true);
+        return this.returnUnmerged(id, compHasBeenRemovedMsg, true);
       }
     }
 

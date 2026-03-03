@@ -18,6 +18,7 @@ import {
   getWorkspaceConfigUpdateOutput,
 } from '@teambit/component.modules.merge-helper';
 import type { MergingMain } from './merging.main.runtime';
+import { compHasBeenRemovedMsg } from './merge-status-provider';
 import type { ConfigStoreMain } from '@teambit/config-store';
 
 export class MergeCmd implements Command {
@@ -221,19 +222,38 @@ ${mergeSnapError.message}
 
   const getFailureOutput = () => {
     if (!failedComponents || !failedComponents.length) return '';
-    const title = '\nmerge skipped for the following component(s)';
-    const body = compact(
-      failedComponents.map((failedComponent) => {
-        // all failures here are "unchangedLegitimately". otherwise, it would have been thrown as an error
-        if (!verbose) return null;
-        return `${chalk.bold(failedComponent.id.toString())} - ${chalk.white(failedComponent.unchangedMessage)}`;
-      })
-    ).join('\n');
-    if (!body) {
-      return `${chalk.bold(`\nmerge skipped legitimately for ${failedComponents.length} component(s)`)}
-(use --verbose to list them next time)`;
+    // always show removed components - the user needs to know about these
+    const skippedRemoved = failedComponents.filter((fc) => fc.unchangedMessage === compHasBeenRemovedMsg);
+    const otherComponents = failedComponents.filter((fc) => fc.unchangedMessage !== compHasBeenRemovedMsg);
+
+    const parts: string[] = [];
+
+    if (skippedRemoved.length) {
+      const removedTitle = chalk.yellow(`\nmerge skipped for ${skippedRemoved.length} soft-removed component(s):`);
+      const removedBody = skippedRemoved.map((fc) => `${chalk.bold(fc.id.toString())}`).join('\n');
+      const removedHint = chalk.yellow(`(use "bit recover <component-id>" to restore, then re-run the merge)`);
+      parts.push(`${removedTitle}\n${removedBody}\n${removedHint}`);
     }
-    return `${chalk.underline(title)}\n${body}`;
+
+    if (otherComponents.length) {
+      const title = '\nmerge skipped for the following component(s)';
+      const body = compact(
+        otherComponents.map((failedComponent) => {
+          // all failures here are "unchangedLegitimately". otherwise, it would have been thrown as an error
+          if (!verbose) return null;
+          return `${chalk.bold(failedComponent.id.toString())} - ${chalk.white(failedComponent.unchangedMessage)}`;
+        })
+      ).join('\n');
+      if (!body) {
+        parts.push(
+          `${chalk.bold(`\nmerge skipped legitimately for ${otherComponents.length} component(s)`)}\n(use --verbose to list them next time)`
+        );
+      } else {
+        parts.push(`${chalk.underline(title)}\n${body}`);
+      }
+    }
+
+    return parts.join('\n');
   };
 
   const getSummary = () => {
