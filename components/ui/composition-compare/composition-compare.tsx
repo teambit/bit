@@ -38,18 +38,22 @@ export type CompositionCompareProps = {
 
 type ControlsStatus = 'loading' | 'available' | 'empty';
 
+function MissingCompositionTemplate({ message, title }: { message?: string; title?: string } = {}) {
+  return (
+    <div className={styles.subView}>
+      <div className={styles.missingComposition}>
+        <div className={styles.missingCompositionTitle}>{title || 'Composition not available'}</div>
+        {message && <div className={styles.missingCompositionSubtitle}>{message}</div>}
+      </div>
+    </div>
+  );
+}
+
 function MissingComposition({ compositionId, version }: { compositionId?: string; version: string }) {
   const message = compositionId
     ? `The selected composition "${compositionId}" does not exist for the ${version} version.`
     : `The selected composition does not exist for the ${version} version.`;
-  return (
-    <div className={styles.subView}>
-      <div className={styles.missingComposition}>
-        <div className={styles.missingCompositionTitle}>Composition not available</div>
-        <div className={styles.missingCompositionSubtitle}>{message}</div>
-      </div>
-    </div>
-  );
+  return <MissingCompositionTemplate message={message} />;
 }
 
 function getCompositionTag(hasInBase: boolean, hasInCompare: boolean): string | undefined {
@@ -281,7 +285,7 @@ function resolveCompositionId(selectedComposition: any, requestedCompositionId?:
 }
 
 function hasMissingComposition(requestedCompositionId: string | undefined, selectedComposition: any) {
-  return Boolean(requestedCompositionId && !selectedComposition);
+  return Boolean(!requestedCompositionId || !selectedComposition);
 }
 
 function buildControlsResetKey(baseChannelKey: string | undefined, compareChannelKey: string | undefined) {
@@ -441,8 +445,8 @@ export function CompositionCompare(props: CompositionCompareProps) {
   const selectedBaseComp = findComposition(baseCompositions, requestedCompositionId);
   const selectedCompareComp = findComposition(compareCompositions, requestedCompositionId);
 
-  const baseMissing = hasMissingComposition(requestedCompositionId, selectedBaseComp);
-  const compareMissing = hasMissingComposition(requestedCompositionId, selectedCompareComp);
+  const baseMissingSelectedCompoisition = hasMissingComposition(requestedCompositionId, selectedBaseComp);
+  const compareMissingSelectedComposition = hasMissingComposition(requestedCompositionId, selectedCompareComp);
 
   const baseCompositionIds = useMemo(
     () => new Set((baseCompositions || []).map((c) => c.identifier)),
@@ -535,8 +539,9 @@ export function CompositionCompare(props: CompositionCompareProps) {
   const stableLabels = useStableControlLabels(baseModel, compareModel, compare?.hasLocalChanges);
 
   const BaseLayout = useMemo(() => {
-    if (!isStableData || !baseChannelKey || !baseModel) return null;
-    if (baseMissing) return <MissingComposition compositionId={requestedCompositionId} version="base" />;
+    if (!isStableData || !baseModel) return null;
+    if (baseMissingSelectedCompoisition)
+      return <MissingComposition compositionId={requestedCompositionId} version="base" />;
     return (
       <CompositionLayout
         model={baseModel}
@@ -560,13 +565,14 @@ export function CompositionCompare(props: CompositionCompareProps) {
     baseQuery,
     previewViewProps,
     emptyState,
-    baseMissing,
+    baseMissingSelectedCompoisition,
     requestedCompositionId,
   ]);
 
   const CompareLayout = useMemo(() => {
-    if (!isStableData || !compareChannelKey || !compareModel) return null;
-    if (compareMissing) return <MissingComposition compositionId={requestedCompositionId} version="compare" />;
+    if (!isStableData) return null;
+    if (compareMissingSelectedComposition)
+      return <MissingComposition compositionId={requestedCompositionId} version="compare" />;
     return (
       <CompositionLayout
         model={compareModel}
@@ -590,7 +596,7 @@ export function CompositionCompare(props: CompositionCompareProps) {
     compareQuery,
     previewViewProps,
     emptyState,
-    compareMissing,
+    compareMissingSelectedComposition,
     requestedCompositionId,
   ]);
 
@@ -602,9 +608,11 @@ export function CompositionCompare(props: CompositionCompareProps) {
     [toggleControls]
   );
 
-  if (!base && !compare) return null;
-
   const key = `${base?.model.id.toString()}-${compare?.model.id.toString()}-composition-compare`;
+
+  if (!contextLoading && !baseCompositions?.length && !compareCompositions?.length) {
+    return <MissingCompositionTemplate title={`No Compositions Available`} />;
+  }
 
   return (
     <div key={key} className={classNames(styles.container, { [styles.isResizing]: isResizing })}>
