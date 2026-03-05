@@ -173,6 +173,11 @@ export async function updateDependenciesVersions(
     pkgName?: string
   ): { compId?: ComponentID; range?: string } | undefined {
     if (!pkgName) return undefined;
+    // For env-own dependencies (from env.jsonc selfPolicy), if the dep is a workspace component,
+    // skip the override so the version is resolved from the bitmap instead.
+    // This prevents the static env.jsonc version (e.g. a tag) from overriding the workspace
+    // version (e.g. a snap hash on a lane).
+    if (overridesDependencies.envOwnPkgNames.has(pkgName) && getIdFromBitMap(id)) return undefined;
     const dependencies = overridesDependencies.getDependenciesToAddManually();
     const found = dependencies?.[depType]?.[pkgName];
     if (!found) return undefined;
