@@ -429,6 +429,64 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
     });
   });
 
+  describe('bit ci merge when components are new to the lane (never existed on main)', () => {
+    let mergeOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+
+      // Initial git commit with just the workspace setup (no bit components)
+      helper.fs.outputFile('.gitignore', 'node_modules/\n.bit/\n');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "initial commit"');
+      const defaultBranch = helper.command.runCmd('git branch --show-current').trim();
+      helper.command.runCmd(`git push -u origin ${defaultBranch}`);
+
+      // Create a lane and add NEW components directly on the lane
+      helper.command.createLane('new-comps-lane');
+      helper.fixtures.populateComponents(2);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      // Create a git branch, commit, and merge back to default branch
+      helper.command.runCmd('git checkout -b feature/new-comps');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: add new components on lane"');
+
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.runCmd('git merge feature/new-comps');
+
+      // Run bit ci merge (workspace .bitmap still references the lane)
+      mergeOutput = helper.command.runCmd('bit ci merge --message "merge new lane components"');
+    });
+    it('should complete successfully', () => {
+      expect(mergeOutput).to.include('Merged PR');
+    });
+    it('should tag the new components', () => {
+      const list = helper.command.listParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      const comp2 = list.find((comp) => comp.id.includes('comp2'));
+      expect(comp1).to.exist;
+      expect(comp2).to.exist;
+      expect(comp1?.currentVersion).to.equal('0.0.1');
+      expect(comp2?.currentVersion).to.equal('0.0.1');
+    });
+    it('status should be clean', () => {
+      helper.command.expectStatusToBeClean();
+    });
+    it('should export tagged components to remote', () => {
+      const list = helper.command.listRemoteScopeParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      const comp2 = list.find((comp) => comp.id.includes('comp2'));
+      expect(comp1?.localVersion).to.equal('0.0.1');
+      expect(comp2?.localVersion).to.equal('0.0.1');
+    });
+    it('should delete the remote lane', () => {
+      const remoteLanes = helper.command.listRemoteLanesParsed();
+      expect(remoteLanes.lanes).to.have.lengthOf(0);
+    });
+  });
+
   describe('bit ci merge after lane import --branch', () => {
     let mergeOutput: string;
     before(() => {
