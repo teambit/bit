@@ -223,7 +223,7 @@ export class WorkspaceManifestFactory {
       // When false, only include peer deps that the component actually uses, to avoid
       // writing unnecessary deps to the generated install manifest.
       let peerDepsForManifest: Record<string, string>;
-      if (includeAllEnvPeers) {
+      if (includeAllEnvPeers ?? true) {
         peerDepsForManifest = envPeerDependencies;
       } else {
         peerDepsForManifest = pickBy(envPeerDependencies, (_val, pkgName) => {
