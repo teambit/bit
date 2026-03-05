@@ -233,6 +233,7 @@ export class InstallMain {
     await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
     const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, {
       dedupe: true,
+      includeAllEnvPeers: false,
     });
     const { dependencies, devDependencies } = componentsAndManifests.manifests[this.workspace.path];
     return this.workspace.writeDependenciesToPackageJson({ ...devDependencies, ...dependencies });
@@ -367,7 +368,6 @@ export class InstallMain {
       dedupe: !hasRootComponents && options?.dedupe,
       dependencyFilterFn: depsFilterFn,
       nodeLinker: this.dependencyResolver.nodeLinker(),
-      includeAllEnvPeers: true,
     };
     const linkOpts = {
       linkTeambitBit: true,
