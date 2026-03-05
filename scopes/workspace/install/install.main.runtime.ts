@@ -367,6 +367,7 @@ export class InstallMain {
       dedupe: !hasRootComponents && options?.dedupe,
       dependencyFilterFn: depsFilterFn,
       nodeLinker: this.dependencyResolver.nodeLinker(),
+      includeAllEnvPeers: true,
     };
     const linkOpts = {
       linkTeambitBit: true,
