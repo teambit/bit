@@ -87,7 +87,7 @@ when no app name is specified, automatically detects and runs the app if only on
       const url = `http://localhost:${port}`;
       this.logger.console(`${appName} app is running on ${url}`);
 
-      if (!noBrowser && port) {
+      if (!noBrowser && port && process.env.TERM_PROGRAM !== 'vscode') {
         await open(url);
       }
     } else if (port) {
@@ -95,7 +95,7 @@ when no app name is specified, automatically detects and runs the app if only on
       const url = `http://localhost:${port}`;
       // this.logger.console(`${appName} app is running on ${url}`);
 
-      if (!noBrowser) {
+      if (!noBrowser && process.env.TERM_PROGRAM !== 'vscode') {
         await open(url);
       }
     }

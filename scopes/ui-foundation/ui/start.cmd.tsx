@@ -117,7 +117,7 @@ includes hot module reloading for development.`;
         const name = server.getName();
         const message = chalk.green(`\nView '${chalk.bold(name)}' components at ${chalk.cyan(url)}`);
         spinnies.add('summary', { text: message, status: 'non-spinnable' });
-        if (!noBrowser) {
+        if (!noBrowser && process.env.TERM_PROGRAM !== 'vscode') {
           await open(url);
         }
         return undefined;
