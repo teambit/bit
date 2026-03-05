@@ -9,8 +9,9 @@ import pMapSeries from 'p-map-series';
 import { snapToSemver } from '@teambit/component-package-version';
 import type { DependencyList, PackageName } from '../dependencies';
 import { ComponentDependency } from '../dependencies';
-import type { WorkspacePolicy, EnvPolicy } from '../policy';
+import type { WorkspacePolicy, EnvPolicy, VariantPolicyConfigEntryValue, VariantPolicyEntryValue } from '../policy';
 import { VariantPolicy } from '../policy';
+import { DependencyResolverAspect } from '../dependency-resolver.aspect';
 import type { DependencyResolverMain } from '../dependency-resolver.main.runtime';
 import type { ComponentsManifestsMap } from '../types';
 import { ComponentManifest } from './component-manifest';
@@ -216,6 +217,13 @@ export class WorkspaceManifestFactory {
       });
 
       const envPeerDependencies = await this._getEnvPeerDependencies(component, packageNames);
+      // Also include packages that are explicitly listed in the component's
+      // dep-resolver config (e.g. with version "+").  Without this, a fresh
+      // workspace after `bit new`/`bit fork` hits a chicken-and-egg problem:
+      // "+" can't resolve → package absent from manifest → filter excludes it
+      // → package never installed.
+      const componentExplicitPkgs = this.getComponentExplicitPackages(component);
+
       // When includeAllEnvPeers is true, use ALL env peer deps to ensure consistent
       // peer dependency contexts across all components. Otherwise, pnpm creates separate
       // "injected" copies in .pnpm/ for components with different peer sets, causing
@@ -230,7 +238,8 @@ export class WorkspaceManifestFactory {
           return (
             depManifestBeforeFiltering.dependencies[pkgName] ||
             depManifestBeforeFiltering.devDependencies[pkgName] ||
-            depManifestBeforeFiltering.peerDependencies[pkgName]
+            depManifestBeforeFiltering.peerDependencies[pkgName] ||
+            componentExplicitPkgs.has(pkgName)
           );
         });
         // In case the env has peer dependencies on both react and react-dom, we want to make sure to keep the versions
@@ -272,6 +281,37 @@ export class WorkspaceManifestFactory {
     }
 
     return result;
+  }
+
+  /**
+   * Collect package names explicitly listed in the component's dep-resolver policy,
+   * excluding entries that represent removals ("-" or `{ version: "-" }`).
+   */
+  private getComponentExplicitPackages(component: Component): Set<string> {
+    const depResolverEntry = component.get(DependencyResolverAspect.id);
+    const explicitPolicy = depResolverEntry?.config?.policy ?? {};
+    return new Set<string>([
+      ...nonRemovedEntryNames(explicitPolicy.dependencies),
+      ...nonRemovedEntryNames(explicitPolicy.devDependencies),
+      ...nonRemovedEntryNames(explicitPolicy.peerDependencies),
+    ]);
+
+    function nonRemovedEntryNames(policySection?: Record<string, VariantPolicyConfigEntryValue>): string[] {
+      if (!policySection) return [];
+      const names: string[] = [];
+      for (const [name, versionSpec] of Object.entries(policySection)) {
+        // Skip explicit removals expressed as "-" or as removal objects.
+        if (versionSpec !== '-' && !isRemovalObject(versionSpec)) {
+          names.push(name);
+        }
+      }
+      return names;
+    }
+
+    function isRemovalObject(val: VariantPolicyConfigEntryValue): val is VariantPolicyEntryValue {
+      if (!val || typeof val !== 'object') return false;
+      return val.version === '-';
+    }
   }
 
   private async _getEnvPeerDependencies(
