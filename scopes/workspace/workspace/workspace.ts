@@ -1498,7 +1498,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     if (!this.envs.isUsingEnvEnv(env)) {
       this.warnedAboutMisconfiguredEnvs.push(envId);
       this.logger.consoleWarning(
-        `env "${envId}" is not of type env. (correct the env's type, or component config with "bit env set ${envId} teambit.envs/env")`
+        `env "${envId}" is not of type env. (correct the env's type, or component config with "bit env set ${envId} bitdev.general/envs/bit-env")`
       );
     }
   }
