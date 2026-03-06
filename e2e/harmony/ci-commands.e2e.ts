@@ -464,8 +464,17 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
       expect(comp1).to.exist;
       expect(comp1?.currentVersion).to.equal('0.0.2');
     });
+    it('should export tagged components to remote', () => {
+      const list = helper.command.listRemoteScopeParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      expect(comp1?.localVersion).to.equal('0.0.2');
+    });
     it('status should be clean', () => {
       helper.command.expectStatusToBeClean();
+    });
+    it('should delete the remote lane', () => {
+      const remoteLanes = helper.command.listRemoteLanesParsed();
+      expect(remoteLanes.lanes).to.have.lengthOf(0);
     });
   });
 

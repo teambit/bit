@@ -724,44 +724,32 @@ export class CiMain {
     const repo = scope.objects;
     let hasChanges = false;
 
-    for (const laneComp of laneComponents) {
-      if (laneComp.isDeleted) continue;
+    const activeComponents = laneComponents.filter((c) => !c.isDeleted);
+    await Promise.all(
+      activeComponents.map(async (laneComp) => {
+        const laneVersion = (await repo.load(laneComp.head)) as Version;
+        if (!laneVersion) return;
 
-      const laneVersion = (await repo.load(laneComp.head)) as Version;
-      if (!laneVersion) continue;
+        const laneConfig = laneVersion.extensions.toConfigObject();
+        if (!laneConfig || Object.keys(laneConfig).length === 0) return;
 
-      const laneConfig = laneVersion.extensions.toConfigObject();
-      if (!laneConfig || Object.keys(laneConfig).length === 0) continue;
-
-      // Get main Version for comparison
-      let mainConfig: Record<string, any> = {};
-      const modelComp = await scope.getModelComponentIfExist(laneComp.id.changeVersion(undefined));
-      if (modelComp) {
-        const mainHead = modelComp.getHead();
+        // Get main Version for comparison
+        let mainConfig: Record<string, any> = {};
+        const modelComp = await scope.getModelComponentIfExist(laneComp.id.changeVersion(undefined));
+        const mainHead = modelComp?.getHead();
         if (mainHead) {
           const mainVersion = (await repo.load(mainHead)) as Version;
-          if (mainVersion) {
-            mainConfig = mainVersion.extensions.toConfigObject();
+          mainConfig = mainVersion?.extensions.toConfigObject() ?? {};
+        }
+
+        for (const [aspectId, config] of Object.entries(laneConfig)) {
+          if (!isEqual(config, mainConfig[aspectId])) {
+            this.workspace.bitMap.addComponentConfig(laneComp.id, aspectId, config);
+            hasChanges = true;
           }
         }
-      }
-
-      // Calculate config diff
-      const configDiff: Record<string, any> = {};
-      for (const [aspectId, config] of Object.entries(laneConfig)) {
-        if (!isEqual(config, mainConfig[aspectId])) {
-          configDiff[aspectId] = config;
-        }
-      }
-
-      if (Object.keys(configDiff).length > 0) {
-        const compId = laneComp.id;
-        for (const [aspectId, config] of Object.entries(configDiff)) {
-          this.workspace.bitMap.addComponentConfig(compId, aspectId, config);
-        }
-        hasChanges = true;
-      }
-    }
+      })
+    );
 
     if (hasChanges) {
       await this.workspace.bitMap.write('restore lane config');
