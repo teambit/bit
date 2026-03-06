@@ -18,7 +18,7 @@ chai.use(chaiFs);
  * only filtering them when using the external package manager path
  * (writeDependenciesToPackageJson).
  */
-describe.only('env peer dependencies should be installed for created components', function () {
+describe('env peer dependencies should be installed for created components', function () {
   this.timeout(0);
   let helper: Helper;
 
@@ -30,7 +30,7 @@ describe.only('env peer dependencies should be installed for created components'
     helper.scopeHelper.destroy();
   });
 
-  describe('bit create react and then check-types and tag', () => {
+  describe('bit create react and then check-types', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.create('react', 'button');
@@ -41,8 +41,7 @@ describe.only('env peer dependencies should be installed for created components'
     });
 
     it('bit check-types should pass without errors', () => {
-      const output = helper.general.runWithTryCatch('bit check-types');
-      expect(output).to.not.have.string('error TS');
+      helper.command.runCmd('bit check-types');
     });
   });
 });
