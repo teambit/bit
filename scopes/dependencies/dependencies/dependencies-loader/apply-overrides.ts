@@ -555,107 +555,158 @@ export class ApplyOverrides {
     }
 
     const originallyExists: string[] = [];
-    let missingPackages: string[] = [];
-    // We want to also add missing packages to the peer list as we know to resolve the version from the env anyway
+    const missingPackages = this.getMissingPackagesFromIssues();
+
+    ['dependencies', 'devDependencies', 'peerDependencies'].forEach((field) => {
+      forEach(autoDetectOverrides[field], (pkgVal, pkgName) => {
+        this.applyAutoDetectedOverrideForPackage(field, pkgName, pkgVal, originallyExists, missingPackages);
+      });
+    });
+  }
+
+  private getMissingPackagesFromIssues(): string[] {
     const missingData = this.issues.getIssueByName('MissingPackagesDependenciesOnFs')?.data as
       | MissingPackagesData[]
       | undefined;
-    if (missingData) {
-      missingPackages = uniq(missingData.map((d) => d.missingPackages).flat());
+    if (!missingData) return [];
+    return uniq(missingData.map((d) => d.missingPackages).flat());
+  }
+
+  private isPackageAutoDetected(pkgName: string, originallyExists: string[], missingPackages: string[]): boolean {
+    // Check component dependencies
+    const existsInAnyCompDeps =
+      this.allDependencies.dependencies.some((dep) => dep.packageName === pkgName) ||
+      this.allDependencies.devDependencies.some((dep) => dep.packageName === pkgName) ||
+      this.allDependencies.peerDependencies.some((dep) => dep.packageName === pkgName);
+
+    // Check originAllPackagesDependencies instead of allPackagesDependencies
+    // as it might be already removed at this point if it was set with "-" in runtime/dev
+    const existsInOriginalPkgDeps =
+      this.originAllPackagesDependencies.packageDependencies[pkgName] ||
+      this.originAllPackagesDependencies.devPackageDependencies[pkgName] ||
+      this.originAllPackagesDependencies.peerPackageDependencies[pkgName];
+
+    // Check if it was originally exists in the component
+    // This handles policies like: dependencies: {"my-dep": "-"}, devDependencies: {"my-dep": "1.0.0"}
+    // where we might remove it before getting to devDeps
+    return (
+      existsInAnyCompDeps ||
+      !!existsInOriginalPkgDeps ||
+      originallyExists.includes(pkgName) ||
+      missingPackages.includes(pkgName)
+    );
+  }
+
+  private applyAutoDetectedOverrideForPackage(
+    field: string,
+    pkgName: string,
+    pkgVal: string,
+    originallyExists: string[],
+    missingPackages: string[]
+  ): void {
+    if (this.overridesDependencies.shouldIgnorePeerPackage(pkgName)) {
+      return;
     }
-    ['dependencies', 'devDependencies', 'peerDependencies'].forEach((field) => {
-      forEach(autoDetectOverrides[field], (pkgVal, pkgName) => {
-        if (this.overridesDependencies.shouldIgnorePeerPackage(pkgName)) {
-          return;
-        }
 
-        const existsInCompsDeps = this.allDependencies.dependencies.find((dep) => dep.packageName === pkgName);
-        const existsInCompsDevDeps = this.allDependencies.devDependencies.find((dep) => dep.packageName === pkgName);
-        const existsInCompsPeerDeps = this.allDependencies.peerDependencies.find((dep) => dep.packageName === pkgName);
+    if (!this.isPackageAutoDetected(pkgName, originallyExists, missingPackages)) {
+      return;
+    }
 
-        // Validate it was auto detected, we only affect stuff that were detected
-        const isAutoDetected =
-          existsInCompsDeps ||
-          existsInCompsDevDeps ||
-          existsInCompsPeerDeps ||
-          // We are checking originAllPackagesDependencies instead of allPackagesDependencies
-          // as it might be already removed from allPackagesDependencies at this point if it was set with
-          // "-" in runtime/dev
-          // in such case we still want to apply it here
-          this.originAllPackagesDependencies.packageDependencies[pkgName] ||
-          this.originAllPackagesDependencies.devPackageDependencies[pkgName] ||
-          this.originAllPackagesDependencies.peerPackageDependencies[pkgName] ||
-          // Check if it was originally exists in the component
-          // as we might have a policy which looks like this:
-          // "components": {
-          //   "dependencies": {
-          //       "my-dep": "-"
-          //    },
-          //   "devDependencies": {
-          //       "my-dep": "1.0.0"
-          //    },
-          // }
-          // in that case we might remove it before getting to the devDeps then we will think that it wasn't required in the component
-          // which is incorrect
-          originallyExists.includes(pkgName) ||
-          missingPackages.includes(pkgName);
+    originallyExists.push(pkgName);
 
-        if (!isAutoDetected) {
-          return;
-        }
-        originallyExists.push(pkgName);
-        const key = DepsKeysToAllPackagesDepsKeys[field];
-        delete this.allPackagesDependencies[key][pkgName];
-        // When changing peer dependency we want it to be stronger than the other types
-        if (field === 'peerDependencies') {
-          delete this.allPackagesDependencies.devPackageDependencies[pkgName];
-          delete this.allPackagesDependencies.packageDependencies[pkgName];
-          if (existsInCompsDeps) {
-            this.allDependencies.dependencies = this.allDependencies.dependencies.filter(
-              (dep) => dep.packageName !== pkgName
-            );
-          }
-          if (existsInCompsDevDeps) {
-            this.allDependencies.devDependencies = this.allDependencies.devDependencies.filter(
-              (dep) => dep.packageName !== pkgName
-            );
-          }
-        }
+    const existsInCompsDeps = this.allDependencies.dependencies.find((dep) => dep.packageName === pkgName);
+    const existsInCompsDevDeps = this.allDependencies.devDependencies.find((dep) => dep.packageName === pkgName);
+    const existsInCompsPeerDeps = this.allDependencies.peerDependencies.find((dep) => dep.packageName === pkgName);
 
-        // This was restored to fix an issue with a case where
-        // You have a package dep in env.jsonc under peers (like @testing-library/react)
-        // Then you change the env.jsonc and move it from peer to devDependencies
-        // the deps resolver data will be correct, but in the legacy data
-        // it will still be in the peerPackageDependencies, so we need to remove it from there
-        // to avoid having it in package.json as a peer dependency
-        // which then will affect the installation of the component
-        delete this.allPackagesDependencies.packageDependencies[pkgName];
-        delete this.allPackagesDependencies.devPackageDependencies[pkgName];
-        delete this.allPackagesDependencies.peerPackageDependencies[pkgName];
+    // When changing peer dependency we want it to be stronger than the other types
+    if (field === 'peerDependencies') {
+      const shouldSkip = this.handlePeerDependencyOverride(pkgName, existsInCompsDeps, existsInCompsDevDeps);
+      if (shouldSkip) return;
+    }
 
-        // If it exists in comps deps / comp dev deps, we don't want to add it to the allPackagesDependencies
-        // as it will make the same dep both a dev and runtime dep
-        // since we are here only for auto detected deps, it means we already resolved the version correctly
-        // so we don't need to really modify the version
-        // also the version here might have a range (^ or ~ for example) so we can't
-        // just put it as is, as it is not valid for component deps to have range
-        if (
-          pkgVal !== MANUALLY_REMOVE_DEPENDENCY &&
-          ((!existsInCompsDeps && !existsInCompsDevDeps) || field === 'peerDependencies')
-        ) {
-          if ((existsInCompsDeps || existsInCompsDevDeps) && field === 'peerDependencies') {
-            const comp = (existsInCompsDeps ?? existsInCompsDevDeps) as Dependency;
-            comp.versionRange = pkgVal;
-            this.allDependencies.peerDependencies.push(comp);
-          } else {
-            this.allPackagesDependencies[key][pkgName] = pkgVal;
-          }
-          if (existsInCompsPeerDeps) {
-            existsInCompsPeerDeps.versionRange = pkgVal;
-          }
-        }
-      });
-    });
+    // Clear package from all dependency types to avoid duplicates
+    // This fixes cases where a package moves between dep types in env.jsonc
+    this.removePackageFromAllDependencyTypes(pkgName);
+
+    this.applyPackageVersion(field, pkgName, pkgVal, existsInCompsDeps, existsInCompsDevDeps, existsInCompsPeerDeps);
+  }
+
+  /**
+   * Handle peer dependency specific logic.
+   * @returns true if the package should be skipped (not added to dependencies)
+   */
+  private handlePeerDependencyOverride(
+    pkgName: string,
+    existsInCompsDeps: Dependency | undefined,
+    existsInCompsDevDeps: Dependency | undefined
+  ): boolean {
+    delete this.allPackagesDependencies.devPackageDependencies[pkgName];
+    delete this.allPackagesDependencies.packageDependencies[pkgName];
+
+    // @types/* packages should not be added to components at all when in env peers.
+    // When a component is installed in a workspace, its env is installed as well.
+    // Packages listed as peers in env.jsonc become runtime dependencies of the env itself,
+    // so they're always installed alongside the env. Since @types/* packages are only needed
+    // for TypeScript compilation (which the env handles), there's no need for components
+    // to have them in their own dependencies.
+    if (pkgName.startsWith('@types/')) {
+      delete this.allPackagesDependencies.peerPackageDependencies[pkgName];
+      return true;
+    }
+
+    if (existsInCompsDeps) {
+      this.allDependencies.dependencies = this.allDependencies.dependencies.filter(
+        (dep) => dep.packageName !== pkgName
+      );
+    }
+    if (existsInCompsDevDeps) {
+      this.allDependencies.devDependencies = this.allDependencies.devDependencies.filter(
+        (dep) => dep.packageName !== pkgName
+      );
+    }
+
+    return false;
+  }
+
+  private removePackageFromAllDependencyTypes(pkgName: string): void {
+    delete this.allPackagesDependencies.packageDependencies[pkgName];
+    delete this.allPackagesDependencies.devPackageDependencies[pkgName];
+    delete this.allPackagesDependencies.peerPackageDependencies[pkgName];
+  }
+
+  private applyPackageVersion(
+    field: string,
+    pkgName: string,
+    pkgVal: string,
+    existsInCompsDeps: Dependency | undefined,
+    existsInCompsDevDeps: Dependency | undefined,
+    existsInCompsPeerDeps: Dependency | undefined
+  ): void {
+    // If it exists in comps deps / comp dev deps, we don't want to add it to the allPackagesDependencies
+    // as it will make the same dep both a dev and runtime dep
+    // since we are here only for auto detected deps, it means we already resolved the version correctly
+    // so we don't need to really modify the version
+    // also the version here might have a range (^ or ~ for example) so we can't
+    // just put it as is, as it is not valid for component deps to have range
+    const shouldAddPackage =
+      pkgVal !== MANUALLY_REMOVE_DEPENDENCY &&
+      ((!existsInCompsDeps && !existsInCompsDevDeps) || field === 'peerDependencies');
+
+    if (!shouldAddPackage) return;
+
+    const key = DepsKeysToAllPackagesDepsKeys[field];
+
+    if ((existsInCompsDeps || existsInCompsDevDeps) && field === 'peerDependencies') {
+      const comp = (existsInCompsDeps ?? existsInCompsDevDeps) as Dependency;
+      comp.versionRange = pkgVal;
+      this.allDependencies.peerDependencies.push(comp);
+    } else {
+      this.allPackagesDependencies[key][pkgName] = pkgVal;
+    }
+
+    if (existsInCompsPeerDeps) {
+      existsInCompsPeerDeps.versionRange = pkgVal;
+    }
   }
 
   private async applyAutoDetectedPeersFromEnvOnEnvItSelf(): Promise<void> {
