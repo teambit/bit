@@ -6,6 +6,14 @@ import open from 'open';
 import chalk from 'chalk';
 import type { UiMain } from './ui.main.runtime';
 
+function openBrowser(url: string): Promise<void> {
+  const openUrl =
+    process.env.BIT_VSCODE_EXTENSION === 'true'
+      ? `vscode://bit.vscode-bit/open-browser?url=${encodeURIComponent(url)}`
+      : url;
+  return open(openUrl).then(() => undefined);
+}
+
 type StartArgs = [userPattern: string];
 type StartFlags = {
   dev: boolean;
@@ -117,8 +125,8 @@ includes hot module reloading for development.`;
         const name = server.getName();
         const message = chalk.green(`\nView '${chalk.bold(name)}' components at ${chalk.cyan(url)}`);
         spinnies.add('summary', { text: message, status: 'non-spinnable' });
-        if (!noBrowser && process.env.TERM_PROGRAM !== 'vscode') {
-          await open(url);
+        if (!noBrowser) {
+          await openBrowser(url);
         }
         return undefined;
       })

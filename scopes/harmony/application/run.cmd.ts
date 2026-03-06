@@ -4,6 +4,14 @@ import type { Logger } from '@teambit/logger';
 import open from 'open';
 import type { ApplicationMain } from './application.main.runtime';
 
+function openBrowser(url: string): Promise<void> {
+  const openUrl =
+    process.env.BIT_VSCODE_EXTENSION === 'true'
+      ? `vscode://bit.vscode-bit/open-browser?url=${encodeURIComponent(url)}`
+      : url;
+  return open(openUrl).then(() => undefined);
+}
+
 type RunOptions = {
   dev: boolean;
   verbose: boolean;
@@ -87,16 +95,16 @@ when no app name is specified, automatically detects and runs the app if only on
       const url = `http://localhost:${port}`;
       this.logger.console(`${appName} app is running on ${url}`);
 
-      if (!noBrowser && port && process.env.TERM_PROGRAM !== 'vscode') {
-        await open(url);
+      if (!noBrowser && port) {
+        await openBrowser(url);
       }
     } else if (port) {
       // New API - also open browser when port is available
       const url = `http://localhost:${port}`;
       // this.logger.console(`${appName} app is running on ${url}`);
 
-      if (!noBrowser && process.env.TERM_PROGRAM !== 'vscode') {
-        await open(url);
+      if (!noBrowser) {
+        await openBrowser(url);
       }
     }
 
