@@ -744,7 +744,7 @@ export class CiMain {
 
         for (const [aspectId, config] of Object.entries(laneConfig)) {
           if (!isEqual(config, mainConfig[aspectId])) {
-            this.workspace.bitMap.addComponentConfig(laneComp.id, aspectId, config);
+            this.workspace.bitMap.addComponentConfig(laneComp.id, aspectId, config as Record<string, any>);
             hasChanges = true;
           }
         }
