@@ -429,6 +429,46 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
     });
   });
 
+  describe('bit ci merge when lane has config changes (env-set)', () => {
+    let mergeOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      const defaultBranch = setupComponentsAndInitialCommit();
+
+      // Create lane and change env on comp1
+      helper.command.createLane('config-lane');
+      helper.command.setEnv('comp1', 'teambit.harmony/aspect');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      // Create git branch, commit, and merge to default branch
+      helper.command.runCmd('git checkout -b feature/config-change');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: env config change on lane"');
+
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.runCmd('git merge feature/config-change');
+
+      // Run bit ci merge
+      mergeOutput = helper.command.runCmd('bit ci merge');
+    });
+    it('should preserve the env config from the lane', () => {
+      const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
+      expect(envData.config.env).to.equal('teambit.harmony/aspect');
+    });
+    it('should tag and export successfully', () => {
+      expect(mergeOutput).to.include('Merged PR');
+      const list = helper.command.listParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      expect(comp1).to.exist;
+      expect(comp1?.currentVersion).to.equal('0.0.2');
+    });
+    it('status should be clean', () => {
+      helper.command.expectStatusToBeClean();
+    });
+  });
+
   describe('bit ci merge when components are new to the lane (never existed on main)', () => {
     let mergeOutput: string;
     before(() => {
