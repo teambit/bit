@@ -13,6 +13,7 @@ import { BitError } from '@teambit/bit-error';
 import yesno from 'yesno';
 import { COMPONENT_PATTERN_HELP, DEFAULT_CLOUD_DOMAIN } from '@teambit/legacy.constants';
 import type { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import type { SwitchCmd } from './switch.cmd';
 import type { FetchCmd } from '@teambit/importer';
 
@@ -629,6 +630,13 @@ export class LaneImportCmd implements Command {
       'import only components from the lane that fit the specified component-pattern to the workspace. works only when the workspace is empty',
     ],
     ['', 'branch', 'create and checkout a new git branch named after the lane'],
+    [
+      'r',
+      'auto-merge-resolve <merge-strategy>',
+      'merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"',
+    ],
+    ['', 'force-ours', 'do not merge, preserve local files as is'],
+    ['', 'force-theirs', 'do not merge, just overwrite with incoming files'],
   ] as CommandOptions;
   loader = true;
 
@@ -640,13 +648,26 @@ export class LaneImportCmd implements Command {
       skipDependencyInstallation = false,
       pattern,
       branch = false,
+      autoMergeResolve,
+      forceOurs = false,
+      forceTheirs = false,
     }: {
       skipDependencyInstallation: boolean;
       pattern?: string;
       branch?: boolean;
+      autoMergeResolve?: MergeStrategy;
+      forceOurs?: boolean;
+      forceTheirs?: boolean;
     }
   ): Promise<string> {
-    return this.switchCmd.report([lane], { skipDependencyInstallation, pattern, branch });
+    return this.switchCmd.report([lane], {
+      skipDependencyInstallation,
+      pattern,
+      branch,
+      autoMergeResolve,
+      forceOurs,
+      forceTheirs,
+    });
   }
 }
 
