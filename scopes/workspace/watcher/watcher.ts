@@ -231,18 +231,22 @@ export class Watcher {
       if (this.verbose && this.msgs?.onAll) {
         this.msgs.onAll('change', filePath);
       }
-      if (dirname(filePath) === this.ipcEventsDir) {
-        const eventName = basename(filePath);
-        if (eventName === 'onNotifySSE') {
-          const content = await fs.readFile(filePath, 'utf8');
-          this.logger.debug(`Watcher, onNotifySSE ${content}`);
-          const parsed = JSON.parse(content);
-          sendEventsToClients(parsed.event, parsed);
-        } else {
-          await this.watcherMain.ipcEvents.triggerGotEvent(eventName as any);
+      try {
+        if (dirname(filePath) === this.ipcEventsDir) {
+          const eventName = basename(filePath);
+          if (eventName === 'onNotifySSE') {
+            const content = await fs.readFile(filePath, 'utf8');
+            this.logger.debug(`Watcher, onNotifySSE ${content}`);
+            const parsed = JSON.parse(content);
+            sendEventsToClients(parsed.event, parsed);
+          } else {
+            await this.watcherMain.ipcEvents.triggerGotEvent(eventName as any);
+          }
+        } else if (filePath.endsWith(UNMERGED_FILENAME)) {
+          await this.workspace.clearCache();
         }
-      } else if (filePath.endsWith(UNMERGED_FILENAME)) {
-        await this.workspace.clearCache();
+      } catch (err: any) {
+        this.logger.error(`failed to handle scope file change ${filePath}: ${err.message}`);
       }
     });
   }

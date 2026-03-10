@@ -557,6 +557,10 @@ export class ScopeMain implements ComponentFactory {
    * 3. global config. so for example if a user logs in or out it would be reflected.
    * it's possible that other commands (e.g. `bit import`) modified these files, while these processes are running.
    * Because these data are kept in memory, they're not up to date anymore.
+   *
+   * @param watchOptions - chokidar watch options (ignoreInitial is always enforced to true)
+   * @param additionalPaths - extra paths to watch (e.g. IPC events dir, unmerged.json)
+   * @param onAdditionalFileChange - callback invoked when a file in additionalPaths changes
    */
   async watchScopeInternalFiles(
     watchOptions: WatchOptions = {},
