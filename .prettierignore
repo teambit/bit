@@ -1,3 +1,6 @@
 fixtures
 e2e/fixtures
 components/legacy/e2e-helper/excluded-fixtures
+# MDX files with JSX comments that prettier incorrectly escapes
+scopes/react/aspect-docs/react/react.mdx
+scopes/react/ui/loader-fallback/loader-fallback.docs.mdx
