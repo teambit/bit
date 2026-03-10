@@ -801,6 +801,7 @@ export class PreviewMain {
   }
 
   private executionRefs = new Map<string, ExecutionRef>();
+  private _useRootModules = false;
 
   private async getPreviewTarget(
     /** execution context (of the specific env) */
@@ -811,6 +812,11 @@ export class PreviewMain {
     [context.id, ...context.relatedContexts].forEach((ctxId) => {
       this.executionRefs.set(ctxId, new ExecutionRef(context));
     });
+
+    // capture the flag once so subsequent updateLinkFiles calls (e.g. from
+    // component-change handlers) use the correct value even if runtimeOptions
+    // is not yet populated at that point.
+    this._useRootModules = !!this.ui.runtimeOptions?.useRootModules;
 
     const previewRuntime = await this.writePreviewEntry(context);
     const previews = this.previewSlot.values();
@@ -879,8 +885,7 @@ export class PreviewMain {
           visitedEnvs.add(envId);
         }
         const compilerInstance = environment.getCompiler?.();
-        const useRootModules = this.ui.runtimeOptions?.useRootModules;
-        const modulePath = useRootModules
+        const modulePath = this._useRootModules
           ? this.pkg.getModulePath(component)
           : compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getRuntimeModulePath(component);
         return files.map((file) => {
