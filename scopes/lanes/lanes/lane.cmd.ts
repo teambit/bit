@@ -660,6 +660,9 @@ export class LaneImportCmd implements Command {
       forceTheirs?: boolean;
     }
   ): Promise<string> {
+    if (forceOurs && forceTheirs) {
+      throw new BitError('please use either --force-ours or --force-theirs, not both');
+    }
     return this.switchCmd.report([lane], {
       skipDependencyInstallation,
       pattern,
