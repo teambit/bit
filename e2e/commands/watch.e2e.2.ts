@@ -104,45 +104,52 @@ chai.use(chaiFs);
       });
     });
   });
-  describe('scope file watching (.bit directory)', () => {
-    let watchRunner: WatchRunner;
-    let allOutput: string;
-    before(async () => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponentsTS();
-      helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
-      watchRunner = new WatchRunner(helper, true);
-      await watchRunner.watch();
-      allOutput = '';
-      watchRunner.watchProcess.stdout!.on('data', (data: Buffer) => {
-        allOutput += data.toString();
+  // Test scope file watching for both scope locations:
+  // - .bit (no git) and .git/bit (with git)
+  function describeScopeFileWatching(scopeDir: string, initGit: boolean) {
+    describe(`scope file watching (${scopeDir} directory)`, () => {
+      let watchRunner: WatchRunner;
+      let allOutput: string;
+      before(async () => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope({ initGit });
+        helper.fixtures.populateComponentsTS();
+        helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
+        watchRunner = new WatchRunner(helper, true);
+        await watchRunner.watch();
+        allOutput = '';
+        watchRunner.watchProcess.stdout!.on('data', (data: Buffer) => {
+          allOutput += data.toString();
+        });
+      });
+      after(() => {
+        watchRunner.killWatcher();
+      });
+      it(`should not trigger main watcher events for files inside ${scopeDir}`, async () => {
+        // Write a file inside the scope dir (not in events dir) - main watcher should ignore it
+        const testFile = path.join(helper.scopes.localPath, scopeDir, 'test-ignore-file');
+        fs.outputFileSync(testFile, 'test content');
+        // Change a component file to verify the main watcher IS working
+        helper.fs.outputFile('comp1/index.ts', 'console.log("scope-watch-test")');
+        await watchRunner.waitForWatchToRebuildComponent();
+        // The component file event should appear but the scope file should not
+        expect(allOutput).to.include('comp1/index.ts');
+        expect(allOutput).to.not.include('test-ignore-file');
+      });
+      it(`should detect IPC event files written to ${scopeDir}/events/ via the scope watcher`, async () => {
+        allOutput = '';
+        // Write an IPC event file (simulating what "bit install" does via publishIpcEvent)
+        const eventsDir = path.join(helper.scopes.localPath, scopeDir, 'events');
+        fs.ensureDirSync(eventsDir);
+        const ipcFile = path.join(eventsDir, 'onPostInstall');
+        // Remove if leftover from workspace setup, then write fresh to trigger 'add' event
+        fs.removeSync(ipcFile);
+        fs.writeFileSync(ipcFile, 'test');
+        // The scope watcher (chokidar with polling) should detect this and print it in verbose mode
+        await watchRunner.waitForWatchToPrintMsg('onPostInstall', 15000);
       });
     });
-    after(() => {
-      watchRunner.killWatcher();
-    });
-    it('should not trigger main watcher events for files inside .bit directory', async () => {
-      // Write a file inside .bit (not in events dir) - main watcher should ignore it
-      const testFile = path.join(helper.scopes.localPath, '.bit', 'test-ignore-file');
-      fs.outputFileSync(testFile, 'test content');
-      // Change a component file to verify the main watcher IS working
-      helper.fs.outputFile('comp1/index.ts', 'console.log("scope-watch-test")');
-      await watchRunner.waitForWatchToRebuildComponent();
-      // The component file event should appear but .bit/test-ignore-file should not
-      expect(allOutput).to.include('comp1/index.ts');
-      expect(allOutput).to.not.include('test-ignore-file');
-    });
-    it('should detect IPC event files written to .bit/events/ via the scope watcher', async () => {
-      allOutput = '';
-      // Write an IPC event file (simulating what "bit install" does via publishIpcEvent)
-      const eventsDir = path.join(helper.scopes.localPath, '.bit', 'events');
-      fs.ensureDirSync(eventsDir);
-      const ipcFile = path.join(eventsDir, 'onPostInstall');
-      // Remove if leftover from workspace setup, then write fresh to trigger 'add' event
-      fs.removeSync(ipcFile);
-      fs.writeFileSync(ipcFile, 'test');
-      // The scope watcher (chokidar with polling) should detect this and print it in verbose mode
-      await watchRunner.waitForWatchToPrintMsg('onPostInstall', 15000);
-    });
-  });
+  }
+
+  describeScopeFileWatching('.bit', false);
+  describeScopeFileWatching('.git/bit', true);
 });
