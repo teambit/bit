@@ -125,7 +125,7 @@ export class Watcher {
   }
 
   private getParcelIgnorePatterns(): string[] {
-    return ['**/node_modules/**', '**/package.json', `**/${this.workspace.scope.path}/**`];
+    return ['**/node_modules/**', '**/package.json', `${pathNormalizeToLinux(this.workspace.scope.path)}/**`];
   }
 
   /**
