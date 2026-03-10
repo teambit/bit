@@ -817,6 +817,9 @@ export class PreviewMain {
     // component-change handlers) use the correct value even if runtimeOptions
     // is not yet populated at that point.
     this._useRootModules = !!this.ui.runtimeOptions?.useRootModules;
+    this.logger.debug(
+      `[getPreviewTarget] _useRootModules set to ${this._useRootModules} (from runtimeOptions: ${this.ui.runtimeOptions?.useRootModules})`
+    );
 
     const previewRuntime = await this.writePreviewEntry(context);
     const previews = this.previewSlot.values();
@@ -872,6 +875,9 @@ export class PreviewMain {
 
       const map = await previewDef.getModuleMap(components);
       const isSplitComponentBundle = this.getEnvPreviewConfig().splitComponentBundle ?? false;
+      // TODO: temp log to understand the paths in case of root modules and non-root modules, should be removed
+      // after we make sure everything works as expected
+      this.logger.debug(`[updateLinkFiles]: _useRootModules=${this._useRootModules}`);
       const withPathsP = map.asyncMap(async (files, component) => {
         const envDef = this.envs.getEnv(component);
         const environment = envDef.env;
