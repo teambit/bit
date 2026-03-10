@@ -1358,11 +1358,14 @@ bit lane diff from to => diff between "from" lane and "to" lane.
 | ------- | :------------------: |
 | `lane`  | the remote lane name |
 
-| **Option**                       | **Option alias** | **Description**                                                                                                                        |
-| -------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `--skip-dependency-installation` |       `-x`       | do not install dependencies of the imported components                                                                                 |
-| `--pattern <component-pattern>`  |       `-p`       | import only components from the lane that fit the specified component-pattern to the workspace. works only when the workspace is empty |
-| `--branch`                       |                  | create and checkout a new git branch named after the lane                                                                              |
+| **Option**                              | **Option alias** | **Description**                                                                                                                        |
+| --------------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `--skip-dependency-installation`        |       `-x`       | do not install dependencies of the imported components                                                                                 |
+| `--pattern <component-pattern>`         |       `-p`       | import only components from the lane that fit the specified component-pattern to the workspace. works only when the workspace is empty |
+| `--branch`                              |                  | create and checkout a new git branch named after the lane                                                                              |
+| `--auto-merge-resolve <merge-strategy>` |       `-r`       | merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"                                      |
+| `--force-ours`                          |                  | do not merge, preserve local files as is                                                                                               |
+| `--force-theirs`                        |                  | do not merge, just overwrite with incoming files                                                                                       |
 
 ### lane remove-comp
 
