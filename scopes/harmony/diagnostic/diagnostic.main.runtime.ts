@@ -1,4 +1,5 @@
 import { getBitVersion } from '@teambit/bit.get-bit-version';
+import os from 'os';
 
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
@@ -45,13 +46,46 @@ export class DiagnosticMain {
     return { version };
   }
 
+  static getProcessInfo() {
+    const memUsage = process.memoryUsage();
+    const cpuUsage = process.cpuUsage();
+    return {
+      uptime: process.uptime(),
+      pid: process.pid,
+      nodeVersion: process.version,
+      platform: process.platform,
+      arch: process.arch,
+      memory: {
+        rss: memUsage.rss,
+        heapTotal: memUsage.heapTotal,
+        heapUsed: memUsage.heapUsed,
+        external: memUsage.external,
+        arrayBuffers: memUsage.arrayBuffers,
+      },
+      cpu: {
+        user: cpuUsage.user,
+        system: cpuUsage.system,
+      },
+      system: {
+        totalMemory: os.totalmem(),
+        freeMemory: os.freemem(),
+        cpuCount: os.cpus().length,
+        loadAverage: os.loadavg(),
+        hostname: os.hostname(),
+      },
+    };
+  }
+
   static async provider(
     [express, graphql]: [ExpressMain, GraphqlMain],
     config: any,
     [diagnosticSlot]: [DiagnosticSlot]
   ) {
     const diagnosticMain = new DiagnosticMain(diagnosticSlot);
-    diagnosticMain.register({ diagnosticFn: DiagnosticMain.getBitVersion });
+    diagnosticMain.register(
+      { diagnosticFn: DiagnosticMain.getBitVersion },
+      { diagnosticFn: DiagnosticMain.getProcessInfo }
+    );
     express.register([new DiagnosticRoute(diagnosticMain)]);
     graphql.register(() => new DiagnosticGraphql(diagnosticMain));
     return diagnosticMain;
