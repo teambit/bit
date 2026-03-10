@@ -1069,7 +1069,7 @@
     "modules/generate-asset-manifest": {
         "name": "modules/generate-asset-manifest",
         "scope": "teambit.rspack",
-        "version": "0.0.2",
+        "version": "0.0.3",
         "mainFile": "index.ts",
         "rootDir": "components/modules/generate-asset-manifest"
     },
