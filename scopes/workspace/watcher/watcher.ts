@@ -1,6 +1,5 @@
 import type { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
-import { watch as fsWatch, type FSWatcher as NodeFSWatcher } from 'node:fs';
 import { dirname, basename, join } from 'path';
 import { compact, difference, partition } from 'lodash';
 import type { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -99,7 +98,6 @@ export class Watcher {
   private isDaemon = false;
   // Parcel watcher subscription for cleanup
   private parcelSubscription: { unsubscribe: () => Promise<void> } | null = null;
-  private scopeFileWatchers: NodeFSWatcher[] = [];
   // Signal handlers for cleanup (to avoid accumulation)
   private signalCleanupHandler: (() => void) | null = null;
   // Cached Watchman availability (checked once per process lifetime)
@@ -219,46 +217,36 @@ export class Watcher {
   }
 
   /**
-   * Start dedicated fs.watch() watchers for files inside the scope (.bit/) directory
-   * that need monitoring. This decouples scope-internal file watching from the main
-   * workspace watcher (Parcel/Chokidar), allowing the main watcher to fully ignore .bit/.
-   * Uses non-recursive fs.watch (no recursive: true) so only direct children are watched,
-   * avoiding the overhead of watching .bit/objects/ which can have tens of thousands of files.
-   *
-   * Also fixes a Watchman bug: when .bit is in ignore_vcs (for cookie placement),
-   * Watchman ignores all changes inside .bit/. Node's fs.watch() bypasses Watchman.
+   * Watch all scope-internal files using a single chokidar watcher with polling.
+   * This includes scope cache files (index, refs, config) as well as IPC event files
+   * and unmerged.json. Using chokidar with polling avoids FSEvents/Watchman issues
+   * (e.g. Watchman's ignore_vcs silently ignoring all .bit/ changes).
+   * The main workspace watcher (Parcel/Chokidar) fully ignores .bit/.
    */
   private async watchScopeFiles(): Promise<void> {
-    const startWatch = (dir: string, filter?: (filename: string) => boolean) => {
-      const watcher = fsWatch(dir, async (_eventType, filename) => {
-        if (!filename || (filter && !filter(filename))) return;
-        const filePath = join(dir, filename);
-        this.logger.debug(`scope file change detected via fs.watch: ${filePath}`);
-        try {
-          await this.handleChange(filePath);
-        } catch (err: any) {
-          this.logger.error(`error handling scope file change ${filePath}: ${err.message}`);
-        }
-      });
-      watcher.on('error', (err) => {
-        this.logger.error(`scope watcher error for ${dir}: ${err.message}`);
-      });
-      this.scopeFileWatchers.push(watcher);
-    };
-
-    // IPC events: .bit/events/ (onPostInstall, onPostObjectsPersist, onNotifySSE)
     await fs.ensureDir(this.ipcEventsDir);
-    startWatch(this.ipcEventsDir);
-
-    // Merge conflict tracking: .bit/unmerged.json
-    startWatch(this.workspace.scope.path, (f) => f.endsWith(UNMERGED_FILENAME));
+    const unmergedPath = join(this.workspace.scope.path, UNMERGED_FILENAME);
+    await this.watcherMain.watchScopeInternalFiles([this.ipcEventsDir, unmergedPath], async (filePath) => {
+      if (dirname(filePath) === this.ipcEventsDir) {
+        const eventName = basename(filePath);
+        if (eventName === 'onNotifySSE') {
+          const content = await fs.readFile(filePath, 'utf8');
+          this.logger.debug(`Watcher, onNotifySSE ${content}`);
+          const parsed = JSON.parse(content);
+          sendEventsToClients(parsed.event, parsed);
+        } else {
+          await this.watcherMain.ipcEvents.triggerGotEvent(eventName as any);
+        }
+      } else if (filePath.endsWith(UNMERGED_FILENAME)) {
+        await this.workspace.clearCache();
+      }
+    });
   }
 
   async watch() {
     await this.setRootDirs();
     const componentIds = Object.values(this.rootDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, this.options);
-    await this.watcherMain.watchScopeInternalFiles();
     await this.watchScopeFiles();
     this.watcherType === 'parcel' ? await this.watchParcel() : await this.watchChokidar();
   }
@@ -479,7 +467,6 @@ export class Watcher {
       isShuttingDown = true;
 
       this.logger.debug('Daemon shutting down...');
-      this.scopeFileWatchers.forEach((w) => w.close());
       // Unsubscribe from Parcel watcher
       this.parcelSubscription?.unsubscribe().catch((err) => {
         this.logger.debug(`Error unsubscribing from Parcel watcher: ${err.message}`);
@@ -519,7 +506,6 @@ export class Watcher {
       if (isShuttingDown) return;
       isShuttingDown = true;
 
-      this.scopeFileWatchers.forEach((w) => w.close());
       this.watcherClient?.disconnect();
       process.exit(0);
     };
@@ -624,24 +610,8 @@ export class Watcher {
       if (this.bitMapChangesInProgress) {
         await this.watchQueue.onIdle();
       }
-      if (dirname(filePath) === this.ipcEventsDir) {
-        const eventName = basename(filePath);
-        if (eventName === 'onNotifySSE') {
-          const content = await fs.readFile(filePath, 'utf8');
-          this.logger.debug(`Watcher, onNotifySSE ${content}`);
-          const parsed = JSON.parse(content);
-          sendEventsToClients(parsed.event, parsed);
-        } else {
-          await this.watcherMain.ipcEvents.triggerGotEvent(eventName as any);
-        }
-        return { results: [], files: [filePath] };
-      }
       if (filePath.endsWith(WORKSPACE_JSONC)) {
         await this.workspace.triggerOnWorkspaceConfigChange();
-        return { results: [], files: [filePath] };
-      }
-      if (filePath.endsWith(UNMERGED_FILENAME)) {
-        await this.workspace.clearCache();
         return { results: [], files: [filePath] };
       }
       const componentId = this.getComponentIdByPath(filePath);
