@@ -1,6 +1,6 @@
 import type { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
-import { dirname, basename, join } from 'path';
+import { dirname, basename, join, relative } from 'path';
 import { compact, difference, partition } from 'lodash';
 import type { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BIT_MAP, WORKSPACE_JSONC } from '@teambit/legacy.constants';
@@ -125,7 +125,8 @@ export class Watcher {
   }
 
   private getParcelIgnorePatterns(): string[] {
-    return ['**/node_modules/**', '**/package.json', '**/.bit/**', '**/.git/bit/**'];
+    const relScopePath = pathNormalizeToLinux(relative(this.workspace.path, this.workspace.scope.path));
+    return ['**/node_modules/**', '**/package.json', `**/${relScopePath}/**`];
   }
 
   /**
@@ -854,7 +855,8 @@ export class Watcher {
     const chokidarOpts = await this.watcherMain.getChokidarWatchOptions();
     // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
     // (windows-style backslashes are converted to forward slashes)
-    chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', '**/.bit/**', '**/.git/bit/**'];
+    const relScopePath = pathNormalizeToLinux(relative(this.workspace.path, this.workspace.scope.path));
+    chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', `**/${relScopePath}/**`];
     this.chokidarWatcher = chokidar.watch(this.workspace.path, chokidarOpts);
     if (this.verbose) {
       logger.console(
