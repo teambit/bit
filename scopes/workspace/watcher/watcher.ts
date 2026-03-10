@@ -228,6 +228,9 @@ export class Watcher {
     await fs.ensureDir(this.ipcEventsDir);
     const unmergedPath = join(this.workspace.scope.path, UNMERGED_FILENAME);
     await this.watcherMain.watchScopeInternalFiles([this.ipcEventsDir, unmergedPath], async (filePath) => {
+      if (this.verbose && this.msgs?.onAll) {
+        this.msgs.onAll('change', filePath);
+      }
       if (dirname(filePath) === this.ipcEventsDir) {
         const eventName = basename(filePath);
         if (eventName === 'onNotifySSE') {
