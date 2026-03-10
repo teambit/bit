@@ -125,7 +125,7 @@ export class Watcher {
   }
 
   private getParcelIgnorePatterns(): string[] {
-    return ['**/node_modules/**', '**/package.json', `${pathNormalizeToLinux(this.workspace.scope.path)}/**`];
+    return ['**/node_modules/**', '**/package.json', '**/.bit/**', '**/.git/bit/**'];
   }
 
   /**
@@ -854,8 +854,7 @@ export class Watcher {
     const chokidarOpts = await this.watcherMain.getChokidarWatchOptions();
     // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
     // (windows-style backslashes are converted to forward slashes)
-    const scopePathLinux = pathNormalizeToLinux(this.workspace.scope.path);
-    chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', `${scopePathLinux}/**`];
+    chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', '**/.bit/**', '**/.git/bit/**'];
     this.chokidarWatcher = chokidar.watch(this.workspace.path, chokidarOpts);
     if (this.verbose) {
       logger.console(
