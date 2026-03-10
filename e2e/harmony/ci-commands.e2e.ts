@@ -457,7 +457,7 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
       const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
       expect(envData.config.env).to.equal('teambit.harmony/aspect');
     });
-    it('should tag and export successfully', () => {
+    it('should tag the component', () => {
       expect(mergeOutput).to.include('Merged PR');
       const list = helper.command.listParsed();
       const comp1 = list.find((comp) => comp.id.includes('comp1'));

@@ -728,7 +728,10 @@ export class CiMain {
     await Promise.all(
       activeComponents.map(async (laneComp) => {
         const laneVersion = (await repo.load(laneComp.head)) as Version;
-        if (!laneVersion) return;
+        if (!laneVersion) {
+          this.logger.console(chalk.yellow(`Warning: could not load Version object for ${laneComp.id.toString()}`));
+          return;
+        }
 
         const laneConfig = laneVersion.extensions.toConfigObject();
         if (!laneConfig || Object.keys(laneConfig).length === 0) return;
