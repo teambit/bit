@@ -385,6 +385,28 @@ export class DependenciesDiagnoseCmd implements Command {
         peerTable.push([entry.packageName, `${entry.versions.length} (${entry.versions.join(', ')})`]);
       });
       sections.push('', chalk.bold('Peer dependencies causing permutations:'), peerTable.toString());
+
+      // Show which envs contribute each peer version
+      const envLines: string[] = [];
+      for (const entry of report.peerPermutations) {
+        if (!entry.envs.length) continue;
+        envLines.push(`  ${chalk.bold(entry.packageName)}`);
+        // Group envs by version for easy scanning
+        const byVersion = new Map<string, string[]>();
+        for (const { envId, version } of entry.envs) {
+          const list = byVersion.get(version) || [];
+          list.push(envId);
+          byVersion.set(version, list);
+        }
+        for (const [version, envIds] of byVersion) {
+          for (const envId of envIds) {
+            envLines.push(`    ${chalk.dim(envId)}  ->  ${version}`);
+          }
+        }
+      }
+      if (envLines.length) {
+        sections.push('', chalk.bold('  Contributing envs:'), ...envLines);
+      }
     }
 
     return sections.join('\n');

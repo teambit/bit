@@ -87,6 +87,7 @@ export interface DiagnosisReport {
   peerPermutations: Array<{
     packageName: string;
     versions: string[];
+    envs: Array<{ envId: string; version: string }>;
   }>;
 }
 
@@ -457,7 +458,15 @@ export class DependenciesMain {
 
     // 2. Collect component-level dep info (for version spread + peer lifecycle detection)
     const packageVersionMap = new Map<string, { versions: Set<string>; lifecycles: Set<string> }>();
+    // Track which env declares which peer version: packageName -> Map<envId, version>
+    const peerEnvMap = new Map<string, Map<string, string>>();
     for (const comp of allComps) {
+      let envId: string;
+      try {
+        envId = this.workspace.envs.getEnvId(comp);
+      } catch {
+        envId = 'unknown';
+      }
       const depList = this.dependencyResolver.getDependencies(comp);
       depList.forEach((dep) => {
         const pkgName = dep.getPackageName?.() || dep.id;
@@ -468,6 +477,16 @@ export class DependenciesMain {
         }
         entry.versions.add(dep.version);
         entry.lifecycles.add(dep.lifecycle);
+        if (dep.lifecycle === 'peer') {
+          let envMap = peerEnvMap.get(pkgName);
+          if (!envMap) {
+            envMap = new Map();
+            peerEnvMap.set(pkgName, envMap);
+          }
+          if (!envMap.has(envId)) {
+            envMap.set(envId, dep.version);
+          }
+        }
       });
     }
 
@@ -488,10 +507,15 @@ export class DependenciesMain {
     // 4. Peer deps with multiple versions
     const peerPermutations = Array.from(packageVersionMap.entries())
       .filter(([, data]) => data.lifecycles.has('peer') && data.versions.size > 1)
-      .map(([pkgName, data]) => ({
-        packageName: pkgName,
-        versions: Array.from(data.versions).sort(compareVersions),
-      }))
+      .map(([pkgName, data]) => {
+        const envMap = peerEnvMap.get(pkgName);
+        const envs = envMap ? Array.from(envMap.entries()).map(([eId, ver]) => ({ envId: eId, version: ver })) : [];
+        return {
+          packageName: pkgName,
+          versions: Array.from(data.versions).sort(compareVersions),
+          envs,
+        };
+      })
       .sort((a, b) => b.versions.length - a.versions.length);
 
     return {
