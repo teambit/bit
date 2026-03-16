@@ -233,7 +233,7 @@ export class WorkspaceManifestFactory {
 
     if (conflictingPackages.length > 0) {
       this.logger?.console?.(
-        `\n💡 To resolve peer version conflicts, pin a version in workspace.jsonc under "teambit.dependencies/dependency-resolver" > "overrides", ` +
+        `\n💡 To resolve workspace peer version conflicts, pin a version in workspace.jsonc under "teambit.dependencies/dependency-resolver" > "overrides", ` +
         `e.g. "overrides": { "${conflictingPackages[0]}": "<version>" }\n`
       );
     }
