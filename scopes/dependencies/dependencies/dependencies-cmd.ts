@@ -338,11 +338,12 @@ export class DependenciesDiagnoseCmd implements Command {
   alias = '';
   options = [
     ['', 'package <string>', 'drill down into a specific package to see all .pnpm copies and peer combos'],
+    ['', 'origins', 'show peer version origins — which envs and components contribute each peer version'],
   ] as CommandOptions;
 
   constructor(private deps: DependenciesMain) {}
 
-  async report(_args: [], options: { package?: string }) {
+  async report(_args: [], options: { package?: string; origins?: boolean }) {
     if (options.package) {
       return this.reportPackageDrillDown(options.package);
     }
@@ -386,25 +387,32 @@ export class DependenciesDiagnoseCmd implements Command {
       });
       sections.push('', chalk.bold('Peer dependencies causing permutations:'), peerTable.toString());
 
-      // Show peer version origins grouped by version
-      const originLines: string[] = [];
-      for (const entry of report.peerPermutations) {
-        if (!entry.versionOrigins.length) continue;
-        originLines.push(`  ${chalk.bold(entry.packageName)}`);
-        for (const vo of entry.versionOrigins) {
-          if (!vo.envs.length && !vo.components.length) continue;
-          originLines.push(`    ${chalk.cyan(vo.version)}`);
-          if (vo.envs.length) {
-            originLines.push(`      envs: ${vo.envs.join(', ')}`);
-          }
-          if (vo.components.length) {
-            const compStrs = vo.components.map((o) => o.componentId);
-            originLines.push(`      components: ${compStrs.join(', ')}`);
+      if (options.origins) {
+        // Show peer version origins grouped by version
+        const originLines: string[] = [];
+        for (const entry of report.peerPermutations) {
+          if (!entry.versionOrigins.length) continue;
+          originLines.push(`  ${chalk.bold(entry.packageName)}`);
+          for (const vo of entry.versionOrigins) {
+            if (!vo.envs.length && !vo.components.length) continue;
+            originLines.push(`    ${chalk.cyan(vo.version)}`);
+            if (vo.envs.length) {
+              originLines.push(`      envs: ${vo.envs.join(', ')}`);
+            }
+            if (vo.components.length) {
+              const compStrs = vo.components.map((o) => o.componentId);
+              originLines.push(`      components: ${compStrs.join(', ')}`);
+            }
           }
         }
-      }
-      if (originLines.length) {
-        sections.push('', chalk.bold('  Peer version origins:'), ...originLines);
+        if (originLines.length) {
+          sections.push('', chalk.bold('  Peer version origins:'), ...originLines);
+        }
+      } else {
+        sections.push(
+          '',
+          chalk.dim('  Tip: use --origins to see which envs and components contribute each peer version')
+        );
       }
     }
 
