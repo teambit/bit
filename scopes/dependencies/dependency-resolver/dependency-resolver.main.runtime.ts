@@ -604,7 +604,7 @@ export class DependencyResolverMain {
     }
   ): Promise<void> {
     try {
-      let componentsForCalc = components.map(({ component, componentRelativeDir }) => ({
+      const componentsForCalc = components.map(({ component, componentRelativeDir }) => ({
         component,
         componentRootDir: options.rootComponentsPath
           ? this.getComponentDirInBitRoots(component, {
