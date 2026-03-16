@@ -107,7 +107,10 @@ export class WorkspaceManifestFactory {
     let envSelfPeers: VariantPolicy;
     let peerOverrides: Record<string, string> = {};
     if (this.resolveEnvPeersFromRoot) {
-      const result = this.mergeEnvPeersToRoot(componentsManifestsMap);
+      const workspacePackageNames = new Set(
+        components.map((component) => this.dependencyResolver.getPackageName(component))
+      );
+      const result = this.mergeEnvPeersToRoot(componentsManifestsMap, workspacePackageNames);
       envSelfPeers = result.rootPolicy;
       peerOverrides = result.peerOverrides;
       if (result.componentPeerOverrides.size > 0) {
@@ -141,7 +144,10 @@ export class WorkspaceManifestFactory {
    * - Conflicting peers with workspaceSingleton: merge majority to root, warn about unsatisfied envs
    * - Conflicting peers without workspaceSingleton: skip root, return as componentPeerOverrides for per-component injection
    */
-  private mergeEnvPeersToRoot(componentsManifestsMap: ComponentsManifestsMap): {
+  private mergeEnvPeersToRoot(
+    componentsManifestsMap: ComponentsManifestsMap,
+    workspacePackageNames: Set<string>
+  ): {
     rootPolicy: VariantPolicy;
     componentPeerOverrides: Map<string, Record<string, string>>;
     peerOverrides: Record<string, string>;
@@ -158,6 +164,8 @@ export class WorkspaceManifestFactory {
       const envId = manifest.envPolicy.envId || 'unknown';
       const selfPolicy = manifest.envPolicy.selfPolicy;
       for (const entry of selfPolicy.entries) {
+        // Skip peers that are workspace components — they're linked, not installed
+        if (workspacePackageNames.has(entry.dependencyId)) continue;
         const pkgName = entry.dependencyId;
         const version = entry.value.version;
         if (!peerVersionsMap.has(pkgName)) {
