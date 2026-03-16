@@ -37,9 +37,13 @@ export class WorkspaceManifest extends Manifest {
       // Resolve "+" version placeholders from peersManifest
       const resolvedPeersManifest = this._resolvePlusVersions(peersManifest || {});
       manifest.dependencies = manifest.dependencies || {};
-      // Env peers are added as defaults — workspace.jsonc policy takes priority
+      // Env peers are added as defaults — workspace.jsonc policy takes priority across all dep sections
       for (const [pkgName, version] of Object.entries(resolvedPeersManifest)) {
-        if (!manifest.dependencies[pkgName]) {
+        const alreadyDefined = manifest.dependencies?.[pkgName] ||
+          manifest.devDependencies?.[pkgName] ||
+          manifest.peerDependencies?.[pkgName] ||
+          manifest.optionalDependencies?.[pkgName];
+        if (!alreadyDefined) {
           manifest.dependencies[pkgName] = version;
         }
       }

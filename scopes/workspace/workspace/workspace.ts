@@ -2255,8 +2255,9 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     try {
       envManifest = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
     } catch (err: any) {
+      const filePath = envJson.path || envJson.relative;
       throw new BitError(
-        `Syntax error in env.jsonc for "${envId}": ${err.message}. Please check the file for invalid JSON (e.g. trailing commas, missing brackets).`
+        `Syntax error in env.jsonc for "${envId}" (${filePath}): ${err.message}. Please check the file for invalid JSONC syntax.`
       );
     }
 

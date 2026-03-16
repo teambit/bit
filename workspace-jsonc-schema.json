@@ -182,7 +182,7 @@
         },
         "resolveEnvPeersFromRoot": {
           "type": "boolean",
-          "description": "When true (default), env peer dependencies from env.jsonc are resolved once and merged into the workspace root manifest, instead of being injected per-component. Conflicts between envs are resolved by picking the highest version satisfying the most components."
+          "description": "When true (default), env peer dependencies from env.jsonc are resolved once and merged into the workspace root manifest, instead of being injected per-component. Conflicts between envs are resolved by picking the version satisfying the most envs."
         },
         "forceEnvPeersToRoot": {
           "type": "boolean",

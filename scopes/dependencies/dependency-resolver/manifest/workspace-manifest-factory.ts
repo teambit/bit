@@ -201,26 +201,29 @@ export class WorkspaceManifestFactory {
         // No conflict — merge to root
         const entry = this.createResolvedEntry(componentsManifestsMap, pkgName, versions[0]);
         resolvedEntries.push(entry);
-        if (overridesFlags.get(pkgName)) {
+        if (overridesFlags.get(pkgName) && versions[0] !== '+') {
           peerOverrides[pkgName] = versions[0];
         }
         continue;
       }
 
-      const isSingleton = this.forceEnvPeersToRoot || (singletonFlags.get(pkgName) ?? false);
+      // overrides:true implies singleton — an override forces a single version across the workspace
+      const isSingleton = this.forceEnvPeersToRoot || (singletonFlags.get(pkgName) ?? false) || (overridesFlags.get(pkgName) ?? false);
 
       if (isSingleton) {
         // Conflict + workspaceSingleton: merge majority to root, warn about unsatisfied
         const chosenVersion = this.resolveConflictingPeerVersions(pkgName, versionsMap);
         resolvedEntries.push(this.createResolvedEntry(componentsManifestsMap, pkgName, chosenVersion));
         conflictingPackages.push(pkgName);
-        if (overridesFlags.get(pkgName)) {
+        if (overridesFlags.get(pkgName) && chosenVersion !== '+') {
           peerOverrides[pkgName] = chosenVersion;
         }
       } else {
         // Conflict + no workspaceSingleton: per-component injection
         // Each env gets its own version injected into its components
         for (const [version, envIds] of versionsMap.entries()) {
+          // Skip "+" placeholder — it's resolved at the workspace root level
+          if (version === '+') continue;
           for (const envId of envIds) {
             if (!componentPeerOverrides.has(envId)) {
               componentPeerOverrides.set(envId, {});
@@ -285,7 +288,7 @@ export class WorkspaceManifestFactory {
     const envsByVersion = Array.from(versionsMap.entries());
 
     // Filter out non-semver versions (like '+') for comparison
-    const semverVersions = versions.filter((v) => v !== '+' && semver.valid(semver.coerce(v)));
+    const semverVersions = versions.filter((v) => v !== '+' && semver.coerce(v) !== null);
 
     if (semverVersions.length === 0) {
       // All versions are non-semver (e.g., '+'), just pick the first
@@ -297,23 +300,23 @@ export class WorkspaceManifestFactory {
     let bestCount = 0;
 
     for (const candidateVersion of semverVersions) {
+      const coercedCandidate = semver.coerce(candidateVersion);
+      if (!coercedCandidate) continue;
       let satisfiedCount = 0;
       for (const [version, envIds] of envsByVersion) {
         if (version === candidateVersion || version === '+') {
           satisfiedCount += envIds.size;
-        } else {
+        } else if (semver.validRange(version)) {
           // Check if the candidate could satisfy the range
-          const coerced = semver.coerce(candidateVersion);
-          if (coerced && semver.satisfies(coerced, version)) {
+          if (semver.satisfies(coercedCandidate.version, version)) {
             satisfiedCount += envIds.size;
           }
         }
       }
-      const coercedCandidate = semver.coerce(candidateVersion);
       const coercedBest = semver.coerce(bestVersion);
       if (
         satisfiedCount > bestCount ||
-        (satisfiedCount === bestCount && coercedCandidate && coercedBest && semver.gt(coercedCandidate, coercedBest))
+        (satisfiedCount === bestCount && coercedBest && semver.gt(coercedCandidate.version, coercedBest.version))
       ) {
         bestVersion = candidateVersion;
         bestCount = satisfiedCount;
@@ -324,7 +327,7 @@ export class WorkspaceManifestFactory {
     const coercedBestForCheck = semver.coerce(bestVersion);
     const unsatisfiedEnvs = envsByVersion.filter(([version]) => {
       if (version === bestVersion || version === '+') return false;
-      if (coercedBestForCheck && semver.satisfies(coercedBestForCheck, version)) return false;
+      if (coercedBestForCheck && semver.validRange(version) && semver.satisfies(coercedBestForCheck.version, version)) return false;
       return true;
     });
 

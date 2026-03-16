@@ -354,8 +354,8 @@ export class EnvsMain {
       const envName = envComponent?.id?.toString();
       const filePath = envJson.path || envJson.relative;
       const location = envName ? `"${envName}" (${filePath})` : filePath;
-      throw new Error(
-        `Syntax error in env.jsonc for ${location}: ${err.message}. Please check the file for invalid JSON (e.g. trailing commas, missing brackets).`
+      throw new BitError(
+        `Syntax error in env.jsonc for ${location}: ${err.message}. Please check the file for invalid JSONC syntax.`
       );
     }
     if (!object.extends) return object;
