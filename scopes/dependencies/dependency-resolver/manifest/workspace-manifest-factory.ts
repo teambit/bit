@@ -233,8 +233,8 @@ export class WorkspaceManifestFactory {
 
     if (conflictingPackages.length > 0) {
       this.logger?.consoleWarning?.(
-        `To resolve the conflicts above, you can pin a specific version in workspace.jsonc under the dependency-resolver policy, ` +
-        `e.g. "dependencies": { "${conflictingPackages[0]}": "<version>" }`
+        `To resolve the conflicts above, pin a version in workspace.jsonc under "teambit.dependencies/dependency-resolver" > "overrides", ` +
+        `e.g. "overrides": { "${conflictingPackages[0]}": "<version>" }`
       );
     }
 
