@@ -5,12 +5,16 @@ import type { Component } from '@teambit/component';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { fromPairs, pickBy, mapValues, uniq, difference } from 'lodash';
 import { SemVer } from 'semver';
+import semver from 'semver';
 import pMapSeries from 'p-map-series';
 import { snapToSemver } from '@teambit/component-package-version';
+import type { Logger } from '@teambit/logger';
 import type { DependencyList, PackageName } from '../dependencies';
 import { ComponentDependency } from '../dependencies';
 import type { WorkspacePolicy, EnvPolicy } from '../policy';
 import { VariantPolicy } from '../policy';
+import type { VariantPolicyEntry } from '../policy/variant-policy';
+import { createVariantPolicyEntry } from '../policy/variant-policy';
 import type { DependencyResolverMain } from '../dependency-resolver.main.runtime';
 import type { ComponentsManifestsMap } from '../types';
 import { ComponentManifest } from './component-manifest';
@@ -49,7 +53,10 @@ const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
 export class WorkspaceManifestFactory {
   constructor(
     private dependencyResolver: DependencyResolverMain,
-    private aspectLoader: AspectLoaderMain
+    private aspectLoader: AspectLoaderMain,
+    private logger?: Logger,
+    private resolveEnvPeersFromRoot: boolean = true,
+    private forceEnvPeersToRoot: boolean = false
   ) {}
 
   async createFromComponents(
@@ -97,14 +104,26 @@ export class WorkspaceManifestFactory {
       components,
       optsWithDefaults.createManifestForComponentsWithoutDependencies
     );
-    const envSelfPeers = this.getEnvsSelfPeersPolicy(componentsManifestsMap);
+    let envSelfPeers: VariantPolicy;
+    let peerOverrides: Record<string, string> = {};
+    if (this.resolveEnvPeersFromRoot) {
+      const result = this.mergeEnvPeersToRoot(componentsManifestsMap);
+      envSelfPeers = result.rootPolicy;
+      peerOverrides = result.peerOverrides;
+      if (result.componentPeerOverrides.size > 0) {
+        this.injectConflictingPeersToComponents(componentsManifestsMap, result.componentPeerOverrides);
+      }
+    } else {
+      envSelfPeers = this.getEnvsSelfPeersPolicy(componentsManifestsMap);
+    }
     const workspaceManifest = new WorkspaceManifest(
       name,
       version,
       dedupedDependencies.rootDependencies,
       envSelfPeers,
       rootDir,
-      componentsManifestsMap
+      componentsManifestsMap,
+      peerOverrides
     );
     return workspaceManifest;
   }
@@ -114,6 +133,213 @@ export class WorkspaceManifestFactory {
     const coreAspectPkgNames = new Set(coreAspectIds.map((coreAspectId) => getCoreAspectPackageName(coreAspectId)));
     coreAspectPkgNames.add('@teambit/legacy');
     return rootPolicy.filter((dep) => !coreAspectPkgNames.has(dep.dependencyId));
+  }
+
+  /**
+   * Merge env peer dependencies to the workspace root.
+   * - Non-conflicting peers: always merge to root
+   * - Conflicting peers with workspaceSingleton: merge majority to root, warn about unsatisfied envs
+   * - Conflicting peers without workspaceSingleton: skip root, return as componentPeerOverrides for per-component injection
+   */
+  private mergeEnvPeersToRoot(componentsManifestsMap: ComponentsManifestsMap): {
+    rootPolicy: VariantPolicy;
+    componentPeerOverrides: Map<string, Record<string, string>>;
+    peerOverrides: Record<string, string>;
+  } {
+    // Collect all env selfPolicies grouped by package name
+    // Map<packageName, Map<version, Set<envId>>>
+    const peerVersionsMap = new Map<string, Map<string, Set<string>>>();
+    // Track workspaceSingleton flag per package (true if ANY env marks it)
+    const singletonFlags = new Map<string, boolean>();
+    // Track overrides flag per package (true if ANY env marks it)
+    const overridesFlags = new Map<string, boolean>();
+
+    for (const manifest of componentsManifestsMap.values()) {
+      const envId = manifest.envPolicy.envId || 'unknown';
+      const selfPolicy = manifest.envPolicy.selfPolicy;
+      for (const entry of selfPolicy.entries) {
+        const pkgName = entry.dependencyId;
+        const version = entry.value.version;
+        if (!peerVersionsMap.has(pkgName)) {
+          peerVersionsMap.set(pkgName, new Map());
+        }
+        const versionsMap = peerVersionsMap.get(pkgName)!;
+        if (!versionsMap.has(version)) {
+          versionsMap.set(version, new Set());
+        }
+        versionsMap.get(version)!.add(envId);
+        if (entry.value.workspaceSingleton) {
+          singletonFlags.set(pkgName, true);
+        }
+        if (entry.value.overrides) {
+          overridesFlags.set(pkgName, true);
+        }
+      }
+    }
+
+    // Resolve each peer dependency
+    const resolvedEntries: VariantPolicyEntry[] = [];
+    // Map<envId, Record<pkgName, version>> for per-component injection
+    const componentPeerOverrides = new Map<string, Record<string, string>>();
+    // Collect pnpm overrides from entries with overrides: true
+    const peerOverrides: Record<string, string> = {};
+
+    for (const [pkgName, versionsMap] of peerVersionsMap.entries()) {
+      const versions = Array.from(versionsMap.keys());
+
+      if (versions.length === 1) {
+        // No conflict — merge to root
+        const entry = this.createResolvedEntry(componentsManifestsMap, pkgName, versions[0]);
+        resolvedEntries.push(entry);
+        if (overridesFlags.get(pkgName)) {
+          peerOverrides[pkgName] = versions[0];
+        }
+        continue;
+      }
+
+      const isSingleton = this.forceEnvPeersToRoot || (singletonFlags.get(pkgName) ?? false);
+
+      if (isSingleton) {
+        // Conflict + workspaceSingleton: merge majority to root, warn about unsatisfied
+        const chosenVersion = this.resolveConflictingPeerVersions(pkgName, versionsMap);
+        resolvedEntries.push(this.createResolvedEntry(componentsManifestsMap, pkgName, chosenVersion));
+        if (overridesFlags.get(pkgName)) {
+          peerOverrides[pkgName] = chosenVersion;
+        }
+      } else {
+        // Conflict + no workspaceSingleton: per-component injection
+        // Each env gets its own version injected into its components
+        for (const [version, envIds] of versionsMap.entries()) {
+          for (const envId of envIds) {
+            if (!componentPeerOverrides.has(envId)) {
+              componentPeerOverrides.set(envId, {});
+            }
+            componentPeerOverrides.get(envId)![pkgName] = version;
+          }
+        }
+      }
+    }
+
+    return {
+      rootPolicy: VariantPolicy.fromArray(resolvedEntries),
+      componentPeerOverrides,
+      peerOverrides,
+    };
+  }
+
+  private createResolvedEntry(
+    componentsManifestsMap: ComponentsManifestsMap,
+    pkgName: string,
+    version: string
+  ): VariantPolicyEntry {
+    const existingEntry = this.findEntryWithVersion(componentsManifestsMap, pkgName, version);
+    if (existingEntry) return existingEntry;
+    return createVariantPolicyEntry(pkgName, version, 'runtime', {
+      source: 'env-own',
+      force: true,
+    });
+  }
+
+  /**
+   * Inject conflicting non-singleton peer deps into component manifests.
+   * Each component gets the version specified by its env.
+   */
+  private injectConflictingPeersToComponents(
+    componentsManifestsMap: ComponentsManifestsMap,
+    componentPeerOverrides: Map<string, Record<string, string>>
+  ): void {
+    for (const manifest of componentsManifestsMap.values()) {
+      const envId = manifest.envPolicy.envId || 'unknown';
+      const overrides = componentPeerOverrides.get(envId);
+      if (!overrides) continue;
+      manifest.dependencies.dependencies = {
+        ...overrides,
+        ...manifest.dependencies.dependencies,
+      };
+    }
+  }
+
+  private resolveConflictingPeerVersions(
+    pkgName: string,
+    versionsMap: Map<string, Set<string>>
+  ): string {
+    const versions = Array.from(versionsMap.keys());
+    const envsByVersion = Array.from(versionsMap.entries());
+
+    // Filter out non-semver versions (like '+') for comparison
+    const semverVersions = versions.filter((v) => v !== '+' && semver.valid(semver.coerce(v)));
+
+    if (semverVersions.length === 0) {
+      // All versions are non-semver (e.g., '+'), just pick the first
+      return versions[0];
+    }
+
+    // For each version, count how many envs it could satisfy
+    let bestVersion = semverVersions[0];
+    let bestCount = 0;
+
+    for (const candidateVersion of semverVersions) {
+      let satisfiedCount = 0;
+      for (const [version, envIds] of envsByVersion) {
+        if (version === candidateVersion || version === '+') {
+          satisfiedCount += envIds.size;
+        } else {
+          // Check if the candidate could satisfy the range
+          const coerced = semver.coerce(candidateVersion);
+          if (coerced && semver.satisfies(coerced, version)) {
+            satisfiedCount += envIds.size;
+          }
+        }
+      }
+      const coercedCandidate = semver.coerce(candidateVersion);
+      const coercedBest = semver.coerce(bestVersion);
+      if (
+        satisfiedCount > bestCount ||
+        (satisfiedCount === bestCount && coercedCandidate && coercedBest && semver.gt(coercedCandidate, coercedBest))
+      ) {
+        bestVersion = candidateVersion;
+        bestCount = satisfiedCount;
+      }
+    }
+
+    // Only warn about envs whose version is NOT satisfied by the chosen version
+    const coercedBestForCheck = semver.coerce(bestVersion);
+    const unsatisfiedEnvs = envsByVersion.filter(([version]) => {
+      if (version === bestVersion || version === '+') return false;
+      if (coercedBestForCheck && semver.satisfies(coercedBestForCheck, version)) return false;
+      return true;
+    });
+
+    if (unsatisfiedEnvs.length > 0) {
+      const allDetails = envsByVersion
+        .map(([version, envIds]) => `  ${version} (from envs: ${Array.from(envIds).join(', ')})`)
+        .join('\n');
+      this.logger?.warn(
+        `Conflicting env peer dependency versions for "${pkgName}":\n${allDetails}\n  → Resolved to: ${bestVersion}`
+      );
+      const unsatisfiedDetails = unsatisfiedEnvs
+        .map(([version, envIds]) => `${version} (${Array.from(envIds).join(', ')})`)
+        .join(', ');
+      this.logger?.consoleWarning?.(
+        `Conflicting env peer versions for "${pkgName}": using ${bestVersion}, but not compatible with: ${unsatisfiedDetails}`
+      );
+    }
+
+    return bestVersion;
+  }
+
+  private findEntryWithVersion(
+    componentsManifestsMap: ComponentsManifestsMap,
+    pkgName: string,
+    version: string
+  ): VariantPolicyEntry | undefined {
+    for (const manifest of componentsManifestsMap.values()) {
+      const entry = manifest.envPolicy.selfPolicy.entries.find(
+        (e) => e.dependencyId === pkgName && e.value.version === version
+      );
+      if (entry) return entry;
+    }
+    return undefined;
   }
 
   private getEnvsSelfPeersPolicy(componentsManifestsMap: ComponentsManifestsMap) {
@@ -215,36 +441,34 @@ export class WorkspaceManifestFactory {
         );
       });
 
-      const envPeerDependencies = await this._getEnvPeerDependencies(component, packageNames);
-      // When includeAllEnvPeers is true, use ALL env peer deps to ensure consistent
-      // peer dependency contexts across all components. Otherwise, pnpm creates separate
-      // "injected" copies in .pnpm/ for components with different peer sets, causing
-      // TypeScript to see duplicate types from different physical paths.
-      // When false, only include peer deps that the component actually uses, to avoid
-      // writing unnecessary deps to the generated install manifest.
-      let peerDepsForManifest: Record<string, string>;
-      if (includeAllEnvPeers ?? true) {
-        peerDepsForManifest = envPeerDependencies;
-      } else {
-        peerDepsForManifest = pickBy(envPeerDependencies, (_val, pkgName) => {
-          return (
-            depManifestBeforeFiltering.dependencies[pkgName] ||
-            depManifestBeforeFiltering.devDependencies[pkgName] ||
-            depManifestBeforeFiltering.peerDependencies[pkgName]
-          );
-        });
-        // In case the env has peer dependencies on both react and react-dom, we want to make sure to keep the versions
-        // in sync with each other, otherwise it may cause issues in the workspace
-        // This is a special case for react and react-dom, as most component do import from react, making it a peer dependency,
-        // but not necessarily import from react-dom, which from env.jsonc peers in that case not added to the peers of the component.
-        // and if the versions are not in sync, it may cause issues in the workspace
-        // an example:
-        // my-comp depend on react, and using @testing-library/react which depend on react-dom (as peer),
-        // the component don't have react-dom as peer dependency, but when we install the dependencies in the workspace,
-        // it will install the latest version of react-dom which may not be compatible with the version of react that my-comp
-        // is using, and it may cause issues in the workspace.
-        if (peerDepsForManifest.react && envPeerDependencies['react-dom']) {
-          peerDepsForManifest['react-dom'] = envPeerDependencies['react-dom'];
+      let peerDepsForManifest: Record<string, string> = {};
+      if (!this.resolveEnvPeersFromRoot) {
+        // Legacy behavior: inject env peer deps into each component's manifest
+        const envPeerDependencies = await this._getEnvPeerDependencies(component, packageNames);
+        if (includeAllEnvPeers ?? true) {
+          peerDepsForManifest = envPeerDependencies;
+        } else {
+          peerDepsForManifest = pickBy(envPeerDependencies, (_val, pkgName) => {
+            return (
+              depManifestBeforeFiltering.dependencies[pkgName] ||
+              depManifestBeforeFiltering.devDependencies[pkgName] ||
+              depManifestBeforeFiltering.peerDependencies[pkgName]
+            );
+          });
+          
+          // In case the env has peer dependencies on both react and react-dom, we want to make sure to keep the versions
+          // in sync with each other, otherwise it may cause issues in the workspace
+          // This is a special case for react and react-dom, as most component do import from react, making it a peer dependency,
+          // but not necessarily import from react-dom, which from env.jsonc peers in that case not added to the peers of the component.
+          // and if the versions are not in sync, it may cause issues in the workspace
+          // an example:
+          // my-comp depend on react, and using @testing-library/react which depend on react-dom (as peer),
+          // the component don't have react-dom as peer dependency, but when we install the dependencies in the workspace,
+          // it will install the latest version of react-dom which may not be compatible with the version of react that my-comp
+          // is using, and it may cause issues in the workspace.
+          if (peerDepsForManifest.react && envPeerDependencies['react-dom']) {
+            peerDepsForManifest['react-dom'] = envPeerDependencies['react-dom'];
+          }
         }
       }
 

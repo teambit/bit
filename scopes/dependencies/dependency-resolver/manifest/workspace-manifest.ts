@@ -7,6 +7,7 @@ import { Manifest } from './manifest';
 
 export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {
   installPeersFromEnvs?: boolean;
+  resolveEnvPeersFromRoot?: boolean;
 }
 
 export class WorkspaceManifest extends Manifest {
@@ -17,7 +18,8 @@ export class WorkspaceManifest extends Manifest {
     public dependencies: ManifestDependenciesObject,
     private envSelfPeersPolicy: VariantPolicy | undefined,
     private rootDir: string,
-    public componentsManifestsMap: ComponentsManifestsMap
+    public componentsManifestsMap: ComponentsManifestsMap,
+    public peerOverrides: Record<string, string> = {}
   ) {
     super(name, version, dependencies);
   }
@@ -30,12 +32,17 @@ export class WorkspaceManifest extends Manifest {
 
   toJson(options: WorkspaceManifestToJsonOptions = {}): Record<string, any> {
     const manifest = super.toJson(options);
-    if (options.installPeersFromEnvs) {
+    if (options.installPeersFromEnvs || options.resolveEnvPeersFromRoot) {
       const peersManifest = this.envSelfPeersPolicy?.toVersionManifest();
       // Resolve "+" version placeholders from peersManifest
       const resolvedPeersManifest = this._resolvePlusVersions(peersManifest || {});
       manifest.dependencies = manifest.dependencies || {};
-      Object.assign(manifest.dependencies, resolvedPeersManifest);
+      // Env peers are added as defaults — workspace.jsonc policy takes priority
+      for (const [pkgName, version] of Object.entries(resolvedPeersManifest)) {
+        if (!manifest.dependencies[pkgName]) {
+          manifest.dependencies[pkgName] = version;
+        }
+      }
     }
     return manifest;
   }
