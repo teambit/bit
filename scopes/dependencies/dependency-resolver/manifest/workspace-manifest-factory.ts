@@ -191,6 +191,8 @@ export class WorkspaceManifestFactory {
     const componentPeerOverrides = new Map<string, Record<string, string>>();
     // Collect pnpm overrides from entries with overrides: true
     const peerOverrides: Record<string, string> = {};
+    // Track packages with conflicts for the hint message
+    const conflictingPackages: string[] = [];
 
     for (const [pkgName, versionsMap] of peerVersionsMap.entries()) {
       const versions = Array.from(versionsMap.keys());
@@ -211,6 +213,7 @@ export class WorkspaceManifestFactory {
         // Conflict + workspaceSingleton: merge majority to root, warn about unsatisfied
         const chosenVersion = this.resolveConflictingPeerVersions(pkgName, versionsMap);
         resolvedEntries.push(this.createResolvedEntry(componentsManifestsMap, pkgName, chosenVersion));
+        conflictingPackages.push(pkgName);
         if (overridesFlags.get(pkgName)) {
           peerOverrides[pkgName] = chosenVersion;
         }
@@ -226,6 +229,13 @@ export class WorkspaceManifestFactory {
           }
         }
       }
+    }
+
+    if (conflictingPackages.length > 0) {
+      this.logger?.consoleWarning?.(
+        `To resolve the conflicts above, you can pin a specific version in workspace.jsonc under the dependency-resolver policy, ` +
+        `e.g. "dependencies": { "${conflictingPackages[0]}": "<version>" }`
+      );
     }
 
     return {
