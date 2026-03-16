@@ -320,6 +320,181 @@ describe('convertLockfileToGraph simple case', () => {
   });
 });
 
+describe('convertLockfileToGraph benchmark', () => {
+  function generateLargeLockfile(
+    numPackages: number,
+    numComponents: number
+  ): {
+    lockfile: BitLockfileFile;
+    componentIdByPkgName: Map<string, InstanceType<typeof ComponentID>>;
+  } {
+    const snapshots: Record<string, any> = {};
+    const packages: Record<string, any> = {};
+    const importerDeps: Record<string, any> = {};
+    const componentIdByPkgName = new Map<string, InstanceType<typeof ComponentID>>();
+
+    // Generate regular packages
+    for (let i = 0; i < numPackages; i++) {
+      const pkgId = `pkg-${i}@1.0.${i}`;
+      packages[pkgId] = {
+        resolution: { integrity: `sha512-${i}` },
+      };
+      // Each package depends on the next 2 packages (creating a graph)
+      const deps: Record<string, string> = {};
+      if (i + 1 < numPackages) deps[`pkg-${i + 1}`] = `1.0.${i + 1}`;
+      if (i + 2 < numPackages) deps[`pkg-${i + 2}`] = `1.0.${i + 2}`;
+      snapshots[pkgId] = Object.keys(deps).length > 0 ? { dependencies: deps } : {};
+      if (i < 50) {
+        importerDeps[`pkg-${i}`] = { version: `1.0.${i}`, specifier: `^1.0.${i}` };
+      }
+    }
+
+    // Generate component packages (with file: protocol)
+    for (let i = 0; i < numComponents; i++) {
+      const compName = `@my-scope/comp-${i}`;
+      const compPath = `comps/comp-${i}`;
+      const fileDepPath = `${compName}@file:${compPath}`;
+
+      packages[fileDepPath] = {
+        resolution: { directory: compPath, type: 'directory' },
+      };
+      snapshots[fileDepPath] = {
+        dependencies: {
+          [`pkg-${i % numPackages}`]: `1.0.${i % numPackages}`,
+        },
+      };
+      componentIdByPkgName.set(compName, ComponentID.fromString(`my-scope/comp-${i}@0.0.${i}`));
+    }
+
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        '.': {},
+        'node_modules/.bit_roots/env': {
+          dependencies: Object.fromEntries(
+            Array.from({ length: numComponents }, (_, i) => [
+              `@my-scope/comp-${i}`,
+              { version: `file:comps/comp-${i}`, specifier: '*' },
+            ])
+          ),
+        },
+        'comps/comp-0': {
+          dependencies: importerDeps,
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots,
+      packages,
+    };
+
+    return { lockfile, componentIdByPkgName };
+  }
+
+  it('should handle 1000 packages and 50 components within 500ms', () => {
+    const { lockfile, componentIdByPkgName } = generateLargeLockfile(1000, 50);
+
+    const start = performance.now();
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: '@my-scope/comp-0',
+      componentRelativeDir: 'comps/comp-0',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName,
+    });
+    const elapsed = performance.now() - start;
+
+    console.log(`  1000 packages, 50 components: ${elapsed.toFixed(1)}ms`);
+    expect(graph.edges.length).to.be.greaterThan(0);
+    expect(graph.packages.size).to.be.greaterThan(0);
+    expect(elapsed).to.be.lessThan(500);
+  });
+
+  it('should handle 5000 packages and 200 components within 2000ms', () => {
+    const { lockfile, componentIdByPkgName } = generateLargeLockfile(5000, 200);
+
+    const start = performance.now();
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: '@my-scope/comp-0',
+      componentRelativeDir: 'comps/comp-0',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName,
+    });
+    const elapsed = performance.now() - start;
+
+    console.log(`  5000 packages, 200 components: ${elapsed.toFixed(1)}ms`);
+    expect(graph.edges.length).to.be.greaterThan(0);
+    expect(graph.packages.size).to.be.greaterThan(0);
+    expect(elapsed).to.be.lessThan(2000);
+  });
+
+  it('should handle 10000 packages and 500 components within 5000ms', () => {
+    const { lockfile, componentIdByPkgName } = generateLargeLockfile(10000, 500);
+
+    const start = performance.now();
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: '@my-scope/comp-0',
+      componentRelativeDir: 'comps/comp-0',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName,
+    });
+    const elapsed = performance.now() - start;
+
+    console.log(`  10000 packages, 500 components: ${elapsed.toFixed(1)}ms`);
+    expect(graph.edges.length).to.be.greaterThan(0);
+    expect(graph.packages.size).to.be.greaterThan(0);
+    expect(elapsed).to.be.lessThan(5000);
+  });
+
+  it('should handle converting 20 lockfiles (1000 pkgs, 100 comps each) within 3000ms', () => {
+    const lockfileCount = 20;
+    const lockfiles = Array.from({ length: lockfileCount }, () => generateLargeLockfile(1000, 100));
+
+    const start = performance.now();
+    const graphs = lockfiles.map(({ lockfile, componentIdByPkgName }) =>
+      convertLockfileToGraph(lockfile, {
+        pkgName: '@my-scope/comp-0',
+        componentRelativeDir: 'comps/comp-0',
+        componentRootDir: 'node_modules/.bit_roots/env',
+        componentIdByPkgName,
+      })
+    );
+    const elapsed = performance.now() - start;
+
+    console.log(
+      `  20 lockfiles (1000 pkgs, 100 comps each): ${elapsed.toFixed(1)}ms total, ${(elapsed / lockfileCount).toFixed(1)}ms avg`
+    );
+    for (const graph of graphs) {
+      expect(graph.edges.length).to.be.greaterThan(0);
+      expect(graph.packages.size).to.be.greaterThan(0);
+    }
+    expect(elapsed).to.be.lessThan(3000);
+  });
+
+  it('should handle converting 50 lockfiles (500 pkgs, 50 comps each) within 3000ms', () => {
+    const lockfileCount = 50;
+    const lockfiles = Array.from({ length: lockfileCount }, () => generateLargeLockfile(500, 50));
+
+    const start = performance.now();
+    const graphs = lockfiles.map(({ lockfile, componentIdByPkgName }) =>
+      convertLockfileToGraph(lockfile, {
+        pkgName: '@my-scope/comp-0',
+        componentRelativeDir: 'comps/comp-0',
+        componentRootDir: 'node_modules/.bit_roots/env',
+        componentIdByPkgName,
+      })
+    );
+    const elapsed = performance.now() - start;
+
+    console.log(
+      `  50 lockfiles (500 pkgs, 50 comps each): ${elapsed.toFixed(1)}ms total, ${(elapsed / lockfileCount).toFixed(1)}ms avg`
+    );
+    for (const graph of graphs) {
+      expect(graph.edges.length).to.be.greaterThan(0);
+      expect(graph.packages.size).to.be.greaterThan(0);
+    }
+    expect(elapsed).to.be.lessThan(3000);
+  });
+});
+
 describe('convertGraphToLockfile on invalid graph', () => {
   it('should throw an error if resolution is missing', async () => {
     const packages: PackagesMap = new Map([['foo@1.0.0', {} as any]]);
