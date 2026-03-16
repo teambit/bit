@@ -386,26 +386,25 @@ export class DependenciesDiagnoseCmd implements Command {
       });
       sections.push('', chalk.bold('Peer dependencies causing permutations:'), peerTable.toString());
 
-      // Show which envs contribute each peer version
-      const envLines: string[] = [];
+      // Show peer version origins grouped by version
+      const originLines: string[] = [];
       for (const entry of report.peerPermutations) {
-        if (!entry.envs.length) continue;
-        envLines.push(`  ${chalk.bold(entry.packageName)}`);
-        // Group envs by version for easy scanning
-        const byVersion = new Map<string, string[]>();
-        for (const { envId, version } of entry.envs) {
-          const list = byVersion.get(version) || [];
-          list.push(envId);
-          byVersion.set(version, list);
-        }
-        for (const [version, envIds] of byVersion) {
-          for (const envId of envIds) {
-            envLines.push(`    ${chalk.dim(envId)}  ->  ${version}`);
+        if (!entry.versionOrigins.length) continue;
+        originLines.push(`  ${chalk.bold(entry.packageName)}`);
+        for (const vo of entry.versionOrigins) {
+          if (!vo.envs.length && !vo.components.length) continue;
+          originLines.push(`    ${chalk.cyan(vo.version)}`);
+          if (vo.envs.length) {
+            originLines.push(`      envs: ${vo.envs.join(', ')}`);
+          }
+          if (vo.components.length) {
+            const compStrs = vo.components.map((o) => o.componentId);
+            originLines.push(`      components: ${compStrs.join(', ')}`);
           }
         }
       }
-      if (envLines.length) {
-        sections.push('', chalk.bold('  Contributing envs:'), ...envLines);
+      if (originLines.length) {
+        sections.push('', chalk.bold('  Peer version origins:'), ...originLines);
       }
     }
 
