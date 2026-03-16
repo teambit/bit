@@ -86,7 +86,10 @@ export interface DiagnosisReport {
   }>;
   peerPermutations: Array<{
     packageName: string;
+    /** declared peer-dep version ranges across components */
     versions: string[];
+    /** actual .pnpm directories for this package (0 means declared but not installed) */
+    installedCopies: number;
   }>;
 }
 
@@ -485,14 +488,15 @@ export class DependenciesMain {
       .sort((a, b) => b.installedCopies - a.installedCopies)
       .slice(0, 30);
 
-    // 4. Peer deps with multiple versions
+    // 4. Peer deps with multiple versions, enriched with actual .pnpm copy count
     const peerPermutations = Array.from(packageVersionMap.entries())
       .filter(([, data]) => data.lifecycles.has('peer') && data.versions.size > 1)
       .map(([pkgName, data]) => ({
         packageName: pkgName,
         versions: Array.from(data.versions).sort(compareVersions),
+        installedCopies: pnpmPackageCopies.get(pkgName) || 0,
       }))
-      .sort((a, b) => b.versions.length - a.versions.length);
+      .sort((a, b) => b.installedCopies - a.installedCopies || b.versions.length - a.versions.length);
 
     return {
       componentCount,
