@@ -402,7 +402,6 @@ describe('convertLockfileToGraph benchmark', () => {
     });
     const elapsed = performance.now() - start;
 
-    console.log(`  1000 packages, 50 components: ${elapsed.toFixed(1)}ms`);
     expect(graph.edges.length).to.be.greaterThan(0);
     expect(graph.packages.size).to.be.greaterThan(0);
     expect(elapsed).to.be.lessThan(500);
@@ -420,7 +419,6 @@ describe('convertLockfileToGraph benchmark', () => {
     });
     const elapsed = performance.now() - start;
 
-    console.log(`  5000 packages, 200 components: ${elapsed.toFixed(1)}ms`);
     expect(graph.edges.length).to.be.greaterThan(0);
     expect(graph.packages.size).to.be.greaterThan(0);
     expect(elapsed).to.be.lessThan(2000);
@@ -438,7 +436,6 @@ describe('convertLockfileToGraph benchmark', () => {
     });
     const elapsed = performance.now() - start;
 
-    console.log(`  10000 packages, 500 components: ${elapsed.toFixed(1)}ms`);
     expect(graph.edges.length).to.be.greaterThan(0);
     expect(graph.packages.size).to.be.greaterThan(0);
     expect(elapsed).to.be.lessThan(5000);
@@ -459,9 +456,6 @@ describe('convertLockfileToGraph benchmark', () => {
     );
     const elapsed = performance.now() - start;
 
-    console.log(
-      `  20 lockfiles (1000 pkgs, 100 comps each): ${elapsed.toFixed(1)}ms total, ${(elapsed / lockfileCount).toFixed(1)}ms avg`
-    );
     for (const graph of graphs) {
       expect(graph.edges.length).to.be.greaterThan(0);
       expect(graph.packages.size).to.be.greaterThan(0);
@@ -484,9 +478,6 @@ describe('convertLockfileToGraph benchmark', () => {
     );
     const elapsed = performance.now() - start;
 
-    console.log(
-      `  50 lockfiles (500 pkgs, 50 comps each): ${elapsed.toFixed(1)}ms total, ${(elapsed / lockfileCount).toFixed(1)}ms avg`
-    );
     for (const graph of graphs) {
       expect(graph.edges.length).to.be.greaterThan(0);
       expect(graph.packages.size).to.be.greaterThan(0);

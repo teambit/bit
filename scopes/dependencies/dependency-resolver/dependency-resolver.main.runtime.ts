@@ -615,11 +615,7 @@ export class DependencyResolverMain {
         pkgName: this.getPackageName(component),
         componentRelativeDir,
       }));
-      if (!isFeatureEnabled(DEPS_GRAPH)) {
-        // We need to optimize the performance of dependency graph calculation.
-        // Temporarily we only calculate it for a limited number of components.
-        componentsForCalc = componentsForCalc.slice(0, 10);
-      }
+
       await this.getPackageManager()?.calcDependenciesGraph?.({
         components: componentsForCalc,
         rootDir: options.rootDir,
