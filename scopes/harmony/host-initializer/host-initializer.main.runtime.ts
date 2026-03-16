@@ -178,10 +178,11 @@ export class HostInitializerMain {
   static async promptForPackageManager(): Promise<boolean> {
     try {
       const response = (await prompt({
-        type: 'confirm',
+        type: 'toggle',
         name: 'useExternalPackageManager',
         message: 'Would you like to use your own package manager (npm/yarn/pnpm) instead of Bit?',
-        initial: false,
+        enabled: 'Yes',
+        disabled: 'No',
         cancel: promptCancel,
       } as any)) as { useExternalPackageManager: boolean };
 
@@ -197,10 +198,11 @@ export class HostInitializerMain {
   static async promptForMcpServer(): Promise<string | null> {
     try {
       const setupMcp = (await prompt({
-        type: 'confirm',
+        type: 'toggle',
         name: 'setupMcp',
         message: 'Would you like to set up the MCP server for AI-powered development?',
-        initial: false,
+        enabled: 'Yes',
+        disabled: 'No',
         cancel: promptCancel,
       } as any)) as { setupMcp: boolean };
 
