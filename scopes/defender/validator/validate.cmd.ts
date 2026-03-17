@@ -58,6 +58,11 @@ by default validates only new and modified components. use --all to validate all
       return { code: result.code, data: `Validation failed after ${totalTime} seconds` };
     }
 
+    if (result.message === 'all tasks were skipped') {
+      this.logger.console(chalk.yellow(`\n⚠ All validation tasks were skipped\n`));
+      return { code: 0, data: 'All validation tasks were skipped' };
+    }
+
     this.logger.console(chalk.green(`\n✓ All validation checks passed in ${totalTime} seconds\n`));
     return { code: 0, data: `Validation completed successfully in ${totalTime} seconds` };
   }
