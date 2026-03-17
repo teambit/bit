@@ -4,8 +4,10 @@ import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { VALID_TASKS } from './validator.tasks';
 import type { ValidatorMain } from './validator.main.runtime';
+
+export const VALID_TASKS = ['check-types', 'lint', 'test'] as const;
+export type ValidTask = (typeof VALID_TASKS)[number];
 
 export class ValidateCmd implements Command {
   name = 'validate [component-pattern]';
