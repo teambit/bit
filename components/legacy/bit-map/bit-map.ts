@@ -16,6 +16,7 @@ import {
   OLD_BIT_MAP,
   VERSION_DELIMITER,
   BITMAP_PREFIX_MESSAGE,
+  LATEST,
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import type {
@@ -292,7 +293,7 @@ export class BitMap {
       if (component.isAvailableOnCurrentLane) return component;
       changedIds.push(component.id);
       return new ComponentMap({
-        id: component.id.changeVersion(undefined).changeScope(component.scope || (component.defaultScope as string)),
+        id: component.id.changeVersion(LATEST).changeScope(component.scope || (component.defaultScope as string)),
         mainFile: component.mainFile,
         rootDir: component.rootDir,
         defaultScope: component.id.scope,

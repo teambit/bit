@@ -236,6 +236,7 @@ export class InstallMain {
     await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
     const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, {
       dedupe: true,
+      includeAllEnvPeers: false,
     });
     const { dependencies, devDependencies } = componentsAndManifests.manifests[this.workspace.path];
     return this.workspace.writeDependenciesToPackageJson({ ...devDependencies, ...dependencies });

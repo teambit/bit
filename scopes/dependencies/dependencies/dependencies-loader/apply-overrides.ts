@@ -670,6 +670,7 @@ export class ApplyOverrides {
     if (!envPolicyManifest || !Object.keys(envPolicyManifest).length) {
       return;
     }
+    this.overridesDependencies.envOwnPkgNames = new Set(Object.keys(envPolicyManifest));
     const deps = this.allPackagesDependencies.packageDependencies || {};
     // we are not iterate component deps since they are resolved from what actually installed
     // the policy used for installation only in that case
