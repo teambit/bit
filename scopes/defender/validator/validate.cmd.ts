@@ -18,6 +18,11 @@ by default validates only new and modified components. use --all to validate all
   options = [
     ['a', 'all', 'validate all components, not only modified and new'],
     ['c', 'continue-on-error', 'run all validation checks even when errors are found'],
+    [
+      '',
+      'skip-tasks <string>',
+      'skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes. available tasks: "check-types", "lint", "test"',
+    ],
   ] as CommandOptions;
 
   constructor(
@@ -28,7 +33,7 @@ by default validates only new and modified components. use --all to validate all
 
   async report(
     [pattern]: [string],
-    { all = false, continueOnError = false }: { all: boolean; continueOnError: boolean }
+    { all = false, continueOnError = false, skipTasks }: { all: boolean; continueOnError: boolean; skipTasks?: string }
   ) {
     if (!this.workspace) throw new OutsideWorkspaceError();
 
@@ -44,7 +49,8 @@ by default validates only new and modified components. use --all to validate all
 
     this.logger.console(`Validating ${components.length} component(s)\n`);
 
-    const result = await this.validator.validate(components, continueOnError);
+    const skipTasksParsed = skipTasks ? skipTasks.split(',').map((t) => t.trim()) : undefined;
+    const result = await this.validator.validate(components, continueOnError, skipTasksParsed);
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
 
     if (result.code !== 0) {

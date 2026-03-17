@@ -97,4 +97,22 @@ describe('validate command', function () {
       expect(output).to.include('No components found to validate');
     });
   });
+
+  describe('validating with --skip-tasks flag', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/comp1.js', 'console.log(undefinedVariable);');
+    });
+    it('should fail at linting step without --skip-tasks', () => {
+      const output = helper.general.runWithTryCatch('bit validate');
+      expect(output).to.include('Linting');
+      expect(output).to.include('Validation failed');
+    });
+    it('should pass when skipping the lint task', () => {
+      const output = helper.command.runCmd('bit validate --skip-tasks lint');
+      expect(output).to.not.include('Linting');
+      expect(output).to.include('All validation checks passed');
+    });
+  });
 });
