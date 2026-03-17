@@ -2793,6 +2793,11 @@
             "",
             "package <string>",
             "drill down into a specific package to see all .pnpm copies and peer combos"
+          ],
+          [
+            "",
+            "origins",
+            "show peer version origins — which envs and components contribute each peer version"
           ]
         ],
         "description": "analyze workspace dependencies for version spread, peer permutations, and bloat",
