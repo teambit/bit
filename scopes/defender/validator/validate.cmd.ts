@@ -4,6 +4,7 @@ import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
+import { VALID_TASKS } from './validator.main.runtime';
 import type { ValidatorMain } from './validator.main.runtime';
 
 export class ValidateCmd implements Command {
@@ -50,6 +51,10 @@ by default validates only new and modified components. use --all to validate all
     this.logger.console(`Validating ${components.length} component(s)\n`);
 
     const skipTasksParsed = skipTasks ? skipTasks.split(',').map((t) => t.trim()) : [];
+    const invalidTasks = skipTasksParsed.filter((t) => !VALID_TASKS.includes(t as any));
+    if (invalidTasks.length > 0) {
+      throw new Error(`unknown skip-tasks: ${invalidTasks.join(', ')}. available tasks: ${VALID_TASKS.join(', ')}`);
+    }
     const result = await this.validator.validate(components, continueOnError, skipTasksParsed);
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
 
@@ -58,7 +63,7 @@ by default validates only new and modified components. use --all to validate all
       return { code: result.code, data: `Validation failed after ${totalTime} seconds` };
     }
 
-    if (result.message === 'all tasks were skipped') {
+    if (result.skippedAll) {
       this.logger.console(chalk.yellow(`\n⚠ All validation tasks were skipped\n`));
       return { code: 0, data: 'All validation tasks were skipped' };
     }

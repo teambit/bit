@@ -114,5 +114,19 @@ describe('validate command', function () {
       expect(output).to.not.include('Linting');
       expect(output).to.include('All validation checks passed');
     });
+    it('should support comma-separated skip-tasks', () => {
+      const output = helper.command.runCmd('bit validate --skip-tasks "lint,test"');
+      expect(output).to.not.include('Linting');
+      expect(output).to.not.include('Testing');
+      expect(output).to.include('Type Checking');
+    });
+    it('should show warning when all tasks are skipped', () => {
+      const output = helper.command.runCmd('bit validate --skip-tasks "check-types,lint,test"');
+      expect(output).to.include('All validation tasks were skipped');
+    });
+    it('should error on invalid skip-tasks value', () => {
+      const output = helper.general.runWithTryCatch('bit validate --skip-tasks "lnt"');
+      expect(output).to.include('unknown skip-tasks: lnt');
+    });
   });
 });
