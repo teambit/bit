@@ -21,11 +21,16 @@
   border-radius: 8px;
 }
 
+// Override hardcoded light background in @teambit/api-reference.renderers.react
+.section :global([class*='reactOverview']) {
+  background-color: var(--surface01-color, rgba(247, 247, 245, 0.63));
+}
+
 .banner {
   display: flex;
   align-items: center;
   width: fit-content;
-  background-color: var(--bit-accent-bg, #f0f0f0);
+  background-color: var(--surface01-color, #f0f0f0);
   border-radius: 8px;
   padding: 16px 32px;
   font-size: 16px;

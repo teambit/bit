@@ -2,4 +2,9 @@
   // preview background should always be white to avoid collisions with themes.
   background-color: var(--bit-bg-color, #fff);
   // height: 100%;
+
+  iframe {
+    overflow: clip;
+    overscroll-behavior: contain;
+  }
 }
