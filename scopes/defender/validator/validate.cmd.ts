@@ -4,7 +4,7 @@ import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { VALID_TASKS } from './validator.main.runtime';
+import { VALID_TASKS } from './validator.tasks';
 import type { ValidatorMain } from './validator.main.runtime';
 
 export class ValidateCmd implements Command {
@@ -50,7 +50,12 @@ by default validates only new and modified components. use --all to validate all
 
     this.logger.console(`Validating ${components.length} component(s)\n`);
 
-    const skipTasksParsed = skipTasks ? skipTasks.split(',').map((t) => t.trim()) : [];
+    const skipTasksParsed = skipTasks
+      ? skipTasks
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [];
     const invalidTasks = skipTasksParsed.filter((t) => !VALID_TASKS.includes(t as any));
     if (invalidTasks.length > 0) {
       throw new Error(`unknown skip-tasks: ${invalidTasks.join(', ')}. available tasks: ${VALID_TASKS.join(', ')}`);

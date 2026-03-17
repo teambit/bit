@@ -15,9 +15,6 @@ import chalk from 'chalk';
 import { ValidatorAspect } from './validator.aspect';
 import { ValidateCmd } from './validate.cmd';
 
-export const VALID_TASKS = ['check-types', 'lint', 'test'] as const;
-export type ValidTask = (typeof VALID_TASKS)[number];
-
 export type ValidationResult = {
   code: number;
   message: string;
