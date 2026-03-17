@@ -271,7 +271,7 @@ Flags: --depth <number>
 analyze workspace dependencies for version spread, peer permutations, and bloat
 
 scans node_modules/.pnpm to report actual installed copies, identifies packages with multiple versions, and highlights peer dependencies causing permutation explosion. Use --package to drill down into a specific package.
-Flags: --package <string>
+Flags: --package <string>, --origins
 
 ## bit deps write
 
