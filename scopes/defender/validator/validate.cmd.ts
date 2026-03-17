@@ -6,8 +6,7 @@ import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { ValidatorMain } from './validator.main.runtime';
 
-export const VALID_TASKS = ['check-types', 'lint', 'test'] as const;
-export type ValidTask = (typeof VALID_TASKS)[number];
+const VALID_TASKS = ['check-types', 'lint', 'test'] as const;
 
 export class ValidateCmd implements Command {
   name = 'validate [component-pattern]';
