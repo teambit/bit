@@ -12,6 +12,10 @@
   > div:first-child {
     border: none;
     border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+
+    &:hover {
+      background: var(--surface-hover-color, #f6f6f6);
+    }
   }
 
   > div:last-child {

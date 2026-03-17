@@ -271,7 +271,7 @@ Flags: --depth <number>
 analyze workspace dependencies for version spread, peer permutations, and bloat
 
 scans node_modules/.pnpm to report actual installed copies, identifies packages with multiple versions, and highlights peer dependencies causing permutation explosion. Use --package to drill down into a specific package.
-Flags: --package <string>
+Flags: --package <string>, --origins
 
 ## bit deps write
 
@@ -469,7 +469,7 @@ DEPRECATED (only use it if you have used add-readme and want to undo it). remove
 ## bit lane import <lane>
 
 import a remote lane to your workspace and switch to that lane
-Flags: --skip-dependency-installation, --pattern <component-pattern>, --branch
+Flags: --skip-dependency-installation, --pattern <component-pattern>, --branch, --auto-merge-resolve <merge-strategy>, --force-ours, --force-theirs
 
 ## bit lane remove-comp <component-pattern>
 

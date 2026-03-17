@@ -2793,6 +2793,11 @@
             "",
             "package <string>",
             "drill down into a specific package to see all .pnpm copies and peer combos"
+          ],
+          [
+            "",
+            "origins",
+            "show peer version origins — which envs and components contribute each peer version"
           ]
         ],
         "description": "analyze workspace dependencies for version spread, peer permutations, and bloat",
@@ -3738,6 +3743,21 @@
             "",
             "branch",
             "create and checkout a new git branch named after the lane"
+          ],
+          [
+            "r",
+            "auto-merge-resolve <merge-strategy>",
+            "merge local changes with the checked out version. strategy should be \"theirs\", \"ours\" or \"manual\""
+          ],
+          [
+            "",
+            "force-ours",
+            "do not merge, preserve local files as is"
+          ],
+          [
+            "",
+            "force-theirs",
+            "do not merge, just overwrite with incoming files"
           ]
         ],
         "description": "import a remote lane to your workspace and switch to that lane",
