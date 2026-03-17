@@ -37,16 +37,16 @@ export class ValidatorMain {
     continueOnError = false,
     skipTasks: string[] = []
   ): Promise<ValidationResult> {
-    const steps: { name: string; label: string; run: () => Promise<ValidationResult> }[] = [];
+    const steps: { label: string; run: () => Promise<ValidationResult> }[] = [];
 
     if (!skipTasks.includes('check-types')) {
-      steps.push({ name: 'check-types', label: 'Type Checking', run: () => this.checkTypes(components) });
+      steps.push({ label: 'Type Checking', run: () => this.checkTypes(components) });
     }
     if (!skipTasks.includes('lint')) {
-      steps.push({ name: 'lint', label: 'Linting', run: () => this.lint(components) });
+      steps.push({ label: 'Linting', run: () => this.lint(components) });
     }
     if (!skipTasks.includes('test')) {
-      steps.push({ name: 'test', label: 'Testing', run: () => this.test(components) });
+      steps.push({ label: 'Testing', run: () => this.test(components) });
     }
 
     if (steps.length === 0) {

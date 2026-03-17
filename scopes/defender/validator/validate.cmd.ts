@@ -49,7 +49,7 @@ by default validates only new and modified components. use --all to validate all
 
     this.logger.console(`Validating ${components.length} component(s)\n`);
 
-    const skipTasksParsed = skipTasks ? skipTasks.split(',').map((t) => t.trim()) : undefined;
+    const skipTasksParsed = skipTasks ? skipTasks.split(',').map((t) => t.trim()) : [];
     const result = await this.validator.validate(components, continueOnError, skipTasksParsed);
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
 
