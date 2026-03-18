@@ -155,6 +155,7 @@ export class ProcessBasedTsServer {
 
   private logger: Logger;
   private cancellationPipeName: string | undefined;
+  private killedIntentionally = false;
 
   constructor(
     private options: TspClientOptions,
@@ -211,9 +212,13 @@ export class ProcessBasedTsServer {
       });
 
       this.tsServerProcess.on('exit', (code, signal) => {
+        if (this.killedIntentionally) return;
         const msg = `TSServer process exited unexpectedly (code: ${code}, signal: ${signal})`;
         this.logger.error(msg);
         this.rejectAllPendingRequests(msg);
+        this.tsServerProcess = null;
+        this.readlineInterface?.close();
+        this.readlineInterface = null;
       });
 
       this.readlineInterface.on('line', (line) => {
@@ -281,6 +286,7 @@ export class ProcessBasedTsServer {
   }
 
   kill() {
+    this.killedIntentionally = true;
     this.tsServerProcess?.kill();
     this.tsServerProcess?.stdin?.destroy();
     this.readlineInterface?.close();
@@ -290,8 +296,10 @@ export class ProcessBasedTsServer {
 
   private rejectAllPendingRequests(reason: string) {
     const error = new Error(reason);
+    for (const deferred of Object.values(this.deferreds)) {
+      deferred.reject(error);
+    }
     for (const seq of Object.keys(this.deferreds)) {
-      this.deferreds[seq].reject(error);
       delete this.deferreds[seq];
     }
   }

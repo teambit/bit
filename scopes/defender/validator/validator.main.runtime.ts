@@ -87,9 +87,10 @@ export class ValidatorMain {
       await tsserver.getDiagnostic(files, files.length > BATCH_SIZE ? BATCH_SIZE : undefined);
     } catch (err: any) {
       tsserver.killTsServer();
+      const errMsg = err instanceof Error ? err.message : String(err);
       return {
         code: 1,
-        message: `type checking failed: ${err.message}`,
+        message: `type checking failed: ${errMsg}`,
       };
     }
     const errorCount = tsserver.lastDiagnostics.length;
