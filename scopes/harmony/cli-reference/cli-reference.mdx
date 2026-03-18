@@ -2619,10 +2619,11 @@ by default validates only new and modified components. use --all to validate all
 | ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
-| **Option**            | **Option alias** | **Description**                                      |
-| --------------------- | :--------------: | ---------------------------------------------------- |
-| `--all`               |       `-a`       | validate all components, not only modified and new   |
-| `--continue-on-error` |       `-c`       | run all validation checks even when errors are found |
+| **Option**              | **Option alias** | **Description**                                                                                                                    |
+| ----------------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `--all`                 |       `-a`       | validate all components, not only modified and new                                                                                 |
+| `--continue-on-error`   |       `-c`       | run all validation checks even when errors are found                                                                               |
+| `--skip-tasks <string>` |                  | skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes. available tasks: "check-types", "lint", "test" |
 
 ---
 

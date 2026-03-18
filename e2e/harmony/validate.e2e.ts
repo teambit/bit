@@ -97,4 +97,36 @@ describe('validate command', function () {
       expect(output).to.include('No components found to validate');
     });
   });
+
+  describe('validating with --skip-tasks flag', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/comp1.js', 'console.log(undefinedVariable);');
+    });
+    it('should fail at linting step without --skip-tasks', () => {
+      const output = helper.general.runWithTryCatch('bit validate');
+      expect(output).to.include('Linting');
+      expect(output).to.include('Validation failed');
+    });
+    it('should pass when skipping the lint task', () => {
+      const output = helper.command.runCmd('bit validate --skip-tasks lint');
+      expect(output).to.not.include('Linting');
+      expect(output).to.include('All validation checks passed');
+    });
+    it('should support comma-separated skip-tasks', () => {
+      const output = helper.command.runCmd('bit validate --skip-tasks "lint,test"');
+      expect(output).to.not.include('Linting');
+      expect(output).to.not.include('Testing');
+      expect(output).to.include('Type Checking');
+    });
+    it('should show warning when all tasks are skipped', () => {
+      const output = helper.command.runCmd('bit validate --skip-tasks "check-types,lint,test"');
+      expect(output).to.include('All validation tasks were skipped');
+    });
+    it('should error on invalid skip-tasks value', () => {
+      const output = helper.general.runWithTryCatch('bit validate --skip-tasks "lnt"');
+      expect(output).to.include('unknown skip-tasks: lnt');
+    });
+  });
 });

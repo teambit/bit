@@ -18,6 +18,7 @@ import { ValidateCmd } from './validate.cmd';
 export type ValidationResult = {
   code: number;
   message: string;
+  skippedAll?: boolean;
 };
 
 export class ValidatorMain {
@@ -32,30 +33,42 @@ export class ValidatorMain {
     private logger: Logger
   ) {}
 
-  async validate(components: Component[], continueOnError = false): Promise<ValidationResult> {
-    // Step 1: Check types
-    this.logger.console(chalk.cyan('1/3 Type Checking...'));
-    const checkTypesResult = await this.checkTypes(components);
-    this.logger.console(checkTypesResult.message);
-    if (checkTypesResult.code !== 0 && !continueOnError) return checkTypesResult;
+  async validate(
+    components: Component[],
+    continueOnError = false,
+    skipTasks: string[] = []
+  ): Promise<ValidationResult> {
+    const steps: { label: string; run: () => Promise<ValidationResult> }[] = [];
 
-    // Step 2: Lint
-    this.logger.console(chalk.cyan('\n2/3 Linting...'));
-    const lintResult = await this.lint(components);
-    this.logger.console(lintResult.message);
-    if (lintResult.code !== 0 && !continueOnError) return lintResult;
+    if (!skipTasks.includes('check-types')) {
+      steps.push({ label: 'Type Checking', run: () => this.checkTypes(components) });
+    }
+    if (!skipTasks.includes('lint')) {
+      steps.push({ label: 'Linting', run: () => this.lint(components) });
+    }
+    if (!skipTasks.includes('test')) {
+      steps.push({ label: 'Testing', run: () => this.test(components) });
+    }
 
-    // Step 3: Test
-    this.logger.console(chalk.cyan('\n3/3 Testing...'));
-    const testResult = await this.test(components);
-    this.logger.console(testResult.message);
+    if (steps.length === 0) {
+      return { code: 0, message: 'all tasks were skipped', skippedAll: true };
+    }
+
+    const total = steps.length;
+    const results: ValidationResult[] = [];
+
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i];
+      this.logger.console(chalk.cyan(`${i > 0 ? '\n' : ''}${i + 1}/${total} ${step.label}...`));
+      const result = await step.run();
+      this.logger.console(result.message);
+      results.push(result);
+      if (result.code !== 0 && !continueOnError) return result;
+    }
 
     // When continueOnError is true, return the first error found, or success if all passed
-    if (continueOnError) {
-      if (checkTypesResult.code !== 0) return checkTypesResult;
-      if (lintResult.code !== 0) return lintResult;
-    }
-    return testResult;
+    const firstError = results.find((r) => r.code !== 0);
+    return firstError || results[results.length - 1];
   }
 
   private async checkTypes(components: Component[]): Promise<ValidationResult> {
@@ -69,7 +82,17 @@ export class ValidatorMain {
     const tsserver = this.typescript.getTsserverClient();
     if (!tsserver) throw new Error('unable to start tsserver');
 
-    await tsserver.getDiagnostic(files);
+    try {
+      const BATCH_SIZE = 50;
+      await tsserver.getDiagnostic(files, files.length > BATCH_SIZE ? BATCH_SIZE : undefined);
+    } catch (err: any) {
+      tsserver.killTsServer();
+      const errMsg = err instanceof Error ? err.message : String(err);
+      return {
+        code: 1,
+        message: `type checking failed: ${errMsg}`,
+      };
+    }
     const errorCount = tsserver.lastDiagnostics.length;
     tsserver.killTsServer();
 
