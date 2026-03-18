@@ -210,6 +210,12 @@ export class ProcessBasedTsServer {
         reject(new Error('TSServer was killed'));
       });
 
+      this.tsServerProcess.on('exit', (code, signal) => {
+        const msg = `TSServer process exited unexpectedly (code: ${code}, signal: ${signal})`;
+        this.logger.error(msg);
+        this.rejectAllPendingRequests(msg);
+      });
+
       this.readlineInterface.on('line', (line) => {
         this.processMessage(line, resolve, reject);
       });
@@ -280,6 +286,14 @@ export class ProcessBasedTsServer {
     this.readlineInterface?.close();
     this.tsServerProcess = null;
     this.readlineInterface = null;
+  }
+
+  private rejectAllPendingRequests(reason: string) {
+    const error = new Error(reason);
+    for (const seq of Object.keys(this.deferreds)) {
+      this.deferreds[seq].reject(error);
+      delete this.deferreds[seq];
+    }
   }
 
   private log(msg: string, obj: Record<string, any> = {}) {
