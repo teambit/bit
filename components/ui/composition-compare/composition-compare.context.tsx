@@ -1,5 +1,5 @@
 import { useContext, createContext } from 'react';
-import { CompositionContentProps } from '@teambit/compositions';
+import type { CompositionContentProps } from '@teambit/compositions';
 
 export type CompositionCompareContextModel = {
   compositionProps?: CompositionContentProps;

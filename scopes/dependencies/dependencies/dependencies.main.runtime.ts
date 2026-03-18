@@ -67,6 +67,15 @@ export type BlameResult = {
   version: string;
 };
 
+/** Max component entries per version origin — keeps output and memory bounded. */
+const MAX_ORIGIN_COMPONENTS = 5;
+
+export type VersionOrigin = {
+  version: string;
+  envs: string[];
+  components: Array<{ componentId: string; envId: string }>;
+};
+
 export interface DiagnosisReport {
   componentCount: number;
   /** total directories in node_modules/.pnpm — the actual installed copies on disk */
@@ -87,6 +96,7 @@ export interface DiagnosisReport {
   peerPermutations: Array<{
     packageName: string;
     versions: string[];
+    versionOrigins: VersionOrigin[];
   }>;
 }
 
@@ -457,7 +467,20 @@ export class DependenciesMain {
 
     // 2. Collect component-level dep info (for version spread + peer lifecycle detection)
     const packageVersionMap = new Map<string, { versions: Set<string>; lifecycles: Set<string> }>();
+    // Track peer version origins: pkgName -> version -> { envs, components }
+    // We track ALL lifecycles so non-peer versions of peer packages also appear in origins.
+    const peerOrigins = new Map<
+      string,
+      Map<string, { envs: Set<string>; components: Array<{ componentId: string; envId: string }> }>
+    >();
     for (const comp of allComps) {
+      let envId: string;
+      try {
+        envId = this.workspace.envs.getEnvId(comp);
+      } catch (err: any) {
+        this.logger.debug(`diagnose: failed to get envId for ${comp.id.toString()}: ${err.message}`);
+        envId = 'unknown';
+      }
       const depList = this.dependencyResolver.getDependencies(comp);
       depList.forEach((dep) => {
         const pkgName = dep.getPackageName?.() || dep.id;
@@ -468,6 +491,21 @@ export class DependenciesMain {
         }
         entry.versions.add(dep.version);
         entry.lifecycles.add(dep.lifecycle);
+        let versionMap = peerOrigins.get(pkgName);
+        if (!versionMap) {
+          versionMap = new Map();
+          peerOrigins.set(pkgName, versionMap);
+        }
+        let origin = versionMap.get(dep.version);
+        if (!origin) {
+          origin = { envs: new Set(), components: [] };
+          versionMap.set(dep.version, origin);
+        }
+        if (dep.source === 'env') {
+          origin.envs.add(envId);
+        } else if (origin.components.length < MAX_ORIGIN_COMPONENTS) {
+          origin.components.push({ componentId: comp.id.toStringWithoutVersion(), envId });
+        }
       });
     }
 
@@ -488,10 +526,26 @@ export class DependenciesMain {
     // 4. Peer deps with multiple versions
     const peerPermutations = Array.from(packageVersionMap.entries())
       .filter(([, data]) => data.lifecycles.has('peer') && data.versions.size > 1)
-      .map(([pkgName, data]) => ({
-        packageName: pkgName,
-        versions: Array.from(data.versions).sort(compareVersions),
-      }))
+      .map(([pkgName, data]) => {
+        const versionMap = peerOrigins.get(pkgName);
+        const versionOrigins: VersionOrigin[] = [];
+        if (versionMap) {
+          for (const [ver, origin] of versionMap) {
+            const envs = Array.from(origin.envs).sort();
+            // Exclude components already listed as envs for this version
+            const components = origin.components
+              .filter((o) => !origin.envs.has(o.componentId))
+              .sort((a, b) => a.componentId.localeCompare(b.componentId));
+            versionOrigins.push({ version: ver, envs, components });
+          }
+          versionOrigins.sort((a, b) => compareVersions(a.version, b.version));
+        }
+        return {
+          packageName: pkgName,
+          versions: Array.from(data.versions).sort(compareVersions),
+          versionOrigins,
+        };
+      })
       .sort((a, b) => b.versions.length - a.versions.length);
 
     return {

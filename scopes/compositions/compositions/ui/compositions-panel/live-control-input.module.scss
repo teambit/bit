@@ -91,6 +91,13 @@
 
 .multiSelect option {
   padding: 4px 6px;
+  color: var(--on-background-color, #222222);
+}
+
+.multiSelect option:checked,
+.multiSelect option:hover {
+  background: var(--surface-hover-color, #edebfc);
+  color: var(--on-surface-color, #2b2b2b);
 }
 
 .portalMenu {
