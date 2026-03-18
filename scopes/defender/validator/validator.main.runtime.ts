@@ -82,7 +82,17 @@ export class ValidatorMain {
     const tsserver = this.typescript.getTsserverClient();
     if (!tsserver) throw new Error('unable to start tsserver');
 
-    await tsserver.getDiagnostic(files);
+    try {
+      const BATCH_SIZE = 50;
+      await tsserver.getDiagnostic(files, files.length > BATCH_SIZE ? BATCH_SIZE : undefined);
+    } catch (err: any) {
+      tsserver.killTsServer();
+      const errMsg = err instanceof Error ? err.message : String(err);
+      return {
+        code: 1,
+        message: `type checking failed: ${errMsg}`,
+      };
+    }
     const errorCount = tsserver.lastDiagnostics.length;
     tsserver.killTsServer();
 
