@@ -346,7 +346,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
           const potentialRangeChar = depInWsVer[0];
           const newRange = potentialRangeChar + depInCompVer;
           if (newRange === depInWsVer) {
-            addNotUpdateToLogs(`the min version from ws ${depInWsVer} is the same as ${depInCompVer} from comp`);
+            addNotUpdateToLogs(`the workspace version ${depInWsVer} is the same as ${depInCompVer} from the component`);
             return;
           }
           if (!semver.validRange(newRange)) {
@@ -377,7 +377,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
           addToConflict();
           return;
         }
-        addNotUpdateToLogs(`the version from ws ${depInWsVer} is greater than ${depInCompVer} from comp`);
+        addNotUpdateToLogs(`the workspace version ${depInWsVer} is greater than ${depInCompVer} from the component`);
         return;
       }
 
@@ -387,7 +387,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
           addToUpdate();
           return;
         }
-        addNotUpdateToLogs(`the range from ws ${depInWsVer} is greater than ${depInCompVer} from comp`);
+        addNotUpdateToLogs(`the workspace range ${depInWsVer} is greater than ${depInCompVer} from the component`);
         return;
       }
 
@@ -395,11 +395,13 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
         const wsMinVer = semver.minVersion(depInWsVer);
         if (!wsMinVer) {
           this.logger.warn(`unable to calculate the min version of ${depInWsVer}`);
-          addNotUpdateToLogs(`unable to calculate the min version of ${depInWsVer} from ws`);
+          addNotUpdateToLogs(`unable to calculate the min version of ${depInWsVer} from the workspace`);
           return;
         }
         if (semver.gt(wsMinVer, depInCompVer)) {
-          addNotUpdateToLogs(`the min version from ws ${depInWsVer} is greater than ${depInCompVer} from comp`);
+          addNotUpdateToLogs(
+            `the workspace min version ${depInWsVer} is greater than ${depInCompVer} from the component`
+          );
           return;
         }
         if (semver.satisfies(depInCompVer, depInWsVer)) {
