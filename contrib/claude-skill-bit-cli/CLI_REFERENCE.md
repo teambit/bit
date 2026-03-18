@@ -271,7 +271,7 @@ Flags: --depth <number>
 analyze workspace dependencies for version spread, peer permutations, and bloat
 
 scans node_modules/.pnpm to report actual installed copies, identifies packages with multiple versions, and highlights peer dependencies causing permutation explosion. Use --package to drill down into a specific package.
-Flags: --package <string>
+Flags: --package <string>, --origins
 
 ## bit deps write
 
@@ -899,7 +899,7 @@ Flags: --yes, --patch, --minor, --major, --semver
 run type-checking, linting, and testing in sequence
 
 validates components by running check-types, lint, and test commands in sequence. stops at the first failure and returns a non-zero exit code. by default validates only new and modified components. use --all to validate all components.
-Flags: --all, --continue-on-error
+Flags: --all, --continue-on-error, --skip-tasks <string>
 
 ## bit version
 
