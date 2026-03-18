@@ -346,7 +346,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
           const potentialRangeChar = depInWsVer[0];
           const newRange = potentialRangeChar + depInCompVer;
           if (newRange === depInWsVer) {
-            addNotUpdateToLogs(`the workspace version ${depInWsVer} is the same as ${depInCompVer} from the component`);
+            addNotUpdateToLogs(`the workspace range ${depInWsVer} already matches ${depInCompVer} from the component`);
             return;
           }
           if (!semver.validRange(newRange)) {
@@ -400,7 +400,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
         }
         if (semver.gt(wsMinVer, depInCompVer)) {
           addNotUpdateToLogs(
-            `the workspace min version ${depInWsVer} is greater than ${depInCompVer} from the component`
+            `the workspace range ${depInWsVer} (min version ${wsMinVer}) is greater than ${depInCompVer} from the component`
           );
           return;
         }
