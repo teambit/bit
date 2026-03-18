@@ -12,7 +12,6 @@ import { ComponentPreview, SandboxPermissionsAggregator } from '@teambit/preview
 // import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { CompositionGallery, CompositionGallerySkeleton } from '@teambit/compositions.panels.composition-gallery';
-import { useThemePicker } from '@teambit/base-react.themes.theme-switcher';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 import type { UsePreviewSandboxSlot } from '@teambit/compositions';
 import { ReadmeSkeleton } from './readme-skeleton';
@@ -60,8 +59,6 @@ export function Overview({
 }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
-  const theme = useThemePicker();
-  const currentTheme = theme?.current;
   const overviewProps = flatten(overviewOptions.values())[0];
   const showHeader = !component.preview?.legacyHeader;
   const EmptyState = getEmptyState && getEmptyState();
@@ -82,8 +79,6 @@ export function Overview({
   const overviewPropsValues = overviewProps && overviewProps();
 
   const { renderCompositionsFirst, defaultPkgManager } = overviewPropsValues || {};
-
-  const themeParams = currentTheme?.themeName ? `theme=${currentTheme?.themeName}` : '';
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { onLoad, style, ...rest } = previewProps || {};
@@ -138,7 +133,7 @@ export function Overview({
                 onLoad={onPreviewLoad}
                 previewName="overview"
                 pubsub={true}
-                queryParams={[iframeQueryParams, themeParams, overviewPropsValues?.queryParams || '']}
+                queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
                 viewport={null}
                 fullContentHeight
                 disableScroll={true}
@@ -160,7 +155,7 @@ export function Overview({
                 onLoad={onPreviewLoad}
                 previewName="overview"
                 pubsub={true}
-                queryParams={[iframeQueryParams, themeParams, overviewPropsValues?.queryParams || '']}
+                queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
                 viewport={null}
                 fullContentHeight
                 disableScroll={true}
