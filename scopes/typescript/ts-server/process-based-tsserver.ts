@@ -175,6 +175,7 @@ export class ProcessBasedTsServer {
         reject(new Error('server already started'));
         return;
       }
+      this.killedIntentionally = false;
 
       const { tsserverPath } = this.options;
       const { logFile, logVerbosity, maxTsServerMemory, globalPlugins, pluginProbeLocations } = this.tsServerArgs;
@@ -215,6 +216,7 @@ export class ProcessBasedTsServer {
         if (this.killedIntentionally) return;
         const msg = `TSServer process exited unexpectedly (code: ${code}, signal: ${signal})`;
         this.logger.error(msg);
+        reject(new Error(msg));
         this.rejectAllPendingRequests(msg);
         this.tsServerProcess = null;
         this.readlineInterface?.close();
