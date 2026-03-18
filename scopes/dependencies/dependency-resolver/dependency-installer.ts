@@ -59,7 +59,12 @@ export type GetComponentManifestsOptions = {
   excludeExtensionsDependencies?: boolean;
 } & Pick<
   PackageManagerInstallOptions,
-  'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents' | 'copyPeerToRuntimeOnRoot' | 'installPeersFromEnvs' | 'resolveEnvPeersFromRoot'
+  | 'dedupe'
+  | 'dependencyFilterFn'
+  | 'copyPeerToRuntimeOnComponents'
+  | 'copyPeerToRuntimeOnRoot'
+  | 'installPeersFromEnvs'
+  | 'resolveEnvPeersFromRoot'
 >;
 
 export type PreInstallSubscriber = (installer: DependencyInstaller, installArgs: InstallArgs) => Promise<void>;
@@ -307,7 +312,10 @@ export class DependencyInstaller {
     includeAllEnvPeers,
     hasRootComponents,
     excludeExtensionsDependencies,
-  }: GetComponentManifestsOptions): Promise<{ manifests: Record<string, ProjectManifest>; peerOverrides: Record<string, string> }> {
+  }: GetComponentManifestsOptions): Promise<{
+    manifests: Record<string, ProjectManifest>;
+    peerOverrides: Record<string, string>;
+  }> {
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
       createManifestForComponentsWithoutDependencies: true,

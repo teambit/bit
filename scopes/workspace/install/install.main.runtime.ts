@@ -860,13 +860,15 @@ export class InstallMain {
     installOptions: GetComponentsAndManifestsOptions
   ): Promise<ComponentsAndManifests> {
     const componentDirectoryMap = await this.getComponentsDirectory([]);
-    let { manifests, peerOverrides } = await dependencyInstaller.getComponentManifests({
+    const result = await dependencyInstaller.getComponentManifests({
       ...installOptions,
       componentDirectoryMap,
       rootPolicy,
       rootDir: this.workspace.path,
       referenceLocalPackages: this.dependencyResolver.hasRootComponents() && installOptions.nodeLinker === 'isolated',
     });
+    let { manifests } = result;
+    const { peerOverrides } = result;
 
     if (this.dependencyResolver.hasRootComponents()) {
       const rootManifests = await this._getRootManifests(manifests);

@@ -4,8 +4,7 @@ import { IssuesClasses } from '@teambit/component-issues';
 import type { Component } from '@teambit/component';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { fromPairs, pickBy, mapValues, uniq, difference } from 'lodash';
-import { SemVer } from 'semver';
-import semver from 'semver';
+import semver, { SemVer } from 'semver';
 import pMapSeries from 'p-map-series';
 import { snapToSemver } from '@teambit/component-package-version';
 import type { Logger } from '@teambit/logger';
@@ -208,7 +207,8 @@ export class WorkspaceManifestFactory {
       }
 
       // overrides:true implies singleton — an override forces a single version across the workspace
-      const isSingleton = this.forceEnvPeersToRoot || (singletonFlags.get(pkgName) ?? false) || (overridesFlags.get(pkgName) ?? false);
+      const isSingleton =
+        this.forceEnvPeersToRoot || (singletonFlags.get(pkgName) ?? false) || (overridesFlags.get(pkgName) ?? false);
 
       if (isSingleton) {
         // Conflict + workspaceSingleton: merge majority to root, warn about unsatisfied
@@ -237,7 +237,7 @@ export class WorkspaceManifestFactory {
     if (conflictingPackages.length > 0) {
       this.logger?.console?.(
         `\n💡 To resolve workspace peer version conflicts, pin a version in workspace.jsonc under "teambit.dependencies/dependency-resolver" > "overrides", ` +
-        `e.g. "overrides": { "${conflictingPackages[0]}": "<version>" }\n`
+          `e.g. "overrides": { "${conflictingPackages[0]}": "<version>" }\n`
       );
     }
 
@@ -280,10 +280,7 @@ export class WorkspaceManifestFactory {
     }
   }
 
-  private resolveConflictingPeerVersions(
-    pkgName: string,
-    versionsMap: Map<string, Set<string>>
-  ): string {
+  private resolveConflictingPeerVersions(pkgName: string, versionsMap: Map<string, Set<string>>): string {
     const versions = Array.from(versionsMap.keys());
     const envsByVersion = Array.from(versionsMap.entries());
 
@@ -327,7 +324,8 @@ export class WorkspaceManifestFactory {
     const coercedBestForCheck = semver.coerce(bestVersion);
     const unsatisfiedEnvs = envsByVersion.filter(([version]) => {
       if (version === bestVersion || version === '+') return false;
-      if (coercedBestForCheck && semver.validRange(version) && semver.satisfies(coercedBestForCheck.version, version)) return false;
+      if (coercedBestForCheck && semver.validRange(version) && semver.satisfies(coercedBestForCheck.version, version))
+        return false;
       return true;
     });
 
@@ -476,7 +474,7 @@ export class WorkspaceManifestFactory {
               depManifestBeforeFiltering.peerDependencies[pkgName]
             );
           });
-          
+
           // In case the env has peer dependencies on both react and react-dom, we want to make sure to keep the versions
           // in sync with each other, otherwise it may cause issues in the workspace
           // This is a special case for react and react-dom, as most component do import from react, making it a peer dependency,
