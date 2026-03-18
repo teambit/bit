@@ -5627,6 +5627,11 @@
         "c",
         "continue-on-error",
         "run all validation checks even when errors are found"
+      ],
+      [
+        "",
+        "skip-tasks <string>",
+        "skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes. available tasks: \"check-types\", \"lint\", \"test\""
       ]
     ],
     "description": "run type-checking, linting, and testing in sequence",
