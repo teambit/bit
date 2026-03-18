@@ -1941,13 +1941,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/ui/login"
     },
-    "ui/menus/use-lanes-menu": {
-        "name": "ui/menus/use-lanes-menu",
-        "scope": "teambit.lanes",
-        "version": "0.0.298",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/menus/use-lanes-menu"
-    },
     "ui/models/lanes-model": {
         "name": "ui/models/lanes-model",
         "scope": "teambit.lanes",
