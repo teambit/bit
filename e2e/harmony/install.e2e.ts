@@ -313,6 +313,48 @@ describe('install with --lockfile-only', function () {
   });
 });
 
+describe('install with --frozen-lockfile', function () {
+  this.timeout(0);
+  let helper: Helper;
+  describe('when lockfile is up to date', () => {
+    before(() => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
+      // First install to create lockfile
+      helper.command.install('is-positive@^1.0.0');
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('should succeed when lockfile does not need to be updated', () => {
+      // Running with frozen-lockfile should succeed since lockfile is already up to date
+      const output = helper.command.install(undefined, { 'frozen-lockfile': '' });
+      expect(output).to.include('Successfully installed dependencies');
+    });
+  });
+  describe('when lockfile needs update', () => {
+    before(() => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
+      // First install to create lockfile
+      helper.command.install('is-positive@^1.0.0');
+      // Add a new dependency to workspace.jsonc without installing
+      const workspaceJsonc = helper.workspaceJsonc.read();
+      workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd'] = '^1.0.0';
+      helper.workspaceJsonc.write(workspaceJsonc);
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('should fail when lockfile needs to be updated', () => {
+      // Running with frozen-lockfile should fail since lockfile needs update
+      expect(() => helper.command.install(undefined, { 'frozen-lockfile': '' })).to.throw();
+    });
+  });
+});
+
 describe('comment preservation during install', function () {
   this.timeout(0);
   let helper: Helper;

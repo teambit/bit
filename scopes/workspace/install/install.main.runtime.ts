@@ -102,6 +102,7 @@ export type WorkspaceInstallOptions = {
   recurringInstall?: boolean;
   optimizeReportForNonTerminal?: boolean;
   lockfileOnly?: boolean;
+  frozenLockfile?: boolean;
   writeConfigFiles?: boolean;
   skipPrune?: boolean;
   dependenciesGraph?: DependenciesGraph;
@@ -403,6 +404,7 @@ export class InstallMain {
       updateAll: options?.updateAll,
       optimizeReportForNonTerminal: options?.optimizeReportForNonTerminal,
       lockfileOnly: options?.lockfileOnly,
+      frozenLockfile: options?.frozenLockfile,
     };
     const prevManifests = new Set<string>();
     // TODO: this make duplicate

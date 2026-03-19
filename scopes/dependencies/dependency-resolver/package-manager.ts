@@ -32,6 +32,12 @@ export type PackageManagerInstallOptions = {
   lockfileOnly?: boolean;
 
   /**
+   * When true, installation will fail if the lockfile needs to be updated.
+   * This is useful for CI environments to ensure reproducible builds.
+   */
+  frozenLockfile?: boolean;
+
+  /**
    * When false, the package manager will not write the node_modules directory
    */
   enableModulesDir?: boolean;
