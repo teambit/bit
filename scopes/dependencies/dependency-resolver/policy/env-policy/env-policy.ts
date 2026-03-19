@@ -35,7 +35,7 @@ export type EnvJsoncPolicyPeerEntry = EnvJsoncPolicyEntry & {
    * forcing all transitive dependencies to use the same version.
    * Useful to prevent old versions from being pulled by published packages.
    */
-  overrides?: boolean;
+  override?: boolean;
 };
 
 export type VersionKeyName = 'version' | 'supportedRange';
@@ -150,9 +150,9 @@ function entriesFromKey(
       );
     }
     const peerEntry = entry as EnvJsoncPolicyPeerEntry;
-    const hasPeerProps = 'workspaceSingleton' in entry || 'overrides' in entry;
+    const hasPeerProps = 'workspaceSingleton' in entry || 'override' in entry;
     const value = hasPeerProps
-      ? { version: entry[versionKey], workspaceSingleton: peerEntry.workspaceSingleton, overrides: peerEntry.overrides }
+      ? { version: entry[versionKey], workspaceSingleton: peerEntry.workspaceSingleton, override: peerEntry.override }
       : entry[versionKey];
     return createVariantPolicyEntry(entry.name, value, lifecycleType, {
       ...options,

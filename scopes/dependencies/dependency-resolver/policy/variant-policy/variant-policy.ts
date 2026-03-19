@@ -41,7 +41,7 @@ export type VariantPolicyEntryValue = {
   resolveFromEnv?: boolean;
   optional?: boolean;
   workspaceSingleton?: boolean;
-  overrides?: boolean;
+  override?: boolean;
 };
 
 export type DependencySource = 'auto' | 'env' | 'env-own' | 'slots' | 'config';
@@ -346,13 +346,13 @@ export function createVariantPolicyEntry(
   const resolveFromEnv = typeof value === 'string' ? false : value.resolveFromEnv;
   const optional = typeof value === 'string' ? undefined : value.optional;
   const workspaceSingleton = typeof value === 'string' ? undefined : value.workspaceSingleton;
-  const overrides = typeof value === 'string' ? undefined : value.overrides;
+  const override = typeof value === 'string' ? undefined : value.override;
 
   const entryValue: VariantPolicyEntryValue = {
     version,
     resolveFromEnv,
     workspaceSingleton,
-    overrides,
+    override,
   };
   const entry: VariantPolicyEntry = {
     ...opts,

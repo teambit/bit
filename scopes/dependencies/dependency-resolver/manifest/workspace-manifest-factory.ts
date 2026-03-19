@@ -178,7 +178,7 @@ export class WorkspaceManifestFactory {
         if (entry.value.workspaceSingleton) {
           singletonFlags.set(pkgName, true);
         }
-        if (entry.value.overrides) {
+        if (entry.value.override) {
           overridesFlags.set(pkgName, true);
         }
       }
