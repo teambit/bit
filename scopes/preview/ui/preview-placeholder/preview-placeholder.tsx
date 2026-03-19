@@ -58,7 +58,7 @@ function prefetchPreviewAssets(url: string) {
 
 function ViewportGate({
   previewAssetsUrl,
-  rootMargin = '0px 0px 200% 0px',
+  rootMargin = '0px 0px 50% 0px',
   children,
 }: {
   previewAssetsUrl?: string;
@@ -81,7 +81,7 @@ function ViewportGate({
               prefetchObs!.disconnect();
             }
           },
-          { rootMargin: '0px 0px 400% 0px' }
+          { rootMargin: '0px 0px 150% 0px' }
         )
       : null;
 
