@@ -362,12 +362,14 @@ export class InstallMain {
     const hasRootComponents = this.dependencyResolver.hasRootComponents();
     // TODO: pass get install options
     const installer = this.dependencyResolver.getInstaller({});
+    const resolveEnvPeersFromRoot = this.dependencyResolver.config.resolveEnvPeersFromRoot ?? true;
     const calcManifestsOpts: GetComponentsAndManifestsOptions = {
       copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
       copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
       dedupe: !hasRootComponents && options?.dedupe,
       dependencyFilterFn: depsFilterFn,
       nodeLinker: this.dependencyResolver.nodeLinker(),
+      resolveEnvPeersFromRoot,
     };
     const linkOpts = {
       linkTeambitBit: true,
@@ -395,7 +397,10 @@ export class InstallMain {
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
       allowScripts: this.dependencyResolver.getAllowedScripts(),
       dangerouslyAllowAllScripts: this.dependencyResolver.config.dangerouslyAllowAllScripts,
-      overrides: this.dependencyResolver.config.overrides,
+      overrides: {
+        ...current.peerOverrides, // env peer overrides (from overrides: true in env.jsonc)
+        ...this.dependencyResolver.config.overrides, // workspace.jsonc overrides win
+      },
       hoistPatterns: this.dependencyResolver.config.hoistPatterns,
       hoistInjectedDependencies: this.dependencyResolver.config.hoistInjectedDependencies,
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
@@ -855,13 +860,15 @@ export class InstallMain {
     installOptions: GetComponentsAndManifestsOptions
   ): Promise<ComponentsAndManifests> {
     const componentDirectoryMap = await this.getComponentsDirectory([]);
-    let manifests = await dependencyInstaller.getComponentManifests({
+    const result = await dependencyInstaller.getComponentManifests({
       ...installOptions,
       componentDirectoryMap,
       rootPolicy,
       rootDir: this.workspace.path,
       referenceLocalPackages: this.dependencyResolver.hasRootComponents() && installOptions.nodeLinker === 'isolated',
     });
+    let { manifests } = result;
+    const { peerOverrides } = result;
 
     if (this.dependencyResolver.hasRootComponents()) {
       const rootManifests = await this._getRootManifests(manifests);
@@ -874,6 +881,7 @@ export class InstallMain {
     return {
       componentDirectoryMap,
       manifests,
+      peerOverrides,
     };
   }
 
@@ -1484,6 +1492,7 @@ export class InstallMain {
 type ComponentsAndManifests = {
   componentDirectoryMap: ComponentMap<string>;
   manifests: Record<string, ProjectManifest>;
+  peerOverrides: Record<string, string>;
 };
 
 function hasComponentsFromWorkspaceInMissingDeps({
