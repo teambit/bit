@@ -25,6 +25,8 @@ export type PackageManagerInstallOptions = {
 
   installPeersFromEnvs?: boolean;
 
+  resolveEnvPeersFromRoot?: boolean;
+
   dependencyFilterFn?: DepsFilterFn;
 
   overrides?: Record<string, string>;
