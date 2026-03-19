@@ -11,11 +11,12 @@ import pMapSeries from 'p-map-series';
 import { Analytics } from '@teambit/legacy.analytics';
 import { getConfig } from '@teambit/config-store';
 import { defaultErrorHandler } from '@teambit/cli';
-import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS, DEBUG_LOG } from '@teambit/legacy.constants';
+import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS, DEBUG_LOG, GLOBAL_LOGS } from '@teambit/legacy.constants';
 import { getPinoLogger } from './pino-logger';
 import { Profiler } from './profiler';
 import { loader } from '@teambit/legacy.loader';
 import { rotateLogDaily } from './rotate-log-daily';
+import { rotateLogIfNeeded, cleanupLogsByTotalSize } from './rotate-log-file';
 
 export { Level as LoggerLevel };
 
@@ -33,8 +34,10 @@ const DEFAULT_LEVEL = 'debug';
 const logLevel = getLogLevel();
 
 rotateLogDaily(DEBUG_LOG);
+rotateLogIfNeeded(DEBUG_LOG);
+cleanupLogsByTotalSize(GLOBAL_LOGS);
 
-const { pinoLogger, pinoLoggerConsole, pinoSSELogger } = getPinoLogger(logLevel, jsonFormat);
+const { pinoLogger, pinoLoggerConsole, pinoSSELogger, fileDestination } = getPinoLogger(logLevel, jsonFormat);
 
 export interface IBitLogger {
   trace(message: string, ...meta: any[]): void;
@@ -70,7 +73,8 @@ class BitLogger implements IBitLogger {
   private profiler: Profiler;
   private onBeforeExitFns: Function[] = [];
 
-  isDaemon = false; // 'bit cli' is a daemon as it should never exit the process, unless the user kills it
+  private _isDaemon = false; // 'bit cli' is a daemon as it should never exit the process, unless the user kills it
+  private _rotationTimer: ReturnType<typeof setInterval> | undefined;
   /**
    * being set on command-registrar, once the flags are parsed. here, it's a workaround to have
    * it set before the command-registrar is loaded. at this stage we don't know for sure the "-j"
@@ -86,6 +90,26 @@ class BitLogger implements IBitLogger {
   constructor(logger: PinoLogger) {
     this.logger = logger;
     this.profiler = new Profiler();
+  }
+
+  get isDaemon(): boolean {
+    return this._isDaemon;
+  }
+
+  set isDaemon(value: boolean) {
+    this._isDaemon = value;
+    if (value && !this._rotationTimer) {
+      const THIRTY_MINUTES = 30 * 60 * 1000;
+      this._rotationTimer = setInterval(() => {
+        try {
+          rotateLogIfNeeded(DEBUG_LOG, 100 * 1024 * 1024, 9, fileDestination);
+          cleanupLogsByTotalSize(GLOBAL_LOGS);
+        } catch {
+          // never crash the daemon for log rotation
+        }
+      }, THIRTY_MINUTES);
+      this._rotationTimer.unref();
+    }
   }
 
   /**
