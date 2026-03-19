@@ -10,7 +10,8 @@ import { DEFAULT_LANE } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import type { ComponentCompareMain } from '@teambit/component-compare';
 import chalk from 'chalk';
-import { compact } from 'lodash';
+import pMap from 'p-map';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 
 type LaneData = {
   name: string;
@@ -117,39 +118,42 @@ export class LaneDiffGenerator {
       reason: `for the "from" diff - ${fromLane ? fromLane.name : DEFAULT_LANE}`,
     });
 
+    // Build an index of fromLaneData for O(1) lookups instead of repeated O(N) .find() calls.
+    const fromLaneIndex = new Map<string, Ref>();
+    for (const comp of this.fromLaneData.components) {
+      fromLaneIndex.set(comp.id.toStringWithoutVersion(), comp.head);
+    }
+
     // Find the common snap (merge-base / fork-point) for each component.
     // This ensures `lane diff` shows only changes made on the lane, not changes that happened on the
     // base lane (e.g. main) after the lane was created.
-    const commonSnapMap = new Map<string, Ref>();
-    await Promise.all(
-      this.toLaneData.components.map(async ({ id, head }) => {
+    const commonSnapMap = new Map<string, { ref: Ref; id: ComponentID }>();
+    await pMap(
+      this.toLaneData.components,
+      async ({ id, head }) => {
         if (!head) return;
-        const foundFromLane = this.fromLaneData.components.find((c) => c.id.isEqualWithoutVersion(id))?.head;
-        if (!foundFromLane || foundFromLane.isEqual(head)) return;
+        const fromHead = fromLaneIndex.get(id.toStringWithoutVersion());
+        if (!fromHead || fromHead.isEqual(head)) return;
         try {
           const snapsDistance = await this.scope.getSnapsDistanceBetweenTwoSnaps(
             id,
             head.toString(),
-            foundFromLane.toString(),
+            fromHead.toString(),
             false
           );
           if (snapsDistance?.commonSnapBeforeDiverge) {
-            commonSnapMap.set(id.toStringWithoutVersion(), snapsDistance.commonSnapBeforeDiverge);
+            commonSnapMap.set(id.toStringWithoutVersion(), { ref: snapsDistance.commonSnapBeforeDiverge, id });
           }
         } catch {
           // if we can't determine the common snap, fall back to comparing against the current head
         }
-      })
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
 
     // Import the common snap versions so we can diff against them
-    const commonSnapsToImport = compact(
-      [...commonSnapMap.entries()].map(([idStr, ref]) => {
-        const comp = this.toLaneData.components.find((c) => c.id.toStringWithoutVersion() === idStr);
-        return comp ? comp.id.changeVersion(ref.hash) : null;
-      })
-    );
-    if (commonSnapsToImport.length > 0) {
+    if (commonSnapMap.size > 0) {
+      const commonSnapsToImport = [...commonSnapMap.values()].map((s) => s.id.changeVersion(s.ref.hash));
       const sourceOrTargetLane = (toLane || fromLane) ?? undefined;
       await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(commonSnapsToImport), {
         cache: true,
@@ -164,7 +168,9 @@ export class LaneDiffGenerator {
         if (idsToCheckDiff && !idsToCheckDiff.hasWithoutVersion(id)) {
           return;
         }
-        await this.componentDiff(id, head, diffOptions, true, commonSnapMap);
+        const idKey = id.toStringWithoutVersion();
+        const forkPoint = commonSnapMap.get(idKey)?.ref;
+        await this.componentDiff(id, head, diffOptions, true, forkPoint);
       })
     );
 
@@ -271,14 +277,13 @@ export class LaneDiffGenerator {
     toLaneHead: Ref | null,
     diffOptions: DiffOptions = {},
     compareToHeadIfEmpty = false,
-    commonSnapMap?: Map<string, Ref>
+    forkPoint?: Ref
   ) {
     const modelComponent = await this.scope.legacyScope.getModelComponent(id);
     const foundFromLane = this.fromLaneData.components.find((c) => c.id.isEqualWithoutVersion(id))?.head;
-    // Use the common snap (fork-point) when available, so the diff only shows changes made on the
+    // Use the fork-point when available, so the diff only shows changes made on the
     // "to" lane rather than also including changes that happened on the "from" lane since the fork.
-    const commonSnap = commonSnapMap?.get(id.toStringWithoutVersion());
-    let fromLaneHead: Ref | null | undefined = commonSnap;
+    let fromLaneHead: Ref | null | undefined = forkPoint;
     if (!fromLaneHead) {
       fromLaneHead = compareToHeadIfEmpty ? foundFromLane || modelComponent.head : foundFromLane;
     }
