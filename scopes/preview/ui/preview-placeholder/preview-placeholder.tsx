@@ -8,6 +8,8 @@ import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import { DocsAspect } from '@teambit/docs';
 import styles from './preview-placeholder.module.scss';
 
+// ── BrowserSkeleton ─────────────────────────────────────────────────────────
+
 function BrowserSkeleton() {
   return (
     <div className={styles.browserSkeleton}>
@@ -27,68 +29,7 @@ function BrowserSkeleton() {
   );
 }
 
-const SLOT_TIMEOUT = 10_000;
-
-type QueueEntry = {
-  id: string;
-  resolve: () => void;
-  timer?: ReturnType<typeof setTimeout>;
-};
-
-class IframeLoadQueue {
-  private active = new Map<string, QueueEntry>();
-  private pending: QueueEntry[] = [];
-
-  constructor(private maxConcurrent = 6) {}
-
-  enqueue(id: string): Promise<void> {
-    if (this.active.has(id)) return Promise.resolve();
-    const existing = this.pending.find((e) => e.id === id);
-    if (existing)
-      return new Promise((resolve) => {
-        existing.resolve = resolve;
-      });
-
-    if (this.active.size < this.maxConcurrent) {
-      const entry: QueueEntry = { id, resolve: () => {} };
-      this.active.set(id, entry);
-      return Promise.resolve();
-    }
-
-    return new Promise((resolve) => {
-      this.pending.push({ id, resolve });
-    });
-  }
-
-  complete(id: string): void {
-    const entry = this.active.get(id);
-    if (entry?.timer) clearTimeout(entry.timer);
-    this.active.delete(id);
-    this.dequeueNext();
-  }
-
-  cancel(id: string): void {
-    const entry = this.active.get(id);
-    if (entry) {
-      if (entry.timer) clearTimeout(entry.timer);
-      this.active.delete(id);
-      this.dequeueNext();
-      return;
-    }
-    const idx = this.pending.findIndex((e) => e.id === id);
-    if (idx !== -1) this.pending.splice(idx, 1);
-  }
-
-  private dequeueNext(): void {
-    if (this.pending.length === 0 || this.active.size >= this.maxConcurrent) return;
-    const next = this.pending.shift()!;
-    next.timer = setTimeout(() => this.complete(next.id), SLOT_TIMEOUT);
-    this.active.set(next.id, next);
-    next.resolve();
-  }
-}
-
-const iframeLoadQueue = new IframeLoadQueue(6);
+// ── Prefetch helper ─────────────────────────────────────────────────────────
 
 const prefetchedAssets = new Set<string>();
 
@@ -111,119 +52,70 @@ function prefetchPreviewAssets(url: string) {
     .catch(() => {});
 }
 
+// ── ViewportGate ────────────────────────────────────────────────────────────
+// Defers iframe mounting until near the viewport. Prefetches assets ahead.
+// Does NOT own skeleton state — parent handles that via onLoad.
+
 function ViewportGate({
-  componentId,
   previewAssetsUrl,
-  skeleton,
   rootMargin = '0px 0px 200% 0px',
   children,
 }: {
-  componentId?: string;
   previewAssetsUrl?: string;
-  skeleton?: ReactNode;
   rootMargin?: string;
   children: ReactNode;
 }) {
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const [hasBeenVisible, setHasBeenVisible] = useState(false);
-  const [isSlotReady, setIsSlotReady] = useState(false);
-  const [iframeReady, setIframeReady] = useState(false);
-  const idRef = useRef(componentId || `vg-${Math.random().toString(36).slice(2)}`);
+  const [visible, setVisible] = useState(false);
 
-  // Main observer: triggers iframe mount when sentinel enters 2-viewport range
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el || hasBeenVisible) return;
+    if (!el) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setHasBeenVisible(true);
-          observer.disconnect();
+    // Prefetch observer — warm browser cache 4 viewports ahead
+    const prefetchObs = previewAssetsUrl
+      ? new IntersectionObserver(
+          ([e]) => {
+            if (e.isIntersecting) {
+              prefetchPreviewAssets(previewAssetsUrl);
+              prefetchObs!.disconnect();
+            }
+          },
+          { rootMargin: '0px 0px 400% 0px' }
+        )
+      : null;
+
+    // Mount observer — mount iframe when 2 viewports away
+    const mountObs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          mountObs.disconnect();
+          prefetchObs?.disconnect();
+          if (previewAssetsUrl) prefetchPreviewAssets(previewAssetsUrl);
+          setVisible(true);
         }
       },
       { rootMargin }
     );
 
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasBeenVisible, rootMargin]);
-
-  // Prefetch observer: fetches asset list when 4 viewports away
-  useEffect(() => {
-    if (!previewAssetsUrl) return;
-    const el = sentinelRef.current;
-    if (!el) return;
-
-    const prefetchObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          prefetchPreviewAssets(previewAssetsUrl);
-          prefetchObserver.disconnect();
-        }
-      },
-      { rootMargin: '0px 0px 400% 0px' }
-    );
-
-    prefetchObserver.observe(el);
-    return () => prefetchObserver.disconnect();
-  }, [previewAssetsUrl]);
-
-  // Request a loading slot from the queue once visible
-  useEffect(() => {
-    if (!hasBeenVisible || isSlotReady) return;
-
-    let cancelled = false;
-    const id = idRef.current;
-
-    // eslint-disable-next-line promise/catch-or-return
-    iframeLoadQueue.enqueue(id).then(() => {
-      if (!cancelled) setIsSlotReady(true);
-    });
+    prefetchObs?.observe(el);
+    mountObs.observe(el);
 
     return () => {
-      cancelled = true;
-      iframeLoadQueue.cancel(id);
+      prefetchObs?.disconnect();
+      mountObs.disconnect();
     };
-  }, [hasBeenVisible, isSlotReady]);
-
-  // Listen for iframe content ready — skeleton stays until iframe actually renders
-  useEffect(() => {
-    if (!isSlotReady || iframeReady) return;
-
-    const id = idRef.current;
-    const handleMessage = (event: MessageEvent) => {
-      const evt = event.data?.event;
-      // _DOM_LOADED_ = iframe HTML loaded, preview-size = content measured
-      if (evt === '_DOM_LOADED_' || evt === 'preview-size') {
-        setIframeReady(true);
-        iframeLoadQueue.complete(id);
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    // Safety timeout — don't block forever if iframe never reports
-    const timer = setTimeout(() => {
-      setIframeReady(true);
-      iframeLoadQueue.complete(id);
-    }, 15_000);
-
-    return () => {
-      window.removeEventListener('message', handleMessage);
-      clearTimeout(timer);
-    };
-  }, [isSlotReady, iframeReady]);
-
-  const mountIframe = hasBeenVisible && isSlotReady;
-  const showSkeleton = !iframeReady;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <div ref={sentinelRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
-      {mountIframe && children}
-      {showSkeleton && <div className={styles.skeletonOverlay}>{skeleton}</div>}
+    <div ref={sentinelRef} className={styles.viewportGate}>
+      {visible ? children : null}
     </div>
   );
 }
+
+// ── PreviewPlaceholder ──────────────────────────────────────────────────────
 
 export function getCompositions(component: ComponentDescriptor) {
   const entry: any = component.get(CompositionsAspect.id);
@@ -269,6 +161,7 @@ export function PreviewPlaceholder({
 
   const prevServerUrlRef = useRef(serverUrl);
   const [forceRender, setForceRender] = React.useState(0);
+  const [previewLoaded, setPreviewLoaded] = useState(false);
 
   useEffect(() => {
     if (prevServerUrlRef.current !== serverUrl && shouldShowPreview) {
@@ -308,12 +201,8 @@ export function PreviewPlaceholder({
     );
 
   return (
-    <div key={`${name}-${serverUrl}-${forceRender}`}>
-      <ViewportGate
-        componentId={name}
-        previewAssetsUrl={`/api/${name}/~aspect/preview-assets`}
-        skeleton={<BrowserSkeleton />}
-      >
+    <div key={`${name}-${serverUrl}-${forceRender}`} className={styles.previewCard}>
+      <ViewportGate previewAssetsUrl={`/api/${name}/~aspect/preview-assets`}>
         <ComponentComposition
           component={component}
           composition={selectedPreview}
@@ -322,8 +211,14 @@ export function PreviewPlaceholder({
           loading={'lazy'}
           viewport={1280}
           queryParams={'disableCta=true'}
+          onLoad={() => setPreviewLoaded(true)}
         />
       </ViewportGate>
+      {!previewLoaded && (
+        <div className={styles.skeletonOverlay}>
+          <BrowserSkeleton />
+        </div>
+      )}
       <div className={styles.previewOverlay} />
     </div>
   );

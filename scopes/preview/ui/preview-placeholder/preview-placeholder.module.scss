@@ -78,6 +78,31 @@
   cursor: pointer;
 }
 
+// ── Viewport gate & skeleton overlay ────────────────────────────────────────
+
+.previewCard {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.viewportGate {
+  width: 100%;
+  height: 100%;
+}
+
+.skeletonOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  background: var(--surface-color, #ffffff);
+}
+
+// ── Browser-chrome skeleton ─────────────────────────────────────────────────
+
 .browserSkeleton {
   width: 100%;
   height: 100%;
@@ -139,14 +164,4 @@
 }
 .browserLine4 {
   width: 65%;
-}
-
-.skeletonOverlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 10;
-  background: var(--surface-color, #ffffff);
 }
