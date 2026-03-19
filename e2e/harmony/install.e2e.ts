@@ -350,7 +350,7 @@ describe('install with --frozen-lockfile', function () {
     });
     it('should fail when lockfile needs to be updated', () => {
       // Running with frozen-lockfile should fail since lockfile needs update
-      expect(() => helper.command.install(undefined, { 'frozen-lockfile': '' })).to.throw();
+      expect(() => helper.command.install(undefined, { 'frozen-lockfile': '' })).to.throw(/frozen[- ]lockfile/i);
     });
   });
 });
