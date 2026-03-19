@@ -381,9 +381,14 @@ export class DependenciesDiagnoseCmd implements Command {
     }
 
     if (report.peerPermutations.length) {
-      const peerTable = borderlessTable({ head: ['Package', 'Versions'], paddingLeft: 2, paddingRight: 1 });
+      const peerTable = borderlessTable({
+        head: ['Package', 'Declared versions', 'Installed copies'],
+        paddingLeft: 2,
+        paddingRight: 1,
+      });
       report.peerPermutations.forEach((entry) => {
-        peerTable.push([entry.packageName, `${entry.versions.length} (${entry.versions.join(', ')})`]);
+        const copies = entry.installedCopies > 0 ? String(entry.installedCopies) : chalk.dim('0 (not installed)');
+        peerTable.push([entry.packageName, `${entry.versions.length} (${entry.versions.join(', ')})`, copies]);
       });
       sections.push('', chalk.bold('Peer dependencies causing permutations:'), peerTable.toString());
 
