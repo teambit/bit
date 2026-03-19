@@ -47,6 +47,11 @@ export function rotateLogIfNeeded(
   const ext = path.extname(logPath);
   const base = path.basename(logPath, ext);
 
+  // Remove the oldest rotated file so the shift chain doesn't fail
+  // when the destination already exists (e.g. on Windows where renameSync won't overwrite)
+  const maxFile = path.join(dir, `${base}${maxFiles}${ext}`);
+  safeRemoveSync(maxFile);
+
   // Shift older logs forward in ascending order
   // i.e. debug9.log → debug10.log, debug8.log → debug9.log, ...
   for (let i = maxFiles - 1; i > 0; i--) {
@@ -77,7 +82,7 @@ export function rotateLogIfNeeded(
  * The current debug.log is excluded from deletion so the active log is never removed.
  *
  * @param logDir       The logs directory (e.g. ~/Library/Caches/Bit/logs/)
- * @param maxTotalSize Maximum total bytes for all debug*.log files (default 200MB)
+ * @param maxTotalSize Maximum total bytes for all debug*.log files (default 1GB)
  */
 export function cleanupLogsByTotalSize(
   logDir: string,

@@ -33,9 +33,13 @@ const DEFAULT_LEVEL = 'debug';
 
 const logLevel = getLogLevel();
 
-rotateLogDaily(DEBUG_LOG);
-rotateLogIfNeeded(DEBUG_LOG);
-cleanupLogsByTotalSize(GLOBAL_LOGS);
+try {
+  rotateLogDaily(DEBUG_LOG);
+  rotateLogIfNeeded(DEBUG_LOG);
+  cleanupLogsByTotalSize(GLOBAL_LOGS);
+} catch {
+  // never prevent the CLI from starting due to log maintenance errors
+}
 
 const { pinoLogger, pinoLoggerConsole, pinoSSELogger, fileDestination } = getPinoLogger(logLevel, jsonFormat);
 
@@ -102,6 +106,7 @@ class BitLogger implements IBitLogger {
       const THIRTY_MINUTES = 30 * 60 * 1000;
       this._rotationTimer = setInterval(() => {
         try {
+          rotateLogDaily(DEBUG_LOG);
           rotateLogIfNeeded(DEBUG_LOG, 100 * 1024 * 1024, 9, fileDestination);
           cleanupLogsByTotalSize(GLOBAL_LOGS);
         } catch {
