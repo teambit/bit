@@ -124,47 +124,53 @@ export class LaneDiffGenerator {
       fromLaneIndex.set(comp.id.toStringWithoutVersion(), comp.head);
     }
 
-    // Find the common snap (merge-base / fork-point) for each component.
-    // This ensures `lane diff` shows only changes made on the lane, not changes that happened on the
-    // base lane (e.g. main) after the lane was created.
-    // When a pattern is provided, only compute fork-points for the matching subset.
-    const componentsToProcess = idsToCheckDiff
-      ? this.toLaneData.components.filter(({ id }) => idsToCheckDiff.hasWithoutVersion(id))
-      : this.toLaneData.components;
+    // Fork-point computation only applies when comparing a lane against main (default lane).
+    // When comparing two non-default lanes, use direct head-to-head comparison.
+    const useForkPoint = fromLaneId.isDefault() || toLaneId.isDefault();
     const commonSnapMap = new Map<string, { ref: Ref; id: ComponentID }>();
-    await pMap(
-      componentsToProcess,
-      async ({ id, head }) => {
-        if (!head) return;
-        const fromHead = fromLaneIndex.get(id.toStringWithoutVersion());
-        if (!fromHead || fromHead.isEqual(head)) return;
-        try {
-          const snapsDistance = await this.scope.getSnapsDistanceBetweenTwoSnaps(
-            id,
-            head.toString(),
-            fromHead.toString(),
-            false
-          );
-          if (snapsDistance?.commonSnapBeforeDiverge) {
-            commonSnapMap.set(id.toStringWithoutVersion(), { ref: snapsDistance.commonSnapBeforeDiverge, id });
-          }
-        } catch {
-          // if we can't determine the common snap, fall back to comparing against the current head
-        }
-      },
-      { concurrency: concurrentComponentsLimit() }
-    );
 
-    // Import the common snap versions so we can diff against them
-    if (commonSnapMap.size > 0) {
-      const commonSnapsToImport = [...commonSnapMap.values()].map((s) => s.id.changeVersion(s.ref.hash));
-      const sourceOrTargetLane = (toLane || fromLane) ?? undefined;
-      await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(commonSnapsToImport), {
-        cache: true,
-        lane: sourceOrTargetLane,
-        ignoreMissingHead: true,
-        reason: 'for the common snap (fork-point) of lane diff',
-      });
+    if (useForkPoint) {
+      // Find the common snap (merge-base / fork-point) for each component.
+      // This ensures `lane diff` shows only changes made on the lane, not changes that happened on
+      // main after the lane was created.
+      // When a pattern is provided, only compute fork-points for the matching subset.
+      const componentsToProcess = idsToCheckDiff
+        ? this.toLaneData.components.filter(({ id }) => idsToCheckDiff.hasWithoutVersion(id))
+        : this.toLaneData.components;
+      await pMap(
+        componentsToProcess,
+        async ({ id, head }) => {
+          if (!head) return;
+          const fromHead = fromLaneIndex.get(id.toStringWithoutVersion());
+          if (!fromHead || fromHead.isEqual(head)) return;
+          try {
+            const snapsDistance = await this.scope.getSnapsDistanceBetweenTwoSnaps(
+              id,
+              head.toString(),
+              fromHead.toString(),
+              false
+            );
+            if (snapsDistance?.commonSnapBeforeDiverge) {
+              commonSnapMap.set(id.toStringWithoutVersion(), { ref: snapsDistance.commonSnapBeforeDiverge, id });
+            }
+          } catch {
+            // if we can't determine the common snap, fall back to comparing against the current head
+          }
+        },
+        { concurrency: concurrentComponentsLimit() }
+      );
+
+      // Import the common snap versions so we can diff against them
+      if (commonSnapMap.size > 0) {
+        const commonSnapsToImport = [...commonSnapMap.values()].map((s) => s.id.changeVersion(s.ref.hash));
+        const sourceOrTargetLane = (toLane || fromLane) ?? undefined;
+        await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(commonSnapsToImport), {
+          cache: true,
+          lane: sourceOrTargetLane,
+          ignoreMissingHead: true,
+          reason: 'for the common snap (fork-point) of lane diff',
+        });
+      }
     }
 
     await Promise.all(
