@@ -5,7 +5,8 @@ import * as fs from 'fs-extra';
  * Rotates a log file if it exceeds a certain size (e.g. 10MB).
  *
  * - If "debug.log" is bigger than `maxSize`,
- *   then move older logs forward (debug9.log → debug10.log, etc.)
+ *   then delete the oldest rotated file (debug9.log with default maxFiles=9),
+ *   shift remaining logs forward (debug8.log → debug9.log, debug7.log → debug8.log, etc.),
  *   rename debug.log → debug1.log,
  *   and finally create an empty debug.log.
  *
@@ -52,8 +53,8 @@ export function rotateLogIfNeeded(
   const maxFile = path.join(dir, `${base}${maxFiles}${ext}`);
   safeRemoveSync(maxFile);
 
-  // Shift older logs forward in ascending order
-  // i.e. debug9.log → debug10.log, debug8.log → debug9.log, ...
+  // Shift older logs forward in descending order
+  // i.e. debug8.log → debug9.log, debug7.log → debug8.log, ...
   for (let i = maxFiles - 1; i > 0; i--) {
     const oldFile = path.join(dir, `${base}${i}${ext}`);
     const newFile = path.join(dir, `${base}${i + 1}${ext}`);
