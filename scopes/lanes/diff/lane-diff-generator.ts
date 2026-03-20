@@ -127,9 +127,13 @@ export class LaneDiffGenerator {
     // Find the common snap (merge-base / fork-point) for each component.
     // This ensures `lane diff` shows only changes made on the lane, not changes that happened on the
     // base lane (e.g. main) after the lane was created.
+    // When a pattern is provided, only compute fork-points for the matching subset.
+    const componentsToProcess = idsToCheckDiff
+      ? this.toLaneData.components.filter(({ id }) => idsToCheckDiff.hasWithoutVersion(id))
+      : this.toLaneData.components;
     const commonSnapMap = new Map<string, { ref: Ref; id: ComponentID }>();
     await pMap(
-      this.toLaneData.components,
+      componentsToProcess,
       async ({ id, head }) => {
         if (!head) return;
         const fromHead = fromLaneIndex.get(id.toStringWithoutVersion());
