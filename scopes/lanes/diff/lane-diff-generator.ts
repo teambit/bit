@@ -174,7 +174,8 @@ export class LaneDiffGenerator {
         }
         const idKey = id.toStringWithoutVersion();
         const forkPoint = commonSnapMap.get(idKey)?.ref;
-        await this.componentDiff(id, head, diffOptions, true, forkPoint);
+        const fromHead = fromLaneIndex.get(idKey);
+        await this.componentDiff(id, head, diffOptions, true, forkPoint, fromHead);
       })
     );
 
@@ -281,10 +282,11 @@ export class LaneDiffGenerator {
     toLaneHead: Ref | null,
     diffOptions: DiffOptions = {},
     compareToHeadIfEmpty = false,
-    forkPoint?: Ref
+    forkPoint?: Ref,
+    fromHead?: Ref
   ) {
     const modelComponent = await this.scope.legacyScope.getModelComponent(id);
-    const foundFromLane = this.fromLaneData.components.find((c) => c.id.isEqualWithoutVersion(id))?.head;
+    const foundFromLane = fromHead ?? this.fromLaneData.components.find((c) => c.id.isEqualWithoutVersion(id))?.head;
     // Use the fork-point when available, so the diff only shows changes made on the
     // "to" lane rather than also including changes that happened on the "from" lane since the fork.
     let fromLaneHead: Ref | null | undefined = forkPoint;
