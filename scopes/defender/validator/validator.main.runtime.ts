@@ -33,11 +33,7 @@ export class ValidatorMain {
     private logger: Logger
   ) {}
 
-  async validate(
-    components: Component[],
-    continueOnError = false,
-    skipTasks: string[] = []
-  ): Promise<ValidationResult> {
+  async validate(components: Component[], failFast = false, skipTasks: string[] = []): Promise<ValidationResult> {
     const steps: { label: string; run: () => Promise<ValidationResult> }[] = [];
 
     if (!skipTasks.includes('check-types')) {
@@ -63,10 +59,10 @@ export class ValidatorMain {
       const result = await step.run();
       this.logger.console(result.message);
       results.push(result);
-      if (result.code !== 0 && !continueOnError) return result;
+      if (result.code !== 0 && failFast) return result;
     }
 
-    // When continueOnError is true, return the first error found, or success if all passed
+    // Return the first error found, or success if all passed
     const firstError = results.find((r) => r.code !== 0);
     return firstError || results[results.length - 1];
   }

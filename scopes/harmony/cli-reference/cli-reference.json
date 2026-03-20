@@ -5624,9 +5624,14 @@
         "validate all components, not only modified and new"
       ],
       [
+        "",
+        "fail-fast",
+        "stop at the first failure instead of running all checks"
+      ],
+      [
         "c",
         "continue-on-error",
-        "run all validation checks even when errors are found"
+        "DEPRECATED: this is now the default behavior"
       ],
       [
         "",
@@ -5635,7 +5640,7 @@
       ]
     ],
     "description": "run type-checking, linting, and testing in sequence",
-    "extendedDescription": "validates components by running check-types, lint, and test commands in sequence.\nstops at the first failure and returns a non-zero exit code.\nby default validates only new and modified components. use --all to validate all components.",
+    "extendedDescription": "validates components by running check-types, lint, and test commands in sequence.\nby default runs all checks even when errors are found.\nuse --fail-fast to stop at the first failure.\nby default validates only new and modified components. use --all to validate all components.",
     "group": "testing",
     "private": false,
     "arguments": [
