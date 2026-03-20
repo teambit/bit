@@ -898,8 +898,8 @@ Flags: --yes, --patch, --minor, --major, --semver
 
 run type-checking, linting, and testing in sequence
 
-validates components by running check-types, lint, and test commands in sequence. stops at the first failure and returns a non-zero exit code. by default validates only new and modified components. use --all to validate all components.
-Flags: --all, --continue-on-error, --skip-tasks <string>
+validates components by running check-types, lint, and test commands in sequence. by default runs all checks even when errors are found. use --fail-fast to stop at the first failure. by default validates only new and modified components. use --all to validate all components.
+Flags: --all, --fail-fast, --skip-tasks <string>
 
 ## bit version
 

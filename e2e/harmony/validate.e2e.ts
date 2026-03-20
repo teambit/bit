@@ -36,11 +36,12 @@ describe('validate command', function () {
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.ts', 'const x: number = "string";');
     });
-    it('should fail at type checking step', () => {
+    it('should continue to run all checks by default', () => {
       const output = helper.general.runWithTryCatch('bit validate');
       expect(output).to.include('1/3 Type Checking');
+      expect(output).to.include('2/3 Linting');
+      expect(output).to.include('3/3 Testing');
       expect(output).to.include('Validation failed');
-      expect(output).to.not.include('2/3 Linting');
     });
   });
 
@@ -51,16 +52,62 @@ describe('validate command', function () {
       // Create a real linting error (undefined variable)
       helper.fs.outputFile('comp1/comp1.js', 'console.log(undefinedVariable);');
     });
-    it('should fail at linting step', () => {
+    it('should continue to run all checks by default', () => {
       const output = helper.general.runWithTryCatch('bit validate');
       expect(output).to.include('1/3 Type Checking');
       expect(output).to.include('2/3 Linting');
+      expect(output).to.include('3/3 Testing');
       expect(output).to.include('Validation failed');
-      expect(output).to.not.include('3/3 Testing');
     });
     it('should show the lint error details', () => {
       const output = helper.general.runWithTryCatch('bit validate');
       expect(output).to.include('error');
+    });
+  });
+
+  describe('validating with --fail-fast flag', () => {
+    describe('with type errors', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.fixtures.populateComponents(1);
+        helper.fs.outputFile('comp1/comp1.ts', 'const x: number = "string";');
+      });
+      it('should stop at the first failure and not run subsequent checks', () => {
+        const output = helper.general.runWithTryCatch('bit validate --fail-fast');
+        expect(output).to.include('1/3 Type Checking');
+        expect(output).to.include('Validation failed');
+        expect(output).to.not.include('2/3 Linting');
+        expect(output).to.not.include('3/3 Testing');
+      });
+    });
+    describe('with lint errors', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.fixtures.populateComponents(1);
+        helper.fs.outputFile('comp1/comp1.js', 'console.log(undefinedVariable);');
+      });
+      it('should stop at linting and not run testing', () => {
+        const output = helper.general.runWithTryCatch('bit validate --fail-fast');
+        expect(output).to.include('1/3 Type Checking');
+        expect(output).to.include('2/3 Linting');
+        expect(output).to.include('Validation failed');
+        expect(output).to.not.include('3/3 Testing');
+      });
+    });
+  });
+
+  describe('validating with deprecated --continue-on-error flag', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fixtures.populateComponents(1);
+    });
+    it('should show a deprecation warning', () => {
+      const output = helper.command.runCmd('bit validate --continue-on-error');
+      expect(output).to.include('--continue-on-error is deprecated');
+    });
+    it('should still run successfully', () => {
+      const output = helper.command.runCmd('bit validate --continue-on-error');
+      expect(output).to.include('All validation checks passed');
     });
   });
 
