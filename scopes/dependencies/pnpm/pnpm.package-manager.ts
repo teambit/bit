@@ -173,7 +173,7 @@ export class PnpmPackageManager implements PackageManager {
       networkConfig,
       {
         autoInstallPeers: installOptions.autoInstallPeers ?? true,
-        dedupePeers: installOptions.dedupePeers,
+        dedupePeers: installOptions.dedupePeers ?? true,
         enableModulesDir: installOptions.enableModulesDir,
         engineStrict: installOptions.engineStrict ?? config.engineStrict,
         excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
