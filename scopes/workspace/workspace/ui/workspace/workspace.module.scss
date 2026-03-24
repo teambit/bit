@@ -52,6 +52,45 @@
   }
 }
 
+.cornerWithBreadcrumb {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 16px 0 8px;
+  margin: 0 8px 0 0;
+  font-size: var(--bit-p-xs, 14px);
+  font-weight: 500;
+  white-space: nowrap;
+  border-right: 1px solid var(--bit-border-color-lightest, #e0e0e0);
+}
+
+.breadcrumbSeparator {
+  color: var(--on-background-color, var(--bit-text-color-light, #6a6a6a));
+  font-weight: 400;
+  margin: 0 2px;
+}
+
+.breadcrumbLink {
+  color: var(--on-background-color, var(--bit-text-color-light, #6a6a6a));
+  font-weight: 400;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.breadcrumbLast {
+  color: var(--on-background-color, var(--bit-text-color-heavy, #2b2b2b));
+  font-weight: 500;
+}
+
 .workspaceWrapper {
   display: flex;
   flex-direction: column;
