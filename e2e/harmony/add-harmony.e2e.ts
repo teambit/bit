@@ -1,4 +1,4 @@
-import chai from 'chai';
+import chai, { expect } from 'chai';
 import path from 'path';
 import { ParentDirTracked, AddingIndividualFiles } from '@teambit/tracker';
 import { Helper } from '@teambit/legacy.e2e-helper';
@@ -23,6 +23,17 @@ describe('add command on Harmony', function () {
       const addFunc = () => helper.command.addComponent('bar/foo.js');
       const error = new AddingIndividualFiles(path.normalize('bar/foo.js'));
       helper.general.expectToThrow(addFunc, error);
+    });
+  });
+  describe('adding a component using backslash path separators (Windows-style)', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fs.outputFile('my-scope/my-comp/index.ts', 'export const foo = "bar";');
+    });
+    it('should track the component successfully', () => {
+      // use backslashes to simulate Windows path.normalize() behavior
+      const output = helper.command.addComponent('my-scope\\my-comp');
+      expect(output).to.have.string('tracking component');
     });
   });
   describe('add a directory inside an existing component', () => {
