@@ -25,6 +25,7 @@ export type ListScopeResult = {
   deprecated?: boolean;
   removed?: boolean;
   laneReadmeOf?: string[];
+  rootDir?: string;
 };
 
 export class ListerMain {
@@ -163,6 +164,13 @@ export class ListerMain {
     if (scopeName) {
       results = results.filter((result) => result.id.scope === scopeName);
     }
+    const bitMap = this.workspace.consumer.bitMap;
+    results.forEach((result) => {
+      const componentMap = bitMap.getComponentIfExist(result.id, { ignoreVersion: true });
+      if (componentMap) {
+        result.rootDir = componentMap.getComponentDir();
+      }
+    });
     return this.sortListScopeResults(results);
   }
 
