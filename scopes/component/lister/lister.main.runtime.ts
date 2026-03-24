@@ -160,7 +160,7 @@ export class ListerMain {
     }
     this.logger.setStatusLine(BEFORE_LOCAL_LIST);
     const componentsList = new ComponentsList(this.workspace);
-    let results = await componentsList.listAll(showRemoteVersion, showAll, namespacesUsingWildcards);
+    let results: ListScopeResult[] = await componentsList.listAll(showRemoteVersion, showAll, namespacesUsingWildcards);
     if (scopeName) {
       results = results.filter((result) => result.id.scope === scopeName);
     }
