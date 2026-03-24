@@ -352,11 +352,13 @@ export class CiMain {
     message,
     build,
     strict,
+    dryRun,
   }: {
     laneIdStr: string;
     message: string;
     build: boolean | undefined;
     strict: boolean | undefined;
+    dryRun?: boolean;
   }) {
     this.logger.console(chalk.blue(`Lane name: ${laneIdStr}`));
 
@@ -418,6 +420,17 @@ export class CiMain {
 
       const snapOutput = snapResultOutput(results);
       this.logger.console(snapOutput);
+
+      if (dryRun) {
+        this.logger.console(chalk.yellow('🏃 Dry-run mode: skipping export, lane deletion, and rename'));
+        this.logger.console(chalk.green(`Snapped ${snappedComponents.length} component(s) successfully`));
+        this.logger.console(
+          chalk.blue(
+            `Temporary lane "${laneId.scope}/${tempLaneName}" kept for debugging. Remove it with: bit lane remove ${laneId.scope}/${tempLaneName}`
+          )
+        );
+        return snapOutput;
+      }
 
       // Finalize atomically: delete existing lane, rename temp lane, export
       this.logger.console('🔄 Finalizing Lane');
