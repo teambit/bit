@@ -209,6 +209,7 @@ export async function install(
     hidePackageManagerOutput?: boolean;
     hoistInjectedDependencies?: boolean;
     dryRun?: boolean;
+    dedupePeers?: boolean;
     dedupeInjectedDeps?: boolean;
     forcedHarmonyVersion?: string;
     allowScripts?: Record<string, boolean | 'warn'>;
@@ -288,7 +289,7 @@ export async function install(
     confirmModulesPurge: false,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
-    dedupePeers: true,
+    dedupePeers: options.dedupePeers !== false,
     dir: rootDir,
     storeController: storeController.ctrl,
     preferFrozenLockfile: true,

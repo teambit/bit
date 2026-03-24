@@ -133,6 +133,8 @@ export type PackageManagerInstallOptions = {
    */
   autoInstallPeers?: boolean;
 
+  dedupePeers?: boolean;
+
   /**
    * Tells the package manager to return the list of dependencies that has to be built.
    * This is used by Ripple CI.
