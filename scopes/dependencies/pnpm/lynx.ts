@@ -289,7 +289,6 @@ export async function install(
     confirmModulesPurge: false,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
-    dedupePeers: options.dedupePeers !== false,
     dir: rootDir,
     storeController: storeController.ctrl,
     preferFrozenLockfile: true,
