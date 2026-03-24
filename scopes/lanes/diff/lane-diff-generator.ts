@@ -187,7 +187,11 @@ export class LaneDiffGenerator {
         if (idsToCheckDiff && !idsToCheckDiff.hasWithoutVersion(id)) {
           return;
         }
-        await this.componentDiff(id, head);
+        try {
+          await this.componentDiff(id, head);
+        } catch (err: any) {
+          this.failures.push({ id, msg: err.message });
+        }
       })
     );
 
