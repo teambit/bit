@@ -17,7 +17,7 @@ import { PkgAspect } from './pkg.aspect';
 import type { PkgExtensionConfig } from './pkg.main.runtime';
 import { DEFAULT_TAR_DIR_IN_CAPSULE } from './packer';
 
-const PUBLISH_CONCURRENCY = 10;
+const PUBLISH_CONCURRENCY = 7;
 const PUBLISH_RETRY_ATTEMPTS = parseInt(process.env.BIT_PUBLISH_RETRY_ATTEMPTS || '3', 10); // Number of retry attempts for retryable errors
 const PUBLISH_RETRY_DELAY = parseInt(process.env.BIT_PUBLISH_RETRY_DELAY || '5000', 10); // Initial delay between retries (5 seconds)
 
@@ -72,11 +72,13 @@ export class Publisher {
         return result;
       }
 
-      // Check if error is retryable (npm registry conflicts or rate limiting)
+      // Check if error is retryable (npm registry conflicts, rate limiting, or EPERM which
+      // is how npm 429 rate limit errors manifest through execa with stdio: 'inherit')
       const errorMessage = result.errors ? result.errors.join(', ') : 'Unknown error';
       const isRetryableError =
         errorMessage.includes('409') ||
         errorMessage.includes('429') ||
+        errorMessage.includes('EPERM') ||
         errorMessage.includes('packument') ||
         errorMessage.includes('Failed to save packument');
 
