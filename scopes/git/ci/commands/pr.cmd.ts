@@ -22,7 +22,7 @@ export class CiPrCmd implements Command {
     ['l', 'lane <lane>', 'If set, use as the lane name, if not available, grab from git-branch name'],
     ['b', 'build', 'Set to true to build the app locally, false (default) will build on Ripple CI'],
     ['s', 'strict', 'Set to true to fail on warnings as well as errors, false (default) only fails on errors'],
-    ['d', 'dry-run', 'Run the full pipeline (snap + build) but skip exporting to remote'],
+    ['d', 'dry-run', 'Run the full pipeline but skip exporting to remote (build runs only if --build is set)'],
   ];
 
   constructor(
