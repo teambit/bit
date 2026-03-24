@@ -18,7 +18,7 @@ import type { PkgExtensionConfig } from './pkg.main.runtime';
 import { DEFAULT_TAR_DIR_IN_CAPSULE } from './packer';
 
 const PUBLISH_CONCURRENCY = 10;
-const PUBLISH_RETRY_ATTEMPTS = parseInt(process.env.BIT_PUBLISH_RETRY_ATTEMPTS || '3', 10); // Number of retry attempts for 409 errors
+const PUBLISH_RETRY_ATTEMPTS = parseInt(process.env.BIT_PUBLISH_RETRY_ATTEMPTS || '3', 10); // Number of retry attempts for retryable errors
 const PUBLISH_RETRY_DELAY = parseInt(process.env.BIT_PUBLISH_RETRY_DELAY || '5000', 10); // Initial delay between retries (5 seconds)
 
 export type PublisherOptions = {
@@ -72,15 +72,16 @@ export class Publisher {
         return result;
       }
 
-      // Check if error is specifically related to npm registry conflicts (409, packument)
+      // Check if error is retryable (npm registry conflicts or rate limiting)
       const errorMessage = result.errors ? result.errors.join(', ') : 'Unknown error';
-      const is409Error =
+      const isRetryableError =
         errorMessage.includes('409') ||
+        errorMessage.includes('429') ||
         errorMessage.includes('packument') ||
         errorMessage.includes('Failed to save packument');
 
-      if (!is409Error) {
-        // Not a 409 error, return immediately without retry
+      if (!isRetryableError) {
+        // Not a retryable error, return immediately without retry
         return result;
       }
 
@@ -90,22 +91,22 @@ export class Publisher {
       if (attempt < PUBLISH_RETRY_ATTEMPTS) {
         const delay = PUBLISH_RETRY_DELAY * Math.pow(2, attempt - 1); // Exponential backoff
         this.logger.warn(
-          `npm 409 conflict for ${capsule.component.id.toString()}, retrying in ${delay}ms (attempt ${attempt}/${PUBLISH_RETRY_ATTEMPTS}). Error: ${errorMessage}`
+          `npm publish failed for ${capsule.component.id.toString()}, retrying in ${delay}ms (attempt ${attempt}/${PUBLISH_RETRY_ATTEMPTS}). Error: ${errorMessage}`
         );
         await this.sleep(delay);
       } else {
         this.logger.error(
-          `Failed to publish ${capsule.component.id.toString()} after ${PUBLISH_RETRY_ATTEMPTS} attempts due to npm registry conflicts`
+          `Failed to publish ${capsule.component.id.toString()} after ${PUBLISH_RETRY_ATTEMPTS} attempts due to npm registry errors`
         );
       }
     }
 
-    // Return the last 409 error result if all attempts failed
+    // Return the last error result if all attempts failed
     return (
       lastError || {
         component: capsule.component,
         metadata: {},
-        errors: [`Failed to publish after ${PUBLISH_RETRY_ATTEMPTS} attempts due to npm registry conflicts`],
+        errors: [`Failed to publish after ${PUBLISH_RETRY_ATTEMPTS} attempts due to npm registry errors`],
         startTime: Date.now(),
         endTime: Date.now(),
       }
