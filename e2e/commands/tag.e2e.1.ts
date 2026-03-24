@@ -93,15 +93,15 @@ describe('bit tag command', function () {
         helper.command.tagAllWithoutBuild();
         helper.command.tagWithoutBuild('components/dependency', '--unmodified --major');
         const listOutput = helper.command.listLocalScopeParsed();
-        expect(listOutput).to.deep.include({
-          id: 'my-scope/components/dependency',
+        const dependency = listOutput.find((item) => item.id === 'my-scope/components/dependency');
+        expect(dependency).to.include({
           localVersion: '1.0.0',
           deprecated: false,
           currentVersion: '1.0.0',
           remoteVersion: 'N/A',
         });
-        expect(listOutput).to.deep.include({
-          id: 'my-scope/components/dependent',
+        const dependent = listOutput.find((item) => item.id === 'my-scope/components/dependent');
+        expect(dependent).to.include({
           localVersion: '0.0.2',
           deprecated: false,
           currentVersion: '0.0.2',
