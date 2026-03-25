@@ -10,6 +10,8 @@ import { DEFAULT_LANE } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import type { ComponentCompareMain } from '@teambit/component-compare';
 import chalk from 'chalk';
+import pMap from 'p-map';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 
 type LaneData = {
   name: string;
@@ -116,13 +118,73 @@ export class LaneDiffGenerator {
       reason: `for the "from" diff - ${fromLane ? fromLane.name : DEFAULT_LANE}`,
     });
 
-    await Promise.all(
-      this.toLaneData.components.map(async ({ id, head }) => {
+    // Build an index of fromLaneData for O(1) lookups instead of repeated O(N) .find() calls.
+    const fromLaneIndex = new Map<string, Ref>();
+    for (const comp of this.fromLaneData.components) {
+      fromLaneIndex.set(comp.id.toStringWithoutVersion(), comp.head);
+    }
+
+    // Fork-point computation only applies when comparing a lane against main (default lane).
+    // When comparing two non-default lanes, use direct head-to-head comparison.
+    const useForkPoint = fromLaneId.isDefault() || toLaneId.isDefault();
+    const commonSnapMap = new Map<string, { ref: Ref; id: ComponentID }>();
+
+    if (useForkPoint) {
+      // Find the common snap (merge-base / fork-point) for each component.
+      // This ensures `lane diff` shows only changes made on the lane, not changes that happened on
+      // main after the lane was created.
+      // When a pattern is provided, only compute fork-points for the matching subset.
+      const componentsToProcess = idsToCheckDiff
+        ? this.toLaneData.components.filter(({ id }) => idsToCheckDiff.hasWithoutVersion(id))
+        : this.toLaneData.components;
+      await pMap(
+        componentsToProcess,
+        async ({ id, head }) => {
+          if (!head) return;
+          const fromHead = fromLaneIndex.get(id.toStringWithoutVersion());
+          if (!fromHead || fromHead.isEqual(head)) return;
+          try {
+            const snapsDistance = await this.scope.getSnapsDistanceBetweenTwoSnaps(
+              id,
+              head.toString(),
+              fromHead.toString(),
+              false
+            );
+            if (snapsDistance?.commonSnapBeforeDiverge) {
+              commonSnapMap.set(id.toStringWithoutVersion(), { ref: snapsDistance.commonSnapBeforeDiverge, id });
+            }
+          } catch {
+            // if we can't determine the common snap, fall back to comparing against the current head
+          }
+        },
+        { concurrency: concurrentComponentsLimit() }
+      );
+
+      // Import the common snap versions so we can diff against them
+      if (commonSnapMap.size > 0) {
+        const commonSnapsToImport = [...commonSnapMap.values()].map((s) => s.id.changeVersion(s.ref.hash));
+        const sourceOrTargetLane = (toLane || fromLane) ?? undefined;
+        await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(commonSnapsToImport), {
+          cache: true,
+          lane: sourceOrTargetLane,
+          ignoreMissingHead: true,
+          reason: 'for the common snap (fork-point) of lane diff',
+        });
+      }
+    }
+
+    await pMap(
+      this.toLaneData.components,
+      async ({ id, head }) => {
         if (idsToCheckDiff && !idsToCheckDiff.hasWithoutVersion(id)) {
           return;
         }
-        await this.componentDiff(id, head, diffOptions, true);
-      })
+        const idKey = id.toStringWithoutVersion();
+        const forkPoint = commonSnapMap.get(idKey)?.ref;
+        const fromHead = fromLaneIndex.get(idKey);
+        await this.componentDiff(id, head, diffOptions, true, forkPoint, fromHead);
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
 
     return {
@@ -187,7 +249,12 @@ export class LaneDiffGenerator {
         if (idsToCheckDiff && !idsToCheckDiff.hasWithoutVersion(id)) {
           return;
         }
-        await this.componentDiff(id, head);
+        try {
+          await this.componentDiff(id, head);
+        } catch (err: any) {
+          const message = err instanceof Error ? err.message : String(err);
+          this.failures.push({ id, msg: message });
+        }
       })
     );
 
@@ -227,11 +294,18 @@ export class LaneDiffGenerator {
     id: ComponentID,
     toLaneHead: Ref | null,
     diffOptions: DiffOptions = {},
-    compareToHeadIfEmpty = false
+    compareToHeadIfEmpty = false,
+    forkPoint?: Ref,
+    fromHead?: Ref
   ) {
     const modelComponent = await this.scope.legacyScope.getModelComponent(id);
-    const foundFromLane = this.fromLaneData.components.find((c) => c.id.isEqualWithoutVersion(id))?.head;
-    const fromLaneHead = compareToHeadIfEmpty ? foundFromLane || modelComponent.head : foundFromLane;
+    const foundFromLane = fromHead ?? this.fromLaneData.components.find((c) => c.id.isEqualWithoutVersion(id))?.head;
+    // Use the fork-point when available, so the diff only shows changes made on the
+    // "to" lane rather than also including changes that happened on the "from" lane since the fork.
+    let fromLaneHead: Ref | null | undefined = forkPoint;
+    if (!fromLaneHead) {
+      fromLaneHead = compareToHeadIfEmpty ? foundFromLane || modelComponent.head : foundFromLane;
+    }
     if (!fromLaneHead) {
       this.newCompsTo.push(id);
       return;
