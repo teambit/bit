@@ -173,8 +173,9 @@ export class LaneDiffGenerator {
       }
     }
 
-    await Promise.all(
-      this.toLaneData.components.map(async ({ id, head }) => {
+    await pMap(
+      this.toLaneData.components,
+      async ({ id, head }) => {
         if (idsToCheckDiff && !idsToCheckDiff.hasWithoutVersion(id)) {
           return;
         }
@@ -182,7 +183,8 @@ export class LaneDiffGenerator {
         const forkPoint = commonSnapMap.get(idKey)?.ref;
         const fromHead = fromLaneIndex.get(idKey);
         await this.componentDiff(id, head, diffOptions, true, forkPoint, fromHead);
-      })
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
 
     return {
