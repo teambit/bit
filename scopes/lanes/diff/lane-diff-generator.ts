@@ -249,7 +249,12 @@ export class LaneDiffGenerator {
         if (idsToCheckDiff && !idsToCheckDiff.hasWithoutVersion(id)) {
           return;
         }
-        await this.componentDiff(id, head);
+        try {
+          await this.componentDiff(id, head);
+        } catch (err: any) {
+          const message = err instanceof Error ? err.message : String(err);
+          this.failures.push({ id, msg: message });
+        }
       })
     );
 
