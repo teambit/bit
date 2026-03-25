@@ -80,7 +80,7 @@ function renderSelfCycle(name: string): string {
 }
 
 function renderHorizontal(names: string[]): string {
-  // build chain: name0  ───▶  name1  ───▶  name2
+  // build chain: name0  ───>  name1  ───>  name2
   const chainParts: string[] = [];
   const plainParts: string[] = [];
   for (let i = 0; i < names.length; i++) {
@@ -157,7 +157,7 @@ export default class FindCycles implements Insight {
   }
 
   private renderData(data: RawResult) {
-    if (data.data.length === 0) {
+    if (!data.data || data.data.length === 0) {
       return 'No cyclic dependencies';
     }
     const totalCycles = data.data.length;
@@ -208,7 +208,7 @@ export default class FindCycles implements Insight {
 
   async addAsComponentIssue(components: Component[]) {
     const result = await this.runInsight({ ids: components.map((c) => c.id) });
-    if (!result.data.length) {
+    if (!result.data || !result.data.length) {
       return; // no circulars
     }
     const allIds = uniq(result.data.flat());
