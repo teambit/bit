@@ -223,6 +223,12 @@ export interface DependencyResolverWorkspaceConfig {
   autoInstallPeers?: boolean;
 
   /**
+   * When true (default), pnpm will deduplicate peer dependencies.
+   * Set to false to disable peer dependency deduplication.
+   */
+  dedupePeers?: boolean;
+
+  /**
    * When true (default), env peer dependencies defined in env.jsonc are resolved once and merged
    * into the workspace root manifest as regular dependencies, instead of being injected into each
    * component's manifest individually. Conflicts between envs are resolved by picking the version
