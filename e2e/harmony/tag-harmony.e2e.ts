@@ -101,7 +101,7 @@ describe('tag components on Harmony', function () {
     });
     it('bit status should show the new components as soft tagged', () => {
       const status = helper.command.status();
-      expect(chalk.reset(status)).to.have.string('comp1 ... ok (soft-tagged)');
+      expect(chalk.reset(status)).to.have.string('comp1 (soft-tagged)');
     });
     describe('tagging with --persist flag', () => {
       before(() => {
