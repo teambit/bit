@@ -6,9 +6,9 @@ import { uniq } from 'lodash';
 import type { Insight, InsightResult, RawResult } from '../insight';
 import type { RunInsightOptions } from '../insight-manager';
 
-const MAX_HORIZONTAL_WIDTH = 90;
-const ARROW = '  ───>  ';
-const ARROW_LEN = 8;
+export const MAX_HORIZONTAL_WIDTH = 90;
+export const ARROW = '  ───>  ';
+export const ARROW_LEN = 8;
 
 type ShortenedInfo = {
   names: string[];
@@ -16,7 +16,7 @@ type ShortenedInfo = {
   version: string | undefined;
 };
 
-function shortenNames(cycle: string[]): ShortenedInfo {
+export function shortenNames(cycle: string[]): ShortenedInfo {
   // cycle has the first element duplicated at the end; work with unique entries
   const unique = cycle.slice(0, -1);
 
@@ -51,7 +51,7 @@ function shortenNames(cycle: string[]): ShortenedInfo {
   return { names, scope: commonScope, version: commonVersion };
 }
 
-function renderHeader(
+export function renderHeader(
   cycleIndex: number | undefined,
   totalCycles: number,
   componentCount: number,
@@ -75,11 +75,11 @@ function renderHeader(
   return chalk.bold(header);
 }
 
-function renderSelfCycle(name: string): string {
+export function renderSelfCycle(name: string): string {
   return `  ${chalk.cyan(name)}  ⟲`;
 }
 
-function renderHorizontal(names: string[]): string {
+export function renderHorizontal(names: string[]): string {
   // build chain: name0  ───>  name1  ───>  name2
   const chainParts: string[] = [];
   const plainParts: string[] = [];
@@ -110,7 +110,7 @@ function renderHorizontal(names: string[]): string {
   return lines.join('\n');
 }
 
-function renderVertical(names: string[]): string {
+export function renderVertical(names: string[]): string {
   const lines: string[] = [];
   for (let i = 0; i < names.length; i++) {
     lines.push(chalk.cyan(names[i]));

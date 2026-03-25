@@ -27,6 +27,7 @@ import type { DependenciesData, OverridesDependenciesData } from './dependencies
 import type { RemoveDependenciesFlags, SetDependenciesFlags } from './dependencies-cmd';
 import {
   DependenciesBlameCmd,
+  DependenciesCircularCmd,
   DependenciesCmd,
   DependenciesDebugCmd,
   DependenciesDiagnoseCmd,
@@ -295,6 +296,20 @@ export class DependenciesMain {
     await this.workspace.bitMap.write(`deps-eject (${componentPattern})`);
 
     return compIds;
+  }
+
+  /**
+   * Find circular dependencies in the workspace component graph.
+   * Returns an array of cycles, where each cycle is an array of component-id strings
+   * (with the first component repeated at the end to make the circular path visible).
+   */
+  async getCircularDependencies(includeDeps?: boolean): Promise<string[][]> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    const graph = await this.graph.getGraphIds();
+    const cycles = graph.findCycles(undefined, includeDeps);
+    // append the first component to the end to make the circular visible in the output
+    cycles.forEach((cycle) => cycle.push(cycle[0]));
+    return cycles;
   }
 
   async getDependencies(id: string, scope?: boolean): Promise<DependenciesResults> {
@@ -687,6 +702,7 @@ export class DependenciesMain {
       new DependenciesBlameCmd(depsMain),
       new DependenciesUsageCmd(depsMain),
       new DependenciesDiagnoseCmd(depsMain),
+      new DependenciesCircularCmd(depsMain),
       new DependenciesWriteCmd(workspace),
     ];
     cli.register(
