@@ -190,7 +190,8 @@ export class LaneDiffGenerator {
         try {
           await this.componentDiff(id, head);
         } catch (err: any) {
-          this.failures.push({ id, msg: err.message });
+          const message = err instanceof Error ? err.message : String(err);
+          this.failures.push({ id, msg: message });
         }
       })
     );

@@ -630,8 +630,8 @@ export class APIForIDE {
         filesDiff: (d.filesDiff || []).map((f) => ({
           filePath: f.filePath,
           status: f.status,
-          fromContent: f.fromContent,
-          toContent: f.toContent,
+          fromContent: f.status === 'UNCHANGED' ? undefined : f.fromContent,
+          toContent: f.status === 'UNCHANGED' ? undefined : f.toContent,
         })),
         fieldsDiff: d.fieldsDiff,
       })),
