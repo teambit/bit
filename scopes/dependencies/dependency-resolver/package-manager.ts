@@ -133,6 +133,9 @@ export type PackageManagerInstallOptions = {
    */
   autoInstallPeers?: boolean;
 
+  /**
+   * When true, pnpm will deduplicate peer dependencies where possible. It is enabled by default.
+   */
   dedupePeers?: boolean;
 
   /**
