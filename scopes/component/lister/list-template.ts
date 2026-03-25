@@ -3,7 +3,7 @@ import semver from 'semver';
 import Table from 'cli-table';
 import type { ListScopeResult } from './lister.main.runtime';
 
-type Row = { id: string; localVersion: string; currentVersion: string; remoteVersion?: string };
+type Row = { id: string; localVersion: string; currentVersion: string; remoteVersion?: string; path?: string };
 
 export function listTemplate(listScopeResults: ListScopeResult[], json: boolean, showRemoteVersion: boolean) {
   function tabulateComponent(listScopeResult: ListScopeResult): Row {
@@ -48,13 +48,16 @@ export function listTemplate(listScopeResults: ListScopeResult[], json: boolean,
       remoteVersion = color ? c[color](remoteVersion) : remoteVersion;
       data.remoteVersion = remoteVersion;
     }
+    if (listScopeResult.rootDir) {
+      data.path = listScopeResult.rootDir;
+    }
     return data;
   }
 
   function toJsonComponent(listScopeResult: ListScopeResult): Record<string, any> {
     const id = listScopeResult.id.toStringWithoutVersion();
     const localVersion = listScopeResult.id.hasVersion() ? (listScopeResult.id.version as string) : '<new>';
-    const data = {
+    const data: Record<string, any> = {
       id,
       localVersion,
       deprecated: listScopeResult.deprecated,
@@ -62,16 +65,29 @@ export function listTemplate(listScopeResults: ListScopeResult[], json: boolean,
       remoteVersion: listScopeResult.remoteVersion || 'N/A',
       removed: listScopeResult.removed,
     };
+    if (listScopeResult.rootDir) {
+      data.rootDir = listScopeResult.rootDir;
+    }
     return data;
   }
 
   if (json) {
     return listScopeResults.map(toJsonComponent);
   }
-  const rows = listScopeResults.map(tabulateComponent);
+  const hasPath = listScopeResults.some((r) => r.rootDir);
+  const rows = listScopeResults.map((r) => {
+    const row = tabulateComponent(r);
+    if (hasPath && !row.path) {
+      row.path = '';
+    }
+    return row;
+  });
   const head = ['component ID', 'latest in scope', 'used in workspace'];
   if (showRemoteVersion) {
     head.push('latest in remote scope');
+  }
+  if (hasPath) {
+    head.push('path');
   }
 
   const table = new Table({ head, style: { head: ['cyan'] } });

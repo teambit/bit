@@ -25,6 +25,7 @@ export type ListScopeResult = {
   deprecated?: boolean;
   removed?: boolean;
   laneReadmeOf?: string[];
+  rootDir?: string;
 };
 
 export class ListerMain {
@@ -159,10 +160,21 @@ export class ListerMain {
     }
     this.logger.setStatusLine(BEFORE_LOCAL_LIST);
     const componentsList = new ComponentsList(this.workspace);
-    let results = await componentsList.listAll(showRemoteVersion, showAll, namespacesUsingWildcards);
+    let results: ListScopeResult[] = await componentsList.listAll(showRemoteVersion, showAll, namespacesUsingWildcards);
     if (scopeName) {
       results = results.filter((result) => result.id.scope === scopeName);
     }
+    const bitMap = this.workspace.consumer.bitMap;
+    const allComponents = bitMap.getAllComponents();
+    const componentMapById = new Map(
+      allComponents.map((componentMap) => [componentMap.id.toStringWithoutVersion(), componentMap])
+    );
+    results.forEach((result) => {
+      const componentMap = componentMapById.get(result.id.toStringWithoutVersion());
+      if (componentMap) {
+        result.rootDir = componentMap.getComponentDir();
+      }
+    });
     return this.sortListScopeResults(results);
   }
 
