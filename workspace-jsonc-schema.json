@@ -180,6 +180,10 @@
           "type": "boolean",
           "description": "Tells pnpm to automatically install peer dependencies. It is true by default."
         },
+        "dedupePeers": {
+          "type": "boolean",
+          "description": "When true (default), pnpm will deduplicate peer dependencies. Set to false to disable peer dependency deduplication."
+        },
         "resolveEnvPeersFromRoot": {
           "type": "boolean",
           "description": "When true (default), env peer dependencies from env.jsonc are resolved once and merged into the workspace root manifest, instead of being injected per-component. Conflicts between envs are resolved by picking the version satisfying the most envs."
