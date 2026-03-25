@@ -165,8 +165,12 @@ export class ListerMain {
       results = results.filter((result) => result.id.scope === scopeName);
     }
     const bitMap = this.workspace.consumer.bitMap;
+    const allComponents = bitMap.getAllComponents();
+    const componentMapById = new Map(
+      allComponents.map((componentMap) => [componentMap.id.toStringWithoutVersion(), componentMap])
+    );
     results.forEach((result) => {
-      const componentMap = bitMap.getComponentIfExist(result.id, { ignoreVersion: true });
+      const componentMap = componentMapById.get(result.id.toStringWithoutVersion());
       if (componentMap) {
         result.rootDir = componentMap.getComponentDir();
       }

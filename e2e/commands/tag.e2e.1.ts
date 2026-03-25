@@ -94,6 +94,7 @@ describe('bit tag command', function () {
         helper.command.tagWithoutBuild('components/dependency', '--unmodified --major');
         const listOutput = helper.command.listLocalScopeParsed();
         const dependency = listOutput.find((item) => item.id === 'my-scope/components/dependency');
+        expect(dependency, 'dependency component should be in list output').to.exist;
         expect(dependency).to.include({
           localVersion: '1.0.0',
           deprecated: false,
@@ -101,6 +102,7 @@ describe('bit tag command', function () {
           remoteVersion: 'N/A',
         });
         const dependent = listOutput.find((item) => item.id === 'my-scope/components/dependent');
+        expect(dependent, 'dependent component should be in list output').to.exist;
         expect(dependent).to.include({
           localVersion: '0.0.2',
           deprecated: false,
