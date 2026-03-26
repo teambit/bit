@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import archy from 'archy';
 import type { ComponentIdGraph } from '@teambit/graph';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { renderCycles } from '@teambit/insights';
+import { renderCycles } from '@teambit/component-issues';
 import { generateDependenciesInfoTable } from './template';
 import type { DependenciesMain } from './dependencies.main.runtime';
 import type { Workspace } from '@teambit/workspace';
