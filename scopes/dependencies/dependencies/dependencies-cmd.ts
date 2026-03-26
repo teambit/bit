@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import archy from 'archy';
 import type { ComponentIdGraph } from '@teambit/graph';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
+import { renderCycles } from '@teambit/component-issues';
 import { generateDependenciesInfoTable } from './template';
 import type { DependenciesMain } from './dependencies.main.runtime';
 import type { Workspace } from '@teambit/workspace';
@@ -457,6 +458,32 @@ export class DependenciesDiagnoseCmd implements Command {
       return this.deps.diagnoseDrillDown(options.package);
     }
     return this.deps.diagnose();
+  }
+}
+
+type DependenciesCircularCmdOptions = {
+  includeDeps?: boolean;
+};
+
+export class DependenciesCircularCmd implements Command {
+  name = 'circular';
+  group = 'info-analysis';
+  description = 'find circular dependencies in the component graph';
+  alias = '';
+  options = [
+    ['j', 'json', 'return the output in JSON format'],
+    ['', 'include-deps', 'include component dependencies that are not in this workspace'],
+  ] as CommandOptions;
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report(_args: [], options: DependenciesCircularCmdOptions) {
+    const cycles = await this.deps.getCircularDependencies(options.includeDeps);
+    return renderCycles(cycles);
+  }
+
+  async json(_args: [], options: DependenciesCircularCmdOptions) {
+    return this.deps.getCircularDependencies(options.includeDeps);
   }
 }
 

@@ -610,7 +610,24 @@ export class APIForIDE {
     return { entries, isMain: false };
   }
 
-  async getLaneHistoryDiffForIDE(fromHistoryId: string, toHistoryId: string, laneName?: string) {
+  async getLaneHistoryDiffForIDE(
+    fromHistoryId: string,
+    toHistoryId: string,
+    laneName?: string
+  ): Promise<{
+    newCompsFrom: string[];
+    newCompsTo: string[];
+    compsWithDiff: {
+      id: string;
+      hasDiff: boolean;
+      filesDiff: { filePath: string; status: string; fromContent?: string; toContent?: string }[];
+      fieldsDiff?: { fieldName: string; diffOutput: string }[] | null;
+    }[];
+    compsWithNoChanges: string[];
+    toLaneName: string;
+    fromLaneName: string;
+    failures: { id: string; msg: string }[];
+  }> {
     const laneId = laneName ? await this.lanes.parseLaneId(laneName) : this.workspace.getCurrentLaneId();
     if (laneId.isDefault()) {
       throw new Error('lane history diff is not available on main');

@@ -3,8 +3,7 @@ import * as path from 'path';
 
 import { DataToPersist } from './data-to-persist';
 
-describe('DataToPersist', function () {
-  this.timeout(0);
+describe('DataToPersist', () => {
   describe('addFile', () => {
     describe('dir/file collision', () => {
       it('should not throw when the existing file starts with the added file in the same dir', () => {
