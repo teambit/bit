@@ -8,6 +8,7 @@ import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import type { PathOsBasedRelative, PathOsBasedAbsolute, PathLinuxRelative } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { AddCmd } from './add-cmd';
 import type { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
 import AddComponents, { addMultipleFromResolvedTrackData } from './add-components';
@@ -51,9 +52,9 @@ export class TrackerMain {
    */
   async track(trackData: TrackData): Promise<TrackResult> {
     const defaultScope = trackData.defaultScope ? await this.addOwnerToScopeName(trackData.defaultScope) : undefined;
-    const compPath = path.isAbsolute(trackData.rootDir)
-      ? trackData.rootDir
-      : path.join(this.workspace.path, trackData.rootDir);
+    const compPath = pathNormalizeToLinux(
+      path.isAbsolute(trackData.rootDir) ? trackData.rootDir : path.join(this.workspace.path, trackData.rootDir)
+    );
     const addComponent = new AddComponents(
       { workspace: this.workspace },
       {

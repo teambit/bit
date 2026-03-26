@@ -117,7 +117,7 @@ export default class AddComponents {
     let componentPathsStats: PathsStats = {};
 
     const resolvedComponentPathsWithoutGitIgnore = (
-      await Promise.all(this.componentPaths.map((componentPath) => glob(componentPath)))
+      await Promise.all(this.componentPaths.map((componentPath) => glob(pathNormalizeToLinux(componentPath))))
     ).flat();
 
     const resolvedComponentPathsWithGitIgnore = this.gitIgnore.filter(resolvedComponentPathsWithoutGitIgnore);
@@ -495,7 +495,7 @@ you can add the directory these files are located at and it'll change the root d
     const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath);
     this._throwForOutsideConsumer(relativeComponentPath);
     throwForExistingParentDir(this.bitMap, relativeComponentPath);
-    const matches = await glob(path.join(relativeComponentPath, '**'), {
+    const matches = await glob(pathNormalizeToLinux(path.join(relativeComponentPath, '**')), {
       cwd: this.consumer.getPath(),
       nodir: true,
     });
@@ -513,8 +513,8 @@ you can add the directory these files are located at and it'll change the root d
     });
     const resolvedMainFile = this._addMainFileToFiles(filteredMatchedFiles);
 
-    const absoluteComponentPath = path.resolve(componentPath);
-    const splitPath = absoluteComponentPath.split(path.sep);
+    const absoluteComponentPath = pathNormalizeToLinux(path.resolve(componentPath));
+    const splitPath = absoluteComponentPath.split('/');
     const lastDir = splitPath[splitPath.length - 1];
     const idOfTrackDir = this._getIdAccordingToTrackDir(componentPath);
     if (!finalBitId) {
