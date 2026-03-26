@@ -10,6 +10,7 @@ import {
   statusWorkspaceIsCleanMsg,
   BASE_DOCS_DOMAIN,
 } from '@teambit/legacy.constants';
+import { Logger } from '@teambit/logger';
 import { compact, groupBy, partition } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import type { StatusResult } from './status.main.runtime';
@@ -68,52 +69,51 @@ export function formatStatusOutput(
   ): string {
     const idWithIssues = componentsWithIssues.find((c) => c.id.isEqual(id));
     const isSoftTagged = Boolean(softTaggedComponents.find((softTaggedId) => softTaggedId.isEqual(id)));
-    const getStatusText = () => {
-      if (message) return message;
-      if (idWithIssues) {
-        return idWithIssues.issues.hasTagBlockerIssues() ? statusFailureMsg : statusWarningsMsg;
-      }
-      return 'ok';
-    };
-    const getColor = () => {
-      if (message) return 'yellow';
-      if (idWithIssues) return idWithIssues.issues.hasTagBlockerIssues() ? 'red' : 'yellow';
-      return 'green';
-    };
-    const messageStatusText = getStatusText();
-    const messageStatusTextWithSoftTag =
-      isSoftTagged && showSoftTagMsg ? `${messageStatusText} (soft-tagged)` : messageStatusText;
-    const messageStatus = chalk[getColor()](messageStatusTextWithSoftTag);
-    let idFormatted = chalk.white('     > ') + chalk.cyan(id.toStringWithoutVersion());
+    const hasTagBlocker = idWithIssues?.issues.hasTagBlockerIssues();
+    const isClean = !message && !idWithIssues;
 
-    if (!showIssues && !localVersions) {
-      return `${idFormatted} ... ${messageStatus}`;
-    }
+    const getSymbol = () => {
+      if (message) return chalk.yellow('⚠');
+      if (idWithIssues) return hasTagBlocker ? chalk.red('✖') : chalk.yellow('⚠');
+      return Logger.successSymbol();
+    };
+
+    let idFormatted = `   ${getSymbol()} ` + chalk.cyan(id.toStringWithoutVersion());
+
     if (localVersions) {
       if (verbose) {
-        idFormatted += `. versions: ${localVersions.join(', ')}`;
+        idFormatted += ` - versions: ${localVersions.join(', ')}`;
       } else {
         const [snaps, tags] = partition(localVersions, (version) => isHash(version));
         const tagsStr = tags.length ? `versions: ${tags.join(', ')}` : '';
         const snapsStr = snaps.length ? `${snaps.length} snap(s)` : '';
-        idFormatted += `. `;
-        idFormatted += tagsStr && snapsStr ? `${tagsStr}. and ${snapsStr}` : tagsStr || snapsStr;
+        idFormatted += ' - ';
+        idFormatted += tagsStr && snapsStr ? `${tagsStr}, ${snapsStr}` : tagsStr || snapsStr;
       }
     }
-    idFormatted += ' ... ';
+
     if (showIssues && idWithIssues) {
       showTroubleshootingLink = true;
-      const issuesTxt = idWithIssues.issues.hasTagBlockerIssues() ? statusFailureMsg : statusWarningsMsg;
-      const issuesColor = idWithIssues.issues.hasTagBlockerIssues() ? 'red' : 'yellow';
-      return `${idFormatted} ${chalk[issuesColor](issuesTxt)}${formatIssues(idWithIssues.issues)}`;
+      const issuesTxt = hasTagBlocker ? statusFailureMsg : statusWarningsMsg;
+      const issuesColor = hasTagBlocker ? 'red' : 'yellow';
+      return `${idFormatted} ... ${chalk[issuesColor](issuesTxt)}${formatIssues(idWithIssues.issues)}`;
     }
-    return `${idFormatted}${messageStatus}`;
+
+    if (isClean) {
+      const softTagSuffix = isSoftTagged && showSoftTagMsg ? chalk.green(' (soft-tagged)') : '';
+      return `${idFormatted}${softTagSuffix}`;
+    }
+
+    const statusText = message || (hasTagBlocker ? statusFailureMsg : statusWarningsMsg);
+    const statusColor: 'yellow' | 'red' = message ? 'yellow' : hasTagBlocker ? 'red' : 'yellow';
+    const statusTextWithSoftTag = isSoftTagged && showSoftTagMsg ? `${statusText} (soft-tagged)` : statusText;
+    return `${idFormatted} ... ${chalk[statusColor](statusTextWithSoftTag)}`;
   }
 
   function formatCategory(title: string, description: string, compsOutput: string[]) {
     if (!compsOutput.length) return '';
-    const titleOutput = chalk.underline.white(`${title} (${compsOutput.length})`);
-    const descOutput = description ? `${description}\n` : '';
+    const titleOutput = chalk.bold.white(`${title} (${compsOutput.length})`);
+    const descOutput = description ? `${chalk.dim(description)}\n` : '';
     return [titleOutput, descOutput, ...compsOutput].join('\n');
   }
 
@@ -132,7 +132,7 @@ export function formatStatusOutput(
       component.latestVersion && component.latestVersion !== component.headVersion
         ? ` latest: ${component.latestVersion}`
         : '';
-    return `    > ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} head: ${
+    return `   ${chalk.yellow('⚠')} ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} head: ${
       component.headVersion
     }${latest}`;
   });
@@ -142,7 +142,7 @@ export function formatStatusOutput(
   const pendingMergeDesc = `(use "bit reset" to discard local tags/snaps, and bit checkout head to re-merge with the remote.
 alternatively, to keep local tags/snaps history, use "bit merge [component-id]")`;
   const pendingMergeComps = mergePendingComponents.map((component) => {
-    return `    > ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
+    return `   ${chalk.yellow('⚠')} ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
       component.divergeData.snapsOnSourceOnly.length
     } (source) and ${component.divergeData.snapsOnTargetOnly.length} (target) uncommon snaps respectively`;
   });
@@ -157,12 +157,11 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
 
   const compDuringMergeStr = formatCategory(compDuringMergeTitle, compDuringMergeDesc, compDuringMergeComps);
 
-  const newComponentDescription = '\n(use "bit snap/tag" to lock a version with all your changes)\n';
-  const newComponentsTitle = newComponents.length
-    ? chalk.underline.white('new components') + newComponentDescription
-    : '';
-
-  const newComponentsOutput = [newComponentsTitle, ...(nonMissing || []), ...(missing || [])].join('\n');
+  const newComponentDescription = '(use "bit snap/tag" to lock a version with all your changes)';
+  const newComponentsOutput = formatCategory('new components', newComponentDescription, [
+    ...(nonMissing || []),
+    ...(missing || []),
+  ]);
 
   const modifiedDesc = '(use "bit diff" to compare changes)';
   const modifiedComponentOutput = formatCategory(
@@ -273,7 +272,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
 
   const getWorkspaceIssuesOutput = () => {
     if (!workspaceIssues.length) return '';
-    const title = chalk.underline.white('workspace issues');
+    const title = chalk.bold.white('workspace issues');
     const issues = workspaceIssues.join('\n');
     return `\n\n${title}\n${issues}`;
   };
@@ -304,11 +303,14 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
       invalidComponentOutput,
       locallySoftRemovedOutput,
       remotelySoftRemovedOutput,
-    ]).join(chalk.underline('\n                         \n') + chalk.white('\n')) +
+    ]).join('\n\n') +
     showWarningsStr +
     troubleshootingStr;
 
-  const results = (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + getWorkspaceIssuesOutput() + getLaneStr();
+  const results =
+    (statusMsg || `${Logger.successSymbol()} ${chalk.yellow(statusWorkspaceIsCleanMsg)}`) +
+    getWorkspaceIssuesOutput() +
+    getLaneStr();
 
   // Determine exit code based on flags
   let exitCode = 0;
