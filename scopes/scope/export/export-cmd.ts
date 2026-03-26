@@ -1,4 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatItem, formatSection, formatHint, warnSymbol, joinSections } from '@teambit/cli';
 import open from 'open';
 import { ejectTemplate } from '@teambit/eject';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
@@ -103,77 +104,72 @@ exporting is the final step after development and versioning to share components
       return chalk.yellow('nothing to export');
     }
     const exportedLane = exportedLanes[0]?.id();
-    const getExportedIds = () => {
-      if (!verbose) return componentsIds.join('\n');
-      return componentsIds
-        .map((id) => {
-          const versions = newIdsOnRemote
-            .filter((newId) => newId.isEqualWithoutVersion(id))
-            .map((newId) => newId.version);
-          return `${id.toString()} - ${versions.join(', ') || 'n/a'}`;
-        })
-        .join('\n');
-    };
-    const exportOutput = () => {
+
+    const exportSection = (() => {
       if (isEmpty(componentsIds)) return exportedLane ? `exported the lane ${chalk.bold(exportedLane)}` : '';
       const lanesOutput = exportedLanes.length ? ` the lane ${chalk.bold(exportedLanes[0].id())} and` : '';
-      return chalk.green(
-        `exported${lanesOutput} the following ${componentsIds.length} component(s):\n${chalk.bold(getExportedIds())}`
-      );
-    };
-    const nonExistOnBitMapOutput = () => {
-      // if includeDependencies is true, the nonExistOnBitMap might be the dependencies
+      const items = componentsIds.map((id) => {
+        if (!verbose) return formatItem(chalk.bold(id.toString()));
+        const versions = newIdsOnRemote
+          .filter((newId) => newId.isEqualWithoutVersion(id))
+          .map((newId) => newId.version);
+        return formatItem(`${chalk.bold(id.toString())} - ${versions.join(', ') || 'n/a'}`);
+      });
+      const desc = `exported${lanesOutput} the following component(s)`;
+      return formatSection('exported components', desc, items);
+    })();
+
+    const nonExistOnBitMapSection = (() => {
       if (isEmpty(nonExistOnBitMap)) return '';
       const idsStr = nonExistOnBitMap.map((id) => id.toString()).join(', ');
-      return chalk.yellow(
-        `${idsStr}\nexported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they where tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'.\n`
-      );
-    };
-    const removedOutput = () => {
+      return `${warnSymbol} ${chalk.yellow(idsStr)}\n${formatHint(
+        "exported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they where tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'."
+      )}`;
+    })();
+
+    const removedSection = (() => {
       if (!removedIds.length) return '';
       const remoteLaneStr = exportedLanes.length ? ' lane' : '';
-      const title = chalk.bold(
-        `\n\nthe following component(s) have been marked as removed on the remote${remoteLaneStr}\n`
-      );
-      const idsStr = removedIds.join('\n');
-      return title + idsStr;
-    };
-    const missingScopeOutput = () => {
+      const items = removedIds.map((id) => formatItem(id.toString(), warnSymbol));
+      return formatSection(`components removed on the remote${remoteLaneStr}`, '', items);
+    })();
+
+    const missingScopeSection = (() => {
       if (isEmpty(missingScope)) return '';
-      const idsStr = missingScope.map((id) => id.toString()).join(', ');
-      return chalk.yellow(
-        `the following component(s) were not exported as no remote scope is configured for them: ${chalk.bold(
-          idsStr
-        )}.\nplease specify <remote> to export them, run 'bit scope set <scope> <component>,  or set a "defaultScope" in your workspace config\n\n`
+      const items = missingScope.map((id) => formatItem(id.toString(), warnSymbol));
+      const hint = formatHint(
+        'please specify <remote> to export them, run \'bit scope set <scope> <component>, or set a "defaultScope" in your workspace config'
       );
-    };
-    const ejectOutput = () => {
+      return `${formatSection('components not exported (no remote scope configured)', '', items)}\n${hint}`;
+    })();
+
+    const ejectSection = (() => {
       if (!ejectResults) return '';
-      const output = ejectTemplate(ejectResults);
-      return `\n${output}`;
-    };
-    const rippleJobsOutput = () => {
+      return ejectTemplate(ejectResults);
+    })();
+
+    const rippleJobsSection = (() => {
       if (!rippleJobUrls.length) return '';
       const shouldOpenBrowser = openBrowser && !process.env.CI;
       const prefix = shouldOpenBrowser ? 'Your browser has been opened to the following link' : 'Visit the link below';
-      const msg = `\n\n${prefix} to track the progress of building the components in the cloud\n`;
+      const msg = `${prefix} to track the progress of building the components in the cloud`;
       if (shouldOpenBrowser) {
         open(rippleJobUrls[0]).catch(() => {
           /** it's ok, the user is instructed to open the browser manually */
         });
       }
       const urlsColored = rippleJobUrls.map((url) => chalk.bold.underline(url));
-      return msg + urlsColored.join('\n');
-    };
+      return `${msg}\n${urlsColored.join('\n')}`;
+    })();
 
-    return (
-      nonExistOnBitMapOutput() +
-      missingScopeOutput() +
-      exportOutput() +
-      ejectOutput() +
-      removedOutput() +
-      rippleJobsOutput()
-    );
+    return joinSections([
+      nonExistOnBitMapSection,
+      missingScopeSection,
+      exportSection,
+      ejectSection,
+      removedSection,
+      rippleJobsSection,
+    ]);
   }
 
   async json(

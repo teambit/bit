@@ -11,6 +11,7 @@ import {
   BASE_DOCS_DOMAIN,
 } from '@teambit/legacy.constants';
 import { Logger } from '@teambit/logger';
+import { formatSection } from '@teambit/cli';
 import { compact, groupBy, partition } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import type { StatusResult } from './status.main.runtime';
@@ -110,13 +111,6 @@ export function formatStatusOutput(
     return `${idFormatted} ... ${chalk[statusColor](statusTextWithSoftTag)}`;
   }
 
-  function formatCategory(title: string, description: string, compsOutput: string[]) {
-    if (!compsOutput.length) return '';
-    const titleOutput = chalk.bold.white(`${title} (${compsOutput.length})`);
-    const descOutput = description ? `${chalk.dim(description)}\n` : '';
-    return [titleOutput, descOutput, ...compsOutput].join('\n');
-  }
-
   const importPendingWarning = importPendingComponents.length ? chalk.yellow(`${IMPORT_PENDING_MSG}.\n`) : '';
 
   const newCompFormatted = newComponents.map((c) => format(c));
@@ -136,7 +130,7 @@ export function formatStatusOutput(
       component.headVersion
     }${latest}`;
   });
-  const outdatedStr = formatCategory(outdatedTitle, outdatedDesc, outdatedComps);
+  const outdatedStr = formatSection(outdatedTitle, outdatedDesc, outdatedComps);
 
   const pendingMergeTitle = 'pending merge';
   const pendingMergeDesc = `(use "bit reset" to discard local tags/snaps, and bit checkout head to re-merge with the remote.
@@ -147,7 +141,7 @@ alternatively, to keep local tags/snaps history, use "bit merge [component-id]")
     } (source) and ${component.divergeData.snapsOnTargetOnly.length} (target) uncommon snaps respectively`;
   });
 
-  const pendingMergeStr = formatCategory(pendingMergeTitle, pendingMergeDesc, pendingMergeComps);
+  const pendingMergeStr = formatSection(pendingMergeTitle, pendingMergeDesc, pendingMergeComps);
 
   const compDuringMergeTitle = 'components in merge state';
   const compDuringMergeDesc = `(use "bit snap/tag [--unmerged]" to complete the merge process.
@@ -155,23 +149,23 @@ to cancel the merge operation, use either "bit lane merge-abort" (for prior "bit
 or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
   const compDuringMergeComps = componentsDuringMergeState.map((c) => format(c));
 
-  const compDuringMergeStr = formatCategory(compDuringMergeTitle, compDuringMergeDesc, compDuringMergeComps);
+  const compDuringMergeStr = formatSection(compDuringMergeTitle, compDuringMergeDesc, compDuringMergeComps);
 
   const newComponentDescription = '(use "bit snap/tag" to lock a version with all your changes)';
-  const newComponentsOutput = formatCategory('new components', newComponentDescription, [
+  const newComponentsOutput = formatSection('new components', newComponentDescription, [
     ...(nonMissing || []),
     ...(missing || []),
   ]);
 
   const modifiedDesc = '(use "bit diff" to compare changes)';
-  const modifiedComponentOutput = formatCategory(
+  const modifiedComponentOutput = formatSection(
     'modified components',
     modifiedDesc,
     modifiedComponents.map((c) => format(c))
   );
 
   const autoTagPendingTitle = 'components pending auto-tag (when their modified dependencies are tagged)';
-  const autoTagPendingOutput = formatCategory(
+  const autoTagPendingOutput = formatSection(
     autoTagPendingTitle,
     '',
     autoTagPendingComponents.map((c) => format(c))
@@ -179,7 +173,7 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
 
   const componentsWithIssuesToPrint = componentsWithIssues.filter((c) => c.issues.hasTagBlockerIssues() || warnings);
   const compWithIssuesDesc = '(fix the issues according to the suggested solution)';
-  const compWithIssuesOutput = formatCategory(
+  const compWithIssuesOutput = formatSection(
     'components with issues',
     compWithIssuesDesc,
     componentsWithIssuesToPrint.map((c) => format(c.id, true)).sort()
@@ -187,11 +181,11 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
 
   const invalidDesc = 'these components failed to load';
   const invalidComps = invalidComponents.map((c) => format(c.id, false, getInvalidComponentLabel(c.error))).sort();
-  const invalidComponentOutput = formatCategory(statusInvalidComponentsMsg, invalidDesc, invalidComps);
+  const invalidComponentOutput = formatSection(statusInvalidComponentsMsg, invalidDesc, invalidComps);
 
   const locallySoftRemovedDesc =
     '(tag/snap and export the components to update the deletion to the remote. to undo deletion, run "bit recover")';
-  const locallySoftRemovedOutput = formatCategory(
+  const locallySoftRemovedOutput = formatSection(
     'soft-removed components locally',
     locallySoftRemovedDesc,
     locallySoftRemoved.map((c) => format(c)).sort()
@@ -199,7 +193,7 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
 
   const remotelySoftRemovedDesc =
     '(use "bit remove" to remove them from the workspace. use "bit recover" to undo the deletion)';
-  const remotelySoftRemovedOutput = formatCategory(
+  const remotelySoftRemovedOutput = formatSection(
     'components deleted on the remote',
     remotelySoftRemovedDesc,
     remotelySoftRemoved.map((c) => format(c)).sort()
@@ -207,25 +201,25 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
 
   const stagedDesc = '(use "bit export" to push these component versions to the remote scope)';
   const stagedComps = stagedComponents.map((c) => format(c.id, false, undefined, c.versions));
-  const stagedComponentsOutput = formatCategory('staged components', stagedDesc, stagedComps);
+  const stagedComponentsOutput = formatSection('staged components', stagedDesc, stagedComps);
 
   const localOnlyDesc = '(these components are excluded from tag/snap/export commands)';
   const localOnlyComps = localOnly.map((c) => format(c)).sort();
-  const localOnlyComponentsOutput = formatCategory('local-only components', localOnlyDesc, localOnlyComps);
+  const localOnlyComponentsOutput = formatSection('local-only components', localOnlyDesc, localOnlyComps);
 
   const softTaggedDesc = '(use "bit tag --persist" to complete the tag)';
   const softTaggedComps = softTaggedComponents.map((id) => format(id, false, undefined, undefined, false));
-  const softTaggedComponentsOutput = formatCategory('soft-tagged components', softTaggedDesc, softTaggedComps);
+  const softTaggedComponentsOutput = formatSection('soft-tagged components', softTaggedDesc, softTaggedComps);
 
   const snappedDesc = '(use "bit tag" or "bit tag --snapped" to lock a semver version)';
-  const snappedComponentsOutput = formatCategory(
+  const snappedComponentsOutput = formatSection(
     'snapped components (tag pending)',
     snappedDesc,
     snappedComponents.map((c) => format(c))
   );
 
   const unavailableOnMainDesc = '(use "bit checkout head" to make them available)';
-  const unavailableOnMainOutput = formatCategory(
+  const unavailableOnMainOutput = formatSection(
     'components unavailable on main',
     unavailableOnMainDesc,
     unavailableOnMain.map((c) => format(c))
@@ -244,7 +238,7 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
   const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) =>
     format(c.id, false, getUpdateFromMsg(c.divergeData))
   );
-  const updatesFromMainOutput = formatCategory(
+  const updatesFromMainOutput = formatSection(
     'pending updates from main',
     updatesFromMainDesc,
     pendingUpdatesFromMainIds
@@ -257,7 +251,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
     const pendingUpdatesFromForkedIds = updatesFromForked.map((c) =>
       format(c.id, false, getUpdateFromMsg(c.divergeData, forkedLaneId.name))
     );
-    updatesFromForkedOutput = formatCategory(
+    updatesFromForkedOutput = formatSection(
       `updates from ${forkedLaneId.name}`,
       updatesFromForkedDesc,
       pendingUpdatesFromForkedIds
