@@ -6,9 +6,9 @@ import { uniq } from 'lodash';
 import type { Insight, InsightResult, RawResult } from '../insight';
 import type { RunInsightOptions } from '../insight-manager';
 
-export const MAX_HORIZONTAL_WIDTH = 90;
-export const ARROW = '  ───>  ';
-export const ARROW_LEN = 8;
+const MAX_HORIZONTAL_WIDTH = 90;
+const ARROW = '  ───>  ';
+const ARROW_LEN = 8;
 
 type ShortenedInfo = {
   names: string[];
@@ -16,7 +16,7 @@ type ShortenedInfo = {
   version: string | undefined;
 };
 
-export function shortenNames(cycle: string[]): ShortenedInfo {
+function shortenNames(cycle: string[]): ShortenedInfo {
   // cycle has the first element duplicated at the end; work with unique entries
   const unique = cycle.slice(0, -1);
 
@@ -51,7 +51,7 @@ export function shortenNames(cycle: string[]): ShortenedInfo {
   return { names, scope: commonScope, version: commonVersion };
 }
 
-export function renderHeader(
+function renderHeader(
   cycleIndex: number | undefined,
   totalCycles: number,
   componentCount: number,
@@ -75,11 +75,11 @@ export function renderHeader(
   return chalk.bold(header);
 }
 
-export function renderSelfCycle(name: string): string {
+function renderSelfCycle(name: string): string {
   return `  ${chalk.cyan(name)}  ⟲`;
 }
 
-export function renderHorizontal(names: string[]): string {
+function renderHorizontal(names: string[]): string {
   // build chain: name0  ───>  name1  ───>  name2
   const chainParts: string[] = [];
   const plainParts: string[] = [];
@@ -110,7 +110,7 @@ export function renderHorizontal(names: string[]): string {
   return lines.join('\n');
 }
 
-export function renderVertical(names: string[]): string {
+function renderVertical(names: string[]): string {
   const lines: string[] = [];
   for (let i = 0; i < names.length; i++) {
     lines.push(chalk.cyan(names[i]));
@@ -122,6 +122,40 @@ export function renderVertical(names: string[]): string {
   // back-edge to start
   lines.push(chalk.red(`  ╰───▶ `) + chalk.cyan(names[0]) + chalk.dim('  (back to start)'));
   return lines.join('\n');
+}
+
+/**
+ * Render an array of cycles (each cycle is an array of component-id strings with the
+ * first element duplicated at the end) into a human-readable string with ASCII diagrams.
+ */
+export function renderCycles(cycles: string[][]): string {
+  if (!cycles.length) {
+    return 'No circular dependencies found';
+  }
+  const totalCycles = cycles.length;
+  const blocks = cycles.map((cycle, idx) => {
+    const componentCount = cycle.length - 1; // last entry is duplicate of first
+    const { names, scope, version } = shortenNames(cycle);
+    const cycleIndex = totalCycles > 1 ? idx : undefined;
+    const header = renderHeader(cycleIndex, totalCycles, componentCount, scope, version);
+
+    let body: string;
+    if (componentCount === 1) {
+      body = renderSelfCycle(names[0]);
+    } else {
+      const chainPlainLen = names.reduce((sum, n) => sum + n.length, 0) + (names.length - 1) * ARROW_LEN;
+      const horizontalWidth = chainPlainLen + 6; // + closing "  ───┘"
+      if (horizontalWidth <= MAX_HORIZONTAL_WIDTH) {
+        body = renderHorizontal(names);
+      } else {
+        body = renderVertical(names);
+      }
+    }
+
+    return `${header}\n\n${body}`;
+  });
+
+  return '\n' + blocks.join('\n\n') + '\n';
 }
 
 export const INSIGHT_CIRCULAR_DEPS_NAME = 'circular';
@@ -157,34 +191,7 @@ export default class FindCycles implements Insight {
   }
 
   private renderData(data: RawResult) {
-    if (!data.data || data.data.length === 0) {
-      return 'No cyclic dependencies';
-    }
-    const totalCycles = data.data.length;
-    const blocks = data.data.map((cycle: string[], idx: number) => {
-      const componentCount = cycle.length - 1; // last entry is duplicate of first
-      const { names, scope, version } = shortenNames(cycle);
-      const cycleIndex = totalCycles > 1 ? idx : undefined;
-      const header = renderHeader(cycleIndex, totalCycles, componentCount, scope, version);
-
-      let body: string;
-      if (componentCount === 1) {
-        body = renderSelfCycle(names[0]);
-      } else {
-        // measure horizontal width
-        const chainPlainLen = names.reduce((sum, n) => sum + n.length, 0) + (names.length - 1) * ARROW_LEN;
-        const horizontalWidth = chainPlainLen + 6; // + closing "  ───┘"
-        if (horizontalWidth <= MAX_HORIZONTAL_WIDTH) {
-          body = renderHorizontal(names);
-        } else {
-          body = renderVertical(names);
-        }
-      }
-
-      return `${header}\n\n${body}`;
-    });
-
-    return '\n' + blocks.join('\n\n') + '\n';
+    return renderCycles(data.data ?? []);
   }
 
   async run(opts?: RunInsightOptions): Promise<InsightResult> {

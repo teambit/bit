@@ -5,15 +5,7 @@ import chalk from 'chalk';
 import archy from 'archy';
 import type { ComponentIdGraph } from '@teambit/graph';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import {
-  ARROW_LEN,
-  MAX_HORIZONTAL_WIDTH,
-  shortenNames,
-  renderHeader,
-  renderSelfCycle,
-  renderHorizontal,
-  renderVertical,
-} from '@teambit/insights';
+import { renderCycles } from '@teambit/insights';
 import { generateDependenciesInfoTable } from './template';
 import type { DependenciesMain } from './dependencies.main.runtime';
 import type { Workspace } from '@teambit/workspace';
@@ -487,33 +479,7 @@ export class DependenciesCircularCmd implements Command {
 
   async report(_args: [], options: DependenciesCircularCmdOptions) {
     const cycles = await this.deps.getCircularDependencies(options.includeDeps);
-    if (!cycles.length) {
-      return 'No circular dependencies found';
-    }
-    const totalCycles = cycles.length;
-    const blocks = cycles.map((cycle, idx) => {
-      const componentCount = cycle.length - 1; // last entry is duplicate of first
-      const { names, scope, version } = shortenNames(cycle);
-      const cycleIndex = totalCycles > 1 ? idx : undefined;
-      const header = renderHeader(cycleIndex, totalCycles, componentCount, scope, version);
-
-      let body: string;
-      if (componentCount === 1) {
-        body = renderSelfCycle(names[0]);
-      } else {
-        const chainPlainLen = names.reduce((sum, n) => sum + n.length, 0) + (names.length - 1) * ARROW_LEN;
-        const horizontalWidth = chainPlainLen + 6; // + closing "  ───┘"
-        if (horizontalWidth <= MAX_HORIZONTAL_WIDTH) {
-          body = renderHorizontal(names);
-        } else {
-          body = renderVertical(names);
-        }
-      }
-
-      return `${header}\n\n${body}`;
-    });
-
-    return '\n' + blocks.join('\n\n') + '\n';
+    return renderCycles(cycles);
   }
 
   async json(_args: [], options: DependenciesCircularCmdOptions) {
