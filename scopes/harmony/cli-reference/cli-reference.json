@@ -3828,6 +3828,22 @@
         ]
       },
       {
+        "name": "current",
+        "alias": "",
+        "options": [
+          [
+            "j",
+            "json",
+            "output in json format"
+          ]
+        ],
+        "description": "display the name of the current lane",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false,
+        "skipWorkspace": false
+      },
+      {
         "name": "history [lane-name]",
         "alias": "",
         "options": [
@@ -4322,6 +4338,11 @@
             "s",
             "strict",
             "Set to true to fail on warnings as well as errors, false (default) only fails on errors"
+          ],
+          [
+            "d",
+            "dry-run",
+            "Run the full pipeline but skip exporting to remote (build runs only if --build is set)"
           ]
         ],
         "description": "Exports a feature lane to Bit Cloud when a Pull Request is opened or updated.",

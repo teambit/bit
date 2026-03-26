@@ -389,6 +389,7 @@ Resolves the lane name from --lane or the current Git branch, validates it, and 
 | `--lane <lane>`       |       `-l`       | If set, use as the lane name, if not available, grab from git-branch name               |
 | `--build`             |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI           |
 | `--strict`            |       `-s`       | Set to true to fail on warnings as well as errors, false (default) only fails on errors |
+| `--dry-run`           |       `-d`       | Run the full pipeline but skip exporting to remote (build runs only if --build is set)  |
 
 ### ci merge
 
@@ -1405,6 +1406,16 @@ workspace, but also mark it as deleted from the lane, so it won't be merged late
 | **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
 | ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
+
+### lane current
+
+**Usage**: `lane current`
+
+**Description**: display the name of the current lane
+
+| **Option** | **Option alias** | **Description**       |
+| ---------- | :--------------: | --------------------- |
+| `--json`   |       `-j`       | output in json format |
 
 ### lane history
 

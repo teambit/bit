@@ -57,6 +57,7 @@ import type { LaneCheckoutOpts } from './lane.cmd';
 import {
   LaneCmd,
   LaneCreateCmd,
+  LaneCurrentCmd,
   LaneImportCmd,
   LaneListCmd,
   LaneRemoveCmd,
@@ -1369,6 +1370,7 @@ please create a new lane instead, which will include all components of this lane
       new LaneFetchCmd(fetchCmd, lanesMain),
       new LaneEjectCmd(lanesMain),
     ];
+    laneCmd.commands.push(new LaneCurrentCmd(lanesMain));
     laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
     laneCmd.commands.push(new LaneHistoryDiffCmd(lanesMain, workspace, scope, componentCompare));
     laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
