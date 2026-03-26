@@ -273,6 +273,11 @@ analyze workspace dependencies for version spread, peer permutations, and bloat
 scans node_modules/.pnpm to report actual installed copies, identifies packages with multiple versions, and highlights peer dependencies causing permutation explosion. Use --package to drill down into a specific package.
 Flags: --package <string>, --origins
 
+## bit deps circular
+
+find circular dependencies in the component graph
+Flags: --json, --include-deps
+
 ## bit deps write
 
 write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions
