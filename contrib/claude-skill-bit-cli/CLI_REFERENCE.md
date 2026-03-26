@@ -489,6 +489,11 @@ delete a component from the lane and install it as a package from main
 
 NOTE: unlike "bit eject" on main, this command doesn't only remove the component from the workspace, but also mark it as deleted from the lane, so it won't be merged later on.
 
+## bit lane current
+
+display the name of the current lane
+Flags: --json
+
 ## bit lane history [lane-name]
 
 show lane history, default to the current lane
