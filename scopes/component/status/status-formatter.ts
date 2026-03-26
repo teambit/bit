@@ -82,13 +82,13 @@ export function formatStatusOutput(
 
     if (localVersions) {
       if (verbose) {
-        idFormatted += `. versions: ${localVersions.join(', ')}`;
+        idFormatted += ` - versions: ${localVersions.join(', ')}`;
       } else {
         const [snaps, tags] = partition(localVersions, (version) => isHash(version));
         const tagsStr = tags.length ? `versions: ${tags.join(', ')}` : '';
         const snapsStr = snaps.length ? `${snaps.length} snap(s)` : '';
-        idFormatted += `. `;
-        idFormatted += tagsStr && snapsStr ? `${tagsStr}. and ${snapsStr}` : tagsStr || snapsStr;
+        idFormatted += ' - ';
+        idFormatted += tagsStr && snapsStr ? `${tagsStr}, ${snapsStr}` : tagsStr || snapsStr;
       }
     }
 
@@ -96,7 +96,7 @@ export function formatStatusOutput(
       showTroubleshootingLink = true;
       const issuesTxt = hasTagBlocker ? statusFailureMsg : statusWarningsMsg;
       const issuesColor = hasTagBlocker ? 'red' : 'yellow';
-      return `${idFormatted} ...  ${chalk[issuesColor](issuesTxt)}${formatIssues(idWithIssues.issues)}`;
+      return `${idFormatted} ... ${chalk[issuesColor](issuesTxt)}${formatIssues(idWithIssues.issues)}`;
     }
 
     if (isClean) {
