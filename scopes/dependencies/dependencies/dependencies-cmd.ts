@@ -472,7 +472,7 @@ export class DependenciesCircularCmd implements Command {
   alias = '';
   options = [
     ['j', 'json', 'return the output in JSON format'],
-    ['', 'include-deps', 'include all dependencies, not just components'],
+    ['', 'include-deps', 'include component dependencies that are not in this workspace'],
   ] as CommandOptions;
 
   constructor(private deps: DependenciesMain) {}
