@@ -52,7 +52,7 @@ delete <component-pattern> - soft-delete components from remote scopes
 recover <component-pattern> - restore soft-deleted components
 export [component-patterns...] - upload components to remote scopes
 lane [sub-command] - manage lanes for parallel development
-Subcommands: list, show, create, remove, change-scope, alias, rename, remove-readme, import, remove-comp, fetch, eject, history, history-diff, checkout, revert, merge-move
+Subcommands: list, show, create, remove, change-scope, alias, rename, remove-readme, import, remove-comp, fetch, eject, current, history, history-diff, checkout, revert, merge-move
 ci <sub-command> - continuous integration commands for automated workflows
 Subcommands: verify, pr, merge
 fork <pattern> [target-component-name] - create a new component by copying from an existing one

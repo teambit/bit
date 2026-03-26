@@ -139,6 +139,44 @@ export class LaneListCmd implements Command {
   }
 }
 
+export class LaneCurrentCmd implements Command {
+  name = 'current';
+  description = 'display the name of the current lane';
+  alias = '';
+  options = [['j', 'json', 'output in json format']] as CommandOptions;
+  loader = false;
+  skipWorkspace = false;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report(): Promise<string> {
+    const currentLaneId = this.lanes.getCurrentLaneId();
+    if (!currentLaneId || currentLaneId.isDefault()) {
+      return DEFAULT_LANE;
+    }
+    const alias = this.lanes.getCurrentLaneNameOrAlias();
+    if (alias && alias !== currentLaneId.name) {
+      return `${currentLaneId.toString()} (${alias})`;
+    }
+    return currentLaneId.toString();
+  }
+
+  async json(): Promise<Record<string, unknown>> {
+    const currentLaneId = this.lanes.getCurrentLaneId();
+    if (!currentLaneId || currentLaneId.isDefault()) {
+      return { name: DEFAULT_LANE, scope: null, id: DEFAULT_LANE, isDefault: true, alias: null };
+    }
+    const alias = this.lanes.getCurrentLaneNameOrAlias();
+    return {
+      name: currentLaneId.name,
+      scope: currentLaneId.scope,
+      id: currentLaneId.toString(),
+      isDefault: false,
+      alias: alias !== currentLaneId.name ? alias : null,
+    };
+  }
+}
+
 export class LaneShowCmd implements Command {
   name = 'show [lane-name]';
   description = `show lane details. if no lane specified, show the current lane`;

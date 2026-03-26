@@ -3828,6 +3828,22 @@
         ]
       },
       {
+        "name": "current",
+        "alias": "",
+        "options": [
+          [
+            "j",
+            "json",
+            "output in json format"
+          ]
+        ],
+        "description": "display the name of the current lane",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false,
+        "skipWorkspace": false
+      },
+      {
         "name": "history [lane-name]",
         "alias": "",
         "options": [
