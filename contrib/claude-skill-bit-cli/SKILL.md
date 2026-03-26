@@ -110,7 +110,7 @@ update [package-patterns...] - update workspace dependencies to newer versions
 link [component-names...] - create links between components and node_modules
 eject <component-pattern> - remove component from workspace and install it as npm package
 deps <sub-command> - manage component dependencies
-Subcommands: get, remove, unset, debug, set, reset, eject, blame, usage, diagnose, write
+Subcommands: get, remove, unset, debug, set, reset, eject, blame, usage, diagnose, circular, write
 why <dependency-name> - find components that use the specified dependency
 set-peer <component-id> <range> - configure component to always be installed as peer dependency
 unset-peer <component-id> - remove always-peer configuration from component

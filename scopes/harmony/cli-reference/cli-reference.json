@@ -2806,6 +2806,26 @@
         "private": false
       },
       {
+        "name": "circular",
+        "alias": "",
+        "options": [
+          [
+            "j",
+            "json",
+            "return the output in JSON format"
+          ],
+          [
+            "",
+            "include-deps",
+            "include component dependencies that are not in this workspace"
+          ]
+        ],
+        "description": "find circular dependencies in the component graph",
+        "extendedDescription": "",
+        "group": "info-analysis",
+        "private": false
+      },
+      {
         "name": "write",
         "alias": "",
         "options": [
