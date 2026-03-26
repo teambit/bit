@@ -300,6 +300,20 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
 
     const idsGroupedByScope = groupByScopeName(ids);
 
+    const resolveRemote = async (scopeName: string): Promise<Remote> => {
+      try {
+        return await scopeRemotes.resolve(scopeName);
+      } catch (err) {
+        if (err instanceof ScopeNotFoundOrDenied && getConfig(CFG_USER_TOKEN_KEY)) {
+          throw new BitError(
+            `unable to export to the remote scope "${scopeName}". the scope may not exist, or you don't have access to it.
+if the scope name is wrong and you've already snapped/tagged, run "bit reset --all" to undo, then run "bit scope rename ${scopeName} <new-scope>" and snap/tag again`
+          );
+        }
+        throw err;
+      }
+    };
+
     /**
      * when a component is exported for the first time, and the lane-scope is not the same as the component-scope, it's
      * important to validate that there is no such component in the original scope. otherwise, later, it'll be impossible
@@ -372,20 +386,6 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       .map((scopeName) => `scope "${scopeName}": ${idsGroupedByScope[scopeName].toString()}`)
       .join(', ');
     this.logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
-
-    const resolveRemote = async (scopeName: string): Promise<Remote> => {
-      try {
-        return await scopeRemotes.resolve(scopeName);
-      } catch (err) {
-        if (err instanceof ScopeNotFoundOrDenied && getConfig(CFG_USER_TOKEN_KEY)) {
-          throw new BitError(
-            `unable to export to the remote scope "${scopeName}". the scope may not exist, or you don't have access to it.
-if the scope name is wrong and you've already snapped/tagged, run "bit reset --all" to undo, then run "bit scope rename ${scopeName} <new-scope>" and snap/tag again`
-          );
-        }
-        throw err;
-      }
-    };
 
     const getUpdatedObjectsToExport = async (
       remoteNameStr: string,
