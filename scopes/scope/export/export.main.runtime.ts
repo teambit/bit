@@ -6,7 +6,13 @@ import { ScopeAspect } from '@teambit/scope';
 import { BitError } from '@teambit/bit-error';
 import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, getCloudDomain } from '@teambit/legacy.constants';
+import {
+  CENTRAL_BIT_HUB_NAME,
+  CENTRAL_BIT_HUB_URL,
+  CFG_USER_TOKEN_KEY,
+  getCloudDomain,
+} from '@teambit/legacy.constants';
+import { getConfig } from '@teambit/config-store';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { BitMap } from '@teambit/legacy.bit-map';
 import { ComponentsList } from '@teambit/legacy.component-list';
@@ -21,7 +27,7 @@ import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import type { Remotes, Remote } from '@teambit/scope.remotes';
-import { getScopeRemotes } from '@teambit/scope.remotes';
+import { getScopeRemotes, ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import type { EjectMain, EjectResults } from '@teambit/eject';
 import { EjectAspect } from '@teambit/eject';
 import type { ExportOrigin } from '@teambit/scope.network';
@@ -311,7 +317,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           return;
         }
         // by getting the remote we also validate that this scope actually exists.
-        const remote = await scopeRemotes.resolve(scopeName);
+        const remote = await resolveRemote(scopeName);
         const list = await remote.list();
         const listIds = ComponentIdList.fromArray(list.map((listItem) => listItem.id));
         newIdsGrouped[scopeName].forEach((id) => {
@@ -367,13 +373,27 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       .join(', ');
     this.logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
 
+    const resolveRemote = async (scopeName: string): Promise<Remote> => {
+      try {
+        return await scopeRemotes.resolve(scopeName);
+      } catch (err) {
+        if (err instanceof ScopeNotFoundOrDenied && getConfig(CFG_USER_TOKEN_KEY)) {
+          throw new BitError(
+            `unable to export to the remote scope "${scopeName}". the scope may not exist, or you don't have access to it.
+if the scope name is wrong and you've already snapped/tagged, run "bit reset --all" to undo, then run "bit scope rename ${scopeName} <new-scope>" and snap/tag again`
+          );
+        }
+        throw err;
+      }
+    };
+
     const getUpdatedObjectsToExport = async (
       remoteNameStr: string,
       bitIds: ComponentIdList,
       lane?: Lane
     ): Promise<ObjectsPerRemoteExtended> => {
       bitIds.throwForDuplicationIgnoreVersion();
-      const remote: Remote = await scopeRemotes.resolve(remoteNameStr);
+      const remote: Remote = await resolveRemote(remoteNameStr);
       const idsToChangeLocally = ComponentIdList.fromArray(bitIds.filter((id) => !scope.isExported(id)));
       const componentsAndObjects: ModelComponentAndObjects[] = [];
       const objectList = new ObjectList();
