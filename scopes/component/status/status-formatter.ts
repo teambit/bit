@@ -10,6 +10,7 @@ import {
   statusWorkspaceIsCleanMsg,
   BASE_DOCS_DOMAIN,
 } from '@teambit/legacy.constants';
+import { Logger } from '@teambit/logger';
 import { compact, groupBy, partition } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import type { StatusResult } from './status.main.runtime';
@@ -74,7 +75,7 @@ export function formatStatusOutput(
     const getSymbol = () => {
       if (message) return chalk.yellow('⚠');
       if (idWithIssues) return hasTagBlocker ? chalk.red('✖') : chalk.yellow('⚠');
-      return chalk.green('✔');
+      return Logger.successSymbol();
     };
 
     let idFormatted = `   ${getSymbol()} ` + chalk.cyan(id.toStringWithoutVersion());
@@ -307,7 +308,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
     troubleshootingStr;
 
   const results =
-    (statusMsg || `${chalk.green('✔')} ${chalk.yellow(statusWorkspaceIsCleanMsg)}`) +
+    (statusMsg || `${Logger.successSymbol()} ${chalk.yellow(statusWorkspaceIsCleanMsg)}`) +
     getWorkspaceIssuesOutput() +
     getLaneStr();
 
