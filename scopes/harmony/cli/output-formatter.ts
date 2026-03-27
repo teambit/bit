@@ -2,8 +2,9 @@ import chalk from 'chalk';
 import { platform } from 'os';
 
 /** Cross-platform green checkmark (mirrors Logger.successSymbol without importing Logger to avoid coupling) */
+const _successSymbol = platform() === 'win32' ? chalk.green('\u2713') : chalk.green('\u2714');
 export function successSymbol(): string {
-  return platform() === 'win32' ? chalk.green('\u2713') : chalk.green('\u2714');
+  return _successSymbol;
 }
 
 /** Yellow warning symbol */
@@ -24,9 +25,12 @@ export function formatItem(text: string, symbol?: string): string {
  */
 export function formatSection(title: string, description: string, items: string[]): string {
   if (!items.length) return '';
-  const titleOutput = chalk.bold.white(`${title} (${items.length})`);
-  const descOutput = description ? `${chalk.dim(description)}\n` : '';
-  return [titleOutput, descOutput, ...items].join('\n');
+  const lines: string[] = [chalk.bold.white(`${title} (${items.length})`)];
+  if (description) {
+    lines.push(chalk.dim(description));
+  }
+  lines.push(...items);
+  return lines.join('\n');
 }
 
 /** Format hint text in dim color */
