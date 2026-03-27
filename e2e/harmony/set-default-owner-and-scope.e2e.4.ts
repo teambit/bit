@@ -51,7 +51,7 @@ describe('set default owner and scope', function () {
         exportOutput = helper.command.export();
       });
       it('should export the component to correct scope', () => {
-        expect(exportOutput).to.have.string('exported the following 1 component');
+        expect(exportOutput).to.have.string('exported components (1)');
         expect(exportOutput).to.have.string(defaultScope);
       });
       describe('validate models data', () => {

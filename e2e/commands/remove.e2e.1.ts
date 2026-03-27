@@ -262,7 +262,7 @@ describe('bit remove command', function () {
           exportOutput = helper.command.export();
         });
         it('should export the deleted components', () => {
-          expect(exportOutput).to.have.string('2 component');
+          expect(exportOutput).to.have.string('exported components (2)');
         });
         it('bit status should be clean', () => {
           helper.command.expectStatusToBeClean();
