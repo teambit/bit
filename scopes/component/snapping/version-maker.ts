@@ -83,6 +83,7 @@ export class VersionMaker {
   private dependencyResolver: DependencyResolverMain;
   private allComponentsToTag: ConsumerComponent[] = [];
   private allWorkspaceComps?: Component[];
+  private snapId: string = '';
   constructor(
     private snapping: SnappingMain,
     private components: Component[],
@@ -106,7 +107,9 @@ export class VersionMaker {
     stagedConfig?: StagedConfig;
     removedComponents?: ComponentIdList;
     totalComponentsCount?: number;
+    snapId: string;
   }> {
+    this.snapId = v4();
     this.allWorkspaceComps = this.workspace ? await this.workspace.list() : undefined;
     const componentsToTag = this.getUniqCompsToTag();
     const idsToTag = ComponentIdList.fromArray(componentsToTag.map((c) => c.id));
@@ -146,6 +149,7 @@ export class VersionMaker {
         publishedPackages: [],
         stagedConfig,
         totalComponentsCount: this.allComponentsToTag.length,
+        snapId: this.snapId,
       };
     }
 
@@ -168,6 +172,7 @@ export class VersionMaker {
           detachHead,
           overrideHead: overrideHead,
         },
+        snapId: this.snapId,
       });
       if (this.workspace) {
         const modelComponent = component.modelComponent || (await this.legacyScope.getModelComponent(component.id));
@@ -213,6 +218,7 @@ export class VersionMaker {
       stagedConfig,
       removedComponents,
       totalComponentsCount: this.allComponentsToTag.length,
+      snapId: this.snapId,
     };
   }
 
