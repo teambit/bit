@@ -106,7 +106,10 @@ exporting is the final step after development and versioning to share components
     const exportedLane = exportedLanes[0]?.id();
 
     const exportSection = (() => {
-      if (isEmpty(componentsIds)) return exportedLane ? `exported the lane ${chalk.bold(exportedLane)}` : '';
+      if (isEmpty(componentsIds)) {
+        if (!exportedLane) return '';
+        return formatSection('exported lane', '', [formatItem(chalk.bold(exportedLane))]);
+      }
       const lanesOutput = exportedLanes.length ? ` the lane ${chalk.bold(exportedLanes[0].id())} and` : '';
       const items = componentsIds.map((id) => {
         if (!verbose) return formatItem(chalk.bold(id.toString()));
@@ -123,7 +126,7 @@ exporting is the final step after development and versioning to share components
       if (isEmpty(nonExistOnBitMap)) return '';
       const idsStr = nonExistOnBitMap.map((id) => id.toString()).join(', ');
       return `${warnSymbol} ${chalk.yellow(idsStr)}\n${formatHint(
-        "exported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they where tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'."
+        "exported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they were tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'."
       )}`;
     })();
 
@@ -138,7 +141,7 @@ exporting is the final step after development and versioning to share components
       if (isEmpty(missingScope)) return '';
       const items = missingScope.map((id) => formatItem(id.toString(), warnSymbol));
       const hint = formatHint(
-        'please specify <remote> to export them, run \'bit scope set <scope> <component>, or set a "defaultScope" in your workspace config'
+        'please specify <remote> to export them, run \'bit scope set <scope> <component>\', or set a "defaultScope" in your workspace config'
       );
       return `${formatSection('components not exported (no remote scope configured)', '', items)}\n${hint}`;
     })();

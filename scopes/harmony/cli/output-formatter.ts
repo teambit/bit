@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { platform } from 'os';
 
-/** Cross-platform green checkmark (mirrors Logger.successSymbol without requiring Logger instance) */
+/** Cross-platform green checkmark (mirrors Logger.successSymbol without importing Logger to avoid coupling) */
 export function successSymbol(): string {
   return platform() === 'win32' ? chalk.green('\u2713') : chalk.green('\u2714');
 }
