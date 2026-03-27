@@ -88,7 +88,7 @@ export type VersionProps = {
   modified?: Log[];
   origin?: VersionOrigin;
   hidden?: boolean;
-  snapId?: string;
+  batchId?: string;
 };
 
 /**
@@ -139,7 +139,7 @@ export default class Version extends BitObject {
   modified: Log[] = []; // currently mutation could happen as a result of either "squash" or "sign".
   origin?: VersionOrigin; // for debugging purposes
   hidden?: boolean; // whether the version is hidden from commands such as "bit log", "bit blame". (needed for un-meaningful snaps, such as merged-lane snap prior to the tag)
-  snapId?: string; // a shared UUID for all versions created in the same snap/tag operation
+  batchId?: string; // a shared UUID for all versions created in the same snap/tag operation
 
   constructor(props: VersionProps) {
     super();
@@ -173,7 +173,7 @@ export default class Version extends BitObject {
     this.modified = props.modified || [];
     this.origin = props.origin;
     this.hidden = props.hidden;
-    this.snapId = props.snapId;
+    this.batchId = props.batchId;
     this.validateVersion();
   }
 
@@ -487,7 +487,7 @@ export default class Version extends BitObject {
         modified: this.modified,
         origin: this.origin,
         hidden: this.hidden,
-        snapId: this.snapId,
+        batchId: this.batchId,
       },
       (val) => !!val
     );
@@ -539,7 +539,7 @@ export default class Version extends BitObject {
       modified,
       origin,
       hidden,
-      snapId,
+      batchId,
     } = contentParsed;
 
     const _getDependencies = (deps = []): Dependency[] => {
@@ -653,7 +653,7 @@ export default class Version extends BitObject {
       modified,
       origin,
       hidden,
-      snapId,
+      batchId,
     });
   }
 

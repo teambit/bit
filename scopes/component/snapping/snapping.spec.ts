@@ -151,12 +151,12 @@ describe('Snapping aspect', function () {
       await destroyWorkspace(workspaceData);
     });
   });
-  describe('snapId', () => {
+  describe('batchId', () => {
     let workspaceData: WorkspaceData;
     after(async () => {
       await destroyWorkspace(workspaceData);
     });
-    it('should assign the same snapId to all components snapped together', async () => {
+    it('should assign the same batchId to all components snapped together', async () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath, { numOfComponents: 3 });
@@ -174,12 +174,12 @@ describe('Snapping aspect', function () {
         })
       );
 
-      const snapIds = versionObjects.map((v) => v.snapId);
+      const batchIds = versionObjects.map((v) => v.batchId);
       // all should be defined
-      snapIds.forEach((id) => expect(id).to.be.a('string').and.not.be.empty);
+      batchIds.forEach((id) => expect(id).to.be.a('string').and.not.be.empty);
       // all should be the same UUID
-      expect(snapIds[0]).to.equal(snapIds[1]);
-      expect(snapIds[1]).to.equal(snapIds[2]);
+      expect(batchIds[0]).to.equal(batchIds[1]);
+      expect(batchIds[1]).to.equal(batchIds[2]);
     });
   });
   describe('local-only', () => {
