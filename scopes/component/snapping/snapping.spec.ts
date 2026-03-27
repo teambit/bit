@@ -152,9 +152,9 @@ describe('Snapping aspect', function () {
     });
   });
   describe('batchId', () => {
-    let workspaceData: WorkspaceData;
+    let workspaceData: WorkspaceData | undefined;
     after(async () => {
-      await destroyWorkspace(workspaceData);
+      if (workspaceData) await destroyWorkspace(workspaceData);
     });
     it('should assign the same batchId to all components snapped together', async () => {
       workspaceData = mockWorkspace();
