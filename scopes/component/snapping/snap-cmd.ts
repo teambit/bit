@@ -189,7 +189,7 @@ export function snapResultOutput(results: SnapResults): string {
   const laneStr = laneName ? ` on "${laneName}" lane` : '';
   const summary = formatSuccessSummary(`${totalCount} component(s) snapped${laneStr}`);
   const snapExplanation = formatHint(
-    '(use "bit export" to push these components to a remote")\n(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)'
+    '(use "bit export" to push these components to a remote)\n(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)'
   );
 
   return joinSections([newSection, changedSection, removedSection, warningsSection, `${summary}\n${snapExplanation}`]);

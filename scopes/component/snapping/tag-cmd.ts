@@ -321,11 +321,11 @@ export function tagResultOutput(results: TagResults): string {
 
   const tagExplanation = results.isSoftTag
     ? formatHint(
-        '(use "bit tag --persist" to persist the soft-tagged changes as a fully tagged version")\n(use "bit reset --soft" to remove the soft-tags)'
+        '(use "bit tag --persist" to persist the soft-tagged changes as a fully tagged version)\n(use "bit reset --soft" to remove the soft-tags)'
       )
     : exportedIds
       ? ''
-      : formatHint('(use "bit export" to push these components to a remote")\n(use "bit reset" to unstage versions)');
+      : formatHint('(use "bit export" to push these components to a remote)\n(use "bit reset" to unstage versions)');
 
   const softTagClarification = results.isSoftTag
     ? chalk.bold(
