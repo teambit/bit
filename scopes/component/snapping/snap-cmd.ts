@@ -157,8 +157,8 @@ export function snapResultOutput(results: SnapResults): string {
     return !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id);
   });
   const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
-  const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
-  const totalCount = totalComponentsCount ?? snappedComponents.length + autoTaggedCount;
+  const autoSnappedCount = autoSnappedResults ? autoSnappedResults.length : 0;
+  const totalCount = totalComponentsCount ?? snappedComponents.length + autoSnappedCount;
 
   const compInBold = (id: ComponentID) => {
     const version = id.hasVersion() ? `@${id.version}` : '';
