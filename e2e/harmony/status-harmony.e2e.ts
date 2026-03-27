@@ -99,7 +99,7 @@ describe('status command on Harmony', function () {
     });
     it('should show new and modified components', () => {
       const output = helper.command.runCmd('bit status --quick');
-      expect(output).to.have.string('modified components');
+      expect(output).to.have.string('modified components (files only)');
       expect(output).to.have.string('comp3');
       expect(output).to.have.string('new components');
       expect(output).to.have.string('comp1');
