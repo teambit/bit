@@ -151,6 +151,37 @@ describe('Snapping aspect', function () {
       await destroyWorkspace(workspaceData);
     });
   });
+  describe('snapId', () => {
+    let workspaceData: WorkspaceData;
+    after(async () => {
+      await destroyWorkspace(workspaceData);
+    });
+    it('should assign the same snapId to all components snapped together', async () => {
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      await mockComponents(workspacePath, { numOfComponents: 3 });
+      const harmony = await loadManyAspects([SnappingAspect, ScopeAspect], workspacePath);
+      const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
+      const scope = harmony.get<ScopeMain>(ScopeAspect.id);
+      const results = await snapping.snap({ build: false, message: 'snap multiple' });
+      expect(results).to.not.be.null;
+      expect(results!.snappedComponents).to.have.lengthOf(3);
+
+      const versionObjects = await Promise.all(
+        results!.snappedComponents.map(async (comp) => {
+          const snapHash = comp.id.version!;
+          return (await scope.legacyScope.objects.load(Ref.from(snapHash))) as Version;
+        })
+      );
+
+      const snapIds = versionObjects.map((v) => v.snapId);
+      // all should be defined
+      snapIds.forEach((id) => expect(id).to.be.a('string').and.not.be.empty);
+      // all should be the same UUID
+      expect(snapIds[0]).to.equal(snapIds[1]);
+      expect(snapIds[1]).to.equal(snapIds[2]);
+    });
+  });
   describe('local-only', () => {
     let harmony: Harmony;
     let workspace: Workspace;
