@@ -18,7 +18,6 @@ type StatusFlags = {
 type QuickStatusJsonResults = {
   modified: string[];
   newComponents: string[];
-  componentsWithIssues: Array<{ id: string; issues: any }>;
 };
 
 type StatusJsonResults = {
@@ -91,14 +90,10 @@ for maximum speed (skips aspect loading entirely), use "bit mini-status".`;
     { lanes, ignoreCircularDependencies, quick }: StatusFlags
   ): Promise<StatusJsonResults | QuickStatusJsonResults> {
     if (quick) {
-      const { modified, newComps, compWithIssues } = await this.status.statusMini();
+      const { modified, newComps } = await this.status.statusMini();
       return {
         modified: modified.map((m) => m.toStringWithoutVersion()),
         newComponents: newComps.map((m) => m.toStringWithoutVersion()),
-        componentsWithIssues: (compWithIssues || []).map((c) => ({
-          id: c.id.toStringWithoutVersion(),
-          issues: c.state.issues.toObjectIncludeDataAsString(),
-        })),
       };
     }
     const {
