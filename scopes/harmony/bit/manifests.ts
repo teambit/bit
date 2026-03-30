@@ -107,6 +107,7 @@ import { BitAspect } from './bit.aspect';
 import { ConfigStoreAspect } from '@teambit/config-store';
 import { CliMcpServerAspect } from '@teambit/cli-mcp-server';
 import { CiAspect } from '@teambit/ci';
+import { RippleAspect } from '@teambit/ripple';
 import { ScriptsAspect } from '@teambit/scripts';
 
 /**
@@ -223,6 +224,7 @@ export const manifestsMap = {
   [ConfigStoreAspect.id]: ConfigStoreAspect,
   [CliMcpServerAspect.id]: CliMcpServerAspect,
   [CiAspect.id]: CiAspect,
+  [RippleAspect.id]: RippleAspect,
   [ScriptsAspect.id]: ScriptsAspect,
 };
 

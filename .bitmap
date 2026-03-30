@@ -1465,6 +1465,14 @@
         "mainFile": "index.ts",
         "rootDir": "components/renderers/tuple-type"
     },
+    "ripple": {
+        "name": "ripple",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.cloud",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/cloud/ripple"
+    },
     "schema": {
         "name": "schema",
         "scope": "teambit.semantics",
