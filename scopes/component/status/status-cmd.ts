@@ -1,4 +1,7 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import type { ComponentID } from '@teambit/component-id';
+import chalk from 'chalk';
+import { Logger } from '@teambit/logger';
 import type { StatusMain, StatusResult } from './status.main.runtime';
 import { formatStatusOutput } from './status-formatter';
 
@@ -9,6 +12,12 @@ type StatusFlags = {
   ignoreCircularDependencies?: boolean;
   warnings?: boolean;
   failOnError?: boolean;
+  quick?: boolean;
+};
+
+type QuickStatusJsonResults = {
+  modified: string[];
+  newComponents: string[];
 };
 
 type StatusJsonResults = {
@@ -54,7 +63,9 @@ export class StatusCmd implements Command {
   group = 'info-analysis';
   extendedDescription = `displays the current state of all workspace components including new, modified, staged, and problematic components.
 identifies blocking issues that prevent tagging/snapping and provides warnings with --warnings flag.
-essential for understanding workspace health before versioning components.`;
+essential for understanding workspace health before versioning components.
+use --quick for a faster check that only detects file-level changes (new/modified components).
+for maximum speed (skips aspect loading entirely), use "bit mini-status".`;
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],
@@ -64,12 +75,27 @@ essential for understanding workspace health before versioning components.`;
     ['', 'strict', 'exit with code 1 if any issues are found (both errors and warnings)'],
     ['', 'fail-on-error', 'exit with code 1 only when tag/snap blocker issues are found (not warnings)'],
     ['c', 'ignore-circular-dependencies', 'do not check for circular dependencies to get the results quicker'],
+    [
+      '',
+      'quick',
+      'show only new and modified components based on file changes. much faster, but does not detect dependency or config changes',
+    ],
   ] as CommandOptions;
   loader = true;
 
   constructor(private status: StatusMain) {}
 
-  async json(_args, { lanes, ignoreCircularDependencies }: StatusFlags): Promise<StatusJsonResults> {
+  async json(
+    _args,
+    { lanes, ignoreCircularDependencies, quick }: StatusFlags
+  ): Promise<StatusJsonResults | QuickStatusJsonResults> {
+    if (quick) {
+      const { modified, newComps } = await this.status.statusMini();
+      return {
+        modified: modified.map((m) => m.toStringWithoutVersion()),
+        newComponents: newComps.map((m) => m.toStringWithoutVersion()),
+      };
+    }
     const {
       newComponents,
       modifiedComponents,
@@ -127,8 +153,35 @@ essential for understanding workspace health before versioning components.`;
     };
   }
 
-  async report(_args, { strict, verbose, lanes, ignoreCircularDependencies, warnings, failOnError }: StatusFlags) {
+  async report(
+    _args,
+    { strict, verbose, lanes, ignoreCircularDependencies, warnings, failOnError, quick }: StatusFlags
+  ) {
+    if (quick) {
+      return this.reportQuick();
+    }
     const statusResult: StatusResult = await this.status.status({ lanes, ignoreCircularDependencies });
     return formatStatusOutput(statusResult, { strict, verbose, warnings, failOnError });
+  }
+
+  private async reportQuick() {
+    const { modified, newComps } = await this.status.statusMini();
+    const formatCategory = (title: string, ids: ComponentID[]) => {
+      if (!ids.length) return '';
+      const titleOutput = chalk.bold.white(`${title} (${ids.length})`);
+      const idsStr = ids.map((id) => `   ${Logger.successSymbol()} ${chalk.cyan(id.toStringWithoutVersion())}`);
+      return [titleOutput, ...idsStr].join('\n');
+    };
+    const sections = [
+      formatCategory('modified components (files only)', modified),
+      formatCategory('new components', newComps),
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+    const data =
+      sections ||
+      `${Logger.successSymbol()} ${chalk.yellow('no new or modified components (based on file changes only, use "bit status" for full check)')}`;
+
+    return { data, code: 0 };
   }
 }

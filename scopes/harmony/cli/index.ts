@@ -10,4 +10,16 @@ export type { Command, CLIArgs, Flags, GenericObject, CommandOptions } from './c
 export { getArgsData, getCommandName, getFlagsData } from './command-helper';
 export * from './exceptions';
 
+export {
+  successSymbol,
+  warnSymbol,
+  errorSymbol,
+  formatItem,
+  formatSection,
+  formatHint,
+  formatSuccessSummary,
+  formatWarningSummary,
+  joinSections,
+} from './output-formatter';
+
 export { CLIAspect as default, MainRuntime, CLIAspect };
