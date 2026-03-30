@@ -1465,6 +1465,20 @@
         "mainFile": "index.ts",
         "rootDir": "components/renderers/tuple-type"
     },
+    "ripple": {
+        "name": "ripple",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.cloud",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/cloud/ripple",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@0.1.4": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
+    },
     "schema": {
         "name": "schema",
         "scope": "teambit.semantics",
