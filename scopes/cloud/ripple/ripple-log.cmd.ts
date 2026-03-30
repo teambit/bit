@@ -2,7 +2,7 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import Table from 'cli-table';
 import type { RippleMain } from './ripple.main.runtime';
-import { colorPhase } from './ripple-utils';
+import { colorPhase, isFailedPhase } from './ripple-utils';
 
 export class RippleLogCmd implements Command {
   name = 'log [job-id]';
@@ -130,8 +130,11 @@ export class RippleLogCmd implements Command {
       }
       for (const compId of node.componentIds) {
         if (shown >= 30) break;
-        const icon =
-          node.phase === 'FAILURE' ? chalk.red('✗') : node.phase === 'SUCCESS' ? chalk.green('✓') : chalk.yellow('○');
+        const icon = isFailedPhase(node.phase)
+          ? chalk.red('✗')
+          : node.phase === 'SUCCESS'
+            ? chalk.green('✓')
+            : chalk.yellow('○');
         lines.push(`  ${icon} ${compId}`);
         shown++;
       }

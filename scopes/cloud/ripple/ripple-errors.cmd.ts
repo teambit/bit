@@ -1,7 +1,7 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import type { RippleMain, CiGraphNode } from './ripple.main.runtime';
-import { colorPhase, stripAnsi } from './ripple-utils';
+import { colorPhase, isFailedPhase, stripAnsi } from './ripple-utils';
 
 export class RippleErrorsCmd implements Command {
   name = 'errors [job-id]';
@@ -49,9 +49,9 @@ export class RippleErrorsCmd implements Command {
       return lines.join('\n');
     }
 
-    const failedNodes = ciNodes.filter((n) => n.phase === 'FAILURE');
+    const failedNodes = ciNodes.filter((n) => isFailedPhase(n.phase));
     const succeededNodes = ciNodes.filter((n) => n.phase === 'SUCCESS');
-    const otherNodes = ciNodes.filter((n) => n.phase !== 'FAILURE' && n.phase !== 'SUCCESS');
+    const otherNodes = ciNodes.filter((n) => !isFailedPhase(n.phase) && n.phase !== 'SUCCESS');
 
     const totalComponents = ciNodes.reduce((sum, n) => sum + n.componentIds.length, 0);
     const failedComponents = failedNodes.flatMap((n) => n.componentIds);
@@ -125,7 +125,7 @@ export class RippleErrorsCmd implements Command {
     if (!job) return { error: 'No job found', job: null, ciNodes: [], containerLogs: {} };
 
     // fetch error logs for failed containers in parallel
-    const failedNodes = ciNodes.filter((n) => n.phase === 'FAILURE');
+    const failedNodes = ciNodes.filter((n) => isFailedPhase(n.phase));
     const containerNames = failedNodes.map((n) => n.containerName);
     const logMap = await this.ripple.getContainerLogs(job.id, containerNames);
     const containerLogs: Record<string, string[]> = {};

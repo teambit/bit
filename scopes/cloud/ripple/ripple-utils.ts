@@ -23,6 +23,11 @@ export function colorPhase(phase?: string): string {
   }
 }
 
+export function isFailedPhase(phase?: string): boolean {
+  const p = phase?.toUpperCase();
+  return p === 'FAILURE' || p === 'FAILED';
+}
+
 /**
  * strip "@hash" or "@version" suffix from a component ID.
  * e.g. "scope/name@abc123" → "scope/name"
