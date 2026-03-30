@@ -8,12 +8,7 @@ import { getCloudDomain } from '@teambit/legacy.constants';
 import { stripComponentVersion } from './ripple-utils';
 import stripAnsi from 'strip-ansi';
 import { RippleAspect } from './ripple.aspect';
-import { RippleCmd } from './ripple.cmd';
-import { RippleListCmd } from './ripple-list.cmd';
-import { RippleLogCmd } from './ripple-log.cmd';
-import { RippleErrorsCmd } from './ripple-errors.cmd';
-import { RippleRetryCmd } from './ripple-retry.cmd';
-import { RippleStopCmd } from './ripple-stop.cmd';
+import { RippleCmd, RippleListCmd, RippleLogCmd, RippleErrorsCmd, RippleRetryCmd, RippleStopCmd } from './ripple.cmd';
 
 export type JobStatus = {
   startedAt?: string;
