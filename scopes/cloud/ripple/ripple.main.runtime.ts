@@ -1,9 +1,9 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import type { RuntimeDefinition } from '@teambit/harmony';
 import { CLIAspect, type CLIMain, MainRuntime } from '@teambit/cli';
 import { LoggerAspect, type LoggerMain, type Logger } from '@teambit/logger';
 import { CloudAspect, type CloudMain } from '@teambit/cloud';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { getCloudDomain } from '@teambit/legacy.constants';
 import { RippleAspect } from './ripple.aspect';
 import { RippleCmd } from './ripple.cmd';
@@ -68,11 +68,12 @@ export type CiGraphNode = {
 
 export class RippleMain {
   static runtime: RuntimeDefinition = MainRuntime;
-  static dependencies = [CLIAspect, CloudAspect, LoggerAspect];
+  static dependencies = [CLIAspect, CloudAspect, LoggerAspect, WorkspaceAspect];
 
   constructor(
     private cloud: CloudMain,
-    private logger: Logger
+    private logger: Logger,
+    private workspace?: Workspace
   ) {}
 
   private static LIST_JOBS = `
@@ -418,52 +419,14 @@ export class RippleMain {
   }
 
   /**
-   * parse .bitmap (JSONC format with leading comments) from cwd.
-   */
-  private readBitmap(): Record<string, any> | null {
-    try {
-      let raw = readFileSync(join(process.cwd(), '.bitmap'), 'utf8');
-      // strip block comments and line comments
-      raw = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
-      return JSON.parse(raw);
-    } catch {
-      return null;
-    }
-  }
-
-  /**
-   * detect the current lane from .bitmap in cwd.
+   * detect the current lane from the workspace.
    * returns the laneId in "scope/lane-name" format, or undefined if not on a lane.
    */
   getCurrentLaneId(): string | undefined {
-    const bitmap = this.readBitmap();
-    if (!bitmap) return undefined;
-    const laneInfo = bitmap._bit_lane;
-    if (!laneInfo?.id) return undefined;
-    // laneInfo.id can be { name, scope } object or a string
-    if (typeof laneInfo.id === 'string') return laneInfo.id;
-    if (laneInfo.id.scope && laneInfo.id.name) return `${laneInfo.id.scope}/${laneInfo.id.name}`;
-    return undefined;
-  }
-
-  /**
-   * get component IDs tracked in the workspace .bitmap.
-   * returns IDs in "scope/name" format suitable for getComponentBuildSummary.
-   */
-  getWorkspaceComponentIds(): string[] {
-    const bitmap = this.readBitmap();
-    if (!bitmap) return [];
-    const ids: string[] = [];
-    for (const [key, value] of Object.entries(bitmap)) {
-      if (key.startsWith('_')) continue;
-      const entry = value as { scope?: string; defaultScope?: string; name?: string };
-      const scope = entry.scope || entry.defaultScope;
-      const name = entry.name || key;
-      if (scope) {
-        ids.push(`${scope}/${name}`);
-      }
-    }
-    return ids;
+    if (!this.workspace) return undefined;
+    const laneId = this.workspace.getCurrentLaneId();
+    if (!laneId || laneId.isDefault()) return undefined;
+    return laneId.toString();
   }
 
   /**
@@ -500,19 +463,12 @@ export class RippleMain {
   }
 
   /**
-   * try to detect the workspace owner from workspace.jsonc in cwd.
+   * detect the workspace owner from the workspace defaultScope.
    */
   getDefaultOwner(): string | undefined {
-    try {
-      const raw = readFileSync(join(process.cwd(), 'workspace.jsonc'), 'utf8');
-      const match = raw.match(/"defaultScope"\s*:\s*"([^"]+)"/);
-      if (!match) return undefined;
-      const defaultScope = match[1];
-      if (!defaultScope.includes('.')) return undefined;
-      return defaultScope.split('.')[0];
-    } catch {
-      return undefined;
-    }
+    const defaultScope = this.workspace?.defaultScope;
+    if (!defaultScope?.includes('.')) return undefined;
+    return defaultScope.split('.')[0];
   }
 
   getJobUrl(job: RippleJob): string {
@@ -527,9 +483,9 @@ export class RippleMain {
     return `https://${getCloudDomain()}/ripple-ci/job/${job.id}`;
   }
 
-  static async provider([cli, cloud, loggerAspect]: [CLIMain, CloudMain, LoggerMain]) {
+  static async provider([cli, cloud, loggerAspect, workspace]: [CLIMain, CloudMain, LoggerMain, Workspace]) {
     const logger = loggerAspect.createLogger(RippleAspect.id);
-    const ripple = new RippleMain(cloud, logger);
+    const ripple = new RippleMain(cloud, logger, workspace);
 
     const rippleCmd = new RippleCmd();
     rippleCmd.commands = [

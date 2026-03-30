@@ -118,6 +118,9 @@ export class RippleListCmd implements Command {
     limit?: string;
   }): Promise<{ jobs: RippleJob[]; ownerUsed?: string }> {
     const requestedLimit = flags.limit ? parseInt(flags.limit, 10) : 20;
+    if (!Number.isFinite(requestedLimit) || requestedLimit < 1) {
+      return { jobs: [], ownerUsed: undefined };
+    }
 
     // build server-side filters
     const filters: { lanes?: string[]; owners?: string[]; scopes?: string[]; status?: string } = {};

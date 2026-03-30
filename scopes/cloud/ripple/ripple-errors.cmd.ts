@@ -14,7 +14,6 @@ export class RippleErrorsCmd implements Command {
 
   options: CommandOptions = [
     ['', 'lane <lane>', 'lane ID to find the latest failed job for (default: detected from .bitmap)'],
-    ['c', 'component <component>', 'check a specific component ID (e.g. "teambit.scope/my-comp")'],
     ['', 'log', 'show full build log for failed containers (not just the error summary)'],
     ['j', 'json', 'return the output as JSON'],
   ];
@@ -23,7 +22,7 @@ export class RippleErrorsCmd implements Command {
 
   constructor(private ripple: RippleMain) {}
 
-  async report([jobId]: [string], flags: { lane?: string; component?: string; log?: boolean }) {
+  async report([jobId]: [string], flags: { lane?: string; log?: boolean }) {
     const { job, ciNodes } = await this.getErrors(jobId, flags);
 
     if (!job) {
@@ -121,8 +120,9 @@ export class RippleErrorsCmd implements Command {
     return lines.join('\n');
   }
 
-  async json([jobId]: [string], flags: { lane?: string; component?: string; log?: boolean }) {
+  async json([jobId]: [string], flags: { lane?: string; log?: boolean }) {
     const { job, ciNodes } = await this.getErrors(jobId, flags);
+    if (!job) return { error: 'No job found', job: null, ciNodes: [], containerLogs: {} };
 
     // fetch error logs for failed containers in parallel
     const failedNodes = ciNodes.filter((n) => n.phase === 'FAILURE');
@@ -138,7 +138,7 @@ export class RippleErrorsCmd implements Command {
 
   private async getErrors(
     jobId: string | undefined,
-    flags: { lane?: string; component?: string }
+    flags: { lane?: string }
   ): Promise<{
     job: any;
     ciNodes: CiGraphNode[];
