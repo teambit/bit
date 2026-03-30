@@ -970,17 +970,22 @@ another option, in case this dependency is not in main yet is to remove all refe
     lane,
     shouldValidateVersion = false,
     addVersionOpts,
+    batchId,
   }: {
     source: ConsumerComponent;
     lane?: Lane;
     shouldValidateVersion?: boolean;
     addVersionOpts?: AddVersionOpts;
+    batchId?: string;
   }): Promise<{
     component: ModelComponent;
     version: Version;
     addedVersionStr: string;
   }> {
     const { addedVersionStr, component, version } = await this._addCompFromScopeToObjects(source, lane, addVersionOpts);
+    if (batchId) {
+      version.batchId = batchId;
+    }
     const unmergedComponent = this.scope.legacyScope.objects.unmergedComponents.getEntry(component.toComponentId());
     if (unmergedComponent) {
       if (unmergedComponent.unrelated) {

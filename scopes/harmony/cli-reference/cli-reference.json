@@ -4279,10 +4279,15 @@
         "c",
         "ignore-circular-dependencies",
         "do not check for circular dependencies to get the results quicker"
+      ],
+      [
+        "",
+        "quick",
+        "show only new and modified components based on file changes. much faster, but does not detect dependency or config changes"
       ]
     ],
     "description": "show workspace component status and issues",
-    "extendedDescription": "displays the current state of all workspace components including new, modified, staged, and problematic components.\nidentifies blocking issues that prevent tagging/snapping and provides warnings with --warnings flag.\nessential for understanding workspace health before versioning components.",
+    "extendedDescription": "displays the current state of all workspace components including new, modified, staged, and problematic components.\nidentifies blocking issues that prevent tagging/snapping and provides warnings with --warnings flag.\nessential for understanding workspace health before versioning components.\nuse --quick for a faster check that only detects file-level changes (new/modified components).\nfor maximum speed (skips aspect loading entirely), use \"bit mini-status\".",
     "group": "info-analysis",
     "private": false
   },

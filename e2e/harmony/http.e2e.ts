@@ -114,7 +114,7 @@ import { HttpHelper } from '../http-helper';
       httpHelper.killHttp();
     });
     it('should export successfully', () => {
-      expect(exportOutput).to.have.string('exported the following 3 component');
+      expect(exportOutput).to.have.string('exported components (3)');
     });
     describe('bit log', () => {
       let logOutput: string;

@@ -2437,19 +2437,22 @@ allows saving work-in-progress changes and switching context, then restoring cha
 **Description**: show workspace component status and issues  
 displays the current state of all workspace components including new, modified, staged, and problematic components.  
 identifies blocking issues that prevent tagging/snapping and provides warnings with --warnings flag.  
-essential for understanding workspace health before versioning components.
+essential for understanding workspace health before versioning components.  
+use --quick for a faster check that only detects file-level changes (new/modified components).  
+for maximum speed (skips aspect loading entirely), use "bit mini-status".
 
 `bit status`
 
-| **Option**                       | **Option alias** | **Description**                                                                         |
-| -------------------------------- | :--------------: | --------------------------------------------------------------------------------------- |
-| `--json`                         |       `-j`       | return a json version of the component                                                  |
-| `--warnings`                     |       `-w`       | show warnings. by default, only issues that block tag/snap are shown                    |
-| `--verbose`                      |                  | show extra data: full snap hashes for staged components, and divergence point for lanes |
-| `--lanes`                        |       `-l`       | when on a lane, show updates from main and updates from forked lanes                    |
-| `--strict`                       |                  | exit with code 1 if any issues are found (both errors and warnings)                     |
-| `--fail-on-error`                |                  | exit with code 1 only when tag/snap blocker issues are found (not warnings)             |
-| `--ignore-circular-dependencies` |       `-c`       | do not check for circular dependencies to get the results quicker                       |
+| **Option**                       | **Option alias** | **Description**                                                                                                            |
+| -------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------- |
+| `--json`                         |       `-j`       | return a json version of the component                                                                                     |
+| `--warnings`                     |       `-w`       | show warnings. by default, only issues that block tag/snap are shown                                                       |
+| `--verbose`                      |                  | show extra data: full snap hashes for staged components, and divergence point for lanes                                    |
+| `--lanes`                        |       `-l`       | when on a lane, show updates from main and updates from forked lanes                                                       |
+| `--strict`                       |                  | exit with code 1 if any issues are found (both errors and warnings)                                                        |
+| `--fail-on-error`                |                  | exit with code 1 only when tag/snap blocker issues are found (not warnings)                                                |
+| `--ignore-circular-dependencies` |       `-c`       | do not check for circular dependencies to get the results quicker                                                          |
+| `--quick`                        |                  | show only new and modified components based on file changes. much faster, but does not detect dependency or config changes |
 
 ---
 
