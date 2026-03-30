@@ -62,80 +62,80 @@ export class RippleLogCmd implements Command {
     lines.push(`  ${chalk.cyan('URL:')}      ${jobUrl}`);
 
     if (flags.component) {
-      const summary = await this.ripple.getComponentBuildSummary(job.id, flags.component);
-      if (!summary) {
-        lines.push('');
-        lines.push(chalk.yellow(`No build summary found for component "${flags.component}" in this job.`));
-      } else {
-        lines.push('');
-        lines.push(chalk.bold(`Build Tasks for ${summary.name || flags.component}`));
-
-        if (summary.tasks && summary.tasks.length > 0) {
-          const table = new Table({
-            head: [chalk.cyan('Task'), chalk.cyan('Status'), chalk.cyan('Started'), chalk.cyan('Warnings')],
-            chars: {
-              top: '',
-              'top-mid': '',
-              'top-left': '',
-              'top-right': '',
-              bottom: '',
-              'bottom-mid': '',
-              'bottom-left': '',
-              'bottom-right': '',
-              left: '',
-              'left-mid': '',
-              mid: '',
-              'mid-mid': '',
-              right: '',
-              'right-mid': '',
-              middle: ' ',
-            },
-            style: { 'padding-left': 1, 'padding-right': 1 },
-          });
-
-          for (const task of summary.tasks) {
-            table.push([
-              task.name || '-',
-              colorPhase(task.status?.status),
-              task.startTime ? new Date(task.startTime).toLocaleString() : '-',
-              task.status?.warnings ? chalk.yellow(String(task.status.warnings)) : '0',
-            ]);
-          }
-          lines.push(table.toString());
-        } else {
-          lines.push(chalk.gray('  No build tasks found.'));
-        }
-      }
+      await this.appendComponentDetail(lines, job.id, flags.component);
     } else {
-      // use ciGraph (internal graph with job-specific status) for the component list
-      const ciNodes = this.ripple.getCiGraphNodes(job);
-      if (ciNodes.length > 0) {
-        const totalComponents = ciNodes.reduce((sum, n) => sum + n.componentIds.length, 0);
-        lines.push('');
-        lines.push(chalk.bold(`Components (${totalComponents})`));
-        lines.push(chalk.gray('  Use --component <id> to see build tasks for a specific component'));
-        let shown = 0;
-        for (const node of ciNodes) {
-          if (shown >= 30) {
-            lines.push(chalk.gray(`  ... and ${totalComponents - shown} more`));
-            break;
-          }
-          for (const compId of node.componentIds) {
-            if (shown >= 30) break;
-            const icon =
-              node.phase === 'FAILURE'
-                ? chalk.red('✗')
-                : node.phase === 'SUCCESS'
-                  ? chalk.green('✓')
-                  : chalk.yellow('○');
-            lines.push(`  ${icon} ${compId}`);
-            shown++;
-          }
-        }
-      }
+      this.appendComponentList(lines, job);
     }
 
     return lines.join('\n');
+  }
+
+  private async appendComponentDetail(lines: string[], jobId: string, componentId: string) {
+    const summary = await this.ripple.getComponentBuildSummary(jobId, componentId);
+    if (!summary) {
+      lines.push('');
+      lines.push(chalk.yellow(`No build summary found for component "${componentId}" in this job.`));
+      return;
+    }
+    lines.push('');
+    lines.push(chalk.bold(`Build Tasks for ${summary.name || componentId}`));
+    if (!summary.tasks || summary.tasks.length === 0) {
+      lines.push(chalk.gray('  No build tasks found.'));
+      return;
+    }
+    const table = new Table({
+      head: [chalk.cyan('Task'), chalk.cyan('Status'), chalk.cyan('Started'), chalk.cyan('Warnings')],
+      chars: {
+        top: '',
+        'top-mid': '',
+        'top-left': '',
+        'top-right': '',
+        bottom: '',
+        'bottom-mid': '',
+        'bottom-left': '',
+        'bottom-right': '',
+        left: '',
+        'left-mid': '',
+        mid: '',
+        'mid-mid': '',
+        right: '',
+        'right-mid': '',
+        middle: ' ',
+      },
+      style: { 'padding-left': 1, 'padding-right': 1 },
+    });
+    for (const task of summary.tasks) {
+      table.push([
+        task.name || '-',
+        colorPhase(task.status?.status),
+        task.startTime ? new Date(task.startTime).toLocaleString() : '-',
+        task.status?.warnings ? chalk.yellow(String(task.status.warnings)) : '0',
+      ]);
+    }
+    lines.push(table.toString());
+  }
+
+  private appendComponentList(lines: string[], job: { ciGraph?: string }) {
+    const ciNodes = this.ripple.getCiGraphNodes(job);
+    if (ciNodes.length === 0) return;
+    const totalComponents = ciNodes.reduce((sum, n) => sum + n.componentIds.length, 0);
+    lines.push('');
+    lines.push(chalk.bold(`Components (${totalComponents})`));
+    lines.push(chalk.gray('  Use --component <id> to see build tasks for a specific component'));
+    let shown = 0;
+    for (const node of ciNodes) {
+      if (shown >= 30) {
+        lines.push(chalk.gray(`  ... and ${totalComponents - shown} more`));
+        break;
+      }
+      for (const compId of node.componentIds) {
+        if (shown >= 30) break;
+        const icon =
+          node.phase === 'FAILURE' ? chalk.red('✗') : node.phase === 'SUCCESS' ? chalk.green('✓') : chalk.yellow('○');
+        lines.push(`  ${icon} ${compId}`);
+        shown++;
+      }
+    }
   }
 
   async json([jobId]: [string], flags: { lane?: string; component?: string }) {
