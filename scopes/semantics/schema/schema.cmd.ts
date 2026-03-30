@@ -5,6 +5,7 @@ import type { Logger } from '@teambit/logger';
 import type { APISchema } from '@teambit/semantics.entities.semantic-schema';
 import { PATTERN_HELP } from '@teambit/legacy.constants';
 import type { SchemaMain } from './schema.main.runtime';
+import { SchemaDiffCommand } from './schema-diff.cmd';
 
 export class SchemaCommand implements Command {
   name = 'schema <pattern>';
@@ -19,12 +20,15 @@ ${PATTERN_HELP('schema')}`;
     ['r', 'remote', 'fetch schema from remote scope (works for components not in workspace)'],
     ['j', 'json', 'return the component schema in json format'],
   ] as CommandOptions;
+  commands: Command[];
 
   constructor(
     private schema: SchemaMain,
     private component: ComponentMain,
     private logger: Logger
-  ) {}
+  ) {
+    this.commands = [new SchemaDiffCommand(schema, component, logger)];
+  }
 
   async report([pattern]: [string], { remote }: { remote: boolean }): Promise<string> {
     const schemas = await this.getSchemas([pattern], remote);

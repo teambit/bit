@@ -1,0 +1,206 @@
+.apiCompareContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+  padding: 24px;
+  gap: 16px;
+}
+
+.summary {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-dent, #f5f5f5);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.summaryBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.addedBadge {
+  composes: summaryBadge;
+  background: rgba(46, 160, 67, 0.15);
+  color: #2ea043;
+}
+
+.removedBadge {
+  composes: summaryBadge;
+  background: rgba(248, 81, 73, 0.15);
+  color: #f85149;
+}
+
+.modifiedBadge {
+  composes: summaryBadge;
+  background: rgba(210, 153, 34, 0.15);
+  color: #d29922;
+}
+
+.changeList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.diffEntry {
+  border: 1px solid var(--border-color, #e1e4e8);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.diffEntryHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    background: var(--bg-dent, #f5f5f5);
+  }
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.statusAdded {
+  composes: statusBadge;
+  background: rgba(46, 160, 67, 0.15);
+  color: #2ea043;
+}
+
+.statusRemoved {
+  composes: statusBadge;
+  background: rgba(248, 81, 73, 0.15);
+  color: #f85149;
+}
+
+.statusModified {
+  composes: statusBadge;
+  background: rgba(210, 153, 34, 0.15);
+  color: #d29922;
+}
+
+.exportName {
+  font-weight: 600;
+  font-size: 14px;
+  font-family: var(--font-mono, monospace);
+}
+
+.schemaType {
+  color: var(--text-tertiary, #8b949e);
+  font-size: 12px;
+}
+
+.expandIcon {
+  margin-left: auto;
+  color: var(--text-tertiary, #8b949e);
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.expandIconOpen {
+  composes: expandIcon;
+  transform: rotate(90deg);
+}
+
+.diffEntryBody {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border-color, #e1e4e8);
+}
+
+.detailsList {
+  list-style: none;
+  padding: 12px 0 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detailItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.detailBullet {
+  color: var(--text-tertiary, #8b949e);
+  flex-shrink: 0;
+}
+
+.detailDescription {
+  color: var(--text-primary);
+}
+
+.signatureBlock {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-dent, #f5f5f5);
+  border-radius: 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}
+
+.signatureLabel {
+  font-weight: 600;
+  color: var(--text-secondary, #6e7681);
+  margin-bottom: 4px;
+  font-family: var(--font-sans, sans-serif);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.signatureRemoved {
+  composes: signatureBlock;
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-tertiary, #8b949e);
+  font-size: 14px;
+}
+
+.toggleSignatures {
+  background: none;
+  border: none;
+  color: var(--accent-color, #0366d6);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-top: 8px;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

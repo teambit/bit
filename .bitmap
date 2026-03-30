@@ -597,6 +597,20 @@
         "mainFile": "index.ts",
         "rootDir": "components/entities/semantic-schema"
     },
+    "entities/semantic-schema-diff": {
+        "name": "entities/semantic-schema-diff",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.semantics",
+        "mainFile": "index.ts",
+        "rootDir": "components/entities/semantic-schema-diff",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.7": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
+    },
     "env": {
         "name": "env",
         "scope": "teambit.envs",

@@ -23,6 +23,10 @@ import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
 import type { Component, ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
+import type { SchemaMain } from '@teambit/schema';
+import { SchemaAspect } from '@teambit/schema';
+import { computeAPIDiff } from '@teambit/semantics.entities.semantic-schema-diff';
+import type { APIDiffResult } from '@teambit/semantics.entities.semantic-schema-diff';
 import { componentCompareSchema } from './component-compare.graphql';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { DiffCmd } from './diff-cmd';
@@ -34,6 +38,7 @@ export type ComponentCompareResult = {
   code: FileDiff[];
   fields: FieldsDiff[];
   tests: FileDiff[];
+  api?: APIDiffResult;
 };
 
 type ConfigDiff = {
@@ -50,6 +55,7 @@ export class ComponentCompareMain {
     private tester: TesterMain,
     private depResolver: DependencyResolverMain,
     private importer: ImporterMain,
+    private schema: SchemaMain,
     private workspace?: Workspace
   ) {}
 
@@ -99,11 +105,17 @@ export class ComponentCompareMain {
       (fileDiff: FileDiff) => allTestFiles.includes(fileDiff.filePath) && fileDiff.status !== 'UNCHANGED'
     );
 
+    const apiDiff =
+      baseComponent && compareComponent
+        ? await this.computeAPIDiffForComponents(baseComponent, compareComponent)
+        : undefined;
+
     const compareResult = {
       id: `${baseCompId}-${compareCompId}`,
       code: diff.filesDiff || [],
       fields: diff.fieldsDiff || [],
       tests: testFilesDiff,
+      api: apiDiff,
     };
 
     return compareResult;
@@ -161,6 +173,22 @@ export class ComponentCompareMain {
       dependencies: serializeAndSort(depData),
       aspects: serializeAspect(component),
     };
+  }
+
+  private async computeAPIDiffForComponents(
+    baseComp: Component,
+    compareComp: Component
+  ): Promise<APIDiffResult | undefined> {
+    try {
+      const [baseSchema, compareSchema] = await Promise.all([
+        this.schema.getSchema(baseComp),
+        this.schema.getSchema(compareComp),
+      ]);
+      return computeAPIDiff(baseSchema, compareSchema);
+    } catch (err: any) {
+      this.logger.warn(`failed computing API diff: ${err.message}`);
+      return undefined;
+    }
   }
 
   private async componentsDiff(
@@ -310,9 +338,21 @@ export class ComponentCompareMain {
     TesterAspect,
     DependencyResolverAspect,
     ImporterAspect,
+    SchemaAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([graphql, component, scope, loggerMain, cli, workspace, tester, depResolver, importer]: [
+  static async provider([
+    graphql,
+    component,
+    scope,
+    loggerMain,
+    cli,
+    workspace,
+    tester,
+    depResolver,
+    importer,
+    schema,
+  ]: [
     GraphqlMain,
     ComponentMain,
     ScopeMain,
@@ -322,6 +362,7 @@ export class ComponentCompareMain {
     TesterMain,
     DependencyResolverMain,
     ImporterMain,
+    SchemaMain,
   ]) {
     const logger = loggerMain.createLogger(ComponentCompareAspect.id);
     const componentCompareMain = new ComponentCompareMain(
@@ -331,6 +372,7 @@ export class ComponentCompareMain {
       tester,
       depResolver,
       importer,
+      schema,
       workspace
     );
     cli.register(new DiffCmd(componentCompareMain));

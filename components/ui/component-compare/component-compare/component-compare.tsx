@@ -27,8 +27,124 @@ import { sortByDateDsc } from '@teambit/component.ui.component-compare.utils.sor
 import { extractLazyLoadedData } from '@teambit/component.ui.component-compare.utils.lazy-loading';
 import { BlockSkeleton, WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
+import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { gql } from '@apollo/client';
 
 import styles from './component-compare.module.scss';
+
+// Extend ChangeType with API (the external enum doesn't have it yet)
+const ChangeTypeAPI = 'API' as unknown as ChangeType;
+
+export type APIDiffDetail = {
+  aspect: string;
+  description: string;
+  impact: string;
+  from?: string;
+  to?: string;
+};
+
+export type APIDiffChange = {
+  status: string;
+  visibility: string;
+  exportName: string;
+  schemaType: string;
+  schemaTypeRaw: string;
+  impact: string;
+  baseSignature?: string;
+  compareSignature?: string;
+  baseNode?: Record<string, any>;
+  compareNode?: Record<string, any>;
+  changes?: APIDiffDetail[];
+};
+
+export type APIDiffResult = {
+  hasChanges: boolean;
+  impact: string;
+  publicChanges: APIDiffChange[];
+  internalChanges: APIDiffChange[];
+  changes: APIDiffChange[];
+  added: number;
+  removed: number;
+  modified: number;
+  breaking: number;
+  nonBreaking: number;
+  patch: number;
+};
+
+const QUERY_API_DIFF = gql`
+  query ComponentCompareAPIDiff($baseId: String!, $compareId: String!) {
+    getHost {
+      id
+      compareComponent(baseId: $baseId, compareId: $compareId) {
+        id
+        api {
+          hasChanges
+          impact
+          added
+          removed
+          modified
+          breaking
+          nonBreaking
+          patch
+          publicChanges {
+            status
+            visibility
+            exportName
+            schemaType
+            schemaTypeRaw
+            impact
+            baseSignature
+            compareSignature
+            baseNode
+            compareNode
+            changes {
+              aspect
+              description
+              impact
+              from
+              to
+            }
+          }
+          internalChanges {
+            status
+            visibility
+            exportName
+            schemaType
+            schemaTypeRaw
+            impact
+            baseSignature
+            compareSignature
+            changes {
+              aspect
+              description
+              impact
+              from
+              to
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+function useAPIDiffQuery(
+  baseId?: string,
+  compareId?: string,
+  skip?: boolean
+): { loading?: boolean; apiDiffResult?: APIDiffResult | null } {
+  const { data, loading } = useDataQuery<{
+    getHost: { compareComponent: { api: APIDiffResult | null } };
+  }>(QUERY_API_DIFF, {
+    variables: { baseId, compareId },
+    skip: skip || !baseId || !compareId,
+  });
+
+  return {
+    loading,
+    apiDiffResult: data?.getHost?.compareComponent?.api,
+  };
+}
 
 const findPrevVersionFromCurrent = (compareVersion) => (_, index: number, logs: LegacyComponentLog[]) => {
   if (compareVersion === 'workspace' || logs.length === 1) return true;
@@ -140,7 +256,8 @@ function deriveChangeType(
   compareId?: ComponentID,
   fileCompareDataByName?: Map<string, FileCompareResult> | null,
   fieldCompareDataByName?: Map<string, FieldCompareResult> | null,
-  testCompareDataByName?: Map<string, FileCompareResult> | null
+  testCompareDataByName?: Map<string, FileCompareResult> | null,
+  apiDiffResult?: APIDiffResult | null
 ): ChangeType[] | undefined | null {
   if (!baseId && !compareId) return null;
   if (!baseId?.version) return [ChangeType.NEW];
@@ -150,9 +267,12 @@ function deriveChangeType(
 
   const fileCompareData = [...fileCompareDataByName.values()];
 
+  const hasApiChanges = apiDiffResult?.hasChanges ?? false;
+
   if (
     fieldCompareDataByName.size === 0 &&
-    (fileCompareDataByName.size === 0 || fileCompareData.every((f) => f.status === 'UNCHANGED'))
+    (fileCompareDataByName.size === 0 || fileCompareData.every((f) => f.status === 'UNCHANGED')) &&
+    !hasApiChanges
   ) {
     return [ChangeType.NONE];
   }
@@ -174,6 +294,10 @@ function deriveChangeType(
 
   if ([...fieldCompareDataByName.values()].some((field) => DEPS_FIELD.includes(field.fieldName))) {
     changed.push(ChangeType.DEPENDENCY);
+  }
+
+  if (hasApiChanges) {
+    changed.push(ChangeTypeAPI);
   }
 
   return changed;
@@ -360,6 +484,12 @@ export function ComponentCompare(props: ComponentCompareProps) {
     skipComponentCompareQuery
   );
 
+  const { loading: apiDiffLoading, apiDiffResult } = useAPIDiffQuery(
+    base?.id.toString(),
+    compare?.id.toString(),
+    skipComponentCompareQuery
+  );
+
   const fileCompareDataByName = useMemo(() => {
     if (loading || compCompareLoading) return undefined;
     if (!compCompareLoading && !componentCompareData) return null;
@@ -391,6 +521,11 @@ export function ComponentCompare(props: ComponentCompareProps) {
     return testCompareDataByNameLookup;
   }, [compCompareLoading, loading, compCompareId]);
 
+  const resolvedApiDiff = useMemo(() => {
+    if (loading || apiDiffLoading) return undefined;
+    return apiDiffResult ?? null;
+  }, [loading, apiDiffLoading, compCompareId, apiDiffResult]);
+
   const componentCompareModel = {
     compare: compare && {
       model: compare,
@@ -410,13 +545,21 @@ export function ComponentCompare(props: ComponentCompareProps) {
     fieldCompareDataByName,
     fileCompareDataByName,
     testCompareDataByName,
+    apiDiffResult: resolvedApiDiff,
     isFullScreen,
     hidden,
   };
 
   const changes =
     changesFromProps ||
-    deriveChangeType(baseId, compare?.id, fileCompareDataByName, fieldCompareDataByName, testCompareDataByName);
+    deriveChangeType(
+      baseId,
+      compare?.id,
+      fileCompareDataByName,
+      fieldCompareDataByName,
+      testCompareDataByName,
+      resolvedApiDiff
+    );
 
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>

@@ -999,23 +999,31 @@ please create a new lane instead, which will include all components of this lane
         componentId.changeVersion(sourceHead).toString()
       );
 
-      if (!compare.fields.length && (!compare.code.length || !compare.code.some((c) => c.status !== 'UNCHANGED'))) {
+      const hasCodeChanges = compare.code.some((c) => c.status !== 'UNCHANGED');
+      const hasFieldChanges = compare.fields.length > 0;
+      const hasApiChanges = compare.api?.hasChanges ?? false;
+
+      if (!hasFieldChanges && !hasCodeChanges && !hasApiChanges) {
         return [ChangeType.NONE];
       }
 
       const changed: ChangeType[] = [];
 
-      if (compare.code.some((f) => f.status !== 'UNCHANGED')) {
+      if (hasCodeChanges) {
         changed.push(ChangeType.SOURCE_CODE);
       }
 
-      if (compare.fields.length > 0) {
+      if (hasFieldChanges) {
         changed.push(ChangeType.ASPECTS);
       }
 
       const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
       if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
         changed.push(ChangeType.DEPENDENCY);
+      }
+
+      if (hasApiChanges) {
+        changed.push(ChangeType.API);
       }
 
       return changed;
@@ -1070,23 +1078,31 @@ please create a new lane instead, which will include all components of this lane
         componentId.changeVersion(sourceHead).toString()
       );
 
-      if (!compare.fields.length && (!compare.code.length || !compare.code.some((c) => c.status !== 'UNCHANGED'))) {
+      const hasCodeChanges = compare.code.some((c) => c.status !== 'UNCHANGED');
+      const hasFieldChanges = compare.fields.length > 0;
+      const hasApiChanges = compare.api?.hasChanges ?? false;
+
+      if (!hasFieldChanges && !hasCodeChanges && !hasApiChanges) {
         return [ChangeType.NONE];
       }
 
       const changed: ChangeType[] = [];
 
-      if (compare.code.some((f) => f.status !== 'UNCHANGED')) {
+      if (hasCodeChanges) {
         changed.push(ChangeType.SOURCE_CODE);
       }
 
-      if (compare.fields.length > 0) {
+      if (hasFieldChanges) {
         changed.push(ChangeType.ASPECTS);
       }
 
       const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
       if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
         changed.push(ChangeType.DEPENDENCY);
+      }
+
+      if (hasApiChanges) {
+        changed.push(ChangeType.API);
       }
 
       return changed;

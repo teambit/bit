@@ -17,12 +17,49 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
         diffOutput: String
       }
 
+      type APIDiffDetail {
+        aspect: String!
+        description: String!
+        impact: String!
+        from: String
+        to: String
+      }
+
+      type APIDiffChange {
+        status: String!
+        visibility: String!
+        exportName: String!
+        schemaType: String!
+        schemaTypeRaw: String!
+        impact: String!
+        baseSignature: String
+        compareSignature: String
+        baseNode: JSONObject
+        compareNode: JSONObject
+        changes: [APIDiffDetail!]
+      }
+
+      type APIDiffResult {
+        hasChanges: Boolean!
+        impact: String!
+        publicChanges: [APIDiffChange!]!
+        internalChanges: [APIDiffChange!]!
+        changes: [APIDiffChange!]!
+        added: Int!
+        removed: Int!
+        modified: Int!
+        breaking: Int!
+        nonBreaking: Int!
+        patch: Int!
+      }
+
       type ComponentCompareResult {
         # unique id for graphql - baseId + compareId
         id: String!
         code(fileName: String): [FileCompareResult!]!
         aspects(aspectName: String): [FieldCompareResult!]!
         tests(fileName: String): [FileCompareResult!]
+        api: APIDiffResult
       }
 
       extend type ComponentHost {
@@ -71,6 +108,7 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
           }
           return result.fields;
         },
+        api: (result: ComponentCompareResult) => result.api || null,
       },
     },
   };
