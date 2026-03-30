@@ -2,6 +2,7 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import Table from 'cli-table';
 import type { RippleMain } from './ripple.main.runtime';
+import { colorPhase } from './ripple-utils';
 
 export class RippleLogCmd implements Command {
   name = 'log [job-id]';
@@ -144,24 +145,5 @@ export class RippleLogCmd implements Command {
       return { job, componentBuild: summary };
     }
     return { job };
-  }
-}
-
-function colorPhase(phase?: string): string {
-  if (!phase) return chalk.yellow('unknown');
-  switch (phase.toUpperCase()) {
-    case 'SUCCESS':
-      return chalk.green(phase);
-    case 'FAILED':
-    case 'FAILURE':
-      return chalk.red(phase);
-    case 'RUNNING':
-    case 'IN_PROGRESS':
-      return chalk.blue(phase);
-    case 'STOPPED':
-    case 'PAUSED':
-      return chalk.gray(phase);
-    default:
-      return chalk.yellow(phase);
   }
 }

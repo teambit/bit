@@ -5,6 +5,8 @@ import { CloudAspect, type CloudMain } from '@teambit/cloud';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { getCloudDomain } from '@teambit/legacy.constants';
+import { stripComponentVersion } from './ripple-utils';
+import stripAnsi from 'strip-ansi';
 import { RippleAspect } from './ripple.aspect';
 import { RippleCmd } from './ripple.cmd';
 import { RippleListCmd } from './ripple-list.cmd';
@@ -44,20 +46,6 @@ export type ComponentBuildSummary = {
   id?: string;
   name?: string;
   tasks?: BuildTaskSummary[];
-};
-
-export type ComponentBuildStatus = {
-  id: string;
-  buildStatus: string;
-};
-
-export type CiGraphNodeStatus = {
-  nodeId?: string;
-  phase?: string;
-  name?: string;
-  startedAt?: string;
-  finishedAt?: string;
-  duration?: number;
 };
 
 export type CiGraphNode = {
@@ -120,23 +108,6 @@ export class RippleMain {
     }
   `;
 
-  private static GET_COMPONENTS_BUILD_STATUS = `
-    query getComponents($ids: [ID]) {
-      getComponents(ids: $ids) {
-        id
-        buildStatus
-      }
-    }
-  `;
-
-  private static GET_SCOPE_COMPONENTS = `
-    query getScopeComponents($scopeId: String!) {
-      getScopeComponents(scopeId: $scopeId) {
-        id
-      }
-    }
-  `;
-
   private static RETRY_JOB = `
     mutation retryJob($jobId: ID!) {
       retryJob(jobId: $jobId) {
@@ -159,11 +130,14 @@ export class RippleMain {
     }
   `;
 
-  private async fetchRippleGQL<T>(query: string, variables?: Record<string, any>): Promise<T | null> {
-    const token = this.cloud.getAuthToken();
-    if (!token) {
+  private ensureAuthenticated(): void {
+    if (!this.cloud.getAuthToken()) {
       throw new Error('You are not logged in. Please run "bit login" first.');
     }
+  }
+
+  private async fetchRippleGQL<T>(query: string, variables?: Record<string, any>): Promise<T | null> {
+    this.ensureAuthenticated();
     const graphqlUrl = `${this.cloud.getCloudApi()}/graphql`;
     const body = JSON.stringify({ query, variables });
     const headers = {
@@ -206,39 +180,6 @@ export class RippleMain {
   }
 
   /**
-   * extract component IDs from a job's ciComponentGraph JSON.
-   * ciComponentGraph.nodes[].id format: "scope/name@hash" — returns "scope/name".
-   */
-  getJobComponentIds(job: { ciComponentGraph?: string }): string[] {
-    if (!job.ciComponentGraph) return [];
-    try {
-      const graph = JSON.parse(job.ciComponentGraph) as { nodes?: Array<{ id: string }> };
-      if (!graph.nodes) return [];
-      return graph.nodes.map((node) => {
-        const atIdx = node.id.indexOf('@');
-        return atIdx > 0 ? node.id.substring(0, atIdx) : node.id;
-      });
-    } catch {
-      return [];
-    }
-  }
-
-  /**
-   * extract full component IDs (with hashes) from a job's ciComponentGraph JSON.
-   * returns IDs in "scope/name@hash" format needed for getComponentsBuildStatus.
-   */
-  getJobComponentFullIds(job: { ciComponentGraph?: string }): string[] {
-    if (!job.ciComponentGraph) return [];
-    try {
-      const graph = JSON.parse(job.ciComponentGraph) as { nodes?: Array<{ id: string }> };
-      if (!graph.nodes) return [];
-      return graph.nodes.map((node) => node.id);
-    } catch {
-      return [];
-    }
-  }
-
-  /**
    * parse a job's ciGraph (internal graph) to extract per-node build status.
    * ciGraph has the job-specific build results (unlike ciComponentGraph which is static).
    * each node represents a build container that builds one or more components.
@@ -250,10 +191,7 @@ export class RippleMain {
       if (!graph.nodes) return [];
       return graph.nodes.map((node) => {
         const attr = typeof node.attr === 'string' ? JSON.parse(node.attr) : node.attr;
-        const ids: string[] = (attr.ids || []).map((id: string) => {
-          const atIdx = id.indexOf('@');
-          return atIdx > 0 ? id.substring(0, atIdx) : id;
-        });
+        const ids: string[] = (attr.ids || []).map((id: string) => stripComponentVersion(id));
         return {
           componentIds: ids,
           containerName: attr.status?.name || node.id,
@@ -274,26 +212,11 @@ export class RippleMain {
   }
 
   /**
-   * get build status for multiple components by their full IDs (scope/name@hash).
-   * uses the getComponents query which works for private scopes (unlike getComponentBuildSummary).
-   */
-  async getComponentsBuildStatus(fullComponentIds: string[]): Promise<ComponentBuildStatus[]> {
-    const data = await this.fetchRippleGQL<{ getComponents: ComponentBuildStatus[] }>(
-      RippleMain.GET_COMPONENTS_BUILD_STATUS,
-      { ids: fullComponentIds }
-    );
-    return data?.getComponents ?? [];
-  }
-
-  /**
    * fetch build logs for a specific container in a job via the REST SSE endpoint.
    * uses an idle timeout to detect end-of-stream (SSE connections may not close).
    */
   async getContainerLog(jobId: string, containerName: string): Promise<string[]> {
-    const token = this.cloud.getAuthToken();
-    if (!token) {
-      throw new Error('You are not logged in. Please run "bit login" first.');
-    }
+    this.ensureAuthenticated();
     const url = `${this.cloud.getCloudApi()}/ripple-ci/api/job/log/${jobId}/${containerName}`;
     const headers = {
       Accept: 'text/event-stream',
@@ -303,6 +226,7 @@ export class RippleMain {
     // hard cap to avoid hanging forever
     const hardTimeout = setTimeout(() => controller.abort(), 30_000);
     const messages: string[] = [];
+    let idleTimer: ReturnType<typeof setTimeout> | undefined;
     try {
       const response = await fetch(url, { headers, signal: controller.signal });
       if (!response.ok || !response.body) {
@@ -312,8 +236,6 @@ export class RippleMain {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      // idle timeout: if no data arrives for 3s, the stream is done
-      let idleTimer: ReturnType<typeof setTimeout> | undefined;
       const resetIdle = () => {
         if (idleTimer) clearTimeout(idleTimer);
         idleTimer = setTimeout(() => controller.abort(), 3_000);
@@ -338,12 +260,12 @@ export class RippleMain {
           }
         }
       }
-      if (idleTimer) clearTimeout(idleTimer);
     } catch (err: any) {
       if (err?.name !== 'AbortError') {
         this.logger.warn(`Failed to fetch container log: ${err?.message}`);
       }
     } finally {
+      if (idleTimer) clearTimeout(idleTimer);
       clearTimeout(hardTimeout);
     }
     return messages;
@@ -373,10 +295,6 @@ export class RippleMain {
    * looks for common error patterns in the build output.
    */
   extractErrorsFromLog(messages: string[]): string[] {
-    // eslint-disable-next-line no-control-regex
-    const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, '');
-
-    // try several patterns, prefer the most specific first
     const patterns = ['errors were found', 'Failed task', 'threw an error', 'Error:', 'FAIL'];
     for (const pattern of patterns) {
       const idx = messages.findIndex((m) => stripAnsi(m).includes(pattern));
@@ -402,23 +320,6 @@ export class RippleMain {
   }
 
   /**
-   * get component IDs from a remote scope via the cloud API.
-   * returns IDs in "scope/name" format (without version).
-   */
-  async getScopeComponentIds(scopeId: string): Promise<string[]> {
-    const data = await this.fetchRippleGQL<{ getScopeComponents: Array<{ id: string }> }>(
-      RippleMain.GET_SCOPE_COMPONENTS,
-      { scopeId }
-    );
-    const components = data?.getScopeComponents ?? [];
-    return components.map((c) => {
-      // id format: "scope/name@version" - strip the version
-      const atIdx = c.id.indexOf('@');
-      return atIdx > 0 ? c.id.substring(0, atIdx) : c.id;
-    });
-  }
-
-  /**
    * detect the current lane from the workspace.
    * returns the laneId in "scope/lane-name" format, or undefined if not on a lane.
    */
@@ -439,27 +340,6 @@ export class RippleMain {
     }
     const jobs = await this.listJobs({ filters, limit: 1 });
     return jobs[0] ?? null;
-  }
-
-  /**
-   * get component build summaries for multiple components in a job.
-   * silently skips components that have no build data or API errors.
-   * processes in batches to avoid overwhelming the API.
-   */
-  async getComponentBuildSummaries(jobId: string, componentIds: string[]): Promise<ComponentBuildSummary[]> {
-    const BATCH_SIZE = 15;
-    const summaries: ComponentBuildSummary[] = [];
-
-    for (let i = 0; i < componentIds.length; i += BATCH_SIZE) {
-      const batch = componentIds.slice(i, i + BATCH_SIZE);
-      const results = await Promise.allSettled(batch.map((cid) => this.getComponentBuildSummary(jobId, cid)));
-      for (const result of results) {
-        if (result.status === 'fulfilled' && result.value) {
-          summaries.push(result.value);
-        }
-      }
-    }
-    return summaries;
   }
 
   /**
@@ -502,13 +382,3 @@ export class RippleMain {
 }
 
 RippleAspect.addRuntime(RippleMain);
-
-/**
- * extract the owner (org) from a job's laneId. laneId format: "owner.scope/lane-name"
- */
-export function getOwnerFromJob(job: RippleJob): string | undefined {
-  if (!job.laneId) return undefined;
-  const scope = job.laneId.split('/')[0];
-  if (!scope?.includes('.')) return scope;
-  return scope.split('.')[0];
-}

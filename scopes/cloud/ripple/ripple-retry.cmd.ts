@@ -1,6 +1,7 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import type { RippleMain } from './ripple.main.runtime';
+import { resolveJobId } from './ripple-utils';
 
 export class RippleRetryCmd implements Command {
   name = 'retry [job-id]';
@@ -20,32 +21,11 @@ export class RippleRetryCmd implements Command {
 
   constructor(private ripple: RippleMain) {}
 
-  private async resolveJobId(
-    jobId: string | undefined,
-    flags: { lane?: string }
-  ): Promise<{ id: string } | { error: string }> {
-    if (jobId) return { id: jobId };
-    const laneId = flags.lane || this.ripple.getCurrentLaneId();
-    if (!laneId) {
-      return {
-        error: 'Could not find a Ripple CI job. Provide a job ID, use --lane, or run from a workspace on a lane.',
-      };
-    }
-    const found = await this.ripple.findLatestJobForLane(laneId);
-    if (!found) {
-      return { error: `No Ripple CI job found for lane "${laneId}".` };
-    }
-    const phase = found.status?.phase?.toUpperCase();
-    if (phase !== 'FAILURE' && phase !== 'FAILED') {
-      return {
-        error: `Latest job for lane "${laneId}" is ${found.status?.phase || 'unknown'} (${found.id}), not failed. Provide a specific job ID to retry.`,
-      };
-    }
-    return { id: found.id };
-  }
-
   async report([jobId]: [string], flags: { lane?: string }) {
-    const resolved = await this.resolveJobId(jobId, flags);
+    const resolved = await resolveJobId(this.ripple, jobId, flags, {
+      allowedPhases: ['FAILURE', 'FAILED'],
+      actionVerb: 'retry',
+    });
     if ('error' in resolved) return chalk.red(resolved.error);
 
     const result = await this.ripple.retryJob(resolved.id);
@@ -62,7 +42,10 @@ export class RippleRetryCmd implements Command {
   }
 
   async json([jobId]: [string], flags: { lane?: string }) {
-    const resolved = await this.resolveJobId(jobId, flags);
+    const resolved = await resolveJobId(this.ripple, jobId, flags, {
+      allowedPhases: ['FAILURE', 'FAILED'],
+      actionVerb: 'retry',
+    });
     if ('error' in resolved) return { error: resolved.error };
     const result = await this.ripple.retryJob(resolved.id);
     return { job: result };

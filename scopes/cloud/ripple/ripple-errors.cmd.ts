@@ -1,9 +1,7 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import type { RippleMain, CiGraphNode } from './ripple.main.runtime';
-
-// eslint-disable-next-line no-control-regex
-const ANSI_REGEX = /\x1b\[[0-9;]*m/g;
+import { colorPhase, stripAnsi } from './ripple-utils';
 
 export class RippleErrorsCmd implements Command {
   name = 'errors [job-id]';
@@ -26,6 +24,9 @@ export class RippleErrorsCmd implements Command {
     const { job, ciNodes } = await this.getErrors(jobId, flags);
 
     if (!job) {
+      if (jobId) {
+        return chalk.red(`Job "${jobId}" not found.`);
+      }
       const laneId = flags.lane || this.ripple.getCurrentLaneId();
       if (laneId) {
         return chalk.red(`No failed Ripple CI job found for lane "${laneId}".`);
@@ -87,10 +88,9 @@ export class RippleErrorsCmd implements Command {
         const errorLines = flags.log ? logMessages : this.ripple.extractErrorsFromLog(logMessages);
         if (errorLines.length > 0) {
           for (const msg of errorLines) {
-            // strip ANSI codes and indent
-            const clean = msg.replace(ANSI_REGEX, '');
+            const clean = stripAnsi(msg);
             // skip stack trace lines (noisy) unless --log is used
-            if (!flags.log && (clean.match(/^\s+at /) || clean.match(/^\s+at\s/))) continue;
+            if (!flags.log && /^\s+at\s/.test(clean)) continue;
             if (clean.length > 0) {
               lines.push(`    ${clean}`);
             }
@@ -164,21 +164,5 @@ export class RippleErrorsCmd implements Command {
     const ciNodes = this.ripple.getCiGraphNodes(job);
 
     return { job, ciNodes };
-  }
-}
-
-function colorPhase(phase?: string): string {
-  if (!phase) return chalk.yellow('unknown');
-  switch (phase.toUpperCase()) {
-    case 'SUCCESS':
-      return chalk.green(phase);
-    case 'FAILED':
-    case 'FAILURE':
-      return chalk.red(phase);
-    case 'RUNNING':
-    case 'IN_PROGRESS':
-      return chalk.blue(phase);
-    default:
-      return chalk.yellow(phase);
   }
 }
