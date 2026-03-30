@@ -357,7 +357,7 @@ export class RippleMain {
       const [scope, ...laneParts] = job.laneId.split('/');
       const laneName = laneParts.join('/');
       if (scope && laneName) {
-        return `https://${getCloudDomain()}/${scope.replace('.', '/')}/~lane/${laneName}/~ripple-ci/job/${job.id}`;
+        return `https://${getCloudDomain()}/${scope.split('.').join('/')}/~lane/${laneName}/~ripple-ci/job/${job.id}`;
       }
     }
     return `https://${getCloudDomain()}/ripple-ci/job/${job.id}`;

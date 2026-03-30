@@ -13,9 +13,9 @@ export class RippleListCmd implements Command {
 
   options: CommandOptions = [
     ['', 'all', 'show jobs from all owners, not just the workspace owner'],
-    ['o', 'owner <owner>', 'filter by organization name (default: detected from workspace.jsonc)'],
+    ['o', 'owner <owner>', 'filter by organization (default: detected from workspace defaultScope)'],
     ['s', 'scope <scope>', 'filter by scope (e.g. "teambit.cloud")'],
-    ['', 'lane <lane>', 'filter by lane name'],
+    ['', 'lane <lane>', 'filter by lane ID (e.g. "scope/lane-name")'],
     ['u', 'user <user>', 'filter by username'],
     ['', 'status <status>', 'filter by status (e.g. SUCCESS, FAILURE, RUNNING)'],
     ['l', 'limit <limit>', 'max number of jobs to show (default: 20)'],
@@ -120,7 +120,7 @@ export class RippleListCmd implements Command {
   }): Promise<{ jobs: RippleJob[]; ownerUsed?: string }> {
     const requestedLimit = flags.limit ? parseInt(flags.limit, 10) : 20;
     if (!Number.isFinite(requestedLimit) || requestedLimit < 1) {
-      return { jobs: [], ownerUsed: undefined };
+      throw new Error(`Invalid --limit value "${flags.limit}". Expected a positive integer.`);
     }
 
     // build server-side filters
