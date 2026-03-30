@@ -2134,6 +2134,94 @@ useful for reverting file changes without changing the component's version histo
 
 ---
 
+## ripple
+
+**Description**: manage Ripple CI jobs on bit.cloud  
+view, retry, and manage Ripple CI jobs that build your components in the cloud after export.
+
+`bit ripple <sub-command>`
+
+### ripple list
+
+**Usage**: `ripple list`
+
+**Description**: list recent Ripple CI jobs (filtered by workspace owner by default)
+
+| **Option**          | **Option alias** | **Description**                                                        |
+| ------------------- | :--------------: | ---------------------------------------------------------------------- |
+| `--all`             |                  | show jobs from all owners, not just the workspace owner                |
+| `--owner <owner>`   |       `-o`       | filter by organization (default: detected from workspace defaultScope) |
+| `--scope <scope>`   |       `-s`       | filter by scope (e.g. "teambit.cloud")                                 |
+| `--lane <lane>`     |                  | filter by lane ID (e.g. "scope/lane-name")                             |
+| `--user <user>`     |       `-u`       | filter by username                                                     |
+| `--status <status>` |                  | filter by status (e.g. SUCCESS, FAILURE, RUNNING)                      |
+| `--limit <limit>`   |       `-l`       | max number of jobs to show (default: 20)                               |
+| `--json`            |       `-j`       | return the output as JSON                                              |
+
+### ripple log
+
+**Usage**: `ripple log [job-id]`
+
+**Description**: show job details and component build task summaries (auto-detects current lane when no job-id given)
+
+| **Arg**  |                         **Description**                          |
+| -------- | :--------------------------------------------------------------: |
+| `job-id` | the Ripple CI job ID (optional — auto-detects from current lane) |
+
+| **Option**                | **Option alias** | **Description**                                                     |
+| ------------------------- | :--------------: | ------------------------------------------------------------------- |
+| `--lane <lane>`           |                  | lane ID to find the latest job for (default: detected from .bitmap) |
+| `--component <component>` |       `-c`       | show build tasks for a specific component (full component ID)       |
+| `--json`                  |       `-j`       | return the output as JSON                                           |
+
+### ripple errors
+
+**Usage**: `ripple errors [job-id]`
+
+**Description**: show build errors for a Ripple CI job (auto-detects current lane when no job-id given)
+
+| **Arg**  |                         **Description**                          |
+| -------- | :--------------------------------------------------------------: |
+| `job-id` | the Ripple CI job ID (optional — auto-detects from current lane) |
+
+| **Option**      | **Option alias** | **Description**                                                            |
+| --------------- | :--------------: | -------------------------------------------------------------------------- |
+| `--lane <lane>` |                  | lane ID to find the latest failed job for (default: detected from .bitmap) |
+| `--log`         |                  | show full build log for failed containers (not just the error summary)     |
+| `--json`        |       `-j`       | return the output as JSON                                                  |
+
+### ripple retry
+
+**Usage**: `ripple retry [job-id]`
+
+**Description**: retry a failed Ripple CI job (auto-detects current lane when no job-id given)
+
+| **Arg**  |                              **Description**                              |
+| -------- | :-----------------------------------------------------------------------: |
+| `job-id` | the Ripple CI job ID to retry (optional — auto-detects from current lane) |
+
+| **Option**      | **Option alias** | **Description**                                                     |
+| --------------- | :--------------: | ------------------------------------------------------------------- |
+| `--lane <lane>` |                  | lane ID to find the latest job for (default: detected from .bitmap) |
+| `--json`        |       `-j`       | return the output as JSON                                           |
+
+### ripple stop
+
+**Usage**: `ripple stop [job-id]`
+
+**Description**: stop a running Ripple CI job (auto-detects current lane when no job-id given)
+
+| **Arg**  |                             **Description**                              |
+| -------- | :----------------------------------------------------------------------: |
+| `job-id` | the Ripple CI job ID to stop (optional — auto-detects from current lane) |
+
+| **Option**      | **Option alias** | **Description**                                                     |
+| --------------- | :--------------: | ------------------------------------------------------------------- |
+| `--lane <lane>` |                  | lane ID to find the latest job for (default: detected from .bitmap) |
+| `--json`        |       `-j`       | return the output as JSON                                           |
+
+---
+
 ## run
 
 **Alias**: `c`  
