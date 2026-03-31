@@ -1,4 +1,3 @@
-// Re-export canonical types
 export type { SchemaChangeFact } from '@teambit/semantics.entities.semantic-schema';
 export type { ImpactLevel, ImpactRule } from './impact-rule';
 export type { AssessedChange } from './impact-assessor';
@@ -15,17 +14,17 @@ export type APIDiffChange = {
   exportName: string;
   schemaType: string;
   schemaTypeRaw: string;
-  impact: import('./impact-rule').ImpactLevel;
+  impact: ImpactLevel;
   baseSignature?: string;
   compareSignature?: string;
   baseNode?: Record<string, any>;
   compareNode?: Record<string, any>;
-  changes?: import('./impact-assessor').AssessedChange[];
+  changes?: AssessedChange[];
 };
 
 export type APIDiffResult = {
   hasChanges: boolean;
-  impact: import('./impact-rule').ImpactLevel;
+  impact: ImpactLevel;
   publicChanges: APIDiffChange[];
   internalChanges: APIDiffChange[];
   changes: APIDiffChange[];

@@ -1,29 +1,11 @@
-/**
- * Types and utilities for semantic schema diffing.
- *
- * Schema `diff()` methods return neutral `SchemaChangeFact[]` — descriptions of what changed
- * with structured context metadata. Impact assessment (BREAKING/NON_BREAKING/PATCH) is handled
- * by a separate ImpactAssessor layer that can be customized per environment.
- */
-
-/**
- * A neutral description of a single schema change.
- * Contains no impact judgment — that's the assessor's job.
- */
 export type SchemaChangeFact = {
-  /** Well-known change kind identifier (like a lint rule ID) */
   changeKind: string;
-  /** Human-readable description */
   description: string;
-  /** Structured metadata for the impact assessor to reason about */
+  /** Structured metadata for the impact assessor to reason about. */
   context: Record<string, any>;
-  /** Previous value (stringified) */
   from?: string;
-  /** New value (stringified) */
   to?: string;
 };
-
-// ─── Display name utilities ──────────────────────────────────────────
 
 const SCHEMA_DISPLAY_NAMES: Record<string, string> = {
   FunctionLikeSchema: 'Function',
@@ -68,52 +50,39 @@ function pluralize(word: string): string {
   return `${word}s`;
 }
 
-// ─── Type rendering ──────────────────────────────────────────────────
+type TypeRenderer = (node: Record<string, any>) => string;
+
+const TYPE_RENDERERS: Record<string, TypeRenderer> = {
+  TypeUnionSchema: (n) => (n.types || []).map((t: any) => typeStr(t)).join(' | ') || 'unknown',
+  TypeIntersectionSchema: (n) => (n.types || []).map((t: any) => typeStr(t)).join(' & ') || 'unknown',
+  TypeArraySchema: (n) => `${typeStr(n.type)}[]`,
+  TupleTypeSchema: (n) => `[${(n.members || []).map((t: any) => typeStr(t)).join(', ')}]`,
+  InferenceTypeSchema: (n) => n.type || n.name || 'inferred',
+  KeywordTypeSchema: (n) => n.name || 'keyword',
+  LiteralTypeSchema: (n) => (n.value !== undefined ? String(n.value) : n.name || 'literal'),
+  TypeRefSchema: (n) => {
+    const base = n.name || 'Ref';
+    return n.typeArgs?.length ? `${base}<${n.typeArgs.map((a: any) => typeStr(a)).join(', ')}>` : base;
+  },
+  TypeLiteralSchema: (n) => {
+    const members = (n.members || []).map((m: any) => m.signature || m.name || '').filter(Boolean);
+    return members.length <= 3 ? `{ ${members.join('; ')} }` : `{ ${members.slice(0, 3).join('; ')}; ... }`;
+  },
+  ParenthesizedTypeSchema: (n) => `(${typeStr(n.type)})`,
+};
 
 export function typeStr(node: Record<string, any> | undefined): string {
   if (!node) return 'unknown';
+  const renderer = TYPE_RENDERERS[node.__schema];
+  if (renderer) return renderer(node);
+  return node.signature || node.name || typeStrFallback(node);
+}
 
-  switch (node.__schema) {
-    case 'TypeUnionSchema':
-      return (node.types || []).map((t: any) => typeStr(t)).join(' | ') || 'unknown';
-    case 'TypeIntersectionSchema':
-      return (node.types || []).map((t: any) => typeStr(t)).join(' & ') || 'unknown';
-    case 'TypeArraySchema':
-      return `${typeStr(node.type)}[]`;
-    case 'TupleTypeSchema':
-      return `[${(node.members || []).map((t: any) => typeStr(t)).join(', ')}]`;
-    case 'InferenceTypeSchema':
-      return node.type || node.name || 'inferred';
-    case 'KeywordTypeSchema':
-      return node.name || 'keyword';
-    case 'LiteralTypeSchema':
-      return node.value !== undefined ? String(node.value) : node.name || 'literal';
-    case 'TypeRefSchema': {
-      const base = node.name || 'Ref';
-      if (node.typeArgs && node.typeArgs.length > 0) {
-        return `${base}<${node.typeArgs.map((a: any) => typeStr(a)).join(', ')}>`;
-      }
-      return base;
-    }
-    case 'TypeLiteralSchema': {
-      const members = (node.members || []).map((m: any) => m.signature || m.name || '').filter(Boolean);
-      if (members.length <= 3) return `{ ${members.join('; ')} }`;
-      return `{ ${members.slice(0, 3).join('; ')}; ... }`;
-    }
-    case 'ParenthesizedTypeSchema':
-      return `(${typeStr(node.type)})`;
-    default:
-      break;
-  }
-
-  if (node.signature) return node.signature;
-  if (node.name) return node.name;
+function typeStrFallback(node: Record<string, any>): string {
   if (node.type && typeof node.type === 'string') return node.type;
   if (node.type && typeof node.type === 'object') return typeStr(node.type);
   return schemaDisplayName(node.__schema || 'unknown', true);
 }
-
-// ─── Comparison utilities ────────────────────────────────────────────
 
 export function typesAreSemanticallyEqual(
   base: Record<string, any> | undefined,
@@ -152,8 +121,6 @@ export function deepEqualNoLocation(a: any, b: any): boolean {
 
   return false;
 }
-
-// ─── Doc diffing (returns facts) ─────────────────────────────────────
 
 export function diffDoc(
   baseDoc: Record<string, any> | undefined,

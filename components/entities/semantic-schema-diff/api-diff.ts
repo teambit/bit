@@ -4,13 +4,8 @@ import type { APIDiffResult, APIDiffChange } from './api-diff-change';
 import { APIDiffStatus } from './api-diff-change';
 import type { ImpactLevel } from './impact-rule';
 import type { ImpactAssessor, AssessedChange } from './impact-assessor';
-import { buildExportMap, getSchemaTypeName, getDisplayName, toComparableObject } from './utils';
-
-function worstImpact(items: { impact: ImpactLevel }[]): ImpactLevel {
-  if (items.some((d) => d.impact === 'BREAKING')) return 'BREAKING';
-  if (items.some((d) => d.impact === 'NON_BREAKING')) return 'NON_BREAKING';
-  return 'PATCH';
-}
+import { worstImpact } from './impact-assessor';
+import { buildExportMap, buildInternalMap, getSchemaTypeName, getDisplayName, toComparableObject } from './utils';
 
 function diffExports(
   baseExports: ReturnType<typeof buildExportMap>,
@@ -26,7 +21,6 @@ function diffExports(
     const compareEntry = compareExports.get(name);
 
     if (!baseEntry && compareEntry) {
-      // ADDED — assess a synthetic fact for the addition itself
       const addedImpact = assessor.assessFact({
         changeKind: 'export-added',
         description: `export '${name}' added`,
@@ -43,7 +37,6 @@ function diffExports(
         compareNode: compareEntry.unwrapped.toObject(),
       });
     } else if (baseEntry && !compareEntry) {
-      // REMOVED
       const removedImpact = assessor.assessFact({
         changeKind: 'export-removed',
         description: `export '${name}' removed`,
@@ -64,9 +57,7 @@ function diffExports(
       const compareComparable = toComparableObject(compareEntry.unwrapped);
 
       if (!deepEqual(baseComparable, compareComparable)) {
-        // Get neutral facts from schema node diff
         const facts = baseEntry.unwrapped.diff(compareEntry.unwrapped);
-        // Assess impact for each fact
         const assessed: AssessedChange[] = assessor.assess(facts);
         const impact = assessed.length > 0 ? worstImpact(assessed) : 'PATCH';
 
@@ -90,29 +81,6 @@ function diffExports(
   return changes;
 }
 
-function buildInternalMap(internals: any[]): ReturnType<typeof buildExportMap> {
-  const map = new Map<string, { name: string; node: any; unwrapped: any }>();
-  for (const mod of internals) {
-    const exports = mod.exports || [];
-    for (const exp of exports) {
-      const name = exp.alias || exp.name || exp.exportNode?.name || '';
-      const unwrapped = exp.exportNode || exp;
-      if (name) {
-        const qualifiedName = mod.namespace ? `${mod.namespace}/${name}` : name;
-        map.set(qualifiedName, { name: qualifiedName, node: exp, unwrapped });
-      }
-    }
-  }
-  return map;
-}
-
-/**
- * Compute a semantic diff between two APISchema objects.
- *
- * Schema nodes produce neutral change facts via `diff()`.
- * The ImpactAssessor maps those facts to impact levels (BREAKING/NON_BREAKING/PATCH)
- * using registerable rules.
- */
 export function computeAPIDiff(base: APISchema, compare: APISchema, assessor: ImpactAssessor): APIDiffResult {
   const baseExports = buildExportMap(base.module.exports);
   const compareExports = buildExportMap(compare.module.exports);
