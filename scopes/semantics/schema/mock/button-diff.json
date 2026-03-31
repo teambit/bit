@@ -1,0 +1,149 @@
+{
+  "hasChanges": true,
+  "impact": "NON_BREAKING",
+  "added": 1,
+  "removed": 0,
+  "modified": 7,
+  "breaking": 0,
+  "nonBreaking": 6,
+  "patch": 2,
+  "publicChanges": [
+    {
+      "status": "MODIFIED",
+      "visibility": "public",
+      "impact": "NON_BREAKING",
+      "exportName": "myFunc",
+      "schemaType": "Function",
+      "baseSignature": "function myFunc(a?: number, b?: number): number",
+      "compareSignature": "function myFunc(a?: number, b?: number, c?: number): number",
+      "details": [
+        {
+          "changeKind": "parameter-added",
+          "description": "parameter 'c: number' added (optional)",
+          "impact": "NON_BREAKING",
+          "to": "c?: number"
+        },
+        {
+          "changeKind": "documentation-changed",
+          "description": "documentation description and tags changed",
+          "impact": "PATCH",
+          "from": "General comment of the myFunc",
+          "to": "Updated comment for myFunc"
+        }
+      ]
+    },
+    {
+      "status": "MODIFIED",
+      "visibility": "public",
+      "impact": "PATCH",
+      "exportName": "ButtonElementType",
+      "schemaType": "Type Alias",
+      "baseSignature": "type ButtonElementType = \"a\" | \"button\"",
+      "compareSignature": "type ButtonElementType = \"a\" | \"button\" | \"div\"",
+      "details": [
+        {
+          "changeKind": "type-definition-changed",
+          "description": "type definition changed",
+          "impact": "PATCH",
+          "from": "type ButtonElementType = \"a\" | \"button\"",
+          "to": "type ButtonElementType = \"a\" | \"button\" | \"div\""
+        }
+      ]
+    },
+    {
+      "status": "MODIFIED",
+      "visibility": "public",
+      "impact": "PATCH",
+      "exportName": "ButtonProps",
+      "schemaType": "Type Alias",
+      "baseSignature": "type ButtonProps = any",
+      "compareSignature": "type ButtonProps = any",
+      "details": [
+        {
+          "changeKind": "type-definition-changed",
+          "description": "type definition changed",
+          "impact": "PATCH",
+          "from": "type ButtonProps = any",
+          "to": "type ButtonProps = any"
+        }
+      ]
+    },
+    {
+      "status": "MODIFIED",
+      "visibility": "public",
+      "impact": "NON_BREAKING",
+      "exportName": "Bar",
+      "schemaType": "Class",
+      "baseSignature": "class Bar",
+      "compareSignature": "class Bar",
+      "details": [
+        {
+          "changeKind": "member-added",
+          "description": "Function 'bar' added: (method) Bar.bar(): void",
+          "impact": "NON_BREAKING",
+          "to": "(method) Bar.bar(): void"
+        }
+      ]
+    },
+    {
+      "status": "MODIFIED",
+      "visibility": "public",
+      "impact": "NON_BREAKING",
+      "exportName": "ClassSomething",
+      "schemaType": "Class",
+      "baseSignature": "class ClassSomething",
+      "compareSignature": "class ClassSomething",
+      "details": [
+        {
+          "changeKind": "member-added",
+          "description": "Function 'newMethod' added: (method) ClassSomething.newMethod(): string",
+          "impact": "NON_BREAKING",
+          "to": "(method) ClassSomething.newMethod(): string"
+        }
+      ]
+    },
+    {
+      "status": "MODIFIED",
+      "visibility": "public",
+      "impact": "NON_BREAKING",
+      "exportName": "Hello",
+      "schemaType": "Interface",
+      "baseSignature": "interface Hello",
+      "compareSignature": "interface Hello",
+      "details": [
+        {
+          "changeKind": "member-added",
+          "description": "Variable 'newProp' added (optional): (property) Hello.newProp?: number | undefined",
+          "impact": "NON_BREAKING",
+          "to": "(property) Hello.newProp?: number | undefined"
+        }
+      ]
+    },
+    {
+      "status": "MODIFIED",
+      "visibility": "public",
+      "impact": "NON_BREAKING",
+      "exportName": "Food",
+      "schemaType": "Enum",
+      "baseSignature": "enum Food",
+      "compareSignature": "enum Food",
+      "details": [
+        {
+          "changeKind": "enum-member-added",
+          "description": "enum member 'Shawarma' added",
+          "impact": "NON_BREAKING",
+          "to": "(enum member) Food.Shawarma = 3"
+        }
+      ]
+    },
+    {
+      "status": "ADDED",
+      "visibility": "public",
+      "impact": "NON_BREAKING",
+      "exportName": "newUtility",
+      "schemaType": "Function",
+      "compareSignature": "function newUtility(x: number): number"
+    }
+  ],
+  "internalChanges": []
+}
