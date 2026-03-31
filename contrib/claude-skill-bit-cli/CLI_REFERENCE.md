@@ -735,6 +735,37 @@ replace component files with specified version while preserving current version
 replaces component source files with files from the specified version but keeps the current component version. useful for reverting file changes without changing the component's version history. different from checkout which changes the version.
 Flags: --verbose, --skip-dependency-installation
 
+## bit ripple <sub-command>
+
+manage Ripple CI jobs on bit.cloud
+
+view, retry, and manage Ripple CI jobs that build your components in the cloud after export.
+
+## bit ripple list
+
+list recent Ripple CI jobs (filtered by workspace owner by default)
+Flags: --all, --owner <owner>, --scope <scope>, --lane <lane>, --user <user>, --status <status>, --limit <limit>, --json
+
+## bit ripple log [job-id]
+
+show job details and component build task summaries (auto-detects current lane when no job-id given)
+Flags: --lane <lane>, --component <component>, --json
+
+## bit ripple errors [job-id]
+
+show build errors for a Ripple CI job (auto-detects current lane when no job-id given)
+Flags: --lane <lane>, --log, --json
+
+## bit ripple retry [job-id]
+
+retry a failed Ripple CI job (auto-detects current lane when no job-id given)
+Flags: --lane <lane>, --json
+
+## bit ripple stop [job-id]
+
+stop a running Ripple CI job (auto-detects current lane when no job-id given)
+Flags: --lane <lane>, --json
+
 ## bit run [app-name]
 
 start an application component locally
