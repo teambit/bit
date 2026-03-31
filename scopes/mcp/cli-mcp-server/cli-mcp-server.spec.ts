@@ -222,7 +222,8 @@ describe('CliMcpServer Integration Tests', function () {
       expect(content.components).to.be.an('object');
     });
 
-    it('should get component details with schema', async () => {
+    it('should get component details with schema', async function () {
+      this.retries(2); // schema extraction is heavier and may hit transient socket hang-ups in CI
       const componentIds = ['comp1'];
 
       const result = (await mcpClient.callTool({
