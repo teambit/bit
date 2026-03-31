@@ -1,6 +1,8 @@
 import { pickBy } from 'lodash';
 import pluralize from 'pluralize';
 import type { DocSchema } from './schemas';
+import type { SchemaChangeDetail } from './schema-diff';
+import { SchemaChangeImpact, deepEqualNoLocation, diffDoc } from './schema-diff';
 
 export interface ISchemaNode {
   __schema: string;
@@ -83,6 +85,38 @@ export abstract class SchemaNode implements ISchemaNode {
     }
 
     return undefined;
+  }
+
+  /**
+   * Compute semantic diff details between this node and another node of the same type.
+   * Subclasses should override this with type-specific comparison logic.
+   * The default implementation compares signatures and documentation.
+   */
+  diff(other: SchemaNode): SchemaChangeDetail[] {
+    const details: SchemaChangeDetail[] = [];
+    const baseObj = this.toObject();
+    const compareObj = other.toObject();
+
+    // Doc changes
+    details.push(...diffDoc(baseObj.doc, compareObj.doc));
+
+    // If only doc changed, we're done
+    const baseNoDoc = { ...baseObj, doc: undefined, location: undefined };
+    const compareNoDoc = { ...compareObj, doc: undefined, location: undefined };
+    if (deepEqualNoLocation(baseNoDoc, compareNoDoc)) return details;
+
+    // Signature changed
+    if (baseObj.signature !== compareObj.signature) {
+      details.push({
+        aspect: 'signature',
+        description: 'signature changed',
+        impact: SchemaChangeImpact.BREAKING,
+        from: baseObj.signature,
+        to: compareObj.signature,
+      });
+    }
+
+    return details;
   }
 }
 

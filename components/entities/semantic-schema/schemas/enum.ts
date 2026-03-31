@@ -1,6 +1,8 @@
 import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
+import type { SchemaChangeDetail } from '../schema-diff';
+import { SchemaChangeImpact, deepEqualNoLocation, diffDoc } from '../schema-diff';
 import { DocSchema } from './docs';
 import { SchemaRegistry } from '..';
 
@@ -61,6 +63,50 @@ export class EnumSchema extends SchemaNode {
       doc: this.doc?.toObject(),
       signature: this.signature,
     };
+  }
+
+  diff(other: SchemaNode): SchemaChangeDetail[] {
+    if (!(other instanceof EnumSchema)) return super.diff(other);
+    const details: SchemaChangeDetail[] = [];
+    const baseMembers: Record<string, any>[] = this.toObject().members || [];
+    const compareMembers: Record<string, any>[] = other.toObject().members || [];
+    const baseMap = new Map(baseMembers.map((m) => [m.name || '', m]));
+    const compareMap = new Map(compareMembers.map((m) => [m.name || '', m]));
+
+    for (const [name, member] of compareMap) {
+      if (!baseMap.has(name)) {
+        details.push({
+          aspect: 'enum-members',
+          description: `enum member '${name}' added`,
+          impact: SchemaChangeImpact.NON_BREAKING,
+          to: member.signature || name,
+        });
+      }
+    }
+    for (const [name, member] of baseMap) {
+      if (!compareMap.has(name)) {
+        details.push({
+          aspect: 'enum-members',
+          description: `enum member '${name}' removed — consumers referencing it will break`,
+          impact: SchemaChangeImpact.BREAKING,
+          from: member.signature || name,
+        });
+      }
+    }
+    for (const [name, bm] of baseMap) {
+      const cm = compareMap.get(name);
+      if (cm && !deepEqualNoLocation(bm, cm)) {
+        details.push({
+          aspect: 'enum-members',
+          description: `enum member '${name}' value changed`,
+          impact: SchemaChangeImpact.BREAKING,
+          from: bm.signature || name,
+          to: cm.signature || name,
+        });
+      }
+    }
+    details.push(...diffDoc(this.toObject().doc, other.toObject().doc));
+    return details;
   }
 
   static fromObject(obj: Record<string, any>): EnumSchema {

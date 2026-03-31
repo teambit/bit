@@ -1,6 +1,8 @@
 import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
+import type { SchemaChangeDetail } from '../schema-diff';
+import { SchemaChangeImpact, typesAreSemanticallyEqual, diffDoc } from '../schema-diff';
 import { DocSchema } from './docs';
 import { SchemaRegistry } from '../schema-registry';
 
@@ -49,6 +51,22 @@ export class TypeSchema extends SchemaNode {
       type: this.type.toObject(),
       signature: this.signature,
     };
+  }
+
+  diff(other: SchemaNode): SchemaChangeDetail[] {
+    if (!(other instanceof TypeSchema)) return super.diff(other);
+    const details: SchemaChangeDetail[] = [];
+    if (!typesAreSemanticallyEqual(this.type.toObject(), other.type.toObject())) {
+      details.push({
+        aspect: 'type-definition',
+        description: 'type definition changed',
+        impact: SchemaChangeImpact.BREAKING,
+        from: this.signature,
+        to: other.signature,
+      });
+    }
+    details.push(...diffDoc(this.toObject().doc, other.toObject().doc));
+    return details;
   }
 
   static fromObject(obj: Record<string, any>): TypeSchema {

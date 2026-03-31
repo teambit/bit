@@ -1,13 +1,8 @@
 export { computeAPIDiff } from './api-diff';
-export { APIDiffStatus, SemanticImpact } from './api-diff-change';
-export type { APIDiffResult, APIDiffChange, APIDiffDetail } from './api-diff-change';
+export { APIDiffStatus } from './api-diff-change';
+export type { APIDiffResult, APIDiffChange } from './api-diff-change';
+// Re-export canonical types from semantic-schema under the aliases used by consumers
+export { SchemaChangeImpact as SemanticImpact } from '@teambit/semantics.entities.semantic-schema';
+export type { SchemaChangeDetail as APIDiffDetail } from '@teambit/semantics.entities.semantic-schema';
 export { computeDetailedDiff } from './schema-comparators';
-export {
-  buildExportMap,
-  stripLocations,
-  deepEqual,
-  getSchemaTypeName,
-  getDisplayName,
-  getDisplayNameFromRaw,
-  toComparableObject,
-} from './utils';
+export { buildExportMap, stripLocations, getSchemaTypeName, getDisplayName, toComparableObject } from './utils';

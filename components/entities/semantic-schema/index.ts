@@ -2,6 +2,17 @@ import * as Schemas from './schemas';
 
 export { SchemaNode, ISchemaNode } from './schema-node';
 export { APISchema } from './api-schema';
+export {
+  SchemaChangeImpact,
+  schemaDisplayName,
+  typeStr,
+  typesAreSemanticallyEqual,
+  deepEqualNoLocation,
+  diffDoc,
+  returnTypeImpact,
+  paramTypeImpact,
+} from './schema-diff';
+export type { SchemaChangeDetail } from './schema-diff';
 export { Export, StaticProperties } from './export';
 export type { SchemaLocation as Location } from './schema-node';
 export { TagName } from './schemas/docs/tag';

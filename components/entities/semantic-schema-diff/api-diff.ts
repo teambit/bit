@@ -1,7 +1,8 @@
 import type { APISchema } from '@teambit/semantics.entities.semantic-schema';
 import type { APIDiffResult, APIDiffChange } from './api-diff-change';
 import { APIDiffStatus, SemanticImpact } from './api-diff-change';
-import { buildExportMap, getSchemaTypeName, getDisplayName, toComparableObject, deepEqual } from './utils';
+import { buildExportMap, getSchemaTypeName, getDisplayName, toComparableObject } from './utils';
+import { deepEqualNoLocation as deepEqual } from '@teambit/semantics.entities.semantic-schema';
 import { computeDetailedDiff } from './schema-comparators';
 
 function worstImpact(details: { impact: SemanticImpact }[]): SemanticImpact {

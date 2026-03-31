@@ -1,6 +1,8 @@
 import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
+import type { SchemaChangeDetail } from '../schema-diff';
+import { diffMembers } from '../schema-diff-members';
 import { DocSchema } from './docs';
 import { ExpressionWithTypeArgumentsSchema } from './expression-with-arguments';
 import { SchemaRegistry } from '../schema-registry';
@@ -80,6 +82,11 @@ export class InterfaceSchema extends SchemaNode {
       extendsNodes: this.extendsNodes?.map((node) => node.toObject()),
       typeParams: this.typeParams,
     };
+  }
+
+  diff(other: SchemaNode): SchemaChangeDetail[] {
+    if (!(other instanceof InterfaceSchema)) return super.diff(other);
+    return diffMembers(this.toObject(), other.toObject(), this, other);
   }
 
   static fromObject(obj: Record<string, any>): InterfaceSchema {

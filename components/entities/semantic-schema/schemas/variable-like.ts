@@ -1,6 +1,8 @@
 import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
+import type { SchemaChangeDetail } from '../schema-diff';
+import { SchemaChangeImpact, typesAreSemanticallyEqual, typeStr, diffDoc } from '../schema-diff';
 import { DocSchema } from './docs';
 import { SchemaRegistry } from '../schema-registry';
 
@@ -62,6 +64,48 @@ export class VariableLikeSchema extends SchemaNode {
       doc: this.doc?.toObject(),
       defaultValue: this.defaultValue,
     };
+  }
+
+  diff(other: SchemaNode): SchemaChangeDetail[] {
+    if (!(other instanceof VariableLikeSchema)) return super.diff(other);
+    const details: SchemaChangeDetail[] = [];
+    if (!typesAreSemanticallyEqual(this.type.toObject(), other.type.toObject())) {
+      details.push({
+        aspect: 'type-annotation',
+        description: `type changed: ${typeStr(this.type.toObject())} → ${typeStr(other.type.toObject())}`,
+        impact: SchemaChangeImpact.BREAKING,
+        from: typeStr(this.type.toObject()),
+        to: typeStr(other.type.toObject()),
+      });
+    }
+    if (this.isOptional && !other.isOptional) {
+      details.push({
+        aspect: 'modifiers',
+        description: 'became required (was optional)',
+        impact: SchemaChangeImpact.BREAKING,
+        from: 'optional',
+        to: 'required',
+      });
+    } else if (!this.isOptional && other.isOptional) {
+      details.push({
+        aspect: 'modifiers',
+        description: 'became optional (was required)',
+        impact: SchemaChangeImpact.NON_BREAKING,
+        from: 'required',
+        to: 'optional',
+      });
+    }
+    if (this.defaultValue !== other.defaultValue) {
+      details.push({
+        aspect: 'default-value',
+        description: `default value changed: ${this.defaultValue ?? 'none'} → ${other.defaultValue ?? 'none'}`,
+        impact: SchemaChangeImpact.PATCH,
+        from: this.defaultValue,
+        to: other.defaultValue,
+      });
+    }
+    details.push(...diffDoc(this.toObject().doc, other.toObject().doc));
+    return details;
   }
 
   static fromObject(obj: Record<string, any>): VariableLikeSchema {
