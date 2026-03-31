@@ -1,4 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { renderSections } from '@teambit/cli';
 import type { ComponentID } from '@teambit/component-id';
 import chalk from 'chalk';
 import { Logger } from '@teambit/logger';
@@ -13,6 +14,7 @@ type StatusFlags = {
   warnings?: boolean;
   failOnError?: boolean;
   quick?: boolean;
+  expand?: boolean;
 };
 
 type QuickStatusJsonResults = {
@@ -80,6 +82,7 @@ for maximum speed (skips aspect loading entirely), use "bit mini-status".`;
       'quick',
       'show only new and modified components based on file changes. much faster, but does not detect dependency or config changes',
     ],
+    ['', 'expand', 'expand all collapsed sections (e.g. auto-tag pending components)'],
   ] as CommandOptions;
   loader = true;
 
@@ -155,13 +158,20 @@ for maximum speed (skips aspect loading entirely), use "bit mini-status".`;
 
   async report(
     _args,
-    { strict, verbose, lanes, ignoreCircularDependencies, warnings, failOnError, quick }: StatusFlags
+    { strict, verbose, lanes, ignoreCircularDependencies, warnings, failOnError, quick, expand }: StatusFlags
   ) {
     if (quick) {
       return this.reportQuick();
     }
     const statusResult: StatusResult = await this.status.status({ lanes, ignoreCircularDependencies });
-    return formatStatusOutput(statusResult, { strict, verbose, warnings, failOnError });
+    const result = formatStatusOutput(statusResult, { strict, verbose, warnings, failOnError });
+
+    // Collapse long informational sections unless --expand
+    if (result.sections?.some((s) => s.collapsible)) {
+      return { data: renderSections(result.sections, expand), code: result.code };
+    }
+
+    return result;
   }
 
   private async reportQuick() {
