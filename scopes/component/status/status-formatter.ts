@@ -30,7 +30,7 @@ export type StatusFormatterOptions = {
 export function formatStatusOutput(
   statusResult: StatusResult,
   options: StatusFormatterOptions = {}
-): { data: string; code: number } {
+): { data: string; code: number; sections?: OutputSection[] } {
   const { strict = false, verbose = false, warnings = false, failOnError = false } = options;
 
   const {
@@ -359,7 +359,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
       const remaining = sorted.length - MAX_SHOWN;
       const scopeLine = remaining > 0 ? [...shown, `+ ${remaining} more scopes`].join(' · ') : shown.join(' · ');
       const title = chalk.bold.white(`components pending auto-tag (${count})`);
-      const desc = chalk.dim('(these will be auto-tagged when their modified dependencies are tagged)');
+      const desc = chalk.dim('  (these will be auto-tagged when their modified dependencies are tagged)');
       const scopes = `   ${scopeLine}`;
       const hint = chalk.dim('— use --expand to list');
       sections.push({
