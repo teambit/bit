@@ -102,11 +102,6 @@ examples:
     };
   }
 
-  /**
-   * Produce a clean, agent-friendly JSON structure.
-   * Strips raw schema nodes (baseNode/compareNode) — agents don't need the full AST.
-   * Includes all semantic context needed to reason about the changes.
-   */
   private toAgentJson(
     diff: APIDiffResult,
     componentId: string,
@@ -160,12 +155,9 @@ examples:
 
     const lines: string[] = [''];
 
-    // Header
-    const impactBadge = this.impactBadge(diff.impact);
-    lines.push(`  ${chalk.bold('API Diff')} for ${chalk.cyan(pattern)}  ${impactBadge}`);
+    lines.push(`  ${chalk.bold('API Diff')} for ${chalk.cyan(pattern)}  ${this.impactBadge(diff.impact)}`);
     lines.push('');
 
-    // Summary line
     const parts: string[] = [];
     if (diff.added > 0) parts.push(chalk.green(`${diff.added} added`));
     if (diff.removed > 0) parts.push(chalk.red(`${diff.removed} removed`));
@@ -177,25 +169,19 @@ examples:
     lines.push(`  ${parts.join(chalk.dim(' · '))}  ${chalk.dim('|')}  ${impactParts.join(chalk.dim(' · '))}`);
     lines.push('');
 
-    // Public API changes
-    if (diff.publicChanges.length > 0) {
-      lines.push(`  ${chalk.bold.underline('Public API')}`);
-      lines.push('');
-      for (const change of this.sortChanges(diff.publicChanges)) {
-        lines.push(...this.formatChange(change));
-      }
-    }
-
-    // Internal changes
-    if (diff.internalChanges.length > 0) {
-      lines.push(`  ${chalk.bold.underline('Internal (non-exported)')}`);
-      lines.push('');
-      for (const change of this.sortChanges(diff.internalChanges)) {
-        lines.push(...this.formatChange(change));
-      }
-    }
+    this.formatSection(lines, 'Public API', diff.publicChanges);
+    this.formatSection(lines, 'Internal (non-exported)', diff.internalChanges);
 
     return lines.join('\n');
+  }
+
+  private formatSection(lines: string[], title: string, changes: APIDiffChange[]): void {
+    if (changes.length === 0) return;
+    lines.push(`  ${chalk.bold.underline(title)}`);
+    lines.push('');
+    for (const change of this.sortChanges(changes)) {
+      lines.push(...this.formatChange(change));
+    }
   }
 
   private sortChanges(changes: APIDiffChange[]): APIDiffChange[] {
@@ -249,57 +235,48 @@ examples:
     return lines;
   }
 
+  private static IMPACT_STYLES = {
+    BREAKING: { badge: chalk.bgRed.white.bold(' BREAKING '), tag: chalk.red('breaking'), dot: chalk.red('●') },
+    NON_BREAKING: {
+      badge: chalk.bgGreen.white.bold(' NON-BREAKING '),
+      tag: chalk.green('non-breaking'),
+      dot: chalk.green('●'),
+    },
+    PATCH: { badge: chalk.bgBlue.white(' PATCH '), tag: chalk.dim('patch'), dot: chalk.dim('●') },
+  };
+
   private impactBadge(impact: ImpactLevel): string {
-    switch (impact) {
-      case 'BREAKING':
-        return chalk.bgRed.white.bold(' BREAKING ');
-      case 'NON_BREAKING':
-        return chalk.bgGreen.white.bold(' NON-BREAKING ');
-      case 'PATCH':
-        return chalk.bgBlue.white(' PATCH ');
-    }
+    return SchemaDiffCommand.IMPACT_STYLES[impact].badge;
   }
-
   private impactTag(impact: ImpactLevel): string {
-    switch (impact) {
-      case 'BREAKING':
-        return chalk.red('breaking');
-      case 'NON_BREAKING':
-        return chalk.green('non-breaking');
-      case 'PATCH':
-        return chalk.dim('patch');
-    }
+    return SchemaDiffCommand.IMPACT_STYLES[impact].tag;
+  }
+  private impactDot(impact: ImpactLevel): string {
+    return SchemaDiffCommand.IMPACT_STYLES[impact].dot;
   }
 
-  private impactDot(impact: ImpactLevel): string {
-    switch (impact) {
-      case 'BREAKING':
-        return chalk.red('●');
-      case 'NON_BREAKING':
-        return chalk.green('●');
-      case 'PATCH':
-        return chalk.dim('●');
-    }
-  }
+  private static DESCRIPTION_ENHANCERS: Array<{
+    match: (changeKind: string, impact: ImpactLevel) => boolean;
+    enhance: (desc: string) => string;
+  }> = [
+    {
+      match: (ck, i) => ck === 'return-type-changed' && i === 'NON_BREAKING',
+      enhance: (d) => d.replace('return type changed:', 'return type widened:'),
+    },
+    {
+      match: (ck, i) => ck === 'return-type-changed' && i === 'BREAKING',
+      enhance: (d) => d.replace('return type changed:', 'return type narrowed:'),
+    },
+    {
+      match: (ck, i) =>
+        (ck === 'destructured-property-default-removed' || ck === 'parameter-default-removed') && i === 'BREAKING',
+      enhance: (d) => (d.includes('breaking') ? d : `${d} — callers relying on the default will break`),
+    },
+  ];
 
   private enhanceDescription(description: string, impact: ImpactLevel, changeKind: string): string {
-    // Enhance return type descriptions based on assessed impact
-    if (changeKind === 'return-type-changed' && impact === 'NON_BREAKING') {
-      return description.replace('return type changed:', 'return type widened:');
-    }
-    if (changeKind === 'return-type-changed' && impact === 'BREAKING') {
-      return description.replace('return type changed:', 'return type narrowed:');
-    }
-    // Enhance default removal based on impact
-    if (
-      (changeKind === 'destructured-property-default-removed' || changeKind === 'parameter-default-removed') &&
-      impact === 'BREAKING'
-    ) {
-      if (!description.includes('breaking')) {
-        return `${description} — callers relying on the default will break`;
-      }
-    }
-    return description;
+    const enhancer = SchemaDiffCommand.DESCRIPTION_ENHANCERS.find((e) => e.match(changeKind, impact));
+    return enhancer ? enhancer.enhance(description) : description;
   }
 
   private truncateSig(sig: string, maxLen = 120): string {
