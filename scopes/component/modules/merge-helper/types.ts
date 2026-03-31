@@ -33,6 +33,8 @@ export type ApplyVersionResults = {
   verbose?: boolean;
   newFromLane?: string[];
   newFromLaneAdded?: boolean;
+  newFromScope?: string[];
+  newFromScopeAdded?: boolean;
   installationError?: Error; // in case the package manager failed, it won't throw, instead, it'll return error here
   compilationError?: Error; // in case the compiler failed, it won't throw, instead, it'll return error here
   workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult;

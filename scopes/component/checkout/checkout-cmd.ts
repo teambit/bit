@@ -67,6 +67,11 @@ when on lanes, 'checkout head' only affects lane components. to update main comp
     ['x', 'skip-dependency-installation', 'do not auto-install dependencies of the imported components'],
     ['', 'force-ours', 'do not merge, preserve local files as is'],
     ['', 'force-theirs', 'do not merge, just overwrite with incoming files'],
+    [
+      '',
+      'include-new-from-scope',
+      "relevant for 'bit checkout head'. import components from the defaultScope that don't exist in the workspace",
+    ],
   ] as CommandOptions;
   loader = true;
 
@@ -85,6 +90,7 @@ when on lanes, 'checkout head' only affects lane components. to update main comp
       verbose = false,
       skipDependencyInstallation = false,
       revert = false,
+      includeNewFromScope = false,
     }: {
       interactiveMerge?: boolean;
       forceOurs?: boolean;
@@ -96,6 +102,7 @@ when on lanes, 'checkout head' only affects lane components. to update main comp
       verbose?: boolean;
       skipDependencyInstallation?: boolean;
       revert?: boolean;
+      includeNewFromScope?: boolean;
     }
   ) {
     if (forceOurs && forceTheirs) {
@@ -113,6 +120,9 @@ when on lanes, 'checkout head' only affects lane components. to update main comp
     if (workspaceOnly && to !== HEAD) {
       throw new BitError('--workspace-only is only relevant when running "bit checkout head" on a lane');
     }
+    if (includeNewFromScope && to !== HEAD) {
+      throw new BitError('--include-new-from-scope is only relevant when running "bit checkout head"');
+    }
     const checkoutProps: CheckoutProps = {
       promptMergeOptions: interactiveMerge,
       mergeStrategy: autoMergeResolve,
@@ -124,6 +134,7 @@ when on lanes, 'checkout head' only affects lane components. to update main comp
       revert,
       forceOurs,
       forceTheirs,
+      includeNewFromScope,
     };
     to = String(to); // it can be a number in case short-hash is used
     if (to === HEAD) checkoutProps.head = true;
@@ -160,6 +171,8 @@ export function checkoutOutput(
     workspaceConfigUpdateResult,
     newFromLane,
     newFromLaneAdded,
+    newFromScope,
+    newFromScopeAdded,
     installationError,
     compilationError,
   }: ApplyVersionResults = checkoutResults;
@@ -243,6 +256,14 @@ once ready, snap/tag the components to persist the changes`;
     const body = newFromLane.join('\n');
     return `${chalk.underline(title)}\n${body}`;
   };
+  const getNewFromScopeOutput = () => {
+    if (!newFromScope?.length) return '';
+    const title = newFromScopeAdded
+      ? `successfully imported the following new components from the defaultScope`
+      : `new components found on the defaultScope but were not added`;
+    const body = newFromScope.join('\n');
+    return `${chalk.underline(title)}\n${body}`;
+  };
   const getSummary = () => {
     const checkedOut = components?.length || 0;
     const notCheckedOutLegitimately = notCheckedOutComponents.length;
@@ -254,8 +275,12 @@ once ready, snap/tag the components to persist the changes`;
     const newOnLaneStr = newOnLaneNum
       ? `\nNew on lane${newOnLaneAddedStr}: ${chalk.bold(newOnLaneNum.toString())}`
       : '';
+    const newFromScopeNum = newFromScope?.length || 0;
+    const newFromScopeStr = newFromScopeNum
+      ? `\nNew from scope (imported): ${chalk.bold(newFromScopeNum.toString())}`
+      : '';
 
-    return title + checkedOutStr + unchangedLegitimatelyStr + newOnLaneStr;
+    return title + checkedOutStr + unchangedLegitimatelyStr + newOnLaneStr + newFromScopeStr;
   };
 
   return compact([
@@ -265,6 +290,7 @@ once ready, snap/tag the components to persist the changes`;
     getRemovedOutput(removedComponents),
     getAddedOutput(addedComponents),
     getNewOnLaneOutput(),
+    getNewFromScopeOutput(),
     getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult),
     getConflictSummary(),
     getSummary(),

@@ -12,6 +12,8 @@ import type { ApplyVersionResults, FailedComponents, MergeStrategy } from '@team
 import { threeWayMerge, getMergeStrategyInteractive } from '@teambit/component.modules.merge-helper';
 import type { ImporterMain } from '@teambit/importer';
 import { ImporterAspect } from '@teambit/importer';
+import type { ListerMain } from '@teambit/lister';
+import { ListerAspect } from '@teambit/lister';
 import { HEAD, LATEST } from '@teambit/legacy.constants';
 import type { ComponentWriterMain } from '@teambit/component-writer';
 import { ComponentWriterAspect } from '@teambit/component-writer';
@@ -54,6 +56,7 @@ export type CheckoutProps = {
   restoreMissingComponents?: boolean; // in case .bitmap has a component and it's missing from the workspace, restore it (from model)
   allowAddingComponentsFromScope?: boolean; // in case the id doesn't exist in .bitmap, add it from the scope (relevant for switch)
   includeLocallyDeleted?: boolean; // include components that were deleted locally. currently enabled for "bit checkout reset" only.
+  includeNewFromScope?: boolean; // import components from the defaultScope that don't exist in the workspace
 };
 
 export type ComponentStatusBeforeMergeAttempt = ComponentStatusBase & {
@@ -69,7 +72,8 @@ export class CheckoutMain {
     private logger: Logger,
     private componentWriter: ComponentWriterMain,
     private importer: ImporterMain,
-    private remove: RemoveMain
+    private remove: RemoveMain,
+    private lister: ListerMain
   ) {}
 
   async checkout(checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
@@ -164,6 +168,24 @@ export class CheckoutMain {
       }
     }
 
+    let newFromScope: ComponentID[] | undefined;
+    let newFromScopeAdded = false;
+    if (checkoutProps.head && checkoutProps.includeNewFromScope) {
+      newFromScope = await this.getNewComponentsFromScope();
+      if (newFromScope.length) {
+        const scopeImporter = this.workspace.scope.legacyScope.scopeImporter;
+        await scopeImporter.importMany({
+          ids: ComponentIdList.fromArray(newFromScope),
+          reason: 'to import new components from the defaultScope',
+        });
+        const compsNewFromScope = await Promise.all(
+          newFromScope.map((id) => consumer.loadComponentFromModelImportIfNeeded(id))
+        );
+        componentsLegacy.push(...compsNewFromScope);
+        newFromScopeAdded = true;
+      }
+    }
+
     const leftUnresolvedConflicts = componentWithConflict && checkoutProps.mergeStrategy === 'manual';
     let componentWriterResults;
     if (componentsLegacy.length) {
@@ -200,6 +222,8 @@ export class CheckoutMain {
       leftUnresolvedConflicts,
       newFromLane: newFromLane?.map((n) => n.toString()),
       newFromLaneAdded,
+      newFromScope: newFromScope?.map((n) => n.toString()),
+      newFromScopeAdded,
       workspaceConfigUpdateResult: componentWriterResults?.workspaceConfigUpdateResult,
       installationError: componentWriterResults?.installationError,
       compilationError: componentWriterResults?.compilationError,
@@ -406,6 +430,22 @@ export class CheckoutMain {
     return nonRemovedNewIds;
   }
 
+  private async getNewComponentsFromScope(): Promise<ComponentID[]> {
+    const defaultScope = this.workspace.defaultScope;
+    if (!defaultScope) return [];
+    try {
+      const remoteComponents = await this.lister.remoteList(defaultScope, { namespacesUsingWildcards: '**' });
+      const workspaceIds = this.workspace.listIds();
+      const newComponents = remoteComponents.filter(
+        (remote) => !remote.removed && !workspaceIds.find((wsId) => wsId.isEqualWithoutVersion(remote.id))
+      );
+      return newComponents.map((c) => c.id);
+    } catch (err) {
+      this.logger.warn(`unable to list components from defaultScope "${defaultScope}"`, err);
+      return [];
+    }
+  }
+
   // eslint-disable-next-line complexity
   private async getComponentStatusBeforeMergeAttempt(
     id: ComponentID,
@@ -601,20 +641,29 @@ export class CheckoutMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, ComponentWriterAspect, ImporterAspect, RemoveAspect];
+  static dependencies = [
+    CLIAspect,
+    WorkspaceAspect,
+    LoggerAspect,
+    ComponentWriterAspect,
+    ImporterAspect,
+    RemoveAspect,
+    ListerAspect,
+  ];
 
   static runtime = MainRuntime;
 
-  static async provider([cli, workspace, loggerMain, compWriter, importer, remove]: [
+  static async provider([cli, workspace, loggerMain, compWriter, importer, remove, lister]: [
     CLIMain,
     Workspace,
     LoggerMain,
     ComponentWriterMain,
     ImporterMain,
     RemoveMain,
+    ListerMain,
   ]) {
     const logger = loggerMain.createLogger(CheckoutAspect.id);
-    const checkoutMain = new CheckoutMain(workspace, logger, compWriter, importer, remove);
+    const checkoutMain = new CheckoutMain(workspace, logger, compWriter, importer, remove, lister);
     cli.register(new CheckoutCmd(checkoutMain), new RevertCmd(checkoutMain));
     return checkoutMain;
   }
