@@ -4576,6 +4576,11 @@
         "",
         "quick",
         "show only new and modified components based on file changes. much faster, but does not detect dependency or config changes"
+      ],
+      [
+        "",
+        "expand",
+        "expand all collapsed sections (e.g. auto-tag pending components)"
       ]
     ],
     "description": "show workspace component status and issues",
