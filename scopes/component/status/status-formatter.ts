@@ -203,7 +203,7 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
   );
 
   const stagedDesc = '(use "bit export" to push these component versions to the remote scope)';
-  const stagedComps = stagedComponents.map((c) => format(c.id, false, undefined, c.versions, true, successSymbol()));
+  const stagedComps = stagedComponents.map((c) => format(c.id, false, undefined, c.versions));
   const stagedComponentsOutput = formatSection('staged components', stagedDesc, stagedComps);
 
   const localOnlyDesc = '(these components are excluded from tag/snap/export commands)';
@@ -211,9 +211,7 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
   const localOnlyComponentsOutput = formatSection('local-only components', localOnlyDesc, localOnlyComps);
 
   const softTaggedDesc = '(use "bit tag --persist" to complete the tag)';
-  const softTaggedComps = softTaggedComponents.map((id) =>
-    format(id, false, undefined, undefined, false, successSymbol())
-  );
+  const softTaggedComps = softTaggedComponents.map((id) => format(id, false, undefined, undefined, false));
   const softTaggedComponentsOutput = formatSection('soft-tagged components', softTaggedDesc, softTaggedComps);
 
   const snappedDesc = '(use "bit tag" or "bit tag --snapped" to lock a semver version)';
