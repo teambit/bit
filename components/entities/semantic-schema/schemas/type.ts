@@ -65,7 +65,7 @@ export class TypeSchema extends SchemaNode {
         to: other.signature,
       });
     }
-    facts.push(...diffDoc(this.toObject().doc, other.toObject().doc));
+    facts.push(...diffDoc(this.doc?.toObject(), other.doc?.toObject()));
     return facts;
   }
 

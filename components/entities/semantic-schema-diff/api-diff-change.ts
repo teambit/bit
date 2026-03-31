@@ -1,3 +1,6 @@
+import type { ImpactLevel } from './impact-rule';
+import type { AssessedChange } from './impact-assessor';
+
 export type { SchemaChangeFact } from '@teambit/semantics.entities.semantic-schema';
 export type { ImpactLevel, ImpactRule } from './impact-rule';
 export type { AssessedChange } from './impact-assessor';

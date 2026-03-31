@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import type { Command, CommandOptions, CLIArgs, Flags } from '@teambit/cli';
+import type { Command, CommandOptions, CLIArgs } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import type { Logger } from '@teambit/logger';
 import { computeAPIDiff, APIDiffStatus } from '@teambit/semantics.entities.semantic-schema-diff';
@@ -7,14 +7,13 @@ import type { APIDiffResult, APIDiffChange, ImpactLevel } from '@teambit/semanti
 import type { SchemaMain } from './schema.main.runtime';
 
 export class SchemaDiffCommand implements Command {
-  name = 'diff <component> [version] [to-version]';
+  name = 'diff <component> <base-version> <compare-version>';
   description = 'show API changes between two versions of a component';
   extendedDescription = `compares the public API schema between two versions of a component.
 shows added, removed, and modified exports with semantic impact analysis.
 
 examples:
-  bit schema diff my-component                   # diff between last two versions
-  bit schema diff my-component 0.0.1 0.0.2       # diff between specific versions`;
+  bit schema diff my-component 0.0.1 0.0.2`;
   group = 'info-analysis';
   options = [['j', 'json', 'return the API diff in json format']] as CommandOptions;
 
@@ -24,23 +23,23 @@ examples:
     private logger: Logger
   ) {}
 
-  async report(args: CLIArgs, _flags: Flags): Promise<string> {
-    const [pattern, version, toVersion] = args as string[];
-    const { diff, componentId, baseVersion, compareVersion } = await this.computeDiff(pattern, version, toVersion);
+  async report(args: CLIArgs): Promise<string> {
+    const [pattern, baseVersion, compareVersion] = args as string[];
+    const { diff, componentId } = await this.computeDiff(pattern, baseVersion, compareVersion);
     return this.formatDiffResult(diff, `${componentId} (${baseVersion} → ${compareVersion})`);
   }
 
   async json(args: CLIArgs): Promise<Record<string, any>> {
-    const [pattern, version, toVersion] = args as string[];
-    const { diff, componentId, baseVersion, compareVersion } = await this.computeDiff(pattern, version, toVersion);
+    const [pattern, baseVersion, compareVersion] = args as string[];
+    const { diff, componentId } = await this.computeDiff(pattern, baseVersion, compareVersion);
     return this.toAgentJson(diff, componentId, baseVersion, compareVersion);
   }
 
   private async computeDiff(
     pattern: string,
-    version?: string,
-    toVersion?: string
-  ): Promise<{ diff: APIDiffResult; componentId: string; baseVersion: string; compareVersion: string }> {
+    baseVersion: string,
+    compareVersion: string
+  ): Promise<{ diff: APIDiffResult; componentId: string }> {
     const host = this.component.getHost();
     const ids = await host.idsByPattern(pattern, true);
 
@@ -52,31 +51,6 @@ examples:
     }
 
     const componentId = ids[0];
-
-    let baseVersion: string;
-    let compareVersion: string;
-
-    if (version && toVersion) {
-      baseVersion = version;
-      compareVersion = toVersion;
-    } else if (version) {
-      baseVersion = version;
-      compareVersion = componentId.version || 'latest';
-    } else {
-      const component = await host.get(componentId);
-      if (!component) throw new Error(`component ${componentId.toString()} not found`);
-
-      const logs = component.logs;
-      if (!logs || logs.length < 2) {
-        throw new Error(
-          `component ${componentId.toString()} needs at least 2 versions to diff. Use "bit schema diff <component> <version1> <version2>".`
-        );
-      }
-
-      compareVersion = logs[0].tag || logs[0].hash;
-      baseVersion = logs[1].tag || logs[1].hash;
-    }
-
     const baseId = componentId.changeVersion(baseVersion);
     const compareId = componentId.changeVersion(compareVersion);
 
@@ -94,12 +68,7 @@ examples:
 
     const assessor = this.schema.getImpactAssessor();
     const diff = computeAPIDiff(baseSchema, compareSchema, assessor);
-    return {
-      diff,
-      componentId: componentId.toStringWithoutVersion(),
-      baseVersion,
-      compareVersion,
-    };
+    return { diff, componentId: componentId.toStringWithoutVersion() };
   }
 
   private toAgentJson(

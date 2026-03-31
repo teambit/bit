@@ -105,7 +105,7 @@ export class EnumSchema extends SchemaNode {
         });
       }
     }
-    facts.push(...diffDoc(this.toObject().doc, other.toObject().doc));
+    facts.push(...diffDoc(this.doc?.toObject(), other.doc?.toObject()));
     return facts;
   }
 
