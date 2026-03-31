@@ -1,62 +1,30 @@
-/* eslint-disable complexity */
 /**
- * Types for semantic schema diffing.
- * Each SchemaNode subclass implements its own `diff()` method using these types.
+ * Types and utilities for semantic schema diffing.
+ *
+ * Schema `diff()` methods return neutral `SchemaChangeFact[]` — descriptions of what changed
+ * with structured context metadata. Impact assessment (BREAKING/NON_BREAKING/PATCH) is handled
+ * by a separate ImpactAssessor layer that can be customized per environment.
  */
 
-export enum SchemaChangeImpact {
-  /** Removing exports, removing required params, narrowing types — consumers will break */
-  BREAKING = 'BREAKING',
-  /** Adding optional params, adding exports, widening types — consumers won't break */
-  NON_BREAKING = 'NON_BREAKING',
-  /** Doc changes, internal refactors — no runtime impact */
-  PATCH = 'PATCH',
-}
-
-export type SchemaChangeDetail = {
-  /** What aspect of the API changed (e.g. 'parameters', 'return-type', 'members') */
-  aspect: string;
-  /** Human-readable description of the change */
+/**
+ * A neutral description of a single schema change.
+ * Contains no impact judgment — that's the assessor's job.
+ */
+export type SchemaChangeFact = {
+  /** Well-known change kind identifier (like a lint rule ID) */
+  changeKind: string;
+  /** Human-readable description */
   description: string;
-  /** Semantic impact of this particular sub-change */
-  impact: SchemaChangeImpact;
+  /** Structured metadata for the impact assessor to reason about */
+  context: Record<string, any>;
   /** Previous value (stringified) */
   from?: string;
   /** New value (stringified) */
   to?: string;
 };
 
-/** Types that are supertypes of everything — widening to these is never breaking. */
-const TOP_TYPES = new Set(['any', 'unknown']);
+// ─── Display name utilities ──────────────────────────────────────────
 
-/**
- * Determine the semantic impact of a return type change.
- * Widening (specific → any/unknown) is non-breaking because consumers
- * already handled the more specific type.
- * Narrowing (any → specific) is also non-breaking — consumers get more info.
- */
-export function returnTypeImpact(from: string, to: string): SchemaChangeImpact {
-  if (from === to) return SchemaChangeImpact.PATCH;
-  if (TOP_TYPES.has(to)) return SchemaChangeImpact.NON_BREAKING;
-  if (TOP_TYPES.has(from)) return SchemaChangeImpact.NON_BREAKING;
-  return SchemaChangeImpact.BREAKING;
-}
-
-/**
- * Determine the semantic impact of a parameter type change.
- * Widening (string → any) means the function accepts more — non-breaking for callers.
- * Narrowing (any → string) means callers passing other types will break.
- */
-export function paramTypeImpact(from: string, to: string): SchemaChangeImpact {
-  if (from === to) return SchemaChangeImpact.PATCH;
-  if (TOP_TYPES.has(to)) return SchemaChangeImpact.NON_BREAKING;
-  if (TOP_TYPES.has(from)) return SchemaChangeImpact.BREAKING;
-  return SchemaChangeImpact.BREAKING;
-}
-
-/**
- * Human-readable singular names for schema types.
- */
 const SCHEMA_DISPLAY_NAMES: Record<string, string> = {
   FunctionLikeSchema: 'Function',
   ClassSchema: 'Class',
@@ -84,9 +52,6 @@ const SCHEMA_DISPLAY_NAMES: Record<string, string> = {
   InferenceTypeSchema: 'Inferred Type',
 };
 
-/**
- * Get human-readable display name from a raw __schema type string.
- */
 export function schemaDisplayName(rawSchemaType: string, singular = true): string {
   const name = SCHEMA_DISPLAY_NAMES[rawSchemaType];
   if (name) return singular ? name : pluralize(name);
@@ -103,10 +68,8 @@ function pluralize(word: string): string {
   return `${word}s`;
 }
 
-/**
- * Render a human-readable type string from a serialized type node.
- * Handles all schema types that lack a useful `signature` or `name`.
- */
+// ─── Type rendering ──────────────────────────────────────────────────
+
 export function typeStr(node: Record<string, any> | undefined): string {
   if (!node) return 'unknown';
 
@@ -150,10 +113,8 @@ export function typeStr(node: Record<string, any> | undefined): string {
   return schemaDisplayName(node.__schema || 'unknown', true);
 }
 
-/**
- * Compare two type nodes semantically. TypeRefSchemas with the same name
- * are considered equivalent even if their internal resolution metadata differs.
- */
+// ─── Comparison utilities ────────────────────────────────────────────
+
 export function typesAreSemanticallyEqual(
   base: Record<string, any> | undefined,
   compare: Record<string, any> | undefined
@@ -172,9 +133,6 @@ export function typesAreSemanticallyEqual(
   return deepEqualNoLocation(base, compare);
 }
 
-/**
- * Deep equality check with location fields stripped.
- */
 export function deepEqualNoLocation(a: any, b: any): boolean {
   if (a === b) return true;
   if (a == null || b == null) return false;
@@ -195,21 +153,20 @@ export function deepEqualNoLocation(a: any, b: any): boolean {
   return false;
 }
 
-/**
- * Compare doc schemas, returning details if changed.
- */
+// ─── Doc diffing (returns facts) ─────────────────────────────────────
+
 export function diffDoc(
   baseDoc: Record<string, any> | undefined,
   compareDoc: Record<string, any> | undefined
-): SchemaChangeDetail[] {
+): SchemaChangeFact[] {
   if (deepEqualNoLocation(baseDoc, compareDoc)) return [];
 
   if (!baseDoc && compareDoc) {
     return [
       {
-        aspect: 'documentation',
+        changeKind: 'documentation-added',
         description: 'documentation added',
-        impact: SchemaChangeImpact.PATCH,
+        context: {},
         to: compareDoc.comment || '(doc added)',
       },
     ];
@@ -217,9 +174,9 @@ export function diffDoc(
   if (baseDoc && !compareDoc) {
     return [
       {
-        aspect: 'documentation',
+        changeKind: 'documentation-removed',
         description: 'documentation removed',
-        impact: SchemaChangeImpact.PATCH,
+        context: {},
         from: baseDoc.comment || '(doc removed)',
       },
     ];
@@ -234,9 +191,9 @@ export function diffDoc(
 
   return [
     {
-      aspect: 'documentation',
+      changeKind: 'documentation-changed',
       description: `documentation ${changes.join(' and ')} changed`,
-      impact: SchemaChangeImpact.PATCH,
+      context: {},
       from: baseDoc?.comment,
       to: compareDoc?.comment,
     },

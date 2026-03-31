@@ -1,20 +1,22 @@
 import type { APISchema } from '@teambit/semantics.entities.semantic-schema';
-import type { APIDiffResult, APIDiffChange } from './api-diff-change';
-import { APIDiffStatus, SemanticImpact } from './api-diff-change';
-import { buildExportMap, getSchemaTypeName, getDisplayName, toComparableObject } from './utils';
 import { deepEqualNoLocation as deepEqual } from '@teambit/semantics.entities.semantic-schema';
-import { computeDetailedDiff } from './schema-comparators';
+import type { APIDiffResult, APIDiffChange } from './api-diff-change';
+import { APIDiffStatus } from './api-diff-change';
+import type { ImpactLevel } from './impact-rule';
+import type { ImpactAssessor, AssessedChange } from './impact-assessor';
+import { buildExportMap, getSchemaTypeName, getDisplayName, toComparableObject } from './utils';
 
-function worstImpact(details: { impact: SemanticImpact }[]): SemanticImpact {
-  if (details.some((d) => d.impact === SemanticImpact.BREAKING)) return SemanticImpact.BREAKING;
-  if (details.some((d) => d.impact === SemanticImpact.NON_BREAKING)) return SemanticImpact.NON_BREAKING;
-  return SemanticImpact.PATCH;
+function worstImpact(items: { impact: ImpactLevel }[]): ImpactLevel {
+  if (items.some((d) => d.impact === 'BREAKING')) return 'BREAKING';
+  if (items.some((d) => d.impact === 'NON_BREAKING')) return 'NON_BREAKING';
+  return 'PATCH';
 }
 
 function diffExports(
   baseExports: ReturnType<typeof buildExportMap>,
   compareExports: ReturnType<typeof buildExportMap>,
-  visibility: 'public' | 'internal'
+  visibility: 'public' | 'internal',
+  assessor: ImpactAssessor
 ): APIDiffChange[] {
   const allNames = new Set([...baseExports.keys(), ...compareExports.keys()]);
   const changes: APIDiffChange[] = [];
@@ -24,24 +26,36 @@ function diffExports(
     const compareEntry = compareExports.get(name);
 
     if (!baseEntry && compareEntry) {
+      // ADDED — assess a synthetic fact for the addition itself
+      const addedImpact = assessor.assessFact({
+        changeKind: 'export-added',
+        description: `export '${name}' added`,
+        context: { exportName: name, visibility },
+      });
       changes.push({
         status: APIDiffStatus.ADDED,
         visibility,
         exportName: name,
         schemaType: getDisplayName(compareEntry.unwrapped, true),
         schemaTypeRaw: getSchemaTypeName(compareEntry.unwrapped),
-        impact: SemanticImpact.NON_BREAKING,
+        impact: addedImpact,
         compareSignature: compareEntry.unwrapped.signature,
         compareNode: compareEntry.unwrapped.toObject(),
       });
     } else if (baseEntry && !compareEntry) {
+      // REMOVED
+      const removedImpact = assessor.assessFact({
+        changeKind: 'export-removed',
+        description: `export '${name}' removed`,
+        context: { exportName: name, visibility, isPublic: visibility === 'public' },
+      });
       changes.push({
         status: APIDiffStatus.REMOVED,
         visibility,
         exportName: name,
         schemaType: getDisplayName(baseEntry.unwrapped, true),
         schemaTypeRaw: getSchemaTypeName(baseEntry.unwrapped),
-        impact: visibility === 'public' ? SemanticImpact.BREAKING : SemanticImpact.PATCH,
+        impact: removedImpact,
         baseSignature: baseEntry.unwrapped.signature,
         baseNode: baseEntry.unwrapped.toObject(),
       });
@@ -50,8 +64,12 @@ function diffExports(
       const compareComparable = toComparableObject(compareEntry.unwrapped);
 
       if (!deepEqual(baseComparable, compareComparable)) {
-        const details = computeDetailedDiff(baseEntry.unwrapped, compareEntry.unwrapped);
-        const impact = details.length > 0 ? worstImpact(details) : SemanticImpact.PATCH;
+        // Get neutral facts from schema node diff
+        const facts = baseEntry.unwrapped.diff(compareEntry.unwrapped);
+        // Assess impact for each fact
+        const assessed: AssessedChange[] = assessor.assess(facts);
+        const impact = assessed.length > 0 ? worstImpact(assessed) : 'PATCH';
+
         changes.push({
           status: APIDiffStatus.MODIFIED,
           visibility,
@@ -63,7 +81,7 @@ function diffExports(
           compareSignature: compareEntry.unwrapped.signature,
           baseNode: baseEntry.unwrapped.toObject(),
           compareNode: compareEntry.unwrapped.toObject(),
-          changes: details,
+          changes: assessed,
         });
       }
     }
@@ -72,10 +90,6 @@ function diffExports(
   return changes;
 }
 
-/**
- * Build a name-keyed map from a list of internal modules.
- * Internal modules have a filePath-based identity.
- */
 function buildInternalMap(internals: any[]): ReturnType<typeof buildExportMap> {
   const map = new Map<string, { name: string; node: any; unwrapped: any }>();
   for (const mod of internals) {
@@ -95,33 +109,29 @@ function buildInternalMap(internals: any[]): ReturnType<typeof buildExportMap> {
 /**
  * Compute a semantic diff between two APISchema objects.
  *
- * Produces:
- * - Public API changes (exports from the module index)
- * - Internal changes (non-exported modules)
- * - Semantic impact classification (BREAKING / NON_BREAKING / PATCH)
- * - Detailed sub-changes per export
+ * Schema nodes produce neutral change facts via `diff()`.
+ * The ImpactAssessor maps those facts to impact levels (BREAKING/NON_BREAKING/PATCH)
+ * using registerable rules.
  */
-export function computeAPIDiff(base: APISchema, compare: APISchema): APIDiffResult {
-  // Public exports
+export function computeAPIDiff(base: APISchema, compare: APISchema, assessor: ImpactAssessor): APIDiffResult {
   const baseExports = buildExportMap(base.module.exports);
   const compareExports = buildExportMap(compare.module.exports);
-  const publicChanges = diffExports(baseExports, compareExports, 'public');
+  const publicChanges = diffExports(baseExports, compareExports, 'public', assessor);
 
-  // Internal modules
   const baseInternals = buildInternalMap(base.internals || []);
   const compareInternals = buildInternalMap(compare.internals || []);
-  const internalChanges = diffExports(baseInternals, compareInternals, 'internal');
+  const internalChanges = diffExports(baseInternals, compareInternals, 'internal', assessor);
 
   const allChanges = [...publicChanges, ...internalChanges];
 
   const added = allChanges.filter((c) => c.status === APIDiffStatus.ADDED).length;
   const removed = allChanges.filter((c) => c.status === APIDiffStatus.REMOVED).length;
   const modified = allChanges.filter((c) => c.status === APIDiffStatus.MODIFIED).length;
-  const breaking = allChanges.filter((c) => c.impact === SemanticImpact.BREAKING).length;
-  const nonBreaking = allChanges.filter((c) => c.impact === SemanticImpact.NON_BREAKING).length;
-  const patch = allChanges.filter((c) => c.impact === SemanticImpact.PATCH).length;
+  const breaking = allChanges.filter((c) => c.impact === 'BREAKING').length;
+  const nonBreaking = allChanges.filter((c) => c.impact === 'NON_BREAKING').length;
+  const patch = allChanges.filter((c) => c.impact === 'PATCH').length;
 
-  const impact = allChanges.length > 0 ? worstImpact(allChanges) : SemanticImpact.PATCH;
+  const impact: ImpactLevel = allChanges.length > 0 ? worstImpact(allChanges) : 'PATCH';
 
   return {
     hasChanges: allChanges.length > 0,

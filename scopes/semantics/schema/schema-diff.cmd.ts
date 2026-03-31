@@ -2,8 +2,8 @@ import chalk from 'chalk';
 import type { Command, CommandOptions, CLIArgs, Flags } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import type { Logger } from '@teambit/logger';
-import { computeAPIDiff, APIDiffStatus, SemanticImpact } from '@teambit/semantics.entities.semantic-schema-diff';
-import type { APIDiffResult, APIDiffChange } from '@teambit/semantics.entities.semantic-schema-diff';
+import { computeAPIDiff, APIDiffStatus } from '@teambit/semantics.entities.semantic-schema-diff';
+import type { APIDiffResult, APIDiffChange, ImpactLevel } from '@teambit/semantics.entities.semantic-schema-diff';
 import type { SchemaMain } from './schema.main.runtime';
 
 export class SchemaDiffCommand implements Command {
@@ -92,7 +92,8 @@ examples:
       this.schema.getSchema(compareComponent),
     ]);
 
-    const diff = computeAPIDiff(baseSchema, compareSchema);
+    const assessor = this.schema.getImpactAssessor();
+    const diff = computeAPIDiff(baseSchema, compareSchema, assessor);
     return {
       diff,
       componentId: componentId.toStringWithoutVersion(),
@@ -122,9 +123,10 @@ examples:
       ...(change.changes && change.changes.length > 0
         ? {
             details: change.changes.map((d) => ({
-              aspect: d.aspect,
+              changeKind: d.changeKind,
               description: d.description,
               impact: d.impact,
+              context: d.context,
               ...(d.from !== undefined ? { from: d.from } : {}),
               ...(d.to !== undefined ? { to: d.to } : {}),
             })),
@@ -232,7 +234,8 @@ examples:
         if (change.changes && change.changes.length > 0) {
           for (const detail of change.changes) {
             const detailImpact = this.impactDot(detail.impact);
-            lines.push(`${indent}${detailImpact} ${detail.description}`);
+            const desc = this.enhanceDescription(detail.description, detail.impact, detail.changeKind);
+            lines.push(`${indent}${detailImpact} ${desc}`);
             if (detail.from && detail.to) {
               lines.push(`${indent}  ${chalk.red(`- ${detail.from}`)}`);
               lines.push(`${indent}  ${chalk.green(`+ ${detail.to}`)}`);
@@ -246,37 +249,57 @@ examples:
     return lines;
   }
 
-  private impactBadge(impact: SemanticImpact): string {
+  private impactBadge(impact: ImpactLevel): string {
     switch (impact) {
-      case SemanticImpact.BREAKING:
+      case 'BREAKING':
         return chalk.bgRed.white.bold(' BREAKING ');
-      case SemanticImpact.NON_BREAKING:
+      case 'NON_BREAKING':
         return chalk.bgGreen.white.bold(' NON-BREAKING ');
-      case SemanticImpact.PATCH:
+      case 'PATCH':
         return chalk.bgBlue.white(' PATCH ');
     }
   }
 
-  private impactTag(impact: SemanticImpact): string {
+  private impactTag(impact: ImpactLevel): string {
     switch (impact) {
-      case SemanticImpact.BREAKING:
+      case 'BREAKING':
         return chalk.red('breaking');
-      case SemanticImpact.NON_BREAKING:
+      case 'NON_BREAKING':
         return chalk.green('non-breaking');
-      case SemanticImpact.PATCH:
+      case 'PATCH':
         return chalk.dim('patch');
     }
   }
 
-  private impactDot(impact: SemanticImpact): string {
+  private impactDot(impact: ImpactLevel): string {
     switch (impact) {
-      case SemanticImpact.BREAKING:
+      case 'BREAKING':
         return chalk.red('●');
-      case SemanticImpact.NON_BREAKING:
+      case 'NON_BREAKING':
         return chalk.green('●');
-      case SemanticImpact.PATCH:
+      case 'PATCH':
         return chalk.dim('●');
     }
+  }
+
+  private enhanceDescription(description: string, impact: ImpactLevel, changeKind: string): string {
+    // Enhance return type descriptions based on assessed impact
+    if (changeKind === 'return-type-changed' && impact === 'NON_BREAKING') {
+      return description.replace('return type changed:', 'return type widened:');
+    }
+    if (changeKind === 'return-type-changed' && impact === 'BREAKING') {
+      return description.replace('return type changed:', 'return type narrowed:');
+    }
+    // Enhance default removal based on impact
+    if (
+      (changeKind === 'destructured-property-default-removed' || changeKind === 'parameter-default-removed') &&
+      impact === 'BREAKING'
+    ) {
+      if (!description.includes('breaking')) {
+        return `${description} — callers relying on the default will break`;
+      }
+    }
+    return description;
   }
 
   private truncateSig(sig: string, maxLen = 120): string {

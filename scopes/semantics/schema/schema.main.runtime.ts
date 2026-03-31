@@ -23,6 +23,8 @@ import type { Formatter } from '@teambit/formatter';
 import type { SchemaNodeTransformer, SchemaTransformer } from '@teambit/typescript';
 import { BuildStatus, CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 import { Http } from '@teambit/scope.network';
+import type { ImpactRule } from '@teambit/semantics.entities.semantic-schema-diff';
+import { ImpactAssessor, DEFAULT_IMPACT_RULES } from '@teambit/semantics.entities.semantic-schema-diff';
 import type { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import type { SchemaExtractor } from './schema-extractor';
@@ -32,6 +34,7 @@ import { SchemaTask, SCHEMA_TASK_NAME } from './schema.task';
 import { SchemaService } from './schema.service';
 
 export type ParserSlot = SlotRegistry<Parser>;
+export type ImpactRuleSlot = SlotRegistry<ImpactRule[]>;
 
 export type SchemaConfig = {
   /**
@@ -53,6 +56,11 @@ export class SchemaMain {
      * parsers slot.
      */
     private parserSlot: ParserSlot,
+
+    /**
+     * impact rules slot for customizing API diff impact assessment.
+     */
+    private impactRuleSlot: ImpactRuleSlot,
 
     private envs: EnvsMain,
 
@@ -246,6 +254,27 @@ export class SchemaMain {
     return component.state.aspects.get(SchemaAspect.id)?.data;
   }
 
+  /**
+   * Register custom impact rules for API diff assessment.
+   * Custom rules take priority over default rules.
+   * This allows environments to customize what constitutes a breaking change.
+   */
+  registerImpactRules(rules: ImpactRule[]): void {
+    this.impactRuleSlot.register(rules);
+  }
+
+  /**
+   * Create an ImpactAssessor with default rules + any registered custom rules.
+   */
+  getImpactAssessor(): ImpactAssessor {
+    const assessor = new ImpactAssessor();
+    assessor.registerDefaultRules(DEFAULT_IMPACT_RULES);
+    for (const rules of this.impactRuleSlot.values()) {
+      assessor.registerRules(rules);
+    }
+    return assessor;
+  }
+
   isSchemaTaskDisabled(component: Component) {
     return this.getSchemaData(component)?.disabled;
   }
@@ -261,7 +290,7 @@ export class SchemaMain {
     WorkspaceAspect,
     ScopeAspect,
   ];
-  static slots = [Slot.withType<Parser>()];
+  static slots = [Slot.withType<Parser>(), Slot.withType<ImpactRule[]>()];
 
   static defaultConfig = {
     defaultParser: 'teambit.typescript/typescript',
@@ -280,10 +309,10 @@ export class SchemaMain {
       ScopeMain,
     ],
     config: SchemaConfig,
-    [parserSlot]: [ParserSlot]
+    [parserSlot, impactRuleSlot]: [ParserSlot, ImpactRuleSlot]
   ) {
     const logger = loggerMain.createLogger(SchemaAspect.id);
-    const schema = new SchemaMain(parserSlot, envs, config, builder, workspace, logger);
+    const schema = new SchemaMain(parserSlot, impactRuleSlot, envs, config, builder, workspace, logger);
     const schemaTask = new SchemaTask(SchemaAspect.id, schema, logger);
     builder.registerBuildTasks([schemaTask]);
     cli.register(new SchemaCommand(schema, component, logger));

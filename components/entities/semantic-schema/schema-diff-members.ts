@@ -2,16 +2,16 @@
  * Shared diff logic for member-based schemas (ClassSchema, InterfaceSchema).
  */
 import type { SchemaNode } from './schema-node';
-import type { SchemaChangeDetail } from './schema-diff';
-import { SchemaChangeImpact, deepEqualNoLocation, diffDoc, schemaDisplayName, typeStr } from './schema-diff';
+import type { SchemaChangeFact } from './schema-diff';
+import { deepEqualNoLocation, diffDoc, schemaDisplayName, typeStr } from './schema-diff';
 
 export function diffMembers(
   baseObj: Record<string, any>,
   compareObj: Record<string, any>,
   baseNode: SchemaNode,
   compareNode: SchemaNode
-): SchemaChangeDetail[] {
-  const details: SchemaChangeDetail[] = [];
+): SchemaChangeFact[] {
+  const details: SchemaChangeFact[] = [];
   const baseMembers: Record<string, any>[] = baseObj.members || [];
   const compareMembers: Record<string, any>[] = compareObj.members || [];
 
@@ -22,9 +22,14 @@ export function diffMembers(
     if (!baseMemberMap.has(name)) {
       const kind = schemaDisplayName(member.__schema || '', true);
       details.push({
-        aspect: 'members',
+        changeKind: 'member-added',
         description: `${kind} '${name}' added${member.isOptional ? ' (optional)' : ''}: ${member.signature || name}`,
-        impact: SchemaChangeImpact.NON_BREAKING,
+        context: {
+          memberName: name,
+          memberKind: kind,
+          isOptional: !!member.isOptional,
+          signature: member.signature || name,
+        },
         to: member.signature || name,
       });
     }
@@ -35,9 +40,9 @@ export function diffMembers(
       const kind = schemaDisplayName(member.__schema || '', true);
       const isPublic = !(member.modifiers || []).includes('private');
       details.push({
-        aspect: 'members',
+        changeKind: 'member-removed',
         description: `${kind} '${name}' removed${isPublic ? ' — consumers using it will break' : ' (was private)'}`,
-        impact: isPublic ? SchemaChangeImpact.BREAKING : SchemaChangeImpact.PATCH,
+        context: { memberName: name, memberKind: kind, isPublic, signature: member.signature || name },
         from: member.signature || name,
       });
     }
@@ -63,7 +68,7 @@ export function diffMembers(
       if (bNode && cNode) {
         const subDetails = bNode.diff(cNode);
         for (const d of subDetails) {
-          details.push({ ...d, aspect: 'members', description: `${kind} '${name}': ${d.description}` });
+          details.push({ ...d, description: `${kind} '${name}': ${d.description}` });
         }
         continue;
       }
@@ -74,25 +79,25 @@ export function diffMembers(
     const compNoDoc = { ...compNoLoc, doc: undefined };
     if (deepEqualNoLocation(baseNoDoc, compNoDoc)) {
       details.push({
-        aspect: 'members',
+        changeKind: 'member-documentation-changed',
         description: `${kind} '${name}' documentation changed`,
-        impact: SchemaChangeImpact.PATCH,
+        context: { memberName: name, memberKind: kind },
         from: baseMember.signature || name,
         to: compareMember.signature || name,
       });
     } else if (baseMember.signature !== compareMember.signature) {
       details.push({
-        aspect: 'members',
+        changeKind: 'member-signature-changed',
         description: `${kind} '${name}' signature changed`,
-        impact: SchemaChangeImpact.BREAKING,
+        context: { memberName: name, memberKind: kind },
         from: baseMember.signature || name,
         to: compareMember.signature || name,
       });
     } else {
       details.push({
-        aspect: 'members',
+        changeKind: 'member-definition-changed',
         description: `${kind} '${name}' internal definition changed`,
-        impact: SchemaChangeImpact.PATCH,
+        context: { memberName: name, memberKind: kind },
         from: baseMember.signature || name,
         to: compareMember.signature || name,
       });
@@ -101,12 +106,14 @@ export function diffMembers(
 
   // Type parameters
   if (!deepEqualNoLocation(baseObj.typeParams, compareObj.typeParams)) {
+    const from = (baseObj.typeParams || []).join(', ');
+    const to = (compareObj.typeParams || []).join(', ');
     details.push({
-      aspect: 'type-parameters',
-      description: `type parameters changed: <${(baseObj.typeParams || []).join(', ') || 'none'}> → <${(compareObj.typeParams || []).join(', ') || 'none'}>`,
-      impact: SchemaChangeImpact.BREAKING,
-      from: (baseObj.typeParams || []).join(', '),
-      to: (compareObj.typeParams || []).join(', '),
+      changeKind: 'type-parameters-changed',
+      description: `type parameters changed: <${from || 'none'}> → <${to || 'none'}>`,
+      context: { from, to },
+      from,
+      to,
     });
   }
 
@@ -115,9 +122,9 @@ export function diffMembers(
     const fromExt = (baseObj.extendsNodes || []).map((n: any) => n.name || typeStr(n)).join(', ') || 'none';
     const toExt = (compareObj.extendsNodes || []).map((n: any) => n.name || typeStr(n)).join(', ') || 'none';
     details.push({
-      aspect: 'extends',
+      changeKind: 'extends-changed',
       description: `extends changed: ${fromExt} → ${toExt}`,
-      impact: SchemaChangeImpact.BREAKING,
+      context: { from: fromExt, to: toExt },
       from: fromExt,
       to: toExt,
     });
@@ -129,9 +136,9 @@ export function diffMembers(
       const fromImpl = (baseObj.implementNodes || []).map((n: any) => n.name || typeStr(n)).join(', ') || 'none';
       const toImpl = (compareObj.implementNodes || []).map((n: any) => n.name || typeStr(n)).join(', ') || 'none';
       details.push({
-        aspect: 'implements',
+        changeKind: 'implements-changed',
         description: `implements changed: ${fromImpl} → ${toImpl}`,
-        impact: SchemaChangeImpact.BREAKING,
+        context: { from: fromImpl, to: toImpl },
         from: fromImpl,
         to: toImpl,
       });

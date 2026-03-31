@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
-import type { SchemaChangeDetail } from '../schema-diff';
-import { SchemaChangeImpact, typesAreSemanticallyEqual, diffDoc } from '../schema-diff';
+import type { SchemaChangeFact } from '../schema-diff';
+import { typesAreSemanticallyEqual, diffDoc } from '../schema-diff';
 import { DocSchema } from './docs';
 import { SchemaRegistry } from '../schema-registry';
 
@@ -53,20 +53,20 @@ export class TypeSchema extends SchemaNode {
     };
   }
 
-  diff(other: SchemaNode): SchemaChangeDetail[] {
+  diff(other: SchemaNode): SchemaChangeFact[] {
     if (!(other instanceof TypeSchema)) return super.diff(other);
-    const details: SchemaChangeDetail[] = [];
+    const facts: SchemaChangeFact[] = [];
     if (!typesAreSemanticallyEqual(this.type.toObject(), other.type.toObject())) {
-      details.push({
-        aspect: 'type-definition',
+      facts.push({
+        changeKind: 'type-definition-changed',
         description: 'type definition changed',
-        impact: SchemaChangeImpact.BREAKING,
+        context: { fromSignature: this.signature, toSignature: other.signature },
         from: this.signature,
         to: other.signature,
       });
     }
-    details.push(...diffDoc(this.toObject().doc, other.toObject().doc));
-    return details;
+    facts.push(...diffDoc(this.toObject().doc, other.toObject().doc));
+    return facts;
   }
 
   static fromObject(obj: Record<string, any>): TypeSchema {

@@ -1,8 +1,8 @@
 import { pickBy } from 'lodash';
 import pluralize from 'pluralize';
 import type { DocSchema } from './schemas';
-import type { SchemaChangeDetail } from './schema-diff';
-import { SchemaChangeImpact, deepEqualNoLocation, diffDoc } from './schema-diff';
+import type { SchemaChangeFact } from './schema-diff';
+import { deepEqualNoLocation, diffDoc } from './schema-diff';
 
 export interface ISchemaNode {
   __schema: string;
@@ -88,35 +88,35 @@ export abstract class SchemaNode implements ISchemaNode {
   }
 
   /**
-   * Compute semantic diff details between this node and another node of the same type.
-   * Subclasses should override this with type-specific comparison logic.
-   * The default implementation compares signatures and documentation.
+   * Compute neutral change facts between this node and another node of the same type.
+   * Subclasses should override with type-specific comparison logic.
+   * Returns facts without impact judgment — impact is assessed separately.
    */
-  diff(other: SchemaNode): SchemaChangeDetail[] {
-    const details: SchemaChangeDetail[] = [];
+  diff(other: SchemaNode): SchemaChangeFact[] {
+    const facts: SchemaChangeFact[] = [];
     const baseObj = this.toObject();
     const compareObj = other.toObject();
 
     // Doc changes
-    details.push(...diffDoc(baseObj.doc, compareObj.doc));
+    facts.push(...diffDoc(baseObj.doc, compareObj.doc));
 
     // If only doc changed, we're done
     const baseNoDoc = { ...baseObj, doc: undefined, location: undefined };
     const compareNoDoc = { ...compareObj, doc: undefined, location: undefined };
-    if (deepEqualNoLocation(baseNoDoc, compareNoDoc)) return details;
+    if (deepEqualNoLocation(baseNoDoc, compareNoDoc)) return facts;
 
     // Signature changed
     if (baseObj.signature !== compareObj.signature) {
-      details.push({
-        aspect: 'signature',
+      facts.push({
+        changeKind: 'signature-changed',
         description: 'signature changed',
-        impact: SchemaChangeImpact.BREAKING,
+        context: { fromSignature: baseObj.signature, toSignature: compareObj.signature },
         from: baseObj.signature,
         to: compareObj.signature,
       });
     }
 
-    return details;
+    return facts;
   }
 }
 

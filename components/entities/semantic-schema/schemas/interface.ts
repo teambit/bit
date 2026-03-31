@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
-import type { SchemaChangeDetail } from '../schema-diff';
+import type { SchemaChangeFact } from '../schema-diff';
 import { diffMembers } from '../schema-diff-members';
 import { DocSchema } from './docs';
 import { ExpressionWithTypeArgumentsSchema } from './expression-with-arguments';
@@ -84,7 +84,7 @@ export class InterfaceSchema extends SchemaNode {
     };
   }
 
-  diff(other: SchemaNode): SchemaChangeDetail[] {
+  diff(other: SchemaNode): SchemaChangeFact[] {
     if (!(other instanceof InterfaceSchema)) return super.diff(other);
     return diffMembers(this.toObject(), other.toObject(), this, other);
   }

@@ -184,7 +184,8 @@ export class ComponentCompareMain {
         this.schema.getSchema(baseComp),
         this.schema.getSchema(compareComp),
       ]);
-      return computeAPIDiff(baseSchema, compareSchema);
+      const assessor = this.schema.getImpactAssessor();
+      return computeAPIDiff(baseSchema, compareSchema, assessor);
     } catch (err: any) {
       this.logger.warn(`failed computing API diff: ${err.message}`);
       return undefined;

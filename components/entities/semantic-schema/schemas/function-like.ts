@@ -2,16 +2,8 @@
 import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
-import type { SchemaChangeDetail } from '../schema-diff';
-import {
-  SchemaChangeImpact,
-  typesAreSemanticallyEqual,
-  typeStr,
-  returnTypeImpact,
-  paramTypeImpact,
-  deepEqualNoLocation,
-  diffDoc,
-} from '../schema-diff';
+import type { SchemaChangeFact } from '../schema-diff';
+import { typesAreSemanticallyEqual, typeStr, deepEqualNoLocation, diffDoc } from '../schema-diff';
 import { ParameterSchema } from './parameter';
 import { DocSchema } from './docs';
 import { TagName } from './docs/tag';
@@ -159,9 +151,9 @@ export class FunctionLikeSchema extends SchemaNode {
     );
   }
 
-  diff(other: SchemaNode): SchemaChangeDetail[] {
+  diff(other: SchemaNode): SchemaChangeFact[] {
     if (!(other instanceof FunctionLikeSchema)) return super.diff(other);
-    const details: SchemaChangeDetail[] = [];
+    const facts: SchemaChangeFact[] = [];
     const baseObj = this.toObject();
     const compareObj = other.toObject();
 
@@ -172,20 +164,25 @@ export class FunctionLikeSchema extends SchemaNode {
     if (compareParams.length > baseParams.length) {
       for (const p of compareParams.slice(baseParams.length)) {
         const isOpt = p.isOptional || p.defaultValue !== undefined;
-        details.push({
-          aspect: 'parameters',
-          description: `parameter '${p.name}: ${typeStr(p.type)}' added${isOpt ? ' (optional)' : ' (required — breaks existing callers)'}`,
-          impact: isOpt ? SchemaChangeImpact.NON_BREAKING : SchemaChangeImpact.BREAKING,
+        facts.push({
+          changeKind: 'parameter-added',
+          description: `parameter '${p.name}: ${typeStr(p.type)}' added${isOpt ? ' (optional)' : ' (required)'}`,
+          context: {
+            paramName: p.name,
+            isOptional: !!p.isOptional,
+            hasDefault: p.defaultValue !== undefined,
+            paramType: typeStr(p.type),
+          },
           to: `${p.name}${p.isOptional ? '?' : ''}: ${typeStr(p.type)}`,
         });
       }
     }
     if (baseParams.length > compareParams.length) {
       for (const p of baseParams.slice(compareParams.length)) {
-        details.push({
-          aspect: 'parameters',
-          description: `parameter '${p.name}: ${typeStr(p.type)}' removed — callers passing this argument will break`,
-          impact: SchemaChangeImpact.BREAKING,
+        facts.push({
+          changeKind: 'parameter-removed',
+          description: `parameter '${p.name}: ${typeStr(p.type)}' removed`,
+          context: { paramName: p.name, isOptional: !!p.isOptional, paramType: typeStr(p.type) },
           from: `${p.name}${p.isOptional ? '?' : ''}: ${typeStr(p.type)}`,
         });
       }
@@ -199,12 +196,17 @@ export class FunctionLikeSchema extends SchemaNode {
 
       const isDestructured = bp.objectBindingNodes || cp.objectBindingNodes;
       if (isDestructured) {
-        FunctionLikeSchema.diffDestructuredParam(bp, cp, details);
+        FunctionLikeSchema.diffDestructuredParam(bp, cp, facts);
         if (!typesAreSemanticallyEqual(bp.type, cp.type)) {
-          details.push({
-            aspect: 'parameters',
+          facts.push({
+            changeKind: 'parameter-type-changed',
             description: `parameter at position ${i} type changed: ${typeStr(bp.type)} → ${typeStr(cp.type)}`,
-            impact: paramTypeImpact(typeStr(bp.type), typeStr(cp.type)),
+            context: {
+              paramName: cp.name || bp.name,
+              fromType: typeStr(bp.type),
+              toType: typeStr(cp.type),
+              position: 'parameter',
+            },
             from: typeStr(bp.type),
             to: typeStr(cp.type),
           });
@@ -220,48 +222,64 @@ export class FunctionLikeSchema extends SchemaNode {
 
       const paramName = cp.name || bp.name;
       if (!nameEqual) {
-        details.push({
-          aspect: 'parameters',
+        facts.push({
+          changeKind: 'parameter-renamed',
           description: `parameter at position ${i} renamed: '${bp.name}' → '${cp.name}'`,
-          impact: SchemaChangeImpact.PATCH,
+          context: { fromName: bp.name, toName: cp.name, position: i },
           from: bp.name,
           to: cp.name,
         });
       }
       if (!typeEqual) {
-        details.push({
-          aspect: 'parameters',
+        facts.push({
+          changeKind: 'parameter-type-changed',
           description: `parameter '${paramName}' type changed: ${typeStr(bp.type)} → ${typeStr(cp.type)}`,
-          impact: paramTypeImpact(typeStr(bp.type), typeStr(cp.type)),
+          context: { paramName, fromType: typeStr(bp.type), toType: typeStr(cp.type), position: 'parameter' },
           from: typeStr(bp.type),
           to: typeStr(cp.type),
         });
       }
       if (bp.isOptional && !cp.isOptional) {
-        details.push({
-          aspect: 'parameters',
-          description: `parameter '${paramName}' became required (was optional) — callers omitting it will break`,
-          impact: SchemaChangeImpact.BREAKING,
+        facts.push({
+          changeKind: 'became-required',
+          description: `parameter '${paramName}' became required (was optional)`,
+          context: { paramName, position: 'parameter' },
           from: 'optional',
           to: 'required',
         });
       } else if (!bp.isOptional && cp.isOptional) {
-        details.push({
-          aspect: 'parameters',
+        facts.push({
+          changeKind: 'became-optional',
           description: `parameter '${paramName}' became optional (was required)`,
-          impact: SchemaChangeImpact.NON_BREAKING,
+          context: { paramName, position: 'parameter' },
           from: 'required',
           to: 'optional',
         });
       }
       if (!defaultEqual) {
-        details.push({
-          aspect: 'parameters',
-          description: `parameter '${paramName}' default value changed: ${bp.defaultValue ?? 'none'} → ${cp.defaultValue ?? 'none'}`,
-          impact: SchemaChangeImpact.PATCH,
-          from: bp.defaultValue !== undefined ? String(bp.defaultValue) : undefined,
-          to: cp.defaultValue !== undefined ? String(cp.defaultValue) : undefined,
-        });
+        if (bp.defaultValue !== undefined && cp.defaultValue === undefined) {
+          facts.push({
+            changeKind: 'parameter-default-removed',
+            description: `parameter '${paramName}' default value removed (was: ${bp.defaultValue})`,
+            context: { paramName, isOptional: !!bp.isOptional, previousDefault: String(bp.defaultValue) },
+            from: String(bp.defaultValue),
+          });
+        } else if (bp.defaultValue === undefined && cp.defaultValue !== undefined) {
+          facts.push({
+            changeKind: 'parameter-default-added',
+            description: `parameter '${paramName}' default value added: ${cp.defaultValue}`,
+            context: { paramName, newDefault: String(cp.defaultValue) },
+            to: String(cp.defaultValue),
+          });
+        } else {
+          facts.push({
+            changeKind: 'parameter-default-changed',
+            description: `parameter '${paramName}' default value changed: ${bp.defaultValue} → ${cp.defaultValue}`,
+            context: { paramName, previousDefault: String(bp.defaultValue), newDefault: String(cp.defaultValue) },
+            from: String(bp.defaultValue),
+            to: String(cp.defaultValue),
+          });
+        }
       }
     }
 
@@ -269,12 +287,10 @@ export class FunctionLikeSchema extends SchemaNode {
     if (!typesAreSemanticallyEqual(baseObj.returnType, compareObj.returnType)) {
       const fromType = typeStr(baseObj.returnType);
       const toType = typeStr(compareObj.returnType);
-      const impact = returnTypeImpact(fromType, toType);
-      const verb = impact === SchemaChangeImpact.NON_BREAKING ? 'widened' : 'changed';
-      details.push({
-        aspect: 'return-type',
-        description: `return type ${verb}: ${fromType} → ${toType}`,
-        impact,
+      facts.push({
+        changeKind: 'return-type-changed',
+        description: `return type changed: ${fromType} → ${toType}`,
+        context: { fromType, toType, position: 'return-type' },
         from: fromType,
         to: toType,
       });
@@ -282,10 +298,10 @@ export class FunctionLikeSchema extends SchemaNode {
 
     // Type parameters
     if (!deepEqualNoLocation(baseObj.typeParams, compareObj.typeParams)) {
-      details.push({
-        aspect: 'type-parameters',
+      facts.push({
+        changeKind: 'type-parameters-changed',
         description: `type parameters changed: <${(baseObj.typeParams || []).join(', ') || 'none'}> → <${(compareObj.typeParams || []).join(', ') || 'none'}>`,
-        impact: SchemaChangeImpact.BREAKING,
+        context: { from: (baseObj.typeParams || []).join(', '), to: (compareObj.typeParams || []).join(', ') },
         from: (baseObj.typeParams || []).join(', '),
         to: (compareObj.typeParams || []).join(', '),
       });
@@ -301,23 +317,33 @@ export class FunctionLikeSchema extends SchemaNode {
       if (added.length) parts.push(`added: ${added.join(', ')}`);
       if (removed.length) parts.push(`removed: ${removed.join(', ')}`);
       const accessNarrowed = removed.includes('public') || added.includes('private') || added.includes('protected');
-      details.push({
-        aspect: 'modifiers',
-        description: `modifiers changed (${parts.join('; ')})`,
-        impact: accessNarrowed ? SchemaChangeImpact.BREAKING : SchemaChangeImpact.PATCH,
-        from: baseMods.join(', ') || 'none',
-        to: compareMods.join(', ') || 'none',
-      });
+      if (accessNarrowed) {
+        facts.push({
+          changeKind: 'access-narrowed',
+          description: `modifiers changed (${parts.join('; ')})`,
+          context: { added, removed, accessNarrowed: true },
+          from: baseMods.join(', ') || 'none',
+          to: compareMods.join(', ') || 'none',
+        });
+      } else {
+        facts.push({
+          changeKind: 'modifiers-changed',
+          description: `modifiers changed (${parts.join('; ')})`,
+          context: { added, removed, accessNarrowed: false },
+          from: baseMods.join(', ') || 'none',
+          to: compareMods.join(', ') || 'none',
+        });
+      }
     }
 
-    details.push(...diffDoc(baseObj.doc, compareObj.doc));
-    return details;
+    facts.push(...diffDoc(baseObj.doc, compareObj.doc));
+    return facts;
   }
 
   private static diffDestructuredParam(
     base: Record<string, any>,
     compare: Record<string, any>,
-    details: SchemaChangeDetail[]
+    facts: SchemaChangeFact[]
   ): void {
     const baseBindings: Record<string, any>[] = base.objectBindingNodes || [];
     const compareBindings: Record<string, any>[] = compare.objectBindingNodes || [];
@@ -326,20 +352,20 @@ export class FunctionLikeSchema extends SchemaNode {
 
     for (const [name] of compareMap) {
       if (!baseMap.has(name)) {
-        details.push({
-          aspect: 'parameters',
+        facts.push({
+          changeKind: 'destructured-property-added',
           description: `destructured property '${name}' added`,
-          impact: SchemaChangeImpact.NON_BREAKING,
+          context: { propertyName: name },
           to: name,
         });
       }
     }
     for (const [name] of baseMap) {
       if (!compareMap.has(name)) {
-        details.push({
-          aspect: 'parameters',
+        facts.push({
+          changeKind: 'destructured-property-removed',
           description: `destructured property '${name}' removed`,
-          impact: SchemaChangeImpact.BREAKING,
+          context: { propertyName: name },
           from: name,
         });
       }
@@ -349,34 +375,38 @@ export class FunctionLikeSchema extends SchemaNode {
       if (!cb) continue;
       if (bb.defaultValue !== cb.defaultValue) {
         if (bb.defaultValue !== undefined && cb.defaultValue === undefined) {
-          details.push({
-            aspect: 'parameters',
+          facts.push({
+            changeKind: 'destructured-property-default-removed',
             description: `destructured property '${name}' default value removed (was: ${bb.defaultValue})`,
-            impact: SchemaChangeImpact.PATCH,
+            context: { propertyName: name, isOptional: !!base.isOptional, previousDefault: String(bb.defaultValue) },
             from: String(bb.defaultValue),
           });
         } else if (bb.defaultValue === undefined && cb.defaultValue !== undefined) {
-          details.push({
-            aspect: 'parameters',
+          facts.push({
+            changeKind: 'destructured-property-default-added',
             description: `destructured property '${name}' default value added: ${cb.defaultValue}`,
-            impact: SchemaChangeImpact.PATCH,
+            context: { propertyName: name, newDefault: String(cb.defaultValue) },
             to: String(cb.defaultValue),
           });
         } else {
-          details.push({
-            aspect: 'parameters',
+          facts.push({
+            changeKind: 'destructured-property-default-changed',
             description: `destructured property '${name}' default value changed: ${bb.defaultValue} → ${cb.defaultValue}`,
-            impact: SchemaChangeImpact.PATCH,
+            context: {
+              propertyName: name,
+              previousDefault: String(bb.defaultValue),
+              newDefault: String(cb.defaultValue),
+            },
             from: String(bb.defaultValue),
             to: String(cb.defaultValue),
           });
         }
       }
       if (bb.type && cb.type && !typesAreSemanticallyEqual(bb.type, cb.type)) {
-        details.push({
-          aspect: 'parameters',
+        facts.push({
+          changeKind: 'destructured-property-type-changed',
           description: `destructured property '${name}' type changed: ${typeStr(bb.type)} → ${typeStr(cb.type)}`,
-          impact: paramTypeImpact(typeStr(bb.type), typeStr(cb.type)),
+          context: { propertyName: name, fromType: typeStr(bb.type), toType: typeStr(cb.type), position: 'parameter' },
           from: typeStr(bb.type),
           to: typeStr(cb.type),
         });

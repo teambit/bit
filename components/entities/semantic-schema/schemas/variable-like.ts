@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
-import type { SchemaChangeDetail } from '../schema-diff';
-import { SchemaChangeImpact, typesAreSemanticallyEqual, typeStr, diffDoc } from '../schema-diff';
+import type { SchemaChangeFact } from '../schema-diff';
+import { typesAreSemanticallyEqual, typeStr, diffDoc } from '../schema-diff';
 import { DocSchema } from './docs';
 import { SchemaRegistry } from '../schema-registry';
 
@@ -66,46 +66,56 @@ export class VariableLikeSchema extends SchemaNode {
     };
   }
 
-  diff(other: SchemaNode): SchemaChangeDetail[] {
+  diff(other: SchemaNode): SchemaChangeFact[] {
     if (!(other instanceof VariableLikeSchema)) return super.diff(other);
-    const details: SchemaChangeDetail[] = [];
+    const facts: SchemaChangeFact[] = [];
     if (!typesAreSemanticallyEqual(this.type.toObject(), other.type.toObject())) {
-      details.push({
-        aspect: 'type-annotation',
+      facts.push({
+        changeKind: 'type-annotation-changed',
         description: `type changed: ${typeStr(this.type.toObject())} → ${typeStr(other.type.toObject())}`,
-        impact: SchemaChangeImpact.BREAKING,
+        context: {
+          fromType: typeStr(this.type.toObject()),
+          toType: typeStr(other.type.toObject()),
+          position: 'variable',
+        },
         from: typeStr(this.type.toObject()),
         to: typeStr(other.type.toObject()),
       });
     }
     if (this.isOptional && !other.isOptional) {
-      details.push({
-        aspect: 'modifiers',
+      facts.push({
+        changeKind: 'became-required',
         description: 'became required (was optional)',
-        impact: SchemaChangeImpact.BREAKING,
+        context: { position: 'variable' },
         from: 'optional',
         to: 'required',
       });
     } else if (!this.isOptional && other.isOptional) {
-      details.push({
-        aspect: 'modifiers',
+      facts.push({
+        changeKind: 'became-optional',
         description: 'became optional (was required)',
-        impact: SchemaChangeImpact.NON_BREAKING,
+        context: { position: 'variable' },
         from: 'required',
         to: 'optional',
       });
     }
     if (this.defaultValue !== other.defaultValue) {
-      details.push({
-        aspect: 'default-value',
+      const changeKind =
+        this.defaultValue === undefined
+          ? 'parameter-default-added'
+          : other.defaultValue === undefined
+            ? 'parameter-default-removed'
+            : 'parameter-default-changed';
+      facts.push({
+        changeKind,
         description: `default value changed: ${this.defaultValue ?? 'none'} → ${other.defaultValue ?? 'none'}`,
-        impact: SchemaChangeImpact.PATCH,
+        context: { previousDefault: this.defaultValue, newDefault: other.defaultValue },
         from: this.defaultValue,
         to: other.defaultValue,
       });
     }
-    details.push(...diffDoc(this.toObject().doc, other.toObject().doc));
-    return details;
+    facts.push(...diffDoc(this.toObject().doc, other.toObject().doc));
+    return facts;
   }
 
   static fromObject(obj: Record<string, any>): VariableLikeSchema {
