@@ -72,7 +72,9 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
           }
           return result.fields;
         },
-        api: (result: ComponentCompareResult) => result.api || null,
+        api: async (result: ComponentCompareResult) => {
+          return (await componentCompareMain.getAPIDiff(result.baseId, result.compareId)) ?? null;
+        },
       },
     },
   };

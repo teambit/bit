@@ -25,7 +25,7 @@ import type { Component, ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import type { SchemaMain } from '@teambit/schema';
 import { SchemaAspect } from '@teambit/schema';
-import type { APIDiffResult } from '@teambit/semantics.entities.semantic-schema-diff';
+
 import { componentCompareSchema } from './component-compare.graphql';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { DiffCmd } from './diff-cmd';
@@ -34,10 +34,11 @@ import { ImporterAspect } from '@teambit/importer';
 
 export type ComponentCompareResult = {
   id: string;
+  baseId: string;
+  compareId: string;
   code: FileDiff[];
   fields: FieldsDiff[];
   tests: FileDiff[];
-  api?: APIDiffResult;
 };
 
 type ConfigDiff = {
@@ -104,18 +105,25 @@ export class ComponentCompareMain {
       (fileDiff: FileDiff) => allTestFiles.includes(fileDiff.filePath) && fileDiff.status !== 'UNCHANGED'
     );
 
-    const apiDiff =
-      baseComponent && compareComponent
-        ? await this.computeAPIDiffForComponents(baseComponent, compareComponent)
-        : undefined;
-
     return {
       id: `${baseCompId}-${compareCompId}`,
+      baseId: baseIdStr,
+      compareId: compareIdStr,
       code: diff.filesDiff || [],
       fields: diff.fieldsDiff || [],
       tests: testFilesDiff,
-      api: apiDiff,
     };
+  }
+
+  async getAPIDiff(baseIdStr: string, compareIdStr: string) {
+    const host = this.componentAspect.getHost();
+    const [baseCompId, compareCompId] = await host.resolveMultipleComponentIds([baseIdStr, compareIdStr]);
+    await this.importer.importObjectsFromMainIfExist([baseCompId, compareCompId], { cache: true });
+    const components = await host.getMany([baseCompId, compareCompId]);
+    const baseComponent = components?.[0];
+    const compareComponent = components?.[1];
+    if (!baseComponent || !compareComponent) return null;
+    return this.schema.computeAPIDiff(baseComponent, compareComponent);
   }
 
   async diffByCLIValues(
@@ -170,13 +178,6 @@ export class ComponentCompareMain {
       dependencies: serializeAndSort(depData),
       aspects: serializeAspect(component),
     };
-  }
-
-  private async computeAPIDiffForComponents(
-    baseComp: Component,
-    compareComp: Component
-  ): Promise<APIDiffResult | undefined> {
-    return this.schema.computeAPIDiff(baseComp, compareComp);
   }
 
   private async componentsDiff(

@@ -57,19 +57,21 @@ function getStatusLabel(status: string): string {
   }
 }
 
+function dotClass(impact: string): string {
+  switch (impact) {
+    case 'BREAKING':
+      return styles.dotBreaking;
+    case 'NON_BREAKING':
+      return styles.dotNonBreaking;
+    default:
+      return styles.dotPatch;
+  }
+}
+
 function DetailItem({ detail }: { detail: APIDiffDetail }) {
-  const dotClass =
-    detail.impact === 'BREAKING'
-      ? styles.removedBadge
-      : detail.impact === 'NON_BREAKING'
-        ? styles.addedBadge
-        : styles.modifiedBadge;
   return (
     <li className={styles.detailItem}>
-      <span
-        className={dotClass}
-        style={{ width: 6, height: 6, borderRadius: '50%', display: 'inline-block', flexShrink: 0, marginTop: 6 }}
-      />
+      <span className={dotClass(detail.impact)} />
       <span className={styles.detailDescription}>{detail.description}</span>
     </li>
   );
@@ -102,9 +104,7 @@ function APIDiffEntry({ change }: { change: APIDiffChange }) {
         <span className={getStatusClass(change.status)}>{getStatusLabel(change.status)}</span>
         <span className={styles.exportName}>{change.exportName}</span>
         <span className={styles.schemaType}>{change.schemaType}</span>
-        <span className={impactClass(change.impact)} style={{ fontSize: 10, marginLeft: 'auto' }}>
-          {impactLabel(change.impact)}
-        </span>
+        <span className={`${impactClass(change.impact)} ${styles.impactBadge}`}>{impactLabel(change.impact)}</span>
         {hasBody && <span className={expanded ? styles.expandIconOpen : styles.expandIcon}>▶</span>}
       </div>
       {expanded && hasBody && (
@@ -161,18 +161,7 @@ function ChangeSection({ title, changes }: { title: string; changes: APIDiffChan
 
   return (
     <>
-      <h3
-        style={{
-          margin: '16px 0 8px',
-          fontSize: 13,
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-          opacity: 0.6,
-        }}
-      >
-        {title}
-      </h3>
+      <h3 className={styles.sectionTitle}>{title}</h3>
       <div className={styles.changeList}>
         {sorted.map((change) => (
           <APIDiffEntry key={`${change.visibility}-${change.status}-${change.exportName}`} change={change} />
@@ -199,10 +188,8 @@ export function APICompare() {
   return (
     <div className={styles.apiCompareContainer}>
       <div className={styles.summary}>
-        <span className={impactClass(impact)} style={{ fontWeight: 600 }}>
-          {impactLabel(impact)}
-        </span>
-        <span style={{ opacity: 0.4 }}>|</span>
+        <span className={impactClass(impact)}>{impactLabel(impact)}</span>
+        <span className={styles.summaryDivider}>|</span>
         {added > 0 && <span className={styles.addedBadge}>+{added} added</span>}
         {removed > 0 && <span className={styles.removedBadge}>-{removed} removed</span>}
         {modified > 0 && <span className={styles.modifiedBadge}>~{modified} modified</span>}

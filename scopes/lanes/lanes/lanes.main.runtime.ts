@@ -1060,14 +1060,16 @@ please create a new lane instead, which will include all components of this lane
   ): Promise<ChangeType[]> {
     if (!commonSnap) return [ChangeType.NEW];
 
-    const compare = await this.componentCompare.compare(
-      componentId.changeVersion(commonSnap.hash).toString(),
-      componentId.changeVersion(sourceHead).toString()
-    );
+    const baseIdStr = componentId.changeVersion(commonSnap.hash).toString();
+    const compareIdStr = componentId.changeVersion(sourceHead).toString();
+    const [compare, apiDiff] = await Promise.all([
+      this.componentCompare.compare(baseIdStr, compareIdStr),
+      this.componentCompare.getAPIDiff(baseIdStr, compareIdStr),
+    ]);
 
     const hasCodeChanges = compare.code.some((c) => c.status !== 'UNCHANGED');
     const hasFieldChanges = compare.fields.length > 0;
-    const hasApiChanges = compare.api?.hasChanges ?? false;
+    const hasApiChanges = apiDiff?.hasChanges ?? false;
 
     if (!hasFieldChanges && !hasCodeChanges && !hasApiChanges) {
       return [ChangeType.NONE];
