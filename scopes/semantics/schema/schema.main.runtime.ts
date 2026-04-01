@@ -29,6 +29,7 @@ import type { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import type { SchemaExtractor } from './schema-extractor';
 import { SchemaCommand } from './schema.cmd';
+import { SchemaDiffCommand } from './schema-diff.cmd';
 import { schemaSchema } from './schema.graphql';
 import { SchemaTask, SCHEMA_TASK_NAME } from './schema.task';
 import { SchemaService } from './schema.service';
@@ -329,7 +330,9 @@ export class SchemaMain {
     const schema = new SchemaMain(parserSlot, impactRuleSlot, envs, config, builder, workspace, logger);
     const schemaTask = new SchemaTask(SchemaAspect.id, schema, logger);
     builder.registerBuildTasks([schemaTask]);
-    cli.register(new SchemaCommand(schema, component, logger));
+    const schemaCmd = new SchemaCommand(schema, component, logger);
+    schemaCmd.commands = [new SchemaDiffCommand(schema, component, logger)];
+    cli.register(schemaCmd);
     graphql.register(() => schemaSchema(schema));
     envs.registerService(new SchemaService());
     if (workspace) {
