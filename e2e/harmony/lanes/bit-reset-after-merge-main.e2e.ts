@@ -228,4 +228,50 @@ describe('bit reset after merging main into a lane', function () {
       expect(() => helper.command.resetAll()).to.throw('no components found to reset');
     });
   });
+
+  /**
+   * Case 5: Using --no-snap with main ahead (fast-forward).
+   * --no-snap prevents both snap creation AND lane head updates, even when
+   * the merge would normally just advance the lane head.
+   * Files get main's content but the lane object stays untouched.
+   * bit reset has nothing to reset.
+   */
+  describe('main is ahead with --no-snap (no snap, no head change)', () => {
+    let headOnLaneBefore: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane('dev');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      headOnLaneBefore = helper.command.getHeadOfLane('dev', 'comp1');
+
+      helper.command.switchLocalLane('main', '-x');
+      helper.fixtures.populateComponents(1, undefined, 'main-v2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.switchLocalLane('dev', '-x');
+      helper.command.mergeLane('main', '--no-snap -x');
+    });
+
+    it('lane head should not have changed', () => {
+      const headAfterMerge = helper.command.getHeadOfLane('dev', 'comp1');
+      expect(headAfterMerge).to.equal(headOnLaneBefore);
+    });
+
+    it('files should have main content and show as modified', () => {
+      const content = helper.fs.readFile('comp1/index.js');
+      expect(content).to.have.string('main-v2');
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(1);
+    });
+
+    it('bit reset should throw because there is nothing to reset', () => {
+      expect(() => helper.command.resetAll()).to.throw('no components found to reset');
+    });
+  });
 });
