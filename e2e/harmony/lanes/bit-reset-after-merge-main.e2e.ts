@@ -117,8 +117,10 @@ describe('bit reset after merging main into a lane', function () {
       afterMerge = helper.scopeHelper.cloneWorkspace();
     });
 
-    it('merge should have updated the lane head', () => {
+    it('merge should have created an auto-snap with two parents (diverge, not fast-forward)', () => {
       expect(headOnLaneAfterMerge).to.not.equal(headOnLaneBefore);
+      const versionObj = helper.command.catComponent(`comp1@${headOnLaneAfterMerge}`);
+      expect(versionObj.parents).to.have.lengthOf(2);
     });
 
     describe('after running bit reset', () => {
