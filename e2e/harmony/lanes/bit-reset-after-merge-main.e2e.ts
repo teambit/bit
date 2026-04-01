@@ -85,13 +85,13 @@ describe('bit reset after merging main into a lane', function () {
   });
 
   /**
-   * Case 2: Main is simply ahead (fast-forward).
-   * The merge does not create a new snap — it just advances the lane head to main's version.
-   * bit reset reverts the lane head back to what the remote lane has (the pre-merge state),
-   * because from the lane's export perspective, the new head is a local (unexported) change.
+   * Case 2: Main is ahead, lane has an unmodified snap.
+   * Even though the lane content is identical to main's base, the unmodified snap creates
+   * a different hash, so the merge still produces an auto-snap (diverge).
+   * bit reset removes this snap and reverts the lane head to the pre-merge state.
    * Files remain with main's content and show as modified.
    */
-  describe('main is ahead, lane has no new changes (fast-forward)', () => {
+  describe('main is ahead, lane has an unmodified snap', () => {
     let headOnLaneBefore: string;
     let headOnLaneAfterMerge: string;
     let afterMerge: string;
@@ -117,7 +117,7 @@ describe('bit reset after merging main into a lane', function () {
       afterMerge = helper.scopeHelper.cloneWorkspace();
     });
 
-    it('merge should have updated the lane head (fast-forward)', () => {
+    it('merge should have updated the lane head', () => {
       expect(headOnLaneAfterMerge).to.not.equal(headOnLaneBefore);
     });
 
@@ -146,7 +146,7 @@ describe('bit reset after merging main into a lane', function () {
   });
 
   /**
-   * Case 3: Using --no-snap flag (diverged, but no snap is created).
+   * Case 3: Using --no-auto-snap flag (diverged, but no snap is created).
    * Because no snap was made, bit reset has nothing to reset and throws
    * "no components found to reset". The lane head and files are unchanged.
    */
