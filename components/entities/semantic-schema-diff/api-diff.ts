@@ -59,13 +59,16 @@ function diffExports(
       if (!deepEqual(baseComparable, compareComparable)) {
         const facts = baseEntry.unwrapped.diff(compareEntry.unwrapped);
         const assessed: AssessedChange[] = assessor.assess(facts);
-        const impact = assessed.length > 0 ? worstImpact(assessed) : 'PATCH';
 
         const baseSig = baseEntry.unwrapped.signature;
         const compareSig = compareEntry.unwrapped.signature;
-        // Only include signatures when they actually differ — stale artifact
-        // signatures can be identical even when the structured data changed.
         const sigsDiffer = baseSig !== compareSig;
+
+        // Skip if no semantic changes detected — the structural difference is
+        // just metadata (locations, ordering) that doesn't affect the API.
+        if (assessed.length === 0 && !sigsDiffer) continue;
+
+        const impact = assessed.length > 0 ? worstImpact(assessed) : 'PATCH';
 
         changes.push({
           status: APIDiffStatus.MODIFIED,
@@ -74,6 +77,8 @@ function diffExports(
           schemaType: getDisplayName(compareEntry.unwrapped, true),
           schemaTypeRaw: getSchemaTypeName(compareEntry.unwrapped),
           impact,
+          // Only include signatures when they actually differ — stale artifact
+          // signatures can be identical even when the structured data changed.
           baseSignature: sigsDiffer ? baseSig : undefined,
           compareSignature: sigsDiffer ? compareSig : undefined,
           baseNode: baseEntry.unwrapped.toObject(),
