@@ -191,7 +191,7 @@ examples:
             const detailImpact = this.impactDot(detail.impact);
             const desc = this.enhanceDescription(detail.description, detail.impact, detail.changeKind);
             lines.push(`${indent}${detailImpact} ${desc}`);
-            if (detail.from && detail.to) {
+            if (detail.from != null && detail.to != null) {
               lines.push(`${indent}  ${chalk.red(`- ${detail.from}`)}`);
               lines.push(`${indent}  ${chalk.green(`+ ${detail.to}`)}`);
             }

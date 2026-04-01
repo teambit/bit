@@ -109,15 +109,13 @@ export class ComponentCompareMain {
         ? await this.computeAPIDiffForComponents(baseComponent, compareComponent)
         : undefined;
 
-    const compareResult = {
+    return {
       id: `${baseCompId}-${compareCompId}`,
       code: diff.filesDiff || [],
       fields: diff.fieldsDiff || [],
       tests: testFilesDiff,
       api: apiDiff,
     };
-
-    return compareResult;
   }
 
   async diffByCLIValues(

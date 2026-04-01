@@ -91,8 +91,10 @@ function APIDiffEntry({ change }: { change: APIDiffChange }) {
         onClick={() => hasBody && setExpanded(!expanded)}
         role="button"
         tabIndex={0}
+        aria-expanded={hasBody ? expanded : undefined}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
             hasBody && setExpanded(!expanded);
           }
         }}

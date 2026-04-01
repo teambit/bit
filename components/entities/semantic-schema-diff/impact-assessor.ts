@@ -14,9 +14,11 @@ export function worstImpact(items: { impact: ImpactLevel }[]): ImpactLevel {
 export class ImpactAssessor {
   private customRules: ImpactRule[] = [];
   private defaultRules: ImpactRule[] = [];
+  private allRules: ImpactRule[] | undefined;
 
   registerDefaultRules(rules: ImpactRule[]): void {
     this.defaultRules.push(...rules);
+    this.allRules = undefined;
   }
 
   /**
@@ -27,8 +29,16 @@ export class ImpactAssessor {
     for (const rule of rules) {
       if (!this.customRules.includes(rule)) {
         this.customRules.push(rule);
+        this.allRules = undefined;
       }
     }
+  }
+
+  private getRules(): ImpactRule[] {
+    if (!this.allRules) {
+      this.allRules = [...this.customRules, ...this.defaultRules];
+    }
+    return this.allRules;
   }
 
   assess(facts: SchemaChangeFact[]): AssessedChange[] {
@@ -39,7 +49,7 @@ export class ImpactAssessor {
   }
 
   assessFact(fact: SchemaChangeFact): ImpactLevel {
-    for (const rule of [...this.customRules, ...this.defaultRules]) {
+    for (const rule of this.getRules()) {
       const kinds = Array.isArray(rule.changeKind) ? rule.changeKind : [rule.changeKind];
       if (!kinds.includes(fact.changeKind) && !kinds.includes('*')) continue;
       const result = rule.assess(fact);

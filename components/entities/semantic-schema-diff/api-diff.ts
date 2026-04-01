@@ -212,12 +212,15 @@ export function computeAPIDiff(base: APISchema, compare: APISchema, assessor: Im
 
   const allChanges = [...publicChanges, ...internalChanges];
 
-  const added = allChanges.filter((c) => c.status === APIDiffStatus.ADDED).length;
-  const removed = allChanges.filter((c) => c.status === APIDiffStatus.REMOVED).length;
-  const modified = allChanges.filter((c) => c.status === APIDiffStatus.MODIFIED).length;
-  const breaking = allChanges.filter((c) => c.impact === 'BREAKING').length;
-  const nonBreaking = allChanges.filter((c) => c.impact === 'NON_BREAKING').length;
-  const patch = allChanges.filter((c) => c.impact === 'PATCH').length;
+  const counts = { added: 0, removed: 0, modified: 0, breaking: 0, nonBreaking: 0, patch: 0 };
+  for (const c of allChanges) {
+    if (c.status === APIDiffStatus.ADDED) counts.added++;
+    else if (c.status === APIDiffStatus.REMOVED) counts.removed++;
+    else if (c.status === APIDiffStatus.MODIFIED) counts.modified++;
+    if (c.impact === 'BREAKING') counts.breaking++;
+    else if (c.impact === 'NON_BREAKING') counts.nonBreaking++;
+    else if (c.impact === 'PATCH') counts.patch++;
+  }
 
   const impact: ImpactLevel = allChanges.length > 0 ? worstImpact(allChanges) : 'PATCH';
 
@@ -227,11 +230,6 @@ export function computeAPIDiff(base: APISchema, compare: APISchema, assessor: Im
     publicChanges,
     internalChanges,
     changes: allChanges,
-    added,
-    removed,
-    modified,
-    breaking,
-    nonBreaking,
-    patch,
+    ...counts,
   };
 }

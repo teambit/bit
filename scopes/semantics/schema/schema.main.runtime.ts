@@ -262,11 +262,6 @@ export class SchemaMain {
    * Custom rules take priority over default rules.
    * This allows environments to customize what constitutes a breaking change.
    */
-  /**
-   * Register custom impact rules for API diff assessment.
-   * Custom rules take priority over default rules.
-   * This allows environments to customize what constitutes a breaking change.
-   */
   registerImpactRules(rules: ImpactRule[]): void {
     this.impactRuleSlot.register(rules);
   }
@@ -282,14 +277,14 @@ export class SchemaMain {
   /**
    * Compute the semantic API diff between two component versions.
    */
-  async computeAPIDiff(baseComp: Component, compareComp: Component): Promise<APIDiffResult | undefined> {
+  async computeAPIDiff(baseComp: Component, compareComp: Component): Promise<APIDiffResult | null> {
     try {
       const [baseSchema, compareSchema] = await Promise.all([this.getSchema(baseComp), this.getSchema(compareComp)]);
       const assessor = this.getImpactAssessor();
       return computeAPIDiff(baseSchema, compareSchema, assessor);
     } catch (err: any) {
       this.logger.warn(`failed computing API diff: ${err.message}`);
-      return undefined;
+      return null;
     }
   }
 
