@@ -59,7 +59,7 @@ export class SchemaMain {
     private parserSlot: ParserSlot,
 
     /**
-     * impact rules slot for customizing API diff impact assessment.
+     * impact rules slot — other aspects register custom rules via registerImpactRules().
      */
     private impactRuleSlot: ImpactRuleSlot,
 
@@ -71,7 +71,9 @@ export class SchemaMain {
 
     private workspace: Workspace,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private impactAssessor: ImpactAssessor
   ) {}
 
   /**
@@ -260,20 +262,21 @@ export class SchemaMain {
    * Custom rules take priority over default rules.
    * This allows environments to customize what constitutes a breaking change.
    */
+  /**
+   * Register custom impact rules for API diff assessment.
+   * Custom rules take priority over default rules.
+   * This allows environments to customize what constitutes a breaking change.
+   */
   registerImpactRules(rules: ImpactRule[]): void {
     this.impactRuleSlot.register(rules);
   }
 
   /**
-   * Create an ImpactAssessor with default rules + any registered custom rules.
+   * Get the ImpactAssessor with default + all registered custom rules from the slot.
    */
   getImpactAssessor(): ImpactAssessor {
-    const assessor = new ImpactAssessor();
-    assessor.registerDefaultRules(DEFAULT_IMPACT_RULES);
-    for (const rules of this.impactRuleSlot.values()) {
-      assessor.registerRules(rules);
-    }
-    return assessor;
+    this.impactAssessor.registerRules(this.impactRuleSlot.values().flat());
+    return this.impactAssessor;
   }
 
   /**
@@ -327,7 +330,9 @@ export class SchemaMain {
     [parserSlot, impactRuleSlot]: [ParserSlot, ImpactRuleSlot]
   ) {
     const logger = loggerMain.createLogger(SchemaAspect.id);
-    const schema = new SchemaMain(parserSlot, impactRuleSlot, envs, config, builder, workspace, logger);
+    const impactAssessor = new ImpactAssessor();
+    impactAssessor.registerDefaultRules(DEFAULT_IMPACT_RULES);
+    const schema = new SchemaMain(parserSlot, impactRuleSlot, envs, config, builder, workspace, logger, impactAssessor);
     const schemaTask = new SchemaTask(SchemaAspect.id, schema, logger);
     builder.registerBuildTasks([schemaTask]);
     const schemaCmd = new SchemaCommand(schema, component, logger);

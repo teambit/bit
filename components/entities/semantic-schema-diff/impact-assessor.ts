@@ -21,10 +21,14 @@ export class ImpactAssessor {
 
   /**
    * Register custom rules (evaluated before default rules).
-   * Used by environments to override default behavior.
+   * Deduplicates — rules already registered are skipped.
    */
   registerRules(rules: ImpactRule[]): void {
-    this.customRules.push(...rules);
+    for (const rule of rules) {
+      if (!this.customRules.includes(rule)) {
+        this.customRules.push(rule);
+      }
+    }
   }
 
   assess(facts: SchemaChangeFact[]): AssessedChange[] {
