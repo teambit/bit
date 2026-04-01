@@ -871,7 +871,7 @@ list stash
 show workspace component status and issues
 
 displays the current state of all workspace components including new, modified, staged, and problematic components. identifies blocking issues that prevent tagging/snapping and provides warnings with --warnings flag. essential for understanding workspace health before versioning components. use --quick for a faster check that only detects file-level changes (new/modified components). for maximum speed (skips aspect loading entirely), use "bit mini-status".
-Flags: --json, --warnings, --verbose, --lanes, --strict, --fail-on-error, --ignore-circular-dependencies, --quick
+Flags: --json, --warnings, --verbose, --lanes, --strict, --fail-on-error, --ignore-circular-dependencies, --quick, --expand
 
 ## bit system <sub-command>
 
