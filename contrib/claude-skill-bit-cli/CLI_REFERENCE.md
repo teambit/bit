@@ -116,7 +116,7 @@ Flags: --unmodified, --strict, --json
 switch between component versions or remove local changes
 
 checkout components to specified versions or remove local changes. most commonly used as 'bit checkout head' to get latest versions. the `<to>` argument accepts these values: - head: checkout to last snap/tag (most common usage) - specific version: checkout to exact version (e.g. 'bit checkout 1.0.5 component-name') - head~x: go back x generations from head (e.g. 'head~2' for two versions back) - latest: checkout to latest semver tag - reset: remove local modifications and restore original files (also restores deleted component directories) when on lanes, 'checkout head' only affects lane components. to update main components, run 'bit lane merge main'.
-Flags: --interactive-merge, --auto-merge-resolve <merge-strategy>, --manual, --all, --workspace-only, --verbose, --skip-dependency-installation, --force-ours, --force-theirs
+Flags: --interactive-merge, --auto-merge-resolve <merge-strategy>, --manual, --all, --workspace-only, --verbose, --skip-dependency-installation, --force-ours, --force-theirs, --include-new-from-scope
 
 ## bit ci <sub-command>
 
