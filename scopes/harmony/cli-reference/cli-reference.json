@@ -2701,6 +2701,11 @@
         "",
         "force-theirs",
         "do not merge, just overwrite with incoming files"
+      ],
+      [
+        "",
+        "include-new-from-scope",
+        "relevant for 'bit checkout head'. import components from the defaultScope that don't exist in the workspace"
       ]
     ],
     "description": "switch between component versions or remove local changes",
