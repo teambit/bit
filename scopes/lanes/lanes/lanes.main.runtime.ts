@@ -1054,7 +1054,7 @@ please create a new lane instead, which will include all components of this lane
   }
 
   private async deriveChangeTypes(
-    commonSnap: { hash: string } | undefined,
+    commonSnap: { hash: string } | null | undefined,
     componentId: ComponentID,
     sourceHead: string
   ): Promise<ChangeType[]> {
