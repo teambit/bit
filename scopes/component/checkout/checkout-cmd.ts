@@ -172,7 +172,6 @@ export function checkoutOutput(
     newFromLane,
     newFromLaneAdded,
     newFromScope,
-    newFromScopeAdded,
     installationError,
     compilationError,
   }: ApplyVersionResults = checkoutResults;
@@ -258,9 +257,7 @@ once ready, snap/tag the components to persist the changes`;
   };
   const getNewFromScopeOutput = () => {
     if (!newFromScope?.length) return '';
-    const title = newFromScopeAdded
-      ? `successfully imported the following new components from the defaultScope`
-      : `new components found on the defaultScope but were not added`;
+    const title = `successfully imported the following new components from the defaultScope`;
     const body = newFromScope.join('\n');
     return `${chalk.underline(title)}\n${body}`;
   };

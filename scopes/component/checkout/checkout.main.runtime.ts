@@ -169,7 +169,6 @@ export class CheckoutMain {
     }
 
     let newFromScope: ComponentID[] | undefined;
-    let newFromScopeAdded = false;
     if (checkoutProps.head && checkoutProps.includeNewFromScope) {
       newFromScope = await this.getNewComponentsFromScope();
       if (newFromScope.length) {
@@ -182,7 +181,6 @@ export class CheckoutMain {
           newFromScope.map((id) => consumer.loadComponentFromModelImportIfNeeded(id))
         );
         componentsLegacy.push(...compsNewFromScope);
-        newFromScopeAdded = true;
       }
     }
 
@@ -223,7 +221,6 @@ export class CheckoutMain {
       newFromLane: newFromLane?.map((n) => n.toString()),
       newFromLaneAdded,
       newFromScope: newFromScope?.map((n) => n.toString()),
-      newFromScopeAdded,
       workspaceConfigUpdateResult: componentWriterResults?.workspaceConfigUpdateResult,
       installationError: componentWriterResults?.installationError,
       compilationError: componentWriterResults?.compilationError,
@@ -437,7 +434,7 @@ export class CheckoutMain {
       const remoteComponents = await this.lister.remoteList(defaultScope, { namespacesUsingWildcards: '**' });
       const workspaceIds = this.workspace.listIds();
       const newComponents = remoteComponents.filter(
-        (remote) => !remote.removed && !workspaceIds.find((wsId) => wsId.isEqualWithoutVersion(remote.id))
+        (remote) => !remote.removed && !workspaceIds.hasWithoutVersion(remote.id)
       );
       return newComponents.map((c) => c.id);
     } catch (err) {
