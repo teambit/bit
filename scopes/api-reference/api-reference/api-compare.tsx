@@ -110,7 +110,7 @@ function APIDiffEntry({ change }: { change: APIDiffChange }) {
           {change.status === 'MODIFIED' && change.changes && change.changes.length > 0 && (
             <ul className={styles.detailsList}>
               {change.changes.map((detail, i) => (
-                <DetailItem key={`${detail.aspect}-${i}`} detail={detail} />
+                <DetailItem key={`${detail.changeKind}-${i}`} detail={detail} />
               ))}
             </ul>
           )}

@@ -1,5 +1,5 @@
 export type APIDiffDetail = {
-  aspect: string;
+  changeKind: string;
   description: string;
   impact: string;
   from?: string;

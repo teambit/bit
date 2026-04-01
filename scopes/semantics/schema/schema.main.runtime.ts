@@ -23,8 +23,8 @@ import type { Formatter } from '@teambit/formatter';
 import type { SchemaNodeTransformer, SchemaTransformer } from '@teambit/typescript';
 import { BuildStatus, CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 import { Http } from '@teambit/scope.network';
-import type { ImpactRule } from '@teambit/semantics.entities.semantic-schema-diff';
-import { ImpactAssessor, DEFAULT_IMPACT_RULES } from '@teambit/semantics.entities.semantic-schema-diff';
+import type { ImpactRule, APIDiffResult } from '@teambit/semantics.entities.semantic-schema-diff';
+import { ImpactAssessor, DEFAULT_IMPACT_RULES, computeAPIDiff } from '@teambit/semantics.entities.semantic-schema-diff';
 import type { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import type { SchemaExtractor } from './schema-extractor';
@@ -273,6 +273,20 @@ export class SchemaMain {
       assessor.registerRules(rules);
     }
     return assessor;
+  }
+
+  /**
+   * Compute the semantic API diff between two component versions.
+   */
+  async computeAPIDiff(baseComp: Component, compareComp: Component): Promise<APIDiffResult | undefined> {
+    try {
+      const [baseSchema, compareSchema] = await Promise.all([this.getSchema(baseComp), this.getSchema(compareComp)]);
+      const assessor = this.getImpactAssessor();
+      return computeAPIDiff(baseSchema, compareSchema, assessor);
+    } catch (err: any) {
+      this.logger.warn(`failed computing API diff: ${err.message}`);
+      return undefined;
+    }
   }
 
   isSchemaTaskDisabled(component: Component) {

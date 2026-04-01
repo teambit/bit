@@ -47,6 +47,7 @@ export function buildExportMap(
 export function buildInternalMap(internals: any[]): ReturnType<typeof buildExportMap> {
   const map = new Map<string, { name: string; node: any; unwrapped: any }>();
   for (const mod of internals) {
+    // Exported internals (re-exports within internal modules)
     const exports = mod.exports || [];
     for (const exp of exports) {
       const name = exp.alias || exp.name || exp.exportNode?.name || '';
@@ -54,6 +55,17 @@ export function buildInternalMap(internals: any[]): ReturnType<typeof buildExpor
       if (name) {
         const qualifiedName = mod.namespace ? `${mod.namespace}/${name}` : name;
         map.set(qualifiedName, { name: qualifiedName, node: exp, unwrapped });
+      }
+    }
+    // Pure internals (non-exported declarations)
+    const pureInternals = mod.internals || [];
+    for (const node of pureInternals) {
+      const name = node.name || '';
+      if (name) {
+        const qualifiedName = mod.namespace ? `${mod.namespace}/${name}` : name;
+        if (!map.has(qualifiedName)) {
+          map.set(qualifiedName, { name: qualifiedName, node, unwrapped: node });
+        }
       }
     }
   }

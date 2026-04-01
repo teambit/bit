@@ -36,7 +36,7 @@ import styles from './component-compare.module.scss';
 const ChangeTypeAPI = 'API' as unknown as ChangeType;
 
 export type APIDiffDetail = {
-  aspect: string;
+  changeKind: string;
   description: string;
   impact: string;
   from?: string;
@@ -75,52 +75,49 @@ const QUERY_API_DIFF = gql`
   query ComponentCompareAPIDiff($baseId: String!, $compareId: String!) {
     getHost {
       id
-      compareComponent(baseId: $baseId, compareId: $compareId) {
-        id
-        api {
-          hasChanges
+      apiDiff(baseId: $baseId, compareId: $compareId) {
+        hasChanges
+        impact
+        added
+        removed
+        modified
+        breaking
+        nonBreaking
+        patch
+        publicChanges {
+          status
+          visibility
+          exportName
+          schemaType
+          schemaTypeRaw
           impact
-          added
-          removed
-          modified
-          breaking
-          nonBreaking
-          patch
-          publicChanges {
-            status
-            visibility
-            exportName
-            schemaType
-            schemaTypeRaw
+          baseSignature
+          compareSignature
+          baseNode
+          compareNode
+          changes {
+            changeKind
+            description
             impact
-            baseSignature
-            compareSignature
-            baseNode
-            compareNode
-            changes {
-              aspect
-              description
-              impact
-              from
-              to
-            }
+            from
+            to
           }
-          internalChanges {
-            status
-            visibility
-            exportName
-            schemaType
-            schemaTypeRaw
+        }
+        internalChanges {
+          status
+          visibility
+          exportName
+          schemaType
+          schemaTypeRaw
+          impact
+          baseSignature
+          compareSignature
+          changes {
+            changeKind
+            description
             impact
-            baseSignature
-            compareSignature
-            changes {
-              aspect
-              description
-              impact
-              from
-              to
-            }
+            from
+            to
           }
         }
       }
@@ -134,15 +131,15 @@ function useAPIDiffQuery(
   skip?: boolean
 ): { loading?: boolean; apiDiffResult?: APIDiffResult | null } {
   const { data, loading } = useDataQuery<{
-    getHost: { compareComponent: { api: APIDiffResult | null } };
+    getHost: { apiDiff: APIDiffResult | null };
   }>(QUERY_API_DIFF, {
     variables: { baseId, compareId },
-    skip: skip || !baseId || !compareId,
+    skip: skip || !baseId || !compareId || baseId === compareId,
   });
 
   return {
     loading,
-    apiDiffResult: data?.getHost?.compareComponent?.api,
+    apiDiffResult: data?.getHost?.apiDiff,
   };
 }
 
@@ -487,7 +484,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   const { loading: apiDiffLoading, apiDiffResult } = useAPIDiffQuery(
     base?.id.toString(),
     compare?.id.toString(),
-    skipComponentCompareQuery
+    hidden
   );
 
   const fileCompareDataByName = useMemo(() => {

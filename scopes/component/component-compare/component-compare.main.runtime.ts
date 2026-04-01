@@ -25,7 +25,6 @@ import type { Component, ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import type { SchemaMain } from '@teambit/schema';
 import { SchemaAspect } from '@teambit/schema';
-import { computeAPIDiff } from '@teambit/semantics.entities.semantic-schema-diff';
 import type { APIDiffResult } from '@teambit/semantics.entities.semantic-schema-diff';
 import { componentCompareSchema } from './component-compare.graphql';
 import { ComponentCompareAspect } from './component-compare.aspect';
@@ -179,17 +178,7 @@ export class ComponentCompareMain {
     baseComp: Component,
     compareComp: Component
   ): Promise<APIDiffResult | undefined> {
-    try {
-      const [baseSchema, compareSchema] = await Promise.all([
-        this.schema.getSchema(baseComp),
-        this.schema.getSchema(compareComp),
-      ]);
-      const assessor = this.schema.getImpactAssessor();
-      return computeAPIDiff(baseSchema, compareSchema, assessor);
-    } catch (err: any) {
-      this.logger.warn(`failed computing API diff: ${err.message}`);
-      return undefined;
-    }
+    return this.schema.computeAPIDiff(baseComp, compareComp);
   }
 
   private async componentsDiff(

@@ -61,6 +61,12 @@ function diffExports(
         const assessed: AssessedChange[] = assessor.assess(facts);
         const impact = assessed.length > 0 ? worstImpact(assessed) : 'PATCH';
 
+        const baseSig = baseEntry.unwrapped.signature;
+        const compareSig = compareEntry.unwrapped.signature;
+        // Only include signatures when they actually differ — stale artifact
+        // signatures can be identical even when the structured data changed.
+        const sigsDiffer = baseSig !== compareSig;
+
         changes.push({
           status: APIDiffStatus.MODIFIED,
           visibility,
@@ -68,8 +74,8 @@ function diffExports(
           schemaType: getDisplayName(compareEntry.unwrapped, true),
           schemaTypeRaw: getSchemaTypeName(compareEntry.unwrapped),
           impact,
-          baseSignature: baseEntry.unwrapped.signature,
-          compareSignature: compareEntry.unwrapped.signature,
+          baseSignature: sigsDiffer ? baseSig : undefined,
+          compareSignature: sigsDiffer ? compareSig : undefined,
           baseNode: baseEntry.unwrapped.toObject(),
           compareNode: compareEntry.unwrapped.toObject(),
           changes: assessed,
@@ -81,13 +87,122 @@ function diffExports(
   return changes;
 }
 
+/**
+ * Remove entries from an internal map that also appear in the public export map.
+ * Older schema extractors duplicated public exports into `internals` — we filter
+ * those out so the diff doesn't report phantom additions/removals.
+ */
+function dedupeInternals(
+  internals: ReturnType<typeof buildExportMap>,
+  publicExports: ReturnType<typeof buildExportMap>
+): ReturnType<typeof buildExportMap> {
+  const deduped = new Map(internals);
+  for (const name of deduped.keys()) {
+    if (publicExports.has(name)) deduped.delete(name);
+  }
+  return deduped;
+}
+
+/**
+ * Detect symbols that moved between public and internal across versions.
+ * Returns the visibility change entries and mutates the maps to remove the
+ * moved symbols so they don't appear as separate add/remove pairs.
+ */
+function detectVisibilityChanges(
+  baseExports: ReturnType<typeof buildExportMap>,
+  compareExports: ReturnType<typeof buildExportMap>,
+  baseInternals: ReturnType<typeof buildExportMap>,
+  compareInternals: ReturnType<typeof buildExportMap>,
+  assessor: ImpactAssessor
+): APIDiffChange[] {
+  const changes: APIDiffChange[] = [];
+
+  // public → internal (made protected): breaking for consumers
+  for (const name of baseExports.keys()) {
+    if (!compareExports.has(name) && compareInternals.has(name)) {
+      const baseEntry = baseExports.get(name)!;
+      const compareEntry = compareInternals.get(name)!;
+      const impact = assessor.assessFact({
+        changeKind: 'visibility-public-to-internal',
+        description: `'${name}' moved from public API to internal — consumers can no longer import it`,
+        context: { exportName: name, from: 'public', to: 'internal' },
+      });
+      changes.push({
+        status: APIDiffStatus.MODIFIED,
+        visibility: 'public',
+        exportName: name,
+        schemaType: getDisplayName(baseEntry.unwrapped, true),
+        schemaTypeRaw: getSchemaTypeName(baseEntry.unwrapped),
+        impact,
+        baseSignature: baseEntry.unwrapped.signature,
+        compareSignature: compareEntry.unwrapped.signature,
+        changes: [
+          {
+            changeKind: 'visibility-public-to-internal',
+            description: `moved from public API to internal`,
+            impact,
+            context: {},
+          },
+        ],
+      });
+      baseExports.delete(name);
+      compareInternals.delete(name);
+    }
+  }
+
+  // internal → public (made public): non-breaking, new API surface
+  for (const name of baseInternals.keys()) {
+    if (!compareInternals.has(name) && compareExports.has(name)) {
+      const baseEntry = baseInternals.get(name)!;
+      const compareEntry = compareExports.get(name)!;
+      const impact = assessor.assessFact({
+        changeKind: 'visibility-internal-to-public',
+        description: `'${name}' promoted from internal to public API`,
+        context: { exportName: name, from: 'internal', to: 'public' },
+      });
+      changes.push({
+        status: APIDiffStatus.MODIFIED,
+        visibility: 'public',
+        exportName: name,
+        schemaType: getDisplayName(compareEntry.unwrapped, true),
+        schemaTypeRaw: getSchemaTypeName(compareEntry.unwrapped),
+        impact,
+        baseSignature: baseEntry.unwrapped.signature,
+        compareSignature: compareEntry.unwrapped.signature,
+        changes: [
+          {
+            changeKind: 'visibility-internal-to-public',
+            description: `promoted from internal to public API`,
+            impact,
+            context: {},
+          },
+        ],
+      });
+      baseInternals.delete(name);
+      compareExports.delete(name);
+    }
+  }
+
+  return changes;
+}
+
 export function computeAPIDiff(base: APISchema, compare: APISchema, assessor: ImpactAssessor): APIDiffResult {
   const baseExports = buildExportMap(base.module.exports);
   const compareExports = buildExportMap(compare.module.exports);
-  const publicChanges = diffExports(baseExports, compareExports, 'public', assessor);
 
-  const baseInternals = buildInternalMap(base.internals || []);
-  const compareInternals = buildInternalMap(compare.internals || []);
+  const baseInternals = dedupeInternals(buildInternalMap(base.internals || []), baseExports);
+  const compareInternals = dedupeInternals(buildInternalMap(compare.internals || []), compareExports);
+
+  // Detect cross-boundary visibility changes before diffing each group
+  const visibilityChanges = detectVisibilityChanges(
+    baseExports,
+    compareExports,
+    baseInternals,
+    compareInternals,
+    assessor
+  );
+
+  const publicChanges = [...visibilityChanges, ...diffExports(baseExports, compareExports, 'public', assessor)];
   const internalChanges = diffExports(baseInternals, compareInternals, 'internal', assessor);
 
   const allChanges = [...publicChanges, ...internalChanges];

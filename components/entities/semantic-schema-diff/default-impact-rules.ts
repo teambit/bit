@@ -89,6 +89,14 @@ export const DEFAULT_IMPACT_RULES: ImpactRule[] = [
     assess: () => 'NON_BREAKING',
   },
   {
+    changeKind: 'visibility-public-to-internal',
+    assess: () => 'BREAKING',
+  },
+  {
+    changeKind: 'visibility-internal-to-public',
+    assess: () => 'NON_BREAKING',
+  },
+  {
     changeKind: 'access-narrowed',
     assess: () => 'BREAKING',
   },

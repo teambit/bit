@@ -56,8 +56,6 @@
       "impact": "PATCH",
       "exportName": "ButtonProps",
       "schemaType": "Type Alias",
-      "baseSignature": "type ButtonProps = any",
-      "compareSignature": "type ButtonProps = any",
       "details": [
         {
           "changeKind": "type-definition-changed",
@@ -74,8 +72,6 @@
       "impact": "NON_BREAKING",
       "exportName": "Bar",
       "schemaType": "Class",
-      "baseSignature": "class Bar",
-      "compareSignature": "class Bar",
       "details": [
         {
           "changeKind": "member-added",
@@ -91,8 +87,6 @@
       "impact": "NON_BREAKING",
       "exportName": "ClassSomething",
       "schemaType": "Class",
-      "baseSignature": "class ClassSomething",
-      "compareSignature": "class ClassSomething",
       "details": [
         {
           "changeKind": "member-added",
@@ -108,8 +102,6 @@
       "impact": "NON_BREAKING",
       "exportName": "Hello",
       "schemaType": "Interface",
-      "baseSignature": "interface Hello",
-      "compareSignature": "interface Hello",
       "details": [
         {
           "changeKind": "member-added",
@@ -125,8 +117,6 @@
       "impact": "NON_BREAKING",
       "exportName": "Food",
       "schemaType": "Enum",
-      "baseSignature": "enum Food",
-      "compareSignature": "enum Food",
       "details": [
         {
           "changeKind": "enum-member-added",
