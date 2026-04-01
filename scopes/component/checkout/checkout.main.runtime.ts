@@ -432,7 +432,7 @@ export class CheckoutMain {
     if (!defaultScope) return [];
     try {
       const remoteComponents = await this.lister.remoteList(defaultScope, { namespacesUsingWildcards: '**' });
-      const workspaceIds = this.workspace.listIds();
+      const workspaceIds = this.workspace.listIdsIncludeRemoved();
       const newComponents = remoteComponents.filter(
         (remote) => !remote.removed && !workspaceIds.hasWithoutVersion(remote.id)
       );
