@@ -182,4 +182,50 @@ describe('bit reset after merging main into a lane', function () {
       expect(() => helper.command.resetAll()).to.throw('no components found to reset');
     });
   });
+
+  /**
+   * Case 4: Using --no-snap flag (diverged).
+   * Unlike --no-auto-snap, --no-snap also prevents the lane head from being updated.
+   * The files get the merged content but the lane object stays untouched.
+   * bit reset has nothing to reset.
+   */
+  describe('diverged with --no-snap (no snap, no head change)', () => {
+    let headOnLaneBefore: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane('dev');
+      helper.fixtures.populateComponents(1, undefined, 'from-lane');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      headOnLaneBefore = helper.command.getHeadOfLane('dev', 'comp1');
+
+      helper.command.switchLocalLane('main', '-x');
+      helper.fixtures.populateComponents(1, undefined, 'from-main');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.switchLocalLane('dev', '-x');
+      helper.command.mergeLane('main', '--auto-merge-resolve theirs --no-snap -x');
+    });
+
+    it('lane head should not have changed', () => {
+      const headAfterMerge = helper.command.getHeadOfLane('dev', 'comp1');
+      expect(headAfterMerge).to.equal(headOnLaneBefore);
+    });
+
+    it('files should have the merged content and show as modified', () => {
+      const content = helper.fs.readFile('comp1/index.js');
+      expect(content).to.have.string('from-main');
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(1);
+    });
+
+    it('bit reset should throw because there is nothing to reset', () => {
+      expect(() => helper.command.resetAll()).to.throw('no components found to reset');
+    });
+  });
 });
