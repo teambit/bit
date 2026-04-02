@@ -32,6 +32,7 @@ export type LaneDiffResults = {
   toLaneName: string;
   fromLaneName: string;
   failures: Failure[];
+  unavailableVersions?: string[];
 };
 
 export class LaneDiffGenerator {
@@ -225,37 +226,55 @@ export class LaneDiffGenerator {
       throw new BitError(`lane-history "${toHistoryId}" is empty, nothing to show`);
     }
 
-    const idsOfTo = ComponentIdList.fromArray(
-      this.toLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
-    );
-    await this.scope.legacyScope.scopeImporter.importWithoutDeps(idsOfTo, {
-      cache: true,
-      lane,
-      ignoreMissingHead: true,
-      reason: `for the "to" diff - ${laneId.toString()}-${toHistoryId}`,
-    });
-    const idsOfFrom = ComponentIdList.fromArray(
-      this.fromLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
-    );
-    await this.scope.legacyScope.scopeImporter.importWithoutDeps(idsOfFrom, {
-      cache: true,
-      lane,
-      ignoreMissingHead: true,
-      reason: `for the "from" diff - ${laneId.toString()}-${fromHistoryId}`,
-    });
+    // Ensure all components from the history entries are recognized as part of the lane.
+    // Components that existed on the lane at the time of these history entries may have since
+    // been removed from the current lane. Without this, the importer would try to fetch them
+    // from the component's own scope (e.g., bitdev.general) rather than the lane's scope,
+    // and that scope won't have the lane-specific snap objects.
+    const currentLaneCompIds = new Set(lane.components.map((c) => c.id.toStringWithoutVersion()));
+    const allHistoryComps = [...this.toLaneData.components, ...this.fromLaneData.components];
+    for (const comp of allHistoryComps) {
+      const key = comp.id.toStringWithoutVersion();
+      if (!currentLaneCompIds.has(key) && comp.head) {
+        lane.addComponent({ id: comp.id, head: comp.head });
+        currentLaneCompIds.add(key);
+      }
+    }
 
-    await Promise.all(
-      this.toLaneData.components.map(async ({ id, head }) => {
+    await this.importHistoryVersions(lane, laneId, toHistoryId, fromHistoryId);
+
+    // Check which version objects are actually available locally.
+    // Some historical versions may not exist on any remote (e.g., from snaps that were
+    // superseded before export). Skip those and report them separately.
+    const repo = this.scope.legacyScope.objects;
+    const unavailableVersions: string[] = [];
+    const fromHeadIndex = new Map<string, Ref>();
+    for (const { id, head } of this.fromLaneData.components) {
+      if (head) fromHeadIndex.set(id.toStringWithoutVersion(), head);
+    }
+
+    await pMap(
+      this.toLaneData.components,
+      async ({ id, head }) => {
         if (idsToCheckDiff && !idsToCheckDiff.hasWithoutVersion(id)) {
           return;
         }
+        const fromHead = fromHeadIndex.get(id.toStringWithoutVersion());
+        // check both "to" and "from" version objects exist before attempting diff
+        const toMissing = head ? !(await repo.has(head)) : false;
+        const fromMissing = fromHead ? !(await repo.has(fromHead)) : false;
+        if (toMissing || fromMissing) {
+          unavailableVersions.push(id.toStringWithoutVersion());
+          return;
+        }
         try {
-          await this.componentDiff(id, head);
+          await this.componentDiff(id, head, {}, false, undefined, fromHead);
         } catch (err: any) {
           const message = err instanceof Error ? err.message : String(err);
           this.failures.push({ id, msg: message });
         }
-      })
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
 
     return {
@@ -266,11 +285,13 @@ export class LaneDiffGenerator {
       toLaneName: this.toLaneData.name,
       fromLaneName: this.fromLaneData.name,
       failures: this.failures,
+      unavailableVersions,
     };
   }
 
   laneDiffResultsToString(laneDiffResults: LaneDiffResults): string {
-    const { compsWithDiff, newCompsFrom, newCompsTo, toLaneName, fromLaneName, failures } = laneDiffResults;
+    const { compsWithDiff, newCompsFrom, newCompsTo, toLaneName, fromLaneName, failures, unavailableVersions } =
+      laneDiffResults;
 
     const newCompsOutput = (laneName: string, ids: string[]) => {
       if (!ids.length) return '';
@@ -287,7 +308,16 @@ export class LaneDiffGenerator {
     const newCompsToStr = newCompsOutput(toLaneName, newCompsTo);
 
     const newCompsFromStr = newCompsOutput(fromLaneName, newCompsFrom);
-    return `${diffResultsStr}${newCompsToStr}${newCompsFromStr}${failuresStr}`;
+
+    let unavailableStr = '';
+    if (unavailableVersions?.length) {
+      unavailableStr = `\n\n${chalk.yellow(
+        `skipped ${unavailableVersions.length} component(s) whose version objects from this history entry were not found.
+this happens when snaps were created locally but the lane was later updated from the remote, replacing the local version history before export`
+      )}`;
+    }
+
+    return `${diffResultsStr}${newCompsToStr}${newCompsFromStr}${failuresStr}${unavailableStr}`;
   }
 
   private async componentDiff(
@@ -399,6 +429,79 @@ export class LaneDiffGenerator {
       })),
       remote: lane.toLaneId().toString(),
     };
+  }
+
+  /**
+   * Import version objects needed for comparing two history entries.
+   *
+   * The "to" versions are typically the current lane heads (or recent snaps) and are
+   * usually found locally. The "from" versions are older snaps that may not exist locally.
+   *
+   * Note: some historical versions may be unavailable on the remote. This happens when
+   * a snap was recorded in the lane history but the Version objects were superseded by a
+   * lane-merge before being exported. The export only includes versions reachable from
+   * the current lane head, so orphaned pre-merge snaps are never sent to the remote.
+   * Such components are skipped gracefully during the diff.
+   */
+  private async importHistoryVersions(lane: Lane, laneId: LaneId, toHistoryId: string, fromHistoryId: string) {
+    const importer = this.scope.legacyScope.scopeImporter;
+
+    const idsOfTo = ComponentIdList.fromArray(
+      this.toLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
+    );
+    const idsOfFrom = ComponentIdList.fromArray(
+      this.fromLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
+    );
+
+    await importer.importWithoutDeps(idsOfTo, {
+      cache: true,
+      lane,
+      ignoreMissingHead: true,
+      reason: `for the "to" diff - ${laneId.toString()}-${toHistoryId}`,
+    });
+    await importer.importWithoutDeps(idsOfFrom, {
+      cache: true,
+      lane,
+      ignoreMissingHead: true,
+      reason: `for the "from" diff - ${laneId.toString()}-${fromHistoryId}`,
+    });
+  }
+
+  /**
+   * Check whether a history entry's version objects are available locally (after attempting import).
+   * Entries with no components (e.g. "new lane") are always considered available.
+   */
+  async isHistoryEntryAvailable(lane: Lane, laneHistory: LaneHistory, historyId: string): Promise<boolean> {
+    const history = laneHistory.getHistory();
+    const entry = history[historyId];
+    if (!entry || !entry.components.length) return true;
+
+    const laneId = lane.toLaneId();
+    const laneData = this.mapHistoryToLaneData(laneId, historyId, entry);
+
+    // Ensure components are on the lane so the importer routes to the lane's scope
+    const currentLaneCompIds = new Set(lane.components.map((c) => c.id.toStringWithoutVersion()));
+    for (const comp of laneData.components) {
+      const key = comp.id.toStringWithoutVersion();
+      if (!currentLaneCompIds.has(key) && comp.head) {
+        lane.addComponent({ id: comp.id, head: comp.head });
+        currentLaneCompIds.add(key);
+      }
+    }
+
+    const ids = ComponentIdList.fromArray(laneData.components.map((c) => c.id.changeVersion(c.head?.toString())));
+    await this.scope.legacyScope.scopeImporter.importWithoutDeps(ids, {
+      cache: true,
+      lane,
+      ignoreMissingHead: true,
+      reason: `checking availability of history entry ${historyId}`,
+    });
+
+    const repo = this.scope.legacyScope.objects;
+    for (const { head } of laneData.components) {
+      if (head && !(await repo.has(head))) return false;
+    }
+    return true;
   }
 
   private mapHistoryToLaneData(laneId: LaneId, historyId: string, historyItem: HistoryItem): LaneData {

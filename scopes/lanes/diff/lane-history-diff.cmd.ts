@@ -45,31 +45,60 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
     let fromId: string;
     let toId: string;
     const historyIds = laneHistory.getHistoryIds();
+    const laneObj = await this.lanes.loadLane(laneId);
+    if (!laneObj) throw new BitError(`unable to load lane "${laneId.toString()}"`);
 
     if (historyId && toHistoryId) {
-      // two args: explicit from and to
+      // two args: explicit from and to — no fallback
       fromId = historyId;
       toId = toHistoryId;
-    } else if (historyId) {
-      // one arg: diff this snap against its predecessor
-      toId = historyId;
-      const predecessorIndex = historyIds.indexOf(historyId) - 1;
-      if (predecessorIndex < 0)
-        throw new BitError(
-          `unable to find a predecessor for history-id "${historyId}". it's either the first entry or not found`
-        );
-      fromId = historyIds[predecessorIndex];
     } else {
-      // no args: diff the latest snap against the one before it
-      if (historyIds.length < 2)
-        throw new BitError(`need at least two history entries to diff, got ${historyIds.length}`);
-      toId = historyIds[historyIds.length - 1];
-      fromId = historyIds[historyIds.length - 2];
+      const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
+
+      if (historyId) {
+        // one arg: diff this entry against its nearest available predecessor
+        toId = historyId;
+        const toIndex = historyIds.indexOf(historyId);
+        if (toIndex < 0) throw new BitError(`history-id "${historyId}" was not found`);
+        fromId = await this.findAvailableEntry(laneDiffGenerator, laneObj, laneHistory, historyIds, toIndex - 1);
+      } else {
+        // no args: find the latest available "to", then its nearest available predecessor
+        if (historyIds.length < 2)
+          throw new BitError(`need at least two history entries to diff, got ${historyIds.length}`);
+        toId = await this.findAvailableEntry(
+          laneDiffGenerator,
+          laneObj,
+          laneHistory,
+          historyIds,
+          historyIds.length - 1
+        );
+        const toIndex = historyIds.indexOf(toId);
+        fromId = await this.findAvailableEntry(laneDiffGenerator, laneObj, laneHistory, historyIds, toIndex - 1);
+      }
     }
 
     const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
-    const laneObj = await this.lanes.loadLane(laneId);
-    const results = await laneDiffGenerator.generateDiffHistory(laneObj!, laneHistory, fromId, toId, pattern);
+    const results = await laneDiffGenerator.generateDiffHistory(laneObj, laneHistory, fromId, toId, pattern);
     return laneDiffGenerator.laneDiffResultsToString(results);
+  }
+
+  /**
+   * Walk backwards from `startIndex` through `historyIds` to find the first entry
+   * whose version objects are available (exist on the remote / locally).
+   */
+  private async findAvailableEntry(
+    laneDiffGenerator: LaneDiffGenerator,
+    laneObj: NonNullable<Awaited<ReturnType<LanesMain['loadLane']>>>,
+    laneHistory: Awaited<ReturnType<LanesMain['getLaneHistory']>>,
+    historyIds: string[],
+    startIndex: number
+  ): Promise<string> {
+    for (let i = startIndex; i >= 0; i--) {
+      const available = await laneDiffGenerator.isHistoryEntryAvailable(laneObj, laneHistory, historyIds[i]);
+      if (available) return historyIds[i];
+    }
+    throw new BitError(
+      `unable to find a history entry with available version objects. all entries before index ${startIndex} have orphaned versions`
+    );
   }
 }
