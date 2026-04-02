@@ -6,6 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 For comprehensive Bit MCP workflow instructions and core principles, see: `.github/instructions/bit.instructions.md`
 
+## CLI Output Style Guide
+
+When modifying CLI command output, follow the style guide: `scopes/harmony/cli/cli-output-style-guide.md`
+
+Use the shared formatting toolkit from `@teambit/cli` (`scopes/harmony/cli/output-formatter.ts`) — never hardcode chalk styles for section titles or Unicode symbols.
+
 ## Development Commands
 
 **IMPORTANT**: This repository practices "dogfooding" - Bit is built using Bit itself. Always use `bit` commands rather than direct npm/pnpm commands where possible.
