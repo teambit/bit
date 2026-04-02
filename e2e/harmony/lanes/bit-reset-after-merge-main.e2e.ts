@@ -149,8 +149,9 @@ describe('bit reset after merging main into a lane', function () {
 
   /**
    * Case 3: Using --no-auto-snap flag (diverged, but no snap is created).
-   * Because no snap was made, bit reset has nothing to reset and throws
-   * "no components found to reset". The lane head and files are unchanged.
+   * The merge still applies file changes on disk, but no snap is created and
+   * the lane head is not updated. Files show as modified.
+   * bit reset has nothing to reset and throws "no components found to reset".
    */
   describe('diverged with --no-auto-snap (no snap created)', () => {
     let headOnLaneBefore: string;
@@ -178,6 +179,13 @@ describe('bit reset after merging main into a lane', function () {
     it('lane head should not have changed (no snap was made)', () => {
       const headAfterMerge = helper.command.getHeadOfLane('dev', 'comp1');
       expect(headAfterMerge).to.equal(headOnLaneBefore);
+    });
+
+    it('files should have the merged content and show as modified', () => {
+      const content = helper.fs.readFile('comp1/index.js');
+      expect(content).to.have.string('from-main');
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(1);
     });
 
     it('bit reset should throw because there is nothing to reset', () => {
@@ -232,10 +240,9 @@ describe('bit reset after merging main into a lane', function () {
   });
 
   /**
-   * Case 5: Using --no-snap with main ahead (fast-forward).
-   * --no-snap prevents both snap creation AND lane head updates, even when
-   * the merge would normally just advance the lane head.
-   * Files get main's content but the lane object stays untouched.
+   * Case 5: Using --no-snap when main is ahead (lane has an unmodified snap).
+   * Similar to Case 2 setup but with --no-snap, which prevents both snap creation
+   * AND lane head updates. Files get main's content but the lane object stays untouched.
    * bit reset has nothing to reset.
    */
   describe('main is ahead with --no-snap (no snap, no head change)', () => {
