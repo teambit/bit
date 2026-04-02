@@ -1,6 +1,6 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import { formatSuccessSummary, formatWarningSummary, formatHint, joinSections } from '@teambit/cli';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import type { PubsubMain } from '@teambit/pubsub';
 import prettyTime from 'pretty-time';
 import { formatCompileResults } from './output-formatter';
