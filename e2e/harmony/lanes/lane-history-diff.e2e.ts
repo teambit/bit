@@ -43,7 +43,7 @@ describe('lane history-diff', function () {
     it('with one arg (first id), should throw since it has no predecessor', () => {
       const firstId = historyEntries[0].id;
       expect(() => helper.command.runCmd(`bit lane history-diff ${firstId}`)).to.throw(
-        'unable to find a history entry with available version objects'
+        'is the first entry and has no predecessor'
       );
     });
   });

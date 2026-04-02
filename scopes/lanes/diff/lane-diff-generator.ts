@@ -299,8 +299,8 @@ export class LaneDiffGenerator {
     let unavailableStr = '';
     if (unavailableVersions?.length) {
       unavailableStr = `\n\n${chalk.yellow(
-        `skipped ${unavailableVersions.length} component(s) whose version objects from this history entry were not found.
-this happens when snaps were created locally but the lane was later updated from the remote, replacing the local version history before export`
+        `skipped ${unavailableVersions.length} component(s) whose version objects referenced by this history entry were not found.
+this can happen when local version history was changed (e.g. after "bit reset" or updating the lane from a remote) before export`
       )}`;
     }
 
@@ -452,6 +452,14 @@ this happens when snaps were created locally but the lane was later updated from
       ignoreMissingHead: true,
       reason: `for the "from" diff - ${laneId.toString()}-${fromHistoryId}`,
     });
+  }
+
+  /**
+   * Check whether a history entry has no components (e.g. the initial "new lane" entry).
+   */
+  isHistoryEntryEmpty(laneHistory: LaneHistory, historyId: string): boolean {
+    const entry = laneHistory.getHistory()[historyId];
+    return !entry || !entry.components.length;
   }
 
   /**

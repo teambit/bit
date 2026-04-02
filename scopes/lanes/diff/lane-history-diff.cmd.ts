@@ -60,12 +60,15 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
       toId = historyId;
       const toIndex = historyIds.indexOf(historyId);
       if (toIndex < 0) throw new BitError(`history-id "${historyId}" was not found`);
+      if (toIndex === 0) throw new BitError(`history-id "${historyId}" is the first entry and has no predecessor`);
       fromId = await this.findAvailableEntry(laneDiffGenerator, laneObj, laneHistory, historyIds, toIndex - 1);
     } else {
       // no args: find the latest available "to", then its nearest available predecessor
       if (historyIds.length < 2)
         throw new BitError(`need at least two history entries to diff, got ${historyIds.length}`);
-      toId = await this.findAvailableEntry(laneDiffGenerator, laneObj, laneHistory, historyIds, historyIds.length - 1);
+      toId = await this.findAvailableEntry(laneDiffGenerator, laneObj, laneHistory, historyIds, historyIds.length - 1, {
+        skipEmpty: true,
+      });
       const toIndex = historyIds.indexOf(toId);
       fromId = await this.findAvailableEntry(laneDiffGenerator, laneObj, laneHistory, historyIds, toIndex - 1);
     }
@@ -83,14 +86,18 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
     laneObj: Lane,
     laneHistory: LaneHistory,
     historyIds: string[],
-    startIndex: number
+    startIndex: number,
+    { skipEmpty = false }: { skipEmpty?: boolean } = {}
   ): Promise<string> {
     for (let i = startIndex; i >= 0; i--) {
       const available = await laneDiffGenerator.isHistoryEntryAvailable(laneObj, laneHistory, historyIds[i]);
-      if (available) return historyIds[i];
+      if (available) {
+        if (skipEmpty && laneDiffGenerator.isHistoryEntryEmpty(laneHistory, historyIds[i])) continue;
+        return historyIds[i];
+      }
     }
     throw new BitError(
-      `unable to find a history entry with available version objects. all entries before index ${startIndex} have orphaned versions`
+      `unable to find a predecessor with available version objects (searched from index ${startIndex} to 0)`
     );
   }
 }
