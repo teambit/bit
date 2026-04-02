@@ -17,6 +17,7 @@ export {
   bulletSymbol,
   formatItem,
   formatSection,
+  formatTitle,
   formatHint,
   formatSuccessSummary,
   formatWarningSummary,

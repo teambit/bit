@@ -2,6 +2,7 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import {
   formatSection,
   formatItem,
+  formatTitle,
   formatHint,
   formatSuccessSummary,
   warnSymbol,
@@ -197,7 +198,7 @@ without arguments, fetches all workspace components' latest versions from their 
       const logs = workspaceConfigUpdateResult?.logs;
       if (!logs || !logs.length) return '';
       const logsStr = logs.join('\n');
-      return `${chalk.bold.white('verbose logs of workspace config update')}\n${logsStr}`;
+      return `${formatTitle('verbose logs of workspace config update')}\n${logsStr}`;
     };
     const upToDateSuffix = lane ? ' on the lane' : '';
     const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date${upToDateSuffix}`;

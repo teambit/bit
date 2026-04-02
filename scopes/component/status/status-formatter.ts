@@ -13,6 +13,7 @@ import {
 import {
   formatSection,
   formatItem,
+  formatTitle,
   bulletSymbol,
   successSymbol,
   warnSymbol,
@@ -279,7 +280,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
 
   const getWorkspaceIssuesOutput = () => {
     if (!workspaceIssues.length) return '';
-    const title = chalk.bold.white('workspace issues');
+    const title = formatTitle('workspace issues');
     const issues = workspaceIssues.join('\n');
     return `\n\n${title}\n${issues}`;
   };
@@ -368,7 +369,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
       const shown = sorted.slice(0, MAX_SHOWN).map(([scope, n]) => `${scope} (${n})`);
       const remaining = sorted.length - MAX_SHOWN;
       const scopeLine = remaining > 0 ? [...shown, `+ ${remaining} more scopes`].join(' · ') : shown.join(' · ');
-      const title = chalk.bold.white(`components pending auto-tag (${count})`);
+      const title = formatTitle(`components pending auto-tag (${count})`);
       const desc = chalk.dim(`  ${autoTagPendingDesc}`);
       const scopes = `   ${scopeLine}`;
       const hint = chalk.dim('— use --expand to list');

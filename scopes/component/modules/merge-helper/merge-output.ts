@@ -2,7 +2,7 @@ import type { ComponentID } from '@teambit/component-id';
 import type { ApplyVersionResult, WorkspaceConfigUpdateResult, WorkspaceDepsUpdates } from './types';
 import chalk from 'chalk';
 import { compact } from 'lodash';
-import { errorSymbol, joinSections } from '@teambit/cli';
+import { errorSymbol, formatTitle, joinSections } from '@teambit/cli';
 import { FileStatus } from './merge-version';
 import { FILE_CHANGES_CHECKOUT_MSG } from '@teambit/legacy.constants';
 
@@ -28,7 +28,7 @@ export function getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult?: Wor
       })
       .join('\n');
 
-    return `${chalk.bold.white(title)}\n${body}`;
+    return `${formatTitle(title)}\n${body}`;
   };
 
   return joinSections([
@@ -49,7 +49,7 @@ function getWorkspaceDepsOutput(workspaceDepsUpdates?: WorkspaceDepsUpdates): st
     })
     .join('\n');
 
-  return `${chalk.bold.white(title)}\n${body}`;
+  return `${formatTitle(title)}\n${body}`;
 }
 
 /**
@@ -79,7 +79,7 @@ export function applyVersionReport(components: ApplyVersionResult[], addName = t
     return '';
   }
   const title = `\n${FILE_CHANGES_CHECKOUT_MSG}\n`;
-  return chalk.bold.white(title) + fileChanges;
+  return formatTitle(title) + fileChanges;
 }
 
 export function conflictSummaryReport(components: ApplyVersionResult[]): {
@@ -113,7 +113,7 @@ export function conflictSummaryReport(components: ApplyVersionResult[]): {
 
 export function installationErrorOutput(installationError?: Error) {
   if (!installationError) return '';
-  const title = `${errorSymbol} ${chalk.bold.white('Installation Error')}`;
+  const title = `${errorSymbol} ${formatTitle('Installation Error')}`;
   const subTitle = 'The following error was thrown by the package manager:';
   const body = chalk.red(installationError.message);
   const suggestion =
@@ -123,7 +123,7 @@ export function installationErrorOutput(installationError?: Error) {
 
 export function compilationErrorOutput(compilationError?: Error) {
   if (!compilationError) return '';
-  const title = `${errorSymbol} ${chalk.bold.white('Compilation Error')}`;
+  const title = `${errorSymbol} ${formatTitle('Compilation Error')}`;
   const subTitle = 'The following error was thrown by the compiler';
   const body = chalk.red(compilationError.message);
   const suggestion = 'Please fix the issue and run "bit compile"';
@@ -134,12 +134,12 @@ export function getRemovedOutput(removedComponents?: ComponentID[]) {
   if (!removedComponents?.length) return '';
   const title = `removed components (${removedComponents.length})`;
   const body = removedComponents.join('\n');
-  return `${chalk.bold.white(title)}\n${body}`;
+  return `${formatTitle(title)}\n${body}`;
 }
 
 export function getAddedOutput(addedComponents?: ComponentID[]) {
   if (!addedComponents?.length) return '';
   const title = `added components (${addedComponents.length})`;
   const body = addedComponents.join('\n');
-  return `${chalk.bold.white(title)}\n${body}`;
+  return `${formatTitle(title)}\n${body}`;
 }
