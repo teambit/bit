@@ -70,6 +70,8 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
         skipEmpty: true,
       });
       const toIndex = historyIds.indexOf(toId);
+      if (toIndex === 0)
+        throw new BitError(`the only available history entry is the first one, no predecessor to diff against`);
       fromId = await this.findAvailableEntry(laneDiffGenerator, laneObj, laneHistory, historyIds, toIndex - 1);
     }
 
