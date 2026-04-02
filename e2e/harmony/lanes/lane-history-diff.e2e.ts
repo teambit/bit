@@ -112,7 +112,7 @@ describe('lane history-diff', function () {
       expect(output).to.not.have.string('skipped');
     });
 
-    it('one arg (orphaned entry): its versions are missing, should skip and diff against "new lane"', () => {
+    it('one arg (orphaned entry): its missing "to" versions should cause components to be skipped', () => {
       // The orphaned entry is the "to". Its predecessor is "first snap" (available).
       // But the "to" versions themselves are orphaned, so components get skipped.
       const output = helper.command.runCmd(`bit lane history-diff ${orphanedHistoryId}`);

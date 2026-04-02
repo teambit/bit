@@ -240,6 +240,17 @@ export class LaneDiffGenerator {
       if (head) fromHeadIndex.set(id.toStringWithoutVersion(), head);
     }
 
+    // Batch-check all refs at once to avoid per-component I/O
+    const allRefsToCheck: Ref[] = [];
+    for (const { id, head } of this.toLaneData.components) {
+      if (idsToCheckDiff && !idsToCheckDiff.hasWithoutVersion(id)) continue;
+      if (head) allRefsToCheck.push(head);
+      const fromHead = fromHeadIndex.get(id.toStringWithoutVersion());
+      if (fromHead) allRefsToCheck.push(fromHead);
+    }
+    const existingRefs = await repo.hasMultiple(allRefsToCheck);
+    const existingRefSet = new Set(existingRefs.map((r) => r.toString()));
+
     await pMap(
       this.toLaneData.components,
       async ({ id, head }) => {
@@ -247,9 +258,8 @@ export class LaneDiffGenerator {
           return;
         }
         const fromHead = fromHeadIndex.get(id.toStringWithoutVersion());
-        // check both "to" and "from" version objects exist before attempting diff
-        const toMissing = head ? !(await repo.has(head)) : false;
-        const fromMissing = fromHead ? !(await repo.has(fromHead)) : false;
+        const toMissing = head ? !existingRefSet.has(head.toString()) : false;
+        const fromMissing = fromHead ? !existingRefSet.has(fromHead.toString()) : false;
         if (toMissing || fromMissing) {
           unavailableVersions.push(id.toStringWithoutVersion());
           return;

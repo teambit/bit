@@ -97,7 +97,7 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
       }
     }
     throw new BitError(
-      `unable to find a predecessor with available version objects (searched from index ${startIndex} to 0)`
+      `unable to find an available history entry with version objects (searched from index ${startIndex} to 0)`
     );
   }
 }
