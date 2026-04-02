@@ -78,8 +78,7 @@ export function applyVersionReport(components: ApplyVersionResult[], addName = t
   if (!fileChanges) {
     return '';
   }
-  const title = `\n${FILE_CHANGES_CHECKOUT_MSG}\n`;
-  return formatTitle(title) + fileChanges;
+  return `\n${formatTitle(FILE_CHANGES_CHECKOUT_MSG)}\n${fileChanges}`;
 }
 
 export function conflictSummaryReport(components: ApplyVersionResult[]): {

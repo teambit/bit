@@ -345,8 +345,7 @@ without arguments, fetches all workspace components' latest versions from their 
 
 function formatMissingComponents(missing?: string[]) {
   if (!missing?.length) return '';
-  const desc = `the following components are missing from the remote in the requested version, try running "bit status" to re-sync your .bitmap file
-also, check that the requested version exists on main or the checked out lane`;
+  const desc = `the following components are missing from the remote in the requested version, try running "bit status" to re-sync your .bitmap file\nalso, check that the requested version exists on main or the checked out lane`;
   const items = missing.map((id) => formatItem(chalk.red(id), errorSymbol));
   return formatSection('missing components', desc, items);
 }

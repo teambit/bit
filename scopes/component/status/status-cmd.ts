@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import { renderSections, successSymbol, formatSection, formatItem, joinSections } from '@teambit/cli';
+import { renderSections, formatSuccessSummary, formatSection, formatItem, joinSections } from '@teambit/cli';
 import type { ComponentID } from '@teambit/component-id';
 import chalk from 'chalk';
 import type { StatusMain, StatusResult } from './status.main.runtime';
@@ -187,7 +187,9 @@ for maximum speed (skips aspect loading entirely), use "bit mini-status".`;
         formatCategory('modified components (files only)', modified),
         formatCategory('new components', newComps),
       ]) ||
-      `${successSymbol()} ${chalk.yellow('no new or modified components (based on file changes only, use "bit status" for full check)')}`;
+      formatSuccessSummary(
+        'no new or modified components (based on file changes only, use "bit status" for full check)'
+      );
 
     return { data, code: 0 };
   }
