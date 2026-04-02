@@ -195,8 +195,10 @@ describe('bit reset after merging main into a lane', function () {
 
   /**
    * Case 4: Using --no-snap flag (diverged).
-   * Unlike --no-auto-snap, --no-snap also prevents the lane head from being updated.
-   * The files get the merged content but the lane object stays untouched.
+   * For diverged merges, both --no-auto-snap and --no-snap behave the same: no new snap
+   * and no lane head change. The difference is that --no-snap also prevents head updates
+   * in non-diverged merges (see Case 5), whereas --no-auto-snap only skips the merge snap.
+   * Files get the merged content but the lane object stays untouched.
    * bit reset has nothing to reset.
    */
   describe('diverged with --no-snap (no snap, no head change)', () => {
