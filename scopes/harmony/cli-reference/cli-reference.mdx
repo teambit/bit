@@ -2263,6 +2263,21 @@ use `bit pattern --help` to understand patterns better and `bit pattern <pattern
 
 `bit schema <pattern>`
 
+### schema diff
+
+**Usage**: `schema diff <component> <base-version> <compare-version>`
+
+**Description**: show API changes between two versions of a component  
+compares the public API schema between two versions of a component.  
+shows added, removed, and modified exports with semantic impact analysis.
+
+examples:  
+ bit schema diff my-component 0.0.1 0.0.2
+
+| **Option** | **Option alias** | **Description**                    |
+| ---------- | :--------------: | ---------------------------------- |
+| `--json`   |       `-j`       | return the API diff in json format |
+
 | **Option** | **Option alias** | **Description**                                                        |
 | ---------- | :--------------: | ---------------------------------------------------------------------- |
 | `--remote` |       `-r`       | fetch schema from remote scope (works for components not in workspace) |

@@ -19,6 +19,7 @@ ${PATTERN_HELP('schema')}`;
     ['r', 'remote', 'fetch schema from remote scope (works for components not in workspace)'],
     ['j', 'json', 'return the component schema in json format'],
   ] as CommandOptions;
+  commands: Command[] = [];
 
   constructor(
     private schema: SchemaMain,
