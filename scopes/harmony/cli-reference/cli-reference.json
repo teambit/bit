@@ -2701,6 +2701,11 @@
         "",
         "force-theirs",
         "do not merge, just overwrite with incoming files"
+      ],
+      [
+        "",
+        "include-new-from-scope",
+        "relevant for 'bit checkout head'. import components from the defaultScope that don't exist in the workspace"
       ]
     ],
     "description": "switch between component versions or remove local changes",
@@ -3519,6 +3524,43 @@
     "extendedDescription": "in case source and target snaps are not provided, the command will use the local and remote heads.\nby \"head\" we mean component-head if on main, or lane-head if on lane.\nif source and target snaps are provided, the command will use them to calculate the distance.",
     "group": "advanced",
     "private": true
+  },
+  {
+    "name": "schema <pattern>",
+    "alias": "",
+    "options": [
+      [
+        "r",
+        "remote",
+        "fetch schema from remote scope (works for components not in workspace)"
+      ],
+      [
+        "j",
+        "json",
+        "return the component schema in json format"
+      ]
+    ],
+    "description": "display component API schema and type definitions",
+    "extendedDescription": "extracts and displays the public API structure of components including types, functions, classes, and interfaces.\nshows detailed type information, function signatures, and JSDoc documentation for exported elements.\nuseful for understanding component interfaces and generating documentation.\n\nyou can use a `<pattern>` for multiple component ids, such as `bit schema \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
+    "group": "info-analysis",
+    "private": false,
+    "commands": [
+      {
+        "name": "diff <component> <base-version> <compare-version>",
+        "alias": "",
+        "options": [
+          [
+            "j",
+            "json",
+            "return the API diff in json format"
+          ]
+        ],
+        "description": "show API changes between two versions of a component",
+        "extendedDescription": "compares the public API schema between two versions of a component.\nshows added, removed, and modified exports with semantic impact analysis.\n\nexamples:\n  bit schema diff my-component 0.0.1 0.0.2",
+        "group": "info-analysis",
+        "private": false
+      }
+    ]
   },
   {
     "name": "test [component-pattern]",
@@ -4576,6 +4618,11 @@
         "",
         "quick",
         "show only new and modified components based on file changes. much faster, but does not detect dependency or config changes"
+      ],
+      [
+        "",
+        "expand",
+        "expand all collapsed sections (e.g. auto-tag pending components)"
       ]
     ],
     "description": "show workspace component status and issues",
@@ -5221,26 +5268,6 @@
         "private": false
       }
     ]
-  },
-  {
-    "name": "schema <pattern>",
-    "alias": "",
-    "options": [
-      [
-        "r",
-        "remote",
-        "fetch schema from remote scope (works for components not in workspace)"
-      ],
-      [
-        "j",
-        "json",
-        "return the component schema in json format"
-      ]
-    ],
-    "description": "display component API schema and type definitions",
-    "extendedDescription": "extracts and displays the public API structure of components including types, functions, classes, and interfaces.\nshows detailed type information, function signatures, and JSDoc documentation for exported elements.\nuseful for understanding component interfaces and generating documentation.\n\nyou can use a `<pattern>` for multiple component ids, such as `bit schema \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
-    "group": "info-analysis",
-    "private": false
   },
   {
     "name": "log <id>",

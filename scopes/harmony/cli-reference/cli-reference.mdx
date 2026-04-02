@@ -359,6 +359,7 @@ the `<to>` argument accepts these values:
 | `--skip-dependency-installation`        |       `-x`       | do not auto-install dependencies of the imported components                                                                              |
 | `--force-ours`                          |                  | do not merge, preserve local files as is                                                                                                 |
 | `--force-theirs`                        |                  | do not merge, just overwrite with incoming files                                                                                         |
+| `--include-new-from-scope`              |                  | relevant for 'bit checkout head'. import components from the defaultScope that don't exist in the workspace                              |
 
 ---
 
@@ -2262,6 +2263,21 @@ use `bit pattern --help` to understand patterns better and `bit pattern <pattern
 
 `bit schema <pattern>`
 
+### schema diff
+
+**Usage**: `schema diff <component> <base-version> <compare-version>`
+
+**Description**: show API changes between two versions of a component  
+compares the public API schema between two versions of a component.  
+shows added, removed, and modified exports with semantic impact analysis.
+
+examples:  
+ bit schema diff my-component 0.0.1 0.0.2
+
+| **Option** | **Option alias** | **Description**                    |
+| ---------- | :--------------: | ---------------------------------- |
+| `--json`   |       `-j`       | return the API diff in json format |
+
 | **Option** | **Option alias** | **Description**                                                        |
 | ---------- | :--------------: | ---------------------------------------------------------------------- |
 | `--remote` |       `-r`       | fetch schema from remote scope (works for components not in workspace) |
@@ -2541,6 +2557,7 @@ for maximum speed (skips aspect loading entirely), use "bit mini-status".
 | `--fail-on-error`                |                  | exit with code 1 only when tag/snap blocker issues are found (not warnings)                                                |
 | `--ignore-circular-dependencies` |       `-c`       | do not check for circular dependencies to get the results quicker                                                          |
 | `--quick`                        |                  | show only new and modified components based on file changes. much faster, but does not detect dependency or config changes |
+| `--expand`                       |                  | expand all collapsed sections (e.g. auto-tag pending components)                                                           |
 
 ---
 

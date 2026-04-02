@@ -27,9 +27,10 @@ show <component-name> - display component metadata, dependencies, and configurat
 graph [id] - visualize component dependencies as a graph image
 pattern <pattern> - test and validate component patterns
 list [remote-scope] - display components in workspace or remote scope
+schema <pattern> - display component API schema and type definitions
+Subcommands: diff
 diff [component-pattern] [version] [to-version] - compare component changes between versions or against the current workspace
 status - show workspace component status and issues
-schema <pattern> - display component API schema and type definitions
 
 Component Configuration
 envs - show components and their assigned environments
