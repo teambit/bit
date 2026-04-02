@@ -32,7 +32,6 @@ export type LaneDiffResults = {
   toLaneName: string;
   fromLaneName: string;
   failures: Failure[];
-  unavailableVersions?: string[];
 };
 
 export class LaneDiffGenerator {
@@ -228,28 +227,25 @@ export class LaneDiffGenerator {
 
     this.ensureComponentsOnLane(lane, [...this.toLaneData.components, ...this.fromLaneData.components]);
 
-    await this.importHistoryVersions(lane, laneId, toHistoryId, fromHistoryId);
-
-    // Check which version objects are actually available locally.
-    // Some historical versions may not exist on any remote (e.g., from snaps that were
-    // superseded before export). Skip those and report them separately.
-    const repo = this.scope.legacyScope.objects;
-    const unavailableVersions: string[] = [];
-    const fromHeadIndex = new Map<string, Ref>();
-    for (const { id, head } of this.fromLaneData.components) {
-      if (head) fromHeadIndex.set(id.toStringWithoutVersion(), head);
-    }
-
-    // Batch-check all refs at once to avoid per-component I/O
-    const allRefsToCheck: Ref[] = [];
-    for (const { id, head } of this.toLaneData.components) {
-      if (idsToCheckDiff && !idsToCheckDiff.hasWithoutVersion(id)) continue;
-      if (head) allRefsToCheck.push(head);
-      const fromHead = fromHeadIndex.get(id.toStringWithoutVersion());
-      if (fromHead) allRefsToCheck.push(fromHead);
-    }
-    const existingRefs = await repo.hasMultiple(allRefsToCheck);
-    const existingRefSet = new Set(existingRefs.map((r) => r.toString()));
+    const idsOfTo = ComponentIdList.fromArray(
+      this.toLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
+    );
+    const idsOfFrom = ComponentIdList.fromArray(
+      this.fromLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
+    );
+    const importer = this.scope.legacyScope.scopeImporter;
+    await importer.importWithoutDeps(idsOfTo, {
+      cache: true,
+      lane,
+      ignoreMissingHead: true,
+      reason: `for the "to" diff - ${laneId.toString()}-${toHistoryId}`,
+    });
+    await importer.importWithoutDeps(idsOfFrom, {
+      cache: true,
+      lane,
+      ignoreMissingHead: true,
+      reason: `for the "from" diff - ${laneId.toString()}-${fromHistoryId}`,
+    });
 
     await pMap(
       this.toLaneData.components,
@@ -257,15 +253,8 @@ export class LaneDiffGenerator {
         if (idsToCheckDiff && !idsToCheckDiff.hasWithoutVersion(id)) {
           return;
         }
-        const fromHead = fromHeadIndex.get(id.toStringWithoutVersion());
-        const toMissing = head ? !existingRefSet.has(head.toString()) : false;
-        const fromMissing = fromHead ? !existingRefSet.has(fromHead.toString()) : false;
-        if (toMissing || fromMissing) {
-          unavailableVersions.push(id.toStringWithoutVersion());
-          return;
-        }
         try {
-          await this.componentDiff(id, head, {}, false, undefined, fromHead);
+          await this.componentDiff(id, head, {}, false);
         } catch (err: any) {
           const message = err instanceof Error ? err.message : String(err);
           this.failures.push({ id, msg: message });
@@ -282,13 +271,11 @@ export class LaneDiffGenerator {
       toLaneName: this.toLaneData.name,
       fromLaneName: this.fromLaneData.name,
       failures: this.failures,
-      unavailableVersions,
     };
   }
 
   laneDiffResultsToString(laneDiffResults: LaneDiffResults): string {
-    const { compsWithDiff, newCompsFrom, newCompsTo, toLaneName, fromLaneName, failures, unavailableVersions } =
-      laneDiffResults;
+    const { compsWithDiff, newCompsFrom, newCompsTo, toLaneName, fromLaneName, failures } = laneDiffResults;
 
     const newCompsOutput = (laneName: string, ids: string[]) => {
       if (!ids.length) return '';
@@ -306,15 +293,7 @@ export class LaneDiffGenerator {
 
     const newCompsFromStr = newCompsOutput(fromLaneName, newCompsFrom);
 
-    let unavailableStr = '';
-    if (unavailableVersions?.length) {
-      unavailableStr = `\n\n${chalk.yellow(
-        `skipped ${unavailableVersions.length} component(s) whose version objects referenced by this history entry were not found.
-this can happen when local version history was changed (e.g. after "bit reset" or updating the lane from a remote) before export`
-      )}`;
-    }
-
-    return `${diffResultsStr}${newCompsToStr}${newCompsFromStr}${failuresStr}${unavailableStr}`;
+    return `${diffResultsStr}${newCompsToStr}${newCompsFromStr}${failuresStr}`;
   }
 
   private async componentDiff(
@@ -426,42 +405,6 @@ this can happen when local version history was changed (e.g. after "bit reset" o
       })),
       remote: lane.toLaneId().toString(),
     };
-  }
-
-  /**
-   * Import version objects needed for comparing two history entries.
-   *
-   * The "to" versions are typically the current lane heads (or recent snaps) and are
-   * usually found locally. The "from" versions are older snaps that may not exist locally.
-   *
-   * Note: some historical versions may be unavailable on the remote. This happens when
-   * a snap was recorded in the lane history but the Version objects were superseded by a
-   * lane-merge before being exported. The export only includes versions reachable from
-   * the current lane head, so orphaned pre-merge snaps are never sent to the remote.
-   * Such components are skipped gracefully during the diff.
-   */
-  private async importHistoryVersions(lane: Lane, laneId: LaneId, toHistoryId: string, fromHistoryId: string) {
-    const importer = this.scope.legacyScope.scopeImporter;
-
-    const idsOfTo = ComponentIdList.fromArray(
-      this.toLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
-    );
-    const idsOfFrom = ComponentIdList.fromArray(
-      this.fromLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
-    );
-
-    await importer.importWithoutDeps(idsOfTo, {
-      cache: true,
-      lane,
-      ignoreMissingHead: true,
-      reason: `for the "to" diff - ${laneId.toString()}-${toHistoryId}`,
-    });
-    await importer.importWithoutDeps(idsOfFrom, {
-      cache: true,
-      lane,
-      ignoreMissingHead: true,
-      reason: `for the "from" diff - ${laneId.toString()}-${fromHistoryId}`,
-    });
   }
 
   /**

@@ -102,26 +102,26 @@ describe('lane history-diff', function () {
       const output = helper.command.runCmd('bit lane history-diff');
       expect(output).to.have.string('comp1');
       expect(output).to.have.string('comp2');
-      expect(output).to.not.have.string('skipped');
+      expect(output).to.not.have.string('Diff failed');
     });
 
     it('one arg (final snap): should skip the orphaned predecessor and diff against "first snap"', () => {
       const output = helper.command.runCmd(`bit lane history-diff ${finalSnapHistoryId}`);
       expect(output).to.have.string('comp1');
       expect(output).to.have.string('comp2');
-      expect(output).to.not.have.string('skipped');
+      expect(output).to.not.have.string('Diff failed');
     });
 
-    it('one arg (orphaned entry): its missing "to" versions should cause components to be skipped', () => {
+    it('one arg (orphaned entry): its missing "to" versions should cause diff failures', () => {
       // The orphaned entry is the "to". Its predecessor is "first snap" (available).
-      // But the "to" versions themselves are orphaned, so components get skipped.
+      // But the "to" versions themselves are orphaned, so componentDiff fails for them.
       const output = helper.command.runCmd(`bit lane history-diff ${orphanedHistoryId}`);
-      expect(output).to.have.string('skipped');
+      expect(output).to.have.string('Diff failed');
     });
 
-    it('two args (explicit): should show skipped message without fallback', () => {
+    it('two args (explicit): should show diff failures without fallback', () => {
       const output = helper.command.runCmd(`bit lane history-diff ${firstSnapHistoryId} ${orphanedHistoryId}`);
-      expect(output).to.have.string('skipped');
+      expect(output).to.have.string('Diff failed');
     });
   });
 });
