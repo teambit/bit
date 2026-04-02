@@ -213,7 +213,7 @@ without arguments, fetches all workspace components' latest versions from their 
     const getRemovedWarning = () => {
       const removedDetails = importDetails.filter((d) => d.removed);
       if (!removedDetails.length) return '';
-      const removedItems = removedDetails.map((d) => formatItem(chalk.bold(d.id), warnSymbol));
+      const removedItems = removedDetails.map((d) => formatItem(chalk.bold(d.id), errorSymbol));
       const hintBase = `run "bit recover <component-id>" to restore`;
       const hintSuffix = lane ? `, then "bit lane merge main" to get latest updates` : '';
       return joinSections([

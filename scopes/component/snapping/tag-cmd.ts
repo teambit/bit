@@ -1,15 +1,7 @@
 import chalk from 'chalk';
 import type { ComponentIdList, ComponentID } from '@teambit/component-id';
 import type { Command, CommandOptions } from '@teambit/cli';
-import {
-  formatItem,
-  formatSection,
-  formatHint,
-  formatSuccessSummary,
-  successSymbol,
-  warnSymbol,
-  joinSections,
-} from '@teambit/cli';
+import { formatItem, formatSection, formatHint, formatSuccessSummary, warnSymbol, joinSections } from '@teambit/cli';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { DEFAULT_BIT_RELEASE_TYPE, COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
 import { IssuesClasses } from '@teambit/component-issues';
@@ -310,14 +302,14 @@ export function tagResultOutput(results: TagResults): string {
   const publishSection = (() => {
     const { publishedPackages } = results;
     if (!publishedPackages || !publishedPackages.length) return '';
-    const items = publishedPackages.map((pkg) => formatItem(pkg, successSymbol()));
+    const items = publishedPackages.map((pkg) => formatItem(pkg));
     return formatSection('published components', '', items);
   })();
 
   const exportedSection = (() => {
     if (!exportedIds) return '';
     if (!exportedIds.length) return `${warnSymbol} ${chalk.yellow('no component has been exported')}`;
-    const items = exportedIds.map((id) => formatItem(compInBold(id), successSymbol()));
+    const items = exportedIds.map((id) => formatItem(compInBold(id)));
     return formatSection('exported components', '', items);
   })();
 

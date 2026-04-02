@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatItem, formatSection, formatHint, successSymbol, warnSymbol, joinSections } from '@teambit/cli';
+import { formatItem, formatSection, formatHint, warnSymbol, joinSections } from '@teambit/cli';
 import open from 'open';
 import { ejectTemplate } from '@teambit/eject';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
@@ -108,15 +108,15 @@ exporting is the final step after development and versioning to share components
     const exportSection = (() => {
       if (isEmpty(componentsIds)) {
         if (!exportedLane) return '';
-        return formatSection('exported lane', '', [formatItem(chalk.bold(exportedLane), successSymbol())]);
+        return formatSection('exported lane', '', [formatItem(chalk.bold(exportedLane))]);
       }
       const lanesOutput = exportedLanes.length ? ` the lane ${chalk.bold(exportedLanes[0].id())} and` : '';
       const items = componentsIds.map((id) => {
-        if (!verbose) return formatItem(chalk.bold(id.toString()), successSymbol());
+        if (!verbose) return formatItem(chalk.bold(id.toString()));
         const versions = newIdsOnRemote
           .filter((newId) => newId.isEqualWithoutVersion(id))
           .map((newId) => newId.version);
-        return formatItem(`${chalk.bold(id.toString())} - ${versions.join(', ') || 'n/a'}`, successSymbol());
+        return formatItem(`${chalk.bold(id.toString())} - ${versions.join(', ') || 'n/a'}`);
       });
       const desc = `exported${lanesOutput} the following component(s)`;
       return formatSection('exported components', desc, items);
