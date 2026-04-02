@@ -2,6 +2,7 @@ import type { ComponentID } from '@teambit/component-id';
 import type { ApplyVersionResult, WorkspaceConfigUpdateResult, WorkspaceDepsUpdates } from './types';
 import chalk from 'chalk';
 import { compact } from 'lodash';
+import { errorSymbol, joinSections } from '@teambit/cli';
 import { FileStatus } from './merge-version';
 import { FILE_CHANGES_CHECKOUT_MSG } from '@teambit/legacy.constants';
 
@@ -20,27 +21,27 @@ export function getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult?: Wor
 
   const getWorkspaceUnchangedDepsOutput = () => {
     if (!workspaceDepsUnchanged) return '';
-    const title = '\nworkspace.jsonc was unable to update the following dependencies';
+    const title = 'workspace.jsonc was unable to update the following dependencies';
     const body = Object.keys(workspaceDepsUnchanged)
       .map((pkgName) => {
         return `  ${pkgName}: ${workspaceDepsUnchanged[pkgName]}`;
       })
       .join('\n');
 
-    return `${chalk.underline(title)}\n${body}`;
+    return `${chalk.bold.white(title)}\n${body}`;
   };
 
-  return compact([
+  return joinSections([
     getWorkspaceUnchangedDepsOutput(),
     getWorkspaceDepsOutput(workspaceDepsUpdates),
     getWorkspaceConflictsOutput(),
-  ]).join('\n\n');
+  ]);
 }
 
 function getWorkspaceDepsOutput(workspaceDepsUpdates?: WorkspaceDepsUpdates): string {
   if (!workspaceDepsUpdates) return '';
 
-  const title = '\nworkspace.jsonc has been updated with the following dependencies';
+  const title = 'workspace.jsonc has been updated with the following dependencies';
   const body = Object.keys(workspaceDepsUpdates)
     .map((pkgName) => {
       const [from, to] = workspaceDepsUpdates[pkgName];
@@ -48,7 +49,7 @@ function getWorkspaceDepsOutput(workspaceDepsUpdates?: WorkspaceDepsUpdates): st
     })
     .join('\n');
 
-  return `${chalk.underline(title)}\n${body}`;
+  return `${chalk.bold.white(title)}\n${body}`;
 }
 
 /**
@@ -78,7 +79,7 @@ export function applyVersionReport(components: ApplyVersionResult[], addName = t
     return '';
   }
   const title = `\n${FILE_CHANGES_CHECKOUT_MSG}\n`;
-  return chalk.underline(title) + fileChanges;
+  return chalk.bold.white(title) + fileChanges;
 }
 
 export function conflictSummaryReport(components: ApplyVersionResult[]): {
@@ -112,7 +113,7 @@ export function conflictSummaryReport(components: ApplyVersionResult[]): {
 
 export function installationErrorOutput(installationError?: Error) {
   if (!installationError) return '';
-  const title = chalk.underline('Installation Error');
+  const title = `${errorSymbol} ${chalk.bold.white('Installation Error')}`;
   const subTitle = 'The following error was thrown by the package manager:';
   const body = chalk.red(installationError.message);
   const suggestion =
@@ -122,7 +123,7 @@ export function installationErrorOutput(installationError?: Error) {
 
 export function compilationErrorOutput(compilationError?: Error) {
   if (!compilationError) return '';
-  const title = chalk.underline('Compilation Error');
+  const title = `${errorSymbol} ${chalk.bold.white('Compilation Error')}`;
   const subTitle = 'The following error was thrown by the compiler';
   const body = chalk.red(compilationError.message);
   const suggestion = 'Please fix the issue and run "bit compile"';
@@ -131,14 +132,14 @@ export function compilationErrorOutput(compilationError?: Error) {
 
 export function getRemovedOutput(removedComponents?: ComponentID[]) {
   if (!removedComponents?.length) return '';
-  const title = `the following ${removedComponents.length} component(s) have been removed`;
+  const title = `removed components (${removedComponents.length})`;
   const body = removedComponents.join('\n');
-  return `${chalk.underline(title)}\n${body}`;
+  return `${chalk.bold.white(title)}\n${body}`;
 }
 
 export function getAddedOutput(addedComponents?: ComponentID[]) {
   if (!addedComponents?.length) return '';
-  const title = `the following ${addedComponents.length} component(s) have been added`;
+  const title = `added components (${addedComponents.length})`;
   const body = addedComponents.join('\n');
-  return `${chalk.underline(title)}\n${body}`;
+  return `${chalk.bold.white(title)}\n${body}`;
 }
