@@ -780,6 +780,13 @@ display component API schema and type definitions
 extracts and displays the public API structure of components including types, functions, classes, and interfaces. shows detailed type information, function signatures, and JSDoc documentation for exported elements. useful for understanding component interfaces and generating documentation. you can use a `<pattern>` for multiple component ids, such as `bit schema "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
 Flags: --remote, --json
 
+## bit schema diff <component> <base-version> <compare-version>
+
+show API changes between two versions of a component
+
+compares the public API schema between two versions of a component. shows added, removed, and modified exports with semantic impact analysis. examples: bit schema diff my-component 0.0.1 0.0.2
+Flags: --json
+
 ## bit scope <sub-command>
 
 manage component scope names and assignments
