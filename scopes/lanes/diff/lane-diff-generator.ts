@@ -225,8 +225,6 @@ export class LaneDiffGenerator {
       throw new BitError(`lane-history "${toHistoryId}" is empty, nothing to show`);
     }
 
-    this.ensureComponentsOnLane(lane, [...this.toLaneData.components, ...this.fromLaneData.components]);
-
     const idsOfTo = ComponentIdList.fromArray(
       this.toLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
     );
@@ -427,8 +425,6 @@ export class LaneDiffGenerator {
     const laneId = lane.toLaneId();
     const laneData = this.mapHistoryToLaneData(laneId, historyId, entry);
 
-    this.ensureComponentsOnLane(lane, laneData.components);
-
     const ids = ComponentIdList.fromArray(laneData.components.map((c) => c.id.changeVersion(c.head?.toString())));
     await this.scope.legacyScope.scopeImporter.importWithoutDeps(ids, {
       cache: true,
@@ -442,23 +438,6 @@ export class LaneDiffGenerator {
     if (!headsToCheck.length) return true;
     const existing = await repo.hasMultiple(headsToCheck);
     return existing.length === headsToCheck.length;
-  }
-
-  /**
-   * Ensure all given components are recognized as part of the lane.
-   * Components that existed on the lane at the time of a history entry may have since been
-   * removed. Without this, the importer would fetch them from the component's own scope
-   * rather than the lane's scope, which won't have the lane-specific snap objects.
-   */
-  private ensureComponentsOnLane(lane: Lane, components: LaneData['components']): void {
-    const currentLaneCompIds = new Set(lane.components.map((c) => c.id.toStringWithoutVersion()));
-    for (const comp of components) {
-      const key = comp.id.toStringWithoutVersion();
-      if (!currentLaneCompIds.has(key) && comp.head) {
-        lane.addComponent({ id: comp.id, head: comp.head });
-        currentLaneCompIds.add(key);
-      }
-    }
   }
 
   private mapHistoryToLaneData(laneId: LaneId, historyId: string, historyItem: HistoryItem): LaneData {
