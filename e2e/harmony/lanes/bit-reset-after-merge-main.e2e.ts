@@ -85,42 +85,46 @@ describe('bit reset after merging main into a lane', function () {
   });
 
   /**
-   * Case 2: Main is ahead, lane has an unmodified snap.
-   * Even though the lane content is identical to main's base, the unmodified snap creates
-   * a different hash, so the merge still produces an auto-snap (diverge).
-   * bit reset removes this snap and reverts the lane head to the pre-merge state.
-   * Files remain with main's content and show as modified.
+   * Case 2: True fast-forward — component was born on the lane, merged to main, then main advanced.
+   * The lane and main share the same snap, so main is simply ahead.
+   * The merge just advances the lane head to main's version (no new snap, single parent).
+   * bit reset reverts the lane head to what the remote lane has.
    */
-  describe('main is ahead, lane has an unmodified snap', () => {
+  describe('true fast-forward (component born on lane, merged to main, main advanced)', () => {
     let headOnLaneBefore: string;
     let headOnLaneAfterMerge: string;
     let afterMerge: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(1);
-      helper.command.tagAllWithoutBuild();
-      helper.command.export();
-
+      // create comp1 on a lane
       helper.command.createLane('dev');
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       headOnLaneBefore = helper.command.getHeadOfLane('dev', 'comp1');
 
+      // merge lane into main so main has the same snap
       helper.command.switchLocalLane('main', '-x');
-      helper.fixtures.populateComponents(1, undefined, 'main-v2');
+      helper.command.mergeLane(`${helper.scopes.remote}/dev`, '-x');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
+      // advance main
+      helper.fixtures.populateComponents(1, undefined, 'main-advanced');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // switch back to lane and merge main
       helper.command.switchLocalLane('dev', '-x');
       helper.command.mergeLane('main', '-x');
       headOnLaneAfterMerge = helper.command.getHeadOfLane('dev', 'comp1');
       afterMerge = helper.scopeHelper.cloneWorkspace();
     });
 
-    it('merge should have created an auto-snap with two parents (diverge, not fast-forward)', () => {
+    it('merge should be a fast-forward (no merge snap with 2 parents)', () => {
       expect(headOnLaneAfterMerge).to.not.equal(headOnLaneBefore);
       const versionObj = helper.command.catComponent(`comp1@${headOnLaneAfterMerge}`);
-      expect(versionObj.parents).to.have.lengthOf(2);
+      expect(versionObj.parents).to.have.lengthOf(1);
     });
 
     describe('after running bit reset', () => {
@@ -136,7 +140,7 @@ describe('bit reset after merging main into a lane', function () {
 
       it('should not change the files (main content remains on disk)', () => {
         const content = helper.fs.readFile('comp1/index.js');
-        expect(content).to.have.string('main-v2');
+        expect(content).to.have.string('main-advanced');
       });
 
       it('should show the component as modified since files do not match the reverted lane head', () => {
@@ -148,60 +152,12 @@ describe('bit reset after merging main into a lane', function () {
   });
 
   /**
-   * Case 3: Using --no-auto-snap flag (diverged, but no snap is created).
-   * The merge still applies file changes on disk, but no snap is created and
-   * the lane head is not updated. Files show as modified.
-   * bit reset has nothing to reset and throws "no components found to reset".
-   */
-  describe('diverged with --no-auto-snap (no snap created)', () => {
-    let headOnLaneBefore: string;
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(1);
-      helper.command.tagAllWithoutBuild();
-      helper.command.export();
-
-      helper.command.createLane('dev');
-      helper.fixtures.populateComponents(1, undefined, 'from-lane');
-      helper.command.snapAllComponentsWithoutBuild();
-      helper.command.export();
-      headOnLaneBefore = helper.command.getHeadOfLane('dev', 'comp1');
-
-      helper.command.switchLocalLane('main', '-x');
-      helper.fixtures.populateComponents(1, undefined, 'from-main');
-      helper.command.tagAllWithoutBuild();
-      helper.command.export();
-
-      helper.command.switchLocalLane('dev', '-x');
-      helper.command.mergeLane('main', '--auto-merge-resolve theirs --no-auto-snap -x');
-    });
-
-    it('lane head should not have changed (no snap was made)', () => {
-      const headAfterMerge = helper.command.getHeadOfLane('dev', 'comp1');
-      expect(headAfterMerge).to.equal(headOnLaneBefore);
-    });
-
-    it('files should have the merged content and show as modified', () => {
-      const content = helper.fs.readFile('comp1/index.js');
-      expect(content).to.have.string('from-main');
-      const status = helper.command.statusJson();
-      expect(status.modifiedComponents).to.have.lengthOf(1);
-    });
-
-    it('bit reset should throw because there is nothing to reset', () => {
-      expect(() => helper.command.resetAll()).to.throw('no components found to reset');
-    });
-  });
-
-  /**
-   * Case 4: Using --no-snap flag (diverged).
-   * For diverged merges, both --no-auto-snap and --no-snap behave the same: no new snap
-   * and no lane head change. The difference is that --no-snap also prevents head updates
-   * in non-diverged merges (see Case 5), whereas --no-auto-snap only skips the merge snap.
+   * Case 3: Using --no-snap flag.
+   * --no-snap prevents both snap creation and lane head updates.
    * Files get the merged content but the lane object stays untouched.
    * bit reset has nothing to reset.
    */
-  describe('diverged with --no-snap (no snap, no head change)', () => {
+  describe('with --no-snap (no snap, no head change)', () => {
     let headOnLaneBefore: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -232,51 +188,6 @@ describe('bit reset after merging main into a lane', function () {
     it('files should have the merged content and show as modified', () => {
       const content = helper.fs.readFile('comp1/index.js');
       expect(content).to.have.string('from-main');
-      const status = helper.command.statusJson();
-      expect(status.modifiedComponents).to.have.lengthOf(1);
-    });
-
-    it('bit reset should throw because there is nothing to reset', () => {
-      expect(() => helper.command.resetAll()).to.throw('no components found to reset');
-    });
-  });
-
-  /**
-   * Case 5: Using --no-snap when main is ahead (lane has an unmodified snap).
-   * Similar to Case 2 setup but with --no-snap, which prevents both snap creation
-   * AND lane head updates. Files get main's content but the lane object stays untouched.
-   * bit reset has nothing to reset.
-   */
-  describe('main is ahead with --no-snap (no snap, no head change)', () => {
-    let headOnLaneBefore: string;
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(1);
-      helper.command.tagAllWithoutBuild();
-      helper.command.export();
-
-      helper.command.createLane('dev');
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.export();
-      headOnLaneBefore = helper.command.getHeadOfLane('dev', 'comp1');
-
-      helper.command.switchLocalLane('main', '-x');
-      helper.fixtures.populateComponents(1, undefined, 'main-v2');
-      helper.command.tagAllWithoutBuild();
-      helper.command.export();
-
-      helper.command.switchLocalLane('dev', '-x');
-      helper.command.mergeLane('main', '--no-snap -x');
-    });
-
-    it('lane head should not have changed', () => {
-      const headAfterMerge = helper.command.getHeadOfLane('dev', 'comp1');
-      expect(headAfterMerge).to.equal(headOnLaneBefore);
-    });
-
-    it('files should have main content and show as modified', () => {
-      const content = helper.fs.readFile('comp1/index.js');
-      expect(content).to.have.string('main-v2');
       const status = helper.command.statusJson();
       expect(status.modifiedComponents).to.have.lengthOf(1);
     });
