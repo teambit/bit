@@ -1,7 +1,8 @@
 import { gql } from 'graphql-tag';
+import type { Schema } from '@teambit/graphql';
 import type { ComponentCompareMain, ComponentCompareResult } from './component-compare.main.runtime';
 
-export function componentCompareSchema(componentCompareMain: ComponentCompareMain) {
+export function componentCompareSchema(componentCompareMain: ComponentCompareMain): Schema {
   return {
     typeDefs: gql`
       type FileCompareResult {

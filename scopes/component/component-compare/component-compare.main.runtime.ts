@@ -115,7 +115,7 @@ export class ComponentCompareMain {
     };
   }
 
-  async getAPIDiff(baseIdStr: string, compareIdStr: string) {
+  async getAPIDiff(baseIdStr: string, compareIdStr: string): Promise<Record<string, any> | null> {
     const host = this.componentAspect.getHost();
     const [baseCompId, compareCompId] = await host.resolveMultipleComponentIds([baseIdStr, compareIdStr]);
     await this.importer.importObjectsFromMainIfExist([baseCompId, compareCompId], { cache: true });
