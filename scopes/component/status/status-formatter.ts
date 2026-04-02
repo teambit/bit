@@ -10,7 +10,15 @@ import {
   statusWorkspaceIsCleanMsg,
   BASE_DOCS_DOMAIN,
 } from '@teambit/legacy.constants';
-import { formatSection, bulletSymbol, successSymbol, warnSymbol, errorSymbol, joinSections } from '@teambit/cli';
+import {
+  formatSection,
+  formatItem,
+  bulletSymbol,
+  successSymbol,
+  warnSymbol,
+  errorSymbol,
+  joinSections,
+} from '@teambit/cli';
 import type { OutputSection } from '@teambit/cli';
 import { countBy, groupBy, partition } from 'lodash';
 import { isHash } from '@teambit/component-version';
@@ -80,7 +88,7 @@ export function formatStatusOutput(
       return defaultSym ?? bulletSymbol;
     };
 
-    let idFormatted = `   ${getSymbol()} ` + chalk.cyan(id.toStringWithoutVersion());
+    let idFormatted = formatItem(chalk.cyan(id.toStringWithoutVersion()), getSymbol());
 
     if (localVersions) {
       if (verbose) {
@@ -127,9 +135,10 @@ export function formatStatusOutput(
       component.latestVersion && component.latestVersion !== component.headVersion
         ? ` latest: ${component.latestVersion}`
         : '';
-    return `   ${warnSymbol} ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} head: ${
-      component.headVersion
-    }${latest}`;
+    return formatItem(
+      `${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} head: ${component.headVersion}${latest}`,
+      warnSymbol
+    );
   });
   const outdatedStr = formatSection(outdatedTitle, outdatedDesc, outdatedComps);
 
@@ -137,9 +146,10 @@ export function formatStatusOutput(
   const pendingMergeDesc = `(use "bit reset" to discard local tags/snaps, and bit checkout head to re-merge with the remote.
 alternatively, to keep local tags/snaps history, use "bit merge [component-id]")`;
   const pendingMergeComps = mergePendingComponents.map((component) => {
-    return `   ${warnSymbol} ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
-      component.divergeData.snapsOnSourceOnly.length
-    } (source) and ${component.divergeData.snapsOnTargetOnly.length} (target) uncommon snaps respectively`;
+    return formatItem(
+      `${chalk.cyan(component.id.toString())} local and remote have diverged and have ${component.divergeData.snapsOnSourceOnly.length} (source) and ${component.divergeData.snapsOnTargetOnly.length} (target) uncommon snaps respectively`,
+      warnSymbol
+    );
   });
 
   const pendingMergeStr = formatSection(pendingMergeTitle, pendingMergeDesc, pendingMergeComps);
