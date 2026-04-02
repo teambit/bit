@@ -7,7 +7,6 @@ import {
   formatSuccessSummary,
   warnSymbol,
   errorSymbol,
-  bulletSymbol,
   joinSections,
 } from '@teambit/cli';
 import chalk from 'chalk';
@@ -356,7 +355,7 @@ also, check that the requested version exists on main or the checked out lane`;
 function formatPlainComponentItem({ scope, name, version, deprecated }: any) {
   const id = `${scope ? `${scope}/` : ''}${name}@${version ? version.toString() : 'latest'}`;
   const suffix = deprecated ? ` ${chalk.yellow('[deprecated]')}` : '';
-  return formatItem(chalk.cyan(id) + suffix, bulletSymbol);
+  return formatItem(chalk.cyan(id) + suffix);
 }
 
 function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails: ImportDetails): string | undefined {
@@ -398,7 +397,7 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
     return undefined;
   }
 
-  const symbol = removed ? errorSymbol : deprecated ? warnSymbol : bulletSymbol;
+  const symbol = removed ? errorSymbol : deprecated ? warnSymbol : undefined;
   const versionOutput = [versions, usedVersion].filter(Boolean).join(', ');
   const stateOutput = `${conflictMessage}${deprecated}${removed}`;
   const details = [chalk.green(status), chalk.cyan(id), versionOutput, stateOutput, missingDeps]

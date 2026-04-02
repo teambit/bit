@@ -1,4 +1,4 @@
-import { bulletSymbol, errorSymbol, formatItem } from '@teambit/cli';
+import { errorSymbol, formatItem } from '@teambit/cli';
 import type { BuildResult } from './workspace-compiler';
 
 export const formatCompileResults = (compileResults: BuildResult[], verbose: boolean) => {
@@ -6,7 +6,7 @@ export const formatCompileResults = (compileResults: BuildResult[], verbose: boo
     .filter((result) => verbose || result.errors.length > 0)
     .map((componentResult: BuildResult) => {
       const failed = componentResult.errors.length > 0;
-      const symbol = failed ? errorSymbol : bulletSymbol;
+      const symbol = failed ? errorSymbol : undefined;
       const suffix = failed ? ' ... failed' : '';
       let line = formatItem(`${componentResult.component}${suffix}`, symbol);
       if (verbose && componentResult.buildResults?.length) {

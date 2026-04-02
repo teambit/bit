@@ -16,9 +16,9 @@ export const errorSymbol = chalk.red('\u2716');
 /** Neutral bullet for informational items (no success/failure connotation) */
 export const bulletSymbol = chalk.dim('\u203A');
 
-/** Format a single item with 3-space indent + symbol + text. Defaults to success symbol. */
+/** Format a single item with 3-space indent + symbol + text. Defaults to bullet symbol. */
 export function formatItem(text: string, symbol?: string): string {
-  const s = symbol ?? successSymbol();
+  const s = symbol ?? bulletSymbol;
   return `   ${s} ${text}`;
 }
 
