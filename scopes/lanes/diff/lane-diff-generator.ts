@@ -252,7 +252,7 @@ export class LaneDiffGenerator {
           return;
         }
         try {
-          await this.componentDiff(id, head, {}, false);
+          await this.componentDiff(id, head);
         } catch (err: any) {
           const message = err instanceof Error ? err.message : String(err);
           this.failures.push({ id, msg: message });
