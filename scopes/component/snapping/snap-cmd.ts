@@ -3,15 +3,7 @@ import type { ComponentID } from '@teambit/component-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { Command, CommandOptions } from '@teambit/cli';
-import {
-  formatItem,
-  formatSection,
-  formatHint,
-  formatSuccessSummary,
-  successSymbol,
-  warnSymbol,
-  joinSections,
-} from '@teambit/cli';
+import { formatItem, formatSection, formatHint, formatSuccessSummary, warnSymbol, joinSections } from '@teambit/cli';
 import {
   NOTHING_TO_SNAP_MSG,
   AUTO_SNAPPED_MSG,
@@ -174,11 +166,11 @@ export function snapResultOutput(results: SnapResults): string {
   };
 
   const formatComp = (component: ConsumerComponent): string => {
-    let output = formatItem(compInBold(component.id), successSymbol());
+    let output = formatItem(compInBold(component.id));
     const autoSnap = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
     if (autoSnap.length) {
-      const autoSnapComp = autoSnap.map((a) => compInBold(a.component.id));
-      output += `\n       ${AUTO_SNAPPED_MSG} (${autoSnapComp.length} total):\n          ${autoSnapComp.join('\n            ')}`;
+      const autoSnapComp = autoSnap.map((a) => a.component.id.toString());
+      output += `\n     ${AUTO_SNAPPED_MSG} (${autoSnapComp.length} total):\n       ${autoSnapComp.join('\n       ')}`;
     }
     return output;
   };

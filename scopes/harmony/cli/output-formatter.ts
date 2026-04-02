@@ -36,7 +36,6 @@ export function formatSection(title: string, description: string, items: string[
       .join('\n');
     lines.push(chalk.dim(indented));
   }
-  lines.push('');
   lines.push(...items);
   return lines.join('\n');
 }
