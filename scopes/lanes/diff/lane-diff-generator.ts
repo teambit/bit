@@ -226,20 +226,7 @@ export class LaneDiffGenerator {
       throw new BitError(`lane-history "${toHistoryId}" is empty, nothing to show`);
     }
 
-    // Ensure all components from the history entries are recognized as part of the lane.
-    // Components that existed on the lane at the time of these history entries may have since
-    // been removed from the current lane. Without this, the importer would try to fetch them
-    // from the component's own scope (e.g., bitdev.general) rather than the lane's scope,
-    // and that scope won't have the lane-specific snap objects.
-    const currentLaneCompIds = new Set(lane.components.map((c) => c.id.toStringWithoutVersion()));
-    const allHistoryComps = [...this.toLaneData.components, ...this.fromLaneData.components];
-    for (const comp of allHistoryComps) {
-      const key = comp.id.toStringWithoutVersion();
-      if (!currentLaneCompIds.has(key) && comp.head) {
-        lane.addComponent({ id: comp.id, head: comp.head });
-        currentLaneCompIds.add(key);
-      }
-    }
+    this.ensureComponentsOnLane(lane, [...this.toLaneData.components, ...this.fromLaneData.components]);
 
     await this.importHistoryVersions(lane, laneId, toHistoryId, fromHistoryId);
 
@@ -479,15 +466,7 @@ this happens when snaps were created locally but the lane was later updated from
     const laneId = lane.toLaneId();
     const laneData = this.mapHistoryToLaneData(laneId, historyId, entry);
 
-    // Ensure components are on the lane so the importer routes to the lane's scope
-    const currentLaneCompIds = new Set(lane.components.map((c) => c.id.toStringWithoutVersion()));
-    for (const comp of laneData.components) {
-      const key = comp.id.toStringWithoutVersion();
-      if (!currentLaneCompIds.has(key) && comp.head) {
-        lane.addComponent({ id: comp.id, head: comp.head });
-        currentLaneCompIds.add(key);
-      }
-    }
+    this.ensureComponentsOnLane(lane, laneData.components);
 
     const ids = ComponentIdList.fromArray(laneData.components.map((c) => c.id.changeVersion(c.head?.toString())));
     await this.scope.legacyScope.scopeImporter.importWithoutDeps(ids, {
@@ -498,10 +477,27 @@ this happens when snaps were created locally but the lane was later updated from
     });
 
     const repo = this.scope.legacyScope.objects;
-    for (const { head } of laneData.components) {
-      if (head && !(await repo.has(head))) return false;
+    const headsToCheck = laneData.components.map((c) => c.head).filter((h): h is Ref => Boolean(h));
+    if (!headsToCheck.length) return true;
+    const existing = await repo.hasMultiple(headsToCheck);
+    return existing.length === headsToCheck.length;
+  }
+
+  /**
+   * Ensure all given components are recognized as part of the lane.
+   * Components that existed on the lane at the time of a history entry may have since been
+   * removed. Without this, the importer would fetch them from the component's own scope
+   * rather than the lane's scope, which won't have the lane-specific snap objects.
+   */
+  private ensureComponentsOnLane(lane: Lane, components: LaneData['components']): void {
+    const currentLaneCompIds = new Set(lane.components.map((c) => c.id.toStringWithoutVersion()));
+    for (const comp of components) {
+      const key = comp.id.toStringWithoutVersion();
+      if (!currentLaneCompIds.has(key) && comp.head) {
+        lane.addComponent({ id: comp.id, head: comp.head });
+        currentLaneCompIds.add(key);
+      }
     }
-    return true;
   }
 
   private mapHistoryToLaneData(laneId: LaneId, historyId: string, historyItem: HistoryItem): LaneData {
