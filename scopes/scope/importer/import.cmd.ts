@@ -207,11 +207,7 @@ without arguments, fetches all workspace components' latest versions from their 
 
     const importedDepsOutput =
       importFlags.displayDependencies && importedDeps.length
-        ? formatSection(
-            `imported ${importedDeps.length} component dependencies`,
-            '',
-            uniq(importedDeps.map(formatPlainComponentItem))
-          )
+        ? formatSection('imported component dependencies', '', uniq(importedDeps.map(formatPlainComponentItem)))
         : '';
 
     const getRemovedWarning = () => {
@@ -220,11 +216,14 @@ without arguments, fetches all workspace components' latest versions from their 
       const removedItems = removedDetails.map((d) => formatItem(chalk.bold(d.id), warnSymbol));
       const hintBase = `run "bit recover <component-id>" to restore`;
       const hintSuffix = lane ? `, then "bit lane merge main" to get latest updates` : '';
-      return formatSection(
-        'deleted components',
-        `imported component(s) are marked as deleted and may not be up to date`,
-        [...removedItems, formatHint(`${hintBase}${hintSuffix}`)]
-      );
+      return joinSections([
+        formatSection(
+          'deleted components',
+          'imported component(s) are marked as deleted and may not be up to date',
+          removedItems
+        ),
+        formatHint(`${hintBase}${hintSuffix}`),
+      ]);
     };
 
     return joinSections([

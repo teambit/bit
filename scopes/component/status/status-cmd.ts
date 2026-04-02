@@ -179,7 +179,7 @@ for maximum speed (skips aspect loading entirely), use "bit mini-status".`;
       return formatSection(
         title,
         '',
-        ids.map((id) => formatItem(chalk.cyan(id.toStringWithoutVersion()), successSymbol()))
+        ids.map((id) => formatItem(chalk.cyan(id.toStringWithoutVersion())))
       );
     };
     const data =
