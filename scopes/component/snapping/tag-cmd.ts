@@ -277,8 +277,8 @@ export function tagResultOutput(results: TagResults): string {
     let output = formatItem(compInBold(component.id));
     const autoTag = autoTaggedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
     if (autoTag.length) {
-      const autoTagComp = autoTag.map((a) => compInBold(a.component.id));
-      output += `\n       ${AUTO_TAGGED_MSG}:\n          ${autoTagComp.join('\n            ')}`;
+      const autoTagComp = autoTag.map((a) => a.component.id.toString());
+      output += `\n     ${AUTO_TAGGED_MSG}:\n       ${autoTagComp.join('\n       ')}`;
     }
     return output;
   };

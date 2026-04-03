@@ -16,9 +16,9 @@ export const errorSymbol = chalk.red('\u2716');
 /** Neutral bullet for informational items (no success/failure connotation) */
 export const bulletSymbol = chalk.dim('\u203A');
 
-/** Format a single item with 3-space indent + symbol + text. Defaults to success symbol. */
+/** Format a single item with 3-space indent + symbol + text. Defaults to bullet symbol. */
 export function formatItem(text: string, symbol?: string): string {
-  const s = symbol ?? successSymbol();
+  const s = symbol ?? bulletSymbol;
   return `   ${s} ${text}`;
 }
 
@@ -28,7 +28,7 @@ export function formatItem(text: string, symbol?: string): string {
  */
 export function formatSection(title: string, description: string, items: string[]): string {
   if (!items.length) return '';
-  const lines: string[] = [chalk.bold.white(`${title} (${items.length})`)];
+  const lines: string[] = [formatTitle(`${title} (${items.length})`)];
   if (description) {
     const indented = description
       .split('\n')
@@ -36,9 +36,13 @@ export function formatSection(title: string, description: string, items: string[
       .join('\n');
     lines.push(chalk.dim(indented));
   }
-  lines.push('');
   lines.push(...items);
   return lines.join('\n');
+}
+
+/** Format a bold white section title */
+export function formatTitle(text: string): string {
+  return chalk.bold.white(text);
 }
 
 /** Format hint text in dim color */

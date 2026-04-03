@@ -169,8 +169,8 @@ export function snapResultOutput(results: SnapResults): string {
     let output = formatItem(compInBold(component.id));
     const autoSnap = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
     if (autoSnap.length) {
-      const autoSnapComp = autoSnap.map((a) => compInBold(a.component.id));
-      output += `\n       ${AUTO_SNAPPED_MSG} (${autoSnapComp.length} total):\n          ${autoSnapComp.join('\n            ')}`;
+      const autoSnapComp = autoSnap.map((a) => a.component.id.toString());
+      output += `\n     ${AUTO_SNAPPED_MSG} (${autoSnapComp.length} total):\n       ${autoSnapComp.join('\n       ')}`;
     }
     return output;
   };

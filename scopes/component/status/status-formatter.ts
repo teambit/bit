@@ -10,9 +10,18 @@ import {
   statusWorkspaceIsCleanMsg,
   BASE_DOCS_DOMAIN,
 } from '@teambit/legacy.constants';
-import { formatSection, bulletSymbol, successSymbol, warnSymbol } from '@teambit/cli';
+import {
+  formatSection,
+  formatItem,
+  formatTitle,
+  bulletSymbol,
+  successSymbol,
+  warnSymbol,
+  errorSymbol,
+  joinSections,
+} from '@teambit/cli';
 import type { OutputSection } from '@teambit/cli';
-import { compact, countBy, groupBy, partition } from 'lodash';
+import { countBy, groupBy, partition } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import type { StatusResult } from './status.main.runtime';
 
@@ -75,12 +84,12 @@ export function formatStatusOutput(
     const isClean = !message && !idWithIssues;
 
     const getSymbol = () => {
-      if (message) return chalk.yellow('⚠');
-      if (idWithIssues) return hasTagBlocker ? chalk.red('✖') : chalk.yellow('⚠');
+      if (message) return warnSymbol;
+      if (idWithIssues) return hasTagBlocker ? errorSymbol : warnSymbol;
       return defaultSym ?? bulletSymbol;
     };
 
-    let idFormatted = `   ${getSymbol()} ` + chalk.cyan(id.toStringWithoutVersion());
+    let idFormatted = formatItem(chalk.cyan(id.toStringWithoutVersion()), getSymbol());
 
     if (localVersions) {
       if (verbose) {
@@ -127,9 +136,10 @@ export function formatStatusOutput(
       component.latestVersion && component.latestVersion !== component.headVersion
         ? ` latest: ${component.latestVersion}`
         : '';
-    return `   ${chalk.yellow('⚠')} ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} head: ${
-      component.headVersion
-    }${latest}`;
+    return formatItem(
+      `${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} head: ${component.headVersion}${latest}`,
+      warnSymbol
+    );
   });
   const outdatedStr = formatSection(outdatedTitle, outdatedDesc, outdatedComps);
 
@@ -137,9 +147,10 @@ export function formatStatusOutput(
   const pendingMergeDesc = `(use "bit reset" to discard local tags/snaps, and bit checkout head to re-merge with the remote.
 alternatively, to keep local tags/snaps history, use "bit merge [component-id]")`;
   const pendingMergeComps = mergePendingComponents.map((component) => {
-    return `   ${chalk.yellow('⚠')} ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
-      component.divergeData.snapsOnSourceOnly.length
-    } (source) and ${component.divergeData.snapsOnTargetOnly.length} (target) uncommon snaps respectively`;
+    return formatItem(
+      `${chalk.cyan(component.id.toString())} local and remote have diverged and have ${component.divergeData.snapsOnSourceOnly.length} (source) and ${component.divergeData.snapsOnTargetOnly.length} (target) uncommon snaps respectively`,
+      warnSymbol
+    );
   });
 
   const pendingMergeStr = formatSection(pendingMergeTitle, pendingMergeDesc, pendingMergeComps);
@@ -269,7 +280,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
 
   const getWorkspaceIssuesOutput = () => {
     if (!workspaceIssues.length) return '';
-    const title = chalk.bold.white('workspace issues');
+    const title = formatTitle('workspace issues');
     const issues = workspaceIssues.join('\n');
     return `\n\n${title}\n${issues}`;
   };
@@ -282,7 +293,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
 
   const statusMsg =
     importPendingWarning +
-    compact([
+    joinSections([
       outdatedStr,
       pendingMergeStr,
       updatesFromMainOutput,
@@ -300,7 +311,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
       invalidComponentOutput,
       locallySoftRemovedOutput,
       remotelySoftRemovedOutput,
-    ]).join('\n\n') +
+    ]) +
     showWarningsStr +
     troubleshootingStr;
 
@@ -358,7 +369,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
       const shown = sorted.slice(0, MAX_SHOWN).map(([scope, n]) => `${scope} (${n})`);
       const remaining = sorted.length - MAX_SHOWN;
       const scopeLine = remaining > 0 ? [...shown, `+ ${remaining} more scopes`].join(' · ') : shown.join(' · ');
-      const title = chalk.bold.white(`components pending auto-tag (${count})`);
+      const title = formatTitle(`components pending auto-tag (${count})`);
       const desc = chalk.dim(`  ${autoTagPendingDesc}`);
       const scopes = `   ${scopeLine}`;
       const hint = chalk.dim('— use --expand to list');
