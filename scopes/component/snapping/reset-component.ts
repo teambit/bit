@@ -64,10 +64,14 @@ export async function removeLocalVersion(
 
   // Load version objects to extract batchIds before they are removed.
   // These batchIds are used to clean up the corresponding lane history entries.
-  const versionObjects: Version[] = await Promise.all(
-    versionsToRemoveStr.map((ver) => component.loadVersion(ver, consumer.scope.objects))
-  );
-  const batchIds = [...new Set(versionObjects.map((v) => v.batchId).filter(Boolean))] as string[];
+  // Only needed on lanes — on main there's no lane history to clean up.
+  let batchIds: string[] | undefined;
+  if (lane) {
+    const versionObjects: Version[] = await Promise.all(
+      versionsToRemoveStr.map((ver) => component.loadVersion(ver, consumer.scope.objects))
+    );
+    batchIds = [...new Set(versionObjects.map((v) => v.batchId).filter(Boolean))] as string[];
+  }
 
   const headBefore = component.getHead();
   await consumer.scope.sources.removeComponentVersions(component, versionsToRemove, versionsToRemoveStr, lane, head);

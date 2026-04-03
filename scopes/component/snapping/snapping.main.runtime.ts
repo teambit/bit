@@ -724,7 +724,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       // Remove lane history entries that correspond to the reset snaps.
       // Each snap uses its batchId as the lane history key, so we can match them.
       if (currentLane) {
-        const allBatchIds = [...new Set(results.flatMap((r) => r.batchIds || []))];
+        const allBatchIds = uniq(results.flatMap((r) => r.batchIds || []));
         if (allBatchIds.length) {
           const laneHistory = await consumer.scope.lanes.getOrCreateLaneHistory(currentLane);
           laneHistory.removeHistoryEntries(allBatchIds);
