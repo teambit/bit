@@ -1,9 +1,10 @@
+import { compact } from 'lodash';
 import { BitError } from '@teambit/bit-error';
 import type { ComponentID } from '@teambit/component-id';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { logger } from '@teambit/legacy.logger';
-import type { Lane, ModelComponent, Version } from '@teambit/objects';
+import type { Lane, ModelComponent } from '@teambit/objects';
 import type { RemoveMain } from '@teambit/remove';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import type { Workspace } from '@teambit/workspace';
@@ -67,10 +68,10 @@ export async function removeLocalVersion(
   // Only needed on lanes — on main there's no lane history to clean up.
   let batchIds: string[] | undefined;
   if (lane) {
-    const versionObjects: Version[] = await Promise.all(
-      versionsToRemoveStr.map((ver) => component.loadVersion(ver, consumer.scope.objects))
+    const versionObjects = await Promise.all(
+      versionsToRemoveStr.map((ver) => component.loadVersion(ver, consumer.scope.objects, false))
     );
-    batchIds = [...new Set(versionObjects.map((v) => v.batchId).filter(Boolean))] as string[];
+    batchIds = [...new Set(compact(compact(versionObjects).map((v) => v.batchId)))];
   }
 
   const headBefore = component.getHead();
