@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { warnSymbol, formatTitle, formatHint, joinSections } from '@teambit/cli';
-import { compact } from 'lodash';
+import { warnSymbol, formatTitle, formatSection, formatItem, formatHint, joinSections } from '@teambit/cli';
 import {
   COMPONENT_PATTERN_HELP,
   AUTO_SNAPPED_MSG,
@@ -128,14 +127,12 @@ for lane-to-lane merging, use 'bit lane merge' instead.`;
       skipDependencyInstallation
     );
     if (resolvedComponents) {
-      const title = formatTitle('successfully resolved component(s)');
-      const componentsStr = resolvedComponents.map((c) => c.id.toStringWithoutVersion()).join('\n');
-      return `${title}\n${chalk.green(componentsStr)}`;
+      const items = resolvedComponents.map((c) => formatItem(c.id.toStringWithoutVersion()));
+      return formatSection('resolved components', '', items);
     }
     if (abortedComponents) {
-      const title = formatTitle('successfully aborted the merge of the following component(s)');
-      const componentsStr = abortedComponents.map((c) => c.id.toStringWithoutVersion()).join('\n');
-      return `${title}\n${chalk.green(componentsStr)}`;
+      const items = abortedComponents.map((c) => formatItem(c.id.toStringWithoutVersion()));
+      return formatSection('merge aborted', '', items);
     }
 
     return mergeReport({
@@ -196,31 +193,22 @@ export function mergeReport({
 
   const getSnapsOutput = () => {
     if (mergeSnapError) {
-      return `${chalk.bold(
+      return `${formatTitle('snap error')}\n${chalk.red(
         'snapping merged components failed with the following error, please fix the issues and snap manually'
-      )}
-${mergeSnapError.message}
-`;
+      )}\n${mergeSnapError.message}`;
     }
     if (!mergeSnapResults || !mergeSnapResults.snappedComponents) return '';
     const { snappedComponents, autoSnappedResults } = mergeSnapResults;
-    const outputComponents = (comps) => {
-      return comps
-        .map((component) => {
-          let componentOutput = `     > ${component.id.toString()}`;
-          const autoTag = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
-          if (autoTag.length) {
-            const autoTagComp = autoTag.map((a) => a.component.id.toString());
-            componentOutput += `\n       ${AUTO_SNAPPED_MSG}: ${autoTagComp.join(', ')}`;
-          }
-          return componentOutput;
-        })
-        .join('\n');
-    };
-
-    return `${formatTitle(
-      `merge-snapped components (${snappedComponents.length})`
-    )}\n${chalk.dim('components snapped as a result of the merge')}\n${outputComponents(snappedComponents)}`;
+    const items = snappedComponents.map((component) => {
+      let line = formatItem(component.id.toString());
+      const autoTag = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
+      if (autoTag.length) {
+        const autoTagComp = autoTag.map((a) => a.component.id.toString());
+        line += `\n       ${AUTO_SNAPPED_MSG}: ${autoTagComp.join(', ')}`;
+      }
+      return line;
+    });
+    return formatSection('merge-snapped components', 'components snapped as a result of the merge', items);
   };
 
   const getFailureOutput = () => {
@@ -232,31 +220,24 @@ ${mergeSnapError.message}
     const parts: string[] = [];
 
     if (skippedRemoved.length) {
-      const removedTitle = chalk.yellow(`\nmerge skipped for ${skippedRemoved.length} soft-removed component(s):`);
-      const removedBody = skippedRemoved.map((fc) => `${chalk.bold(fc.id.toString())}`).join('\n');
-      const removedHint = chalk.yellow(`(use "bit recover <component-id>" to restore, then re-run the merge)`);
-      parts.push(`${removedTitle}\n${removedBody}\n${removedHint}`);
+      const items = skippedRemoved.map((fc) => formatItem(chalk.bold(fc.id.toString()), warnSymbol));
+      const section = formatSection('merge skipped - soft-removed', '', items);
+      const hint = formatHint('use "bit recover <component-id>" to restore, then re-run the merge');
+      parts.push(`${section}\n${hint}`);
     }
 
     if (otherComponents.length) {
-      const title = '\nmerge skipped for the following component(s)';
-      const body = compact(
-        otherComponents.map((failedComponent) => {
-          // all failures here are "unchangedLegitimately". otherwise, it would have been thrown as an error
-          if (!verbose) return null;
-          return `${chalk.bold(failedComponent.id.toString())} - ${chalk.white(failedComponent.unchangedMessage)}`;
-        })
-      ).join('\n');
-      if (!body) {
-        parts.push(
-          `${chalk.bold(`\nmerge skipped legitimately for ${otherComponents.length} component(s)`)}\n(use --verbose to list them next time)`
-        );
+      if (!verbose) {
+        parts.push(formatHint(`merge skipped for ${otherComponents.length} component(s) (use --verbose to list them)`));
       } else {
-        parts.push(`${formatTitle(title)}\n${body}`);
+        const items = otherComponents.map((failedComponent) =>
+          formatItem(`${chalk.bold(failedComponent.id.toString())} - ${failedComponent.unchangedMessage}`)
+        );
+        parts.push(formatSection('merge skipped', '', items));
       }
     }
 
-    return parts.join('\n');
+    return parts.join('\n\n');
   };
 
   const getSummary = () => {

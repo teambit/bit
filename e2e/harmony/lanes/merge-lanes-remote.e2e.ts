@@ -75,7 +75,7 @@ describe('merge lanes - remote lane operations', function () {
         mergeOutput = helper.command.mergeLane(`${helper.scopes.remote}/dev`, `--workspace --verbose`);
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
-        expect(mergeOutput).to.have.string('merge skipped for the following component(s)');
+        expect(mergeOutput).to.have.string('merge skipped');
         expect(mergeOutput).to.have.string('not in the workspace');
       });
       it('bitmap should not save any component', () => {

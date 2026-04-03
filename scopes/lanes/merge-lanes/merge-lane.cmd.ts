@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { joinSections } from '@teambit/cli';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { mergeReport } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
@@ -219,11 +220,9 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     });
 
     const mergeResult = mergeReport({ ...mergeResults, configMergeResults, verbose });
-    const deleteOutput = `\n${deleteResults.localResult ? removeTemplate(deleteResults.localResult, false) : ''}${(
-      deleteResults.remoteResult || []
-    ).map((item) => removeTemplate(item, true))}${
-      (deleteResults.readmeResult && chalk.yellow(deleteResults.readmeResult)) || ''
-    }\n`;
-    return mergeResult + deleteOutput;
+    const localDeleteOutput = deleteResults.localResult ? removeTemplate(deleteResults.localResult, false) : '';
+    const remoteDeleteOutput = (deleteResults.remoteResult || []).map((item) => removeTemplate(item, true)).join('');
+    const readmeOutput = deleteResults.readmeResult ? chalk.yellow(deleteResults.readmeResult) : '';
+    return joinSections([mergeResult, localDeleteOutput, remoteDeleteOutput, readmeOutput]);
   }
 }

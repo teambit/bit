@@ -1,6 +1,7 @@
 import c from 'chalk';
 import Table from 'cli-table';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { warnSymbol, errorSymbol } from '@teambit/cli';
 import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentLogMain, LogOpts } from './component-log.main.runtime';
 
@@ -93,8 +94,8 @@ export function paintAuthor(email: string | null | undefined, username: string |
 
 function paintLog(log: LegacyComponentLog): string {
   const { message, date, tag, hash, username, email, deleted, deprecated } = log;
-  const deletedStr = deleted ? c.red(' [deleted]') : '';
-  const deprecatedStr = !deleted && deprecated ? c.yellow(' [deprecated]') : '';
+  const deletedStr = deleted ? ` ${errorSymbol} deleted` : '';
+  const deprecatedStr = !deleted && deprecated ? ` ${warnSymbol} deprecated` : '';
   const title = tag ? `tag ${tag} (${hash})${deletedStr}${deprecatedStr}\n` : `snap ${hash}\n`;
   return (
     c.yellow(title) +

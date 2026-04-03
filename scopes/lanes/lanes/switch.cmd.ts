@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import { compact } from 'lodash';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import {
   applyVersionReport,
@@ -7,6 +6,7 @@ import {
   compilationErrorOutput,
 } from '@teambit/component.modules.merge-helper';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatItem, formatSection, formatSuccessSummary, formatHint, joinSections } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { LanesMain } from './lanes.main.runtime';
 
@@ -106,37 +106,31 @@ ${COMPONENT_PATTERN_HELP}`,
     }
     const getFailureOutput = () => {
       if (!failedComponents || !failedComponents.length) return '';
-      const title = '\nswitch skipped for the following component(s)';
-      const body = compact(
-        failedComponents.map((failedComponent) => {
-          // all failures here are "unchangedLegitimately". otherwise, it would have been thrown as an error
-          if (!verbose) return null;
-          return `${chalk.bold(failedComponent.id.toString())} - ${chalk.white(failedComponent.unchangedMessage)}`;
-        })
-      ).join('\n');
-      if (!body) {
-        return `${chalk.bold(`\nswitch skipped legitimately for ${failedComponents.length} component(s)`)}
-  (use --verbose to list them next time)`;
+      if (!verbose) {
+        return formatHint(`switch skipped for ${failedComponents.length} component(s) (use --verbose to list them)`);
       }
-      return `${chalk.underline(title)}\n${body}`;
+      const items = failedComponents.map((failedComponent) =>
+        formatItem(`${chalk.bold(failedComponent.id.toString())} - ${failedComponent.unchangedMessage}`)
+      );
+      return formatSection('switch skipped', '', items);
     };
     const getSuccessfulOutput = () => {
-      const laneSwitched = chalk.green(`\nsuccessfully set "${chalk.bold(lane)}" as the active lane`);
-      if (!components || !components.length) return `No components have been changed.${laneSwitched}`;
-      const title = `successfully switched ${components.length} components to the head of lane ${lane}\n`;
-      return chalk.bold(title) + applyVersionReport(components, true, false) + laneSwitched;
+      const laneSwitched = formatSuccessSummary(`successfully set "${chalk.bold(lane)}" as the active lane`);
+      if (!components || !components.length) return `No components have been changed.\n${laneSwitched}`;
+      const title = `successfully switched ${components.length} components to the head of lane ${lane}`;
+      return formatSuccessSummary(title) + '\n' + applyVersionReport(components, true, false) + '\n' + laneSwitched;
     };
 
     const getGitBranchWarningOutput = () => {
-      return gitBranchWarning ? chalk.yellow(`Warning: ${gitBranchWarning}`) : null;
+      return gitBranchWarning ? chalk.yellow(`Warning: ${gitBranchWarning}`) : '';
     };
 
-    return compact([
+    return joinSections([
       getFailureOutput(),
       getSuccessfulOutput(),
       getGitBranchWarningOutput(),
       installationErrorOutput(installationError),
       compilationErrorOutput(compilationError),
-    ]).join('\n\n');
+    ]);
   }
 }
