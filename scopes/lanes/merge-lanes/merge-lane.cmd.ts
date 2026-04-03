@@ -221,7 +221,9 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
 
     const mergeResult = mergeReport({ ...mergeResults, configMergeResults, verbose });
     const localDeleteOutput = deleteResults.localResult ? removeTemplate(deleteResults.localResult, false) : '';
-    const remoteDeleteOutput = (deleteResults.remoteResult || []).map((item) => removeTemplate(item, true)).join('');
+    const remoteDeleteOutput = joinSections(
+      (deleteResults.remoteResult || []).map((item) => removeTemplate(item, true))
+    );
     const readmeOutput = deleteResults.readmeResult ? chalk.yellow(deleteResults.readmeResult) : '';
     return joinSections([mergeResult, localDeleteOutput, remoteDeleteOutput, readmeOutput]);
   }

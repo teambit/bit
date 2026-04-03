@@ -70,13 +70,13 @@ export class LaneListCmd implements Command {
     });
     if (merged) {
       const mergedLanes = lanes.filter((l) => l.isMerged);
-      if (!mergedLanes.length) return formatSuccessSummary('none of the lanes is merged');
+      if (!mergedLanes.length) return formatHint('none of the lanes is merged');
       const items = mergedLanes.map((m) => formatItem(m.name));
       return formatSection('merged lanes', '', items);
     }
     if (notMerged) {
       const unmergedLanes = lanes.filter((l) => !l.isMerged);
-      if (!unmergedLanes.length) return formatSuccessSummary('all lanes are merged');
+      if (!unmergedLanes.length) return formatHint('all lanes are merged');
       const items = unmergedLanes.map((m) => formatItem(m.name));
       return formatSection('unmerged lanes', '', items);
     }
@@ -289,7 +289,7 @@ a lane created from another lane contains all the components of the original lan
     const summary = formatSuccessSummary(
       `successfully created and checked out to lane ${chalk.bold(result.alias || result.laneId.name)}`
     );
-    const note = currentLane ? chalk.yellow(`note - your new lane will be based on lane ${currentLane.name}`) : '';
+    const note = currentLane ? formatHint(`note - your new lane will be based on lane ${currentLane.name}`) : '';
     const scopeInfo = formatHint(`this lane will be exported to ${remoteScopeOrDefaultScope}`);
     return joinSections([summary, note, scopeInfo]);
   }
@@ -814,5 +814,6 @@ function outputReadmeComponent(component: LaneData['readmeComponent']): string {
   if (!component) return '';
   const head = component.head || '(unsnapped)';
   const hint = component.head ? '' : ` - use "bit snap ${component.id.fullName}" to snap before exporting`;
-  return ` ${warnSymbol} readme: ${component.id} - ${head}${hint}`;
+  const prefix = component.head ? ' ' : ` ${warnSymbol} `;
+  return `${prefix}readme: ${component.id} - ${head}${hint}`;
 }
