@@ -137,12 +137,12 @@ describe('merge lanes - remote lane operations', function () {
         it('bit lane --merged should not show the lane as it was not merged into main yet', () => {
           const merged = helper.command.listLanes('--merged');
           expect(merged).to.not.have.string('dev');
-          expect(merged).to.have.string('None of the lanes is merged');
+          expect(merged).to.have.string('none of the lanes is merged');
         });
         it('bit lane --unmerged should show the lane', () => {
           const merged = helper.command.listLanes('--not-merged');
           expect(merged).to.have.string('dev');
-          expect(merged).to.not.have.string('All lanes are merged');
+          expect(merged).to.not.have.string('all lanes are merged');
         });
       });
     });
