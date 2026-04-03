@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { warnSymbol, formatTitle, formatHint, joinSections } from '@teambit/cli';
 import { compact } from 'lodash';
 import {
   COMPONENT_PATTERN_HELP,
@@ -127,14 +128,14 @@ for lane-to-lane merging, use 'bit lane merge' instead.`;
       skipDependencyInstallation
     );
     if (resolvedComponents) {
-      const title = 'successfully resolved component(s)\n';
+      const title = formatTitle('successfully resolved component(s)');
       const componentsStr = resolvedComponents.map((c) => c.id.toStringWithoutVersion()).join('\n');
-      return chalk.underline(title) + chalk.green(componentsStr);
+      return `${title}\n${chalk.green(componentsStr)}`;
     }
     if (abortedComponents) {
-      const title = 'successfully aborted the merge of the following component(s)\n';
+      const title = formatTitle('successfully aborted the merge of the following component(s)');
       const componentsStr = abortedComponents.map((c) => c.id.toStringWithoutVersion()).join('\n');
-      return chalk.underline(title) + chalk.green(componentsStr);
+      return `${title}\n${chalk.green(componentsStr)}`;
     }
 
     return mergeReport({
@@ -162,33 +163,35 @@ export function mergeReport({
 }: ApplyVersionResults & { configMergeResults?: ConfigMergeResult[] }): string {
   const getSuccessOutput = () => {
     if (!components || !components.length) return '';
-    const title = `successfully merged ${components.length} components${
-      version ? `from version ${chalk.bold(version)}` : ''
-    }\n`;
+    const title = formatTitle(
+      `successfully merged ${components.length} components${version ? ` from version ${chalk.bold(version)}` : ''}`
+    );
     const fileChangesReport = applyVersionReport(components);
 
-    return chalk.bold(title) + fileChangesReport;
+    return fileChangesReport ? `${title}\n${fileChangesReport}` : title;
   };
 
   let componentsWithConflicts = 0;
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
-    const title = `files with conflicts summary\n`;
-    const suggestion = `\n\nmerge process not completed due to the conflicts above. fix conflicts manually and then run "bit install".
-once ready, snap/tag the components to complete the merge.`;
+    const title = formatTitle(`${warnSymbol} files with conflicts summary`);
     const conflictSummary = conflictSummaryReport(components);
     componentsWithConflicts = conflictSummary.conflictedComponents;
-    return chalk.underline(title) + conflictSummary.conflictStr + chalk.yellow(suggestion);
+    const suggestion = formatHint(
+      `merge process not completed due to the conflicts above. fix conflicts manually and then run "bit install".\nonce ready, snap/tag the components to complete the merge.`
+    );
+    return `${title}\n${conflictSummary.conflictStr}\n\n${suggestion}`;
   };
 
   const configMergeWithConflicts = configMergeResults?.filter((c) => c.hasConflicts()) || [];
   const getConfigMergeConflictSummary = () => {
     if (!configMergeWithConflicts.length) return '';
     const comps = configMergeWithConflicts.map((c) => c.compIdStr).join('\n');
-    const title = `components with config-merge conflicts\n`;
-    const suggestion = `\nconflicts were found while trying to merge the config. fix them manually by editing the ${MergeConfigFilename} file in the workspace root.
-once ready, snap/tag the components to complete the merge.`;
-    return chalk.underline(title) + comps + chalk.yellow(suggestion);
+    const title = formatTitle(`${warnSymbol} components with config-merge conflicts`);
+    const suggestion = formatHint(
+      `conflicts were found while trying to merge the config. fix them manually by editing the ${MergeConfigFilename} file in the workspace root.\nonce ready, snap/tag the components to complete the merge.`
+    );
+    return `${title}\n${comps}\n${suggestion}`;
   };
 
   const getSnapsOutput = () => {
@@ -215,9 +218,9 @@ ${mergeSnapError.message}
         .join('\n');
     };
 
-    return `${chalk.underline(
-      'merge-snapped components'
-    )}\n(${'components snapped as a result of the merge'})\n${outputComponents(snappedComponents)}`;
+    return `${formatTitle(
+      `merge-snapped components (${snappedComponents.length})`
+    )}\n${chalk.dim('components snapped as a result of the merge')}\n${outputComponents(snappedComponents)}`;
   };
 
   const getFailureOutput = () => {
@@ -249,7 +252,7 @@ ${mergeSnapError.message}
           `${chalk.bold(`\nmerge skipped legitimately for ${otherComponents.length} component(s)`)}\n(use --verbose to list them next time)`
         );
       } else {
-        parts.push(`${chalk.underline(title)}\n${body}`);
+        parts.push(`${formatTitle(title)}\n${body}`);
       }
     }
 
@@ -268,7 +271,7 @@ ${mergeSnapError.message}
       return compact([comps, ws, mergeConfig]).join(', ');
     };
 
-    const title = chalk.bold.underline('Merge Summary');
+    const title = formatTitle('Merge Summary');
     const mergedStr = `\nTotal Merged: ${chalk.bold(merged.toString())}`;
     const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(unchangedLegitimately.toString())}`;
     const autoSnappedStr = `\nTotal Snapped: ${chalk.bold(autoSnapped.toString())}`;
@@ -278,7 +281,7 @@ ${mergeSnapError.message}
     return title + mergedStr + unchangedLegitimatelyStr + autoSnappedStr + removedStr + conflictStr;
   };
 
-  return compact([
+  return joinSections([
     getSuccessOutput(),
     getFailureOutput(),
     getRemovedOutput(removedComponents),
@@ -287,5 +290,5 @@ ${mergeSnapError.message}
     getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult),
     getConflictSummary(),
     getSummary(),
-  ]).join('\n\n');
+  ]);
 }

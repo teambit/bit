@@ -1,8 +1,7 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import { renderSections } from '@teambit/cli';
+import { renderSections, formatSuccessSummary, formatSection, formatItem, joinSections } from '@teambit/cli';
 import type { ComponentID } from '@teambit/component-id';
 import chalk from 'chalk';
-import { Logger } from '@teambit/logger';
 import type { StatusMain, StatusResult } from './status.main.runtime';
 import { formatStatusOutput } from './status-formatter';
 
@@ -177,20 +176,20 @@ for maximum speed (skips aspect loading entirely), use "bit mini-status".`;
   private async reportQuick() {
     const { modified, newComps } = await this.status.statusMini();
     const formatCategory = (title: string, ids: ComponentID[]) => {
-      if (!ids.length) return '';
-      const titleOutput = chalk.bold.white(`${title} (${ids.length})`);
-      const idsStr = ids.map((id) => `   ${Logger.successSymbol()} ${chalk.cyan(id.toStringWithoutVersion())}`);
-      return [titleOutput, ...idsStr].join('\n');
+      return formatSection(
+        title,
+        '',
+        ids.map((id) => formatItem(chalk.cyan(id.toStringWithoutVersion())))
+      );
     };
-    const sections = [
-      formatCategory('modified components (files only)', modified),
-      formatCategory('new components', newComps),
-    ]
-      .filter(Boolean)
-      .join('\n\n');
     const data =
-      sections ||
-      `${Logger.successSymbol()} ${chalk.yellow('no new or modified components (based on file changes only, use "bit status" for full check)')}`;
+      joinSections([
+        formatCategory('modified components (files only)', modified),
+        formatCategory('new components', newComps),
+      ]) ||
+      formatSuccessSummary(
+        'no new or modified components (based on file changes only, use "bit status" for full check)'
+      );
 
     return { data, code: 0 };
   }
