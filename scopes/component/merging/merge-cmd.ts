@@ -249,7 +249,7 @@ export function mergeReport({
       const comps = componentsWithConflicts ? `${componentsWithConflicts} components` : '';
       const ws = workspaceConfigUpdateResult?.workspaceDepsConflicts ? 'workspace.jsonc file' : '';
       const mergeConfig = configMergeWithConflicts.length ? `${MergeConfigFilename} file` : '';
-      return compact([comps, ws, mergeConfig]).join(', ');
+      return [comps, ws, mergeConfig].filter(Boolean).join(', ');
     };
 
     const title = formatTitle('Merge Summary');
