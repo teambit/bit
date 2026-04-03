@@ -284,7 +284,9 @@ export class VersionMaker {
     if (lane) {
       const { message } = this.params;
       const msgStr = message ? ` (${message})` : '';
-      const laneHistory = await this.legacyScope.lanes.updateLaneHistory(lane, `snap${msgStr}`);
+      // Use batchId as the lane history key so `bit reset` can identify and remove the
+      // corresponding entry when it deletes the snapped versions.
+      const laneHistory = await this.legacyScope.lanes.updateLaneHistory(lane, `snap${msgStr}`, this.batchId);
       this.legacyScope.objects.add(laneHistory);
     }
   }

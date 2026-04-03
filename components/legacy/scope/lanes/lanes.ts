@@ -40,15 +40,19 @@ export default class Lanes {
     return existingLaneHistory || emptyLaneHistory;
   }
 
-  async updateLaneHistory(laneObject: Lane, laneHistoryMsg?: string) {
+  async updateLaneHistory(laneObject: Lane, laneHistoryMsg?: string, historyKey?: string) {
     const laneHistory = await this.getOrCreateLaneHistory(laneObject);
-    await laneHistory.addHistory(laneObject, laneHistoryMsg);
+    await laneHistory.addHistory(laneObject, laneHistoryMsg, historyKey);
     return laneHistory;
   }
 
   async saveLane(
     laneObject: Lane,
-    { saveLaneHistory = true, laneHistoryMsg }: { saveLaneHistory?: boolean; laneHistoryMsg?: string }
+    {
+      saveLaneHistory = true,
+      laneHistoryMsg,
+      historyKey,
+    }: { saveLaneHistory?: boolean; laneHistoryMsg?: string; historyKey?: string }
   ) {
     if (!laneObject.hasChanged) {
       logger.debug(`lanes, saveLane, no need to save the lane "${laneObject.name}" as it has not changed`);
@@ -56,7 +60,7 @@ export default class Lanes {
     }
     const objectsToSave: BitObject[] = [laneObject];
     if (saveLaneHistory) {
-      const laneHistory = await this.updateLaneHistory(laneObject, laneHistoryMsg);
+      const laneHistory = await this.updateLaneHistory(laneObject, laneHistoryMsg, historyKey);
       objectsToSave.push(laneHistory);
     }
     await this.objects.writeObjectsToTheFS(objectsToSave);

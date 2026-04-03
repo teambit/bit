@@ -49,21 +49,19 @@ describe('lane history-diff', function () {
   });
 
   /**
-   * Simplest reproduction: snap → reset → snap → export.
-   * The reset deletes the Version objects but the lane-history entry from the first snap survives.
-   * When a fresh workspace imports this lane, the orphaned entry references versions that
-   * don't exist on the remote.
+   * Scenario: snap → reset → snap → export.
+   * Before the fix, reset would delete Version objects but leave the lane-history entry,
+   * creating an orphaned entry. Now, reset also removes the corresponding lane-history entry
+   * (keyed by batchId), so the history stays clean.
    *
-   * History timeline (oldest→newest):
+   * History timeline after reset cleanup (oldest→newest):
    *   [0] "new lane"        (empty, always available)
    *   [1] "first snap"      (exported, available)
-   *   [2] "local snap"      (orphaned - versions deleted by reset)
-   *   [3] "final snap"      (exported, available)
+   *   [2] "final snap"      (exported, available)
+   *   (the "local snap" entry is removed by reset)
    */
-  describe('lane history-diff with orphaned versions after snap-reset-snap', () => {
-    let orphanedHistoryId: string;
-    let finalSnapHistoryId: string;
-    let firstSnapHistoryId: string;
+  describe('lane history after snap-reset-snap (no orphaned entries)', () => {
+    let historyEntries: any[];
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
@@ -75,11 +73,7 @@ describe('lane history-diff', function () {
       helper.fixtures.populateComponents(2, undefined, 'v2');
       helper.command.snapAllComponentsWithoutBuild('-m "local snap"');
 
-      const historyAfterSnap = helper.command.laneHistoryParsed();
-      orphanedHistoryId = historyAfterSnap[historyAfterSnap.length - 1].id;
-      firstSnapHistoryId = historyAfterSnap[historyAfterSnap.length - 2].id;
-
-      // Reset → Version objects deleted, but lane-history entry survives
+      // Reset → both Version objects and lane-history entry are removed
       helper.command.resetAll();
 
       // Snap again and export
@@ -87,41 +81,34 @@ describe('lane history-diff', function () {
       helper.command.snapAllComponentsWithoutBuild('-m "final snap"');
       helper.command.exportLane();
 
-      const historyAfterExport = helper.command.laneHistoryParsed();
-      finalSnapHistoryId = historyAfterExport[historyAfterExport.length - 1].id;
-
       // Fresh workspace: switch to the lane
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.switchRemoteLane('dev');
+
+      historyEntries = helper.command.laneHistoryParsed();
     });
 
-    it('no args: should skip the orphaned entry and diff "final snap" against "first snap"', () => {
-      // no args diffs latest (final snap) against predecessor.
-      // predecessor is the orphaned entry, so it should automatically fall back to "first snap"
+    it('should not have an orphaned entry in the history', () => {
+      // We expect 3 entries: "new lane", "first snap", "final snap".
+      // The "local snap" entry should have been removed by reset.
+      const messages = historyEntries.map((e: any) => e.message || '');
+      expect(messages.some((m: string) => m.includes('local snap'))).to.be.false;
+    });
+
+    it('no args: should diff "final snap" against "first snap" without errors', () => {
       const output = helper.command.runCmd('bit lane history-diff');
       expect(output).to.have.string('comp1');
       expect(output).to.have.string('comp2');
       expect(output).to.not.have.string('Diff failed');
     });
 
-    it('one arg (final snap): should skip the orphaned predecessor and diff against "first snap"', () => {
-      const output = helper.command.runCmd(`bit lane history-diff ${finalSnapHistoryId}`);
+    it('with one arg (final snap id): should diff against "first snap" without errors', () => {
+      const finalSnapId = historyEntries[historyEntries.length - 1].id;
+      const output = helper.command.runCmd(`bit lane history-diff ${finalSnapId}`);
       expect(output).to.have.string('comp1');
       expect(output).to.have.string('comp2');
       expect(output).to.not.have.string('Diff failed');
-    });
-
-    it('one arg (orphaned entry): its missing "to" versions should cause diff failures', () => {
-      // The orphaned entry is the "to". Its predecessor is "first snap" (available).
-      // But the "to" versions themselves are orphaned, so componentDiff fails for them.
-      const output = helper.command.runCmd(`bit lane history-diff ${orphanedHistoryId}`);
-      expect(output).to.have.string('Diff failed');
-    });
-
-    it('two args (explicit): should show diff failures without fallback', () => {
-      const output = helper.command.runCmd(`bit lane history-diff ${firstSnapHistoryId} ${orphanedHistoryId}`);
-      expect(output).to.have.string('Diff failed');
     });
   });
 });
