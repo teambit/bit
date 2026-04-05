@@ -27,6 +27,7 @@ import type { DependenciesData, OverridesDependenciesData } from './dependencies
 import type { RemoveDependenciesFlags, SetDependenciesFlags } from './dependencies-cmd';
 import {
   DependenciesBlameCmd,
+  DependenciesCircularCmd,
   DependenciesCmd,
   DependenciesDebugCmd,
   DependenciesDiagnoseCmd,
@@ -95,7 +96,10 @@ export interface DiagnosisReport {
   }>;
   peerPermutations: Array<{
     packageName: string;
+    /** declared peer-dep version ranges across components */
     versions: string[];
+    /** actual .pnpm directories for this package (0 means declared but not installed) */
+    installedCopies: number;
     versionOrigins: VersionOrigin[];
   }>;
 }
@@ -292,6 +296,20 @@ export class DependenciesMain {
     await this.workspace.bitMap.write(`deps-eject (${componentPattern})`);
 
     return compIds;
+  }
+
+  /**
+   * Find circular dependencies in the workspace component graph.
+   * Returns an array of cycles, where each cycle is an array of component-id strings
+   * (with the first component repeated at the end to make the circular path visible).
+   */
+  async getCircularDependencies(includeDeps?: boolean): Promise<string[][]> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    const graph = await this.graph.getGraphIds();
+    const cycles = graph.findCycles(undefined, includeDeps);
+    // append the first component to the end to make the circular visible in the output
+    cycles.forEach((cycle) => cycle.push(cycle[0]));
+    return cycles;
   }
 
   async getDependencies(id: string, scope?: boolean): Promise<DependenciesResults> {
@@ -523,7 +541,7 @@ export class DependenciesMain {
       .sort((a, b) => b.installedCopies - a.installedCopies)
       .slice(0, 30);
 
-    // 4. Peer deps with multiple versions
+    // 4. Peer deps with multiple versions, enriched with actual .pnpm copy count
     const peerPermutations = Array.from(packageVersionMap.entries())
       .filter(([, data]) => data.lifecycles.has('peer') && data.versions.size > 1)
       .map(([pkgName, data]) => {
@@ -543,10 +561,11 @@ export class DependenciesMain {
         return {
           packageName: pkgName,
           versions: Array.from(data.versions).sort(compareVersions),
+          installedCopies: pnpmPackageCopies.get(pkgName) || 0,
           versionOrigins,
         };
       })
-      .sort((a, b) => b.versions.length - a.versions.length);
+      .sort((a, b) => b.installedCopies - a.installedCopies || b.versions.length - a.versions.length);
 
     return {
       componentCount,
@@ -683,6 +702,7 @@ export class DependenciesMain {
       new DependenciesBlameCmd(depsMain),
       new DependenciesUsageCmd(depsMain),
       new DependenciesDiagnoseCmd(depsMain),
+      new DependenciesCircularCmd(depsMain),
       new DependenciesWriteCmd(workspace),
     ];
     cli.register(

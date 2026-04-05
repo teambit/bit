@@ -22,6 +22,8 @@ import { CiPrCmd } from './commands/pr.cmd';
 import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
 import { ComponentIdList } from '@teambit/component-id';
+import { isEqual } from 'lodash';
+import type { Version, LaneComponent } from '@teambit/objects';
 import { SourceBranchDetector } from './source-branch-detector';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 
@@ -350,11 +352,13 @@ export class CiMain {
     message,
     build,
     strict,
+    dryRun,
   }: {
     laneIdStr: string;
     message: string;
     build: boolean | undefined;
     strict: boolean | undefined;
+    dryRun?: boolean;
   }) {
     this.logger.console(chalk.blue(`Lane name: ${laneIdStr}`));
 
@@ -416,6 +420,17 @@ export class CiMain {
 
       const snapOutput = snapResultOutput(results);
       this.logger.console(snapOutput);
+
+      if (dryRun) {
+        this.logger.console(chalk.yellow('🏃 Dry-run mode: skipping export, lane deletion, and rename'));
+        this.logger.console(chalk.green(`Snapped ${snappedComponents.length} component(s) successfully`));
+        this.logger.console(
+          chalk.blue(
+            `Temporary lane "${laneId.scope}/${tempLaneName}" kept for debugging. Remove it with: bit lane remove ${laneId.scope}/${tempLaneName}`
+          )
+        );
+        return snapOutput;
+      }
 
       // Finalize atomically: delete existing lane, rename temp lane, export
       this.logger.console('🔄 Finalizing Lane');
@@ -515,6 +530,7 @@ export class CiMain {
     }
 
     const currentLane = await this.lanes.getCurrentLane();
+    const laneComponents = currentLane?.components;
     if (currentLane) {
       // this doesn't normally happen. we expect this mergePr to be called from the default branch, which normally checks
       // out to main lane.
@@ -572,6 +588,10 @@ export class CiMain {
 
     await this.workspace.bitMap.write('checkout head');
     this.logger.console(checkoutOutput(checkoutResults, checkoutProps));
+
+    if (laneComponents?.length) {
+      await this.restoreLaneConfigChanges(laneComponents);
+    }
 
     // Check for workspace.jsonc conflicts
     if (
@@ -705,6 +725,57 @@ export class CiMain {
     await this.performLaneCleanup(currentLane, laneName, initialCommitSha);
 
     return { code: 0, data: '' };
+  }
+
+  /**
+   * Compare lane Version extensions with main Version extensions for each component.
+   * Any config differences (e.g. env-set, deps-set) are saved to .bitmap so they survive
+   * the switch from lane to main and get included in the subsequent tag.
+   */
+  private async restoreLaneConfigChanges(laneComponents: LaneComponent[]) {
+    const scope = this.workspace.scope.legacyScope;
+    const repo = scope.objects;
+    let hasChanges = false;
+
+    const activeComponents = laneComponents.filter((c) => !c.isDeleted);
+    await Promise.all(
+      activeComponents.map(async (laneComp) => {
+        const laneVersion = (await repo.load(laneComp.head)) as Version;
+        if (!laneVersion) {
+          this.logger.console(chalk.yellow(`Warning: could not load Version object for ${laneComp.id.toString()}`));
+          return;
+        }
+
+        const laneConfig = laneVersion.extensions.toConfigObject();
+        if (!laneConfig || Object.keys(laneConfig).length === 0) return;
+
+        // Get main Version for comparison
+        let mainConfig: Record<string, any> = {};
+        const modelComp = await scope.getModelComponentIfExist(laneComp.id.changeVersion(undefined));
+        const mainHead = modelComp?.getHead();
+        if (mainHead) {
+          const mainVersion = (await repo.load(mainHead)) as Version;
+          mainConfig = mainVersion?.extensions.toConfigObject() ?? {};
+        }
+
+        for (const [aspectId, config] of Object.entries(laneConfig)) {
+          if (!isEqual(config, mainConfig[aspectId])) {
+            const updated = this.workspace.bitMap.addComponentConfig(
+              laneComp.id,
+              aspectId,
+              config as Record<string, any>
+            );
+            if (updated) hasChanges = true;
+          }
+        }
+      })
+    );
+
+    if (hasChanges) {
+      await this.workspace.bitMap.write('restore lane config');
+      await this.workspace.clearCache();
+      this.logger.console(chalk.blue('Restored config changes from lane'));
+    }
   }
 
   /**

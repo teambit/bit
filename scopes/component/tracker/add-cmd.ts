@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import * as path from 'path';
 import { BitError } from '@teambit/bit-error';
 import type { PathLinux, PathOsBased } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { AddActionResults, Warnings } from './add-components';
 import type { TrackerMain } from './tracker.main.runtime';
 
@@ -101,12 +102,12 @@ export class AddCmd implements Command {
       );
     }
 
-    const normalizedPaths: PathOsBased[] = paths.map((p) => path.normalize(p));
+    const normalizedPaths: PathOsBased[] = paths.map((p) => pathNormalizeToLinux(path.normalize(p)));
     const { addedComponents, warnings }: AddActionResults = await this.tracker.addForCLI({
       componentPaths: normalizedPaths,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       id,
-      main: main ? path.normalize(main) : undefined,
+      main: main ? pathNormalizeToLinux(path.normalize(main)) : undefined,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       namespace,
       defaultScope: scope,

@@ -359,6 +359,7 @@ the `<to>` argument accepts these values:
 | `--skip-dependency-installation`        |       `-x`       | do not auto-install dependencies of the imported components                                                                              |
 | `--force-ours`                          |                  | do not merge, preserve local files as is                                                                                                 |
 | `--force-theirs`                        |                  | do not merge, just overwrite with incoming files                                                                                         |
+| `--include-new-from-scope`              |                  | relevant for 'bit checkout head'. import components from the defaultScope that don't exist in the workspace                              |
 
 ---
 
@@ -389,6 +390,7 @@ Resolves the lane name from --lane or the current Git branch, validates it, and 
 | `--lane <lane>`       |       `-l`       | If set, use as the lane name, if not available, grab from git-branch name               |
 | `--build`             |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI           |
 | `--strict`            |       `-s`       | Set to true to fail on warnings as well as errors, false (default) only fails on errors |
+| `--dry-run`           |       `-d`       | Run the full pipeline but skip exporting to remote (build runs only if --build is set)  |
 
 ### ci merge
 
@@ -750,6 +752,17 @@ scans node_modules/.pnpm to report actual installed copies, identifies packages 
 | -------------------- | :--------------: | ---------------------------------------------------------------------------------- |
 | `--package <string>` |                  | drill down into a specific package to see all .pnpm copies and peer combos         |
 | `--origins`          |                  | show peer version origins — which envs and components contribute each peer version |
+
+### deps circular
+
+**Usage**: `deps circular`
+
+**Description**: find circular dependencies in the component graph
+
+| **Option**       | **Option alias** | **Description**                                               |
+| ---------------- | :--------------: | ------------------------------------------------------------- |
+| `--json`         |       `-j`       | return the output in JSON format                              |
+| `--include-deps` |                  | include component dependencies that are not in this workspace |
 
 ### deps write
 
@@ -1405,6 +1418,16 @@ workspace, but also mark it as deleted from the lane, so it won't be merged late
 | **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
 | ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
+
+### lane current
+
+**Usage**: `lane current`
+
+**Description**: display the name of the current lane
+
+| **Option** | **Option alias** | **Description**       |
+| ---------- | :--------------: | --------------------- |
+| `--json`   |       `-j`       | output in json format |
 
 ### lane history
 
@@ -2112,6 +2135,94 @@ useful for reverting file changes without changing the component's version histo
 
 ---
 
+## ripple
+
+**Description**: manage Ripple CI jobs on bit.cloud  
+view, retry, and manage Ripple CI jobs that build your components in the cloud after export.
+
+`bit ripple <sub-command>`
+
+### ripple list
+
+**Usage**: `ripple list`
+
+**Description**: list recent Ripple CI jobs (filtered by workspace owner by default)
+
+| **Option**          | **Option alias** | **Description**                                                        |
+| ------------------- | :--------------: | ---------------------------------------------------------------------- |
+| `--all`             |                  | show jobs from all owners, not just the workspace owner                |
+| `--owner <owner>`   |       `-o`       | filter by organization (default: detected from workspace defaultScope) |
+| `--scope <scope>`   |       `-s`       | filter by scope (e.g. "teambit.cloud")                                 |
+| `--lane <lane>`     |                  | filter by lane ID (e.g. "scope/lane-name")                             |
+| `--user <user>`     |       `-u`       | filter by username                                                     |
+| `--status <status>` |                  | filter by status (e.g. SUCCESS, FAILURE, RUNNING)                      |
+| `--limit <limit>`   |       `-l`       | max number of jobs to show (default: 20)                               |
+| `--json`            |       `-j`       | return the output as JSON                                              |
+
+### ripple log
+
+**Usage**: `ripple log [job-id]`
+
+**Description**: show job details and component build task summaries (auto-detects current lane when no job-id given)
+
+| **Arg**  |                         **Description**                          |
+| -------- | :--------------------------------------------------------------: |
+| `job-id` | the Ripple CI job ID (optional — auto-detects from current lane) |
+
+| **Option**                | **Option alias** | **Description**                                                     |
+| ------------------------- | :--------------: | ------------------------------------------------------------------- |
+| `--lane <lane>`           |                  | lane ID to find the latest job for (default: detected from .bitmap) |
+| `--component <component>` |       `-c`       | show build tasks for a specific component (full component ID)       |
+| `--json`                  |       `-j`       | return the output as JSON                                           |
+
+### ripple errors
+
+**Usage**: `ripple errors [job-id]`
+
+**Description**: show build errors for a Ripple CI job (auto-detects current lane when no job-id given)
+
+| **Arg**  |                         **Description**                          |
+| -------- | :--------------------------------------------------------------: |
+| `job-id` | the Ripple CI job ID (optional — auto-detects from current lane) |
+
+| **Option**      | **Option alias** | **Description**                                                            |
+| --------------- | :--------------: | -------------------------------------------------------------------------- |
+| `--lane <lane>` |                  | lane ID to find the latest failed job for (default: detected from .bitmap) |
+| `--log`         |                  | show full build log for failed containers (not just the error summary)     |
+| `--json`        |       `-j`       | return the output as JSON                                                  |
+
+### ripple retry
+
+**Usage**: `ripple retry [job-id]`
+
+**Description**: retry a failed Ripple CI job (auto-detects current lane when no job-id given)
+
+| **Arg**  |                              **Description**                              |
+| -------- | :-----------------------------------------------------------------------: |
+| `job-id` | the Ripple CI job ID to retry (optional — auto-detects from current lane) |
+
+| **Option**      | **Option alias** | **Description**                                                     |
+| --------------- | :--------------: | ------------------------------------------------------------------- |
+| `--lane <lane>` |                  | lane ID to find the latest job for (default: detected from .bitmap) |
+| `--json`        |       `-j`       | return the output as JSON                                           |
+
+### ripple stop
+
+**Usage**: `ripple stop [job-id]`
+
+**Description**: stop a running Ripple CI job (auto-detects current lane when no job-id given)
+
+| **Arg**  |                             **Description**                              |
+| -------- | :----------------------------------------------------------------------: |
+| `job-id` | the Ripple CI job ID to stop (optional — auto-detects from current lane) |
+
+| **Option**      | **Option alias** | **Description**                                                     |
+| --------------- | :--------------: | ------------------------------------------------------------------- |
+| `--lane <lane>` |                  | lane ID to find the latest job for (default: detected from .bitmap) |
+| `--json`        |       `-j`       | return the output as JSON                                           |
+
+---
+
 ## run
 
 **Alias**: `c`  
@@ -2151,6 +2262,21 @@ always wrap the pattern with single quotes to avoid collision with shell command
 use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
 
 `bit schema <pattern>`
+
+### schema diff
+
+**Usage**: `schema diff <component> <base-version> <compare-version>`
+
+**Description**: show API changes between two versions of a component  
+compares the public API schema between two versions of a component.  
+shows added, removed, and modified exports with semantic impact analysis.
+
+examples:  
+ bit schema diff my-component 0.0.1 0.0.2
+
+| **Option** | **Option alias** | **Description**                    |
+| ---------- | :--------------: | ---------------------------------- |
+| `--json`   |       `-j`       | return the API diff in json format |
 
 | **Option** | **Option alias** | **Description**                                                        |
 | ---------- | :--------------: | ---------------------------------------------------------------------- |
@@ -2415,19 +2541,23 @@ allows saving work-in-progress changes and switching context, then restoring cha
 **Description**: show workspace component status and issues  
 displays the current state of all workspace components including new, modified, staged, and problematic components.  
 identifies blocking issues that prevent tagging/snapping and provides warnings with --warnings flag.  
-essential for understanding workspace health before versioning components.
+essential for understanding workspace health before versioning components.  
+use --quick for a faster check that only detects file-level changes (new/modified components).  
+for maximum speed (skips aspect loading entirely), use "bit mini-status".
 
 `bit status`
 
-| **Option**                       | **Option alias** | **Description**                                                                         |
-| -------------------------------- | :--------------: | --------------------------------------------------------------------------------------- |
-| `--json`                         |       `-j`       | return a json version of the component                                                  |
-| `--warnings`                     |       `-w`       | show warnings. by default, only issues that block tag/snap are shown                    |
-| `--verbose`                      |                  | show extra data: full snap hashes for staged components, and divergence point for lanes |
-| `--lanes`                        |       `-l`       | when on a lane, show updates from main and updates from forked lanes                    |
-| `--strict`                       |                  | exit with code 1 if any issues are found (both errors and warnings)                     |
-| `--fail-on-error`                |                  | exit with code 1 only when tag/snap blocker issues are found (not warnings)             |
-| `--ignore-circular-dependencies` |       `-c`       | do not check for circular dependencies to get the results quicker                       |
+| **Option**                       | **Option alias** | **Description**                                                                                                            |
+| -------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------- |
+| `--json`                         |       `-j`       | return a json version of the component                                                                                     |
+| `--warnings`                     |       `-w`       | show warnings. by default, only issues that block tag/snap are shown                                                       |
+| `--verbose`                      |                  | show extra data: full snap hashes for staged components, and divergence point for lanes                                    |
+| `--lanes`                        |       `-l`       | when on a lane, show updates from main and updates from forked lanes                                                       |
+| `--strict`                       |                  | exit with code 1 if any issues are found (both errors and warnings)                                                        |
+| `--fail-on-error`                |                  | exit with code 1 only when tag/snap blocker issues are found (not warnings)                                                |
+| `--ignore-circular-dependencies` |       `-c`       | do not check for circular dependencies to get the results quicker                                                          |
+| `--quick`                        |                  | show only new and modified components based on file changes. much faster, but does not detect dependency or config changes |
+| `--expand`                       |                  | expand all collapsed sections (e.g. auto-tag pending components)                                                           |
 
 ---
 
@@ -2610,7 +2740,8 @@ supports glob patterns to update specific packages. prompts for confirmation unl
 
 **Description**: run type-checking, linting, and testing in sequence  
 validates components by running check-types, lint, and test commands in sequence.  
-stops at the first failure and returns a non-zero exit code.  
+by default runs all checks even when errors are found.  
+use --fail-fast to stop at the first failure.  
 by default validates only new and modified components. use --all to validate all components.
 
 `bit validate [component-pattern]`
@@ -2619,10 +2750,12 @@ by default validates only new and modified components. use --all to validate all
 | ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
-| **Option**            | **Option alias** | **Description**                                      |
-| --------------------- | :--------------: | ---------------------------------------------------- |
-| `--all`               |       `-a`       | validate all components, not only modified and new   |
-| `--continue-on-error` |       `-c`       | run all validation checks even when errors are found |
+| **Option**              | **Option alias** | **Description**                                                                                                                    |
+| ----------------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `--all`                 |       `-a`       | validate all components, not only modified and new                                                                                 |
+| `--fail-fast`           |                  | stop at the first failure instead of running all checks                                                                            |
+| `--continue-on-error`   |       `-c`       | DEPRECATED: this is now the default behavior                                                                                       |
+| `--skip-tasks <string>` |                  | skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes. available tasks: "check-types", "lint", "test" |
 
 ---
 

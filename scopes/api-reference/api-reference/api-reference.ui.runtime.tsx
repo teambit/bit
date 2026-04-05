@@ -17,8 +17,11 @@ import { CodeAspect } from '@teambit/code';
 import { TaggedExports } from '@teambit/tagged-exports';
 import type { WorkspaceUI } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
+import type { ComponentCompareUI } from '@teambit/component-compare';
+import { ComponentCompareAspect } from '@teambit/component-compare';
 
 import { APIReferenceAspect } from './api-reference.aspect';
+import { APICompareSection } from './api-compare.section';
 
 export type APINodeRendererSlot = SlotRegistry<APINodeRenderer[]>;
 export class APIReferenceUI {
@@ -29,7 +32,7 @@ export class APIReferenceUI {
     private workspace: WorkspaceUI
   ) {}
 
-  static dependencies = [ComponentAspect, CodeAspect, WorkspaceAspect];
+  static dependencies = [ComponentAspect, CodeAspect, WorkspaceAspect, ComponentCompareAspect];
   static runtime = UIRuntime;
   static slots = [Slot.withType<APINodeRenderer[]>()];
 
@@ -69,7 +72,7 @@ export class APIReferenceUI {
   apiNodeRenderers: APINodeRenderer[] = defaultNodeRenderers;
 
   static async provider(
-    [componentUI, codeUI, workspaceUI]: [ComponentUI, CodeUI, WorkspaceUI],
+    [componentUI, codeUI, workspaceUI, componentCompareUI]: [ComponentUI, CodeUI, WorkspaceUI, ComponentCompareUI],
     _,
     [apiNodeRendererSlot]: [APINodeRendererSlot],
     harmony: Harmony
@@ -83,6 +86,11 @@ export class APIReferenceUI {
     componentUI.registerRoute(apiReferenceSection.route);
     // register all default schema classes
     apiReferenceUI.registerSchemaClasses(() => Object.values(Schemas));
+
+    // register API compare tab in component compare
+    const apiCompareSection = new APICompareSection();
+    componentCompareUI.registerNavigation(apiCompareSection);
+    componentCompareUI.registerRoutes([apiCompareSection.route]);
 
     return apiReferenceUI;
   }

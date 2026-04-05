@@ -38,6 +38,7 @@ import type { ComponentMain, ComponentMap } from '@teambit/component';
 import type { SchemaMain } from '@teambit/schema';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import type { Logger } from '@teambit/logger';
+import { LaneDiffGenerator } from '@teambit/lanes.modules.diff';
 
 const FILES_HISTORY_DIR = 'files-history';
 const ENV_ICONS_DIR = 'env-icons';
@@ -583,6 +584,82 @@ export class APIForIDE {
       { concurrency: 30 }
     );
     return results;
+  }
+
+  async getLaneHistoryForIDE(laneName?: string) {
+    const laneId = laneName ? await this.lanes.parseLaneId(laneName) : this.workspace.getCurrentLaneId();
+    if (laneId.isDefault()) {
+      return { entries: [], isMain: true };
+    }
+    await this.lanes.importLaneHistory(laneId);
+    const laneHistory = await this.lanes.getLaneHistory(laneId);
+    const historyIds = laneHistory.getHistoryIds();
+    const history = laneHistory.getHistory();
+    const entries = historyIds.map((id) => {
+      const item = history[id];
+      return {
+        id,
+        date: item.log.date,
+        username: item.log.username,
+        email: item.log.email,
+        message: item.log.message,
+        components: item.components,
+        deleted: item.deleted,
+      };
+    });
+    return { entries, isMain: false };
+  }
+
+  async getLaneHistoryDiffForIDE(
+    fromHistoryId: string,
+    toHistoryId: string,
+    laneName?: string
+  ): Promise<{
+    newCompsFrom: string[];
+    newCompsTo: string[];
+    compsWithDiff: {
+      id: string;
+      hasDiff: boolean;
+      filesDiff: { filePath: string; status: string; fromContent?: string; toContent?: string }[];
+      fieldsDiff?: { fieldName: string; diffOutput: string }[] | null;
+    }[];
+    compsWithNoChanges: string[];
+    toLaneName: string;
+    fromLaneName: string;
+    failures: { id: string; msg: string }[];
+  }> {
+    const laneId = laneName ? await this.lanes.parseLaneId(laneName) : this.workspace.getCurrentLaneId();
+    if (laneId.isDefault()) {
+      throw new Error('lane history diff is not available on main');
+    }
+    await this.lanes.importLaneHistory(laneId);
+    const laneHistory = await this.lanes.getLaneHistory(laneId);
+    const laneObj = await this.lanes.loadLane(laneId);
+    if (!laneObj) throw new Error(`unable to find lane "${laneId.toString()}"`);
+    const diffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
+    const diffResults = await diffGenerator.generateDiffHistory(laneObj, laneHistory, fromHistoryId, toHistoryId);
+    return {
+      newCompsFrom: diffResults.newCompsFrom,
+      newCompsTo: diffResults.newCompsTo,
+      compsWithDiff: diffResults.compsWithDiff.map((d) => ({
+        id: d.id.toString(),
+        hasDiff: d.hasDiff,
+        filesDiff: (d.filesDiff || []).map((f) => ({
+          filePath: f.filePath,
+          status: f.status,
+          fromContent: f.status === 'UNCHANGED' ? undefined : f.fromContent,
+          toContent: f.status === 'UNCHANGED' ? undefined : f.toContent,
+        })),
+        fieldsDiff: d.fieldsDiff,
+      })),
+      compsWithNoChanges: diffResults.compsWithNoChanges,
+      toLaneName: diffResults.toLaneName,
+      fromLaneName: diffResults.fromLaneName,
+      failures: diffResults.failures.map((f) => ({
+        id: f.id.toString(),
+        msg: f.msg,
+      })),
+    };
   }
 
   getCurrentLaneName(includeScope = false): string {

@@ -3,6 +3,7 @@ import type { ComponentID } from '@teambit/component-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatItem, formatSection, formatHint, formatSuccessSummary, warnSymbol, joinSections } from '@teambit/cli';
 import {
   NOTHING_TO_SNAP_MSG,
   AUTO_SNAPPED_MSG,
@@ -156,45 +157,40 @@ export function snapResultOutput(results: SnapResults): string {
     return !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id);
   });
   const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
-  const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
-  const totalCount = totalComponentsCount ?? snappedComponents.length + autoTaggedCount;
-
-  const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
-  const snapExplanation = `\n(use "bit export" to push these components to a remote")
-(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)`;
+  const autoSnappedCount = autoSnappedResults ? autoSnappedResults.length : 0;
+  const totalCount = totalComponentsCount ?? snappedComponents.length + autoSnappedCount;
 
   const compInBold = (id: ComponentID) => {
     const version = id.hasVersion() ? `@${id.version}` : '';
     return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
   };
 
-  const outputComponents = (comps: ConsumerComponent[]) => {
-    return comps
-      .map((component) => {
-        let componentOutput = `     > ${compInBold(component.id)}`;
-        const autoTag = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
-        if (autoTag.length) {
-          const autoTagComp = autoTag.map((a) => compInBold(a.component.id));
-          componentOutput += `\n       ${AUTO_SNAPPED_MSG} (${autoTagComp.length} total):
-          ${autoTagComp.join('\n            ')}`;
-        }
-        return componentOutput;
-      })
-      .join('\n');
+  const formatComp = (component: ConsumerComponent): string => {
+    let output = formatItem(compInBold(component.id));
+    const autoSnap = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
+    if (autoSnap.length) {
+      const autoSnapComp = autoSnap.map((a) => a.component.id.toString());
+      output += `\n     ${AUTO_SNAPPED_MSG} (${autoSnapComp.length} total):\n       ${autoSnapComp.join('\n       ')}`;
+    }
+    return output;
   };
 
-  const outputIfExists = (label, explanation, components) => {
-    if (!components.length) return '';
-    return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
-  };
-  const laneStr = laneName ? ` on "${laneName}" lane` : '';
-
-  return (
-    outputIfExists('new components', 'first version for components', addedComponents) +
-    outputIfExists('changed components', 'components that got a version bump', changedComponents) +
-    outputIdsIfExists('removed components', removedComponents) +
-    warningsOutput +
-    chalk.green(`\n${totalCount} component(s) snapped${laneStr}`) +
-    snapExplanation
+  const newSection = formatSection('new components', 'first version for components', addedComponents.map(formatComp));
+  const changedSection = formatSection(
+    'changed components',
+    'components that got a version bump',
+    changedComponents.map(formatComp)
   );
+  const removedSection = outputIdsIfExists('removed components', removedComponents);
+
+  const warningsSection =
+    warnings && warnings.length ? warnings.map((w) => `${warnSymbol} ${chalk.yellow(w)}`).join('\n') : '';
+
+  const laneStr = laneName ? ` on "${laneName}" lane` : '';
+  const summary = formatSuccessSummary(`${totalCount} component(s) snapped${laneStr}`);
+  const snapExplanation = formatHint(
+    '(use "bit export" to push these components to a remote)\n(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)'
+  );
+
+  return joinSections([newSection, changedSection, removedSection, warningsSection, `${summary}\n${snapExplanation}`]);
 }

@@ -2251,7 +2251,15 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     if (!envJson) {
       throw new BitError(`unable to find env.jsonc file in ${envId}`);
     }
-    const envManifest: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
+    let envManifest: EnvJsonc;
+    try {
+      envManifest = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
+    } catch (err: any) {
+      const filePath = envJson.path || envJson.relative;
+      throw new BitError(
+        `Syntax error in env.jsonc for "${envId}" (${filePath}): ${err.message}. Please check the file for invalid JSONC syntax.`
+      );
+    }
 
     return envManifest;
   }

@@ -77,10 +77,10 @@ describe('bit status command', function () {
     it('Should show missing dependencies', () => {
       output = helper.command.runCmd('bit status');
       expect(output).to.have.string('non-existing dependency files');
-      expect(output).to.have.string('comp1 ...  issues found');
+      expect(output).to.have.string('comp1 ... issues found');
       expect(output).to.have.string('comp1.js -> ./comp2, ./comp3, ./comp4, ./comp5, ./comp6');
       expect(output).to.have.string('comp5.js -> ./comp6');
-      expect(output).to.have.string('comp5 ...  issues found');
+      expect(output).to.have.string('comp5 ... issues found');
       // Validate indentations is correct, nested deps should be indent 2 more
       expect(output).to.have.string(`${MISSING_DEPS_SPACE}comp1.js`);
       expect(output).to.have.string(`${MISSING_DEPS_SPACE}comp5.js`);
@@ -200,7 +200,7 @@ describe('bit status command', function () {
     });
     it('should display that component as a staged component with version 0.0.2', () => {
       expect(output.includes('staged components')).to.be.true;
-      expect(output.includes('bar/foo. versions: 0.0.2')).to.be.true;
+      expect(output.includes('bar/foo - versions: 0.0.2')).to.be.true;
     });
     it('should not display that component as new', () => {
       expect(output.includes('new components')).to.be.false;

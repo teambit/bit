@@ -231,7 +231,7 @@ describe('bit lane command', function () {
         output = helper.command.mergeLane('lane-a', '-x');
       });
       it('should indicate that the component was removed', () => {
-        expect(output).to.have.string('the following 1 component(s) have been removed');
+        expect(output).to.have.string('removed components (1)');
       });
       it('should remove the soft-removed component from .bitmap', () => {
         const list = helper.command.list();
@@ -260,7 +260,7 @@ describe('bit lane command', function () {
           abortOutput = helper.command.mergeAbortLane('-x');
         });
         it('should indicate that a component has been added', () => {
-          expect(abortOutput).to.have.string('have been added');
+          expect(abortOutput).to.have.string('added components (1)');
         });
         it('should add the previously removed component', () => {
           expect(path.join(helper.scopes.localPath, 'comp2')).to.be.a.directory();
@@ -300,7 +300,7 @@ describe('bit lane command', function () {
         output = helper.command.mergeLane('lane-a', '-x');
       });
       it('should indicate that the component was removed', () => {
-        expect(output).to.have.string('the following 1 component(s) have been removed');
+        expect(output).to.have.string('removed components (1)');
       });
       it('should remove the soft-removed component from .bitmap', () => {
         const list = helper.command.list();
@@ -426,7 +426,7 @@ describe('bit lane command', function () {
       output = helper.command.checkoutHead('-x');
     });
     it('should indicate that the component was removed', () => {
-      expect(output).to.have.string('the following 1 component(s) have been removed');
+      expect(output).to.have.string('removed components (1)');
     });
     it('should remove the soft-removed component from .bitmap', () => {
       const list = helper.command.list();
