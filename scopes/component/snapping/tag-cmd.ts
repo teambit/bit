@@ -1,13 +1,22 @@
 import chalk from 'chalk';
 import type { ComponentIdList, ComponentID } from '@teambit/component-id';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatItem, formatSection, formatHint, formatSuccessSummary, warnSymbol, joinSections } from '@teambit/cli';
+import {
+  formatItem,
+  formatSection,
+  formatHint,
+  formatDetailsHint,
+  formatSuccessSummary,
+  warnSymbol,
+  joinSections,
+} from '@teambit/cli';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { DEFAULT_BIT_RELEASE_TYPE, COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
 import type { Logger } from '@teambit/logger';
+import type { Report } from '@teambit/cli';
 import type { TagResults, SnappingMain } from './snapping.main.runtime';
 import type { BasicTagParams } from './version-maker';
 import type { ConfigStoreMain } from '@teambit/config-store';
@@ -206,7 +215,7 @@ To undo local tag use the "bit reset" command.`
 
     const results = await this.snapping.tag(params);
     if (!results) return chalk.yellow(persist ? 'no soft-tag found' : NOTHING_TO_TAG_MSG);
-    return tagResultOutput(results);
+    return tagResultReport(results);
   }
 }
 
@@ -253,7 +262,7 @@ semver allows the following options only: ${RELEASE_TYPES.join(', ')}`);
   };
 }
 
-export function tagResultOutput(results: TagResults): string {
+export function tagResultReport(results: TagResults): string | Report {
   const {
     taggedComponents,
     autoTaggedResults,
@@ -273,7 +282,11 @@ export function tagResultOutput(results: TagResults): string {
     return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
   };
 
-  const formatComp = (component: ConsumerComponent): string => {
+  const formatCompMinimal = (component: ConsumerComponent): string => {
+    return formatItem(compInBold(component.id));
+  };
+
+  const formatCompDetailed = (component: ConsumerComponent): string => {
     let output = formatItem(compInBold(component.id));
     const autoTag = autoTaggedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
     if (autoTag.length) {
@@ -291,12 +304,16 @@ export function tagResultOutput(results: TagResults): string {
     ? 'components that are set to get a version bump when persisted'
     : 'components that got a version bump';
 
-  const newSection = formatSection(softTagPrefix + 'new components', newDesc, addedComponents.map(formatComp));
-  const changedSection = formatSection(
-    softTagPrefix + 'changed components',
-    changedDesc,
-    changedComponents.map(formatComp)
-  );
+  const buildSections = (formatComp: (c: ConsumerComponent) => string) => {
+    const newSection = formatSection(softTagPrefix + 'new components', newDesc, addedComponents.map(formatComp));
+    const changedSection = formatSection(
+      softTagPrefix + 'changed components',
+      changedDesc,
+      changedComponents.map(formatComp)
+    );
+    return { newSection, changedSection };
+  };
+
   const removedSection = outputIdsIfExists('removed components', removedComponents);
 
   const publishSection = (() => {
@@ -333,15 +350,46 @@ export function tagResultOutput(results: TagResults): string {
       )
     : '';
 
-  return joinSections([
+  const hasAutoTagged = autoTaggedCount > 0;
+
+  // Build minimal output (no auto-tagged listing, just counts)
+  const { newSection, changedSection } = buildSections(hasAutoTagged ? formatCompMinimal : formatCompDetailed);
+  const autoTagHint = hasAutoTagged ? formatDetailsHint(`all ${autoTaggedCount} auto-tagged dependents`) : '';
+  const footerParts = [summary, autoTagHint, tagExplanation, softTagClarification].filter(Boolean).join('\n');
+  const data = joinSections([
     newSection,
     changedSection,
     removedSection,
     publishSection,
     exportedSection,
     warningsSection,
-    [summary, tagExplanation, softTagClarification].filter(Boolean).join('\n'),
+    footerParts,
   ]);
+
+  if (!hasAutoTagged) {
+    return data;
+  }
+
+  // Build detailed output (with full auto-tagged listing)
+  const { newSection: newDetailed, changedSection: changedDetailed } = buildSections(formatCompDetailed);
+  const detailedFooter = [summary, tagExplanation, softTagClarification].filter(Boolean).join('\n');
+  const details = joinSections([
+    newDetailed,
+    changedDetailed,
+    removedSection,
+    publishSection,
+    exportedSection,
+    warningsSection,
+    detailedFooter,
+  ]);
+
+  return { data, code: 0, details };
+}
+
+/** @deprecated use tagResultReport instead */
+export function tagResultOutput(results: TagResults): string {
+  const result = tagResultReport(results);
+  return typeof result === 'string' ? result : result.data;
 }
 
 export function outputIdsIfExists(label: string, ids?: ComponentIdList) {

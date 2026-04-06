@@ -19,6 +19,7 @@ export {
   formatSection,
   formatTitle,
   formatHint,
+  formatDetailsHint,
   formatSuccessSummary,
   formatWarningSummary,
   joinSections,

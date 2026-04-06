@@ -131,6 +131,6 @@ export interface Command {
 export type Flags = { [flagName: string]: string | boolean | undefined | any };
 export type CLIArgs = Array<string[] | string>;
 export type GenericObject = { [k: string]: any };
-export type Report = { data: string; code: number };
+export type Report = { data: string; code: number; details?: string };
 export type CommandArg = { name: string; description?: string };
 export type Example = { cmd: string; description: string };
