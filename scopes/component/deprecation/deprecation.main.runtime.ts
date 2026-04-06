@@ -132,6 +132,8 @@ export class DeprecationMain {
   }
 
   private async addDeprecatedDepIssue(component: Component) {
+    const isSelfDeprecated = await this.isComponentDeprecated(component);
+    if (isSelfDeprecated) return;
     const dependencies = this.depsResolver.getComponentDependencies(component);
     const removedWithUndefined = await Promise.all(
       dependencies.map(async (dep) => {
@@ -144,6 +146,14 @@ export class DeprecationMain {
     if (removed.length) {
       component.state.issues.getOrCreate(IssuesClasses.DeprecatedDependencies).data = removed;
     }
+  }
+
+  private async isComponentDeprecated(component: Component): Promise<boolean> {
+    const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(component.id);
+    if (bitmapEntry && bitmapEntry.isDeprecated()) return true;
+    if (bitmapEntry && bitmapEntry.isUndeprecated()) return false;
+    if (!component.id.hasVersion()) return false;
+    return this.isDeprecatedByIdWithoutLoadingComponent(component.id);
   }
 
   /**
