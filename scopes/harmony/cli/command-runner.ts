@@ -95,11 +95,11 @@ export class CommandRunner {
     loader.off();
     const data = typeof result === 'string' ? result : result.data;
     const exitCode = typeof result === 'string' ? 0 : result.code;
+    if (shouldReturnResult) return { data, exitCode };
     const details = typeof result === 'string' ? undefined : result.details;
     if (details) {
       await this.persistDetails(details).catch((err) => logger.error('failed to persist command details', err));
     }
-    if (shouldReturnResult) return { data, exitCode };
     await this.writeAndExit(`${data}\n`, exitCode);
   }
 

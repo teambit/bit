@@ -35,9 +35,9 @@ export class DetailsCmd implements Command {
     } catch {
       // corrupted meta file, proceed with empty meta
     }
+    const timestamp = meta.timestamp && !Number.isNaN(Date.parse(meta.timestamp)) ? meta.timestamp : '';
     const header = meta.command
-      ? formatTitle(`details from "bit ${meta.command}"`) +
-        (meta.timestamp ? chalk.dim(`  ${new Date(meta.timestamp).toLocaleString()}`) : '')
+      ? formatTitle(`details from "bit ${meta.command}"`) + (timestamp ? chalk.dim(`  ${timestamp}`) : '')
       : formatTitle('details from last command');
 
     return `${header}\n\n${content}\n\n${formatHint('(these are details from the last command that provided them)')}`;
