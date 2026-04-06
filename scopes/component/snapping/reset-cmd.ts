@@ -65,11 +65,12 @@ useful for undoing mistakes before exporting. exported versions cannot be reset.
     }
     const { results, isSoftUntag } = await this.snapping.reset(pattern, head, force, soft);
     const titleSuffix = isSoftUntag ? 'soft-untagged' : 'reset';
+    const description = isSoftUntag ? 'soft-untagged versions are no longer candidates for tagging' : '';
     const items = results.map((result) =>
       formatItem(`${chalk.cyan(result.id.toStringWithoutVersion())} - version(s): ${result.versions.join(', ')}`)
     );
     return joinSections([
-      formatSection(`${titleSuffix} components`, '', items),
+      formatSection(`${titleSuffix} components`, description, items),
       formatSuccessSummary(`${results.length} component(s) ${titleSuffix} successfully`),
     ]);
   }

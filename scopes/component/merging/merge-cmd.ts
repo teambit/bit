@@ -1,6 +1,14 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { warnSymbol, formatTitle, formatSection, formatItem, formatHint, joinSections } from '@teambit/cli';
+import {
+  warnSymbol,
+  errorSymbol,
+  formatTitle,
+  formatSection,
+  formatItem,
+  formatHint,
+  joinSections,
+} from '@teambit/cli';
 import {
   COMPONENT_PATTERN_HELP,
   AUTO_SNAPPED_MSG,
@@ -193,7 +201,7 @@ export function mergeReport({
 
   const getSnapsOutput = () => {
     if (mergeSnapError) {
-      return `${formatTitle('snap error')}\n${chalk.red(
+      return `${formatTitle(`${errorSymbol} snap error`)}\n${chalk.red(
         'snapping merged components failed with the following error, please fix the issues and snap manually'
       )}\n${mergeSnapError.message}`;
     }
