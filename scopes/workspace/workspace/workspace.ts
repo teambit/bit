@@ -2001,6 +2001,14 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     if (typeof id === 'string' && id.startsWith('@')) {
       return this.resolveComponentIdFromPackageName(id);
     }
+    // support filesystem paths (e.g. "scopes/harmony/cli") as component identifiers
+    if (typeof id === 'string' && id.includes('/')) {
+      const absPath = path.isAbsolute(id) ? id : path.resolve(this.path, id);
+      if (fs.existsSync(absPath)) {
+        const idByPath = await this.getComponentIdByPath(id);
+        if (idByPath) return idByPath;
+      }
+    }
     const getDefaultScope = async (bitId: ComponentID, bitMapOptions?: GetBitMapComponentOptions) => {
       if (bitId.scope) {
         return bitId.scope;
