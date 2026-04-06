@@ -211,7 +211,7 @@ describe('bit deprecate and undeprecate commands', function () {
     it('bit status should show the DeprecatedDependencies component-issue', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.DeprecatedDependencies.name);
     });
-    describe('deprecating the dependent component as well', () => {
+    describe('deprecating the dependent component as well (before tag)', () => {
       before(() => {
         helper.command.deprecateComponent('comp1');
       });
@@ -220,6 +220,21 @@ describe('bit deprecate and undeprecate commands', function () {
       });
       after(() => {
         helper.command.undeprecateComponent('comp1');
+      });
+    });
+    describe('deprecating the dependent component as well (after tag and export)', () => {
+      before(() => {
+        helper.command.deprecateComponent('comp1');
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+      });
+      it('bit status should not show the DeprecatedDependencies component-issue', () => {
+        helper.command.expectStatusToNotHaveIssue(IssuesClasses.DeprecatedDependencies.name);
+      });
+      after(() => {
+        helper.command.undeprecateComponent('comp1');
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
       });
     });
     describe('un-deprecating it', () => {
