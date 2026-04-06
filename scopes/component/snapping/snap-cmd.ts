@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import type { ComponentID } from '@teambit/component-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { Command, CommandOptions } from '@teambit/cli';
@@ -21,7 +20,7 @@ import {
 } from '@teambit/legacy.constants';
 import type { Logger } from '@teambit/logger';
 import type { SnappingMain, SnapResults } from './snapping.main.runtime';
-import { outputIdsIfExists } from './tag-cmd';
+import { outputIdsIfExists, compInBold } from './tag-cmd';
 import type { BasicTagSnapParams } from './version-maker';
 import type { ConfigStoreMain } from '@teambit/config-store';
 
@@ -169,18 +168,15 @@ export function snapResultReport(results: SnapResults): string | Report {
   const autoSnappedCount = autoSnappedResults ? autoSnappedResults.length : 0;
   const totalCount = totalComponentsCount ?? snappedComponents.length + autoSnappedCount;
 
-  const compInBold = (id: ComponentID) => {
-    const version = id.hasVersion() ? `@${id.version}` : '';
-    return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
-  };
-
   const formatCompMinimal = (component: ConsumerComponent): string => {
     return formatItem(compInBold(component.id));
   };
 
   const formatCompDetailed = (component: ConsumerComponent): string => {
     let output = formatItem(compInBold(component.id));
-    const autoSnap = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
+    const autoSnap = (autoSnappedResults ?? []).filter((result) =>
+      result.triggeredBy.searchWithoutVersion(component.id)
+    );
     if (autoSnap.length) {
       const autoSnapComp = autoSnap.map((a) => a.component.id.toString());
       output += `\n     ${AUTO_SNAPPED_MSG} (${autoSnapComp.length} total):\n       ${autoSnapComp.join('\n       ')}`;
@@ -223,7 +219,7 @@ export function snapResultReport(results: SnapResults): string | Report {
 
   // Build detailed output (with full auto-snapped listing)
   const { newSection: newDetailed, changedSection: changedDetailed } = buildSections(formatCompDetailed);
-  const detailedFooter = `${summary}\n${snapExplanation}`;
+  const detailedFooter = [summary, snapExplanation].filter(Boolean).join('\n');
   const details = joinSections([newDetailed, changedDetailed, removedSection, warningsSection, detailedFooter]);
 
   return { data, code: 0, details };

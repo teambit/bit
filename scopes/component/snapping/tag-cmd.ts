@@ -277,18 +277,13 @@ export function tagResultReport(results: TagResults): string | Report {
   const autoTaggedCount = autoTaggedResults ? autoTaggedResults.length : 0;
   const totalCount = totalComponentsCount ?? taggedComponents.length + autoTaggedCount;
 
-  const compInBold = (id: ComponentID) => {
-    const version = id.hasVersion() ? `@${id.version}` : '';
-    return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
-  };
-
   const formatCompMinimal = (component: ConsumerComponent): string => {
     return formatItem(compInBold(component.id));
   };
 
   const formatCompDetailed = (component: ConsumerComponent): string => {
     let output = formatItem(compInBold(component.id));
-    const autoTag = autoTaggedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
+    const autoTag = (autoTaggedResults ?? []).filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
     if (autoTag.length) {
       const autoTagComp = autoTag.map((a) => a.component.id.toString());
       output += `\n     ${AUTO_TAGGED_MSG}:\n       ${autoTagComp.join('\n       ')}`;
@@ -390,6 +385,11 @@ export function tagResultReport(results: TagResults): string | Report {
 export function tagResultOutput(results: TagResults): string {
   const result = tagResultReport(results);
   return typeof result === 'string' ? result : result.data;
+}
+
+export function compInBold(id: ComponentID): string {
+  const version = id.hasVersion() ? `@${id.version}` : '';
+  return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
 }
 
 export function outputIdsIfExists(label: string, ids?: ComponentIdList) {
