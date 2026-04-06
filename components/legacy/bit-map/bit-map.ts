@@ -55,6 +55,7 @@ export class BitMap {
   hasChanged: boolean;
   paths: { [path: string]: ComponentID }; // path => componentId
   pathsLowerCase: { [path: string]: ComponentID }; // path => componentId
+  rootDirs: { [rootDir: string]: ComponentID }; // rootDir => componentId
   markAsChangedBinded: Function;
   _cacheIdsAll: ComponentIdList | undefined;
   _cacheIdsLane: ComponentIdList | undefined;
@@ -76,6 +77,7 @@ export class BitMap {
     this.hasChanged = false;
     this.paths = {};
     this.pathsLowerCase = {};
+    this.rootDirs = {};
     this.markAsChangedBinded = this.markAsChanged.bind(this);
   }
 
@@ -744,6 +746,7 @@ export class BitMap {
   _invalidateCache = () => {
     this.paths = {};
     this.pathsLowerCase = {};
+    this.rootDirs = {};
     this._cacheIdsAll = undefined;
     this._cacheIdsLane = undefined;
     this._cacheIdsLaneIncludeRemoved = undefined;
@@ -864,7 +867,8 @@ export class BitMap {
   }
 
   getComponentIdByRootPath(componentPath: PathLinux): ComponentID | undefined {
-    return this.components.find((component) => component.rootDir === componentPath)?.id;
+    this._populateRootDirs();
+    return this.rootDirs[componentPath];
   }
 
   _populateAllPaths() {
@@ -877,6 +881,16 @@ export class BitMap {
           this.paths[relativeToConsumer] = component.id;
           this.pathsLowerCase[relativeToConsumer.toLowerCase()] = component.id;
         });
+      });
+    }
+  }
+
+  _populateRootDirs() {
+    if (isEmpty(this.rootDirs)) {
+      this.components.forEach((component) => {
+        if (component.rootDir) {
+          this.rootDirs[component.rootDir] = component.id;
+        }
       });
     }
   }

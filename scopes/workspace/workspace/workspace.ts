@@ -1745,13 +1745,8 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return undefined;
   }
 
-  /**
-   * resolve a relative directory path (e.g. "scopes/harmony/cli") to a component ID by matching against rootDir in .bitmap.
-   */
   private resolveIdFromRootDir(dirPath: string): ComponentID | undefined {
-    const linuxPath = pathNormalizeToLinux(dirPath);
-    const cleanPath = linuxPath.endsWith('/') ? linuxPath.slice(0, -1) : linuxPath;
-    return this.consumer.bitMap.getComponentIdByRootPath(cleanPath);
+    return this.consumer.bitMap.getComponentIdByRootPath(pathNormalizeToLinux(dirPath));
   }
 
   private async componentConfigFileFromComponentDirAndName(
