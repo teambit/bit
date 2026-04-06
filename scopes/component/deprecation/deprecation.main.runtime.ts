@@ -149,10 +149,10 @@ export class DeprecationMain {
   }
 
   private async isComponentDeprecated(component: Component): Promise<boolean> {
-    const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(component.id);
-    if (bitmapEntry && bitmapEntry.isDeprecated()) return true;
-    if (bitmapEntry && bitmapEntry.isUndeprecated()) return false;
-    if (!component.id.hasVersion()) return false;
+    if (!component.id.hasVersion()) {
+      const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(component.id);
+      return Boolean(bitmapEntry && bitmapEntry.isDeprecated());
+    }
     return this.isDeprecatedByIdWithoutLoadingComponent(component.id);
   }
 
