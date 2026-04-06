@@ -7,7 +7,7 @@ import { LAST_COMMAND_DETAILS_DIR } from './command-runner';
 
 export class DetailsCmd implements Command {
   name = 'details';
-  description = 'show detailed output from the last command';
+  description = 'show expanded details from the last command that provided them (e.g. tag, snap)';
   alias = '';
   group = 'general';
   options = [] as CommandOptions;
