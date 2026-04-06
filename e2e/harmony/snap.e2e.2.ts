@@ -324,7 +324,7 @@ describe('bit snap command', function () {
               resolveOutput = helper.command.merge('bar/foo --resolve');
             });
             it('should resolve successfully', () => {
-              expect(resolveOutput).to.have.string('successfully resolved component');
+              expect(resolveOutput).to.have.string('resolved components');
             });
             it('bit status should not show the component as during merge state', () => {
               const status = helper.command.statusJson();
@@ -481,7 +481,7 @@ describe('bit snap command', function () {
             resolveOutput = helper.command.merge('bar/foo --resolve');
           });
           it('should resolve the conflicts successfully', () => {
-            expect(resolveOutput).to.have.string('successfully resolved component');
+            expect(resolveOutput).to.have.string('resolved components');
           });
           it('bit status should not show the component as if it has conflicts', () => {
             const status = helper.command.statusJson();
@@ -509,7 +509,7 @@ describe('bit snap command', function () {
             abortOutput = helper.command.merge('bar/foo --abort');
           });
           it('should abort the merge successfully', () => {
-            expect(abortOutput).to.have.string('successfully aborted the merge');
+            expect(abortOutput).to.have.string('merge aborted');
           });
           it('bit status should show the same state as before the merge', () => {
             const status = helper.command.statusJson();
