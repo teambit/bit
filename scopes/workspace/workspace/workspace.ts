@@ -1745,6 +1745,15 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return undefined;
   }
 
+  /**
+   * resolve a relative directory path (e.g. "scopes/harmony/cli") to a component ID by matching against rootDir in .bitmap.
+   */
+  private resolveIdFromRootDir(dirPath: string): ComponentID | undefined {
+    const linuxPath = pathNormalizeToLinux(dirPath);
+    const cleanPath = linuxPath.endsWith('/') ? linuxPath.slice(0, -1) : linuxPath;
+    return this.consumer.bitMap.getComponentIdByRootPath(cleanPath);
+  }
+
   private async componentConfigFileFromComponentDirAndName(
     relativeComponentDir: PathOsBasedRelative
   ): Promise<ComponentConfigFile | undefined> {
@@ -1991,6 +2000,10 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
    * Transform the id to ComponentId and get the exact id as appear in bitmap
    */
   async resolveComponentId(id: string | BitId | ComponentID): Promise<ComponentID> {
+    if (typeof id === 'string' && id.includes('/') && !id.includes(':') && !id.startsWith('@')) {
+      const idFromPath = this.resolveIdFromRootDir(id);
+      if (idFromPath) return idFromPath;
+    }
     if (id instanceof BitId && id.hasScope() && id.hasVersion()) {
       // an optimization to make it faster when BitId is passed
       return ComponentID.fromLegacy(id);
