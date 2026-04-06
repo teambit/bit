@@ -53,7 +53,8 @@ describe('lane history-diff', function () {
    *
    * Flow: snap A → export → snap B → reset → snap C → export.
    * The reset deletes snap B's Version objects AND its lane-history entry (keyed by batchId).
-   * After export, a fresh workspace should see only entries for snap A and snap C — no orphans.
+   * After export, a fresh workspace should see entries for "new lane", snap A and snap C — no
+   * orphaned entry for snap B.
    */
   describe('bit reset removes the lane-history entry of the reset snap', () => {
     let historyEntries: any[];
@@ -82,6 +83,8 @@ describe('lane history-diff', function () {
 
     it('should not have a lane-history entry for the reset snap', () => {
       const messages = historyEntries.map((e: any) => e.message || '');
+      expect(messages.some((m: string) => m.includes('snap A'))).to.be.true;
+      expect(messages.some((m: string) => m.includes('snap C'))).to.be.true;
       expect(messages.some((m: string) => m.includes('snap B'))).to.be.false;
     });
 
