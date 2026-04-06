@@ -3,7 +3,15 @@ import type { ComponentID } from '@teambit/component-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatItem, formatSection, formatHint, formatSuccessSummary, warnSymbol, joinSections } from '@teambit/cli';
+import {
+  formatItem,
+  formatSection,
+  formatHint,
+  formatSuccessSummary,
+  warnSymbol,
+  joinSections,
+  saveCommandDetails,
+} from '@teambit/cli';
 import {
   NOTHING_TO_SNAP_MSG,
   AUTO_SNAPPED_MSG,
@@ -165,7 +173,11 @@ export function snapResultOutput(results: SnapResults): string {
     return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
   };
 
-  const formatComp = (component: ConsumerComponent): string => {
+  const formatCompCollapsed = (component: ConsumerComponent): string => {
+    return formatItem(compInBold(component.id));
+  };
+
+  const formatCompExpanded = (component: ConsumerComponent): string => {
     let output = formatItem(compInBold(component.id));
     const autoSnap = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
     if (autoSnap.length) {
@@ -174,6 +186,8 @@ export function snapResultOutput(results: SnapResults): string {
     }
     return output;
   };
+
+  const formatComp = autoSnappedCount > 0 ? formatCompCollapsed : formatCompExpanded;
 
   const newSection = formatSection('new components', 'first version for components', addedComponents.map(formatComp));
   const changedSection = formatSection(
@@ -192,5 +206,38 @@ export function snapResultOutput(results: SnapResults): string {
     '(use "bit export" to push these components to a remote)\n(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)'
   );
 
-  return joinSections([newSection, changedSection, removedSection, warningsSection, `${summary}\n${snapExplanation}`]);
+  const autoSnapHint =
+    autoSnappedCount > 0
+      ? formatHint(`(${autoSnappedCount} auto-snapped dependents hidden. run "bit details" to expand)`)
+      : '';
+
+  // Save expanded output to details file when there are hidden auto-snapped results
+  if (autoSnappedCount > 0) {
+    const expandedNewSection = formatSection(
+      'new components',
+      'first version for components',
+      addedComponents.map(formatCompExpanded)
+    );
+    const expandedChangedSection = formatSection(
+      'changed components',
+      'components that got a version bump',
+      changedComponents.map(formatCompExpanded)
+    );
+    const expandedOutput = joinSections([
+      expandedNewSection,
+      expandedChangedSection,
+      removedSection,
+      warningsSection,
+      `${summary}\n${snapExplanation}`,
+    ]);
+    saveCommandDetails('bit snap', expandedOutput);
+  }
+
+  return joinSections([
+    newSection,
+    changedSection,
+    removedSection,
+    warningsSection,
+    [summary, autoSnapHint, snapExplanation].filter(Boolean).join('\n'),
+  ]);
 }

@@ -1,7 +1,15 @@
 import chalk from 'chalk';
 import type { ComponentIdList, ComponentID } from '@teambit/component-id';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatItem, formatSection, formatHint, formatSuccessSummary, warnSymbol, joinSections } from '@teambit/cli';
+import {
+  formatItem,
+  formatSection,
+  formatHint,
+  formatSuccessSummary,
+  warnSymbol,
+  joinSections,
+  saveCommandDetails,
+} from '@teambit/cli';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { DEFAULT_BIT_RELEASE_TYPE, COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
 import { IssuesClasses } from '@teambit/component-issues';
@@ -273,7 +281,11 @@ export function tagResultOutput(results: TagResults): string {
     return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
   };
 
-  const formatComp = (component: ConsumerComponent): string => {
+  const formatCompCollapsed = (component: ConsumerComponent): string => {
+    return formatItem(compInBold(component.id));
+  };
+
+  const formatCompExpanded = (component: ConsumerComponent): string => {
     let output = formatItem(compInBold(component.id));
     const autoTag = autoTaggedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
     if (autoTag.length) {
@@ -290,6 +302,8 @@ export function tagResultOutput(results: TagResults): string {
   const changedDesc = results.isSoftTag
     ? 'components that are set to get a version bump when persisted'
     : 'components that got a version bump';
+
+  const formatComp = autoTaggedCount > 0 ? formatCompCollapsed : formatCompExpanded;
 
   const newSection = formatSection(softTagPrefix + 'new components', newDesc, addedComponents.map(formatComp));
   const changedSection = formatSection(
@@ -333,6 +347,35 @@ export function tagResultOutput(results: TagResults): string {
       )
     : '';
 
+  const autoTagHint =
+    autoTaggedCount > 0
+      ? formatHint(`(${autoTaggedCount} auto-tagged dependents hidden. run "bit details" to expand)`)
+      : '';
+
+  // Save expanded output to details file when there are hidden auto-tagged results
+  if (autoTaggedCount > 0) {
+    const expandedNewSection = formatSection(
+      softTagPrefix + 'new components',
+      newDesc,
+      addedComponents.map(formatCompExpanded)
+    );
+    const expandedChangedSection = formatSection(
+      softTagPrefix + 'changed components',
+      changedDesc,
+      changedComponents.map(formatCompExpanded)
+    );
+    const expandedOutput = joinSections([
+      expandedNewSection,
+      expandedChangedSection,
+      removedSection,
+      publishSection,
+      exportedSection,
+      warningsSection,
+      [summary, tagExplanation, softTagClarification].filter(Boolean).join('\n'),
+    ]);
+    saveCommandDetails('bit tag', expandedOutput);
+  }
+
   return joinSections([
     newSection,
     changedSection,
@@ -340,7 +383,7 @@ export function tagResultOutput(results: TagResults): string {
     publishSection,
     exportedSection,
     warningsSection,
-    [summary, tagExplanation, softTagClarification].filter(Boolean).join('\n'),
+    [summary, autoTagHint, tagExplanation, softTagClarification].filter(Boolean).join('\n'),
   ]);
 }
 

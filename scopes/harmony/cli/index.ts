@@ -26,4 +26,5 @@ export {
 } from './output-formatter';
 export type { OutputSection } from './output-formatter';
 
+export { saveCommandDetails } from './command-details';
 export { CLIAspect as default, MainRuntime, CLIAspect };

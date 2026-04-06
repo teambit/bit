@@ -7,6 +7,7 @@ import globalFlags from './global-flags';
 import { Analytics } from '@teambit/legacy.analytics';
 import type { OnCommandStartSlot } from './cli.main.runtime';
 import pMapSeries from 'p-map-series';
+import { clearCommandDetails } from './command-details';
 
 type CommandResult = { data: any; exitCode: number };
 
@@ -47,6 +48,7 @@ export class CommandRunner {
   }
 
   private bootstrapCommand() {
+    clearCommandDetails();
     try {
       Analytics.init(this.commandName, this.flags, this.args);
     } catch (err: any) {
