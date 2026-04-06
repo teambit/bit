@@ -94,11 +94,14 @@ export function paintAuthor(email: string | null | undefined, username: string |
 
 function paintLog(log: LegacyComponentLog): string {
   const { message, date, tag, hash, username, email, deleted, deprecated } = log;
-  const deletedStr = deleted ? ` ${errorSymbol} deleted` : '';
-  const deprecatedStr = !deleted && deprecated ? ` ${warnSymbol} deprecated` : '';
-  const title = tag ? `tag ${tag} (${hash})${deletedStr}${deprecatedStr}\n` : `snap ${hash}\n`;
+  const deletedStr = deleted ? ` ${c.red(`${errorSymbol} deleted`)}` : '';
+  const deprecatedStr = !deleted && deprecated ? ` ${c.yellow(`${warnSymbol} deprecated`)}` : '';
+  const title = tag ? `tag ${tag} (${hash})` : `snap ${hash}`;
   return (
     c.yellow(title) +
+    deletedStr +
+    deprecatedStr +
+    '\n' +
     paintAuthor(email, username) +
     (date ? c.white(`date: ${date}\n`) : '') +
     (message ? c.white(`\n      ${message}\n`) : '')
