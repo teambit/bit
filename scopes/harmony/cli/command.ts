@@ -109,6 +109,7 @@ export interface Command {
    * @param args  - arguments object as defined in name.
    * @param flags - command flags as described in options.
    * @return - Report object. The Report.data is printed to the stdout as is.
+   * Optionally include Report.details for expanded output accessible via `bit details` after the command completes.
    */
   report?(args: CLIArgs, flags: Flags): Promise<string | Report>;
 
@@ -131,6 +132,15 @@ export interface Command {
 export type Flags = { [flagName: string]: string | boolean | undefined | any };
 export type CLIArgs = Array<string[] | string>;
 export type GenericObject = { [k: string]: any };
-export type Report = { data: string; code: number; details?: string };
+export type Report = {
+  data: string;
+  code: number;
+  /**
+   * Optional expanded output persisted to disk and viewable via `bit details`.
+   * Use this for verbose information (e.g. auto-tagged dependents) that would clutter
+   * the default output but is useful after a one-shot command has already completed.
+   */
+  details?: string;
+};
 export type CommandArg = { name: string; description?: string };
 export type Example = { cmd: string; description: string };
