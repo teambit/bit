@@ -1,3 +1,4 @@
+import { compact } from 'lodash';
 import { BitError } from '@teambit/bit-error';
 import type { ComponentID } from '@teambit/component-id';
 import type { Consumer } from '@teambit/legacy.consumer';
@@ -17,6 +18,8 @@ export type ResetResult = {
    * we want .bitmap to have the version before the detachment. not as the head.
    */
   versionToSetInBitmap?: string;
+  /** batchIds from the version objects being removed, used to clean up lane history entries */
+  batchIds?: string[];
 };
 
 /**
@@ -60,6 +63,17 @@ export async function removeLocalVersion(
     });
   }
 
+  // Load version objects to extract batchIds before they are removed.
+  // These batchIds are used to clean up the corresponding lane history entries.
+  // Only needed on lanes — on main there's no lane history to clean up.
+  let batchIds: string[] | undefined;
+  if (lane) {
+    const versionObjects = await Promise.all(
+      versionsToRemoveStr.map((ver) => component.loadVersion(ver, consumer.scope.objects, false))
+    );
+    batchIds = [...new Set(compact(compact(versionObjects).map((v) => v.batchId)))];
+  }
+
   const headBefore = component.getHead();
   await consumer.scope.sources.removeComponentVersions(component, versionsToRemove, versionsToRemoveStr, lane, head);
   const headAfter = component.getHead();
@@ -71,7 +85,7 @@ export async function removeLocalVersion(
     if (snapBeforeDetached) versionToSetInBitmap = component.getTagOfRefIfExists(snapBeforeDetached);
   }
 
-  return { id, versions: versionsToRemoveStr, component, versionToSetInBitmap };
+  return { id, versions: versionsToRemoveStr, component, versionToSetInBitmap, batchIds };
 }
 
 export async function removeLocalVersionsForAllComponents(

@@ -720,6 +720,18 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     const isRealUntag = !soft;
     if (isRealUntag) {
       results = await untag();
+
+      // Remove lane history entries that correspond to the reset snaps.
+      // Each snap uses its batchId as the lane history key, so we can match them.
+      if (currentLane) {
+        const allBatchIds = uniq(results.flatMap((r) => r.batchIds || []));
+        if (allBatchIds.length) {
+          const laneHistory = await consumer.scope.lanes.getOrCreateLaneHistory(currentLane);
+          laneHistory.removeHistoryEntries(allBatchIds);
+          consumer.scope.objects.add(laneHistory);
+        }
+      }
+
       await consumer.scope.objects.persist();
       const currentLaneId = consumer.getCurrentLaneId();
       const stagedConfig = await this.workspace.scope.getStagedConfig();
