@@ -49,39 +49,31 @@ describe('lane history-diff', function () {
   });
 
   /**
-   * Scenario: snap → reset → snap → export.
-   * Before the fix, reset would delete Version objects but leave the lane-history entry,
-   * creating an orphaned entry. Now, reset also removes the corresponding lane-history entry
-   * (keyed by batchId), so the history stays clean.
+   * Verifies that `bit reset` removes lane-history entries for the reset snaps.
    *
-   * History timeline after reset cleanup (oldest→newest):
-   *   [0] "new lane"        (empty, always available)
-   *   [1] "first snap"      (exported, available)
-   *   [2] "final snap"      (exported, available)
-   *   (the "local snap" entry is removed by reset)
+   * Flow: snap A → export → snap B → reset → snap C → export.
+   * The reset deletes snap B's Version objects AND its lane-history entry (keyed by batchId).
+   * After export, a fresh workspace should see entries for "new lane", snap A and snap C — no
+   * orphaned entry for snap B.
    */
-  describe('lane history after snap-reset-snap (no orphaned entries)', () => {
+  describe('bit reset removes the lane-history entry of the reset snap', () => {
     let historyEntries: any[];
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.createLane('dev');
-      helper.command.snapAllComponentsWithoutBuild('-m "first snap"');
+      helper.command.snapAllComponentsWithoutBuild('-m "snap A"');
       helper.command.exportLane();
 
-      // Snap locally (creates lane-history entry + Version objects)
       helper.fixtures.populateComponents(2, undefined, 'v2');
-      helper.command.snapAllComponentsWithoutBuild('-m "local snap"');
+      helper.command.snapAllComponentsWithoutBuild('-m "snap B"');
 
-      // Reset → both Version objects and lane-history entry are removed
       helper.command.resetAll();
 
-      // Snap again and export
       helper.fixtures.populateComponents(2, undefined, 'v3');
-      helper.command.snapAllComponentsWithoutBuild('-m "final snap"');
+      helper.command.snapAllComponentsWithoutBuild('-m "snap C"');
       helper.command.exportLane();
 
-      // Fresh workspace: switch to the lane
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.switchRemoteLane('dev');
@@ -89,23 +81,23 @@ describe('lane history-diff', function () {
       historyEntries = helper.command.laneHistoryParsed();
     });
 
-    it('should not have an orphaned entry in the history', () => {
-      // We expect 3 entries: "new lane", "first snap", "final snap".
-      // The "local snap" entry should have been removed by reset.
+    it('should not have a lane-history entry for the reset snap', () => {
       const messages = historyEntries.map((e: any) => e.message || '');
-      expect(messages.some((m: string) => m.includes('local snap'))).to.be.false;
+      expect(messages.some((m: string) => m.includes('snap A'))).to.be.true;
+      expect(messages.some((m: string) => m.includes('snap C'))).to.be.true;
+      expect(messages.some((m: string) => m.includes('snap B'))).to.be.false;
     });
 
-    it('no args: should diff "final snap" against "first snap" without errors', () => {
+    it('no args: should diff latest against its predecessor without errors', () => {
       const output = helper.command.runCmd('bit lane history-diff');
       expect(output).to.have.string('comp1');
       expect(output).to.have.string('comp2');
       expect(output).to.not.have.string('Diff failed');
     });
 
-    it('with one arg (final snap id): should diff against "first snap" without errors', () => {
-      const finalSnapId = historyEntries[historyEntries.length - 1].id;
-      const output = helper.command.runCmd(`bit lane history-diff ${finalSnapId}`);
+    it('with one arg (latest id): should diff against predecessor without errors', () => {
+      const latestId = historyEntries[historyEntries.length - 1].id;
+      const output = helper.command.runCmd(`bit lane history-diff ${latestId}`);
       expect(output).to.have.string('comp1');
       expect(output).to.have.string('comp2');
       expect(output).to.not.have.string('Diff failed');

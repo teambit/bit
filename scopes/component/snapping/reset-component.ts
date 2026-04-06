@@ -71,7 +71,8 @@ export async function removeLocalVersion(
     const versionObjects = await Promise.all(
       versionsToRemoveStr.map((ver) => component.loadVersion(ver, consumer.scope.objects, false))
     );
-    batchIds = [...new Set(compact(compact(versionObjects).map((v) => v.batchId)))];
+    const loadedVersions = compact(versionObjects);
+    batchIds = [...new Set(compact(loadedVersions.map((v) => v.batchId)))];
   }
 
   const headBefore = component.getHead();
