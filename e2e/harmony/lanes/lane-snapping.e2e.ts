@@ -188,7 +188,7 @@ describe('bit lane snapping and tagging', function () {
       output = helper.command.resetAll();
     });
     it('should untag successfully', () => {
-      expect(output).to.have.string('1 component(s) were reset');
+      expect(output).to.have.string('1 component(s) reset successfully');
     });
     it('should change the component to be new', () => {
       const status = helper.command.statusJson();

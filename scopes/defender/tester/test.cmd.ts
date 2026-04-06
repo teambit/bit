@@ -1,4 +1,5 @@
 import type { Command, CommandOptions, GenericObject } from '@teambit/cli';
+import { formatHint, formatSuccessSummary } from '@teambit/cli';
 import chalk from 'chalk';
 import type { Logger } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
@@ -99,9 +100,9 @@ supports watch mode, coverage reporting, and debug mode for development workflow
       true
     );
     if (!components.length) {
-      const data = chalk.bold(`no components found to test.
-use "--unmodified" flag to test all components or specify the ids to test.
-otherwise, only new and modified components will be tested`);
+      const data = formatHint(
+        `no components found to test.\nuse "--unmodified" flag to test all components or specify the ids to test.\notherwise, only new and modified components will be tested`
+      );
       return {
         code: 0,
         data,
@@ -143,7 +144,10 @@ otherwise, only new and modified components will be tested`);
     const { seconds } = timer.stop();
 
     if (watch) return '';
-    const data = `tests has been completed in ${chalk.cyan(seconds.toString())} seconds.`;
+    const data =
+      code === 0
+        ? formatSuccessSummary(`tests completed in ${seconds} seconds`)
+        : formatHint(`tests completed in ${seconds} seconds`);
     return {
       code,
       data,

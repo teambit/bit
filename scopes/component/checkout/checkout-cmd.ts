@@ -1,6 +1,14 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { compact } from 'lodash';
+import {
+  formatTitle,
+  formatSection,
+  formatItem,
+  formatSuccessSummary,
+  formatHint,
+  warnSymbol,
+  joinSections,
+} from '@teambit/cli';
 import type { ApplyVersionResults, MergeStrategy } from '@teambit/component.modules.merge-helper';
 import {
   applyVersionReport,
@@ -189,51 +197,47 @@ export function checkoutOutput(
   const getNotCheckedOutOutput = () => {
     if (!notCheckedOutComponents.length) return '';
     if (!verbose && all) {
-      return chalk.green(
-        `checkout was not needed for ${chalk.bold(
-          notCheckedOutComponents.length.toString()
-        )} components (use --verbose to get more details)\n`
+      return formatHint(
+        `checkout was not needed for ${notCheckedOutComponents.length} components (use --verbose to get more details)`
       );
     }
-    const title = 'checkout was not required for the following component(s)';
-    const body = notCheckedOutComponents
-      .map((failedComponent) => `${failedComponent.id.toString()} - ${failedComponent.unchangedMessage}`)
-      .join('\n');
-    return `${chalk.underline(title)}\n${body}`;
+    const items = notCheckedOutComponents.map((failedComponent) =>
+      formatItem(`${failedComponent.id.toString()} - ${failedComponent.unchangedMessage}`)
+    );
+    return formatSection('checkout skipped', '', items);
   };
   const getWsConfigUpdateLogs = () => {
     const logs = workspaceConfigUpdateResult?.logs;
     if (!logs || !logs.length) return '';
     const logsStr = logs.join('\n');
-    return `${chalk.underline('verbose logs of workspace config update')}\n${logsStr}`;
+    return `${formatTitle('verbose logs of workspace config update')}\n${logsStr}`;
   };
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
-    const title = `files with conflicts summary\n`;
-    const suggestion = `\n\nfix the conflicts above manually and then run "bit install".
-once ready, snap/tag the components to persist the changes`;
+    const title = formatTitle(`${warnSymbol} files with conflicts summary`);
     const conflictSummary = conflictSummaryReport(components);
-    return chalk.underline(title) + conflictSummary.conflictStr + chalk.yellow(suggestion);
+    const suggestion = formatHint(
+      `fix the conflicts above manually and then run "bit install".\nonce ready, snap/tag the components to persist the changes`
+    );
+    return `${title}\n${conflictSummary.conflictStr}\n\n${suggestion}`;
   };
   const getSuccessfulOutput = () => {
     if (!components || !components.length) return '';
-    const newLine = '\n';
     const switchedOrReverted = revert ? 'reverted' : 'switched';
     if (components.length === 1) {
       const component = components[0];
       const componentName = reset ? component.id.toString() : component.id.toStringWithoutVersion();
-      if (reset) return `successfully reset ${chalk.bold(componentName)}\n`;
+      if (reset) return formatSuccessSummary(`successfully reset ${chalk.bold(componentName)}`);
       const title =
         alternativeTitle ||
         `successfully ${switchedOrReverted} ${chalk.bold(componentName)} to version ${chalk.bold(
           head || latest ? component.id.version : version
         )}`;
-      return chalk.bold(title) + newLine + applyVersionReport(components, false);
+      return [formatSuccessSummary(title), applyVersionReport(components, false)].filter(Boolean).join('\n');
     }
     if (reset) {
-      const title = 'successfully reset the following components\n\n';
-      const body = components.map((component) => chalk.bold(component.id.toString())).join('\n');
-      return chalk.underline(title) + body;
+      const items = components.map((component) => formatItem(component.id.toString()));
+      return formatSection('reset components', '', items);
     }
     const getVerOutput = () => {
       if (head) return 'their head version';
@@ -245,26 +249,24 @@ once ready, snap/tag the components to persist the changes`;
     const title =
       alternativeTitle || `successfully ${switchedOrReverted} ${components.length} components to ${versionOutput}`;
     const showVersion = head || reset;
-    return chalk.bold(title) + newLine + applyVersionReport(components, true, showVersion);
+    return [formatSuccessSummary(title), applyVersionReport(components, true, showVersion)].filter(Boolean).join('\n');
   };
   const getNewOnLaneOutput = () => {
     if (!newFromLane?.length) return '';
-    const title = newFromLaneAdded
-      ? `successfully added the following components from the lane`
-      : `the following components exist on the lane but were not added to the workspace. omit --workspace-only flag to add them`;
-    const body = newFromLane.join('\n');
-    return `${chalk.underline(title)}\n${body}`;
+    const title = newFromLaneAdded ? 'new components from lane' : 'new components on lane (not added)';
+    const desc = newFromLaneAdded ? '' : 'omit --workspace-only flag to add them';
+    const items = newFromLane.map((c) => formatItem(c.toString()));
+    return formatSection(title, desc, items);
   };
   const getNewFromScopeOutput = () => {
     if (!newFromScope?.length) return '';
-    const title = `successfully imported the following new components from the defaultScope`;
-    const body = newFromScope.join('\n');
-    return `${chalk.underline(title)}\n${body}`;
+    const items = newFromScope.map((c) => formatItem(c.toString()));
+    return formatSection('new components from scope', '', items);
   };
   const getSummary = () => {
     const checkedOut = components?.length || 0;
     const notCheckedOutLegitimately = notCheckedOutComponents.length;
-    const title = chalk.bold.underline('Summary');
+    const title = formatTitle('Checkout Summary');
     const checkedOutStr = `\nTotal Changed: ${chalk.bold(checkedOut.toString())}`;
     const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(notCheckedOutLegitimately.toString())}`;
     const newOnLaneNum = newFromLane?.length || 0;
@@ -280,7 +282,7 @@ once ready, snap/tag the components to persist the changes`;
     return title + checkedOutStr + unchangedLegitimatelyStr + newOnLaneStr + newFromScopeStr;
   };
 
-  return compact([
+  return joinSections([
     getWsConfigUpdateLogs(),
     getNotCheckedOutOutput(),
     getSuccessfulOutput(),
@@ -293,5 +295,5 @@ once ready, snap/tag the components to persist the changes`;
     getSummary(),
     installationErrorOutput(installationError),
     compilationErrorOutput(compilationError),
-  ]).join('\n\n');
+  ]);
 }

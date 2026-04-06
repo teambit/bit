@@ -750,7 +750,7 @@ describe('bit checkout command', function () {
         expect(list).to.have.lengthOf(3);
       });
       it('should show the new components in the output', () => {
-        expect(output).to.have.string('successfully imported the following new components from the defaultScope');
+        expect(output).to.have.string('new components from scope');
         expect(output).to.have.string('comp2');
         expect(output).to.have.string('comp3');
       });

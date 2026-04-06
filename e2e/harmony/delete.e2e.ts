@@ -359,7 +359,7 @@ describe('bit delete command', function () {
       output = helper.command.resetAll();
     });
     it('should reset the deleted component', () => {
-      expect(output).to.have.string('2 component(s) were reset');
+      expect(output).to.have.string('2 component(s) reset successfully');
     });
     it('should revert the .bitmap entry of the deleted component as it was before', () => {
       const bitmap = helper.bitMap.read();
