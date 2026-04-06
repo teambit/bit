@@ -51,6 +51,16 @@ describe('compile extension', function () {
         expect(result).to.have.string(appOutput);
       });
     });
+    describe('compile by filesystem path', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.compile('comp1');
+      });
+      it('should compile the component when given its root directory path', () => {
+        // comp1's rootDir in bitmap is 'comp1'
+        expect(output).to.have.string('comp1');
+      });
+    });
     describe('tag the components (compilation for release)', () => {
       before(() => {
         helper.command.tagAllComponents();
