@@ -1,9 +1,11 @@
 import chalk from 'chalk';
+import { countBy } from 'lodash';
 import type { ComponentIdList, ComponentID } from '@teambit/component-id';
 import type { Command, CommandOptions, Report } from '@teambit/cli';
 import {
   formatItem,
   formatSection,
+  formatTitle,
   formatHint,
   formatDetailsHint,
   formatSuccessSummary,
@@ -346,13 +348,28 @@ export function tagResultReport(results: TagResults): string | Report {
 
   const hasAutoTagged = autoTaggedCount > 0;
 
-  // Build minimal output (no auto-tagged listing, just counts)
+  // Build minimal output (no auto-tagged listing, just counts grouped by scope)
   const { newSection, changedSection } = buildSections(hasAutoTagged ? formatCompMinimal : formatCompDetailed);
-  const autoTagHint = hasAutoTagged ? formatDetailsHint(`all ${autoTaggedCount} auto-tagged dependents`) : '';
-  const footerParts = [summary, autoTagHint, tagExplanation, softTagClarification].filter(Boolean).join('\n');
+
+  const autoTagSection = (() => {
+    if (!hasAutoTagged) return '';
+    const scopeCounts = countBy(autoTaggedResults, (r) => r.component.id.scope);
+    const sorted = Object.entries(scopeCounts).sort(([, a], [, b]) => b - a);
+    const MAX_SHOWN = 4;
+    const shown = sorted.slice(0, MAX_SHOWN).map(([scope, n]) => `${scope} (${n})`);
+    const remaining = sorted.length - MAX_SHOWN;
+    const scopeLine = remaining > 0 ? [...shown, `+ ${remaining} more scopes`].join(' · ') : shown.join(' · ');
+    const title = formatTitle(`auto-tagged dependents (${autoTaggedCount})`);
+    const scopes = `   ${scopeLine}`;
+    const hint = formatDetailsHint('full list of auto-tagged dependents');
+    return `${title}\n${scopes}\n${hint}`;
+  })();
+
+  const footerParts = [summary, tagExplanation, softTagClarification].filter(Boolean).join('\n');
   const data = joinSections([
     newSection,
     changedSection,
+    autoTagSection,
     removedSection,
     publishSection,
     exportedSection,

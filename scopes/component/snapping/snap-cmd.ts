@@ -1,10 +1,12 @@
 import chalk from 'chalk';
+import { countBy } from 'lodash';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { Command, CommandOptions, Report } from '@teambit/cli';
 import {
   formatItem,
   formatSection,
+  formatTitle,
   formatHint,
   formatDetailsHint,
   formatSuccessSummary,
@@ -206,11 +208,32 @@ export function snapResultReport(results: SnapResults): string | Report {
     '(use "bit export" to push these components to a remote)\n(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)'
   );
 
-  // Build minimal output
+  // Build minimal output (no auto-snapped listing, just counts grouped by scope)
   const { newSection, changedSection } = buildSections(hasAutoSnapped ? formatCompMinimal : formatCompDetailed);
-  const autoSnapHint = hasAutoSnapped ? formatDetailsHint(`all ${autoSnappedCount} auto-snapped dependents`) : '';
-  const footerParts = [summary, autoSnapHint, snapExplanation].filter(Boolean).join('\n');
-  const data = joinSections([newSection, changedSection, removedSection, warningsSection, footerParts]);
+
+  const autoSnapSection = (() => {
+    if (!hasAutoSnapped) return '';
+    const scopeCounts = countBy(autoSnappedResults, (r) => r.component.id.scope);
+    const sorted = Object.entries(scopeCounts).sort(([, a], [, b]) => b - a);
+    const MAX_SHOWN = 4;
+    const shown = sorted.slice(0, MAX_SHOWN).map(([scope, n]) => `${scope} (${n})`);
+    const remaining = sorted.length - MAX_SHOWN;
+    const scopeLine = remaining > 0 ? [...shown, `+ ${remaining} more scopes`].join(' · ') : shown.join(' · ');
+    const title = formatTitle(`auto-snapped dependents (${autoSnappedCount})`);
+    const scopes = `   ${scopeLine}`;
+    const hint = formatDetailsHint('full list of auto-snapped dependents');
+    return `${title}\n${scopes}\n${hint}`;
+  })();
+
+  const footerParts = [summary, snapExplanation].filter(Boolean).join('\n');
+  const data = joinSections([
+    newSection,
+    changedSection,
+    autoSnapSection,
+    removedSection,
+    warningsSection,
+    footerParts,
+  ]);
 
   if (!hasAutoSnapped) {
     return data;
