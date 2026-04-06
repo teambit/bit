@@ -233,7 +233,7 @@ export function checkoutOutput(
         `successfully ${switchedOrReverted} ${chalk.bold(componentName)} to version ${chalk.bold(
           head || latest ? component.id.version : version
         )}`;
-      return formatSuccessSummary(title) + '\n' + applyVersionReport(components, false);
+      return [formatSuccessSummary(title), applyVersionReport(components, false)].filter(Boolean).join('\n');
     }
     if (reset) {
       const items = components.map((component) => formatItem(component.id.toString()));
@@ -249,7 +249,7 @@ export function checkoutOutput(
     const title =
       alternativeTitle || `successfully ${switchedOrReverted} ${components.length} components to ${versionOutput}`;
     const showVersion = head || reset;
-    return formatSuccessSummary(title) + '\n' + applyVersionReport(components, true, showVersion);
+    return [formatSuccessSummary(title), applyVersionReport(components, true, showVersion)].filter(Boolean).join('\n');
   };
   const getNewOnLaneOutput = () => {
     if (!newFromLane?.length) return '';

@@ -118,7 +118,9 @@ ${COMPONENT_PATTERN_HELP}`,
       const laneSwitched = formatSuccessSummary(`successfully set "${chalk.bold(lane)}" as the active lane`);
       if (!components || !components.length) return `No components have been changed.\n${laneSwitched}`;
       const title = `successfully switched ${components.length} components to the head of lane ${lane}`;
-      return formatSuccessSummary(title) + '\n' + applyVersionReport(components, true, false) + '\n' + laneSwitched;
+      return [formatSuccessSummary(title), applyVersionReport(components, true, false), laneSwitched]
+        .filter(Boolean)
+        .join('\n');
     };
 
     const getGitBranchWarningOutput = () => {
