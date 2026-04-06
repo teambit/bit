@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import type { ComponentIdList, ComponentID } from '@teambit/component-id';
-import type { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions, Report } from '@teambit/cli';
 import {
   formatItem,
   formatSection,
@@ -16,7 +16,6 @@ import { IssuesClasses } from '@teambit/component-issues';
 import type { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
 import type { Logger } from '@teambit/logger';
-import type { Report } from '@teambit/cli';
 import type { TagResults, SnappingMain } from './snapping.main.runtime';
 import type { BasicTagParams } from './version-maker';
 import type { ConfigStoreMain } from '@teambit/config-store';
@@ -134,7 +133,7 @@ use for official releases. for development versions, use 'bit snap' instead.`;
   ) {}
 
   // eslint-disable-next-line complexity
-  async report([patterns = []]: [string[]], options: TagParams): Promise<string> {
+  async report([patterns = []]: [string[]], options: TagParams): Promise<string | Report> {
     const {
       message = '',
       ver,
@@ -384,7 +383,7 @@ export function tagResultReport(results: TagResults): string | Report {
 /** @deprecated use tagResultReport instead */
 export function tagResultOutput(results: TagResults): string {
   const result = tagResultReport(results);
-  return typeof result === 'string' ? result : result.data;
+  return typeof result === 'string' ? result : result.details || result.data;
 }
 
 export function compInBold(id: ComponentID): string {

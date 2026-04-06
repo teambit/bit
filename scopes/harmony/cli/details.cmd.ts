@@ -29,7 +29,12 @@ export class DetailsCmd implements Command {
       fs.readFile(metaPath, 'utf-8').catch(() => '{}'),
     ]);
 
-    const meta = JSON.parse(metaRaw);
+    let meta: Record<string, string> = {};
+    try {
+      meta = JSON.parse(metaRaw);
+    } catch {
+      // corrupted meta file, proceed with empty meta
+    }
     const header = meta.command
       ? formatTitle(`details from "bit ${meta.command}"`) +
         (meta.timestamp ? chalk.dim(`  ${new Date(meta.timestamp).toLocaleString()}`) : '')

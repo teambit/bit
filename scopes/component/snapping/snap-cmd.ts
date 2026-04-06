@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
-import type { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions, Report } from '@teambit/cli';
 import {
   formatItem,
   formatSection,
@@ -11,7 +11,6 @@ import {
   warnSymbol,
   joinSections,
 } from '@teambit/cli';
-import type { Report } from '@teambit/cli';
 import {
   NOTHING_TO_SNAP_MSG,
   AUTO_SNAPPED_MSG,
@@ -228,5 +227,5 @@ export function snapResultReport(results: SnapResults): string | Report {
 /** @deprecated use snapResultReport instead */
 export function snapResultOutput(results: SnapResults): string {
   const result = snapResultReport(results);
-  return typeof result === 'string' ? result : result.data;
+  return typeof result === 'string' ? result : result.details || result.data;
 }
