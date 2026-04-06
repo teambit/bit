@@ -1738,11 +1738,9 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   async getComponentIdByPath(componentPath: PathOsBased): Promise<ComponentID | undefined> {
     const relativePath = path.isAbsolute(componentPath) ? path.relative(this.path, componentPath) : componentPath;
     const linuxPath = pathNormalizeToLinux(relativePath);
-    const bitId = this.consumer.bitMap.getComponentIdByPath(linuxPath);
-    if (bitId) {
-      return bitId;
-    }
-    return undefined;
+    return (
+      this.consumer.bitMap.getComponentIdByPath(linuxPath) ?? this.consumer.bitMap.getComponentIdByRootPath(linuxPath)
+    );
   }
 
   private async componentConfigFileFromComponentDirAndName(
@@ -2002,12 +2000,9 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       return this.resolveComponentIdFromPackageName(id);
     }
     // support filesystem paths (e.g. "scopes/harmony/cli") as component identifiers
-    if (typeof id === 'string' && id.includes('/')) {
-      const absPath = path.isAbsolute(id) ? id : path.resolve(this.path, id);
-      if (fs.existsSync(absPath)) {
-        const idByPath = await this.getComponentIdByPath(id);
-        if (idByPath) return idByPath;
-      }
+    if (typeof id === 'string' && id.includes(path.sep)) {
+      const idByPath = await this.getComponentIdByPath(id);
+      if (idByPath) return idByPath;
     }
     const getDefaultScope = async (bitId: ComponentID, bitMapOptions?: GetBitMapComponentOptions) => {
       if (bitId.scope) {
