@@ -29,9 +29,11 @@ describe('auto tagging functionality', function () {
       tagOutput = helper.command.tagWithoutBuild('comp3');
     });
     it('should auto tag the dependencies and the nested dependencies', () => {
-      expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
-      expect(tagOutput).to.have.string('comp1@0.0.2');
-      expect(tagOutput).to.have.string('comp2@0.0.2');
+      expect(tagOutput).to.have.string('3 component(s) tagged');
+      expect(tagOutput).to.have.string('auto-tagged dependents');
+      const details = helper.command.runCmd('bit details');
+      expect(details).to.have.string('comp1@0.0.2');
+      expect(details).to.have.string('comp2@0.0.2');
     });
     it('should update the dependencies and the flattenedDependencies of the dependent with the new versions', () => {
       const barFoo = helper.command.catComponent('comp2@latest');
@@ -118,9 +120,11 @@ describe('auto tagging functionality', function () {
         tagOutput = helper.command.tagAllWithoutBuild('--ignore-issues="CircularDependencies"');
       });
       it('should auto tag all dependents', () => {
-        expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
-        expect(tagOutput).to.have.string('bar/a@0.0.2');
-        expect(tagOutput).to.have.string('bar/b@0.0.2');
+        expect(tagOutput).to.have.string('3 component(s) tagged');
+        expect(tagOutput).to.have.string('auto-tagged dependents');
+        const details = helper.command.runCmd('bit details');
+        expect(details).to.have.string('bar/a@0.0.2');
+        expect(details).to.have.string('bar/b@0.0.2');
       });
       it('should update the dependencies and the flattenedDependencies of the all dependents with the new versions', () => {
         const barA = helper.command.catComponent('bar/a@latest');
@@ -181,10 +185,11 @@ describe('auto tagging functionality', function () {
         tagOutput = helper.command.tagAllWithoutBuild('--ignore-issues="CircularDependencies" --ver 2.0.0');
       });
       it('should auto tag all dependents', () => {
-        expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
+        expect(tagOutput).to.have.string('3 component(s) tagged');
         expect(tagOutput).to.have.string('bar/c@2.0.0');
-        expect(tagOutput).to.have.string('bar/a@0.0.2');
-        expect(tagOutput).to.have.string('bar/b@0.0.2');
+        const details = helper.command.runCmd('bit details');
+        expect(details).to.have.string('bar/a@0.0.2');
+        expect(details).to.have.string('bar/b@0.0.2');
       });
       it('should update the dependencies and the flattenedDependencies of the all dependents with the new versions', () => {
         const barA = helper.command.catComponent('bar/a@latest');
@@ -277,7 +282,9 @@ describe('auto tagging functionality', function () {
         tagOutput = helper.command.tagWithoutBuild('bar/c');
       });
       it('should bump the component version that is direct and indirect dependent only once', () => {
-        expect(tagOutput).to.have.string('bar/a@0.0.2');
+        expect(tagOutput).to.have.string('3 component(s) tagged');
+        const details = helper.command.runCmd('bit details');
+        expect(details).to.have.string('bar/a@0.0.2');
 
         const barA = helper.command.catComponent(`${helper.scopes.remote}/bar/a`);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

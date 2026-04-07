@@ -80,6 +80,16 @@
     "private": false
   },
   {
+    "name": "details",
+    "alias": "",
+    "options": [],
+    "description": "show expanded details from the last command that provided them (e.g. tag, snap)",
+    "extendedDescription": "",
+    "group": "general",
+    "private": false,
+    "skipWorkspace": true
+  },
+  {
     "name": "show <component-name>",
     "alias": "",
     "options": [
