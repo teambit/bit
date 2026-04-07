@@ -197,17 +197,18 @@ describe('compile extension', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponentsTS(3);
       helper.command.move('comp1', 'nested/comp1');
+      helper.command.move('comp2', 'nested/comp2');
     });
     it('should compile a component when given its rootDir path', () => {
       const output = helper.command.compile('nested/comp1');
       expect(output).to.have.string('1/1');
     });
     it('should compile multiple components when given multiple rootDir paths', () => {
-      const output = helper.command.compile('nested/comp1 comp2');
+      const output = helper.command.compile('nested/comp1 nested/comp2');
       expect(output).to.have.string('2/2');
     });
     it('should compile when mixing directory path and component id', () => {
-      const compId = `${helper.scopes.remote}/comp2`;
+      const compId = `${helper.scopes.remote}/comp3`;
       const output = helper.command.compile(`nested/comp1 ${compId}`);
       expect(output).to.have.string('2/2');
     });
