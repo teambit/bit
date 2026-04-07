@@ -1746,8 +1746,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   private resolveIdFromRootDir(id: string | BitId | ComponentID): ComponentID | undefined {
-    if (typeof id !== 'string' || !id.includes('/') || id.includes(':') || id.includes('@')) return undefined;
-    if (this.aspectLoader.isCoreAspect(id)) return undefined;
+    if (typeof id !== 'string') return undefined;
     const normalized = path.posix.normalize(pathNormalizeToLinux(id)).replace(/^\.\//, '');
     return this.consumer.bitMap.getComponentIdByRootPath(normalized);
   }

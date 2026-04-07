@@ -888,9 +888,7 @@ export class BitMap {
   _populateRootDirs() {
     if (isEmpty(this.rootDirs)) {
       this.components.forEach((component) => {
-        if (component.rootDir) {
-          this.rootDirs[component.rootDir] = component.id;
-        }
+        this.rootDirs[component.rootDir] = component.id;
       });
     }
   }
