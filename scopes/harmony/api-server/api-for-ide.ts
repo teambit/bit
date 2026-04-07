@@ -55,6 +55,7 @@ type InitSCMEntry = {
   pathsFromLastSnap: PathFromLastSnap;
   hashesFromLastSnap: HashesFromLastSnap;
   compDir: PathLinux;
+  scopePath: string;
 };
 
 type DataToInitSCM = { [compId: string]: InitSCMEntry };
@@ -572,6 +573,7 @@ export class APIForIDE {
           pathsFromLastSnap,
           hashesFromLastSnap,
           compDir: compFiles.compDir,
+          scopePath: this.workspace.scope.path,
         };
       },
       { concurrency: 30 }
