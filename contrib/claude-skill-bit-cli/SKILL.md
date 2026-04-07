@@ -22,6 +22,9 @@ Subcommands: log, tail-log
 doctor [diagnosis-name] - diagnose and troubleshoot workspace issues
 clear-cache - remove cached data to resolve stale data issues
 
+Workspace commands
+details - show expanded details from the last command that provided them (e.g. tag, snap)
+
 Information & Analysis
 show <component-name> - display component metadata, dependencies, and configuration
 graph [id] - visualize component dependencies as a graph image
