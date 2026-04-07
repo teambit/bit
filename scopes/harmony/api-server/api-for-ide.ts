@@ -48,10 +48,12 @@ const CMD_HISTORY = 'command-history-ide';
 type PathLinux = string; // problematic to get it from @teambit/legacy/dist/utils/path.
 
 type PathFromLastSnap = { [relativeToWorkspace: PathLinux]: string };
+type HashesFromLastSnap = { [relativeToWorkspace: PathLinux]: string };
 
 type InitSCMEntry = {
   filesStatus: FilesStatus;
   pathsFromLastSnap: PathFromLastSnap;
+  hashesFromLastSnap: HashesFromLastSnap;
   compDir: PathLinux;
 };
 
@@ -406,6 +408,15 @@ export class APIForIDE {
     return results;
   }
 
+  getCompFileHashesFromLastSnap(compFiles: CompFiles): { [relativePath: string]: string } {
+    if (!compFiles.id.hasVersion()) return {}; // it's a new component.
+    const results: { [relativePath: string]: string } = {};
+    for (const modelFile of compFiles.getModelFiles()) {
+      results[pathJoinLinux(compFiles.compDir, modelFile.relativePath)] = modelFile.file.hash;
+    }
+    return results;
+  }
+
   async warmWorkspaceCache() {
     await this.workspace.warmCache();
   }
@@ -544,18 +555,22 @@ export class APIForIDE {
     return compact(results);
   }
 
-  async getDataToInitSCM(): Promise<DataToInitSCM> {
+  async getDataToInitSCM(options?: { useHashes?: boolean }): Promise<DataToInitSCM> {
+    const useHashes = options?.useHashes;
     const ids = this.workspace.listIds();
     const results: DataToInitSCM = {};
     await pMap(
       ids,
       async (id) => {
         const compFiles = await this.workspace.getFilesModification(id);
-        const pathsFromLastSnap = await this.getCompFilesDirPathFromLastSnapUsingCompFiles(compFiles);
+        const hashesFromLastSnap = this.getCompFileHashesFromLastSnap(compFiles);
+        // only materialize files to disk when the extension doesn't support hash-based reads
+        const pathsFromLastSnap = useHashes ? {} : await this.getCompFilesDirPathFromLastSnapUsingCompFiles(compFiles);
         const idStr = id.toStringWithoutVersion();
         results[idStr] = {
           filesStatus: compFiles.getFilesStatus(),
           pathsFromLastSnap,
+          hashesFromLastSnap,
           compDir: compFiles.compDir,
         };
       },

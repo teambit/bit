@@ -33,6 +33,10 @@ export class CompFiles {
     return Promise.all(this.modelFiles.map((file) => SourceFile.loadFromSourceFileModel(file, this.repository)));
   }
 
+  getModelFiles(): SourceFileModel[] {
+    return this.modelFiles;
+  }
+
   getFilesStatus(): FilesStatus {
     const result = this.currentFiles.reduce((acc, file) => {
       const headFile = this.modelFiles.find((h) => h.relativePath === file.relative);
