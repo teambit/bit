@@ -2,11 +2,15 @@ import { logger, shouldDisableLoader } from '@teambit/legacy.logger';
 import type { CLIArgs, Command, Flags } from './command';
 import { loader } from '@teambit/legacy.loader';
 import { handleErrorAndExit } from './handle-errors';
-import { TOKEN_FLAG_NAME } from '@teambit/legacy.constants';
+import { TOKEN_FLAG_NAME, CACHE_ROOT } from '@teambit/legacy.constants';
 import globalFlags from './global-flags';
 import { Analytics } from '@teambit/legacy.analytics';
 import type { OnCommandStartSlot } from './cli.main.runtime';
 import pMapSeries from 'p-map-series';
+import fs from 'fs-extra';
+import path from 'path';
+
+export const LAST_COMMAND_DETAILS_DIR = path.join(CACHE_ROOT, 'last-command-details');
 
 type CommandResult = { data: any; exitCode: number };
 
@@ -92,7 +96,20 @@ export class CommandRunner {
     const data = typeof result === 'string' ? result : result.data;
     const exitCode = typeof result === 'string' ? 0 : result.code;
     if (shouldReturnResult) return { data, exitCode };
+    const details = typeof result === 'string' ? undefined : result.details;
+    if (details) {
+      await this.persistDetails(details).catch((err) => logger.error('failed to persist command details', err));
+    }
     await this.writeAndExit(`${data}\n`, exitCode);
+  }
+
+  private async persistDetails(details: string) {
+    await fs.ensureDir(LAST_COMMAND_DETAILS_DIR);
+    const meta = JSON.stringify({ command: this.commandName, timestamp: new Date().toISOString() });
+    await Promise.all([
+      fs.writeFile(path.join(LAST_COMMAND_DETAILS_DIR, 'content'), details),
+      fs.writeFile(path.join(LAST_COMMAND_DETAILS_DIR, 'meta.json'), meta),
+    ]);
   }
 
   private async runWaitHandler() {

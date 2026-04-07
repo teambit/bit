@@ -374,7 +374,10 @@ describe('tag components on Harmony', function () {
       tagOutput = helper.command.tagWithoutBuild('comp3', '--unmodified --increment prerelease --prerelease-id dev');
     });
     it('should auto-tag dependents according to the pre-release version', () => {
-      expect(tagOutput).to.have.string('comp1@0.0.2-dev.0');
+      expect(tagOutput).to.have.string('3 component(s) tagged');
+      expect(tagOutput).to.have.string('auto-tagged dependents');
+      const details = helper.command.runCmd('bit details');
+      expect(details).to.have.string('comp1@0.0.2-dev.0');
     });
   });
   describe('invalid pre-release after normal tag', () => {
