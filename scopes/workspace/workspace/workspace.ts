@@ -1745,8 +1745,11 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return undefined;
   }
 
-  private resolveIdFromRootDir(dirPath: string): ComponentID | undefined {
-    return this.consumer.bitMap.getComponentIdByRootPath(pathNormalizeToLinux(dirPath));
+  private resolveIdFromRootDir(id: string | BitId | ComponentID): ComponentID | undefined {
+    if (typeof id !== 'string' || !id.includes('/') || id.includes(':') || id.includes('@')) return undefined;
+    if (this.aspectLoader.isCoreAspect(id)) return undefined;
+    const normalized = path.posix.normalize(pathNormalizeToLinux(id)).replace(/^\.\//, '');
+    return this.consumer.bitMap.getComponentIdByRootPath(normalized);
   }
 
   private async componentConfigFileFromComponentDirAndName(
@@ -1995,10 +1998,8 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
    * Transform the id to ComponentId and get the exact id as appear in bitmap
    */
   async resolveComponentId(id: string | BitId | ComponentID): Promise<ComponentID> {
-    if (typeof id === 'string' && id.includes('/') && !id.includes(':') && !id.startsWith('@')) {
-      const idFromPath = this.resolveIdFromRootDir(id);
-      if (idFromPath) return idFromPath;
-    }
+    const idFromPath = this.resolveIdFromRootDir(id);
+    if (idFromPath) return idFromPath;
     if (id instanceof BitId && id.hasScope() && id.hasVersion()) {
       // an optimization to make it faster when BitId is passed
       return ComponentID.fromLegacy(id);

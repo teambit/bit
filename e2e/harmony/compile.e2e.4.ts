@@ -192,4 +192,27 @@ describe('compile extension', function () {
       expect(sourceMapPathContent.sources).to.deep.equal(['nested/foo.ts']);
     });
   });
+  describe('compile by directory path', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponentsTS(3);
+    });
+    it('should compile a component when given its rootDir path', () => {
+      const output = helper.command.compile('comp1');
+      expect(output).to.have.string('1/1');
+    });
+    it('should compile multiple components when given multiple rootDir paths', () => {
+      const output = helper.command.compile('comp1 comp2');
+      expect(output).to.have.string('2/2');
+    });
+    it('should compile when mixing directory path and component id', () => {
+      const compId = `${helper.scopes.remote}/comp2`;
+      const output = helper.command.compile(`comp1 ${compId}`);
+      expect(output).to.have.string('2/2');
+    });
+    it('should compile when path has ./ prefix', () => {
+      const output = helper.command.compile('./comp1');
+      expect(output).to.have.string('1/1');
+    });
+  });
 });
