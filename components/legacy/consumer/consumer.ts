@@ -79,7 +79,7 @@ export default class Consumer {
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
   async setBitMap() {
-    this.bitMap = await BitMap.load(this.getPath(), this.config.defaultScope);
+    this.bitMap = await BitMap.load(this.getPath(), this.config.defaultScope, this.config.ignoredFiles);
   }
 
   setPackageJson(packageJson: PackageJsonFile) {
