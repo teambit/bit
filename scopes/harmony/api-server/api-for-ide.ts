@@ -48,14 +48,13 @@ const CMD_HISTORY = 'command-history-ide';
 type PathLinux = string; // problematic to get it from @teambit/legacy/dist/utils/path.
 
 type PathFromLastSnap = { [relativeToWorkspace: PathLinux]: string };
-type HashesFromLastSnap = { [relativeToWorkspace: PathLinux]: string };
+type ObjectPathsFromLastSnap = { [relativeToWorkspace: PathLinux]: string };
 
 type InitSCMEntry = {
   filesStatus: FilesStatus;
   pathsFromLastSnap: PathFromLastSnap;
-  hashesFromLastSnap: HashesFromLastSnap;
+  objectPathsFromLastSnap: ObjectPathsFromLastSnap;
   compDir: PathLinux;
-  scopePath: string;
 };
 
 type DataToInitSCM = { [compId: string]: InitSCMEntry };
@@ -409,11 +408,12 @@ export class APIForIDE {
     return results;
   }
 
-  getCompFileHashesFromLastSnap(compFiles: CompFiles): { [relativePath: string]: string } {
+  getCompFileObjectPathsFromLastSnap(compFiles: CompFiles): { [relativePath: string]: string } {
     if (!compFiles.id.hasVersion()) return {}; // it's a new component.
+    const repo = this.workspace.scope.legacyScope.objects;
     const results: { [relativePath: string]: string } = {};
     for (const modelFile of compFiles.modelFiles) {
-      results[pathJoinLinux(compFiles.compDir, modelFile.relativePath)] = modelFile.file.hash;
+      results[pathJoinLinux(compFiles.compDir, modelFile.relativePath)] = repo.objectPath(modelFile.file);
     }
     return results;
   }
@@ -569,16 +569,15 @@ export class APIForIDE {
       ids,
       async (id) => {
         const compFiles = await this.workspace.getFilesModification(id);
-        // only compute hashes when the extension supports hash-based reads, otherwise materialize files to disk
-        const hashesFromLastSnap = useHashes ? this.getCompFileHashesFromLastSnap(compFiles) : {};
+        // only compute object paths when the extension supports direct object reads, otherwise materialize files to disk
+        const objectPathsFromLastSnap = useHashes ? this.getCompFileObjectPathsFromLastSnap(compFiles) : {};
         const pathsFromLastSnap = useHashes ? {} : await this.getCompFilesDirPathFromLastSnapUsingCompFiles(compFiles);
         const idStr = id.toStringWithoutVersion();
         results[idStr] = {
           filesStatus: compFiles.getFilesStatus(),
           pathsFromLastSnap,
-          hashesFromLastSnap,
+          objectPathsFromLastSnap,
           compDir: compFiles.compDir,
-          scopePath: this.workspace.scope.path,
         };
       },
       { concurrency: 30 }
