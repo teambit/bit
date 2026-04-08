@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import chalk from 'chalk';
+import { formatSuccessSummary } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import { type ComponentID } from '@teambit/component-id';
 import { getRemoteByName } from '@teambit/scope.remotes';
@@ -59,7 +59,7 @@ to match a state and another criteria, use " AND " keyword. e.g. '$modified AND 
 
   async report([pattern]: [string], flags: PatternFlags) {
     const ids = await this.json([pattern], flags);
-    const title = chalk.green(`found ${chalk.bold(ids.length.toString())} components matching the pattern`);
+    const title = formatSuccessSummary(`found ${ids.length} components matching the pattern`);
     return `${title}\n${ids.join('\n')}`;
   }
 

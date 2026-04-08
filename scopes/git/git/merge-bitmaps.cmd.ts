@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import chalk from 'chalk';
+import { formatSuccessSummary, errorSymbol } from '@teambit/cli';
 import type { GitMain } from './git.main.runtime';
 
 const COMMAND_NAME = 'merge-bitmaps';
@@ -23,8 +23,8 @@ export class MergeBitmapsCmd implements Command {
   async report([ancestor, current, other]: string[]) {
     const res = await this.git.mergeBitmaps(ancestor, current, other);
     if (res) {
-      return chalk.green('git merge driver was successfully set');
+      return formatSuccessSummary('git merge driver was set');
     }
-    return chalk.red('git merge driver was not set');
+    return `${errorSymbol} git merge driver was not set`;
   }
 }

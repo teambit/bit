@@ -125,3 +125,8 @@ const title = formatTitle(`${warnSymbol} files with conflicts summary`);
 - `bit version-history` (build/show) — `scopes/scope/version-history/version-history-cmd.ts`
 - `bit artifacts` — `scopes/pipelines/builder/artifact/artifacts.cmd.ts`
 - `bit templates` — `scopes/generator/generator/templates.cmd.ts`
+- `bit npmrc` — `scopes/cloud/cloud/npmrc.cmd.ts`
+- `bit graph` — `scopes/component/graph/graph-cmd.ts`
+- `bit git merge-bitmaps` / `bit set-merge-driver` — `scopes/git/git/merge-bitmaps.cmd.ts`, `set-git-merge-driver.cmd.ts`
+- `bit pattern` — `scopes/workspace/workspace/pattern.cmd.ts`
+- `bit mcp setup` — `scopes/mcp/cli-mcp-server/setup-cmd.ts`
