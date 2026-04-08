@@ -12,7 +12,7 @@ export class CompFiles {
     private repository: Repository,
     private currentFiles: SourceFile[],
     readonly compDir: PathLinux,
-    private modelFiles: SourceFileModel[] = []
+    readonly modelFiles: SourceFileModel[] = []
   ) {}
 
   isModified(): boolean {
@@ -31,10 +31,6 @@ export class CompFiles {
 
   async getHeadFiles(): Promise<SourceFile[]> {
     return Promise.all(this.modelFiles.map((file) => SourceFile.loadFromSourceFileModel(file, this.repository)));
-  }
-
-  getModelFiles(): SourceFileModel[] {
-    return this.modelFiles;
   }
 
   getFilesStatus(): FilesStatus {

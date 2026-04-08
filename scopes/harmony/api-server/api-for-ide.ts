@@ -412,7 +412,7 @@ export class APIForIDE {
   getCompFileHashesFromLastSnap(compFiles: CompFiles): { [relativePath: string]: string } {
     if (!compFiles.id.hasVersion()) return {}; // it's a new component.
     const results: { [relativePath: string]: string } = {};
-    for (const modelFile of compFiles.getModelFiles()) {
+    for (const modelFile of compFiles.modelFiles) {
       results[pathJoinLinux(compFiles.compDir, modelFile.relativePath)] = modelFile.file.hash;
     }
     return results;
@@ -558,14 +558,19 @@ export class APIForIDE {
 
   async getDataToInitSCM(options?: { useHashes?: boolean }): Promise<DataToInitSCM> {
     const useHashes = options?.useHashes;
+    if (useHashes) {
+      // clean up old materialized files since hash-based reads don't need them
+      const lastSnapDir = path.join(this.workspace.scope.path, FILES_HISTORY_DIR, LAST_SNAP_DIR);
+      await fs.remove(lastSnapDir);
+    }
     const ids = this.workspace.listIds();
     const results: DataToInitSCM = {};
     await pMap(
       ids,
       async (id) => {
         const compFiles = await this.workspace.getFilesModification(id);
-        const hashesFromLastSnap = this.getCompFileHashesFromLastSnap(compFiles);
-        // only materialize files to disk when the extension doesn't support hash-based reads
+        // only compute hashes when the extension supports hash-based reads, otherwise materialize files to disk
+        const hashesFromLastSnap = useHashes ? this.getCompFileHashesFromLastSnap(compFiles) : {};
         const pathsFromLastSnap = useHashes ? {} : await this.getCompFilesDirPathFromLastSnapUsingCompFiles(compFiles);
         const idStr = id.toStringWithoutVersion();
         results[idStr] = {
