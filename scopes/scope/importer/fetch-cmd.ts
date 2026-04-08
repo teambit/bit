@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary, formatHint } from '@teambit/cli';
 import type { ComponentID } from '@teambit/component-id';
 import { FileStatus } from '@teambit/component.modules.merge-helper';
 import type { ImporterMain } from './importer.main.runtime';
@@ -54,13 +55,13 @@ export class FetchCmd implements Command {
     );
 
     if (!importedIds.length) {
-      return chalk.yellow('nothing to import');
+      return formatHint('nothing to import');
     }
-    const title = `successfully fetched ${importedIds.length} component(s)`;
+    const title = formatSuccessSummary(`fetched ${importedIds.length} component(s)`);
     if (!importDetails) {
       // in case it fetches from a scope, when a workspace is not available.
       const comps = importedIds.map((id) => chalk.cyan(id.toString()));
-      return [chalk.green(title)].concat(comps).join('\n');
+      return [title].concat(comps).join('\n');
     }
 
     const componentDependencies = importedIds.map((id) => {
@@ -68,9 +69,8 @@ export class FetchCmd implements Command {
       if (!details) throw new Error(`missing details for component ${id.toString()}`);
       return formatPlainComponentItemWithVersions(id, details);
     });
-    const componentDependenciesOutput = [chalk.green(title)].concat(componentDependencies).join('\n');
 
-    return componentDependenciesOutput;
+    return [title].concat(componentDependencies).join('\n');
   }
 }
 

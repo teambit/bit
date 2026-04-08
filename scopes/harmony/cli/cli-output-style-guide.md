@@ -121,3 +121,7 @@ const title = formatTitle(`${warnSymbol} files with conflicts summary`);
 - `bit envs` (list/get) — `scopes/envs/envs/envs.cmd.ts`
 - `bit capsule` (create/list/delete) — `scopes/workspace/workspace/capsule.cmd.ts`
 - `bit check-types` — `scopes/typescript/typescript/cmds/check-types.cmd.ts`
+- `bit fetch` — `scopes/scope/importer/fetch-cmd.ts`
+- `bit version-history` (build/show) — `scopes/scope/version-history/version-history-cmd.ts`
+- `bit artifacts` — `scopes/pipelines/builder/artifact/artifacts.cmd.ts`
+- `bit templates` — `scopes/generator/generator/templates.cmd.ts`
