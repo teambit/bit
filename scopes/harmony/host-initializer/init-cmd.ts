@@ -6,6 +6,7 @@ import { initScope } from '@teambit/legacy.scope-api';
 import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy.constants';
 import type { WorkspaceExtensionProps } from '@teambit/config';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary } from '@teambit/cli';
 import type { InteractiveConfig } from './host-initializer.main.runtime';
 import { HostInitializerMain } from './host-initializer.main.runtime';
 import type { Logger } from '@teambit/logger';
@@ -146,7 +147,7 @@ supports various reset options to recover from corrupted state or restart from s
       // Handle both cases init --bare and init --bare [scopeName]
       const bareVal = bare === true ? '' : bare;
       await initScope(path, bareVal, shared);
-      return `${chalk.green('successfully initialized an empty bare bit scope.')}`;
+      return formatSuccessSummary('initialized an empty bare bit scope.');
     }
 
     if (reset && resetHard) {

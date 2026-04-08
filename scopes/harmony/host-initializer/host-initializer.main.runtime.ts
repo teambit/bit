@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import chalk from 'chalk';
+import { formatSuccessSummary, formatHint, formatTitle } from '@teambit/cli';
 import { prompt } from 'enquirer';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import type { Consumer } from '@teambit/legacy.consumer';
@@ -323,33 +324,35 @@ node_modules
     resetScope: boolean,
     interactiveConfig: InteractiveConfig | null
   ): string {
-    let initMessage = `${chalk.green('successfully initialized a bit workspace.')}`;
+    let initMessage = formatSuccessSummary('initialized a bit workspace.');
 
-    if (!created) initMessage = `${chalk.grey('successfully re-initialized a bit workspace.')}`;
-    if (reset) initMessage = `${chalk.grey('your bit workspace has been reset successfully.')}`;
-    if (resetHard) initMessage = `${chalk.grey('your bit workspace has been hard-reset successfully.')}`;
-    if (resetScope) initMessage = `${chalk.grey('your local scope has been reset successfully.')}`;
+    if (!created) initMessage = formatHint('successfully re-initialized a bit workspace.');
+    if (reset) initMessage = formatHint('your bit workspace has been reset successfully.');
+    if (resetHard) initMessage = formatHint('your bit workspace has been hard-reset successfully.');
+    if (resetScope) initMessage = formatHint('your local scope has been reset successfully.');
 
     // Add additional information for interactive mode
     if (interactiveConfig) {
-      initMessage += `\n\n${chalk.cyan('ℹ️  Additional Information:')}`;
+      initMessage += `\n\n${formatTitle('Additional Information')}`;
       const defaultDirectory = interactiveConfig?.defaultDirectory || 'bit-components/{scope}/{name}';
-      initMessage += `\n📁 Components will be created in: ${chalk.cyan(defaultDirectory)}`;
-      initMessage += `\n📖 For CI/CD setup, visit: ${chalk.underline('https://bit.dev/docs/getting-started/collaborate/exporting-components#custom-ci/cd-setup')}`;
+      initMessage += `\n  Components will be created in: ${chalk.cyan(defaultDirectory)}`;
+      initMessage += `\n  For CI/CD setup, visit: https://bit.dev/docs/getting-started/collaborate/exporting-components#custom-ci/cd-setup`;
 
       if (interactiveConfig.generator) {
-        initMessage += `\n🎯 Environment: ${chalk.cyan(interactiveConfig.generator)}`;
+        initMessage += `\n  Environment: ${chalk.cyan(interactiveConfig.generator)}`;
       }
 
       if (interactiveConfig.mcpEditor) {
-        initMessage += `\n🤖 MCP server configured for: ${chalk.cyan(interactiveConfig.mcpEditor)}`;
+        initMessage += `\n  MCP server configured for: ${chalk.cyan(interactiveConfig.mcpEditor)}`;
       }
 
       if (interactiveConfig.externalPackageManager) {
-        initMessage += `\n📦 External package manager mode enabled`;
-        initMessage += `\n💡 Run ${chalk.cyan('pnpm install')} (or ${chalk.cyan('yarn install')}/${chalk.cyan('npm install')}) to install dependencies`;
+        initMessage += `\n  External package manager mode enabled`;
+        initMessage += formatHint(
+          `\n  Run ${chalk.cyan('pnpm install')} (or ${chalk.cyan('yarn install')}/${chalk.cyan('npm install')}) to install dependencies`
+        );
       } else if (interactiveConfig.generator) {
-        initMessage += `\n💡 Run ${chalk.cyan('bit install')} to install dependencies`;
+        initMessage += formatHint(`\n  Run ${chalk.cyan('bit install')} to install dependencies`);
       }
     }
 

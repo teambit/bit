@@ -94,3 +94,11 @@ const title = formatTitle(`${warnSymbol} files with conflicts summary`);
 - `bit lint` — `scopes/defender/linter/lint.cmd.ts`
 - `bit link` — `scopes/workspace/install/link/link.cmd.ts`
 - `bit remove` / `bit delete` — `scopes/component/remove/remove-template.ts`, `delete-cmd.ts`
+- `bit fork` — `scopes/component/forking/fork.cmd.ts`
+- `bit recover` — `scopes/component/remove/recover-cmd.ts`
+- `bit scope rename` / `bit scope rename-owner` — `scopes/component/renaming/scope-rename.cmd.ts`, `scope-rename-owner.cmd.ts`
+- `bit remote` (add/del/list) — `scopes/harmony/global-config/remote-cmd.ts`
+- `bit init` — `scopes/harmony/host-initializer/init-cmd.ts`, `host-initializer.main.runtime.ts`
+- `bit clear-cache` — `scopes/workspace/clear-cache/clear-cache-cmd.ts`
+- `bit eject-conf` — `scopes/workspace/workspace/eject-conf.cmd.ts`
+- `bit scope set` — `scopes/workspace/workspace/scope-subcommands/scope-set.cmd.ts`
