@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import yesno from 'yesno';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatItem, formatSuccessSummary, formatHint, joinSections } from '@teambit/cli';
 import type { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import type { RemovedObjects } from '@teambit/legacy.scope';
@@ -107,11 +108,12 @@ to remove components from your local workspace only, use "bit remove" instead.`;
         .filter(Boolean);
     }
     const removedComps = await this.remove.deleteComps(componentsPattern, deleteOpts);
-    const removedCompIds = removedComps.map((comp) => comp.id.toString());
-    return `${chalk.green('successfully deleted the following components:')}
-${removedCompIds.join('\n')}
-
-${chalk.bold('to update the remote, please tag/snap and then export. to revert, please use "bit recover"')}`;
+    const items = removedComps.map((comp) => formatItem(comp.id.toString()));
+    return joinSections([
+      formatSuccessSummary('successfully deleted the following components'),
+      items.join('\n'),
+      formatHint('to update the remote, please tag/snap and then export. to revert, please use "bit recover"'),
+    ]);
   }
 
   private paintArray(removedObjectsArray: RemovedObjects[]) {

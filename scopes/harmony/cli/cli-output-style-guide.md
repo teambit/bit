@@ -89,3 +89,8 @@ const title = formatTitle(`${warnSymbol} files with conflicts summary`);
 - `bit import` — `scopes/scope/importer/import.cmd.ts`
 - `bit merge` — `scopes/component/merging/merge-cmd.ts`
 - Shared merge helpers — `scopes/component/modules/merge-helper/merge-output.ts` (also used by `checkout`, `switch`, `lane merge`)
+- `bit add` — `scopes/component/tracker/add-cmd.ts`
+- `bit deps` (set/remove/unset/reset/eject/blame/diagnose) — `scopes/dependencies/dependencies/dependencies-cmd.ts`
+- `bit lint` — `scopes/defender/linter/lint.cmd.ts`
+- `bit link` — `scopes/workspace/install/link/link.cmd.ts`
+- `bit remove` / `bit delete` — `scopes/component/remove/remove-template.ts`, `delete-cmd.ts`
