@@ -1,4 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary, formatItem, formatHint, joinSections } from '@teambit/cli';
 import type { ComponentID } from '@teambit/component';
 import chalk from 'chalk';
 import type { GeneratorMain } from './generator.main.runtime';
@@ -80,19 +81,17 @@ export class CreateCmd implements Command {
   ) {
     options.aspectId = options.aspectId ?? options.template;
     const results = await this.generator.generateComponentTemplate(componentNames, templateName, options);
-    const title = `${results.length} component(s) were created`;
 
     const componentsData = results
       .map((result) => {
-        return `${chalk.bold(result.id.toString())}
-    location: ${result.dir}
-    env:      ${result.envId} (set by ${result.envSetBy})
-    package:  ${result.packageName}
-`;
+        return `${formatItem(chalk.bold(result.id.toString()))}
+      location: ${result.dir}
+      env:      ${result.envId} (set by ${result.envSetBy})
+      package:  ${result.packageName}`;
       })
       .join('\n');
-    const footer = `env configuration is according to workspace variants, template config or --env flag.`;
+    const footer = formatHint(`env configuration is according to workspace variants, template config or --env flag.`);
 
-    return `${chalk.green(title)}\n\n${componentsData}\n\n${footer}`;
+    return joinSections([formatSuccessSummary(`${results.length} component(s) were created`), componentsData, footer]);
   }
 }

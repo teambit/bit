@@ -1,7 +1,7 @@
 // eslint-disable-next-line max-classes-per-file
-import chalk from 'chalk';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary } from '@teambit/cli';
 import type { CheckoutProps } from '@teambit/checkout';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
@@ -38,7 +38,7 @@ export class StashSaveCmd implements Command {
     }
   ) {
     const compIds = await this.stash.save({ pattern, message, includeNew });
-    return chalk.green(`stashed ${compIds.length} components`);
+    return formatSuccessSummary(`stashed ${compIds.length} components`);
   }
 }
 
@@ -109,7 +109,7 @@ export class StashLoadCmd implements Command {
       forceTheirs,
     };
     const compIds = await this.stash.loadLatest(checkoutProps, stashId);
-    return chalk.green(`checked out ${compIds.length} components according to the latest stash`);
+    return formatSuccessSummary(`checked out ${compIds.length} components according to the latest stash`);
   }
 }
 

@@ -108,3 +108,8 @@ const title = formatTitle(`${warnSymbol} files with conflicts summary`);
 - `bit aspect` (set/update/unset/get) — `scopes/harmony/aspect/aspect.cmd.ts`
 - `bit envs` (set/unset/update) — `scopes/workspace/workspace/envs-subcommands/`
 - `bit use` / `bit unuse` — `scopes/workspace/workspace/use.cmd.ts`, `unuse.cmd.ts`
+- `bit create` — `scopes/generator/generator/create.cmd.ts`
+- `bit stash` (save/load) — `scopes/component/stash/stash.cmd.ts`
+- `bit scope fork` — `scopes/component/forking/scope-fork.cmd.ts`
+- `bit format` — `scopes/defender/formatter/format.cmd.ts`
+- `bit validate` — `scopes/defender/validator/validate.cmd.ts`
