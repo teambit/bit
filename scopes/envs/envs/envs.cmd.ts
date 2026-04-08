@@ -3,6 +3,7 @@ import pMapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatTitle, formatHint } from '@teambit/cli';
 import { compact } from 'lodash';
 import type { ComponentMain, ComponentFactory, Component } from '@teambit/component';
 import type { EnvsMain } from './environments.main.runtime';
@@ -20,7 +21,7 @@ export class ListEnvsCmd implements Command {
 
   async report() {
     const allEnvs = this.envs.getAllRegisteredEnvsIds().join('\n');
-    const title = chalk.green('the following envs are available in the workspace:');
+    const title = formatTitle('available envs in the workspace');
     return `${title}\n${allEnvs}`;
   }
 }
@@ -69,7 +70,7 @@ export class GetEnvCmd implements Command {
 
     const all = compact(await Promise.all(allP));
 
-    const envTitle = chalk.green(`Environment: ${env.id}`);
+    const envTitle = formatTitle(`Environment: ${env.id}`);
     return `${envTitle}\n${all.join('\n\n')}`;
   }
 
@@ -149,9 +150,7 @@ environments control how components are built, tested, linted, and deployed.`;
   getNonLoadedEnvsWarning() {
     if (!this.nonLoadedEnvs.size) return '';
     const list = Array.from(this.nonLoadedEnvs.values()).join(',');
-    return chalk.yellow(`warning: bit wasn't able to load the following envs: ${chalk.cyan(list)}.
-please run ${chalk.cyan("'bit install'")} to fix. if this doesn't help, run ${chalk.cyan(
-      "'bit status'"
-    )} to see if there are any additional issues`);
+    return formatHint(`warning: bit wasn't able to load the following envs: ${list}.
+please run 'bit install' to fix. if this doesn't help, run 'bit status' to see if there are any additional issues`);
   }
 }

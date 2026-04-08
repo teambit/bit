@@ -116,3 +116,8 @@ const title = formatTitle(`${warnSymbol} files with conflicts summary`);
 - `bit login` / `bit logout` / `bit whoami` — `scopes/cloud/cloud/login.cmd.ts`, `logout.cmd.ts`, `whoami.cmd.ts`
 - `bit build` — `scopes/pipelines/builder/build.cmd.ts`
 - `bit new` — `scopes/generator/generator/new.cmd.ts`
+- `bit merge-abort` — `scopes/lanes/merge-lanes/merge-abort.cmd.ts`
+- `bit merge-move` — `scopes/lanes/merge-lanes/merge-move.cmd.ts`
+- `bit envs` (list/get) — `scopes/envs/envs/envs.cmd.ts`
+- `bit capsule` (create/list/delete) — `scopes/workspace/workspace/capsule.cmd.ts`
+- `bit check-types` — `scopes/typescript/typescript/cmds/check-types.cmd.ts`
