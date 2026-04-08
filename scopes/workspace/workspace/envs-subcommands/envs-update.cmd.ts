@@ -1,4 +1,5 @@
 import type { Command } from '@teambit/cli';
+import { formatTitle, formatItem, formatSuccessSummary, formatHint, joinSections } from '@teambit/cli';
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { Workspace } from '../workspace';
@@ -40,20 +41,21 @@ export class EnvsUpdateCmd implements Command {
   async report([aspectId, pattern]: [string, string]) {
     const { updated, alreadyUpToDate } = await this.workspace.updateEnvForComponents(aspectId, pattern);
     if (Object.keys(updated).length) {
-      const body = Object.keys(updated)
-        .map((envId) => {
-          return `${chalk.bold(envId)}:\n${updated[envId].map((compId) => compId.toString()).join('\n')}`;
-        })
-        .join('\n\n');
-      const title = chalk.green(`the following component(s) env has been successfully updated:\n`);
-      const suffix = `\n${installAfterEnvChangesMsg}`;
-      return title + body + suffix;
+      const sections = Object.keys(updated).map((envId) => {
+        const items = updated[envId].map((compId) => formatItem(compId.toString()));
+        return `${formatTitle(envId)}\n${items.join('\n')}`;
+      });
+      return joinSections([
+        formatSuccessSummary('the following component(s) env has been updated'),
+        ...sections,
+        installAfterEnvChangesMsg,
+      ]);
     }
     if (alreadyUpToDate.length) {
-      return chalk.green(
+      return formatSuccessSummary(
         `all ${alreadyUpToDate.length} component(s) that use this env are already up to date. nothing to update`
       );
     }
-    return chalk.yellow(`unable to find any components using env ${chalk.bold(aspectId)}`);
+    return formatHint(`unable to find any components using env ${chalk.bold(aspectId)}`);
   }
 }

@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary } from '@teambit/cli';
 import type { RenamingMain } from './renaming.main.runtime';
 
 export type RenameOptions = {
@@ -51,8 +52,8 @@ for local components: simply renames the existing component in place.`;
 
   async report([sourceId, targetId]: [string, string], options: RenameOptions): Promise<string> {
     const results = await this.renaming.rename(sourceId, targetId, options);
-    return chalk.green(
-      `successfully renamed ${chalk.bold(results.sourceId.toString())} to ${chalk.bold(results.targetId.toString())}`
+    return formatSuccessSummary(
+      `renamed ${chalk.bold(results.sourceId.toString())} to ${chalk.bold(results.targetId.toString())}`
     );
   }
 }

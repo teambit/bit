@@ -102,3 +102,9 @@ const title = formatTitle(`${warnSymbol} files with conflicts summary`);
 - `bit clear-cache` — `scopes/workspace/clear-cache/clear-cache-cmd.ts`
 - `bit eject-conf` — `scopes/workspace/workspace/eject-conf.cmd.ts`
 - `bit scope set` — `scopes/workspace/workspace/scope-subcommands/scope-set.cmd.ts`
+- `bit deprecate` / `bit undeprecate` — `scopes/component/deprecation/deprecate-cmd.ts`, `undeprecate-cmd.ts`
+- `bit rename` — `scopes/component/renaming/rename.cmd.ts`
+- `bit move` — `scopes/component/mover/move-cmd.ts`
+- `bit aspect` (set/update/unset/get) — `scopes/harmony/aspect/aspect.cmd.ts`
+- `bit envs` (set/unset/update) — `scopes/workspace/workspace/envs-subcommands/`
+- `bit use` / `bit unuse` — `scopes/workspace/workspace/use.cmd.ts`, `unuse.cmd.ts`
