@@ -113,3 +113,6 @@ const title = formatTitle(`${warnSymbol} files with conflicts summary`);
 - `bit scope fork` — `scopes/component/forking/scope-fork.cmd.ts`
 - `bit format` — `scopes/defender/formatter/format.cmd.ts`
 - `bit validate` — `scopes/defender/validator/validate.cmd.ts`
+- `bit login` / `bit logout` / `bit whoami` — `scopes/cloud/cloud/login.cmd.ts`, `logout.cmd.ts`, `whoami.cmd.ts`
+- `bit build` — `scopes/pipelines/builder/build.cmd.ts`
+- `bit new` — `scopes/generator/generator/new.cmd.ts`
