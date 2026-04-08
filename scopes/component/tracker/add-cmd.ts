@@ -55,7 +55,8 @@ export class AddCmd implements Command {
         const alreadyUsedWarning = Object.keys(warnings.alreadyUsed)
           .map((key) =>
             formatItem(
-              `${warnSymbol} files ${chalk.bold(warnings.alreadyUsed[key].join(', '))} already used by component: ${key}`
+              `files ${chalk.bold(warnings.alreadyUsed[key].join(', '))} already used by component: ${key}`,
+              warnSymbol
             )
           )
           .filter((x) => x)

@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import type { CheckoutProps } from '@teambit/checkout';
 import { checkoutOutput } from '@teambit/checkout';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatItem, formatSuccessSummary, joinSections, successSymbol } from '@teambit/cli';
+import { formatItem, formatSuccessSummary, joinSections } from '@teambit/cli';
 import type { MergeLanesMain } from './merge-lanes.main.runtime';
 
 export type MergeAbortOpts = {
@@ -59,7 +59,7 @@ please fix the error and then run "bit checkout reset --all" to revert the compo
     };
 
     const checkoutOutputStr = checkoutResults ? checkoutOutput(checkoutResults, checkoutProps) : '';
-    const restoredItemsOutput = restoredItems.map((item) => formatItem(item, successSymbol())).join('\n');
+    const restoredItemsOutput = restoredItems.map((item) => formatItem(item)).join('\n');
 
     return joinSections([
       checkoutOutputStr,

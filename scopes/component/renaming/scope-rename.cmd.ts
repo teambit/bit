@@ -51,7 +51,7 @@ export function renameScopeOutput(renameResult: RenameResult): string {
   const refactoredSection = refactoredIds.length
     ? [
         formatTitle(`refactored components (${refactoredIds.length})`),
-        ...refactoredIds.map((id) => formatItem(id)),
+        ...refactoredIds.map((id) => formatItem(id.toString())),
       ].join('\n')
     : '';
   return joinSections([renamedSection, refactoredSection]);

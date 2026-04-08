@@ -1,7 +1,7 @@
 // eslint-disable-next-line max-classes-per-file
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatSuccessSummary } from '@teambit/cli';
+import { formatSuccessSummary, errorSymbol } from '@teambit/cli';
 import type { CheckoutProps } from '@teambit/checkout';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
@@ -129,8 +129,6 @@ allows saving work-in-progress changes and switching context, then restoring cha
   constructor(private stash: StashMain) {}
 
   async report([unrecognizedSubcommand]: [string]) {
-    return chalk.red(
-      `"${unrecognizedSubcommand}" is not a subcommand of "stash", please run "bit stash --help" to list the subcommands`
-    );
+    return `${errorSymbol} "${unrecognizedSubcommand}" is not a subcommand of "stash", please run "bit stash --help" to list the subcommands`;
   }
 }

@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatTitle, formatItem, formatSuccessSummary, errorSymbol, joinSections, successSymbol } from '@teambit/cli';
+import { formatTitle, formatItem, formatSuccessSummary, errorSymbol, joinSections } from '@teambit/cli';
 import type { ClearCacheMain } from './clear-cache.main.runtime';
 
 export default class ClearCacheCmd implements Command {
@@ -33,8 +33,8 @@ note: this cache has minimal impact on disk space. to free significant disk spac
     const { succeed, failed: failedCaches } = await this.clearCache.clearCache();
     const getSuccessOutput = () => {
       if (!succeed.length) return '';
-      const items = succeed.map((str) => formatItem(str, successSymbol()));
-      return `${formatTitle('caches cleared')}\n${items.join('\n')}`;
+      const items = succeed.map((str) => formatItem(str));
+      return `${formatSuccessSummary('caches cleared')}\n${items.join('\n')}`;
     };
     const getFailedOutput = () => {
       if (!failedCaches.length) return '';

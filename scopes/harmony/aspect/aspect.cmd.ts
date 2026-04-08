@@ -92,7 +92,7 @@ export class SetAspectCmd implements Command {
     const configParsed = config ? JSON.parse(config) : {};
     const results = await this.aspect.setAspectsToComponents(pattern, aspectId, configParsed, options);
     if (!results.length) return formatHint(`unable to find any matching components for ${chalk.bold(pattern)} pattern`);
-    const items = results.map((r) => formatItem(r));
+    const items = results.map((r) => formatItem(r.toString()));
     return joinSections([formatSuccessSummary('the following component(s) have been updated'), items.join('\n')]);
   }
 }
@@ -130,7 +130,7 @@ export class UpdateAspectCmd implements Command {
   async report([aspectId, pattern]: [string, string]) {
     const { updated, alreadyUpToDate } = await this.aspect.updateAspectsToComponents(aspectId, pattern);
     if (updated.length) {
-      const items = updated.map((u) => formatItem(u));
+      const items = updated.map((u) => formatItem(u.toString()));
       return joinSections([formatSuccessSummary('the following component(s) have been updated'), items.join('\n')]);
     }
     if (alreadyUpToDate.length) {
@@ -163,7 +163,7 @@ export class UnsetAspectCmd implements Command {
   async report([pattern, aspectId]: [string, string]) {
     const results = await this.aspect.unsetAspectsFromComponents(pattern, aspectId);
     if (!results.length) return formatHint(`unable to find any matching components for ${chalk.bold(pattern)} pattern`);
-    const items = results.map((r) => formatItem(r));
+    const items = results.map((r) => formatItem(r.toString()));
     return joinSections([formatSuccessSummary('the following component(s) have been updated'), items.join('\n')]);
   }
 }

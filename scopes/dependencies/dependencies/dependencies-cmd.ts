@@ -250,7 +250,7 @@ export class DependenciesResetCmd implements Command {
     const comps = results.map((id) => id.toString());
 
     const items = comps.map((c) => formatItem(c));
-    return joinSections([formatSuccessSummary('successfully reset dependencies'), ...items]);
+    return joinSections([formatSuccessSummary('successfully reset dependencies'), items.join('\n')]);
   }
 }
 
@@ -269,7 +269,7 @@ export class DependenciesEjectCmd implements Command {
     const comps = results.map((id) => id.toString());
 
     const items = comps.map((c) => formatItem(c));
-    return joinSections([formatSuccessSummary('successfully ejected dependencies'), ...items]);
+    return joinSections([formatSuccessSummary('successfully ejected dependencies'), items.join('\n')]);
   }
 }
 
