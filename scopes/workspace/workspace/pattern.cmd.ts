@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatSuccessSummary } from '@teambit/cli';
+import { formatSuccessSummary, formatItem } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import { type ComponentID } from '@teambit/component-id';
 import { getRemoteByName } from '@teambit/scope.remotes';
@@ -59,8 +59,9 @@ to match a state and another criteria, use " AND " keyword. e.g. '$modified AND 
 
   async report([pattern]: [string], flags: PatternFlags) {
     const ids = await this.json([pattern], flags);
+    const items = ids.map((id) => formatItem(id));
     const title = formatSuccessSummary(`found ${ids.length} components matching the pattern`);
-    return `${title}\n${ids.join('\n')}`;
+    return `${title}\n${items.join('\n')}`;
   }
 
   async json([pattern]: [string], flags: PatternFlags): Promise<string[]> {

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatSuccessSummary, formatHint } from '@teambit/cli';
+import { formatItem, formatSuccessSummary, formatHint } from '@teambit/cli';
 import type { ComponentID } from '@teambit/component-id';
 import { FileStatus } from '@teambit/component.modules.merge-helper';
 import type { ImporterMain } from './importer.main.runtime';
@@ -60,7 +60,7 @@ export class FetchCmd implements Command {
     const title = formatSuccessSummary(`fetched ${importedIds.length} component(s)`);
     if (!importDetails) {
       // in case it fetches from a scope, when a workspace is not available.
-      const comps = importedIds.map((id) => chalk.cyan(id.toString()));
+      const comps = importedIds.map((id) => formatItem(id.toString()));
       return [title].concat(comps).join('\n');
     }
 

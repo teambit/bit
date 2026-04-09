@@ -3,7 +3,7 @@ import pMapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatTitle, formatHint } from '@teambit/cli';
+import { formatTitle, formatItem, formatWarningSummary } from '@teambit/cli';
 import { compact } from 'lodash';
 import type { ComponentMain, ComponentFactory, Component } from '@teambit/component';
 import type { EnvsMain } from './environments.main.runtime';
@@ -20,9 +20,9 @@ export class ListEnvsCmd implements Command {
   ) {}
 
   async report() {
-    const allEnvs = this.envs.getAllRegisteredEnvsIds().join('\n');
+    const items = this.envs.getAllRegisteredEnvsIds().map((id) => formatItem(id));
     const title = formatTitle('available envs in the workspace');
-    return `${title}\n${allEnvs}`;
+    return `${title}\n${items.join('\n')}`;
   }
 }
 
@@ -150,7 +150,8 @@ environments control how components are built, tested, linted, and deployed.`;
   getNonLoadedEnvsWarning() {
     if (!this.nonLoadedEnvs.size) return '';
     const list = Array.from(this.nonLoadedEnvs.values()).join(',');
-    return formatHint(`warning: bit wasn't able to load the following envs: ${list}.
-please run 'bit install' to fix. if this doesn't help, run 'bit status' to see if there are any additional issues`);
+    return formatWarningSummary(
+      `bit wasn't able to load the following envs: ${list}. please run 'bit install' to fix. if this doesn't help, run 'bit status' to see if there are any additional issues`
+    );
   }
 }

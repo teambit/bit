@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatSuccessSummary, errorSymbol } from '@teambit/cli';
+import { formatSuccessSummary, formatWarningSummary, errorSymbol } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { GraphConfig } from '@teambit/legacy.dependency-graph';
 import { VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
@@ -73,7 +73,11 @@ export class VersionHistoryBuildCmd implements Command {
       })
       .join('\n');
 
-    return `${formatSuccessSummary('completed building version history')}\n${resultsStr}`;
+    const hasErrors = Object.values(results).some((r) => r.err);
+    const summary = hasErrors
+      ? formatWarningSummary('completed building version history (with errors)')
+      : formatSuccessSummary('completed building version history');
+    return `${summary}\n${resultsStr}`;
   }
 }
 
