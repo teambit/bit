@@ -23,8 +23,8 @@ export class MergeBitmapsCmd implements Command {
   async report([ancestor, current, other]: string[]) {
     const res = await this.git.mergeBitmaps(ancestor, current, other);
     if (res) {
-      return formatSuccessSummary('git merge driver was set');
+      return formatSuccessSummary('bitmap files merged successfully');
     }
-    return `${errorSymbol} git merge driver was not set`;
+    return `${errorSymbol} bitmap merge failed`;
   }
 }
