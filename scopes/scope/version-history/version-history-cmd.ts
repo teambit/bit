@@ -1,4 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary, formatWarningSummary, errorSymbol } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { GraphConfig } from '@teambit/legacy.dependency-graph';
 import { VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
@@ -63,16 +64,20 @@ export class VersionHistoryBuildCmd implements Command {
       .map((idStr) => {
         const result = results[idStr];
         const getMsg = () => {
-          if (result.err) return `failed with an error: ${chalk.red(result.err.message)}`;
+          if (result.err) return `${errorSymbol} failed: ${result.err.message}`;
           if (!result.added) return 'no changes';
-          return `successfully added ${result.added.length} hashes`;
+          return `added ${result.added.length} hashes`;
         };
         const msg = getMsg();
         return `${chalk.bold(idStr)}: ${msg}`;
       })
       .join('\n');
 
-    return `${chalk.green('completed building version history for the following component(s)')}:\n${resultsStr}`;
+    const hasErrors = Object.values(results).some((r) => r.err);
+    const summary = hasErrors
+      ? formatWarningSummary('completed building version history (with errors)')
+      : formatSuccessSummary('completed building version history');
+    return `${summary}\n${resultsStr}`;
   }
 }
 

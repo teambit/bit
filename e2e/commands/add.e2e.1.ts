@@ -59,9 +59,7 @@ describe('bit add command', function () {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       output = helper.command.addComponent('bar -i bar/new');
-      expect(output).to.have.string(
-        `warning: files bar/foo.js already used by component: ${helper.scopes.remote}/bar/foo`
-      );
+      expect(output).to.have.string(`files bar/foo.js already used by component: ${helper.scopes.remote}/bar/foo`);
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.not.have.property('bar/new');
     });
