@@ -1,7 +1,6 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import chalk from 'chalk';
-import { formatSuccessSummary, formatHint, formatTitle } from '@teambit/cli';
 import { prompt } from 'enquirer';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import type { Consumer } from '@teambit/legacy.consumer';
@@ -14,7 +13,7 @@ import { WorkspaceConfig } from '@teambit/config';
 import type { SetupOptions, RulesOptions } from '@teambit/mcp.mcp-config-writer';
 import { McpConfigWriter } from '@teambit/mcp.mcp-config-writer';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime, formatSuccessSummary, formatHint, formatTitle } from '@teambit/cli';
 import { ObjectsWithoutConsumer } from './objects-without-consumer';
 import { HostInitializerAspect } from './host-initializer.aspect';
 import { InitCmd } from './init-cmd';

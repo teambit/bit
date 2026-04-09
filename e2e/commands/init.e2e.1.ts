@@ -549,7 +549,7 @@ describe('run bit init', function () {
 
         // Complete the initialization manually with skip-interactive to verify workspace creation
         const finalOutput = helper.command.init('--skip-interactive');
-        expect(finalOutput).to.have.string('successfully initialized a bit workspace');
+        expect(finalOutput).to.have.string('initialized a bit workspace');
         expect(workspaceJsonc).to.be.a.file();
       });
 
