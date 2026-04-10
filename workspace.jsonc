@@ -37,7 +37,7 @@
         "@bitdev/node.generators.node-starters": "^1.0.0",
         "@bitdev/node.generators.node-templates": "^6.0.1",
         "@bitdev/react.generators.react-starters": "^2.0.0",
-        "@bitdev/react.generators.react-templates": "^6.0.2",
+        "@bitdev/react.generators.react-templates": "^6.0.3",
         "@bitdev/symphony.generators.symphony-starters": "^1.0.0",
         "@bitdev/symphony.generators.symphony-templates": "^5.0.1",
         "@dagrejs/dagre": "^1.1.2",
