@@ -1,4 +1,6 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { BitError } from '@teambit/bit-error';
+import type { Component } from '../component';
 import type { ComponentMain } from '../component.main.runtime';
 
 const ENVS_ASPECT_ID = 'teambit.envs/envs';
@@ -36,19 +38,28 @@ export class CatCmd implements Command {
     const id = await host.resolveComponentId(idStr);
     const component = await host.get(id);
     if (!component) {
-      throw new Error(`component "${idStr}" was not found`);
+      throw new BitError(`component "${idStr}" was not found`);
     }
     return component;
   }
 
-  private getFiles(component: any) {
-    return component.state.filesystem.files.map((f: any) => ({
-      path: f.relative as string,
+  private getFiles(component: Component) {
+    return component.state.filesystem.files.map((f) => ({
+      path: f.relative,
       content: (f.contents as Buffer).toString('utf-8'),
     }));
   }
 
-  private getConfig(component: any) {
+  private findFile(files: { path: string; content: string }[], filePath: string) {
+    const file = files.find((f) => f.path === filePath);
+    if (!file) {
+      const available = files.map((f) => f.path).join(', ');
+      throw new BitError(`file "${filePath}" not found in component. available files: ${available}`);
+    }
+    return file;
+  }
+
+  private getConfig(component: Component) {
     const envsEntry = component.state.aspects.get(ENVS_ASPECT_ID);
     const env = envsEntry?.config?.env as string | undefined;
 
@@ -66,12 +77,7 @@ export class CatCmd implements Command {
 
   private formatFilesText(files: { path: string; content: string }[], singleFile?: string): string {
     if (singleFile) {
-      const file = files.find((f) => f.path === singleFile);
-      if (!file) {
-        const available = files.map((f) => f.path).join(', ');
-        throw new Error(`file "${singleFile}" not found in component. available files: ${available}`);
-      }
-      return file.content;
+      return this.findFile(files, singleFile).content;
     }
     return files.map((f) => `--- ${f.path} ---\n${f.content}`).join('\n\n');
   }
@@ -92,8 +98,11 @@ export class CatCmd implements Command {
   }
 
   async report([idStr]: [string], flags: CatFlags) {
+    if (flags.file && flags.config && !flags.all) {
+      throw new BitError('--file cannot be used with --config. use --all to show both files and config');
+    }
     const component = await this.getComponent(idStr);
-    const showFiles = !flags.config;
+    const showFiles = !flags.config || flags.all;
     const showConfig = flags.config || flags.all;
     const sections: string[] = [];
 
@@ -109,8 +118,11 @@ export class CatCmd implements Command {
   }
 
   async json([idStr]: [string], flags: CatFlags) {
+    if (flags.file && flags.config && !flags.all) {
+      throw new BitError('--file cannot be used with --config. use --all to show both files and config');
+    }
     const component = await this.getComponent(idStr);
-    const showFiles = !flags.config;
+    const showFiles = !flags.config || flags.all;
     const showConfig = flags.config || flags.all;
 
     const result: Record<string, any> = {
@@ -120,16 +132,7 @@ export class CatCmd implements Command {
 
     if (showFiles) {
       const allFiles = this.getFiles(component);
-      if (flags.file) {
-        const file = allFiles.find((f) => f.path === flags.file);
-        if (!file) {
-          const available = allFiles.map((f) => f.path).join(', ');
-          throw new Error(`file "${flags.file}" not found in component. available files: ${available}`);
-        }
-        result.files = [file];
-      } else {
-        result.files = allFiles;
-      }
+      result.files = flags.file ? [this.findFile(allFiles, flags.file)] : allFiles;
     }
     if (showConfig) {
       result.config = this.getConfig(component);
