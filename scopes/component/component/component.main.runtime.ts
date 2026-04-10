@@ -30,6 +30,7 @@ import {
   FilesFragment,
   ExtensionsFragment,
 } from './show';
+import { CatCmd } from './cat';
 
 export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 
@@ -170,6 +171,7 @@ export class ComponentMain {
     const logger = loggerMain.createLogger(ComponentAspect.id);
     const componentExtension = new ComponentMain(hostSlot, express, showFragmentSlot);
     cli.register(new ShowCmd(componentExtension, logger));
+    cli.register(new CatCmd(componentExtension));
 
     componentExtension.registerShowFragments([
       new NameFragment(),
