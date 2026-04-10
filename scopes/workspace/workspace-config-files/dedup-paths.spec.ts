@@ -364,8 +364,7 @@ describe('Workspace Config files - dedupe paths', function () {
             envIds: ['teambit.harmony/node'],
           },
         };
-        // @ts-ignore
-        const result = dedupePaths(configMap, emptyEnvCompsDirsMap);
+        const result = dedupePaths(configMap, emptyEnvCompsDirsMap as any, undefined);
         expect(result).to.deep.equal([]);
       });
     });
