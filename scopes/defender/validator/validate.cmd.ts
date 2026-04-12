@@ -1,8 +1,8 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatTitle, formatSuccessSummary, formatHint, formatWarningSummary, errorSymbol } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError } from '@teambit/workspace';
-import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { ValidatorMain } from './validator.main.runtime';
 
@@ -52,13 +52,13 @@ by default validates only new and modified components. use --all to validate all
       );
     }
 
-    this.logger.console(chalk.bold('\n🔍 Running validation checks...\n'));
+    this.logger.console(`\n${formatTitle('Running validation checks...')}\n`);
 
     const startTime = Date.now();
     const components = await this.workspace.getComponentsByUserInput(pattern ? false : all, pattern, true);
 
     if (components.length === 0) {
-      this.logger.console(chalk.yellow('No components found to validate'));
+      this.logger.console(formatHint('No components found to validate'));
       return { code: 0, data: 'No components found to validate' };
     }
 
@@ -78,16 +78,16 @@ by default validates only new and modified components. use --all to validate all
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
 
     if (result.code !== 0) {
-      this.logger.console(chalk.red(`\n✗ Validation failed\n`));
+      this.logger.console(`\n${errorSymbol} Validation failed\n`);
       return { code: result.code, data: `Validation failed after ${totalTime} seconds` };
     }
 
     if (result.skippedAll) {
-      this.logger.console(chalk.yellow(`\n⚠ All validation tasks were skipped\n`));
+      this.logger.console(`\n${formatWarningSummary('All validation tasks were skipped')}\n`);
       return { code: 0, data: 'All validation tasks were skipped' };
     }
 
-    this.logger.console(chalk.green(`\n✓ All validation checks passed in ${totalTime} seconds\n`));
+    this.logger.console(`\n${formatSuccessSummary(`All validation checks passed in ${totalTime} seconds`)}\n`);
     return { code: 0, data: `Validation completed successfully in ${totalTime} seconds` };
   }
 }

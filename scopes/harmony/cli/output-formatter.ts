@@ -50,6 +50,12 @@ export function formatHint(text: string): string {
   return chalk.dim(text);
 }
 
+/** Format a hint pointing the user to `bit details` for expanded output */
+export function formatDetailsHint(subject?: string): string {
+  const what = subject ? ` ${subject}` : '';
+  return formatHint(`(run "bit details" to see${what})`);
+}
+
 /** Format a success summary: green checkmark + green message */
 export function formatSuccessSummary(msg: string): string {
   return `${successSymbol()} ${chalk.green(msg)}`;

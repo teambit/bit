@@ -40,9 +40,9 @@ export default class Lanes {
     return existingLaneHistory || emptyLaneHistory;
   }
 
-  async updateLaneHistory(laneObject: Lane, laneHistoryMsg?: string) {
+  async updateLaneHistory(laneObject: Lane, laneHistoryMsg?: string, historyKey?: string) {
     const laneHistory = await this.getOrCreateLaneHistory(laneObject);
-    await laneHistory.addHistory(laneObject, laneHistoryMsg);
+    await laneHistory.addHistory(laneObject, laneHistoryMsg, historyKey);
     return laneHistory;
   }
 

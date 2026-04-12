@@ -1,6 +1,6 @@
-import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatItem, formatSuccessSummary } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { RemoveMain } from './remove.main.runtime';
 
@@ -34,7 +34,7 @@ export class RecoverCmd implements Command {
     if (recovered.length === 0) {
       throw new BitError(`no soft-deleted components found matching pattern "${componentPattern}"`);
     }
-    const recoveredStr = recovered.map((id) => id.toString()).join('\n');
-    return `${chalk.green('successfully recovered the following component(s):')}\n${recoveredStr}`;
+    const items = recovered.map((id) => formatItem(id.toString()));
+    return `${formatSuccessSummary('successfully recovered the following component(s)')}\n${items.join('\n')}`;
   }
 }

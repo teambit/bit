@@ -1,4 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatItem, formatSuccessSummary, joinSections } from '@teambit/cli';
 import type { ComponentConfig } from '@teambit/generator';
 import chalk from 'chalk';
 import { hasWildcard } from '@teambit/legacy.utils';
@@ -95,15 +96,16 @@ the target-component-name argument is not allowed when using patterns.`;
       }
 
       const results = await this.forking.forkByPattern(sourceId, options);
-      const title = chalk.green(
-        `successfully forked ${chalk.bold(results.length)} component(s) matching pattern ${chalk.bold(sourceId)}`
-      );
-      return `${title}\n${results.map((id) => id.toString()).join('\n')}`;
+      const items = results.map((id) => formatItem(id.toString()));
+      return joinSections([
+        formatSuccessSummary(`forked ${results.length} component(s) matching pattern ${chalk.bold(sourceId)}`),
+        items.join('\n'),
+      ]);
     }
 
     // Single component mode - original behavior
     const result = await this.forking.fork(sourceId, targetId, options);
     const targetIdStr = result.toString();
-    return chalk.green(`successfully forked ${chalk.bold(targetIdStr)} from ${chalk.bold(sourceId)}`);
+    return formatSuccessSummary(`forked ${chalk.bold(targetIdStr)} from ${chalk.bold(sourceId)}`);
   }
 }

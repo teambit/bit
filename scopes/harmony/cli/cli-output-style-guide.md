@@ -4,16 +4,16 @@ All CLI command output should use the shared formatting toolkit from `@teambit/c
 
 ## Toolkit Functions
 
-| Function                            | Purpose                                                                                    | Example output                                                                                                                           |
-| ----------------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `formatTitle(text)`                 | Bold white section title                                                                   | **modified components**                                                                                                                  |
-| `formatSection(title, desc, items)` | Full section: title with count, dim description, item list. Returns `''` if items is empty | **modified components (3)**<br>&nbsp;&nbsp;_(use "bit diff" to compare)_<br><br>&nbsp;&nbsp;&nbsp;› comp-a<br>&nbsp;&nbsp;&nbsp;› comp-b |
-| `formatItem(text, symbol?)`         | Indented item line (3-space + symbol + text). Defaults to `bulletSymbol`                   | &nbsp;&nbsp;&nbsp;› comp-a                                                                                                               |
-| `formatHint(text)`                  | Dim text for hints/timing                                                                  | _Finished. (1.2s)_                                                                                                                       |
-| `formatSuccessSummary(msg)`         | Green checkmark + green text                                                               | ✔ 5/5 compiled successfully                                                                                                             |
-| `formatWarningSummary(msg)`         | Warning symbol + yellow text                                                               | ⚠ 2/5 failed                                                                                                                            |
-| `joinSections(sections)`            | Filter empty strings, join with `\n\n`                                                     | —                                                                                                                                        |
-| `renderSections(sections, expand?)` | Render with collapsible section support                                                    | —                                                                                                                                        |
+| Function                            | Purpose                                                                                    | Example output                                                                                                                               |
+| ----------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `formatTitle(text)`                 | Bold white section title                                                                   | **modified components**                                                                                                                      |
+| `formatSection(title, desc, items)` | Full section: title with count, dim description, item list. Returns `''` if items is empty | **modified components (3)**<br/>&nbsp;&nbsp;_(use "bit diff" to compare)_<br/><br/>&nbsp;&nbsp;&nbsp;› comp-a<br/>&nbsp;&nbsp;&nbsp;› comp-b |
+| `formatItem(text, symbol?)`         | Indented item line (3-space + symbol + text). Defaults to `bulletSymbol`                   | &nbsp;&nbsp;&nbsp;› comp-a                                                                                                                   |
+| `formatHint(text)`                  | Dim text for hints/timing                                                                  | _Finished. (1.2s)_                                                                                                                           |
+| `formatSuccessSummary(msg)`         | Green checkmark + green text                                                               | ✔ 5/5 compiled successfully                                                                                                                 |
+| `formatWarningSummary(msg)`         | Warning symbol + yellow text                                                               | ⚠ 2/5 failed                                                                                                                                |
+| `joinSections(sections)`            | Filter empty strings, join with `\n\n`                                                     | —                                                                                                                                            |
+| `renderSections(sections, expand?)` | Render with collapsible section support                                                    | —                                                                                                                                            |
 
 ## Symbols
 
@@ -89,3 +89,44 @@ const title = formatTitle(`${warnSymbol} files with conflicts summary`);
 - `bit import` — `scopes/scope/importer/import.cmd.ts`
 - `bit merge` — `scopes/component/merging/merge-cmd.ts`
 - Shared merge helpers — `scopes/component/modules/merge-helper/merge-output.ts` (also used by `checkout`, `switch`, `lane merge`)
+- `bit add` — `scopes/component/tracker/add-cmd.ts`
+- `bit deps` (set/remove/unset/reset/eject/blame/diagnose) — `scopes/dependencies/dependencies/dependencies-cmd.ts`
+- `bit lint` — `scopes/defender/linter/lint.cmd.ts`
+- `bit link` — `scopes/workspace/install/link/link.cmd.ts`
+- `bit remove` / `bit delete` — `scopes/component/remove/remove-template.ts`, `delete-cmd.ts`
+- `bit fork` — `scopes/component/forking/fork.cmd.ts`
+- `bit recover` — `scopes/component/remove/recover-cmd.ts`
+- `bit scope rename` / `bit scope rename-owner` — `scopes/component/renaming/scope-rename.cmd.ts`, `scope-rename-owner.cmd.ts`
+- `bit remote` (add/del/list) — `scopes/harmony/global-config/remote-cmd.ts`
+- `bit init` — `scopes/harmony/host-initializer/init-cmd.ts`, `host-initializer.main.runtime.ts`
+- `bit clear-cache` — `scopes/workspace/clear-cache/clear-cache-cmd.ts`
+- `bit eject-conf` — `scopes/workspace/workspace/eject-conf.cmd.ts`
+- `bit scope set` — `scopes/workspace/workspace/scope-subcommands/scope-set.cmd.ts`
+- `bit deprecate` / `bit undeprecate` — `scopes/component/deprecation/deprecate-cmd.ts`, `undeprecate-cmd.ts`
+- `bit rename` — `scopes/component/renaming/rename.cmd.ts`
+- `bit move` — `scopes/component/mover/move-cmd.ts`
+- `bit aspect` (set/update/unset/get) — `scopes/harmony/aspect/aspect.cmd.ts`
+- `bit envs` (set/unset/update) — `scopes/workspace/workspace/envs-subcommands/`
+- `bit use` / `bit unuse` — `scopes/workspace/workspace/use.cmd.ts`, `unuse.cmd.ts`
+- `bit create` — `scopes/generator/generator/create.cmd.ts`
+- `bit stash` (save/load) — `scopes/component/stash/stash.cmd.ts`
+- `bit scope fork` — `scopes/component/forking/scope-fork.cmd.ts`
+- `bit format` — `scopes/defender/formatter/format.cmd.ts`
+- `bit validate` — `scopes/defender/validator/validate.cmd.ts`
+- `bit login` / `bit logout` / `bit whoami` — `scopes/cloud/cloud/login.cmd.ts`, `logout.cmd.ts`, `whoami.cmd.ts`
+- `bit build` — `scopes/pipelines/builder/build.cmd.ts`
+- `bit new` — `scopes/generator/generator/new.cmd.ts`
+- `bit merge-abort` — `scopes/lanes/merge-lanes/merge-abort.cmd.ts`
+- `bit merge-move` — `scopes/lanes/merge-lanes/merge-move.cmd.ts`
+- `bit envs` (list/get) — `scopes/envs/envs/envs.cmd.ts`
+- `bit capsule` (create/list/delete) — `scopes/workspace/workspace/capsule.cmd.ts`
+- `bit check-types` — `scopes/typescript/typescript/cmds/check-types.cmd.ts`
+- `bit fetch` — `scopes/scope/importer/fetch-cmd.ts`
+- `bit version-history` (build/show) — `scopes/scope/version-history/version-history-cmd.ts`
+- `bit artifacts` — `scopes/pipelines/builder/artifact/artifacts.cmd.ts`
+- `bit templates` — `scopes/generator/generator/templates.cmd.ts`
+- `bit npmrc` — `scopes/cloud/cloud/npmrc.cmd.ts`
+- `bit graph` — `scopes/component/graph/graph-cmd.ts`
+- `bit git merge-bitmaps` / `bit set-merge-driver` — `scopes/git/git/merge-bitmaps.cmd.ts`, `set-git-merge-driver.cmd.ts`
+- `bit pattern` — `scopes/workspace/workspace/pattern.cmd.ts`
+- `bit mcp setup` — `scopes/mcp/cli-mcp-server/setup-cmd.ts`

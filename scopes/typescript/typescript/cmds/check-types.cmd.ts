@@ -1,8 +1,8 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary, formatHint, errorSymbol } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError } from '@teambit/workspace';
-import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { TypescriptMain } from '../typescript.main.runtime';
 
@@ -39,7 +39,7 @@ useful for catching type issues before tagging, snapping or building components.
     const start = Date.now();
     const { tsserver, componentsCount } = await this.runDiagnosticOnTsServer(false, pattern, unmodified);
     if (!tsserver) {
-      const data = chalk.bold(`no components found to check.
+      const data = formatHint(`no components found to check.
 use "--unmodified" flag to check all components or specify the ids to check.
 otherwise, only new and modified components will be checked`);
       return { code: 0, data };
@@ -50,12 +50,12 @@ otherwise, only new and modified components will be checked`);
     if (tsserver.lastDiagnostics.length) {
       return {
         code: strict ? 1 : 0,
-        data: chalk.red(`${msg}. found errors in ${tsserver.lastDiagnostics.length} files.`),
+        data: `${errorSymbol} ${msg}. found errors in ${tsserver.lastDiagnostics.length} files.`,
       };
     }
     return {
       code: 0,
-      data: chalk.green(`${msg}. no errors were found.`),
+      data: formatSuccessSummary(`${msg}. no errors were found.`),
     };
   }
 

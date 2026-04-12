@@ -265,12 +265,12 @@ export class ComponentMap {
    * if the component dir has changed since the last tracking, re-scan the component-dir to get the
    * updated list of the files
    */
-  async trackDirectoryChangesHarmony(consumerPath: PathOsBasedAbsolute): Promise<void> {
+  async trackDirectoryChangesHarmony(consumerPath: PathOsBasedAbsolute, ignoredFiles?: string[]): Promise<void> {
     const trackDir = this.rootDir;
     if (!trackDir) {
       return;
     }
-    const gitIgnore = await getGitIgnoreHarmony(consumerPath);
+    const gitIgnore = await getGitIgnoreHarmony(consumerPath, ignoredFiles);
     this.files = await getFilesByDir(trackDir, consumerPath, gitIgnore);
   }
 
@@ -391,14 +391,17 @@ export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore
   }));
 }
 
-export async function getGitIgnoreHarmony(consumerPath: string): Promise<any> {
-  const ignoreList = await getIgnoreListHarmony(consumerPath);
+export async function getGitIgnoreHarmony(consumerPath: string, additionalPatterns?: string[]): Promise<any> {
+  const ignoreList = await getIgnoreListHarmony(consumerPath, additionalPatterns);
   return ignore().add(ignoreList);
 }
 
-export async function getIgnoreListHarmony(consumerPath: string): Promise<string[]> {
+export async function getIgnoreListHarmony(consumerPath: string, additionalPatterns?: string[]): Promise<string[]> {
   const ignoreList = await retrieveIgnoreList(consumerPath);
   // the ability to track package.json is deprecated since Harmony
   ignoreList.push(PACKAGE_JSON);
+  if (additionalPatterns?.length) {
+    ignoreList.push(...additionalPatterns);
+  }
   return ignoreList;
 }

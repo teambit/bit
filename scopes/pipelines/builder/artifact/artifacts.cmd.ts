@@ -1,4 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatTitle, formatSuccessSummary } from '@teambit/cli';
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { ComponentMain } from '@teambit/component';
@@ -53,7 +54,7 @@ use --out-dir to download artifacts locally for inspection or deployment purpose
     const list = await artifactExtractor.list();
     const grouped = artifactExtractor.groupResultsByAspect(list);
     const outputArtifacts = (aspectId: string, artifactData: ExtractorArtifactResult[]) => {
-      const title = chalk.green(aspectId);
+      const title = formatTitle(aspectId);
       const artifactDataStr = artifactData
         .map((artifact) => {
           const subTitle = chalk.white(`${artifact.taskName} (${artifact.artifactName})`);
@@ -71,7 +72,7 @@ use --out-dir to download artifacts locally for inspection or deployment purpose
       return `${idStr}\n${artifacts}`;
     };
     const footer = artifactsOpts.outDir
-      ? chalk.green('\n\nThe above files were saved successfully to the file system')
+      ? `\n\n${formatSuccessSummary('The above files were saved to the file system')}`
       : '';
     return grouped.map(outputResult).join('\n\n') + footer;
   }

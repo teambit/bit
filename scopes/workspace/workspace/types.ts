@@ -84,4 +84,11 @@ export interface WorkspaceExtConfig {
    * - `enableWorkspaceConfigWrite`.
    */
   externalPackageManager?: boolean;
+
+  /**
+   * List of file patterns to ignore from all components in the workspace.
+   * Uses gitignore syntax.
+   * Example: ["oxlint.config.json", "biome.json", "*.bak"]
+   */
+  ignoredFiles?: string[];
 }

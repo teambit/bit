@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary, formatHint, joinSections } from '@teambit/cli';
 import type { MergeLanesMain } from './merge-lanes.main.runtime';
 import { BitError } from '@teambit/bit-error';
 
@@ -47,12 +48,12 @@ in order to move all local merge changes to a new lane, you can simply create a 
       : `the default-scope ${chalk.bold(
           result.laneId.scope
         )}. you can change the lane's scope, before it is exported, with the "bit lane change-scope" command`;
-    const title = chalk.green(
-      `successfully added and checked out to the new lane ${chalk.bold(
+    const title = formatSuccessSummary(
+      `added and checked out to the new lane ${chalk.bold(
         result.alias || result.laneId.name
       )} based on lane ${chalk.bold(currentLane.name)}`
     );
-    const remoteScopeOutput = `this lane will be exported to ${remoteScopeOrDefaultScope}`;
-    return `${title}\n${remoteScopeOutput}`;
+    const remoteScopeOutput = formatHint(`this lane will be exported to ${remoteScopeOrDefaultScope}`);
+    return joinSections([title, remoteScopeOutput]);
   }
 }

@@ -283,6 +283,10 @@ Flags: --json, --include-deps
 write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions
 Flags: --target <workspace.jsonc|package.json>
 
+## bit details
+
+show expanded details from the last command that provided them (e.g. tag, snap)
+
 ## bit diff [component-pattern] [version] [to-version]
 
 compare component changes between versions or against the current workspace

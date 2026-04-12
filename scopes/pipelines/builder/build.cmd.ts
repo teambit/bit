@@ -1,10 +1,10 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatTitle, formatItem, formatSuccessSummary, formatHint, joinSections } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import prettyTime from 'pretty-time';
 import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import chalk from 'chalk';
 import type { BuilderMain } from './builder.main.runtime';
 import { IssuesClasses } from '@teambit/component-issues';
 
@@ -132,7 +132,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     // If pattern is provided, don't pass the unmodified flag as "all" - the pattern should take precedence
     const components = await this.workspace.getComponentsByUserInput(pattern ? false : unmodified, pattern, true);
     if (!components.length) {
-      return chalk.bold(
+      return formatHint(
         `no components found to build. use "--unmodified" flag to build all components or specify the ids to build, otherwise, only new and modified components will be built`
       );
     }
@@ -173,24 +173,21 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       this.logger.consoleFailure(msg);
     }
     envsExecutionResults.throwErrorsIfExist(loose);
-    return chalk.green(msg);
+    return formatSuccessSummary(msg);
   }
 
   private async getListTasks(componentIdStr: string): Promise<string> {
     const compId = await this.workspace.resolveComponentId(componentIdStr);
     const component = await this.workspace.get(compId);
     const results = this.builder.listTasks(component);
-    return `${chalk.green('Task List')}
-id:    ${results.id.toString()}
-envId: ${results.envId}
-
-${chalk.bold('Build Pipeline Tasks:')}
-${results.buildTasks.join('\n')}
-
-${chalk.bold('Tag Pipeline Tasks:')}
-${results.tagTasks.join('\n')}
-
-${chalk.bold('Snap Pipeline Tasks:')}
-${results.snapTasks.join('\n') || '<N/A>'}`;
+    const buildItems = results.buildTasks.map((t) => formatItem(t));
+    const tagItems = results.tagTasks.map((t) => formatItem(t));
+    const snapItems = results.snapTasks.length ? results.snapTasks.map((t) => formatItem(t)) : [formatItem('<N/A>')];
+    return joinSections([
+      `${formatTitle('Task List')}\nid:    ${results.id.toString()}\nenvId: ${results.envId}`,
+      `${formatTitle('Build Pipeline Tasks')}\n${buildItems.join('\n')}`,
+      `${formatTitle('Tag Pipeline Tasks')}\n${tagItems.join('\n')}`,
+      `${formatTitle('Snap Pipeline Tasks')}\n${snapItems.join('\n')}`,
+    ]);
   }
 }

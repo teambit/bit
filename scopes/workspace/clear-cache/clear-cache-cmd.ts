@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import chalk from 'chalk';
+import { formatTitle, formatItem, formatSuccessSummary, errorSymbol, joinSections } from '@teambit/cli';
 import type { ClearCacheMain } from './clear-cache.main.runtime';
 
 export default class ClearCacheCmd implements Command {
@@ -26,23 +26,21 @@ note: this cache has minimal impact on disk space. to free significant disk spac
     if (remote) {
       const success = await this.clearCache.clearRemoteCache(remote);
       if (success) {
-        return chalk.green(`successfully cleaned the cache of "${remote}"`);
+        return formatSuccessSummary(`cleaned the cache of "${remote}"`);
       }
-      return chalk.red(`failed cleaning the cache of "${remote}"`);
+      return `${errorSymbol} failed cleaning the cache of "${remote}"`;
     }
-    const { succeed, failed } = await this.clearCache.clearCache();
+    const { succeed, failed: failedCaches } = await this.clearCache.clearCache();
     const getSuccessOutput = () => {
       if (!succeed.length) return '';
-      const title = 'the following cache(s) have been cleared:';
-      const output = succeed.map((str) => `  ✔ ${str}`).join('\n');
-      return chalk.green(`${chalk.bold(title)}\n${output}`);
+      const items = succeed.map((str) => formatItem(str));
+      return `${formatSuccessSummary('caches cleared')}\n${items.join('\n')}`;
     };
     const getFailedOutput = () => {
-      if (!failed.length) return '';
-      const title = 'the following cache(s) failed to clear:';
-      const output = failed.map((str) => `  X ${str}`).join('\n');
-      return chalk.red(`${chalk.bold(title)}\n${output}`);
+      if (!failedCaches.length) return '';
+      const items = failedCaches.map((str) => formatItem(str, errorSymbol));
+      return `${errorSymbol} ${formatTitle('caches failed to clear')}\n${items.join('\n')}`;
     };
-    return `${getSuccessOutput()}\n${getFailedOutput()}`;
+    return joinSections([getSuccessOutput(), getFailedOutput()]);
   }
 }

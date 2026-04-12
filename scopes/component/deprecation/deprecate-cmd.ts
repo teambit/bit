@@ -1,5 +1,5 @@
-import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary, formatHint } from '@teambit/cli';
 import type { DeprecationMain } from './deprecation.main.runtime';
 
 export class DeprecateCmd implements Command {
@@ -33,9 +33,9 @@ deprecated components remain available but display warnings when installed or im
   async report([id]: [string], { newId, range }: { newId?: string; range?: string }): Promise<string> {
     const result = await this.deprecate(id, newId, range);
     if (result) {
-      return chalk.green(`the component "${id}" has been deprecated successfully`);
+      return formatSuccessSummary(`the component "${id}" has been deprecated successfully`);
     }
-    return chalk.bold(`the component "${id}" is already deprecated. no changes have been made`);
+    return formatHint(`the component "${id}" is already deprecated. no changes have been made`);
   }
 
   private async deprecate(id: string, newId?: string, range?: string): Promise<boolean> {
