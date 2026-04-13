@@ -703,7 +703,7 @@ export class LaneImportCmd implements Command {
       forceOurs?: boolean;
       forceTheirs?: boolean;
     }
-  ): Promise<string> {
+  ): Promise<string | Report> {
     if (forceOurs && forceTheirs) {
       throw new BitError('please use either --force-ours or --force-theirs, not both');
     }

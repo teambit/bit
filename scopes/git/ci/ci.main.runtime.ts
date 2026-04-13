@@ -587,7 +587,8 @@ export class CiMain {
     const checkoutResults = await this.checkout.checkout(checkoutProps);
 
     await this.workspace.bitMap.write('checkout head');
-    this.logger.console(checkoutOutput(checkoutResults, checkoutProps));
+    const output = checkoutOutput(checkoutResults, checkoutProps);
+    this.logger.console(typeof output === 'string' ? output : output.data);
 
     if (laneComponents?.length) {
       await this.restoreLaneConfigChanges(laneComponents);
