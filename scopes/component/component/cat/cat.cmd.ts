@@ -58,7 +58,7 @@ export class CatCmd implements Command {
 
   private findFile(files: { path: string; content: string }[], filePath: string) {
     const normalized = pathNormalizeToLinux(filePath);
-    const file = files.find((f) => f.path === normalized);
+    const file = files.find((f) => pathNormalizeToLinux(f.path) === normalized);
     if (!file) {
       const available = files.map((f) => f.path).join(', ');
       throw new BitError(`file "${filePath}" not found in component. available files: ${available}`);
@@ -68,7 +68,7 @@ export class CatCmd implements Command {
 
   private getConfig(component: Component) {
     const envsEntry = component.state.aspects.get(ENVS_ASPECT_ID);
-    const env = envsEntry?.config?.env as string | undefined;
+    const env = (envsEntry?.config?.env || envsEntry?.data?.id) as string | undefined;
 
     const depsManifest = component.getDependencies().toDependenciesManifest();
 
