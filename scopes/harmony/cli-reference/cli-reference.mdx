@@ -305,6 +305,25 @@ with no args, only workspace's capsules are deleted
 
 ---
 
+## cat
+
+**Description**: print source files or config of a component at a specific version
+
+`bit cat <component-id>`
+
+| **Arg**        |                        **Description**                         |
+| -------------- | :------------------------------------------------------------: |
+| `component-id` | component ID, optionally with @version (e.g. scope/name@1.0.0) |
+
+| **Option**      | **Option alias** | **Description**                                                          |
+| --------------- | :--------------: | ------------------------------------------------------------------------ |
+| `--file <path>` |       `-f`       | show only the specified file (relative to component root)                |
+| `--config`      |       `-c`       | show component configuration (env, dependencies) instead of source files |
+| `--all`         |       `-a`       | show both source files and configuration                                 |
+| `--json`        |       `-j`       | output as JSON                                                           |
+
+---
+
 ## check-types
 
 **Description**: validate TypeScript type correctness  
