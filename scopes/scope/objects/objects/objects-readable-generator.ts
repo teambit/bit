@@ -159,7 +159,7 @@ export class ObjectsReadableGenerator {
       const nullParentHashes = missingParentsHashes.filter((_, i) => !parentVersions[i]);
       if (nullParentHashes.length) {
         logger.warn(
-          `failed loading ${nullParentHashes.length} parent version(s) for ${component.id()}, missing: ${nullParentHashes.join(', ')}`
+          `ObjectsReadableGenerator.pushComponentObjects: failed loading ${nullParentHashes.length} parent version(s) for ${component.id()} (version: ${componentWithOptions.version}), missing: ${nullParentHashes.join(', ')}`
         );
       }
       allVersions.push(...(compact(parentVersions) as Version[]));
