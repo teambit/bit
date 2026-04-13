@@ -68,7 +68,7 @@ please fix the error and then run "bit checkout reset --all" to revert the compo
     if (typeof checkoutResult !== 'string') {
       const data = joinSections([checkoutResult.data, ...extraSections]);
       const details = checkoutResult.details ? joinSections([checkoutResult.details, ...extraSections]) : undefined;
-      return { data, code: checkoutResult.code, details } as Report;
+      return { data, code: checkoutResult.code, details };
     }
     return joinSections([checkoutResult, ...extraSections]);
   }

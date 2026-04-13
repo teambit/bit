@@ -162,7 +162,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       detachHead?: boolean;
       loose?: boolean;
     }
-  ): Promise<string> {
+  ): Promise<string | Report> {
     build = this.configStore.getConfigBoolean(CFG_FORCE_LOCAL_BUILD) || Boolean(build);
     if (ours || theirs) {
       throw new BitError(
@@ -230,7 +230,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       const extraSections = [localDeleteOutput, remoteDeleteOutput, readmeOutput];
       const data = joinSections([mergeResult.data, ...extraSections]);
       const details = mergeResult.details ? joinSections([mergeResult.details, ...extraSections]) : undefined;
-      return { data, code: mergeResult.code, details } as Report;
+      return { data, code: mergeResult.code, details };
     }
     return joinSections([mergeResult, localDeleteOutput, remoteDeleteOutput, readmeOutput]);
   }

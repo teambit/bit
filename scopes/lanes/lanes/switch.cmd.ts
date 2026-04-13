@@ -5,7 +5,7 @@ import {
   installationErrorOutput,
   compilationErrorOutput,
 } from '@teambit/component.modules.merge-helper';
-import type { Command, CommandOptions, Report } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { formatItem, formatSection, formatSuccessSummary, formatDetailsHint, joinSections } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { LanesMain } from './lanes.main.runtime';
@@ -145,6 +145,6 @@ ${COMPONENT_PATTERN_HELP}`,
 
     const data = buildOutput(getFailureOutputMinimal());
     const details = buildOutput(getFailureOutputDetailed());
-    return { data, code: 0, details } as Report;
+    return { data, code: 0, details };
   }
 }
