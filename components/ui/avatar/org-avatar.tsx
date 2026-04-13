@@ -10,6 +10,7 @@ export type OrgAvatarProps = {
   imageSize?: number;
   fontSize?: number;
   imgClassName?: string;
+  widthStretch?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function OrgAvatar({
@@ -19,6 +20,7 @@ export function OrgAvatar({
   fontSize = Math.round(size * 0.4),
   className,
   imgClassName,
+  widthStretch = true,
   children,
   ...rest
 }: OrgAvatarProps) {
@@ -26,7 +28,7 @@ export function OrgAvatar({
   const profileImageWithParams =
     profileImage && profileImage.startsWith('blob:')
       ? profileImage
-      : addAvatarQueryParams(profileImage, imageSize, styles.defaultAvatarBgColor);
+      : addAvatarQueryParams(profileImage, imageSize, styles.defaultAvatarBgColor, widthStretch);
 
   return (
     <div
@@ -37,12 +39,13 @@ export function OrgAvatar({
       {profileImageWithParams && (
         <img
           src={profileImageWithParams}
-          className={classNames(styles.avatarImg, profileImage.startsWith('blob:') && styles.blob, imgClassName)}
+          className={classNames(styles.avatarImg, imgClassName)}
         />
       )}
+      {!profileImage && 
       <span className={styles.defaultAvatar}>
         <i className="bitcon-organization" style={{ fontSize: `${fontSize}px`, lineHeight: `${size}px` }} />
-      </span>
+      </span>}
       {children}
     </div>
   );
