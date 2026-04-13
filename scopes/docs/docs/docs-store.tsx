@@ -1,9 +1,12 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
-// let docs = [];
+let root;
 
 export function addDocs(docs: any[]) {
   const Doc = docs[0];
-  ReactDOM.render(<Doc />, document.getElementById('root'));
+  if (!root) {
+    root = createRoot(document.getElementById('root')!);
+  }
+  root.render(<Doc />);
 }

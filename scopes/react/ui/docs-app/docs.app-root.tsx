@@ -1,14 +1,16 @@
 import type { DocsRootProps } from '@teambit/docs';
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { DocsApp } from './docs-app';
 
+let root;
+
 function DocsRoot({ componentId, docs, compositions, context }: DocsRootProps) {
-  ReactDOM.render(
-    <DocsApp componentId={componentId} docs={docs} compositions={compositions} context={context} />,
-    document.getElementById('root')
-  );
+  if (!root) {
+    root = createRoot(document.getElementById('root')!);
+  }
+  root.render(<DocsApp componentId={componentId} docs={docs} compositions={compositions} context={context} />);
 }
 
 // For backward compatibility - can be removed end of 2022

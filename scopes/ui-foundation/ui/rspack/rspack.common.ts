@@ -26,7 +26,6 @@ export function resolveAlias(opts?: { profile?: boolean }): Record<string, strin
   return {
     'react/jsx-runtime': require.resolve('react/jsx-runtime'),
     react: require.resolve('react'),
-    'react-dom/server': require.resolve('react-dom/server'),
     'react-dom': require.resolve('react-dom'),
     ...(opts?.profile && {
       'react-dom$': 'react-dom/profiling',

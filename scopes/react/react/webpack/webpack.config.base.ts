@@ -75,7 +75,6 @@ export default function (isEnvProduction = false): Configuration {
       alias: {
         'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime'),
         'react/jsx-runtime': require.resolve('react/jsx-runtime'),
-        'react-dom/server': require.resolve('react-dom/server'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',
