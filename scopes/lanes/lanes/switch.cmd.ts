@@ -5,8 +5,8 @@ import {
   installationErrorOutput,
   compilationErrorOutput,
 } from '@teambit/component.modules.merge-helper';
-import type { Command, CommandOptions } from '@teambit/cli';
-import { formatItem, formatSection, formatSuccessSummary, formatHint, joinSections } from '@teambit/cli';
+import type { Command, CommandOptions, Report } from '@teambit/cli';
+import { formatItem, formatSection, formatSuccessSummary, formatDetailsHint, joinSections } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { LanesMain } from './lanes.main.runtime';
 
@@ -104,11 +104,14 @@ ${COMPONENT_PATTERN_HELP}`,
     if (json) {
       return JSON.stringify({ components, failedComponents }, null, 4);
     }
-    const getFailureOutput = () => {
+    const hasSkippedComponents = failedComponents && failedComponents.length > 0 && !verbose;
+
+    const getFailureOutputMinimal = () => {
+      if (!hasSkippedComponents) return '';
+      return formatDetailsHint(`full list of ${failedComponents.length} skipped component(s)`);
+    };
+    const getFailureOutputDetailed = () => {
       if (!failedComponents || !failedComponents.length) return '';
-      if (!verbose) {
-        return formatHint(`switch skipped for ${failedComponents.length} component(s) (use --verbose to list them)`);
-      }
       const items = failedComponents.map((failedComponent) =>
         formatItem(`${chalk.bold(failedComponent.id.toString())} - ${failedComponent.unchangedMessage}`)
       );
@@ -127,12 +130,21 @@ ${COMPONENT_PATTERN_HELP}`,
       return gitBranchWarning ? chalk.yellow(`Warning: ${gitBranchWarning}`) : '';
     };
 
-    return joinSections([
-      getFailureOutput(),
-      getSuccessfulOutput(),
-      getGitBranchWarningOutput(),
-      installationErrorOutput(installationError),
-      compilationErrorOutput(compilationError),
-    ]);
+    const buildOutput = (failureOutput: string) =>
+      joinSections([
+        failureOutput,
+        getSuccessfulOutput(),
+        getGitBranchWarningOutput(),
+        installationErrorOutput(installationError),
+        compilationErrorOutput(compilationError),
+      ]);
+
+    if (!hasSkippedComponents) {
+      return buildOutput(getFailureOutputDetailed());
+    }
+
+    const data = buildOutput(getFailureOutputMinimal());
+    const details = buildOutput(getFailureOutputDetailed());
+    return { data, code: 0, details } as Report;
   }
 }

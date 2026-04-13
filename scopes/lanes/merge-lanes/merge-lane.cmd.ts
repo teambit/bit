@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import type { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions, Report } from '@teambit/cli';
 import { joinSections } from '@teambit/cli';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { mergeReport } from '@teambit/merging';
@@ -225,6 +225,13 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       (deleteResults.remoteResult || []).map((item) => removeTemplate(item, true))
     );
     const readmeOutput = deleteResults.readmeResult ? chalk.yellow(deleteResults.readmeResult) : '';
+
+    if (typeof mergeResult !== 'string') {
+      const extraSections = [localDeleteOutput, remoteDeleteOutput, readmeOutput];
+      const data = joinSections([mergeResult.data, ...extraSections]);
+      const details = mergeResult.details ? joinSections([mergeResult.details, ...extraSections]) : undefined;
+      return { data, code: mergeResult.code, details } as Report;
+    }
     return joinSections([mergeResult, localDeleteOutput, remoteDeleteOutput, readmeOutput]);
   }
 }

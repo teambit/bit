@@ -6,7 +6,7 @@ import { DEFAULT_LANE } from '@teambit/lane-id';
 import { checkoutOutput } from '@teambit/checkout';
 import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError } from '@teambit/workspace';
-import type { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions, Report } from '@teambit/cli';
 import {
   formatTitle,
   formatSection,
@@ -349,7 +349,7 @@ export class LaneCheckoutCmd implements Command {
 
   constructor(private lanes: LanesMain) {}
 
-  async report([historyId]: [string], opts: LaneCheckoutOpts): Promise<string> {
+  async report([historyId]: [string], opts: LaneCheckoutOpts): Promise<string | Report> {
     const result = await this.lanes.checkoutHistory(historyId, opts);
     return checkoutOutput(result, {}, `successfully checked out according to history-id: ${historyId}`);
   }
@@ -375,7 +375,7 @@ if you want to fork the lane from a certain point in history, use "lane checkout
 
   constructor(private lanes: LanesMain) {}
 
-  async report([historyId]: [string], opts: LaneCheckoutOpts): Promise<string> {
+  async report([historyId]: [string], opts: LaneCheckoutOpts): Promise<string | Report> {
     const result = await this.lanes.revertHistory(historyId, opts);
     return checkoutOutput(result, {}, `successfully reverted according to history-id: ${historyId}`);
   }
