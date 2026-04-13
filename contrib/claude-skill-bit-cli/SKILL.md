@@ -27,6 +27,7 @@ details - show expanded details from the last command that provided them (e.g. t
 
 Information & Analysis
 show <component-name> - display component metadata, dependencies, and configuration
+cat <component-id> - print source files or config of a component at a specific version
 graph [id] - visualize component dependencies as a graph image
 pattern <pattern> - test and validate component patterns
 list [remote-scope] - display components in workspace or remote scope
