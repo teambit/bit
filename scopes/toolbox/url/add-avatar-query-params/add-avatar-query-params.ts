@@ -1,4 +1,9 @@
-export function addAvatarQueryParams(url: string, size: string | number, defaultAvatarBgColor: string, widthStretch: boolean = true) {
+export function addAvatarQueryParams(
+  url: string,
+  size: string | number,
+  defaultAvatarBgColor: string,
+  widthStretch: boolean = true
+) {
   if (!url) return url;
 
   const intSize = typeof size === 'string' ? parseInt(size) : size;
