@@ -156,6 +156,12 @@ export class ObjectsReadableGenerator {
       });
       const missingParentsHashes = allParentsHashes.filter((h) => !h.isEqual(version.hash()));
       const parentVersions = await pMapSeries(missingParentsHashes, (parentHash) => parentHash.load(this.repo));
+      const nullParentHashes = missingParentsHashes.filter((_, i) => !parentVersions[i]);
+      if (nullParentHashes.length) {
+        logger.warn(
+          `failed loading ${nullParentHashes.length} parent version(s) for ${component.id()}, missing: ${nullParentHashes.join(', ')}`
+        );
+      }
       allVersions.push(...(compact(parentVersions) as Version[]));
       // note: don't bring the head. otherwise, component-delta of the head won't bring all history of this comp.
     }
