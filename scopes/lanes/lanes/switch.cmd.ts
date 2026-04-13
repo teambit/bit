@@ -104,15 +104,16 @@ ${COMPONENT_PATTERN_HELP}`,
     if (json) {
       return JSON.stringify({ components, failedComponents }, null, 4);
     }
-    const hasSkippedComponents = failedComponents && failedComponents.length > 0 && !verbose;
+    const skippedComponents = failedComponents ?? [];
+    const hasSkippedComponents = skippedComponents.length > 0 && !verbose;
 
     const getFailureOutputMinimal = () => {
       if (!hasSkippedComponents) return '';
-      return formatDetailsHint(`full list of ${failedComponents.length} skipped component(s)`);
+      return formatDetailsHint(`full list of ${skippedComponents.length} skipped component(s)`);
     };
     const getFailureOutputDetailed = () => {
-      if (!failedComponents || !failedComponents.length) return '';
-      const items = failedComponents.map((failedComponent) =>
+      if (!skippedComponents.length) return '';
+      const items = skippedComponents.map((failedComponent) =>
         formatItem(`${chalk.bold(failedComponent.id.toString())} - ${failedComponent.unchangedMessage}`)
       );
       return formatSection('switch skipped', '', items);

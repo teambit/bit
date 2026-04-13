@@ -419,6 +419,12 @@ describe('bit lane command', function () {
     it('should switch the component on the lane only', () => {
       expect(switchOutput).to.have.string('switched 1 components');
       expect(switchOutput).to.have.string('1 skipped component(s)');
+      expect(switchOutput).to.have.string('bit details');
+    });
+    it('bit details should show the full list of skipped components', () => {
+      const details = helper.command.runCmd('bit details');
+      expect(details).to.have.string('switch skipped');
+      expect(details).to.have.string('comp2');
     });
   });
 });
