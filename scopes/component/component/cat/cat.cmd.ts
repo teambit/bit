@@ -1,5 +1,6 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import type { Component } from '../component';
 import type { ComponentMain } from '../component.main.runtime';
 
@@ -35,6 +36,11 @@ export class CatCmd implements Command {
 
   private async getComponent(idStr: string) {
     const host = this.component.getHost();
+    if (!host) {
+      throw new BitError(
+        'unable to find a component host. please run this command from within a Bit workspace or scope'
+      );
+    }
     const id = await host.resolveComponentId(idStr);
     const component = await host.get(id);
     if (!component) {
@@ -51,7 +57,8 @@ export class CatCmd implements Command {
   }
 
   private findFile(files: { path: string; content: string }[], filePath: string) {
-    const file = files.find((f) => f.path === filePath);
+    const normalized = pathNormalizeToLinux(filePath);
+    const file = files.find((f) => f.path === normalized);
     if (!file) {
       const available = files.map((f) => f.path).join(', ');
       throw new BitError(`file "${filePath}" not found in component. available files: ${available}`);
