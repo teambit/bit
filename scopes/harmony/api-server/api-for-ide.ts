@@ -683,6 +683,50 @@ export class APIForIDE {
     };
   }
 
+  async getLaneDiffForIDE(): Promise<{
+    newCompsFrom: string[];
+    newCompsTo: string[];
+    compsWithDiff: {
+      id: string;
+      hasDiff: boolean;
+      filesDiff: { filePath: string; status: string; fromContent?: string; toContent?: string }[];
+      fieldsDiff?: { fieldName: string; diffOutput: string }[] | null;
+    }[];
+    compsWithNoChanges: string[];
+    toLaneName: string;
+    fromLaneName: string;
+    failures: { id: string; msg: string }[];
+  }> {
+    const currentLaneId = this.workspace.getCurrentLaneId();
+    if (currentLaneId.isDefault()) {
+      throw new Error('lane diff is not available on main');
+    }
+    const diffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
+    const diffResults = await diffGenerator.generate([]);
+    return {
+      newCompsFrom: diffResults.newCompsFrom,
+      newCompsTo: diffResults.newCompsTo,
+      compsWithDiff: diffResults.compsWithDiff.map((d) => ({
+        id: d.id.toString(),
+        hasDiff: d.hasDiff,
+        filesDiff: (d.filesDiff || []).map((f) => ({
+          filePath: f.filePath,
+          status: f.status,
+          fromContent: f.status === 'UNCHANGED' ? undefined : f.fromContent,
+          toContent: f.status === 'UNCHANGED' ? undefined : f.toContent,
+        })),
+        fieldsDiff: d.fieldsDiff,
+      })),
+      compsWithNoChanges: diffResults.compsWithNoChanges,
+      toLaneName: diffResults.toLaneName,
+      fromLaneName: diffResults.fromLaneName,
+      failures: diffResults.failures.map((f) => ({
+        id: f.id.toString(),
+        msg: f.msg,
+      })),
+    };
+  }
+
   getCurrentLaneName(includeScope = false): string {
     const currentLaneId = this.workspace.getCurrentLaneId();
     if (!includeScope) return currentLaneId.name;
