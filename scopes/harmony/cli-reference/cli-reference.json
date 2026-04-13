@@ -131,6 +131,43 @@
     ]
   },
   {
+    "name": "cat <component-id>",
+    "alias": "",
+    "options": [
+      [
+        "f",
+        "file <path>",
+        "show only the specified file (relative to component root)"
+      ],
+      [
+        "c",
+        "config",
+        "show component configuration (env, dependencies) instead of source files"
+      ],
+      [
+        "a",
+        "all",
+        "show both source files and configuration"
+      ],
+      [
+        "j",
+        "json",
+        "output as JSON"
+      ]
+    ],
+    "description": "print source files or config of a component at a specific version",
+    "extendedDescription": "",
+    "group": "info-analysis",
+    "private": false,
+    "skipWorkspace": true,
+    "arguments": [
+      {
+        "name": "component-id",
+        "description": "component ID, optionally with @version (e.g. scope/name@1.0.0)"
+      }
+    ]
+  },
+  {
     "name": "component-issues",
     "alias": "",
     "options": [
