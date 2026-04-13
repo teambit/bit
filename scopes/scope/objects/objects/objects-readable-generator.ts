@@ -1,6 +1,7 @@
 import pMapSeries from 'p-map-series';
 import { BitError } from '@teambit/bit-error';
 import { Readable } from 'stream';
+import { compact } from 'lodash';
 import type BitObject from './object';
 import type Repository from './repository';
 import type Ref from './ref';
@@ -155,7 +156,7 @@ export class ObjectsReadableGenerator {
       });
       const missingParentsHashes = allParentsHashes.filter((h) => !h.isEqual(version.hash()));
       const parentVersions = await pMapSeries(missingParentsHashes, (parentHash) => parentHash.load(this.repo));
-      allVersions.push(...(parentVersions as unknown as Version[]));
+      allVersions.push(...(compact(parentVersions) as Version[]));
       // note: don't bring the head. otherwise, component-delta of the head won't bring all history of this comp.
     }
     allVersions.push(version);
