@@ -1075,14 +1075,16 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     ) {
       componentVersion = new ComponentVersion(this, version.hash().toString());
     }
+    const resolvedVersion = componentVersion.version;
     const loadFileInstance = (ClassName) => async (file) => {
       const loadP = file.file.load(repository);
       const content: Source = await loadP;
       if (!content)
         throw new BitError(
-          `failed loading file ${file.relativePath} from the model of ${this.id()}@${versionStr}.
-the Source object is missing from the local scope. to fix, run:
-  bit import ${this.id()}@${versionStr} --objects --all-history`
+          `failed loading file ${file.relativePath} (ref: ${file.file.toString()}) from the model of ${this.id()}@${resolvedVersion}.
+The Source object is missing from the local scope.
+To fix, run:
+bit import ${this.id()}@${resolvedVersion} --objects --all-history`
         );
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
