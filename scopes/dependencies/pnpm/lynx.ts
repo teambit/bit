@@ -267,6 +267,7 @@ export async function install(
     forcedHarmonyVersion?: string;
     allowScripts?: Record<string, boolean | 'warn'>;
     dangerouslyAllowAllScripts?: boolean;
+    neverBuiltDependencies?: string[];
   } & Pick<
     InstallOptions,
     | 'autoInstallPeers'
@@ -366,6 +367,7 @@ export async function install(
     ...resolveScriptPolicies({
       allowScripts: options.allowScripts,
       dangerouslyAllowAllScripts: options.dangerouslyAllowAllScripts,
+      neverBuiltDependencies: options.neverBuiltDependencies,
     }),
     returnListOfDepsRequiringBuild: true,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
@@ -442,20 +444,24 @@ export async function install(
 type ScriptPolicyConfig = {
   allowScripts?: Record<string, boolean | 'warn'>;
   dangerouslyAllowAllScripts?: boolean;
+  neverBuiltDependencies?: string[];
 };
 
 function resolveScriptPolicies({
   allowScripts,
   dangerouslyAllowAllScripts,
+  neverBuiltDependencies,
 }: ScriptPolicyConfig): { allowBuilds: Record<string, boolean | string>; dangerouslyAllowAllBuilds?: boolean } {
-  if (dangerouslyAllowAllScripts) {
-    // Allow everything, but keep core-js denied by default (it was always in the legacy deny list).
-    return {
-      dangerouslyAllowAllBuilds: true,
-      allowBuilds: { 'core-js': false },
-    };
-  }
   const allowBuilds: Record<string, boolean | string> = {};
+  if (dangerouslyAllowAllScripts) {
+    // Allow everything, but deny explicit blocklist entries. core-js was always
+    // in the legacy deny list; merge in any caller-provided neverBuiltDependencies.
+    allowBuilds['core-js'] = false;
+    for (const pkg of neverBuiltDependencies ?? []) {
+      allowBuilds[pkg] = false;
+    }
+    return { dangerouslyAllowAllBuilds: true, allowBuilds };
+  }
   for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts ?? {})) {
     if (allowedScript === true || allowedScript === false) {
       allowBuilds[packageDescriptor] = allowedScript;
@@ -471,6 +477,9 @@ function resolveScriptPolicies({
     if (allowScripts?.[untrustedPkgName] !== true) {
       allowBuilds[untrustedPkgName] = false;
     }
+  }
+  for (const pkg of neverBuiltDependencies ?? []) {
+    allowBuilds[pkg] = false;
   }
   return { allowBuilds };
 }
