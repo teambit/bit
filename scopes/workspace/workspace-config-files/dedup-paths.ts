@@ -79,6 +79,7 @@ export function dedupePaths(
 
   const compPathExtendingHashMap = buildCompPathExtendingHashMap(extendingConfigFilesMap, envCompsDirsMap);
   const allPaths = Object.keys(compPathExtendingHashMap);
+  if (!allPaths.length) return [];
   const allPossibleDirs = getAllPossibleDirsFromPaths(allPaths, componentsRootDir);
   const allPathsPerFileHash: { [path: string]: string | null } = {}; // null when parent-dir has same amount of comps per env.
 
