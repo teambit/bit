@@ -104,6 +104,11 @@ delete capsules
 with no args, only workspace's capsules are deleted
 Flags: --scope-aspects, --all
 
+## bit cat <component-id>
+
+print source files or config of a component at a specific version
+Flags: --file <path>, --config, --all, --json
+
 ## bit check-types [component-pattern]
 
 validate TypeScript type correctness
