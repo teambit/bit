@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import ssri from 'ssri';
 import _ from 'lodash';
-import { pack } from '@pnpm/releasing.commands';
 import type { ComponentFactory } from '@teambit/component';
 import type { ComponentResult, ArtifactDefinition } from '@teambit/builder';
 import type { Capsule, IsolatorMain } from '@teambit/isolator';
@@ -133,6 +132,10 @@ export class Packer {
         warnings.push(`"package.json at ${cwd}" contain a snap version which is not a valid semver, can't pack it`);
         return { warnings, startTime, endTime: Date.now() };
       }
+      // Load @pnpm/releasing.commands lazily via dynamic import. The package is
+      // ESM in pnpm v11 and loading it through CJS require() at module top-level
+      // can trip Node's ESM-over-require path when invoked from a build capsule.
+      const { pack } = await import('@pnpm/releasing.commands');
       const { tarballPath: tgzName } = await pack.api({
         argv: { original: [] },
         dir: cwd,
