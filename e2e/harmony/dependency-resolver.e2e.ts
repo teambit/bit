@@ -1,8 +1,21 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
-import type { Modules } from '@pnpm/installing.modules-yaml';
-import { readModulesManifest } from '@pnpm/installing.modules-yaml';
+// `@pnpm/installing.modules-yaml` is ESM in pnpm v11 and can't be `require()`d
+// safely from this CJS test file. Read `.modules.yaml` directly instead.
+import yaml from 'js-yaml';
+
+type Modules = { hoistPattern?: string[] } & Record<string, unknown>;
+
+async function readModulesManifest(modulesDir: string): Promise<Modules | null> {
+  try {
+    const raw = await fs.readFile(path.join(modulesDir, '.modules.yaml'), 'utf8');
+    return yaml.load(raw) as Modules;
+  } catch (err: any) {
+    if (err?.code === 'ENOENT') return null;
+    throw err;
+  }
+}
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import rimraf from 'rimraf';
 import { Extensions } from '@teambit/legacy.constants';

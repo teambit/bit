@@ -1,7 +1,20 @@
 import path from 'path';
+import fs from 'fs-extra';
+import yaml from 'js-yaml';
 import chai, { expect } from 'chai';
-import { readModulesManifest } from '@pnpm/installing.modules-yaml';
 import chaiString from 'chai-string';
+
+// `@pnpm/installing.modules-yaml` is ESM in pnpm v11 and can't be `require()`d
+// safely from this CJS test file. Read `.modules.yaml` directly instead.
+async function readModulesManifest(modulesDir: string): Promise<Record<string, any> | null> {
+  try {
+    const raw = await fs.readFile(path.join(modulesDir, '.modules.yaml'), 'utf8');
+    return yaml.load(raw) as Record<string, any>;
+  } catch (err: any) {
+    if (err?.code === 'ENOENT') return null;
+    throw err;
+  }
+}
 
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';

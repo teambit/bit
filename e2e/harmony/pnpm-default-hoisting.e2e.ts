@@ -1,8 +1,22 @@
 import { expect } from 'chai';
 import path from 'path';
-import type { Modules } from '@pnpm/installing.modules-yaml';
-import { readModulesManifest } from '@pnpm/installing.modules-yaml';
+import fs from 'fs-extra';
+import yaml from 'js-yaml';
 import { Helper } from '@teambit/legacy.e2e-helper';
+
+// `@pnpm/installing.modules-yaml` is ESM in pnpm v11 and can't be `require()`d
+// safely from this CJS test file. Read `.modules.yaml` directly instead.
+type Modules = { hoistPattern?: string[]; publicHoistPattern?: string[] } & Record<string, unknown>;
+
+async function readModulesManifest(modulesDir: string): Promise<Modules | null> {
+  try {
+    const raw = await fs.readFile(path.join(modulesDir, '.modules.yaml'), 'utf8');
+    return yaml.load(raw) as Modules;
+  } catch (err: any) {
+    if (err?.code === 'ENOENT') return null;
+    throw err;
+  }
+}
 
 describe('pnpm install with default settings', function () {
   let helper: Helper;
