@@ -1,4 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatItem, formatSuccessSummary, joinSections } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
 import type { ForkingMain } from './forking.main.runtime';
@@ -35,11 +36,10 @@ export class ScopeForkCmd implements Command {
 
   async report([originalScope, newScope, pattern]: [string, string, string], options: ScopeForkOptions) {
     const forkedIds = await this.forking.forkScope(originalScope, newScope, pattern, options);
-    const title = chalk.green(
-      `successfully forked ${chalk.bold(originalScope)} into ${chalk.bold(
-        newScope || forkedIds[0].scope
-      )}. the following components were created`
-    );
-    return `${title}\n${forkedIds.map((id) => id.toString()).join('\n')}`;
+    const items = forkedIds.map((id) => formatItem(id.toString()));
+    return joinSections([
+      formatSuccessSummary(`forked ${chalk.bold(originalScope)} into ${chalk.bold(newScope || forkedIds[0].scope)}`),
+      items.join('\n'),
+    ]);
   }
 }

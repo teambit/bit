@@ -557,15 +557,23 @@ export class ScopeMain implements ComponentFactory {
    * 3. global config. so for example if a user logs in or out it would be reflected.
    * it's possible that other commands (e.g. `bit import`) modified these files, while these processes are running.
    * Because these data are kept in memory, they're not up to date anymore.
+   *
+   * @param watchOptions - chokidar watch options (ignoreInitial is always enforced to true)
+   * @param additionalPaths - extra paths to watch (e.g. IPC events dir, unmerged.json)
+   * @param onAdditionalFileChange - callback invoked when a file in additionalPaths changes
    */
-  async watchScopeInternalFiles(watchOptions: WatchOptions = {}) {
+  async watchScopeInternalFiles(
+    watchOptions: WatchOptions = {},
+    additionalPaths: string[] = [],
+    onAdditionalFileChange?: (filePath: string) => Promise<void>
+  ) {
     const scopeIndexFile = this.legacyScope.objects.scopeIndex.getPath();
     const remoteLanesDir = this.legacyScope.objects.remoteLanes.basePath;
     const globalStore = this.configStore.stores.global;
     const scopeStore = this.configStore.stores.scope;
     const globalConfigFile = globalStore.getPath();
     const scopeJsonPath = scopeStore.getPath();
-    const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile, scopeJsonPath];
+    const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile, scopeJsonPath, ...additionalPaths];
     // Use polling to reduce FSEvents stream consumption on macOS.
     // These files change infrequently (mainly during import/export operations),
     // so the small CPU overhead of polling is acceptable.
@@ -574,7 +582,8 @@ export class ScopeMain implements ComponentFactory {
       this.logger.debug(`watchSystemFiles has started, watching ${pathsToWatch.join(', ')}`);
     });
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    watcher.on('change', async (filePath) => {
+    watcher.on('all', async (event, filePath) => {
+      if (event !== 'change' && event !== 'add') return;
       if (filePath === scopeIndexFile) {
         this.logger.debug('scope index file has been changed, reloading it');
         await this.legacyScope.objects.reLoadScopeIndex();
@@ -588,6 +597,8 @@ export class ScopeMain implements ComponentFactory {
         this.logger.debug('scope.json file has been changed, reloading it');
         await scopeStore.invalidateCache();
         this.configStore.invalidateCache();
+      } else if (onAdditionalFileChange) {
+        await onAdditionalFileChange(filePath);
       } else {
         this.logger.error(
           'unknown file has been changed, please check why it is watched by scope.watchSystemFiles',

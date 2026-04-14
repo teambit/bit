@@ -491,7 +491,15 @@ export class DependencyResolverMain {
       ...defaultCreateFromComponentsOptions,
       ...options,
     };
-    const workspaceManifestFactory = new WorkspaceManifestFactory(this, this.aspectLoader);
+    const resolveEnvPeersFromRoot = context?.inCapsule ? false : (this.config.resolveEnvPeersFromRoot ?? true);
+    const forceEnvPeersToRoot = this.config.forceEnvPeersToRoot ?? false;
+    const workspaceManifestFactory = new WorkspaceManifestFactory(this,
+      this.aspectLoader,
+      this.logger,
+      resolveEnvPeersFromRoot,
+      forceEnvPeersToRoot
+    );
+    
     const res = await workspaceManifestFactory.createFromComponents(
       name,
       version,
@@ -604,7 +612,7 @@ export class DependencyResolverMain {
     }
   ): Promise<void> {
     try {
-      let componentsForCalc = components.map(({ component, componentRelativeDir }) => ({
+      const componentsForCalc = components.map(({ component, componentRelativeDir }) => ({
         component,
         componentRootDir: options.rootComponentsPath
           ? this.getComponentDirInBitRoots(component, {
@@ -615,11 +623,7 @@ export class DependencyResolverMain {
         pkgName: this.getPackageName(component),
         componentRelativeDir,
       }));
-      if (!isFeatureEnabled(DEPS_GRAPH)) {
-        // We need to optimize the performance of dependency graph calculation.
-        // Temporarily we only calculate it for a limited number of components.
-        componentsForCalc = componentsForCalc.slice(0, 10);
-      }
+
       await this.getPackageManager()?.calcDependenciesGraph?.({
         components: componentsForCalc,
         rootDir: options.rootDir,
@@ -897,7 +901,7 @@ export class DependencyResolverMain {
     const packageManager = this.getPackageManager();
     let peerDependencyIssues!: PeerDependencyIssuesByProjects;
     const installer = this.getInstaller();
-    const manifests = await installer.getComponentManifests({
+    const { manifests } = await installer.getComponentManifests({
       ...options,
       componentDirectoryMap,
       rootPolicy,
@@ -1161,9 +1165,14 @@ export class DependencyResolverMain {
     }
     const policy = envManifest?.policy;
     if (!policy) return undefined;
-    const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policy, {
-      includeLegacyPeersInSelfPolicy: envComponent && this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()),
-    });
+    const envId = envComponent?.id.toStringWithoutVersion();
+    const allPoliciesFromEnv = EnvPolicy.fromConfigObject(
+      policy,
+      {
+        includeLegacyPeersInSelfPolicy: envComponent && this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()),
+      },
+      envId
+    );
     return allPoliciesFromEnv;
   }
 
@@ -1217,9 +1226,11 @@ export class DependencyResolverMain {
       const policiesFromEnvConfig = await env.getDependencies();
       if (policiesFromEnvConfig) {
         const idWithoutVersion = options.envId.split('@')[0];
-        const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policiesFromEnvConfig, {
-          includeLegacyPeersInSelfPolicy: this.envs.isCoreEnv(idWithoutVersion),
-        });
+        const allPoliciesFromEnv = EnvPolicy.fromConfigObject(
+          policiesFromEnvConfig,
+          { includeLegacyPeersInSelfPolicy: this.envs.isCoreEnv(idWithoutVersion) },
+          idWithoutVersion
+        );
         return allPoliciesFromEnv;
       }
     }

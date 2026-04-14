@@ -173,6 +173,7 @@ export class PnpmPackageManager implements PackageManager {
       networkConfig,
       {
         autoInstallPeers: installOptions.autoInstallPeers ?? true,
+        dedupePeers: installOptions.dedupePeers ?? true,
         enableModulesDir: installOptions.enableModulesDir,
         engineStrict: installOptions.engineStrict ?? config.engineStrict,
         excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
@@ -384,8 +385,7 @@ export class PnpmPackageManager implements PackageManager {
   async findUsages(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string> {
     const lockfile = await readWantedLockfile(opts.lockfileDir, { ignoreIncompatible: false });
     if (!lockfile) return '';
-    const importerIds = Object.keys(lockfile.importers ?? {})
-      .filter((id) => !id.includes(`${BIT_ROOTS_DIR}/`));
+    const importerIds = Object.keys(lockfile.importers ?? {}).filter((id) => !id.includes(`${BIT_ROOTS_DIR}/`));
     const projectPaths = importerIds.map((id) => join(opts.lockfileDir, id));
     const importerInfoMap = new Map<string, ImporterInfo>();
     for (const importerId of importerIds) {
@@ -407,7 +407,7 @@ export class PnpmPackageManager implements PackageManager {
       },
       importerInfoMap,
       lockfile,
-      nameFormatter ({ manifest }) {
+      nameFormatter({ manifest }) {
         if ('componentId' in manifest) {
           const { scope, name } = manifest.componentId as { scope: string; name: string };
           return `${scope}/${name}`;
@@ -430,22 +430,30 @@ export class PnpmPackageManager implements PackageManager {
       return;
     }
     for (const { componentRootDir, componentRelativeDir, pkgName, component } of opts.components) {
-      const lockfile = structuredClone(originalLockfile);
       let compRootDir: string | undefined;
-      if (componentRootDir && !lockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
+      if (componentRootDir && !originalLockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
         compRootDir = componentRootDir.split('@')[0];
       } else {
         compRootDir = componentRootDir;
       }
-      if (!lockfile.importers[compRootDir as ProjectId]) {
-        // This will only happen if the env was not loaded correctly before install.
-        // But in this case we cannot calculate the dependency graph from the lockfile.
+      if (!originalLockfile.importers[compRootDir as ProjectId]) {
         continue;
       }
       const filterByImporterIds = [componentRelativeDir as ProjectId];
       if (compRootDir != null) {
         filterByImporterIds.push(compRootDir as ProjectId);
       }
+      // Only clone the importers that will be mutated, reuse the rest of the lockfile as-is
+      const clonedImporters: Record<string, any> = {};
+      for (const importerId of filterByImporterIds) {
+        if (originalLockfile.importers[importerId]) {
+          clonedImporters[importerId] = structuredClone(originalLockfile.importers[importerId]);
+        }
+      }
+      const lockfile = {
+        ...originalLockfile,
+        importers: { ...originalLockfile.importers, ...clonedImporters },
+      };
       for (const importerId of filterByImporterIds) {
         for (const depType of [
           'dependencies',

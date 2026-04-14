@@ -1,6 +1,8 @@
 import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
+import type { SchemaChangeFact } from '../schema-diff';
+import { diffMembers } from '../schema-diff-members';
 import { DocSchema } from './docs';
 import { ExpressionWithTypeArgumentsSchema } from './expression-with-arguments';
 import { SchemaRegistry } from '../schema-registry';
@@ -118,6 +120,11 @@ export class ClassSchema extends SchemaNode {
       implementNodes,
       decorators
     );
+  }
+
+  diff(other: SchemaNode): SchemaChangeFact[] {
+    if (!(other instanceof ClassSchema)) return super.diff(other);
+    return diffMembers(this.toObject(), other.toObject(), this, other);
   }
 
   static fromSchema(node: ClassSchema, memberTransformer: (_node: SchemaNode) => SchemaNode = (_node) => _node) {

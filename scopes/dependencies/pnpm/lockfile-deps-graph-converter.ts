@@ -117,15 +117,17 @@ function buildEdges(
     componentIdByPkgName: ComponentIdByPkgName;
   }
 ): DependencyEdge[] {
+  const replaceFileVersion = createFileVersionReplacer(componentIdByPkgName);
   const edges: DependencyEdge[] = [];
   for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
-    const neighbours = extractDependenciesFromSnapshot(snapshot);
+    const neighbours = extractDependenciesFromSnapshot(snapshot, replaceFileVersion);
+    const replacedDepPath = replaceFileVersion(depPath);
     const edge: DependencyEdge = {
-      id: depPath,
+      id: replacedDepPath,
       neighbours,
     };
-    const pkgId = dp.removeSuffix(depPath);
-    if (pkgId !== depPath) {
+    const pkgId = dp.removeSuffix(replacedDepPath);
+    if (pkgId !== replacedDepPath) {
       edge.attr = { pkgId };
     }
     if (snapshot.transitivePeerDependencies) {
@@ -138,14 +140,20 @@ function buildEdges(
       edges.push(edge);
     }
   }
+  for (const dep of directDependencies) {
+    dep.id = replaceFileVersion(dep.id);
+  }
   edges.push({
     id: DependenciesGraph.ROOT_EDGE_ID,
-    neighbours: replaceFileVersions(componentIdByPkgName, directDependencies),
+    neighbours: directDependencies,
   });
-  return replaceFileVersions(componentIdByPkgName, edges);
+  return edges;
 }
 
-function extractDependenciesFromSnapshot(snapshot: any): DependencyNeighbour[] {
+function extractDependenciesFromSnapshot(
+  snapshot: any,
+  replaceFileVersion: (s: string) => string
+): DependencyNeighbour[] {
   const dependencies: DependencyNeighbour[] = [];
 
   for (const { depTypeField, optional } of [
@@ -155,7 +163,7 @@ function extractDependenciesFromSnapshot(snapshot: any): DependencyNeighbour[] {
     for (const [name, ref] of Object.entries((snapshot[depTypeField] ?? {}) as Record<string, string>)) {
       const subDepPath = dp.refToRelative(ref, name);
       if (subDepPath != null) {
-        dependencies.push({ id: subDepPath, optional });
+        dependencies.push({ id: replaceFileVersion(subDepPath), optional });
       }
     }
   }
@@ -167,6 +175,9 @@ function buildPackages(
   lockfile: BitLockfileFile,
   { componentIdByPkgName }: { componentIdByPkgName: ComponentIdByPkgName }
 ): PackagesMap {
+  const replaceFileVersion = createFileVersionReplacer(componentIdByPkgName);
+  const depsRequiringBuild = lockfile.bit?.depsRequiringBuild;
+  const depsRequiringBuildSet = depsRequiringBuild ? new Set(depsRequiringBuild) : undefined;
   const packages: PackagesMap = new Map();
   for (const [pkgId, pkg] of Object.entries(lockfile.packages ?? {})) {
     const graphPkg = pick(pkg, [
@@ -186,7 +197,8 @@ function buildPackages(
     if (graphPkg.resolution.type === 'directory') {
       delete graphPkg.resolution;
     }
-    const parsed = dp.parse(pkgId);
+    const replacedPkgId = replaceFileVersion(pkgId);
+    const parsed = dp.parse(replacedPkgId);
     if (parsed.name && componentIdByPkgName.has(parsed.name)) {
       const compId = componentIdByPkgName.get(parsed.name)!;
       graphPkg.component = {
@@ -194,20 +206,29 @@ function buildPackages(
         scope: compId.scope,
       };
     }
-    if (lockfile.bit?.depsRequiringBuild?.includes(pkgId)) {
+    if (depsRequiringBuildSet?.has(pkgId)) {
       graphPkg.requiresBuild = true;
     }
-    packages.set(pkgId, graphPkg);
+    packages.set(replacedPkgId, graphPkg);
   }
-  return new Map(replaceFileVersions(componentIdByPkgName, Array.from(packages.entries())));
+  return packages;
 }
 
-function replaceFileVersions<T>(componentIdByPkgName: ComponentIdByPkgName, obj: T): T {
-  let s = JSON.stringify(obj);
+function createFileVersionReplacer(componentIdByPkgName: ComponentIdByPkgName): (s: string) => string {
+  if (componentIdByPkgName.size === 0) return (s) => s;
+
+  const replacements = new Map<string, string>();
+  const escapedNames: string[] = [];
   for (const [pkgName, componentId] of componentIdByPkgName.entries()) {
-    s = s.replaceAll(new RegExp(`${pkgName}@file:[^'"(]+`, 'g'), `${pkgName}@${snapToSemver(componentId.version)}`);
+    replacements.set(pkgName, `${pkgName}@${snapToSemver(componentId.version)}`);
+    escapedNames.push(pkgName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   }
-  return JSON.parse(s);
+  const pattern = new RegExp(`(${escapedNames.join('|')})@file:[^'"(]+`, 'g');
+
+  return (s: string) => {
+    if (!s.includes('@file:')) return s;
+    return s.replace(pattern, (_, name) => replacements.get(name)!);
+  };
 }
 
 export async function convertGraphToLockfile(

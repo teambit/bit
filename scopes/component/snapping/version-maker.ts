@@ -83,6 +83,7 @@ export class VersionMaker {
   private dependencyResolver: DependencyResolverMain;
   private allComponentsToTag: ConsumerComponent[] = [];
   private allWorkspaceComps?: Component[];
+  private batchId: string = '';
   constructor(
     private snapping: SnappingMain,
     private components: Component[],
@@ -106,7 +107,9 @@ export class VersionMaker {
     stagedConfig?: StagedConfig;
     removedComponents?: ComponentIdList;
     totalComponentsCount?: number;
+    batchId: string;
   }> {
+    this.batchId = v4();
     this.allWorkspaceComps = this.workspace ? await this.workspace.list() : undefined;
     const componentsToTag = this.getUniqCompsToTag();
     const idsToTag = ComponentIdList.fromArray(componentsToTag.map((c) => c.id));
@@ -146,6 +149,7 @@ export class VersionMaker {
         publishedPackages: [],
         stagedConfig,
         totalComponentsCount: this.allComponentsToTag.length,
+        batchId: this.batchId,
       };
     }
 
@@ -168,6 +172,7 @@ export class VersionMaker {
           detachHead,
           overrideHead: overrideHead,
         },
+        batchId: this.batchId,
       });
       if (this.workspace) {
         const modelComponent = component.modelComponent || (await this.legacyScope.getModelComponent(component.id));
@@ -213,6 +218,7 @@ export class VersionMaker {
       stagedConfig,
       removedComponents,
       totalComponentsCount: this.allComponentsToTag.length,
+      batchId: this.batchId,
     };
   }
 
@@ -278,7 +284,9 @@ export class VersionMaker {
     if (lane) {
       const { message } = this.params;
       const msgStr = message ? ` (${message})` : '';
-      const laneHistory = await this.legacyScope.lanes.updateLaneHistory(lane, `snap${msgStr}`);
+      // Use batchId as the lane history key so `bit reset` can identify and remove the
+      // corresponding entry when it deletes the snapped versions.
+      const laneHistory = await this.legacyScope.lanes.updateLaneHistory(lane, `snap${msgStr}`, this.batchId);
       this.legacyScope.objects.add(laneHistory);
     }
   }

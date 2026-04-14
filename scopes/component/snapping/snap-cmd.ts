@@ -1,8 +1,18 @@
 import chalk from 'chalk';
-import type { ComponentID } from '@teambit/component-id';
+import { countBy } from 'lodash';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
-import type { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions, Report } from '@teambit/cli';
+import {
+  formatItem,
+  formatSection,
+  formatTitle,
+  formatHint,
+  formatDetailsHint,
+  formatSuccessSummary,
+  warnSymbol,
+  joinSections,
+} from '@teambit/cli';
 import {
   NOTHING_TO_SNAP_MSG,
   AUTO_SNAPPED_MSG,
@@ -11,7 +21,7 @@ import {
 } from '@teambit/legacy.constants';
 import type { Logger } from '@teambit/logger';
 import type { SnappingMain, SnapResults } from './snapping.main.runtime';
-import { outputIdsIfExists } from './tag-cmd';
+import { outputIdsIfExists, compInBold } from './tag-cmd';
 import type { BasicTagSnapParams } from './version-maker';
 import type { ConfigStoreMain } from '@teambit/config-store';
 
@@ -138,11 +148,11 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     });
 
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
-    return snapResultOutput(results);
+    return snapResultReport(results);
   }
 }
 
-export function snapResultOutput(results: SnapResults): string {
+export function snapResultReport(results: SnapResults): string | Report {
   const {
     snappedComponents,
     autoSnappedResults,
@@ -156,45 +166,89 @@ export function snapResultOutput(results: SnapResults): string {
     return !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id);
   });
   const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
-  const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
-  const totalCount = totalComponentsCount ?? snappedComponents.length + autoTaggedCount;
+  const autoSnappedCount = autoSnappedResults ? autoSnappedResults.length : 0;
+  const totalCount = totalComponentsCount ?? snappedComponents.length + autoSnappedCount;
 
-  const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
-  const snapExplanation = `\n(use "bit export" to push these components to a remote")
-(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)`;
-
-  const compInBold = (id: ComponentID) => {
-    const version = id.hasVersion() ? `@${id.version}` : '';
-    return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
+  const formatCompMinimal = (component: ConsumerComponent): string => {
+    return formatItem(compInBold(component.id));
   };
 
-  const outputComponents = (comps: ConsumerComponent[]) => {
-    return comps
-      .map((component) => {
-        let componentOutput = `     > ${compInBold(component.id)}`;
-        const autoTag = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
-        if (autoTag.length) {
-          const autoTagComp = autoTag.map((a) => compInBold(a.component.id));
-          componentOutput += `\n       ${AUTO_SNAPPED_MSG} (${autoTagComp.length} total):
-          ${autoTagComp.join('\n            ')}`;
-        }
-        return componentOutput;
-      })
-      .join('\n');
+  const formatCompDetailed = (component: ConsumerComponent): string => {
+    let output = formatItem(compInBold(component.id));
+    const autoSnap = (autoSnappedResults ?? []).filter((result) =>
+      result.triggeredBy.searchWithoutVersion(component.id)
+    );
+    if (autoSnap.length) {
+      const autoSnapComp = autoSnap.map((a) => a.component.id.toString());
+      output += `\n     ${AUTO_SNAPPED_MSG} (${autoSnapComp.length} total):\n       ${autoSnapComp.join('\n       ')}`;
+    }
+    return output;
   };
 
-  const outputIfExists = (label, explanation, components) => {
-    if (!components.length) return '';
-    return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
+  const hasAutoSnapped = autoSnappedCount > 0;
+
+  const buildSections = (formatComp: (c: ConsumerComponent) => string) => {
+    const newSection = formatSection('new components', 'first version for components', addedComponents.map(formatComp));
+    const changedSection = formatSection(
+      'changed components',
+      'components that got a version bump',
+      changedComponents.map(formatComp)
+    );
+    return { newSection, changedSection };
   };
+
+  const removedSection = outputIdsIfExists('removed components', removedComponents);
+
+  const warningsSection =
+    warnings && warnings.length ? warnings.map((w) => `${warnSymbol} ${chalk.yellow(w)}`).join('\n') : '';
+
   const laneStr = laneName ? ` on "${laneName}" lane` : '';
-
-  return (
-    outputIfExists('new components', 'first version for components', addedComponents) +
-    outputIfExists('changed components', 'components that got a version bump', changedComponents) +
-    outputIdsIfExists('removed components', removedComponents) +
-    warningsOutput +
-    chalk.green(`\n${totalCount} component(s) snapped${laneStr}`) +
-    snapExplanation
+  const summary = formatSuccessSummary(`${totalCount} component(s) snapped${laneStr}`);
+  const snapExplanation = formatHint(
+    '(use "bit export" to push these components to a remote)\n(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)'
   );
+
+  // Build minimal output (no auto-snapped listing, just counts grouped by scope)
+  const { newSection, changedSection } = buildSections(hasAutoSnapped ? formatCompMinimal : formatCompDetailed);
+
+  const autoSnapSection = (() => {
+    if (!hasAutoSnapped) return '';
+    const scopeCounts = countBy(autoSnappedResults, (r) => r.component.id.scope);
+    const sorted = Object.entries(scopeCounts).sort(([, a], [, b]) => b - a);
+    const MAX_SHOWN = 4;
+    const shown = sorted.slice(0, MAX_SHOWN).map(([scope, n]) => `${scope} (${n})`);
+    const remaining = sorted.length - MAX_SHOWN;
+    const scopeLine = remaining > 0 ? [...shown, `+ ${remaining} more scopes`].join(' · ') : shown.join(' · ');
+    const title = formatTitle(`auto-snapped dependents (${autoSnappedCount})`);
+    const scopes = `   ${scopeLine}`;
+    const hint = formatDetailsHint('full list of auto-snapped dependents');
+    return `${title}\n${scopes}\n${hint}`;
+  })();
+
+  const footerParts = [summary, snapExplanation].filter(Boolean).join('\n');
+  const data = joinSections([
+    newSection,
+    changedSection,
+    autoSnapSection,
+    removedSection,
+    warningsSection,
+    footerParts,
+  ]);
+
+  if (!hasAutoSnapped) {
+    return data;
+  }
+
+  // Build detailed output (with full auto-snapped listing)
+  const { newSection: newDetailed, changedSection: changedDetailed } = buildSections(formatCompDetailed);
+  const detailedFooter = [summary, snapExplanation].filter(Boolean).join('\n');
+  const details = joinSections([newDetailed, changedDetailed, removedSection, warningsSection, detailedFooter]);
+
+  return { data, code: 0, details };
+}
+
+/** @deprecated use snapResultReport instead */
+export function snapResultOutput(results: SnapResults): string {
+  const result = snapResultReport(results);
+  return typeof result === 'string' ? result : result.details || result.data;
 }

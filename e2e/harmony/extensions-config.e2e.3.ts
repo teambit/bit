@@ -119,8 +119,10 @@ describe('harmony extension config', function () {
           });
           it('should auto tag the component when tagging the extension again', () => {
             output = helper.command.tagComponent('dummy-extension-without-logs', 'message', '--unmodified');
+            expect(output).to.have.string('2 component(s) tagged');
             expect(output).to.have.string('auto-tagged dependents');
-            expect(output).to.have.string('bar/foo@0.0.2');
+            const details = helper.command.runCmd('bit details');
+            expect(details).to.have.string('bar/foo@0.0.2');
           });
         });
         describe('tagging extension then component', () => {

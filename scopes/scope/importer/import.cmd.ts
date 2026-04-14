@@ -1,6 +1,16 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import {
+  formatSection,
+  formatItem,
+  formatTitle,
+  formatHint,
+  formatSuccessSummary,
+  warnSymbol,
+  errorSymbol,
+  joinSections,
+} from '@teambit/cli';
 import chalk from 'chalk';
-import { compact, uniq } from 'lodash';
+import { uniq } from 'lodash';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import {
   installationErrorOutput,
@@ -12,7 +22,7 @@ import {
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { immutableUnshift } from '@teambit/legacy.utils';
+
 import type { ImporterMain } from './importer.main.runtime';
 import type { ImportOptions, ImportDetails, ImportStatus, ImportResult } from './import-components';
 
@@ -172,44 +182,61 @@ without arguments, fetches all workspace components' latest versions from their 
         : `successfully imported ${importedIdsUniqNoVersion.length} components`;
 
     let upToDateCount = 0;
-    const importedComponents = importedIds.map((bitId) => {
-      const details = importDetails.find((c) => c.id === bitId.toStringWithoutVersion());
-      if (!details) throw new Error(`missing details for component ${bitId.toString()}`);
-      if (details.status === 'up to date') {
-        upToDateCount += 1;
-      }
-      return formatPlainComponentItemWithVersions(bitId, details);
-    });
+    const importedComponents = importedIds
+      .map((bitId) => {
+        const details = importDetails.find((c) => c.id === bitId.toStringWithoutVersion());
+        if (!details) throw new Error(`missing details for component ${bitId.toString()}`);
+        if (details.status === 'up to date') {
+          upToDateCount += 1;
+        }
+        return formatPlainComponentItemWithVersions(bitId, details);
+      })
+      .filter(Boolean) as string[];
+
     const getWsConfigUpdateLogs = () => {
       const logs = workspaceConfigUpdateResult?.logs;
       if (!logs || !logs.length) return '';
       const logsStr = logs.join('\n');
-      return `${chalk.underline('verbose logs of workspace config update')}\n${logsStr}`;
+      return `${formatTitle('verbose logs of workspace config update')}\n${logsStr}`;
     };
     const upToDateSuffix = lane ? ' on the lane' : '';
     const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date${upToDateSuffix}`;
     const summary = `${summaryPrefix}${upToDateStr}`;
-    const importOutput = compact(importedComponents).join('\n');
+
+    const importOutput = importedComponents.length ? formatSection('imported components', '', importedComponents) : '';
+
     const importedDepsOutput =
       importFlags.displayDependencies && importedDeps.length
-        ? immutableUnshift(
-            uniq(importedDeps.map(formatPlainComponentItem)),
-            chalk.green(`\n\nsuccessfully imported ${importedDeps.length} component dependencies`)
-          ).join('\n')
+        ? formatSection('imported component dependencies', '', uniq(importedDeps.map(formatPlainComponentItem)))
         : '';
 
-    const output = compact([
+    const getRemovedWarning = () => {
+      const removedDetails = importDetails.filter((d) => d.removed);
+      if (!removedDetails.length) return '';
+      const removedItems = removedDetails.map((d) => formatItem(chalk.bold(d.id), errorSymbol));
+      const hintBase = `run "bit recover <component-id>" to restore`;
+      const hintSuffix = lane ? `, then "bit lane merge main" to get latest updates` : '';
+      return joinSections([
+        formatSection(
+          'deleted components',
+          'imported component(s) are marked as deleted and may not be up to date',
+          removedItems
+        ),
+        formatHint(`${hintBase}${hintSuffix}`),
+      ]);
+    };
+
+    return joinSections([
       getWsConfigUpdateLogs(),
       importOutput,
       importedDepsOutput,
       formatMissingComponents(missingIds),
+      getRemovedWarning(),
       getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult),
       installationErrorOutput(installationError),
       compilationErrorOutput(compilationError),
-      chalk.green(summary),
-    ]).join('\n\n');
-
-    return output;
+      formatSuccessSummary(summary),
+    ]);
   }
 
   async json([ids]: [string[]], importFlags: ImportFlags) {
@@ -318,22 +345,18 @@ without arguments, fetches all workspace components' latest versions from their 
 
 function formatMissingComponents(missing?: string[]) {
   if (!missing?.length) return '';
-  const title = chalk.underline('Missing Components');
-  const subTitle = `The following components are missing from the remote in the requested version, try running "bit status" to re-sync your .bitmap file
-Also, check that the requested version exists on main or the checked out lane`;
-  const body = chalk.red(missing.join('\n'));
-  return `${title}\n${subTitle}\n${body}`;
+  const desc = `the following components are missing from the remote in the requested version, try running "bit status" to re-sync your .bitmap file\nalso, check that the requested version exists on main or the checked out lane`;
+  const items = missing.map((id) => formatItem(chalk.red(id), errorSymbol));
+  return formatSection('missing components', desc, items);
 }
 
 function formatPlainComponentItem({ scope, name, version, deprecated }: any) {
-  return chalk.cyan(
-    `- ${scope ? `${scope}/` : ''}${name}@${version ? version.toString() : 'latest'}  ${
-      deprecated ? chalk.yellow('[deprecated]') : ''
-    }`
-  );
+  const id = `${scope ? `${scope}/` : ''}${name}@${version ? version.toString() : 'latest'}`;
+  const suffix = deprecated ? ` ${chalk.yellow('[deprecated]')}` : '';
+  return formatItem(chalk.cyan(id) + suffix);
 }
 
-function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails: ImportDetails) {
+function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails: ImportDetails): string | undefined {
   const status: ImportStatus = importDetails.status;
   const id = bitId.toStringWithoutVersion();
   let usingLatest = '';
@@ -372,10 +395,11 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
     return undefined;
   }
 
-  const statusOutput = `- ${chalk.green(status)}`;
-  const idOutput = chalk.cyan(id);
-  const versionOutput = compact([versions, usedVersion]).join(', ');
+  const symbol = removed ? errorSymbol : deprecated ? warnSymbol : undefined;
+  const versionOutput = [versions, usedVersion].filter(Boolean).join(', ');
   const stateOutput = `${conflictMessage}${deprecated}${removed}`;
-  const output = compact([statusOutput, idOutput, versionOutput, stateOutput, missingDeps]).join(' ');
-  return chalk.dim(output);
+  const details = [chalk.green(status), chalk.cyan(id), versionOutput, stateOutput, missingDeps]
+    .filter(Boolean)
+    .join(' ');
+  return formatItem(chalk.dim(details), symbol);
 }

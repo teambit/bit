@@ -166,7 +166,7 @@ describe('component id with wildcard', function () {
           output = helper.command.exportIds('"*/fs/*"');
         });
         it('should indicate the exported components', () => {
-          expect(output).to.have.string('exported the following 2 component(s)');
+          expect(output).to.have.string('exported components (2)');
         });
         it('should export only the matched components', () => {
           const ls = helper.command.listRemoteScopeParsed();
@@ -203,7 +203,7 @@ describe('component id with wildcard', function () {
           output = helper.command.reset('"**/*/is/*"');
         });
         it('should indicate the untagged components', () => {
-          expect(output).to.have.string('2 component(s) were reset');
+          expect(output).to.have.string('2 component(s) reset successfully');
           expect(output).to.have.string('utils/is/string');
           expect(output).to.have.string('utils/is/type');
         });

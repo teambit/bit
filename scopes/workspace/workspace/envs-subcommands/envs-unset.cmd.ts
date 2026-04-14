@@ -1,6 +1,6 @@
 import type { Command } from '@teambit/cli';
+import { formatItem, formatSuccessSummary, formatHint, joinSections } from '@teambit/cli';
 import { PATTERN_HELP, COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import chalk from 'chalk';
 import type { Workspace } from '../workspace';
 import { installAfterEnvChangesMsg } from './envs-set.cmd';
 
@@ -26,9 +26,13 @@ ${PATTERN_HELP('env unset')}`;
     const componentIds = await this.workspace.idsByPattern(pattern);
     const { changed } = await this.workspace.unsetEnvFromComponents(componentIds);
     if (!changed.length) {
-      return chalk.yellow(`unable to find components matching the pattern with env configured in the .bitmap file`);
+      return formatHint(`unable to find components matching the pattern with env configured in the .bitmap file`);
     }
-    return `successfully removed .bitmap env configuration from the following component(s):
-${changed.map((id) => id.toString()).join('\n')}\n${installAfterEnvChangesMsg}`;
+    const items = changed.map((id) => formatItem(id.toString()));
+    return joinSections([
+      formatSuccessSummary('removed .bitmap env configuration from the following component(s)'),
+      items.join('\n'),
+      installAfterEnvChangesMsg,
+    ]);
   }
 }

@@ -180,6 +180,18 @@
           "type": "boolean",
           "description": "Tells pnpm to automatically install peer dependencies. It is true by default."
         },
+        "dedupePeers": {
+          "type": "boolean",
+          "description": "When true (default), pnpm will deduplicate peer dependencies. Set to false to disable peer dependency deduplication."
+        },
+        "resolveEnvPeersFromRoot": {
+          "type": "boolean",
+          "description": "When true (default), env peer dependencies from env.jsonc are resolved once and merged into the workspace root manifest, instead of being injected per-component. Conflicts between envs are resolved by picking the version satisfying the most envs."
+        },
+        "forceEnvPeersToRoot": {
+          "type": "boolean",
+          "description": "When true, ALL env peer dependencies are forced to the workspace root manifest, even when different envs specify conflicting versions. The best version is chosen and a warning is logged for unsatisfied envs. When false (default), conflicting peers without workspaceSingleton are injected per-component. Only applies when resolveEnvPeersFromRoot is true."
+        },
         "strictPeerDependencies": {
           "description": "If true, then Bit will add the '--strict-peer-dependencies' option when invoking package managers. This causes 'bit install' to fail if there are unsatisfied peer dependencies, which is an invalid state that can cause build failures or incompatible dependency versions. (For historical reasons, JavaScript package managers generally do not treat this invalid state as an error.) The default value is false to avoid legacy compatibility issues. It is strongly recommended to set strictPeerDependencies=true.",
           "type": "boolean",

@@ -25,6 +25,8 @@ export type PackageManagerInstallOptions = {
 
   installPeersFromEnvs?: boolean;
 
+  resolveEnvPeersFromRoot?: boolean;
+
   dependencyFilterFn?: DepsFilterFn;
 
   overrides?: Record<string, string>;
@@ -130,6 +132,11 @@ export type PackageManagerInstallOptions = {
    * Tells pnpm to automatically install peer dependencies. It is true by default.
    */
   autoInstallPeers?: boolean;
+
+  /**
+   * When true, pnpm will deduplicate peer dependencies where possible. It is enabled by default.
+   */
+  dedupePeers?: boolean;
 
   /**
    * Tells the package manager to return the list of dependencies that has to be built.

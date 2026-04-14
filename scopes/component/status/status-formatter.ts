@@ -10,7 +10,18 @@ import {
   statusWorkspaceIsCleanMsg,
   BASE_DOCS_DOMAIN,
 } from '@teambit/legacy.constants';
-import { compact, groupBy, partition } from 'lodash';
+import {
+  formatSection,
+  formatItem,
+  formatTitle,
+  bulletSymbol,
+  successSymbol,
+  warnSymbol,
+  errorSymbol,
+  joinSections,
+} from '@teambit/cli';
+import type { OutputSection } from '@teambit/cli';
+import { countBy, groupBy, partition } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import type { StatusResult } from './status.main.runtime';
 
@@ -28,7 +39,7 @@ export type StatusFormatterOptions = {
 export function formatStatusOutput(
   statusResult: StatusResult,
   options: StatusFormatterOptions = {}
-): { data: string; code: number } {
+): { data: string; code: number; sections?: OutputSection[] } {
   const { strict = false, verbose = false, warnings = false, failOnError = false } = options;
 
   const {
@@ -64,57 +75,50 @@ export function formatStatusOutput(
     showIssues = false,
     message?: string,
     localVersions?: string[],
-    showSoftTagMsg = true
+    showSoftTagMsg = true,
+    defaultSym?: string
   ): string {
     const idWithIssues = componentsWithIssues.find((c) => c.id.isEqual(id));
     const isSoftTagged = Boolean(softTaggedComponents.find((softTaggedId) => softTaggedId.isEqual(id)));
-    const getStatusText = () => {
-      if (message) return message;
-      if (idWithIssues) {
-        return idWithIssues.issues.hasTagBlockerIssues() ? statusFailureMsg : statusWarningsMsg;
-      }
-      return 'ok';
-    };
-    const getColor = () => {
-      if (message) return 'yellow';
-      if (idWithIssues) return idWithIssues.issues.hasTagBlockerIssues() ? 'red' : 'yellow';
-      return 'green';
-    };
-    const messageStatusText = getStatusText();
-    const messageStatusTextWithSoftTag =
-      isSoftTagged && showSoftTagMsg ? `${messageStatusText} (soft-tagged)` : messageStatusText;
-    const messageStatus = chalk[getColor()](messageStatusTextWithSoftTag);
-    let idFormatted = chalk.white('     > ') + chalk.cyan(id.toStringWithoutVersion());
+    const hasTagBlocker = idWithIssues?.issues.hasTagBlockerIssues();
+    const isClean = !message && !idWithIssues;
 
-    if (!showIssues && !localVersions) {
-      return `${idFormatted} ... ${messageStatus}`;
-    }
+    const getSymbol = () => {
+      if (message) return warnSymbol;
+      if (idWithIssues) return hasTagBlocker ? errorSymbol : warnSymbol;
+      return defaultSym ?? bulletSymbol;
+    };
+
+    let idFormatted = formatItem(chalk.cyan(id.toStringWithoutVersion()), getSymbol());
+
     if (localVersions) {
       if (verbose) {
-        idFormatted += `. versions: ${localVersions.join(', ')}`;
+        idFormatted += ` - versions: ${localVersions.join(', ')}`;
       } else {
         const [snaps, tags] = partition(localVersions, (version) => isHash(version));
         const tagsStr = tags.length ? `versions: ${tags.join(', ')}` : '';
         const snapsStr = snaps.length ? `${snaps.length} snap(s)` : '';
-        idFormatted += `. `;
-        idFormatted += tagsStr && snapsStr ? `${tagsStr}. and ${snapsStr}` : tagsStr || snapsStr;
+        idFormatted += ' - ';
+        idFormatted += tagsStr && snapsStr ? `${tagsStr}, ${snapsStr}` : tagsStr || snapsStr;
       }
     }
-    idFormatted += ' ... ';
+
     if (showIssues && idWithIssues) {
       showTroubleshootingLink = true;
-      const issuesTxt = idWithIssues.issues.hasTagBlockerIssues() ? statusFailureMsg : statusWarningsMsg;
-      const issuesColor = idWithIssues.issues.hasTagBlockerIssues() ? 'red' : 'yellow';
-      return `${idFormatted} ${chalk[issuesColor](issuesTxt)}${formatIssues(idWithIssues.issues)}`;
+      const issuesTxt = hasTagBlocker ? statusFailureMsg : statusWarningsMsg;
+      const issuesColor = hasTagBlocker ? 'red' : 'yellow';
+      return `${idFormatted} ... ${chalk[issuesColor](issuesTxt)}${formatIssues(idWithIssues.issues)}`;
     }
-    return `${idFormatted}${messageStatus}`;
-  }
 
-  function formatCategory(title: string, description: string, compsOutput: string[]) {
-    if (!compsOutput.length) return '';
-    const titleOutput = chalk.underline.white(`${title} (${compsOutput.length})`);
-    const descOutput = description ? `${description}\n` : '';
-    return [titleOutput, descOutput, ...compsOutput].join('\n');
+    if (isClean) {
+      const softTagSuffix = isSoftTagged && showSoftTagMsg ? chalk.green(' (soft-tagged)') : '';
+      return `${idFormatted}${softTagSuffix}`;
+    }
+
+    const statusText = message || (hasTagBlocker ? statusFailureMsg : statusWarningsMsg);
+    const statusColor: 'yellow' | 'red' = message ? 'yellow' : hasTagBlocker ? 'red' : 'yellow';
+    const statusTextWithSoftTag = isSoftTagged && showSoftTagMsg ? `${statusText} (soft-tagged)` : statusText;
+    return `${idFormatted} ... ${chalk[statusColor](statusTextWithSoftTag)}`;
   }
 
   const importPendingWarning = importPendingComponents.length ? chalk.yellow(`${IMPORT_PENDING_MSG}.\n`) : '';
@@ -132,55 +136,58 @@ export function formatStatusOutput(
       component.latestVersion && component.latestVersion !== component.headVersion
         ? ` latest: ${component.latestVersion}`
         : '';
-    return `    > ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} head: ${
-      component.headVersion
-    }${latest}`;
+    return formatItem(
+      `${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} head: ${component.headVersion}${latest}`,
+      warnSymbol
+    );
   });
-  const outdatedStr = formatCategory(outdatedTitle, outdatedDesc, outdatedComps);
+  const outdatedStr = formatSection(outdatedTitle, outdatedDesc, outdatedComps);
 
   const pendingMergeTitle = 'pending merge';
   const pendingMergeDesc = `(use "bit reset" to discard local tags/snaps, and bit checkout head to re-merge with the remote.
 alternatively, to keep local tags/snaps history, use "bit merge [component-id]")`;
   const pendingMergeComps = mergePendingComponents.map((component) => {
-    return `    > ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
-      component.divergeData.snapsOnSourceOnly.length
-    } (source) and ${component.divergeData.snapsOnTargetOnly.length} (target) uncommon snaps respectively`;
+    return formatItem(
+      `${chalk.cyan(component.id.toString())} local and remote have diverged and have ${component.divergeData.snapsOnSourceOnly.length} (source) and ${component.divergeData.snapsOnTargetOnly.length} (target) uncommon snaps respectively`,
+      warnSymbol
+    );
   });
 
-  const pendingMergeStr = formatCategory(pendingMergeTitle, pendingMergeDesc, pendingMergeComps);
+  const pendingMergeStr = formatSection(pendingMergeTitle, pendingMergeDesc, pendingMergeComps);
 
   const compDuringMergeTitle = 'components in merge state';
   const compDuringMergeDesc = `(use "bit snap/tag [--unmerged]" to complete the merge process.
 to cancel the merge operation, use either "bit lane merge-abort" (for prior "bit lane merge" command)
 or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
-  const compDuringMergeComps = componentsDuringMergeState.map((c) => format(c));
+  const compDuringMergeComps = componentsDuringMergeState.map((c) =>
+    format(c, false, undefined, undefined, true, warnSymbol)
+  );
 
-  const compDuringMergeStr = formatCategory(compDuringMergeTitle, compDuringMergeDesc, compDuringMergeComps);
+  const compDuringMergeStr = formatSection(compDuringMergeTitle, compDuringMergeDesc, compDuringMergeComps);
 
-  const newComponentDescription = '\n(use "bit snap/tag" to lock a version with all your changes)\n';
-  const newComponentsTitle = newComponents.length
-    ? chalk.underline.white('new components') + newComponentDescription
-    : '';
-
-  const newComponentsOutput = [newComponentsTitle, ...(nonMissing || []), ...(missing || [])].join('\n');
+  const newComponentDescription = '(use "bit snap/tag" to lock a version with all your changes)';
+  const newComponentsOutput = formatSection('new components', newComponentDescription, [
+    ...(nonMissing || []),
+    ...(missing || []),
+  ]);
 
   const modifiedDesc = '(use "bit diff" to compare changes)';
-  const modifiedComponentOutput = formatCategory(
+  const modifiedComponentOutput = formatSection(
     'modified components',
     modifiedDesc,
     modifiedComponents.map((c) => format(c))
   );
 
-  const autoTagPendingTitle = 'components pending auto-tag (when their modified dependencies are tagged)';
-  const autoTagPendingOutput = formatCategory(
-    autoTagPendingTitle,
-    '',
+  const autoTagPendingDesc = '(these will be auto-tagged when their modified dependencies are tagged)';
+  const autoTagPendingOutput = formatSection(
+    'components pending auto-tag',
+    autoTagPendingDesc,
     autoTagPendingComponents.map((c) => format(c))
   );
 
   const componentsWithIssuesToPrint = componentsWithIssues.filter((c) => c.issues.hasTagBlockerIssues() || warnings);
   const compWithIssuesDesc = '(fix the issues according to the suggested solution)';
-  const compWithIssuesOutput = formatCategory(
+  const compWithIssuesOutput = formatSection(
     'components with issues',
     compWithIssuesDesc,
     componentsWithIssuesToPrint.map((c) => format(c.id, true)).sort()
@@ -188,11 +195,11 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
 
   const invalidDesc = 'these components failed to load';
   const invalidComps = invalidComponents.map((c) => format(c.id, false, getInvalidComponentLabel(c.error))).sort();
-  const invalidComponentOutput = formatCategory(statusInvalidComponentsMsg, invalidDesc, invalidComps);
+  const invalidComponentOutput = formatSection(statusInvalidComponentsMsg, invalidDesc, invalidComps);
 
   const locallySoftRemovedDesc =
     '(tag/snap and export the components to update the deletion to the remote. to undo deletion, run "bit recover")';
-  const locallySoftRemovedOutput = formatCategory(
+  const locallySoftRemovedOutput = formatSection(
     'soft-removed components locally',
     locallySoftRemovedDesc,
     locallySoftRemoved.map((c) => format(c)).sort()
@@ -200,7 +207,7 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
 
   const remotelySoftRemovedDesc =
     '(use "bit remove" to remove them from the workspace. use "bit recover" to undo the deletion)';
-  const remotelySoftRemovedOutput = formatCategory(
+  const remotelySoftRemovedOutput = formatSection(
     'components deleted on the remote',
     remotelySoftRemovedDesc,
     remotelySoftRemoved.map((c) => format(c)).sort()
@@ -208,28 +215,28 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
 
   const stagedDesc = '(use "bit export" to push these component versions to the remote scope)';
   const stagedComps = stagedComponents.map((c) => format(c.id, false, undefined, c.versions));
-  const stagedComponentsOutput = formatCategory('staged components', stagedDesc, stagedComps);
+  const stagedComponentsOutput = formatSection('staged components', stagedDesc, stagedComps);
 
   const localOnlyDesc = '(these components are excluded from tag/snap/export commands)';
   const localOnlyComps = localOnly.map((c) => format(c)).sort();
-  const localOnlyComponentsOutput = formatCategory('local-only components', localOnlyDesc, localOnlyComps);
+  const localOnlyComponentsOutput = formatSection('local-only components', localOnlyDesc, localOnlyComps);
 
   const softTaggedDesc = '(use "bit tag --persist" to complete the tag)';
   const softTaggedComps = softTaggedComponents.map((id) => format(id, false, undefined, undefined, false));
-  const softTaggedComponentsOutput = formatCategory('soft-tagged components', softTaggedDesc, softTaggedComps);
+  const softTaggedComponentsOutput = formatSection('soft-tagged components', softTaggedDesc, softTaggedComps);
 
   const snappedDesc = '(use "bit tag" or "bit tag --snapped" to lock a semver version)';
-  const snappedComponentsOutput = formatCategory(
+  const snappedComponentsOutput = formatSection(
     'snapped components (tag pending)',
     snappedDesc,
     snappedComponents.map((c) => format(c))
   );
 
   const unavailableOnMainDesc = '(use "bit checkout head" to make them available)';
-  const unavailableOnMainOutput = formatCategory(
+  const unavailableOnMainOutput = formatSection(
     'components unavailable on main',
     unavailableOnMainDesc,
-    unavailableOnMain.map((c) => format(c))
+    unavailableOnMain.map((c) => format(c, false, undefined, undefined, true, warnSymbol))
   );
 
   const getUpdateFromMsg = (divergeData: SnapsDistance, from = 'main'): string => {
@@ -245,7 +252,7 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
   const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) =>
     format(c.id, false, getUpdateFromMsg(c.divergeData))
   );
-  const updatesFromMainOutput = formatCategory(
+  const updatesFromMainOutput = formatSection(
     'pending updates from main',
     updatesFromMainDesc,
     pendingUpdatesFromMainIds
@@ -258,7 +265,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
     const pendingUpdatesFromForkedIds = updatesFromForked.map((c) =>
       format(c.id, false, getUpdateFromMsg(c.divergeData, forkedLaneId.name))
     );
-    updatesFromForkedOutput = formatCategory(
+    updatesFromForkedOutput = formatSection(
       `updates from ${forkedLaneId.name}`,
       updatesFromForkedDesc,
       pendingUpdatesFromForkedIds
@@ -273,7 +280,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
 
   const getWorkspaceIssuesOutput = () => {
     if (!workspaceIssues.length) return '';
-    const title = chalk.underline.white('workspace issues');
+    const title = formatTitle('workspace issues');
     const issues = workspaceIssues.join('\n');
     return `\n\n${title}\n${issues}`;
   };
@@ -286,7 +293,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
 
   const statusMsg =
     importPendingWarning +
-    compact([
+    joinSections([
       outdatedStr,
       pendingMergeStr,
       updatesFromMainOutput,
@@ -304,11 +311,14 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
       invalidComponentOutput,
       locallySoftRemovedOutput,
       remotelySoftRemovedOutput,
-    ]).join(chalk.underline('\n                         \n') + chalk.white('\n')) +
+    ]) +
     showWarningsStr +
     troubleshootingStr;
 
-  const results = (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + getWorkspaceIssuesOutput() + getLaneStr();
+  const results =
+    (statusMsg || `${successSymbol()} ${chalk.yellow(statusWorkspaceIsCleanMsg)}`) +
+    getWorkspaceIssuesOutput() +
+    getLaneStr();
 
   // Determine exit code based on flags
   let exitCode = 0;
@@ -323,9 +333,74 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
     }
   }
 
+  // Build structured sections for interactive rendering
+  const sections: OutputSection[] = [];
+  if (importPendingWarning) {
+    sections.push({ content: importPendingWarning.trimEnd() });
+  }
+
+  const sectionEntries: Array<{ content: string; autoTag?: boolean }> = [
+    { content: outdatedStr },
+    { content: pendingMergeStr },
+    { content: updatesFromMainOutput },
+    { content: updatesFromForkedOutput },
+    { content: compDuringMergeStr },
+    { content: localOnlyComponentsOutput },
+    { content: newComponentsOutput },
+    { content: modifiedComponentOutput },
+    { content: snappedComponentsOutput },
+    { content: stagedComponentsOutput },
+    { content: softTaggedComponentsOutput },
+    { content: unavailableOnMainOutput },
+    { content: autoTagPendingOutput, autoTag: true },
+    { content: compWithIssuesOutput },
+    { content: invalidComponentOutput },
+    { content: locallySoftRemovedOutput },
+    { content: remotelySoftRemovedOutput },
+  ];
+
+  for (const entry of sectionEntries) {
+    if (!entry.content) continue;
+    if (entry.autoTag) {
+      const count = autoTagPendingComponents.length;
+      const scopeCounts = countBy(autoTagPendingComponents, (id) => id.scope);
+      const sorted = Object.entries(scopeCounts).sort(([, a], [, b]) => b - a);
+      const MAX_SHOWN = 4;
+      const shown = sorted.slice(0, MAX_SHOWN).map(([scope, n]) => `${scope} (${n})`);
+      const remaining = sorted.length - MAX_SHOWN;
+      const scopeLine = remaining > 0 ? [...shown, `+ ${remaining} more scopes`].join(' · ') : shown.join(' · ');
+      const title = formatTitle(`components pending auto-tag (${count})`);
+      const desc = chalk.dim(`  ${autoTagPendingDesc}`);
+      const scopes = `   ${scopeLine}`;
+      const hint = chalk.dim('— use --expand to list');
+      sections.push({
+        content: entry.content,
+        collapsible: {
+          summary: `${title}\n${desc}\n${scopes}  ${hint}`,
+        },
+      });
+    } else {
+      sections.push({ content: entry.content });
+    }
+  }
+
+  const suffixParts = [showWarningsStr.trim(), troubleshootingStr.trim()].filter(Boolean);
+  if (suffixParts.length) sections.push({ content: suffixParts.join('\n') });
+
+  const wsIssuesStr = getWorkspaceIssuesOutput().trim();
+  if (wsIssuesStr) sections.push({ content: wsIssuesStr });
+
+  const laneInfoStr = getLaneStr().trim();
+  if (laneInfoStr) sections.push({ content: laneInfoStr });
+
+  if (!sections.length) {
+    sections.push({ content: `${successSymbol()} ${chalk.yellow(statusWorkspaceIsCleanMsg)}` });
+  }
+
   return {
     data: results,
     code: exitCode,
+    sections,
   };
 }
 

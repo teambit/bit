@@ -92,7 +92,8 @@ describe('bit remove command', function () {
         output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/bar/foo`);
       });
       it('should show a successful message', () => {
-        expect(output).to.have.string(`removed components from the remote scope: ${helper.scopes.remote}/bar/foo`);
+        expect(output).to.have.string('removed components from the remote scope');
+        expect(output).to.have.string(`${helper.scopes.remote}/bar/foo`);
       });
       it('should remove the component from the remote scope', () => {
         const lsScope = helper.command.listRemoteScopeIds();
@@ -111,7 +112,7 @@ describe('bit remove command', function () {
     it('should not remove component with dependencies when -f flag is false', () => {
       const output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/${componentName}`);
       expect(output).to.have.string(
-        `error: unable to delete ${helper.scopes.remote}/${componentName}, because the following components depend on it:`
+        `unable to delete ${helper.scopes.remote}/${componentName}, because the following components depend on it`
       );
     });
     it('should remove component with dependencies when -f flag is true', () => {
@@ -150,7 +151,7 @@ describe('bit remove command', function () {
     });
     it('should not remove modified component ', () => {
       const output = helper.command.removeComponent('bar/foo@0.0.1');
-      expect(output).to.have.string('error: unable to remove modified components');
+      expect(output).to.have.string('unable to remove modified components');
       expect(output).to.have.string('bar/foo');
     });
   });
@@ -262,7 +263,7 @@ describe('bit remove command', function () {
           exportOutput = helper.command.export();
         });
         it('should export the deleted components', () => {
-          expect(exportOutput).to.have.string('2 component');
+          expect(exportOutput).to.have.string('exported components (2)');
         });
         it('bit status should be clean', () => {
           helper.command.expectStatusToBeClean();

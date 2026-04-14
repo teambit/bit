@@ -1,7 +1,13 @@
+@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
 .loader {
   color: var(--on-surface-neutral-low-color, #9598a1);
 }
 
 .currentUser {
   cursor: pointer;
+}
+
+:export {
+  menuZIndex: #{$modal-z-index + 1};
 }

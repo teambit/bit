@@ -114,7 +114,7 @@ import { HttpHelper } from '../http-helper';
       httpHelper.killHttp();
     });
     it('should export successfully', () => {
-      expect(exportOutput).to.have.string('exported the following 3 component');
+      expect(exportOutput).to.have.string('exported components (3)');
     });
     describe('bit log', () => {
       let logOutput: string;
@@ -144,7 +144,7 @@ import { HttpHelper } from '../http-helper';
       });
       it('should show descriptive error when removing component that has dependents', () => {
         const output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/comp2`);
-        expect(output).to.have.string(`error: unable to delete ${helper.scopes.remote}/comp2`);
+        expect(output).to.have.string(`unable to delete ${helper.scopes.remote}/comp2`);
         expect(output).to.have.string(`${helper.scopes.remote}/comp1`);
       });
       it('should remove successfully components that has no dependents', () => {

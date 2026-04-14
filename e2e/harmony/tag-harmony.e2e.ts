@@ -101,7 +101,7 @@ describe('tag components on Harmony', function () {
     });
     it('bit status should show the new components as soft tagged', () => {
       const status = helper.command.status();
-      expect(chalk.reset(status)).to.have.string('comp1 ... ok (soft-tagged)');
+      expect(chalk.reset(status)).to.have.string('comp1 (soft-tagged)');
     });
     describe('tagging with --persist flag', () => {
       before(() => {
@@ -374,7 +374,10 @@ describe('tag components on Harmony', function () {
       tagOutput = helper.command.tagWithoutBuild('comp3', '--unmodified --increment prerelease --prerelease-id dev');
     });
     it('should auto-tag dependents according to the pre-release version', () => {
-      expect(tagOutput).to.have.string('comp1@0.0.2-dev.0');
+      expect(tagOutput).to.have.string('3 component(s) tagged');
+      expect(tagOutput).to.have.string('auto-tagged dependents');
+      const details = helper.command.runCmd('bit details');
+      expect(details).to.have.string('comp1@0.0.2-dev.0');
     });
   });
   describe('invalid pre-release after normal tag', () => {
@@ -508,9 +511,9 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
     });
     it('should show correct output with versions from file', () => {
       const status = helper.command.status();
-      expect(status).to.have.string('comp1. versions: 2.0.0');
-      expect(status).to.have.string('comp2. versions: 0.1.0');
-      expect(status).to.have.string('comp3. versions: 1.5.0');
+      expect(status).to.have.string('comp1 - versions: 2.0.0');
+      expect(status).to.have.string('comp2 - versions: 0.1.0');
+      expect(status).to.have.string('comp3 - versions: 1.5.0');
     });
   });
   describe('maintain two main branches 1.x and 2.x, tagging the older branch 1.x with a patch', () => {

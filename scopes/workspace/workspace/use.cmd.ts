@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import chalk from 'chalk';
+import { formatSuccessSummary } from '@teambit/cli';
 import type { Workspace } from './workspace';
 
 export class UseCmd implements Command {
@@ -18,8 +18,8 @@ export class UseCmd implements Command {
 
   async report([id]: [string]): Promise<any> {
     const aspectIdAdded = await this.workspace.use(id);
-    return chalk.green(
-      `workspace.jsonc updated successfully! features and extensions from "${aspectIdAdded}" are now available.`
+    return formatSuccessSummary(
+      `workspace.jsonc updated! features and extensions from "${aspectIdAdded}" are now available.`
     );
   }
 }

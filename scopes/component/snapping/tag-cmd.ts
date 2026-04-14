@@ -1,6 +1,17 @@
 import chalk from 'chalk';
+import { countBy } from 'lodash';
 import type { ComponentIdList, ComponentID } from '@teambit/component-id';
-import type { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions, Report } from '@teambit/cli';
+import {
+  formatItem,
+  formatSection,
+  formatTitle,
+  formatHint,
+  formatDetailsHint,
+  formatSuccessSummary,
+  warnSymbol,
+  joinSections,
+} from '@teambit/cli';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { DEFAULT_BIT_RELEASE_TYPE, COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
 import { IssuesClasses } from '@teambit/component-issues';
@@ -124,7 +135,7 @@ use for official releases. for development versions, use 'bit snap' instead.`;
   ) {}
 
   // eslint-disable-next-line complexity
-  async report([patterns = []]: [string[]], options: TagParams): Promise<string> {
+  async report([patterns = []]: [string[]], options: TagParams): Promise<string | Report> {
     const {
       message = '',
       ver,
@@ -205,7 +216,7 @@ To undo local tag use the "bit reset" command.`
 
     const results = await this.snapping.tag(params);
     if (!results) return chalk.yellow(persist ? 'no soft-tag found' : NOTHING_TO_TAG_MSG);
-    return tagResultOutput(results);
+    return tagResultReport(results);
   }
 }
 
@@ -252,7 +263,7 @@ semver allows the following options only: ${RELEASE_TYPES.join(', ')}`);
   };
 }
 
-export function tagResultOutput(results: TagResults): string {
+export function tagResultReport(results: TagResults): string | Report {
   const {
     taggedComponents,
     autoTaggedResults,
@@ -267,88 +278,138 @@ export function tagResultOutput(results: TagResults): string {
   const autoTaggedCount = autoTaggedResults ? autoTaggedResults.length : 0;
   const totalCount = totalComponentsCount ?? taggedComponents.length + autoTaggedCount;
 
-  const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
-  const tagExplanationPersist = exportedIds
-    ? ''
-    : `\n(use "bit export" to push these components to a remote")
-(use "bit reset" to unstage versions)`;
-  const tagExplanationSoft = `\n(use "bit tag --persist" to persist the soft-tagged changes as a fully tagged version")
-(use "bit reset --soft" to remove the soft-tags)`;
-
-  const tagExplanation = results.isSoftTag ? tagExplanationSoft : tagExplanationPersist;
-
-  const compInBold = (id: ComponentID) => {
-    const version = id.hasVersion() ? `@${id.version}` : '';
-    return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
+  const formatCompMinimal = (component: ConsumerComponent): string => {
+    return formatItem(compInBold(component.id));
   };
 
-  const outputComponents = (comps: ConsumerComponent[]) => {
-    return comps
-      .map((component) => {
-        let componentOutput = `     > ${compInBold(component.id)}`;
-        const autoTag = autoTaggedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
-        if (autoTag.length) {
-          const autoTagComp = autoTag.map((a) => compInBold(a.component.id));
-          componentOutput += `\n       ${AUTO_TAGGED_MSG}:
-          ${autoTagComp.join('\n            ')}`;
-        }
-        return componentOutput;
-      })
-      .join('\n');
-  };
-
-  const publishOutput = () => {
-    const { publishedPackages } = results;
-    if (!publishedPackages || !publishedPackages.length) return '';
-    const successTitle = `\n\n${chalk.green(
-      `published the following ${publishedPackages.length} component(s) successfully\n`
-    )}`;
-    const successCompsStr = publishedPackages.join('\n');
-    const successOutput = successCompsStr ? successTitle + successCompsStr : '';
-    return successOutput;
-  };
-
-  const exportedOutput = () => {
-    if (!exportedIds) return '';
-    if (!exportedIds.length) return `\n${chalk.yellow('no component has been exported')}\n`;
-    const title = `\n${chalk.underline('exported components')}\n`;
-    const ids = exportedIds.map((id) => `     > ${compInBold(id)}`).join('\n');
-    return `${title}${ids}\n`;
+  const formatCompDetailed = (component: ConsumerComponent): string => {
+    let output = formatItem(compInBold(component.id));
+    const autoTag = (autoTaggedResults ?? []).filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
+    if (autoTag.length) {
+      const autoTagComp = autoTag.map((a) => a.component.id.toString());
+      output += `\n     ${AUTO_TAGGED_MSG}:\n       ${autoTagComp.join('\n       ')}`;
+    }
+    return output;
   };
 
   const softTagPrefix = results.isSoftTag ? 'soft-tagged ' : '';
-  const outputIfExists = (label: string, explanation: string, components: ConsumerComponent[]) => {
-    if (!components.length) return '';
-    return `\n${chalk.underline(softTagPrefix + label)}\n(${explanation})\n${outputComponents(components)}\n`;
-  };
-
   const newDesc = results.isSoftTag
     ? 'set to be tagged with first version for components when persisted'
     : 'first version for components';
   const changedDesc = results.isSoftTag
     ? 'components that are set to get a version bump when persisted'
     : 'components that got a version bump';
+
+  const buildSections = (formatComp: (c: ConsumerComponent) => string) => {
+    const newSection = formatSection(softTagPrefix + 'new components', newDesc, addedComponents.map(formatComp));
+    const changedSection = formatSection(
+      softTagPrefix + 'changed components',
+      changedDesc,
+      changedComponents.map(formatComp)
+    );
+    return { newSection, changedSection };
+  };
+
+  const removedSection = outputIdsIfExists('removed components', removedComponents);
+
+  const publishSection = (() => {
+    const { publishedPackages } = results;
+    if (!publishedPackages || !publishedPackages.length) return '';
+    const items = publishedPackages.map((pkg) => formatItem(pkg));
+    return formatSection('published components', '', items);
+  })();
+
+  const exportedSection = (() => {
+    if (!exportedIds) return '';
+    if (!exportedIds.length) return `${warnSymbol} ${chalk.yellow('no component has been exported')}`;
+    const items = exportedIds.map((id) => formatItem(compInBold(id)));
+    return formatSection('exported components', '', items);
+  })();
+
+  const warningsSection =
+    warnings && warnings.length ? warnings.map((w) => `${warnSymbol} ${chalk.yellow(w)}`).join('\n') : '';
+
+  const summaryMsg = `${totalCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged${exportedIds ? ' and exported' : ''}`;
+  const summary = formatSuccessSummary(summaryMsg);
+
+  const tagExplanation = results.isSoftTag
+    ? formatHint(
+        '(use "bit tag --persist" to persist the soft-tagged changes as a fully tagged version)\n(use "bit reset --soft" to remove the soft-tags)'
+      )
+    : exportedIds
+      ? ''
+      : formatHint('(use "bit export" to push these components to a remote)\n(use "bit reset" to unstage versions)');
+
   const softTagClarification = results.isSoftTag
     ? chalk.bold(
-        '\nkeep in mind that this is a soft-tag (changes recorded to be tagged), to persist the changes use --persist flag'
+        'keep in mind that this is a soft-tag (changes recorded to be tagged), to persist the changes use --persist flag'
       )
     : '';
-  return (
-    outputIfExists('new components', newDesc, addedComponents) +
-    outputIfExists('changed components', changedDesc, changedComponents) +
-    outputIdsIfExists('removed components', removedComponents) +
-    publishOutput() +
-    exportedOutput() +
-    warningsOutput +
-    chalk.green(
-      `\n${totalCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged${exportedIds ? ' and exported' : ''}`
-    ) +
-    tagExplanation +
-    softTagClarification
-  );
+
+  const hasAutoTagged = autoTaggedCount > 0;
+
+  // Build minimal output (no auto-tagged listing, just counts grouped by scope)
+  const { newSection, changedSection } = buildSections(hasAutoTagged ? formatCompMinimal : formatCompDetailed);
+
+  const autoTagSection = (() => {
+    if (!hasAutoTagged) return '';
+    const scopeCounts = countBy(autoTaggedResults, (r) => r.component.id.scope);
+    const sorted = Object.entries(scopeCounts).sort(([, a], [, b]) => b - a);
+    const MAX_SHOWN = 4;
+    const shown = sorted.slice(0, MAX_SHOWN).map(([scope, n]) => `${scope} (${n})`);
+    const remaining = sorted.length - MAX_SHOWN;
+    const scopeLine = remaining > 0 ? [...shown, `+ ${remaining} more scopes`].join(' · ') : shown.join(' · ');
+    const title = formatTitle(`auto-tagged dependents (${autoTaggedCount})`);
+    const scopes = `   ${scopeLine}`;
+    const hint = formatDetailsHint('full list of auto-tagged dependents');
+    return `${title}\n${scopes}\n${hint}`;
+  })();
+
+  const footerParts = [summary, tagExplanation, softTagClarification].filter(Boolean).join('\n');
+  const data = joinSections([
+    newSection,
+    changedSection,
+    autoTagSection,
+    removedSection,
+    publishSection,
+    exportedSection,
+    warningsSection,
+    footerParts,
+  ]);
+
+  if (!hasAutoTagged) {
+    return data;
+  }
+
+  // Build detailed output (with full auto-tagged listing)
+  const { newSection: newDetailed, changedSection: changedDetailed } = buildSections(formatCompDetailed);
+  const detailedFooter = [summary, tagExplanation, softTagClarification].filter(Boolean).join('\n');
+  const details = joinSections([
+    newDetailed,
+    changedDetailed,
+    removedSection,
+    publishSection,
+    exportedSection,
+    warningsSection,
+    detailedFooter,
+  ]);
+
+  return { data, code: 0, details };
+}
+
+/** @deprecated use tagResultReport instead */
+export function tagResultOutput(results: TagResults): string {
+  const result = tagResultReport(results);
+  return typeof result === 'string' ? result : result.details || result.data;
+}
+
+export function compInBold(id: ComponentID): string {
+  const version = id.hasVersion() ? `@${id.version}` : '';
+  return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
 }
 
 export function outputIdsIfExists(label: string, ids?: ComponentIdList) {
   if (!ids?.length) return '';
-  return `\n${chalk.underline(label)}\n${ids.map((id) => id.toStringWithoutVersion()).join('\n')}\n`;
+  const items = ids.map((id) => formatItem(id.toStringWithoutVersion(), warnSymbol));
+  return formatSection(label, '', items);
 }

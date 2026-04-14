@@ -1498,7 +1498,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     if (!this.envs.isUsingEnvEnv(env)) {
       this.warnedAboutMisconfiguredEnvs.push(envId);
       this.logger.consoleWarning(
-        `env "${envId}" is not of type env. (correct the env's type, or component config with "bit env set ${envId} teambit.envs/env")`
+        `env "${envId}" is not of type env. (correct the env's type, or component config with "bit env set ${envId} bitdev.general/envs/bit-env")`
       );
     }
   }
@@ -1743,6 +1743,12 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       return bitId;
     }
     return undefined;
+  }
+
+  private resolveIdFromRootDir(id: string | BitId | ComponentID): ComponentID | undefined {
+    if (typeof id !== 'string') return undefined;
+    const normalized = path.posix.normalize(pathNormalizeToLinux(id)).replace(/^\.\//, '');
+    return this.consumer.bitMap.getComponentIdByRootPath(normalized);
   }
 
   private async componentConfigFileFromComponentDirAndName(
@@ -1991,6 +1997,8 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
    * Transform the id to ComponentId and get the exact id as appear in bitmap
    */
   async resolveComponentId(id: string | BitId | ComponentID): Promise<ComponentID> {
+    const idFromPath = this.resolveIdFromRootDir(id);
+    if (idFromPath) return idFromPath;
     if (id instanceof BitId && id.hasScope() && id.hasVersion()) {
       // an optimization to make it faster when BitId is passed
       return ComponentID.fromLegacy(id);
@@ -2251,7 +2259,15 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     if (!envJson) {
       throw new BitError(`unable to find env.jsonc file in ${envId}`);
     }
-    const envManifest: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
+    let envManifest: EnvJsonc;
+    try {
+      envManifest = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
+    } catch (err: any) {
+      const filePath = envJson.path || envJson.relative;
+      throw new BitError(
+        `Syntax error in env.jsonc for "${envId}" (${filePath}): ${err.message}. Please check the file for invalid JSONC syntax.`
+      );
+    }
 
     return envManifest;
   }

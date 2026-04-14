@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import { EmptyWorkspace } from '@teambit/workspace.ui.empty-workspace';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
@@ -15,7 +15,7 @@ import { H3 } from '@teambit/design.ui.heading';
 import { WorkspaceContext } from '../workspace-context';
 import { LinkPlugin } from './link-plugin';
 import { useWorkspaceAggregation } from './use-workspace-aggregation';
-import { useQueryParamWithDefault } from './use-query-param-with-default';
+import { useQueryParamWithDefault, useListParamWithDefault } from './use-query-param-with-default';
 import type { AggregationType } from './workspace-overview.types';
 import { WorkspaceFilterPanel } from './workspace-filter-panel';
 import styles from './workspace-overview.module.scss';
@@ -53,8 +53,8 @@ export function WorkspaceOverview() {
   );
 
   const [aggregation, setAggregation] = useQueryParamWithDefault<AggregationType>('aggregation', 'namespaces');
-  const [activeNamespaces, setActiveNamespaces] = useState<string[]>([]);
-  const [activeScopes, setActiveScopes] = useState<string[]>([]);
+  const [activeNamespaces, setActiveNamespaces] = useListParamWithDefault('ns');
+  const [activeScopes, setActiveScopes] = useListParamWithDefault('scopes');
 
   const filters = useMemo(
     () => ({ namespaces: activeNamespaces, scopes: activeScopes }),

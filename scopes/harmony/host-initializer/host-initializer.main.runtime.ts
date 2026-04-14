@@ -13,7 +13,7 @@ import { WorkspaceConfig } from '@teambit/config';
 import type { SetupOptions, RulesOptions } from '@teambit/mcp.mcp-config-writer';
 import { McpConfigWriter } from '@teambit/mcp.mcp-config-writer';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime, formatSuccessSummary, formatHint, formatTitle } from '@teambit/cli';
 import { ObjectsWithoutConsumer } from './objects-without-consumer';
 import { HostInitializerAspect } from './host-initializer.aspect';
 import { InitCmd } from './init-cmd';
@@ -178,10 +178,11 @@ export class HostInitializerMain {
   static async promptForPackageManager(): Promise<boolean> {
     try {
       const response = (await prompt({
-        type: 'confirm',
+        type: 'toggle',
         name: 'useExternalPackageManager',
         message: 'Would you like to use your own package manager (npm/yarn/pnpm) instead of Bit?',
-        initial: false,
+        enabled: 'Yes',
+        disabled: 'No',
         cancel: promptCancel,
       } as any)) as { useExternalPackageManager: boolean };
 
@@ -197,10 +198,11 @@ export class HostInitializerMain {
   static async promptForMcpServer(): Promise<string | null> {
     try {
       const setupMcp = (await prompt({
-        type: 'confirm',
+        type: 'toggle',
         name: 'setupMcp',
         message: 'Would you like to set up the MCP server for AI-powered development?',
-        initial: false,
+        enabled: 'Yes',
+        disabled: 'No',
         cancel: promptCancel,
       } as any)) as { setupMcp: boolean };
 
@@ -321,33 +323,35 @@ node_modules
     resetScope: boolean,
     interactiveConfig: InteractiveConfig | null
   ): string {
-    let initMessage = `${chalk.green('successfully initialized a bit workspace.')}`;
+    let initMessage = formatSuccessSummary('initialized a bit workspace.');
 
-    if (!created) initMessage = `${chalk.grey('successfully re-initialized a bit workspace.')}`;
-    if (reset) initMessage = `${chalk.grey('your bit workspace has been reset successfully.')}`;
-    if (resetHard) initMessage = `${chalk.grey('your bit workspace has been hard-reset successfully.')}`;
-    if (resetScope) initMessage = `${chalk.grey('your local scope has been reset successfully.')}`;
+    if (!created) initMessage = formatHint('successfully re-initialized a bit workspace.');
+    if (reset) initMessage = formatHint('your bit workspace has been reset successfully.');
+    if (resetHard) initMessage = formatHint('your bit workspace has been hard-reset successfully.');
+    if (resetScope) initMessage = formatHint('your local scope has been reset successfully.');
 
     // Add additional information for interactive mode
     if (interactiveConfig) {
-      initMessage += `\n\n${chalk.cyan('ℹ️  Additional Information:')}`;
+      initMessage += `\n\n${formatTitle('Additional Information')}`;
       const defaultDirectory = interactiveConfig?.defaultDirectory || 'bit-components/{scope}/{name}';
-      initMessage += `\n📁 Components will be created in: ${chalk.cyan(defaultDirectory)}`;
-      initMessage += `\n📖 For CI/CD setup, visit: ${chalk.underline('https://bit.dev/docs/getting-started/collaborate/exporting-components#custom-ci/cd-setup')}`;
+      initMessage += `\n  Components will be created in: ${chalk.cyan(defaultDirectory)}`;
+      initMessage += `\n  For CI/CD setup, visit: https://bit.dev/docs/getting-started/collaborate/exporting-components#custom-ci/cd-setup`;
 
       if (interactiveConfig.generator) {
-        initMessage += `\n🎯 Environment: ${chalk.cyan(interactiveConfig.generator)}`;
+        initMessage += `\n  Environment: ${chalk.cyan(interactiveConfig.generator)}`;
       }
 
       if (interactiveConfig.mcpEditor) {
-        initMessage += `\n🤖 MCP server configured for: ${chalk.cyan(interactiveConfig.mcpEditor)}`;
+        initMessage += `\n  MCP server configured for: ${chalk.cyan(interactiveConfig.mcpEditor)}`;
       }
 
       if (interactiveConfig.externalPackageManager) {
-        initMessage += `\n📦 External package manager mode enabled`;
-        initMessage += `\n💡 Run ${chalk.cyan('pnpm install')} (or ${chalk.cyan('yarn install')}/${chalk.cyan('npm install')}) to install dependencies`;
+        initMessage += `\n  External package manager mode enabled`;
+        initMessage += formatHint(
+          `\n  Run ${chalk.cyan('pnpm install')} (or ${chalk.cyan('yarn install')}/${chalk.cyan('npm install')}) to install dependencies`
+        );
       } else if (interactiveConfig.generator) {
-        initMessage += `\n💡 Run ${chalk.cyan('bit install')} to install dependencies`;
+        initMessage += formatHint(`\n  Run ${chalk.cyan('bit install')} to install dependencies`);
       }
     }
 

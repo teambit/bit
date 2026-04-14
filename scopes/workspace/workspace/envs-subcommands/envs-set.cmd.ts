@@ -1,9 +1,10 @@
 import type { Command } from '@teambit/cli';
+import { formatItem, formatSuccessSummary, formatHint, joinSections } from '@teambit/cli';
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { Workspace } from '../workspace';
 
-export const installAfterEnvChangesMsg = chalk.yellow("please run 'bit install' for the changes to take effect");
+export const installAfterEnvChangesMsg = formatHint("please run 'bit install' for the changes to take effect");
 
 export class EnvsSetCmd implements Command {
   name = 'set <component-pattern> <env>';
@@ -43,8 +44,11 @@ export class EnvsSetCmd implements Command {
     const envId = await this.workspace.resolveComponentId(env);
     const componentIds = await this.workspace.idsByPattern(pattern);
     await this.workspace.setEnvToComponents(envId, componentIds);
-    return `assigned ${chalk.bold(envId.toString())} env to the following component(s):
-${componentIds.map((compId) => compId.toString()).join('\n')}\n
-${installAfterEnvChangesMsg}`;
+    const items = componentIds.map((compId) => formatItem(compId.toString()));
+    return joinSections([
+      formatSuccessSummary(`assigned ${chalk.bold(envId.toString())} env to the following component(s)`),
+      items.join('\n'),
+      installAfterEnvChangesMsg,
+    ]);
   }
 }

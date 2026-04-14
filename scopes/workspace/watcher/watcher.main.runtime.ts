@@ -56,9 +56,12 @@ export class WatcherMain {
     };
   }
 
-  async watchScopeInternalFiles() {
+  async watchScopeInternalFiles(
+    additionalPaths?: string[],
+    onAdditionalFileChange?: (filePath: string) => Promise<void>
+  ) {
     const chokidarOpts = await this.getChokidarWatchOptions();
-    await this.scope.watchScopeInternalFiles(chokidarOpts);
+    await this.scope.watchScopeInternalFiles(chokidarOpts, additionalPaths, onAdditionalFileChange);
   }
 
   async triggerOnPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {

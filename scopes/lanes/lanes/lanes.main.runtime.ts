@@ -57,6 +57,7 @@ import type { LaneCheckoutOpts } from './lane.cmd';
 import {
   LaneCmd,
   LaneCreateCmd,
+  LaneCurrentCmd,
   LaneImportCmd,
   LaneListCmd,
   LaneRemoveCmd,
@@ -989,38 +990,9 @@ please create a new lane instead, which will include all components of this lane
 
     const commonSnap = snapsDistance?.commonSnapBeforeDiverge;
 
-    const getChanges = async (): Promise<ChangeType[]> => {
-      if (!commonSnap) return [ChangeType.NEW];
-
-      // import common snap before we compare
-      const compare = await this.componentCompare.compare(
-        componentId.changeVersion(commonSnap.hash).toString(),
-        componentId.changeVersion(sourceHead).toString()
-      );
-
-      if (!compare.fields.length && (!compare.code.length || !compare.code.some((c) => c.status !== 'UNCHANGED'))) {
-        return [ChangeType.NONE];
-      }
-
-      const changed: ChangeType[] = [];
-
-      if (compare.code.some((f) => f.status !== 'UNCHANGED')) {
-        changed.push(ChangeType.SOURCE_CODE);
-      }
-
-      if (compare.fields.length > 0) {
-        changed.push(ChangeType.ASPECTS);
-      }
-
-      const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
-      if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
-        changed.push(ChangeType.DEPENDENCY);
-      }
-
-      return changed;
-    };
-
-    const changes = !options?.skipChanges ? await getChanges() : undefined;
+    const changes = !options?.skipChanges
+      ? await this.deriveChangeTypes(commonSnap, componentId, sourceHead)
+      : undefined;
     const changeType = changes ? changes[0] : undefined;
 
     return {
@@ -1061,37 +1033,9 @@ please create a new lane instead, which will include all components of this lane
 
     const commonSnap = snapsDistance?.commonSnapBeforeDiverge;
 
-    const getChanges = async (): Promise<ChangeType[]> => {
-      if (!commonSnap) return [ChangeType.NEW];
-
-      const compare = await this.componentCompare.compare(
-        componentId.changeVersion(commonSnap.hash).toString(),
-        componentId.changeVersion(sourceHead).toString()
-      );
-
-      if (!compare.fields.length && (!compare.code.length || !compare.code.some((c) => c.status !== 'UNCHANGED'))) {
-        return [ChangeType.NONE];
-      }
-
-      const changed: ChangeType[] = [];
-
-      if (compare.code.some((f) => f.status !== 'UNCHANGED')) {
-        changed.push(ChangeType.SOURCE_CODE);
-      }
-
-      if (compare.fields.length > 0) {
-        changed.push(ChangeType.ASPECTS);
-      }
-
-      const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
-      if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
-        changed.push(ChangeType.DEPENDENCY);
-      }
-
-      return changed;
-    };
-
-    const changes = !options?.skipChanges ? await getChanges() : undefined;
+    const changes = !options?.skipChanges
+      ? await this.deriveChangeTypes(commonSnap, componentId, sourceHead)
+      : undefined;
     const changeType = changes ? changes[0] : undefined;
 
     return {
@@ -1107,6 +1051,50 @@ please create a new lane instead, which will include all components of this lane
         common: snapsDistance?.commonSnapBeforeDiverge?.hash,
       },
     };
+  }
+
+  private async deriveChangeTypes(
+    commonSnap: { hash: string } | null | undefined,
+    componentId: ComponentID,
+    sourceHead: string
+  ): Promise<ChangeType[]> {
+    if (!commonSnap) return [ChangeType.NEW];
+
+    const baseIdStr = componentId.changeVersion(commonSnap.hash).toString();
+    const compareIdStr = componentId.changeVersion(sourceHead).toString();
+    const [compare, apiDiff] = await Promise.all([
+      this.componentCompare.compare(baseIdStr, compareIdStr),
+      this.componentCompare.getAPIDiff(baseIdStr, compareIdStr),
+    ]);
+
+    const hasCodeChanges = compare.code.some((c) => c.status !== 'UNCHANGED');
+    const hasFieldChanges = compare.fields.length > 0;
+    const hasApiChanges = apiDiff?.hasChanges ?? false;
+
+    if (!hasFieldChanges && !hasCodeChanges && !hasApiChanges) {
+      return [ChangeType.NONE];
+    }
+
+    const changed: ChangeType[] = [];
+
+    if (hasCodeChanges) {
+      changed.push(ChangeType.SOURCE_CODE);
+    }
+
+    if (hasFieldChanges) {
+      changed.push(ChangeType.ASPECTS);
+    }
+
+    const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
+    if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
+      changed.push(ChangeType.DEPENDENCY);
+    }
+
+    if (hasApiChanges) {
+      changed.push(ChangeType.API);
+    }
+
+    return changed;
   }
 
   private async recreateNewLaneIfDeleted() {
@@ -1369,6 +1357,7 @@ please create a new lane instead, which will include all components of this lane
       new LaneFetchCmd(fetchCmd, lanesMain),
       new LaneEjectCmd(lanesMain),
     ];
+    laneCmd.commands.push(new LaneCurrentCmd(lanesMain));
     laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
     laneCmd.commands.push(new LaneHistoryDiffCmd(lanesMain, workspace, scope, componentCompare));
     laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
