@@ -37,6 +37,13 @@ $panelBg: #fafafa;
   right: 0px;
 }
 
+.label {
+  padding: 1px 6px;
+  font-size: 10px;
+  line-height: 1.4;
+  border-radius: 4px;
+}
+
 .depNode {
   overflow: hidden;
   text-overflow: ellipsis;
