@@ -454,13 +454,19 @@ function resolveScriptPolicies({
 }: ScriptPolicyConfig): { allowBuilds: Record<string, boolean | string>; dangerouslyAllowAllBuilds?: boolean } {
   const allowBuilds: Record<string, boolean | string> = {};
   if (dangerouslyAllowAllScripts) {
-    // Allow everything, but deny explicit blocklist entries. core-js was always
-    // in the legacy deny list; merge in any caller-provided neverBuiltDependencies.
-    allowBuilds['core-js'] = false;
-    for (const pkg of neverBuiltDependencies ?? []) {
+    // pnpm v11's createAllowBuildFunction short-circuits on dangerouslyAllowAllBuilds
+    // and ignores allowBuilds entries. To keep the "allow everything except these"
+    // pattern working, only set dangerouslyAllowAllBuilds when no deny list is given;
+    // otherwise emit allowBuilds with just the deny entries (leaving other packages
+    // to default pnpm v11 behavior).
+    if (!neverBuiltDependencies?.length) {
+      allowBuilds['core-js'] = false;
+      return { dangerouslyAllowAllBuilds: true, allowBuilds };
+    }
+    for (const pkg of neverBuiltDependencies) {
       allowBuilds[pkg] = false;
     }
-    return { dangerouslyAllowAllBuilds: true, allowBuilds };
+    return { allowBuilds };
   }
   for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts ?? {})) {
     if (allowedScript === true || allowedScript === false) {
