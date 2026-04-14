@@ -537,23 +537,6 @@ export class WorkspaceManifestFactory {
       ...nonRemovedEntryNames(explicitPolicy.devDependencies),
       ...nonRemovedEntryNames(explicitPolicy.peerDependencies),
     ]);
-
-    function nonRemovedEntryNames(policySection?: Record<string, VariantPolicyConfigEntryValue>): string[] {
-      if (!policySection) return [];
-      const names: string[] = [];
-      for (const [name, versionSpec] of Object.entries(policySection)) {
-        // Skip explicit removals expressed as "-" or as removal objects.
-        if (versionSpec !== '-' && !isRemovalObject(versionSpec)) {
-          names.push(name);
-        }
-      }
-      return names;
-    }
-
-    function isRemovalObject(val: VariantPolicyConfigEntryValue): val is VariantPolicyEntryValue {
-      if (!val || typeof val !== 'object') return false;
-      return val.version === '-';
-    }
   }
 
   private async _getEnvPeerDependencies(
@@ -713,4 +696,21 @@ async function getMissingPackages(component: Component): Promise<{ devMissings: 
     devMissings,
     runtimeMissings,
   };
+}
+
+function nonRemovedEntryNames(policySection?: Record<string, VariantPolicyConfigEntryValue>): string[] {
+  if (!policySection) return [];
+  const names: string[] = [];
+  for (const [name, versionSpec] of Object.entries(policySection)) {
+    // Skip explicit removals expressed as "-" or as removal objects.
+    if (versionSpec !== '-' && !isRemovalObject(versionSpec)) {
+      names.push(name);
+    }
+  }
+  return names;
+}
+
+function isRemovalObject(val: VariantPolicyConfigEntryValue): boolean {
+  if (!val || typeof val !== 'object') return false;
+  return (val as VariantPolicyEntryValue).version === '-';
 }
