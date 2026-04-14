@@ -316,7 +316,6 @@ export async function install(
   const { allProjects, packagesToBuild } = groupPkgs(manifestsByPaths, {
     update: options?.updateAll,
   });
-  const authConfig = getAuthConfig(registries);
   const storeController = await createStoreController({
     rootDir,
     storeDir,
