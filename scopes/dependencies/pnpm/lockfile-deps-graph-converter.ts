@@ -1,8 +1,8 @@
 import path from 'path';
 import { type ProjectManifest } from '@pnpm/types';
 import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
-import { type ResolveFunction } from '@pnpm/client';
-import * as dp from '@pnpm/dependency-path';
+import { type ResolveFunction } from '@pnpm/installing.client';
+import * as dp from '@pnpm/deps.path';
 import { pick, partition } from 'lodash';
 import { BitError } from '@teambit/bit-error';
 import { snapToSemver } from '@teambit/component-package-version';
@@ -336,7 +336,7 @@ export async function convertGraphToLockfile(
         );
         if ('integrity' in resolution && resolution.integrity) {
           lockfile.packages[pkgToResolve.pkgId].resolution = {
-            integrity: resolution.integrity,
+            integrity: resolution.integrity as string,
           };
         }
       }

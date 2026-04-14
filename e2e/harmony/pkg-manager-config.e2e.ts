@@ -1,6 +1,6 @@
 import path from 'path';
 import chai, { expect } from 'chai';
-import { readModulesManifest } from '@pnpm/modules-yaml';
+import { readModulesManifest } from '@pnpm/installing.modules-yaml';
 import chaiString from 'chai-string';
 
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';

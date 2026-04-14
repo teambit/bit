@@ -1,13 +1,13 @@
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
-import { initDefaultReporter } from '@pnpm/default-reporter';
+import { initDefaultReporter } from '@pnpm/cli.default-reporter';
 import { streamParser } from '@pnpm/logger';
-import type { StoreController, WantedDependency } from '@pnpm/package-store';
+import type { StoreController, WantedDependency } from '@pnpm/store.controller';
 import { TRUSTED_PACKAGE_NAMES } from '@pnpm/plugin-trusted-deps';
-import { rebuild } from '@pnpm/plugin-commands-rebuild';
-import type { CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
-import { createOrConnectStoreController } from '@pnpm/store-connection-manager';
-import { sortPackages } from '@pnpm/sort-packages';
+import { rebuild } from '@pnpm/building.commands';
+import type { CreateStoreControllerOptions } from '@pnpm/store.connection-manager';
+import { createStoreController as pnpmCreateStoreController } from '@pnpm/store.connection-manager';
+import { sortProjects } from '@pnpm/workspace.projects-sorter';
 import type {
   PackageManifest,
   ProjectManifest,
@@ -25,13 +25,13 @@ import type {
 } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
-import type { MutatedProject, InstallOptions, PeerDependencyIssuesByProjects, ProjectOptions } from '@pnpm/core';
-import { mutateModules } from '@pnpm/core';
-import * as pnpm from '@pnpm/core';
-import type { ClientOptions } from '@pnpm/client';
-import { createClient } from '@pnpm/client';
+import type { MutatedProject, InstallOptions, PeerDependencyIssuesByProjects, ProjectOptions } from '@pnpm/installing.deps-installer';
+import { mutateModules } from '@pnpm/installing.deps-installer';
+import * as pnpm from '@pnpm/installing.deps-installer';
+import type { ClientOptions } from '@pnpm/installing.client';
+import { createResolver } from '@pnpm/installing.client';
 import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
-import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
+import { createProjectsGraph } from '@pnpm/workspace.projects-graph';
 import { readWantedLockfile, writeWantedLockfile } from '@pnpm/lockfile.fs';
 import { type LockfileFile, type LockfileObject } from '@pnpm/lockfile.types';
 import type { Logger } from '@teambit/logger';
@@ -50,6 +50,58 @@ const UNTRUSTED_PACKAGE_NAMES = ['es5-ext', 'less', 'protobufjs', 'ssh', 'core-j
 const installsRunning: Record<string, Promise<any>> = {};
 const cafsLocker = new Map<string, number>();
 
+/**
+ * Convert a flat rawConfig-style auth dict (keys like `//registry/:_authToken`, `_auth`, etc.)
+ * into the `configByUri: Record<string, RegistryConfig>` structure that pnpm v11 APIs expect.
+ */
+function authConfigToConfigByUri(authConfig: Record<string, any>, defaultRegistry?: string): Record<string, any> {
+  const configByUri: Record<string, any> = {};
+  const defaultCreds: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(authConfig)) {
+    if (value == null) continue;
+    // Default-registry creds (no `:` prefix): _auth, _authToken, _password, username, tokenHelper
+    if (key === '_auth' || key === '_authToken' || key === '_password' || key === 'username' || key === 'tokenHelper') {
+      defaultCreds[key] = value;
+      continue;
+    }
+    // Per-registry keys end with ':<credsField>' or ':<sslField>' or ':<sslField>file'
+    const credMatch = key.match(/^(.+):(_auth|_authToken|_password|username|tokenHelper)$/);
+    if (credMatch) {
+      const [, uri, field] = credMatch;
+      configByUri[uri] ??= {};
+      configByUri[uri].creds ??= {};
+      if (field === '_authToken') configByUri[uri].creds.authToken = value;
+      else if (field === '_auth') configByUri[uri].creds.basicAuth = decodeBasicAuth(value);
+      else if (field === 'tokenHelper') configByUri[uri].creds.tokenHelper = value;
+      else configByUri[uri].creds[field] = value;
+      continue;
+    }
+    const sslMatch = key.match(/^(.+):(cert|key|ca)(file)?$/);
+    if (sslMatch) {
+      const [, uri, field] = sslMatch;
+      configByUri[uri] ??= {};
+      configByUri[uri].tls ??= {};
+      configByUri[uri].tls[field] = value;
+    }
+  }
+  // Build default creds entry keyed by default registry
+  if (defaultRegistry && Object.keys(defaultCreds).length > 0) {
+    configByUri[''] ??= {};
+    configByUri[''].creds ??= {};
+    if (defaultCreds._authToken != null) configByUri[''].creds.authToken = defaultCreds._authToken;
+    if (defaultCreds._auth != null) configByUri[''].creds.basicAuth = decodeBasicAuth(defaultCreds._auth as string);
+    if (defaultCreds.tokenHelper != null) configByUri[''].creds.tokenHelper = defaultCreds.tokenHelper;
+  }
+  return configByUri;
+}
+
+function decodeBasicAuth(b64: string): { username: string; password: string } {
+  const decoded = Buffer.from(b64, 'base64').toString('utf8');
+  const idx = decoded.indexOf(':');
+  if (idx < 0) return { username: decoded, password: '' };
+  return { username: decoded.slice(0, idx), password: decoded.slice(idx + 1) };
+}
+
 async function createStoreController(
   options: {
     rootDir: string;
@@ -66,7 +118,7 @@ async function createStoreController(
     cacheDir: options.cacheDir,
     cafsLocker,
     storeDir: options.storeDir,
-    rawConfig: authConfig,
+    configByUri: authConfigToConfigByUri(authConfig, options.registries.defaultRegistry.uri),
     verifyStoreIntegrity: true,
     httpProxy: options.proxyConfig?.httpProxy,
     httpsProxy: options.proxyConfig?.httpsProxy,
@@ -93,7 +145,7 @@ async function createStoreController(
     fetchWarnTimeoutMs: options.networkConfig.fetchWarnTimeoutMs,
     fetchMinSpeedKiBps: options.networkConfig.fetchMinSpeedKiBps,
   };
-  return createOrConnectStoreController(opts);
+  return pnpmCreateStoreController(opts);
 }
 
 export async function generateResolverAndFetcher({
@@ -113,8 +165,9 @@ export async function generateResolverAndFetcher({
   const authConfig = getAuthConfig(registries);
   proxyConfig ??= {};
   networkConfig ??= {};
-  const opts: ClientOptions = {
-    authConfig: Object.assign({}, pnpmConfig.config.rawConfig, authConfig),
+  const mergedAuthConfig = Object.assign({}, pnpmConfig.config.authConfig, authConfig);
+  const opts: Omit<ClientOptions, 'storeIndex'> = {
+    configByUri: authConfigToConfigByUri(mergedAuthConfig, registries.defaultRegistry.uri),
     cacheDir,
     httpProxy: proxyConfig?.httpProxy,
     httpsProxy: proxyConfig?.httpsProxy,
@@ -125,7 +178,6 @@ export async function generateResolverAndFetcher({
     noProxy: proxyConfig?.noProxy,
     strictSsl: networkConfig.strictSSL,
     timeout: networkConfig.fetchTimeout,
-    rawConfig: pnpmConfig.config.rawConfig,
     userAgent: networkConfig.userAgent,
     retry: {
       factor: networkConfig.fetchRetryFactor,
@@ -138,8 +190,8 @@ export async function generateResolverAndFetcher({
     fetchWarnTimeoutMs: networkConfig?.fetchWarnTimeoutMs,
     fetchMinSpeedKiBps: networkConfig?.fetchMinSpeedKiBps,
   };
-  const result = createClient(opts);
-  return result;
+  const { resolve } = createResolver(opts);
+  return { resolve };
 }
 
 export async function getPeerDependencyIssues(
@@ -171,6 +223,7 @@ export async function getPeerDependencyIssues(
     excludeLinksFromLockfile: true,
     storeController: storeController.ctrl,
     storeDir: storeController.dir,
+    globalVirtualStoreDir: storeController.dir,
     overrides: opts.overrides,
     peersSuffixMaxLength: 1000,
     registries: opts.registries.toMap(),
@@ -226,7 +279,6 @@ export async function install(
     | 'excludeLinksFromLockfile'
     | 'minimumReleaseAge'
     | 'minimumReleaseAgeExclude'
-    | 'neverBuiltDependencies'
     | 'ignorePackageManifest'
     | 'hoistWorkspacePackages'
     | 'returnListOfDepsRequiringBuild'
@@ -297,7 +349,6 @@ export async function install(
     modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.
     registries: registries.toMap(),
     resolutionMode: 'highest',
-    rawConfig: authConfig,
     hooks: { readPackage },
     externalDependencies,
     strictPeerDependencies: false,
@@ -315,7 +366,6 @@ export async function install(
     injectWorkspacePackages: true,
     ...resolveScriptPolicies({
       allowScripts: options.allowScripts,
-      neverBuiltDependencies: options.neverBuiltDependencies,
       dangerouslyAllowAllScripts: options.dangerouslyAllowAllScripts,
     }),
     returnListOfDepsRequiringBuild: true,
@@ -392,56 +442,38 @@ export async function install(
 
 type ScriptPolicyConfig = {
   allowScripts?: Record<string, boolean | 'warn'>;
-  neverBuiltDependencies?: string[];
   dangerouslyAllowAllScripts?: boolean;
 };
 
 function resolveScriptPolicies({
   allowScripts,
-  neverBuiltDependencies,
   dangerouslyAllowAllScripts,
-}: ScriptPolicyConfig) {
-  let resolvedNeverBuilt = neverBuiltDependencies;
-  let onlyBuiltDependencies: string[] | undefined;
-  let ignoredBuiltDependencies: string[] | undefined;
+}: ScriptPolicyConfig): { allowBuilds: Record<string, boolean | string>; dangerouslyAllowAllBuilds?: boolean } {
   if (dangerouslyAllowAllScripts) {
-    if (resolvedNeverBuilt == null) {
-      // If neverBuiltDependencies is not explicitly set, use a default list
-      // we tell pnpm to allow all scripts to be executed, except the packages listed below.
-      resolvedNeverBuilt = ['core-js'];
+    // Allow everything, but keep core-js denied by default (it was always in the legacy deny list).
+    return {
+      dangerouslyAllowAllBuilds: true,
+      allowBuilds: { 'core-js': false },
+    };
+  }
+  const allowBuilds: Record<string, boolean | string> = {};
+  for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts ?? {})) {
+    if (allowedScript === true || allowedScript === false) {
+      allowBuilds[packageDescriptor] = allowedScript;
     }
-  } else {
-    onlyBuiltDependencies = [];
-    ignoredBuiltDependencies = [];
-    for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts ?? {})) {
-      switch (allowedScript) {
-        case true:
-          onlyBuiltDependencies.push(packageDescriptor);
-          break;
-        case false:
-          ignoredBuiltDependencies.push(packageDescriptor);
-          break;
-        default:
-          // Ignore any non-boolean values. String values are placeholders that the user
-          // should replace with booleans.
-          // pnpm will print a warning about these during installation.
-          break;
-      }
-    }
-    for (const trustedPkgName of TRUSTED_PACKAGE_NAMES) {
-      if (allowScripts?.[trustedPkgName] == null) {
-        onlyBuiltDependencies.push(trustedPkgName);
-      }
-    }
-    // Add untrusted packages to ignoredBuiltDependencies unless the user explicitly allows them
-    for (const untrustedPkgName of UNTRUSTED_PACKAGE_NAMES) {
-      if (allowScripts?.[untrustedPkgName] !== true) {
-        ignoredBuiltDependencies.push(untrustedPkgName);
-      }
+    // String values (e.g. 'warn') are placeholders — ignore them; pnpm warns about these.
+  }
+  for (const trustedPkgName of TRUSTED_PACKAGE_NAMES) {
+    if (allowScripts?.[trustedPkgName] == null) {
+      allowBuilds[trustedPkgName] = true;
     }
   }
-
-  return { neverBuiltDependencies: resolvedNeverBuilt, onlyBuiltDependencies, ignoredBuiltDependencies };
+  for (const untrustedPkgName of UNTRUSTED_PACKAGE_NAMES) {
+    if (allowScripts?.[untrustedPkgName] !== true) {
+      allowBuilds[untrustedPkgName] = false;
+    }
+  }
+  return { allowBuilds };
 }
 
 function initReporter(opts?: ReportOptions) {
@@ -588,8 +620,8 @@ function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>, opts: { up
     rootDir: rootDir as ProjectRootDir,
     manifest,
   }));
-  const { graph } = createPkgGraph(pkgs);
-  const chunks = sortPackages(graph as any);
+  const { graph } = createProjectsGraph(pkgs);
+  const chunks = sortProjects(graph as any);
 
   // This will create local link by pnpm to a component exists in the ws.
   // it will later deleted by the link process
@@ -602,7 +634,7 @@ function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>, opts: { up
   // with this we will have a link to the local B by pnpm so it will install B@1.0.0 inside A
   // then when overriding the link, A will still works
   // This is the rational behind not deleting this completely, but need further check that it really works
-  const packagesToBuild: MutatedProject[] = []; // @pnpm/core will use this to install the packages
+  const packagesToBuild: MutatedProject[] = []; // @pnpm/installing.deps-installer will use this to install the packages
   const allProjects: ProjectOptions[] = [];
 
   chunks.forEach((dirs, buildIndex) => {

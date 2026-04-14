@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import path from 'path';
-import type { Modules } from '@pnpm/modules-yaml';
-import { readModulesManifest } from '@pnpm/modules-yaml';
+import type { Modules } from '@pnpm/installing.modules-yaml';
+import { readModulesManifest } from '@pnpm/installing.modules-yaml';
 import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('pnpm install with default settings', function () {

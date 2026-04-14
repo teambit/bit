@@ -1,4 +1,4 @@
-import { PeerDependencyIssuesByProjects } from '@pnpm/core';
+import { PeerDependencyIssuesByProjects } from '@pnpm/installing.deps-installer';
 import type { PeerDependencyRules, ProjectManifest, DependencyManifest } from '@pnpm/types';
 import type { ComponentID, ComponentMap, Component } from '@teambit/component';
 import { type DependenciesGraph } from '@teambit/objects';

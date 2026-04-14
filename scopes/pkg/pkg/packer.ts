@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import ssri from 'ssri';
 import _ from 'lodash';
-import { pack } from '@pnpm/plugin-commands-publishing';
+import { pack } from '@pnpm/releasing.commands';
 import type { ComponentFactory } from '@teambit/component';
 import type { ComponentResult, ArtifactDefinition } from '@teambit/builder';
 import type { Capsule, IsolatorMain } from '@teambit/isolator';
@@ -136,8 +136,7 @@ export class Packer {
       const { tarballPath: tgzName } = await pack.api({
         argv: { original: [] },
         dir: cwd,
-        rawConfig: {},
-      });
+      } as any);
       this.logger.debug(`successfully packed tarball at ${cwd}`);
       const tgzOriginPath = path.join(cwd, tgzName);
       let tarPath = path.join(outputPath, tgzName);

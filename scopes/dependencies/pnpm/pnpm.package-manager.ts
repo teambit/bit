@@ -17,15 +17,15 @@ import type { Logger } from '@teambit/logger';
 import { type LockfileFile } from '@pnpm/lockfile.types';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
-import type { PeerDependencyIssuesByProjects } from '@pnpm/core';
+import type { PeerDependencyIssuesByProjects } from '@pnpm/installing.deps-installer';
 import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
-import type { Config } from '@pnpm/config';
+import type { Config } from '@pnpm/config.reader';
 import { type ProjectId, type ProjectManifest, type DepPath } from '@pnpm/types';
-import type { Modules } from '@pnpm/modules-yaml';
-import { readModulesManifest } from '@pnpm/modules-yaml';
-import type { ImporterInfo } from '@pnpm/reviewing.dependencies-hierarchy';
-import { buildDependentsTree } from '@pnpm/reviewing.dependencies-hierarchy';
-import { renderDependentsTree } from '@pnpm/list';
+import type { Modules } from '@pnpm/installing.modules-yaml';
+import { readModulesManifest } from '@pnpm/installing.modules-yaml';
+import type { ImporterInfo } from '@pnpm/deps.inspection.tree-builder';
+import { buildDependentsTree } from '@pnpm/deps.inspection.tree-builder';
+import { renderDependentsTree } from '@pnpm/deps.inspection.list';
 import {
   readWantedLockfile,
   writeLockfileFile,
@@ -294,31 +294,29 @@ export class PnpmPackageManager implements PackageManager {
     if (!this.username) {
       this.username = (await this.cloud.getCurrentUser())?.username ?? 'anonymous';
     }
-    // We need to use config.rawConfig as it will only contain the settings defined by the user.
-    // config contains default values of the settings when they are not defined by the user.
     const result: PackageManagerNetworkConfig = {
       userAgent: `bit user/${this.username}`,
     };
-    if (config.rawConfig['max-sockets'] != null) {
-      result.maxSockets = config.rawConfig['max-sockets'];
+    if (config.maxSockets != null) {
+      result.maxSockets = config.maxSockets;
     }
-    if (config.rawConfig['network-concurrency'] != null) {
-      result.networkConcurrency = config.rawConfig['network-concurrency'];
+    if (config.networkConcurrency != null) {
+      result.networkConcurrency = config.networkConcurrency;
     }
-    if (config.rawConfig['fetch-retries'] != null) {
-      result.fetchRetries = config.rawConfig['fetch-retries'];
+    if (config.fetchRetries != null) {
+      result.fetchRetries = config.fetchRetries;
     }
-    if (config.rawConfig['fetch-timeout'] != null) {
-      result.fetchTimeout = config.rawConfig['fetch-timeout'];
+    if (config.fetchTimeout != null) {
+      result.fetchTimeout = config.fetchTimeout;
     }
-    if (config.rawConfig['fetch-retry-maxtimeout'] != null) {
-      result.fetchRetryMaxtimeout = config.rawConfig['fetch-retry-maxtimeout'];
+    if (config.fetchRetryMaxtimeout != null) {
+      result.fetchRetryMaxtimeout = config.fetchRetryMaxtimeout;
     }
-    if (config.rawConfig['fetch-retry-mintimeout'] != null) {
-      result.fetchRetryMintimeout = config.rawConfig['fetch-retry-mintimeout'];
+    if (config.fetchRetryMintimeout != null) {
+      result.fetchRetryMintimeout = config.fetchRetryMintimeout;
     }
-    if (config.rawConfig['strict-ssl'] != null) {
-      result.strictSSL = config.rawConfig['strict-ssl'];
+    if (config.strictSsl != null) {
+      result.strictSSL = config.strictSsl;
     }
     if (config.ca != null) {
       result.ca = config.ca;
