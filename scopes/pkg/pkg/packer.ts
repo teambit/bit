@@ -132,10 +132,13 @@ export class Packer {
         warnings.push(`"package.json at ${cwd}" contain a snap version which is not a valid semver, can't pack it`);
         return { warnings, startTime, endTime: Date.now() };
       }
-      // Load @pnpm/releasing.commands lazily via dynamic import. The package is
-      // ESM in pnpm v11 and loading it through CJS require() at module top-level
-      // can trip Node's ESM-over-require path when invoked from a build capsule.
-      const { pack } = await import('@pnpm/releasing.commands');
+      // Load @pnpm/releasing.commands lazily via a native dynamic import.
+      // The package is ESM in pnpm v11 and loading it through CJS require() in
+      // the build capsule crashes with "Unexpected token 'export'". We use
+      // new Function("...") so Babel won't transpile the import() call back
+      // to require() during bit's compile step.
+      const dynamicImport = new Function('p', 'return import(p)') as (p: string) => Promise<any>;
+      const { pack } = await dynamicImport('@pnpm/releasing.commands');
       const { tarballPath: tgzName } = await pack.api({
         argv: { original: [] },
         dir: cwd,
