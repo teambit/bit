@@ -433,6 +433,8 @@ function resolveScriptPolicies({
         onlyBuiltDependencies.push(trustedPkgName);
       }
     }
+    // Our own allow list
+    onlyBuiltDependencies.push('@zkochan/fuse-native');
     // Add untrusted packages to ignoredBuiltDependencies unless the user explicitly allows them
     for (const untrustedPkgName of UNTRUSTED_PACKAGE_NAMES) {
       if (allowScripts?.[untrustedPkgName] !== true) {
