@@ -1079,7 +1079,11 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       const loadP = file.file.load(repository);
       const content: Source = await loadP;
       if (!content)
-        throw new BitError(`failed loading file ${file.relativePath} from the model of ${this.id()}@${versionStr}`);
+        throw new BitError(
+          `failed loading file ${file.relativePath} from the model of ${this.id()}@${versionStr}.
+the Source object is missing from the local scope. to fix, run:
+  bit import ${this.id()}@${versionStr} --objects --all-history`
+        );
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
     const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
