@@ -80,6 +80,16 @@
     "private": false
   },
   {
+    "name": "details",
+    "alias": "",
+    "options": [],
+    "description": "show expanded details from the last command that provided them (e.g. tag, snap)",
+    "extendedDescription": "",
+    "group": "general",
+    "private": false,
+    "skipWorkspace": true
+  },
+  {
     "name": "show <component-name>",
     "alias": "",
     "options": [
@@ -182,7 +192,7 @@
         "arguments": [
           {
             "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           },
           {
             "name": "env",
@@ -213,7 +223,7 @@
         "arguments": [
           {
             "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ]
       },
@@ -251,7 +261,7 @@
           },
           {
             "name": "pattern",
-            "description": "the components to update (defaults to all components). component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "the components to update (defaults to all components). component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ],
         "examples": [
@@ -520,7 +530,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -601,7 +611,7 @@
           },
           {
             "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ]
       },
@@ -693,7 +703,7 @@
           },
           {
             "name": "pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ]
       }
@@ -1008,7 +1018,7 @@
         "arguments": [
           {
             "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ]
       },
@@ -1023,7 +1033,7 @@
         "arguments": [
           {
             "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ]
       },
@@ -1056,6 +1066,298 @@
       {
         "name": "script-name",
         "description": "the name of the script to run (e.g., \"generate-svg\", \"pre-snap\")"
+      }
+    ]
+  },
+  {
+    "name": "login",
+    "alias": "",
+    "options": [
+      [
+        "",
+        "skip-config-update",
+        "skip writing to the .npmrc file"
+      ],
+      [
+        "",
+        "refresh-token",
+        "force refresh token even when logged in"
+      ],
+      [
+        "d",
+        "cloud-domain <domain>",
+        "login cloud domain (default bit.cloud)"
+      ],
+      [
+        "",
+        "default-cloud-domain",
+        "login to default cloud domain (bit.cloud)"
+      ],
+      [
+        "p",
+        "port <port>",
+        "port number to open for localhost server (default 8085)"
+      ],
+      [
+        "",
+        "no-browser",
+        "do not open a browser for authentication"
+      ],
+      [
+        "",
+        "machine-name <name>",
+        "specify machine-name to pair with the token (useful for CI to avoid accidentally revoking the token)"
+      ],
+      [
+        "",
+        "suppress-browser-launch",
+        "DEPRECATE. use --no-browser instead"
+      ]
+    ],
+    "description": "authenticate with Bit Cloud for component publishing and collaboration",
+    "extendedDescription": "opens browser to authenticate with Bit Cloud (bit.cloud) and obtain access token for publishing components.\nautomatically updates .npmrc file with registry configuration and authentication token for seamless package publishing.\nsupports custom cloud domains, CI/machine authentication, and manual token refresh options.",
+    "group": "auth",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true
+  },
+  {
+    "name": "logout",
+    "alias": "",
+    "options": [],
+    "description": "sign out of Bit Cloud and clear authentication tokens",
+    "extendedDescription": "removes stored authentication tokens and signs out of Bit Cloud.\nclears local credentials while preserving .npmrc configurations.\nuse this to switch between accounts or when authentication tokens expire.",
+    "group": "auth",
+    "private": false,
+    "skipWorkspace": true
+  },
+  {
+    "name": "whoami",
+    "alias": "",
+    "options": [],
+    "description": "display the currently authenticated Bit Cloud user",
+    "extendedDescription": "shows the username of the currently logged in Bit Cloud account.\nverifies authentication status with the cloud service and displays the active username.\nuseful for confirming authentication before publishing or when switching between accounts.",
+    "group": "auth",
+    "private": false,
+    "skipWorkspace": true
+  },
+  {
+    "name": "npmrc [sub-command]",
+    "alias": "",
+    "options": [],
+    "description": "configure .npmrc file with Bit Cloud registry and authentication settings",
+    "extendedDescription": "manages .npmrc configuration for seamless package installation from Bit Cloud registries.\nautomatically configures scoped registries and authentication tokens for your workspace components.\nprovides sub-commands for generating, updating, and managing npm registry configurations.",
+    "group": "auth",
+    "private": false,
+    "skipWorkspace": true,
+    "commands": [
+      {
+        "name": "generate",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "dry-run",
+            "show the .npmrc file content that will be written"
+          ],
+          [
+            "f",
+            "force",
+            "force update the .npmrc file even if there are conflicts"
+          ]
+        ],
+        "description": "update npmrc file with scope, registry, and token information from bit.cloud",
+        "extendedDescription": "",
+        "group": "auth",
+        "private": false,
+        "skipWorkspace": false
+      }
+    ]
+  },
+  {
+    "name": "ripple <sub-command>",
+    "alias": "",
+    "options": [],
+    "description": "manage Ripple CI jobs on bit.cloud",
+    "extendedDescription": "view, retry, and manage Ripple CI jobs that build your components in the cloud after export.",
+    "group": "collaborate",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true,
+    "commands": [
+      {
+        "name": "list",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "all",
+            "show jobs from all owners, not just the workspace owner"
+          ],
+          [
+            "o",
+            "owner <owner>",
+            "filter by organization (default: detected from workspace defaultScope)"
+          ],
+          [
+            "s",
+            "scope <scope>",
+            "filter by scope (e.g. \"teambit.cloud\")"
+          ],
+          [
+            "",
+            "lane <lane>",
+            "filter by lane ID (e.g. \"scope/lane-name\")"
+          ],
+          [
+            "u",
+            "user <user>",
+            "filter by username"
+          ],
+          [
+            "",
+            "status <status>",
+            "filter by status (e.g. SUCCESS, FAILURE, RUNNING)"
+          ],
+          [
+            "l",
+            "limit <limit>",
+            "max number of jobs to show (default: 20)"
+          ],
+          [
+            "j",
+            "json",
+            "return the output as JSON"
+          ]
+        ],
+        "description": "list recent Ripple CI jobs (filtered by workspace owner by default)",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false,
+        "remoteOp": true,
+        "skipWorkspace": true
+      },
+      {
+        "name": "log [job-id]",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "lane <lane>",
+            "lane ID to find the latest job for (default: detected from .bitmap)"
+          ],
+          [
+            "c",
+            "component <component>",
+            "show build tasks for a specific component (full component ID)"
+          ],
+          [
+            "j",
+            "json",
+            "return the output as JSON"
+          ]
+        ],
+        "description": "show job details and component build task summaries (auto-detects current lane when no job-id given)",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false,
+        "remoteOp": true,
+        "skipWorkspace": true,
+        "arguments": [
+          {
+            "name": "job-id",
+            "description": "the Ripple CI job ID (optional — auto-detects from current lane)"
+          }
+        ]
+      },
+      {
+        "name": "errors [job-id]",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "lane <lane>",
+            "lane ID to find the latest failed job for (default: detected from .bitmap)"
+          ],
+          [
+            "",
+            "log",
+            "show full build log for failed containers (not just the error summary)"
+          ],
+          [
+            "j",
+            "json",
+            "return the output as JSON"
+          ]
+        ],
+        "description": "show build errors for a Ripple CI job (auto-detects current lane when no job-id given)",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false,
+        "remoteOp": true,
+        "skipWorkspace": true,
+        "arguments": [
+          {
+            "name": "job-id",
+            "description": "the Ripple CI job ID (optional — auto-detects from current lane)"
+          }
+        ]
+      },
+      {
+        "name": "retry [job-id]",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "lane <lane>",
+            "lane ID to find the latest job for (default: detected from .bitmap)"
+          ],
+          [
+            "j",
+            "json",
+            "return the output as JSON"
+          ]
+        ],
+        "description": "retry a failed Ripple CI job (auto-detects current lane when no job-id given)",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false,
+        "remoteOp": true,
+        "skipWorkspace": true,
+        "arguments": [
+          {
+            "name": "job-id",
+            "description": "the Ripple CI job ID to retry (optional — auto-detects from current lane)"
+          }
+        ]
+      },
+      {
+        "name": "stop [job-id]",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "lane <lane>",
+            "lane ID to find the latest job for (default: detected from .bitmap)"
+          ],
+          [
+            "j",
+            "json",
+            "return the output as JSON"
+          ]
+        ],
+        "description": "stop a running Ripple CI job (auto-detects current lane when no job-id given)",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false,
+        "remoteOp": true,
+        "skipWorkspace": true,
+        "arguments": [
+          {
+            "name": "job-id",
+            "description": "the Ripple CI job ID to stop (optional — auto-detects from current lane)"
+          }
+        ]
       }
     ]
   },
@@ -1635,7 +1937,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ],
     "examples": [
@@ -1681,7 +1983,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -2272,7 +2574,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ],
     "examples": [
@@ -2331,7 +2633,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -2357,7 +2659,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -2409,6 +2711,11 @@
         "",
         "force-theirs",
         "do not merge, just overwrite with incoming files"
+      ],
+      [
+        "",
+        "include-new-from-scope",
+        "relevant for 'bit checkout head'. import components from the defaultScope that don't exist in the workspace"
       ]
     ],
     "description": "switch between component versions or remove local changes",
@@ -2422,7 +2729,7 @@
       },
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -2448,7 +2755,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       },
       {
         "name": "to",
@@ -2488,7 +2795,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -2570,7 +2877,7 @@
     "arguments": [
       {
         "name": "component-patterns...",
-        "description": "(not recommended) component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "(not recommended) component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -2631,7 +2938,7 @@
         "arguments": [
           {
             "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           },
           {
             "name": "package...",
@@ -2661,7 +2968,7 @@
         "arguments": [
           {
             "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           },
           {
             "name": "package...",
@@ -2711,7 +3018,7 @@
         "arguments": [
           {
             "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           },
           {
             "name": "package...",
@@ -2730,7 +3037,7 @@
         "arguments": [
           {
             "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ]
       },
@@ -2745,7 +3052,7 @@
         "arguments": [
           {
             "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ]
       },
@@ -3072,7 +3379,7 @@
     "arguments": [
       {
         "name": "component-patterns...",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.. By default, all new and modified are tagged."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.. By default, all new and modified are tagged."
       }
     ],
     "examples": [
@@ -3169,7 +3476,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.. By default, only new and modified components are snapped (add --unmodified to snap all components in the workspace)."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.. By default, only new and modified components are snapped (add --unmodified to snap all components in the workspace)."
       }
     ]
   },
@@ -3215,7 +3522,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -3227,6 +3534,43 @@
     "extendedDescription": "in case source and target snaps are not provided, the command will use the local and remote heads.\nby \"head\" we mean component-head if on main, or lane-head if on lane.\nif source and target snaps are provided, the command will use them to calculate the distance.",
     "group": "advanced",
     "private": true
+  },
+  {
+    "name": "schema <pattern>",
+    "alias": "",
+    "options": [
+      [
+        "r",
+        "remote",
+        "fetch schema from remote scope (works for components not in workspace)"
+      ],
+      [
+        "j",
+        "json",
+        "return the component schema in json format"
+      ]
+    ],
+    "description": "display component API schema and type definitions",
+    "extendedDescription": "extracts and displays the public API structure of components including types, functions, classes, and interfaces.\nshows detailed type information, function signatures, and JSDoc documentation for exported elements.\nuseful for understanding component interfaces and generating documentation.\n\nyou can use a `<pattern>` for multiple component ids, such as `bit schema \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
+    "group": "info-analysis",
+    "private": false,
+    "commands": [
+      {
+        "name": "diff <component> <base-version> <compare-version>",
+        "alias": "",
+        "options": [
+          [
+            "j",
+            "json",
+            "return the API diff in json format"
+          ]
+        ],
+        "description": "show API changes between two versions of a component",
+        "extendedDescription": "compares the public API schema between two versions of a component.\nshows added, removed, and modified exports with semantic impact analysis.\n\nexamples:\n  bit schema diff my-component 0.0.1 0.0.2",
+        "group": "info-analysis",
+        "private": false
+      }
+    ]
   },
   {
     "name": "test [component-pattern]",
@@ -3290,7 +3634,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -3321,7 +3665,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       },
       {
         "name": "version",
@@ -3426,7 +3770,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -3546,7 +3890,7 @@
           [
             "p",
             "pattern <component-pattern>",
-            "switch only the lane components matching the specified component-pattern. only works when the workspace is empty\n\ncomponent name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "switch only the lane components matching the specified component-pattern. only works when the workspace is empty\n\ncomponent name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           ],
           [
             "n",
@@ -3715,7 +4059,7 @@
           [
             "",
             "pattern <component-pattern>",
-            "show lane-diff for components conforming to the specified component-pattern only\ncomponent-pattern format: component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "show lane-diff for components conforming to the specified component-pattern only\ncomponent-pattern format: component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           ]
         ],
         "description": "show diff between lanes",
@@ -3813,7 +4157,7 @@
         "arguments": [
           {
             "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ]
       },
@@ -3843,7 +4187,7 @@
         "arguments": [
           {
             "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ]
       },
@@ -3895,7 +4239,7 @@
           [
             "",
             "pattern <component-pattern>",
-            "show lane-diff for components conforming to the specified component-pattern only\ncomponent-pattern format: component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "show lane-diff for components conforming to the specified component-pattern only\ncomponent-pattern format: component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           ]
         ],
         "description": "show diff between lane-history entries",
@@ -4086,7 +4430,7 @@
           },
           {
             "name": "pattern",
-            "description": "partially merge the lane - only components that match the specified component-pattern\nComponent pattern format: component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "partially merge the lane - only components that match the specified component-pattern\nComponent pattern format: component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ]
       },
@@ -4173,7 +4517,7 @@
       [
         "p",
         "pattern <component-pattern>",
-        "switch only the lane components matching the specified component-pattern. only works when the workspace is empty\n\ncomponent name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "switch only the lane components matching the specified component-pattern. only works when the workspace is empty\n\ncomponent name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       ],
       [
         "n",
@@ -4284,6 +4628,11 @@
         "",
         "quick",
         "show only new and modified components based on file changes. much faster, but does not detect dependency or config changes"
+      ],
+      [
+        "",
+        "expand",
+        "expand all collapsed sections (e.g. auto-tag pending components)"
       ]
     ],
     "description": "show workspace component status and issues",
@@ -4318,7 +4667,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -4823,7 +5172,7 @@
         "arguments": [
           {
             "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ]
       }
@@ -4851,7 +5200,7 @@
       [
         "p",
         "pattern",
-        "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       ],
       [
         "m",
@@ -4871,7 +5220,7 @@
           [
             "p",
             "pattern",
-            "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           ],
           [
             "",
@@ -4929,26 +5278,6 @@
         "private": false
       }
     ]
-  },
-  {
-    "name": "schema <pattern>",
-    "alias": "",
-    "options": [
-      [
-        "r",
-        "remote",
-        "fetch schema from remote scope (works for components not in workspace)"
-      ],
-      [
-        "j",
-        "json",
-        "return the component schema in json format"
-      ]
-    ],
-    "description": "display component API schema and type definitions",
-    "extendedDescription": "extracts and displays the public API structure of components including types, functions, classes, and interfaces.\nshows detailed type information, function signatures, and JSDoc documentation for exported elements.\nuseful for understanding component interfaces and generating documentation.\n\nyou can use a `<pattern>` for multiple component ids, such as `bit schema \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
-    "group": "info-analysis",
-    "private": false
   },
   {
     "name": "log <id>",
@@ -5127,7 +5456,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -5148,111 +5477,6 @@
         "extendedDescription": "the `<old-id>` and `<new-id>` arguments can be either a component-id or a package-name.",
         "group": "workspace-tools",
         "private": false
-      }
-    ]
-  },
-  {
-    "name": "login",
-    "alias": "",
-    "options": [
-      [
-        "",
-        "skip-config-update",
-        "skip writing to the .npmrc file"
-      ],
-      [
-        "",
-        "refresh-token",
-        "force refresh token even when logged in"
-      ],
-      [
-        "d",
-        "cloud-domain <domain>",
-        "login cloud domain (default bit.cloud)"
-      ],
-      [
-        "",
-        "default-cloud-domain",
-        "login to default cloud domain (bit.cloud)"
-      ],
-      [
-        "p",
-        "port <port>",
-        "port number to open for localhost server (default 8085)"
-      ],
-      [
-        "",
-        "no-browser",
-        "do not open a browser for authentication"
-      ],
-      [
-        "",
-        "machine-name <name>",
-        "specify machine-name to pair with the token (useful for CI to avoid accidentally revoking the token)"
-      ],
-      [
-        "",
-        "suppress-browser-launch",
-        "DEPRECATE. use --no-browser instead"
-      ]
-    ],
-    "description": "authenticate with Bit Cloud for component publishing and collaboration",
-    "extendedDescription": "opens browser to authenticate with Bit Cloud (bit.cloud) and obtain access token for publishing components.\nautomatically updates .npmrc file with registry configuration and authentication token for seamless package publishing.\nsupports custom cloud domains, CI/machine authentication, and manual token refresh options.",
-    "group": "auth",
-    "private": false,
-    "remoteOp": true,
-    "skipWorkspace": true
-  },
-  {
-    "name": "logout",
-    "alias": "",
-    "options": [],
-    "description": "sign out of Bit Cloud and clear authentication tokens",
-    "extendedDescription": "removes stored authentication tokens and signs out of Bit Cloud.\nclears local credentials while preserving .npmrc configurations.\nuse this to switch between accounts or when authentication tokens expire.",
-    "group": "auth",
-    "private": false,
-    "skipWorkspace": true
-  },
-  {
-    "name": "whoami",
-    "alias": "",
-    "options": [],
-    "description": "display the currently authenticated Bit Cloud user",
-    "extendedDescription": "shows the username of the currently logged in Bit Cloud account.\nverifies authentication status with the cloud service and displays the active username.\nuseful for confirming authentication before publishing or when switching between accounts.",
-    "group": "auth",
-    "private": false,
-    "skipWorkspace": true
-  },
-  {
-    "name": "npmrc [sub-command]",
-    "alias": "",
-    "options": [],
-    "description": "configure .npmrc file with Bit Cloud registry and authentication settings",
-    "extendedDescription": "manages .npmrc configuration for seamless package installation from Bit Cloud registries.\nautomatically configures scoped registries and authentication tokens for your workspace components.\nprovides sub-commands for generating, updating, and managing npm registry configurations.",
-    "group": "auth",
-    "private": false,
-    "skipWorkspace": true,
-    "commands": [
-      {
-        "name": "generate",
-        "alias": "",
-        "options": [
-          [
-            "",
-            "dry-run",
-            "show the .npmrc file content that will be written"
-          ],
-          [
-            "f",
-            "force",
-            "force update the .npmrc file even if there are conflicts"
-          ]
-        ],
-        "description": "update npmrc file with scope, registry, and token information from bit.cloud",
-        "extendedDescription": "",
-        "group": "auth",
-        "private": false,
-        "skipWorkspace": false
       }
     ]
   },
@@ -5388,7 +5612,7 @@
     "arguments": [
       {
         "name": "pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       },
       {
         "name": "target-component-name",
@@ -5428,7 +5652,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -5458,7 +5682,7 @@
         "arguments": [
           {
             "name": "pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ]
       },
@@ -5479,7 +5703,7 @@
         "arguments": [
           {
             "name": "pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ]
       },
@@ -5526,7 +5750,7 @@
         "arguments": [
           {
             "name": "pattern",
-            "description": "the components to extend. component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "the components to extend. component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           },
           {
             "name": "aspect-id",
@@ -5549,7 +5773,7 @@
         "arguments": [
           {
             "name": "pattern",
-            "description": "the components to target. component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "the components to target. component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           },
           {
             "name": "aspect-id",
@@ -5572,7 +5796,7 @@
           },
           {
             "name": "pattern",
-            "description": "the components to update (defaults to all components). component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+            "description": "the components to update (defaults to all components). component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ],
         "examples": [
@@ -5605,7 +5829,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -5656,7 +5880,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -5692,7 +5916,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },
@@ -5723,7 +5947,7 @@
     "arguments": [
       {
         "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   }

@@ -1,4 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatTitle, formatItem, formatSuccessSummary, warnSymbol, errorSymbol, joinSections } from '@teambit/cli';
 import chalk from 'chalk';
 import * as path from 'path';
 import { BitError } from '@teambit/bit-error';
@@ -53,8 +54,9 @@ export class AddCmd implements Command {
       const alreadyUsedOutput = () => {
         const alreadyUsedWarning = Object.keys(warnings.alreadyUsed)
           .map((key) =>
-            chalk.yellow(
-              `warning: files ${chalk.bold(warnings.alreadyUsed[key].join(', '))} already used by component: ${key}`
+            formatItem(
+              `files ${chalk.bold(warnings.alreadyUsed[key].join(', '))} already used by component: ${key}`,
+              warnSymbol
             )
           )
           .filter((x) => x)
@@ -63,33 +65,27 @@ export class AddCmd implements Command {
       };
       const emptyDirectoryOutput = () => {
         if (!warnings.emptyDirectory.length) return '';
-        return chalk.yellow(
-          `warning: the following directories are empty or all their files were excluded\n${chalk.bold(
-            warnings.emptyDirectory.join('\n')
-          )}\n`
-        );
+        const items = warnings.emptyDirectory.map((dir) => formatItem(chalk.bold(dir), warnSymbol));
+        return `${formatTitle(`${warnSymbol} empty or excluded directories`)}\n${items.join('\n')}\n`;
       };
       return alreadyUsedOutput() + emptyDirectoryOutput();
     };
 
     if (addedComponents.length > 1) {
-      return paintWarning() + chalk.green(`tracking ${addedComponents.length} new components`);
+      return paintWarning() + formatSuccessSummary(`tracking ${addedComponents.length} new components`);
     }
 
-    return (
-      paintWarning() +
-      addedComponents
-        .map((result) => {
-          if (result.files.length === 0) {
-            return chalk.underline.red(`could not track component ${chalk.bold(result.id)}: no files to track`);
-          }
-          const title = chalk.underline(`tracking component ${chalk.bold(result.id)}:\n`);
-          const files = result.files.map((file) => chalk.green(`added ${file}`));
-          return title + files.join('\n');
-        })
-        .flat()
-        .join('\n\n')
-    );
+    return joinSections([
+      paintWarning(),
+      ...addedComponents.map((result) => {
+        if (result.files.length === 0) {
+          return `${errorSymbol} could not track component ${chalk.bold(result.id)}: no files to track`;
+        }
+        const title = formatTitle(`tracking component ${chalk.bold(result.id)}`);
+        const files = result.files.map((file) => formatItem(`added ${file}`));
+        return `${title}\n${files.join('\n')}`;
+      }),
+    ]);
   }
 
   async json(

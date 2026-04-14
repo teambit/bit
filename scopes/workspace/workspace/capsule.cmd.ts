@@ -1,5 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatItem, formatTitle, formatSuccessSummary, formatHint } from '@teambit/cli';
 import type { CapsuleList, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import type { ScopeMain } from '@teambit/scope';
 import chalk from 'chalk';
@@ -91,11 +92,10 @@ export class CapsuleCreateCmd implements Command {
   async report([componentIds]: [string[]], opts: CreateOpts) {
     // @ts-ignore
     const capsules = await this.create(componentIds, opts);
-    const capsuleOutput = capsules
-      .map((capsule) => `${chalk.bold(capsule.component.id.toString())} - ${capsule.path}`)
-      .join('\n');
-    const title = `${capsules.length} capsule(s) were created successfully`;
-    return `${chalk.green(title)}\n${capsuleOutput}`;
+    const items = capsules.map((capsule) =>
+      formatItem(`${chalk.bold(capsule.component.id.toString())} - ${capsule.path}`)
+    );
+    return `${formatSuccessSummary(`${capsules.length} capsule(s) were created`)}\n${items.join('\n')}`;
   }
 
   async json([componentIds]: [string[]], opts: CreateOpts) {
@@ -135,17 +135,11 @@ To initialize a workspace: bit init`);
     const numOfWsCapsules = listWs ? listWs.capsules.length : listScope.capsules.length;
     const hostType = this.workspace ? 'workspace' : 'scope';
 
-    const title = chalk.green(
-      `found ${chalk.cyan(numOfWsCapsules.toString())} capsule(s) for ${hostType}:  ${chalk.cyan(hostPath)}`
-    );
-    const wsLine = listWs
-      ? chalk.green(`workspace capsules root-dir:       ${chalk.cyan(workspaceCapsulesRootDir)}`)
-      : undefined;
-    const scopeAspectLine = chalk.green(
-      `scope's aspects capsules root-dir: ${chalk.cyan(scopeAspectsCapsulesRootDir)}`
-    );
-    const scopeLine = chalk.green(`scope's capsules root-dir: ${chalk.cyan(scopeCapsulesRootDir)}`);
-    const suggestLine = chalk.green(`use --json to get the list of all capsules`);
+    const title = formatTitle(`found ${numOfWsCapsules} capsule(s) for ${hostType}: ${hostPath}`);
+    const wsLine = listWs ? formatItem(`workspace capsules root-dir: ${workspaceCapsulesRootDir}`) : undefined;
+    const scopeAspectLine = formatItem(`scope's aspects capsules root-dir: ${scopeAspectsCapsulesRootDir}`);
+    const scopeLine = formatItem(`scope's capsules root-dir: ${scopeCapsulesRootDir}`);
+    const suggestLine = formatHint(`use --json to get the list of all capsules`);
     const lines = [title, wsLine, scopeAspectLine, scopeLine, suggestLine].filter((x) => x).join('\n');
 
     // TODO: improve output
@@ -201,7 +195,7 @@ export class CapsuleDeleteCmd implements Command {
     };
     const capsuleBaseDir = capsuleBaseDirToDelete();
     const deletedDir = await this.isolator.deleteCapsules(capsuleBaseDir);
-    return chalk.green(`the following capsules dir has been deleted ${chalk.bold(deletedDir)}`);
+    return formatSuccessSummary(`capsules dir has been deleted: ${chalk.bold(deletedDir)}`);
   }
 }
 

@@ -48,10 +48,12 @@ const CMD_HISTORY = 'command-history-ide';
 type PathLinux = string; // problematic to get it from @teambit/legacy/dist/utils/path.
 
 type PathFromLastSnap = { [relativeToWorkspace: PathLinux]: string };
+type ObjectPathsFromLastSnap = { [relativeToWorkspace: PathLinux]: string };
 
 type InitSCMEntry = {
   filesStatus: FilesStatus;
   pathsFromLastSnap: PathFromLastSnap;
+  objectPathsFromLastSnap: ObjectPathsFromLastSnap;
   compDir: PathLinux;
 };
 
@@ -406,6 +408,16 @@ export class APIForIDE {
     return results;
   }
 
+  getCompFileObjectPathsFromLastSnap(compFiles: CompFiles): { [relativePath: string]: string } {
+    if (!compFiles.id.hasVersion()) return {}; // it's a new component.
+    const repo = this.workspace.scope.legacyScope.objects;
+    const results: { [relativePath: string]: string } = {};
+    for (const modelFile of compFiles.modelFiles) {
+      results[pathJoinLinux(compFiles.compDir, modelFile.relativePath)] = repo.objectPath(modelFile.file);
+    }
+    return results;
+  }
+
   async warmWorkspaceCache() {
     await this.workspace.warmCache();
   }
@@ -544,18 +556,27 @@ export class APIForIDE {
     return compact(results);
   }
 
-  async getDataToInitSCM(): Promise<DataToInitSCM> {
+  async getDataToInitSCM(options?: { useHashes?: boolean }): Promise<DataToInitSCM> {
+    const useHashes = options?.useHashes;
+    if (useHashes) {
+      // clean up old materialized files since hash-based reads don't need them
+      const lastSnapDir = path.join(this.workspace.scope.path, FILES_HISTORY_DIR, LAST_SNAP_DIR);
+      await fs.remove(lastSnapDir);
+    }
     const ids = this.workspace.listIds();
     const results: DataToInitSCM = {};
     await pMap(
       ids,
       async (id) => {
         const compFiles = await this.workspace.getFilesModification(id);
-        const pathsFromLastSnap = await this.getCompFilesDirPathFromLastSnapUsingCompFiles(compFiles);
+        // only compute object paths when the extension supports direct object reads, otherwise materialize files to disk
+        const objectPathsFromLastSnap = useHashes ? this.getCompFileObjectPathsFromLastSnap(compFiles) : {};
+        const pathsFromLastSnap = useHashes ? {} : await this.getCompFilesDirPathFromLastSnapUsingCompFiles(compFiles);
         const idStr = id.toStringWithoutVersion();
         results[idStr] = {
           filesStatus: compFiles.getFilesStatus(),
           pathsFromLastSnap,
+          objectPathsFromLastSnap,
           compDir: compFiles.compDir,
         };
       },

@@ -1,7 +1,7 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { renderSections, formatSuccessSummary, formatSection, formatItem, joinSections } from '@teambit/cli';
 import type { ComponentID } from '@teambit/component-id';
 import chalk from 'chalk';
-import { Logger } from '@teambit/logger';
 import type { StatusMain, StatusResult } from './status.main.runtime';
 import { formatStatusOutput } from './status-formatter';
 
@@ -13,6 +13,7 @@ type StatusFlags = {
   warnings?: boolean;
   failOnError?: boolean;
   quick?: boolean;
+  expand?: boolean;
 };
 
 type QuickStatusJsonResults = {
@@ -80,6 +81,7 @@ for maximum speed (skips aspect loading entirely), use "bit mini-status".`;
       'quick',
       'show only new and modified components based on file changes. much faster, but does not detect dependency or config changes',
     ],
+    ['', 'expand', 'expand all collapsed sections (e.g. auto-tag pending components)'],
   ] as CommandOptions;
   loader = true;
 
@@ -155,32 +157,39 @@ for maximum speed (skips aspect loading entirely), use "bit mini-status".`;
 
   async report(
     _args,
-    { strict, verbose, lanes, ignoreCircularDependencies, warnings, failOnError, quick }: StatusFlags
+    { strict, verbose, lanes, ignoreCircularDependencies, warnings, failOnError, quick, expand }: StatusFlags
   ) {
     if (quick) {
       return this.reportQuick();
     }
     const statusResult: StatusResult = await this.status.status({ lanes, ignoreCircularDependencies });
-    return formatStatusOutput(statusResult, { strict, verbose, warnings, failOnError });
+    const result = formatStatusOutput(statusResult, { strict, verbose, warnings, failOnError });
+
+    // Collapse long informational sections unless --expand
+    if (result.sections?.some((s) => s.collapsible)) {
+      return { data: renderSections(result.sections, expand), code: result.code };
+    }
+
+    return result;
   }
 
   private async reportQuick() {
     const { modified, newComps } = await this.status.statusMini();
     const formatCategory = (title: string, ids: ComponentID[]) => {
-      if (!ids.length) return '';
-      const titleOutput = chalk.bold.white(`${title} (${ids.length})`);
-      const idsStr = ids.map((id) => `   ${Logger.successSymbol()} ${chalk.cyan(id.toStringWithoutVersion())}`);
-      return [titleOutput, ...idsStr].join('\n');
+      return formatSection(
+        title,
+        '',
+        ids.map((id) => formatItem(chalk.cyan(id.toStringWithoutVersion())))
+      );
     };
-    const sections = [
-      formatCategory('modified components (files only)', modified),
-      formatCategory('new components', newComps),
-    ]
-      .filter(Boolean)
-      .join('\n\n');
     const data =
-      sections ||
-      `${Logger.successSymbol()} ${chalk.yellow('no new or modified components (based on file changes only, use "bit status" for full check)')}`;
+      joinSections([
+        formatCategory('modified components (files only)', modified),
+        formatCategory('new components', newComps),
+      ]) ||
+      formatSuccessSummary(
+        'no new or modified components (based on file changes only, use "bit status" for full check)'
+      );
 
     return { data, code: 0 };
   }

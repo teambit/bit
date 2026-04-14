@@ -23,15 +23,19 @@ import type { Formatter } from '@teambit/formatter';
 import type { SchemaNodeTransformer, SchemaTransformer } from '@teambit/typescript';
 import { BuildStatus, CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 import { Http } from '@teambit/scope.network';
+import type { ImpactRule, APIDiffResult } from '@teambit/semantics.entities.semantic-schema-diff';
+import { ImpactAssessor, DEFAULT_IMPACT_RULES, computeAPIDiff } from '@teambit/semantics.entities.semantic-schema-diff';
 import type { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import type { SchemaExtractor } from './schema-extractor';
 import { SchemaCommand } from './schema.cmd';
+import { SchemaDiffCommand } from './schema-diff.cmd';
 import { schemaSchema } from './schema.graphql';
 import { SchemaTask, SCHEMA_TASK_NAME } from './schema.task';
 import { SchemaService } from './schema.service';
 
 export type ParserSlot = SlotRegistry<Parser>;
+export type ImpactRuleSlot = SlotRegistry<ImpactRule[]>;
 
 export type SchemaConfig = {
   /**
@@ -54,6 +58,11 @@ export class SchemaMain {
      */
     private parserSlot: ParserSlot,
 
+    /**
+     * impact rules slot — other aspects register custom rules via registerImpactRules().
+     */
+    private impactRuleSlot: ImpactRuleSlot,
+
     private envs: EnvsMain,
 
     private config: SchemaConfig,
@@ -62,7 +71,9 @@ export class SchemaMain {
 
     private workspace: Workspace,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private impactAssessor: ImpactAssessor
   ) {}
 
   /**
@@ -246,6 +257,37 @@ export class SchemaMain {
     return component.state.aspects.get(SchemaAspect.id)?.data;
   }
 
+  /**
+   * Register custom impact rules for API diff assessment.
+   * Custom rules take priority over default rules.
+   * This allows environments to customize what constitutes a breaking change.
+   */
+  registerImpactRules(rules: ImpactRule[]): void {
+    this.impactRuleSlot.register(rules);
+  }
+
+  /**
+   * Get the ImpactAssessor with default + all registered custom rules from the slot.
+   */
+  getImpactAssessor(): ImpactAssessor {
+    this.impactAssessor.registerRules(this.impactRuleSlot.values().flat());
+    return this.impactAssessor;
+  }
+
+  /**
+   * Compute the semantic API diff between two component versions.
+   */
+  async computeAPIDiff(baseComp: Component, compareComp: Component): Promise<APIDiffResult | null> {
+    try {
+      const [baseSchema, compareSchema] = await Promise.all([this.getSchema(baseComp), this.getSchema(compareComp)]);
+      const assessor = this.getImpactAssessor();
+      return computeAPIDiff(baseSchema, compareSchema, assessor);
+    } catch (err: any) {
+      this.logger.warn(`failed computing API diff: ${err.message}`);
+      return null;
+    }
+  }
+
   isSchemaTaskDisabled(component: Component) {
     return this.getSchemaData(component)?.disabled;
   }
@@ -261,7 +303,7 @@ export class SchemaMain {
     WorkspaceAspect,
     ScopeAspect,
   ];
-  static slots = [Slot.withType<Parser>()];
+  static slots = [Slot.withType<Parser>(), Slot.withType<ImpactRule[]>()];
 
   static defaultConfig = {
     defaultParser: 'teambit.typescript/typescript',
@@ -280,13 +322,17 @@ export class SchemaMain {
       ScopeMain,
     ],
     config: SchemaConfig,
-    [parserSlot]: [ParserSlot]
+    [parserSlot, impactRuleSlot]: [ParserSlot, ImpactRuleSlot]
   ) {
     const logger = loggerMain.createLogger(SchemaAspect.id);
-    const schema = new SchemaMain(parserSlot, envs, config, builder, workspace, logger);
+    const impactAssessor = new ImpactAssessor();
+    impactAssessor.registerDefaultRules(DEFAULT_IMPACT_RULES);
+    const schema = new SchemaMain(parserSlot, impactRuleSlot, envs, config, builder, workspace, logger, impactAssessor);
     const schemaTask = new SchemaTask(SchemaAspect.id, schema, logger);
     builder.registerBuildTasks([schemaTask]);
-    cli.register(new SchemaCommand(schema, component, logger));
+    const schemaCmd = new SchemaCommand(schema, component, logger);
+    schemaCmd.commands = [new SchemaDiffCommand(schema, component, logger)];
+    cli.register(schemaCmd);
     graphql.register(() => schemaSchema(schema));
     envs.registerService(new SchemaService());
     if (workspace) {

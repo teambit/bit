@@ -1,5 +1,5 @@
-import chalk from 'chalk';
 import type { Command } from '@teambit/cli';
+import { formatSuccessSummary } from '@teambit/cli';
 import type { CloudMain } from './cloud.main.runtime';
 
 export class LogoutCmd implements Command {
@@ -19,7 +19,7 @@ use this to switch between accounts or when authentication tokens expire.`;
 
   async report(): Promise<string> {
     await this.cloud.logout();
-    return chalk.green('logged out successfully.');
+    return formatSuccessSummary('logged out successfully.');
   }
 
   async json() {

@@ -1,5 +1,14 @@
 // eslint-disable-next-line max-classes-per-file
 import type { Command, CommandOptions } from '@teambit/cli';
+import {
+  formatTitle,
+  formatItem,
+  formatSection,
+  formatSuccessSummary,
+  formatHint,
+  joinSections,
+  warnSymbol,
+} from '@teambit/cli';
 import Table from 'cli-table';
 import chalk from 'chalk';
 import archy from 'archy';
@@ -142,12 +151,10 @@ export class DependenciesSetCmd implements Command {
   async report([pattern, packages]: [string, string[]], setDepsFlags: SetDependenciesFlags) {
     const { changedComps, addedPackages } = await this.deps.setDependency(pattern, packages, setDepsFlags);
 
-    return `${chalk.green('successfully updated dependencies')}
-${chalk.bold('changed components')}
-${changedComps.join('\n')}
-
-${chalk.bold('added packages')}
-${JSON.stringify(addedPackages, undefined, 4)}`;
+    const compItems = changedComps.map((c) => formatItem(c));
+    const compSection = formatSection('changed components', '', compItems);
+    const pkgSection = `${formatTitle('added packages')}\n${JSON.stringify(addedPackages, undefined, 4)}`;
+    return joinSections([formatSuccessSummary('successfully updated dependencies'), compSection, pkgSection]);
   }
 }
 
@@ -178,14 +185,15 @@ see also 'bit deps unset'`;
   async report([pattern, packages]: [string, string[]], removeDepsFlags: RemoveDependenciesFlags) {
     const results = await this.deps.removeDependency(pattern, packages, removeDepsFlags);
     if (!results.length) {
-      return chalk.yellow('the specified component-pattern do not use the entered packages. nothing to remove');
+      return formatHint('the specified component-pattern do not use the entered packages. nothing to remove');
     }
 
-    const output = results
-      .map(({ id, removedPackages }) => `${chalk.underline(id.toString())}\n${removedPackages.join('\n')}`)
-      .join('\n\n');
+    const sections = results.map(({ id, removedPackages }) => {
+      const items = removedPackages.map((pkg) => formatItem(pkg));
+      return formatSection(id.toString(), '', items);
+    });
 
-    return `${chalk.green('successfully removed dependencies')}\n${output}`;
+    return joinSections([formatSuccessSummary('successfully removed dependencies'), ...sections]);
   }
 }
 
@@ -215,14 +223,15 @@ see also "bit deps remove"`;
   async report([pattern, packages]: [string, string[]], removeDepsFlags: RemoveDependenciesFlags) {
     const results = await this.deps.removeDependency(pattern, packages, removeDepsFlags, true);
     if (!results.length) {
-      return chalk.yellow('the specified component-pattern do not use the entered packages. nothing to unset');
+      return formatHint('the specified component-pattern do not use the entered packages. nothing to unset');
     }
 
-    const output = results
-      .map(({ id, removedPackages }) => `${chalk.underline(id.toString())}\n${removedPackages.join('\n')}`)
-      .join('\n\n');
+    const sections = results.map(({ id, removedPackages }) => {
+      const items = removedPackages.map((pkg) => formatItem(pkg));
+      return formatSection(id.toString(), '', items);
+    });
 
-    return `${chalk.green('successfully unset dependencies')}\n${output}`;
+    return joinSections([formatSuccessSummary('successfully unset dependencies'), ...sections]);
   }
 }
 
@@ -240,7 +249,8 @@ export class DependenciesResetCmd implements Command {
     const results = await this.deps.reset(pattern);
     const comps = results.map((id) => id.toString());
 
-    return `${chalk.green('successfully reset dependencies for the following component(s)')}\n${comps}`;
+    const items = comps.map((c) => formatItem(c));
+    return joinSections([formatSuccessSummary('successfully reset dependencies'), items.join('\n')]);
   }
 }
 
@@ -258,7 +268,8 @@ export class DependenciesEjectCmd implements Command {
     const results = await this.deps.eject(pattern);
     const comps = results.map((id) => id.toString());
 
-    return `${chalk.green('successfully ejected dependencies for the following component(s)')}\n${comps}`;
+    const items = comps.map((c) => formatItem(c));
+    return joinSections([formatSuccessSummary('successfully ejected dependencies'), items.join('\n')]);
   }
 }
 
@@ -280,7 +291,7 @@ export class DependenciesBlameCmd implements Command {
   async report([compName, depName]: [string, string]) {
     const results = await this.deps.blame(compName, depName);
     if (!results.length) {
-      return chalk.yellow(`the specified component ${compName} does not use the entered dependency ${depName}`);
+      return formatHint(`the specified component ${compName} does not use the entered dependency ${depName}`);
     }
     const table = borderlessTable();
     results.map(({ snap, tag, author, date, message, version }) =>
@@ -319,7 +330,7 @@ supports both exact version matching and package name patterns.`;
     if (deepUsageResult != null) return deepUsageResult;
     const results = await this.deps.usage(depName);
     if (!Object.keys(results).length) {
-      return chalk.yellow(`the specified dependency ${depName} is not used by any component`);
+      return formatHint(`the specified dependency ${depName} is not used by any component`);
     }
     return Object.keys(results)
       .map((compIdStr) => `${chalk.bold(compIdStr)} (using dep in version ${results[compIdStr]})`)
@@ -355,9 +366,9 @@ export class DependenciesDiagnoseCmd implements Command {
         ? `${(report.pnpmStoreEntries / report.uniquePackages).toFixed(1)}x bloat factor`
         : 'N/A';
     const sections: string[] = [
-      chalk.bold('Dependency Diagnosis for workspace'),
+      formatTitle('Dependency Diagnosis for workspace'),
       '',
-      chalk.bold('Summary:'),
+      formatTitle('Summary:'),
       `  Components in workspace: ${report.componentCount}`,
       `  Unique packages: ${report.uniquePackages.toLocaleString()}`,
       `  Installed copies (.pnpm entries): ${report.pnpmStoreEntries.toLocaleString()} (${bloatFactor})`,
@@ -378,7 +389,7 @@ export class DependenciesDiagnoseCmd implements Command {
           (IMPACT_COLOR[entry.impact] || chalk.green)(entry.impact),
         ]);
       });
-      sections.push('', chalk.bold('Top version-spread packages:'), spreadTable.toString());
+      sections.push('', formatTitle('Top version-spread packages:'), spreadTable.toString());
     }
 
     if (report.peerPermutations.length) {
@@ -391,7 +402,7 @@ export class DependenciesDiagnoseCmd implements Command {
         const copies = entry.installedCopies > 0 ? String(entry.installedCopies) : chalk.dim('0 (not installed)');
         peerTable.push([entry.packageName, `${entry.versions.length} (${entry.versions.join(', ')})`, copies]);
       });
-      sections.push('', chalk.bold('Peer dependencies causing permutations:'), peerTable.toString());
+      sections.push('', formatTitle('Peer dependencies causing permutations:'), peerTable.toString());
 
       if (options.origins) {
         // Show peer version origins grouped by version
@@ -412,12 +423,12 @@ export class DependenciesDiagnoseCmd implements Command {
           }
         }
         if (originLines.length) {
-          sections.push('', chalk.bold('  Peer version origins:'), ...originLines);
+          sections.push('', formatTitle('  Peer version origins:'), ...originLines);
         }
       } else {
         sections.push(
           '',
-          chalk.dim('  Tip: use --origins to see which envs and components contribute each peer version')
+          formatHint('  Tip: use --origins to see which envs and components contribute each peer version')
         );
       }
     }
@@ -427,13 +438,18 @@ export class DependenciesDiagnoseCmd implements Command {
 
   private async reportPackageDrillDown(packageName: string): Promise<string> {
     const { pnpmDirs } = await this.deps.diagnoseDrillDown(packageName);
-    const header = [chalk.bold(`Package drill-down: ${packageName}`), '', `  Installed copies: ${pnpmDirs.length}`, ''];
+    const header = [
+      formatTitle(`Package drill-down: ${packageName}`),
+      '',
+      `  Installed copies: ${pnpmDirs.length}`,
+      '',
+    ];
 
     if (!pnpmDirs.length) {
       return [
         ...header,
-        chalk.yellow('  No .pnpm entries found for this package.'),
-        chalk.dim('  The package may not exist in this workspace, or it may be installed only once.'),
+        `  ${warnSymbol} No .pnpm entries found for this package.`,
+        formatHint('  The package may not exist in this workspace, or it may be installed only once.'),
       ].join('\n');
     }
 
@@ -525,7 +541,7 @@ the specified version range will be used when adding this component as a peer de
 
   async report([componentId, range]: [string, string]) {
     await this.deps.setPeer(componentId, range != null ? range.toString() : range);
-    return `${chalk.green('successfully marked the component as a peer component')}`;
+    return formatSuccessSummary('successfully marked the component as a peer component');
   }
 }
 
@@ -543,7 +559,7 @@ reverses the effect of 'bit set-peer' command. the component will be treated nor
 
   async report([componentId]: [string]) {
     await this.deps.unsetPeer(componentId);
-    return `${chalk.green('successfully marked the component as not a peer component')}`;
+    return formatSuccessSummary('successfully marked the component as not a peer component');
   }
 }
 

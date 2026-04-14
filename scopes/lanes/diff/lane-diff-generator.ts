@@ -228,24 +228,26 @@ export class LaneDiffGenerator {
     const idsOfTo = ComponentIdList.fromArray(
       this.toLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
     );
-    await this.scope.legacyScope.scopeImporter.importWithoutDeps(idsOfTo, {
+    const idsOfFrom = ComponentIdList.fromArray(
+      this.fromLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
+    );
+    const importer = this.scope.legacyScope.scopeImporter;
+    await importer.importWithoutDeps(idsOfTo, {
       cache: true,
       lane,
       ignoreMissingHead: true,
       reason: `for the "to" diff - ${laneId.toString()}-${toHistoryId}`,
     });
-    const idsOfFrom = ComponentIdList.fromArray(
-      this.fromLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
-    );
-    await this.scope.legacyScope.scopeImporter.importWithoutDeps(idsOfFrom, {
+    await importer.importWithoutDeps(idsOfFrom, {
       cache: true,
       lane,
       ignoreMissingHead: true,
       reason: `for the "from" diff - ${laneId.toString()}-${fromHistoryId}`,
     });
 
-    await Promise.all(
-      this.toLaneData.components.map(async ({ id, head }) => {
+    await pMap(
+      this.toLaneData.components,
+      async ({ id, head }) => {
         if (idsToCheckDiff && !idsToCheckDiff.hasWithoutVersion(id)) {
           return;
         }
@@ -255,7 +257,8 @@ export class LaneDiffGenerator {
           const message = err instanceof Error ? err.message : String(err);
           this.failures.push({ id, msg: message });
         }
-      })
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
 
     return {
@@ -287,6 +290,7 @@ export class LaneDiffGenerator {
     const newCompsToStr = newCompsOutput(toLaneName, newCompsTo);
 
     const newCompsFromStr = newCompsOutput(fromLaneName, newCompsFrom);
+
     return `${diffResultsStr}${newCompsToStr}${newCompsFromStr}${failuresStr}`;
   }
 
@@ -399,6 +403,41 @@ export class LaneDiffGenerator {
       })),
       remote: lane.toLaneId().toString(),
     };
+  }
+
+  /**
+   * Check whether a history entry has no components (e.g. the initial "new lane" entry).
+   */
+  isHistoryEntryEmpty(laneHistory: LaneHistory, historyId: string): boolean {
+    const entry = laneHistory.getHistory()[historyId];
+    return !entry || !entry.components.length;
+  }
+
+  /**
+   * Check whether a history entry's version objects are available locally (after attempting import).
+   * Entries with no components (e.g. "new lane") are always considered available.
+   */
+  async isHistoryEntryAvailable(lane: Lane, laneHistory: LaneHistory, historyId: string): Promise<boolean> {
+    const history = laneHistory.getHistory();
+    const entry = history[historyId];
+    if (!entry || !entry.components.length) return true;
+
+    const laneId = lane.toLaneId();
+    const laneData = this.mapHistoryToLaneData(laneId, historyId, entry);
+
+    const ids = ComponentIdList.fromArray(laneData.components.map((c) => c.id.changeVersion(c.head?.toString())));
+    await this.scope.legacyScope.scopeImporter.importWithoutDeps(ids, {
+      cache: true,
+      lane,
+      ignoreMissingHead: true,
+      reason: `checking availability of history entry ${historyId}`,
+    });
+
+    const repo = this.scope.legacyScope.objects;
+    const headsToCheck = laneData.components.map((c) => c.head).filter((h): h is Ref => Boolean(h));
+    if (!headsToCheck.length) return true;
+    const existing = await repo.hasMultiple(headsToCheck);
+    return existing.length === headsToCheck.length;
   }
 
   private mapHistoryToLaneData(laneId: LaneId, historyId: string, historyItem: HistoryItem): LaneData {

@@ -1,9 +1,18 @@
 import chalk from 'chalk';
-import type { ComponentID } from '@teambit/component-id';
+import { countBy } from 'lodash';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
-import type { Command, CommandOptions } from '@teambit/cli';
-import { formatItem, formatSection, formatHint, formatSuccessSummary, warnSymbol, joinSections } from '@teambit/cli';
+import type { Command, CommandOptions, Report } from '@teambit/cli';
+import {
+  formatItem,
+  formatSection,
+  formatTitle,
+  formatHint,
+  formatDetailsHint,
+  formatSuccessSummary,
+  warnSymbol,
+  joinSections,
+} from '@teambit/cli';
 import {
   NOTHING_TO_SNAP_MSG,
   AUTO_SNAPPED_MSG,
@@ -12,7 +21,7 @@ import {
 } from '@teambit/legacy.constants';
 import type { Logger } from '@teambit/logger';
 import type { SnappingMain, SnapResults } from './snapping.main.runtime';
-import { outputIdsIfExists } from './tag-cmd';
+import { outputIdsIfExists, compInBold } from './tag-cmd';
 import type { BasicTagSnapParams } from './version-maker';
 import type { ConfigStoreMain } from '@teambit/config-store';
 
@@ -139,11 +148,11 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     });
 
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
-    return snapResultOutput(results);
+    return snapResultReport(results);
   }
 }
 
-export function snapResultOutput(results: SnapResults): string {
+export function snapResultReport(results: SnapResults): string | Report {
   const {
     snappedComponents,
     autoSnappedResults,
@@ -160,27 +169,34 @@ export function snapResultOutput(results: SnapResults): string {
   const autoSnappedCount = autoSnappedResults ? autoSnappedResults.length : 0;
   const totalCount = totalComponentsCount ?? snappedComponents.length + autoSnappedCount;
 
-  const compInBold = (id: ComponentID) => {
-    const version = id.hasVersion() ? `@${id.version}` : '';
-    return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
+  const formatCompMinimal = (component: ConsumerComponent): string => {
+    return formatItem(compInBold(component.id));
   };
 
-  const formatComp = (component: ConsumerComponent): string => {
+  const formatCompDetailed = (component: ConsumerComponent): string => {
     let output = formatItem(compInBold(component.id));
-    const autoSnap = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
+    const autoSnap = (autoSnappedResults ?? []).filter((result) =>
+      result.triggeredBy.searchWithoutVersion(component.id)
+    );
     if (autoSnap.length) {
-      const autoSnapComp = autoSnap.map((a) => compInBold(a.component.id));
-      output += `\n       ${AUTO_SNAPPED_MSG} (${autoSnapComp.length} total):\n          ${autoSnapComp.join('\n            ')}`;
+      const autoSnapComp = autoSnap.map((a) => a.component.id.toString());
+      output += `\n     ${AUTO_SNAPPED_MSG} (${autoSnapComp.length} total):\n       ${autoSnapComp.join('\n       ')}`;
     }
     return output;
   };
 
-  const newSection = formatSection('new components', 'first version for components', addedComponents.map(formatComp));
-  const changedSection = formatSection(
-    'changed components',
-    'components that got a version bump',
-    changedComponents.map(formatComp)
-  );
+  const hasAutoSnapped = autoSnappedCount > 0;
+
+  const buildSections = (formatComp: (c: ConsumerComponent) => string) => {
+    const newSection = formatSection('new components', 'first version for components', addedComponents.map(formatComp));
+    const changedSection = formatSection(
+      'changed components',
+      'components that got a version bump',
+      changedComponents.map(formatComp)
+    );
+    return { newSection, changedSection };
+  };
+
   const removedSection = outputIdsIfExists('removed components', removedComponents);
 
   const warningsSection =
@@ -192,5 +208,47 @@ export function snapResultOutput(results: SnapResults): string {
     '(use "bit export" to push these components to a remote)\n(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)'
   );
 
-  return joinSections([newSection, changedSection, removedSection, warningsSection, `${summary}\n${snapExplanation}`]);
+  // Build minimal output (no auto-snapped listing, just counts grouped by scope)
+  const { newSection, changedSection } = buildSections(hasAutoSnapped ? formatCompMinimal : formatCompDetailed);
+
+  const autoSnapSection = (() => {
+    if (!hasAutoSnapped) return '';
+    const scopeCounts = countBy(autoSnappedResults, (r) => r.component.id.scope);
+    const sorted = Object.entries(scopeCounts).sort(([, a], [, b]) => b - a);
+    const MAX_SHOWN = 4;
+    const shown = sorted.slice(0, MAX_SHOWN).map(([scope, n]) => `${scope} (${n})`);
+    const remaining = sorted.length - MAX_SHOWN;
+    const scopeLine = remaining > 0 ? [...shown, `+ ${remaining} more scopes`].join(' · ') : shown.join(' · ');
+    const title = formatTitle(`auto-snapped dependents (${autoSnappedCount})`);
+    const scopes = `   ${scopeLine}`;
+    const hint = formatDetailsHint('full list of auto-snapped dependents');
+    return `${title}\n${scopes}\n${hint}`;
+  })();
+
+  const footerParts = [summary, snapExplanation].filter(Boolean).join('\n');
+  const data = joinSections([
+    newSection,
+    changedSection,
+    autoSnapSection,
+    removedSection,
+    warningsSection,
+    footerParts,
+  ]);
+
+  if (!hasAutoSnapped) {
+    return data;
+  }
+
+  // Build detailed output (with full auto-snapped listing)
+  const { newSection: newDetailed, changedSection: changedDetailed } = buildSections(formatCompDetailed);
+  const detailedFooter = [summary, snapExplanation].filter(Boolean).join('\n');
+  const details = joinSections([newDetailed, changedDetailed, removedSection, warningsSection, detailedFooter]);
+
+  return { data, code: 0, details };
+}
+
+/** @deprecated use snapResultReport instead */
+export function snapResultOutput(results: SnapResults): string {
+  const result = snapResultReport(results);
+  return typeof result === 'string' ? result : result.details || result.data;
 }
