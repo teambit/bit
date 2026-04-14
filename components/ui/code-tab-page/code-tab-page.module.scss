@@ -38,10 +38,12 @@ $panelBg: #fafafa;
 }
 
 .label {
-  padding: 1px 6px;
+  padding: 2px 4px;
   font-size: 10px;
-  line-height: 1.4;
   border-radius: 4px;
+  font-weight: 450;
+  line-height: 1;
+  text-transform: lowercase;
 }
 
 .depNode {
