@@ -331,7 +331,7 @@ export class SchemaMain {
     const schemaTask = new SchemaTask(SchemaAspect.id, schema, logger);
     builder.registerBuildTasks([schemaTask]);
     const schemaCmd = new SchemaCommand(schema, component, logger);
-    schemaCmd.commands = [new SchemaDiffCommand(schema, component, logger)];
+    schemaCmd.commands = [new SchemaDiffCommand(schema, component, logger, workspace, scope)];
     cli.register(schemaCmd);
     graphql.register(() => schemaSchema(schema));
     envs.registerService(new SchemaService());
