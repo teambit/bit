@@ -12,7 +12,7 @@ import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError, WorkspaceAspect } from '@teambit/workspace';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import type { LaneDiffResults } from '@teambit/lanes.modules.diff';
-import { LaneDiffCmd, LaneDiffGenerator, LaneHistoryDiffCmd, LaneApiDiffCmd } from '@teambit/lanes.modules.diff';
+import { LaneDiffCmd, LaneDiffGenerator, LaneHistoryDiffCmd } from '@teambit/lanes.modules.diff';
 import type { Scope as LegacyScope, TrackLane, LaneData } from '@teambit/legacy.scope';
 import { NoCommonSnap } from '@teambit/legacy.scope';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
@@ -1369,7 +1369,6 @@ please create a new lane instead, which will include all components of this lane
     laneCmd.commands.push(new LaneHistoryDiffCmd(lanesMain, workspace, scope, componentCompare, schema));
     laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
     laneCmd.commands.push(new LaneRevertCmd(lanesMain));
-    laneCmd.commands.push(new LaneApiDiffCmd(lanesMain, schema, component, workspace, scope));
     cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));
     cli.registerOnStart(async () => {
       await lanesMain.recreateNewLaneIfDeleted();
