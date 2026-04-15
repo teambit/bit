@@ -1345,9 +1345,6 @@ please create a new lane instead, which will include all components of this lane
       install,
       schema
     );
-    if (schema.schemaDiffCommand) {
-      schema.schemaDiffCommand.lanes = lanesMain;
-    }
     const switchCmd = new SwitchCmd(lanesMain);
     const fetchCmd = new FetchCmd(importer);
     const laneCmd = new LaneCmd(lanesMain, workspace, scope);

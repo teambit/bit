@@ -2,130 +2,37 @@ import chalk from 'chalk';
 import type { Command, CommandOptions, CLIArgs } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import type { Logger } from '@teambit/logger';
-import type { Workspace } from '@teambit/workspace';
-import type { ScopeMain } from '@teambit/scope';
-import type { LanesMain } from '@teambit/lanes';
 import { computeAPIDiff, APIDiffStatus } from '@teambit/semantics.entities.semantic-schema-diff';
 import type { APIDiffResult, APIDiffChange, ImpactLevel } from '@teambit/semantics.entities.semantic-schema-diff';
 import type { SchemaMain } from './schema.main.runtime';
 
 export class SchemaDiffCommand implements Command {
-  name = 'diff <component> [base-version] [compare-version]';
+  name = 'diff <component> <base-version> <compare-version>';
   description = 'show API changes between two versions of a component';
   extendedDescription = `compares the public API schema between two versions of a component.
 shows added, removed, and modified exports with semantic impact analysis.
 
 examples:
-  bit schema diff my-component 0.0.1 0.0.2
-  bit schema diff my-component --lane   (diff lane head vs main head)`;
+  bit schema diff my-component 0.0.1 0.0.2`;
   group = 'info-analysis';
-  options = [
-    ['j', 'json', 'return the API diff in json format'],
-    ['l', 'lane <lane-name>', 'diff the component on the given lane (or current lane if no name) against main'],
-  ] as CommandOptions;
-
-  lanes?: LanesMain;
+  options = [['j', 'json', 'return the API diff in json format']] as CommandOptions;
 
   constructor(
     private schema: SchemaMain,
     private component: ComponentMain,
-    private logger: Logger,
-    private workspace?: Workspace,
-    private scope?: ScopeMain
+    private logger: Logger
   ) {}
 
-  async report(args: CLIArgs, flags: { lane?: string }): Promise<string> {
+  async report(args: CLIArgs): Promise<string> {
     const [pattern, baseVersion, compareVersion] = args as string[];
-    if (flags.lane !== undefined) {
-      const laneName = typeof flags.lane === 'string' ? flags.lane : undefined;
-      const { diff, componentId, fromLabel, toLabel } = await this.computeLaneDiff(pattern, laneName);
-      return this.formatDiffResult(diff, `${componentId} (${fromLabel} → ${toLabel})`);
-    }
-    if (!baseVersion || !compareVersion) {
-      throw new Error('please provide base-version and compare-version, or use --lane');
-    }
     const { diff, componentId } = await this.computeDiff(pattern, baseVersion, compareVersion);
     return this.formatDiffResult(diff, `${componentId} (${baseVersion} → ${compareVersion})`);
   }
 
-  async json(args: CLIArgs, flags: { lane?: string }): Promise<Record<string, any>> {
+  async json(args: CLIArgs): Promise<Record<string, any>> {
     const [pattern, baseVersion, compareVersion] = args as string[];
-    if (flags.lane !== undefined) {
-      const laneName = typeof flags.lane === 'string' ? flags.lane : undefined;
-      const { diff, componentId, fromLabel, toLabel } = await this.computeLaneDiff(pattern, laneName);
-      return this.toAgentJson(diff, componentId, fromLabel, toLabel);
-    }
-    if (!baseVersion || !compareVersion) {
-      throw new Error('please provide base-version and compare-version, or use --lane');
-    }
     const { diff, componentId } = await this.computeDiff(pattern, baseVersion, compareVersion);
     return this.toAgentJson(diff, componentId, baseVersion, compareVersion);
-  }
-
-  private async computeLaneDiff(
-    pattern: string,
-    laneName?: string
-  ): Promise<{ diff: APIDiffResult; componentId: string; fromLabel: string; toLabel: string }> {
-    if (!this.lanes) {
-      throw new Error('--lane flag is not available (lanes aspect not loaded)');
-    }
-    if (!this.workspace && !this.scope) {
-      throw new Error('--lane flag requires a workspace or scope');
-    }
-
-    const laneId = laneName ? await this.lanes.parseLaneId(laneName) : this.workspace?.getCurrentLaneId();
-
-    if (!laneId || laneId.isDefault()) {
-      throw new Error('--lane requires a lane name, or being checked out to a lane');
-    }
-
-    const host = this.component.getHost();
-    const ids = await host.idsByPattern(pattern, true);
-    if (ids.length === 0) throw new Error(`no components found matching "${pattern}"`);
-    if (ids.length > 1)
-      throw new Error(`pattern "${pattern}" matches ${ids.length} components. please specify a single component.`);
-
-    const componentId = ids[0];
-
-    const laneObj = await this.lanes.loadLane(laneId);
-    if (!laneObj) throw new Error(`unable to find lane "${laneId.toString()}"`);
-
-    const laneComp = laneObj.components.find((c) => c.id.isEqualWithoutVersion(componentId));
-    if (!laneComp)
-      throw new Error(`component ${componentId.toStringWithoutVersion()} is not on lane "${laneId.toString()}"`);
-    const laneHead = laneComp.head.toString();
-
-    const scope = this.scope || this.workspace!.scope;
-    const modelComponent = await scope.legacyScope.getModelComponent(componentId);
-    const mainHead = modelComponent.head?.toString();
-
-    if (!mainHead) throw new Error(`component ${componentId.toStringWithoutVersion()} has no version on main`);
-    if (laneHead === mainHead) {
-      throw new Error(`component ${componentId.toStringWithoutVersion()} has the same version on lane and main`);
-    }
-
-    const baseId = componentId.changeVersion(mainHead);
-    const compareId = componentId.changeVersion(laneHead);
-    const [baseComponent, compareComponent] = await host.getMany([baseId, compareId]);
-
-    if (!baseComponent) throw new Error(`could not load ${baseId.toString()}`);
-    if (!compareComponent) throw new Error(`could not load ${compareId.toString()}`);
-
-    this.logger.debug(`computing lane API diff: ${baseId.toString()} -> ${compareId.toString()}`);
-
-    const [baseSchema, compareSchema] = await Promise.all([
-      this.schema.getSchema(baseComponent),
-      this.schema.getSchema(compareComponent),
-    ]);
-
-    const assessor = this.schema.getImpactAssessor();
-    const diff = computeAPIDiff(baseSchema, compareSchema, assessor);
-    return {
-      diff,
-      componentId: componentId.toStringWithoutVersion(),
-      fromLabel: `main@${mainHead.slice(0, 8)}`,
-      toLabel: `${laneId.name}@${laneHead.slice(0, 8)}`,
-    };
   }
 
   private async computeDiff(

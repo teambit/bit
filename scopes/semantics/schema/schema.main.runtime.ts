@@ -76,8 +76,6 @@ export class SchemaMain {
     private impactAssessor: ImpactAssessor
   ) {}
 
-  schemaDiffCommand?: SchemaDiffCommand;
-
   /**
    * get the default parser.
    */
@@ -332,10 +330,8 @@ export class SchemaMain {
     const schema = new SchemaMain(parserSlot, impactRuleSlot, envs, config, builder, workspace, logger, impactAssessor);
     const schemaTask = new SchemaTask(SchemaAspect.id, schema, logger);
     builder.registerBuildTasks([schemaTask]);
-    const schemaDiffCmd = new SchemaDiffCommand(schema, component, logger, workspace, scope);
-    schema.schemaDiffCommand = schemaDiffCmd;
     const schemaCmd = new SchemaCommand(schema, component, logger);
-    schemaCmd.commands = [schemaDiffCmd];
+    schemaCmd.commands = [new SchemaDiffCommand(schema, component, logger)];
     cli.register(schemaCmd);
     graphql.register(() => schemaSchema(schema));
     envs.registerService(new SchemaService());
