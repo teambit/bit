@@ -3574,7 +3574,7 @@
   },
   {
     "name": "schema <pattern>",
-    "alias": "",
+    "alias": "api",
     "options": [
       [
         "r",
