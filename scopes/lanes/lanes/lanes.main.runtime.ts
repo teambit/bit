@@ -1395,6 +1395,18 @@ please create a new lane instead, which will include all components of this lane
         throw new Error(`component ${componentId.toStringWithoutVersion()} has the same version on lane and main`);
       const baseId = componentId.changeVersion(mainHead);
       const compareId = componentId.changeVersion(laneHead);
+      const scopeImporter = scope.legacyScope.scopeImporter;
+      await scopeImporter.importWithoutDeps(ComponentIdList.fromArray([baseId]), {
+        cache: true,
+        ignoreMissingHead: true,
+        reason: 'schema diff --lane: import main version',
+      });
+      await scopeImporter.importWithoutDeps(ComponentIdList.fromArray([compareId]), {
+        cache: true,
+        lane: laneObj,
+        ignoreMissingHead: true,
+        reason: 'schema diff --lane: import lane version',
+      });
       const [baseComponent, compareComponent] = await host.getMany([baseId, compareId]);
       if (!baseComponent) throw new Error(`could not load ${baseId.toString()}`);
       if (!compareComponent) throw new Error(`could not load ${compareId.toString()}`);
