@@ -71,7 +71,8 @@ when no app name is specified, automatically detects and runs the app if only on
     const resolvedApp = appName ? appName : ids.length === 1 ? ids[0].toString() : undefined;
     if (!resolvedApp) {
       const runStr = chalk.cyan(`bit run <app id or name>`);
-      this.logger.console(`multiple apps found, please specify one using "${runStr}"`);
+      const appList = ids.map((id) => `  - ${id.toString()}`).join('\n');
+      this.logger.console(`multiple apps found, please specify one using "${runStr}".\navailable apps:\n${appList}`);
       process.exit(1);
     }
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
