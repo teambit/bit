@@ -8,6 +8,7 @@ import type { SchemaMain } from './schema.main.runtime';
 
 export class SchemaCommand implements Command {
   name = 'schema <pattern>';
+  alias = 'api';
   description = 'display component API schema and type definitions';
   extendedDescription = `extracts and displays the public API structure of components including types, functions, classes, and interfaces.
 shows detailed type information, function signatures, and JSDoc documentation for exported elements.
