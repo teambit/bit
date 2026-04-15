@@ -843,6 +843,11 @@ export class CiMain {
    * On retry we delete the remote lane (now populated by the winning concurrent push) and try
    * the export again with our local hash. Bounded attempts guard against a tight push loop between
    * two runners.
+   *
+   * Before each retry we verify we're not a stale run: if the PR branch has advanced past our
+   * commit on the remote, a newer CI run is on the way and clobbering its lane with our older
+   * snaps would regress the PR preview. In that case we surface the original error and let the
+   * newer run publish the correct lane.
    */
   private async exportWithRetryOnLaneHashMismatch(laneIdStr: string, maxAttempts = 3) {
     const isHashMismatchErr = (err: any) =>
@@ -853,6 +858,14 @@ export class CiMain {
         return await this.exporter.export();
       } catch (e: any) {
         if (!isHashMismatchErr(e) || attempt === maxAttempts) throw e;
+        if (await this.isStaleCiRun()) {
+          this.logger.console(
+            chalk.yellow(
+              `Export failed with lane hash mismatch on "${laneIdStr}" and the PR branch has advanced past our commit. Not retrying - a newer CI run will publish the correct lane.`
+            )
+          );
+          throw e;
+        }
         this.logger.console(
           chalk.yellow(
             `Export attempt ${attempt}/${maxAttempts} failed with lane hash mismatch on "${laneIdStr}" (likely a concurrent CI push). Deleting remote lane and retrying.`
@@ -863,6 +876,28 @@ export class CiMain {
     }
     // Unreachable: the loop either returns on success or throws on the last attempt.
     throw new Error(`exportWithRetryOnLaneHashMismatch: exhausted ${maxAttempts} attempts for lane ${laneIdStr}`);
+  }
+
+  /**
+   * Returns true when the PR branch on the remote has advanced past our local HEAD, meaning a
+   * newer commit was pushed to the branch while this CI run was in flight. Best-effort: when we
+   * can't determine the branch or reach the remote we return false (don't block retry).
+   */
+  private async isStaleCiRun(): Promise<boolean> {
+    try {
+      const branch = await this.getBranchName();
+      if (!branch) return false;
+      const localSha = (await git.revparse(['HEAD'])).trim();
+      await git.fetch('origin', branch);
+      const remoteSha = (await git.revparse([`origin/${branch}`])).trim();
+      if (!remoteSha || !localSha || remoteSha === localSha) return false;
+      // If remote has a commit we don't, we're stale.
+      const mergeBase = (await git.raw(['merge-base', localSha, remoteSha])).trim();
+      return mergeBase === localSha && mergeBase !== remoteSha;
+    } catch (err: any) {
+      this.logger.console(chalk.yellow(`Unable to verify CI run freshness (assuming fresh): ${err?.message || err}`));
+      return false;
+    }
   }
 
   /**
