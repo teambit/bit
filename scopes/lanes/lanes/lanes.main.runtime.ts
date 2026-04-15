@@ -1377,6 +1377,7 @@ please create a new lane instead, which will include all components of this lane
         throw new Error('--lane requires a lane name, or being checked out to a lane');
       }
       const componentId = ComponentID.fromString(pattern);
+      await lanesMain.importLaneObject(laneId);
       const laneObj = await lanesMain.loadLane(laneId);
       if (!laneObj) throw new Error(`unable to find lane "${laneId.toString()}"`);
       const laneComp = laneObj.components.find((c) => c.id.isEqualWithoutVersion(componentId));
