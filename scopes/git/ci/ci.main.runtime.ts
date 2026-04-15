@@ -587,7 +587,7 @@ export class CiMain {
     const checkoutResults = await this.checkout.checkout(checkoutProps);
 
     await this.workspace.bitMap.write('checkout head');
-    this.logger.console(checkoutOutput(checkoutResults, checkoutProps));
+    this.logger.console(reportToString(checkoutOutput(checkoutResults, checkoutProps)));
 
     if (laneComponents?.length) {
       await this.restoreLaneConfigChanges(laneComponents);
@@ -878,6 +878,10 @@ export class CiMain {
     this.logger.console(chalk.blue('No specific version bump detected, using default patch'));
     return releaseType;
   }
+}
+
+function reportToString(result: string | { data: string }): string {
+  return typeof result === 'string' ? result : result.data;
 }
 
 CiAspect.addRuntime(CiMain);
