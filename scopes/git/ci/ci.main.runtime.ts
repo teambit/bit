@@ -27,6 +27,14 @@ import type { Version, LaneComponent } from '@teambit/objects';
 import { SourceBranchDetector } from './source-branch-detector';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 
+/**
+ * Sentinel substring emitted by the hub when a lane push is rejected because a lane with the same
+ * id already exists with a different hash. Thrown as `BitError` from
+ * `components/legacy/scope/repositories/sources.ts` and wrapped in `UnexpectedNetworkError` across
+ * the wire, so we match on the message text rather than an error class.
+ */
+const LANE_HASH_MISMATCH_MARKER = 'a lane with the same id already exists with a different hash';
+
 export interface CiWorkspaceConfig {
   /**
    * Path to a custom script that generates commit messages for `bit ci merge` operations.
@@ -385,6 +393,7 @@ export class CiMain {
     this.logger.console(chalk.blue(`Creating temporary lane ${laneId.scope}/${tempLaneName}`));
 
     let foundErr: Error | undefined;
+    let renamedToFinalName = false;
     try {
       await this.lanes.createLane(tempLaneName, {
         scope: laneId.scope,
@@ -452,10 +461,12 @@ export class CiMain {
       // Rename temp lane to original name
       this.logger.console(chalk.blue(`Renaming lane from ${tempLaneName} to ${laneId.name}`));
       await this.lanes.rename(laneId.name, tempLaneName);
+      renamedToFinalName = true;
 
-      // Export with the correct name
+      // Export with the correct name. Retry on hash-mismatch, which indicates a concurrent CI job
+      // pushed the same lane id between our pre-export delete and our merge on the hub.
       this.logger.console(chalk.blue(`Exporting ${snappedComponents.length} components`));
-      const exportResults = await this.exporter.export();
+      const exportResults = await this.exportWithRetryOnLaneHashMismatch(laneId.toString());
       this.logger.console(chalk.green(`Exported ${exportResults.componentsIds.length} components`));
     } catch (e: any) {
       foundErr = e;
@@ -477,8 +488,10 @@ export class CiMain {
         await this.lanes.checkout.checkout({ head: true, skipNpmInstall: true });
       }
 
-      // Clean up orphaned temporary lane on error
-      if (foundErr) {
+      // Clean up orphaned temporary lane on error. Skip if the rename to the final name already
+      // happened - in that case the temp name no longer exists locally, and the lane under the
+      // final name may have been partially exported; leave it alone rather than wipe evidence.
+      if (foundErr && !renamedToFinalName) {
         const tempLaneFullName = `${laneId.scope}/${tempLaneName}`;
         this.logger.console(chalk.blue(`Cleaning up temporary lane ${tempLaneFullName}`));
         try {
@@ -825,6 +838,78 @@ export class CiMain {
       this.logger.console(
         chalk.yellow(`Error during lane cleanup for source branch '${sourceBranchName}': ${e.message}`)
       );
+    }
+  }
+
+  /**
+   * Export with retry on lane hash-mismatch, caused by a concurrent `bit ci pr` run pushing the
+   * same lane id between our pre-export delete and the hub's merge (the export takes 1-2 minutes,
+   * plenty of time to race). Before each retry we skip if the PR branch has advanced past our
+   * commit - in that case a newer run will publish the correct lane, and retrying with our older
+   * snaps would regress the PR preview.
+   */
+  private async exportWithRetryOnLaneHashMismatch(laneIdStr: string, maxAttempts = 3) {
+    const isHashMismatchErr = (err: any) => (err?.message || err?.toString() || '').includes(LANE_HASH_MISMATCH_MARKER);
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        return await this.exporter.export();
+      } catch (e: any) {
+        if (!isHashMismatchErr(e) || attempt === maxAttempts) throw e;
+        if (await this.isStaleCiRun()) {
+          this.logger.console(
+            chalk.yellow(
+              `Export failed with lane hash mismatch on "${laneIdStr}" and the PR branch has advanced past our commit. Not retrying - a newer CI run will publish the correct lane.`
+            )
+          );
+          throw e;
+        }
+        this.logger.console(
+          chalk.yellow(
+            `Export attempt ${attempt}/${maxAttempts} failed with lane hash mismatch on "${laneIdStr}" (likely a concurrent CI push). Deleting remote lane and retrying.`
+          )
+        );
+        try {
+          await this.archiveLane(laneIdStr, true);
+        } catch (archiveErr: any) {
+          // Preserve the original export error - rethrowing the archive error would hide the real
+          // reason the push was rejected.
+          this.logger.console(
+            chalk.yellow(
+              `Failed to delete remote lane "${laneIdStr}" while recovering from hash mismatch: ${archiveErr?.message || archiveErr}. Rethrowing the original export error.`
+            )
+          );
+          if (e && typeof e === 'object' && (e as any).cause == null) {
+            (e as any).cause = archiveErr;
+          }
+          throw e;
+        }
+      }
+    }
+    throw new Error(`exportWithRetryOnLaneHashMismatch: exhausted ${maxAttempts} attempts for lane ${laneIdStr}`);
+  }
+
+  /**
+   * Returns true when the PR branch on the remote has advanced past our local HEAD, meaning a
+   * newer commit was pushed to the branch while this CI run was in flight. Best-effort: when we
+   * can't determine the branch or reach the remote we return false (don't block retry).
+   */
+  private async isStaleCiRun(): Promise<boolean> {
+    try {
+      const branch = await this.getBranchName();
+      if (!branch) return false;
+      const localSha = (await git.revparse(['HEAD'])).trim();
+      // `--` separator and fully-qualified ref so a branch name starting with `-` can't be
+      // interpreted as a git option (defense in depth for untrusted PR branches).
+      await git.raw(['fetch', 'origin', '--', `refs/heads/${branch}:refs/remotes/origin/${branch}`]);
+      const remoteSha = (await git.revparse([`refs/remotes/origin/${branch}`])).trim();
+      if (remoteSha === localSha) return false;
+      const mergeBase = (await git.raw(['merge-base', localSha, remoteSha])).trim();
+      // local is strictly behind remote - remote has commits we don't.
+      return mergeBase === localSha;
+    } catch (err: any) {
+      this.logger.console(chalk.yellow(`Unable to verify CI run freshness (assuming fresh): ${err?.message || err}`));
+      return false;
     }
   }
 
