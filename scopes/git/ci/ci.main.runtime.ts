@@ -834,20 +834,11 @@ export class CiMain {
   }
 
   /**
-   * Run `exporter.export()` and retry when the remote rejects the push because a lane with the same
-   * id already exists with a different hash. This race happens when a concurrent `bit ci pr` run
-   * (same PR, different workflow or re-run) pushed the same lane id between our pre-export
-   * existence check and our merge on the hub. Between "Exporting" and the hub's merge check there
-   * can be ~1-2 minutes of upload/processing - plenty of time for another run to persist a new lane.
-   *
-   * On retry we delete the remote lane (now populated by the winning concurrent push) and try
-   * the export again with our local hash. Bounded attempts guard against a tight push loop between
-   * two runners.
-   *
-   * Before each retry we verify we're not a stale run: if the PR branch has advanced past our
-   * commit on the remote, a newer CI run is on the way and clobbering its lane with our older
-   * snaps would regress the PR preview. In that case we surface the original error and let the
-   * newer run publish the correct lane.
+   * Export with retry on lane hash-mismatch, caused by a concurrent `bit ci pr` run pushing the
+   * same lane id between our pre-export delete and the hub's merge (the export takes 1-2 minutes,
+   * plenty of time to race). Before each retry we skip if the PR branch has advanced past our
+   * commit - in that case a newer run will publish the correct lane, and retrying with our older
+   * snaps would regress the PR preview.
    */
   private async exportWithRetryOnLaneHashMismatch(laneIdStr: string, maxAttempts = 3) {
     const isHashMismatchErr = (err: any) =>
@@ -888,7 +879,6 @@ export class CiMain {
         }
       }
     }
-    // Unreachable: the loop either returns on success or throws on the last attempt.
     throw new Error(`exportWithRetryOnLaneHashMismatch: exhausted ${maxAttempts} attempts for lane ${laneIdStr}`);
   }
 
@@ -902,14 +892,14 @@ export class CiMain {
       const branch = await this.getBranchName();
       if (!branch) return false;
       const localSha = (await git.revparse(['HEAD'])).trim();
-      // Fetch with fully-qualified ref and `--` separator so a branch name starting with `-`
-      // cannot be interpreted as a git option (defense in depth for untrusted PR branches).
+      // `--` separator and fully-qualified ref so a branch name starting with `-` can't be
+      // interpreted as a git option (defense in depth for untrusted PR branches).
       await git.raw(['fetch', 'origin', '--', `refs/heads/${branch}`]);
       const remoteSha = (await git.revparse([`refs/remotes/origin/${branch}`])).trim();
-      if (!remoteSha || !localSha || remoteSha === localSha) return false;
-      // If remote has a commit we don't, we're stale.
+      if (remoteSha === localSha) return false;
       const mergeBase = (await git.raw(['merge-base', localSha, remoteSha])).trim();
-      return mergeBase === localSha && mergeBase !== remoteSha;
+      // local is strictly behind remote - remote has commits we don't.
+      return mergeBase === localSha;
     } catch (err: any) {
       this.logger.console(chalk.yellow(`Unable to verify CI run freshness (assuming fresh): ${err?.message || err}`));
       return false;
