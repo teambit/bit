@@ -1376,12 +1376,7 @@ please create a new lane instead, which will include all components of this lane
       if (laneId.isDefault()) {
         throw new Error('--lane requires a lane name, or being checked out to a lane');
       }
-      const host = component.getHost();
-      const ids = await host.idsByPattern(pattern, true);
-      if (ids.length === 0) throw new Error(`no components found matching "${pattern}"`);
-      if (ids.length > 1)
-        throw new Error(`pattern "${pattern}" matches ${ids.length} components. please specify a single component.`);
-      const componentId = ids[0];
+      const componentId = ComponentID.fromString(pattern);
       const laneObj = await lanesMain.loadLane(laneId);
       if (!laneObj) throw new Error(`unable to find lane "${laneId.toString()}"`);
       const laneComp = laneObj.components.find((c) => c.id.isEqualWithoutVersion(componentId));
@@ -1407,7 +1402,7 @@ please create a new lane instead, which will include all components of this lane
         ignoreMissingHead: true,
         reason: 'schema diff --lane: import lane version',
       });
-      const [baseComponent, compareComponent] = await host.getMany([baseId, compareId]);
+      const [baseComponent, compareComponent] = await scope.getMany([baseId, compareId]);
       if (!baseComponent) throw new Error(`could not load ${baseId.toString()}`);
       if (!compareComponent) throw new Error(`could not load ${compareId.toString()}`);
       const diff = await schema.computeAPIDiff(baseComponent, compareComponent);
