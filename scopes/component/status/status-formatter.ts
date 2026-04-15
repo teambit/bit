@@ -10,9 +10,18 @@ import {
   statusWorkspaceIsCleanMsg,
   BASE_DOCS_DOMAIN,
 } from '@teambit/legacy.constants';
-import { Logger } from '@teambit/logger';
-import { formatSection } from '@teambit/cli';
-import { compact, groupBy, partition } from 'lodash';
+import {
+  formatSection,
+  formatItem,
+  formatTitle,
+  bulletSymbol,
+  successSymbol,
+  warnSymbol,
+  errorSymbol,
+  joinSections,
+} from '@teambit/cli';
+import type { OutputSection } from '@teambit/cli';
+import { countBy, groupBy, partition } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import type { StatusResult } from './status.main.runtime';
 
@@ -30,7 +39,7 @@ export type StatusFormatterOptions = {
 export function formatStatusOutput(
   statusResult: StatusResult,
   options: StatusFormatterOptions = {}
-): { data: string; code: number } {
+): { data: string; code: number; sections?: OutputSection[] } {
   const { strict = false, verbose = false, warnings = false, failOnError = false } = options;
 
   const {
@@ -66,7 +75,8 @@ export function formatStatusOutput(
     showIssues = false,
     message?: string,
     localVersions?: string[],
-    showSoftTagMsg = true
+    showSoftTagMsg = true,
+    defaultSym?: string
   ): string {
     const idWithIssues = componentsWithIssues.find((c) => c.id.isEqual(id));
     const isSoftTagged = Boolean(softTaggedComponents.find((softTaggedId) => softTaggedId.isEqual(id)));
@@ -74,12 +84,12 @@ export function formatStatusOutput(
     const isClean = !message && !idWithIssues;
 
     const getSymbol = () => {
-      if (message) return chalk.yellow('⚠');
-      if (idWithIssues) return hasTagBlocker ? chalk.red('✖') : chalk.yellow('⚠');
-      return Logger.successSymbol();
+      if (message) return warnSymbol;
+      if (idWithIssues) return hasTagBlocker ? errorSymbol : warnSymbol;
+      return defaultSym ?? bulletSymbol;
     };
 
-    let idFormatted = `   ${getSymbol()} ` + chalk.cyan(id.toStringWithoutVersion());
+    let idFormatted = formatItem(chalk.cyan(id.toStringWithoutVersion()), getSymbol());
 
     if (localVersions) {
       if (verbose) {
@@ -126,9 +136,10 @@ export function formatStatusOutput(
       component.latestVersion && component.latestVersion !== component.headVersion
         ? ` latest: ${component.latestVersion}`
         : '';
-    return `   ${chalk.yellow('⚠')} ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} head: ${
-      component.headVersion
-    }${latest}`;
+    return formatItem(
+      `${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} head: ${component.headVersion}${latest}`,
+      warnSymbol
+    );
   });
   const outdatedStr = formatSection(outdatedTitle, outdatedDesc, outdatedComps);
 
@@ -136,9 +147,10 @@ export function formatStatusOutput(
   const pendingMergeDesc = `(use "bit reset" to discard local tags/snaps, and bit checkout head to re-merge with the remote.
 alternatively, to keep local tags/snaps history, use "bit merge [component-id]")`;
   const pendingMergeComps = mergePendingComponents.map((component) => {
-    return `   ${chalk.yellow('⚠')} ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
-      component.divergeData.snapsOnSourceOnly.length
-    } (source) and ${component.divergeData.snapsOnTargetOnly.length} (target) uncommon snaps respectively`;
+    return formatItem(
+      `${chalk.cyan(component.id.toString())} local and remote have diverged and have ${component.divergeData.snapsOnSourceOnly.length} (source) and ${component.divergeData.snapsOnTargetOnly.length} (target) uncommon snaps respectively`,
+      warnSymbol
+    );
   });
 
   const pendingMergeStr = formatSection(pendingMergeTitle, pendingMergeDesc, pendingMergeComps);
@@ -147,7 +159,9 @@ alternatively, to keep local tags/snaps history, use "bit merge [component-id]")
   const compDuringMergeDesc = `(use "bit snap/tag [--unmerged]" to complete the merge process.
 to cancel the merge operation, use either "bit lane merge-abort" (for prior "bit lane merge" command)
 or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
-  const compDuringMergeComps = componentsDuringMergeState.map((c) => format(c));
+  const compDuringMergeComps = componentsDuringMergeState.map((c) =>
+    format(c, false, undefined, undefined, true, warnSymbol)
+  );
 
   const compDuringMergeStr = formatSection(compDuringMergeTitle, compDuringMergeDesc, compDuringMergeComps);
 
@@ -164,10 +178,10 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
     modifiedComponents.map((c) => format(c))
   );
 
-  const autoTagPendingTitle = 'components pending auto-tag (when their modified dependencies are tagged)';
+  const autoTagPendingDesc = '(these will be auto-tagged when their modified dependencies are tagged)';
   const autoTagPendingOutput = formatSection(
-    autoTagPendingTitle,
-    '',
+    'components pending auto-tag',
+    autoTagPendingDesc,
     autoTagPendingComponents.map((c) => format(c))
   );
 
@@ -222,7 +236,7 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
   const unavailableOnMainOutput = formatSection(
     'components unavailable on main',
     unavailableOnMainDesc,
-    unavailableOnMain.map((c) => format(c))
+    unavailableOnMain.map((c) => format(c, false, undefined, undefined, true, warnSymbol))
   );
 
   const getUpdateFromMsg = (divergeData: SnapsDistance, from = 'main'): string => {
@@ -266,7 +280,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
 
   const getWorkspaceIssuesOutput = () => {
     if (!workspaceIssues.length) return '';
-    const title = chalk.bold.white('workspace issues');
+    const title = formatTitle('workspace issues');
     const issues = workspaceIssues.join('\n');
     return `\n\n${title}\n${issues}`;
   };
@@ -279,7 +293,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
 
   const statusMsg =
     importPendingWarning +
-    compact([
+    joinSections([
       outdatedStr,
       pendingMergeStr,
       updatesFromMainOutput,
@@ -297,12 +311,12 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
       invalidComponentOutput,
       locallySoftRemovedOutput,
       remotelySoftRemovedOutput,
-    ]).join('\n\n') +
+    ]) +
     showWarningsStr +
     troubleshootingStr;
 
   const results =
-    (statusMsg || `${Logger.successSymbol()} ${chalk.yellow(statusWorkspaceIsCleanMsg)}`) +
+    (statusMsg || `${successSymbol()} ${chalk.yellow(statusWorkspaceIsCleanMsg)}`) +
     getWorkspaceIssuesOutput() +
     getLaneStr();
 
@@ -319,9 +333,74 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
     }
   }
 
+  // Build structured sections for interactive rendering
+  const sections: OutputSection[] = [];
+  if (importPendingWarning) {
+    sections.push({ content: importPendingWarning.trimEnd() });
+  }
+
+  const sectionEntries: Array<{ content: string; autoTag?: boolean }> = [
+    { content: outdatedStr },
+    { content: pendingMergeStr },
+    { content: updatesFromMainOutput },
+    { content: updatesFromForkedOutput },
+    { content: compDuringMergeStr },
+    { content: localOnlyComponentsOutput },
+    { content: newComponentsOutput },
+    { content: modifiedComponentOutput },
+    { content: snappedComponentsOutput },
+    { content: stagedComponentsOutput },
+    { content: softTaggedComponentsOutput },
+    { content: unavailableOnMainOutput },
+    { content: autoTagPendingOutput, autoTag: true },
+    { content: compWithIssuesOutput },
+    { content: invalidComponentOutput },
+    { content: locallySoftRemovedOutput },
+    { content: remotelySoftRemovedOutput },
+  ];
+
+  for (const entry of sectionEntries) {
+    if (!entry.content) continue;
+    if (entry.autoTag) {
+      const count = autoTagPendingComponents.length;
+      const scopeCounts = countBy(autoTagPendingComponents, (id) => id.scope);
+      const sorted = Object.entries(scopeCounts).sort(([, a], [, b]) => b - a);
+      const MAX_SHOWN = 4;
+      const shown = sorted.slice(0, MAX_SHOWN).map(([scope, n]) => `${scope} (${n})`);
+      const remaining = sorted.length - MAX_SHOWN;
+      const scopeLine = remaining > 0 ? [...shown, `+ ${remaining} more scopes`].join(' · ') : shown.join(' · ');
+      const title = formatTitle(`components pending auto-tag (${count})`);
+      const desc = chalk.dim(`  ${autoTagPendingDesc}`);
+      const scopes = `   ${scopeLine}`;
+      const hint = chalk.dim('— use --expand to list');
+      sections.push({
+        content: entry.content,
+        collapsible: {
+          summary: `${title}\n${desc}\n${scopes}  ${hint}`,
+        },
+      });
+    } else {
+      sections.push({ content: entry.content });
+    }
+  }
+
+  const suffixParts = [showWarningsStr.trim(), troubleshootingStr.trim()].filter(Boolean);
+  if (suffixParts.length) sections.push({ content: suffixParts.join('\n') });
+
+  const wsIssuesStr = getWorkspaceIssuesOutput().trim();
+  if (wsIssuesStr) sections.push({ content: wsIssuesStr });
+
+  const laneInfoStr = getLaneStr().trim();
+  if (laneInfoStr) sections.push({ content: laneInfoStr });
+
+  if (!sections.length) {
+    sections.push({ content: `${successSymbol()} ${chalk.yellow(statusWorkspaceIsCleanMsg)}` });
+  }
+
   return {
     data: results,
     code: exitCode,
+    sections,
   };
 }
 

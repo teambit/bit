@@ -15,6 +15,16 @@ import path from 'path';
 import { CliMcpServerAspect } from './cli-mcp-server.aspect';
 import type { CliMcpServerMain } from './cli-mcp-server.main.runtime';
 
+/** Parse JSON from an MCP tool response, providing a clear error when the server returned a non-JSON error string. */
+function parseToolJson(result: CallToolResult): any {
+  const text = (result.content[0] as any).text;
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Expected JSON response from MCP tool but got: ${text.slice(0, 200)}`);
+  }
+}
+
 describe('CliMcpServer Integration Tests', function () {
   this.timeout(30000); // Increased timeout for MCP server operations
 
@@ -165,7 +175,7 @@ describe('CliMcpServer Integration Tests', function () {
       expect(result.content).to.be.an('array');
       expect(result.content[0]).to.have.property('type', 'text');
 
-      const content = JSON.parse((result.content[0] as any).text);
+      const content = parseToolJson(result);
       expect(content).to.have.property('status');
       expect(content).to.have.property('list');
     });
@@ -182,7 +192,7 @@ describe('CliMcpServer Integration Tests', function () {
       expect(result.content).to.be.an('array');
       expect(result.content[0]).to.have.property('type', 'text');
 
-      const content = JSON.parse((result.content[0] as any).text);
+      const content = parseToolJson(result);
       expect(content).to.have.property('status');
     });
   });
@@ -204,7 +214,7 @@ describe('CliMcpServer Integration Tests', function () {
       expect(result.content).to.be.an('array');
       expect(result.content[0]).to.have.property('type', 'text');
 
-      const content = JSON.parse((result.content[0] as any).text);
+      const content = parseToolJson(result);
       expect(content).to.have.property('summary');
       expect(content).to.have.property('components');
       expect(content.summary).to.have.property('requested', 2);
@@ -212,7 +222,8 @@ describe('CliMcpServer Integration Tests', function () {
       expect(content.components).to.be.an('object');
     });
 
-    it('should get component details with schema', async () => {
+    it('should get component details with schema', async function () {
+      this.retries(2); // schema extraction is heavier and may hit transient socket hang-ups in CI
       const componentIds = ['comp1'];
 
       const result = (await mcpClient.callTool({
@@ -228,7 +239,7 @@ describe('CliMcpServer Integration Tests', function () {
       expect(result.content).to.be.an('array');
       expect(result.content[0]).to.have.property('type', 'text');
 
-      const content = JSON.parse((result.content[0] as any).text);
+      const content = parseToolJson(result);
       expect(content).to.have.property('summary');
       expect(content).to.have.property('components');
       expect(content.summary.includeSchema).to.be.true;
@@ -317,7 +328,7 @@ describe('CliMcpServer Integration Tests', function () {
       expect(result.content).to.be.an('array');
       expect(result.content[0]).to.have.property('type', 'text');
 
-      const content = JSON.parse((result.content[0] as any).text);
+      const content = parseToolJson(result);
       expect(content).to.have.property('commands');
       expect(content.commands).to.be.an('array');
       expect(content.commands.length).to.be.greaterThan(0);
@@ -341,7 +352,7 @@ describe('CliMcpServer Integration Tests', function () {
       expect(result.content).to.be.an('array');
       expect(result.content[0]).to.have.property('type', 'text');
 
-      const content = JSON.parse((result.content[0] as any).text);
+      const content = parseToolJson(result);
       expect(content).to.have.property('commands');
       expect(content.commands).to.be.an('array');
       expect(content.commands.length).to.be.greaterThan(0);
@@ -361,7 +372,7 @@ describe('CliMcpServer Integration Tests', function () {
       expect(result.content).to.be.an('array');
       expect(result.content[0]).to.have.property('type', 'text');
 
-      const content = JSON.parse((result.content[0] as any).text);
+      const content = parseToolJson(result);
       expect(content).to.have.property('name', 'status');
       expect(content).to.have.property('description');
       expect(content).to.have.property('options');
@@ -380,7 +391,7 @@ describe('CliMcpServer Integration Tests', function () {
       expect(result.content).to.be.an('array');
       expect(result.content[0]).to.have.property('type', 'text');
 
-      const content = JSON.parse((result.content[0] as any).text);
+      const content = parseToolJson(result);
       expect(content).to.have.property('name', 'lane switch');
       expect(content).to.have.property('description');
       expect(content.description).to.include('switch to the specified lane');
@@ -403,7 +414,7 @@ describe('CliMcpServer Integration Tests', function () {
       expect(result.content).to.be.an('array');
       expect(result.content[0]).to.have.property('type', 'text');
 
-      const content = JSON.parse((result.content[0] as any).text);
+      const content = parseToolJson(result);
       expect(content).to.have.property('name', 'lane show');
       expect(content).to.have.property('description');
     });

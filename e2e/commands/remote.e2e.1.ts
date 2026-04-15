@@ -44,7 +44,7 @@ describe('bit remote command', function () {
       });
       it('should successfully delete the global remote when "--global" flag was used', () => {
         const output = helper.command.runCmd(`bit remote del ${helper.scopes.remote} --global`);
-        expect(output).to.have.string('successfully removed remote');
+        expect(output).to.have.string('removed remote');
 
         const remotes = helper.command.runCmd('bit remote');
         expect(remotes).to.not.have.string(helper.scopes.remote);
@@ -79,7 +79,7 @@ describe('bit remote command', function () {
       });
       it('should successfully delete the remote when "--global" flag was not used', () => {
         const output = helper.command.runCmd(`bit remote del ${helper.scopes.remote}`);
-        expect(output).to.have.string('successfully removed remote');
+        expect(output).to.have.string('removed remote');
 
         const remotes = helper.command.runCmd('bit remote');
         expect(remotes).to.not.have.string(helper.scopes.remote);

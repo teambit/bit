@@ -104,6 +104,11 @@ delete capsules
 with no args, only workspace's capsules are deleted
 Flags: --scope-aspects, --all
 
+## bit cat <component-id>
+
+print source files or config of a component at a specific version
+Flags: --file <path>, --config, --all, --json
+
 ## bit check-types [component-pattern]
 
 validate TypeScript type correctness
@@ -116,7 +121,7 @@ Flags: --unmodified, --strict, --json
 switch between component versions or remove local changes
 
 checkout components to specified versions or remove local changes. most commonly used as 'bit checkout head' to get latest versions. the `<to>` argument accepts these values: - head: checkout to last snap/tag (most common usage) - specific version: checkout to exact version (e.g. 'bit checkout 1.0.5 component-name') - head~x: go back x generations from head (e.g. 'head~2' for two versions back) - latest: checkout to latest semver tag - reset: remove local modifications and restore original files (also restores deleted component directories) when on lanes, 'checkout head' only affects lane components. to update main components, run 'bit lane merge main'.
-Flags: --interactive-merge, --auto-merge-resolve <merge-strategy>, --manual, --all, --workspace-only, --verbose, --skip-dependency-installation, --force-ours, --force-theirs
+Flags: --interactive-merge, --auto-merge-resolve <merge-strategy>, --manual, --all, --workspace-only, --verbose, --skip-dependency-installation, --force-ours, --force-theirs, --include-new-from-scope
 
 ## bit ci <sub-command>
 
@@ -282,6 +287,10 @@ Flags: --json, --include-deps
 
 write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions
 Flags: --target <workspace.jsonc|package.json>
+
+## bit details
+
+show expanded details from the last command that provided them (e.g. tag, snap)
 
 ## bit diff [component-pattern] [version] [to-version]
 
@@ -735,6 +744,37 @@ replace component files with specified version while preserving current version
 replaces component source files with files from the specified version but keeps the current component version. useful for reverting file changes without changing the component's version history. different from checkout which changes the version.
 Flags: --verbose, --skip-dependency-installation
 
+## bit ripple <sub-command>
+
+manage Ripple CI jobs on bit.cloud
+
+view, retry, and manage Ripple CI jobs that build your components in the cloud after export.
+
+## bit ripple list
+
+list recent Ripple CI jobs (filtered by workspace owner by default)
+Flags: --all, --owner <owner>, --scope <scope>, --lane <lane>, --user <user>, --status <status>, --limit <limit>, --json
+
+## bit ripple log [job-id]
+
+show job details and component build task summaries (auto-detects current lane when no job-id given)
+Flags: --lane <lane>, --component <component>, --json
+
+## bit ripple errors [job-id]
+
+show build errors for a Ripple CI job (auto-detects current lane when no job-id given)
+Flags: --lane <lane>, --log, --json
+
+## bit ripple retry [job-id]
+
+retry a failed Ripple CI job (auto-detects current lane when no job-id given)
+Flags: --lane <lane>, --json
+
+## bit ripple stop [job-id]
+
+stop a running Ripple CI job (auto-detects current lane when no job-id given)
+Flags: --lane <lane>, --json
+
 ## bit run [app-name]
 
 start an application component locally
@@ -748,6 +788,13 @@ display component API schema and type definitions
 
 extracts and displays the public API structure of components including types, functions, classes, and interfaces. shows detailed type information, function signatures, and JSDoc documentation for exported elements. useful for understanding component interfaces and generating documentation. you can use a `<pattern>` for multiple component ids, such as `bit schema "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
 Flags: --remote, --json
+
+## bit schema diff <component> <base-version> <compare-version>
+
+show API changes between two versions of a component
+
+compares the public API schema between two versions of a component. shows added, removed, and modified exports with semantic impact analysis. examples: bit schema diff my-component 0.0.1 0.0.2
+Flags: --json
 
 ## bit scope <sub-command>
 
@@ -840,7 +887,7 @@ list stash
 show workspace component status and issues
 
 displays the current state of all workspace components including new, modified, staged, and problematic components. identifies blocking issues that prevent tagging/snapping and provides warnings with --warnings flag. essential for understanding workspace health before versioning components. use --quick for a faster check that only detects file-level changes (new/modified components). for maximum speed (skips aspect loading entirely), use "bit mini-status".
-Flags: --json, --warnings, --verbose, --lanes, --strict, --fail-on-error, --ignore-circular-dependencies, --quick
+Flags: --json, --warnings, --verbose, --lanes, --strict, --fail-on-error, --ignore-circular-dependencies, --quick, --expand
 
 ## bit system <sub-command>
 

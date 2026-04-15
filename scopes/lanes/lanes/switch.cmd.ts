@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import { compact } from 'lodash';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import {
   applyVersionReport,
@@ -7,6 +6,7 @@ import {
   compilationErrorOutput,
 } from '@teambit/component.modules.merge-helper';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatItem, formatSection, formatSuccessSummary, formatDetailsHint, joinSections } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { LanesMain } from './lanes.main.runtime';
 
@@ -104,39 +104,48 @@ ${COMPONENT_PATTERN_HELP}`,
     if (json) {
       return JSON.stringify({ components, failedComponents }, null, 4);
     }
-    const getFailureOutput = () => {
-      if (!failedComponents || !failedComponents.length) return '';
-      const title = '\nswitch skipped for the following component(s)';
-      const body = compact(
-        failedComponents.map((failedComponent) => {
-          // all failures here are "unchangedLegitimately". otherwise, it would have been thrown as an error
-          if (!verbose) return null;
-          return `${chalk.bold(failedComponent.id.toString())} - ${chalk.white(failedComponent.unchangedMessage)}`;
-        })
-      ).join('\n');
-      if (!body) {
-        return `${chalk.bold(`\nswitch skipped legitimately for ${failedComponents.length} component(s)`)}
-  (use --verbose to list them next time)`;
-      }
-      return `${chalk.underline(title)}\n${body}`;
+    const skippedComponents = failedComponents ?? [];
+    const hasSkippedComponents = skippedComponents.length > 0 && !verbose;
+
+    const getFailureOutputMinimal = () => {
+      if (!hasSkippedComponents) return '';
+      return formatDetailsHint(`full list of ${skippedComponents.length} skipped component(s)`);
+    };
+    const getFailureOutputDetailed = () => {
+      if (!skippedComponents.length) return '';
+      const items = skippedComponents.map((failedComponent) =>
+        formatItem(`${chalk.bold(failedComponent.id.toString())} - ${failedComponent.unchangedMessage}`)
+      );
+      return formatSection('switch skipped', '', items);
     };
     const getSuccessfulOutput = () => {
-      const laneSwitched = chalk.green(`\nsuccessfully set "${chalk.bold(lane)}" as the active lane`);
-      if (!components || !components.length) return `No components have been changed.${laneSwitched}`;
-      const title = `successfully switched ${components.length} components to the head of lane ${lane}\n`;
-      return chalk.bold(title) + applyVersionReport(components, true, false) + laneSwitched;
+      const laneSwitched = formatSuccessSummary(`successfully set "${chalk.bold(lane)}" as the active lane`);
+      if (!components || !components.length) return `No components have been changed.\n${laneSwitched}`;
+      const title = `successfully switched ${components.length} components to the head of lane ${lane}`;
+      return [formatSuccessSummary(title), applyVersionReport(components, true, false), laneSwitched]
+        .filter(Boolean)
+        .join('\n');
     };
 
     const getGitBranchWarningOutput = () => {
-      return gitBranchWarning ? chalk.yellow(`Warning: ${gitBranchWarning}`) : null;
+      return gitBranchWarning ? chalk.yellow(`Warning: ${gitBranchWarning}`) : '';
     };
 
-    return compact([
-      getFailureOutput(),
-      getSuccessfulOutput(),
-      getGitBranchWarningOutput(),
-      installationErrorOutput(installationError),
-      compilationErrorOutput(compilationError),
-    ]).join('\n\n');
+    const buildOutput = (failureOutput: string) =>
+      joinSections([
+        failureOutput,
+        getSuccessfulOutput(),
+        getGitBranchWarningOutput(),
+        installationErrorOutput(installationError),
+        compilationErrorOutput(compilationError),
+      ]);
+
+    if (!hasSkippedComponents) {
+      return buildOutput(getFailureOutputDetailed());
+    }
+
+    const data = buildOutput(getFailureOutputMinimal());
+    const details = buildOutput(getFailureOutputDetailed());
+    return { data, code: 0, details };
   }
 }

@@ -22,14 +22,19 @@ Subcommands: log, tail-log
 doctor [diagnosis-name] - diagnose and troubleshoot workspace issues
 clear-cache - remove cached data to resolve stale data issues
 
+Workspace commands
+details - show expanded details from the last command that provided them (e.g. tag, snap)
+
 Information & Analysis
 show <component-name> - display component metadata, dependencies, and configuration
+cat <component-id> - print source files or config of a component at a specific version
 graph [id] - visualize component dependencies as a graph image
 pattern <pattern> - test and validate component patterns
 list [remote-scope] - display components in workspace or remote scope
+schema <pattern> - display component API schema and type definitions
+Subcommands: diff
 diff [component-pattern] [version] [to-version] - compare component changes between versions or against the current workspace
 status - show workspace component status and issues
-schema <pattern> - display component API schema and type definitions
 
 Component Configuration
 envs - show components and their assigned environments
@@ -45,6 +50,8 @@ Subcommands: list, list-core, get, set, unset, update
 Collaboration & Remote
 remote - manage remote scopes for self-hosted environments
 Subcommands: add, del, list
+ripple <sub-command> - manage Ripple CI jobs on bit.cloud
+Subcommands: list, log, errors, retry, stop
 deprecate <component-name> - mark a component as deprecated to discourage its use
 undeprecate <id> - remove the deprecation status from a component
 import [component-patterns...] - bring components from remote scopes into your workspace
@@ -71,6 +78,13 @@ Subcommands: start, setup, rules
 
 Develop components
 script [script-name] - run a script defined by the environment
+
+Authentication & Cloud
+login - authenticate with Bit Cloud for component publishing and collaboration
+logout - sign out of Bit Cloud and clear authentication tokens
+whoami - display the currently authenticated Bit Cloud user
+npmrc [sub-command] - configure .npmrc file with Bit Cloud registry and authentication settings
+Subcommands: generate
 
 Workspace Tools
 ws-config <sub-command> - generate IDE configuration files
@@ -128,12 +142,5 @@ Subcommands: save, load, list
 log <id> - display component version history
 log-file <filepath> - EXPERIMENTAL. display history of changes to a specific file
 blame <filepath> - EXPERIMENTAL. show line-by-line authorship and modification history
-
-Authentication & Cloud
-login - authenticate with Bit Cloud for component publishing and collaboration
-logout - sign out of Bit Cloud and clear authentication tokens
-whoami - display the currently authenticated Bit Cloud user
-npmrc [sub-command] - configure .npmrc file with Bit Cloud registry and authentication settings
-Subcommands: generate
 
 IMPORTANT: When you need flags, arguments, or subcommand details, READ the file CLI_REFERENCE.md in this same directory using the Read tool. Only fall back to 'bit <command> --help' if the reference file doesn't cover what you need.

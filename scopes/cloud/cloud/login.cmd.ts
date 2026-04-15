@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import yesno from 'yesno';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary, formatTitle } from '@teambit/cli';
 import { isEmpty } from 'lodash';
 import { BitError } from '@teambit/bit-error';
 import type { CloudMain } from './cloud.main.runtime';
@@ -82,7 +83,7 @@ supports custom cloud domains, CI/machine authentication, and manual token refre
       );
       const ok = await yesno({ question: reLoginPrompt });
       if (!ok) {
-        return chalk.green(`Logged in as ${this.cloud.getUsername()}`);
+        return formatSuccessSummary(`Logged in as ${this.cloud.getUsername()}`);
       }
       await this.cloud.logout();
     }
@@ -97,7 +98,7 @@ supports custom cloud domains, CI/machine authentication, and manual token refre
       defaultCloudDomain
     );
 
-    let message = chalk.green(`Logged in as ${result?.username}`);
+    let message = formatSuccessSummary(`Logged in as ${result?.username}`);
 
     if (skipConfigUpdate) {
       return message;
@@ -211,6 +212,6 @@ Modification: ${chalk.green(conflict.modifications)}`
         return entryStr;
       })
       .join('\n');
-    return chalk.greenBright(`\nGlobal config changes:\n${updates}\n\n`);
+    return `\n${formatTitle('Global config changes')}\n${updates}\n\n`;
   };
 }

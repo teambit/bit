@@ -39,19 +39,37 @@ import type { SchemaMain } from '@teambit/schema';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import type { Logger } from '@teambit/logger';
 import { LaneDiffGenerator } from '@teambit/lanes.modules.diff';
+import type { LaneDiffResults } from '@teambit/lanes.modules.diff';
 
 const FILES_HISTORY_DIR = 'files-history';
 const ENV_ICONS_DIR = 'env-icons';
 const LAST_SNAP_DIR = 'last-snap';
 const CMD_HISTORY = 'command-history-ide';
 
+type LaneDiffForIDEResult = {
+  newCompsFrom: string[];
+  newCompsTo: string[];
+  compsWithDiff: {
+    id: string;
+    hasDiff: boolean;
+    filesDiff: { filePath: string; status: string; fromContent?: string; toContent?: string }[];
+    fieldsDiff?: { fieldName: string; diffOutput: string }[] | null;
+  }[];
+  compsWithNoChanges: string[];
+  toLaneName: string;
+  fromLaneName: string;
+  failures: { id: string; msg: string }[];
+};
+
 type PathLinux = string; // problematic to get it from @teambit/legacy/dist/utils/path.
 
 type PathFromLastSnap = { [relativeToWorkspace: PathLinux]: string };
+type ObjectPathsFromLastSnap = { [relativeToWorkspace: PathLinux]: string };
 
 type InitSCMEntry = {
   filesStatus: FilesStatus;
   pathsFromLastSnap: PathFromLastSnap;
+  objectPathsFromLastSnap: ObjectPathsFromLastSnap;
   compDir: PathLinux;
 };
 
@@ -406,6 +424,16 @@ export class APIForIDE {
     return results;
   }
 
+  getCompFileObjectPathsFromLastSnap(compFiles: CompFiles): { [relativePath: string]: string } {
+    if (!compFiles.id.hasVersion()) return {}; // it's a new component.
+    const repo = this.workspace.scope.legacyScope.objects;
+    const results: { [relativePath: string]: string } = {};
+    for (const modelFile of compFiles.modelFiles) {
+      results[pathJoinLinux(compFiles.compDir, modelFile.relativePath)] = repo.objectPath(modelFile.file);
+    }
+    return results;
+  }
+
   async warmWorkspaceCache() {
     await this.workspace.warmCache();
   }
@@ -544,18 +572,27 @@ export class APIForIDE {
     return compact(results);
   }
 
-  async getDataToInitSCM(): Promise<DataToInitSCM> {
+  async getDataToInitSCM(options?: { useHashes?: boolean }): Promise<DataToInitSCM> {
+    const useHashes = options?.useHashes;
+    if (useHashes) {
+      // clean up old materialized files since hash-based reads don't need them
+      const lastSnapDir = path.join(this.workspace.scope.path, FILES_HISTORY_DIR, LAST_SNAP_DIR);
+      await fs.remove(lastSnapDir);
+    }
     const ids = this.workspace.listIds();
     const results: DataToInitSCM = {};
     await pMap(
       ids,
       async (id) => {
         const compFiles = await this.workspace.getFilesModification(id);
-        const pathsFromLastSnap = await this.getCompFilesDirPathFromLastSnapUsingCompFiles(compFiles);
+        // only compute object paths when the extension supports direct object reads, otherwise materialize files to disk
+        const objectPathsFromLastSnap = useHashes ? this.getCompFileObjectPathsFromLastSnap(compFiles) : {};
+        const pathsFromLastSnap = useHashes ? {} : await this.getCompFilesDirPathFromLastSnapUsingCompFiles(compFiles);
         const idStr = id.toStringWithoutVersion();
         results[idStr] = {
           filesStatus: compFiles.getFilesStatus(),
           pathsFromLastSnap,
+          objectPathsFromLastSnap,
           compDir: compFiles.compDir,
         };
       },
@@ -614,20 +651,7 @@ export class APIForIDE {
     fromHistoryId: string,
     toHistoryId: string,
     laneName?: string
-  ): Promise<{
-    newCompsFrom: string[];
-    newCompsTo: string[];
-    compsWithDiff: {
-      id: string;
-      hasDiff: boolean;
-      filesDiff: { filePath: string; status: string; fromContent?: string; toContent?: string }[];
-      fieldsDiff?: { fieldName: string; diffOutput: string }[] | null;
-    }[];
-    compsWithNoChanges: string[];
-    toLaneName: string;
-    fromLaneName: string;
-    failures: { id: string; msg: string }[];
-  }> {
+  ): Promise<LaneDiffForIDEResult> {
     const laneId = laneName ? await this.lanes.parseLaneId(laneName) : this.workspace.getCurrentLaneId();
     if (laneId.isDefault()) {
       throw new Error('lane history diff is not available on main');
@@ -638,6 +662,20 @@ export class APIForIDE {
     if (!laneObj) throw new Error(`unable to find lane "${laneId.toString()}"`);
     const diffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
     const diffResults = await diffGenerator.generateDiffHistory(laneObj, laneHistory, fromHistoryId, toHistoryId);
+    return this.toLaneDiffForIDEResult(diffResults);
+  }
+
+  async getLaneDiffForIDE(): Promise<LaneDiffForIDEResult> {
+    const currentLaneId = this.workspace.getCurrentLaneId();
+    if (currentLaneId.isDefault()) {
+      throw new Error('lane diff is not available on main');
+    }
+    const diffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
+    const diffResults = await diffGenerator.generate([]);
+    return this.toLaneDiffForIDEResult(diffResults);
+  }
+
+  private toLaneDiffForIDEResult(diffResults: LaneDiffResults): LaneDiffForIDEResult {
     return {
       newCompsFrom: diffResults.newCompsFrom,
       newCompsTo: diffResults.newCompsTo,

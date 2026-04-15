@@ -1,6 +1,8 @@
 import { pickBy } from 'lodash';
 import pluralize from 'pluralize';
 import type { DocSchema } from './schemas';
+import type { SchemaChangeFact } from './schema-diff';
+import { deepEqualNoLocation, diffDoc } from './schema-diff';
 
 export interface ISchemaNode {
   __schema: string;
@@ -83,6 +85,38 @@ export abstract class SchemaNode implements ISchemaNode {
     }
 
     return undefined;
+  }
+
+  /**
+   * Compute neutral change facts between this node and another node of the same type.
+   * Subclasses should override with type-specific comparison logic.
+   * Returns facts without impact judgment — impact is assessed separately.
+   */
+  diff(other: SchemaNode): SchemaChangeFact[] {
+    const facts: SchemaChangeFact[] = [];
+    const baseObj = this.toObject();
+    const compareObj = other.toObject();
+
+    // Doc changes
+    facts.push(...diffDoc(baseObj.doc, compareObj.doc));
+
+    // If only doc changed, we're done
+    const baseNoDoc = { ...baseObj, doc: undefined, location: undefined };
+    const compareNoDoc = { ...compareObj, doc: undefined, location: undefined };
+    if (deepEqualNoLocation(baseNoDoc, compareNoDoc)) return facts;
+
+    // Signature changed
+    if (baseObj.signature !== compareObj.signature) {
+      facts.push({
+        changeKind: 'signature-changed',
+        description: 'signature changed',
+        context: { fromSignature: baseObj.signature, toSignature: compareObj.signature },
+        from: baseObj.signature,
+        to: compareObj.signature,
+      });
+    }
+
+    return facts;
   }
 }
 

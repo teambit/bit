@@ -2,8 +2,8 @@ import type { TimerResponse } from '@teambit/toolbox.time.timer';
 import { Timer } from '@teambit/toolbox.time.timer';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatTitle, formatItem, formatSuccessSummary, formatHint, errorSymbol, joinSections } from '@teambit/cli';
 import type { ComponentFactory, ComponentID } from '@teambit/component';
-import chalk from 'chalk';
 import type { EnvsExecutionResult } from '@teambit/envs';
 import type { Workspace } from '@teambit/workspace';
 import { compact, flatten } from 'lodash';
@@ -63,21 +63,17 @@ supports check mode to verify formatting without making changes.`;
   async report([pattern]: [string], formatterOptions: FormatCmdOptions) {
     const { duration, data, code, componentsIdsToFormat } = await this.json([pattern], formatterOptions);
 
-    const title = chalk.bold(
-      `formatting total of ${chalk.cyan(
-        componentsIdsToFormat.length.toString()
-      )} component(s) in workspace '${chalk.cyan(this.componentHost.name)}`
+    const title = formatTitle(
+      `formatting total of ${componentsIdsToFormat.length} component(s) in workspace '${this.componentHost.name}'`
     );
 
     const componentsOutputs = this.getAllComponentsResultOutput(data.results, { check: formatterOptions.check });
 
     const { seconds } = duration;
-    const summery = `formatted ${chalk.cyan(componentsIdsToFormat.length.toString())} components in ${chalk.cyan(
-      seconds.toString()
-    )}.`;
+    const summary = formatHint(`formatted ${componentsIdsToFormat.length} components in ${seconds}s.`);
 
     return {
-      data: `${title}\n\n${componentsOutputs}\n\n${summery}`,
+      data: joinSections([title, componentsOutputs, summary]),
       code,
     };
   }
@@ -126,16 +122,15 @@ supports check mode to verify formatting without making changes.`;
   }
 
   private getOneComponentResultOutput(componentResult: JsonComponentFormatResult, context: OutputContext) {
-    const title = chalk.bold.cyan(componentResult.componentId.toString({ ignoreVersion: true }));
+    const title = formatTitle(componentResult.componentId.toString({ ignoreVersion: true }));
     const filesWithIssues = componentResult.results.filter((fileResult) => fileResult.hasIssues);
     if (!filesWithIssues || !filesWithIssues.length) {
-      return `${title}\n${chalk.green('no issues found')}`;
+      return `${title}\n${formatSuccessSummary('no issues found')}`;
     }
-    let subTitle = chalk.green('the following files have been re-formatted:');
-    if (context.check) {
-      subTitle = chalk.red('issues found in the following files:');
-    }
-    const files = filesWithIssues.map(this.getOneComponentFileResultOutput);
+    const subTitle = context.check
+      ? `${errorSymbol} issues found in the following files:`
+      : formatSuccessSummary('the following files have been re-formatted:');
+    const files = filesWithIssues.map((f) => formatItem(this.getOneComponentFileResultOutput(f)));
     return `${title}\n${subTitle}\n${files.join('\n')}`;
   }
 

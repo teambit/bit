@@ -253,7 +253,7 @@ describe('bit lane import operations', function () {
     // previously, it was quietly importing the component from the current lane and ignores the provided version.
     it('should not bring that snap', () => {
       const output = helper.command.importComponent(`comp1@${headOnLaneA}`, '--override');
-      expect(output).to.have.string('Missing Components');
+      expect(output).to.have.string('missing components');
     });
     it('should not not change .bitmap', () => {
       const bitMap = helper.bitMap.read();

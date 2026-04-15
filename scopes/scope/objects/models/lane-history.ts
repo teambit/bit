@@ -76,14 +76,20 @@ export class LaneHistory extends BitObject {
       .map(([id]) => id);
   }
 
-  async addHistory(laneObj: Lane, msg?: string) {
+  async addHistory(laneObj: Lane, msg?: string, historyKey?: string) {
     const log: Log = await getBasicLog();
     if (msg) log.message = msg;
     const components = laneObj.toComponentIds().toStringArray();
     const deleted = laneObj.components
       .filter((c) => c.isDeleted)
       .map((c) => c.id.changeVersion(c.head.toString()).toString());
-    this.history[v4()] = { log, components, ...(deleted.length && { deleted }) };
+    this.history[historyKey || v4()] = { log, components, ...(deleted.length && { deleted }) };
+  }
+
+  removeHistoryEntries(keys: string[]) {
+    for (const key of keys) {
+      delete this.history[key];
+    }
   }
 
   merge(laneHistory: LaneHistory) {

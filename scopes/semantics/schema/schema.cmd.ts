@@ -8,6 +8,7 @@ import type { SchemaMain } from './schema.main.runtime';
 
 export class SchemaCommand implements Command {
   name = 'schema <pattern>';
+  alias = 'api';
   description = 'display component API schema and type definitions';
   extendedDescription = `extracts and displays the public API structure of components including types, functions, classes, and interfaces.
 shows detailed type information, function signatures, and JSDoc documentation for exported elements.
@@ -19,6 +20,7 @@ ${PATTERN_HELP('schema')}`;
     ['r', 'remote', 'fetch schema from remote scope (works for components not in workspace)'],
     ['j', 'json', 'return the component schema in json format'],
   ] as CommandOptions;
+  commands: Command[] = [];
 
   constructor(
     private schema: SchemaMain,
