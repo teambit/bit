@@ -1369,6 +1369,27 @@ please create a new lane instead, which will include all components of this lane
     laneCmd.commands.push(new LaneRevertCmd(lanesMain));
     cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));
 
+    schema.registerComponentImporter(async (ids: string[], laneName?: string) => {
+      const scopeImporter = scope.legacyScope.scopeImporter;
+      const componentIds = ComponentIdList.fromArray(ids.map((id) => ComponentID.fromString(id)));
+      if (laneName) {
+        const laneId = await lanesMain.parseLaneId(laneName);
+        await lanesMain.importLaneObject(laneId);
+        const laneObj = await lanesMain.loadLane(laneId);
+        await scopeImporter.importWithoutDeps(componentIds, {
+          cache: true,
+          lane: laneObj || undefined,
+          ignoreMissingHead: true,
+          reason: `apiDiff GQL: import from lane ${laneName}`,
+        });
+      }
+      await scopeImporter.importWithoutDeps(componentIds, {
+        cache: true,
+        ignoreMissingHead: true,
+        reason: 'apiDiff GQL: import from main',
+      });
+    });
+
     schema.registerLaneDiffHandler(
       async (pattern: string, laneName?: string, baseVersion?: string, compareVersion?: string) => {
         const laneId = laneName ? await lanesMain.parseLaneId(laneName) : lanesMain.getCurrentLaneId();

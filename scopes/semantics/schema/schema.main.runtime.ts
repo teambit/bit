@@ -259,10 +259,21 @@ export class SchemaMain {
   }
 
   private schemaDiffCommand?: SchemaDiffCommand;
+  private _componentImporter?: (ids: string[], laneName?: string) => Promise<void>;
 
   registerLaneDiffHandler(handler: LaneDiffHandler): void {
     if (!this.schemaDiffCommand) throw new Error('schema diff command not initialized');
     this.schemaDiffCommand.laneDiffHandler = handler;
+  }
+
+  registerComponentImporter(importer: (ids: string[], laneName?: string) => Promise<void>): void {
+    this._componentImporter = importer;
+  }
+
+  async importComponents(ids: string[], laneName?: string): Promise<void> {
+    if (this._componentImporter) {
+      await this._componentImporter(ids, laneName);
+    }
   }
 
   /**
