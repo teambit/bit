@@ -1384,6 +1384,13 @@ please create a new lane instead, which will include all components of this lane
       if (!laneComp)
         throw new Error(`component ${componentId.toStringWithoutVersion()} is not on lane "${laneId.toString()}"`);
       const laneHead = laneComp.head.toString();
+      const scopeImporter = scope.legacyScope.scopeImporter;
+      // import the component from main so ModelComponent + head version are available locally
+      await scopeImporter.importWithoutDeps(ComponentIdList.fromArray([componentId]), {
+        cache: true,
+        ignoreMissingHead: true,
+        reason: 'schema diff --lane: import component from main',
+      });
       const modelComponent = await scope.legacyScope.getModelComponent(componentId);
       const mainHead = modelComponent.head?.toString();
       if (!mainHead) throw new Error(`component ${componentId.toStringWithoutVersion()} has no version on main`);
@@ -1391,7 +1398,7 @@ please create a new lane instead, which will include all components of this lane
         throw new Error(`component ${componentId.toStringWithoutVersion()} has the same version on lane and main`);
       const baseId = componentId.changeVersion(mainHead);
       const compareId = componentId.changeVersion(laneHead);
-      const scopeImporter = scope.legacyScope.scopeImporter;
+      // import the specific versions we need to diff
       await scopeImporter.importWithoutDeps(ComponentIdList.fromArray([baseId]), {
         cache: true,
         ignoreMissingHead: true,
