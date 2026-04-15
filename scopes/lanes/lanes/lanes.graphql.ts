@@ -31,7 +31,6 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         hasDiff: Boolean
         filesDiff: [FileDiff]
         fieldsDiff: [FieldsDiff]
-        apiDiff: APIDiffResult
       }
 
       type GetDiffResult {

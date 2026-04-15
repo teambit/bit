@@ -54,7 +54,6 @@ type LaneDiffForIDEResult = {
     hasDiff: boolean;
     filesDiff: { filePath: string; status: string; fromContent?: string; toContent?: string }[];
     fieldsDiff?: { fieldName: string; diffOutput: string }[] | null;
-    apiDiff?: Record<string, any> | null;
   }[];
   compsWithNoChanges: string[];
   toLaneName: string;
@@ -690,7 +689,6 @@ export class APIForIDE {
           toContent: f.status === 'UNCHANGED' ? undefined : f.toContent,
         })),
         fieldsDiff: d.fieldsDiff,
-        apiDiff: d.apiDiff ?? null,
       })),
       compsWithNoChanges: diffResults.compsWithNoChanges,
       toLaneName: diffResults.toLaneName,
