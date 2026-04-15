@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatItem, formatSection } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import open from 'open';
 import type { ApplicationMain } from './application.main.runtime';
@@ -71,8 +72,10 @@ when no app name is specified, automatically detects and runs the app if only on
     const resolvedApp = appName ? appName : idsAndNames.length === 1 ? idsAndNames[0].name : undefined;
     if (!resolvedApp) {
       const runStr = chalk.cyan(`bit run <app-name>`);
-      const appList = idsAndNames.map(({ name }) => `  - ${name}`).join('\n');
-      this.logger.console(`multiple apps found, please specify one using "${runStr}".\navailable apps:\n${appList}`);
+      const sortedNames = idsAndNames.map(({ name }) => name).sort((a, b) => a.localeCompare(b));
+      const items = sortedNames.map((name) => formatItem(name));
+      const section = formatSection('available apps', '', items);
+      this.logger.console(`multiple apps found, please specify one using "${runStr}".\n\n${section}`);
       process.exit(1);
     }
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
