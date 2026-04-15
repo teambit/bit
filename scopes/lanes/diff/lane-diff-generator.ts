@@ -9,9 +9,6 @@ import type { LaneId } from '@teambit/lane-id';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import type { ComponentCompareMain } from '@teambit/component-compare';
-import type { SchemaMain } from '@teambit/schema';
-import { APIDiffStatus } from '@teambit/semantics.entities.semantic-schema-diff';
-import type { APIDiffResult, APIDiffChange } from '@teambit/semantics.entities.semantic-schema-diff';
 import chalk from 'chalk';
 import pMap from 'p-map';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
@@ -48,8 +45,7 @@ export class LaneDiffGenerator {
   constructor(
     private workspace: Workspace | undefined,
     private scope: ScopeMain,
-    private componentCompare: ComponentCompareMain,
-    private schema?: SchemaMain
+    private componentCompare: ComponentCompareMain
   ) {}
 
   /**
@@ -288,11 +284,6 @@ export class LaneDiffGenerator {
 
     const diffResultsStr = outputDiffResults(compsWithDiff);
 
-    const apiDiffResults = compsWithDiff
-      .filter((d) => d.apiDiff?.hasChanges)
-      .map((d) => this.formatApiDiff(d.apiDiff!, d.id.toString()))
-      .join('\n');
-
     const failuresTitle = `\n\nDiff failed on the following component(s)`;
     const failuresIds = failures.map((f) => `${f.id.toString()} - ${chalk.red(f.msg)}`).join('\n');
     const failuresStr = failures.length ? `${chalk.inverse(failuresTitle)}\n${failuresIds}` : '';
@@ -300,44 +291,7 @@ export class LaneDiffGenerator {
 
     const newCompsFromStr = newCompsOutput(fromLaneName, newCompsFrom);
 
-    return `${diffResultsStr}${apiDiffResults}${newCompsToStr}${newCompsFromStr}${failuresStr}`;
-  }
-
-  private formatApiDiff(apiDiff: APIDiffResult, componentId: string): string {
-    if (!apiDiff.hasChanges) return '';
-
-    const lines: string[] = [];
-    lines.push(chalk.bold(`\n  API Diff for ${chalk.cyan(componentId)}`));
-
-    const parts: string[] = [];
-    if (apiDiff.added > 0) parts.push(chalk.green(`${apiDiff.added} added`));
-    if (apiDiff.removed > 0) parts.push(chalk.red(`${apiDiff.removed} removed`));
-    if (apiDiff.modified > 0) parts.push(chalk.yellow(`${apiDiff.modified} modified`));
-    if (parts.length > 0) lines.push(`  ${parts.join(chalk.dim(' · '))}`);
-
-    const formatChanges = (title: string, changes: APIDiffChange[]) => {
-      if (changes.length === 0) return;
-      lines.push(`  ${chalk.underline(title)}`);
-      for (const change of changes) {
-        const prefix =
-          change.status === APIDiffStatus.ADDED
-            ? chalk.green('+')
-            : change.status === APIDiffStatus.REMOVED
-              ? chalk.red('−')
-              : chalk.yellow('~');
-        lines.push(`    ${prefix} ${change.exportName} ${chalk.dim(`(${change.schemaType})`)}`);
-        if (change.changes) {
-          for (const detail of change.changes) {
-            lines.push(`      ${chalk.dim('●')} ${detail.description}`);
-          }
-        }
-      }
-    };
-
-    formatChanges('Public API', apiDiff.publicChanges);
-    formatChanges('Internal', apiDiff.internalChanges);
-
-    return lines.join('\n');
+    return `${diffResultsStr}${newCompsToStr}${newCompsFromStr}${failuresStr}`;
   }
 
   private async componentDiff(
@@ -386,21 +340,6 @@ export class LaneDiffGenerator {
       this.toLaneData.name,
       diffOptions
     );
-    if (this.schema) {
-      try {
-        const fromCompId = id.changeVersion(fromLaneHead.toString());
-        const toCompId = id.changeVersion(toLaneHead.toString());
-        const [fromComp, toComp] = await this.scope.getMany([fromCompId, toCompId]);
-        if (fromComp && toComp) {
-          diff.apiDiff = await this.schema.computeAPIDiff(fromComp, toComp);
-          if (diff.apiDiff?.hasChanges && !diff.hasDiff) {
-            diff.hasDiff = true;
-          }
-        }
-      } catch {
-        // API diff is best-effort
-      }
-    }
     this.compsWithDiff.push(diff);
   }
 

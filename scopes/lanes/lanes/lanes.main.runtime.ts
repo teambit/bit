@@ -168,8 +168,7 @@ export class LanesMain {
     readonly componentWriter: ComponentWriterMain,
     private remove: RemoveMain,
     readonly checkout: CheckoutMain,
-    private install: InstallMain,
-    private schema: SchemaMain
+    private install: InstallMain
   ) {}
 
   /**
@@ -746,7 +745,7 @@ please create a new lane instead, which will include all components of this lane
    * [from, to] => diff between "from" lane and "to" lane.
    */
   public async getDiff(values: string[], diffOptions: DiffOptions = {}, pattern?: string): Promise<LaneDiffResults> {
-    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare, this.schema);
+    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
     return laneDiffGenerator.generate(values, diffOptions, pattern);
   }
 
@@ -1342,8 +1341,7 @@ please create a new lane instead, which will include all components of this lane
       componentWriter,
       remove,
       checkout,
-      install,
-      schema
+      install
     );
     const switchCmd = new SwitchCmd(lanesMain);
     const fetchCmd = new FetchCmd(importer);
@@ -1357,7 +1355,7 @@ please create a new lane instead, which will include all components of this lane
       new LaneChangeScopeCmd(lanesMain),
       new LaneAliasCmd(lanesMain),
       new LaneRenameCmd(lanesMain),
-      new LaneDiffCmd(workspace, scope, componentCompare, schema),
+      new LaneDiffCmd(workspace, scope, componentCompare),
       new LaneRemoveReadmeCmd(lanesMain),
       new LaneImportCmd(switchCmd),
       new LaneRemoveCompCmd(workspace, lanesMain),
@@ -1366,7 +1364,7 @@ please create a new lane instead, which will include all components of this lane
     ];
     laneCmd.commands.push(new LaneCurrentCmd(lanesMain));
     laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
-    laneCmd.commands.push(new LaneHistoryDiffCmd(lanesMain, workspace, scope, componentCompare, schema));
+    laneCmd.commands.push(new LaneHistoryDiffCmd(lanesMain, workspace, scope, componentCompare));
     laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
     laneCmd.commands.push(new LaneRevertCmd(lanesMain));
     cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));

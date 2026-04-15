@@ -2,7 +2,6 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import type { ScopeMain } from '@teambit/scope';
 import type { Workspace } from '@teambit/workspace';
 import type { ComponentCompareMain } from '@teambit/component-compare';
-import type { SchemaMain } from '@teambit/schema';
 import type { Lane, LaneHistory } from '@teambit/objects';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { LaneDiffGenerator } from './lane-diff-generator';
@@ -32,8 +31,7 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
     private lanes: LanesMain,
     private workspace: Workspace,
     private scope: ScopeMain,
-    private componentCompare: ComponentCompareMain,
-    private schema: SchemaMain
+    private componentCompare: ComponentCompareMain
   ) {}
 
   async report(
@@ -51,7 +49,7 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
     const laneObj = await this.lanes.loadLane(laneId);
     if (!laneObj) throw new BitError(`unable to load lane "${laneId.toString()}"`);
 
-    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare, this.schema);
+    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
 
     if (historyId && toHistoryId) {
       // two args: explicit from and to — no fallback

@@ -2,7 +2,6 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import type { ScopeMain } from '@teambit/scope';
 import type { Workspace } from '@teambit/workspace';
 import type { ComponentCompareMain } from '@teambit/component-compare';
-import type { SchemaMain } from '@teambit/schema';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { LaneDiffGenerator } from './lane-diff-generator';
 
@@ -39,12 +38,11 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
   constructor(
     private workspace: Workspace,
     private scope: ScopeMain,
-    private componentCompare: ComponentCompareMain,
-    private schema: SchemaMain
+    private componentCompare: ComponentCompareMain
   ) {}
 
   async report([values = []]: [string[]], { pattern }: { pattern?: string }) {
-    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare, this.schema);
+    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
     const results = await laneDiffGenerator.generate(values, undefined, pattern);
     return laneDiffGenerator.laneDiffResultsToString(results);
   }
