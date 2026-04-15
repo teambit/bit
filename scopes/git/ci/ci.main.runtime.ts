@@ -856,14 +856,6 @@ export class CiMain {
         return await this.exporter.export();
       } catch (e: any) {
         if (!isHashMismatchErr(e) || attempt === maxAttempts) throw e;
-        if (await this.isStaleCiRun()) {
-          this.logger.console(
-            chalk.yellow(
-              `Export failed with lane hash mismatch on "${laneIdStr}" and the PR branch has advanced past our commit. Not retrying - a newer CI run will publish the correct lane.`
-            )
-          );
-          throw e;
-        }
         this.logger.console(
           chalk.yellow(
             `Export attempt ${attempt}/${maxAttempts} failed with lane hash mismatch on "${laneIdStr}" (likely a concurrent CI push). Deleting remote lane and retrying.`
@@ -887,30 +879,6 @@ export class CiMain {
       }
     }
     throw new Error(`exportWithRetryOnLaneHashMismatch: exhausted ${maxAttempts} attempts for lane ${laneIdStr}`);
-  }
-
-  /**
-   * Returns true when the PR branch on the remote has advanced past our local HEAD, meaning a
-   * newer commit was pushed to the branch while this CI run was in flight. Best-effort: when we
-   * can't determine the branch or reach the remote we return false (don't block retry).
-   */
-  private async isStaleCiRun(): Promise<boolean> {
-    try {
-      const branch = await this.getBranchName();
-      if (!branch) return false;
-      const localSha = (await git.revparse(['HEAD'])).trim();
-      // `--` separator and fully-qualified ref so a branch name starting with `-` can't be
-      // interpreted as a git option (defense in depth for untrusted PR branches).
-      await git.raw(['fetch', 'origin', '--', `refs/heads/${branch}:refs/remotes/origin/${branch}`]);
-      const remoteSha = (await git.revparse([`refs/remotes/origin/${branch}`])).trim();
-      if (remoteSha === localSha) return false;
-      const mergeBase = (await git.raw(['merge-base', localSha, remoteSha])).trim();
-      // local is strictly behind remote - remote has commits we don't.
-      return mergeBase === localSha;
-    } catch (err: any) {
-      this.logger.console(chalk.yellow(`Unable to verify CI run freshness (assuming fresh): ${err?.message || err}`));
-      return false;
-    }
   }
 
   /**
