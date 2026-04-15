@@ -84,7 +84,7 @@ import { LanesRestoreRoute } from './lanes.restore.route';
 import type { InstallMain } from '@teambit/install';
 import { InstallAspect } from '@teambit/install';
 import type { SchemaMain } from '@teambit/schema';
-import { SchemaAspect, SchemaDiffCommand } from '@teambit/schema';
+import { SchemaAspect } from '@teambit/schema';
 
 export { Lane };
 
@@ -1370,48 +1370,6 @@ please create a new lane instead, which will include all components of this lane
     laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
     laneCmd.commands.push(new LaneRevertCmd(lanesMain));
     cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));
-
-    const schemaCmd = cli.getCommand('schema');
-    const schemaDiffCmd = schemaCmd?.commands?.find((c) => c.name.startsWith('diff'));
-    if (schemaDiffCmd instanceof SchemaDiffCommand) {
-      schemaDiffCmd.laneDiffHandler = async (pattern: string, laneName?: string) => {
-        const laneId = laneName ? await lanesMain.parseLaneId(laneName) : lanesMain.getCurrentLaneId();
-        if (laneId.isDefault()) {
-          throw new Error('--lane requires a lane name, or being checked out to a lane');
-        }
-        const host = component.getHost();
-        const ids = await host.idsByPattern(pattern, true);
-        if (ids.length === 0) throw new Error(`no components found matching "${pattern}"`);
-        if (ids.length > 1)
-          throw new Error(`pattern "${pattern}" matches ${ids.length} components. please specify a single component.`);
-        const componentId = ids[0];
-        const laneObj = await lanesMain.loadLane(laneId);
-        if (!laneObj) throw new Error(`unable to find lane "${laneId.toString()}"`);
-        const laneComp = laneObj.components.find((c) => c.id.isEqualWithoutVersion(componentId));
-        if (!laneComp)
-          throw new Error(`component ${componentId.toStringWithoutVersion()} is not on lane "${laneId.toString()}"`);
-        const laneHead = laneComp.head.toString();
-        const modelComponent = await scope.legacyScope.getModelComponent(componentId);
-        const mainHead = modelComponent.head?.toString();
-        if (!mainHead) throw new Error(`component ${componentId.toStringWithoutVersion()} has no version on main`);
-        if (laneHead === mainHead)
-          throw new Error(`component ${componentId.toStringWithoutVersion()} has the same version on lane and main`);
-        const baseId = componentId.changeVersion(mainHead);
-        const compareId = componentId.changeVersion(laneHead);
-        const [baseComponent, compareComponent] = await host.getMany([baseId, compareId]);
-        if (!baseComponent) throw new Error(`could not load ${baseId.toString()}`);
-        if (!compareComponent) throw new Error(`could not load ${compareId.toString()}`);
-        const diff = await schema.computeAPIDiff(baseComponent, compareComponent);
-        if (!diff) throw new Error(`could not compute API diff for ${componentId.toStringWithoutVersion()}`);
-        return {
-          diff,
-          componentId: componentId.toStringWithoutVersion(),
-          fromLabel: `main@${mainHead.slice(0, 8)}`,
-          toLabel: `${laneId.name}@${laneHead.slice(0, 8)}`,
-        };
-      };
-    }
-
     cli.registerOnStart(async () => {
       await lanesMain.recreateNewLaneIfDeleted();
     });
