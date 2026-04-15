@@ -83,6 +83,8 @@ import { LanesDeleteRoute } from './lanes.delete.route';
 import { LanesRestoreRoute } from './lanes.restore.route';
 import type { InstallMain } from '@teambit/install';
 import { InstallAspect } from '@teambit/install';
+import type { SchemaMain } from '@teambit/schema';
+import { SchemaAspect } from '@teambit/schema';
 
 export { Lane };
 
@@ -166,7 +168,8 @@ export class LanesMain {
     readonly componentWriter: ComponentWriterMain,
     private remove: RemoveMain,
     readonly checkout: CheckoutMain,
-    private install: InstallMain
+    private install: InstallMain,
+    private schema: SchemaMain
   ) {}
 
   /**
@@ -743,7 +746,7 @@ please create a new lane instead, which will include all components of this lane
    * [from, to] => diff between "from" lane and "to" lane.
    */
   public async getDiff(values: string[], diffOptions: DiffOptions = {}, pattern?: string): Promise<LaneDiffResults> {
-    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
+    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare, this.schema);
     return laneDiffGenerator.generate(values, diffOptions, pattern);
   }
 
@@ -1288,6 +1291,7 @@ please create a new lane instead, which will include all components of this lane
     RemoveAspect,
     CheckoutAspect,
     InstallAspect,
+    SchemaAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1306,6 +1310,7 @@ please create a new lane instead, which will include all components of this lane
     remove,
     checkout,
     install,
+    schema,
   ]: [
     CLIMain,
     ScopeMain,
@@ -1322,6 +1327,7 @@ please create a new lane instead, which will include all components of this lane
     RemoveMain,
     CheckoutMain,
     InstallMain,
+    SchemaMain,
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
     const lanesMain = new LanesMain(
@@ -1336,7 +1342,8 @@ please create a new lane instead, which will include all components of this lane
       componentWriter,
       remove,
       checkout,
-      install
+      install,
+      schema
     );
     const switchCmd = new SwitchCmd(lanesMain);
     const fetchCmd = new FetchCmd(importer);
@@ -1350,7 +1357,7 @@ please create a new lane instead, which will include all components of this lane
       new LaneChangeScopeCmd(lanesMain),
       new LaneAliasCmd(lanesMain),
       new LaneRenameCmd(lanesMain),
-      new LaneDiffCmd(workspace, scope, componentCompare),
+      new LaneDiffCmd(workspace, scope, componentCompare, schema),
       new LaneRemoveReadmeCmd(lanesMain),
       new LaneImportCmd(switchCmd),
       new LaneRemoveCompCmd(workspace, lanesMain),
@@ -1359,7 +1366,7 @@ please create a new lane instead, which will include all components of this lane
     ];
     laneCmd.commands.push(new LaneCurrentCmd(lanesMain));
     laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
-    laneCmd.commands.push(new LaneHistoryDiffCmd(lanesMain, workspace, scope, componentCompare));
+    laneCmd.commands.push(new LaneHistoryDiffCmd(lanesMain, workspace, scope, componentCompare, schema));
     laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
     laneCmd.commands.push(new LaneRevertCmd(lanesMain));
     cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));
