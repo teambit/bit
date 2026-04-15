@@ -115,7 +115,16 @@ export class GraphqlUI {
   }
 
   private createCache({ state }: { state?: NormalizedCacheObject } = {}) {
-    const cache = new InMemoryCache();
+    const cache = new InMemoryCache({
+      typePolicies: {
+        // The Aspect type has an `id` field (the aspect ID, e.g. "teambit.envs/envs").
+        // Without this, Apollo normalizes all Aspect objects by __typename:id, causing
+        // every component to share a single cache entry per aspect ID. This means the
+        // last-written aspect data overwrites all others (e.g. all components show the
+        // same env). Disabling normalization stores aspects inline per component.
+        Aspect: { keyFields: false },
+      },
+    });
 
     if (state) cache.restore(state);
 
