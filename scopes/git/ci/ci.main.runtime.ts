@@ -385,6 +385,7 @@ export class CiMain {
     this.logger.console(chalk.blue(`Creating temporary lane ${laneId.scope}/${tempLaneName}`));
 
     let foundErr: Error | undefined;
+    let renamedToFinalName = false;
     try {
       await this.lanes.createLane(tempLaneName, {
         scope: laneId.scope,
@@ -452,10 +453,12 @@ export class CiMain {
       // Rename temp lane to original name
       this.logger.console(chalk.blue(`Renaming lane from ${tempLaneName} to ${laneId.name}`));
       await this.lanes.rename(laneId.name, tempLaneName);
+      renamedToFinalName = true;
 
-      // Export with the correct name
+      // Export with the correct name. Retry on hash-mismatch, which indicates a concurrent CI job
+      // pushed the same lane id between our pre-export delete and our merge on the hub.
       this.logger.console(chalk.blue(`Exporting ${snappedComponents.length} components`));
-      const exportResults = await this.exporter.export();
+      const exportResults = await this.exportWithRetryOnLaneHashMismatch(laneId.toString());
       this.logger.console(chalk.green(`Exported ${exportResults.componentsIds.length} components`));
     } catch (e: any) {
       foundErr = e;
@@ -477,8 +480,10 @@ export class CiMain {
         await this.lanes.checkout.checkout({ head: true, skipNpmInstall: true });
       }
 
-      // Clean up orphaned temporary lane on error
-      if (foundErr) {
+      // Clean up orphaned temporary lane on error. Skip if the rename to the final name already
+      // happened - in that case the temp name no longer exists locally, and the lane under the
+      // final name may have been partially exported; leave it alone rather than wipe evidence.
+      if (foundErr && !renamedToFinalName) {
         const tempLaneFullName = `${laneId.scope}/${tempLaneName}`;
         this.logger.console(chalk.blue(`Cleaning up temporary lane ${tempLaneFullName}`));
         try {
@@ -826,6 +831,38 @@ export class CiMain {
         chalk.yellow(`Error during lane cleanup for source branch '${sourceBranchName}': ${e.message}`)
       );
     }
+  }
+
+  /**
+   * Run `exporter.export()` and retry when the remote rejects the push because a lane with the same
+   * id already exists with a different hash. This race happens when a concurrent `bit ci pr` run
+   * (same PR, different workflow or re-run) pushed the same lane id between our pre-export
+   * existence check and our merge on the hub. Between "Exporting" and the hub's merge check there
+   * can be ~1-2 minutes of upload/processing - plenty of time for another run to persist a new lane.
+   *
+   * On retry we delete the remote lane (now populated by the winning concurrent push) and try
+   * the export again with our local hash. Bounded attempts guard against a tight push loop between
+   * two runners.
+   */
+  private async exportWithRetryOnLaneHashMismatch(laneIdStr: string, maxAttempts = 3) {
+    const isHashMismatchErr = (err: any) =>
+      (err?.message || err?.toString() || '').includes('a lane with the same id already exists with a different hash');
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        return await this.exporter.export();
+      } catch (e: any) {
+        if (!isHashMismatchErr(e) || attempt === maxAttempts) throw e;
+        this.logger.console(
+          chalk.yellow(
+            `Export attempt ${attempt}/${maxAttempts} failed with lane hash mismatch on "${laneIdStr}" (likely a concurrent CI push). Deleting remote lane and retrying.`
+          )
+        );
+        await this.archiveLane(laneIdStr, true);
+      }
+    }
+    // Unreachable: the loop either returns on success or throws on the last attempt.
+    throw new Error(`exportWithRetryOnLaneHashMismatch: exhausted ${maxAttempts} attempts for lane ${laneIdStr}`);
   }
 
   /**
