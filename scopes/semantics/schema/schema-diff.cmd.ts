@@ -4,6 +4,7 @@ import type { ComponentMain } from '@teambit/component';
 import type { Logger } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
 import type { ScopeMain } from '@teambit/scope';
+import type { LanesMain } from '@teambit/lanes';
 import { computeAPIDiff, APIDiffStatus } from '@teambit/semantics.entities.semantic-schema-diff';
 import type { APIDiffResult, APIDiffChange, ImpactLevel } from '@teambit/semantics.entities.semantic-schema-diff';
 import type { SchemaMain } from './schema.main.runtime';
@@ -22,6 +23,8 @@ examples:
     ['j', 'json', 'return the API diff in json format'],
     ['l', 'lane <lane-name>', 'diff the component on the given lane (or current lane if no name) against main'],
   ] as CommandOptions;
+
+  lanes?: LanesMain;
 
   constructor(
     private schema: SchemaMain,
@@ -63,16 +66,14 @@ examples:
     pattern: string,
     laneName?: string
   ): Promise<{ diff: APIDiffResult; componentId: string; fromLabel: string; toLabel: string }> {
+    if (!this.lanes) {
+      throw new Error('--lane flag is not available (lanes aspect not loaded)');
+    }
     if (!this.workspace && !this.scope) {
       throw new Error('--lane flag requires a workspace or scope');
     }
 
-    const scope = this.scope || this.workspace!.scope;
-    const legacyScope = scope.legacyScope;
-
-    const laneId = laneName
-      ? await legacyScope.lanes.parseLaneIdFromString(laneName)
-      : this.workspace?.getCurrentLaneId();
+    const laneId = laneName ? await this.lanes.parseLaneId(laneName) : this.workspace?.getCurrentLaneId();
 
     if (!laneId || laneId.isDefault()) {
       throw new Error('--lane requires a lane name, or being checked out to a lane');
@@ -86,7 +87,7 @@ examples:
 
     const componentId = ids[0];
 
-    const laneObj = await legacyScope.lanes.loadLane(laneId);
+    const laneObj = await this.lanes.loadLane(laneId);
     if (!laneObj) throw new Error(`unable to find lane "${laneId.toString()}"`);
 
     const laneComp = laneObj.components.find((c) => c.id.isEqualWithoutVersion(componentId));
@@ -94,7 +95,8 @@ examples:
       throw new Error(`component ${componentId.toStringWithoutVersion()} is not on lane "${laneId.toString()}"`);
     const laneHead = laneComp.head.toString();
 
-    const modelComponent = await legacyScope.getModelComponent(componentId);
+    const scope = this.scope || this.workspace!.scope;
+    const modelComponent = await scope.legacyScope.getModelComponent(componentId);
     const mainHead = modelComponent.head?.toString();
 
     if (!mainHead) throw new Error(`component ${componentId.toStringWithoutVersion()} has no version on main`);
