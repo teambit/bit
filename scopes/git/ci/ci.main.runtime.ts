@@ -27,6 +27,14 @@ import type { Version, LaneComponent } from '@teambit/objects';
 import { SourceBranchDetector } from './source-branch-detector';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 
+/**
+ * Sentinel substring emitted by the hub when a lane push is rejected because a lane with the same
+ * id already exists with a different hash. Thrown as `BitError` from
+ * `components/legacy/scope/repositories/sources.ts` and wrapped in `UnexpectedNetworkError` across
+ * the wire, so we match on the message text rather than an error class.
+ */
+const LANE_HASH_MISMATCH_MARKER = 'a lane with the same id already exists with a different hash';
+
 export interface CiWorkspaceConfig {
   /**
    * Path to a custom script that generates commit messages for `bit ci merge` operations.
@@ -841,8 +849,7 @@ export class CiMain {
    * snaps would regress the PR preview.
    */
   private async exportWithRetryOnLaneHashMismatch(laneIdStr: string, maxAttempts = 3) {
-    const isHashMismatchErr = (err: any) =>
-      (err?.message || err?.toString() || '').includes('a lane with the same id already exists with a different hash');
+    const isHashMismatchErr = (err: any) => (err?.message || err?.toString() || '').includes(LANE_HASH_MISMATCH_MARKER);
 
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       try {
@@ -872,7 +879,7 @@ export class CiMain {
               `Failed to delete remote lane "${laneIdStr}" while recovering from hash mismatch: ${archiveErr?.message || archiveErr}. Rethrowing the original export error.`
             )
           );
-          if (e && typeof e === 'object' && !('cause' in e)) {
+          if (e && typeof e === 'object' && (e as any).cause == null) {
             (e as any).cause = archiveErr;
           }
           throw e;
@@ -894,7 +901,7 @@ export class CiMain {
       const localSha = (await git.revparse(['HEAD'])).trim();
       // `--` separator and fully-qualified ref so a branch name starting with `-` can't be
       // interpreted as a git option (defense in depth for untrusted PR branches).
-      await git.raw(['fetch', 'origin', '--', `refs/heads/${branch}`]);
+      await git.raw(['fetch', 'origin', '--', `refs/heads/${branch}:refs/remotes/origin/${branch}`]);
       const remoteSha = (await git.revparse([`refs/remotes/origin/${branch}`])).trim();
       if (remoteSha === localSha) return false;
       const mergeBase = (await git.raw(['merge-base', localSha, remoteSha])).trim();
