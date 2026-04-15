@@ -39,11 +39,27 @@ import type { SchemaMain } from '@teambit/schema';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import type { Logger } from '@teambit/logger';
 import { LaneDiffGenerator } from '@teambit/lanes.modules.diff';
+import type { LaneDiffResults } from '@teambit/lanes.modules.diff';
 
 const FILES_HISTORY_DIR = 'files-history';
 const ENV_ICONS_DIR = 'env-icons';
 const LAST_SNAP_DIR = 'last-snap';
 const CMD_HISTORY = 'command-history-ide';
+
+type LaneDiffForIDEResult = {
+  newCompsFrom: string[];
+  newCompsTo: string[];
+  compsWithDiff: {
+    id: string;
+    hasDiff: boolean;
+    filesDiff: { filePath: string; status: string; fromContent?: string; toContent?: string }[];
+    fieldsDiff?: { fieldName: string; diffOutput: string }[] | null;
+  }[];
+  compsWithNoChanges: string[];
+  toLaneName: string;
+  fromLaneName: string;
+  failures: { id: string; msg: string }[];
+};
 
 type PathLinux = string; // problematic to get it from @teambit/legacy/dist/utils/path.
 
@@ -635,20 +651,7 @@ export class APIForIDE {
     fromHistoryId: string,
     toHistoryId: string,
     laneName?: string
-  ): Promise<{
-    newCompsFrom: string[];
-    newCompsTo: string[];
-    compsWithDiff: {
-      id: string;
-      hasDiff: boolean;
-      filesDiff: { filePath: string; status: string; fromContent?: string; toContent?: string }[];
-      fieldsDiff?: { fieldName: string; diffOutput: string }[] | null;
-    }[];
-    compsWithNoChanges: string[];
-    toLaneName: string;
-    fromLaneName: string;
-    failures: { id: string; msg: string }[];
-  }> {
+  ): Promise<LaneDiffForIDEResult> {
     const laneId = laneName ? await this.lanes.parseLaneId(laneName) : this.workspace.getCurrentLaneId();
     if (laneId.isDefault()) {
       throw new Error('lane history diff is not available on main');
@@ -659,50 +662,20 @@ export class APIForIDE {
     if (!laneObj) throw new Error(`unable to find lane "${laneId.toString()}"`);
     const diffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
     const diffResults = await diffGenerator.generateDiffHistory(laneObj, laneHistory, fromHistoryId, toHistoryId);
-    return {
-      newCompsFrom: diffResults.newCompsFrom,
-      newCompsTo: diffResults.newCompsTo,
-      compsWithDiff: diffResults.compsWithDiff.map((d) => ({
-        id: d.id.toString(),
-        hasDiff: d.hasDiff,
-        filesDiff: (d.filesDiff || []).map((f) => ({
-          filePath: f.filePath,
-          status: f.status,
-          fromContent: f.status === 'UNCHANGED' ? undefined : f.fromContent,
-          toContent: f.status === 'UNCHANGED' ? undefined : f.toContent,
-        })),
-        fieldsDiff: d.fieldsDiff,
-      })),
-      compsWithNoChanges: diffResults.compsWithNoChanges,
-      toLaneName: diffResults.toLaneName,
-      fromLaneName: diffResults.fromLaneName,
-      failures: diffResults.failures.map((f) => ({
-        id: f.id.toString(),
-        msg: f.msg,
-      })),
-    };
+    return this.toLaneDiffForIDEResult(diffResults);
   }
 
-  async getLaneDiffForIDE(): Promise<{
-    newCompsFrom: string[];
-    newCompsTo: string[];
-    compsWithDiff: {
-      id: string;
-      hasDiff: boolean;
-      filesDiff: { filePath: string; status: string; fromContent?: string; toContent?: string }[];
-      fieldsDiff?: { fieldName: string; diffOutput: string }[] | null;
-    }[];
-    compsWithNoChanges: string[];
-    toLaneName: string;
-    fromLaneName: string;
-    failures: { id: string; msg: string }[];
-  }> {
+  async getLaneDiffForIDE(): Promise<LaneDiffForIDEResult> {
     const currentLaneId = this.workspace.getCurrentLaneId();
     if (currentLaneId.isDefault()) {
       throw new Error('lane diff is not available on main');
     }
     const diffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
     const diffResults = await diffGenerator.generate([]);
+    return this.toLaneDiffForIDEResult(diffResults);
+  }
+
+  private toLaneDiffForIDEResult(diffResults: LaneDiffResults): LaneDiffForIDEResult {
     return {
       newCompsFrom: diffResults.newCompsFrom,
       newCompsTo: diffResults.newCompsTo,
