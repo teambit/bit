@@ -871,7 +871,21 @@ export class CiMain {
             `Export attempt ${attempt}/${maxAttempts} failed with lane hash mismatch on "${laneIdStr}" (likely a concurrent CI push). Deleting remote lane and retrying.`
           )
         );
-        await this.archiveLane(laneIdStr, true);
+        try {
+          await this.archiveLane(laneIdStr, true);
+        } catch (archiveErr: any) {
+          // Preserve the original export error - rethrowing the archive error would hide the real
+          // reason the push was rejected.
+          this.logger.console(
+            chalk.yellow(
+              `Failed to delete remote lane "${laneIdStr}" while recovering from hash mismatch: ${archiveErr?.message || archiveErr}. Rethrowing the original export error.`
+            )
+          );
+          if (e && typeof e === 'object' && !('cause' in e)) {
+            (e as any).cause = archiveErr;
+          }
+          throw e;
+        }
       }
     }
     // Unreachable: the loop either returns on success or throws on the last attempt.
@@ -888,8 +902,10 @@ export class CiMain {
       const branch = await this.getBranchName();
       if (!branch) return false;
       const localSha = (await git.revparse(['HEAD'])).trim();
-      await git.fetch('origin', branch);
-      const remoteSha = (await git.revparse([`origin/${branch}`])).trim();
+      // Fetch with fully-qualified ref and `--` separator so a branch name starting with `-`
+      // cannot be interpreted as a git option (defense in depth for untrusted PR branches).
+      await git.raw(['fetch', 'origin', '--', `refs/heads/${branch}`]);
+      const remoteSha = (await git.revparse([`refs/remotes/origin/${branch}`])).trim();
       if (!remoteSha || !localSha || remoteSha === localSha) return false;
       // If remote has a commit we don't, we're stale.
       const mergeBase = (await git.raw(['merge-base', localSha, remoteSha])).trim();
