@@ -8,7 +8,9 @@ import type { SchemaMain } from './schema.main.runtime';
 
 export type LaneDiffHandler = (
   pattern: string,
-  laneName?: string
+  laneName?: string,
+  baseVersion?: string,
+  compareVersion?: string
 ) => Promise<{ diff: APIDiffResult; componentId: string; fromLabel: string; toLabel: string }>;
 
 export class SchemaDiffCommand implements Command {
@@ -39,7 +41,12 @@ examples:
     if (flags.lane !== undefined) {
       if (!this.laneDiffHandler) throw new Error('--lane flag is not available (lanes aspect not loaded)');
       const laneName = typeof flags.lane === 'string' ? flags.lane : undefined;
-      const { diff, componentId, fromLabel, toLabel } = await this.laneDiffHandler(pattern, laneName);
+      const { diff, componentId, fromLabel, toLabel } = await this.laneDiffHandler(
+        pattern,
+        laneName,
+        baseVersion,
+        compareVersion
+      );
       return this.formatDiffResult(diff, `${componentId} (${fromLabel} → ${toLabel})`);
     }
     if (!baseVersion || !compareVersion) {
@@ -54,7 +61,12 @@ examples:
     if (flags.lane !== undefined) {
       if (!this.laneDiffHandler) throw new Error('--lane flag is not available (lanes aspect not loaded)');
       const laneName = typeof flags.lane === 'string' ? flags.lane : undefined;
-      const { diff, componentId, fromLabel, toLabel } = await this.laneDiffHandler(pattern, laneName);
+      const { diff, componentId, fromLabel, toLabel } = await this.laneDiffHandler(
+        pattern,
+        laneName,
+        baseVersion,
+        compareVersion
+      );
       return this.toAgentJson(diff, componentId, fromLabel, toLabel);
     }
     if (!baseVersion || !compareVersion) {
