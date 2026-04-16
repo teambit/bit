@@ -59,8 +59,7 @@ export class WorkspaceGenerator {
     try {
       process.chdir(this.workspacePath);
       await this.initGit();
-      // Resolve agent flag: true means default AGENTS.md, string means a specific tool.
-      const agentType = this.options.agent === true ? undefined : this.options.agent || undefined;
+      const agentType = this.options.agent || undefined;
       await HostInitializerMain.init(
         this.workspacePath,
         this.options.skipGit,
