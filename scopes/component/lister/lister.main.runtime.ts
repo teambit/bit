@@ -13,6 +13,7 @@ import { BitError } from '@teambit/bit-error';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { Http } from '@teambit/scope.network';
 import { CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
+import { parseScope } from '@teambit/legacy.utils';
 import { ListCmd } from './list.cmd';
 import { SearchCmd } from './search.cmd';
 import { ListerAspect } from './lister.aspect';
@@ -32,13 +33,9 @@ export type ListScopeResult = {
 };
 
 export type SearchOptions = {
-  /** filter remote results by these owners. when omitted and skipAutoOwner is false, the workspace defaultScope's owner is used */
   owners?: string[];
-  /** disable auto-extracting owner from workspace.defaultScope */
   skipAutoOwner?: boolean;
-  /** skip remote search */
   localOnly?: boolean;
-  /** skip local workspace search */
   remoteOnly?: boolean;
 };
 
@@ -211,68 +208,64 @@ export class ListerMain {
     return this._http;
   }
 
-  /**
-   * Search for components by keyword(s). Runs the provided queries in parallel against
-   * the central Bit Cloud search and against the local workspace component IDs.
-   * Returns deduplicated, sorted lists.
-   */
   async search(queries: string[], opts: SearchOptions = {}): Promise<SearchResults> {
     if (!queries.length) throw new BitError('search requires at least one query');
     if (opts.localOnly && opts.remoteOnly) {
       throw new BitError('--local-only and --remote-only cannot be used together');
     }
 
-    // Resolve owners for the remote search.
     let ownersToUse = opts.owners?.length ? opts.owners : undefined;
     if (!ownersToUse && !opts.skipAutoOwner && this.workspace) {
-      const defaultScope = this.workspace.defaultScope;
-      if (defaultScope) {
-        const owner = defaultScope.includes('.') ? defaultScope.split('.')[0] : defaultScope;
-        ownersToUse = [owner];
-      }
+      const owner = parseScope(this.workspace.defaultScope).owner ?? this.workspace.defaultScope;
+      if (owner) ownersToUse = [owner];
     }
 
-    // Local component IDs (without versions) to match against.
-    let localIds: string[] = [];
-    if (!opts.remoteOnly && this.workspace) {
-      const components = await this.workspace.list();
-      localIds = components.map((c) => c.id.toStringWithoutVersion());
-    }
+    const [localIds, http] = await Promise.all([
+      !opts.remoteOnly && this.workspace ? this.workspace.listIds().map((id) => id.toStringWithoutVersion()) : [],
+      opts.localOnly ? undefined : this.getHttp(),
+    ]);
 
-    const http = opts.localOnly ? undefined : await this.getHttp();
+    const localIdsLower = localIds.map((id) => id.toLowerCase());
 
-    const perQuery: SearchResults['perQuery'] = [];
-    const remoteSet = new Set<string>();
-    const localSet = new Set<string>();
-
-    await Promise.all(
+    const perQuery = await Promise.all(
       queries.map(async (query) => {
         const lower = query.toLowerCase();
-        const localMatches = localIds.filter((id) => id.toLowerCase().includes(lower));
-        localMatches.forEach((id) => localSet.add(id));
+        const localMatches = localIds.filter((_, i) => localIdsLower[i].includes(lower));
 
         let remoteCount = 0;
+        let remoteComponents: string[] = [];
         let error: string | undefined;
         if (http) {
           try {
             const result = await http.search(query, ownersToUse);
-            const components = result?.components || [];
-            components.forEach((id: string) => remoteSet.add(id));
-            remoteCount = components.length;
+            remoteComponents = result?.components || [];
+            remoteCount = remoteComponents.length;
           } catch (err: any) {
             error = err.message || String(err);
             this.logger.warn(`search failed for query "${query}": ${error}`);
           }
         }
 
-        perQuery.push({ query, remoteCount, localCount: localMatches.length, error });
+        return { query, remoteCount, localCount: localMatches.length, error, localMatches, remoteComponents };
       })
     );
+
+    const remoteSet = new Set<string>();
+    const localSet = new Set<string>();
+    for (const result of perQuery) {
+      result.remoteComponents.forEach((id) => remoteSet.add(id));
+      result.localMatches.forEach((id) => localSet.add(id));
+    }
 
     return {
       remote: Array.from(remoteSet).sort(),
       local: Array.from(localSet).sort(),
-      perQuery,
+      perQuery: perQuery.map(({ query, remoteCount, localCount, error }) => ({
+        query,
+        remoteCount,
+        localCount,
+        error,
+      })),
       ownersUsed: ownersToUse,
     };
   }

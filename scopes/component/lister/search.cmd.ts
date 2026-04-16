@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import chalk from 'chalk';
+import { formatTitle, formatHint, formatWarningSummary, joinSections } from '@teambit/cli';
 import type { ListerMain, SearchResults } from './lister.main.runtime';
 
 type SearchFlags = {
@@ -49,32 +49,29 @@ owner extracted from the workspace's defaultScope; use --owners or --skip-auto-o
 
   async report([queries]: [string[]], flags: SearchFlags) {
     const results = await this.run(queries, flags);
-    const lines: string[] = [];
+    const sections: string[] = [];
 
     if (results.ownersUsed?.length && !flags.localOnly) {
-      lines.push(chalk.dim(`remote search filtered by owners: ${results.ownersUsed.join(', ')}`));
-      lines.push('');
+      sections.push(formatHint(`remote search filtered by owners: ${results.ownersUsed.join(', ')}`));
     }
 
     if (!flags.remoteOnly) {
-      lines.push(chalk.bold(`Local (${results.local.length})`));
-      lines.push(results.local.length ? results.local.join('\n') : chalk.dim('  no matches in workspace'));
-      lines.push('');
+      const body = results.local.length ? results.local.join('\n') : formatHint('  no matches in workspace');
+      sections.push(`${formatTitle(`Local (${results.local.length})`)}\n${body}`);
     }
 
     if (!flags.localOnly) {
-      lines.push(chalk.bold(`Remote (${results.remote.length})`));
-      lines.push(results.remote.length ? results.remote.join('\n') : chalk.dim('  no matches on bit cloud'));
-      lines.push('');
+      const body = results.remote.length ? results.remote.join('\n') : formatHint('  no matches on bit cloud');
+      sections.push(`${formatTitle(`Remote (${results.remote.length})`)}\n${body}`);
     }
 
     const failed = results.perQuery.filter((r) => r.error);
     if (failed.length) {
-      lines.push(chalk.yellow('Failed queries:'));
-      failed.forEach((r) => lines.push(`  - "${r.query}": ${r.error}`));
+      const items = failed.map((r) => `  - "${r.query}": ${r.error}`);
+      sections.push(`${formatWarningSummary('Failed queries:')}\n${items.join('\n')}`);
     }
 
-    return lines.join('\n');
+    return joinSections(sections);
   }
 
   async json([queries]: [string[]], flags: SearchFlags) {
