@@ -6,17 +6,18 @@ import { deepEqualNoLocation, diffDoc } from './schema-diff';
 
 export interface ISchemaNode {
   __schema: string;
+  name?: string;
+  displaySchemaName: string;
   location: SchemaLocation;
   doc?: DocSchema;
   signature?: string;
-  name?: string;
   toObject(): Record<string, any>;
   toString(options?: { color?: boolean }): string;
   toFullSignature(options?: { showDocs?: boolean }): string;
   getNodes(): SchemaNode[];
   findNode(predicate: (node: SchemaNode) => boolean, visitedNodes?: Set<SchemaNode>): SchemaNode | undefined;
   getAllNodesRecursively(visitedNodes?: Set<SchemaNode>): SchemaNode[];
-  displaySchemaName: string;
+  diff(other: SchemaNode): SchemaChangeFact[];
 }
 
 /**

@@ -57,7 +57,7 @@ function diffExports(
       const compareComparable = toComparableObject(compareEntry.unwrapped);
 
       if (!deepEqual(baseComparable, compareComparable)) {
-        const facts = baseEntry.unwrapped.diff(compareEntry.unwrapped);
+        const facts = baseEntry.unwrapped.diff?.(compareEntry.unwrapped) ?? [];
         const assessed: AssessedChange[] = assessor.assess(facts);
 
         const baseSig = baseEntry.unwrapped.signature;
