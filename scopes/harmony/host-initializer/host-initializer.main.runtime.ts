@@ -62,8 +62,9 @@ export class HostInitializerMain {
     resetScope = false,
     force = false,
     workspaceConfigProps: WorkspaceExtensionProps = {},
-    generator?: string
-  ): Promise<{ created: boolean; consumer: Consumer }> {
+    generator?: string,
+    agent?: string
+  ): Promise<{ created: boolean; consumer: Consumer; agentFileWritten?: string }> {
     const consumerInfo = await getWorkspaceInfo(absPath || process.cwd());
     // if "bit init" was running without any flags, the user is probably trying to init a new workspace but wasn't aware
     // that he's already in a workspace.
@@ -115,7 +116,101 @@ export class HostInitializerMain {
       await consumer.resetLaneNew();
     }
     const writtenConsumer = await consumer.write();
-    return { created: !consumerInfo?.path, consumer: writtenConsumer };
+    const created = !consumerInfo?.path;
+    let agentFileWritten: string | undefined;
+    if (created) {
+      agentFileWritten = await HostInitializerMain.writeAgentInstructions(consumerPath, agent);
+    }
+    return { created, consumer: writtenConsumer, agentFileWritten };
+  }
+
+  /**
+   * Supported agent targets and their output file paths (relative to workspace root).
+   */
+  static readonly AGENT_FILE_MAP: Record<string, string> = {
+    claude: 'CLAUDE.md',
+    cursor: '.cursor/rules/bit.mdc',
+    copilot: '.github/copilot-instructions.md',
+  };
+
+  /**
+   * All known agent instruction file paths. Used to detect whether a workspace
+   * already contains any agent configuration.
+   */
+  static readonly ALL_AGENT_FILES = [
+    'AGENTS.md',
+    'CLAUDE.md',
+    '.cursorrules',
+    '.cursor/rules',
+    '.github/copilot-instructions.md',
+  ];
+
+  /**
+   * Write AI agent instructions into the workspace.
+   *
+   * - Skips if .git exists (git repos use the interactive init flow).
+   * - Skips if any known agent instruction file already exists.
+   * - When `agent` is provided, writes to the tool-specific path (e.g. CLAUDE.md).
+   * - When `agent` is omitted, writes the universal AGENTS.md.
+   *
+   * Returns the relative path of the file written, or undefined if skipped.
+   */
+  static async writeAgentInstructions(
+    projectPath: string,
+    agent?: string,
+    skipGitCheck = false
+  ): Promise<string | undefined> {
+    try {
+      // Don't write in git repos — they use the interactive flow.
+      // Callers like `bit new` set skipGitCheck because they always create a fresh workspace.
+      if (!skipGitCheck && (await HostInitializerMain.hasGitDirectory(projectPath))) return undefined;
+
+      // Don't write if any agent file already exists.
+      if (await HostInitializerMain.hasExistingAgentFile(projectPath)) return undefined;
+
+      const relativePath = agent ? HostInitializerMain.AGENT_FILE_MAP[agent] : undefined;
+      const targetFile = relativePath || 'AGENTS.md';
+      const targetPath = path.join(projectPath, targetFile);
+
+      // Read the shared template content.
+      const templatePath = path.join(__dirname, 'agents-template.md');
+      const content = await fs.readFile(templatePath, 'utf8');
+
+      // Some formats require frontmatter.
+      const finalContent = HostInitializerMain.wrapWithFrontmatter(targetFile, content);
+
+      await fs.ensureDir(path.dirname(targetPath));
+      await fs.writeFile(targetPath, finalContent);
+      return targetFile;
+    } catch {
+      // Don't fail initialization if the agent file cannot be written.
+      return undefined;
+    }
+  }
+
+  /**
+   * Check if any known agent instruction file or directory already exists.
+   */
+  static async hasExistingAgentFile(projectPath: string): Promise<boolean> {
+    for (const rel of HostInitializerMain.ALL_AGENT_FILES) {
+      if (await fs.pathExists(path.join(projectPath, rel))) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Wrap template content with tool-specific frontmatter where required.
+   */
+  static wrapWithFrontmatter(targetFile: string, content: string): string {
+    if (targetFile === '.cursor/rules/bit.mdc') {
+      return `---
+description: Bit workspace instructions
+alwaysApply: true
+---
+
+${content}`;
+    }
+    return content;
   }
 
   /**
@@ -321,7 +416,8 @@ node_modules
     reset: boolean,
     resetHard: boolean,
     resetScope: boolean,
-    interactiveConfig: InteractiveConfig | null
+    interactiveConfig: InteractiveConfig | null,
+    agentFileWritten?: string
   ): string {
     let initMessage = formatSuccessSummary('initialized a bit workspace.');
 
@@ -329,6 +425,12 @@ node_modules
     if (reset) initMessage = formatHint('your bit workspace has been reset successfully.');
     if (resetHard) initMessage = formatHint('your bit workspace has been hard-reset successfully.');
     if (resetScope) initMessage = formatHint('your local scope has been reset successfully.');
+
+    if (agentFileWritten) {
+      initMessage += formatHint(
+        `\n  Created ${chalk.cyan(agentFileWritten)} — instructions for AI agents working in this workspace`
+      );
+    }
 
     // Add additional information for interactive mode
     if (interactiveConfig) {

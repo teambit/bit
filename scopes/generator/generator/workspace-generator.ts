@@ -72,6 +72,9 @@ export class WorkspaceGenerator {
         {}
       );
       await this.writeWorkspaceFiles();
+      // Write agent instructions — resolve flag: true means default AGENTS.md, string means a specific tool.
+      const agentType = this.options.agent === true ? undefined : this.options.agent || undefined;
+      await HostInitializerMain.writeAgentInstructions(this.workspacePath, agentType, true);
       await this.reloadBitInWorkspaceDir();
       // Setting the workspace to be in install context to prevent errors during the workspace generation
       // the workspace will be in install context until the end of the generation install process
