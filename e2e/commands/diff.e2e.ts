@@ -406,7 +406,7 @@ describe('bit diff command', function () {
       });
       it('--configs-only + --file should error', () => {
         const out = helper.general.runWithTryCatch('bit diff bar/foo --configs-only --file foo.js');
-        expect(out).to.have.string('cannot be combined');
+        expect(out).to.have.string('mutually exclusive');
       });
     });
   });

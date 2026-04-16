@@ -175,16 +175,20 @@ function formatComponentHeader(diffResult: DiffResults): string {
   return `showing diff for ${chalk.bold(diffResult.id.toStringWithoutVersion())}`;
 }
 
-export function outputDiffResultsNameOnly(diffResults: DiffResults[]): string {
+function outputDiffResultsSummary(diffResults: DiffResults[], includeStats: boolean): string {
   return diffResults
     .map((diffResult) => {
       if (!diffResult.hasDiff) {
         return `no diff for ${chalk.bold(diffResult.id.toString())}`;
       }
       const header = formatComponentHeader(diffResult);
-      const fileLines = (diffResult.filesDiff || [])
-        .filter((fd) => fd.diffOutput)
-        .map((fd) => `${STATUS_LETTER[fd.status]} ${fd.filePath}`);
+      const filesWithDiff = (diffResult.filesDiff || []).filter((fd) => fd.diffOutput);
+      const pathWidth = includeStats ? filesWithDiff.reduce((max, fd) => Math.max(max, fd.filePath.length), 0) : 0;
+      const fileLines = filesWithDiff.map((fd) => {
+        if (!includeStats) return `${STATUS_LETTER[fd.status]} ${fd.filePath}`;
+        const { additions, deletions } = countDiffLines(fd.diffOutput);
+        return `${STATUS_LETTER[fd.status]} ${fd.filePath.padEnd(pathWidth)}  +${additions} -${deletions}`;
+      });
       const fieldLines = (diffResult.fieldsDiff || []).map((fd) => `F ${fd.fieldName}`);
       const lines = [...fileLines, ...fieldLines];
       if (!lines.length) return `${header}\n(no matching changes)`;
@@ -193,26 +197,12 @@ export function outputDiffResultsNameOnly(diffResults: DiffResults[]): string {
     .join('\n\n');
 }
 
+export function outputDiffResultsNameOnly(diffResults: DiffResults[]): string {
+  return outputDiffResultsSummary(diffResults, false);
+}
+
 export function outputDiffResultsStat(diffResults: DiffResults[]): string {
-  return diffResults
-    .map((diffResult) => {
-      if (!diffResult.hasDiff) {
-        return `no diff for ${chalk.bold(diffResult.id.toString())}`;
-      }
-      const header = formatComponentHeader(diffResult);
-      const filesWithDiff = (diffResult.filesDiff || []).filter((fd) => fd.diffOutput);
-      const pathWidth = filesWithDiff.reduce((max, fd) => Math.max(max, fd.filePath.length), 0);
-      const fileLines = filesWithDiff.map((fd) => {
-        const { additions, deletions } = countDiffLines(fd.diffOutput);
-        const paddedPath = fd.filePath.padEnd(pathWidth);
-        return `${STATUS_LETTER[fd.status]} ${paddedPath}  +${additions} -${deletions}`;
-      });
-      const fieldLines = (diffResult.fieldsDiff || []).map((fd) => `F ${fd.fieldName}`);
-      const lines = [...fileLines, ...fieldLines];
-      if (!lines.length) return `${header}\n(no matching changes)`;
-      return [header, ...lines].join('\n');
-    })
-    .join('\n\n');
+  return outputDiffResultsSummary(diffResults, true);
 }
 
 export function outputDiffResultsFormatted(diffResults: DiffResults[], opts: DiffOutputOptions = {}): string {

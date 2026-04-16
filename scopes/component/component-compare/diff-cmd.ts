@@ -96,7 +96,7 @@ if both "version" and "to-version" are provided, compare those two versions dire
     return filtered.map((result) => ({
       id: result.id.toString(),
       hasDiff: result.hasDiff,
-      filesDiff: result.filesDiff,
+      filesDiff: result.filesDiff?.map(({ filePath, diffOutput, status }) => ({ filePath, diffOutput, status })),
       fieldsDiff: result.fieldsDiff,
     }));
   }
@@ -125,7 +125,7 @@ if both "version" and "to-version" are provided, compare those two versions dire
       throw new BitError('--files-only and --configs-only are mutually exclusive');
     }
     if (configsOnly && files && files.length) {
-      throw new BitError('--file cannot be combined with --configs-only');
+      throw new BitError('--file and --configs-only are mutually exclusive');
     }
     if (nameOnly && stat) {
       throw new BitError('--name-only and --stat are mutually exclusive');
