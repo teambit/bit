@@ -214,6 +214,9 @@ export class ListerMain {
     if (opts.localOnly && opts.remoteOnly) {
       throw new BitError('--local-only and --remote-only cannot be used together');
     }
+    if (opts.localOnly && !this.workspace) {
+      throw new BitError('--local-only requires a workspace. Run without --local-only to search remote only.');
+    }
     const uniqueQueries = [...new Set(queries)];
 
     let ownersToUse = opts.owners?.length ? opts.owners : undefined;
@@ -224,7 +227,12 @@ export class ListerMain {
 
     const [localIds, http] = await Promise.all([
       !opts.remoteOnly && this.workspace ? this.workspace.listIds().map((id) => id.toStringWithoutVersion()) : [],
-      opts.localOnly ? undefined : this.getHttp(),
+      opts.localOnly
+        ? undefined
+        : this.getHttp().catch((err) => {
+            this.logger.warn(`failed to connect to remote: ${this.extractErrorMessage(err)}`);
+            return undefined;
+          }),
     ]);
 
     const localIdsLower = localIds.map((id) => id.toLowerCase());
