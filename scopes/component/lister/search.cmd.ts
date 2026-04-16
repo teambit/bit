@@ -55,7 +55,7 @@ owner extracted from the workspace's defaultScope; use --owners or --skip-auto-o
       sections.push(formatHint(`remote search filtered by owners: ${results.ownersUsed.join(', ')}`));
     }
 
-    if (!flags.remoteOnly) {
+    if (!flags.remoteOnly && results.hasWorkspace) {
       const body = results.local.length ? results.local.join('\n') : formatHint('  no matches in workspace');
       sections.push(`${formatTitle(`Local (${results.local.length})`)}\n${body}`);
     }

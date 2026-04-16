@@ -44,6 +44,7 @@ export type SearchResults = {
   local: string[];
   perQuery: Array<{ query: string; remoteCount: number; localCount: number; error?: string }>;
   ownersUsed?: string[];
+  hasWorkspace: boolean;
 };
 
 export class ListerMain {
@@ -213,6 +214,7 @@ export class ListerMain {
     if (opts.localOnly && opts.remoteOnly) {
       throw new BitError('--local-only and --remote-only cannot be used together');
     }
+    const uniqueQueries = [...new Set(queries)];
 
     let ownersToUse = opts.owners?.length ? opts.owners : undefined;
     if (!ownersToUse && !opts.skipAutoOwner && this.workspace) {
@@ -228,7 +230,7 @@ export class ListerMain {
     const localIdsLower = localIds.map((id) => id.toLowerCase());
 
     const perQuery = await Promise.all(
-      queries.map(async (query) => {
+      uniqueQueries.map(async (query) => {
         const lower = query.toLowerCase();
         const localMatches = localIds.filter((_, i) => localIdsLower[i].includes(lower));
 
@@ -241,7 +243,7 @@ export class ListerMain {
             remoteComponents = result?.components || [];
             remoteCount = remoteComponents.length;
           } catch (err: any) {
-            error = err.message || String(err);
+            error = this.extractErrorMessage(err);
             this.logger.warn(`search failed for query "${query}": ${error}`);
           }
         }
@@ -267,6 +269,7 @@ export class ListerMain {
         error,
       })),
       ownersUsed: ownersToUse,
+      hasWorkspace: !!this.workspace,
     };
   }
 
