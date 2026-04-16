@@ -11,7 +11,10 @@ import { getRemoteByName, listScopesByOwner } from '@teambit/scope.remotes';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { BitError } from '@teambit/bit-error';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { Http } from '@teambit/scope.network';
+import { CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 import { ListCmd } from './list.cmd';
+import { SearchCmd } from './search.cmd';
 import { ListerAspect } from './lister.aspect';
 import { NoIdMatchWildcard } from './no-id-match-wildcard';
 
@@ -26,6 +29,24 @@ export type ListScopeResult = {
   removed?: boolean;
   laneReadmeOf?: string[];
   rootDir?: string;
+};
+
+export type SearchOptions = {
+  /** filter remote results by these owners. when omitted and skipAutoOwner is false, the workspace defaultScope's owner is used */
+  owners?: string[];
+  /** disable auto-extracting owner from workspace.defaultScope */
+  skipAutoOwner?: boolean;
+  /** skip remote search */
+  localOnly?: boolean;
+  /** skip local workspace search */
+  remoteOnly?: boolean;
+};
+
+export type SearchResults = {
+  remote: string[];
+  local: string[];
+  perQuery: Array<{ query: string; remoteCount: number; localCount: number; error?: string }>;
+  ownersUsed?: string[];
 };
 
 export class ListerMain {
@@ -182,13 +203,87 @@ export class ListerMain {
     return listScopeResults.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
   }
 
+  private _http?: Http;
+  private async getHttp(): Promise<Http> {
+    if (!this._http) {
+      this._http = await Http.connect(SYMPHONY_GRAPHQL, CENTRAL_BIT_HUB_NAME);
+    }
+    return this._http;
+  }
+
+  /**
+   * Search for components by keyword(s). Runs the provided queries in parallel against
+   * the central Bit Cloud search and against the local workspace component IDs.
+   * Returns deduplicated, sorted lists.
+   */
+  async search(queries: string[], opts: SearchOptions = {}): Promise<SearchResults> {
+    if (!queries.length) throw new BitError('search requires at least one query');
+    if (opts.localOnly && opts.remoteOnly) {
+      throw new BitError('--local-only and --remote-only cannot be used together');
+    }
+
+    // Resolve owners for the remote search.
+    let ownersToUse = opts.owners?.length ? opts.owners : undefined;
+    if (!ownersToUse && !opts.skipAutoOwner && this.workspace) {
+      const defaultScope = this.workspace.defaultScope;
+      if (defaultScope) {
+        const owner = defaultScope.includes('.') ? defaultScope.split('.')[0] : defaultScope;
+        ownersToUse = [owner];
+      }
+    }
+
+    // Local component IDs (without versions) to match against.
+    let localIds: string[] = [];
+    if (!opts.remoteOnly && this.workspace) {
+      const components = await this.workspace.list();
+      localIds = components.map((c) => c.id.toStringWithoutVersion());
+    }
+
+    const http = opts.localOnly ? undefined : await this.getHttp();
+
+    const perQuery: SearchResults['perQuery'] = [];
+    const remoteSet = new Set<string>();
+    const localSet = new Set<string>();
+
+    await Promise.all(
+      queries.map(async (query) => {
+        const lower = query.toLowerCase();
+        const localMatches = localIds.filter((id) => id.toLowerCase().includes(lower));
+        localMatches.forEach((id) => localSet.add(id));
+
+        let remoteCount = 0;
+        let error: string | undefined;
+        if (http) {
+          try {
+            const result = await http.search(query, ownersToUse);
+            const components = result?.components || [];
+            components.forEach((id: string) => remoteSet.add(id));
+            remoteCount = components.length;
+          } catch (err: any) {
+            error = err.message || String(err);
+            this.logger.warn(`search failed for query "${query}": ${error}`);
+          }
+        }
+
+        perQuery.push({ query, remoteCount, localCount: localMatches.length, error });
+      })
+    );
+
+    return {
+      remote: Array.from(remoteSet).sort(),
+      local: Array.from(localSet).sort(),
+      perQuery,
+      ownersUsed: ownersToUse,
+    };
+  }
+
   static slots = [];
   static dependencies = [CLIAspect, LoggerAspect, WorkspaceAspect];
   static runtime = MainRuntime;
   static async provider([cli, loggerMain, workspace]: [CLIMain, LoggerMain, Workspace]) {
     const logger = loggerMain.createLogger(ListerAspect.id);
     const lister = new ListerMain(logger, workspace);
-    cli.register(new ListCmd(lister));
+    cli.register(new ListCmd(lister), new SearchCmd(lister));
     return lister;
   }
 }
