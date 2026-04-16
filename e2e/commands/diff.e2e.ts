@@ -299,4 +299,115 @@ describe('bit diff command', function () {
       });
     });
   });
+  describe('ai-agent output flags', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fixtures.createComponentBarFoo(barFooV1);
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.createComponentIsType();
+      helper.fixtures.addComponentUtilsIsType();
+      helper.command.tagAllComponents();
+      // modify source in bar/foo, and add a file in utils/is-type so both filesDiff and fieldsDiff appear
+      helper.fixtures.createComponentBarFoo(barFooV2);
+      helper.fs.createFile('is-type', 'extra.js', "module.exports = 'extra';\n");
+      helper.command.addComponent('is-type', { i: 'utils/is-type', m: 'is-type.js' });
+    });
+    describe('--name-only', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.diff('bar/foo', '--name-only');
+      });
+      it('should print the component header once', () => {
+        expect(output).to.have.string('showing diff for');
+        expect(output).to.have.string('bar/foo');
+      });
+      it('should list changed files with a status letter and path', () => {
+        expect(output).to.match(/^M foo\.js$/m);
+      });
+      it('should not include the unified diff body', () => {
+        expect(output).to.not.have.string('--- foo.js');
+        expect(output).to.not.have.string(barFooV2);
+      });
+    });
+    describe('--stat', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.diff('bar/foo', '--stat');
+      });
+      it('should include the changed file with +N -M counts', () => {
+        expect(output).to.match(/M foo\.js\s+\+\d+ -\d+/);
+      });
+      it('should not include the unified diff body', () => {
+        expect(output).to.not.have.string('@@ ');
+      });
+    });
+    describe('--file <path>', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.diff('utils/is-type', '--file extra.js');
+      });
+      it('should include the matching file diff', () => {
+        expect(output).to.have.string('extra.js');
+      });
+      it('should not include fields diff (implies --files-only)', () => {
+        expect(output).to.not.have.string('--- Main File');
+        expect(output).to.not.have.string('--- Files');
+      });
+    });
+    describe('--files-only', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.diff('utils/is-type', '--files-only');
+      });
+      it('should include file diffs', () => {
+        expect(output).to.have.string('extra.js');
+      });
+      it('should drop fields diff', () => {
+        expect(output).to.not.have.string('--- Files');
+        expect(output).to.not.have.string('--- Main File');
+      });
+    });
+    describe('--configs-only', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.diff('utils/is-type', '--configs-only');
+      });
+      it('should include fields diff', () => {
+        expect(output).to.have.string('--- Files');
+      });
+      it('should drop file-content diffs', () => {
+        expect(output).to.not.have.string('@@ ');
+      });
+    });
+    describe('--json', () => {
+      let parsed: any;
+      before(() => {
+        const raw = helper.command.runCmd('bit diff bar/foo --json');
+        parsed = JSON.parse(raw);
+      });
+      it('should return an array with one entry per matching component', () => {
+        expect(parsed).to.be.an('array');
+        expect(parsed).to.have.lengthOf(1);
+      });
+      it('should expose id, hasDiff, filesDiff, fieldsDiff', () => {
+        expect(parsed[0]).to.have.property('id').that.is.a('string');
+        expect(parsed[0]).to.have.property('hasDiff').that.is.a('boolean');
+        expect(parsed[0]).to.have.property('filesDiff');
+      });
+    });
+    describe('mutually exclusive flags', () => {
+      it('--files-only + --configs-only should error', () => {
+        const out = helper.general.runWithTryCatch('bit diff bar/foo --files-only --configs-only');
+        expect(out).to.have.string('mutually exclusive');
+      });
+      it('--name-only + --stat should error', () => {
+        const out = helper.general.runWithTryCatch('bit diff bar/foo --name-only --stat');
+        expect(out).to.have.string('mutually exclusive');
+      });
+      it('--configs-only + --file should error', () => {
+        const out = helper.general.runWithTryCatch('bit diff bar/foo --configs-only --file foo.js');
+        expect(out).to.have.string('cannot be combined');
+      });
+    });
+  });
 });
