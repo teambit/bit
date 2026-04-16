@@ -782,6 +782,7 @@
 @teambit/git/dist/set-git-merge-driver.cmd.js
 @teambit/git/dist/merge-bitmaps.cmd.js
 @teambit/lister/dist/list.cmd.js
+@teambit/lister/dist/search.cmd.js
 @teambit/workspace-config-files/dist/workspace-config-files.service.js
 @teambit/workspace-config-files/dist/ws-config.cmd.js
 @teambit/deprecation/dist/deprecate-cmd.js
