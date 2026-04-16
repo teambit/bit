@@ -834,6 +834,13 @@ run a script defined by the environment
 executes custom scripts defined by component environments. scripts can be shell commands or JavaScript functions defined in env.scripts(). runs the script for all components grouped by their environment. use --list to see all available scripts.
 Flags: --list
 
+## bit search <query...>
+
+search for components by keyword in the local workspace and remote bit cloud
+
+runs the provided query terms in parallel against bit cloud and against the local workspace. multiple queries are unioned (deduplicated) in the output. by default, remote results are filtered by the owner extracted from the workspace's defaultScope; use --owners or --skip-auto-owner to change this.
+Flags: --owners <list>, --skip-auto-owner, --remote-only, --local-only, --json
+
 ## bit set-peer <component-id> <range>
 
 configure component to always be installed as peer dependency
