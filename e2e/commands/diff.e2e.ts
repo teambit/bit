@@ -394,6 +394,33 @@ describe('bit diff command', function () {
         expect(parsed[0]).to.have.property('hasDiff').that.is.a('boolean');
         expect(parsed[0]).to.have.property('filesDiff');
       });
+      it('should include diffOutput in each filesDiff entry by default', () => {
+        expect(parsed[0].filesDiff[0]).to.have.property('diffOutput').that.is.a('string');
+      });
+    });
+    describe('--json --name-only', () => {
+      let parsed: any;
+      before(() => {
+        const raw = helper.command.runCmd('bit diff bar/foo --json --name-only');
+        parsed = JSON.parse(raw);
+      });
+      it('should omit diffOutput from filesDiff entries', () => {
+        expect(parsed[0].filesDiff[0]).to.have.property('filePath');
+        expect(parsed[0].filesDiff[0]).to.have.property('status');
+        expect(parsed[0].filesDiff[0]).to.not.have.property('diffOutput');
+      });
+    });
+    describe('--json --stat', () => {
+      let parsed: any;
+      before(() => {
+        const raw = helper.command.runCmd('bit diff bar/foo --json --stat');
+        parsed = JSON.parse(raw);
+      });
+      it('should include additions/deletions and omit diffOutput', () => {
+        expect(parsed[0].filesDiff[0]).to.have.property('additions').that.is.a('number');
+        expect(parsed[0].filesDiff[0]).to.have.property('deletions').that.is.a('number');
+        expect(parsed[0].filesDiff[0]).to.not.have.property('diffOutput');
+      });
     });
     describe('mutually exclusive flags', () => {
       it('--files-only + --configs-only should error', () => {

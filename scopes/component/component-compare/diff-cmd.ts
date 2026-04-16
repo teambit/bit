@@ -97,7 +97,9 @@ if both "version" and "to-version" are provided, compare those two versions dire
     return filtered.map((result) => ({
       id: result.id.toStringWithoutVersion(),
       hasDiff: result.hasDiff,
-      filesDiff: result.filesDiff?.map((fd) => this.projectFileDiffForJson(fd, outputOpts)),
+      filesDiff: result.filesDiff
+        ?.filter((fd) => fd.status !== 'UNCHANGED' && fd.diffOutput)
+        .map((fd) => this.projectFileDiffForJson(fd, outputOpts)),
       fieldsDiff: result.fieldsDiff,
     }));
   }
@@ -144,7 +146,7 @@ if both "version" and "to-version" are provided, compare those two versions dire
     }
 
     return {
-      filesOnly,
+      filesOnly: filesOnly || Boolean(files && files.length),
       configsOnly,
       files,
       nameOnly,
