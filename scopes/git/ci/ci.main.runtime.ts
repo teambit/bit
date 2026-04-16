@@ -460,7 +460,14 @@ export class CiMain {
           // `getLanes` just reported the lane exists, but the delete API says "not found". Re-query
           // to confirm. If the lane still shows up, something is off on the remote (delete can't
           // see what list/export can), and retrying will never converge.
-          const stillExists = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name }).catch(() => []);
+          let stillExists;
+          try {
+            stillExists = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name });
+          } catch (verifyErr: any) {
+            throw new Error(
+              `failed to verify whether remote lane ${laneId.toString()} still exists after delete returned "not found": ${verifyErr?.message || verifyErr}`
+            );
+          }
           if (stillExists.length) {
             throw new Error(
               `unable to delete remote lane ${laneId.toString()}: the remote reports the lane as "not found" from ` +
@@ -905,10 +912,10 @@ export class CiMain {
       const archiveLane = await this.lanes.removeLanes([laneId], { remote: true, force: true });
       if (archiveLane.length) {
         this.logger.console(chalk.green(`Lane '${laneId}' archived successfully`));
-      } else {
-        this.logger.console(chalk.yellow(`Failed to archive lane '${laneId}' - no lanes were removed`));
+        return 'deleted';
       }
-      return 'deleted';
+      this.logger.console(chalk.yellow(`Failed to archive lane '${laneId}' - no lanes were removed`));
+      return 'not-found';
     } catch (e: any) {
       if (e.message?.includes('was not found') || e.toString().includes('was not found')) {
         this.logger.console(chalk.yellow(`Lane '${laneId}' was not found on the remote`));
