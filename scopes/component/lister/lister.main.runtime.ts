@@ -45,7 +45,8 @@ export type SearchResults = {
   perQuery: Array<{ query: string; remoteCount: number; localCount: number; error?: string }>;
   ownersUsed?: string[];
   hasWorkspace: boolean;
-  remoteAvailable: boolean;
+  /** true = connected, false = connection failed, undefined = remote search was not attempted */
+  remoteAvailable?: boolean;
 };
 
 export class ListerMain {
@@ -279,7 +280,7 @@ export class ListerMain {
       })),
       ownersUsed: ownersToUse,
       hasWorkspace: !!this.workspace,
-      remoteAvailable: !!http,
+      remoteAvailable: opts.localOnly ? undefined : !!http,
     };
   }
 

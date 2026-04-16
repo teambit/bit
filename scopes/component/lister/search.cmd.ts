@@ -56,15 +56,15 @@ owner extracted from the workspace's defaultScope; use --owners or --skip-auto-o
     }
 
     if (!flags.remoteOnly && results.hasWorkspace) {
-      const body = results.local.length ? results.local.join('\n') : formatHint('  no matches in workspace');
+      const body = results.local.length ? results.local.join('\n') : formatHint('no matches in workspace');
       sections.push(`${formatTitle(`Local (${results.local.length})`)}\n${body}`);
     }
 
     if (!flags.localOnly) {
-      if (!results.remoteAvailable) {
+      if (results.remoteAvailable === false) {
         sections.push(formatHint('remote search unavailable (connection failed)'));
       } else {
-        const body = results.remote.length ? results.remote.join('\n') : formatHint('  no matches on bit cloud');
+        const body = results.remote.length ? results.remote.join('\n') : formatHint('no matches on bit cloud');
         sections.push(`${formatTitle(`Remote (${results.remote.length})`)}\n${body}`);
       }
     }
