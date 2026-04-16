@@ -31,6 +31,7 @@ cat <component-id> - print source files or config of a component at a specific v
 graph [id] - visualize component dependencies as a graph image
 pattern <pattern> - test and validate component patterns
 list [remote-scope] - display components in workspace or remote scope
+search <query...> - search for components by keyword in the local workspace and remote bit cloud
 schema <pattern> - display component API schema and type definitions
 Subcommands: diff
 diff [component-pattern] [version] [to-version] - compare component changes between versions or against the current workspace
