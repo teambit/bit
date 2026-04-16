@@ -51,7 +51,7 @@ owner extracted from the workspace's defaultScope; use --owners or --skip-auto-o
     const results = await this.run(queries, flags);
     const sections: string[] = [];
 
-    if (results.ownersUsed?.length && !flags.localOnly) {
+    if (results.ownersUsed?.length && !flags.localOnly && results.remoteAvailable !== false) {
       sections.push(formatHint(`remote search filtered by owners: ${results.ownersUsed.join(', ')}`));
     }
 
