@@ -11,6 +11,7 @@ export {
   DiffResults,
   FieldsDiff,
   FileDiff,
+  countDiffLines,
   filterDiffResults,
   getFilesDiff,
   outputDiffResults,

@@ -2,8 +2,8 @@ import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
 import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import type { DiffOutputOptions, DiffResults } from '@teambit/legacy.component-diff';
-import { filterDiffResults, outputDiffResultsFormatted } from '@teambit/legacy.component-diff';
+import type { DiffOutputOptions, DiffResults, FileDiff } from '@teambit/legacy.component-diff';
+import { countDiffLines, filterDiffResults, outputDiffResultsFormatted } from '@teambit/legacy.component-diff';
 import type { ComponentCompareMain } from './component-compare.main.runtime';
 
 type DiffFlags = {
@@ -15,6 +15,7 @@ type DiffFlags = {
   configsOnly?: boolean;
   nameOnly?: boolean;
   stat?: boolean;
+  json?: boolean;
 };
 
 export class DiffCmd implements Command {
@@ -96,9 +97,20 @@ if both "version" and "to-version" are provided, compare those two versions dire
     return filtered.map((result) => ({
       id: result.id.toStringWithoutVersion(),
       hasDiff: result.hasDiff,
-      filesDiff: result.filesDiff?.map(({ filePath, diffOutput, status }) => ({ filePath, diffOutput, status })),
+      filesDiff: result.filesDiff?.map((fd) => this.projectFileDiffForJson(fd, outputOpts)),
       fieldsDiff: result.fieldsDiff,
     }));
+  }
+
+  private projectFileDiffForJson(fd: FileDiff, opts: DiffOutputOptions) {
+    const { filePath, status } = fd;
+    if (opts.stat) {
+      return { filePath, status, ...countDiffLines(fd.diffOutput) };
+    }
+    if (opts.nameOnly) {
+      return { filePath, status };
+    }
+    return { filePath, status, diffOutput: fd.diffOutput };
   }
 
   private async runDiff(

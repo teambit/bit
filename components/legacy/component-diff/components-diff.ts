@@ -107,10 +107,13 @@ export function outputDiffResults(diffResults: DiffResults[]): string {
         const titleStr = `showing diff for ${chalk.bold(diffResult.id.toStringWithoutVersion())}`;
         const titleSeparator = Array.from({ length: titleStr.length }).fill('-').join('');
         const title = chalk.cyan(`${titleSeparator}\n${titleStr}\n${titleSeparator}`);
-        // @ts-ignore since hasDiff is true, filesDiff must be set
-        const filesWithDiff = diffResult.filesDiff.filter((file) => file.diffOutput);
+        const filesWithDiff = (diffResult.filesDiff || []).filter((file) => file.diffOutput);
+        const hasFields = Boolean(diffResult.fieldsDiff && diffResult.fieldsDiff.length);
+        if (!filesWithDiff.length && !hasFields) {
+          return `${title}\n(no matching changes for the given filters)`;
+        }
         const files = filesWithDiff.map((fileDiff) => fileDiff.diffOutput).join('\n');
-        const fields = diffResult.fieldsDiff ? diffResult.fieldsDiff.map((field) => field.diffOutput).join('\n') : '';
+        const fields = hasFields ? diffResult.fieldsDiff!.map((field) => field.diffOutput).join('\n') : '';
         return `${title}\n${files}\n${fields}`;
       }
       return `no diff for ${chalk.bold(diffResult.id.toString())} (consider running with --verbose)`;
@@ -156,8 +159,7 @@ export function filterDiffResults(diffResults: DiffResults[], opts: DiffOutputOp
         ? (result.filesDiff || []).filter((fd) => matchesFileFilter(fd.filePath, files as string[]))
         : result.filesDiff;
     const fieldsDiff = filesOnly || hasFileFilter ? null : result.fieldsDiff;
-    const hasDiff = Boolean((filesDiff && filesDiff.some((f) => f.diffOutput)) || (fieldsDiff && fieldsDiff.length));
-    return { ...result, filesDiff, fieldsDiff, hasDiff };
+    return { ...result, filesDiff, fieldsDiff };
   });
 }
 
@@ -168,7 +170,7 @@ const STATUS_LETTER: Record<DiffStatus, string> = {
   UNCHANGED: ' ',
 };
 
-function countDiffLines(diffOutput: string): { additions: number; deletions: number } {
+export function countDiffLines(diffOutput: string): { additions: number; deletions: number } {
   let additions = 0;
   let deletions = 0;
   for (const line of diffOutput.split('\n')) {
