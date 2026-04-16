@@ -131,8 +131,16 @@ export type DiffOutputOptions = {
   stat?: boolean;
 };
 
+function normalizeFileFilterPath(p: string): string {
+  return p.startsWith('./') ? p.slice(2) : p;
+}
+
 function matchesFileFilter(filePath: string, filters: string[]): boolean {
-  return filters.some((f) => filePath === f || filePath.endsWith(f) || f.endsWith(filePath));
+  const normalizedPath = normalizeFileFilterPath(filePath);
+  return filters.some((f) => {
+    const normalizedFilter = normalizeFileFilterPath(f);
+    return normalizedPath === normalizedFilter || normalizedPath.endsWith(`/${normalizedFilter}`);
+  });
 }
 
 export function filterDiffResults(diffResults: DiffResults[], opts: DiffOutputOptions): DiffResults[] {
@@ -164,7 +172,7 @@ function countDiffLines(diffOutput: string): { additions: number; deletions: num
   let additions = 0;
   let deletions = 0;
   for (const line of diffOutput.split('\n')) {
-    if (line.startsWith('+++') || line.startsWith('---')) continue;
+    if (line.startsWith('+++ ') || line.startsWith('--- ')) continue;
     if (line.startsWith('+')) additions += 1;
     else if (line.startsWith('-')) deletions += 1;
   }

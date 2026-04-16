@@ -94,7 +94,7 @@ if both "version" and "to-version" are provided, compare those two versions dire
     const diffResults = await this.runDiff([pattern, version, toVersion], flags);
     const filtered = filterDiffResults(diffResults, outputOpts);
     return filtered.map((result) => ({
-      id: result.id.toString(),
+      id: result.id.toStringWithoutVersion(),
       hasDiff: result.hasDiff,
       filesDiff: result.filesDiff?.map(({ filePath, diffOutput, status }) => ({ filePath, diffOutput, status })),
       fieldsDiff: result.fieldsDiff,
