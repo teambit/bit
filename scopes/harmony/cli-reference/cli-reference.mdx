@@ -2417,6 +2417,25 @@ use --list to see all available scripts.
 
 ---
 
+## search
+
+**Description**: search for components by keyword in the local workspace and remote bit cloud  
+runs the provided query terms in parallel against bit cloud and against the local workspace.  
+multiple queries are unioned (deduplicated) in the output. by default, remote results are filtered by the  
+owner extracted from the workspace's defaultScope; use --owners or --skip-auto-owner to change this.
+
+`bit search <query...>`
+
+| **Option**          | **Option alias** | **Description**                                                 |
+| ------------------- | :--------------: | --------------------------------------------------------------- |
+| `--owners <list>`   |       `-o`       | comma-separated list of owners/orgs to filter remote results by |
+| `--skip-auto-owner` |                  | do not auto-extract owner from workspace defaultScope           |
+| `--remote-only`     |       `-r`       | only search remote bit cloud, skip local workspace              |
+| `--local-only`      |       `-l`       | only search the local workspace, skip remote bit cloud          |
+| `--json`            |       `-j`       | show the output in JSON format                                  |
+
+---
+
 ## set-peer
 
 **Description**: configure component to always be installed as peer dependency  

@@ -1446,6 +1446,43 @@
     "skipWorkspace": true
   },
   {
+    "name": "search <query...>",
+    "alias": "",
+    "options": [
+      [
+        "o",
+        "owners <list>",
+        "comma-separated list of owners/orgs to filter remote results by"
+      ],
+      [
+        "",
+        "skip-auto-owner",
+        "do not auto-extract owner from workspace defaultScope"
+      ],
+      [
+        "r",
+        "remote-only",
+        "only search remote bit cloud, skip local workspace"
+      ],
+      [
+        "l",
+        "local-only",
+        "only search the local workspace, skip remote bit cloud"
+      ],
+      [
+        "j",
+        "json",
+        "show the output in JSON format"
+      ]
+    ],
+    "description": "search for components by keyword in the local workspace and remote bit cloud",
+    "extendedDescription": "runs the provided query terms in parallel against bit cloud and against the local workspace.\nmultiple queries are unioned (deduplicated) in the output. by default, remote results are filtered by the\nowner extracted from the workspace's defaultScope; use --owners or --skip-auto-owner to change this.",
+    "group": "info-analysis",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true
+  },
+  {
     "name": "ws-config <sub-command>",
     "alias": "workspace-config",
     "options": [],
