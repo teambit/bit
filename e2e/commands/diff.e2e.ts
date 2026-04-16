@@ -313,7 +313,7 @@ describe('bit diff command', function () {
       helper.command.addComponent('is-type', { i: 'utils/is-type', m: 'is-type.js' });
     });
     describe('--name-only', () => {
-      let output: string;
+      let output: string | null | undefined;
       before(() => {
         output = helper.command.diff('bar/foo', '--name-only');
       });
@@ -330,7 +330,7 @@ describe('bit diff command', function () {
       });
     });
     describe('--stat', () => {
-      let output: string;
+      let output: string | null | undefined;
       before(() => {
         output = helper.command.diff('bar/foo', '--stat');
       });
@@ -342,7 +342,7 @@ describe('bit diff command', function () {
       });
     });
     describe('--file <path>', () => {
-      let output: string;
+      let output: string | null | undefined;
       before(() => {
         output = helper.command.diff('utils/is-type', '--file extra.js');
       });
@@ -355,7 +355,7 @@ describe('bit diff command', function () {
       });
     });
     describe('--files-only', () => {
-      let output: string;
+      let output: string | null | undefined;
       before(() => {
         output = helper.command.diff('utils/is-type', '--files-only');
       });
@@ -368,7 +368,7 @@ describe('bit diff command', function () {
       });
     });
     describe('--configs-only', () => {
-      let output: string;
+      let output: string | null | undefined;
       before(() => {
         output = helper.command.diff('utils/is-type', '--configs-only');
       });
