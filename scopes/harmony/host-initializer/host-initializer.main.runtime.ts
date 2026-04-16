@@ -160,6 +160,10 @@ export class HostInitializerMain {
     agent?: string,
     skipGitCheck = false
   ): Promise<string | undefined> {
+    if (agent && !HostInitializerMain.AGENT_FILE_MAP[agent]) {
+      const supported = Object.keys(HostInitializerMain.AGENT_FILE_MAP).join(', ');
+      throw new Error(`unknown --agent value "${agent}". supported values: ${supported}`);
+    }
     try {
       // Don't write in git repos — they use the interactive flow.
       // Callers like `bit new` set skipGitCheck because they always create a fresh workspace.
@@ -168,8 +172,7 @@ export class HostInitializerMain {
       // Don't write if any agent file already exists.
       if (await HostInitializerMain.hasExistingAgentFile(projectPath)) return undefined;
 
-      const relativePath = agent ? HostInitializerMain.AGENT_FILE_MAP[agent] : undefined;
-      const targetFile = relativePath || 'AGENTS.md';
+      const targetFile = agent ? HostInitializerMain.AGENT_FILE_MAP[agent] : 'AGENTS.md';
       const targetPath = path.join(projectPath, targetFile);
 
       // Read the shared template content.
@@ -203,12 +206,7 @@ export class HostInitializerMain {
    */
   static wrapWithFrontmatter(targetFile: string, content: string): string {
     if (targetFile === '.cursor/rules/bit.mdc') {
-      return `---
-description: Bit workspace instructions
-alwaysApply: true
----
-
-${content}`;
+      return ['---', 'description: Bit workspace instructions', 'alwaysApply: true', '---', '', content].join('\n');
     }
     return content;
   }

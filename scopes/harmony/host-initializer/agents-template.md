@@ -1,4 +1,4 @@
-# AGENTS.md
+# Bit Workspace — AI Agent Instructions
 
 This file teaches AI agents how to work correctly inside a **Bit workspace**. Read it fully before touching any code.
 
@@ -75,7 +75,7 @@ bit lint                             # run linter
 bit check-types                      # TypeScript type checker
 ```
 
-> **Always use `bit install`** to install packages. Never use `npm install`, `yarn`, or `pnpm` directly — they will corrupt the workspace's dependency resolution.
+> **Always use `bit install`** to install packages. Never use `npm install`, `yarn`, or `pnpm` directly — unless the workspace is configured with `externalPackageManager` mode in `workspace.jsonc`, in which case use your configured package manager.
 >
 > **Use Bit for type checking and testing.** Never use `tsc` or `npx tsc` directly. Scope to specific components when useful:
 >
