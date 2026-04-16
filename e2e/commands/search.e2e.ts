@@ -79,4 +79,49 @@ describe('bit search command', function () {
       expect(output).to.have.string('no matches in workspace');
     });
   });
+
+  describe('combined local and remote search after export', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
+      helper.command.export();
+    });
+
+    it('should include local results for the exported component', () => {
+      const output = helper.command.runCmd('bit search foo --json');
+      const results = JSON.parse(output);
+      expect(results.local.some((id: string) => id.includes('bar/foo'))).to.be.true;
+      expect(results.remote).to.be.an('array');
+      expect(results.perQuery).to.have.lengthOf(1);
+      expect(results.perQuery[0].query).to.equal('foo');
+    });
+
+    it('should show both Local and Remote sections in report output', () => {
+      const output = helper.command.runCmd('bit search foo');
+      expect(output).to.have.string('Local');
+      expect(output).to.have.string('Remote');
+    });
+  });
+
+  describe('remote-only search', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+    });
+
+    it('should return valid json structure with --remote-only', () => {
+      const output = helper.command.runCmd('bit search button --remote-only --skip-auto-owner --json');
+      const results = JSON.parse(output);
+      expect(results.remote).to.be.an('array');
+      expect(results.local).to.be.an('array').that.is.empty;
+      expect(results.hasWorkspace).to.be.true;
+    });
+
+    it('should not show Local section in report output', () => {
+      const output = helper.command.runCmd('bit search button --remote-only --skip-auto-owner');
+      expect(output).to.not.have.string('Local');
+      expect(output).to.have.string('Remote');
+    });
+  });
 });
