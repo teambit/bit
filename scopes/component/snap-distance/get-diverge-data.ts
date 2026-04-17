@@ -86,15 +86,15 @@ export async function getDivergeData({
     versionParentsFromObjects,
   });
   const unmergedData = repo.unmergedComponents.getEntry(modelComponent.toComponentId());
+  // these are fatal data-integrity errors (head ref points to an object that can't be reached).
+  // always throw regardless of `throws`: callers such as `headIncludeRemote` don't inspect
+  // `SnapsDistance.err` and would otherwise proceed with a missing hash, leading to an opaque
+  // failure (e.g. ComponentNotFound) later in the flow — after partial work has already run.
   if (!versionParents.find((p) => p.hash.isEqual(targetHead))) {
-    const err = new TargetHeadNotFound(modelComponent.id(), targetHead.toString());
-    if (throws) throw err;
-    return new SnapsDistance([], [], undefined, err);
+    throw new TargetHeadNotFound(modelComponent.id(), targetHead.toString());
   }
   if (!versionParents.find((p) => p.hash.isEqual(localHead))) {
-    const err = new LocalHeadNotFound(modelComponent.id(), localHead.toString());
-    if (throws) throw err;
-    return new SnapsDistance([], [], undefined, err);
+    throw new LocalHeadNotFound(modelComponent.id(), localHead.toString());
   }
 
   return getDivergeDataBetweenTwoSnaps(

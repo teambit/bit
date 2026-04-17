@@ -36,14 +36,16 @@ describe('local head Version object is missing from scope', function () {
       const versionHistoryHash = sha1(`${helper.scopes.remote}/comp1:VersionHistory`);
       helper.fs.deleteObject(helper.general.getHashPathOfObject(versionHistoryHash));
     });
-    it('bit status should not surface the raw cleargraph "does not exist on graph" error', () => {
+    it('bit status should surface LocalHeadNotFound with actionable "bit import --objects" instead of the raw graph error', () => {
       const output = helper.general.runWithTryCatch('bit status');
       expect(output).to.not.include('does not exist on graph');
-      expect(output).to.include('comp1');
+      expect(output).to.match(/bit import .*--objects/);
     });
-    it('bit checkout head should not surface the raw cleargraph "does not exist on graph" error', () => {
+    it('bit checkout head should fail early with LocalHeadNotFound (not a later ComponentNotFound) and suggest "bit import --objects"', () => {
       const output = helper.general.runWithTryCatch('bit checkout head');
       expect(output).to.not.include('does not exist on graph');
+      expect(output).to.not.include('ComponentNotFound');
+      expect(output).to.match(/bit import .*--objects/);
     });
   });
 });
