@@ -296,8 +296,8 @@ show expanded details from the last command that provided them (e.g. tag, snap)
 
 compare component changes between versions or against the current workspace
 
-shows a detailed diff of component files, dependencies, and configuration changes. by default, compares workspace changes against the latest version. specify versions to compare historical changes. supports pattern matching to filter components and various output formats for better readability.
-Flags: --parent, --verbose, --table
+shows a detailed diff of component files, dependencies, and configuration changes. by default, compares workspace changes against the latest version. specify versions to compare historical changes. supports pattern matching to filter components and various output formats for better readability. for ai-agent workflows, use --name-only to list what changed, --file to drill into a specific file, --files-only / --configs-only to focus on one diff category, or --json for machine-readable output.
+Flags: --parent, --verbose, --table, --file <paths>, --files-only, --configs-only, --name-only, --stat, --json
 
 ## bit doctor [diagnosis-name]
 
