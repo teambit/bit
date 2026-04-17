@@ -33,8 +33,57 @@ import { DependentsGetter } from './dependents-getter';
 import type { ListerMain } from '@teambit/lister';
 import { NoIdMatchWildcard } from '@teambit/lister';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 
 const BEFORE_IMPORT_ACTION = 'importing components';
+// How many components to hydrate → write → release per pass when processing a large
+// import. Keeping this bounded prevents OOM for imports of thousands of components
+// (e.g. `bit import --owner`), where each hydrated ConsumerComponent holds
+// decompressed file buffers that dominate the heap until files are written to disk.
+const IMPORT_WRITE_CHUNK_SIZE = 200;
+
+/**
+ * Strip a ConsumerComponent down to the minimum the import flow still needs after a batch
+ * has been written to disk. For huge imports (e.g. `bit import --owner`), keeping 4k+
+ * components fully hydrated through finalize ran the 4GB V8 heap out of memory.
+ *
+ * What the flow actually still reads later (post-write):
+ *   - `id` / `bindingPrefix` / `defaultScope` — for package-name derivation
+ *   - the `pkg` extension entry — for `componentIdToPackageName`
+ *   - `id.version` + `modelComponent` via `scope.getModelComponent` — for lane saving
+ * Everything else (files, deps, docs, other extensions, flattened dep lists, package
+ * maps, schema, etc.) is dropped so the heap scales with `~#components * ~1 KB` instead
+ * of `~#components * (deps + extensions + artifacts)`.
+ */
+function releaseHeavyComponentFields(component: Component): void {
+  const comp = component as unknown as Record<string, unknown> & {
+    extensions?: Array<{ name?: string }> & {
+      findExtension?: (name: string) => { name?: string } | undefined;
+    };
+  };
+  comp.files = undefined;
+  comp.dataToPersist = undefined;
+  comp.dependencies = undefined;
+  comp.devDependencies = undefined;
+  comp.flattenedDependencies = undefined;
+  comp.packageDependencies = undefined;
+  comp.devPackageDependencies = undefined;
+  comp.peerPackageDependencies = undefined;
+  comp.packageJsonChangedProps = undefined;
+  comp.docs = undefined;
+  comp.overrides = undefined;
+  comp.schema = undefined;
+  comp.scopesList = undefined;
+  comp.license = undefined;
+  comp.log = undefined;
+  // Keep only the `pkg` extension entry — it's what `componentIdToPackageName` reads.
+  const ext = comp.extensions;
+  if (ext && typeof ext.findExtension === 'function') {
+    const pkgExt = ext.findExtension('teambit.pkg/pkg');
+    ext.length = 0;
+    if (pkgExt) ext.push(pkgExt);
+  }
+}
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -279,14 +328,22 @@ export default class ImportComponents {
     let writtenComponents: Component[] = [];
     let componentWriterResults: ComponentWriterResults | undefined;
     if (!this.options.objectsOnly) {
-      const components = await multipleVersionDependenciesToConsumer(versionDependenciesArr, this.scope.objects);
-      await this._fetchDivergeData(components);
-      this._throwForDivergedHistory();
-      await this.throwForComponentsFromAnotherLane(components.map((c) => c.id));
-      const filteredComponents = await this._filterComponentsByFilters(components);
-      componentWriterResults = await this._writeToFileSystem(filteredComponents);
-      await this._saveLaneDataIfNeeded(filteredComponents);
-      writtenComponents = filteredComponents;
+      // Process in chunks so we never hold thousands of hydrated ConsumerComponents
+      // (each with decompressed file buffers) in memory simultaneously. For very large
+      // imports (e.g. `bit import --owner`) the previous all-at-once flow OOMed because
+      // peak footprint was roughly `#components * total_file_bytes_per_component`.
+      const chunkSize = IMPORT_WRITE_CHUNK_SIZE;
+      const { writtenComponents: written, precomputedAutoDeps } = await this._processAndWriteInChunks(
+        versionDependenciesArr,
+        chunkSize
+      );
+      writtenComponents = written;
+      // Release the repo LRU cache before the workspace-wide finalization; decompressed
+      // scope objects cached during the write phase are no longer useful and, for huge
+      // imports, otherwise push the heap over its limit inside updateDepsInWorkspaceConfig.
+      this.scope.objects.clearObjectsFromCache();
+      componentWriterResults = await this._finalizeWriteBatches(writtenComponents, precomputedAutoDeps);
+      await this._saveLaneDataIfNeeded(writtenComponents);
     }
 
     return this.returnCompleteResults(
@@ -295,6 +352,89 @@ export default class ImportComponents {
       writtenComponents,
       componentWriterResults
     );
+  }
+
+  private async _processAndWriteInChunks(
+    versionDependenciesArr: VersionDependencies[],
+    chunkSize: number
+  ): Promise<{ writtenComponents: Component[]; precomputedAutoDeps: Array<{ packageName: string; version: string }> }> {
+    const writtenComponents: Component[] = [];
+    const precomputedAutoDeps: Array<{ packageName: string; version: string }> = [];
+    const configMerger = this.componentWriter.getConfigMerger();
+    const total = versionDependenciesArr.length;
+    for (let i = 0; i < total; i += chunkSize) {
+      const chunk = versionDependenciesArr.slice(i, i + chunkSize);
+      const chunkNum = Math.floor(i / chunkSize) + 1;
+      const totalChunks = Math.ceil(total / chunkSize);
+      this.logger.setStatusLine(
+        `writing components to workspace [chunk ${chunkNum}/${totalChunks}, ${chunk.length} components]`
+      );
+      const chunkComponents = await multipleVersionDependenciesToConsumer(chunk, this.scope.objects);
+      await this._fetchDivergeData(chunkComponents);
+      this._throwForDivergedHistory();
+      // divergeData is reset per-chunk so `_throwForDivergedHistory` scales O(chunk)
+      // per chunk instead of O(total) — and so the accumulated ModelComponent
+      // instances can be GC'd between chunks.
+      this.divergeData = [];
+      await this.throwForComponentsFromAnotherLane(chunkComponents.map((c) => c.id));
+      const filtered = await this._filterComponentsByFilters(chunkComponents);
+      if (filtered.length) {
+        await this._writeBatchToFileSystem(filtered);
+      }
+      // Extract the auto-detected dep tuples this batch contributes to workspace.jsonc,
+      // then drop the heavy dep/extension structures so GC can reclaim them. This is the
+      // difference between finalize seeing ~#components * dep_list_size and finalize
+      // seeing just a flat array of {packageName, version} tuples.
+      for (const comp of filtered) {
+        precomputedAutoDeps.push(...configMerger.extractAutoDepsForConfigMerge(comp));
+        releaseHeavyComponentFields(comp);
+      }
+      writtenComponents.push(...filtered);
+      // Repo's LRU keeps decompressed BitObjects (Version/Source/etc.) across chunks.
+      // For huge imports this accumulates many MB per cached item — drop them between
+      // chunks since we've already persisted what we need.
+      this.scope.objects.clearObjectsFromCache();
+    }
+    return { writtenComponents, precomputedAutoDeps };
+  }
+
+  private async _writeBatchToFileSystem(components: Component[]): Promise<void> {
+    const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(components);
+    const manyComponentsWriterOpts: ManyComponentsWriterParams = {
+      components: componentsToWrite,
+      writeToPath: this.options.writeToPath,
+      writeConfig: this.options.writeConfig,
+      skipDependencyInstallation: !this.options.installNpmPackages,
+      skipWriteConfigFiles: !this.options.writeConfigFiles,
+      verbose: this.options.verbose,
+      throwForExistingDir: !this.options.override,
+      skipWritingToFs: this.options.trackOnly,
+      shouldUpdateWorkspaceConfig: true,
+      reasonForBitmapChange: 'import',
+      writeDeps: this.options.writeDeps,
+    };
+    await this.componentWriter.writeComponentsFiles(manyComponentsWriterOpts);
+  }
+
+  private async _finalizeWriteBatches(
+    components: Component[],
+    precomputedAutoDeps: Array<{ packageName: string; version: string }>
+  ): Promise<ComponentWriterResults> {
+    const manyComponentsWriterOpts: ManyComponentsWriterParams = {
+      components,
+      writeToPath: this.options.writeToPath,
+      writeConfig: this.options.writeConfig,
+      skipDependencyInstallation: !this.options.installNpmPackages,
+      skipWriteConfigFiles: !this.options.writeConfigFiles,
+      verbose: this.options.verbose,
+      throwForExistingDir: !this.options.override,
+      skipWritingToFs: this.options.trackOnly,
+      shouldUpdateWorkspaceConfig: true,
+      reasonForBitmapChange: 'import',
+      writeDeps: this.options.writeDeps,
+      precomputedAutoDeps,
+    };
+    return this.componentWriter.finalizeWrite(manyComponentsWriterOpts);
   }
 
   private async mergeAndSaveLaneObject(lane: Lane) {
@@ -339,13 +479,15 @@ export default class ImportComponents {
       // component is in bitmap using an older version, it throws "getDivergeData: unable to find Version X of Y"
       return;
     }
-    await Promise.all(
-      components.map(async (component) => {
+    await pMapPool(
+      components,
+      async (component) => {
         const fromWorkspace = this.workspace.getIdIfExist(component.id);
         const modelComponent = await this.scope.getModelComponent(component.id);
         await modelComponent.setDivergeData(this.scope.objects, undefined, false, fromWorkspace);
         this.divergeData.push(modelComponent);
-      })
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
   }
 
@@ -370,21 +512,26 @@ export default class ImportComponents {
     const currentRemoteLane = this.remoteLane?.toLaneId().isEqual(currentLaneId) ? this.remoteLane : undefined;
     const currentLane = await this.workspace.getCurrentLaneObject();
     const idsFromAnotherLane: ComponentID[] = [];
+    const concurrency = concurrentComponentsLimit();
     if (currentRemoteLane) {
-      await Promise.all(
-        bitIds.map(async (bitId) => {
+      await pMapPool(
+        bitIds,
+        async (bitId) => {
           const isOnCurrentLane =
             (await this.scope.isPartOfLaneHistoryOrMain(bitId, currentRemoteLane)) ||
             (currentLane && (await this.scope.isPartOfLaneHistoryOrMain(bitId, currentLane)));
           if (!isOnCurrentLane) idsFromAnotherLane.push(bitId);
-        })
+        },
+        { concurrency }
       );
     } else {
-      await Promise.all(
-        bitIds.map(async (bitId) => {
+      await pMapPool(
+        bitIds,
+        async (bitId) => {
           const isIdOnMain = await this.scope.isPartOfMainHistory(bitId);
           if (!isIdOnMain) idsFromAnotherLane.push(bitId);
-        })
+        },
+        { concurrency }
       );
     }
     if (idsFromAnotherLane.length) {
@@ -662,42 +809,48 @@ to write the components from .bitmap file according to the their remote, please 
     currentVersions: ImportedVersions,
     components: VersionDependencies[]
   ): Promise<ImportDetails[]> {
-    const detailsP = components.map(async (component) => {
-      const id = component.component.id;
-      const idStr = id.toStringWithoutVersion();
-      const beforeImportVersions = currentVersions[idStr];
-      if (!beforeImportVersions) {
-        throw new Error(
-          `_getImportDetails failed finding ${idStr} in currentVersions, which has ${Object.keys(currentVersions).join(
-            ', '
-          )}`
-        );
-      }
-      const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
-      if (!modelComponent) throw new BitError(`imported component ${idStr} was not found in the model`);
-      const afterImportVersions = modelComponent.listVersions();
-      const versionDifference: string[] = difference(afterImportVersions, beforeImportVersions);
-      const getStatus = (): ImportStatus => {
-        if (!versionDifference.length) return 'up to date';
-        if (!beforeImportVersions.length) return 'added';
-        return 'updated';
-      };
-      const filesStatus = this.mergeStatus && this.mergeStatus[idStr] ? this.mergeStatus[idStr] : null;
-      const deprecated = Boolean(await modelComponent.isDeprecated(this.scope.objects, id.version));
-      const removed = Boolean(await component.component.component.isRemoved(this.scope.objects, id.version));
-      const latestVersion = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
-      return {
-        id: idStr,
-        versions: versionDifference,
-        latestVersion: versionDifference.includes(latestVersion) ? latestVersion : null,
-        status: getStatus(),
-        filesStatus,
-        missingDeps: this.options.fetchDeps ? component.getMissingDependencies() : [],
-        deprecated,
-        removed,
-      };
-    });
-    const importDetails: ImportDetails[] = await Promise.all(detailsP);
+    // Bounded concurrency: each entry does `isDeprecated` / `isRemoved`, which load and
+    // parse the head Version object from disk. Fanning out 4k+ of those at once (the old
+    // Promise.all) OOMs the heap on large imports.
+    const importDetails = await pMapPool(
+      components,
+      async (component): Promise<ImportDetails> => {
+        const id = component.component.id;
+        const idStr = id.toStringWithoutVersion();
+        const beforeImportVersions = currentVersions[idStr];
+        if (!beforeImportVersions) {
+          throw new Error(
+            `_getImportDetails failed finding ${idStr} in currentVersions, which has ${Object.keys(
+              currentVersions
+            ).join(', ')}`
+          );
+        }
+        const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
+        if (!modelComponent) throw new BitError(`imported component ${idStr} was not found in the model`);
+        const afterImportVersions = modelComponent.listVersions();
+        const versionDifference: string[] = difference(afterImportVersions, beforeImportVersions);
+        const getStatus = (): ImportStatus => {
+          if (!versionDifference.length) return 'up to date';
+          if (!beforeImportVersions.length) return 'added';
+          return 'updated';
+        };
+        const filesStatus = this.mergeStatus && this.mergeStatus[idStr] ? this.mergeStatus[idStr] : null;
+        const deprecated = Boolean(await modelComponent.isDeprecated(this.scope.objects, id.version));
+        const removed = Boolean(await component.component.component.isRemoved(this.scope.objects, id.version));
+        const latestVersion = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
+        return {
+          id: idStr,
+          versions: versionDifference,
+          latestVersion: versionDifference.includes(latestVersion) ? latestVersion : null,
+          status: getStatus(),
+          filesStatus,
+          missingDeps: this.options.fetchDeps ? component.getMissingDependencies() : [],
+          deprecated,
+          removed,
+        };
+      },
+      { concurrency: concurrentComponentsLimit() }
+    );
 
     return importDetails;
   }

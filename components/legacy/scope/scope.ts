@@ -2,6 +2,8 @@ import fs from 'fs-extra';
 import * as pathLib from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { reject, isNil } from 'lodash';
 import type { BitIdStr } from '@teambit/legacy-bit-id';
 import type { LaneId } from '@teambit/lane-id';
@@ -55,6 +57,10 @@ import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
 
 const removeNils = (array) => reject(array, isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
+// Threshold above which we skip aggregating every component's dependency graph before
+// install. Merging thousands of graphs produces a multi-GB in-memory structure that
+// OOMs the process; pnpm can resolve fine without this optimization.
+const DEPS_GRAPH_AGGREGATION_LIMIT = 500;
 
 type HasIdOpts = {
   includeSymlink?: boolean;
@@ -743,10 +749,22 @@ once done, to continue working, please run "bit cc"`
   }
 
   public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {
-    let allGraph: DependenciesGraph | undefined;
     if (!isFeatureEnabled(DEPS_GRAPH)) return undefined;
-    await Promise.all(
-      componentIds.map(async (componentId) => {
+    // For very large imports, aggregating every component's dependency graph blows the
+    // heap — each graph is a compressed-JSON blob that gets decompressed + parsed, and
+    // the merged `allGraph` keeps growing (edges are concatenated, not deduped). The
+    // graph is a pnpm install optimization, so skipping it just falls back to pnpm's
+    // normal resolution path — correct, only slower.
+    if (componentIds.length > DEPS_GRAPH_AGGREGATION_LIMIT) {
+      logger.debug(
+        `getDependenciesGraphByComponentIds: skipping dep-graph aggregation for ${componentIds.length} components (limit: ${DEPS_GRAPH_AGGREGATION_LIMIT})`
+      );
+      return undefined;
+    }
+    let allGraph: DependenciesGraph | undefined;
+    await pMapPool(
+      componentIds,
+      async (componentId) => {
         const graph = await this.getDependenciesGraphByComponentId(componentId);
         if (graph == null || graph.isEmpty()) return;
         if (allGraph == null) {
@@ -754,7 +772,8 @@ once done, to continue working, please run "bit cc"`
         } else {
           allGraph.merge(graph);
         }
-      })
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
     return allGraph;
   }

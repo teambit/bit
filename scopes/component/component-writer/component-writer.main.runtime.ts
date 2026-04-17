@@ -44,6 +44,12 @@ export interface ManyComponentsWriterParams {
   shouldUpdateWorkspaceConfig?: boolean; // whether it should update dependencies policy (or leave conflicts) in workspace.jsonc
   mergeStrategy?: MergeStrategy; // needed for workspace.jsonc conflicts
   writeDeps?: 'package.json' | 'workspace.jsonc';
+  /**
+   * Pre-extracted auto-detected dep tuples to feed the workspace.jsonc update in place of
+   * reading them from `components`. Used by large batched imports to release heavy
+   * `ConsumerComponent` fields per batch instead of keeping them all alive until finalize.
+   */
+  precomputedAutoDeps?: Array<{ packageName: string; version: string }>;
 }
 
 export type ComponentWriterResults = {
@@ -66,13 +72,45 @@ export class ComponentWriterMain {
     return this.workspace.consumer;
   }
 
+  /**
+   * Exposes the config-merger so callers processing many components in chunks can
+   * extract the subset of dep data needed for workspace.jsonc updates (see
+   * {@link ConfigMergerMain.extractAutoDepsForConfigMerge}) without retaining the full
+   * `ConsumerComponent` instances through finalize.
+   */
+  getConfigMerger(): ConfigMergerMain {
+    return this.configMerge;
+  }
+
   async writeMany(opts: ManyComponentsWriterParams): Promise<ComponentWriterResults> {
     if (!opts.components.length) return {};
     this.logger.debug('writeMany, started');
+    await this.writeComponentsFiles(opts);
+    const results = await this.finalizeWrite(opts);
+    this.logger.debug('writeMany, completed!');
+    return results;
+  }
+
+  /**
+   * Writes component files and updates .bitmap but skips the workspace-wide finalization
+   * (workspace.jsonc update, dep install, compile). Callers that process many components
+   * in batches should call this per batch and then call {@link finalizeWrite} once at the end.
+   */
+  async writeComponentsFiles(opts: ManyComponentsWriterParams): Promise<void> {
+    if (!opts.components.length) return;
     await this.populateComponentsFilesToWrite(opts);
     this.moveComponentsIfNeeded(opts);
     await this.persistComponentsData(opts);
     if (!opts.skipUpdatingBitMap) await this.consumer.writeBitMap(opts.reasonForBitmapChange);
+  }
+
+  /**
+   * Workspace-wide finalization after component files are on disk:
+   * writes dependencies files, resolves workspace.jsonc deps, installs and compiles.
+   * Intended to run once — after all batched {@link writeComponentsFiles} calls — so that
+   * install/compile don't repeat per batch.
+   */
+  async finalizeWrite(opts: ManyComponentsWriterParams): Promise<ComponentWriterResults> {
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
     let workspaceConfigUpdateResult: WorkspaceConfigUpdateResult | undefined;
@@ -80,10 +118,9 @@ export class ComponentWriterMain {
       await this.workspace.writeDependencies(opts.writeDeps);
     }
     if (opts.shouldUpdateWorkspaceConfig) {
-      workspaceConfigUpdateResult = await this.configMerge.updateDepsInWorkspaceConfig(
-        opts.components,
-        opts.mergeStrategy
-      );
+      workspaceConfigUpdateResult = opts.precomputedAutoDeps
+        ? await this.configMerge.updateDepsInWorkspaceConfigFromAutoDeps(opts.precomputedAutoDeps, opts.mergeStrategy)
+        : await this.configMerge.updateDepsInWorkspaceConfig(opts.components, opts.mergeStrategy);
     }
     if (this.workspace.externalPackageManagerIsUsed()) {
       await this.installer.writeDependenciesToPackageJson();
@@ -95,7 +132,6 @@ export class ComponentWriterMain {
       // no point to compile if the installation is not running. the environment is not ready.
       compilationError = await this.compileGracefully();
     }
-    this.logger.debug('writeMany, completed!');
     return { installationError, compilationError, workspaceConfigUpdateResult };
   }
 
@@ -137,6 +173,17 @@ export class ComponentWriterMain {
     opts.components.forEach((component) => dataToPersist.merge(component.dataToPersist));
     dataToPersist.addBasePath(this.consumer.getPath());
     await dataToPersist.persistAllToFS();
+    // Release file buffers — once written to disk, they dominate memory for large
+    // imports and are no longer needed by finalization steps (install/compile read
+    // from the filesystem, config-merge only reads deps metadata).
+    opts.components.forEach((component) => {
+      if (component.files) {
+        for (const file of component.files as unknown as Array<{ contents: Buffer | null }>) {
+          if (file) file.contents = null;
+        }
+      }
+      component.dataToPersist = new DataToPersist();
+    });
   }
   private async populateComponentsFilesToWrite(opts: ManyComponentsWriterParams) {
     const writeComponentsParams = opts.components.map((component) =>

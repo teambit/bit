@@ -214,13 +214,17 @@ export default class Repository {
       // @ts-ignore @todo: fix! it should return BitObject | null.
       return null;
     }
-    const size = fileContentsRaw.byteLength;
+    const compressedSize = fileContentsRaw.byteLength;
     const fileContents = this.onRead(fileContentsRaw);
     // uncomment to debug the transformed objects by onRead
     // console.log('transformedContent load', ref.toString(), BitObject.parseSync(fileContents).getType());
     const parsedObject = await BitObject.parseObject(fileContents, objectPath);
+    // Cache decision must account for decompressed size, not the compressed on-disk size.
+    // A small compressed blob (e.g. a dependency-graph JSON) can expand to tens of MB in
+    // memory, and with 3k such items cached the process can exhaust the heap.
     const maxSizeToCache = 100 * 1024; // 100KB
-    if (size < maxSizeToCache) {
+    const decompressedSize = fileContents.byteLength;
+    if (compressedSize < maxSizeToCache && decompressedSize < maxSizeToCache) {
       // don't cache big files (mainly artifacts) to prevent out-of-memory
       this.setCache(parsedObject);
     }

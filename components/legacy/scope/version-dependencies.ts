@@ -1,5 +1,7 @@
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import ComponentWithDependencies from './component-dependencies';
 import type { ComponentVersion } from './component-version';
 import { DependenciesNotFound } from './exceptions/dependencies-not-found';
@@ -56,20 +58,22 @@ export async function multipleVersionDependenciesToConsumer(
   versionDependencies: VersionDependencies[],
   repo: Repository
 ): Promise<ConsumerComponent[]> {
-  const flattenedCompVer: { [id: string]: ComponentVersion } = {};
+  // Only hydrate the main components; dependency ConsumerComponents are never returned
+  // by this function, so building them just to discard them wastes memory (each one
+  // holds decompressed file contents) — critical for very large imports.
+  const mainCompVers = new Map<string, ComponentVersion>();
+  for (const verDep of versionDependencies) {
+    const idStr = verDep.component.id.toString();
+    if (!mainCompVers.has(idStr)) mainCompVers.set(idStr, verDep.component);
+  }
+
   const flattenedConsumerComp: { [id: string]: ConsumerComponent } = {};
-
-  versionDependencies.forEach((verDep) => {
-    const allComps = [verDep.component, ...verDep.dependencies];
-    allComps.forEach((compVer) => {
-      flattenedCompVer[compVer.id.toString()] = compVer;
-    });
-  });
-
-  await Promise.all(
-    Object.keys(flattenedCompVer).map(async (idStr) => {
-      flattenedConsumerComp[idStr] = await flattenedCompVer[idStr].toConsumer(repo);
-    })
+  await pMapPool(
+    Array.from(mainCompVers.entries()),
+    async ([idStr, compVer]) => {
+      flattenedConsumerComp[idStr] = await compVer.toConsumer(repo);
+    },
+    { concurrency: concurrentComponentsLimit() }
   );
   return versionDependencies.map(
     (verDep) => flattenedConsumerComp[verDep.component.id.toString()] as ConsumerComponent
