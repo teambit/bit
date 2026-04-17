@@ -1,5 +1,5 @@
 import type { Command, CommandOptions, GenericObject } from '@teambit/cli';
-import { formatHint, formatSuccessSummary } from '@teambit/cli';
+import { formatHint } from '@teambit/cli';
 import chalk from 'chalk';
 import type { Logger } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
@@ -7,6 +7,7 @@ import { OutsideWorkspaceError } from '@teambit/workspace';
 import { Timer } from '@teambit/toolbox.time.timer';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { TesterMain, TestResults } from './tester.main.runtime';
+import { aggregateTestResults, formatTestReport } from './test-output-formatter';
 
 type TestFlags = {
   watch: boolean;
@@ -18,6 +19,7 @@ type TestFlags = {
   junit?: string;
   coverage?: boolean;
   updateSnapshot: boolean;
+  verbose?: boolean;
 };
 
 export class TestCmd implements Command {
@@ -50,6 +52,7 @@ supports watch mode, coverage reporting, and debug mode for development workflow
       'DEPRECATED. (use the pattern instead, e.g. "scopeName/**"). name of the scope to test',
     ],
     ['j', 'json', 'return the results in json format'],
+    ['', 'verbose', 'show passing components and list components without tests'],
     // TODO: we need to reduce this redundant casting every time.
   ] as CommandOptions;
 
@@ -71,6 +74,7 @@ supports watch mode, coverage reporting, and debug mode for development workflow
       coverage = false,
       unmodified = false,
       updateSnapshot = false,
+      verbose = false,
     }: TestFlags
   ) {
     const timer = Timer.create();
@@ -114,6 +118,7 @@ supports watch mode, coverage reporting, and debug mode for development workflow
     );
 
     let code = 0;
+    let tests: TestResults | undefined;
     if (watch && !debug) {
       // avoid turning off the logger for non-watch scenario. otherwise, when this aspect throws errors, they'll be
       // swallowed. (Jest errors are shown regardless via Jest, but if the tester is unable to run Jest in the first
@@ -127,7 +132,7 @@ supports watch mode, coverage reporting, and debug mode for development workflow
         updateSnapshot,
       });
     } else {
-      const tests = await this.tester.test(components, {
+      tests = await this.tester.test(components, {
         watch,
         debug,
         env,
@@ -144,10 +149,10 @@ supports watch mode, coverage reporting, and debug mode for development workflow
     const { seconds } = timer.stop();
 
     if (watch) return '';
-    const data =
-      code === 0
-        ? formatSuccessSummary(`tests completed in ${seconds} seconds`)
-        : formatHint(`tests completed in ${seconds} seconds`);
+    const summary = tests ? aggregateTestResults(tests, components) : undefined;
+    const data = summary
+      ? `\n${formatTestReport(summary, { verbose, duration: `${seconds}s` })}`
+      : formatHint(`tests completed in ${seconds} seconds`);
     return {
       code,
       data,
@@ -226,9 +231,24 @@ supports watch mode, coverage reporting, and debug mode for development workflow
       error: r.error,
     }));
 
+    const aggregated = aggregateTestResults(tests, components);
+    const summary = {
+      totals: aggregated.totals,
+      componentsWithTests: aggregated.componentsWithTests.map((c) => ({
+        id: c.id.toString(),
+        passed: c.passed,
+        failed: c.failed,
+        pending: c.pending,
+        hasError: c.hasError,
+      })),
+      componentsWithoutTests: aggregated.componentsWithoutTests.map((id) => id.toString()),
+      envErrors: aggregated.envErrors.map((e) => ({ envId: e.envId, message: e.error.message })),
+    };
+
     return {
       code,
       data,
+      summary,
     };
   }
 }
