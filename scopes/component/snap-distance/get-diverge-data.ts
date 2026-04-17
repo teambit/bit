@@ -87,10 +87,14 @@ export async function getDivergeData({
   });
   const unmergedData = repo.unmergedComponents.getEntry(modelComponent.toComponentId());
   if (!versionParents.find((p) => p.hash.isEqual(targetHead))) {
-    throw new TargetHeadNotFound(modelComponent.id(), targetHead.toString());
+    const err = new TargetHeadNotFound(modelComponent.id(), targetHead.toString());
+    if (throws) throw err;
+    return new SnapsDistance([], [], undefined, err);
   }
   if (!versionParents.find((p) => p.hash.isEqual(localHead))) {
-    throw new LocalHeadNotFound(modelComponent.id(), localHead.toString());
+    const err = new LocalHeadNotFound(modelComponent.id(), localHead.toString());
+    if (throws) throw err;
+    return new SnapsDistance([], [], undefined, err);
   }
 
   return getDivergeDataBetweenTwoSnaps(
