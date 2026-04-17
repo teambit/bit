@@ -20,6 +20,7 @@ type TestFlags = {
   coverage?: boolean;
   updateSnapshot: boolean;
   verbose?: boolean;
+  summary?: boolean;
 };
 
 export class TestCmd implements Command {
@@ -53,6 +54,7 @@ supports watch mode, coverage reporting, and debug mode for development workflow
     ],
     ['j', 'json', 'return the results in json format'],
     ['', 'verbose', 'show passing components and list components without tests'],
+    ['', 'summary', 'suppress tester output, print only the final pass/fail headline (or summary object with --json)'],
     // TODO: we need to reduce this redundant casting every time.
   ] as CommandOptions;
 
@@ -75,6 +77,7 @@ supports watch mode, coverage reporting, and debug mode for development workflow
       unmodified = false,
       updateSnapshot = false,
       verbose = false,
+      summary: summaryOnly = false,
     }: TestFlags
   ) {
     const timer = Timer.create();
@@ -132,14 +135,19 @@ supports watch mode, coverage reporting, and debug mode for development workflow
         updateSnapshot,
       });
     } else {
-      tests = await this.tester.test(components, {
-        watch,
-        debug,
-        env,
-        junit,
-        coverage,
-        updateSnapshot,
-      });
+      const restore = summaryOnly ? silenceConsoleAndStdout() : undefined;
+      try {
+        tests = await this.tester.test(components, {
+          watch,
+          debug,
+          env,
+          junit,
+          coverage,
+          updateSnapshot,
+        });
+      } finally {
+        restore?.();
+      }
       if (tests.hasErrors()) code = 1;
       if (process.exitCode && process.exitCode !== 0 && typeof process.exitCode === 'number') {
         // this is needed for testers such as "vitest", where it sets the exitCode to non zero when the coverage is not met.
@@ -151,7 +159,7 @@ supports watch mode, coverage reporting, and debug mode for development workflow
     if (watch) return '';
     const summary = tests ? aggregateTestResults(tests, components) : undefined;
     const data = summary
-      ? `\n${formatTestReport(summary, { verbose, duration: `${seconds}s` })}`
+      ? `\n${formatTestReport(summary, { verbose, duration: `${seconds}s`, summaryOnly })}`
       : formatHint(`tests completed in ${seconds} seconds`);
     return {
       code,
@@ -169,6 +177,7 @@ supports watch mode, coverage reporting, and debug mode for development workflow
       coverage = false,
       unmodified = false,
       updateSnapshot = false,
+      summary: summaryOnly = false,
     }: TestFlags
   ): Promise<GenericObject> {
     const timer = Timer.create();
@@ -220,17 +229,6 @@ supports watch mode, coverage reporting, and debug mode for development workflow
       code = process.exitCode;
     }
 
-    const data = tests.results.map((r) => ({
-      data: {
-        components: r.data?.components.map((c) => ({
-          ...c,
-          componentId: c.componentId.toString(),
-        })),
-        errors: r.data?.errors,
-      },
-      error: r.error,
-    }));
-
     const aggregated = aggregateTestResults(tests, components);
     const summary = {
       totals: aggregated.totals,
@@ -245,10 +243,24 @@ supports watch mode, coverage reporting, and debug mode for development workflow
       envErrors: aggregated.envErrors.map((e) => ({ envId: e.envId, message: e.error.message })),
     };
 
+    if (summaryOnly) {
+      return { code, data: summary };
+    }
+
+    const data = tests.results.map((r) => ({
+      data: {
+        components: r.data?.components.map((c) => ({
+          ...c,
+          componentId: c.componentId.toString(),
+        })),
+        errors: r.data?.errors,
+      },
+      error: r.error,
+    }));
+
     return {
       code,
       data,
-      summary,
     };
   }
 }

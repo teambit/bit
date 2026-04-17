@@ -139,6 +139,19 @@ describe('formatTestReport()', () => {
     expect(out).to.include('no components to test');
   });
 
+  it('emits only the final headline when summaryOnly is set', () => {
+    const results = mkResults('teambit.react/react', [
+      { name: 'comp-a', files: [mkFile(5, 0)] },
+      { name: 'comp-b', files: [mkFile(0, 2)] },
+    ]);
+    const summary = aggregateTestResults(results, [mkComponent('comp-a'), mkComponent('comp-b')]);
+    const out = formatTestReport(summary, { verbose: false, duration: '1s', summaryOnly: true });
+    expect(out).to.not.include('test results');
+    expect(out).to.not.include('my-scope/comp-a');
+    expect(out).to.include('2 tests failed across 1 of 2 components');
+    expect(out).to.include('Finished. (1s)');
+  });
+
   it('surfaces env errors in a dedicated section', () => {
     const err = new Error('tester crashed');
     const results = {

@@ -84,8 +84,15 @@ function summarizeComponent(comp: {
   return { id: comp.componentId, passed, failed, pending, hasError };
 }
 
-export function formatTestReport(summary: TestOutputSummary, opts: { verbose: boolean; duration: string }): string {
+export function formatTestReport(
+  summary: TestOutputSummary,
+  opts: { verbose: boolean; duration: string; summaryOnly?: boolean }
+): string {
   const { componentsWithTests, componentsWithoutTests, envErrors, totals } = summary;
+  const failingComponents = componentsWithTests.filter((c) => c.failed > 0 || c.hasError).length;
+  const finalSummary = formatFinalSummary(totals, failingComponents, envErrors.length > 0, opts.duration);
+
+  if (opts.summaryOnly) return finalSummary;
 
   const perComponentLines = componentsWithTests
     .sort((a, b) => a.id.toString().localeCompare(b.id.toString()))
@@ -101,9 +108,6 @@ export function formatTestReport(summary: TestOutputSummary, opts: { verbose: bo
     : '';
 
   const noTestsSection = formatNoTestsSection(componentsWithoutTests, opts.verbose);
-
-  const failingComponents = componentsWithTests.filter((c) => c.failed > 0 || c.hasError).length;
-  const finalSummary = formatFinalSummary(totals, failingComponents, envErrors.length > 0, opts.duration);
 
   return joinSections([resultsSection, envErrorsSection, noTestsSection, finalSummary]);
 }
