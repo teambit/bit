@@ -250,23 +250,32 @@ export default class ImportComponents {
 
   /**
    * Import all components from all scopes of an owner, handling errors per-scope.
-   * If a scope fails during import, log a warning and continue with other scopes.
+   *
+   * Each scope is streamed through the full fetch → write → release pipeline before the
+   * next one is fetched. This keeps peak memory bounded by a single scope's worth of
+   * `VersionDependencies` instead of the sum across all scopes, which is what used to
+   * blow the 4 GB heap on owners with thousands of components.
    */
   private async importByOwner(ownerName: string): Promise<ImportResult> {
     this.logger.debug(`importByOwner, owner: ${ownerName}`);
 
-    // Get components grouped by scope
     const { scopeIds, failedScopes, failedScopesErrors } = await this.lister.getRemoteCompIdsByOwnerGrouped(
       ownerName,
       this.options.includeDeprecated
     );
 
-    const allVersionDeps: VersionDependencies[] = [];
     const allBeforeVersions: ImportedVersions = {};
+    const accWritten: Component[] = [];
+    const accAutoDeps: Array<{ packageName: string; version: string }> = [];
+    const accImportedIds: ComponentID[] = [];
+    const accImportedDeps: ComponentID[] = [];
+    const accImportDetails: ImportDetails[] = [];
+    const accMissingIds: string[] = [];
+    let anyImported = false;
+
     const importFailedScopes: string[] = [...failedScopes];
     const allFailedScopesErrors: Map<string, string> = new Map(failedScopesErrors);
 
-    // Import each scope separately with error handling
     const scopeEntries = Array.from(scopeIds.entries());
     const totalScopes = scopeEntries.length;
     let completedScopes = 0;
@@ -281,7 +290,35 @@ export default class ImportComponents {
         const versionDeps = await this._importComponentsObjects(idList, {
           lane: this.remoteLane,
         });
-        allVersionDeps.push(...versionDeps);
+        if (!versionDeps.length) {
+          this.logger.consoleSuccess(`imported ${scopeName} (${ids.length} components)`);
+          continue;
+        }
+        anyImported = true;
+
+        // Capture lightweight info before `versionDeps` is discarded.
+        for (const v of versionDeps) {
+          accImportedIds.push(v.component.id);
+          accImportedDeps.push(...v.allDependenciesIds);
+        }
+        accImportDetails.push(...(await this._getImportDetails(beforeVersions, versionDeps)));
+        const importedIdStrs = new Set(versionDeps.map((v) => v.component.id.toStringWithoutVersion()));
+        for (const compIdStr of Object.keys(beforeVersions)) {
+          if (!importedIdStrs.has(compIdStr)) accMissingIds.push(compIdStr);
+        }
+
+        // Write this scope's components through the chunked pipeline, then let
+        // `versionDeps` go out of scope — next iteration's GC will reclaim its Version
+        // objects (the dominant memory source during a large `--owner` import).
+        if (!this.options.objectsOnly) {
+          const { writtenComponents, precomputedAutoDeps } = await this._processAndWriteInChunks(
+            versionDeps,
+            IMPORT_WRITE_CHUNK_SIZE
+          );
+          accWritten.push(...writtenComponents);
+          accAutoDeps.push(...precomputedAutoDeps);
+        }
+
         this.logger.consoleSuccess(`imported ${scopeName} (${ids.length} components)`);
       } catch (err: any) {
         importFailedScopes.push(scopeName);
@@ -290,7 +327,7 @@ export default class ImportComponents {
       }
     }
 
-    if (!allVersionDeps.length) {
+    if (!anyImported) {
       throw new BitError(`failed to import any components from owner "${ownerName}"`);
     }
 
@@ -304,7 +341,23 @@ export default class ImportComponents {
       );
     }
 
-    return this.processAndWriteComponents(allBeforeVersions, allVersionDeps);
+    let componentWriterResults: ComponentWriterResults | undefined;
+    if (!this.options.objectsOnly) {
+      componentWriterResults = await this._finalizeWriteBatches(accWritten, accAutoDeps);
+      await this._saveLaneDataIfNeeded(accWritten);
+    }
+
+    return {
+      importedIds: accImportedIds,
+      importedDeps: accImportedDeps,
+      writtenComponents: accWritten,
+      importDetails: accImportDetails,
+      installationError: componentWriterResults?.installationError,
+      compilationError: componentWriterResults?.compilationError,
+      workspaceConfigUpdateResult: componentWriterResults?.workspaceConfigUpdateResult,
+      missingIds: accMissingIds,
+      lane: this.remoteLane,
+    };
   }
 
   /**
