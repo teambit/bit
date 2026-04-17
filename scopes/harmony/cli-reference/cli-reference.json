@@ -1857,6 +1857,11 @@
         "c",
         "current-dir",
         "create the new workspace in current directory (default is to create a new directory, inside the current dir)"
+      ],
+      [
+        "",
+        "agent [type]",
+        "create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)"
       ]
     ],
     "description": "create a new Bit workspace from a template",
@@ -5188,6 +5193,11 @@
         "",
         "skip-interactive",
         "skip interactive mode for Git repositories"
+      ],
+      [
+        "",
+        "agent [type]",
+        "create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)"
       ]
     ],
     "description": "initialize a Bit workspace in an existing project",

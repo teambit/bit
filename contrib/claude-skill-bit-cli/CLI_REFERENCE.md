@@ -418,7 +418,7 @@ Flags: --path <path>, --objects, --override, --verbose, --json, --skip-dependenc
 initialize a Bit workspace in an existing project
 
 creates Bit configuration files in an existing project directory to start tracking components. if already a workspace, validates and repairs Bit files as needed. supports various reset options to recover from corrupted state or restart from scratch.
-Flags: --name <workspace-name>, --generator <env-id>, --standalone, --no-package-json, --reset, --reset-new, --reset-lane-new, --reset-hard, --reset-scope, --default-directory <default-directory>, --default-scope <default-scope>, --force, --bare [name], --shared <groupname>, --external-package-manager, --skip-interactive
+Flags: --name <workspace-name>, --generator <env-id>, --standalone, --no-package-json, --reset, --reset-new, --reset-lane-new, --reset-hard, --reset-scope, --default-directory <default-directory>, --default-scope <default-scope>, --force, --bare [name], --shared <groupname>, --external-package-manager, --skip-interactive, --agent [type]
 
 ## bit install [packages...]
 
@@ -653,7 +653,7 @@ moves component files to a new location within the workspace and updates the .bi
 create a new Bit workspace from a template
 
 initializes a new Bit workspace with pre-configured settings, environments, and optionally starter components. templates provide different setups for React, Angular, Node.js, or custom development workflows. installs dependencies and configures the workspace for immediate development.
-Flags: --aspect <aspect-id>, --template <env-id>, --env <env-id>, --default-scope <scope-name>, --skip-git, --empty, --load-from <path-to-template>, --current-dir
+Flags: --aspect <aspect-id>, --template <env-id>, --env <env-id>, --default-scope <scope-name>, --skip-git, --empty, --load-from <path-to-template>, --current-dir, --agent [type]
 
 ## bit npmrc [sub-command]
 
