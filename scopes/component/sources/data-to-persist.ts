@@ -12,34 +12,27 @@ export class DataToPersist {
   files: AbstractVinyl[];
   symlinks: Symlink[];
   remove: RemovePath[];
-  // indices so addFile stays O(1) on very large imports (tens of thousands of files).
-  private filesIndex: Map<string, number>;
-  private fileDirs: Set<string>;
   constructor() {
     this.files = [];
     this.symlinks = [];
     this.remove = [];
-    this.filesIndex = new Map();
-    this.fileDirs = new Set();
   }
   addFile(file: AbstractVinyl) {
     if (!file) throw new Error('failed adding an empty file into DataToPersist');
     if (!file.path) {
       throw new Error('failed adding a file into DataToPersist as it does not have a path property');
     }
-    const existingFileIndex = this.filesIndex.get(file.path);
-    if (existingFileIndex !== undefined) {
-      if (!file.override) return; // keep the existing file
-      this.files.splice(existingFileIndex, 1);
-      this.filesIndex.delete(file.path);
-      // fileDirs entry for file.path stays — the incoming file has the same path.
-      for (let i = existingFileIndex; i < this.files.length; i += 1) {
-        this.filesIndex.set(this.files[i].path, i);
+    const existingFileIndex = this.files.findIndex((existingFile) => existingFile.path === file.path);
+    if (existingFileIndex !== -1) {
+      if (file.override) {
+        // delete existing file
+        this.files.splice(existingFileIndex, 1);
+      } else {
+        // don't push this one. keep the existing file
+        return;
       }
     }
     this._throwForDirectoryCollision(file);
-    this.filesIndex.set(file.path, this.files.length);
-    this.fileDirs.add(`${file.path}${path.sep}`);
     this.files.push(file);
   }
   addManyFiles(files: AbstractVinyl[] = []) {
@@ -139,14 +132,6 @@ export class DataToPersist {
       this._assertRelative(removePath.path);
       removePath.path = path.join(basePath, removePath.path);
     });
-    // file paths just changed; rebuild the indices.
-    this.filesIndex.clear();
-    this.fileDirs.clear();
-    for (let i = 0; i < this.files.length; i += 1) {
-      const p = this.files[i].path;
-      this.filesIndex.set(p, i);
-      this.fileDirs.add(`${p}${path.sep}`);
-    }
   }
   /**
    * helps for debugging
@@ -248,24 +233,12 @@ export class DataToPersist {
    * practically, it runs `("bar/foo".startsWith("bar/"))` for both cases above.
    */
   _throwForDirectoryCollision(file: AbstractVinyl) {
-    // case 1: an existing file is inside a directory named like the incoming file's path.
-    const incomingAsDir = `${file.path}${path.sep}`;
-    if (this.fileDirs.has(incomingAsDir)) {
-      const collision = this.files.find((f) => f.path.startsWith(incomingAsDir));
-      if (collision) {
-        throw new Error(`unable to add the file "${file.path}", because another file "${collision.path}" is going to be written.
+    const directoryCollision = this.files.find(
+      (f) => f.path.startsWith(`${file.path}${path.sep}`) || `${file.path}`.startsWith(`${f.path}${path.sep}`)
+    );
+    if (directoryCollision) {
+      throw new Error(`unable to add the file "${file.path}", because another file "${directoryCollision.path}" is going to be written.
 one of them is a directory of the other one, and is not possible to have them both`);
-      }
-    }
-    // case 2: the incoming file lives inside a directory named like an existing file's path.
-    // walk up the incoming path's segments and check each as an existing file.
-    let parent = path.dirname(file.path);
-    while (parent && parent !== path.dirname(parent)) {
-      if (this.filesIndex.has(parent)) {
-        throw new Error(`unable to add the file "${file.path}", because another file "${parent}" is going to be written.
-one of them is a directory of the other one, and is not possible to have them both`);
-      }
-      parent = path.dirname(parent);
     }
   }
 }

@@ -214,15 +214,13 @@ export default class Repository {
       // @ts-ignore @todo: fix! it should return BitObject | null.
       return null;
     }
+    const size = fileContentsRaw.byteLength;
     const fileContents = this.onRead(fileContentsRaw);
     // uncomment to debug the transformed objects by onRead
     // console.log('transformedContent load', ref.toString(), BitObject.parseSync(fileContents).getType());
     const parsedObject = await BitObject.parseObject(fileContents, objectPath);
-    // Cache decision is based on decompressed size: a small on-disk blob (e.g. a
-    // dependency-graph JSON) can expand to tens of MB in memory, which would blow the
-    // heap if the LRU held ~3k of them.
     const maxSizeToCache = 100 * 1024; // 100KB
-    if (fileContents.byteLength < maxSizeToCache) {
+    if (size < maxSizeToCache) {
       // don't cache big files (mainly artifacts) to prevent out-of-memory
       this.setCache(parsedObject);
     }
