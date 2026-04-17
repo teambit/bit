@@ -116,9 +116,11 @@ supports watch mode, coverage reporting, and debug mode for development workflow
       };
     }
 
-    this.logger.console(
-      `testing total of ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`
-    );
+    if (!summaryOnly) {
+      this.logger.console(
+        `testing total of ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`
+      );
+    }
 
     let code = 0;
     let tests: TestResults | undefined;
@@ -272,25 +274,31 @@ supports watch mode, coverage reporting, and debug mode for development workflow
  * restores everything back to normal.
  */
 function silenceConsoleAndStdout(): () => void {
-  // Keep copies of the original methods so we can restore them later
-  const originalConsole = { ...console };
-  const originalStdoutWrite = process.stdout.write;
-  const originalStderrWrite = process.stderr.write;
+  const CONSOLE_METHODS = ['log', 'warn', 'error', 'info', 'debug'] as const;
+  const originalConsole = Object.fromEntries(
+    // eslint-disable-next-line no-console
+    CONSOLE_METHODS.map((m) => [m, console[m]])
+  ) as Record<(typeof CONSOLE_METHODS)[number], (...args: any[]) => void>;
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStderrWrite = process.stderr.write.bind(process.stderr);
 
-  // No-op implementations for console.* methods
-  for (const method of ['log', 'warn', 'error', 'info', 'debug'] as const) {
+  for (const method of CONSOLE_METHODS) {
     // eslint-disable-next-line no-console
     console[method] = () => {};
   }
 
-  // Replace process.stdout.write and process.stderr.write with no-ops
-  process.stdout.write = (() => true) as any;
-  process.stderr.write = (() => true) as any;
+  // process.stdout.write(chunk, encoding?, callback?) — callers may rely on the optional
+  // callback firing. Invoke it so we don't leave writers hanging.
+  const stubWrite = (...args: any[]): boolean => {
+    const cb = args.find((a) => typeof a === 'function') as ((err?: Error | null) => void) | undefined;
+    if (cb) cb();
+    return true;
+  };
+  process.stdout.write = stubWrite as typeof process.stdout.write;
+  process.stderr.write = stubWrite as typeof process.stderr.write;
 
-  // Return a function to restore original behavior
   return () => {
-    for (const method of Object.keys(originalConsole) as (keyof Console)[]) {
-      // @ts-ignore
+    for (const method of CONSOLE_METHODS) {
       // eslint-disable-next-line no-console
       console[method] = originalConsole[method];
     }
