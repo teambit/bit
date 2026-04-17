@@ -44,11 +44,7 @@ export interface ManyComponentsWriterParams {
   shouldUpdateWorkspaceConfig?: boolean; // whether it should update dependencies policy (or leave conflicts) in workspace.jsonc
   mergeStrategy?: MergeStrategy; // needed for workspace.jsonc conflicts
   writeDeps?: 'package.json' | 'workspace.jsonc';
-  /**
-   * Pre-extracted auto-detected dep tuples to feed the workspace.jsonc update in place of
-   * reading them from `components`. Used by large batched imports to release heavy
-   * `ConsumerComponent` fields per batch instead of keeping them all alive until finalize.
-   */
+  /** Pre-extracted dep tuples; when present, finalize reads these instead of walking `components`. */
   precomputedAutoDeps?: Array<{ packageName: string; version: string }>;
 }
 
@@ -72,12 +68,6 @@ export class ComponentWriterMain {
     return this.workspace.consumer;
   }
 
-  /**
-   * Exposes the config-merger so callers processing many components in chunks can
-   * extract the subset of dep data needed for workspace.jsonc updates (see
-   * {@link ConfigMergerMain.extractAutoDepsForConfigMerge}) without retaining the full
-   * `ConsumerComponent` instances through finalize.
-   */
   getConfigMerger(): ConfigMergerMain {
     return this.configMerge;
   }
@@ -92,9 +82,8 @@ export class ComponentWriterMain {
   }
 
   /**
-   * Writes component files and updates .bitmap but skips the workspace-wide finalization
-   * (workspace.jsonc update, dep install, compile). Callers that process many components
-   * in batches should call this per batch and then call {@link finalizeWrite} once at the end.
+   * Per-batch half of {@link writeMany}: populate, persist, and update .bitmap.
+   * Callers batching very large imports call this per chunk, then {@link finalizeWrite} once.
    */
   async writeComponentsFiles(opts: ManyComponentsWriterParams): Promise<void> {
     if (!opts.components.length) return;
@@ -105,10 +94,8 @@ export class ComponentWriterMain {
   }
 
   /**
-   * Workspace-wide finalization after component files are on disk:
-   * writes dependencies files, resolves workspace.jsonc deps, installs and compiles.
-   * Intended to run once — after all batched {@link writeComponentsFiles} calls — so that
-   * install/compile don't repeat per batch.
+   * Workspace-wide finalization pair to {@link writeComponentsFiles}: workspace.jsonc update,
+   * dep install, compile. Runs once per import, not per batch.
    */
   async finalizeWrite(opts: ManyComponentsWriterParams): Promise<ComponentWriterResults> {
     let installationError: Error | undefined;
@@ -173,9 +160,8 @@ export class ComponentWriterMain {
     opts.components.forEach((component) => dataToPersist.merge(component.dataToPersist));
     dataToPersist.addBasePath(this.consumer.getPath());
     await dataToPersist.persistAllToFS();
-    // Release file buffers — once written to disk, they dominate memory for large
-    // imports and are no longer needed by finalization steps (install/compile read
-    // from the filesystem, config-merge only reads deps metadata).
+    // Once file buffers are on disk, release them — install/compile read from the
+    // filesystem and config-merge only needs deps metadata.
     opts.components.forEach((component) => {
       if (component.files) {
         for (const file of component.files as unknown as Array<{ contents: Buffer | null }>) {

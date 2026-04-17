@@ -12,10 +12,8 @@ export class DataToPersist {
   files: AbstractVinyl[];
   symlinks: Symlink[];
   remove: RemovePath[];
-  // index file paths so addFile is O(1) — critical for very large imports
-  // where addFile is called tens of thousands of times.
+  // indices so addFile stays O(1) on very large imports (tens of thousands of files).
   private filesIndex: Map<string, number>;
-  // index directory prefixes (with trailing sep) for O(1) collision checks.
   private fileDirs: Set<string>;
   constructor() {
     this.files = [];
@@ -31,11 +29,10 @@ export class DataToPersist {
     }
     const existingFileIndex = this.filesIndex.get(file.path);
     if (existingFileIndex !== undefined) {
-      if (!file.override) return; // don't push this one. keep the existing file.
-      // remove the existing same-path file and fix up indices for shifted entries.
-      // fileDirs keeps its entry for file.path — the new file has the same path.
+      if (!file.override) return; // keep the existing file
       this.files.splice(existingFileIndex, 1);
       this.filesIndex.delete(file.path);
+      // fileDirs entry for file.path stays — the incoming file has the same path.
       for (let i = existingFileIndex; i < this.files.length; i += 1) {
         this.filesIndex.set(this.files[i].path, i);
       }
@@ -142,7 +139,7 @@ export class DataToPersist {
       this._assertRelative(removePath.path);
       removePath.path = path.join(basePath, removePath.path);
     });
-    // file paths just changed; rebuild the indices so further addFile calls stay O(1).
+    // file paths just changed; rebuild the indices.
     this.filesIndex.clear();
     this.fileDirs.clear();
     for (let i = 0; i < this.files.length; i += 1) {

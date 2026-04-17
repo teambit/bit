@@ -58,9 +58,8 @@ export async function multipleVersionDependenciesToConsumer(
   versionDependencies: VersionDependencies[],
   repo: Repository
 ): Promise<ConsumerComponent[]> {
-  // Only hydrate the main components; dependency ConsumerComponents are never returned
-  // by this function, so building them just to discard them wastes memory (each one
-  // holds decompressed file contents) — critical for very large imports.
+  // Only hydrate main components — dependency ConsumerComponents aren't returned, so
+  // building them only to discard them wastes (sometimes a lot of) memory.
   const mainCompVers = new Map<string, ComponentVersion>();
   for (const verDep of versionDependencies) {
     const idStr = verDep.component.id.toString();

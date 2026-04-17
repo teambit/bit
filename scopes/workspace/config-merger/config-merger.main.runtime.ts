@@ -260,11 +260,8 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
   }
 
   /**
-   * Extracts the subset of a component's data needed by {@link updateDepsInWorkspaceConfig}.
-   * Callers processing many components in chunks can call this per-component, release the
-   * heavy `ConsumerComponent` (extensions/files/deps), and then pass the accumulated tuples
-   * to {@link updateDepsInWorkspaceConfigFromAutoDeps}. This avoids holding thousands of
-   * fully hydrated components in memory only to read their dependency lists.
+   * Lightweight tuple projection used by chunked large-import flows that release the
+   * heavy `ConsumerComponent` before {@link updateDepsInWorkspaceConfigFromAutoDeps} runs.
    */
   extractAutoDepsForConfigMerge(component: ConsumerComponent): Array<{ packageName: string; version: string }> {
     const deps = this.depsResolver.getDependenciesFromLegacyComponent(component);
@@ -290,11 +287,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     return this.updateDepsInWorkspaceConfigFromAutoDeps(autoDeps, mergeStrategy);
   }
 
-  /**
-   * Same as {@link updateDepsInWorkspaceConfig} but accepts pre-extracted auto-detected
-   * dependency tuples instead of full `ConsumerComponent` instances — lets large imports
-   * release component memory before workspace.jsonc is updated.
-   */
+  /** Same as {@link updateDepsInWorkspaceConfig} but reads from pre-extracted tuples. */
   async updateDepsInWorkspaceConfigFromAutoDeps(
     autoDeps: Array<{ packageName: string; version: string }>,
     mergeStrategy?: MergeStrategy

@@ -57,9 +57,6 @@ import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
 
 const removeNils = (array) => reject(array, isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
-// Threshold above which we skip aggregating every component's dependency graph before
-// install. Merging thousands of graphs produces a multi-GB in-memory structure that
-// OOMs the process; pnpm can resolve fine without this optimization.
 const DEPS_GRAPH_AGGREGATION_LIMIT = 500;
 
 type HasIdOpts = {
@@ -750,11 +747,9 @@ once done, to continue working, please run "bit cc"`
 
   public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {
     if (!isFeatureEnabled(DEPS_GRAPH)) return undefined;
-    // For very large imports, aggregating every component's dependency graph blows the
-    // heap — each graph is a compressed-JSON blob that gets decompressed + parsed, and
-    // the merged `allGraph` keeps growing (edges are concatenated, not deduped). The
-    // graph is a pnpm install optimization, so skipping it just falls back to pnpm's
-    // normal resolution path — correct, only slower.
+    // The aggregated graph grows monotonically (edges concatenate without dedup) and each
+    // per-component graph is a large compressed JSON blob. Past this threshold, skip the
+    // pnpm install pre-seed entirely and let pnpm resolve normally.
     if (componentIds.length > DEPS_GRAPH_AGGREGATION_LIMIT) {
       logger.debug(
         `getDependenciesGraphByComponentIds: skipping dep-graph aggregation for ${componentIds.length} components (limit: ${DEPS_GRAPH_AGGREGATION_LIMIT})`
