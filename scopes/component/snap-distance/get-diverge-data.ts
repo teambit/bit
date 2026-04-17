@@ -7,6 +7,7 @@ import { Ref, versionParentsToGraph } from '@teambit/objects';
 import { SnapsDistance } from './snaps-distance';
 import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
 import { TargetHeadNotFound } from './target-head-not-found';
+import { LocalHeadNotFound } from './local-head-not-found';
 
 /**
  * *** NEW WAY ***
@@ -87,6 +88,9 @@ export async function getDivergeData({
   const unmergedData = repo.unmergedComponents.getEntry(modelComponent.toComponentId());
   if (!versionParents.find((p) => p.hash.isEqual(targetHead))) {
     throw new TargetHeadNotFound(modelComponent.id(), targetHead.toString());
+  }
+  if (!versionParents.find((p) => p.hash.isEqual(localHead))) {
+    throw new LocalHeadNotFound(modelComponent.id(), localHead.toString());
   }
 
   return getDivergeDataBetweenTwoSnaps(
