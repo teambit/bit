@@ -33,8 +33,9 @@ function mkResults(envId: string, components: CompFixture[]): TestResults {
   const hasFailure = compResults.some(
     (c) => (c.errors?.length || 0) > 0 || c.results.testFiles.some((f) => f.failed > 0 || f.error)
   );
+  const envComponents = components.map((c) => mkComponent(c.name));
   return {
-    results: [{ env: { id: envId } as any, data: new Tests(compResults) }],
+    results: [{ env: { id: envId, components: envComponents } as any, data: new Tests(compResults) }],
     hasErrors: () => hasFailure,
     errors: [],
   } as unknown as TestResults;
@@ -66,15 +67,18 @@ describe('aggregateTestResults()', () => {
     expect(summary.componentsWithoutTests.map((id) => id.toString())).to.include('my-scope/comp-c');
   });
 
-  it('surfaces env-level errors', () => {
+  it('surfaces env-level errors and keeps affected components out of the no-tests bucket', () => {
     const err = new Error('tester crashed');
+    const compA = mkComponent('comp-a');
     const results = {
-      results: [{ env: { id: 'teambit.react/react' } as any, data: undefined, error: err }],
+      results: [{ env: { id: 'teambit.react/react', components: [compA] } as any, data: undefined, error: err }],
     } as unknown as TestResults;
-    const summary = aggregateTestResults(results, [mkComponent('comp-a')]);
+    const summary = aggregateTestResults(results, [compA]);
     expect(summary.envErrors).to.have.lengthOf(1);
     expect(summary.envErrors[0].error.message).to.equal('tester crashed');
-    expect(summary.totals.withoutTests).to.equal(1);
+    expect(summary.totals.withoutTests).to.equal(0);
+    expect(summary.totals.affectedByEnvError).to.equal(1);
+    expect(summary.componentsAffectedByEnvError.map((id) => id.toString())).to.include('my-scope/comp-a');
   });
 
   it('flags components with tester errors on test files', () => {
@@ -154,13 +158,23 @@ describe('formatTestReport()', () => {
 
   it('surfaces env errors in a dedicated section', () => {
     const err = new Error('tester crashed');
+    const compA = mkComponent('comp-a');
     const results = {
-      results: [{ env: { id: 'teambit.react/react' } as any, data: undefined, error: err }],
+      results: [{ env: { id: 'teambit.react/react', components: [compA] } as any, data: undefined, error: err }],
     } as unknown as TestResults;
-    const summary = aggregateTestResults(results, [mkComponent('comp-a')]);
+    const summary = aggregateTestResults(results, [compA]);
     const out = formatTestReport(summary, { verbose: false, duration: '0.3s' });
     expect(out).to.include('tester errors');
     expect(out).to.include('teambit.react/react');
     expect(out).to.include('tester crashed');
+    expect(out).to.include('1 components targeted');
+  });
+
+  it('includes pending tests in the headline when present', () => {
+    const results = mkResults('teambit.react/react', [{ name: 'comp-a', files: [mkFile(3, 0, 2)] }]);
+    const summary = aggregateTestResults(results, [mkComponent('comp-a')]);
+    const out = formatTestReport(summary, { verbose: false, duration: '1s' });
+    expect(out).to.include('2 pending');
+    expect(out).to.include('3/5 tests passed');
   });
 });

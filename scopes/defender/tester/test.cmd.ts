@@ -53,7 +53,7 @@ supports watch mode, coverage reporting, and debug mode for development workflow
       'DEPRECATED. (use the pattern instead, e.g. "scopeName/**"). name of the scope to test',
     ],
     ['j', 'json', 'return the results in json format'],
-    ['', 'verbose', 'show passing components and list components without tests'],
+    ['', 'verbose', 'list the component ids that have no tests (default collapses them into a count)'],
     ['', 'summary', 'suppress tester output, print only the final pass/fail headline (or summary object with --json)'],
     // TODO: we need to reduce this redundant casting every time.
   ] as CommandOptions;
@@ -240,6 +240,7 @@ supports watch mode, coverage reporting, and debug mode for development workflow
         hasError: c.hasError,
       })),
       componentsWithoutTests: aggregated.componentsWithoutTests.map((id) => id.toString()),
+      componentsAffectedByEnvError: aggregated.componentsAffectedByEnvError.map((id) => id.toString()),
       envErrors: aggregated.envErrors.map((e) => ({ envId: e.envId, message: e.error.message })),
     };
 

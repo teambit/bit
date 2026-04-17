@@ -1,12 +1,11 @@
-import chalk from 'chalk';
 import type { Component, ComponentID } from '@teambit/component';
 import {
   formatTitle,
   formatHint,
+  formatItem,
   formatSuccessSummary,
   formatWarningSummary,
   joinSections,
-  successSymbol,
   errorSymbol,
   warnSymbol,
 } from '@teambit/cli';
@@ -28,11 +27,14 @@ export type EnvTestError = {
 export type TestOutputSummary = {
   componentsWithTests: ComponentTestSummary[];
   componentsWithoutTests: ComponentID[];
+  /** components that belong to an env whose tester errored before producing results */
+  componentsAffectedByEnvError: ComponentID[];
   envErrors: EnvTestError[];
   totals: {
     totalComponents: number;
     tested: number;
     withoutTests: number;
+    affectedByEnvError: number;
     testsPassed: number;
     testsFailed: number;
     testsPending: number;
@@ -43,10 +45,15 @@ export function aggregateTestResults(results: TestResults, allComponents: Compon
   const componentsWithTests: ComponentTestSummary[] = [];
   const envErrors: EnvTestError[] = [];
   const testedIds = new Set<string>();
+  const affectedByEnvErrorIds = new Set<string>();
 
   for (const envResult of results.results) {
     const envId = envResult.env?.id;
-    if (envResult.error) envErrors.push({ envId, error: envResult.error });
+    const envComponents: Component[] = envResult.env?.components ?? [];
+    if (envResult.error) {
+      envErrors.push({ envId, error: envResult.error });
+      envComponents.forEach((c) => affectedByEnvErrorIds.add(c.id.toString()));
+    }
     const tests = envResult.data;
     if (!tests) continue;
     for (const comp of tests.components) {
@@ -56,18 +63,24 @@ export function aggregateTestResults(results: TestResults, allComponents: Compon
     }
   }
 
-  const componentsWithoutTests = allComponents.filter((c) => !testedIds.has(c.id.toString())).map((c) => c.id);
+  const componentsAffectedByEnvError = allComponents
+    .filter((c) => affectedByEnvErrorIds.has(c.id.toString()) && !testedIds.has(c.id.toString()))
+    .map((c) => c.id);
+  const componentsWithoutTests = allComponents
+    .filter((c) => !testedIds.has(c.id.toString()) && !affectedByEnvErrorIds.has(c.id.toString()))
+    .map((c) => c.id);
 
   const totals = {
     totalComponents: allComponents.length,
     tested: componentsWithTests.length,
     withoutTests: componentsWithoutTests.length,
+    affectedByEnvError: componentsAffectedByEnvError.length,
     testsPassed: sum(componentsWithTests, (c) => c.passed),
     testsFailed: sum(componentsWithTests, (c) => c.failed),
     testsPending: sum(componentsWithTests, (c) => c.pending),
   };
 
-  return { componentsWithTests, componentsWithoutTests, envErrors, totals };
+  return { componentsWithTests, componentsWithoutTests, componentsAffectedByEnvError, envErrors, totals };
 }
 
 function summarizeComponent(comp: {
@@ -119,10 +132,11 @@ function formatComponentLine(c: ComponentTestSummary): string {
   if (c.passed > 0) parts.push(`${c.passed} passed`);
   if (c.pending > 0) parts.push(`${c.pending} pending`);
   const stats = parts.length ? parts.join(', ') : 'no test counts reported';
+  const text = `${id} — ${stats}`;
 
-  if (c.failed > 0) return `   ${errorSymbol} ${id} — ${stats}`;
-  if (c.hasError) return `   ${warnSymbol} ${id} — ${stats} (tester reported errors)`;
-  return `   ${successSymbol()} ${id} — ${stats}`;
+  if (c.failed > 0) return formatItem(text, errorSymbol);
+  if (c.hasError) return formatItem(`${text} (tester reported errors)`, warnSymbol);
+  return formatItem(text);
 }
 
 function formatNoTestsSection(ids: ComponentID[], verbose: boolean): string {
@@ -133,7 +147,7 @@ function formatNoTestsSection(ids: ComponentID[], verbose: boolean): string {
   const lines = ids
     .map((id) => id.toString({ ignoreVersion: true }))
     .sort()
-    .map((s) => `   ${chalk.dim('›')} ${s}`);
+    .map((s) => formatItem(s));
   return [formatHint(`${ids.length} components have no tests`), ...lines].join('\n');
 }
 
@@ -143,15 +157,20 @@ function formatFinalSummary(
   hasEnvError: boolean,
   duration: string
 ): string {
-  const totalTests = totals.testsPassed + totals.testsFailed;
-  const withoutSuffix = totals.withoutTests > 0 ? `, ${totals.withoutTests} without tests` : '';
+  const totalTests = totals.testsPassed + totals.testsFailed + totals.testsPending;
+  const suffixParts: string[] = [];
+  if (totals.withoutTests > 0) suffixParts.push(`${totals.withoutTests} without tests`);
+  if (totals.affectedByEnvError > 0) suffixParts.push(`${totals.affectedByEnvError} not tested due to tester errors`);
+  const extraSuffix = suffixParts.length ? `, ${suffixParts.join(', ')}` : '';
+  const pendingSuffix = totals.testsPending > 0 ? `, ${totals.testsPending} pending` : '';
   const timing = formatHint(`Finished. (${duration})`);
 
   if (hasEnvError || totals.testsFailed > 0 || failingComponents > 0) {
+    const attempted = totals.tested + totals.affectedByEnvError;
     const headline =
       totals.testsFailed > 0
-        ? `${totals.testsFailed} tests failed across ${failingComponents} of ${totals.tested} components${withoutSuffix}`
-        : `tester errors encountered (${totals.tested} components tested${withoutSuffix})`;
+        ? `${totals.testsFailed} tests failed across ${failingComponents} of ${totals.tested} components${pendingSuffix}${extraSuffix}`
+        : `tester errors encountered (${attempted || totals.totalComponents} components targeted${extraSuffix})`;
     return `${formatWarningSummary(headline)}\n${timing}`;
   }
 
@@ -163,7 +182,7 @@ function formatFinalSummary(
     return `${formatHint(none)}\n${timing}`;
   }
 
-  const headline = `${totals.testsPassed}/${totalTests || totals.testsPassed} tests passed across ${totals.tested} components${withoutSuffix}`;
+  const headline = `${totals.testsPassed}/${totalTests || totals.testsPassed} tests passed across ${totals.tested} components${pendingSuffix}${extraSuffix}`;
   return `${formatSuccessSummary(headline)}\n${timing}`;
 }
 
