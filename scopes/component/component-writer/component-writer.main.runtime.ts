@@ -160,16 +160,6 @@ export class ComponentWriterMain {
     opts.components.forEach((component) => dataToPersist.merge(component.dataToPersist));
     dataToPersist.addBasePath(this.consumer.getPath());
     await dataToPersist.persistAllToFS();
-    // Once file buffers are on disk, release them — install/compile read from the
-    // filesystem and config-merge only needs deps metadata.
-    opts.components.forEach((component) => {
-      if (component.files) {
-        for (const file of component.files as unknown as Array<{ contents: Buffer | null }>) {
-          if (file) file.contents = null;
-        }
-      }
-      component.dataToPersist = new DataToPersist();
-    });
   }
   private async populateComponentsFilesToWrite(opts: ManyComponentsWriterParams) {
     const writeComponentsParams = opts.components.map((component) =>
