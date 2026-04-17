@@ -1210,6 +1210,7 @@ supports various reset options to recover from corrupted state or restart from s
 | `--shared <groupname>`                    |       `-s`       | add group write permissions to a scope properly                                                                                           |
 | `--external-package-manager`              |                  | enable external package manager mode (npm/yarn/pnpm)                                                                                      |
 | `--skip-interactive`                      |                  | skip interactive mode for Git repositories                                                                                                |
+| `--agent [type]`                          |                  | create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)                                               |
 
 ---
 
@@ -1942,6 +1943,7 @@ installs dependencies and configures the workspace for immediate development.
 | `--empty`                        |       `-e`       | skip template's default component creation (relevant for templates that add components by default)                                  |
 | `--load-from <path-to-template>` |                  | local path to the workspace containing the template. Helpful during a development of a workspace-template                           |
 | `--current-dir`                  |       `-c`       | create the new workspace in current directory (default is to create a new directory, inside the current dir)                        |
+| `--agent [type]`                 |                  | create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)                                         |
 
 ---
 
