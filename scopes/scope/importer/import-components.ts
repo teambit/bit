@@ -5,7 +5,6 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsPendingMerge } from '@teambit/legacy.consumer';
 import type { Lane, ModelComponent, Version } from '@teambit/objects';
-import { Extensions } from '@teambit/legacy.constants';
 import { getLatestVersionNumber, pathNormalizeToLinux, hasWildcard } from '@teambit/legacy.utils';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import type { MergeStrategy, MergeResultsThreeWay, FilesStatus } from '@teambit/component.modules.merge-helper';
@@ -37,46 +36,6 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 
 const BEFORE_IMPORT_ACTION = 'importing components';
-// How many components to hydrate → write → release per pass when processing a large
-// import. Keeping this bounded prevents OOM for imports of thousands of components
-// (e.g. `bit import --owner`), where each hydrated ConsumerComponent holds
-// decompressed file buffers that dominate the heap until files are written to disk.
-const IMPORT_WRITE_CHUNK_SIZE = 200;
-
-/**
- * Strip a ConsumerComponent down to the minimum the post-write import flow still needs.
- *
- * Kept: `name`/`version`/`scope`/`defaultScope`/`bindingPrefix`/`mainFile` (so `component.id`
- * resolves) and the `pkg` extension (read by `componentIdToPackageName`).
- */
-function releaseHeavyComponentFields(component: Component): void {
-  const comp = component as unknown as Record<string, unknown> & {
-    extensions?: Array<{ name?: string }> & {
-      findExtension?: (name: string) => { name?: string } | undefined;
-    };
-  };
-  comp.files = undefined;
-  comp.dataToPersist = undefined;
-  comp.dependencies = undefined;
-  comp.devDependencies = undefined;
-  comp.flattenedDependencies = undefined;
-  comp.packageDependencies = undefined;
-  comp.devPackageDependencies = undefined;
-  comp.peerPackageDependencies = undefined;
-  comp.packageJsonChangedProps = undefined;
-  comp.docs = undefined;
-  comp.overrides = undefined;
-  comp.schema = undefined;
-  comp.scopesList = undefined;
-  comp.license = undefined;
-  comp.log = undefined;
-  const ext = comp.extensions;
-  if (ext && typeof ext.findExtension === 'function') {
-    const pkgExt = ext.findExtension(Extensions.pkg);
-    ext.length = 0;
-    if (pkgExt) ext.push(pkgExt);
-  }
-}
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -266,7 +225,6 @@ export default class ImportComponents {
 
     const allBeforeVersions: ImportedVersions = {};
     const accWritten: Component[] = [];
-    const accAutoDeps: Array<{ packageName: string; version: string }> = [];
     const accImportedIds: ComponentID[] = [];
     const accImportedDeps: ComponentID[] = [];
     const accImportDetails: ImportDetails[] = [];
@@ -307,16 +265,20 @@ export default class ImportComponents {
           if (!importedIdStrs.has(compIdStr)) accMissingIds.push(compIdStr);
         }
 
-        // Write this scope's components through the chunked pipeline, then let
-        // `versionDeps` go out of scope — next iteration's GC will reclaim its Version
-        // objects (the dominant memory source during a large `--owner` import).
+        // Hydrate + write this scope's components now, so `versionDeps` can be GC'd on the
+        // next iteration instead of accumulating across all scopes.
         if (!this.options.objectsOnly) {
-          const { writtenComponents, precomputedAutoDeps } = await this._processAndWriteInChunks(
-            versionDeps,
-            IMPORT_WRITE_CHUNK_SIZE
-          );
-          accWritten.push(...writtenComponents);
-          accAutoDeps.push(...precomputedAutoDeps);
+          const components = await multipleVersionDependenciesToConsumer(versionDeps, this.scope.objects);
+          await this._fetchDivergeData(components);
+          this._throwForDivergedHistory();
+          this.divergeData = [];
+          await this.throwForComponentsFromAnotherLane(components.map((c) => c.id));
+          const filtered = await this._filterComponentsByFilters(components);
+          if (filtered.length) {
+            const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(filtered);
+            await this.componentWriter.writeComponentsFiles(this._buildScopeWriteOpts(componentsToWrite));
+            accWritten.push(...filtered);
+          }
         }
 
         this.logger.consoleSuccess(`imported ${scopeName} (${ids.length} components)`);
@@ -343,7 +305,9 @@ export default class ImportComponents {
 
     let componentWriterResults: ComponentWriterResults | undefined;
     if (!this.options.objectsOnly) {
-      componentWriterResults = await this._finalizeWriteBatches(accWritten, accAutoDeps);
+      componentWriterResults = await this.componentWriter.finalizeWrite(
+        this._buildScopeWriteOpts(accWritten, { shouldUpdateWorkspaceConfig: true })
+      );
       await this._saveLaneDataIfNeeded(accWritten);
     }
 
@@ -360,77 +324,7 @@ export default class ImportComponents {
     };
   }
 
-  /**
-   * Process imported components: merge lane if needed, write to filesystem, and return results.
-   */
-  private async processAndWriteComponents(
-    beforeImportVersions: ImportedVersions,
-    versionDependenciesArr: VersionDependencies[]
-  ): Promise<ImportResult> {
-    if (this.remoteLane && this.options.objectsOnly) {
-      await this.mergeAndSaveLaneObject(this.remoteLane);
-    }
-
-    let writtenComponents: Component[] = [];
-    let componentWriterResults: ComponentWriterResults | undefined;
-    if (!this.options.objectsOnly) {
-      // Process in chunks so we never hold thousands of hydrated ConsumerComponents
-      // (each with decompressed file buffers) in memory simultaneously.
-      const { writtenComponents: written, precomputedAutoDeps } = await this._processAndWriteInChunks(
-        versionDependenciesArr,
-        IMPORT_WRITE_CHUNK_SIZE
-      );
-      writtenComponents = written;
-      componentWriterResults = await this._finalizeWriteBatches(writtenComponents, precomputedAutoDeps);
-      await this._saveLaneDataIfNeeded(writtenComponents);
-    }
-
-    return this.returnCompleteResults(
-      beforeImportVersions,
-      versionDependenciesArr,
-      writtenComponents,
-      componentWriterResults
-    );
-  }
-
-  private async _processAndWriteInChunks(
-    versionDependenciesArr: VersionDependencies[],
-    chunkSize: number
-  ): Promise<{ writtenComponents: Component[]; precomputedAutoDeps: Array<{ packageName: string; version: string }> }> {
-    const writtenComponents: Component[] = [];
-    const precomputedAutoDeps: Array<{ packageName: string; version: string }> = [];
-    const configMerger = this.componentWriter.getConfigMerger();
-    const total = versionDependenciesArr.length;
-    for (let i = 0; i < total; i += chunkSize) {
-      const chunk = versionDependenciesArr.slice(i, i + chunkSize);
-      const chunkNum = Math.floor(i / chunkSize) + 1;
-      const totalChunks = Math.ceil(total / chunkSize);
-      this.logger.setStatusLine(
-        `writing components to workspace [chunk ${chunkNum}/${totalChunks}, ${chunk.length} components]`
-      );
-      const chunkComponents = await multipleVersionDependenciesToConsumer(chunk, this.scope.objects);
-      await this._fetchDivergeData(chunkComponents);
-      this._throwForDivergedHistory();
-      // scope `divergeData` to the current chunk so `_throwForDivergedHistory` doesn't
-      // re-scan every prior chunk's ModelComponents (and lets them be GC'd).
-      this.divergeData = [];
-      await this.throwForComponentsFromAnotherLane(chunkComponents.map((c) => c.id));
-      const filtered = await this._filterComponentsByFilters(chunkComponents);
-      if (filtered.length) {
-        await this._writeBatchToFileSystem(filtered);
-      }
-      for (const comp of filtered) {
-        precomputedAutoDeps.push(...configMerger.extractAutoDepsForConfigMerge(comp));
-        releaseHeavyComponentFields(comp);
-      }
-      writtenComponents.push(...filtered);
-      // Repo LRU would otherwise retain decompressed Version/Source objects across chunks.
-      this.scope.objects.clearObjectsFromCache();
-    }
-    return { writtenComponents, precomputedAutoDeps };
-  }
-
-  private _buildWriterOpts(
+  private _buildScopeWriteOpts(
     components: Component[],
     extra?: Partial<ManyComponentsWriterParams>
   ): ManyComponentsWriterParams {
@@ -449,17 +343,35 @@ export default class ImportComponents {
     };
   }
 
-  private async _writeBatchToFileSystem(components: Component[]): Promise<void> {
-    const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(components);
-    await this.componentWriter.writeComponentsFiles(this._buildWriterOpts(componentsToWrite));
-  }
+  /**
+   * Process imported components: merge lane if needed, write to filesystem, and return results.
+   */
+  private async processAndWriteComponents(
+    beforeImportVersions: ImportedVersions,
+    versionDependenciesArr: VersionDependencies[]
+  ): Promise<ImportResult> {
+    if (this.remoteLane && this.options.objectsOnly) {
+      await this.mergeAndSaveLaneObject(this.remoteLane);
+    }
 
-  private async _finalizeWriteBatches(
-    components: Component[],
-    precomputedAutoDeps: Array<{ packageName: string; version: string }>
-  ): Promise<ComponentWriterResults> {
-    return this.componentWriter.finalizeWrite(
-      this._buildWriterOpts(components, { shouldUpdateWorkspaceConfig: true, precomputedAutoDeps })
+    let writtenComponents: Component[] = [];
+    let componentWriterResults: ComponentWriterResults | undefined;
+    if (!this.options.objectsOnly) {
+      const components = await multipleVersionDependenciesToConsumer(versionDependenciesArr, this.scope.objects);
+      await this._fetchDivergeData(components);
+      this._throwForDivergedHistory();
+      await this.throwForComponentsFromAnotherLane(components.map((c) => c.id));
+      const filteredComponents = await this._filterComponentsByFilters(components);
+      componentWriterResults = await this._writeToFileSystem(filteredComponents);
+      await this._saveLaneDataIfNeeded(filteredComponents);
+      writtenComponents = filteredComponents;
+    }
+
+    return this.returnCompleteResults(
+      beforeImportVersions,
+      versionDependenciesArr,
+      writtenComponents,
+      componentWriterResults
     );
   }
 
@@ -1054,8 +966,19 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
 
   async _writeToFileSystem(components: Component[]): Promise<ComponentWriterResults> {
     const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(components);
-    return this.componentWriter.writeMany(
-      this._buildWriterOpts(componentsToWrite, { shouldUpdateWorkspaceConfig: true })
-    );
+    const manyComponentsWriterOpts: ManyComponentsWriterParams = {
+      components: componentsToWrite,
+      writeToPath: this.options.writeToPath,
+      writeConfig: this.options.writeConfig,
+      skipDependencyInstallation: !this.options.installNpmPackages,
+      skipWriteConfigFiles: !this.options.writeConfigFiles,
+      verbose: this.options.verbose,
+      throwForExistingDir: !this.options.override,
+      skipWritingToFs: this.options.trackOnly,
+      shouldUpdateWorkspaceConfig: true,
+      reasonForBitmapChange: 'import',
+      writeDeps: this.options.writeDeps,
+    };
+    return this.componentWriter.writeMany(manyComponentsWriterOpts);
   }
 }

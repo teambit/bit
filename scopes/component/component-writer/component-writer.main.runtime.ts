@@ -44,8 +44,6 @@ export interface ManyComponentsWriterParams {
   shouldUpdateWorkspaceConfig?: boolean; // whether it should update dependencies policy (or leave conflicts) in workspace.jsonc
   mergeStrategy?: MergeStrategy; // needed for workspace.jsonc conflicts
   writeDeps?: 'package.json' | 'workspace.jsonc';
-  /** Pre-extracted dep tuples; when present, finalize reads these instead of walking `components`. */
-  precomputedAutoDeps?: Array<{ packageName: string; version: string }>;
 }
 
 export type ComponentWriterResults = {
@@ -66,10 +64,6 @@ export class ComponentWriterMain {
 
   get consumer(): Consumer {
     return this.workspace.consumer;
-  }
-
-  getConfigMerger(): ConfigMergerMain {
-    return this.configMerge;
   }
 
   async writeMany(opts: ManyComponentsWriterParams): Promise<ComponentWriterResults> {
@@ -105,9 +99,10 @@ export class ComponentWriterMain {
       await this.workspace.writeDependencies(opts.writeDeps);
     }
     if (opts.shouldUpdateWorkspaceConfig) {
-      workspaceConfigUpdateResult = opts.precomputedAutoDeps
-        ? await this.configMerge.updateDepsInWorkspaceConfigFromAutoDeps(opts.precomputedAutoDeps, opts.mergeStrategy)
-        : await this.configMerge.updateDepsInWorkspaceConfig(opts.components, opts.mergeStrategy);
+      workspaceConfigUpdateResult = await this.configMerge.updateDepsInWorkspaceConfig(
+        opts.components,
+        opts.mergeStrategy
+      );
     }
     if (this.workspace.externalPackageManagerIsUsed()) {
       await this.installer.writeDependenciesToPackageJson();

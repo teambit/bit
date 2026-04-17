@@ -57,7 +57,6 @@ import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
 
 const removeNils = (array) => reject(array, isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
-const DEPS_GRAPH_AGGREGATION_LIMIT = 500;
 
 type HasIdOpts = {
   includeSymlink?: boolean;
@@ -747,15 +746,6 @@ once done, to continue working, please run "bit cc"`
 
   public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {
     if (!isFeatureEnabled(DEPS_GRAPH)) return undefined;
-    // The aggregated graph grows monotonically (edges concatenate without dedup) and each
-    // per-component graph is a large compressed JSON blob. Past this threshold, skip the
-    // pnpm install pre-seed entirely and let pnpm resolve normally.
-    if (componentIds.length > DEPS_GRAPH_AGGREGATION_LIMIT) {
-      logger.debug(
-        `getDependenciesGraphByComponentIds: skipping dep-graph aggregation for ${componentIds.length} components (limit: ${DEPS_GRAPH_AGGREGATION_LIMIT})`
-      );
-      return undefined;
-    }
     let allGraph: DependenciesGraph | undefined;
     await pMapPool(
       componentIds,

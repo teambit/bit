@@ -259,37 +259,8 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     };
   }
 
-  /**
-   * Lightweight tuple projection used by chunked large-import flows that release the
-   * heavy `ConsumerComponent` before {@link updateDepsInWorkspaceConfigFromAutoDeps} runs.
-   */
-  extractAutoDepsForConfigMerge(component: ConsumerComponent): Array<{ packageName: string; version: string }> {
-    const deps = this.depsResolver.getDependenciesFromLegacyComponent(component);
-    const autoDeps: Array<{ packageName: string; version: string }> = [];
-    deps.forEach((dep) => {
-      if (dep.source !== 'auto') return;
-      const packageName = dep.getPackageName?.();
-      if (!packageName) return;
-      autoDeps.push({ packageName, version: dep.version });
-    });
-    return autoDeps;
-  }
-
   async updateDepsInWorkspaceConfig(
     components: ConsumerComponent[],
-    mergeStrategy?: MergeStrategy
-  ): Promise<WorkspaceConfigUpdateResult | undefined> {
-    if (mergeStrategy === 'ours') {
-      this.logger.debug('mergeStrategy is "ours", skipping the workspace.jsonc update');
-      return undefined;
-    }
-    const autoDeps = components.flatMap((c) => this.extractAutoDepsForConfigMerge(c));
-    return this.updateDepsInWorkspaceConfigFromAutoDeps(autoDeps, mergeStrategy);
-  }
-
-  /** Same as {@link updateDepsInWorkspaceConfig} but reads from pre-extracted tuples. */
-  async updateDepsInWorkspaceConfigFromAutoDeps(
-    autoDeps: Array<{ packageName: string; version: string }>,
     mergeStrategy?: MergeStrategy
   ): Promise<WorkspaceConfigUpdateResult | undefined> {
     if (mergeStrategy === 'ours') {
@@ -302,11 +273,18 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
       return acc;
     }, {});
     const componentDepsWithMultipleVer: Record<string, string[]> = {};
-    autoDeps.forEach(({ packageName: depId, version }) => {
-      if (!workspacePolicyObj[depId]) return;
-      if (workspacePolicyObj[depId] === version) return;
-      if (componentDepsWithMultipleVer[depId]?.includes(version)) return;
-      (componentDepsWithMultipleVer[depId] ||= []).push(version);
+    components.forEach((component) => {
+      const deps = this.depsResolver.getDependenciesFromLegacyComponent(component);
+      deps.forEach((dep) => {
+        if (dep.source !== 'auto') return;
+        const depId = dep.getPackageName?.();
+        if (!depId) return; // unclear when this happens.
+        if (!workspacePolicyObj[depId]) return;
+        if (workspacePolicyObj[depId] === dep.version) return;
+        if (componentDepsWithMultipleVer[depId]?.includes(dep.version)) return;
+
+        (componentDepsWithMultipleVer[depId] ||= []).push(dep.version);
+      });
     });
 
     const compToLog = Object.keys(componentDepsWithMultipleVer)
