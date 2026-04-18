@@ -48,7 +48,7 @@ export function schemaSchema(schema: SchemaMain): Schema {
 
       extend type ComponentHost {
         getSchema(id: String!, skipInternals: Boolean): JSONObject
-        apiDiff(baseId: String!, compareId: String!, lane: String): APIDiffResult
+        apiDiff(baseId: String!, compareId: String!): APIDiffResult
       }
     `,
     resolvers: {
@@ -65,11 +65,7 @@ export function schemaSchema(schema: SchemaMain): Schema {
 
           return filterUnimplementedAndAddDefaults(api);
         },
-        apiDiff: async (
-          host: ComponentFactory,
-          { baseId, compareId, lane }: { baseId: string; compareId: string; lane?: string }
-        ) => {
-          await schema.importComponents([baseId, compareId], lane);
+        apiDiff: async (host: ComponentFactory, { baseId, compareId }: { baseId: string; compareId: string }) => {
           const [baseCompId, compareCompId] = await Promise.all([
             host.resolveComponentId(baseId),
             host.resolveComponentId(compareId),

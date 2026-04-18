@@ -30,7 +30,6 @@ import { SchemaAspect } from './schema.aspect';
 import type { SchemaExtractor } from './schema-extractor';
 import { SchemaCommand } from './schema.cmd';
 import { SchemaDiffCommand } from './schema-diff.cmd';
-import type { LaneDiffHandler } from './schema-diff.cmd';
 import { schemaSchema } from './schema.graphql';
 import { SchemaTask, SCHEMA_TASK_NAME } from './schema.task';
 import { SchemaService } from './schema.service';
@@ -258,24 +257,6 @@ export class SchemaMain {
     return component.state.aspects.get(SchemaAspect.id)?.data;
   }
 
-  private schemaDiffCommand?: SchemaDiffCommand;
-  private _componentImporter?: (ids: string[], laneName?: string) => Promise<void>;
-
-  registerLaneDiffHandler(handler: LaneDiffHandler): void {
-    if (!this.schemaDiffCommand) throw new Error('schema diff command not initialized');
-    this.schemaDiffCommand.laneDiffHandler = handler;
-  }
-
-  registerComponentImporter(importer: (ids: string[], laneName?: string) => Promise<void>): void {
-    this._componentImporter = importer;
-  }
-
-  async importComponents(ids: string[], laneName?: string): Promise<void> {
-    if (this._componentImporter) {
-      await this._componentImporter(ids, laneName);
-    }
-  }
-
   /**
    * Register custom impact rules for API diff assessment.
    * Custom rules take priority over default rules.
@@ -349,10 +330,8 @@ export class SchemaMain {
     const schema = new SchemaMain(parserSlot, impactRuleSlot, envs, config, builder, workspace, logger, impactAssessor);
     const schemaTask = new SchemaTask(SchemaAspect.id, schema, logger);
     builder.registerBuildTasks([schemaTask]);
-    const schemaDiffCmd = new SchemaDiffCommand(schema, component, logger);
-    schema.schemaDiffCommand = schemaDiffCmd;
     const schemaCmd = new SchemaCommand(schema, component, logger);
-    schemaCmd.commands = [schemaDiffCmd];
+    schemaCmd.commands = [new SchemaDiffCommand(schema, component, logger)];
     cli.register(schemaCmd);
     graphql.register(() => schemaSchema(schema));
     envs.registerService(new SchemaService());

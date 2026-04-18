@@ -12,6 +12,5 @@ export {
 } from './schema.task';
 export type { SchemaEnv } from './schema-env';
 export type { SchemaMain, ImpactRuleSlot } from './schema.main.runtime';
-export type { LaneDiffHandler } from './schema-diff.cmd';
 export default SchemaAspect;
 export { SchemaAspect };

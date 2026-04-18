@@ -6,29 +6,16 @@ import { computeAPIDiff, APIDiffStatus } from '@teambit/semantics.entities.seman
 import type { APIDiffResult, APIDiffChange, ImpactLevel } from '@teambit/semantics.entities.semantic-schema-diff';
 import type { SchemaMain } from './schema.main.runtime';
 
-export type LaneDiffHandler = (
-  pattern: string,
-  laneName?: string,
-  baseVersion?: string,
-  compareVersion?: string
-) => Promise<{ diff: APIDiffResult; componentId: string; fromLabel: string; toLabel: string }>;
-
 export class SchemaDiffCommand implements Command {
-  name = 'diff <component> [base-version] [compare-version]';
+  name = 'diff <component> <base-version> <compare-version>';
   description = 'show API changes between two versions of a component';
   extendedDescription = `compares the public API schema between two versions of a component.
 shows added, removed, and modified exports with semantic impact analysis.
 
 examples:
-  bit schema diff my-component 0.0.1 0.0.2
-  bit schema diff my-component --lane   (diff lane head vs main head)`;
+  bit schema diff my-component 0.0.1 0.0.2`;
   group = 'info-analysis';
-  options = [
-    ['j', 'json', 'return the API diff in json format'],
-    ['l', 'lane <lane-name>', 'diff the component on the given lane (or current lane if no name) against main'],
-  ] as CommandOptions;
-
-  laneDiffHandler?: LaneDiffHandler;
+  options = [['j', 'json', 'return the API diff in json format']] as CommandOptions;
 
   constructor(
     private schema: SchemaMain,
@@ -36,42 +23,14 @@ examples:
     private logger: Logger
   ) {}
 
-  async report(args: CLIArgs, flags: { lane?: string }): Promise<string> {
+  async report(args: CLIArgs): Promise<string> {
     const [pattern, baseVersion, compareVersion] = args as string[];
-    if (flags.lane !== undefined) {
-      if (!this.laneDiffHandler) throw new Error('--lane flag is not available (lanes aspect not loaded)');
-      const laneName = typeof flags.lane === 'string' ? flags.lane : undefined;
-      const { diff, componentId, fromLabel, toLabel } = await this.laneDiffHandler(
-        pattern,
-        laneName,
-        baseVersion,
-        compareVersion
-      );
-      return this.formatDiffResult(diff, `${componentId} (${fromLabel} → ${toLabel})`);
-    }
-    if (!baseVersion || !compareVersion) {
-      throw new Error('please provide base-version and compare-version, or use --lane');
-    }
     const { diff, componentId } = await this.computeDiff(pattern, baseVersion, compareVersion);
     return this.formatDiffResult(diff, `${componentId} (${baseVersion} → ${compareVersion})`);
   }
 
-  async json(args: CLIArgs, flags: { lane?: string }): Promise<Record<string, any>> {
+  async json(args: CLIArgs): Promise<Record<string, any>> {
     const [pattern, baseVersion, compareVersion] = args as string[];
-    if (flags.lane !== undefined) {
-      if (!this.laneDiffHandler) throw new Error('--lane flag is not available (lanes aspect not loaded)');
-      const laneName = typeof flags.lane === 'string' ? flags.lane : undefined;
-      const { diff, componentId, fromLabel, toLabel } = await this.laneDiffHandler(
-        pattern,
-        laneName,
-        baseVersion,
-        compareVersion
-      );
-      return this.toAgentJson(diff, componentId, fromLabel, toLabel);
-    }
-    if (!baseVersion || !compareVersion) {
-      throw new Error('please provide base-version and compare-version, or use --lane');
-    }
     const { diff, componentId } = await this.computeDiff(pattern, baseVersion, compareVersion);
     return this.toAgentJson(diff, componentId, baseVersion, compareVersion);
   }
