@@ -47,6 +47,16 @@ export class PreviewPreview {
     this.registerClickPubSub();
   }
 
+  private rerenderOnPreviewModulesChange = debounce(() => {
+    if (!this.isReady()) return;
+    // HMR updates regenerate preview link modules and call linkModules() again.
+    // Re-render the active preview so updated composition exports reach the mounted tree.
+    void this.render().catch((err) => {
+      // Avoid turning a recoverable hot-update into an uncaught promise rejection.
+      console.error('[preview.preview] failed re-rendering after preview module update', err);
+    });
+  }, 30);
+
   private registerClickPubSub() {
     window.addEventListener('click', (e) => {
       const timestamp = Date.now();
@@ -397,6 +407,10 @@ export class PreviewPreview {
     [previewSlot, renderingContextSlot]: [PreviewSlot, RenderingContextSlot]
   ) {
     const preview = new PreviewPreview(pubsub, previewSlot, renderingContextSlot);
+
+    PREVIEW_MODULES.onSet.add(() => {
+      preview.rerenderOnPreviewModulesChange();
+    });
 
     window.addEventListener('hashchange', () => {
       // eslint-disable-next-line @typescript-eslint/no-floating-promises

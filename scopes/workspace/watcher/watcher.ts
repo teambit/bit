@@ -1,7 +1,7 @@
 import type { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
 import { dirname, basename, join, relative } from 'path';
-import { compact, difference, partition } from 'lodash';
+import { compact, difference, partition, uniq } from 'lodash';
 import type { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BIT_MAP, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import type { Consumer } from '@teambit/legacy.consumer';
@@ -72,6 +72,9 @@ export type RootDirs = { [dir: PathLinux]: ComponentID };
 type WatcherType = 'chokidar' | 'parcel';
 
 const DEBOUNCE_WAIT_MS = 100;
+const FILE_SETTLE_POLL_MS = 100;
+const FILE_SETTLE_STABLE_POLLS = 2;
+const FILE_SETTLE_MAX_POLLS = 10;
 const DROP_ERROR_DEBOUNCE_MS = 300; // Wait 300ms after last drop error before recovering
 type PathLinux = string; // ts fails when importing it from @teambit/legacy/dist/utils/path.
 
@@ -637,6 +640,7 @@ export class Watcher {
       await this.sleep(DEBOUNCE_WAIT_MS);
       const files = this.changedFilesPerComponent[compIdStr];
       delete this.changedFilesPerComponent[compIdStr];
+      await this.waitForFilesToStabilize(files);
 
       const buildResults = await this.watchQueue.add(() => this.triggerCompChanges(componentId, files));
       const failureMsg = buildResults.length
@@ -655,6 +659,39 @@ export class Watcher {
 
   private async sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private async waitForFilesToStabilize(files: PathOsBasedAbsolute[]) {
+    const existingFiles = compact(
+      await Promise.all(uniq(files).map(async (filePath) => ((await fs.pathExists(filePath)) ? filePath : null)))
+    );
+    if (!existingFiles.length) return;
+
+    let stablePolls = 0;
+    let previousSnapshot = '';
+
+    for (let poll = 0; poll < FILE_SETTLE_MAX_POLLS; poll += 1) {
+      const currentSnapshot = JSON.stringify(
+        await Promise.all(
+          existingFiles.map(async (filePath) => {
+            const stat = await fs.stat(filePath);
+            return [filePath, stat.size, stat.mtimeMs];
+          })
+        )
+      );
+
+      if (currentSnapshot === previousSnapshot) {
+        stablePolls += 1;
+        if (stablePolls >= FILE_SETTLE_STABLE_POLLS) {
+          return;
+        }
+      } else {
+        previousSnapshot = currentSnapshot;
+        stablePolls = 0;
+      }
+
+      await this.sleep(FILE_SETTLE_POLL_MS);
+    }
   }
 
   private async triggerCompChanges(
