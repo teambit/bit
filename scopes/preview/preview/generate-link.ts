@@ -86,12 +86,19 @@ function __bitActivePreviewName() {
 }
 
 let __bitInitialized = false;
-function __bitMaybeInitialize(force = false) {
+async function __bitMaybeInitialize(force = false, shouldNotify = false) {
   const activePreview = __bitActivePreviewName();
   if (activePreview !== ${JSON.stringify(prefix)}) return;
   if (__bitInitialized && !force) return;
   __bitInitialized = true;
-  void initializeModules();
+  await initializeModules();
+  if (shouldNotify) {
+    window.dispatchEvent(
+      new CustomEvent('bit-preview-modules-updated', {
+        detail: { previewName: ${JSON.stringify(prefix)} },
+      })
+    );
+  }
 }
 
 const __bitHot =
@@ -102,7 +109,7 @@ const __bitHot =
 if (__bitHot) {
   __bitHot.accept(${JSON.stringify(acceptedDependencies)}, () => {
     __bitInitialized = false;
-    __bitMaybeInitialize(true);
+    void __bitMaybeInitialize(true, true);
   });
   __bitHot.dispose(() => {
     __bitInitialized = false;
@@ -113,9 +120,11 @@ if (__bitHot) {
 // chunk as loaded. Otherwise modules placed in the current entry chunk can be
 // resolved as a missing async chunk while the entry is still evaluating.
 queueMicrotask(() => {
-  __bitMaybeInitialize();
+  void __bitMaybeInitialize();
 });
-window.addEventListener('hashchange', () => __bitMaybeInitialize());
+window.addEventListener('hashchange', () => {
+  void __bitMaybeInitialize();
+});
 `;
 
   const runtimeBootstrap = useSource

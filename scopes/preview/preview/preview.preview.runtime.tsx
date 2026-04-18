@@ -47,14 +47,10 @@ export class PreviewPreview {
     this.registerClickPubSub();
   }
 
-  private rerenderOnPreviewModulesChange = debounce(() => {
+  private rerenderOnPreviewModulesUpdated = debounce(() => {
     if (!this.isReady()) return;
-    // HMR updates regenerate preview link modules and call linkModules() again.
-    // Re-render the active preview so updated composition exports reach the mounted tree.
     void this.render().catch((err) => {
-      // Avoid turning a recoverable hot-update into an uncaught promise rejection.
-      // eslint-disable-next-line no-console
-      console.warn('[preview.preview] failed re-rendering after preview module update', err);
+      console.error('[preview.preview] failed re-rendering after preview module update', err);
     });
   }, 30);
 
@@ -409,8 +405,8 @@ export class PreviewPreview {
   ) {
     const preview = new PreviewPreview(pubsub, previewSlot, renderingContextSlot);
 
-    PREVIEW_MODULES.onSet.add(() => {
-      preview.rerenderOnPreviewModulesChange();
+    window.addEventListener('bit-preview-modules-updated', () => {
+      preview.rerenderOnPreviewModulesUpdated();
     });
 
     window.addEventListener('hashchange', () => {
