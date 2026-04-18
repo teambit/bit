@@ -53,7 +53,8 @@ export class PreviewPreview {
     // Re-render the active preview so updated composition exports reach the mounted tree.
     void this.render().catch((err) => {
       // Avoid turning a recoverable hot-update into an uncaught promise rejection.
-      console.error('[preview.preview] failed re-rendering after preview module update', err);
+      // eslint-disable-next-line no-console
+      console.warn('[preview.preview] failed re-rendering after preview module update', err);
     });
   }, 30);
 
