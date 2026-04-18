@@ -164,7 +164,7 @@ export class CompositionsMain {
   }
 
   static defaultConfig: CompositionsConfig = {
-    compositionFilePattern: ['**/*.composition.*', '**/*.compositions.*'],
+    compositionFilePattern: ['**/*.composition?(s).*'],
     compositionPreviewFilePattern: ['**/*.{t,j}s?(x)'],
   };
 
