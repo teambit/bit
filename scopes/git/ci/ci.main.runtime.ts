@@ -455,7 +455,27 @@ export class CiMain {
 
       if (existingLanes.length) {
         this.logger.console(chalk.blue(`Deleting existing remote lane ${laneId.toString()}`));
-        await this.archiveLane(laneId.toString(), true); // throwOnError: delete must succeed before export
+        const archiveResult = await this.archiveLane(laneId.toString(), true); // throwOnError: delete must succeed before export
+        if (archiveResult === 'not-found') {
+          // `getLanes` just reported the lane exists, but the delete API says "not found". Re-query
+          // to confirm. If the lane still shows up, something is off on the remote (delete can't
+          // see what list/export can), and retrying will never converge.
+          let stillExists;
+          try {
+            stillExists = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name });
+          } catch (verifyErr: any) {
+            throw new Error(
+              `failed to verify whether remote lane ${laneId.toString()} still exists after delete returned "not found": ${verifyErr?.message || verifyErr}`
+            );
+          }
+          if (stillExists.length) {
+            throw new Error(
+              `unable to delete remote lane ${laneId.toString()}: the remote reports the lane as "not found" from ` +
+                `the delete API but still lists it from the query API. maybe this is a remote issue on bit.cloud. ` +
+                `please contact support or manually delete the lane on bit.cloud before re-running CI.`
+            );
+          }
+        }
       }
 
       // Rename temp lane to original name
@@ -856,14 +876,6 @@ export class CiMain {
         return await this.exporter.export();
       } catch (e: any) {
         if (!isHashMismatchErr(e) || attempt === maxAttempts) throw e;
-        if (await this.isStaleCiRun()) {
-          this.logger.console(
-            chalk.yellow(
-              `Export failed with lane hash mismatch on "${laneIdStr}" and the PR branch has advanced past our commit. Not retrying - a newer CI run will publish the correct lane.`
-            )
-          );
-          throw e;
-        }
         this.logger.console(
           chalk.yellow(
             `Export attempt ${attempt}/${maxAttempts} failed with lane hash mismatch on "${laneIdStr}" (likely a concurrent CI push). Deleting remote lane and retrying.`
@@ -890,53 +902,30 @@ export class CiMain {
   }
 
   /**
-   * Returns true when the PR branch on the remote has advanced past our local HEAD, meaning a
-   * newer commit was pushed to the branch while this CI run was in flight. Best-effort: when we
-   * can't determine the branch or reach the remote we return false (don't block retry).
-   */
-  private async isStaleCiRun(): Promise<boolean> {
-    try {
-      const branch = await this.getBranchName();
-      if (!branch) return false;
-      const localSha = (await git.revparse(['HEAD'])).trim();
-      // `--` separator and fully-qualified ref so a branch name starting with `-` can't be
-      // interpreted as a git option (defense in depth for untrusted PR branches).
-      await git.raw(['fetch', 'origin', '--', `refs/heads/${branch}:refs/remotes/origin/${branch}`]);
-      const remoteSha = (await git.revparse([`refs/remotes/origin/${branch}`])).trim();
-      if (remoteSha === localSha) return false;
-      const mergeBase = (await git.raw(['merge-base', localSha, remoteSha])).trim();
-      // local is strictly behind remote - remote has commits we don't.
-      return mergeBase === localSha;
-    } catch (err: any) {
-      this.logger.console(chalk.yellow(`Unable to verify CI run freshness (assuming fresh): ${err?.message || err}`));
-      return false;
-    }
-  }
-
-  /**
    * Archives (deletes) a lane with proper error handling and logging.
    * @param throwOnError - if true, throws on failure (use for critical operations like pre-export cleanup)
    */
-  private async archiveLane(laneId: string, throwOnError = false) {
+  private async archiveLane(laneId: string, throwOnError = false): Promise<'deleted' | 'not-found' | 'error'> {
     try {
       this.logger.console(chalk.blue(`Archiving lane ${laneId}`));
       // force means to remove the lane even if it was not merged. in this case, we don't care much because main already has the changes.
       const archiveLane = await this.lanes.removeLanes([laneId], { remote: true, force: true });
       if (archiveLane.length) {
         this.logger.console(chalk.green(`Lane '${laneId}' archived successfully`));
-      } else {
-        this.logger.console(chalk.yellow(`Failed to archive lane '${laneId}' - no lanes were removed`));
+        return 'deleted';
       }
+      this.logger.console(chalk.yellow(`Failed to archive lane '${laneId}' - no lanes were removed`));
+      return 'not-found';
     } catch (e: any) {
-      // "not found" is success - another concurrent job may have deleted it
       if (e.message?.includes('was not found') || e.toString().includes('was not found')) {
-        this.logger.console(chalk.yellow(`Lane '${laneId}' was already deleted (likely by concurrent job)`));
-        return;
+        this.logger.console(chalk.yellow(`Lane '${laneId}' was not found on the remote`));
+        return 'not-found';
       }
       this.logger.console(chalk.red(`Error archiving lane '${laneId}': ${e.message}`));
       if (throwOnError) {
         throw new Error(`Failed to delete remote lane '${laneId}': ${e.message}`);
       }
+      return 'error';
       // Don't throw the error - lane cleanup is not critical to the merge process
     }
   }

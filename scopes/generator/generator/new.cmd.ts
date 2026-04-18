@@ -59,6 +59,7 @@ installs dependencies and configures the workspace for immediate development.`;
       'current-dir',
       'create the new workspace in current directory (default is to create a new directory, inside the current dir)',
     ],
+    ['', 'agent [type]', 'create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)'],
   ] as CommandOptions;
 
   constructor(private generator: GeneratorMain) {}

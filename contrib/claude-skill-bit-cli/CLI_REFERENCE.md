@@ -296,8 +296,8 @@ show expanded details from the last command that provided them (e.g. tag, snap)
 
 compare component changes between versions or against the current workspace
 
-shows a detailed diff of component files, dependencies, and configuration changes. by default, compares workspace changes against the latest version. specify versions to compare historical changes. supports pattern matching to filter components and various output formats for better readability.
-Flags: --parent, --verbose, --table
+shows a detailed diff of component files, dependencies, and configuration changes. by default, compares workspace changes against the latest version. specify versions to compare historical changes. supports pattern matching to filter components and various output formats for better readability. for ai-agent workflows, use --name-only to list what changed, --file to drill into a specific file, --files-only / --configs-only to focus on one diff category, or --json for machine-readable output.
+Flags: --parent, --verbose, --table, --file <paths>, --files-only, --configs-only, --name-only, --stat, --json
 
 ## bit doctor [diagnosis-name]
 
@@ -418,7 +418,7 @@ Flags: --path <path>, --objects, --override, --verbose, --json, --skip-dependenc
 initialize a Bit workspace in an existing project
 
 creates Bit configuration files in an existing project directory to start tracking components. if already a workspace, validates and repairs Bit files as needed. supports various reset options to recover from corrupted state or restart from scratch.
-Flags: --name <workspace-name>, --generator <env-id>, --standalone, --no-package-json, --reset, --reset-new, --reset-lane-new, --reset-hard, --reset-scope, --default-directory <default-directory>, --default-scope <default-scope>, --force, --bare [name], --shared <groupname>, --external-package-manager, --skip-interactive
+Flags: --name <workspace-name>, --generator <env-id>, --standalone, --no-package-json, --reset, --reset-new, --reset-lane-new, --reset-hard, --reset-scope, --default-directory <default-directory>, --default-scope <default-scope>, --force, --bare [name], --shared <groupname>, --external-package-manager, --skip-interactive, --agent [type]
 
 ## bit install [packages...]
 
@@ -653,7 +653,7 @@ moves component files to a new location within the workspace and updates the .bi
 create a new Bit workspace from a template
 
 initializes a new Bit workspace with pre-configured settings, environments, and optionally starter components. templates provide different setups for React, Angular, Node.js, or custom development workflows. installs dependencies and configures the workspace for immediate development.
-Flags: --aspect <aspect-id>, --template <env-id>, --env <env-id>, --default-scope <scope-name>, --skip-git, --empty, --load-from <path-to-template>, --current-dir
+Flags: --aspect <aspect-id>, --template <env-id>, --env <env-id>, --default-scope <scope-name>, --skip-git, --empty, --load-from <path-to-template>, --current-dir, --agent [type]
 
 ## bit npmrc [sub-command]
 
@@ -833,6 +833,13 @@ run a script defined by the environment
 
 executes custom scripts defined by component environments. scripts can be shell commands or JavaScript functions defined in env.scripts(). runs the script for all components grouped by their environment. use --list to see all available scripts.
 Flags: --list
+
+## bit search <query...>
+
+search for components by keyword in the local workspace and remote bit cloud
+
+runs the provided query terms in parallel against bit cloud and against the local workspace. multiple queries are unioned (deduplicated) in the output. by default, remote results are filtered by the owner extracted from the workspace's defaultScope; use --owners or --skip-auto-owner to change this.
+Flags: --owners <list>, --skip-auto-owner, --remote-only, --local-only, --json
 
 ## bit set-peer <component-id> <range>
 
