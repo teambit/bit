@@ -87,17 +87,25 @@ function __bitActivePreviewName() {
 
 let __bitInitialized = false;
 async function __bitMaybeInitialize(force = false, shouldNotify = false) {
-  const activePreview = __bitActivePreviewName();
-  if (activePreview !== ${JSON.stringify(prefix)}) return;
   if (__bitInitialized && !force) return;
   __bitInitialized = true;
+  // Always call initializeModules() so linkModules runs for every preview
+  // (e.g. 'compositions') — even ones that are not the URL's active preview.
+  // This is required because included previews (like 'overview'.include = ['compositions'])
+  // gate readiness on PREVIEW_MODULES containing every included preview name.
+  // Expensive source imports are still filtered per-component via __bitShouldSurfaceFor.
   await initializeModules();
   if (shouldNotify) {
-    window.dispatchEvent(
-      new CustomEvent('bit-preview-modules-updated', {
-        detail: { previewName: ${JSON.stringify(prefix)} },
-      })
-    );
+    // Only the active preview dispatches the update event so unrelated previews
+    // don't cause extra rerenders during HMR.
+    const activePreview = __bitActivePreviewName();
+    if (activePreview === ${JSON.stringify(prefix)}) {
+      window.dispatchEvent(
+        new CustomEvent('bit-preview-modules-updated', {
+          detail: { previewName: ${JSON.stringify(prefix)} },
+        })
+      );
+    }
   }
 }
 
