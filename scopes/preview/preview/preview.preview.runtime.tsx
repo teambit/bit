@@ -50,6 +50,7 @@ export class PreviewPreview {
   private rerenderOnPreviewModulesUpdated = debounce(() => {
     if (!this.isReady()) return;
     void this.render().catch((err) => {
+      // eslint-disable-next-line no-console
       console.error('[preview.preview] failed re-rendering after preview module update', err);
     });
   }, 30);
