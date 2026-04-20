@@ -558,6 +558,11 @@
         "",
         "use-root-modules",
         "EXPERIMENTAL. resolve component previews from root node_modules instead of .bit_roots. mainly for internal usage, use with caution only if you understand the implications"
+      ],
+      [
+        "",
+        "use-source",
+        "EXPERIMENTAL. resolve local workspace component previews from source files instead of .bit_roots or package artifacts. intended for debugging and HMR investigations"
       ]
     ],
     "description": "launch the Bit development server",
