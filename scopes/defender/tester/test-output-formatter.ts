@@ -103,11 +103,17 @@ function summarizeComponent(comp: {
 
 export function formatTestReport(
   summary: TestOutputSummary,
-  opts: { verbose: boolean; duration: string; summaryOnly?: boolean }
+  opts: { verbose: boolean; duration: string; summaryOnly?: boolean; failedDueToExitCode?: boolean }
 ): string {
   const { componentsWithTests, componentsWithoutTests, envErrors, totals } = summary;
   const failingComponents = componentsWithTests.filter((c) => c.failed > 0 || c.hasError).length;
-  const finalSummary = formatFinalSummary(totals, failingComponents, envErrors.length > 0, opts.duration);
+  const finalSummary = formatFinalSummary(
+    totals,
+    failingComponents,
+    envErrors.length > 0,
+    opts.duration,
+    opts.failedDueToExitCode ?? false
+  );
 
   if (opts.summaryOnly) return finalSummary;
 
@@ -159,7 +165,8 @@ function formatFinalSummary(
   totals: TestOutputSummary['totals'],
   failingComponents: number,
   hasEnvError: boolean,
-  duration: string
+  duration: string,
+  failedDueToExitCode: boolean
 ): string {
   const totalTests = totals.testsPassed + totals.testsFailed + totals.testsPending;
   const suffixParts: string[] = [];
@@ -175,6 +182,15 @@ function formatFinalSummary(
       totals.testsFailed > 0
         ? `${totals.testsFailed} tests failed across ${failingComponents} of ${totals.tested} components${pendingSuffix}${extraSuffix}`
         : `tester errors encountered (${attempted || totals.totalComponents} components targeted${extraSuffix})`;
+    return `${formatWarningSummary(headline)}\n${timing}`;
+  }
+
+  if (failedDueToExitCode) {
+    const passedPart =
+      totals.tested > 0
+        ? `${totals.testsPassed}/${totalTests || totals.testsPassed} tests passed across ${totals.tested} components${pendingSuffix}${extraSuffix}`
+        : `no test failures reported${extraSuffix}`;
+    const headline = `${passedPart}, but tester exited with a non-zero code (e.g. coverage threshold not met)`;
     return `${formatWarningSummary(headline)}\n${timing}`;
   }
 

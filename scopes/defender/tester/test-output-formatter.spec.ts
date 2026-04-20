@@ -170,6 +170,15 @@ describe('formatTestReport()', () => {
     expect(out).to.include('1 components targeted');
   });
 
+  it('downgrades to a warning when all tests pass but tester exited non-zero (e.g. coverage threshold)', () => {
+    const results = mkResults('teambit.react/react', [{ name: 'comp-a', files: [mkFile(5, 0)] }]);
+    const summary = aggregateTestResults(results, [mkComponent('comp-a')]);
+    const out = formatTestReport(summary, { verbose: false, duration: '1s', failedDueToExitCode: true });
+    expect(out).to.include('5/5 tests passed');
+    expect(out).to.include('non-zero code');
+    expect(out).to.not.include('tests failed across');
+  });
+
   it('includes pending tests in the headline when present', () => {
     const results = mkResults('teambit.react/react', [{ name: 'comp-a', files: [mkFile(3, 0, 2)] }]);
     const summary = aggregateTestResults(results, [mkComponent('comp-a')]);

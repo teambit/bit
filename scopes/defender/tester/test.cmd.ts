@@ -163,8 +163,9 @@ supports watch mode, coverage reporting, and debug mode for development workflow
 
     if (watch) return '';
     const summary = tests ? aggregateTestResults(tests, components) : undefined;
+    const failedDueToExitCode = code !== 0 && !!tests && !tests.hasErrors();
     const data = summary
-      ? `${summaryOnly ? '' : '\n'}${formatTestReport(summary, { verbose, duration: `${seconds}s`, summaryOnly })}`
+      ? `${summaryOnly ? '' : '\n'}${formatTestReport(summary, { verbose, duration: `${seconds}s`, summaryOnly, failedDueToExitCode })}`
       : formatHint(`tests completed in ${seconds} seconds`);
     return {
       code,
