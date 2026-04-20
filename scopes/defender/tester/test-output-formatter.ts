@@ -1,3 +1,4 @@
+import { sumBy } from 'lodash';
 import type { Component, ComponentID } from '@teambit/component';
 import {
   formatTitle,
@@ -63,21 +64,23 @@ export function aggregateTestResults(results: TestResults, allComponents: Compon
     }
   }
 
-  const componentsAffectedByEnvError = allComponents
-    .filter((c) => affectedByEnvErrorIds.has(c.id.toString()) && !testedIds.has(c.id.toString()))
-    .map((c) => c.id);
-  const componentsWithoutTests = allComponents
-    .filter((c) => !testedIds.has(c.id.toString()) && !affectedByEnvErrorIds.has(c.id.toString()))
-    .map((c) => c.id);
+  const componentsAffectedByEnvError: ComponentID[] = [];
+  const componentsWithoutTests: ComponentID[] = [];
+  for (const c of allComponents) {
+    const idStr = c.id.toString();
+    if (testedIds.has(idStr)) continue;
+    if (affectedByEnvErrorIds.has(idStr)) componentsAffectedByEnvError.push(c.id);
+    else componentsWithoutTests.push(c.id);
+  }
 
   const totals = {
     totalComponents: allComponents.length,
     tested: componentsWithTests.length,
     withoutTests: componentsWithoutTests.length,
     affectedByEnvError: componentsAffectedByEnvError.length,
-    testsPassed: sum(componentsWithTests, (c) => c.passed),
-    testsFailed: sum(componentsWithTests, (c) => c.failed),
-    testsPending: sum(componentsWithTests, (c) => c.pending),
+    testsPassed: sumBy(componentsWithTests, (c) => c.passed),
+    testsFailed: sumBy(componentsWithTests, (c) => c.failed),
+    testsPending: sumBy(componentsWithTests, (c) => c.pending),
   };
 
   return { componentsWithTests, componentsWithoutTests, componentsAffectedByEnvError, envErrors, totals };
@@ -90,9 +93,9 @@ function summarizeComponent(comp: {
 }): ComponentTestSummary | undefined {
   const testFiles = comp.results?.testFiles ?? [];
   if (!testFiles.length && !comp.errors?.length) return undefined;
-  const passed = sum(testFiles, (f) => f.pass || 0);
-  const failed = sum(testFiles, (f) => f.failed || 0);
-  const pending = sum(testFiles, (f) => f.pending || 0);
+  const passed = sumBy(testFiles, (f) => f.pass || 0);
+  const failed = sumBy(testFiles, (f) => f.failed || 0);
+  const pending = sumBy(testFiles, (f) => f.pending || 0);
   const hasError = Boolean(comp.errors?.length) || testFiles.some((f) => f.error);
   return { id: comp.componentId, passed, failed, pending, hasError };
 }
@@ -184,8 +187,4 @@ function formatFinalSummary(
 
   const headline = `${totals.testsPassed}/${totalTests || totals.testsPassed} tests passed across ${totals.tested} components${pendingSuffix}${extraSuffix}`;
   return `${formatSuccessSummary(headline)}\n${timing}`;
-}
-
-function sum<T>(items: T[], pick: (item: T) => number): number {
-  return items.reduce((acc, item) => acc + pick(item), 0);
 }
