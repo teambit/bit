@@ -6,128 +6,72 @@
   height: 100%;
 }
 
-.tab {
-  color: var(--on-background-color);
-
-  > div:first-child {
-    border: none;
-    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
-
-    &:hover {
-      background: var(--surface-hover-color, #f6f6f6);
-    }
-  }
-
-  > div:last-child {
-    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
-  }
+// ─── Compositions list ──────────────────────────────────────────────────
+.compositionsList {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 4px 0;
 }
 
-.linkWrapper {
-  padding: 0 12px;
+.compositionItem {
+  padding: 0 6px;
+  margin: 1px 6px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 40px;
-  font-size: var(--bit-p-xs);
-  transition: all 300ms ease-in-out;
-  color: var(--on-background-color);
+  height: 34px;
+  border-radius: 6px;
+  font-size: 13px;
+  transition: all 140ms ease;
+  color: var(--on-background-color, #1c2024);
   position: relative;
 
   &:hover {
-    background-color: var(--border-medium-color, #ededed);
-    // border-radius: 8px;
-    transition: background-color 300ms ease-in-out;
+    background: var(--surface-hover-color, rgba(0, 0, 0, 0.04));
 
     .panelLink {
       padding-right: 40px;
     }
 
-    .right {
+    .itemActions {
       visibility: visible;
       opacity: 1;
-      color: var(--bit-text-color-light, #6c707c);
-      transition: opacity 100ms ease-in-out;
-
-      .icon {
-        &:hover {
-          color: var(--bit-text-color-heavy);
-        }
-      }
     }
   }
 
   &.active {
-    display: flex;
-    align-items: center;
-    background-color: var(--bit-accent-color, #6c5ce7);
-    color: var(--bit-bg-color, #ffffff);
+    background: var(--bit-accent-color, #6c5ce7);
+    color: #ffffff;
+    font-weight: 500;
 
-    // overrides
     &:hover {
-      background-color: #5d4aec;
+      background: color-mix(in srgb, var(--bit-accent-color, #6c5ce7) 88%, #000);
     }
 
-    .box {
-      background-color: var(--bit-bg-color, #ffffff);
-    }
-
-    .right {
-      // visibility: unset;
+    .itemActions {
       opacity: 1;
-      color: var(--bit-accent-bg, #eceaff);
+      visibility: visible;
+      color: rgba(255, 255, 255, 0.7);
 
-      .icon {
-        &:hover {
-          color: var(--bit-bg-color, #ffffff);
-        }
+      .actionIcon:hover {
+        color: #ffffff;
       }
     }
-  }
 
-  .right {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    visibility: hidden;
-    font-size: 13px;
-    transition:
-      opacity 100ms ease-in-out,
-      visibility 0s linear 100ms;
-  }
-
-  .codeLink {
-    cursor: pointer;
+    .compositionDot {
+      background: rgba(255, 255, 255, 0.5);
+    }
   }
 }
 
-.box {
-  width: 10px;
-  height: 10px;
+.compositionDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--bit-accent-color, #6c5ce7);
+  opacity: 0.4;
   flex-shrink: 0;
-  background-color: var(--bit-text-color-heavy);
-  margin-right: 11px;
-  border-radius: 1px;
-}
-
-.name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   margin-right: 8px;
-}
-
-.iconLink {
-  display: flex;
-  align-items: center;
-  color: inherit;
-  text-decoration: none;
 }
 
 .panelLink {
@@ -140,51 +84,59 @@
   text-decoration: none;
   color: inherit;
   min-width: 0;
-  transition: padding-right 200ms ease-in-out;
+  transition: padding-right 140ms ease;
 
   &:active {
     color: inherit;
   }
 }
 
-.noLiveControls {
-  padding: 12px;
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.tabs {
+.itemActions {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 100ms ease;
+}
+
+.actionIcon {
   display: flex;
   align-items: center;
-  margin-bottom: 17px;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  color: var(--bit-text-color-light, #8b8d98);
+  cursor: pointer;
+  transition: all 100ms ease;
+  text-decoration: none;
+  font-size: 12px;
 
-  > div {
-    position: relative;
-    padding: 8px;
-    text-transform: uppercase;
-    font-size: 12px;
-    font-weight: bold;
-
-    &:not(:first-child) {
-      color: #878c9a;
-    }
-
-    &:first-child {
-      &:before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        background-color: var(--bit-accent-color, #6c5ce7);
-        height: 3px;
-        border-radius: 10px;
-        transition:
-          background-color 300ms,
-          height 300ms;
-      }
-    }
+  &:hover {
+    color: var(--bit-text-color-heavy, #1c2024);
+    background: rgba(0, 0, 0, 0.06);
   }
 }
 
+.iconLink {
+  display: flex;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+// ─── Legacy compat ──────────────────────────────────────────────────────
 .liveControlsSkeleton {
   padding: 12px 16px;
   display: flex;
