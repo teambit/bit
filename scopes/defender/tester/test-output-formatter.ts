@@ -7,6 +7,7 @@ import {
   formatSuccessSummary,
   formatWarningSummary,
   joinSections,
+  successSymbol,
   errorSymbol,
   warnSymbol,
 } from '@teambit/cli';
@@ -146,7 +147,7 @@ function formatComponentLine(c: ComponentTestSummary): string {
 
   if (c.failed > 0) return formatItem(text, errorSymbol);
   if (c.hasError) return formatItem(`${text} (tester reported errors)`, warnSymbol);
-  return formatItem(text);
+  return formatItem(text, successSymbol());
 }
 
 function formatNoTestsSection(ids: ComponentID[], verbose: boolean): string {
@@ -178,10 +179,17 @@ function formatFinalSummary(
 
   if (hasEnvError || totals.testsFailed > 0 || failingComponents > 0) {
     const attempted = totals.tested + totals.affectedByEnvError;
-    const headline =
-      totals.testsFailed > 0
-        ? `${totals.testsFailed} tests failed across ${failingComponents} of ${totals.tested} components${pendingSuffix}${extraSuffix}`
-        : `tester errors encountered (${attempted || totals.totalComponents} components targeted${extraSuffix})`;
+    const totalTestsForWarning = totals.testsPassed + totals.testsFailed + totals.testsPending;
+    let headline: string;
+    if (totals.testsFailed > 0) {
+      headline = `${totals.testsFailed} tests failed across ${failingComponents} of ${totals.tested} components${pendingSuffix}${extraSuffix}`;
+    } else if (totals.testsPassed > 0) {
+      // tests passed but some components had tester-level errors — surface both
+      const passedComponents = totals.tested - failingComponents;
+      headline = `${totals.testsPassed}/${totalTestsForWarning || totals.testsPassed} tests passed across ${passedComponents} components, but ${failingComponents} components had tester errors${pendingSuffix}${extraSuffix}`;
+    } else {
+      headline = `tester errors encountered (${attempted || totals.totalComponents} components targeted${extraSuffix})`;
+    }
     return `${formatWarningSummary(headline)}\n${timing}`;
   }
 

@@ -170,6 +170,24 @@ describe('formatTestReport()', () => {
     expect(out).to.include('1 components targeted');
   });
 
+  it('surfaces passed counts alongside tester errors when no tests failed', () => {
+    const err = new Error('parse error');
+    const results = mkResults('teambit.react/react', [
+      { name: 'comp-a', files: [mkFile(10, 0)] },
+      { name: 'comp-b', files: [mkFile(5, 0)] },
+      { name: 'comp-c', files: [mkFile(0, 0, 0, err)] },
+    ]);
+    const summary = aggregateTestResults(results, [
+      mkComponent('comp-a'),
+      mkComponent('comp-b'),
+      mkComponent('comp-c'),
+    ]);
+    const out = formatTestReport(summary, { verbose: false, duration: '1s' });
+    expect(out).to.include('15/15 tests passed across 2 components');
+    expect(out).to.include('1 components had tester errors');
+    expect(out).to.not.include('tester errors encountered (');
+  });
+
   it('downgrades to a warning when all tests pass but tester exited non-zero (e.g. coverage threshold)', () => {
     const results = mkResults('teambit.react/react', [{ name: 'comp-a', files: [mkFile(5, 0)] }]);
     const summary = aggregateTestResults(results, [mkComponent('comp-a')]);
