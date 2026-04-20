@@ -92,6 +92,7 @@ export class ComponentWriterMain {
    * dep install, compile. Runs once per import, not per batch.
    */
   async finalizeWrite(opts: ManyComponentsWriterParams): Promise<ComponentWriterResults> {
+    if (!opts.components.length) return {};
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
     let workspaceConfigUpdateResult: WorkspaceConfigUpdateResult | undefined;

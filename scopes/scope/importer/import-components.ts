@@ -254,12 +254,11 @@ export default class ImportComponents {
         }
         anyImported = true;
 
-        // Capture lightweight info before `versionDeps` is discarded.
+        // Lightweight per-scope info that doesn't depend on merge status.
         for (const v of versionDeps) {
           accImportedIds.push(v.component.id);
           accImportedDeps.push(...v.allDependenciesIds);
         }
-        accImportDetails.push(...(await this._getImportDetails(beforeVersions, versionDeps)));
         const importedIdStrs = new Set(versionDeps.map((v) => v.component.id.toStringWithoutVersion()));
         for (const compIdStr of Object.keys(beforeVersions)) {
           if (!importedIdStrs.has(compIdStr)) accMissingIds.push(compIdStr);
@@ -277,9 +276,13 @@ export default class ImportComponents {
           if (filtered.length) {
             const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(filtered);
             await this.componentWriter.writeComponentsFiles(this._buildScopeWriteOpts(componentsToWrite));
-            accWritten.push(...filtered);
+            accWritten.push(...componentsToWrite);
           }
         }
+
+        // Collect import details after merge-strategy processing so `this.mergeStatus`
+        // is populated before `_getImportDetails` reads it for `filesStatus`.
+        accImportDetails.push(...(await this._getImportDetails(beforeVersions, versionDeps)));
 
         this.logger.consoleSuccess(`imported ${scopeName} (${ids.length} components)`);
       } catch (err: any) {
@@ -304,7 +307,7 @@ export default class ImportComponents {
     }
 
     let componentWriterResults: ComponentWriterResults | undefined;
-    if (!this.options.objectsOnly) {
+    if (!this.options.objectsOnly && accWritten.length) {
       componentWriterResults = await this.componentWriter.finalizeWrite(
         this._buildScopeWriteOpts(accWritten, { shouldUpdateWorkspaceConfig: true })
       );
