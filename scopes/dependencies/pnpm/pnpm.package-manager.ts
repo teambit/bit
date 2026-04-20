@@ -106,7 +106,7 @@ export class PnpmPackageManager implements PackageManager {
       : graphLockfile;
     Object.assign(mergedLockfile, {
       bit: {
-        ...((mergedLockfile as LockfileFile & { bit?: Record<string, unknown> }).bit ?? {}),
+        ...(mergedLockfile as LockfileFile & { bit?: Record<string, unknown> }).bit,
         restoredFromModel: true,
       },
     });
@@ -518,7 +518,7 @@ function tryReadPackageJson(pkgDir: string) {
 // graph's root edge — so per-importer overlay (instead of overwrite) is what keeps
 // unrelated workspace importers intact.
 function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: LockfileFile): LockfileFile {
-  const importers: NonNullable<LockfileFile['importers']> = { ...(existing.importers ?? {}) };
+  const importers: NonNullable<LockfileFile['importers']> = { ...existing.importers };
   for (const [importerId, graphImporter] of Object.entries(graph.importers ?? {})) {
     const existingImporter = importers[importerId];
     if (!existingImporter) {
@@ -527,11 +527,11 @@ function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: LockfileF
     }
     importers[importerId] = {
       ...existingImporter,
-      dependencies: { ...(existingImporter.dependencies ?? {}), ...(graphImporter.dependencies ?? {}) },
-      devDependencies: { ...(existingImporter.devDependencies ?? {}), ...(graphImporter.devDependencies ?? {}) },
+      dependencies: { ...existingImporter.dependencies, ...graphImporter.dependencies },
+      devDependencies: { ...existingImporter.devDependencies, ...graphImporter.devDependencies },
       optionalDependencies: {
-        ...(existingImporter.optionalDependencies ?? {}),
-        ...(graphImporter.optionalDependencies ?? {}),
+        ...existingImporter.optionalDependencies,
+        ...graphImporter.optionalDependencies,
       },
     };
   }
@@ -539,7 +539,7 @@ function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: LockfileF
     ...existing,
     lockfileVersion: graph.lockfileVersion ?? existing.lockfileVersion,
     importers,
-    packages: { ...(existing.packages ?? {}), ...(graph.packages ?? {}) },
-    snapshots: { ...(existing.snapshots ?? {}), ...(graph.snapshots ?? {}) },
+    packages: { ...existing.packages, ...graph.packages },
+    snapshots: { ...existing.snapshots, ...graph.snapshots },
   };
 }
