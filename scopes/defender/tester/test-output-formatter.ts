@@ -110,10 +110,12 @@ export function formatTestReport(
   opts: { verbose: boolean; duration: string; summaryOnly?: boolean; failedDueToExitCode?: boolean }
 ): string {
   const { componentsWithTests, componentsWithoutTests, envErrors, totals } = summary;
-  const failingComponents = componentsWithTests.filter((c) => c.failed > 0 || c.hasError).length;
+  const componentsWithFailedTests = componentsWithTests.filter((c) => c.failed > 0).length;
+  const componentsWithOnlyTesterErrors = componentsWithTests.filter((c) => c.failed === 0 && c.hasError).length;
   const finalSummary = formatFinalSummary(
     totals,
-    failingComponents,
+    componentsWithFailedTests,
+    componentsWithOnlyTesterErrors,
     envErrors.length > 0,
     opts.duration,
     opts.failedDueToExitCode ?? false
@@ -167,7 +169,8 @@ function formatNoTestsSection(ids: ComponentID[], verbose: boolean): string {
 
 function formatFinalSummary(
   totals: TestOutputSummary['totals'],
-  failingComponents: number,
+  componentsWithFailedTests: number,
+  componentsWithOnlyTesterErrors: number,
   hasEnvError: boolean,
   duration: string,
   failedDueToExitCode: boolean
@@ -179,17 +182,19 @@ function formatFinalSummary(
   const extraSuffix = suffixParts.length ? `, ${suffixParts.join(', ')}` : '';
   const pendingSuffix = totals.testsPending > 0 ? `, ${totals.testsPending} pending` : '';
   const timing = formatHint(`Finished. (${duration})`);
+  const anyFailing = componentsWithFailedTests + componentsWithOnlyTesterErrors;
 
-  if (hasEnvError || totals.testsFailed > 0 || failingComponents > 0) {
+  if (hasEnvError || totals.testsFailed > 0 || anyFailing > 0) {
     const attempted = totals.tested + totals.affectedByEnvError;
-    const totalTestsForWarning = totals.testsPassed + totals.testsFailed + totals.testsPending;
     let headline: string;
     if (totals.testsFailed > 0) {
-      headline = `${totals.testsFailed} tests failed across ${failingComponents} of ${totals.tested} components${pendingSuffix}${extraSuffix}`;
+      const testerErrorSuffix =
+        componentsWithOnlyTesterErrors > 0 ? ` (+${componentsWithOnlyTesterErrors} components had tester errors)` : '';
+      headline = `${totals.testsFailed} tests failed across ${componentsWithFailedTests} of ${totals.tested} components${testerErrorSuffix}${pendingSuffix}${extraSuffix}`;
     } else if (totals.testsPassed > 0) {
       // tests passed but some components had tester-level errors — surface both
-      const passedComponents = totals.tested - failingComponents;
-      headline = `${totals.testsPassed}/${totalTestsForWarning || totals.testsPassed} tests passed across ${passedComponents} components, but ${failingComponents} components had tester errors${pendingSuffix}${extraSuffix}`;
+      const passedComponents = totals.tested - componentsWithOnlyTesterErrors;
+      headline = `${totals.testsPassed}/${totalTests || totals.testsPassed} tests passed across ${passedComponents} components, but ${componentsWithOnlyTesterErrors} components had tester errors${pendingSuffix}${extraSuffix}`;
     } else {
       headline = `tester errors encountered (${attempted || totals.totalComponents} components targeted${extraSuffix})`;
     }

@@ -170,6 +170,23 @@ describe('formatTestReport()', () => {
     expect(out).to.include('1 components targeted');
   });
 
+  it('separates failed-tests component count from tester-error component count in failure headline', () => {
+    const err = new Error('parse error');
+    const results = mkResults('teambit.react/react', [
+      { name: 'comp-a', files: [mkFile(2, 3)] },
+      { name: 'comp-b', files: [mkFile(5, 0)] },
+      { name: 'comp-c', files: [mkFile(0, 0, 0, err)] },
+    ]);
+    const summary = aggregateTestResults(results, [
+      mkComponent('comp-a'),
+      mkComponent('comp-b'),
+      mkComponent('comp-c'),
+    ]);
+    const out = formatTestReport(summary, { verbose: false, duration: '1s' });
+    expect(out).to.include('3 tests failed across 1 of 3 components');
+    expect(out).to.include('(+1 components had tester errors)');
+  });
+
   it('surfaces passed counts alongside tester errors when no tests failed', () => {
     const err = new Error('parse error');
     const results = mkResults('teambit.react/react', [

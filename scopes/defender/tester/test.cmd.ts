@@ -152,6 +152,7 @@ supports watch mode, coverage reporting, and debug mode for development workflow
         });
       } finally {
         restore?.();
+        if (summaryOnly) this.logger.on();
       }
       if (tests.hasErrors()) code = 1;
       if (process.exitCode && process.exitCode !== 0 && typeof process.exitCode === 'number') {
@@ -213,6 +214,9 @@ supports watch mode, coverage reporting, and debug mode for development workflow
     }
 
     let code = 0;
+    // also disable the logger: testers like Jest reassign `console.warn` to `this.logger.warn`,
+    // which bypasses the stdout/console silencer and can corrupt machine-readable JSON output.
+    this.logger.off();
     const restore = silenceConsoleAndStdout();
     let tests: TestResults;
     try {
@@ -224,11 +228,10 @@ supports watch mode, coverage reporting, and debug mode for development workflow
         coverage,
         updateSnapshot,
       });
-    } catch (err) {
+    } finally {
       restore();
-      throw err;
+      this.logger.on();
     }
-    restore();
     if (tests.hasErrors()) code = 1;
     if (process.exitCode && process.exitCode !== 0 && typeof process.exitCode === 'number') {
       // this is needed for testers such as "vitest", where it sets the exitCode to non zero when the coverage is not met.
