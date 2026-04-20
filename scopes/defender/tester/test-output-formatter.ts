@@ -58,9 +58,10 @@ export function aggregateTestResults(results: TestResults, allComponents: Compon
     const tests = envResult.data;
     if (!tests) continue;
     for (const comp of tests.components) {
-      testedIds.add(comp.componentId.toString());
       const summary = summarizeComponent(comp);
-      if (summary) componentsWithTests.push(summary);
+      if (!summary) continue;
+      testedIds.add(comp.componentId.toString());
+      componentsWithTests.push(summary);
     }
   }
 

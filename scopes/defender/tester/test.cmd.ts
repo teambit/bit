@@ -137,6 +137,9 @@ supports watch mode, coverage reporting, and debug mode for development workflow
         updateSnapshot,
       });
     } else {
+      // testers such as Jest reassign `console.warn` to forward into `this.logger.warn` inside their `test()`,
+      // bypassing our stdout/console monkey-patch. also turn the logger off so those re-routed calls don't surface.
+      if (summaryOnly) this.logger.off();
       const restore = summaryOnly ? silenceConsoleAndStdout() : undefined;
       try {
         tests = await this.tester.test(components, {
@@ -161,7 +164,7 @@ supports watch mode, coverage reporting, and debug mode for development workflow
     if (watch) return '';
     const summary = tests ? aggregateTestResults(tests, components) : undefined;
     const data = summary
-      ? `\n${formatTestReport(summary, { verbose, duration: `${seconds}s`, summaryOnly })}`
+      ? `${summaryOnly ? '' : '\n'}${formatTestReport(summary, { verbose, duration: `${seconds}s`, summaryOnly })}`
       : formatHint(`tests completed in ${seconds} seconds`);
     return {
       code,
