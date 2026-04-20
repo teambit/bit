@@ -48,20 +48,23 @@ export function aggregateTestResults(results: TestResults, allComponents: Compon
   const envErrors: EnvTestError[] = [];
   const testedIds = new Set<string>();
   const affectedByEnvErrorIds = new Set<string>();
+  // normalize on both sides so a version-mismatch between the tester's ComponentsResults and the
+  // workspace `allComponents` list can't leak a tested component into `componentsWithoutTests`.
+  const idKey = (id: ComponentID) => id.toString({ ignoreVersion: true });
 
   for (const envResult of results.results) {
     const envId = envResult.env?.id;
     const envComponents: Component[] = envResult.env?.components ?? [];
     if (envResult.error) {
       envErrors.push({ envId, error: envResult.error });
-      envComponents.forEach((c) => affectedByEnvErrorIds.add(c.id.toString()));
+      envComponents.forEach((c) => affectedByEnvErrorIds.add(idKey(c.id)));
     }
     const tests = envResult.data;
     if (!tests) continue;
     for (const comp of tests.components) {
       const summary = summarizeComponent(comp);
       if (!summary) continue;
-      testedIds.add(comp.componentId.toString());
+      testedIds.add(idKey(comp.componentId));
       componentsWithTests.push(summary);
     }
   }
@@ -69,9 +72,9 @@ export function aggregateTestResults(results: TestResults, allComponents: Compon
   const componentsAffectedByEnvError: ComponentID[] = [];
   const componentsWithoutTests: ComponentID[] = [];
   for (const c of allComponents) {
-    const idStr = c.id.toString();
-    if (testedIds.has(idStr)) continue;
-    if (affectedByEnvErrorIds.has(idStr)) componentsAffectedByEnvError.push(c.id);
+    const key = idKey(c.id);
+    if (testedIds.has(key)) continue;
+    if (affectedByEnvErrorIds.has(key)) componentsAffectedByEnvError.push(c.id);
     else componentsWithoutTests.push(c.id);
   }
 
