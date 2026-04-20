@@ -11,9 +11,31 @@
 // @remove-on-eject-end
 'use strict';
 
-const { dismissRuntimeErrors, reportRuntimeError } = require('react-error-overlay');
+const {
+  dismissBuildError,
+  dismissRuntimeErrors,
+  reportBuildError,
+  reportRuntimeError,
+  setEditorHandler,
+} = require('react-error-overlay');
+const launchEditorEndpoint = require('./launchEditorEndpoint');
+
+setEditorHandler(function editorHandler(errorLocation) {
+  // Keep this in sync with the error overlay middleware endpoint.
+  fetch(
+    launchEditorEndpoint +
+      '?fileName=' +
+      window.encodeURIComponent(errorLocation.fileName) +
+      '&lineNumber=' +
+      window.encodeURIComponent(errorLocation.lineNumber || 1) +
+      '&colNumber=' +
+      window.encodeURIComponent(errorLocation.colNumber || 1)
+  );
+});
 
 module.exports = {
+  clearCompileError: dismissBuildError,
   clearRuntimeErrors: dismissRuntimeErrors,
+  showCompileError: reportBuildError,
   handleRuntimeError: reportRuntimeError,
 };
