@@ -69,10 +69,30 @@ export class ComponentWriterMain {
   async writeMany(opts: ManyComponentsWriterParams): Promise<ComponentWriterResults> {
     if (!opts.components.length) return {};
     this.logger.debug('writeMany, started');
+    await this.writeComponentsFiles(opts);
+    const results = await this.finalizeWrite(opts);
+    this.logger.debug('writeMany, completed!');
+    return results;
+  }
+
+  /**
+   * Per-batch half of {@link writeMany}: populate, persist, and update .bitmap.
+   * Callers batching very large imports call this per chunk, then {@link finalizeWrite} once.
+   */
+  async writeComponentsFiles(opts: ManyComponentsWriterParams): Promise<void> {
+    if (!opts.components.length) return;
     await this.populateComponentsFilesToWrite(opts);
     this.moveComponentsIfNeeded(opts);
     await this.persistComponentsData(opts);
     if (!opts.skipUpdatingBitMap) await this.consumer.writeBitMap(opts.reasonForBitmapChange);
+  }
+
+  /**
+   * Workspace-wide finalization pair to {@link writeComponentsFiles}: workspace.jsonc update,
+   * dep install, compile. Runs once per import, not per batch.
+   */
+  async finalizeWrite(opts: ManyComponentsWriterParams): Promise<ComponentWriterResults> {
+    if (!opts.components.length) return {};
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
     let workspaceConfigUpdateResult: WorkspaceConfigUpdateResult | undefined;
@@ -95,7 +115,6 @@ export class ComponentWriterMain {
       // no point to compile if the installation is not running. the environment is not ready.
       compilationError = await this.compileGracefully();
     }
-    this.logger.debug('writeMany, completed!');
     return { installationError, compilationError, workspaceConfigUpdateResult };
   }
 
