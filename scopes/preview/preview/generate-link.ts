@@ -1,5 +1,5 @@
 import type { ComponentMap } from '@teambit/component';
-import { join } from 'path';
+import { join, relative } from 'path';
 import { outputFileSync } from 'fs-extra';
 import normalizePath from 'normalize-path';
 import objectHash from 'object-hash';
@@ -40,7 +40,9 @@ export function generateLink(
   componentMap: ComponentMap<string[]>,
   mainModulesMap?: MainModulesMap,
   isSplitComponentBundle = false,
-  tempPackageDir?: string
+  tempPackageDir?: string,
+  workspacePath?: string,
+  useSource = false
 ): string {
   const componentLinks: ComponentLink[] = componentMap.toArray().map(([component, modulePath], compIdx) => ({
     componentIdString: component.id.toStringWithoutVersion(),
@@ -58,9 +60,90 @@ export function generateLink(
     const varName = getEnvVarName(envId);
     return { envId, varName, resolveFrom };
   });
+  const moduleImports = getModuleImports(moduleLinks, tempPackageDir);
+  const acceptedDependencies = useSource
+    ? Array.from(
+        new Set([
+          ...componentLinks.flatMap((link) =>
+            link.modules.map((module) => toWebpackRequestId(module.resolveFrom, workspacePath))
+          ),
+          ...(moduleImports.tempFilePath ? [toWebpackRequestId(moduleImports.tempFilePath, workspacePath)] : []),
+        ])
+      )
+    : [];
 
-  const contents = `
-import { linkModules } from '${normalizePath(join(previewDistDir, 'preview-modules.js'))}';
+  const sourceModeBootstrap = `
+function __bitActivePreviewName() {
+  try {
+    const { hash } = window.location;
+    if (!hash) return null;
+    const [, query = ""] = hash.slice(1).split("?");
+    const params = new URLSearchParams(query);
+    return params.get("preview");
+  } catch {
+    return null;
+  }
+}
+
+let __bitInitialized = false;
+async function __bitMaybeInitialize(force = false, shouldNotify = false) {
+  if (__bitInitialized && !force) return;
+  __bitInitialized = true;
+  // Always call initializeModules() so linkModules runs for every preview
+  // (e.g. 'compositions') — even ones that are not the URL's active preview.
+  // This is required because included previews (like 'overview'.include = ['compositions'])
+  // gate readiness on PREVIEW_MODULES containing every included preview name.
+  // Expensive source imports are still filtered per-component via __bitShouldSurfaceFor.
+  await initializeModules();
+  if (shouldNotify) {
+    // Only the active preview dispatches the update event so unrelated previews
+    // don't cause extra rerenders during HMR.
+    const activePreview = __bitActivePreviewName();
+    if (activePreview === ${JSON.stringify(prefix)}) {
+      window.dispatchEvent(
+        new CustomEvent('bit-preview-modules-updated', {
+          detail: { previewName: ${JSON.stringify(prefix)} },
+        })
+      );
+    }
+  }
+}
+
+const __bitHot =
+  import.meta.webpackHot
+  || (typeof module !== 'undefined' && module.hot)
+  || undefined;
+
+if (__bitHot) {
+  __bitHot.accept(${JSON.stringify(acceptedDependencies)}, () => {
+    __bitInitialized = false;
+    void __bitMaybeInitialize(true, true);
+  });
+  __bitHot.dispose(() => {
+    __bitInitialized = false;
+  });
+}
+
+// Defer source-mode initialization until after webpack marks the current entry
+// chunk as loaded. Otherwise modules placed in the current entry chunk can be
+// resolved as a missing async chunk while the entry is still evaluating.
+queueMicrotask(() => {
+  void __bitMaybeInitialize();
+});
+window.addEventListener('hashchange', () => {
+  void __bitMaybeInitialize();
+});
+`;
+
+  const runtimeBootstrap = useSource
+    ? sourceModeBootstrap
+    : `
+(async function initializeModulesOnLoad() {
+  await initializeModules();
+})();
+`;
+
+  const contents = `import { linkModules } from '${normalizePath(join(previewDistDir, 'preview-modules.js'))}';
 
 // strip leading/trailing slashes from any id we compare
 function __bitNormalizeId(id) {
@@ -105,10 +188,9 @@ function __bitSurfaceToOverlay(err, componentId) {
   }, 0);
 }
 
-${getModuleImports(moduleLinks, tempPackageDir)}
-(async function initializeModules() {
+${moduleImports.statement}
+async function initializeModules() {
 ${getComponentImports(componentLinks)}
-
 linkModules('${prefix}', {
   modulesMap: {
     ${moduleLinks.map((m) => `"${m.envId}": ${m.varName}`).join(',\n    ')}
@@ -120,7 +202,8 @@ ${componentLinks
   .join(',\n')}
   }
 });
-})();
+}
+${runtimeBootstrap}
 `;
   return contents;
 }
@@ -135,7 +218,28 @@ function getEnvVarName(envId: string) {
   return varName;
 }
 
-function getModuleImports(moduleLinks: ModuleLink[] = [], tempPackageDir?: string): string {
+function toWebpackRequestId(filePath: string, workspacePath?: string): string {
+  if (!workspacePath) return filePath;
+  const normalizedWorkspacePath = normalizePath(workspacePath);
+  const normalizedFilePath = normalizePath(filePath);
+  if (normalizedFilePath === normalizedWorkspacePath) return '.';
+  if (
+    normalizedFilePath.startsWith(`${normalizedWorkspacePath}/`) ||
+    normalizedFilePath.startsWith(`${normalizedWorkspacePath}\\`)
+  ) {
+    const relPath = normalizePath(relative(workspacePath, filePath));
+    return relPath.startsWith('.') ? relPath : `./${relPath}`;
+  }
+  return filePath;
+}
+
+function getModuleImports(
+  moduleLinks: ModuleLink[] = [],
+  tempPackageDir?: string
+): {
+  statement: string;
+  tempFilePath?: string;
+} {
   const hash = objectHash(moduleLinks);
   const tempFileName = `preview-modules-${hash}.mjs`;
   const tempFilePath = toWindowsCompatiblePath(join(tempPackageDir || previewDistDir, tempFileName));
@@ -143,9 +247,12 @@ function getModuleImports(moduleLinks: ModuleLink[] = [], tempPackageDir?: strin
     .map((module) => `export * as ${module.varName} from "${module.resolveFrom}";`)
     .join('\n');
   outputFileSync(tempFilePath, tempFileContents);
-  return `import {${moduleLinks.map((moduleLink) => moduleLink.varName).join(', ')}} from "${normalizePath(
-    tempFilePath
-  )}";`;
+  return {
+    statement: `import {${moduleLinks.map((moduleLink) => moduleLink.varName).join(', ')}} from "${normalizePath(
+      tempFilePath
+    )}";`,
+    tempFilePath: normalizePath(tempFilePath),
+  };
 }
 
 function getComponentImports(componentLinks: ComponentLink[] = []): string {
@@ -159,7 +266,6 @@ function getComponentImports(componentLinks: ComponentLink[] = []): string {
               ${module.varName} = await import("${module.resolveFrom}");
             } 
             catch (err) {
-              const msg = (err && err.message) ? err.message : String(err);
               __bitSurfaceToOverlay(err, "${link.componentIdString}");
               ${module.varName} = { 
                 default: function ErrorFallback() { return null; },

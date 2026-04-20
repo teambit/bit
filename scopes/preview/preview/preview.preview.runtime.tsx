@@ -47,6 +47,14 @@ export class PreviewPreview {
     this.registerClickPubSub();
   }
 
+  private rerenderOnPreviewModulesUpdated = debounce(() => {
+    if (!this.isReady()) return;
+    void this.render().catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error('[preview.preview] failed re-rendering after preview module update', err);
+    });
+  }, 30);
+
   private registerClickPubSub() {
     window.addEventListener('click', (e) => {
       const timestamp = Date.now();
@@ -397,6 +405,10 @@ export class PreviewPreview {
     [previewSlot, renderingContextSlot]: [PreviewSlot, RenderingContextSlot]
   ) {
     const preview = new PreviewPreview(pubsub, previewSlot, renderingContextSlot);
+
+    window.addEventListener('bit-preview-modules-updated', () => {
+      preview.rerenderOnPreviewModulesUpdated();
+    });
 
     window.addEventListener('hashchange', () => {
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
