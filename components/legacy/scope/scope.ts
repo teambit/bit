@@ -40,9 +40,8 @@ import type {
   ComponentItem,
   ObjectItem,
   ObjectList,
-  DependenciesGraph,
 } from '@teambit/objects';
-import { ModelComponent, Symlink, BitObject, Ref, Repository, IndexType } from '@teambit/objects';
+import { DependenciesGraph, ModelComponent, Symlink, BitObject, Ref, Repository, IndexType } from '@teambit/objects';
 import type { RemovedObjects } from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
@@ -750,7 +749,9 @@ once done, to continue working, please run "bit cc"`
         const graph = await this.getDependenciesGraphByComponentId(componentId);
         if (graph == null || graph.isEmpty()) return;
         if (allGraph == null) {
-          allGraph = graph;
+          // loadDependenciesGraph caches the graph on the Version object; merging into
+          // it in place would mutate the cached instance and corrupt subsequent callers.
+          allGraph = DependenciesGraph.deserialize(graph.serialize());
         } else {
           allGraph.merge(graph);
         }

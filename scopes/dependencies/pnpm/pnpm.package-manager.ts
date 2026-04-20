@@ -91,17 +91,27 @@ export class PnpmPackageManager implements PackageManager {
       ...opts,
       registries,
     });
-    const lockfile: LockfileFile = await convertGraphToLockfile(dependenciesGraph, {
+    const graphLockfile: LockfileFile = await convertGraphToLockfile(dependenciesGraph, {
       ...opts,
       resolve,
     });
-    Object.assign(lockfile, {
+    // Merge the graph-derived subset into any existing wanted lockfile rather than
+    // overwriting. Only the importers, packages, and snapshots referenced by the
+    // imported components' subgraph are re-stated here; every other workspace dep's
+    // locked version must be preserved so pnpm doesn't re-resolve it to a newer
+    // registry version.
+    const existingLockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: true });
+    const mergedLockfile = existingLockfile
+      ? mergeGraphLockfileIntoExisting(convertLockfileObjectToLockfileFile(existingLockfile), graphLockfile)
+      : graphLockfile;
+    Object.assign(mergedLockfile, {
       bit: {
+        ...((mergedLockfile as LockfileFile & { bit?: Record<string, unknown> }).bit ?? {}),
         restoredFromModel: true,
       },
     });
     const lockfilePath = join(opts.rootDir, 'pnpm-lock.yaml');
-    await writeLockfileFile(lockfilePath, lockfile);
+    await writeLockfileFile(lockfilePath, mergedLockfile);
     this.logger.debug(`generated a lockfile from dependencies graph at ${lockfilePath}`);
     if (process.env.DEPS_GRAPH_LOG) {
       // eslint-disable-next-line no-console
@@ -498,4 +508,38 @@ function tryReadPackageJson(pkgDir: string) {
   } catch {
     return undefined;
   }
+}
+
+// Merge a graph-derived lockfile into an existing wanted lockfile. The graph lockfile is
+// authoritative for keys it contains (a re-imported component can change the resolution
+// of its own deps), but must not erase packages, snapshots, or importer entries that are
+// only known to the existing lockfile. convertGraphToLockfile emits importer entries for
+// every workspace project, but only populates deps for manifests whose keys appear in the
+// graph's root edge — so per-importer overlay (instead of overwrite) is what keeps
+// unrelated workspace importers intact.
+function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: LockfileFile): LockfileFile {
+  const importers: NonNullable<LockfileFile['importers']> = { ...(existing.importers ?? {}) };
+  for (const [importerId, graphImporter] of Object.entries(graph.importers ?? {})) {
+    const existingImporter = importers[importerId];
+    if (!existingImporter) {
+      importers[importerId] = graphImporter;
+      continue;
+    }
+    importers[importerId] = {
+      ...existingImporter,
+      dependencies: { ...(existingImporter.dependencies ?? {}), ...(graphImporter.dependencies ?? {}) },
+      devDependencies: { ...(existingImporter.devDependencies ?? {}), ...(graphImporter.devDependencies ?? {}) },
+      optionalDependencies: {
+        ...(existingImporter.optionalDependencies ?? {}),
+        ...(graphImporter.optionalDependencies ?? {}),
+      },
+    };
+  }
+  return {
+    ...existing,
+    lockfileVersion: graph.lockfileVersion ?? existing.lockfileVersion,
+    importers,
+    packages: { ...(existing.packages ?? {}), ...(graph.packages ?? {}) },
+    snapshots: { ...(existing.snapshots ?? {}), ...(graph.snapshots ?? {}) },
+  };
 }
