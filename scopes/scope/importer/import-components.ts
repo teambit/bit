@@ -223,7 +223,6 @@ export default class ImportComponents {
       this.options.includeDeprecated
     );
 
-    const allBeforeVersions: ImportedVersions = {};
     const accWritten: Component[] = [];
     const accImportedIds: ComponentID[] = [];
     const accImportedDeps: ComponentID[] = [];
@@ -243,11 +242,18 @@ export default class ImportComponents {
       try {
         const idList = ComponentIdList.fromArray(ids);
         const beforeVersions = await this._getCurrentVersions(idList);
-        Object.assign(allBeforeVersions, beforeVersions);
 
         const versionDeps = await this._importComponentsObjects(idList, {
           lane: this.remoteLane,
         });
+
+        // Record missing IDs (present in scope before import but not returned by fetch)
+        // before any early-continue so they are not under-reported on empty results.
+        const importedIdStrs = new Set(versionDeps.map((v) => v.component.id.toStringWithoutVersion()));
+        for (const compIdStr of Object.keys(beforeVersions)) {
+          if (!importedIdStrs.has(compIdStr)) accMissingIds.push(compIdStr);
+        }
+
         if (!versionDeps.length) {
           this.logger.consoleSuccess(`imported ${scopeName} (${ids.length} components)`);
           continue;
@@ -258,10 +264,6 @@ export default class ImportComponents {
         for (const v of versionDeps) {
           accImportedIds.push(v.component.id);
           accImportedDeps.push(...v.allDependenciesIds);
-        }
-        const importedIdStrs = new Set(versionDeps.map((v) => v.component.id.toStringWithoutVersion()));
-        for (const compIdStr of Object.keys(beforeVersions)) {
-          if (!importedIdStrs.has(compIdStr)) accMissingIds.push(compIdStr);
         }
 
         // Hydrate + write this scope's components now, so `versionDeps` can be GC'd on the
