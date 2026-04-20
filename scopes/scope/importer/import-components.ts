@@ -239,59 +239,63 @@ export default class ImportComponents {
     for (const [scopeName, ids] of scopeEntries) {
       completedScopes++;
       this.logger.setStatusLine(`importing from ${scopeName} [${completedScopes}/${totalScopes}]`);
-      try {
-        const idList = ComponentIdList.fromArray(ids);
-        const beforeVersions = await this._getCurrentVersions(idList);
+      const idList = ComponentIdList.fromArray(ids);
+      const beforeVersions = await this._getCurrentVersions(idList);
 
-        const versionDeps = await this._importComponentsObjects(idList, {
+      // Only the remote fetch is tolerated per-scope (a failing remote for one scope should
+      // not abort the whole owner import). Write/merge/validation errors below propagate.
+      let versionDeps: VersionDependencies[];
+      try {
+        versionDeps = await this._importComponentsObjects(idList, {
           lane: this.remoteLane,
         });
-
-        // Record missing IDs (present in scope before import but not returned by fetch)
-        // before any early-continue so they are not under-reported on empty results.
-        const importedIdStrs = new Set(versionDeps.map((v) => v.component.id.toStringWithoutVersion()));
-        for (const compIdStr of Object.keys(beforeVersions)) {
-          if (!importedIdStrs.has(compIdStr)) accMissingIds.push(compIdStr);
-        }
-
-        if (!versionDeps.length) {
-          this.logger.consoleSuccess(`imported ${scopeName} (${ids.length} components)`);
-          continue;
-        }
-        anyImported = true;
-
-        // Lightweight per-scope info that doesn't depend on merge status.
-        for (const v of versionDeps) {
-          accImportedIds.push(v.component.id);
-          accImportedDeps.push(...v.allDependenciesIds);
-        }
-
-        // Hydrate + write this scope's components now, so `versionDeps` can be GC'd on the
-        // next iteration instead of accumulating across all scopes.
-        if (!this.options.objectsOnly) {
-          const components = await multipleVersionDependenciesToConsumer(versionDeps, this.scope.objects);
-          await this._fetchDivergeData(components);
-          this._throwForDivergedHistory();
-          this.divergeData = [];
-          await this.throwForComponentsFromAnotherLane(components.map((c) => c.id));
-          const filtered = await this._filterComponentsByFilters(components);
-          if (filtered.length) {
-            const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(filtered);
-            await this.componentWriter.writeComponentsFiles(this._buildScopeWriteOpts(componentsToWrite));
-            accWritten.push(...componentsToWrite);
-          }
-        }
-
-        // Collect import details after merge-strategy processing so `this.mergeStatus`
-        // is populated before `_getImportDetails` reads it for `filesStatus`.
-        accImportDetails.push(...(await this._getImportDetails(beforeVersions, versionDeps)));
-
-        this.logger.consoleSuccess(`imported ${scopeName} (${ids.length} components)`);
       } catch (err: any) {
         importFailedScopes.push(scopeName);
         allFailedScopesErrors.set(scopeName, err.message);
         this.logger.consoleFailure(`failed to import ${scopeName}`);
+        continue;
       }
+
+      // Record missing IDs (present in scope before import but not returned by fetch)
+      // before any early-continue so they are not under-reported on empty results.
+      const importedIdStrs = new Set(versionDeps.map((v) => v.component.id.toStringWithoutVersion()));
+      for (const compIdStr of Object.keys(beforeVersions)) {
+        if (!importedIdStrs.has(compIdStr)) accMissingIds.push(compIdStr);
+      }
+
+      if (!versionDeps.length) {
+        this.logger.consoleSuccess(`imported ${scopeName} (0 components, nothing to import)`);
+        continue;
+      }
+      anyImported = true;
+
+      // Lightweight per-scope info that doesn't depend on merge status.
+      for (const v of versionDeps) {
+        accImportedIds.push(v.component.id);
+        accImportedDeps.push(...v.allDependenciesIds);
+      }
+
+      // Hydrate + write this scope's components now, so `versionDeps` can be GC'd on the
+      // next iteration instead of accumulating across all scopes.
+      if (!this.options.objectsOnly) {
+        const components = await multipleVersionDependenciesToConsumer(versionDeps, this.scope.objects);
+        await this._fetchDivergeData(components);
+        this._throwForDivergedHistory();
+        this.divergeData = [];
+        await this.throwForComponentsFromAnotherLane(components.map((c) => c.id));
+        const filtered = await this._filterComponentsByFilters(components);
+        if (filtered.length) {
+          const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(filtered);
+          await this.componentWriter.writeComponentsFiles(this._buildScopeWriteOpts(componentsToWrite));
+          accWritten.push(...componentsToWrite);
+        }
+      }
+
+      // Collect import details after merge-strategy processing so `this.mergeStatus`
+      // is populated before `_getImportDetails` reads it for `filesStatus`.
+      accImportDetails.push(...(await this._getImportDetails(beforeVersions, versionDeps)));
+
+      this.logger.consoleSuccess(`imported ${scopeName} (${ids.length} components)`);
     }
 
     if (!anyImported) {
