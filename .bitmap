@@ -1836,13 +1836,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/composition-compare-section"
     },
-    "ui/composition-live-controls": {
-        "name": "ui/composition-live-controls",
-        "scope": "teambit.compositions",
-        "version": "0.0.6",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/composition-live-controls"
-    },
     "ui/compositions-app": {
         "name": "ui/compositions-app",
         "scope": "teambit.react",
