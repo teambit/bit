@@ -58,6 +58,7 @@ import type { NewDependencies } from './generate-comp-from-scope';
 import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
 import { FlattenedEdgesGetter } from './flattened-edges';
 import { includeUpdateDependentsInSnap } from './include-update-dependents-in-snap';
+import { findLaneComponentsDependingOnUpdDepTargets } from './include-lane-components-for-updep-snap';
 import { SnapDistanceCmd } from './snap-distance-cmd';
 import type { ResetResult } from './reset-component';
 import {
@@ -477,7 +478,38 @@ export class SnappingMain {
       });
     }
 
-    const components = [...existingComponents, ...newComponents];
+    // When snapping updateDependents, also pull in any lane.components entry that depends on one
+    // of the targets so it can be re-snapped with the cascaded dep refs in the same pass. These
+    // dependents stay in `lane.components`; only the explicit targets receive the
+    // `addToUpdateDependentsInLane` treatment via `updateDependentIds` below.
+    let laneCompDependents: Component[] = [];
+    if (params.updateDependents && lane) {
+      const targetIdsForUpDep = ComponentIdList.fromArray(allCompIds);
+      const { components: dependents } = await findLaneComponentsDependingOnUpdDepTargets({
+        lane,
+        targetIds: targetIdsForUpDep,
+        scope: this.scope,
+        logger: this.logger,
+      });
+      laneCompDependents = dependents;
+      for (const dependent of laneCompDependents) {
+        snapDataPerComp.push({
+          componentId: dependent.id,
+          dependencies: [],
+          aspects: undefined,
+          message: params.message || 'cascaded from updateDependents snap',
+          files: undefined,
+          isNew: false,
+          mainFile: undefined,
+          newDependencies: [],
+          removeDependencies: undefined,
+          version: undefined,
+        });
+        allCompIds.push(dependent.id);
+      }
+    }
+
+    const components = [...existingComponents, ...newComponents, ...laneCompDependents];
 
     // this must be done before we load component aspects later on, because this updated deps may update aspects.
     await pMapSeries(components, async (component) => {
@@ -521,6 +553,11 @@ export class SnappingMain {
 
     const ids = ComponentIdList.fromArray(allCompIds);
     const shouldTag = Boolean(params.tag);
+    // Switch from the lane-wide `updateDependentsOnLane` to per-component `updateDependentIds` so
+    // the explicit `_snap --update-dependents` targets land in `lane.updateDependents` while the
+    // dependent lane.components we folded in above go to `lane.components` like a normal snap.
+    const updateDependentTargetIds =
+      params.updateDependents && componentIds.length ? ComponentIdList.fromArray(componentIds) : undefined;
     const makeVersionParams = {
       ...params,
       tagDataPerComp: snapDataPerComp.map((s) => ({
@@ -532,7 +569,7 @@ export class SnappingMain {
       persist: true,
       isSnap: !shouldTag,
       message: params.message as string,
-      updateDependentsOnLane: params.updateDependents,
+      updateDependentIds: updateDependentTargetIds,
     };
     const results = await this.makeVersion(ids, components, makeVersionParams);
 
