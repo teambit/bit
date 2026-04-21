@@ -441,10 +441,13 @@ export class VersionMaker {
     if (!this.workspace) return this.getLaneAutoTagIdsFromScope(idsToTag);
     // ids without versions are new. it's impossible that tagged (and not-modified) components has
     // them as dependencies.
-    // Cascaded updateDependents aren't in the workspace bitmap, so they can't be loaded by the
-    // auto-tag path (it calls consumer.loadComponents). Exclude them from the trigger set — they
-    // are already being snapped as part of this pass, and any workspace dependent of theirs must
-    // be in the seed set (it would have been loaded via the regular modified-files detection).
+    // Exclude cascaded updateDependents from the auto-tag trigger set: they aren't in the
+    // workspace bitmap, and the auto-tag path calls `consumer.loadComponents`, which would throw
+    // MissingBitMapComponent on them. We don't need them in the trigger set anyway — any
+    // workspace dependent of an updateDependent already has its dep rewritten to the lane hash by
+    // the dependency-versions-resolver (`getIdFromUpdateDependentsOnLane`), which makes it look
+    // modified and land directly in the snap set via `getTagPendingComponentsIds`. The cascade's
+    // new hash is then propagated by `updateDependenciesVersions` in the same pass.
     const updateDependentIds = this.params.updateDependentIds;
     const workspaceIds = updateDependentIds
       ? idsToTag.filter((id) => !updateDependentIds.searchWithoutVersion(id))
