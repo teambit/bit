@@ -22,11 +22,21 @@ export type UpdateDependentsForSnap = {
  * than in a separate post-step) avoids producing two Version objects per cascade and keeps the
  * number of downstream Ripple CI builds at one per component, just like a normal snap.
  *
- * The `cascade set` is computed by a fixed-point expansion: start with the ids the user is
- * snapping, then repeatedly add any updateDependent whose recorded dependencies reference an id
- * already in the set. This handles transitive cascades (A -> B -> C, edit C → A and B cascade) and
- * cycles (A -> B -> C -> A) because hashes are pre-assigned by `setHashes()` before deps are
- * rewritten.
+ * *** Why we base the cascade on main head (and ignore the current updateDependents snap) ***
+ * The prior updateDependents entry points to an older snap (the one the "snap updates" button
+ * produced last time). Parenting the new cascade off that old snap would drift the lane off main:
+ * say A was 0.0.1 when first seeded into updateDependents, but main has since moved to 0.0.2 —
+ * using the old snap as the parent means the new cascade's history never includes A@0.0.2, and
+ * divergence calculations get messy. Instead, we always start from A's current main head. The new
+ * updateDependents snap is a direct descendant of main, one commit ahead, with deps rewritten to
+ * the lane versions. Any previously cascaded snap on the lane is simply orphaned — that's fine;
+ * the lane only ever points at the latest.
+ *
+ * *** Why the cascade set is a fixed-point expansion ***
+ * Starting from the ids the user is snapping, we add any updateDependent whose recorded
+ * dependencies (at main head) reference an id already in the set, then repeat. This handles
+ * transitive cascades (A -> B -> C, edit C → A and B cascade) and cycles (A -> B -> C -> A)
+ * because hashes are pre-assigned by `setHashes()` before deps are rewritten.
  */
 export async function includeUpdateDependentsInSnap({
   lane,
@@ -45,44 +55,47 @@ export async function includeUpdateDependentsInSnap({
   if (!updateDependents || !updateDependents.length) return empty;
 
   const legacyScope = scope.legacyScope;
-  const updateDependentsIdList = ComponentIdList.fromArray(updateDependents);
 
+  // Fetch each updateDependent from main (no lane context) so the loaded ConsumerComponent
+  // carries main's head as its version. This flows through `setNewVersion` into
+  // `previouslyUsedVersion` and ultimately becomes the parent of the new cascaded snap — keeping
+  // it a direct descendant of main rather than of an earlier (now-orphaned) updateDependents snap.
+  const mainIds = ComponentIdList.fromArray(updateDependents.map((id) => id.changeVersion(undefined)));
   try {
-    await legacyScope.scopeImporter.importWithoutDeps(updateDependentsIdList, {
-      cache: true,
-      includeUpdateDependents: true,
-      // VersionHistory is needed so that `getDivergeData` can resolve the remote head during
-      // export. Without it, `bit snap` succeeds locally but `bit export` fails with
-      // "TargetHeadNotFound" because the old updateDependents hash isn't reachable through
-      // VersionHistory in workspaces that never imported the updateDependent's objects.
-      includeVersionHistory: true,
-      lane,
-      reason: 'for including updateDependents in the local snap',
+    await scope.import(mainIds, {
+      preferDependencyGraph: false,
+      reason: 'for cascading updateDependents in the local snap (using main head as the base)',
     });
   } catch (err: any) {
-    logger.debug(`includeUpdateDependentsInSnap: failed to pre-fetch updateDependents Version objects: ${err.message}`);
+    logger.debug(`includeUpdateDependentsInSnap: failed to pre-fetch main head for updateDependents: ${err.message}`);
   }
 
-  const loaded: Array<{ id: ComponentID; depIds: ComponentID[]; component?: Component }> = [];
+  type LoadedEntry = { id: ComponentID; depIds: ComponentID[]; component: Component };
+  const loaded: LoadedEntry[] = [];
   for (const updDepId of updateDependents) {
-    const oldHash = updDepId.version;
-    if (!oldHash) continue;
-    const modelComponent = await legacyScope.getModelComponent(updDepId);
-    const version = await modelComponent.loadVersion(oldHash, legacyScope.objects, false);
-    if (!version) {
-      logger.debug(
-        `includeUpdateDependentsInSnap: Version object for ${updDepId.toString()} is missing locally, skipping`
-      );
+    const idWithoutVersion = updDepId.changeVersion(undefined);
+    const modelComponent = await legacyScope.getModelComponentIfExist(idWithoutVersion);
+    if (!modelComponent || !modelComponent.head) {
+      logger.debug(`includeUpdateDependentsInSnap: ${updDepId.toString()} has no main head locally, skipping`);
       continue;
     }
-    const depIds = [...version.dependencies.get().map((d) => d.id), ...version.devDependencies.get().map((d) => d.id)];
-    loaded.push({ id: updDepId, depIds });
+    const mainHeadStr = modelComponent.getTagOfRefIfExists(modelComponent.head) || modelComponent.head.toString();
+    const idAtMainHead = idWithoutVersion.changeVersion(mainHeadStr);
+    const component = await scope.get(idAtMainHead);
+    if (!component) {
+      logger.debug(`includeUpdateDependentsInSnap: unable to load ${idAtMainHead.toString()} from scope, skipping`);
+      continue;
+    }
+    const consumerComp = component.state._consumer;
+    const depIds = [
+      ...consumerComp.dependencies.get().map((d) => d.id),
+      ...consumerComp.devDependencies.get().map((d) => d.id),
+    ];
+    loaded.push({ id: component.id, depIds, component });
   }
 
   if (!loaded.length) return empty;
 
-  // Fixed-point expansion: add every updateDependent whose deps point at an id already in the
-  // cascade set. Repeat until nothing new is added. This handles transitive and cyclic cases.
   const cascadeSet = new Set<string>(snapIds.map((id) => id.toStringWithoutVersion()));
   let changed = true;
   while (changed) {
@@ -107,16 +120,7 @@ export async function includeUpdateDependentsInSnap({
   });
   if (!toInclude.length) return empty;
 
-  const components = await Promise.all(
-    toInclude.map(async (entry) => {
-      const comp = await scope.get(entry.id);
-      if (!comp) {
-        throw new Error(`includeUpdateDependentsInSnap: unable to load component ${entry.id.toString()} from scope`);
-      }
-      return comp;
-    })
-  );
-
+  const components = toInclude.map((entry) => entry.component);
   const ids = ComponentIdList.fromArray(components.map((c) => c.id));
   return { components, ids };
 }
