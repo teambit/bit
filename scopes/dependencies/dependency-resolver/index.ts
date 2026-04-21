@@ -46,7 +46,7 @@ export type {
   SemverVersion,
   DependenciesManifest,
 } from './dependencies';
-export { WorkspacePolicy, VariantPolicy, EnvPolicy } from './policy';
+export { WorkspacePolicy, VariantPolicy, EnvPolicy, EnvPolicyEnvJsoncConfigObject } from './policy';
 export type {
   WorkspacePolicyEntry,
   WorkspacePolicyConfigObject,

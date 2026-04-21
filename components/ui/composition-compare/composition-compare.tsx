@@ -657,8 +657,11 @@ export function CompositionCompare(props: CompositionCompareProps) {
               role="button"
               tabIndex={0}
             >
+              <div className={styles.controlsTitleRow}>
+                <Icon of="settings" className={styles.controlsIcon} />
+                <span className={styles.controlsPanelTitle}>Live Controls</span>
+              </div>
               <Icon of={isControlsOpen ? 'fat-arrow-down' : 'fat-arrow-up'} className={styles.controlsArrow} />
-              <span className={styles.controlsPanelTitle}>Live controls</span>
             </div>
             <div className={styles.controlsPanelContent} style={{ display: isControlsOpen ? undefined : 'none' }}>
               <LiveControlsDiffPanel

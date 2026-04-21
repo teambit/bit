@@ -558,6 +558,11 @@
         "",
         "use-root-modules",
         "EXPERIMENTAL. resolve component previews from root node_modules instead of .bit_roots. mainly for internal usage, use with caution only if you understand the implications"
+      ],
+      [
+        "",
+        "use-source",
+        "EXPERIMENTAL. resolve local workspace component previews from source files instead of .bit_roots or package artifacts. intended for debugging and HMR investigations"
       ]
     ],
     "description": "launch the Bit development server",
@@ -1446,6 +1451,43 @@
     "skipWorkspace": true
   },
   {
+    "name": "search <query...>",
+    "alias": "",
+    "options": [
+      [
+        "o",
+        "owners <list>",
+        "comma-separated list of owners/orgs to filter remote results by"
+      ],
+      [
+        "",
+        "skip-auto-owner",
+        "do not auto-extract owner from workspace defaultScope"
+      ],
+      [
+        "r",
+        "remote-only",
+        "only search remote bit cloud, skip local workspace"
+      ],
+      [
+        "l",
+        "local-only",
+        "only search the local workspace, skip remote bit cloud"
+      ],
+      [
+        "j",
+        "json",
+        "show the output in JSON format"
+      ]
+    ],
+    "description": "search for components by keyword in the local workspace and remote bit cloud",
+    "extendedDescription": "runs the provided query terms in parallel against bit cloud and against the local workspace.\nmultiple queries are unioned (deduplicated) in the output. by default, remote results are filtered by the\nowner extracted from the workspace's defaultScope; use --owners or --skip-auto-owner to change this.",
+    "group": "info-analysis",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true
+  },
+  {
     "name": "ws-config <sub-command>",
     "alias": "workspace-config",
     "options": [],
@@ -1820,6 +1862,11 @@
         "c",
         "current-dir",
         "create the new workspace in current directory (default is to create a new directory, inside the current dir)"
+      ],
+      [
+        "",
+        "agent [type]",
+        "create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)"
       ]
     ],
     "description": "create a new Bit workspace from a template",
@@ -3693,10 +3740,40 @@
         "t",
         "table",
         "show tables instead of plain text for dependencies diff"
+      ],
+      [
+        "",
+        "file <paths>",
+        "show only file diffs for the given component-relative path(s). comma-separated. implies --files-only"
+      ],
+      [
+        "",
+        "files-only",
+        "show only file-content diffs; omit dependency, env, and aspect-config changes"
+      ],
+      [
+        "",
+        "configs-only",
+        "show only dependency, env, and aspect-config changes; omit file-content diffs"
+      ],
+      [
+        "",
+        "name-only",
+        "summary: list changed files with status (M/A/D) and changed field categories; no diff bodies"
+      ],
+      [
+        "",
+        "stat",
+        "summary: like --name-only but includes +N -M line counts per file"
+      ],
+      [
+        "j",
+        "json",
+        "return the diff result as json"
       ]
     ],
     "description": "compare component changes between versions or against the current workspace",
-    "extendedDescription": "shows a detailed diff of component files, dependencies, and configuration changes. \nby default, compares workspace changes against the latest version. specify versions to compare historical changes.\nsupports pattern matching to filter components and various output formats for better readability.",
+    "extendedDescription": "shows a detailed diff of component files, dependencies, and configuration changes.\nby default, compares workspace changes against the latest version. specify versions to compare historical changes.\nsupports pattern matching to filter components and various output formats for better readability.\nfor ai-agent workflows, use --name-only to list what changed, --file to drill into a specific file,\n--files-only / --configs-only to focus on one diff category, or --json for machine-readable output.",
     "group": "info-analysis",
     "private": false,
     "arguments": [
@@ -3737,6 +3814,22 @@
       {
         "cmd": "diff foo 0.0.2 --parent",
         "description": "compare \"foo@0.0.2\" to its parent version. showing what changed in 0.0.2"
+      },
+      {
+        "cmd": "diff foo --name-only",
+        "description": "list changed files and field categories without diff bodies"
+      },
+      {
+        "cmd": "diff foo --file src/index.ts",
+        "description": "show the diff of a single file in a component"
+      },
+      {
+        "cmd": "diff foo --files-only",
+        "description": "show only source-code diffs, skip dependency/config changes"
+      },
+      {
+        "cmd": "diff foo --json",
+        "description": "return the diff result as json for programmatic consumption"
       }
     ]
   },
@@ -5105,6 +5198,11 @@
         "",
         "skip-interactive",
         "skip interactive mode for Git repositories"
+      ],
+      [
+        "",
+        "agent [type]",
+        "create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)"
       ]
     ],
     "description": "initialize a Bit workspace in an existing project",

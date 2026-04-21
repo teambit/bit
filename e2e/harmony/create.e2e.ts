@@ -1,0 +1,224 @@
+import chai, { expect } from 'chai';
+import { OutsideWorkspaceError } from '@teambit/workspace';
+import path from 'path';
+import os from 'os';
+import { Helper } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
+
+describe('create extension', function () {
+  this.timeout(0);
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
+  after(() => {
+    helper.scopeHelper.destroy();
+  });
+  describe('when running outside the workspace', () => {
+    it('should throw ConsumerNotFound error', () => {
+      const cmd = () => helper.command.runCmd('bit create aspect my-aspect', os.tmpdir());
+      const error = new OutsideWorkspaceError();
+      helper.general.expectToThrow(cmd, error);
+    });
+  });
+  describe('with --namespace flag', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.command.create('bit-aspect', 'my-aspect', '--namespace ui');
+    });
+    it('should create the directories properly', () => {
+      const compRootDir = path.join(helper.scopes.localPath, helper.scopes.remote, 'ui/my-aspect');
+      expect(compRootDir).to.be.a.directory();
+      expect(path.join(compRootDir, 'index.ts')).to.be.a.file();
+      expect(path.join(compRootDir, 'my-aspect.main.runtime.ts')).to.be.a.file();
+      expect(path.join(compRootDir, 'my-aspect.aspect.ts')).to.be.a.file();
+    });
+    it('should add the component correctly', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('ui/my-aspect');
+    });
+  });
+  describe('name with namespace as part of the name', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.command.create('bit-aspect', 'ui/my-aspect');
+    });
+    it('should create the directories properly', () => {
+      const compRootDir = path.join(helper.scopes.localPath, helper.scopes.remote, 'ui/my-aspect');
+      expect(compRootDir).to.be.a.directory();
+      expect(path.join(compRootDir, 'index.ts')).to.be.a.file();
+      expect(path.join(compRootDir, 'my-aspect.main.runtime.ts')).to.be.a.file();
+      expect(path.join(compRootDir, 'my-aspect.aspect.ts')).to.be.a.file();
+    });
+    it('should add the component correctly', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('ui/my-aspect');
+    });
+  });
+  describe('name with namespace as part of the name and namespace flag', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.command.create('bit-aspect', 'ui/my-aspect', '--namespace another/level');
+    });
+    it('should create the directories properly', () => {
+      const compRootDir = path.join(helper.scopes.localPath, helper.scopes.remote, 'another/level/ui/my-aspect');
+      expect(compRootDir).to.be.a.directory();
+      expect(path.join(compRootDir, 'index.ts')).to.be.a.file();
+      expect(path.join(compRootDir, 'my-aspect.main.runtime.ts')).to.be.a.file();
+      expect(path.join(compRootDir, 'my-aspect.aspect.ts')).to.be.a.file();
+    });
+    it('should add the component correctly', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('another/level/ui/my-aspect');
+    });
+  });
+  describe('when a component already exist on that dir', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.command.create('bit-aspect', 'my-aspect');
+    });
+    it('should throw an error', () => {
+      expect(() => helper.command.create('bit-aspect', 'my-aspect')).to.throw('this path already exist');
+
+      // make sure the dir still exists and the rollback mechanism did not delete it.
+      const compRootDir = path.join(helper.scopes.localPath, helper.scopes.remote, 'my-aspect');
+      expect(compRootDir).to.be.a.directory();
+    });
+  });
+  describe('when an error is thrown during the add/track phase', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      expect(() => helper.command.create('bit-aspect', 'myAspect')).to.throw(
+        'component names can only contain alphanumeric, lowercase characters'
+      );
+    });
+    it('should not leave the generated component in the filesystem', () => {
+      const compRootDir = path.join(helper.scopes.localPath, helper.scopes.remote, 'my-aspect');
+      expect(compRootDir).to.not.be.a.path();
+    });
+  });
+  describe('with an invalid scope-name', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+    });
+    it('should throw InvalidScopeName error', () => {
+      expect(() => helper.command.create('bit-aspect', 'my-aspect', '--scope ui/')).to.throw('"ui/" is invalid');
+    });
+  });
+  describe('with --scope flag', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope({ addRemoteScopeAsDefaultScope: false });
+      helper.workspaceJsonc.addDefaultScope('my-scope');
+      helper.command.create('bit-aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
+    });
+    it('should add the component to the .bitmap file with a new defaultScope prop', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('my-aspect');
+      expect(bitMap['my-aspect']).to.have.property('defaultScope');
+      expect(bitMap['my-aspect'].defaultScope).to.equal(helper.scopes.remote);
+    });
+    it('bit show should show this scope as the defaultScope', () => {
+      const show = helper.command.showComponent('my-aspect');
+      expect(show).to.include(helper.scopes.remote);
+    });
+    describe('exporting the component', () => {
+      before(() => {
+        helper.command.tagAllWithoutBuild('--ignore-issues "*"');
+        // the fact the export succeed, means the defaultScope from .bitmap taken into account
+        // otherwise, it would have been used the workspace.jsonc defaultScope "my-scope" and fails.
+        helper.command.export();
+      });
+      it('should delete the defaultScope prop from .bitmap', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.have.property('my-aspect');
+        expect(bitMap['my-aspect']).to.not.have.property('defaultScope');
+      });
+    });
+  });
+  describe('with scope as part of the component name (bit.cloud format)', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope({ addRemoteScopeAsDefaultScope: false });
+      helper.workspaceJsonc.addDefaultScope('default-org.default-scope');
+      // Use bit.cloud scope format: org.scope/namespace/name
+      helper.command.create('bit-aspect', 'my-org.my-scope/hooks/my-hook');
+    });
+    it('should create the directories properly under the parsed scope', () => {
+      // The scope "my-org.my-scope" is parsed into owner="my-org" and scope="my-scope"
+      // The default directory template is {scope}/{name}, so the path becomes my-scope/hooks/my-hook
+      const compRootDir = path.join(helper.scopes.localPath, 'my-scope', 'hooks/my-hook');
+      expect(compRootDir).to.be.a.directory();
+      expect(path.join(compRootDir, 'index.ts')).to.be.a.file();
+    });
+    it('should add the component with the correct name (without scope prefix)', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('hooks/my-hook');
+    });
+    it('should set the defaultScope to the parsed scope from the component name', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap['hooks/my-hook']).to.have.property('defaultScope');
+      expect(bitMap['hooks/my-hook'].defaultScope).to.equal('my-org.my-scope');
+    });
+    it('bit show should show the parsed scope as the defaultScope', () => {
+      const show = helper.command.showComponent('hooks/my-hook');
+      expect(show).to.include('my-org.my-scope');
+    });
+  });
+  describe('with env defined inside the aspect-template different than the variants', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
+      helper.command.create('bit-aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
+    });
+    it('should set the env according to the variant', () => {
+      const show = helper.command.showComponentParsedHarmony('my-aspect');
+      const env = show.find((item) => item.title === 'env');
+      expect(env.json).to.equal('teambit.react/react');
+    });
+  });
+  describe('with env defined inside the aspect-template when there is no variant', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.command.create('bit-aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
+    });
+    it('should set the env according to the template env', () => {
+      const show = helper.command.showComponentParsedHarmony('my-aspect');
+      const env = show.find((item) => item.title === 'env');
+      expect(env.json).to.equal('teambit.harmony/aspect');
+    });
+  });
+  describe('from an inner dir', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fs.createNewDirectoryInLocalWorkspace('inner-dir');
+    });
+    it('should not throw', () => {
+      const cmd = helper.command.create(
+        'bit-aspect',
+        'my-aspect',
+        undefined,
+        path.join(helper.scopes.localPath, 'inner-dir')
+      );
+      expect(() => cmd).to.not.throw();
+    });
+  });
+  describe('external package manager mode', () => {
+    let pkgJson;
+    before(() => {
+      // create a new workspace that uses an external package manager
+      helper.scopeHelper.cleanWorkspace();
+      helper.command.init('--external-package-manager');
+      helper.command.create('module', 'simple');
+      pkgJson = helper.fs.readJsonFile('package.json');
+    });
+    it('should write dependencies of the component to package.json', () => {
+      expect(pkgJson.dependencies['@bitdev/node.node-env'] != null).to.eq(true);
+    });
+    it('should not write dependencies of the env to package.json', () => {
+      expect(pkgJson.dependencies.eslint == null).to.eq(true);
+    });
+    it('should not run installation', () => {
+      expect(helper.fs.exists('node_modules/eslint')).to.eq(false);
+    });
+  });
+});
