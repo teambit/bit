@@ -216,10 +216,11 @@ export class UIServer {
       this.logger.error(e.message);
     });
 
+    const proxyEntries = this.getProxyFromPlugins();
+
     server.on('upgrade', (req, socket, head) => {
       const reqUrl = req.url?.replace(/\?.+$/, '') || '';
       const path = stripTrailingChar(reqUrl, '/');
-      const proxyEntries = this.getProxyFromPlugins();
       const entry = proxyEntries.find((proxy) => proxy.context.some((item) => item === stripTrailingChar(path, '/')));
       if (!entry) {
         return;
@@ -228,8 +229,6 @@ export class UIServer {
         target: entry.target,
       });
     });
-
-    const proxyEntries = this.getProxyFromPlugins();
     proxyEntries.forEach((entry) => {
       entry.context.forEach((route) => {
         this._proxyRoutes.add(route);

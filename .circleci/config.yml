@@ -668,8 +668,8 @@ jobs:
   # ========== Bit CI Jobs ==========
   bit_pr:
     # uncomment in case this job fails with "Killed".
-    # resource_class: 2xlarge
-    resource_class: xlarge
+    resource_class: 2xlarge
+    # resource_class: xlarge
     <<: *defaults
     environment:
       # BIT_FEATURES: cloud-importer-v2
@@ -710,7 +710,12 @@ jobs:
       - run:
           name: If no component has changed, exit the job
           command: |
-            if cd bit && bit diff | grep -q "there are no modified components to diff"; then
+            # Grepping stdout of `bit diff` is unsafe: unified-diff content of a modified
+            # source file can contain the "no modified components" sentinel string itself
+            # (e.g. when diff-cmd.ts is modified). Use structured JSON output instead.
+            # --name-only omits full diff bodies so this stays cheap on large merges;
+            # the top-level JSON array is empty iff there are no modified components.
+            if cd bit && bit diff --json --name-only | tr -d '[:space:]' | grep -q '^\[\]$'; then
               if grep -q '"nextVersion": {' .bitmap; then
                 echo "No changes detected, but soft-tagged components found. Continuing workflow."
               else

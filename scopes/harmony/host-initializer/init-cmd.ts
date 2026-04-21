@@ -63,6 +63,7 @@ supports various reset options to recover from corrupted state or restart from s
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
     ['', 'external-package-manager', 'enable external package manager mode (npm/yarn/pnpm)'],
     ['', 'skip-interactive', 'skip interactive mode for Git repositories'],
+    ['', 'agent [type]', 'create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)'],
   ] as CommandOptions;
 
   constructor(
@@ -138,6 +139,7 @@ supports various reset options to recover from corrupted state or restart from s
       defaultDirectory,
       defaultScope,
       externalPackageManager,
+      agent,
     } = flags;
 
     if (path) path = pathlib.resolve(path);
@@ -167,7 +169,10 @@ supports various reset options to recover from corrupted state or restart from s
       externalPackageManager: interactiveConfig?.externalPackageManager || externalPackageManager,
     };
 
-    const { created } = await HostInitializerMain.init(
+    // Resolve agent flag: true means no specific type (use default AGENTS.md), string means a specific tool.
+    const agentType = agent === true ? undefined : agent || undefined;
+
+    const { created, agentFileWritten } = await HostInitializerMain.init(
       path,
       standalone,
       noPackageJson,
@@ -178,9 +183,17 @@ supports various reset options to recover from corrupted state or restart from s
       resetScope,
       force,
       workspaceExtensionProps,
-      interactiveConfig?.generator || generator
+      interactiveConfig?.generator || generator,
+      agentType
     );
 
-    return HostInitializerMain.generateInitMessage(created, reset, resetHard, resetScope, interactiveConfig);
+    return HostInitializerMain.generateInitMessage(
+      created,
+      reset,
+      resetHard,
+      resetScope,
+      interactiveConfig,
+      agentFileWritten
+    );
   }
 }
