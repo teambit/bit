@@ -142,7 +142,7 @@ export default function (isEnvProduction = false): Configuration {
                 presets: [
                   require.resolve('@babel/preset-env'),
                   require.resolve('@babel/preset-typescript'),
-                  require.resolve('@babel/preset-react'),
+                  [require.resolve('@babel/preset-react'), { runtime: 'automatic' }],
                 ],
                 // This is a feature of `babel-loader` for webpack (not Babel itself).
                 // It enables caching results in ./node_modules/.cache/babel-loader/
