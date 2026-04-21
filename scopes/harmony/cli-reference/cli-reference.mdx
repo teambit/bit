@@ -808,7 +808,9 @@ scans node_modules/.pnpm to report actual installed copies, identifies packages 
 **Description**: compare component changes between versions or against the current workspace  
 shows a detailed diff of component files, dependencies, and configuration changes.  
 by default, compares workspace changes against the latest version. specify versions to compare historical changes.  
-supports pattern matching to filter components and various output formats for better readability.
+supports pattern matching to filter components and various output formats for better readability.  
+for ai-agent workflows, use --name-only to list what changed, --file to drill into a specific file,  
+--files-only / --configs-only to focus on one diff category, or --json for machine-readable output.
 
 `bit diff [component-pattern] [version] [to-version]`
 
@@ -818,11 +820,17 @@ supports pattern matching to filter components and various output formats for be
 | `version`           |                                                                                                                                                                         the base version to compare from. if omitted, compares the workspace's current files to the component's latest version.                                                                                                                                                                          |
 | `to-version`        |                                                                                                                                                     the target version to compare against "version". if both "version" and "to-version" are provided, compare those two versions directly (ignoring the workspace).                                                                                                                                                      |
 
-| **Option**  | **Option alias** | **Description**                                                                                 |
-| ----------- | :--------------: | ----------------------------------------------------------------------------------------------- |
-| `--parent`  |       `-p`       | compare the specified "version" to its immediate parent instead of comparing to the current one |
-| `--verbose` |       `-v`       | show a more verbose output where possible                                                       |
-| `--table`   |       `-t`       | show tables instead of plain text for dependencies diff                                         |
+| **Option**       | **Option alias** | **Description**                                                                                      |
+| ---------------- | :--------------: | ---------------------------------------------------------------------------------------------------- |
+| `--parent`       |       `-p`       | compare the specified "version" to its immediate parent instead of comparing to the current one      |
+| `--verbose`      |       `-v`       | show a more verbose output where possible                                                            |
+| `--table`        |       `-t`       | show tables instead of plain text for dependencies diff                                              |
+| `--file <paths>` |                  | show only file diffs for the given component-relative path(s). comma-separated. implies --files-only |
+| `--files-only`   |                  | show only file-content diffs; omit dependency, env, and aspect-config changes                        |
+| `--configs-only` |                  | show only dependency, env, and aspect-config changes; omit file-content diffs                        |
+| `--name-only`    |                  | summary: list changed files with status (M/A/D) and changed field categories; no diff bodies         |
+| `--stat`         |                  | summary: like --name-only but includes +N -M line counts per file                                    |
+| `--json`         |       `-j`       | return the diff result as json                                                                       |
 
 ---
 
@@ -1202,6 +1210,7 @@ supports various reset options to recover from corrupted state or restart from s
 | `--shared <groupname>`                    |       `-s`       | add group write permissions to a scope properly                                                                                           |
 | `--external-package-manager`              |                  | enable external package manager mode (npm/yarn/pnpm)                                                                                      |
 | `--skip-interactive`                      |                  | skip interactive mode for Git repositories                                                                                                |
+| `--agent [type]`                          |                  | create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)                                               |
 
 ---
 
@@ -1934,6 +1943,7 @@ installs dependencies and configures the workspace for immediate development.
 | `--empty`                        |       `-e`       | skip template's default component creation (relevant for templates that add components by default)                                  |
 | `--load-from <path-to-template>` |                  | local path to the workspace containing the template. Helpful during a development of a workspace-template                           |
 | `--current-dir`                  |       `-c`       | create the new workspace in current directory (default is to create a new directory, inside the current dir)                        |
+| `--agent [type]`                 |                  | create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)                                         |
 
 ---
 
@@ -2277,6 +2287,7 @@ when no app name is specified, automatically detects and runs the app if only on
 
 ## schema
 
+**Alias**: `api`  
 **Description**: display component API schema and type definitions  
 extracts and displays the public API structure of components including types, functions, classes, and interfaces.  
 shows detailed type information, function signatures, and JSDoc documentation for exported elements.  
@@ -2416,6 +2427,25 @@ use --list to see all available scripts.
 
 ---
 
+## search
+
+**Description**: search for components by keyword in the local workspace and remote bit cloud  
+runs the provided query terms in parallel against bit cloud and against the local workspace.  
+multiple queries are unioned (deduplicated) in the output. by default, remote results are filtered by the  
+owner extracted from the workspace's defaultScope; use --owners or --skip-auto-owner to change this.
+
+`bit search <query...>`
+
+| **Option**          | **Option alias** | **Description**                                                 |
+| ------------------- | :--------------: | --------------------------------------------------------------- |
+| `--owners <list>`   |       `-o`       | comma-separated list of owners/orgs to filter remote results by |
+| `--skip-auto-owner` |                  | do not auto-extract owner from workspace defaultScope           |
+| `--remote-only`     |       `-r`       | only search remote bit cloud, skip local workspace              |
+| `--local-only`      |       `-l`       | only search the local workspace, skip remote bit cloud          |
+| `--json`            |       `-j`       | show the output in JSON format                                  |
+
+---
+
 ## set-peer
 
 **Description**: configure component to always be installed as peer dependency  
@@ -2513,6 +2543,7 @@ includes hot module reloading for development.
 | `--skip-compilation`    |                  | skip the auto-compilation before starting the web-server                                                                                                                   |
 | `--ui-root-name [type]` |       `-u`       | name of the ui root to use, e.g. "teambit.scope/scope" or "teambit.workspace/workspace"                                                                                    |
 | `--use-root-modules`    |                  | EXPERIMENTAL. resolve component previews from root node_modules instead of .bit_roots. mainly for internal usage, use with caution only if you understand the implications |
+| `--use-source`          |                  | EXPERIMENTAL. resolve local workspace component previews from source files instead of .bit_roots or package artifacts. intended for debugging and HMR investigations       |
 
 ---
 

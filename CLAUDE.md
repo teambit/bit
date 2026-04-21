@@ -55,6 +55,8 @@ Use the shared formatting toolkit from `@teambit/cli` (`scopes/harmony/cli/outpu
 - `npm run format` - Format code with Prettier
 - `npm run prettier:check` - Check if code is formatted correctly
 
+**IMPORTANT**: After making code changes, always run `npm run lint` to verify. Do NOT run `npx tsc --noEmit` or `npx oxlint` directly — `npm run lint` is the canonical command and covers both type checking and linting for this repo.
+
 ### Bit-specific Commands
 
 - `bit start` - Start the Bit UI for component development

@@ -1,5 +1,4 @@
 @import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
-$panelBg: #fafafa;
 
 .compositionsPage {
   height: 100%;
@@ -13,27 +12,250 @@ $panelBg: #fafafa;
 
 .left {
   min-width: 200px;
-
-  //cannot assign max-width directly to right side
   max-width: calc(100% - 200px);
-
   display: flex;
-  overflow-y: auto;
+  overflow: hidden;
   flex-direction: column;
+  background: var(--bit-bg-color, #ffffff);
 }
 
 .right {
-  background: var(--background-color, $panelBg);
+  background: var(--compositions-panel-bg, #f7f7f8);
   overflow-y: auto;
-  // this is to fix the right panel when it gets too big or too small
   min-width: 200px;
   max-width: calc(100% - 200px);
+  border-left: 1px solid var(--bit-border-color-lightest, #eaeaec);
 }
 
 .menuBar {
-  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  border-bottom: 1px solid var(--bit-border-color-lightest, #eaeaec);
+  background: var(--bit-bg-color, #ffffff);
+  flex-shrink: 0;
+
+  > div {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  // normalize all OptionButton instances to match our toolbar style
+  :global([class*='optionButton']) {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 6px;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--bit-text-color-light, #8b8d98);
+    border: none;
+    cursor: pointer;
+    transition: all 140ms ease;
+
+    &:hover {
+      background: var(--surface-hover-color, #f0f0f2) !important;
+      color: var(--bit-text-color-heavy, #1c2024);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &:global(.active),
+    &[class*='active'] {
+      background: rgba(108, 92, 231, 0.1) !important;
+      color: var(--bit-accent-color, #6c5ce7) !important;
+    }
+  }
 }
 
+// ─── Toolbar ────────────────────────────────────────────────────────────
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px;
+}
+
+.toolbarButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--bit-text-color-light, #8b8d98);
+  cursor: pointer;
+  transition: all 140ms ease;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 0;
+
+  &:hover {
+    background: var(--surface-hover-color, #f0f0f2);
+    color: var(--bit-text-color-heavy, #1c2024);
+  }
+
+  &:active {
+    background: var(--bit-border-color-lightest, #eaeaec);
+    transform: scale(0.95);
+  }
+}
+
+.toolbarButtonActive {
+  background: rgba(108, 92, 231, 0.1);
+  color: var(--bit-accent-color, #6c5ce7);
+
+  &:hover {
+    background: rgba(108, 92, 231, 0.15);
+    color: var(--bit-accent-color, #6c5ce7);
+  }
+}
+
+// ─── Preview + Controls Tray area ───────────────────────────────────────
+.previewArea {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.compositionPanel {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.dragOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  cursor: ns-resize;
+}
+
+// ─── Controls Tray (bottom panel, like DevTools) ────────────────────────
+.controlsTray {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--bit-border-color-lightest, #eaeaec);
+  background: var(--compositions-panel-bg, #f7f7f8);
+  overflow: hidden;
+}
+
+.trayDragHandle {
+  flex-shrink: 0;
+  height: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: ns-resize;
+  background: transparent;
+  transition: background 120ms ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  &:hover .trayDragBar {
+    background: var(--bit-text-color-light, #8b8d98);
+    width: 48px;
+  }
+}
+
+.trayDragBar {
+  width: 32px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--bit-border-color-lightest, #d0d0d3);
+  transition: all 140ms ease;
+}
+
+.trayHeader {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 14px 8px;
+}
+
+.trayTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trayIcon {
+  font-size: 13px;
+  color: var(--bit-accent-color, #6c5ce7);
+}
+
+.trayTitle {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--bit-text-color-light, #8b8d98);
+}
+
+.trayBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--bit-accent-color, #6c5ce7);
+  color: #ffffff;
+  line-height: 1;
+}
+
+.trayClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--bit-text-color-light, #8b8d98);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+  transition: all 120ms ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--bit-text-color-heavy, #1c2024);
+  }
+}
+
+.trayBody {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.trayEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  font-size: 12px;
+  color: var(--bit-text-color-light, #8b8d98);
+}
+
+// ─── Splitter ───────────────────────────────────────────────────────────
 .splitter {
   position: relative;
 
@@ -47,6 +269,7 @@ $panelBg: #fafafa;
   right: 0;
 }
 
+// ─── Tabs ───────────────────────────────────────────────────────────────
 .tabsContainer {
   display: flex;
   flex-direction: column;
@@ -78,6 +301,7 @@ $panelBg: #fafafa;
   }
 }
 
+// ─── Empty / error states ───────────────────────────────────────────────
 .noCompositionsPage {
   padding: 50px 40px 100px 40px;
   width: 100%;
@@ -96,9 +320,4 @@ $panelBg: #fafafa;
 
 .buildStatusMessage {
   margin: auto;
-}
-
-.compositionPanel {
-  display: flex;
-  flex: 1;
 }
