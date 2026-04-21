@@ -517,6 +517,10 @@ function tryReadPackageJson(pkgDir: string) {
 // every workspace project, but only populates deps for manifests whose keys appear in the
 // graph's root edge — so per-importer overlay (instead of overwrite) is what keeps
 // unrelated workspace importers intact.
+//
+// Packages and snapshots are deep-merged per key so that pnpm-managed metadata the graph
+// doesn't round-trip (e.g. `optional`, `transitivePeerDependencies`, `dev`) survives on
+// entries the graph also knows about.
 function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: LockfileFile): LockfileFile {
   const importers: NonNullable<LockfileFile['importers']> = { ...existing.importers };
   for (const [importerId, graphImporter] of Object.entries(graph.importers ?? {})) {
@@ -535,11 +539,38 @@ function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: LockfileF
       },
     };
   }
-  return {
+  const existingBit = (existing as LockfileFile & { bit?: { depsRequiringBuild?: string[] } }).bit;
+  const graphBit = (graph as LockfileFile & { bit?: { depsRequiringBuild?: string[] } }).bit;
+  const mergedDepsRequiringBuild = Array.from(
+    new Set([...(existingBit?.depsRequiringBuild ?? []), ...(graphBit?.depsRequiringBuild ?? [])])
+  ).sort();
+  const merged = {
     ...existing,
     lockfileVersion: graph.lockfileVersion ?? existing.lockfileVersion,
     importers,
-    packages: { ...existing.packages, ...graph.packages },
-    snapshots: { ...existing.snapshots, ...graph.snapshots },
+    packages: mergeEntryRecords(existing.packages, graph.packages),
+    snapshots: mergeEntryRecords(existing.snapshots, graph.snapshots),
   };
+  if (existingBit || graphBit) {
+    (merged as LockfileFile & { bit?: Record<string, unknown> }).bit = {
+      ...existingBit,
+      ...graphBit,
+      depsRequiringBuild: mergedDepsRequiringBuild,
+    };
+  }
+  return merged;
+}
+
+function mergeEntryRecords<T extends object>(
+  existing: Record<string, T> | undefined,
+  graph: Record<string, T> | undefined
+): Record<string, T> | undefined {
+  if (!existing) return graph;
+  if (!graph) return existing;
+  const merged: Record<string, T> = { ...existing };
+  for (const [key, graphEntry] of Object.entries(graph)) {
+    const existingEntry = merged[key];
+    merged[key] = existingEntry ? ({ ...existingEntry, ...graphEntry } as T) : graphEntry;
+  }
+  return merged;
 }
