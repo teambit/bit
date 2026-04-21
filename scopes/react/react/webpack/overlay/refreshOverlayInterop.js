@@ -1,6 +1,4 @@
 /* eslint-disable */
-/** this file was copied as is from react-dev-utils/refreshOverlayInterop */
-
 // @remove-on-eject-begin
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
@@ -11,27 +9,16 @@
 // @remove-on-eject-end
 'use strict';
 
+// Thin mapping between @pmmmwh/react-refresh-webpack-plugin's overlay
+// contract and react-error-overlay. Initialization (startReportingRuntimeErrors)
+// is handled by webpackHotDevClient.js which is added as the overlay entry.
+
 const {
   dismissBuildError,
   dismissRuntimeErrors,
   reportBuildError,
   reportRuntimeError,
-  setEditorHandler,
 } = require('react-error-overlay');
-const launchEditorEndpoint = require('./launchEditorEndpoint');
-
-setEditorHandler(function editorHandler(errorLocation) {
-  // Keep this in sync with the error overlay middleware endpoint.
-  fetch(
-    launchEditorEndpoint +
-      '?fileName=' +
-      window.encodeURIComponent(errorLocation.fileName) +
-      '&lineNumber=' +
-      window.encodeURIComponent(errorLocation.lineNumber || 1) +
-      '&colNumber=' +
-      window.encodeURIComponent(errorLocation.colNumber || 1)
-  );
-});
 
 module.exports = {
   clearCompileError: dismissBuildError,

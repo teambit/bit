@@ -176,6 +176,13 @@ export type PreviewConfig = {
 export type EnvPreviewConfig = {
   strategyName?: PreviewStrategyName;
   splitComponentBundle?: boolean;
+  /**
+   * whether the env's preview pipeline can consume component source files directly
+   * (required when `bit start --use-source` is used).
+   * older envs without the matching preview/webpack config should leave this unset/false
+   * so bit falls back to the compiled dist paths for their components.
+   */
+  supportsUseSource?: boolean;
 };
 
 export type BundlingStrategySlot = SlotRegistry<BundlingStrategy>;
@@ -909,7 +916,8 @@ export class PreviewMain {
   }
 
   private getComponentPreviewPaths(files: AbstractVinyl[], component: Component, environment: PreviewEnv): string[] {
-    if (this._useSource) {
+    const envSupportsUseSource = this.getEnvPreviewConfig(environment).supportsUseSource ?? false;
+    if (this._useSource && envSupportsUseSource) {
       return files.map((file) => file.path);
     }
 

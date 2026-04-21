@@ -105,9 +105,6 @@ includes hot module reloading for development.`;
         `bit start can only be run inside a bit workspace or a bit scope - please ensure you are running the command in the correct directory`
       );
     }
-    if (useRootModules && useSource) {
-      throw new BitError(`--use-root-modules and --use-source cannot be used together`);
-    }
     const appName = this.ui.getUiName(uiRootAspectIdOrName);
     await this.ui.invokePreStart({ skipCompilation });
     this.logger.off();
