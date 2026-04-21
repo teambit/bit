@@ -931,7 +931,7 @@ Flags: --show-all, --aspect <aspect-id>, --json
 run component tests
 
 executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.). by default only runs tests for new and modified components. use --unmodified to test all components. supports watch mode, coverage reporting, and debug mode for development workflows.
-Flags: --watch, --debug, --unmodified, --junit <filepath>, --coverage, --env <id>, --update-snapshot, --json
+Flags: --watch, --debug, --unmodified, --junit <filepath>, --coverage, --env <id>, --update-snapshot, --json, --verbose, --summary
 
 ## bit undeprecate <id>
 
