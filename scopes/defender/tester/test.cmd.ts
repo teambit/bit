@@ -242,14 +242,16 @@ supports watch mode, coverage reporting, and debug mode for development workflow
     const summary = {
       totals: aggregated.totals,
       componentsWithTests: aggregated.componentsWithTests.map((c) => ({
-        id: c.id.toString(),
+        id: c.id.toString({ ignoreVersion: true }),
         passed: c.passed,
         failed: c.failed,
         pending: c.pending,
         hasError: c.hasError,
       })),
-      componentsWithoutTests: aggregated.componentsWithoutTests.map((id) => id.toString()),
-      componentsAffectedByEnvError: aggregated.componentsAffectedByEnvError.map((id) => id.toString()),
+      componentsWithoutTests: aggregated.componentsWithoutTests.map((id) => id.toString({ ignoreVersion: true })),
+      componentsAffectedByEnvError: aggregated.componentsAffectedByEnvError.map((id) =>
+        id.toString({ ignoreVersion: true })
+      ),
       envErrors: aggregated.envErrors.map((e) => ({ envId: e.envId, message: e.error.message })),
     };
 
