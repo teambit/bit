@@ -9,6 +9,7 @@ export {
 } from './workspace-policy';
 export {
   VariantPolicy,
+  VariantPolicyConfigEntryValue,
   VariantPolicyEntryValue,
   VariantPolicyConfigObject,
   SerializedVariantPolicy,
