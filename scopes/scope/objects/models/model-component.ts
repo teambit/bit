@@ -382,12 +382,7 @@ export default class Component extends BitObject {
 
   setLaneHeadLocal(lane?: Lane) {
     if (lane) {
-      // A component on a lane can live under `components` or `updateDependents`; for
-      // divergence/export purposes both represent "this component's current local head on the
-      // lane". Without the updateDependents branch here, cascaded updateDependents (see
-      // include-update-dependents-in-snap.ts) have a fresh Version saved locally but look
-      // unchanged to divergeData, so the export never includes their Version objects.
-      this.laneHeadLocal = lane.getCompHeadIncludeUpdateDependents(this.toComponentId()) || null;
+      this.laneHeadLocal = lane.getComponentHead(this.toComponentId());
     }
   }
 

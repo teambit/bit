@@ -30,8 +30,8 @@ import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { persistRemotes, validateRemotes, removePendingDirs } from './export-scope-components';
-import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref } from '@teambit/objects';
-import { ObjectList } from '@teambit/objects';
+import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject } from '@teambit/objects';
+import { ObjectList, Ref } from '@teambit/objects';
 import { Scope, PersistFailed } from '@teambit/legacy.scope';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
 import { ExportAspect } from './export.aspect';
@@ -349,6 +349,17 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           return [head, ...headVersion.parents];
         }
         return [head];
+      }
+      // When the local lane has cascaded updateDependents (see `includeUpdateDependentsInSnap`),
+      // divergeData-based `getLocalHashes` can't see those new Version objects because the
+      // component's `laneHeadLocal` only reflects `lane.components`. Push the updateDependents
+      // head directly instead — the parent is always an existing remote ref (main head) so there
+      // are no missing ancestors to worry about.
+      const updDepEntry = laneObject?.shouldOverrideUpdateDependents()
+        ? laneObject.updateDependents?.find((id) => id.isEqualWithoutVersion(modelComponent.toComponentId()))
+        : undefined;
+      if (updDepEntry?.version) {
+        return [Ref.from(updDepEntry.version)];
       }
       const fromWorkspace = this.workspace?.getIdIfExist(modelComponent.toComponentId());
       const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects, fromWorkspace);
