@@ -12,7 +12,9 @@ export type CurrentPkgSource =
   // these are dependencies from the dependencies policy in "workspace.jsonc"
   | 'rootPolicy'
   // these are dependencies stored in the component object (snapped/tagged version)
-  | 'component-model';
+  | 'component-model'
+  // these are dependencies defined in env.jsonc files
+  | 'env-jsonc';
 
 export type CurrentPkg = {
   name: string;
