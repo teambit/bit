@@ -751,9 +751,18 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
       ? await componentsList.listNonNewComponentsIds()
       : await componentsList.listExportPendingComponentsIds(laneObject);
     const removedStagedBitIds = await this.getRemovedStagedBitIds();
+    // When the lane's updateDependents were cascaded locally (during `bit snap`), the new Version
+    // objects for those entries are in the local scope, but the per-component "isLocallyChanged"
+    // heuristic won't detect them because `lane.getComponentHead` only looks at `lane.components`.
+    // The lane itself sets `overrideUpdateDependents` to signal "I touched updateDependents locally
+    // — push them". Include those ids explicitly so the export pushes the cascaded Version objects.
+    const updateDependentsIds = laneObject.shouldOverrideUpdateDependents()
+      ? (laneObject.updateDependents || []).map((id) => id.changeVersion(undefined))
+      : [];
     const componentsToExport = ComponentIdList.uniqFromArray([
       ...componentsToExportWithoutRemoved,
       ...removedStagedBitIds,
+      ...updateDependentsIds,
     ]);
     return { componentsToExport, laneObject };
   }
@@ -841,6 +850,14 @@ async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
   consumer.setCurrentLane(lane.toLaneId(), true);
   consumer.scope.scopeJson.removeLaneFromNew(lane.name);
   lane.isNew = false;
+  // `overrideUpdateDependents` is a request addressed to the remote — once the export is through,
+  // the remote has already merged our updateDependents, so the local flag must not linger (on a
+  // user's workspace lane, it must never be `true` at rest, see Lane.setOverrideUpdateDependents).
+  if (lane.shouldOverrideUpdateDependents()) {
+    lane.setOverrideUpdateDependents(false);
+    consumer.scope.objects.add(lane);
+    await consumer.scope.objects.persist();
+  }
 }
 
 export function isUserTryingToExportLanes(consumer: Consumer) {

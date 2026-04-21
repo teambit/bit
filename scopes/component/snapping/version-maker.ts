@@ -68,6 +68,13 @@ export type VersionMakerParams = {
   packageManagerConfigRootDir?: string;
   exitOnFirstFailedTask?: boolean;
   updateDependentsOnLane?: boolean;
+  /**
+   * When the snap pass includes cascaded updateDependents (see
+   * `include-update-dependents-in-snap.ts`), these ids receive the `addToUpdateDependentsInLane`
+   * treatment on a per-component basis: their Version object is added to `lane.updateDependents`
+   * instead of `lane.components`, and the workspace bitmap is left untouched so they stay hidden.
+   */
+  updateDependentIds?: ComponentIdList;
   setHeadAsParent?: boolean;
 } & BasicTagParams;
 
@@ -153,7 +160,15 @@ export class VersionMaker {
       };
     }
 
-    const { rebuildDepsGraph, build, updateDependentsOnLane, setHeadAsParent, detachHead, overrideHead } = this.params;
+    const {
+      rebuildDepsGraph,
+      build,
+      updateDependentsOnLane,
+      updateDependentIds,
+      setHeadAsParent,
+      detachHead,
+      overrideHead,
+    } = this.params;
     await this.snapping._addFlattenedDependenciesToComponents(this.allComponentsToTag, rebuildDepsGraph);
     await this._addDependenciesGraphToComponents();
     await this.snapping.throwForDepsFromAnotherLane(this.allComponentsToTag);
@@ -161,20 +176,22 @@ export class VersionMaker {
     this.addBuildStatus(this.allComponentsToTag, BuildStatus.Pending);
 
     const currentLane = this.consumer?.getCurrentLaneId();
+    const isUpdateDependent = (id: ComponentID) => Boolean(updateDependentIds?.searchWithoutVersion(id));
     await mapSeries(this.allComponentsToTag, async (component) => {
+      const compIsUpdDep = isUpdateDependent(component.id);
       const results = await this.snapping._addCompToObjects({
         source: component,
         lane,
         shouldValidateVersion: Boolean(build),
         addVersionOpts: {
-          addToUpdateDependentsInLane: updateDependentsOnLane,
+          addToUpdateDependentsInLane: updateDependentsOnLane || compIsUpdDep,
           setHeadAsParent,
           detachHead,
           overrideHead: overrideHead,
         },
         batchId: this.batchId,
       });
-      if (this.workspace) {
+      if (this.workspace && !compIsUpdDep) {
         const modelComponent = component.modelComponent || (await this.legacyScope.getModelComponent(component.id));
         await updateVersions(
           this.workspace,
@@ -184,7 +201,7 @@ export class VersionMaker {
           results.addedVersionStr,
           true
         );
-      } else {
+      } else if (!this.workspace) {
         const tagData = this.params.tagDataPerComp?.find((t) => t.componentId.isEqualWithoutVersion(component.id));
         if (tagData?.isNew) results.version.removeAllParents();
       }
@@ -194,7 +211,24 @@ export class VersionMaker {
       await this.workspace.scope.legacyScope.stagedSnaps.write();
     }
     const publishedPackages: string[] = [];
-    const harmonyCompsToTag = await (this.workspace || this.scope).getManyByLegacy(this.allComponentsToTag);
+    // Cascaded updateDependents are not tracked in the workspace bitmap, so loading them via
+    // `workspace.getManyByLegacy` would fail when the workspace tries to resolve their rootDir.
+    // Route them through `scope.getManyByLegacy` while the real workspace components go through
+    // the normal workspace path, then merge the results in the original order.
+    const workspaceComps: ConsumerComponent[] = [];
+    const scopeOnlyComps: ConsumerComponent[] = [];
+    this.allComponentsToTag.forEach((comp) => {
+      if (this.workspace && updateDependentIds?.searchWithoutVersion(comp.id)) {
+        scopeOnlyComps.push(comp);
+      } else {
+        workspaceComps.push(comp);
+      }
+    });
+    const workspaceHarmonyComps = workspaceComps.length
+      ? await (this.workspace || this.scope).getManyByLegacy(workspaceComps)
+      : [];
+    const scopeHarmonyComps = scopeOnlyComps.length ? await this.scope.getManyByLegacy(scopeOnlyComps) : [];
+    const harmonyCompsToTag = [...workspaceHarmonyComps, ...scopeHarmonyComps];
     // this is not necessarily the same as the previous allComponentsToTag. although it should be, because
     // harmonyCompsToTag is created from allComponentsToTag. however, for aspects, the getMany returns them from cache
     // and therefore, their instance of ConsumerComponent can be different than the one in allComponentsToTag.
@@ -206,7 +240,12 @@ export class VersionMaker {
     await this.legacyScope.objects.persist();
     await removeMergeConfigFromComponents(unmergedComps, this.allComponentsToTag, this.workspace);
     if (this.workspace) {
-      await linkToNodeModulesByComponents(harmonyCompsToTag, this.workspace);
+      // Exclude cascaded updateDependents from node_modules linking — they have no rootDir in
+      // the workspace bitmap, so the linker would throw MissingBitMapComponent.
+      const compsToLink = updateDependentIds
+        ? harmonyCompsToTag.filter((c) => !updateDependentIds.searchWithoutVersion(c.id))
+        : harmonyCompsToTag;
+      await linkToNodeModulesByComponents(compsToLink, this.workspace);
     }
     // clear all objects. otherwise, ModelComponent has the wrong divergeData
     this.legacyScope.objects.clearObjectsFromCache();
@@ -277,7 +316,13 @@ export class VersionMaker {
 
   private async triggerOnPreSnap(autoTagIds: ComponentIdList) {
     const allFunctions = this.snapping.onPreSnapSlot.values();
-    await mapSeries(allFunctions, (func) => func(this.components, autoTagIds, this.params));
+    // Exclude cascaded updateDependents: they were loaded from the scope (not the workspace), so
+    // pre-snap steps that touch workspace files (e.g. formatting) have nothing to act on.
+    const updateDependentIds = this.params.updateDependentIds;
+    const components = updateDependentIds
+      ? this.components.filter((c) => !updateDependentIds.searchWithoutVersion(c.id))
+      : this.components;
+    await mapSeries(allFunctions, (func) => func(components, autoTagIds, this.params));
   }
 
   private async addLaneObject(lane?: Lane) {
@@ -320,7 +365,12 @@ export class VersionMaker {
     const isolateOptions = { packageManagerConfigRootDir, seedersOnly, populateArtifactsIgnorePkgJson };
     const builderOptions = { exitOnFirstFailedTask, skipTests, skipTasks: skipTasksParsed, loose };
 
-    const componentsToBuild = harmonyCompsToTag.filter((c) => !c.isDeleted());
+    // Cascaded updateDependents are not part of the workspace and get built by the downstream
+    // Ripple CI job after export; building them here would require workspace state they don't have.
+    const updateDependentIds = this.params.updateDependentIds;
+    const componentsToBuild = harmonyCompsToTag.filter(
+      (c) => !c.isDeleted() && !updateDependentIds?.searchWithoutVersion(c.id)
+    );
     if (componentsToBuild.length) {
       const componentsToBuildLegacy: ConsumerComponent[] = componentsToBuild.map((c) => c.state._consumer);
       await this.scope.reloadAspectsWithNewVersion(componentsToBuildLegacy);
@@ -391,7 +441,15 @@ export class VersionMaker {
     if (!this.workspace) return this.getLaneAutoTagIdsFromScope(idsToTag);
     // ids without versions are new. it's impossible that tagged (and not-modified) components has
     // them as dependencies.
-    const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
+    // Cascaded updateDependents aren't in the workspace bitmap, so they can't be loaded by the
+    // auto-tag path (it calls consumer.loadComponents). Exclude them from the trigger set — they
+    // are already being snapped as part of this pass, and any workspace dependent of theirs must
+    // be in the seed set (it would have been loaded via the regular modified-files detection).
+    const updateDependentIds = this.params.updateDependentIds;
+    const workspaceIds = updateDependentIds
+      ? idsToTag.filter((id) => !updateDependentIds.searchWithoutVersion(id))
+      : idsToTag;
+    const idsToTriggerAutoTag = workspaceIds.filter((id) => id.hasVersion());
     const autoTagDataWithLocalOnly = await this.workspace.getAutoTagInfo(
       ComponentIdList.fromArray(idsToTriggerAutoTag)
     );

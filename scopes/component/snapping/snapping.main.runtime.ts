@@ -57,6 +57,7 @@ import ResetCmd from './reset-cmd';
 import type { NewDependencies } from './generate-comp-from-scope';
 import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
 import { FlattenedEdgesGetter } from './flattened-edges';
+import { includeUpdateDependentsInSnap } from './include-update-dependents-in-snap';
 import { SnapDistanceCmd } from './snap-distance-cmd';
 import type { ResetResult } from './reset-component';
 import {
@@ -605,6 +606,20 @@ export class SnappingMain {
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
     const components = await this.loadComponentsForTagOrSnap(ids);
     await this.throwForVariousIssues(components, ignoreIssues);
+
+    // If the current lane has `updateDependents`, fold the relevant entries into the same snap
+    // pass so they land with the correct dep hashes on the first try (rather than going stale and
+    // needing a second snap). See `include-update-dependents-in-snap.ts` for the rationale.
+    const currentLaneObject = await consumer.scope.getCurrentLaneObject();
+    const { components: updDepComponents, ids: updDepIds } = await includeUpdateDependentsInSnap({
+      lane: currentLaneObject || undefined,
+      snapIds: ids,
+      scope: this.scope,
+      logger: this.logger,
+    });
+    const allComponents = [...components, ...updDepComponents];
+    const allIds = ComponentIdList.uniqFromArray([...ids, ...updDepIds]);
+
     const makeVersionParams = {
       editor,
       ignoreNewestVersion: false,
@@ -624,9 +639,10 @@ export class SnappingMain {
       detachHead,
       loose,
       ignoreIssues,
+      updateDependentIds: updDepIds.length ? updDepIds : undefined,
     };
     const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents, totalComponentsCount } =
-      await this.makeVersion(ids, components, makeVersionParams);
+      await this.makeVersion(allIds, allComponents, makeVersionParams);
 
     const snapResults: Partial<SnapResults> = {
       snappedComponents: taggedComponents,
