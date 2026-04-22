@@ -110,6 +110,7 @@ export type WorkspaceInstallOptions = {
   writeConfigFiles?: boolean;
   skipPrune?: boolean;
   dependenciesGraph?: DependenciesGraph;
+  restoreFromDependenciesGraph?: boolean;
   allowScripts?: Record<string, boolean>;
 };
 
@@ -394,11 +395,12 @@ export class InstallMain {
       }
     );
 
+    const dependenciesGraph = await this.resolveDependenciesGraph(options);
     const pmInstallOptions: PackageManagerInstallOptions = {
       ...calcManifestsOpts,
       autoInstallPeers: this.dependencyResolver.config.autoInstallPeers,
       dedupePeers: this.dependencyResolver.config.dedupePeers,
-      dependenciesGraph: options?.dependenciesGraph,
+      dependenciesGraph,
       includeOptionalDeps: options?.includeOptionalDeps,
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
       allowScripts: this.dependencyResolver.getAllowedScripts(),
@@ -537,6 +539,22 @@ export class InstallMain {
   private shouldClearCacheOnInstall(): boolean {
     const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
     return nonLoadedEnvs.length > 0;
+  }
+
+  private async resolveDependenciesGraph(
+    options?: ModulesInstallOptions
+  ): Promise<DependenciesGraph | undefined> {
+    if (options?.dependenciesGraph) return options.dependenciesGraph;
+    if (!options?.restoreFromDependenciesGraph) return undefined;
+    const graph = await this.workspace.scope.getDependenciesGraphByComponentIds(this.workspace.listIds());
+    if (!graph) {
+      this.logger.console(
+        chalk.yellow(
+          '--restore was requested but no workspace component has a stored dependency graph. Falling back to a regular install.'
+        )
+      );
+    }
+    return graph;
   }
 
   /**
