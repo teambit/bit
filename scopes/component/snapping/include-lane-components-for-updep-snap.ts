@@ -58,18 +58,29 @@ export async function findLaneComponentsDependingOnUpdDepTargets({
 
   type LoadedEntry = { id: ComponentID; depIds: ComponentID[] };
   const loaded: LoadedEntry[] = [];
+  // Best-effort loading — the prefetch above swallows import errors, so a single corrupt or
+  // missing object shouldn't abort the whole `_snap --update-dependents` pass.
   for (const laneComp of laneComponents) {
-    const modelComponent = await legacyScope.getModelComponentIfExist(laneComp.id);
-    if (!modelComponent) continue;
-    const version = await modelComponent.loadVersion(laneComp.head.toString(), legacyScope.objects, false);
-    if (!version) {
+    try {
+      const modelComponent = await legacyScope.getModelComponentIfExist(laneComp.id);
+      if (!modelComponent) continue;
+      const version = await modelComponent.loadVersion(laneComp.head.toString(), legacyScope.objects, false);
+      if (!version) {
+        logger.debug(
+          `findLaneComponentsDependingOnUpdDepTargets: Version object for ${laneComp.id.toString()}@${laneComp.head.toString()} is missing, skipping`
+        );
+        continue;
+      }
+      // Match the full dependency set used by `updateDependenciesVersions` (runtime + dev + peer +
+      // extension) so a lane.component that depends on a target only via peer or extension deps is
+      // still pulled into the snap pass.
+      const depIds = version.getAllDependenciesIds();
+      loaded.push({ id: laneComp.id.changeVersion(laneComp.head.toString()), depIds });
+    } catch (err: any) {
       logger.debug(
-        `findLaneComponentsDependingOnUpdDepTargets: Version object for ${laneComp.id.toString()}@${laneComp.head.toString()} is missing, skipping`
+        `findLaneComponentsDependingOnUpdDepTargets: failed to load ${laneComp.id.toString()}@${laneComp.head.toString()}: ${err.message}, skipping`
       );
-      continue;
     }
-    const depIds = [...version.dependencies.get().map((d) => d.id), ...version.devDependencies.get().map((d) => d.id)];
-    loaded.push({ id: laneComp.id.changeVersion(laneComp.head.toString()), depIds });
   }
 
   if (!loaded.length) return empty;
@@ -98,15 +109,27 @@ export async function findLaneComponentsDependingOnUpdDepTargets({
   });
   if (!toInclude.length) return empty;
 
-  const components = await Promise.all(
+  const loadedComps = await Promise.all(
     toInclude.map(async (entry) => {
-      const comp = await scope.get(entry.id);
-      if (!comp) {
-        throw new Error(`findLaneComponentsDependingOnUpdDepTargets: unable to load ${entry.id.toString()} from scope`);
+      try {
+        const comp = await scope.get(entry.id);
+        if (!comp) {
+          logger.debug(
+            `findLaneComponentsDependingOnUpdDepTargets: unable to load ${entry.id.toString()} from scope, skipping`
+          );
+          return undefined;
+        }
+        return comp;
+      } catch (err: any) {
+        logger.debug(
+          `findLaneComponentsDependingOnUpdDepTargets: failed to load ${entry.id.toString()} from scope: ${err.message}, skipping`
+        );
+        return undefined;
       }
-      return comp;
     })
   );
+  const components = loadedComps.filter((c): c is NonNullable<typeof c> => Boolean(c));
+  if (!components.length) return empty;
   const ids = ComponentIdList.fromArray(components.map((c) => c.id));
   return { components, ids };
 }

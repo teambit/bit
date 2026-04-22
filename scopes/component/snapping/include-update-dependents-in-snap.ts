@@ -72,26 +72,32 @@ export async function includeUpdateDependentsInSnap({
 
   type LoadedEntry = { id: ComponentID; depIds: ComponentID[]; component: Component };
   const loaded: LoadedEntry[] = [];
+  // Every step below is best-effort: the prefetch above swallows import errors, so a missing or
+  // corrupt local object shouldn't convert into a hard snap crash here. Log and skip instead.
   for (const updDepId of updateDependents) {
-    const idWithoutVersion = updDepId.changeVersion(undefined);
-    const modelComponent = await legacyScope.getModelComponentIfExist(idWithoutVersion);
-    if (!modelComponent || !modelComponent.head) {
-      logger.debug(`includeUpdateDependentsInSnap: ${updDepId.toString()} has no main head locally, skipping`);
-      continue;
+    try {
+      const idWithoutVersion = updDepId.changeVersion(undefined);
+      const modelComponent = await legacyScope.getModelComponentIfExist(idWithoutVersion);
+      if (!modelComponent || !modelComponent.head) {
+        logger.debug(`includeUpdateDependentsInSnap: ${updDepId.toString()} has no main head locally, skipping`);
+        continue;
+      }
+      const mainHeadStr = modelComponent.getTagOfRefIfExists(modelComponent.head) || modelComponent.head.toString();
+      const idAtMainHead = idWithoutVersion.changeVersion(mainHeadStr);
+      const component = await scope.get(idAtMainHead);
+      if (!component) {
+        logger.debug(`includeUpdateDependentsInSnap: unable to load ${idAtMainHead.toString()} from scope, skipping`);
+        continue;
+      }
+      const consumerComp = component.state._consumer;
+      // Mirror `updateDependenciesVersions`, which rewrites deps across runtime, dev, peer and
+      // extension dependencies. If we skip any of those here, a component that depends on a snapped
+      // id only through (say) a peerDependency would escape the cascade set and stay stale.
+      const depIds = consumerComp.getAllDependencies().map((d) => d.id);
+      loaded.push({ id: component.id, depIds, component });
+    } catch (err: any) {
+      logger.debug(`includeUpdateDependentsInSnap: failed to load ${updDepId.toString()}: ${err.message}, skipping`);
     }
-    const mainHeadStr = modelComponent.getTagOfRefIfExists(modelComponent.head) || modelComponent.head.toString();
-    const idAtMainHead = idWithoutVersion.changeVersion(mainHeadStr);
-    const component = await scope.get(idAtMainHead);
-    if (!component) {
-      logger.debug(`includeUpdateDependentsInSnap: unable to load ${idAtMainHead.toString()} from scope, skipping`);
-      continue;
-    }
-    const consumerComp = component.state._consumer;
-    const depIds = [
-      ...consumerComp.dependencies.get().map((d) => d.id),
-      ...consumerComp.devDependencies.get().map((d) => d.id),
-    ];
-    loaded.push({ id: component.id, depIds, component });
   }
 
   if (!loaded.length) return empty;

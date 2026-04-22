@@ -214,7 +214,11 @@ export class VersionMaker {
     // Cascaded updateDependents are not tracked in the workspace bitmap, so loading them via
     // `workspace.getManyByLegacy` would fail when the workspace tries to resolve their rootDir.
     // Route them through `scope.getManyByLegacy` while the real workspace components go through
-    // the normal workspace path, then merge the results in the original order.
+    // the normal workspace path, then concatenate. Note: this groups workspace comps first and
+    // scope-only comps second, which is not strictly the original order of `allComponentsToTag`
+    // — but in practice the only "scope-only" entries are cascaded updateDependents appended at
+    // the end of the seed set, so the effective order is preserved. Downstream steps (build,
+    // linking, logging) don't depend on a specific order across this boundary.
     const workspaceComps: ConsumerComponent[] = [];
     const scopeOnlyComps: ConsumerComponent[] = [];
     this.allComponentsToTag.forEach((comp) => {

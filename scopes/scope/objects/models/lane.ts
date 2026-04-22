@@ -212,10 +212,17 @@ export default class Lane extends BitObject {
   }
   /**
    * !!! important !!!
-   * this should get called only on a "temp lane", such as running "bit _snap", which the scope gets destroys after the
-   * command is done. when _scope exports the lane, this "overrideUpdateDependents" is not saved to the remote-scope.
+   * this flag is a one-shot instruction to the next export: "I've rewritten updateDependents
+   * locally — push them as-is instead of treating them as unchanged". Two callers are allowed to
+   * persist it on a local lane:
+   *  - bare-scope `bit _snap --update-dependents` (the scope is destroyed after the command)
+   *  - workspace `bit snap` when it cascades updateDependents via `includeUpdateDependentsInSnap`
+   * In the workspace case, `updateLanesAfterExport` clears the flag immediately after a successful
+   * export, so the lane is never left in the "override" state once a push has synced with the
+   * remote. The flag is never serialized to the remote-scope (see the toObject/parse pair).
    *
-   * on a user local lane object, this prop should never be true. otherwise, it'll override the remote-scope data.
+   * Do NOT leave it set without following up with an export — otherwise, a later fetch could
+   * surprise callers by treating stale local state as authoritative.
    */
   setOverrideUpdateDependents(overrideUpdateDependents: boolean) {
     this.overrideUpdateDependents = overrideUpdateDependents;
