@@ -494,9 +494,8 @@ export class SnappingMain {
       // Guard against the rare case where a dependent surfaced by the cascade helper is already
       // an explicit target in the snap set — pushing it twice would produce duplicate snapData
       // entries and inflate `allCompIds`.
-      laneCompDependents = dependents.filter(
-        (dep) => !allCompIds.some((existing) => existing.isEqualWithoutVersion(dep.id))
-      );
+      const allCompIdList = ComponentIdList.fromArray(allCompIds);
+      laneCompDependents = dependents.filter((dep) => !allCompIdList.searchWithoutVersion(dep.id));
       for (const dependent of laneCompDependents) {
         snapDataPerComp.push({
           componentId: dependent.id,

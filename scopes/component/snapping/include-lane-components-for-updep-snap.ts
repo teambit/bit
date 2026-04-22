@@ -1,5 +1,6 @@
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
+import { compact } from 'lodash';
 import type { Component } from '@teambit/component';
 import type { ScopeMain } from '@teambit/scope';
 import type { Logger } from '@teambit/logger';
@@ -128,7 +129,7 @@ export async function findLaneComponentsDependingOnUpdDepTargets({
       }
     })
   );
-  const components = loadedComps.filter((c): c is NonNullable<typeof c> => Boolean(c));
+  const components = compact(loadedComps);
   if (!components.length) return empty;
   const ids = ComponentIdList.fromArray(components.map((c) => c.id));
   return { components, ids };
