@@ -14,7 +14,7 @@
   "rules": {
     "no-console": "error",
     "max-lines": ["error", 2000],
-    "complexity": ["error", { "max": 50 }],
+    "complexity": ["error", { "max": 47 }],
     "no-shadow": "error",
     "no-use-before-define": ["error", { "functions": false, "classes": true, "variables": true }],
     "no-return-assign": "off",
