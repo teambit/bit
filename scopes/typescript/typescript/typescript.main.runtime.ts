@@ -130,6 +130,14 @@ export class TypescriptMain {
     const configMutator = new TypescriptConfigMutator(options);
     const transformerContext: TsConfigTransformContext = {};
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+    // TS 6 turns previously-silent deprecations (e.g. moduleResolution=node) into hard errors.
+    // Shipped env tsconfigs keep the legacy options for TS 5.x consumers, so inject the silencer
+    // only when the loaded compiler is actually TS 6+.
+    const tsMajor = parseInt(tsModule.version?.split('.')[0] || '0', 10);
+    const compilerOptions = afterMutation.raw.tsconfig?.compilerOptions;
+    if (tsMajor >= 6 && compilerOptions && !compilerOptions.ignoreDeprecations) {
+      compilerOptions.ignoreDeprecations = '6.0';
+    }
     const afterMutationWithoutTsconfig = { ...afterMutation.raw, tsconfig: '' };
 
     return new TypescriptCompiler(
