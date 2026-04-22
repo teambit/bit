@@ -733,12 +733,19 @@ possible causes:
     if (existingLane?.hasChanged && existingLane.includeDeletedData() && !lane.includeDeletedData()) {
       existingLane.setSchemaToNotSupportDeletedData();
     }
-    // merging updateDependents is tricky. the end user should never change it, only get it as is from the remote.
-    // this prop gets updated with snap-from-scope with --update-dependents flag. and a graphql query should remove entries
-    // from there. other than these 2 places, it should never change. so when a user imports it, always override.
-    // if it is being exported, the remote should override it only when it comes from the snap-from-scope command, to
-    // indicate this, the lane should have the overrideUpdateDependents prop set to true.
-    if (isImport && existingLane) {
+    // merging updateDependents is tricky. Historically the end user never changed it — it was only
+    // updated by `bit _snap --update-dependents` (bare scope) or a graphql query. In that world,
+    // an import could safely overwrite the local list with whatever the remote had.
+    //
+    // With the workspace-side cascade (`bit snap` rewriting updateDependents via
+    // `includeUpdateDependentsInSnap`), the local user CAN now have pending changes to
+    // `updateDependents` that haven't been exported yet. `setOverrideUpdateDependents(true)` on the
+    // local lane is the signal for "don't blow these away". If an import happens before the export,
+    // overriding from the remote would silently discard the cascaded snaps.
+    //
+    // On export, the remote still only overrides when the incoming lane carries
+    // `overrideUpdateDependents=true`, matching the original contract.
+    if (isImport && existingLane && !existingLane.shouldOverrideUpdateDependents()) {
       existingLane.updateDependents = lane.updateDependents;
     }
     if (isExport && existingLane && lane.shouldOverrideUpdateDependents()) {

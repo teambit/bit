@@ -212,17 +212,24 @@ export default class Lane extends BitObject {
   }
   /**
    * !!! important !!!
-   * this flag is a one-shot instruction to the next export: "I've rewritten updateDependents
-   * locally — push them as-is instead of treating them as unchanged". Two callers are allowed to
-   * persist it on a local lane:
+   * this flag is a one-shot instruction for the NEXT export: "the `updateDependents` list on this
+   * lane was rewritten locally — send them over, the remote should accept them as-is instead of
+   * ignoring them". Two callers are allowed to set it on a local lane:
    *  - bare-scope `bit _snap --update-dependents` (the scope is destroyed after the command)
    *  - workspace `bit snap` when it cascades updateDependents via `includeUpdateDependentsInSnap`
-   * In the workspace case, `updateLanesAfterExport` clears the flag immediately after a successful
-   * export, so the lane is never left in the "override" state once a push has synced with the
-   * remote. The flag is never serialized to the remote-scope (see the toObject/parse pair).
    *
-   * Do NOT leave it set without following up with an export — otherwise, a later fetch could
-   * surprise callers by treating stale local state as authoritative.
+   * The flag DOES round-trip through `toObject()` / `parse()` — that's how it:
+   *  1. survives on-disk persistence between `bit snap` and a later `bit export` process;
+   *  2. travels on the wire as part of the lane payload so the remote's `sources.mergeLane`
+   *     (see `components/legacy/scope/repositories/sources.ts`) can read it off the INCOMING
+   *     lane and decide whether to override `existingLane.updateDependents`.
+   *
+   * The remote does NOT copy this flag onto its stored `existingLane`, so it's never persisted
+   * on the remote scope — only used transiently during merge.
+   *
+   * In the workspace flow, `updateLanesAfterExport` clears the flag locally once the push has
+   * succeeded, so the lane is never left in the "override" state after its request has been
+   * honored.
    */
   setOverrideUpdateDependents(overrideUpdateDependents: boolean) {
     this.overrideUpdateDependents = overrideUpdateDependents;
