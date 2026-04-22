@@ -71,6 +71,7 @@
     "e2e/fixtures/**",
     "components/legacy/e2e-helper/fixtures/**",
     "components/legacy/e2e-helper/excluded-fixtures/**",
+    "components/semantics/doc-parser/fixtures/**",
     "scopes/dependencies/dependencies/files-dependency-builder/fixtures/**",
     "scopes/semantics/schema/mock/**",
     "scripts/**"
