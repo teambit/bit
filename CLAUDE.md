@@ -51,7 +51,6 @@ Use the shared formatting toolkit from `@teambit/cli` (`scopes/harmony/cli/outpu
 
 - `npm run lint` - Run Oxlint and TypeScript type checking (`tsc --noEmit`)
 - `npm run lint:fix` - Run Oxlint with auto-fix
-- `npm run lint:type-aware` - Run Oxlint with type-aware rules (via `oxlint-tsgolint`); not wired to CI yet due to tsgolint/tsconfig compatibility
 - `npm run format` - Format code with Prettier
 - `npm run prettier:check` - Check if code is formatted correctly
 
