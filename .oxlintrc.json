@@ -1,0 +1,79 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "promise", "react", "typescript", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "mocha": true,
+    "es2022": true
+  },
+  "settings": {},
+  "rules": {
+    "no-console": "error",
+    "max-lines": ["error", 2000],
+    "complexity": ["error", { "max": 47 }],
+    "no-shadow": "error",
+    "no-use-before-define": ["error", { "functions": false, "classes": true, "variables": true }],
+    "no-return-assign": "off",
+    "no-unused-vars": "off",
+    "no-unused-expressions": "off",
+
+    "typescript/ban-ts-comment": "off",
+    "typescript/no-explicit-any": "off",
+    "typescript/no-var-requires": "off",
+    "typescript/return-await": "error",
+    "typescript/dot-notation": "error",
+    "typescript/consistent-type-imports": [
+      "warn",
+      { "prefer": "type-imports", "fixStyle": "separate-type-imports" }
+    ],
+    "typescript/no-unused-vars": ["error", { "args": "after-used", "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+
+    "import/no-duplicates": "error",
+    "import/default": "off",
+
+    "promise/always-return": "off",
+    "promise/no-nesting": "off",
+
+    "react-hooks/exhaustive-deps": "off",
+    "react/no-this-in-sfc": "off",
+
+    "unicorn/no-empty-file": "off"
+  },
+  "overrides": [
+    {
+      "files": ["e2e/**/*.ts"],
+      "rules": {
+        "default-case": "off"
+      }
+    },
+    {
+      "files": [
+        "e2e/watch-runner.ts",
+        "e2e/http-helper.ts",
+        "e2e/performance/**/*.ts",
+        "components/legacy/e2e-helper/e2e-scope-helper.ts",
+        "components/legacy/e2e-helper/npm-ci-registry.ts"
+      ],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.bit/**",
+    "**/coverage/**",
+    "e2e/fixtures/**",
+    "components/legacy/e2e-helper/fixtures/**",
+    "components/legacy/e2e-helper/excluded-fixtures/**",
+    "components/semantics/doc-parser/fixtures/**",
+    "scopes/dependencies/dependencies/files-dependency-builder/fixtures/**",
+    "scopes/semantics/schema/mock/**",
+    "scripts/**"
+  ]
+}
