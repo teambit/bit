@@ -225,8 +225,18 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const removedIds = await this.getRemovedStagedBitIds();
     const workspaceIds = this.workspace.listIds();
+    // Lane `updateDependents` are intentionally not tracked in the workspace bitmap — they're
+    // hidden from the user and exist only to re-align the lane with its dependencies. Excluding
+    // them here prevents the misleading "component files are not tracked" hint from firing on
+    // every export of a lane that carries updateDependents.
+    const laneUpdateDependents = laneObject?.updateDependents
+      ? ComponentIdList.fromArray(laneObject.updateDependents)
+      : undefined;
     const nonExistOnBitMap = exported.filter(
-      (id) => !workspaceIds.hasWithoutVersion(id) && !removedIds.hasWithoutVersion(id)
+      (id) =>
+        !workspaceIds.hasWithoutVersion(id) &&
+        !removedIds.hasWithoutVersion(id) &&
+        !laneUpdateDependents?.hasWithoutVersion(id)
     );
     const updatedIds = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
     // re-generate the package.json, this way, it has the correct data in the componentId prop.

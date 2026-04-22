@@ -161,11 +161,19 @@ export function snapResultReport(results: SnapResults): string | Report {
     laneName,
     removedComponents,
     totalComponentsCount,
+    cascadedUpdateDependents,
   }: SnapResults = results;
+  const isCascaded = (component: ConsumerComponent) =>
+    Boolean(cascadedUpdateDependents?.searchWithoutVersion(component.id));
   const changedComponents = snappedComponents.filter((component) => {
-    return !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id);
+    return (
+      !newComponents.searchWithoutVersion(component.id) &&
+      !removedComponents?.searchWithoutVersion(component.id) &&
+      !isCascaded(component)
+    );
   });
   const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
+  const cascadedComponents = snappedComponents.filter(isCascaded);
   const autoSnappedCount = autoSnappedResults ? autoSnappedResults.length : 0;
   const totalCount = totalComponentsCount ?? snappedComponents.length + autoSnappedCount;
 
@@ -194,7 +202,14 @@ export function snapResultReport(results: SnapResults): string | Report {
       'components that got a version bump',
       changedComponents.map(formatComp)
     );
-    return { newSection, changedSection };
+    const cascadedSection = cascadedComponents.length
+      ? formatSection(
+          'snapped updates',
+          "impacted dependents re-snapped to stay consistent with the lane — equivalent to clicking 'Snap updates' in the UI",
+          cascadedComponents.map(formatComp)
+        )
+      : '';
+    return { newSection, changedSection, cascadedSection };
   };
 
   const removedSection = outputIdsIfExists('removed components', removedComponents);
@@ -209,7 +224,9 @@ export function snapResultReport(results: SnapResults): string | Report {
   );
 
   // Build minimal output (no auto-snapped listing, just counts grouped by scope)
-  const { newSection, changedSection } = buildSections(hasAutoSnapped ? formatCompMinimal : formatCompDetailed);
+  const { newSection, changedSection, cascadedSection } = buildSections(
+    hasAutoSnapped ? formatCompMinimal : formatCompDetailed
+  );
 
   const autoSnapSection = (() => {
     if (!hasAutoSnapped) return '';
@@ -229,6 +246,7 @@ export function snapResultReport(results: SnapResults): string | Report {
   const data = joinSections([
     newSection,
     changedSection,
+    cascadedSection,
     autoSnapSection,
     removedSection,
     warningsSection,
@@ -240,9 +258,20 @@ export function snapResultReport(results: SnapResults): string | Report {
   }
 
   // Build detailed output (with full auto-snapped listing)
-  const { newSection: newDetailed, changedSection: changedDetailed } = buildSections(formatCompDetailed);
+  const {
+    newSection: newDetailed,
+    changedSection: changedDetailed,
+    cascadedSection: cascadedDetailed,
+  } = buildSections(formatCompDetailed);
   const detailedFooter = [summary, snapExplanation].filter(Boolean).join('\n');
-  const details = joinSections([newDetailed, changedDetailed, removedSection, warningsSection, detailedFooter]);
+  const details = joinSections([
+    newDetailed,
+    changedDetailed,
+    cascadedDetailed,
+    removedSection,
+    warningsSection,
+    detailedFooter,
+  ]);
 
   return { data, code: 0, details };
 }

@@ -115,6 +115,11 @@ export type SnapResults = BasicTagResults & {
   snappedComponents: ConsumerComponent[];
   autoSnappedResults: AutoTagResult[];
   laneName: string | null; // null if default
+  // Ids of lane.updateDependents that were cascaded into this snap pass. They appear in
+  // `snappedComponents` along with the user's direct targets, but the output distinguishes them
+  // because they're hidden components (not in the workspace bitmap) whose dep refs we rewrote to
+  // keep the lane internally consistent.
+  cascadedUpdateDependents?: ComponentIdList;
 };
 
 export type SnapFromScopeResults = {
@@ -691,6 +696,7 @@ export class SnappingMain {
       newComponents,
       removedComponents,
       totalComponentsCount,
+      cascadedUpdateDependents: updDepIds.length ? updDepIds : undefined,
     };
 
     const currentLane = consumer.getCurrentLaneId();
