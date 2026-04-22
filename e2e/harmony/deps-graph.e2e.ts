@@ -238,11 +238,11 @@ chai.use(chaiFs);
       helper.scopeHelper.destroy();
     });
   });
-  // Reproduces the "reimport drift" bug: when a second component is imported into a
-  // workspace that already has installed components, the graph-generated lockfile
-  // overwrites pnpm-lock.yaml using only the newly-imported component's subgraph.
-  // Existing workspace dependencies are then re-resolved by pnpm against the manifest
-  // specifiers, potentially drifting to newer versions.
+  // Covers the "reimport drift" path: when a second component is imported into a
+  // workspace that already has installed components, the graph-generated lockfile must
+  // not overwrite pnpm-lock.yaml with only the newly-imported component's subgraph — if
+  // it did, existing workspace dependencies would be re-resolved by pnpm against the
+  // manifest specifiers and drift to newer registry versions.
   describe('importing a component into a workspace that already has an installed component', function () {
     let randomStr: string;
     let initialLockfile: any;
@@ -301,17 +301,18 @@ chai.use(chaiFs);
     it('second import should include comp2 deps at the versions stored in its graph', () => {
       expect(lockfileAfterSecondImport.packages).to.have.property('@pnpm.e2e/bar@100.0.0');
     });
-    // This assertion currently fails: the graph-based lockfile regeneration overwrites
-    // pnpm-lock.yaml with only comp2's subgraph, so foo is re-resolved from the manifest
-    // specifier and drifts to the newer registry version.
+    // Regression coverage: graph-based lockfile regeneration previously overwrote
+    // pnpm-lock.yaml with only comp2's subgraph, causing foo to be re-resolved from the
+    // manifest specifier and drift to the newer registry version.
     it('second import should preserve comp1 deps at their previously-locked versions', () => {
       expect(lockfileAfterSecondImport.packages).to.have.property('@pnpm.e2e/foo@100.0.0');
       expect(lockfileAfterSecondImport.packages).to.not.have.property('@pnpm.e2e/foo@100.1.0');
     });
   });
-  // Same class of bug as the previous block, but for the "pull updated version of an
-  // already-imported component" path. Only the re-imported component's IDs are passed
-  // to installPackagesGracefully, so only its graph is used to regenerate the lockfile.
+  // Same class of drift as the previous block, but for the "pull updated version of an
+  // already-imported component" path. Only the re-imported component's IDs are passed to
+  // installPackagesGracefully, so only its graph is used to regenerate the lockfile — the
+  // merge helper has to preserve unrelated components' previously-locked deps.
   describe('re-importing an updated version of an already-imported component', function () {
     let randomStr: string;
     let lockfileAfterReimport: any;
@@ -365,9 +366,9 @@ chai.use(chaiFs);
       helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
     });
-    // This assertion currently fails: re-importing comp1 regenerates the lockfile from
-    // comp1's graph only, dropping comp2's bar entry. pnpm then re-resolves bar from the
-    // manifest specifier and drifts to the newer registry version.
+    // Regression coverage: re-importing comp1 must not regenerate the lockfile from
+    // comp1's graph only and drop comp2's bar entry. Otherwise pnpm may re-resolve bar
+    // from the manifest specifier and drift to the newer registry version.
     it('should preserve comp2 dependency versions that are unrelated to the re-imported component', () => {
       expect(lockfileAfterReimport.packages).to.have.property('@pnpm.e2e/bar@100.0.0');
       expect(lockfileAfterReimport.packages).to.not.have.property('@pnpm.e2e/bar@100.1.0');
