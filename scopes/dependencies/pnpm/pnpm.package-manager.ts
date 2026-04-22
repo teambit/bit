@@ -546,7 +546,11 @@ function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: LockfileF
   ).sort();
   const merged = {
     ...existing,
-    lockfileVersion: graph.lockfileVersion ?? existing.lockfileVersion,
+    // Keep the existing lockfile's schema version. convertGraphToLockfile hardcodes
+    // lockfileVersion: '9.0', so preferring graph.lockfileVersion would silently
+    // downgrade workspaces whose pnpm already writes a newer schema and trigger a
+    // full rewrite on the next install.
+    lockfileVersion: existing.lockfileVersion ?? graph.lockfileVersion,
     importers,
     packages: mergeEntryRecords(existing.packages, graph.packages),
     snapshots: mergeEntryRecords(existing.snapshots, graph.snapshots),
