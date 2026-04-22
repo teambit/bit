@@ -591,13 +591,8 @@ jobs:
       - attach_workspace:
           at: ./
       - run:
-          name: 'run OXlint'
-          command: 'cd bit && npm run oxlint'
-      - run:
-          name: 'run ESLint'
-          command: 'cd bit && node --max-old-space-size=4096 node_modules/eslint/bin/eslint.js "{src,e2e,scopes,components}/**/*.{ts,tsx}" --format junit -o junit/eslint-results.xml'
-          environment:
-            NODE_OPTIONS: --max-old-space-size=4096
+          name: 'run Oxlint'
+          command: 'cd bit && npm run lint-circle'
       - store_test_results_and_artifacts:
           test_results_path: bit/junit
           artifacts_path: bit/junit

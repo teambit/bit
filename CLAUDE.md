@@ -49,11 +49,12 @@ Use the shared formatting toolkit from `@teambit/cli` (`scopes/harmony/cli/outpu
 
 ### Linting and Formatting
 
-- `npm run lint` - Run ESLint and TypeScript type checking
-- `npm run lint:fix` - Run ESLint with auto-fix
-- `npm run oxlint` - Run oxlint (faster linter)
+- `npm run lint` - Run Oxlint and TypeScript type checking (`tsc --noEmit`)
+- `npm run lint:fix` - Run Oxlint with auto-fix
 - `npm run format` - Format code with Prettier
 - `npm run prettier:check` - Check if code is formatted correctly
+
+Lint rules live in `.oxlintrc.json`. ESLint has been fully removed from this repo's linting; the `eslint` packages remaining in `workspace.jsonc` are for `@teambit/defender.eslint-linter` which is shipped to Bit users' envs.
 
 **IMPORTANT**: After making code changes, always run `npm run lint` to verify. Do NOT run `npx tsc --noEmit` or `npx oxlint` directly — `npm run lint` is the canonical command and covers both type checking and linting for this repo.
 
@@ -132,7 +133,7 @@ Each aspect follows a standard structure:
 - TypeScript compilation with strict mode
 - Babel for transpilation
 - Webpack for bundling
-- ESLint for linting with custom rules
+- Oxlint for linting with custom rules (configured in `.oxlintrc.json`)
 
 ### Key Concepts
 
