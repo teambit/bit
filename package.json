@@ -47,6 +47,7 @@
     "oxlint:fix": "oxlint --fix --fix-suggestions --fix-dangerously scopes e2e components",
     "lint:only": "oxlint --deny-warnings scopes e2e components",
     "lint": "tsc --noEmit && oxlint --deny-warnings scopes e2e components",
+    "lint:type-aware": "oxlint --type-aware --deny-warnings scopes e2e components",
     "lint-circle": "oxlint --deny-warnings --format junit scopes e2e components > junit/oxlint-results.xml",
     "lint:fix": "oxlint --fix scopes e2e components",
     "lint-full": "./scripts/validate-import-named-aspects.sh && ./scripts/validate-no-ramda.sh && node scripts/validate-pkg-exist-in-pkg-json.js && npm run lint",
@@ -89,8 +90,8 @@
     "lint-staged": "lint-staged"
   },
   "dependencies": {
-    "oxlint": "1.12.0",
-    "oxlint-tsgolint": "0.0.4",
+    "oxlint": "^1.61.0",
+    "oxlint-tsgolint": "^0.21.1",
     "husky": "9.1.7"
   },
   "devDependencies": {},

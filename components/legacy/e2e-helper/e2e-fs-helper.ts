@@ -41,8 +41,7 @@ export default class FsHelper {
     ensureAndWriteJson(filePath, jsonContent);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  createFileOnRootLevel(name = 'foo.js', impl?: string = fixtures.fooFixture) {
+  createFileOnRootLevel(name = 'foo.js', impl: string = fixtures.fooFixture) {
     const filePath = path.join(this.scopes.localPath, name);
     fs.outputFileSync(filePath, impl);
   }

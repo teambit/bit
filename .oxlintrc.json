@@ -10,21 +10,22 @@
     "mocha": true,
     "es2022": true
   },
-  "settings": {
-    "react": {
-      "version": "detect"
-    }
-  },
+  "settings": {},
   "rules": {
     "no-console": "error",
     "max-lines": ["error", 2000],
+    "complexity": ["error", { "max": 50 }],
+    "no-shadow": "error",
+    "no-use-before-define": ["error", { "functions": false, "classes": true, "variables": true }],
     "no-return-assign": "off",
     "no-unused-vars": "off",
+    "no-unused-expressions": "off",
 
     "typescript/ban-ts-comment": "off",
     "typescript/no-explicit-any": "off",
     "typescript/no-var-requires": "off",
     "typescript/return-await": "error",
+    "typescript/dot-notation": "error",
     "typescript/consistent-type-imports": [
       "warn",
       { "prefer": "type-imports", "fixStyle": "separate-type-imports" }
@@ -37,8 +38,8 @@
     "promise/always-return": "off",
     "promise/no-nesting": "off",
 
-    "react/prop-types": "off",
     "react-hooks/exhaustive-deps": "off",
+    "react/no-this-in-sfc": "off",
 
     "unicorn/no-empty-file": "off"
   },
@@ -46,7 +47,6 @@
     {
       "files": ["e2e/**/*.ts"],
       "rules": {
-        "no-unused-expressions": "off",
         "default-case": "off"
       }
     },
