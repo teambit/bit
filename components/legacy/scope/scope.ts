@@ -2,6 +2,8 @@ import fs from 'fs-extra';
 import * as pathLib from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { reject, isNil } from 'lodash';
 import type { BitIdStr } from '@teambit/legacy-bit-id';
 import type { LaneId } from '@teambit/lane-id';
@@ -742,10 +744,11 @@ once done, to continue working, please run "bit cc"`
   }
 
   public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {
-    let allGraph: DependenciesGraph | undefined;
     if (!isFeatureEnabled(DEPS_GRAPH)) return undefined;
-    await Promise.all(
-      componentIds.map(async (componentId) => {
+    let allGraph: DependenciesGraph | undefined;
+    await pMapPool(
+      componentIds,
+      async (componentId) => {
         const graph = await this.getDependenciesGraphByComponentId(componentId);
         if (graph == null || graph.isEmpty()) return;
         if (allGraph == null) {
@@ -755,7 +758,8 @@ once done, to continue working, please run "bit cc"`
         } else {
           allGraph.merge(graph);
         }
-      })
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
     return allGraph;
   }

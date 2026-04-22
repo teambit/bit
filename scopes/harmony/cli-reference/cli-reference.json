@@ -3709,6 +3709,16 @@
         "j",
         "json",
         "return the results in json format"
+      ],
+      [
+        "",
+        "verbose",
+        "list the component ids that have no tests (default collapses them into a count)"
+      ],
+      [
+        "",
+        "summary",
+        "suppress tester output, print only the final pass/fail headline (or summary object with --json)"
       ]
     ],
     "description": "run component tests",

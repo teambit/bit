@@ -2718,18 +2718,20 @@ supports watch mode, coverage reporting, and debug mode for development workflow
 | ------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-pattern` | component name, component id, component pattern, or relative directory path. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
-| **Option**             | **Option alias** | **Description**                                                                         |
-| ---------------------- | :--------------: | --------------------------------------------------------------------------------------- |
-| `--watch`              |       `-w`       | start the tester in watch mode.                                                         |
-| `--debug`              |       `-d`       | start the tester in debug mode.                                                         |
-| `--all`                |       `-a`       | DEPRECATED. (use --unmodified)                                                          |
-| `--unmodified`         |       `-u`       | test all components, not only new and modified                                          |
-| `--junit <filepath>`   |                  | write tests results as JUnit XML format into the specified file path                    |
-| `--coverage`           |                  | show code coverage data                                                                 |
-| `--env <id>`           |       `-e`       | test only components assigned the given env                                             |
-| `--update-snapshot`    |                  | if supported by the tester, re-record every snapshot that fails during the test run     |
-| `--scope <scope-name>` |       `-s`       | DEPRECATED. (use the pattern instead, e.g. "scopeName/\*\*"). name of the scope to test |
-| `--json`               |       `-j`       | return the results in json format                                                       |
+| **Option**             | **Option alias** | **Description**                                                                                 |
+| ---------------------- | :--------------: | ----------------------------------------------------------------------------------------------- |
+| `--watch`              |       `-w`       | start the tester in watch mode.                                                                 |
+| `--debug`              |       `-d`       | start the tester in debug mode.                                                                 |
+| `--all`                |       `-a`       | DEPRECATED. (use --unmodified)                                                                  |
+| `--unmodified`         |       `-u`       | test all components, not only new and modified                                                  |
+| `--junit <filepath>`   |                  | write tests results as JUnit XML format into the specified file path                            |
+| `--coverage`           |                  | show code coverage data                                                                         |
+| `--env <id>`           |       `-e`       | test only components assigned the given env                                                     |
+| `--update-snapshot`    |                  | if supported by the tester, re-record every snapshot that fails during the test run             |
+| `--scope <scope-name>` |       `-s`       | DEPRECATED. (use the pattern instead, e.g. "scopeName/\*\*"). name of the scope to test         |
+| `--json`               |       `-j`       | return the results in json format                                                               |
+| `--verbose`            |                  | list the component ids that have no tests (default collapses them into a count)                 |
+| `--summary`            |                  | suppress tester output, print only the final pass/fail headline (or summary object with --json) |
 
 ---
 

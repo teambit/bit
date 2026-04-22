@@ -89,6 +89,7 @@ export default function (workDir: string, envId: string): Configuration {
       new ReactRefreshWebpackPlugin({
         overlay: {
           sockPath: `_hmr/${envId}`,
+          entry: require.resolve('./overlay/webpackHotDevClient'),
           module: require.resolve('./overlay/refreshOverlayInterop'),
         },
 
