@@ -592,7 +592,7 @@ jobs:
           at: ./
       - run:
           name: 'run Oxlint'
-          command: 'cd bit && mkdir -p junit && npm run lint-circle'
+          command: 'cd bit && npm run lint-circle'
       - store_test_results_and_artifacts:
           test_results_path: bit/junit
           artifacts_path: bit/junit

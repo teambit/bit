@@ -48,7 +48,7 @@
     "lint:only": "oxlint --deny-warnings scopes e2e components",
     "lint": "tsc --noEmit && oxlint --deny-warnings scopes e2e components",
     "lint:type-aware": "oxlint --type-aware --deny-warnings scopes e2e components",
-    "lint-circle": "oxlint --deny-warnings --format junit scopes e2e components > junit/oxlint-results.xml",
+    "lint-circle": "mkdir -p junit && oxlint --deny-warnings --format junit scopes e2e components > junit/oxlint-results.xml",
     "lint:fix": "oxlint --fix scopes e2e components",
     "lint-full": "./scripts/validate-import-named-aspects.sh && ./scripts/validate-no-ramda.sh && node scripts/validate-pkg-exist-in-pkg-json.js && npm run lint",
     "format": "prettier \"{e2e,scopes,components}/**/*.{ts,js,jsx,css,scss,tsx,md,mdx}\" --write",
