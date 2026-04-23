@@ -57,21 +57,7 @@
         color: #ffffff;
       }
     }
-
-    .compositionDot {
-      background: rgba(255, 255, 255, 0.5);
-    }
   }
-}
-
-.compositionDot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--bit-accent-color, #6c5ce7);
-  opacity: 0.4;
-  flex-shrink: 0;
-  margin-right: 8px;
 }
 
 .panelLink {
@@ -117,7 +103,6 @@
   width: 22px;
   height: 22px;
   border-radius: 4px;
-  color: var(--bit-text-color-light, #8b8d98);
   cursor: pointer;
   transition: all 100ms ease;
   text-decoration: none;
