@@ -114,7 +114,7 @@ export function Compositions({
       const next = Math.max(120, Math.min(600, startHeight + (startY - ev.clientY)));
       trayHeightRef.current = next;
       if (trayRef.current) {
-        trayRef.current.style.height = `${next}px`;
+        trayRef.current.style.maxHeight = `${next}px`;
       }
     };
     const onUp = () => {
@@ -187,7 +187,7 @@ export function Compositions({
               sandbox={sandboxValue}
             />
             {showControlsTray && (
-              <div ref={trayRef} className={styles.controlsTray} style={{ height: trayHeightRef.current }}>
+              <div ref={trayRef} className={styles.controlsTray} style={{ maxHeight: trayHeightRef.current }}>
                 <div className={styles.trayDragHandle} onMouseDown={onTrayDragStart}>
                   <div className={styles.trayDragBar} />
                 </div>
