@@ -399,7 +399,7 @@ export class InstallMain {
       }
     );
 
-    const dependenciesGraph = await this.resolveDependenciesGraph(options);
+    const dependenciesGraph = await this.resolveDependenciesGraph(options, { hasRootComponents });
     const pmInstallOptions: PackageManagerInstallOptions = {
       ...calcManifestsOpts,
       autoInstallPeers: this.dependencyResolver.config.autoInstallPeers,
@@ -525,10 +525,23 @@ export class InstallMain {
   }
 
   private async resolveDependenciesGraph(
-    options?: ModulesInstallOptions
+    options: ModulesInstallOptions | undefined,
+    context: { hasRootComponents: boolean }
   ): Promise<DependenciesGraph | undefined> {
     if (options?.dependenciesGraph) return options.dependenciesGraph;
     if (!options?.restoreFromDependenciesGraph) return undefined;
+    // The package manager only seeds the lockfile from a supplied graph when the workspace
+    // has `rootComponents` enabled (see PnpmPackageManager.install). Without that, --restore
+    // would silently no-op and re-resolve everything from manifest specifiers, so we bail
+    // out explicitly instead of letting the user think the graph was applied.
+    if (!context.hasRootComponents) {
+      this.logger.console(
+        chalk.yellow(
+          '--restore requires "rootComponents: true" in the dependency-resolver config; falling back to a regular install.'
+        )
+      );
+      return undefined;
+    }
     // --restore is an explicit opt-in, so bypass the DEPS_GRAPH feature toggle that would
     // otherwise make this return undefined on workspaces that haven't enabled the flag.
     const graph = await this.workspace.scope.getDependenciesGraphByComponentIds(this.workspace.listIds(), {
