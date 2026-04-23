@@ -69,12 +69,10 @@
   overflow: hidden;
 }
 
-// ─── Controls Panel (bottom tray) ───────────────────────────────────────
 .controlsPanel {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  background: var(--compositions-panel-bg, #f7f7f8);
   min-height: 36px;
   overflow: hidden;
   border-top: 1px solid var(--bit-border-color-lightest, #eaeaec);
