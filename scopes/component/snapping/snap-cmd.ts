@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import { countBy } from 'lodash';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ComponentID } from '@teambit/component-id';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { Command, CommandOptions, Report } from '@teambit/cli';
 import {
@@ -165,6 +166,9 @@ export function snapResultReport(results: SnapResults): string | Report {
   }: SnapResults = results;
   const isCascaded = (component: ConsumerComponent) =>
     Boolean(cascadedUpdateDependents?.searchWithoutVersion(component.id));
+  // Cascaded updateDependents are hidden lane deps re-snapped to keep the lane consistent —
+  // they don't live in the workspace bitmap, so we surface them in the "auto-snapped
+  // dependents" bucket rather than mixing them into "changed components".
   const changedComponents = snappedComponents.filter((component) => {
     return (
       !newComponents.searchWithoutVersion(component.id) &&
@@ -175,6 +179,9 @@ export function snapResultReport(results: SnapResults): string | Report {
   const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
   const cascadedComponents = snappedComponents.filter(isCascaded);
   const autoSnappedCount = autoSnappedResults ? autoSnappedResults.length : 0;
+  const cascadedCount = cascadedComponents.length;
+  const updatedDependentsCount = autoSnappedCount + cascadedCount;
+  const hasUpdatedDependents = updatedDependentsCount > 0;
   const totalCount = totalComponentsCount ?? snappedComponents.length + autoSnappedCount;
 
   const formatCompMinimal = (component: ConsumerComponent): string => {
@@ -193,8 +200,6 @@ export function snapResultReport(results: SnapResults): string | Report {
     return output;
   };
 
-  const hasAutoSnapped = autoSnappedCount > 0;
-
   const buildSections = (formatComp: (c: ConsumerComponent) => string) => {
     const newSection = formatSection('new components', 'first version for components', addedComponents.map(formatComp));
     const changedSection = formatSection(
@@ -202,14 +207,7 @@ export function snapResultReport(results: SnapResults): string | Report {
       'components that got a version bump',
       changedComponents.map(formatComp)
     );
-    const cascadedSection = cascadedComponents.length
-      ? formatSection(
-          'snapped updates',
-          "impacted dependents re-snapped to stay consistent with the lane — equivalent to clicking 'Snap updates' in the UI",
-          cascadedComponents.map(formatComp)
-        )
-      : '';
-    return { newSection, changedSection, cascadedSection };
+    return { newSection, changedSection };
   };
 
   const removedSection = outputIdsIfExists('removed components', removedComponents);
@@ -223,51 +221,59 @@ export function snapResultReport(results: SnapResults): string | Report {
     '(use "bit export" to push these components to a remote)\n(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)'
   );
 
-  // Build minimal output (no auto-snapped listing, just counts grouped by scope)
-  const { newSection, changedSection, cascadedSection } = buildSections(
-    hasAutoSnapped ? formatCompMinimal : formatCompDetailed
-  );
-
+  // Minimal auto-snap section: count + scope breakdown. Merges regular auto-snapped dependents
+  // (workspace components) and cascaded updateDependents (hidden lane deps) so users see a
+  // single rolled-up count and the `--details` output explains the split.
   const autoSnapSection = (() => {
-    if (!hasAutoSnapped) return '';
-    const scopeCounts = countBy(autoSnappedResults, (r) => r.component.id.scope);
+    if (!hasUpdatedDependents) return '';
+    const autoSnapIds: ComponentID[] = (autoSnappedResults ?? []).map((r) => r.component.id);
+    const cascadedIds: ComponentID[] = cascadedComponents.map((c) => c.id);
+    const scopeCounts = countBy([...autoSnapIds, ...cascadedIds], (id) => id.scope);
     const sorted = Object.entries(scopeCounts).sort(([, a], [, b]) => b - a);
     const MAX_SHOWN = 4;
     const shown = sorted.slice(0, MAX_SHOWN).map(([scope, n]) => `${scope} (${n})`);
     const remaining = sorted.length - MAX_SHOWN;
     const scopeLine = remaining > 0 ? [...shown, `+ ${remaining} more scopes`].join(' · ') : shown.join(' · ');
-    const title = formatTitle(`auto-snapped dependents (${autoSnappedCount})`);
+    const title = formatTitle(`auto-snapped dependents (${updatedDependentsCount})`);
     const scopes = `   ${scopeLine}`;
     const hint = formatDetailsHint('full list of auto-snapped dependents');
     return `${title}\n${scopes}\n${hint}`;
   })();
 
+  // Build minimal output (no auto-snapped listing, just counts grouped by scope)
+  const { newSection, changedSection } = buildSections(hasUpdatedDependents ? formatCompMinimal : formatCompDetailed);
   const footerParts = [summary, snapExplanation].filter(Boolean).join('\n');
   const data = joinSections([
     newSection,
     changedSection,
-    cascadedSection,
     autoSnapSection,
     removedSection,
     warningsSection,
     footerParts,
   ]);
 
-  if (!hasAutoSnapped) {
+  if (!hasUpdatedDependents) {
     return data;
   }
 
-  // Build detailed output (with full auto-snapped listing)
-  const {
-    newSection: newDetailed,
-    changedSection: changedDetailed,
-    cascadedSection: cascadedDetailed,
-  } = buildSections(formatCompDetailed);
+  // Detailed output: per-component auto-snap info is already embedded inline via
+  // formatCompDetailed. Cascaded updateDependents don't have a single `triggeredBy` (they're
+  // driven by the overall lane change, not any one workspace component), so we list them in a
+  // dedicated subsection marked as "not in workspace" so users understand why they don't
+  // appear in their source tree.
+  const { newSection: newDetailed, changedSection: changedDetailed } = buildSections(formatCompDetailed);
+  const cascadedDetailSection = cascadedCount
+    ? formatSection(
+        'auto-snapped dependents (not in workspace)',
+        'lane updateDependents re-snapped to stay consistent with the changes',
+        cascadedComponents.map((c) => formatItem(compInBold(c.id)))
+      )
+    : '';
   const detailedFooter = [summary, snapExplanation].filter(Boolean).join('\n');
   const details = joinSections([
     newDetailed,
     changedDetailed,
-    cascadedDetailed,
+    cascadedDetailSection,
     removedSection,
     warningsSection,
     detailedFooter,

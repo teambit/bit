@@ -112,10 +112,9 @@ exporting is the final step after development and versioning to share components
         return formatSection('exported lane', '', [formatItem(chalk.bold(exportedLane))]);
       }
       const lanesOutput = exportedLanes.length ? ` the lane ${chalk.bold(exportedLanes[0].id())} and` : '';
-      // Split the exported ids into "regular lane components" vs "updates" so the output matches
-      // the UI's terminology ('Snap updates' button, IMPACT section). The updates list is the
-      // lane's `updateDependents` — hidden dependents that got re-snapped to keep the lane
-      // consistent with the user's changes.
+      // Split the exported ids into workspace components vs. updated dependents. The updated
+      // dependents come from the lane's `updateDependents` list — hidden components that got
+      // re-snapped (via a 'Snap updates' action or a local cascade) to keep the lane consistent.
       const laneUpdateIds = exportedLanes[0]?.updateDependents;
       const isUpdate = (id: ComponentID) => Boolean(laneUpdateIds?.find((u) => u.isEqualWithoutVersion(id)));
       const renderItem = (id: ComponentID) => {
@@ -136,8 +135,8 @@ exporting is the final step after development and versioning to share components
         : '';
       const updatesPart = updateIds.length
         ? formatSection(
-            'exported updates',
-            "impacted dependents pushed to keep the lane consistent (from a 'Snap updates' / local cascade)",
+            'updated dependents',
+            'hidden dependents re-snapped and pushed to keep the lane consistent',
             updateIds.map(renderItem)
           )
         : '';
