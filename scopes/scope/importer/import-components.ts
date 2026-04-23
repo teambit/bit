@@ -387,9 +387,9 @@ export default class ImportComponents {
   private async mergeAndSaveLaneObject(lane: Lane) {
     const mergeLaneResults = await this.scope.sources.mergeLane(lane, true);
     const mergedLane = mergeLaneResults.mergeLane;
-    // Always write a history entry on import — `bit reset` needs a baseline entry to rewind to
-    // when undoing a local cascade snap. See the identical call in importer.main.runtime.ts.
+    const isRemoteLaneEqualsToMergedLane = lane.isEqual(mergedLane);
     await this.scope.lanes.saveLane(mergedLane, {
+      saveLaneHistory: !isRemoteLaneEqualsToMergedLane,
       laneHistoryMsg: 'import (merge from remote)',
     });
   }

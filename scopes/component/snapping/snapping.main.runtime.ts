@@ -785,17 +785,19 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       results = await untag();
 
       // Remove lane history entries that correspond to the reset snaps, and rewind the lane's
-      // `updateDependents` / `overrideUpdateDependents` to the state recorded in the newest
-      // remaining history entry. Each snap uses its batchId as the lane history key, so we can
-      // match them. Without this, a cascaded snap's updateDependents entries stay stuck on the
+      // `updateDependents` / `overrideUpdateDependents` to the state recorded in the entry
+      // immediately BEFORE the earliest reset batch. Each snap uses its batchId as the lane
+      // history key. Without this, a cascaded snap's updateDependents entries stay stuck on the
       // now-orphaned cascade hashes. `--head` passes a single batch, `--all` passes all of them;
-      // picking the "newest remaining" entry gives `--head` snap-by-snap granularity while
-      // `--all` rewinds all the way back.
+      // picking "the entry before the earliest excluded batch (by date)" gives `--head`
+      // snap-by-snap granularity while `--all` rewinds all the way back — AND it correctly
+      // ignores any newer history entries (e.g. a `bit fetch --lanes` that ran after the snap)
+      // whose content still reflects the post-cascade state.
       if (currentLane) {
         const allBatchIds = uniq(results.flatMap((r) => r.batchIds || []));
         if (allBatchIds.length) {
           const laneHistory = await consumer.scope.lanes.getOrCreateLaneHistory(currentLane);
-          const priorEntry = laneHistory.getLatestEntryExcluding(allBatchIds);
+          const priorEntry = laneHistory.getLatestEntryBeforeBatches(allBatchIds);
           laneHistory.removeHistoryEntries(allBatchIds);
           consumer.scope.objects.add(laneHistory);
 

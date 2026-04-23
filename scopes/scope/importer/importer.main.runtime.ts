@@ -148,11 +148,9 @@ export class ImporterMain {
       includeUpdateDependents,
     });
     const { mergeLane } = await this.scope.legacyScope.sources.mergeLane(lane, true);
-    // Always record a history entry on fetch — `bit reset` relies on having a baseline entry
-    // that captures the state BEFORE any local snap so it can rewind cleanly. Skipping the
-    // entry when the merged lane equals the remote (previous optimization) left no baseline,
-    // so a reset after the first cascade would wipe updateDependents entirely.
+    const isRemoteLaneEqualsToMergedLane = lane.isEqual(mergeLane);
     await this.scope.legacyScope.lanes.saveLane(mergeLane, {
+      saveLaneHistory: !isRemoteLaneEqualsToMergedLane,
       laneHistoryMsg: 'fetch (merge from remote)',
     });
   }
@@ -267,9 +265,9 @@ export class ImporterMain {
         reason: `for fetching lane ${lane.id()}`,
       });
       const { mergeLane } = await this.scope.legacyScope.sources.mergeLane(lane, true);
-      // Always write a history entry on fetch (see the same call in `fetchLaneComponents` for
-      // the full rationale — `bit reset` needs a baseline to rewind to).
+      const isRemoteLaneEqualsToMergedLane = lane.isEqual(mergeLane);
       await this.scope.legacyScope.lanes.saveLane(mergeLane, {
+        saveLaneHistory: !isRemoteLaneEqualsToMergedLane,
         laneHistoryMsg: 'fetch (merge from remote)',
       });
       const results = importResults.map((result) => result.component.id);

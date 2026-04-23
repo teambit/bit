@@ -108,14 +108,26 @@ export class LaneHistory extends BitObject {
   }
 
   /**
-   * Return the most recent history entry (by log.date) excluding the given keys. Used by
-   * `bit reset` to find the "post-revert" target state after removing the batches being reset.
+   * Return the history entry that captures the state immediately BEFORE the earliest of the
+   * given batches. Used by `bit reset` to find the "post-rewind" target state: entries recorded
+   * AFTER a cascaded snap (e.g. a later `bit fetch --lanes` that wrote its own history entry)
+   * must NOT be the rewind target — they'd leave the lane in the post-cascade state. Picking by
+   * "date < earliest excluded date" guarantees we land on state that predates the reset.
+   *
+   * Returns `undefined` when no entry precedes the excluded batches (e.g. the reset covers the
+   * very first entries on the lane — nothing older to restore from).
    */
-  getLatestEntryExcluding(excludeKeys: string[]): HistoryItem | undefined {
-    const entries = Object.entries(this.history)
-      .filter(([key]) => !excludeKeys.includes(key))
-      .sort(([, a], [, b]) => Number(b.log.date) - Number(a.log.date));
-    return entries[0]?.[1];
+  getLatestEntryBeforeBatches(batchIds: string[]): HistoryItem | undefined {
+    const excludedDates = batchIds
+      .map((id) => this.history[id]?.log.date)
+      .filter((d): d is string => Boolean(d))
+      .map((d) => Number(d));
+    if (!excludedDates.length) return undefined;
+    const earliestExcludedDate = Math.min(...excludedDates);
+    const candidates = Object.values(this.history)
+      .filter((e) => Number(e.log.date) < earliestExcludedDate)
+      .sort((a, b) => Number(b.log.date) - Number(a.log.date));
+    return candidates[0];
   }
 
   removeHistoryEntries(keys: string[]) {
