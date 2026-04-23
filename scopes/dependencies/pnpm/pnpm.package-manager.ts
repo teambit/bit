@@ -150,10 +150,6 @@ export class PnpmPackageManager implements PackageManager {
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
-    // When dependenciesGraph is explicitly supplied (by the component writer on import, or
-    // by `bit install --restore`), honor it regardless of the DEPS_GRAPH feature toggle —
-    // the flag gates the *providers* that fetch graphs, so the presence of one here means
-    // the caller already decided this install should be seeded from stored graphs.
     if (
       installOptions.dependenciesGraph &&
       (installOptions.rootComponents || installOptions.rootComponentsForCapsules)

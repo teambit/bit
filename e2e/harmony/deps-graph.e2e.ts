@@ -422,10 +422,6 @@ export default new ${className}();
       expect(lockfileAfterRestore.packages).to.not.have.property('@pnpm.e2e/bar@100.1.0');
     });
   });
-  // --restore is an explicit opt-in, so it has to bypass the DEPS_GRAPH feature toggle
-  // and work on workspaces that never enabled the flag. The graph itself was authored on
-  // a scope that had the flag on at tag time, but the consumer shouldn't need to flip
-  // the flag just to restore from it.
   describe('bit install --restore works when the DEPS_GRAPH feature toggle is disabled', function () {
     let randomStr: string;
     let lockfileAfterRestore: any;
@@ -436,7 +432,7 @@ export default new ${className}();
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      npmCiRegistry.setRegistry();
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -456,11 +452,9 @@ export default new ${className}();
 
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
+      npmCiRegistry.setRegistry();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
 
-      // Turn the DEPS_GRAPH feature toggle off for the remainder of the test. The outer
-      // describe's after() hook will restore it via resetFeatures, but we also restore it
-      // here so subsequent describes in this suite aren't affected.
       helper.command.resetFeatures();
       try {
         helper.command.import(`${helper.scopes.remote}/comp1@latest`);
@@ -475,7 +469,6 @@ export default new ${className}();
     });
     after(() => {
       npmCiRegistry.destroy();
-      helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
     });
     it('should still restore the lockfile from the stored graph', () => {

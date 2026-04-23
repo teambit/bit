@@ -52,7 +52,11 @@ import type {
   WorkspacePolicy,
   UpdatedComponent,
 } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect, ComponentDependency, ensureHoistedDependencyResolution } from '@teambit/dependency-resolver';
+import {
+  DependencyResolverAspect,
+  ComponentDependency,
+  ensureHoistedDependencyResolution,
+} from '@teambit/dependency-resolver';
 import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
 import type { Logger, LoggerMain } from '@teambit/logger';
@@ -395,7 +399,7 @@ export class InstallMain {
       }
     );
 
-    const dependenciesGraph = await this.resolveDependenciesGraph(options);
+    const dependenciesGraph = await this.resolveDependenciesGraph(options, { hasRootComponents });
     const pmInstallOptions: PackageManagerInstallOptions = {
       ...calcManifestsOpts,
       autoInstallPeers: this.dependencyResolver.config.autoInstallPeers,
@@ -542,12 +546,19 @@ export class InstallMain {
   }
 
   private async resolveDependenciesGraph(
-    options?: ModulesInstallOptions
+    options: ModulesInstallOptions | undefined,
+    context: { hasRootComponents: boolean }
   ): Promise<DependenciesGraph | undefined> {
     if (options?.dependenciesGraph) return options.dependenciesGraph;
     if (!options?.restoreFromDependenciesGraph) return undefined;
-    // --restore is an explicit opt-in, so bypass the DEPS_GRAPH feature toggle that would
-    // otherwise make this return undefined on workspaces that haven't enabled the flag.
+    if (!context.hasRootComponents) {
+      this.logger.console(
+        chalk.yellow(
+          '--restore requires "rootComponents: true" in the dependency-resolver config; falling back to a regular install.'
+        )
+      );
+      return undefined;
+    }
     const graph = await this.workspace.scope.getDependenciesGraphByComponentIds(this.workspace.listIds(), {
       ignoreFeatureToggle: true,
     });

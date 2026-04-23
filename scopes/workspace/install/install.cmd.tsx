@@ -73,7 +73,7 @@ automatically imports components, compiles components, links to node_modules, an
     [
       '',
       'restore',
-      'reconstruct the lockfile from each workspace component\'s stored dependency graph before installing',
+      "reconstruct the lockfile from each workspace component's stored dependency graph before installing",
     ],
     [
       '',
