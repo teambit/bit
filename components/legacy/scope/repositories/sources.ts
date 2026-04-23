@@ -761,6 +761,15 @@ possible causes:
       existingLane.updateDependents = lane.updateDependents;
     }
 
-    return { mergeResults, mergeErrors, mergeLane: existingLane || lane };
+    const mergeLane = existingLane || lane;
+    // `overrideUpdateDependents` is a one-shot wire signal from the client to the remote —
+    // once we've honored it above, it must not persist on the remote scope. Clearing it here
+    // covers both the "existingLane was merged" path AND the first-time-push path (where we'd
+    // otherwise store the incoming `lane` as-is with the flag still set).
+    if (isExport && mergeLane.shouldOverrideUpdateDependents()) {
+      mergeLane.setOverrideUpdateDependents(false);
+    }
+
+    return { mergeResults, mergeErrors, mergeLane };
   }
 }

@@ -235,12 +235,13 @@ export default class Lane extends BitObject {
    *     (see `components/legacy/scope/repositories/sources.ts`) can read it off the INCOMING
    *     lane and decide whether to override `existingLane.updateDependents`.
    *
-   * The remote does NOT copy this flag onto its stored `existingLane`, so it's never persisted
-   * on the remote scope — only used transiently during merge.
+   * The remote clears the flag on the merge result before persisting (see `sources.mergeLane`
+   * with `isExport=true`), so it's never stored on the remote scope — even on a first-time push
+   * where there's no `existingLane` and the incoming `lane` becomes the stored object.
    *
-   * In the workspace flow, `updateLanesAfterExport` clears the flag locally once the push has
-   * succeeded, so the lane is never left in the "override" state after its request has been
-   * honored.
+   * In the workspace flow, `updateLanesAfterExport` also clears the flag locally once the push
+   * has succeeded, so the lane is never left in the "override" state after its request has
+   * been honored.
    */
   setOverrideUpdateDependents(overrideUpdateDependents: boolean) {
     this.overrideUpdateDependents = overrideUpdateDependents;
