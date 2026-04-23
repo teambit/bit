@@ -211,6 +211,17 @@ export default class Lane extends BitObject {
     return this.overrideUpdateDependents;
   }
   /**
+   * Single-shot restore of both `updateDependents` and `overrideUpdateDependents` — used by
+   * `bit reset` when rewinding to a prior `LaneHistory` entry. Direct property reset without
+   * going through `addComponentToUpdateDependents` (which has "add" semantics and would not
+   * handle the "wipe and set" case cleanly).
+   */
+  setUpdateDependentsAndOverride(updateDependents: ComponentID[] | undefined, override: boolean) {
+    this.updateDependents = updateDependents?.length ? [...updateDependents] : undefined;
+    this.overrideUpdateDependents = override || undefined;
+    this.hasChanged = true;
+  }
+  /**
    * !!! important !!!
    * this flag is a one-shot instruction for the NEXT export: "the `updateDependents` list on this
    * lane was rewritten locally — send them over, the remote should accept them as-is instead of

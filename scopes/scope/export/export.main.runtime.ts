@@ -877,6 +877,11 @@ async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
   if (lane.shouldOverrideUpdateDependents()) {
     lane.setOverrideUpdateDependents(false);
     consumer.scope.objects.add(lane);
+    // Record the post-export state in LaneHistory so a later `bit reset` can rewind to this
+    // checkpoint (not past it). Without this entry, resetting a snap made after an export would
+    // over-revert back to the pre-export state.
+    const laneHistory = await consumer.scope.lanes.updateLaneHistory(lane, 'exported');
+    consumer.scope.objects.add(laneHistory);
     await consumer.scope.objects.persist();
   }
 }

@@ -10,6 +10,19 @@ export type HistoryItem = {
   log: Log;
   components: string[];
   deleted?: string[];
+  /**
+   * Snapshot of `lane.updateDependents` at the time this history entry was recorded. Used by
+   * `bit reset` to restore the prior `updateDependents` state when a cascaded snap is rolled
+   * back, and by audit flows that want to see how updateDependents evolved over the lane's life.
+   * Optional for backward compatibility with entries written before this field existed.
+   */
+  updateDependents?: string[];
+  /**
+   * The value of `lane.overrideUpdateDependents` at the time this history entry was recorded.
+   * Needed alongside `updateDependents` so that `bit reset` can restore not just the list but
+   * whether the lane was in the "needs to push updateDependents" state at that point.
+   */
+  overrideUpdateDependents?: boolean;
 };
 
 type History = { [uuid: string]: HistoryItem };
@@ -83,7 +96,26 @@ export class LaneHistory extends BitObject {
     const deleted = laneObj.components
       .filter((c) => c.isDeleted)
       .map((c) => c.id.changeVersion(c.head.toString()).toString());
-    this.history[historyKey || v4()] = { log, components, ...(deleted.length && { deleted }) };
+    const updateDependents = laneObj.updateDependents?.map((id) => id.toString());
+    const overrideUpdateDependents = laneObj.shouldOverrideUpdateDependents() || undefined;
+    this.history[historyKey || v4()] = {
+      log,
+      components,
+      ...(deleted.length && { deleted }),
+      ...(updateDependents?.length && { updateDependents }),
+      ...(overrideUpdateDependents && { overrideUpdateDependents }),
+    };
+  }
+
+  /**
+   * Return the most recent history entry (by log.date) excluding the given keys. Used by
+   * `bit reset` to find the "post-revert" target state after removing the batches being reset.
+   */
+  getLatestEntryExcluding(excludeKeys: string[]): HistoryItem | undefined {
+    const entries = Object.entries(this.history)
+      .filter(([key]) => !excludeKeys.includes(key))
+      .sort(([, a], [, b]) => Number(b.log.date) - Number(a.log.date));
+    return entries[0]?.[1];
   }
 
   removeHistoryEntries(keys: string[]) {

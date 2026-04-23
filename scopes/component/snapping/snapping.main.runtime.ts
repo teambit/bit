@@ -784,14 +784,30 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     if (isRealUntag) {
       results = await untag();
 
-      // Remove lane history entries that correspond to the reset snaps.
-      // Each snap uses its batchId as the lane history key, so we can match them.
+      // Remove lane history entries that correspond to the reset snaps, and rewind the lane's
+      // `updateDependents` / `overrideUpdateDependents` to the state recorded in the newest
+      // remaining history entry. Each snap uses its batchId as the lane history key, so we can
+      // match them. Without this, a cascaded snap's updateDependents entries stay stuck on the
+      // now-orphaned cascade hashes. `--head` passes a single batch, `--all` passes all of them;
+      // picking the "newest remaining" entry gives `--head` snap-by-snap granularity while
+      // `--all` rewinds all the way back.
       if (currentLane) {
         const allBatchIds = uniq(results.flatMap((r) => r.batchIds || []));
         if (allBatchIds.length) {
           const laneHistory = await consumer.scope.lanes.getOrCreateLaneHistory(currentLane);
+          const priorEntry = laneHistory.getLatestEntryExcluding(allBatchIds);
           laneHistory.removeHistoryEntries(allBatchIds);
           consumer.scope.objects.add(laneHistory);
+
+          const cascadedToClean = applyUpdateDependentsFromHistoryEntry(currentLane, priorEntry);
+          if (cascadedToClean.length) {
+            for (const id of cascadedToClean) {
+              const modelComp = await consumer.scope.getModelComponentIfExist(id);
+              if (modelComp && id.version) modelComp.removeVersion(id.version);
+              if (modelComp) consumer.scope.objects.add(modelComp);
+            }
+            consumer.scope.objects.add(currentLane);
+          }
         }
       }
 
@@ -1517,5 +1533,34 @@ another option, in case this dependency is not in main yet is to remove all refe
 }
 
 SnappingAspect.addRuntime(SnappingMain);
+
+/**
+ * Restore `lane.updateDependents` / `overrideUpdateDependents` from a `LaneHistory` entry (the
+ * entry that immediately precedes the batches being reset), and return the updDep ids that
+ * existed on the lane but don't appear in the restored snapshot — these are the orphaned cascade
+ * Version objects that the caller needs to remove from their ModelComponent.
+ *
+ * If there's no prior entry (e.g. the lane was created via a path that skipped lane-history),
+ * we clear updateDependents and the override flag, and report everything currently on the lane
+ * as orphaned. That's the same effect as saying "there's no known prior state, so fall back to
+ * an empty one".
+ */
+function applyUpdateDependentsFromHistoryEntry(
+  lane: Lane,
+  priorEntry: { updateDependents?: string[]; overrideUpdateDependents?: boolean } | undefined
+): ComponentID[] {
+  const snapshotIds = (priorEntry?.updateDependents || []).map((s) => ComponentID.fromString(s));
+  const snapshotKeys = new Set(snapshotIds.map((id) => id.toString()));
+  const removed = (lane.updateDependents || []).filter((current) => !snapshotKeys.has(current.toString()));
+  if (priorEntry) {
+    lane.setUpdateDependentsAndOverride(
+      snapshotIds.length ? snapshotIds : undefined,
+      priorEntry.overrideUpdateDependents || false
+    );
+  } else {
+    lane.setUpdateDependentsAndOverride(undefined, false);
+  }
+  return removed;
+}
 
 export default SnappingMain;
