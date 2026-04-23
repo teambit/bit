@@ -74,7 +74,6 @@ export function CompositionsPanel({
               className={classNames(styles.compositionItem, composition === active && styles.active)}
             >
               <a className={styles.panelLink} onClick={() => handleSelect(composition)}>
-                <span className={styles.compositionDot} />
                 <span className={styles.name}>{composition.displayName}</span>
               </a>
               <div className={styles.itemActions}>
