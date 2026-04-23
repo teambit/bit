@@ -1487,8 +1487,11 @@ export class ScopeMain implements ComponentFactory {
     return scope;
   }
 
-  public getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {
-    return this.legacyScope.getDependenciesGraphByComponentIds(componentIds);
+  public getDependenciesGraphByComponentIds(
+    componentIds: ComponentID[],
+    options?: { ignoreFeatureToggle?: boolean }
+  ): Promise<DependenciesGraph | undefined> {
+    return this.legacyScope.getDependenciesGraphByComponentIds(componentIds, options);
   }
 }
 

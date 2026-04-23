@@ -529,7 +529,11 @@ export class InstallMain {
   ): Promise<DependenciesGraph | undefined> {
     if (options?.dependenciesGraph) return options.dependenciesGraph;
     if (!options?.restoreFromDependenciesGraph) return undefined;
-    const graph = await this.workspace.scope.getDependenciesGraphByComponentIds(this.workspace.listIds());
+    // --restore is an explicit opt-in, so bypass the DEPS_GRAPH feature toggle that would
+    // otherwise make this return undefined on workspaces that haven't enabled the flag.
+    const graph = await this.workspace.scope.getDependenciesGraphByComponentIds(this.workspace.listIds(), {
+      ignoreFeatureToggle: true,
+    });
     if (!graph) {
       this.logger.console(
         chalk.yellow(

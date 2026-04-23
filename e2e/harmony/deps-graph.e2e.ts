@@ -607,4 +607,66 @@ chai.use(chaiFs);
       expect(lockfileAfterRestore.packages).to.not.have.property('@pnpm.e2e/bar@100.1.0');
     });
   });
+  // --restore is an explicit opt-in, so it has to bypass the DEPS_GRAPH feature toggle
+  // and work on workspaces that never enabled the flag. The graph itself was authored on
+  // a scope that had the flag on at tag time, but the consumer shouldn't need to flip
+  // the flag just to restore from it.
+  describe('bit install --restore works when the DEPS_GRAPH feature toggle is disabled', function () {
+    let randomStr: string;
+    let lockfileAfterRestore: any;
+    before(async () => {
+      randomStr = generateRandomStr(4);
+      const name = `@ci/${randomStr}.{name}`;
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
+      await npmCiRegistry.init();
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        { policy: { peers: [] } },
+        false,
+        'custom-env/env',
+        'custom-env/env'
+      );
+      helper.fs.createFile('comp1', 'comp1.js', 'require("@pnpm.e2e/foo"); // eslint-disable-line');
+      helper.command.addComponent('comp1');
+      helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-env/env`, {});
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      await addDistTag({ package: '@pnpm.e2e/foo', version: '100.0.0', distTag: 'latest' });
+      helper.command.install('--add-missing-deps');
+      helper.command.tagAllComponents('--skip-tests');
+      helper.command.export();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+
+      // Turn the DEPS_GRAPH feature toggle off for the remainder of the test. The outer
+      // describe's after() hook will restore it via resetFeatures, but we also restore it
+      // here so subsequent describes in this suite aren't affected.
+      helper.command.resetFeatures();
+      try {
+        helper.command.import(`${helper.scopes.remote}/comp1@latest`);
+        await addDistTag({ package: '@pnpm.e2e/foo', version: '100.1.0', distTag: 'latest' });
+        helper.fs.deletePath('pnpm-lock.yaml');
+        helper.fs.deletePath('node_modules');
+        helper.command.runCmd('bit install --restore');
+        lockfileAfterRestore = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8'));
+      } finally {
+        helper.command.setFeatures(DEPS_GRAPH);
+      }
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.command.delConfig('registry');
+      helper.scopeHelper.destroy();
+    });
+    it('should still restore the lockfile from the stored graph', () => {
+      expect(lockfileAfterRestore.bit.restoredFromModel).to.eq(true);
+      expect(lockfileAfterRestore.packages).to.have.property('@pnpm.e2e/foo@100.0.0');
+      expect(lockfileAfterRestore.packages).to.not.have.property('@pnpm.e2e/foo@100.1.0');
+    });
+  });
 });
