@@ -821,7 +821,10 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
           // cascade hashes to clean up, and we still need that lane mutation to land on disk.
           consumer.scope.objects.add(currentLane);
           for (const id of cascadedToClean) {
-            const modelComp = await consumer.scope.getModelComponentIfExist(id);
+            // Load the ModelComponent WITHOUT a version. `sources.get()` returns undefined when
+            // a versioned id's Version object is missing/corrupt — that would silently skip the
+            // versions-map cleanup here even though dropping a ref doesn't need the Version body.
+            const modelComp = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
             if (modelComp && id.version) modelComp.removeVersion(id.version);
             if (modelComp) consumer.scope.objects.add(modelComp);
           }
