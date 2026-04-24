@@ -802,13 +802,14 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
           consumer.scope.objects.add(laneHistory);
 
           const cascadedToClean = applyUpdateDependentsFromHistoryEntry(currentLane, priorEntry);
-          if (cascadedToClean.length) {
-            for (const id of cascadedToClean) {
-              const modelComp = await consumer.scope.getModelComponentIfExist(id);
-              if (modelComp && id.version) modelComp.removeVersion(id.version);
-              if (modelComp) consumer.scope.objects.add(modelComp);
-            }
-            consumer.scope.objects.add(currentLane);
+          // Always persist the lane: `applyUpdateDependentsFromHistoryEntry` may have changed
+          // just the override flag or the updateDependents list without producing any orphaned
+          // cascade hashes to clean up, and we still need that lane mutation to land on disk.
+          consumer.scope.objects.add(currentLane);
+          for (const id of cascadedToClean) {
+            const modelComp = await consumer.scope.getModelComponentIfExist(id);
+            if (modelComp && id.version) modelComp.removeVersion(id.version);
+            if (modelComp) consumer.scope.objects.add(modelComp);
           }
         }
       }
