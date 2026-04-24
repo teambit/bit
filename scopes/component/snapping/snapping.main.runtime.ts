@@ -369,6 +369,11 @@ export class SnappingMain {
       ignoreIssues?: string;
       lane?: string;
       updateDependents?: boolean;
+      // Explicit per-id list of components that must land in `lane.updateDependents` instead of
+      // `lane.components` after the snap. Used by the merge-snap flow (main→lane refresh) where
+      // the set is determined by the target lane's existing `updateDependents`, not by the
+      // lane-wide `updateDependents: boolean` flag which is reserved for `_snap --update-dependents`.
+      updateDependentIds?: string[];
       tag?: boolean;
       // in case of merging lanes, the component files are updated in-memory
       updatedLegacyComponents?: ConsumerComponent[];
@@ -565,8 +570,17 @@ export class SnappingMain {
     // Switch from the lane-wide `updateDependentsOnLane` to per-component `updateDependentIds` so
     // the explicit `_snap --update-dependents` targets land in `lane.updateDependents` while the
     // dependent lane.components we folded in above go to `lane.components` like a normal snap.
-    const updateDependentTargetIds =
-      params.updateDependents && componentIds.length ? ComponentIdList.fromArray(componentIds) : undefined;
+    // If the caller passed an explicit `updateDependentIds` list (merge-snap flow), use it
+    // directly — those are the ids the target lane already treats as updateDependents.
+    const updateDependentTargetIds = (() => {
+      if (params.updateDependentIds?.length) {
+        return ComponentIdList.fromArray(params.updateDependentIds.map((s) => ComponentID.fromString(s)));
+      }
+      if (params.updateDependents && componentIds.length) {
+        return ComponentIdList.fromArray(componentIds);
+      }
+      return undefined;
+    })();
     const makeVersionParams = {
       ...params,
       tagDataPerComp: snapDataPerComp.map((s) => ({

@@ -323,6 +323,7 @@ export class MergingMain {
         snapMessage,
         build,
         laneId: currentLane?.toLaneId(),
+        targetLane: currentLane,
         loose,
       });
     };
@@ -473,6 +474,15 @@ export class MergingMain {
 
     const addToCurrentLane = (head: Ref) => {
       if (!currentLane) throw new Error('currentLane must be defined when adding to the lane');
+      // Components in `lane.updateDependents` are hidden (not in workspaces) but still need their
+      // lane ref refreshed when main advances. Handle them before the lane.components path so
+      // they keep their "updateDependent" status instead of being promoted to lane.components.
+      const isUpdateDependent = currentLane.updateDependents?.some((u) => u.isEqualWithoutVersion(id));
+      if (isUpdateDependent) {
+        currentLane.addComponentToUpdateDependents(id.changeVersion(head.toString()));
+        currentLane.setOverrideUpdateDependents(true);
+        return;
+      }
       if (otherLaneId.isDefault()) {
         const isPartOfLane = currentLane.components.find((c) => c.id.isEqualWithoutVersion(id));
         if (!isPartOfLane) return;
@@ -636,11 +646,13 @@ export class MergingMain {
       snapMessage,
       build,
       laneId,
+      targetLane,
       loose,
     }: {
       snapMessage?: string;
       build?: boolean;
       laneId?: LaneId;
+      targetLane?: Lane;
       loose?: boolean;
     }
   ): Promise<MergeSnapResults> {
@@ -648,6 +660,15 @@ export class MergingMain {
     this.logger.debug(`merge-snaps, snapResolvedComponents, total ${unmergedComponents.length.toString()} components`);
     if (!unmergedComponents.length) return null;
     const ids = ComponentIdList.fromArray(unmergedComponents.map((r) => ComponentID.fromObject(r.id)));
+    // Merge-snap ids that overlap with the target lane's existing `updateDependents` must land
+    // back in `lane.updateDependents`, not be promoted to `lane.components`. Without this, a
+    // main→lane refresh (UI "update lane") would turn hidden updateDependents into visible lane
+    // components.
+    const updateDependentIds = targetLane?.updateDependents?.length
+      ? ids
+          .filter((id) => targetLane.updateDependents?.some((u) => u.isEqualWithoutVersion(id)))
+          .map((id) => id.toString())
+      : undefined;
     if (!this.workspace) {
       const getLoadAspectOnlyForIds = (): ComponentIdList | undefined => {
         if (!allComponentsStatus.length || !allComponentsStatus[0].dataMergeResult) return undefined;
@@ -679,6 +700,7 @@ export class MergingMain {
           lane: laneId?.toString(),
           updatedLegacyComponents: updatedComponents,
           loadAspectOnlyForIds: getLoadAspectOnlyForIds(),
+          updateDependentIds,
           loose,
         }
       );

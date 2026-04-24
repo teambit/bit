@@ -306,13 +306,19 @@ export class MergeLanesMain {
     const legacyScope = this.scope.legacyScope;
     if (fetchCurrent && !currentLaneId.isDefault()) {
       // if current is default, it'll be fetch later on
-      await this.lanes.fetchLaneWithItsComponents(currentLaneId);
+      // Pass `shouldIncludeUpdateDependents` so the bare-scope also pulls the Version objects for
+      // the target lane's `updateDependents` entries. Needed when the merge flow then walks them
+      // (e.g. refreshing them against main's advanced heads during a main→lane "update lane").
+      await this.lanes.fetchLaneWithItsComponents(currentLaneId, shouldIncludeUpdateDependents);
     }
     const currentLane = currentLaneId.isDefault() ? undefined : await legacyScope.loadLane(currentLaneId);
     const isDefaultLane = otherLaneId.isDefault();
     if (isDefaultLane) {
       if (!skipFetch) {
-        const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps);
+        // Include the current lane's `updateDependents` here so main-side heads for those ids
+        // are pre-fetched. Without it, main→lane merge can't pull the refreshed comp2 (main's
+        // advanced head) to re-cascade the updateDependent against.
+        const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps, shouldIncludeUpdateDependents);
         const compIdList = ComponentIdList.fromArray(ids).toVersionLatest();
         await this.importer.importObjectsFromMainIfExist(compIdList);
       }
