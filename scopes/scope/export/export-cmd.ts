@@ -116,7 +116,8 @@ exporting is the final step after development and versioning to share components
       // dependents come from the lane's `updateDependents` list — hidden components that got
       // re-snapped (via a 'Snap updates' action or a local cascade) to keep the lane consistent.
       const laneUpdateIds = exportedLanes[0]?.updateDependents;
-      const isUpdate = (id: ComponentID) => Boolean(laneUpdateIds?.find((u) => u.isEqualWithoutVersion(id)));
+      const updateKeys = new Set(laneUpdateIds?.map((id) => id.toStringWithoutVersion()) ?? []);
+      const isUpdate = (id: ComponentID) => updateKeys.has(id.toStringWithoutVersion());
       const renderItem = (id: ComponentID) => {
         if (!verbose) return formatItem(chalk.bold(id.toString()));
         const versions = newIdsOnRemote

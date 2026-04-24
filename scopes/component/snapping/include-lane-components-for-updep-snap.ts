@@ -1,6 +1,8 @@
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import { compact } from 'lodash';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import type { Component } from '@teambit/component';
 import type { ScopeMain } from '@teambit/scope';
 import type { Logger } from '@teambit/logger';
@@ -110,8 +112,11 @@ export async function findLaneComponentsDependingOnUpdDepTargets({
   });
   if (!toInclude.length) return empty;
 
-  const loadedComps = await Promise.all(
-    toInclude.map(async (entry) => {
+  // Cap concurrency: on large lanes the fixed-point expansion can pull in many dependents, and an
+  // unbounded Promise.all of scope.get() calls would spike memory/IO.
+  const loadedComps = await pMapPool(
+    toInclude,
+    async (entry) => {
       try {
         const comp = await scope.get(entry.id);
         if (!comp) {
@@ -127,7 +132,8 @@ export async function findLaneComponentsDependingOnUpdDepTargets({
         );
         return undefined;
       }
-    })
+    },
+    { concurrency: concurrentComponentsLimit() }
   );
   const components = compact(loadedComps);
   if (!components.length) return empty;
