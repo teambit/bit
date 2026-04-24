@@ -1,21 +1,24 @@
 .container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 2px 0;
+  gap: 0;
   font-size: 13px;
-  padding: 0;
+  padding: 4px 0;
   width: 100%;
 }
 
 .item {
   padding: 8px 14px;
-  border-right: 1px solid var(--bit-border-color-lightest, rgba(0, 0, 0, 0.05));
-  border-bottom: 1px solid var(--bit-border-color-lightest, rgba(0, 0, 0, 0.05));
+  border-bottom: 1px solid var(--bit-border-color-lightest, rgba(0, 0, 0, 0.06));
   transition: background 120ms ease;
   min-width: 0;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.015);
+    background: var(--surface-hover-color, rgba(0, 0, 0, 0.015));
+  }
+
+  &:last-child {
+    border-bottom: none;
   }
 }
 
