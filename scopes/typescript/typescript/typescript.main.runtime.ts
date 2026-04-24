@@ -140,6 +140,12 @@ export class TypescriptMain {
       if (compilerOptions.strict === undefined) compilerOptions.strict = false;
       if (compilerOptions.noUncheckedSideEffectImports === undefined)
         compilerOptions.noUncheckedSideEffectImports = false;
+      // TS 6 stopped auto-discovering @types/* packages (types defaults to []).
+      // Seed the types every Bit env installs — @types/node universally and @types/jest
+      // (provides describe/it/expect globals). React env excludes @types/mocha, so don't seed it.
+      if (compilerOptions.types === undefined) {
+        compilerOptions.types = ['node', 'jest'];
+      }
     }
     const afterMutationWithoutTsconfig = { ...afterMutation.raw, tsconfig: '' };
 
