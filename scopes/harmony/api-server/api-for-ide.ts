@@ -213,12 +213,16 @@ export class APIForIDE {
   async getCurrentLaneObject(): Promise<LaneObj | undefined> {
     const currentLane = await this.lanes.getCurrentLane();
     if (!currentLane) return undefined;
-    const components = currentLane.components.map((c) => {
-      return {
-        id: c.id.toStringWithoutVersion(),
-        head: c.head.toString(),
-      };
-    });
+    // hidden (skipWorkspace: true) lane components are not workspace-tracked, so the IDE should
+    // not surface them alongside the user's edited components.
+    const components = currentLane.components
+      .filter((c) => !c.skipWorkspace)
+      .map((c) => {
+        return {
+          id: c.id.toStringWithoutVersion(),
+          head: c.head.toString(),
+        };
+      });
     return {
       name: currentLane.name,
       scope: currentLane.scope,

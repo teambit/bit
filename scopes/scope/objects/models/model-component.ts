@@ -704,11 +704,29 @@ export default class Component extends BitObject {
       if (parent && !parent.isEqual(versionToAddRef)) {
         version.addAsOnlyParent(parent);
       }
-      if (addToUpdateDependentsInLane) {
-        lane.addComponentToUpdateDependents(currentBitId.changeVersion(versionToAddRef.toString()));
+      // when the caller didn't explicitly opt in or out, preserve the existing entry's
+      // skipWorkspace state. This is what makes scenario 10 work via the unified architecture:
+      // a merge-from-main that produces a new snap for a hidden updateDependent must keep that
+      // entry hidden, not promote it into workspace-tracked state. Workspace-snap producers that
+      // want to PROMOTE a previously-hidden entry (scenario 6) need to pass
+      // `addToUpdateDependentsInLane: false` explicitly — they know they're acting on a workspace
+      // comp.
+      const existingEntry = lane.getComponent(currentBitId);
+      const shouldBeHidden = addToUpdateDependentsInLane ?? existingEntry?.skipWorkspace ?? false;
+      lane.addComponent({
+        id: currentBitId,
+        head: versionToAddRef,
+        isDeleted: version.isRemoved(),
+        ...(shouldBeHidden && { skipWorkspace: true }),
+      });
+      if (shouldBeHidden) {
+        // wire-level signal so `sources.mergeLane` on the export path accepts the new hidden
+        // entry as authoritative (the remote's existing hidden hash for this id gets replaced).
+        // We set this on every write to a hidden entry — explicit cascade producers (bare-scope
+        // `_snap --update-dependents`), workspace cascade-on-snap (future), AND merge-snaps that
+        // refresh hidden entries (scenario 10). The remote clears the flag on its stored copy
+        // post-merge so it never persists across an unrelated future fetch.
         lane.setOverrideUpdateDependents(true);
-      } else {
-        lane.addComponent({ id: currentBitId, head: versionToAddRef, isDeleted: version.isRemoved() });
       }
 
       if (lane.readmeComponent && lane.readmeComponent.id.fullName === currentBitId.fullName) {

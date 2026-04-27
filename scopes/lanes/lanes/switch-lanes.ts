@@ -123,7 +123,7 @@ export class LaneSwitcher {
     this.switchProps.remoteLane = remoteLane;
     this.laneToSwitchTo = remoteLane;
     this.logger.debug(`populatePropsAccordingToRemoteLane, completed`);
-    return remoteLane.components.map((l) => l.id.changeVersion(l.head.toString()));
+    return [...remoteLane.toComponentIds()];
   }
 
   private async populatePropsAccordingToDefaultLane() {
@@ -135,7 +135,7 @@ export class LaneSwitcher {
     this.laneIdToSwitchTo = localLane.toLaneId();
     this.laneToSwitchTo = localLane;
     this.throwForSwitchingToCurrentLane();
-    return localLane.components.map((c) => c.id.changeVersion(c.head.toString()));
+    return [...localLane.toComponentIds()];
   }
 
   private throwForSwitchingToCurrentLane() {

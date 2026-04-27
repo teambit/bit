@@ -473,11 +473,17 @@ export class MergingMain {
 
     const addToCurrentLane = (head: Ref) => {
       if (!currentLane) throw new Error('currentLane must be defined when adding to the lane');
-      if (otherLaneId.isDefault()) {
-        const isPartOfLane = currentLane.components.find((c) => c.id.isEqualWithoutVersion(id));
-        if (!isPartOfLane) return;
-      }
-      currentLane.addComponent({ id, head });
+      const existingOnLane = currentLane.components.find((c) => c.id.isEqualWithoutVersion(id));
+      if (otherLaneId.isDefault() && !existingOnLane) return;
+      // preserve the existing entry's `skipWorkspace` flag so a merge that refreshes a hidden
+      // updateDependent doesn't accidentally promote it into the workspace-tracked bucket (and
+      // vice versa). This is how scenario 10 (`_merge-lane main dev`) keeps the cascaded entry
+      // in `lane.updateDependents` after the merge advances it to main's new head.
+      currentLane.addComponent({
+        id,
+        head,
+        ...(existingOnLane?.skipWorkspace && { skipWorkspace: true }),
+      });
     };
 
     const convertHashToTagIfPossible = (componentId: ComponentID): ComponentID => {

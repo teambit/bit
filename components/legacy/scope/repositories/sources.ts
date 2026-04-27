@@ -720,8 +720,15 @@ possible causes:
       mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
     };
 
+    // hidden (`skipWorkspace: true`) lane components go through the dedicated updateDependents
+    // merge branch below, not the per-component loop. On import, the legacy semantic is "remote is
+    // authoritative for hidden entries"; on export, the `overrideUpdateDependents` wire signal
+    // governs when the client's hidden entries replace the server's. Rewiring hidden entries into
+    // the full per-component diverge-check would need matching cascade mechanics in this layer too,
+    // which is outside the foundation-only scope.
+    const visibleIncomingComponents = lane.components.filter((c) => !c.skipWorkspace);
     await pMap(
-      lane.components,
+      visibleIncomingComponents,
       async (component) => {
         await mergeLaneComponent(component);
       },
@@ -733,12 +740,12 @@ possible causes:
     if (existingLane?.hasChanged && existingLane.includeDeletedData() && !lane.includeDeletedData()) {
       existingLane.setSchemaToNotSupportDeletedData();
     }
-    // merging updateDependents is tricky. the end user should never change it, only get it as is from the remote.
-    // this prop gets updated with snap-from-scope with --update-dependents flag. and a graphql query should remove entries
-    // from there. other than these 2 places, it should never change. so when a user imports it, always override.
-    // if it is being exported, the remote should override it only when it comes from the snap-from-scope command, to
-    // indicate this, the lane should have the overrideUpdateDependents prop set to true.
-    if (isImport && existingLane) {
+    // hidden (skipWorkspace) entries are merged here via the legacy `updateDependents`-shaped
+    // override/wire path. New flows that produce hidden entries (workspace cascade-on-snap, the
+    // bare-scope `_snap --update-dependents`) set `overrideUpdateDependents=true` to claim the
+    // local list as authoritative; we honor it on export and protect it from being clobbered on
+    // import.
+    if (isImport && existingLane && !existingLane.shouldOverrideUpdateDependents()) {
       existingLane.updateDependents = lane.updateDependents;
     }
     if (isExport && existingLane && lane.shouldOverrideUpdateDependents()) {
@@ -754,6 +761,14 @@ possible causes:
       existingLane.updateDependents = lane.updateDependents;
     }
 
-    return { mergeResults, mergeErrors, mergeLane: existingLane || lane };
+    const mergeLane = existingLane || lane;
+    // `overrideUpdateDependents` is a one-shot wire signal from client to remote — once we've
+    // honored it above, it must not persist on the remote scope. Clear it so that subsequent
+    // imports of the same lane object don't see a stale "local is authoritative" claim.
+    if (isExport && mergeLane.shouldOverrideUpdateDependents()) {
+      mergeLane.setOverrideUpdateDependents(false);
+    }
+
+    return { mergeResults, mergeErrors, mergeLane };
   }
 }
