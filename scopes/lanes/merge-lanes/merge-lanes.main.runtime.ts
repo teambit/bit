@@ -312,7 +312,10 @@ export class MergeLanesMain {
     const isDefaultLane = otherLaneId.isDefault();
     if (isDefaultLane) {
       if (!skipFetch) {
-        const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps);
+        // pass `shouldIncludeUpdateDependents` so the prefetch covers main objects for the
+        // lane's hidden entries too — the per-component merge engine needs main-side Version
+        // objects locally to compute divergence against the hidden cascade snaps.
+        const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps, shouldIncludeUpdateDependents);
         const compIdList = ComponentIdList.fromArray(ids).toVersionLatest();
         await this.importer.importObjectsFromMainIfExist(compIdList);
       }

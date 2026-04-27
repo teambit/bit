@@ -140,7 +140,11 @@ export class ImporterMain {
    * once done, merge the lane object and save it as well.
    */
   async fetchLaneComponents(lane: Lane, includeUpdateDependents = false) {
-    const ids = includeUpdateDependents ? lane.toComponentIdsIncludeUpdateDependents() : lane.toComponentIds();
+    // hidden (skipWorkspace) entries are part of the lane's graph and the merge engine needs
+    // their Version objects available locally to do per-component diverge checks. We always
+    // fetch the full set; the `includeUpdateDependents` flag now only controls server-side
+    // semantics around the wire-format `updateDependents` array, not whether to fetch them.
+    const ids = lane.toComponentIdsIncludeUpdateDependents();
     await this.scope.legacyScope.scopeImporter.importMany({
       ids,
       lane,
