@@ -472,7 +472,9 @@ export class RippleErrorsCmd implements Command {
 
   async json([jobId]: [string], flags: { lane?: string; log?: boolean }) {
     const { job, ciNodes, source, lastExport, error } = await this.getErrors(jobId, flags);
-    if (!job) return { error: error || 'No job found', job: null, ciNodes: [], containerLogs: {} };
+    if (!job) {
+      return { error: error || 'No job found', job: null, ciNodes: [], containerLogs: {}, source, lastExport };
+    }
 
     // fetch error logs for failed containers in parallel
     const failedNodes = ciNodes.filter((n) => isFailedPhase(n.phase));

@@ -130,6 +130,7 @@ export class RippleMain {
     mutation retryJob($jobId: ID!) {
       retryJob(jobId: $jobId) {
         id
+        slug
         name
         laneId
         status { startedAt finishedAt phase }
@@ -141,6 +142,7 @@ export class RippleMain {
     mutation stopJob($jobId: ID!) {
       stopJob(jobId: $jobId) {
         id
+        slug
         name
         laneId
         status { startedAt finishedAt phase }

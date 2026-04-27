@@ -36,6 +36,13 @@ function isValidLastExport(value: unknown): value is LastExportData {
   const v = value as Record<string, unknown>;
   if (typeof v.timestamp !== 'string') return false;
   if (!Array.isArray(v.rippleJobs) || !v.rippleJobs.every((j) => typeof j === 'string' && j.length > 0)) return false;
-  if (!Array.isArray(v.exportedComponents)) return false;
+  if (!Array.isArray(v.exportedComponents) || !v.exportedComponents.every((c) => typeof c === 'string' && c.length > 0))
+    return false;
+  if (v.lane !== undefined) {
+    if (!v.lane || typeof v.lane !== 'object') return false;
+    const lane = v.lane as Record<string, unknown>;
+    if (typeof lane.scope !== 'string' || lane.scope.length === 0) return false;
+    if (typeof lane.name !== 'string' || lane.name.length === 0) return false;
+  }
   return true;
 }
