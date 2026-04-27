@@ -207,7 +207,12 @@ make sure this argument is the name only, without the scope-name. to change the 
   async renameScope(
     oldScope: string,
     newScope: string,
-    options: { refactor?: boolean; deprecate?: boolean; preserve?: boolean } = {}
+    options: {
+      refactor?: boolean;
+      deprecate?: boolean;
+      preserve?: boolean;
+      skipDependencyInstallation?: boolean;
+    } = {}
   ): Promise<RenameResult> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const allComponentsIds = this.workspace.listIds();
@@ -222,7 +227,11 @@ make sure this argument is the name only, without the scope-name. to change the 
       const targetId = ComponentID.fromObject({ name: compId.fullName }, newScope);
       return { sourceId: compId, targetId };
     });
-    return this.renameMultiple(multipleIds, options);
+    const result = await this.renameMultiple(multipleIds, options);
+    if (!options.skipDependencyInstallation) {
+      await this.installDeps();
+    }
+    return result;
   }
 
   /**
@@ -285,6 +294,16 @@ make sure this argument is the name only, without the scope-name. to change the 
   private async deleteLinkFromNodeModules(packageName: string) {
     await fs.remove(path.join(this.workspace.path, 'node_modules', packageName));
   }
+  private async installDeps() {
+    await this.install.install(undefined, {
+      dedupe: true,
+      import: false,
+      copyPeerToRuntimeOnRoot: true,
+      copyPeerToRuntimeOnComponents: false,
+      updateExisting: false,
+    });
+  }
+
   private async compileGracefully(ids: ComponentID[]) {
     try {
       await this.compiler.compileOnWorkspace(ids);
