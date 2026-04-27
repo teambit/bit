@@ -1,8 +1,22 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import Table from 'cli-table';
+import type { LastExportData } from '@teambit/export';
 import type { RippleMain, RippleJob, CiGraphNode } from './ripple.main.runtime';
-import { colorPhase, isFailedPhase, stripAnsi, resolveJobId } from './ripple-utils';
+import { colorPhase, isFailedPhase, stripAnsi, resolveJobId, formatAge } from './ripple-utils';
+
+function lastExportHeader(lastExport: LastExportData, job: { status?: { phase?: string } }): string {
+  const age = formatAge(lastExport.timestamp);
+  const target = lastExport.lane ? `lane "${lastExport.lane.scope}/${lastExport.lane.name}"` : 'main';
+  const phase = job.status?.phase?.toUpperCase();
+  if (phase === 'SUCCESS') {
+    return chalk.green(`✓ Your last export (${age}) to ${target} succeeded.`);
+  }
+  if (isFailedPhase(phase)) {
+    return chalk.red(`✗ Your last export (${age}) to ${target} failed.`);
+  }
+  return chalk.gray(`Your last export (${age}) to ${target} — status: ${colorPhase(phase)}.`);
+}
 
 export class RippleCmd implements Command {
   name = 'ripple <sub-command>';
@@ -174,7 +188,8 @@ export class RippleListCmd implements Command {
 
 export class RippleLogCmd implements Command {
   name = 'log [job-id]';
-  description = 'show job details and component build task summaries (auto-detects current lane when no job-id given)';
+  description =
+    'show job details and component build task summaries (auto-detects current lane, or your last export when on main)';
   skipWorkspace = true;
   remoteOp = true;
   alias = '';
@@ -185,36 +200,34 @@ export class RippleLogCmd implements Command {
     ['j', 'json', 'return the output as JSON'],
   ];
 
-  arguments = [{ name: 'job-id', description: 'the Ripple CI job ID (optional — auto-detects from current lane)' }];
+  arguments = [
+    {
+      name: 'job-id',
+      description: 'the Ripple CI job ID (optional — auto-detects from current lane, or your last export when on main)',
+    },
+  ];
 
   constructor(private ripple: RippleMain) {}
 
   private async resolveJob(jobId: string | undefined, flags: { lane?: string }) {
-    if (jobId) {
-      return this.ripple.getJob(jobId);
-    }
-    const laneId = flags.lane || this.ripple.getCurrentLaneId();
-    if (!laneId) return null;
-    const found = await this.ripple.findLatestJobForLane(laneId);
-    return found ? this.ripple.getJob(found.id) : null;
+    const resolved = await resolveJobId(this.ripple, jobId, flags);
+    if ('error' in resolved) return { job: null, error: resolved.error, source: undefined, lastExport: undefined };
+    const job = await this.ripple.getJob(resolved.id);
+    return { job, error: undefined, source: resolved.source, lastExport: resolved.lastExport };
   }
 
   async report([jobId]: [string], flags: { lane?: string; component?: string }) {
-    const job = await this.resolveJob(jobId, flags);
+    const { job, error, source, lastExport } = await this.resolveJob(jobId, flags);
     if (!job) {
-      if (!jobId) {
-        const laneId = flags.lane || this.ripple.getCurrentLaneId();
-        if (laneId) {
-          return chalk.red(`No Ripple CI job found for lane "${laneId}".`);
-        }
-        return chalk.red(
-          'Could not find a Ripple CI job. Provide a job ID, use --lane, or run from a workspace on a lane.'
-        );
-      }
-      return chalk.red(`Job "${jobId}" not found.`);
+      if (jobId) return chalk.red(`Job "${jobId}" not found.`);
+      return chalk.red(error || 'Could not find a Ripple CI job.');
     }
 
     const lines: string[] = [];
+    if (source === 'last-export' && lastExport) {
+      lines.push(lastExportHeader(lastExport, job));
+      lines.push('');
+    }
     lines.push(chalk.bold('Job Details'));
     lines.push(`  ${chalk.cyan('ID:')}       ${job.id}`);
     if (job.name) lines.push(`  ${chalk.cyan('Name:')}     ${job.name}`);
@@ -310,18 +323,18 @@ export class RippleLogCmd implements Command {
   }
 
   async json([jobId]: [string], flags: { lane?: string; component?: string }) {
-    const job = await this.resolveJob(jobId, flags);
+    const { job, source, lastExport } = await this.resolveJob(jobId, flags);
     if (flags.component && job) {
       const summary = await this.ripple.getComponentBuildSummary(job.id, flags.component);
-      return { job, componentBuild: summary };
+      return { job, componentBuild: summary, source, lastExport };
     }
-    return { job };
+    return { job, source, lastExport };
   }
 }
 
 export class RippleErrorsCmd implements Command {
   name = 'errors [job-id]';
-  description = 'show build errors for a Ripple CI job (auto-detects current lane when no job-id given)';
+  description = 'show build errors for a Ripple CI job (auto-detects current lane, or your last export when on main)';
   skipWorkspace = true;
   remoteOp = true;
   alias = '';
@@ -332,12 +345,17 @@ export class RippleErrorsCmd implements Command {
     ['j', 'json', 'return the output as JSON'],
   ];
 
-  arguments = [{ name: 'job-id', description: 'the Ripple CI job ID (optional — auto-detects from current lane)' }];
+  arguments = [
+    {
+      name: 'job-id',
+      description: 'the Ripple CI job ID (optional — auto-detects from current lane, or your last export when on main)',
+    },
+  ];
 
   constructor(private ripple: RippleMain) {}
 
   async report([jobId]: [string], flags: { lane?: string; log?: boolean }) {
-    const { job, ciNodes } = await this.getErrors(jobId, flags);
+    const { job, ciNodes, source, lastExport, error } = await this.getErrors(jobId, flags);
 
     if (!job) {
       if (jobId) {
@@ -348,11 +366,16 @@ export class RippleErrorsCmd implements Command {
         return chalk.red(`No failed Ripple CI job found for lane "${laneId}".`);
       }
       return chalk.red(
-        'Could not find a Ripple CI job. Provide a job ID, use --lane, or run from a workspace on a lane.'
+        error ||
+          'Could not find a Ripple CI job. Provide a job ID, use --lane, or run from a workspace with a recent export.'
       );
     }
 
     const lines: string[] = [];
+    if (source === 'last-export' && lastExport) {
+      lines.push(lastExportHeader(lastExport, job));
+      lines.push('');
+    }
     lines.push(chalk.bold(`Ripple CI Errors — ${job.name || job.id}`));
     lines.push(`  ${chalk.cyan('Job ID:')} ${job.id}`);
     lines.push(`  ${chalk.cyan('Status:')} ${colorPhase(job.status?.phase)}`);
@@ -437,8 +460,8 @@ export class RippleErrorsCmd implements Command {
   }
 
   async json([jobId]: [string], flags: { lane?: string; log?: boolean }) {
-    const { job, ciNodes } = await this.getErrors(jobId, flags);
-    if (!job) return { error: 'No job found', job: null, ciNodes: [], containerLogs: {} };
+    const { job, ciNodes, source, lastExport, error } = await this.getErrors(jobId, flags);
+    if (!job) return { error: error || 'No job found', job: null, ciNodes: [], containerLogs: {} };
 
     // fetch error logs for failed containers in parallel
     const failedNodes = ciNodes.filter((n) => isFailedPhase(n.phase));
@@ -449,7 +472,7 @@ export class RippleErrorsCmd implements Command {
       containerLogs[name] = flags.log ? messages : this.ripple.extractErrorsFromLog(messages);
     }
 
-    return { job, ciNodes, containerLogs };
+    return { job, ciNodes, containerLogs, source, lastExport };
   }
 
   private async getErrors(
@@ -458,28 +481,51 @@ export class RippleErrorsCmd implements Command {
   ): Promise<{
     job: any;
     ciNodes: CiGraphNode[];
+    source?: 'arg' | 'lane' | 'last-export';
+    lastExport?: LastExportData;
+    error?: string;
   }> {
-    let job;
+    let job: any = null;
+    let source: 'arg' | 'lane' | 'last-export' | undefined;
+    let lastExport: LastExportData | undefined;
 
     if (jobId) {
       job = await this.ripple.getJob(jobId);
+      source = 'arg';
     } else {
       const laneId = flags.lane || this.ripple.getCurrentLaneId();
-      if (!laneId) {
-        return { job: null, ciNodes: [] };
+      if (laneId) {
+        const found = await this.ripple.findLatestJobForLane(laneId, 'FAILURE');
+        job = found ? await this.ripple.getJob(found.id) : null;
+        source = 'lane';
+      } else {
+        const last = await this.ripple.getLastExport();
+        const slug = last?.rippleJobs?.[last.rippleJobs.length - 1];
+        if (slug && last) {
+          job = await this.ripple.getJobBySlug(slug);
+          source = 'last-export';
+          lastExport = last;
+          if (!job) {
+            return {
+              job: null,
+              ciNodes: [],
+              source: 'last-export',
+              lastExport: last,
+              error: `Could not find Ripple CI job for your last export "${slug}".`,
+            };
+          }
+        }
       }
-      const found = await this.ripple.findLatestJobForLane(laneId, 'FAILURE');
-      job = found ? await this.ripple.getJob(found.id) : null;
     }
 
     if (!job) {
-      return { job: null, ciNodes: [] };
+      return { job: null, ciNodes: [], source, lastExport };
     }
 
     // use ciGraph (internal graph) for job-specific build status per container/component
     const ciNodes = this.ripple.getCiGraphNodes(job);
 
-    return { job, ciNodes };
+    return { job, ciNodes, source, lastExport };
   }
 }
 

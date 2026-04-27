@@ -5,6 +5,7 @@ import { CloudAspect, type CloudMain } from '@teambit/cloud';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { getCloudDomain } from '@teambit/legacy.constants';
+import { readLastExport, type LastExportData } from '@teambit/export';
 import { stripComponentVersion } from './ripple-utils';
 import stripAnsi from 'strip-ansi';
 import { RippleAspect } from './ripple.aspect';
@@ -75,6 +76,22 @@ export class RippleMain {
   private static GET_JOB = `
     query getJob($jobId: ID!) {
       getJob(jobId: $jobId) {
+        id
+        name
+        laneId
+        hash
+        simulation
+        user { username displayName }
+        status { startedAt finishedAt phase }
+        ciGraph
+        ciComponentGraph
+      }
+    }
+  `;
+
+  private static GET_JOB_BY_SLUG = `
+    query getJobBySlug($slug: ID!) {
+      getJob(slug: $slug) {
         id
         name
         laneId
@@ -323,6 +340,28 @@ export class RippleMain {
     const laneId = this.workspace.getCurrentLaneId();
     if (!laneId || laneId.isDefault()) return undefined;
     return laneId.toString();
+  }
+
+  /**
+   * read the last-export.json written by ExportMain after a successful export.
+   * used to auto-resolve the ripple job when the user is on main (no current lane).
+   */
+  async getLastExport(): Promise<LastExportData | null> {
+    if (!this.workspace) return null;
+    return readLastExport(this.workspace.scope.path);
+  }
+
+  /**
+   * the central-hub returns url slugs in `metadata.jobs`, not the GraphQL job ids accepted by getJob(jobId).
+   * the schema also supports getJob(slug: ID!), which we use here to fetch the job directly from a slug.
+   */
+  async getJobBySlug(
+    slug: string
+  ): Promise<(RippleJob & { hash?: string; ciGraph?: string; ciComponentGraph?: string }) | null> {
+    const data = await this.fetchRippleGQL<{
+      getJob: RippleJob & { hash?: string; ciGraph?: string; ciComponentGraph?: string };
+    }>(RippleMain.GET_JOB_BY_SLUG, { slug });
+    return data?.getJob ?? null;
   }
 
   /**
