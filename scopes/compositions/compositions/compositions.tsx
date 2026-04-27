@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import React, { useContext, useEffect, useState, useMemo, useRef } from 'react';
+import React, { useContext, useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import head from 'lodash.head';
 import queryString from 'query-string';
@@ -25,11 +25,14 @@ import { Link as BaseLink, useNavigate, useLocation } from '@teambit/base-react.
 import { OptionButton } from '@teambit/design.ui.input.option-button';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { Tooltip } from '@teambit/design.ui.tooltip';
+import { Icon } from '@teambit/evangelist.elements.icon';
+import { useLiveControls } from '@teambit/compositions.ui.composition-live-controls';
 import type { EmptyStateSlot, CompositionsMenuSlot, UsePreviewSandboxSlot } from './compositions.ui.runtime';
 import type { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
+import { LiveControls } from './ui/compositions-panel/live-control-panel';
 import type { ComponentCompositionProps } from './ui/composition-preview';
 import { useDefaultControlsSchemaResponder } from './use-default-controls-schema-responder';
 
@@ -94,6 +97,37 @@ export function Compositions({
 
   const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);
 
+  const [controlsTrayOpen, setControlsTrayOpen] = useState(true);
+  const [isDraggingTray, setIsDraggingTray] = useState(false);
+  const trayRef = useRef<HTMLDivElement>(null);
+  const trayHeightRef = useRef(260);
+  const { ready, defs, values, onChange } = useLiveControls();
+
+  const onTrayDragStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startHeight = trayHeightRef.current;
+    setIsDraggingTray(true);
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+    const onMove = (ev: MouseEvent) => {
+      const next = Math.max(120, Math.min(600, startHeight + (startY - ev.clientY)));
+      trayHeightRef.current = next;
+      if (trayRef.current) {
+        trayRef.current.style.maxHeight = `${next}px`;
+      }
+    };
+    const onUp = () => {
+      setIsDraggingTray(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }, []);
+
   // collapse sidebar when empty, reopen when not
   useEffect(() => setSidebarOpenness(showSidebar), [showSidebar]);
   useEffect(() => {
@@ -113,30 +147,70 @@ export function Compositions({
     });
   }, [enableLiveControls]);
 
+  const currentCompositionHasControls = ready && defs.length > 0;
+  const showControlsTray = currentCompositionHasControls && controlsTrayOpen;
+
   return (
     <CompositionContextProvider queryParams={compositionParams} setQueryParams={setCompositionParams}>
       <SplitPane layout={sidebarOpenness} size="80%" className={styles.compositionsPage}>
         <Pane className={styles.left}>
           <CompositionsMenuBar menuBarWidgets={menuBarWidgets} className={styles.menuBar}>
-            <Tooltip content={'Open in new tab'} placement="right">
-              <Link external href={currentCompositionFullUrl} className={styles.openInNewTab}>
+            <Tooltip content={'Open in new tab'} placement="bottom">
+              <Link external href={currentCompositionFullUrl} className={styles.toolbarButton}>
                 <OptionButton icon="open-tab" />
               </Link>
             </Tooltip>
+            {currentCompositionHasControls && (
+              <Tooltip content={controlsTrayOpen ? 'Hide controls' : 'Show controls'} placement="bottom">
+                <button
+                  className={`${styles.toolbarButton} ${controlsTrayOpen ? styles.toolbarButtonActive : ''}`}
+                  onClick={() => setControlsTrayOpen((o) => !o)}
+                >
+                  <Icon of="settings" />
+                </button>
+              </Tooltip>
+            )}
           </CompositionsMenuBar>
           <SandboxPermissionsAggregator
             hooks={previewSandboxHooks}
             onSandboxChange={setSandboxValue}
             component={component}
           />
-          <CompositionContent
-            className={styles.compositionPanel}
-            emptyState={emptyState}
-            component={component}
-            selected={currentComposition}
-            queryParams={queryParams}
-            sandbox={sandboxValue}
-          />
+          <div className={styles.previewArea}>
+            {isDraggingTray && <div className={styles.dragOverlay} />}
+            <CompositionContent
+              className={styles.compositionPanel}
+              emptyState={emptyState}
+              component={component}
+              selected={currentComposition}
+              queryParams={queryParams}
+              sandbox={sandboxValue}
+            />
+            {showControlsTray && (
+              <div ref={trayRef} className={styles.controlsTray} style={{ maxHeight: trayHeightRef.current }}>
+                <div className={styles.trayDragHandle} onMouseDown={onTrayDragStart}>
+                  <div className={styles.trayDragBar} />
+                </div>
+                <div className={styles.trayHeader}>
+                  <div className={styles.trayTitleRow}>
+                    <Icon of="settings" className={styles.trayIcon} />
+                    <span className={styles.trayTitle}>Live Controls</span>
+                    {ready && defs.length > 0 && <span className={styles.trayBadge}>{defs.length}</span>}
+                  </div>
+                  <button className={styles.trayClose} onClick={() => setControlsTrayOpen(false)}>
+                    <Icon of="x" />
+                  </button>
+                </div>
+                <div className={styles.trayBody}>
+                  {ready ? (
+                    <LiveControls defs={defs} values={values} onChange={onChange} />
+                  ) : (
+                    <div className={styles.trayEmpty}>No live controls available for this composition</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </Pane>
         <HoverSplitter className={styles.splitter}>
           <Collapser

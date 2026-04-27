@@ -1,16 +1,41 @@
 .container {
-  display: flex;
-  flex-direction: column;
-  font-size: 12px;
-  padding: 8px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0;
+  font-size: 13px;
+  padding: 4px 0;
   width: 100%;
 }
 
 .item {
-  padding: 4px 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--bit-border-color-lightest, rgba(0, 0, 0, 0.06));
+  transition: background 120ms ease;
+  min-width: 0;
+
+  &:hover {
+    background: var(--surface-hover-color, rgba(0, 0, 0, 0.015));
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
 .label {
-  font-weight: bold;
-  color: var(--on-background-color);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+
+  label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: var(--bit-text-color-light, #8b8d98);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }

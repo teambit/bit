@@ -558,6 +558,11 @@
         "",
         "use-root-modules",
         "EXPERIMENTAL. resolve component previews from root node_modules instead of .bit_roots. mainly for internal usage, use with caution only if you understand the implications"
+      ],
+      [
+        "",
+        "use-source",
+        "EXPERIMENTAL. resolve local workspace component previews from source files instead of .bit_roots or package artifacts. intended for debugging and HMR investigations"
       ]
     ],
     "description": "launch the Bit development server",
@@ -669,6 +674,11 @@
             "",
             "deprecate",
             "for exported components, instead of deleting the original components, deprecating them"
+          ],
+          [
+            "x",
+            "skip-dependency-installation",
+            "do not install dependencies after the rename"
           ]
         ],
         "description": "rename the scope name for all components with the specified 'current scope name'. if exported, create new components and delete the original ones",
@@ -3704,6 +3714,16 @@
         "j",
         "json",
         "return the results in json format"
+      ],
+      [
+        "",
+        "verbose",
+        "list the component ids that have no tests (default collapses them into a count)"
+      ],
+      [
+        "",
+        "summary",
+        "suppress tester output, print only the final pass/fail headline (or summary object with --json)"
       ]
     ],
     "description": "run component tests",

@@ -26,6 +26,7 @@ type StartFlags = {
   skipUiBuild: boolean;
   uiRootName: string;
   useRootModules: boolean;
+  useSource: boolean;
 };
 
 export class StartCmd implements Command {
@@ -65,6 +66,11 @@ includes hot module reloading for development.`;
       'use-root-modules',
       'EXPERIMENTAL. resolve component previews from root node_modules instead of .bit_roots. mainly for internal usage, use with caution only if you understand the implications',
     ],
+    [
+      '',
+      'use-source',
+      'EXPERIMENTAL. resolve local workspace component previews from source files instead of .bit_roots or package artifacts. intended for debugging and HMR investigations',
+    ],
   ] as CommandOptions;
 
   constructor(
@@ -89,6 +95,7 @@ includes hot module reloading for development.`;
       showInternalUrls,
       uiRootName: uiRootAspectIdOrName,
       useRootModules,
+      useSource,
     }: StartFlags
   ) {
     const spinnies = this.logger.multiSpinner;
@@ -113,6 +120,7 @@ includes hot module reloading for development.`;
       verbose,
       showInternalUrls,
       useRootModules,
+      useSource,
     });
 
     uiServer

@@ -813,7 +813,7 @@ default scopes for components are set in the bitmap file. the default scope for 
 rename the scope name for all components with the specified 'current scope name'. if exported, create new components and delete the original ones
 
 Note: if `<current-scope-name>` is also the defaultScope for the workspace, this command will set `<new-scope-name>` as the defaultScope instead, and that will then be set for all components by default. You may see updates in your .bitmap file as a result of this change
-Flags: --preserve, --refactor, --deprecate
+Flags: --preserve, --refactor, --deprecate, --skip-dependency-installation
 
 ## bit scope rename-owner <current-owner-name> <new-owner-name>
 
@@ -866,7 +866,7 @@ Flags: --message <message>, --unmodified, --unmerged, --build, --editor [editor]
 launch the Bit development server
 
 starts the local development server providing a UI to browse, preview, and interact with components. works in both workspaces and scopes. opens automatically in your browser at http://localhost:3000 (or specified port). includes hot module reloading for development.
-Flags: --dev, --port [port-number], --rebuild, --skip-ui-build, --verbose, --no-browser, --show-internal-urls, --skip-compilation, --ui-root-name [type], --use-root-modules
+Flags: --dev, --port [port-number], --rebuild, --skip-ui-build, --verbose, --no-browser, --show-internal-urls, --skip-compilation, --ui-root-name [type], --use-root-modules, --use-source
 
 ## bit stash <sub-command>
 
@@ -931,7 +931,7 @@ Flags: --show-all, --aspect <aspect-id>, --json
 run component tests
 
 executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.). by default only runs tests for new and modified components. use --unmodified to test all components. supports watch mode, coverage reporting, and debug mode for development workflows.
-Flags: --watch, --debug, --unmodified, --junit <filepath>, --coverage, --env <id>, --update-snapshot, --json
+Flags: --watch, --debug, --unmodified, --junit <filepath>, --coverage, --env <id>, --update-snapshot, --json, --verbose, --summary
 
 ## bit undeprecate <id>
 
