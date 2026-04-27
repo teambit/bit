@@ -5,6 +5,16 @@ import type { LastExportData } from '@teambit/export';
 import type { RippleMain, RippleJob, CiGraphNode } from './ripple.main.runtime';
 import { colorPhase, isFailedPhase, stripAnsi, resolveJobId, formatAge } from './ripple-utils';
 
+/**
+ * a last-export entry matches the target context when its saved lane equals the current lane
+ * (or both are undefined / "main"). this prevents using a stale last-export from a different lane
+ * after the user has switched lanes.
+ */
+function lastExportMatchesTarget(last: LastExportData, targetLane: string | undefined): boolean {
+  const lastLaneStr = last.lane ? `${last.lane.scope}/${last.lane.name}` : undefined;
+  return lastLaneStr === targetLane;
+}
+
 function lastExportHeader(lastExport: LastExportData, job: { status?: { phase?: string } }): string {
   const age = formatAge(lastExport.timestamp);
   const target = lastExport.lane ? `lane "${lastExport.lane.scope}/${lastExport.lane.name}"` : 'main';
@@ -363,7 +373,7 @@ export class RippleErrorsCmd implements Command {
       }
       const laneId = flags.lane || this.ripple.getCurrentLaneId();
       if (laneId) {
-        return chalk.red(`No failed Ripple CI job found for lane "${laneId}".`);
+        return chalk.red(`No Ripple CI job found for lane "${laneId}".`);
       }
       return chalk.red(
         error ||
@@ -494,27 +504,25 @@ export class RippleErrorsCmd implements Command {
       source = 'arg';
     } else {
       const laneId = flags.lane || this.ripple.getCurrentLaneId();
-      if (laneId) {
-        const found = await this.ripple.findLatestJobForLane(laneId, 'FAILURE');
+      const last = await this.ripple.getLastExport();
+      if (last?.rippleJobs?.length && lastExportMatchesTarget(last, laneId)) {
+        const slug = last.rippleJobs[last.rippleJobs.length - 1];
+        job = await this.ripple.getJobBySlug(slug);
+        source = 'last-export';
+        lastExport = last;
+        if (!job) {
+          return {
+            job: null,
+            ciNodes: [],
+            source: 'last-export',
+            lastExport: last,
+            error: `Could not find Ripple CI job for your last export "${slug}".`,
+          };
+        }
+      } else if (laneId) {
+        const found = await this.ripple.findLatestJobForLane(laneId);
         job = found ? await this.ripple.getJob(found.id) : null;
         source = 'lane';
-      } else {
-        const last = await this.ripple.getLastExport();
-        const slug = last?.rippleJobs?.[last.rippleJobs.length - 1];
-        if (slug && last) {
-          job = await this.ripple.getJobBySlug(slug);
-          source = 'last-export';
-          lastExport = last;
-          if (!job) {
-            return {
-              job: null,
-              ciNodes: [],
-              source: 'last-export',
-              lastExport: last,
-              error: `Could not find Ripple CI job for your last export "${slug}".`,
-            };
-          }
-        }
       }
     }
 

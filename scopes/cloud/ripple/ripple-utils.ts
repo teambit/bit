@@ -56,18 +56,13 @@ export async function resolveJobId(
   if (jobId) return { id: jobId, source: 'arg' };
 
   const laneId = flags.lane || ripple.getCurrentLaneId();
-  if (laneId) {
-    const found = await ripple.findLatestJobForLane(laneId);
-    if (!found) {
-      return { error: `No Ripple CI job found for lane "${laneId}".` };
-    }
-    const phaseError = checkPhase(found, opts, `Latest job for lane "${laneId}"`);
-    if (phaseError) return { error: phaseError };
-    return { id: found.id, source: 'lane' };
-  }
-
   const lastExport = await ripple.getLastExport();
-  if (lastExport?.rippleJobs?.length) {
+  const lastLaneStr = lastExport?.lane ? `${lastExport.lane.scope}/${lastExport.lane.name}` : undefined;
+
+  // prefer last-export when its lane matches the user's current context (or both are main).
+  // last-export is per-workspace, so it identifies *this user's* last export — more specific than
+  // the latest lane job, which might be someone else's.
+  if (lastExport?.rippleJobs?.length && lastLaneStr === laneId) {
     const slug = lastExport.rippleJobs[lastExport.rippleJobs.length - 1];
     const job = await ripple.getJobBySlug(slug);
     if (!job) {
@@ -76,6 +71,16 @@ export async function resolveJobId(
     const phaseError = checkPhase(job, opts, 'Last export job');
     if (phaseError) return { error: phaseError };
     return { id: job.id, source: 'last-export', lastExport };
+  }
+
+  if (laneId) {
+    const found = await ripple.findLatestJobForLane(laneId);
+    if (!found) {
+      return { error: `No Ripple CI job found for lane "${laneId}".` };
+    }
+    const phaseError = checkPhase(found, opts, `Latest job for lane "${laneId}"`);
+    if (phaseError) return { error: phaseError };
+    return { id: found.id, source: 'lane' };
   }
 
   return {
