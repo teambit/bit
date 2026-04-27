@@ -24,8 +24,18 @@ export async function readLastExport(scopePath: string): Promise<LastExportData 
   if (!(await fs.pathExists(filePath))) return null;
   try {
     const raw = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(raw) as LastExportData;
+    const parsed = JSON.parse(raw);
+    return isValidLastExport(parsed) ? parsed : null;
   } catch {
     return null;
   }
+}
+
+function isValidLastExport(value: unknown): value is LastExportData {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  if (typeof v.timestamp !== 'string') return false;
+  if (!Array.isArray(v.rippleJobs) || !v.rippleJobs.every((j) => typeof j === 'string' && j.length > 0)) return false;
+  if (!Array.isArray(v.exportedComponents)) return false;
+  return true;
 }

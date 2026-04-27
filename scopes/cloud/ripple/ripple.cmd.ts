@@ -351,7 +351,7 @@ export class RippleErrorsCmd implements Command {
   alias = '';
 
   options: CommandOptions = [
-    ['', 'lane <lane>', 'lane ID to find the latest failed job for (default: detected from .bitmap)'],
+    ['', 'lane <lane>', 'lane ID to find the latest job for (default: detected from .bitmap)'],
     ['', 'log', 'show full build log for failed containers (not just the error summary)'],
     ['j', 'json', 'return the output as JSON'],
   ];
