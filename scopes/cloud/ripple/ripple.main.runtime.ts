@@ -19,6 +19,8 @@ export type JobStatus = {
 
 export type RippleJob = {
   id: string;
+  /** url-safe identifier used by the cloud UI; the bit.cloud /ripple-ci/job/ page resolves by slug, not id */
+  slug?: string;
   name?: string;
   laneId?: string;
   simulation?: boolean;
@@ -79,6 +81,7 @@ export class RippleMain {
     query getJob($jobId: ID!) {
       getJob(jobId: $jobId) {
         id
+        slug
         name
         laneId
         hash
@@ -95,6 +98,7 @@ export class RippleMain {
     query getJobBySlug($slug: ID!) {
       getJob(slug: $slug) {
         id
+        slug
         name
         laneId
         hash
@@ -384,15 +388,18 @@ export class RippleMain {
   }
 
   getJobUrl(job: RippleJob): string {
+    // the bit.cloud UI resolves the /ripple-ci/job/<id-or-slug> segment by slug;
+    // job.id (a uuid) returns "No CI job found", so prefer slug when present.
+    const segment = job.slug || job.id;
     if (job.laneId) {
       // laneId format: "scope/lane-name", e.g. "att-bit.duc/my-lane"
       const [scope, ...laneParts] = job.laneId.split('/');
       const laneName = laneParts.join('/');
       if (scope && laneName) {
-        return `https://${getCloudDomain()}/${scope.split('.').join('/')}/~lane/${laneName}/~ripple-ci/job/${job.id}`;
+        return `https://${getCloudDomain()}/${scope.split('.').join('/')}/~lane/${laneName}/~ripple-ci/job/${segment}`;
       }
     }
-    return `https://${getCloudDomain()}/ripple-ci/job/${job.id}`;
+    return `https://${getCloudDomain()}/ripple-ci/job/${segment}`;
   }
 
   static async provider([cli, cloud, loggerAspect, workspace]: [CLIMain, CloudMain, LoggerMain, Workspace]) {
