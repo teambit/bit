@@ -532,6 +532,12 @@ export class SnappingMain {
       isSnap: !shouldTag,
       message: params.message as string,
       updateDependentsOnLane: params.updateDependents,
+      // when adding a hidden updateDependent, the unified architecture relies on autotag
+      // (`getLaneAutoTagIdsFromScope`) to find lane.components that depend on the new entry and
+      // re-snap them with the cascaded dep — that's scenario 4. Callers that pass
+      // `skipAutoTag: true` (e.g., dot-cli's snap-from-scope command) are overridden here in the
+      // updateDependents flow specifically.
+      skipAutoTag: params.updateDependents ? false : params.skipAutoTag,
     };
     const results = await this.makeVersion(ids, components, makeVersionParams);
 
@@ -539,9 +545,14 @@ export class SnappingMain {
     let exportedIds: ComponentIdList | undefined;
     if (params.push) {
       const updatedLane = lane ? await this.scope.legacyScope.loadLane(lane.toLaneId()) : undefined;
+      // include auto-tagged ids in the export set. For `_snap --update-dependents` (scenario 4),
+      // `getLaneAutoTagIdsFromScope` re-snaps lane.components that depend on the new hidden
+      // entry, and those new snaps must be pushed alongside the explicit target.
+      const autoTaggedIds = (results.autoTaggedResults || []).map((r) => r.component.id);
+      const idsToExport = ComponentIdList.uniqFromArray([...ids, ...autoTaggedIds]);
       const { exported } = await this.exporter.pushToScopes({
         scope: this.scope.legacyScope,
-        ids,
+        ids: idsToExport,
         allVersions: false,
         laneObject: updatedLane,
         // no need other snaps. only the latest one. without this option, when snapping on lane from another-scope, it

@@ -163,24 +163,29 @@ export class VersionMaker {
     const currentLane = this.consumer?.getCurrentLaneId();
     await mapSeries(this.allComponentsToTag, async (component) => {
       // hidden lane entries (skipWorkspace) cascade through autotag but must not enter the
-      // workspace bitmap. Detect by absence-from-bitmap: workspace components are always in the
-      // bitmap; cascaded hidden entries come from `getManyConsumerComponents` (scope-loaded) and
-      // are not.
+      // workspace bitmap. Detect via two signals:
+      //  - workspace flow: absence-from-bitmap (cascade autotag loaded the comp from scope)
+      //  - bare-scope flow: the lane already marks the entry as `skipWorkspace`
+      const laneEntry = lane?.getComponent(component.id);
       const isHiddenLaneEntry = Boolean(
-        this.consumer && !this.consumer.bitMap.getComponentIfExist(component.id, { ignoreVersion: true })
+        (this.consumer && !this.consumer.bitMap.getComponentIfExist(component.id, { ignoreVersion: true })) ||
+          (!this.consumer && laneEntry?.skipWorkspace)
       );
-      // explicit signal to addVersion:
-      //  - hidden cascade snap (auto-tagged by getLaneAutoTagIdsFromScope) → keep hidden
-      //    (`skipWorkspace: true`) and raise the override flag for export
-      //  - workspace component (in bitmap) → promote to visible (`skipWorkspace: false`), so a
-      //    user importing a previously-hidden updateDependent and snapping it (scenario 6)
-      //    moves the entry from `lane.updateDependents` into `lane.components`
-      //  - bare-scope `_snap --update-dependents` producer → caller passes
-      //    `updateDependentsOnLane: true` directly, this branch yields true
+      // explicit signal to addVersion. Order matters — auto-tag cascade results check the
+      // existing entry's bucket BEFORE applying the caller-level `updateDependentsOnLane` flag,
+      // so a bare-scope `_snap --update-dependents` (scenario 4) that auto-tags a *visible*
+      // lane.components dependent (comp1 in the test) doesn't accidentally move it into the
+      // hidden bucket.
+      //  - explicit target of `_snap --update-dependents` → hidden (caller flag)
+      //  - hidden cascade snap (auto-tagged) → keep hidden, raise override flag
+      //  - workspace component (in bitmap) → promote to visible (scenario 6)
+      //  - auto-tagged visible lane component → keep visible
+      const isExplicitTarget = this.ids.searchWithoutVersion(component.id) !== undefined;
       let addToUpdateDependentsInLane: boolean | undefined;
-      if (updateDependentsOnLane) addToUpdateDependentsInLane = true;
+      if (updateDependentsOnLane && isExplicitTarget) addToUpdateDependentsInLane = true;
       else if (isHiddenLaneEntry) addToUpdateDependentsInLane = true;
       else if (this.consumer) addToUpdateDependentsInLane = false;
+      else addToUpdateDependentsInLane = false;
       const results = await this.snapping._addCompToObjects({
         source: component,
         lane,
@@ -459,7 +464,13 @@ export class VersionMaker {
     const laneCompIds = ComponentIdList.fromArray(
       candidateLaneEntries.map((c) => c.id.changeVersion(c.head.toString()))
     );
-    const graphIds = await this.scope.getGraphIds(laneCompIds);
+    // include `idsToTag` in the graph too. For bare-scope `_snap --update-dependents` (scenario
+    // 4), the targeted hidden entry is being NEWLY introduced to the lane and isn't in
+    // candidateLaneEntries yet — without seeding it into the graph, predecessors lookup wouldn't
+    // surface lane.components that depend on it, and the reverse cascade (re-snap visible
+    // dependents) wouldn't fire.
+    const graphSeedIds = ComponentIdList.uniqFromArray([...laneCompIds, ...idsToTag]);
+    const graphIds = await this.scope.getGraphIds(graphSeedIds);
     const dependentsMap = idsToTag.reduce(
       (acc, id) => {
         const dependents = graphIds.predecessors(id.toString());
