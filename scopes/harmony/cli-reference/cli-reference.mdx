@@ -2365,11 +2365,12 @@ as a result of this change
 | `current-scope-name` | the scope name to be replaced by another scope name |
 | `new-scope-name`     | a new scope name to replace the current scope name  |
 
-| **Option**    | **Option alias** | **Description**                                                                                                 |
-| ------------- | :--------------: | --------------------------------------------------------------------------------------------------------------- |
-| `--preserve`  |                  | avoid renaming files and variables/classes according to the new scope name                                      |
-| `--refactor`  |       `-r`       | update the import statements in all dependent components to the new package name (i.e. with the new scope name) |
-| `--deprecate` |                  | for exported components, instead of deleting the original components, deprecating them                          |
+| **Option**                       | **Option alias** | **Description**                                                                                                 |
+| -------------------------------- | :--------------: | --------------------------------------------------------------------------------------------------------------- |
+| `--preserve`                     |                  | avoid renaming files and variables/classes according to the new scope name                                      |
+| `--refactor`                     |       `-r`       | update the import statements in all dependent components to the new package name (i.e. with the new scope name) |
+| `--deprecate`                    |                  | for exported components, instead of deleting the original components, deprecating them                          |
+| `--skip-dependency-installation` |       `-x`       | do not install dependencies after the rename                                                                    |
 
 ### scope rename-owner
 
