@@ -26,6 +26,8 @@ export type RippleJob = {
   status?: JobStatus;
 };
 
+export type RippleJobFull = RippleJob & { hash?: string; ciGraph?: string; ciComponentGraph?: string };
+
 export type BuildTaskStatus = {
   status?: string;
   warnings?: number;
@@ -182,11 +184,9 @@ export class RippleMain {
     return data?.listJobs ?? [];
   }
 
-  async getJob(
-    jobId: string
-  ): Promise<(RippleJob & { hash?: string; ciGraph?: string; ciComponentGraph?: string }) | null> {
+  async getJob(jobId: string): Promise<RippleJobFull | null> {
     const data = await this.fetchRippleGQL<{
-      getJob: RippleJob & { hash?: string; ciGraph?: string; ciComponentGraph?: string };
+      getJob: RippleJobFull;
     }>(RippleMain.GET_JOB, { jobId });
     return data?.getJob ?? null;
   }
@@ -355,11 +355,9 @@ export class RippleMain {
    * the central-hub returns url slugs in `metadata.jobs`, not the GraphQL job ids accepted by getJob(jobId).
    * the schema also supports getJob(slug: ID!), which we use here to fetch the job directly from a slug.
    */
-  async getJobBySlug(
-    slug: string
-  ): Promise<(RippleJob & { hash?: string; ciGraph?: string; ciComponentGraph?: string }) | null> {
+  async getJobBySlug(slug: string): Promise<RippleJobFull | null> {
     const data = await this.fetchRippleGQL<{
-      getJob: RippleJob & { hash?: string; ciGraph?: string; ciComponentGraph?: string };
+      getJob: RippleJobFull;
     }>(RippleMain.GET_JOB_BY_SLUG, { slug });
     return data?.getJob ?? null;
   }

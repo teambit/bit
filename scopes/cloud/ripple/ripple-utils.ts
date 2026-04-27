@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import stripAnsi from 'strip-ansi';
 import type { LastExportData } from '@teambit/export';
-import type { RippleMain } from './ripple.main.runtime';
+import type { RippleMain, RippleJobFull } from './ripple.main.runtime';
 
 export { stripAnsi };
 
@@ -40,7 +40,9 @@ export function stripComponentVersion(id: string): string {
 
 export type ResolveSource = 'arg' | 'lane' | 'last-export';
 
-export type ResolvedJobId = { id: string; source: ResolveSource; lastExport?: LastExportData } | { error: string };
+export type ResolvedJobId =
+  | { id: string; source: ResolveSource; lastExport?: LastExportData; job?: RippleJobFull }
+  | { error: string };
 
 /**
  * resolve a job ID from explicit argument, --lane flag, current workspace lane, or the
@@ -70,7 +72,7 @@ export async function resolveJobId(
     }
     const phaseError = checkPhase(job, opts, 'Last export job');
     if (phaseError) return { error: phaseError };
-    return { id: job.id, source: 'last-export', lastExport };
+    return { id: job.id, source: 'last-export', lastExport, job };
   }
 
   if (laneId) {

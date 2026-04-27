@@ -222,7 +222,8 @@ export class RippleLogCmd implements Command {
   private async resolveJob(jobId: string | undefined, flags: { lane?: string }) {
     const resolved = await resolveJobId(this.ripple, jobId, flags);
     if ('error' in resolved) return { job: null, error: resolved.error, source: undefined, lastExport: undefined };
-    const job = await this.ripple.getJob(resolved.id);
+    // when resolved from last-export, the resolver already fetched the full job — reuse it
+    const job = resolved.job ?? (await this.ripple.getJob(resolved.id));
     return { job, error: undefined, source: resolved.source, lastExport: resolved.lastExport };
   }
 
