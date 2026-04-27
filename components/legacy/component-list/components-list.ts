@@ -162,12 +162,16 @@ export class ComponentsList {
     const pendingExportComponents = await pFilter(modelComponents, async (component: ModelComponent) => {
       const foundInBitMap = fromBitMap.searchWithoutVersion(component.toComponentId());
       if (!foundInBitMap) {
-        // it's not on the .bitmap only in the scope, as part of the out-of-sync feature, it should
-        // be considered as staged and should be exported. same for soft-removed components, which are on scope only.
-        // notice that we use `hasLocalChanges`
-        // and not `isLocallyChanged` by purpose. otherwise, cached components that were not
-        // updated from a remote will be calculated as remote-ahead in the setDivergeData and will
-        // be exported unexpectedly.
+        // it's not on the .bitmap only in the scope. Two cases land here:
+        //  - out-of-sync: a workspace component that lost its bitmap entry but still has scope data
+        //  - hidden lane entry: a `skipWorkspace: true` lane component (cascade-on-snap, bare-scope
+        //    `_snap --update-dependents`) that exists only in scope+lane, never the workspace
+        // For the lane case, fall back to lane-aware divergence so the cascade snap is detected
+        // as source-ahead and gets exported. Without this, the new hidden version would be
+        // computed but never sent over the wire, and the remote would reject the lane object.
+        if (lane && lane.getComponent(component.toComponentId())) {
+          return component.isLocallyChanged(this.scope.objects, lane);
+        }
         return component.isLocallyChangedRegardlessOfLanes();
       }
       return component.isLocallyChanged(this.scope.objects, lane, foundInBitMap);
