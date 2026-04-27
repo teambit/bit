@@ -82,18 +82,31 @@ export default class Lane extends BitObject {
     return hidden.map((c) => c.id.changeVersion(c.head.toString()));
   }
   set updateDependents(next: ComponentID[] | undefined) {
+    const currentHidden = this.components
+      .filter((c) => c.skipWorkspace)
+      .map((c) => c.id.changeVersion(c.head.toString()).toString())
+      .sort();
+    const nextHidden = (next || []).map((id) => {
+      if (!id.hasVersion()) {
+        throw new ValidationError(`Lane.updateDependents: component "${id.toString()}" is missing a version`);
+      }
+      return id.toString();
+    });
+    const nextHiddenSorted = [...nextHidden].sort();
+    if (isEqual(currentHidden, nextHiddenSorted)) return;
     // drop every existing hidden entry, then add the replacement set. Preserves array-identity
     // semantics callers expect from `lane.updateDependents = lane.updateDependents` reassignment.
     this.components = this.components.filter((c) => !c.skipWorkspace);
-    if (!next?.length) return;
-    for (const id of next) {
-      if (!id.hasVersion()) continue;
-      this.components.push({
-        id: id.changeVersion(undefined),
-        head: Ref.from(id.version as string),
-        skipWorkspace: true,
-      });
+    if (next?.length) {
+      for (const id of next) {
+        this.components.push({
+          id: id.changeVersion(undefined),
+          head: Ref.from(id.version as string),
+          skipWorkspace: true,
+        });
+      }
     }
+    this.hasChanged = true;
   }
   id(): string {
     return this.scope + LANE_REMOTE_DELIMITER + this.name;
