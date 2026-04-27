@@ -674,6 +674,11 @@
             "",
             "deprecate",
             "for exported components, instead of deleting the original components, deprecating them"
+          ],
+          [
+            "x",
+            "skip-dependency-installation",
+            "do not install dependencies after the rename"
           ]
         ],
         "description": "rename the scope name for all components with the specified 'current scope name'. if exported, create new components and delete the original ones",
