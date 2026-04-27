@@ -352,7 +352,10 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         }
       }
 
-      const head = component.head || laneItem?.head;
+      // for hidden lane entries (skipWorkspace), the lane head is independent of main's head and
+      // we need to walk *its* parent chain to find the prior snap to rewind to. Prefer the lane
+      // head over the modelComponent's main head in that case.
+      const head = laneItem?.skipWorkspace ? laneItem.head : component.head || laneItem?.head;
       if (!head) {
         return undefined;
       }

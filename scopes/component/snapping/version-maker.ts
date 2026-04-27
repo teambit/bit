@@ -169,16 +169,24 @@ export class VersionMaker {
       const isHiddenLaneEntry = Boolean(
         this.consumer && !this.consumer.bitMap.getComponentIfExist(component.id, { ignoreVersion: true })
       );
+      // explicit signal to addVersion:
+      //  - hidden cascade snap (auto-tagged by getLaneAutoTagIdsFromScope) → keep hidden
+      //    (`skipWorkspace: true`) and raise the override flag for export
+      //  - workspace component (in bitmap) → promote to visible (`skipWorkspace: false`), so a
+      //    user importing a previously-hidden updateDependent and snapping it (scenario 6)
+      //    moves the entry from `lane.updateDependents` into `lane.components`
+      //  - bare-scope `_snap --update-dependents` producer → caller passes
+      //    `updateDependentsOnLane: true` directly, this branch yields true
+      let addToUpdateDependentsInLane: boolean | undefined;
+      if (updateDependentsOnLane) addToUpdateDependentsInLane = true;
+      else if (isHiddenLaneEntry) addToUpdateDependentsInLane = true;
+      else if (this.consumer) addToUpdateDependentsInLane = false;
       const results = await this.snapping._addCompToObjects({
         source: component,
         lane,
         shouldValidateVersion: Boolean(build),
         addVersionOpts: {
-          // for hidden cascade entries, force the addToUpdateDependents path so addVersion sets
-          // skipWorkspace: true and raises the override flag for export. The caller's
-          // `updateDependentsOnLane` flag still wins for the non-hidden case (e.g., the bare-scope
-          // `_snap --update-dependents` producer).
-          addToUpdateDependentsInLane: updateDependentsOnLane || isHiddenLaneEntry || undefined,
+          addToUpdateDependentsInLane,
           setHeadAsParent,
           detachHead,
           overrideHead: overrideHead,
