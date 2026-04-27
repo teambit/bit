@@ -27,7 +27,9 @@ describe('Renaming Aspect', function () {
       workspace = harmony.get<Workspace>(WorkspaceAspect.id);
 
       await renaming.rename('comp1', 'ui/comp1');
-      await renaming.renameScope(workspaceData.remoteScopeName, 'another-scope-name');
+      await renaming.renameScope(workspaceData.remoteScopeName, 'another-scope-name', {
+        skipDependencyInstallation: true,
+      });
     });
     after(async () => {
       await destroyWorkspace(workspaceData);

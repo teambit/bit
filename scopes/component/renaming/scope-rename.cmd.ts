@@ -24,6 +24,7 @@ as a result of this change`;
     ['x', 'skip-dependency-installation', 'do not install dependencies after the rename'],
   ] as CommandOptions;
   group = 'component-config';
+  loader = true;
 
   constructor(private renaming: RenamingMain) {}
 
