@@ -767,8 +767,12 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       if (currentLane?.shouldOverrideUpdateDependents()) {
         const repo = this.scope.legacyScope.objects;
         const hiddenEntries = currentLane.components.filter((c) => c.skipWorkspace);
-        const anyHasLocalHashes = await Promise.all(
-          hiddenEntries.map(async (entry) => {
+        // bound concurrency — each task does scope reads, head population and a diverge-data
+        // computation, which can spike I/O on large lanes. Match the convention used elsewhere
+        // (e.g., merging.getMergeStatus) of `concurrentComponentsLimit()`.
+        const anyHasLocalHashes = await pMap(
+          hiddenEntries,
+          async (entry) => {
             const mc = await this.scope.legacyScope.getModelComponentIfExist(entry.id);
             if (!mc) return false;
             // refresh the modelComponent's lane heads against the post-reset lane state, so
@@ -777,7 +781,8 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
             await mc.populateLocalAndRemoteHeads(repo, currentLane);
             const local = await mc.getLocalHashes(repo);
             return local.length > 0;
-          })
+          },
+          { concurrency: concurrentComponentsLimit() }
         );
         if (!anyHasLocalHashes.some(Boolean)) {
           currentLane.setOverrideUpdateDependents(false);

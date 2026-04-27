@@ -181,11 +181,7 @@ export class VersionMaker {
       //  - workspace component (in bitmap) → promote to visible (scenario 6)
       //  - auto-tagged visible lane component → keep visible
       const isExplicitTarget = this.ids.searchWithoutVersion(component.id) !== undefined;
-      let addToUpdateDependentsInLane: boolean | undefined;
-      if (updateDependentsOnLane && isExplicitTarget) addToUpdateDependentsInLane = true;
-      else if (isHiddenLaneEntry) addToUpdateDependentsInLane = true;
-      else if (this.consumer) addToUpdateDependentsInLane = false;
-      else addToUpdateDependentsInLane = false;
+      const addToUpdateDependentsInLane = (updateDependentsOnLane && isExplicitTarget) || isHiddenLaneEntry;
       const results = await this.snapping._addCompToObjects({
         source: component,
         lane,
