@@ -206,6 +206,7 @@ export class PreviewStartPlugin implements StartPlugin {
       ...this.serversState[id],
       isCompiling: true,
     };
+
     const spinnerId = getSpinnerId(id);
     const text = getSpinnerCompilingMessage(this.serversMap[id] || this.pendingServers.get(id));
     const exists = this.logger.multiSpinner.spinners[spinnerId];
