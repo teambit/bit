@@ -759,14 +759,19 @@ possible causes:
       const incomingHidden = lane.updateDependents || [];
       const existingHidden = existingLane.updateDependents || [];
       const existingByName = new Map(existingHidden.map((id) => [id.toStringWithoutVersion(), id]));
-      await Promise.all(
-        incomingHidden.map(async (id) => {
+      // Bound concurrency — each task may load a ModelComponent from storage. With many incoming
+      // hidden entries, an unbounded `Promise.all` could spike I/O during a large export. Match
+      // the per-component merge loop above which uses `concurrentComponentsLimit()`.
+      await pMap(
+        incomingHidden,
+        async (id) => {
           const existing = existingByName.get(id.toStringWithoutVersion());
           if (!existing || existing.version !== id.version) {
             const mergedComponent = await getModelComponent(id);
             mergeResults.push({ mergedComponent, mergedVersions: [id.version] });
           }
-        })
+        },
+        { concurrency: concurrentComponentsLimit() }
       );
       existingLane.updateDependents = incomingHidden;
     }

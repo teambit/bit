@@ -436,8 +436,13 @@ export default class Lane extends BitObject {
   }
   isEqual(lane: Lane): boolean {
     if (this.id() !== lane.id()) return false;
-    const thisComponents = this.toComponentIds().toStringArray().sort();
-    const otherComponents = lane.toComponentIds().toStringArray().sort();
+    // compare the full graph including hidden (skipWorkspace) entries. The three real callers
+    // (`importer.fetchLaneComponents`, `importer.fetchLanesUsingScope`, `import-components`) use
+    // this to decide whether to write a LaneHistory entry — a change to a hidden updateDependent
+    // is a graph change and must trigger that write. Restricting to visible-only would silently
+    // skip lane-history bookkeeping when only the hidden bucket changed.
+    const thisComponents = this.toComponentIdsIncludeUpdateDependents().toStringArray().sort();
+    const otherComponents = lane.toComponentIdsIncludeUpdateDependents().toStringArray().sort();
     return isEqual(thisComponents, otherComponents);
   }
   clone() {
