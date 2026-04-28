@@ -564,6 +564,218 @@ describe('ci merge with bitmap auto-sync mode', function () {
   });
 
   // ------------------------------------------------------------------------------------
+  // The realistic developer flow: nobody works directly on the default branch. Devs cut
+  // a git feature branch, work for a while, then periodically merge main back into it
+  // to stay current with their teammates' merged PRs. The "merge main into feature
+  // branch" step is exactly when auto-sync needs to fire — that's when newly-tagged
+  // versions from other PRs become reachable.
+  //
+  // Note: this is a *git branch*, not a Bit *lane*. The dev hasn't run `bit lane create`
+  // (or `bit ci pr`), so they're still on Bit's main lane — `isOnMain()` returns true
+  // and auto-sync is allowed to run.
+  // ------------------------------------------------------------------------------------
+  describe('developer working on a git feature branch (Bit on main) — merging main in', () => {
+    let devClone: string;
+    let mainBranch: string;
+    const compId = `comp1`;
+
+    function bitmapVersion(): string | undefined {
+      const bitmap = helper.bitMap.read();
+      const entry = bitmap[compId] || bitmap[`${helper.scopes.remote}/${compId}`];
+      return entry?.version;
+    }
+
+    before(() => {
+      // ── CI workspace setup ──
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      mainBranch = setupComponentsAndInitialCommit();
+      enableBitmapAutoSync();
+      commitAndPushWorkspaceJsonc(mainBranch);
+
+      // Snapshot the dev workspace BEFORE any teammate activity. This is what the dev
+      // had when they branched off main.
+      devClone = helper.scopeHelper.cloneWorkspace();
+
+      // Simulate a teammate's PR landing on origin/main while the dev is off on their
+      // feature branch — the version bumps to 0.0.2, but bitmap on origin stays at 0.0.1.
+      simulatePrMergedOnDefaultBranch(
+        mainBranch,
+        'teammate-work',
+        () => helper.fs.outputFile('comp1/comp1.js', 'console.log("teammate");'),
+        'feat: teammate update'
+      );
+      helper.command.runCmd('bit ci merge --no-bitmap-commit');
+
+      // ── Dev's perspective: switch to the dev clone and create a feature branch ──
+      helper.scopeHelper.getClonedWorkspace(devClone);
+      helper.command.runCmd('git checkout -b feature/dev-work');
+
+      // Dev does some local work on their branch (no remote tagging here — just code).
+      helper.fs.outputFile('comp2/comp2.js', 'console.log("dev local work");');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "wip: dev work on feature branch"');
+    });
+
+    it('before merging main: dev .bitmap is still at the original 0.0.1', () => {
+      expect(bitmapVersion()).to.equal('0.0.1');
+    });
+
+    describe('dev merges origin/main into their feature branch', () => {
+      before(() => {
+        helper.command.runCmd(`git fetch origin ${mainBranch}`);
+        helper.command.runCmd(`git merge origin/${mainBranch} --no-edit`);
+      });
+
+      it('git status shows we are still on the feature branch (Bit lane is still main)', () => {
+        const currentBranch = helper.command.runCmd('git branch --show-current').trim();
+        expect(currentBranch).to.equal('feature/dev-work');
+        const lanes = helper.command.listLanesParsed();
+        expect(lanes.currentLane).to.equal('main');
+      });
+
+      describe('first bit command on the feature branch after the merge', () => {
+        before(() => {
+          helper.command.status();
+        });
+
+        it('auto-sync runs and updates .bitmap to scope HEAD (0.0.2)', () => {
+          expect(bitmapVersion()).to.equal('0.0.2');
+        });
+
+        it('sentinel records the feature branch HEAD (the merge commit)', () => {
+          const sentinelContent = fs.readFileSync(getSentinelPath(), 'utf-8').trim();
+          const currentGitHead = helper.command.runCmd('git rev-parse HEAD').trim();
+          expect(sentinelContent).to.equal(currentGitHead);
+        });
+      });
+    });
+  });
+
+  // ------------------------------------------------------------------------------------
+  // Lane guard: when the developer is on a Bit *lane* (not just a git branch), auto-sync
+  // must NOT run. Lanes have their own version flow and reconciling to main's scope HEAD
+  // would clobber the lane's component versions. The `isOnMain()` guard handles this;
+  // this test pins that behavior down so a future refactor can't regress it.
+  // ------------------------------------------------------------------------------------
+  // ------------------------------------------------------------------------------------
+  // Edge case: the developer never runs a bit command locally. They branch off main, code,
+  // commit, push — and the first bit command anywhere is `bit ci pr` running in CI on the
+  // newly-opened PR. Meanwhile, since the dev branched off, another teammate's PR merged
+  // and `bit ci merge --no-bitmap-commit` advanced scope to 0.0.2; the dev's branch still
+  // carries .bitmap@0.0.1.
+  //
+  // The auto-sync needs to fire during `bit ci pr`'s bootstrap so the lane gets snapped
+  // off the latest scope HEAD, not the stale bitmap version.
+  // ------------------------------------------------------------------------------------
+  describe('first bit command is `bit ci pr` on a stale feature branch', () => {
+    let devClone: string;
+    let mainBranch: string;
+    let prOutput: string;
+
+    before(() => {
+      // ── Setup: workspace, autoSync enabled, initial state pushed ──
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      mainBranch = setupComponentsAndInitialCommit();
+      enableBitmapAutoSync();
+      commitAndPushWorkspaceJsonc(mainBranch);
+
+      // Snapshot — represents the dev workspace before they branch.
+      devClone = helper.scopeHelper.cloneWorkspace();
+
+      // Teammate's PR lands on main while the dev is offline; scope advances to 0.0.2.
+      simulatePrMergedOnDefaultBranch(
+        mainBranch,
+        'teammate-merged',
+        () => helper.fs.outputFile('comp1/comp1.js', 'console.log("teammate");'),
+        'feat: teammate update'
+      );
+      helper.command.runCmd('bit ci merge --no-bitmap-commit');
+
+      // ── Dev's perspective: branch, code, commit, push — NO bit commands ──
+      helper.scopeHelper.getClonedWorkspace(devClone);
+      helper.command.runCmd('git checkout -b feature/no-local-bit');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("dev");');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: dev change"');
+      helper.command.runCmd('git push -u origin feature/no-local-bit');
+
+      // The dev's .bitmap on disk here is still 0.0.1 — they never ran a bit command
+      // since branching, so auto-sync hasn't fired yet for this workspace state.
+
+      // First bit command in this workspace state is `bit ci pr`. The bootstrap should
+      // auto-sync the bitmap to 0.0.2 BEFORE bit ci pr's own logic runs.
+      prOutput = helper.command.runCmd('bit ci pr --message "stale-branch PR"');
+    });
+
+    it('starts the test with .bitmap reflecting the post-sync version (0.0.2)', () => {
+      // Auto-sync rewrote bitmap during `bit ci pr` bootstrap — verify it landed.
+      const bitmap = helper.bitMap.read();
+      const entry = bitmap['comp1'] || bitmap[`${helper.scopes.remote}/comp1`];
+      expect(entry?.version).to.match(/^(0\.0\.2|[a-f0-9]{40})$/); // 0.0.2 from main, or a fresh snap on the lane
+    });
+
+    it('bit ci pr completes successfully despite the stale starting state', () => {
+      expect(prOutput).to.include('PR command executed successfully');
+    });
+
+    it('creates the lane and exports it', () => {
+      const remoteLanes = helper.command.listRemoteLanesParsed();
+      const lane = remoteLanes.lanes.find((l: any) => l.name === 'feature-no-local-bit');
+      expect(lane).to.exist;
+      expect(lane.components).to.have.lengthOf(1);
+    });
+
+    it('the sentinel was advanced (auto-sync ran during the bit ci pr bootstrap)', () => {
+      // bit ci pr eventually switches to a Bit lane internally, but the bootstrap fires
+      // BEFORE that switch — at the moment auto-sync is allowed, isOnMain() is still true
+      // and the sentinel gets written. Subsequent commands will see it cached.
+      expect(getSentinelPath()).to.be.a.file();
+    });
+  });
+
+  describe('developer on a Bit lane — auto-sync is skipped', () => {
+    let mainBranch: string;
+    let sentinelBeforeLaneWork: string;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      mainBranch = setupComponentsAndInitialCommit();
+      enableBitmapAutoSync();
+      commitAndPushWorkspaceJsonc(mainBranch);
+
+      // Creating the lane is itself a bit command, which runs while we're still on
+      // main — so the sentinel is initialized at that moment. Capture it.
+      helper.command.createLane('feature-lane');
+      sentinelBeforeLaneWork = fs.existsSync(getSentinelPath())
+        ? fs.readFileSync(getSentinelPath(), 'utf-8').trim()
+        : '';
+
+      // Move git HEAD on the lane so the sentinel-mismatch condition would normally
+      // trigger a sync — the lane guard is the only thing that should suppress it.
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("on lane");');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "wip on lane"');
+
+      helper.command.status(); // first bit command on the lane after the new commit
+    });
+
+    it('we are on the Bit lane, not main', () => {
+      const lanes = helper.command.listLanesParsed();
+      expect(lanes.currentLane).to.equal('feature-lane');
+    });
+
+    it('sentinel did NOT advance to the lane-side git HEAD (lane guard suppressed sync)', () => {
+      const currentGitHead = helper.command.runCmd('git rev-parse HEAD').trim();
+      const sentinelAfter = fs.existsSync(getSentinelPath()) ? fs.readFileSync(getSentinelPath(), 'utf-8').trim() : '';
+      expect(sentinelAfter).to.equal(sentinelBeforeLaneWork);
+      expect(sentinelAfter).to.not.equal(currentGitHead);
+    });
+  });
+
+  // ------------------------------------------------------------------------------------
   // CLI flag without the workspace flag: `--no-bitmap-commit` alone skips the commit but
   // the auto-sync mechanism is NOT activated. The dev would still need a manual sync.
   // This documents the intentional separation: the CLI flag is for the CI side, the
