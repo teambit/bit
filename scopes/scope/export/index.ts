@@ -13,3 +13,5 @@ export {
   removePendingDirs,
   mergeObjects,
 } from './export-scope-components';
+export { readLastExport, writeLastExport } from './last-export';
+export type { LastExportData } from './last-export';

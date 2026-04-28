@@ -97,7 +97,7 @@ export function Compositions({
 
   const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);
 
-  const [controlsTrayOpen, setControlsTrayOpen] = useState(true);
+  const [controlsTrayOpen, setControlsTrayOpen] = useState(false);
   const [isDraggingTray, setIsDraggingTray] = useState(false);
   const trayRef = useRef<HTMLDivElement>(null);
   const trayHeightRef = useRef(260);
@@ -252,6 +252,9 @@ export function Compositions({
                     }
                     const newPath = pathSegments.join('/');
                     navigate(`/${newPath}?${urlParams.toString()}`);
+                    // open the tray only on explicit user selection, so the
+                    // tray stays closed on navigation/tab return.
+                    setControlsTrayOpen(true);
                   }}
                   url={compositionUrl}
                   compositions={component.compositions}

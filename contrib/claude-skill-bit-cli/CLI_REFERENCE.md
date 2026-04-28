@@ -757,12 +757,12 @@ Flags: --all, --owner <owner>, --scope <scope>, --lane <lane>, --user <user>, --
 
 ## bit ripple log [job-id]
 
-show job details and component build task summaries (auto-detects current lane when no job-id given)
+show job details and component build task summaries (auto-detects current lane, or your last export when on main)
 Flags: --lane <lane>, --component <component>, --json
 
 ## bit ripple errors [job-id]
 
-show build errors for a Ripple CI job (auto-detects current lane when no job-id given)
+show build errors for a Ripple CI job (auto-detects current lane, or your last export when on main)
 Flags: --lane <lane>, --log, --json
 
 ## bit ripple retry [job-id]
@@ -813,7 +813,7 @@ default scopes for components are set in the bitmap file. the default scope for 
 rename the scope name for all components with the specified 'current scope name'. if exported, create new components and delete the original ones
 
 Note: if `<current-scope-name>` is also the defaultScope for the workspace, this command will set `<new-scope-name>` as the defaultScope instead, and that will then be set for all components by default. You may see updates in your .bitmap file as a result of this change
-Flags: --preserve, --refactor, --deprecate
+Flags: --preserve, --refactor, --deprecate, --skip-dependency-installation
 
 ## bit scope rename-owner <current-owner-name> <new-owner-name>
 

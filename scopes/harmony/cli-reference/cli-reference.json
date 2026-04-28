@@ -674,6 +674,11 @@
             "",
             "deprecate",
             "for exported components, instead of deleting the original components, deprecating them"
+          ],
+          [
+            "x",
+            "skip-dependency-installation",
+            "do not install dependencies after the rename"
           ]
         ],
         "description": "rename the scope name for all components with the specified 'current scope name'. if exported, create new components and delete the original ones",
@@ -1299,7 +1304,7 @@
             "return the output as JSON"
           ]
         ],
-        "description": "show job details and component build task summaries (auto-detects current lane when no job-id given)",
+        "description": "show job details and component build task summaries (auto-detects current lane, or your last export when on main)",
         "extendedDescription": "",
         "group": "ungrouped",
         "private": false,
@@ -1308,7 +1313,7 @@
         "arguments": [
           {
             "name": "job-id",
-            "description": "the Ripple CI job ID (optional — auto-detects from current lane)"
+            "description": "the Ripple CI job ID (optional — auto-detects from current lane, or your last export when on main)"
           }
         ]
       },
@@ -1319,7 +1324,7 @@
           [
             "",
             "lane <lane>",
-            "lane ID to find the latest failed job for (default: detected from .bitmap)"
+            "lane ID to find the latest job for (default: detected from .bitmap)"
           ],
           [
             "",
@@ -1332,7 +1337,7 @@
             "return the output as JSON"
           ]
         ],
-        "description": "show build errors for a Ripple CI job (auto-detects current lane when no job-id given)",
+        "description": "show build errors for a Ripple CI job (auto-detects current lane, or your last export when on main)",
         "extendedDescription": "",
         "group": "ungrouped",
         "private": false,
@@ -1341,7 +1346,7 @@
         "arguments": [
           {
             "name": "job-id",
-            "description": "the Ripple CI job ID (optional — auto-detects from current lane)"
+            "description": "the Ripple CI job ID (optional — auto-detects from current lane, or your last export when on main)"
           }
         ]
       },
