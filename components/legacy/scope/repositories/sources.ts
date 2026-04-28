@@ -752,16 +752,23 @@ possible causes:
       existingLane.updateDependents = lane.updateDependents;
     }
     if (isExport && existingLane && lane.shouldOverrideUpdateDependents()) {
+      // Cache both sides outside the loop. With the unified-components getter, each
+      // `lane.updateDependents` access recomputes (filter + map) the hidden slice; without
+      // caching, an export with N incoming hidden entries against an existing lane with M
+      // recomputes the existing array N times for an O(N·M²) lookup. Snapshot once → O(N·M).
+      const incomingHidden = lane.updateDependents || [];
+      const existingHidden = existingLane.updateDependents || [];
+      const existingByName = new Map(existingHidden.map((id) => [id.toStringWithoutVersion(), id]));
       await Promise.all(
-        (lane.updateDependents || []).map(async (id) => {
-          const existing = existingLane.updateDependents?.find((existingId) => existingId.isEqualWithoutVersion(id));
+        incomingHidden.map(async (id) => {
+          const existing = existingByName.get(id.toStringWithoutVersion());
           if (!existing || existing.version !== id.version) {
             const mergedComponent = await getModelComponent(id);
             mergeResults.push({ mergedComponent, mergedVersions: [id.version] });
           }
         })
       );
-      existingLane.updateDependents = lane.updateDependents;
+      existingLane.updateDependents = incomingHidden;
     }
 
     const mergeLane = existingLane || lane;
