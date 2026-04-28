@@ -43,7 +43,7 @@ export type LaneQueryResult = {
   updatedAt?: Date;
   updatedBy?: LaneQueryLaneOwner;
   dependents?: Array<ComponentIdObj>;
-  slug?: string
+  slug?: string;
   deleted?: boolean;
 };
 /**
@@ -80,7 +80,7 @@ export type LaneModel = {
   updatedAt?: Date;
   updatedBy?: LaneQueryLaneOwner;
   dependents?: ComponentID[];
-  slug?: string
+  slug?: string;
   deleted?: boolean;
 };
 /**
@@ -234,7 +234,7 @@ export class LanesModel {
       createdBy,
       deleted,
       dependents: dependents?.map((dependent) => ComponentID.fromObject(dependent)),
-      slug
+      slug,
     };
   }
 
@@ -387,10 +387,11 @@ export class LanesModel {
   };
 
   resolveComponentFromUrl = (idFromUrl: string, laneId?: LaneId) => {
-    const comps = (
-      (laneId && this.lanes.find((lane) => lane.slug === laneId.toString() || lane.id.isEqual(laneId))) ||
-      this.viewedLane
-    )?.components || [];
+    const comps =
+      (
+        (laneId && this.lanes.find((lane) => lane.slug === laneId.toString() || lane.id.isEqual(laneId))) ||
+        this.viewedLane
+      )?.components || [];
     const includesScope = idFromUrl.includes('.');
     if (includesScope) {
       return comps.find((component) => component.toStringWithoutVersion() === idFromUrl);
