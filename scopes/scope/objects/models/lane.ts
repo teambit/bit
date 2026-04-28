@@ -436,14 +436,26 @@ export default class Lane extends BitObject {
   }
   isEqual(lane: Lane): boolean {
     if (this.id() !== lane.id()) return false;
-    // compare the full graph including hidden (skipWorkspace) entries. The three real callers
-    // (`importer.fetchLaneComponents`, `importer.fetchLanesUsingScope`, `import-components`) use
-    // this to decide whether to write a LaneHistory entry — a change to a hidden updateDependent
-    // is a graph change and must trigger that write. Restricting to visible-only would silently
-    // skip lane-history bookkeeping when only the hidden bucket changed.
-    const thisComponents = this.toComponentIdsIncludeUpdateDependents().toStringArray().sort();
-    const otherComponents = lane.toComponentIdsIncludeUpdateDependents().toStringArray().sort();
-    return isEqual(thisComponents, otherComponents);
+    // include every per-component bit that affects the wire format (id, head, skipWorkspace,
+    // isDeleted), not just id+head. The three real callers (`importer.fetchLaneComponents`,
+    // `importer.fetchLanesUsingScope`, `import-components`) use this to decide whether to write
+    // a LaneHistory entry. A bucket flip (skipWorkspace) or a soft-delete flip with the same
+    // head is still a meaningful state change — a different `toObject()` payload — so it must
+    // trigger the history write. Sort by a stable key so order doesn't affect equality.
+    const normalize = (l: Lane) =>
+      l.components
+        .map((c) => ({
+          id: c.id.toStringWithoutVersion(),
+          head: c.head.toString(),
+          skipWorkspace: Boolean(c.skipWorkspace),
+          isDeleted: Boolean(c.isDeleted),
+        }))
+        .sort((a, b) =>
+          `${a.id}@${a.head}:${a.skipWorkspace ? 1 : 0}:${a.isDeleted ? 1 : 0}`.localeCompare(
+            `${b.id}@${b.head}:${b.skipWorkspace ? 1 : 0}:${b.isDeleted ? 1 : 0}`
+          )
+        );
+    return isEqual(normalize(this), normalize(lane));
   }
   clone() {
     return new Lane({
