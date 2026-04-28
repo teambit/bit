@@ -2200,11 +2200,11 @@ view, retry, and manage Ripple CI jobs that build your components in the cloud a
 
 **Usage**: `ripple log [job-id]`
 
-**Description**: show job details and component build task summaries (auto-detects current lane when no job-id given)
+**Description**: show job details and component build task summaries (auto-detects current lane, or your last export when on main)
 
-| **Arg**  |                         **Description**                          |
-| -------- | :--------------------------------------------------------------: |
-| `job-id` | the Ripple CI job ID (optional — auto-detects from current lane) |
+| **Arg**  |                                          **Description**                                           |
+| -------- | :------------------------------------------------------------------------------------------------: |
+| `job-id` | the Ripple CI job ID (optional — auto-detects from current lane, or your last export when on main) |
 
 | **Option**                | **Option alias** | **Description**                                                     |
 | ------------------------- | :--------------: | ------------------------------------------------------------------- |
@@ -2216,17 +2216,17 @@ view, retry, and manage Ripple CI jobs that build your components in the cloud a
 
 **Usage**: `ripple errors [job-id]`
 
-**Description**: show build errors for a Ripple CI job (auto-detects current lane when no job-id given)
+**Description**: show build errors for a Ripple CI job (auto-detects current lane, or your last export when on main)
 
-| **Arg**  |                         **Description**                          |
-| -------- | :--------------------------------------------------------------: |
-| `job-id` | the Ripple CI job ID (optional — auto-detects from current lane) |
+| **Arg**  |                                          **Description**                                           |
+| -------- | :------------------------------------------------------------------------------------------------: |
+| `job-id` | the Ripple CI job ID (optional — auto-detects from current lane, or your last export when on main) |
 
-| **Option**      | **Option alias** | **Description**                                                            |
-| --------------- | :--------------: | -------------------------------------------------------------------------- |
-| `--lane <lane>` |                  | lane ID to find the latest failed job for (default: detected from .bitmap) |
-| `--log`         |                  | show full build log for failed containers (not just the error summary)     |
-| `--json`        |       `-j`       | return the output as JSON                                                  |
+| **Option**      | **Option alias** | **Description**                                                        |
+| --------------- | :--------------: | ---------------------------------------------------------------------- |
+| `--lane <lane>` |                  | lane ID to find the latest job for (default: detected from .bitmap)    |
+| `--log`         |                  | show full build log for failed containers (not just the error summary) |
+| `--json`        |       `-j`       | return the output as JSON                                              |
 
 ### ripple retry
 

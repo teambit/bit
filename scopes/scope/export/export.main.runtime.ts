@@ -30,6 +30,7 @@ import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { persistRemotes, validateRemotes, removePendingDirs } from './export-scope-components';
+import { writeLastExport } from './last-export';
 import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref } from '@teambit/objects';
 import { ObjectList } from '@teambit/objects';
 import { Scope, PersistFailed } from '@teambit/legacy.scope';
@@ -130,6 +131,18 @@ export class ExportMain {
     if (Scope.onPostExport) {
       await Scope.onPostExport(exported, exportedLanes).catch((err) => {
         this.logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
+      });
+    }
+
+    if (rippleJobs.length) {
+      const lane = exportedLanes[0];
+      await writeLastExport(this.workspace.scope.path, {
+        timestamp: new Date().toISOString(),
+        rippleJobs,
+        lane: lane ? { scope: lane.scope, name: lane.name } : undefined,
+        exportedComponents: exported.map((id) => id.toStringWithoutVersion()),
+      }).catch((err) => {
+        this.logger.error('failed to write last-export.json (this error does not stop the process)', err);
       });
     }
 
