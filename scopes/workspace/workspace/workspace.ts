@@ -1364,7 +1364,10 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     if (!(await fs.pathExists(path.join(this.path, '.git')))) return;
 
     // Read the sentinel before resolving git HEAD — most invocations are cached and
-    // exit cheaply here without forking a git subprocess.
+    // exit cheaply here without forking a git subprocess. ENOENT (no sentinel yet) is
+    // the normal first-run path; any other read error (EACCES, EIO, etc.) indicates
+    // a genuine problem and should surface rather than be silently swallowed — masking
+    // it would put every subsequent command on the slow full-fetch path with no signal.
     const sentinelPath = path.join(this.path, '.bit', 'last-pull-sync');
     let sentinelHead: string | undefined;
     try {
@@ -1421,6 +1424,10 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       this.logger.console(`bitmapAutoSync: synced ${updatedIds.length} component(s) to scope HEAD`);
     }
 
+    // Let a sentinel write failure throw — `.bit/` was already written above (bitmap
+    // and scope objects), so a permission failure here means something is genuinely
+    // broken. Catching would silently leave the sentinel stale and force every later
+    // command into the slow full-fetch path with no signal to the user.
     await fs.outputFile(sentinelPath, currentGitHead);
   }
 
