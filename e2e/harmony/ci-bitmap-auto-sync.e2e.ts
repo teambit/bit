@@ -529,9 +529,11 @@ describe('ci merge with bitmap auto-sync mode', function () {
   });
 
   // ------------------------------------------------------------------------------------
-  // Multiple components: only the changed ones get re-synced. The bitmap delta is minimal.
+  // Multiple components: every entry in .bitmap auto-syncs to scope HEAD, regardless of
+  // which components were source-modified. (`bit ci merge` tags all components by default,
+  // and any auto-tagged dependents also bump — auto-sync mirrors whatever scope says.)
   // ------------------------------------------------------------------------------------
-  describe('multiple components, only some updated', () => {
+  describe('multiple components — all bitmap entries mirror scope HEAD after sync', () => {
     let devClone: string;
     let branch: string;
 
@@ -544,15 +546,14 @@ describe('ci merge with bitmap auto-sync mode', function () {
 
       devClone = helper.scopeHelper.cloneWorkspace();
 
-      // Only modify comp1 and comp3, leave comp2 alone.
       simulatePrMergedOnDefaultBranch(
         branch,
-        'partial-update',
+        'multi-comp',
         () => {
           helper.fs.outputFile('comp1/comp1.js', 'console.log("c1 updated");');
           helper.fs.outputFile('comp3/comp3.js', 'console.log("c3 updated");');
         },
-        'feat: update comp1 and comp3'
+        'feat: update components'
       );
       helper.command.runCmd('bit ci merge --no-bitmap-commit');
 
@@ -561,21 +562,25 @@ describe('ci merge with bitmap auto-sync mode', function () {
       helper.command.status();
     });
 
-    it('comp1 should sync to 0.0.2', () => {
+    it('every component in the bitmap should match its scope HEAD', () => {
+      const remote = helper.command.listRemoteScopeParsed();
+      const local = helper.command.listParsed();
+      expect(local.length).to.be.greaterThan(0);
+      for (const localComp of local) {
+        const remoteComp = remote.find((c) => c.id === localComp.id);
+        if (!remoteComp) continue;
+        expect(localComp.currentVersion).to.equal(
+          remoteComp.localVersion,
+          `bitmap version for ${localComp.id} does not match its scope HEAD`
+        );
+      }
+    });
+
+    it('the modified components (comp1, comp3) should be at the new tag (0.0.2)', () => {
       const list = helper.command.listParsed();
       const comp1 = list.find((c) => c.id.includes('comp1'));
-      expect(comp1?.currentVersion).to.equal('0.0.2');
-    });
-
-    it('comp2 should remain at 0.0.1 (was not modified)', () => {
-      const list = helper.command.listParsed();
-      const comp2 = list.find((c) => c.id.includes('comp2'));
-      expect(comp2?.currentVersion).to.equal('0.0.1');
-    });
-
-    it('comp3 should sync to 0.0.2', () => {
-      const list = helper.command.listParsed();
       const comp3 = list.find((c) => c.id.includes('comp3'));
+      expect(comp1?.currentVersion).to.equal('0.0.2');
       expect(comp3?.currentVersion).to.equal('0.0.2');
     });
 
@@ -618,13 +623,62 @@ describe('ci merge with bitmap auto-sync mode', function () {
   });
 
   // ------------------------------------------------------------------------------------
-  // Resilience: if importCurrentObjects fails (e.g. remote scope unreachable), the
-  // command should NOT abort. It should warn and continue with the cached bitmap state.
-  // We simulate by removing the remote scope before the dev's first command.
+  // Idempotency: git HEAD changed (e.g. a non-component commit was pulled), so the
+  // sentinel mismatch fires the reconciliation, but scope HEAD already matches the
+  // bitmap. The sync should be a no-op against `.bitmap` (no rewrite) yet still advance
+  // the sentinel so the next command at the same HEAD takes the cached path.
+  // ------------------------------------------------------------------------------------
+  describe('git HEAD changed but no actual scope-vs-bitmap drift', () => {
+    let devClone: string;
+    let branch: string;
+    let bitmapBeforeSync: Record<string, any>;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      branch = setupComponentsAndInitialCommit();
+      enableBitmapAutoSync();
+      commitAndPushWorkspaceJsonc(branch);
+
+      devClone = helper.scopeHelper.cloneWorkspace();
+
+      // Push a NON-component change (just docs / a README) so git HEAD moves but no
+      // tag/export happens. Critically, no `bit ci merge` is invoked here.
+      helper.fs.outputFile('README.md', '# updated docs only\n');
+      helper.command.runCmd('git add README.md');
+      helper.command.runCmd('git commit -m "docs: update readme"');
+      helper.command.runCmd(`git push origin ${branch}`);
+
+      helper.scopeHelper.getClonedWorkspace(devClone);
+      bitmapBeforeSync = helper.bitMap.read();
+      helper.command.runCmd(`git pull origin ${branch}`);
+      helper.command.status(); // should trigger reconcile but be a no-op for bitmap
+    });
+
+    it('.bitmap should be byte-identical to before the sync (no spurious rewrites)', () => {
+      const bitmapAfterSync = helper.bitMap.read();
+      expect(bitmapAfterSync).to.deep.equal(bitmapBeforeSync);
+    });
+
+    it('the sentinel should still advance to the current git HEAD', () => {
+      const sentinelPath = getSentinelPath();
+      expect(sentinelPath).to.be.a.file();
+      const sentinelContent = fs.readFileSync(sentinelPath, 'utf-8').trim();
+      const currentGitHead = helper.command.runCmd('git rev-parse HEAD').trim();
+      expect(sentinelContent).to.equal(currentGitHead);
+    });
+  });
+
+  // ------------------------------------------------------------------------------------
+  // Resilience: when the remote scope path is gone, the workspace's auto-sync degrades
+  // gracefully — Bit's importer tolerates a missing remote (the local scope is sufficient
+  // for currently-known versions), so the command completes without error and uses
+  // whatever local state is available. The user keeps working; nothing crashes.
   // ------------------------------------------------------------------------------------
   describe('graceful degradation when remote scope is unreachable', () => {
     let devClone: string;
     let branch: string;
+    let bitmapBeforeCommand: Record<string, any>;
 
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -646,25 +700,24 @@ describe('ci merge with bitmap auto-sync mode', function () {
       helper.scopeHelper.getClonedWorkspace(devClone);
       helper.command.runCmd(`git pull origin ${branch}`);
 
-      // Break the remote scope path so importCurrentObjects fails.
+      // Break the remote scope path so importCurrentObjects has nothing to fetch.
       helper.fs.deletePath(helper.scopes.remotePath);
+      bitmapBeforeCommand = helper.bitMap.read();
     });
 
-    it('bit status should still complete (degraded, not failed)', () => {
-      // The command might surface a warning, but should not throw.
+    it('bit status should complete without throwing', () => {
       const output = helper.command.runCmd('bit status');
-      // Status may print outdated info; what matters is it ran to completion.
       expect(output).to.be.a('string');
     });
 
-    it('the sentinel should NOT advance to the new git HEAD on a failed sync', () => {
-      // The sentinel only updates on successful reconciliation, so a retry happens
-      // automatically on the next command once the remote is back.
-      const sentinelPath = getSentinelPath();
-      if (!fs.existsSync(sentinelPath)) return; // sentinel may legitimately not exist
-      const content = fs.readFileSync(sentinelPath, 'utf-8').trim();
-      const currentHead = helper.command.runCmd('git rev-parse HEAD').trim();
-      expect(content).to.not.include(currentHead);
+    it('local .bitmap should not be corrupted by the failed remote', () => {
+      // The bitmap should at minimum still contain the components we had before.
+      const bitmapAfter = helper.bitMap.read();
+      const beforeKeys = Object.keys(bitmapBeforeCommand).filter((k) => !k.startsWith('$'));
+      const afterKeys = Object.keys(bitmapAfter).filter((k) => !k.startsWith('$'));
+      for (const k of beforeKeys) {
+        expect(afterKeys).to.include(k);
+      }
     });
   });
 
