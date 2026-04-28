@@ -112,6 +112,7 @@ import { CompFiles } from './workspace-component/comp-files';
 import { Filter } from './filter';
 import type { ComponentStatusLegacy, ComponentStatusResult } from './workspace-component/component-status-loader';
 import { ComponentStatusLoader } from './workspace-component/component-status-loader';
+import execa from 'execa';
 import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
 import type { ConfigStoreMain, Store } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
@@ -1345,6 +1346,98 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
     await scopeComponentsImporter.importMany({ ids, lane, reason: 'for making sure the current lane has all ' });
     return lane;
+  }
+
+  /**
+   * When `bitmapAutoSync: true` is set under `teambit.workspace/workspace` in workspace.jsonc,
+   * reconcile the local `.bitmap` with the latest scope HEAD versions whenever git HEAD has
+   * moved since the last successful reconciliation.
+   *
+   * Designed to support workflows where `bit ci merge --no-bitmap-commit` is used in CI:
+   * the master branch never receives a `.bitmap` commit, and every developer's first Bit
+   * command after `git pull` transparently catches their local `.bitmap` up to scope HEAD.
+   *
+   * Sentinel file at `.bit/last-pull-sync` records the git HEAD at the last sync, so the
+   * (potentially network-bound) reconciliation is paid at most once per `git pull`.
+   *
+   * No-op when:
+   * - `bitmapAutoSync` is not enabled on the workspace,
+   * - the workspace is not inside a git repository,
+   * - the workspace is on a lane,
+   * - git HEAD has not moved since the last sync.
+   *
+   * On a remote-scope fetch failure, the cached `.bitmap` is left untouched and the
+   * sentinel is NOT advanced — the next command retries.
+   */
+  async reconcileBitmapWithScopeIfNeeded(): Promise<void> {
+    if (!this.config.bitmapAutoSync) return;
+    if (!this.consumer.isOnMain()) return;
+
+    const gitDir = path.join(this.path, '.git');
+    if (!(await fs.pathExists(gitDir))) return;
+
+    let currentGitHead: string;
+    try {
+      const result = await execa('git', ['rev-parse', 'HEAD'], { cwd: this.path });
+      currentGitHead = result.stdout.trim();
+    } catch {
+      // Empty repo or git not available — nothing to reconcile against.
+      return;
+    }
+
+    const sentinelPath = path.join(this.path, '.bit', 'last-pull-sync');
+    if (await fs.pathExists(sentinelPath)) {
+      const sentinelContent = (await fs.readFile(sentinelPath, 'utf-8')).trim();
+      if (sentinelContent === currentGitHead) {
+        // Already reconciled at this git HEAD; cheap path.
+        return;
+      }
+    }
+
+    this.logger.debug(
+      `bitmapAutoSync: git HEAD changed since last sync (sentinel mismatch), reconciling .bitmap with scope`
+    );
+
+    try {
+      await this.importCurrentObjects();
+    } catch (err: any) {
+      this.logger.warn(
+        `bitmapAutoSync: failed to fetch latest scope objects: ${err?.message ?? err}. ` +
+          `Continuing with the cached state. Run "bit fetch" to retry; the next bit command will re-attempt the sync.`
+      );
+      // Don't advance the sentinel — next command will retry the network call.
+      return;
+    }
+
+    const bitmapIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
+    let updatedCount = 0;
+    await pMap(
+      bitmapIds,
+      async (bitmapId) => {
+        if (!bitmapId.hasScope()) return;
+        const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(bitmapId.changeVersion(undefined));
+        if (!modelComponent) return;
+        let scopeHead: string;
+        try {
+          scopeHead = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
+        } catch {
+          return;
+        }
+        if (!scopeHead || scopeHead === '0.0.0') return; // VERSION_ZERO — no head yet
+        if (bitmapId.version === scopeHead) return; // already in sync
+        const newId = bitmapId.changeVersion(scopeHead);
+        this.consumer.bitMap.updateComponentId(newId);
+        updatedCount++;
+      },
+      { concurrency: 30 }
+    );
+
+    if (updatedCount > 0) {
+      await this.bitMap.write('bitmapAutoSync: reconciled with scope HEAD');
+      this.logger.console(`bitmapAutoSync: synced ${updatedCount} component(s) to scope HEAD`);
+    }
+
+    await fs.outputFile(sentinelPath, currentGitHead);
   }
 
   async use(aspectIdStr: string): Promise<string> {

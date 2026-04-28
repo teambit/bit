@@ -24,6 +24,7 @@ type Options = {
   forceTheirs?: boolean;
   laneName?: string;
   skipPush?: boolean;
+  noBitmapCommit?: boolean;
 };
 
 export class CiMergeCmd implements Command {
@@ -61,6 +62,11 @@ export class CiMergeCmd implements Command {
     ['', 'force-theirs', 'do not merge during checkout, just overwrite with incoming files'],
     ['', 'lane-name <name>', 'specify the lane name to delete after merge (auto-detected if not provided)'],
     ['', 'skip-push', 'skip pushing the changes to the remote repository (useful when CI handles the push separately)'],
+    [
+      '',
+      'no-bitmap-commit',
+      'skip the post-tag git add/commit/push entirely. The new versions still land in the scope, but no .bitmap (or lockfile) commit is created on the default branch. Pair with `bitmapAutoSync: true` in workspace.jsonc so developers auto-sync their local .bitmap on the next git pull.',
+    ],
   ];
 
   constructor(
@@ -105,6 +111,7 @@ export class CiMergeCmd implements Command {
       forceTheirs: options.forceTheirs,
       laneName: options.laneName,
       skipPush: options.skipPush,
+      noBitmapCommit: options.noBitmapCommit,
     });
   }
 }
