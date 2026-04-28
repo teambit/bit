@@ -134,17 +134,20 @@ export class TypescriptMain {
     // Shipped env tsconfigs must stay valid for TS 5.x consumers, so patch the raw tsconfig
     // at runtime when the loaded compiler is actually TS 6+ — preserving TS 5 behavior.
     const tsMajor = parseInt(tsModule.version?.split('.')[0] || '0', 10);
-    const compilerOptions = afterMutation.raw.tsconfig?.compilerOptions;
+    const tsconfig = afterMutation.raw.tsconfig;
+    const compilerOptions = tsconfig?.compilerOptions;
     if (tsMajor >= 6 && compilerOptions) {
       if (!compilerOptions.ignoreDeprecations) compilerOptions.ignoreDeprecations = '6.0';
-      if (compilerOptions.strict === undefined) compilerOptions.strict = false;
       if (compilerOptions.noUncheckedSideEffectImports === undefined)
         compilerOptions.noUncheckedSideEffectImports = false;
-      // TS 6 stopped auto-discovering @types/* packages (types defaults to []).
-      // Seed the types every Bit env installs — @types/node universally and @types/jest
-      // (provides describe/it/expect globals). React env excludes @types/mocha, so don't seed it.
-      if (compilerOptions.types === undefined) {
-        compilerOptions.types = ['node', 'jest'];
+      // strict and types: don't inject when the tsconfig extends a base — the base may
+      // already set these, and an explicit value here would silently override the inherited one.
+      if (!tsconfig.extends) {
+        if (compilerOptions.strict === undefined) compilerOptions.strict = false;
+        // TS 6 stopped auto-discovering @types/* packages (types defaults to []).
+        // Seed the types every Bit env installs — @types/node universally and @types/jest
+        // (provides describe/it/expect globals). React env excludes @types/mocha, so don't seed it.
+        if (compilerOptions.types === undefined) compilerOptions.types = ['node', 'jest'];
       }
     }
     const afterMutationWithoutTsconfig = { ...afterMutation.raw, tsconfig: '' };
