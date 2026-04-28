@@ -775,10 +775,14 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
           async (entry) => {
             const mc = await this.scope.legacyScope.getModelComponentIfExist(entry.id);
             if (!mc) return false;
-            // refresh the modelComponent's lane heads against the post-reset lane state, so
-            // `getLocalHashes` (which derives from divergeData) sees the rewound source head and
-            // can correctly determine "no unexported snaps remain".
+            // refresh the modelComponent's lane heads against the post-reset lane state, then
+            // explicitly invalidate the cached `divergeData`. `getLocalHashes` would otherwise
+            // see a stale source head (the pre-reset cascade hash) because `setDivergeData`
+            // returns the cached value when `fromCache` is true (the default). With the cache
+            // cleared, divergeData is recomputed against the rewound `laneHeadLocal` and
+            // correctly reports "no unexported snaps remain".
             await mc.populateLocalAndRemoteHeads(repo, currentLane);
+            mc.divergeData = undefined;
             const local = await mc.getLocalHashes(repo);
             return local.length > 0;
           },
