@@ -113,6 +113,8 @@ import { Filter } from './filter';
 import type { ComponentStatusLegacy, ComponentStatusResult } from './workspace-component/component-status-loader';
 import { ComponentStatusLoader } from './workspace-component/component-status-loader';
 import execa from 'execa';
+import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
+import { VERSION_ZERO } from '@teambit/objects';
 import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
 import type { ConfigStoreMain, Store } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
@@ -1378,10 +1380,12 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
     let currentGitHead: string;
     try {
-      const result = await execa('git', ['rev-parse', 'HEAD'], { cwd: this.path });
+      const gitExecutablePath = getGitExecutablePath();
+      const result = await execa(gitExecutablePath, ['rev-parse', 'HEAD'], { cwd: this.path });
       currentGitHead = result.stdout.trim();
     } catch {
-      // Empty repo or git not available — nothing to reconcile against.
+      // Empty repo, git not on PATH, or `core.gitExecutablePath` misconfigured —
+      // nothing to reconcile against. Auto-sync is best-effort; never throw here.
       return;
     }
 
@@ -1423,7 +1427,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
         } catch {
           return;
         }
-        if (!scopeHead || scopeHead === '0.0.0') return; // VERSION_ZERO — no head yet
+        if (!scopeHead || scopeHead === VERSION_ZERO) return; // no head in scope yet
         if (bitmapId.version === scopeHead) return; // already in sync
         const newId = bitmapId.changeVersion(scopeHead);
         this.consumer.bitMap.updateComponentId(newId);
