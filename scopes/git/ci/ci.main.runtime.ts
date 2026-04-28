@@ -716,52 +716,7 @@ export class CiMain {
           )
         );
       } else {
-        this.logger.console('🔄 Git Operations');
-        // Set user.email and user.name
-        await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
-        await git.addConfig('user.name', 'Bit CI');
-
-        // Check git status before commit
-        const statusBeforeCommit = await git.status();
-        this.logger.console(chalk.blue(`Git status before commit: ${statusBeforeCommit.files.length} files`));
-        statusBeforeCommit.files.forEach((file) => {
-          this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
-        });
-
-        // Show git diff if there are uncommitted changes
-        if (verbose && statusBeforeCommit.files.length > 0) {
-          try {
-            const diff = await git.diff();
-            if (diff) {
-              this.logger.console(chalk.blue('Git diff before commit:'));
-              this.logger.console(diff);
-            }
-          } catch (error) {
-            this.logger.console(chalk.yellow(`Failed to show git diff: ${error}`));
-          }
-        }
-
-        // Previously we committed only .bitmap and pnpm-lock.yaml files.
-        // However, it's possible that "bit checkout head" we did above, modified other files as well.
-        // So now we commit all files that were changed.
-        await git.add(['.']);
-
-        const commitMessage = await this.getCustomCommitMessage();
-        await git.commit(commitMessage);
-
-        // Check git status after commit
-        const statusAfterCommit = await git.status();
-        this.logger.console(chalk.blue(`Git status after commit: ${statusAfterCommit.files.length} files`));
-        statusAfterCommit.files.forEach((file) => {
-          this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
-        });
-
-        await git.pull('origin', defaultBranch, { '--rebase': 'true' });
-        if (skipPush) {
-          this.logger.console(chalk.yellow('Skipping git push (--skip-push flag)'));
-        } else {
-          await git.push('origin', defaultBranch);
-        }
+        await this.commitAndPushBitmapChanges({ verbose, skipPush, defaultBranch });
       }
     } else {
       this.logger.console(chalk.yellow('No components were tagged, skipping export and git operations'));
@@ -773,6 +728,62 @@ export class CiMain {
     await this.performLaneCleanup(currentLane, laneName, initialCommitSha);
 
     return { code: 0, data: '' };
+  }
+
+  /**
+   * Stage every changed file (post-tag/export the bitmap, lockfiles, and any files
+   * touched by `bit checkout head` may differ), commit with the configured message,
+   * rebase against origin, and push — unless `skipPush` was passed.
+   */
+  private async commitAndPushBitmapChanges({
+    verbose,
+    skipPush,
+    defaultBranch,
+  }: {
+    verbose?: boolean;
+    skipPush?: boolean;
+    defaultBranch: string;
+  }) {
+    this.logger.console('🔄 Git Operations');
+    await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
+    await git.addConfig('user.name', 'Bit CI');
+
+    const statusBeforeCommit = await git.status();
+    this.logger.console(chalk.blue(`Git status before commit: ${statusBeforeCommit.files.length} files`));
+    statusBeforeCommit.files.forEach((file) => {
+      this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
+    });
+
+    if (verbose && statusBeforeCommit.files.length > 0) {
+      try {
+        const diff = await git.diff();
+        if (diff) {
+          this.logger.console(chalk.blue('Git diff before commit:'));
+          this.logger.console(diff);
+        }
+      } catch (error) {
+        this.logger.console(chalk.yellow(`Failed to show git diff: ${error}`));
+      }
+    }
+
+    // Stage everything: `bit checkout head` earlier in the flow may modify files
+    // beyond .bitmap and pnpm-lock.yaml, so a narrow `git add` would miss them.
+    await git.add(['.']);
+    const commitMessage = await this.getCustomCommitMessage();
+    await git.commit(commitMessage);
+
+    const statusAfterCommit = await git.status();
+    this.logger.console(chalk.blue(`Git status after commit: ${statusAfterCommit.files.length} files`));
+    statusAfterCommit.files.forEach((file) => {
+      this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
+    });
+
+    await git.pull('origin', defaultBranch, { '--rebase': 'true' });
+    if (skipPush) {
+      this.logger.console(chalk.yellow('Skipping git push (--skip-push flag)'));
+      return;
+    }
+    await git.push('origin', defaultBranch);
   }
 
   /**

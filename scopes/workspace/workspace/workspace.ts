@@ -1351,97 +1351,106 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   /**
-   * When `bitmapAutoSync: true` is set under `teambit.workspace/workspace` in workspace.jsonc,
-   * reconcile the local `.bitmap` with the latest scope HEAD versions whenever git HEAD has
-   * moved since the last successful reconciliation.
+   * When `bitmapAutoSync` is enabled in workspace.jsonc, reconcile `.bitmap` with the
+   * latest scope HEAD versions on the first Bit command after `git pull`. The sentinel
+   * file at `.bit/last-pull-sync` makes subsequent commands at the same git HEAD a no-op.
    *
-   * Designed to support workflows where `bit ci merge --no-bitmap-commit` is used in CI:
-   * the master branch never receives a `.bitmap` commit, and every developer's first Bit
-   * command after `git pull` transparently catches their local `.bitmap` up to scope HEAD.
-   *
-   * Sentinel file at `.bit/last-pull-sync` records the git HEAD at the last sync, so the
-   * (potentially network-bound) reconciliation is paid at most once per `git pull`.
-   *
-   * No-op when:
-   * - `bitmapAutoSync` is not enabled on the workspace,
-   * - the workspace is not inside a git repository,
-   * - the workspace is on a lane,
-   * - git HEAD has not moved since the last sync.
-   *
-   * On a remote-scope fetch failure, the cached `.bitmap` is left untouched and the
-   * sentinel is NOT advanced — the next command retries.
+   * On a failed remote-scope fetch the sentinel is NOT advanced, so the next command
+   * retries.
    */
   async reconcileBitmapWithScopeIfNeeded(): Promise<void> {
     if (!this.config.bitmapAutoSync) return;
     if (!this.consumer.isOnMain()) return;
+    if (!(await fs.pathExists(path.join(this.path, '.git')))) return;
 
-    const gitDir = path.join(this.path, '.git');
-    if (!(await fs.pathExists(gitDir))) return;
-
-    let currentGitHead: string;
-    try {
-      const gitExecutablePath = getGitExecutablePath();
-      const result = await execa(gitExecutablePath, ['rev-parse', 'HEAD'], { cwd: this.path });
-      currentGitHead = result.stdout.trim();
-    } catch {
-      // Empty repo, git not on PATH, or `core.gitExecutablePath` misconfigured —
-      // nothing to reconcile against. Auto-sync is best-effort; never throw here.
-      return;
-    }
-
+    // Read the sentinel before resolving git HEAD — most invocations are cached and
+    // exit cheaply here without forking a git subprocess.
     const sentinelPath = path.join(this.path, '.bit', 'last-pull-sync');
-    if (await fs.pathExists(sentinelPath)) {
-      const sentinelContent = (await fs.readFile(sentinelPath, 'utf-8')).trim();
-      if (sentinelContent === currentGitHead) {
-        // Already reconciled at this git HEAD; cheap path.
-        return;
-      }
+    let sentinelHead: string | undefined;
+    try {
+      sentinelHead = (await fs.readFile(sentinelPath, 'utf-8')).trim();
+    } catch (err: any) {
+      if (err?.code !== 'ENOENT') throw err;
     }
 
-    this.logger.debug(
-      `bitmapAutoSync: git HEAD changed since last sync (sentinel mismatch), reconciling .bitmap with scope`
-    );
+    const currentGitHead = await this.readCurrentGitHead();
+    if (!currentGitHead) return;
+    if (sentinelHead === currentGitHead) return;
+
+    this.logger.debug(`bitmapAutoSync: git HEAD changed since last sync, reconciling .bitmap with scope`);
 
     try {
       await this.importCurrentObjects();
     } catch (err: any) {
       this.logger.warn(
         `bitmapAutoSync: failed to fetch latest scope objects: ${err?.message ?? err}. ` +
-          `Continuing with the cached state. Run "bit fetch" to retry; the next bit command will re-attempt the sync.`
+          `Continuing with the cached state. The next bit command will re-attempt the sync.`
       );
-      // Don't advance the sentinel — next command will retry the network call.
+      // Sentinel stays at the previous HEAD so the next command retries the fetch.
       return;
     }
 
     const bitmapIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
-    let updatedCount = 0;
-    await pMap(
-      bitmapIds,
-      async (bitmapId) => {
-        if (!bitmapId.hasScope()) return;
-        const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(bitmapId.changeVersion(undefined));
-        if (!modelComponent) return;
-        let scopeHead: string;
-        try {
-          scopeHead = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
-        } catch {
-          return;
-        }
-        if (!scopeHead || scopeHead === VERSION_ZERO) return; // no head in scope yet
-        if (bitmapId.version === scopeHead) return; // already in sync
-        const newId = bitmapId.changeVersion(scopeHead);
-        this.consumer.bitMap.updateComponentId(newId);
-        updatedCount++;
-      },
-      { concurrency: 30 }
+    const updatedIds = compact(
+      await pMap(
+        bitmapIds,
+        async (bitmapId) => {
+          if (!bitmapId.hasScope()) return undefined;
+          const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(
+            bitmapId.changeVersion(undefined)
+          );
+          if (!modelComponent) return undefined;
+          let scopeHead: string;
+          try {
+            scopeHead = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
+          } catch {
+            return undefined;
+          }
+          if (!scopeHead || scopeHead === VERSION_ZERO) return undefined;
+          if (bitmapId.version === scopeHead) return undefined;
+          const newId = bitmapId.changeVersion(scopeHead);
+          this.consumer.bitMap.updateComponentId(newId);
+          return newId;
+        },
+        { concurrency: 30 }
+      )
     );
 
-    if (updatedCount > 0) {
+    if (updatedIds.length > 0) {
       await this.bitMap.write('bitmapAutoSync: reconciled with scope HEAD');
-      this.logger.console(`bitmapAutoSync: synced ${updatedCount} component(s) to scope HEAD`);
+      this.logger.console(`bitmapAutoSync: synced ${updatedIds.length} component(s) to scope HEAD`);
     }
 
     await fs.outputFile(sentinelPath, currentGitHead);
+  }
+
+  /**
+   * Resolve the current git HEAD without forking `git` when possible (the common case:
+   * loose refs). Falls back to `git rev-parse HEAD` only for packed-refs and unusual
+   * repo states. Returns null when git is unavailable or HEAD can't be resolved — the
+   * caller treats that as "skip auto-sync."
+   */
+  private async readCurrentGitHead(): Promise<string | null> {
+    const headPath = path.join(this.path, '.git', 'HEAD');
+    let headContent: string;
+    try {
+      headContent = (await fs.readFile(headPath, 'utf-8')).trim();
+    } catch {
+      return null;
+    }
+    if (!headContent.startsWith('ref: ')) return headContent; // detached HEAD
+    const refName = headContent.slice('ref: '.length);
+    try {
+      return (await fs.readFile(path.join(this.path, '.git', refName), 'utf-8')).trim();
+    } catch {
+      // Loose ref missing — likely packed. Fall back to git.
+    }
+    try {
+      const result = await execa(getGitExecutablePath(), ['rev-parse', 'HEAD'], { cwd: this.path });
+      return result.stdout.trim();
+    } catch {
+      return null;
+    }
   }
 
   async use(aspectIdStr: string): Promise<string> {
