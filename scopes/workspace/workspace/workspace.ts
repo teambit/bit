@@ -1432,26 +1432,34 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   /**
-   * Resolve the current git HEAD without forking `git` when possible (the common case:
-   * loose refs). Falls back to `git rev-parse HEAD` only for packed-refs and unusual
-   * repo states. Returns null when git is unavailable or HEAD can't be resolved — the
-   * caller treats that as "skip auto-sync."
+   * Resolve the current git HEAD. Tries a direct read of `.git/HEAD` (+ the loose ref
+   * file it points at) for the common case to avoid forking a process. Falls back to
+   * `git rev-parse HEAD` for packed-refs, git worktrees / submodules (where `.git` is
+   * a file pointing at the real gitdir, not a directory), and any other layout. Returns
+   * null when HEAD can't be resolved at all — the caller treats that as "skip auto-sync."
    */
   private async readCurrentGitHead(): Promise<string | null> {
-    const headPath = path.join(this.path, '.git', 'HEAD');
-    let headContent: string;
+    const gitPath = path.join(this.path, '.git');
+    let gitIsDir = false;
     try {
-      headContent = (await fs.readFile(headPath, 'utf-8')).trim();
+      gitIsDir = (await fs.stat(gitPath)).isDirectory();
     } catch {
       return null;
     }
-    if (!headContent.startsWith('ref: ')) return headContent; // detached HEAD
-    const refName = headContent.slice('ref: '.length);
-    try {
-      return (await fs.readFile(path.join(this.path, '.git', refName), 'utf-8')).trim();
-    } catch {
-      // Loose ref missing — likely packed. Fall back to git.
+
+    if (gitIsDir) {
+      try {
+        const headContent = (await fs.readFile(path.join(gitPath, 'HEAD'), 'utf-8')).trim();
+        if (!headContent.startsWith('ref: ')) return headContent; // detached HEAD
+        const refName = headContent.slice('ref: '.length);
+        return (await fs.readFile(path.join(gitPath, refName), 'utf-8')).trim();
+      } catch {
+        // Loose ref missing (likely packed) or some other unusual state. Fall through.
+      }
     }
+
+    // Fallback: invoke git itself. Handles worktrees (where `.git` is a file with
+    // `gitdir:` indirection), packed-refs, submodules, and any other layout.
     try {
       const result = await execa(getGitExecutablePath(), ['rev-parse', 'HEAD'], { cwd: this.path });
       return result.stdout.trim();
