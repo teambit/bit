@@ -290,6 +290,15 @@ describe('ci merge with bitmap auto-sync mode', function () {
         it('reports a clean status (no outdated, no modified)', () => {
           helper.command.expectStatusToBeClean();
         });
+
+        it('leaves .bitmap as a local working-tree modification in git', () => {
+          // Documents the user-visible side effect: origin's tracked .bitmap stays at
+          // the old version (CI never pushes), but our local copy is freshly rewritten
+          // by the auto-sync. So `git status` will show .bitmap as modified — devs
+          // should NOT commit it (committing would defeat the whole workflow).
+          const gitStatus = helper.command.runCmd('git status --porcelain .bitmap').trim();
+          expect(gitStatus).to.match(/M\s+\.bitmap$/);
+        });
       });
     });
   });
@@ -479,6 +488,78 @@ describe('ci merge with bitmap auto-sync mode', function () {
       const bitmap = helper.bitMap.read();
       const entry = bitmap[compId] || bitmap[`${helper.scopes.remote}/${compId}`];
       expect(entry?.version).to.equal('0.0.3');
+    });
+  });
+
+  // ------------------------------------------------------------------------------------
+  // Continuous developer flow: the existing multi-cycle test resets the workspace
+  // between cycles, which is unrealistic. Real devs keep working in the same checkout
+  // across many `git pull`s — their .bitmap accumulates auto-sync rewrites from prior
+  // cycles (and shows as "modified" in git the whole time). This test verifies that
+  // multiple sequential pulls + auto-syncs work without resetting, never lose state,
+  // and don't trip over the lingering working-tree modification to .bitmap.
+  // ------------------------------------------------------------------------------------
+  describe('continuous developer flow — multiple sync cycles in the same workspace', () => {
+    let branch: string;
+    const compId = `comp1`;
+
+    function bitmapVersion(): string | undefined {
+      const bitmap = helper.bitMap.read();
+      const entry = bitmap[compId] || bitmap[`${helper.scopes.remote}/${compId}`];
+      return entry?.version;
+    }
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      branch = setupComponentsAndInitialCommit();
+      enableBitmapAutoSync();
+      commitAndPushWorkspaceJsonc(branch);
+    });
+
+    it('cycle 1: bitmap syncs to 0.0.2', () => {
+      simulatePrMergedOnDefaultBranch(
+        branch,
+        'cont-cycle-1',
+        () => helper.fs.outputFile('comp1/comp1.js', 'console.log("c1");'),
+        'feat: cycle 1'
+      );
+      helper.command.runCmd('bit ci merge --no-bitmap-commit');
+      helper.command.status(); // first bit command after the new commit — triggers sync
+
+      expect(bitmapVersion()).to.equal('0.0.2');
+    });
+
+    it('cycle 2: same workspace (already-modified .bitmap from cycle 1), syncs to 0.0.3', () => {
+      simulatePrMergedOnDefaultBranch(
+        branch,
+        'cont-cycle-2',
+        () => helper.fs.outputFile('comp1/comp1.js', 'console.log("c2");'),
+        'feat: cycle 2'
+      );
+      helper.command.runCmd('bit ci merge --no-bitmap-commit');
+      helper.command.status();
+
+      expect(bitmapVersion()).to.equal('0.0.3');
+    });
+
+    it('cycle 3: continues advancing without state corruption', () => {
+      simulatePrMergedOnDefaultBranch(
+        branch,
+        'cont-cycle-3',
+        () => helper.fs.outputFile('comp1/comp1.js', 'console.log("c3");'),
+        'feat: cycle 3'
+      );
+      helper.command.runCmd('bit ci merge --no-bitmap-commit');
+      helper.command.status();
+
+      expect(bitmapVersion()).to.equal('0.0.4');
+    });
+
+    it('the sentinel reflects the latest synced HEAD after the chain of cycles', () => {
+      const sentinelContent = fs.readFileSync(getSentinelPath(), 'utf-8').trim();
+      const currentGitHead = helper.command.runCmd('git rev-parse HEAD').trim();
+      expect(sentinelContent).to.equal(currentGitHead);
     });
   });
 
