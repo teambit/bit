@@ -743,8 +743,11 @@ once done, to continue working, please run "bit cc"`
     this.objects.scopeJson = scopeJson;
   }
 
-  public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {
-    if (!isFeatureEnabled(DEPS_GRAPH)) return undefined;
+  public async getDependenciesGraphByComponentIds(
+    componentIds: ComponentID[],
+    options?: { ignoreFeatureToggle?: boolean }
+  ): Promise<DependenciesGraph | undefined> {
+    if (!options?.ignoreFeatureToggle && !isFeatureEnabled(DEPS_GRAPH)) return undefined;
     let allGraph: DependenciesGraph | undefined;
     await pMapPool(
       componentIds,
