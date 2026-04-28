@@ -757,12 +757,12 @@ Flags: --all, --owner <owner>, --scope <scope>, --lane <lane>, --user <user>, --
 
 ## bit ripple log [job-id]
 
-show job details and component build task summaries (auto-detects current lane when no job-id given)
+show job details and component build task summaries (auto-detects current lane, or your last export when on main)
 Flags: --lane <lane>, --component <component>, --json
 
 ## bit ripple errors [job-id]
 
-show build errors for a Ripple CI job (auto-detects current lane when no job-id given)
+show build errors for a Ripple CI job (auto-detects current lane, or your last export when on main)
 Flags: --lane <lane>, --log, --json
 
 ## bit ripple retry [job-id]
