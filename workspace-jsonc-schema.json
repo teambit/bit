@@ -37,6 +37,11 @@
           "description": "If true, envs are resolved from the env's root node_modules or workspace node_modules; if false, only from the scope envs capsule",
           "type": "boolean",
           "default": false
+        },
+        "bitmapAutoSync": {
+          "description": "When true, every bit command auto-syncs the local .bitmap to the latest scope HEAD on the first run after `git pull` (sentinel-driven, paid at most once per pull). Pair with `bit ci merge --no-bitmap-commit` to support repos with branch protection that forbid CI commits on the default branch.",
+          "type": "boolean",
+          "default": false
         }
       },
       "required": [

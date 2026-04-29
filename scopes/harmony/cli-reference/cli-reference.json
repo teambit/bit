@@ -4952,6 +4952,11 @@
             "",
             "skip-push",
             "skip pushing the changes to the remote repository (useful when CI handles the push separately)"
+          ],
+          [
+            "",
+            "no-bitmap-commit",
+            "skip the post-tag git add/commit/push entirely. The new versions still land in the scope, but no .bitmap (or lockfile) commit is created on the default branch. Pair with `bitmapAutoSync: true` in workspace.jsonc so developers auto-sync their local .bitmap on the first bit command after `git pull`."
           ]
         ],
         "description": "Tags and exports new semantic versions after merging a PR to main.",

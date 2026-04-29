@@ -91,4 +91,22 @@ export interface WorkspaceExtConfig {
    * Example: ["oxlint.config.json", "biome.json", "*.bak"]
    */
   ignoredFiles?: string[];
+
+  /**
+   * If set to `true`, Bit auto-syncs the local `.bitmap` to the latest scope HEAD versions
+   * whenever the git HEAD has moved since the last sync (sentinel-driven, runs once per
+   * `git pull`). Designed for repos with strict branch-protection rules: combined with
+   * `bit ci merge --no-bitmap-commit`, the CI never commits `.bitmap` to the default
+   * branch — every developer's first Bit command after `git pull` reconciles their
+   * local `.bitmap` with the latest exported scope versions automatically.
+   *
+   * The mechanism is a no-op when:
+   * - the workspace is not inside a git repo,
+   * - the workspace is on a lane (lanes have their own sync flow),
+   * - git HEAD is unchanged since the last successful reconciliation.
+   *
+   * On a failed remote-scope fetch, the command continues with the cached `.bitmap`
+   * state and the sentinel is NOT advanced, so the next command retries.
+   */
+  bitmapAutoSync?: boolean;
 }
