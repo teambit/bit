@@ -23,12 +23,14 @@ export type LaneProps = {
   name: string;
   scope: string;
   log: Log;
+  // hidden lane entries (formerly the separate `updateDependents` array) are part of `components`
+  // with `skipWorkspace: true`. There is no separate `updateDependents` field on `LaneProps` —
+  // `Lane.parse` hoists the wire-format `updateDependents` into `components` before constructing.
   components?: LaneComponent[];
   hash: string;
   schema?: string;
   readmeComponent?: LaneReadmeComponent;
   forkedFrom?: LaneId;
-  updateDependents?: ComponentID[];
   overrideUpdateDependents?: boolean;
 };
 

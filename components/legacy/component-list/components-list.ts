@@ -158,12 +158,15 @@ export class ComponentsList {
    */
   /**
    * @param includeHiddenLaneEntries when true, lane components with `skipWorkspace: true` (cascade
-   * updateDependents) are included if they have local snaps to export. Default `false` keeps the
-   * "workspace-staged" view (used by `bit status` and `bit reset`) free of internal lane plumbing
-   * — those entries don't live in `.bitmap` and surfacing them as if they were workspace components
-   * confuses status output and breaks reset's bitmap-update step. Export passes `true` so the
-   * cascade snap's Version object actually lands in the export bundle (otherwise the lane object
-   * would reference a Version the remote doesn't have).
+   * updateDependents) are included if they have local snaps. Default `false` keeps the
+   * workspace-staged view used by `bit status` free of internal lane plumbing — those entries
+   * don't live in `.bitmap` and surfacing them as if they were workspace components confuses the
+   * "staged components" output. Export and reset opt in (`true`) for different reasons:
+   *   - export: the cascade snap's Version object must land in the export bundle, otherwise the
+   *     lane object would reference a Version the remote doesn't have.
+   *   - reset: the cascade snap itself must be reverted end-to-end (cascade spec scenario 8); the
+   *     bitmap-update step in `snapping.reset` skips hidden entries explicitly so we don't try to
+   *     write workspace state for components that don't live in the workspace.
    */
   async listExportPendingComponentsIds(
     lane?: Lane | null,
