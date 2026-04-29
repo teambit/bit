@@ -752,9 +752,9 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
         // hidden lane entries (skipWorkspace) are not in the workspace bitmap, so we shouldn't
         // try to update bitmap state for them — `removeLocalVersion` already rewound the lane's
         // hidden head to its prior cascade hash (or removed the entry entirely if no prior).
-        const isHiddenLaneEntry = !consumer.bitMap.getComponentIfExist(component.toComponentId(), {
-          ignoreVersion: true,
-        });
+        // Check the lane's skipWorkspace flag explicitly — a soft-deleted (visible) entry is also
+        // absent from bitmap but `updateVersions` knows how to restore it from stagedConfig.
+        const isHiddenLaneEntry = Boolean(currentLane?.getComponent(component.toComponentId())?.skipWorkspace);
         if (isHiddenLaneEntry) return;
         await updateVersions(this.workspace, stagedConfig, currentLaneId, component, versionToSetInBitmap, false);
       });
