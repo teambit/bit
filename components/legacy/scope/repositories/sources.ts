@@ -352,10 +352,14 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         }
       }
 
-      // for hidden lane entries (skipWorkspace), the lane head is independent of main's head and
-      // we need to walk *its* parent chain to find the prior snap to rewind to. Prefer the lane
-      // head over the modelComponent's main head in that case.
-      const head = laneItem?.skipWorkspace ? laneItem.head : component.head || laneItem?.head;
+      // when on a lane, walk the LANE's parent chain — `laneItem.head` is the lane head we're
+      // about to rewind, and the prior snap lives in *its* parent graph, not in main's. Falling
+      // back to `component.head` (main head) here was a long-standing bug that surfaced once the
+      // component-tagged-on-main-then-imported-to-lane case became common (cascade-on-snap):
+      // `bit reset --head` walked main's parents, found none for the tag, returned undefined,
+      // and `lane.removeComponent` was called — leaving the bitmap to rewind all the way back to
+      // the imported tag instead of the previous lane snap.
+      const head = laneItem?.head || component.head;
       if (!head) {
         return undefined;
       }
