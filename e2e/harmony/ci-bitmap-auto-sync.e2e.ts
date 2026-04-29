@@ -735,6 +735,146 @@ describe('ci merge with bitmap auto-sync mode', function () {
     });
   });
 
+  // ------------------------------------------------------------------------------------
+  // Edge case: a PR that introduces a brand-new component. Before the merge, the
+  // component exists in `.bitmap` as "new" (no scope, no version — only `defaultScope`).
+  // After `bit ci merge --no-bitmap-commit`, the component is tagged in scope (gains
+  // scope + version 0.0.1) but the workspace's `.bitmap` on origin still shows it as
+  // new. When the dev pulls and the auto-sync runs, the new-component entry must be
+  // promoted to its tagged state in the local bitmap. (The original implementation's
+  // `if (!bitmapId.hasScope()) return undefined;` guard would silently skip these.)
+  // ------------------------------------------------------------------------------------
+  describe('first sync after a PR introduces a brand-new component', () => {
+    let devClone: string;
+    let mainBranch: string;
+    const newCompName = 'comp-new';
+
+    function bitmapEntry(name: string): any {
+      const bitmap = helper.bitMap.read();
+      return Object.entries(bitmap).find(([k, v]: [string, any]) => k === name || v?.name === name)?.[1];
+    }
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      mainBranch = setupComponentsAndInitialCommit(2); // comp1, comp2 at 0.0.1
+      enableBitmapAutoSync();
+      commitAndPushWorkspaceJsonc(mainBranch);
+
+      // Snapshot — dev's workspace before the new-comp PR even exists.
+      devClone = helper.scopeHelper.cloneWorkspace();
+
+      // ── Simulate a PR that ADDS a brand-new component ──
+      helper.command.runCmd('git checkout -b feature/add-new-comp');
+      helper.fs.outputFile(`${newCompName}/${newCompName}.js`, `console.log("${newCompName}");`);
+      helper.command.addComponent(newCompName); // .bitmap now has comp-new as untagged
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: add comp-new"');
+      helper.command.runCmd(`git checkout ${mainBranch}`);
+      helper.command.runCmd(`git merge feature/add-new-comp --no-ff -m "Merge add-new-comp"`);
+      helper.command.runCmd(`git push origin ${mainBranch}`);
+
+      // CI tags + exports — comp-new gets its initial 0.0.1 in scope.
+      helper.command.runCmd('bit ci merge --no-bitmap-commit');
+
+      // ── Switch to dev's snapshot and pull ──
+      helper.scopeHelper.getClonedWorkspace(devClone);
+      helper.command.runCmd(`git pull origin ${mainBranch}`);
+    });
+
+    it('after pull, .bitmap entry for comp-new has no scope or version yet (it is the merged-but-unsynced state)', () => {
+      const entry = bitmapEntry(newCompName);
+      expect(entry, `${newCompName} should be in bitmap after pull`).to.exist;
+      // Either no scope set or empty string — both mean "not yet synced".
+      expect(entry.scope || '').to.equal('');
+      expect(entry.version || '').to.equal('');
+    });
+
+    describe('first bit command after pull triggers auto-sync', () => {
+      before(() => {
+        helper.command.status();
+      });
+
+      it('comp-new in .bitmap should be promoted to its tagged state (scope + version)', () => {
+        const entry = bitmapEntry(newCompName);
+        expect(entry, `${newCompName} should still be in bitmap`).to.exist;
+        expect(entry.scope).to.equal(helper.scopes.remote);
+        expect(entry.version).to.equal('0.0.1');
+      });
+
+      it('`bit list` shows comp-new at 0.0.1', () => {
+        const list = helper.command.listParsed();
+        const newComp = list.find((c) => c.id.includes(newCompName));
+        expect(newComp).to.exist;
+        expect(newComp?.currentVersion).to.equal('0.0.1');
+      });
+    });
+  });
+
+  // ------------------------------------------------------------------------------------
+  // Variation of the above: a fresh `git clone` of the repo when origin is in the
+  // same state (new component merged but its .bitmap entry never synced). The cloning
+  // developer's first bit command must promote it the same way as the existing-clone
+  // case above.
+  // ------------------------------------------------------------------------------------
+  describe('fresh clone after a PR introduced a brand-new component (workspace2)', () => {
+    let mainBranch: string;
+    const newCompName = 'comp-new-clone';
+
+    function bitmapEntry(name: string): any {
+      const bitmap = helper.bitMap.read();
+      return Object.entries(bitmap).find(([k, v]: [string, any]) => k === name || v?.name === name)?.[1];
+    }
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      mainBranch = setupComponentsAndInitialCommit(2);
+      enableBitmapAutoSync();
+      commitAndPushWorkspaceJsonc(mainBranch);
+
+      // PR that adds the brand-new component.
+      helper.command.runCmd('git checkout -b feature/add-new-comp-clone');
+      helper.fs.outputFile(`${newCompName}/${newCompName}.js`, `console.log("${newCompName}");`);
+      helper.command.addComponent(newCompName);
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: add comp-new-clone"');
+      helper.command.runCmd(`git checkout ${mainBranch}`);
+      helper.command.runCmd(`git merge feature/add-new-comp-clone --no-ff -m "Merge add-new-comp-clone"`);
+      helper.command.runCmd(`git push origin ${mainBranch}`);
+      helper.command.runCmd('bit ci merge --no-bitmap-commit');
+
+      // ── Simulate workspace2: a brand-new dev `git clone`s the repo from scratch ──
+      helper.git.mimicGitCloneLocalProjectHarmony();
+      // `mimicGitCloneLocalProjectHarmony` deletes `.bit/` but doesn't reset the working
+      // tree — so the on-disk `.bitmap` still has the CI workspace's post-tag state.
+      // To simulate a TRUE fresh clone, hard-reset the working tree to origin's HEAD.
+      helper.command.runCmd(`git fetch origin ${mainBranch}`);
+      helper.command.runCmd(`git reset --hard origin/${mainBranch}`);
+      helper.scopeHelper.addRemoteScope();
+    });
+
+    it('the freshly-cloned .bitmap shows comp-new-clone in its untagged form', () => {
+      const entry = bitmapEntry(newCompName);
+      expect(entry, `${newCompName} should be in cloned bitmap`).to.exist;
+      expect(entry.scope || '').to.equal('');
+      expect(entry.version || '').to.equal('');
+    });
+
+    describe('first bit command in the fresh clone triggers auto-sync', () => {
+      before(() => {
+        helper.command.status();
+      });
+
+      it('comp-new-clone in .bitmap should be promoted to its tagged state', () => {
+        const entry = bitmapEntry(newCompName);
+        expect(entry).to.exist;
+        expect(entry.scope).to.equal(helper.scopes.remote);
+        expect(entry.version).to.equal('0.0.1');
+      });
+    });
+  });
+
   describe('developer on a Bit lane — auto-sync is skipped', () => {
     let mainBranch: string;
     let sentinelBeforeLaneWork: string;

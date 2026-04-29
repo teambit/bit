@@ -1382,8 +1382,48 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
     this.logger.debug(`bitmapAutoSync: git HEAD changed since last sync, reconciling .bitmap with scope`);
 
+    // Resolve every bitmap entry to a "lookup id" that has scope filled in. New
+    // components (added via `bit add` on a feature branch but tagged only by CI) have
+    // an empty `scope` in the bitmap — only `defaultScope` is set. We must resolve
+    // those before the import, because the scope import filters out IDs without scope
+    // and the model lookup below needs scope to find the component.
+    const lookupIds: ComponentID[] = [];
+    for (const bitmapId of this.consumer.bitMap.getAllIdsAvailableOnLane()) {
+      if (bitmapId.hasScope()) {
+        lookupIds.push(bitmapId);
+        continue;
+      }
+      const componentMap = this.consumer.bitMap.getComponentIfExist(bitmapId);
+      const defaultScope = componentMap?.defaultScope;
+      if (!defaultScope) continue;
+      lookupIds.push(bitmapId.changeScope(defaultScope));
+    }
+
+    // Fetch the latest scope HEADs from remote for all of these. Use the lower-level
+    // scope importer with `includeUnexported: true` — `importCurrentObjects` filters
+    // out IDs that aren't already in the local scope, which would skip brand-new
+    // components introduced by another teammate's PR (they exist on remote but the
+    // current workspace's local scope has never seen them).
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
+    const idList = ComponentIdList.fromArray(lookupIds);
     try {
-      await this.importCurrentObjects();
+      await scopeComponentsImporter.importWithoutDeps(idList.toVersionLatest(), {
+        cache: false,
+        includeVersionHistory: true,
+        fetchHeadIfLocalIsBehind: true,
+        ignoreMissingHead: true,
+        includeUnexported: true,
+        reason: 'bitmapAutoSync: latest scope HEAD',
+      });
+      await scopeComponentsImporter.importMany({
+        ids: idList,
+        ignoreMissingHead: true,
+        preferDependencyGraph: true,
+        reFetchUnBuiltVersion: true,
+        throwForSeederNotFound: false,
+        includeUnexported: true,
+        reason: 'bitmapAutoSync: dependencies for sync',
+      });
     } catch (err: any) {
       this.logger.warn(
         `bitmapAutoSync: failed to fetch latest scope objects: ${err?.message ?? err}. ` +
@@ -1393,14 +1433,12 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       return;
     }
 
-    const bitmapIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
     const updatedIds = compact(
       await pMap(
-        bitmapIds,
-        async (bitmapId) => {
-          if (!bitmapId.hasScope()) return undefined;
+        lookupIds,
+        async (lookupId) => {
           const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(
-            bitmapId.changeVersion(undefined)
+            lookupId.changeVersion(undefined)
           );
           if (!modelComponent) return undefined;
           let scopeHead: string;
@@ -1410,8 +1448,8 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
             return undefined;
           }
           if (!scopeHead || scopeHead === VERSION_ZERO) return undefined;
-          if (bitmapId.version === scopeHead) return undefined;
-          const newId = bitmapId.changeVersion(scopeHead);
+          if (lookupId.version === scopeHead) return undefined;
+          const newId = lookupId.changeVersion(scopeHead);
           this.consumer.bitMap.updateComponentId(newId);
           return newId;
         },
