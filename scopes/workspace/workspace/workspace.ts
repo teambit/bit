@@ -1387,6 +1387,18 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     // an empty `scope` in the bitmap — only `defaultScope` is set. We must resolve
     // those before the import, because the scope import filters out IDs without scope
     // and the model lookup below needs scope to find the component.
+    //
+    // Related: `ComponentLoader._handleOutOfSyncScenarios` in
+    // components/legacy/consumer-component/component-loader.ts uses the same primitives
+    // (`getModelComponentIfExist`, `bitMap.updateComponentId`) to fix per-component
+    // out-of-sync states during component loading. It does NOT handle:
+    //   - scope HEAD has advanced past bitmap's version when that version still exists
+    //     in scope (the main case `bitmapAutoSync` is built for),
+    //   - bitmap entries with empty `scope` field (it doesn't fall back to defaultScope),
+    //   - triggering the import itself with `includeUnexported: true` for components
+    //     not yet in local scope.
+    // This reconcile fills those gaps; afterwards `_handleOutOfSyncScenarios` is a
+    // no-op for the same components (bitmap is already aligned with scope).
     const lookupIds: ComponentID[] = [];
     for (const bitmapId of this.consumer.bitMap.getAllIdsAvailableOnLane()) {
       if (bitmapId.hasScope()) {
