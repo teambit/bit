@@ -147,7 +147,12 @@ export async function getComponentsWithOptionToUntag(
 ): Promise<ModelComponent[]> {
   const componentList = new ComponentsList(workspace);
   const laneObj = await workspace.getCurrentLaneObject();
-  const components: ModelComponent[] = await componentList.listExportPendingComponents(laneObj);
+  // include hidden updateDependents — `bit reset` is expected to revert cascade snaps end-to-end
+  // (see scenario 8 of the cascade spec). The bitmap-update step in `snapping.reset` skips them
+  // so we don't try to write workspace state for components that don't live in the workspace.
+  const components: ModelComponent[] = await componentList.listExportPendingComponents(laneObj, {
+    includeHiddenLaneEntries: true,
+  });
   const removedStagedIds = await remove.getRemovedStaged();
   if (!removedStagedIds.length) return components;
   const removedStagedBitIds = removedStagedIds.map((id) => id);

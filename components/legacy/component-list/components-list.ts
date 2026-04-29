@@ -156,7 +156,19 @@ export class ComponentsList {
    * will be easier to add it here once all legacy are not using this class and then ScopeMain will be in the
    * constructor.
    */
-  async listExportPendingComponentsIds(lane?: Lane | null): Promise<ComponentIdList> {
+  /**
+   * @param includeHiddenLaneEntries when true, lane components with `skipWorkspace: true` (cascade
+   * updateDependents) are included if they have local snaps to export. Default `false` keeps the
+   * "workspace-staged" view (used by `bit status` and `bit reset`) free of internal lane plumbing
+   * — those entries don't live in `.bitmap` and surfacing them as if they were workspace components
+   * confuses status output and breaks reset's bitmap-update step. Export passes `true` so the
+   * cascade snap's Version object actually lands in the export bundle (otherwise the lane object
+   * would reference a Version the remote doesn't have).
+   */
+  async listExportPendingComponentsIds(
+    lane?: Lane | null,
+    { includeHiddenLaneEntries = false }: { includeHiddenLaneEntries?: boolean } = {}
+  ): Promise<ComponentIdList> {
     const fromBitMap = this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
     const modelComponents = await this.getModelComponents();
     const pendingExportComponents = await pFilter(modelComponents, async (component: ModelComponent) => {
@@ -166,10 +178,12 @@ export class ComponentsList {
         //  - out-of-sync: a workspace component that lost its bitmap entry but still has scope data
         //  - hidden lane entry: a `skipWorkspace: true` lane component (cascade-on-snap, bare-scope
         //    `_snap --update-dependents`) that exists only in scope+lane, never the workspace
-        // For the lane case, fall back to lane-aware divergence so the cascade snap is detected
-        // as source-ahead and gets exported. Without this, the new hidden version would be
-        // computed but never sent over the wire, and the remote would reject the lane object.
-        if (lane && lane.getComponent(component.toComponentId())) {
+        const laneEntry = lane?.getComponent(component.toComponentId());
+        if (laneEntry?.skipWorkspace) {
+          if (!includeHiddenLaneEntries) return false;
+          return component.isLocallyChanged(this.scope.objects, lane);
+        }
+        if (lane && laneEntry) {
           return component.isLocallyChanged(this.scope.objects, lane);
         }
         return component.isLocallyChangedRegardlessOfLanes();
@@ -205,8 +219,11 @@ export class ComponentsList {
     return ComponentIdList.fromArray(updatedIds);
   }
 
-  async listExportPendingComponents(laneObj?: Lane): Promise<ModelComponent[]> {
-    const exportPendingComponentsIds: ComponentIdList = await this.listExportPendingComponentsIds(laneObj);
+  async listExportPendingComponents(
+    laneObj?: Lane,
+    options?: { includeHiddenLaneEntries?: boolean }
+  ): Promise<ModelComponent[]> {
+    const exportPendingComponentsIds: ComponentIdList = await this.listExportPendingComponentsIds(laneObj, options);
     return Promise.all(exportPendingComponentsIds.map((id) => this.scope.getModelComponent(id)));
   }
 
