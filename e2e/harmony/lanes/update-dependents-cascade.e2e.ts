@@ -712,4 +712,55 @@ describe('local snap cascades updateDependents on the lane', function () {
       expect(comp2InComponents, 'comp2 must not leak into lane.components').to.be.undefined;
     });
   });
+
+  // ---------------------------------------------------------------------------------------------
+  // Scenario 14: `bit lane history` on a lane that contains hidden updateDependents must run
+  // cleanly and produce a fresh entry whenever the lane changes — including when the only change
+  // is a hidden cascade. `Lane.isEqual` covers `skipWorkspace`, so a cascade-only state delta
+  // flips `hasChanged` and triggers `updateLaneHistory` in `saveLane`.
+  // ---------------------------------------------------------------------------------------------
+  describe('scenario 14: bit lane history on a lane with hidden updateDependents', () => {
+    let historyBeforeLocalSnap: Array<Record<string, any>>;
+    let historyAfterLocalSnap: Array<Record<string, any>>;
+    let comp3HeadAfterLocalSnap: string;
+
+    before(async () => {
+      await buildBaseRemoteState();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+      helper.command.importLane('dev', '-x');
+      helper.command.importComponent('comp3');
+
+      historyBeforeLocalSnap = helper.command.laneHistoryParsed();
+
+      helper.fs.outputFile(`${helper.scopes.remote}/comp3/index.js`, "module.exports = () => 'comp3-v2';");
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      comp3HeadAfterLocalSnap = helper.command.getHeadOfLane('dev', 'comp3');
+
+      historyAfterLocalSnap = helper.command.laneHistoryParsed();
+    });
+
+    it('bit lane history runs cleanly on a lane that has hidden updateDependents', () => {
+      expect(historyBeforeLocalSnap).to.be.an('array').and.not.empty;
+      historyBeforeLocalSnap.forEach((entry) => {
+        expect(entry).to.have.property('id');
+        expect(entry).to.have.property('components').that.is.an('array');
+      });
+    });
+
+    it('a workspace cascade snap appends a new history entry', () => {
+      expect(historyAfterLocalSnap.length).to.be.greaterThan(historyBeforeLocalSnap.length);
+    });
+
+    it('the new history entry records the advanced comp3 head among its components', () => {
+      const newEntries = historyAfterLocalSnap.filter((e) => !historyBeforeLocalSnap.some((b) => b.id === e.id));
+      expect(newEntries, 'expected at least one new history entry after the cascade snap').to.not.be.empty;
+      const comp3RefsInNewEntries = newEntries.flatMap((e) =>
+        (e.components || []).filter((c: string) => c.includes('/comp3@'))
+      );
+      expect(comp3RefsInNewEntries.some((ref: string) => ref.endsWith(`@${comp3HeadAfterLocalSnap}`))).to.be.true;
+    });
+  });
 });
