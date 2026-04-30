@@ -152,11 +152,9 @@ export class ComponentsList {
   }
 
   /**
-   * @todo: this is not the full list. It's missing the deleted-components.
-   * will be easier to add it here once all legacy are not using this class and then ScopeMain will be in the
-   * constructor.
-   */
-  /**
+   * @todo: this is not the full list. It's missing the deleted-components. will be easier to add it
+   * here once all legacy are not using this class and then ScopeMain will be in the constructor.
+   *
    * @param includeHiddenLaneEntries when true, lane components with `skipWorkspace: true` (cascade
    * updateDependents) are included if they have local snaps. Default `false` keeps the
    * workspace-staged view used by `bit status` free of internal lane plumbing — those entries
