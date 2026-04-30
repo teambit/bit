@@ -10,27 +10,6 @@ import type { Helper } from './e2e-helper';
 const skipRegistryTests = process.env.SKIP_REGISTRY_TESTS === 'True' || process.env.SKIP_REGISTRY_TESTS === 'true';
 export const supportNpmCiRegistryTesting = !skipRegistryTests;
 
-// `@pnpm/network.fetch` is ESM in pnpm v11; reimplement the retry loop here
-// with the built-in global fetch to keep this file CommonJS-compatible.
-async function fetchWithRetry(
-  url: string,
-  opts: { retries: number; minTimeout: number; maxTimeout: number }
-): Promise<Response> {
-  let lastErr: unknown;
-  let timeout = opts.minTimeout;
-  for (let attempt = 0; attempt <= opts.retries; attempt++) {
-    try {
-      return await fetch(url);
-    } catch (err) {
-      lastErr = err;
-      if (attempt === opts.retries) break;
-      await new Promise((resolve) => setTimeout(resolve, timeout));
-      timeout = Math.min(timeout * 2, opts.maxTimeout);
-    }
-  }
-  throw lastErr;
-}
-
 /**
  * some features, such as installing dependencies as packages, require npm registry to be set.
  * in order to not rely on bitsrc site for the npm registry, this class provides a way to use npm
@@ -89,10 +68,13 @@ export class NpmCiRegistry {
           resolved = true;
           let fetchResults;
           try {
-            fetchResults = await fetchWithRetry(`http://localhost:${REGISTRY_MOCK_PORT}/is-odd`, {
-              retries: 3,
-              minTimeout: 1000,
-              maxTimeout: 10000,
+            const { fetch } = await import('@pnpm/network.fetch');
+            fetchResults = await fetch(`http://localhost:${REGISTRY_MOCK_PORT}/is-odd`, {
+              retry: {
+                minTimeout: 1000,
+                maxTimeout: 10000,
+                retries: 3,
+              },
             });
           } catch (err) {
             reject(err);
