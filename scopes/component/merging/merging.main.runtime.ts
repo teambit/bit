@@ -27,6 +27,8 @@ import { ImporterAspect } from '@teambit/importer';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import { compact } from 'lodash';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
+import { v4 } from 'uuid';
 import type { ApplyVersionWithComps, CheckoutMain, ComponentStatusBase } from '@teambit/checkout';
 import { CheckoutAspect, removeFilesIfNeeded, updateFileStatus } from '@teambit/checkout';
 import type { ConfigMergerMain, ConfigMergeResult, PolicyDependency } from '@teambit/config-merger';
@@ -424,7 +426,17 @@ export class MergingMain {
     );
 
     if (this.workspace) {
-      const compsToWrite = compact(componentsResults.map((c) => c.legacyCompToWrite));
+      // Hidden lane updateDependents (skipWorkspace=true) live only on the lane and in the scope.
+      // Writing them to the workspace would (a) leak internal lane plumbing into bitmap/files,
+      // and (b) confuse downstream classifiers that key off bitmap-presence (for example, the
+      // cascade-on-snap detector in version-maker treats "in bitmap" as "workspace tracked",
+      // which would route the subsequent merge-snap into `lane.components` instead of refreshing
+      // `lane.updateDependents`). Filter them out here — they participate in the merge through
+      // the unmergedComponents queue and the snap path, but not through workspace I/O.
+      const visibleResults = componentsResults.filter(
+        (c) => !currentLane?.getComponent(c.applyVersionResult.id)?.skipWorkspace
+      );
+      const compsToWrite = compact(visibleResults.map((c) => c.legacyCompToWrite));
       const manyComponentsWriterOpts = {
         consumer: this.workspace.consumer,
         components: compsToWrite,
@@ -690,12 +702,89 @@ export class MergingMain {
       );
       return results;
     }
-    return this.snapping.snap({
-      legacyBitIds: ids,
+    // Split hidden lane updateDependents (skipWorkspace=true) from visible workspace components.
+    // Hidden entries have no workspace files — `loadComponentsForTagOrSnap` -> `workspace.getMany`
+    // would throw `ComponentsPendingImport`, and the snap pipeline's capsule isolator would fail
+    // anyway. Snap them via the scope-side path instead (same approach scenario 10 takes through
+    // `_merge-lane main`). Visible entries continue through the regular workspace snap.
+    const lane = await this.scope.legacyScope.getCurrentLaneObject();
+    const hiddenIds = lane
+      ? ComponentIdList.fromArray(ids.filter((id) => lane.getComponent(id)?.skipWorkspace))
+      : new ComponentIdList();
+    const visibleIds = ComponentIdList.fromArray(
+      ids.filter((id) => !hiddenIds.find((h) => h.isEqualWithoutVersion(id)))
+    );
+
+    let hiddenResults: MergeSnapResults = null;
+    if (hiddenIds.length) {
+      hiddenResults = await this.snapHiddenForMerge(hiddenIds, snapMessage, lane);
+    }
+
+    if (!visibleIds.length) return hiddenResults;
+
+    const visibleResults = await this.snapping.snap({
+      legacyBitIds: visibleIds,
       build,
       message: snapMessage,
       loose,
     });
+
+    if (!hiddenResults) return visibleResults;
+    if (!visibleResults) return hiddenResults;
+    return {
+      ...visibleResults,
+      snappedComponents: [...visibleResults.snappedComponents, ...hiddenResults.snappedComponents],
+      autoSnappedResults: [...visibleResults.autoSnappedResults, ...hiddenResults.autoSnappedResults],
+    };
+  }
+
+  /**
+   * Scope-side snap for hidden lane updateDependents during a workspace merge. We can't go through
+   * `snapping.snap` (loads via workspace, which has no files for hidden entries) and can't call
+   * `snapping.snapFromScope` (it explicitly rejects workspace context). Instead, build the merge
+   * Version directly via `_addCompToObjects` — the second parent comes from the unmergedComponent
+   * entry (set in `applyVersion`), and the merge dep rewrites are already on the loaded
+   * ConsumerComponent.
+   */
+  private async snapHiddenForMerge(
+    hiddenIds: ComponentIdList,
+    snapMessage: string | undefined,
+    lane: Lane | undefined
+  ): Promise<MergeSnapResults> {
+    const legacyScope = this.scope.legacyScope;
+    const snappedComponents: ConsumerComponent[] = [];
+    await mapSeries(hiddenIds, async (id) => {
+      // current lane head is the parent we descend from. The unmergedComponent entry (set in
+      // `applyVersion`) provides the second parent (main's head) — `_addCompToObjects` reads it.
+      const laneEntry = lane?.getComponent(id);
+      const previouslyUsedVersion = laneEntry?.head?.toString();
+      if (!previouslyUsedVersion) {
+        throw new BitError(`snapHiddenForMerge: lane entry for ${id.toString()} has no head`);
+      }
+      const idAtHead = id.changeVersion(previouslyUsedVersion);
+      const consumerComponent = await legacyScope.getConsumerComponent(idAtHead);
+      if (snapMessage) consumerComponent.log = { ...consumerComponent.log, message: snapMessage } as any;
+      // assign a fresh hash so `_addCompToObjects` records a new snap (and the override flag in
+      // addVersion fires while the lane carries the entry as hidden).
+      consumerComponent.version = sha1(v4());
+      consumerComponent.previouslyUsedVersion = previouslyUsedVersion;
+      await this.snapping._addCompToObjects({
+        source: consumerComponent,
+        lane,
+        // hidden entries cascade only — explicit caller intent here is to refresh the lane's
+        // hidden bucket without promoting to visible (existingEntry.skipWorkspace stays true).
+        addVersionOpts: { addToUpdateDependentsInLane: true },
+      });
+      snappedComponents.push(consumerComponent);
+      legacyScope.objects.unmergedComponents.removeComponent(id);
+    });
+    if (lane) legacyScope.objects.add(lane);
+    await legacyScope.objects.persist();
+    return {
+      snappedComponents,
+      autoSnappedResults: [],
+      removedComponents: new ComponentIdList(),
+    };
   }
 
   private async tagAllLaneComponent(

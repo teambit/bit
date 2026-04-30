@@ -93,6 +93,14 @@ export class MergeLanesMain {
     }
     const currentLaneId = this.workspace.consumer.getCurrentLaneId();
     const otherLaneId = await this.workspace.consumer.getParsedLaneId(laneName);
+    // Hidden lane updateDependents must participate in every merge — otherwise main→lane refresh
+    // (`bit lane merge main`) leaves the lane's cascaded entries stuck on their old main-head
+    // base, and lane→main merge would push a partially-consistent lane state. The bare-scope
+    // counterpart (`bit _merge-lane`, used by Ripple / the UI's "update lane" button) already
+    // sets this; the workspace path was the missing leg.
+    if (options.shouldIncludeUpdateDependents === undefined) {
+      options.shouldIncludeUpdateDependents = true;
+    }
     return this.mergeLane(otherLaneId, currentLaneId, options);
   }
 

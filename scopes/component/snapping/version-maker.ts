@@ -166,6 +166,8 @@ export class VersionMaker {
       // workspace bitmap. Detect via two signals:
       //  - workspace flow: absence-from-bitmap (cascade autotag loaded the comp from scope)
       //  - bare-scope flow: the lane already marks the entry as `skipWorkspace`
+      // Workspace flow that *promotes* a previously-hidden entry (scenario 6 — `bit import` then
+      // `bit snap`) relies on the workspace having the bitmap entry, so we treat it as visible.
       const laneEntry = lane?.getComponent(component.id);
       const isHiddenLaneEntry = Boolean(
         (this.consumer && !this.consumer.bitMap.getComponentIfExist(component.id, { ignoreVersion: true })) ||
