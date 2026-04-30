@@ -301,6 +301,7 @@ export class WorkspaceMain {
         workspace.inInstallContext = true;
       }
       await workspace.importCurrentLaneIfMissing();
+      await workspace.reconcileBitmapWithScopeIfNeeded();
       logger.profile('workspace.registerOnStart');
       const loadAspectsOpts = {
         runSubscribers: false,
