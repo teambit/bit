@@ -722,10 +722,13 @@ describe('local snap cascades updateDependents on the lane', function () {
   describe('scenario 14: bit lane history on a lane with hidden updateDependents', () => {
     let historyBeforeLocalSnap: Array<Record<string, any>>;
     let historyAfterLocalSnap: Array<Record<string, any>>;
+    let comp2InUpdDepInitial: string;
     let comp3HeadAfterLocalSnap: string;
+    let comp2HeadAfterCascade: string;
 
     before(async () => {
-      await buildBaseRemoteState();
+      const base = await buildBaseRemoteState();
+      comp2InUpdDepInitial = base.comp2InUpdDepInitial;
 
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
@@ -738,6 +741,8 @@ describe('local snap cascades updateDependents on the lane', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       comp3HeadAfterLocalSnap = helper.command.getHeadOfLane('dev', 'comp3');
+      const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
+      comp2HeadAfterCascade = remoteLane.updateDependents[0].split('@')[1];
 
       historyAfterLocalSnap = helper.command.laneHistoryParsed();
     });
@@ -748,6 +753,13 @@ describe('local snap cascades updateDependents on the lane', function () {
         expect(entry).to.have.property('id');
         expect(entry).to.have.property('components').that.is.an('array');
       });
+    });
+
+    it('history entries created BEFORE the workspace snap include the seeded comp2 hash under updateDependents', () => {
+      const seedEntries = historyBeforeLocalSnap.filter((e) =>
+        (e.updateDependents || []).some((s: string) => s.endsWith(`@${comp2InUpdDepInitial}`))
+      );
+      expect(seedEntries, 'expected at least one history entry with the seed comp2 hash').to.not.be.empty;
     });
 
     it('a workspace cascade snap appends a new history entry', () => {
@@ -761,6 +773,82 @@ describe('local snap cascades updateDependents on the lane', function () {
         (e.components || []).filter((c: string) => c.includes('/comp3@'))
       );
       expect(comp3RefsInNewEntries.some((ref: string) => ref.endsWith(`@${comp3HeadAfterLocalSnap}`))).to.be.true;
+    });
+
+    it('the new history entry records the cascaded comp2 hash under updateDependents (separate from components)', () => {
+      const newEntries = historyAfterLocalSnap.filter((e) => !historyBeforeLocalSnap.some((b) => b.id === e.id));
+      const comp2RefsInUpdateDependents = newEntries.flatMap((e) =>
+        (e.updateDependents || []).filter((c: string) => c.includes('/comp2@'))
+      );
+      expect(comp2RefsInUpdateDependents.some((ref: string) => ref.endsWith(`@${comp2HeadAfterCascade}`))).to.be.true;
+      // and the cascaded comp2 must NOT leak into history.components — that field drives
+      // checkout/revert workspace materialization, which would mis-promote a hidden entry.
+      const comp2RefsInComponents = newEntries.flatMap((e) =>
+        (e.components || []).filter((c: string) => c.includes('/comp2@'))
+      );
+      expect(comp2RefsInComponents).to.have.lengthOf(0);
+    });
+  });
+
+  // ---------------------------------------------------------------------------------------------
+  // Scenario 15: `bit lane checkout <history-id>` must rewind hidden updateDependents on the lane
+  // alongside the visible components. Hidden entries don't go through the workspace `checkout`
+  // path (no bitmap, no files), so the rewind happens directly on the lane object —
+  // `lane.updateDependents` is set to the historical hashes and the lane is saved.
+  // ---------------------------------------------------------------------------------------------
+  describe('scenario 15: bit lane checkout rewinds hidden updateDependents on the lane', () => {
+    let comp2InUpdDepInitial: string;
+    let comp3HeadOnLaneInitial: string;
+    let comp2HeadAfterCascade: string;
+    let comp3HeadAfterLocalSnap: string;
+    let preCascadeHistoryId: string;
+
+    before(async () => {
+      const base = await buildBaseRemoteState();
+      comp2InUpdDepInitial = base.comp2InUpdDepInitial;
+      comp3HeadOnLaneInitial = base.comp3HeadOnLaneInitial;
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+      helper.command.importLane('dev', '-x');
+      helper.command.importComponent('comp3');
+
+      // Snapshot the history-id BEFORE the cascade snap. This is what we'll checkout to.
+      const historyBeforeCascade = helper.command.laneHistoryParsed();
+      const matchingEntry = historyBeforeCascade.find((e) =>
+        (e.updateDependents || []).some((s: string) => s.endsWith(`@${comp2InUpdDepInitial}`))
+      );
+      expect(matchingEntry, 'expected a history entry pointing at the pre-cascade comp2 hash').to.exist;
+      preCascadeHistoryId = (matchingEntry as Record<string, any>).id;
+
+      // Cascade snap: comp3 advances on lane, comp2 (hidden) cascades to a new hash.
+      helper.fs.outputFile(`${helper.scopes.remote}/comp3/index.js`, "module.exports = () => 'comp3-v2';");
+      helper.command.snapAllComponentsWithoutBuild();
+      comp3HeadAfterLocalSnap = helper.command.getHeadOfLane('dev', 'comp3');
+      const laneAfterCascade = helper.command.catLane('dev');
+      comp2HeadAfterCascade = laneAfterCascade.updateDependents[0].split('@')[1];
+
+      expect(comp3HeadAfterLocalSnap).to.not.equal(comp3HeadOnLaneInitial);
+      expect(comp2HeadAfterCascade).to.not.equal(comp2InUpdDepInitial);
+
+      helper.command.runCmd(`bit lane checkout ${preCascadeHistoryId} -x`);
+    });
+
+    it('lane.updateDependents should rewind to the pre-cascade comp2 hash', () => {
+      const localLane = helper.command.catLane('dev');
+      expect(localLane.updateDependents).to.have.lengthOf(1);
+      expect(localLane.updateDependents[0].split('@')[1]).to.equal(comp2InUpdDepInitial);
+    });
+
+    it('comp2 must stay hidden after the checkout (not promoted to lane.components)', () => {
+      const localLane = helper.command.catLane('dev');
+      const comp2InComponents = localLane.components.find((c) => c.id.name === 'comp2');
+      expect(comp2InComponents, 'comp2 must not leak into lane.components').to.be.undefined;
+    });
+
+    it('comp2 must NOT appear in the workspace bitmap after the checkout', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.not.have.property('comp2');
     });
   });
 });

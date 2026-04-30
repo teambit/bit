@@ -237,6 +237,7 @@ export class LanesMain {
       isLane: true,
       lane,
     });
+    await this.restoreUpdateDependentsFromHistory(historyItem, lane);
     return results;
   }
 
@@ -287,7 +288,35 @@ export class LanesMain {
       results.addedComponents = [...(results.addedComponents || []), ...(deletedResults.addedComponents || [])];
     }
 
+    await this.restoreUpdateDependentsFromHistory(historyItem, lane);
+
     return results;
+  }
+
+  /**
+   * Rewind hidden lane entries (`skipWorkspace: true`) to the historical state. The visible
+   * components flow through `checkout.checkout` (workspace materialization); hidden entries have
+   * no workspace counterpart so we rewrite their heads directly on the lane object and persist.
+   * Pulls each historical hash into the local scope on demand so a downstream `bit export` /
+   * `bit lane merge` can read it.
+   */
+  private async restoreUpdateDependentsFromHistory(historyItem: HistoryItem, lane: Lane | null | undefined) {
+    if (!lane || !historyItem.updateDependents?.length) return;
+    const historicalHidden = historyItem.updateDependents.map((id) => ComponentID.fromString(id));
+    const ids = ComponentIdList.fromArray(historicalHidden);
+    await this.scope.legacyScope.scopeImporter.importMany({
+      ids,
+      lane,
+      reason: 'to restore hidden updateDependents from lane history',
+    });
+    historicalHidden.forEach((compId) => {
+      lane.addComponent({
+        id: compId.changeVersion(undefined),
+        head: Ref.from(compId.version as string),
+        skipWorkspace: true,
+      });
+    });
+    await this.scope.legacyScope.lanes.saveLane(lane, { saveLaneHistory: false });
   }
 
   private async getHistoryItemOfCurrentLane(historyId: string): Promise<HistoryItem> {
