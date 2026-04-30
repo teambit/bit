@@ -132,6 +132,9 @@ describe('local snap cascades updateDependents on the lane', function () {
       let npmCiRegistry: NpmCiRegistry;
 
       before(async () => {
+        // Destroy the outer helper's temp dirs before swapping in a dot-scope helper, otherwise
+        // the original instance's workspaces/scopes leak for the rest of the suite.
+        helper.scopeHelper.destroy();
         helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
         helper.scopeHelper.setWorkspaceWithRemoteScope();
         npmCiRegistry = new NpmCiRegistry(helper);
@@ -176,6 +179,9 @@ describe('local snap cascades updateDependents on the lane', function () {
       });
       after(() => {
         npmCiRegistry.destroy();
+        // Destroy this scenario's dot-scope helper before swapping back, so its temp dirs
+        // don't outlive the describe block.
+        helper.scopeHelper.destroy();
         helper = new Helper();
       });
 
