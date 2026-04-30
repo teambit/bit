@@ -41,7 +41,9 @@ describe('tsconfig env mismatch between check-types and build', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
 
-      // Create permissive tsconfig (no strict mode)
+      // Create permissive tsconfig (strict mode explicitly off).
+      // strict must be set explicitly because TS 6 changed the default from false to true,
+      // and this fixture was relying on the TS 5 default.
       const permissiveTsconfig = JSON.stringify(
         {
           compilerOptions: {
@@ -55,7 +57,7 @@ describe('tsconfig env mismatch between check-types and build', function () {
             moduleResolution: 'node',
             esModuleInterop: true,
             outDir: './dist',
-            // No strict mode - permissive
+            strict: false,
           },
           exclude: ['artifacts', 'public', 'dist', 'node_modules'],
         },
