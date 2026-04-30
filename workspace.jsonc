@@ -39,7 +39,7 @@
         "@bitdev/react.generators.react-starters": "^2.0.0",
         "@bitdev/react.generators.react-templates": "^6.0.3",
         "@bitdev/symphony.generators.symphony-starters": "^1.0.0",
-        "@bitdev/symphony.generators.symphony-templates": "^5.0.1",
+        "@bitdev/symphony.generators.symphony-templates": "^5.0.2",
         "@dagrejs/dagre": "^1.1.2",
         "@graphql-modules/core": "0.7.17",
         "@graphql-tools/schema": "^10.0.0",
