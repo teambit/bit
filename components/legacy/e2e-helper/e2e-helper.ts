@@ -21,6 +21,7 @@ import ScopeJsonHelper from './e2e-scope-json-helper';
 import type { ScopesOptions } from './e2e-scopes';
 import ScopesData from './e2e-scopes';
 import CapsulesHelper from './e2e-capsules-helper';
+import SnappingHelper from './e2e-snapping-helper';
 
 export type HelperOptions = {
   scopesOptions?: ScopesOptions;
@@ -44,6 +45,7 @@ export class Helper {
   scopeHelper: ScopeHelper;
   git: GitHelper;
   capsules: CapsulesHelper;
+  snapping: SnappingHelper;
   constructor(helperOptions?: HelperOptions) {
     this.debugMode = Boolean(process.env.npm_config_debug) || process.argv.includes('--debug'); // debug mode shows the workspace/scopes dirs and doesn't delete them
     this.scopes = new ScopesData(helperOptions?.scopesOptions); // generates dirs and scope names
@@ -85,6 +87,7 @@ export class Helper {
     this.env = new EnvHelper(this.command, this.fs, this.scopes, this.scopeHelper, this.fixtures, this.extensions);
     this.general = new GeneralHelper(this.scopes, this.npm, this.command);
     this.capsules = new CapsulesHelper(this.command);
+    this.snapping = new SnappingHelper();
   }
 }
 
