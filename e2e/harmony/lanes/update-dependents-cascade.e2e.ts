@@ -678,10 +678,15 @@ describe('local snap cascades updateDependents on the lane', function () {
       const base = await buildBaseRemoteState();
       comp2InUpdDepInitial = base.comp2InUpdDepInitial;
 
+      // Advance comp2 on main with a REAL file change. The cascade snap on the lane (comp2 is
+      // hidden) must absorb this content via 3-way merge — `snapHiddenForMerge` has to use the
+      // merged ConsumerComponent produced by `applyVersion`, not just reload the lane-head
+      // version, otherwise main-side content drift is silently lost.
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
       helper.command.importComponent('*');
-      helper.command.tagWithoutBuild('comp2', '--unmodified -m "advance-main"');
+      helper.fs.outputFile(`${helper.scopes.remote}/comp2/index.js`, "module.exports = () => 'comp2-main-v2';");
+      helper.command.tagAllWithoutBuild('-m "advance-main"');
       helper.command.export();
       comp2HeadOnMainAfterAdvance = helper.command.getHead(`${helper.scopes.remote}/comp2`);
 
@@ -704,6 +709,17 @@ describe('local snap cascades updateDependents on the lane', function () {
       const comp2 = helper.command.catComponent(remoteLane.updateDependents[0], helper.scopes.remotePath);
       expect(comp2.parents).to.include(comp2HeadOnMainAfterAdvance);
       expect(comp2.parents).to.have.lengthOf(2);
+    });
+
+    it('cascaded comp2 must absorb main-side content (file ref equals main`s)', () => {
+      const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
+      const cascaded = helper.command.catComponent(remoteLane.updateDependents[0], helper.scopes.remotePath);
+      const mainAdvanced = helper.command.catComponent(
+        `${helper.scopes.remote}/comp2@${comp2HeadOnMainAfterAdvance}`,
+        helper.scopes.remotePath
+      );
+      // Same blob ref means the merge result took main-side content, not lane-head content.
+      expect(cascaded.files[0].file).to.equal(mainAdvanced.files[0].file);
     });
 
     it('comp2 must stay in lane.updateDependents, NOT be promoted to lane.components', () => {

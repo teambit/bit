@@ -717,7 +717,7 @@ export class MergingMain {
 
     let hiddenResults: MergeSnapResults = null;
     if (hiddenIds.length) {
-      hiddenResults = await this.snapHiddenForMerge(hiddenIds, snapMessage, lane);
+      hiddenResults = await this.snapHiddenForMerge(hiddenIds, updatedComponents, snapMessage, lane);
     }
 
     if (!visibleIds.length) return hiddenResults;
@@ -743,26 +743,31 @@ export class MergingMain {
    * `snapping.snap` (loads via workspace, which has no files for hidden entries) and can't call
    * `snapping.snapFromScope` (it explicitly rejects workspace context). Instead, build the merge
    * Version directly via `_addCompToObjects` — the second parent comes from the unmergedComponent
-   * entry (set in `applyVersion`), and the merge dep rewrites are already on the loaded
-   * ConsumerComponent.
+   * entry (set in `applyVersion`), and the merge dep rewrites + main-side content/config changes
+   * are already on the merged `ConsumerComponent` produced by `applyVersion` and threaded in via
+   * `updatedComponents`.
    */
   private async snapHiddenForMerge(
     hiddenIds: ComponentIdList,
+    updatedComponents: ConsumerComponent[],
     snapMessage: string | undefined,
     lane: Lane | undefined
   ): Promise<MergeSnapResults> {
     const legacyScope = this.scope.legacyScope;
     const snappedComponents: ConsumerComponent[] = [];
     await mapSeries(hiddenIds, async (id) => {
-      // current lane head is the parent we descend from. The unmergedComponent entry (set in
-      // `applyVersion`) provides the second parent (main's head) — `_addCompToObjects` reads it.
       const laneEntry = lane?.getComponent(id);
       const previouslyUsedVersion = laneEntry?.head?.toString();
       if (!previouslyUsedVersion) {
         throw new BitError(`snapHiddenForMerge: lane entry for ${id.toString()} has no head`);
       }
-      const idAtHead = id.changeVersion(previouslyUsedVersion);
-      const consumerComponent = await legacyScope.getConsumerComponent(idAtHead);
+      // Prefer the merged ConsumerComponent produced by `applyVersion` so main-side file/aspect
+      // changes flow into the cascade snap. Fall back to the lane-head version when no merged
+      // result is available (e.g., a future caller path that snaps a hidden entry without
+      // running the merge engine first).
+      const merged = updatedComponents.find((c) => c.componentId.isEqualWithoutVersion(id));
+      const consumerComponent =
+        merged || (await legacyScope.getConsumerComponent(id.changeVersion(previouslyUsedVersion)));
       if (snapMessage) consumerComponent.log = { ...consumerComponent.log, message: snapMessage } as any;
       // assign a fresh hash so `_addCompToObjects` records a new snap (and the override flag in
       // addVersion fires while the lane carries the entry as hidden).
