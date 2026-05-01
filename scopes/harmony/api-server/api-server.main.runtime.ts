@@ -3,7 +3,7 @@ import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { Port } from '@teambit/toolbox.network.get-port';
 import fs from 'fs-extra';
 import crypto from 'crypto';
-import express from 'express';
+import expressFactory from 'express';
 import type { ExpressMain, Middleware, Request, Response, NextFunction } from '@teambit/express';
 import { ExpressAspect } from '@teambit/express';
 import type { Logger, LoggerMain } from '@teambit/logger';
@@ -137,7 +137,7 @@ export class ApiServerMain {
     // trigger large-body parsing. CORS is registered before auth so 401
     // responses still carry CORS headers; otherwise browser-based clients
     // (bit-vscode) see a misleading CORS failure instead of the JSON 401.
-    const app = express();
+    const app = expressFactory();
     app.use(
       cors({
         origin(origin, callback) {
