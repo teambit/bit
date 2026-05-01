@@ -2,7 +2,9 @@ import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { Port } from '@teambit/toolbox.network.get-port';
 import fs from 'fs-extra';
-import type { ExpressMain } from '@teambit/express';
+import crypto from 'crypto';
+import express from 'express';
+import type { ExpressMain, Middleware, Request, Response, NextFunction } from '@teambit/express';
 import { ExpressAspect } from '@teambit/express';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
@@ -62,6 +64,8 @@ import type { SchemaMain } from '@teambit/schema';
 import { SchemaAspect } from '@teambit/schema';
 
 export class ApiServerMain {
+  private serverToken?: string;
+
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -122,7 +126,18 @@ export class ApiServerMain {
 
     const port = options.port || (await this.getRandomPort());
 
-    const app = this.express.createApp();
+    // Generate a per-server auth token and persist it to a 0600 file before
+    // any HTTP request can be handled. Clients (e.g. the bit-vscode extension)
+    // read it from <workspace.scope.path>/server-token.txt and send it as
+    // `Authorization: Bearer <token>`. See createAuthMiddleware below.
+    this.writeServerToken();
+
+    // Create the app *before* express.createApp registers routes, so the auth
+    // middleware runs first — including before bodyParser, which means
+    // unauthenticated requests can't trigger large-body parsing.
+    const app = express();
+    app.use(this.createAuthMiddleware());
+    this.express.createApp(app);
 
     app.use(
       cors({
@@ -223,6 +238,56 @@ export class ApiServerMain {
   writeUsedPort(port: number) {
     const filePath = this.getServerPortFilePath();
     fs.writeFileSync(filePath, port.toString());
+  }
+
+  /**
+   * Generate a fresh per-server bearer token and persist it to a 0600 file.
+   * Clients (e.g. the bit-vscode extension) read this file and send the token
+   * as `Authorization: Bearer <token>` on every request.
+   *
+   * Backwards compatibility: clients that don't yet know about this file (older
+   * extension versions) won't send the header and will receive 401 with a
+   * message pointing them at the upgrade. Old bit-server versions don't write
+   * this file, so a new client checking for it gracefully falls back to no
+   * auth header — meaning a NEW extension keeps working against an OLD
+   * bit-server.
+   */
+  private writeServerToken() {
+    const token = crypto.randomBytes(32).toString('hex');
+    const filePath = this.getServerTokenFilePath();
+    fs.writeFileSync(filePath, token, { mode: 0o600 });
+    this.serverToken = token;
+  }
+
+  private getServerTokenFilePath() {
+    return join(this.workspace.scope.path, 'server-token.txt');
+  }
+
+  /**
+   * Authentication middleware: requires `Authorization: Bearer <serverToken>`
+   * on every request except OPTIONS preflight (handled by cors) and the
+   * unauthenticated `/api/_health` liveness probe.
+   *
+   * Runs before bodyParser so unauthenticated requests can't trigger
+   * large-body parsing.
+   */
+  private createAuthMiddleware(): Middleware {
+    return (req: Request, res: Response, next: NextFunction) => {
+      if (req.method === 'OPTIONS') return next();
+      if (req.url === '/api/_health') return next();
+
+      const expected = `Bearer ${this.serverToken}`;
+      if (!this.serverToken || req.headers.authorization !== expected) {
+        this.logger.debug(`api-server: rejected unauthenticated request to ${req.url}`);
+        res.status(401).jsonp({
+          error: 'unauthorized',
+          message:
+            'This bit-server requires authentication. Please upgrade your bit VS Code extension to the latest version.',
+        });
+        return;
+      }
+      return next();
+    };
   }
 
   /**
