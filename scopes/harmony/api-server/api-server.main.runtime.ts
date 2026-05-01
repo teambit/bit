@@ -133,12 +133,11 @@ export class ApiServerMain {
     this.writeServerToken();
 
     // Create the app *before* express.createApp registers routes, so the auth
-    // middleware runs first — including before bodyParser, which means
-    // unauthenticated requests can't trigger large-body parsing.
+    // middleware runs before bodyParser — unauthenticated requests can't
+    // trigger large-body parsing. CORS is registered before auth so 401
+    // responses still carry CORS headers; otherwise browser-based clients
+    // (bit-vscode) see a misleading CORS failure instead of the JSON 401.
     const app = express();
-    app.use(this.createAuthMiddleware());
-    this.express.createApp(app);
-
     app.use(
       cors({
         origin(origin, callback) {
@@ -147,6 +146,8 @@ export class ApiServerMain {
         credentials: true,
       })
     );
+    app.use(this.createAuthMiddleware());
+    this.express.createApp(app);
     const proxyHeaders = {
       Authorization: `${DEFAULT_AUTH_TYPE} ${Http.getToken()}`,
       origin: '',
@@ -256,6 +257,10 @@ export class ApiServerMain {
     const token = crypto.randomBytes(32).toString('hex');
     const filePath = this.getServerTokenFilePath();
     fs.writeFileSync(filePath, token, { mode: 0o600 });
+    // Node's `mode` write option is only honored when the file is created.
+    // chmod explicitly so a pre-existing file with broader permissions gets
+    // tightened to 0600.
+    fs.chmodSync(filePath, 0o600);
     this.serverToken = token;
   }
 
@@ -274,11 +279,13 @@ export class ApiServerMain {
   private createAuthMiddleware(): Middleware {
     return (req: Request, res: Response, next: NextFunction) => {
       if (req.method === 'OPTIONS') return next();
-      if (req.url === '/api/_health') return next();
+      // Use req.path (not req.url) so query strings don't bypass the
+      // health-check exemption — e.g. /api/_health?cache-buster=1.
+      if (req.path === '/api/_health') return next();
 
-      const expected = `Bearer ${this.serverToken}`;
-      if (!this.serverToken || req.headers.authorization !== expected) {
-        this.logger.debug(`api-server: rejected unauthenticated request to ${req.url}`);
+      const provided = parseBearerToken(req.headers.authorization);
+      if (!this.serverToken || provided !== this.serverToken) {
+        this.logger.debug(`api-server: rejected unauthenticated request to ${req.path}`);
         res.status(401).jsonp({
           error: 'unauthorized',
           message:
@@ -494,5 +501,16 @@ export class ApiServerMain {
 }
 
 ApiServerAspect.addRuntime(ApiServerMain);
+
+/**
+ * Extract the token from an `Authorization: Bearer <token>` header.
+ * Lenient on scheme casing and surrounding whitespace so a slightly
+ * non-canonical client header doesn't get rejected.
+ */
+function parseBearerToken(header: string | undefined): string | undefined {
+  if (!header) return undefined;
+  const match = header.match(/^\s*Bearer\s+(\S+)\s*$/i);
+  return match?.[1];
+}
 
 export default ApiServerMain;

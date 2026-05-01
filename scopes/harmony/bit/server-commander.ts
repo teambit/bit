@@ -336,14 +336,25 @@ Please run the command "bit server-forever" first to start the server.`)
    * exists (older bit-server with no auth requirement) or scope can't be
    * resolved. Used by HTTP/SSE callers in this file to authenticate to the
    * running bit-server.
+   *
+   * Only ENOENT and ScopeNotFound are swallowed — other read errors
+   * (EACCES, EPERM, corrupted file, …) are surfaced so the user sees the
+   * real cause instead of a misleading 401/upgrade message from the server.
    */
   private getServerTokenIfExists(): string | undefined {
+    let filePath: string;
     try {
-      const filePath = this.getServerTokenFilePath();
+      filePath = this.getServerTokenFilePath();
+    } catch (err: any) {
+      if (err instanceof ScopeNotFound) return undefined;
+      throw err;
+    }
+    try {
       const token = fs.readFileSync(filePath, 'utf8').trim();
       return token || undefined;
-    } catch {
-      return undefined;
+    } catch (err: any) {
+      if (err.code === 'ENOENT') return undefined;
+      throw err;
     }
   }
 
