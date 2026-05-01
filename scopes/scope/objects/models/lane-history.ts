@@ -88,12 +88,15 @@ export class LaneHistory extends BitObject {
     const deleted = laneObj.components
       .filter((c) => c.isDeleted)
       .map((c) => c.id.changeVersion(c.head.toString()).toString());
+    // Always write `updateDependents` (even when empty) so checkout/revert can distinguish a
+    // post-PR entry that legitimately had no hidden entries (drop current hidden) from a legacy
+    // pre-PR entry that never recorded the field at all (leave current hidden alone).
     const updateDependents = (laneObj.updateDependents || []).map((id) => id.toString());
     this.history[historyKey || v4()] = {
       log,
       components,
       ...(deleted.length && { deleted }),
-      ...(updateDependents.length && { updateDependents }),
+      updateDependents,
     };
   }
 
