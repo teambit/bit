@@ -10,6 +10,10 @@ export interface WorkspaceItem {
 
 export type AggregationType = 'namespaces' | 'scopes' | 'none';
 
+export type Density = 'compact' | 'comfy';
+
+export type ComponentStatus = 'built' | 'changed' | 'building' | 'queued';
+
 export interface AggregationGroup {
   name: string;
   displayName: string;
