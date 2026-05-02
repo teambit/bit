@@ -83,6 +83,8 @@ import { LanesDeleteRoute } from './lanes.delete.route';
 import { LanesRestoreRoute } from './lanes.restore.route';
 import type { InstallMain } from '@teambit/install';
 import { InstallAspect } from '@teambit/install';
+import type { SchemaMain } from '@teambit/schema';
+import { SchemaAspect } from '@teambit/schema';
 
 export { Lane };
 
@@ -166,7 +168,8 @@ export class LanesMain {
     readonly componentWriter: ComponentWriterMain,
     private remove: RemoveMain,
     readonly checkout: CheckoutMain,
-    private install: InstallMain
+    private install: InstallMain,
+    private schema: SchemaMain
   ) {}
 
   /**
@@ -743,7 +746,7 @@ please create a new lane instead, which will include all components of this lane
    * [from, to] => diff between "from" lane and "to" lane.
    */
   public async getDiff(values: string[], diffOptions: DiffOptions = {}, pattern?: string): Promise<LaneDiffResults> {
-    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
+    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare, this.schema);
     return laneDiffGenerator.generate(values, diffOptions, pattern);
   }
 
@@ -1288,6 +1291,7 @@ please create a new lane instead, which will include all components of this lane
     RemoveAspect,
     CheckoutAspect,
     InstallAspect,
+    SchemaAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1306,6 +1310,7 @@ please create a new lane instead, which will include all components of this lane
     remove,
     checkout,
     install,
+    schema,
   ]: [
     CLIMain,
     ScopeMain,
@@ -1322,6 +1327,7 @@ please create a new lane instead, which will include all components of this lane
     RemoveMain,
     CheckoutMain,
     InstallMain,
+    SchemaMain,
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
     const lanesMain = new LanesMain(
@@ -1336,7 +1342,8 @@ please create a new lane instead, which will include all components of this lane
       componentWriter,
       remove,
       checkout,
-      install
+      install,
+      schema
     );
     const switchCmd = new SwitchCmd(lanesMain);
     const fetchCmd = new FetchCmd(importer);
@@ -1350,7 +1357,7 @@ please create a new lane instead, which will include all components of this lane
       new LaneChangeScopeCmd(lanesMain),
       new LaneAliasCmd(lanesMain),
       new LaneRenameCmd(lanesMain),
-      new LaneDiffCmd(workspace, scope, componentCompare),
+      new LaneDiffCmd(workspace, scope, componentCompare, schema),
       new LaneRemoveReadmeCmd(lanesMain),
       new LaneImportCmd(switchCmd),
       new LaneRemoveCompCmd(workspace, lanesMain),
@@ -1359,10 +1366,80 @@ please create a new lane instead, which will include all components of this lane
     ];
     laneCmd.commands.push(new LaneCurrentCmd(lanesMain));
     laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
-    laneCmd.commands.push(new LaneHistoryDiffCmd(lanesMain, workspace, scope, componentCompare));
+    laneCmd.commands.push(new LaneHistoryDiffCmd(lanesMain, workspace, scope, componentCompare, schema));
     laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
     laneCmd.commands.push(new LaneRevertCmd(lanesMain));
     cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));
+
+    schema.registerLaneDiffHandler(
+      async (pattern: string, laneName?: string, baseVersion?: string, compareVersion?: string) => {
+        const laneId = laneName ? await lanesMain.parseLaneId(laneName) : lanesMain.getCurrentLaneId();
+        if (laneId.isDefault()) {
+          throw new Error('--lane requires a lane name, or being checked out to a lane');
+        }
+        const componentId = ComponentID.fromString(pattern);
+        await lanesMain.importLaneObject(laneId);
+        const laneObj = await lanesMain.loadLane(laneId);
+        if (!laneObj) throw new Error(`unable to find lane "${laneId.toString()}"`);
+        const scopeImporter = scope.legacyScope.scopeImporter;
+
+        let fromVersion: string;
+        let toVersion: string;
+        let fromLabel: string;
+        let toLabel: string;
+
+        if (baseVersion && compareVersion) {
+          fromVersion = baseVersion;
+          toVersion = compareVersion;
+          fromLabel = baseVersion.length > 8 ? baseVersion.slice(0, 8) : baseVersion;
+          toLabel = compareVersion.length > 8 ? compareVersion.slice(0, 8) : compareVersion;
+        } else {
+          const laneComp = laneObj.components.find((c) => c.id.isEqualWithoutVersion(componentId));
+          if (!laneComp)
+            throw new Error(`component ${componentId.toStringWithoutVersion()} is not on lane "${laneId.toString()}"`);
+          toVersion = laneComp.head.toString();
+          await scopeImporter.importWithoutDeps(ComponentIdList.fromArray([componentId]), {
+            cache: true,
+            ignoreMissingHead: true,
+            reason: 'schema diff --lane: import component from main',
+          });
+          const modelComponent = await scope.legacyScope.getModelComponent(componentId);
+          const mainHead = modelComponent.head?.toString();
+          if (!mainHead) throw new Error(`component ${componentId.toStringWithoutVersion()} has no version on main`);
+          if (toVersion === mainHead)
+            throw new Error(`component ${componentId.toStringWithoutVersion()} has the same version on lane and main`);
+          fromVersion = mainHead;
+          fromLabel = `main@${mainHead.slice(0, 8)}`;
+          toLabel = `${laneId.name}@${toVersion.slice(0, 8)}`;
+        }
+
+        const baseId = componentId.changeVersion(fromVersion);
+        const compareId = componentId.changeVersion(toVersion);
+        await scopeImporter.importWithoutDeps(ComponentIdList.fromArray([baseId]), {
+          cache: true,
+          ignoreMissingHead: true,
+          reason: 'schema diff --lane: import base version',
+        });
+        await scopeImporter.importWithoutDeps(ComponentIdList.fromArray([compareId]), {
+          cache: true,
+          lane: laneObj,
+          ignoreMissingHead: true,
+          reason: 'schema diff --lane: import compare version',
+        });
+        const [baseComponent, compareComponent] = await scope.getMany([baseId, compareId]);
+        if (!baseComponent) throw new Error(`could not load ${baseId.toString()}`);
+        if (!compareComponent) throw new Error(`could not load ${compareId.toString()}`);
+        const diff = await schema.computeAPIDiff(baseComponent, compareComponent);
+        if (!diff) throw new Error(`could not compute API diff for ${componentId.toStringWithoutVersion()}`);
+        return {
+          diff,
+          componentId: componentId.toStringWithoutVersion(),
+          fromLabel,
+          toLabel,
+        };
+      }
+    );
+
     cli.registerOnStart(async () => {
       await lanesMain.recreateNewLaneIfDeleted();
     });

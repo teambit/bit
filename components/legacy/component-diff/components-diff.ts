@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import tempy from 'tempy';
 import { uniq } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
+import type { APIDiffResult } from '@teambit/semantics.entities.semantic-schema-diff';
 import { diffFiles } from './diff-files';
 import type { PathOsBased } from '@teambit/toolbox.path.path';
 import type { SourceFile } from '@teambit/component.sources';
@@ -24,6 +25,7 @@ export type DiffResults = {
   hasDiff: boolean;
   filesDiff?: FileDiff[];
   fieldsDiff?: FieldsDiff[] | null | undefined;
+  apiDiff?: APIDiffResult | null;
 };
 
 export type DiffOptions = {
