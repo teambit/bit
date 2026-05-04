@@ -292,8 +292,9 @@ export class ApiServerMain {
       const hostHeader = req.headers.host || '';
       // Parse hostname from "host:port". IPv6 may be bracketed: "[::1]:1234"
       // → "::1"; IPv4 / hostname is plain: "127.0.0.1:1234" → "127.0.0.1".
+      // HTTP hostnames are case-insensitive, so normalize before checking.
       const match = hostHeader.match(/^\[([^\]]+)\]|^([^:]+)/);
-      const host = match ? match[1] || match[2] : '';
+      const host = match ? (match[1] || match[2]).toLowerCase() : '';
       if (!allowed.has(host)) {
         this.logger.debug(`api-server: rejected non-loopback Host header: ${hostHeader}`);
         res.status(403).end();

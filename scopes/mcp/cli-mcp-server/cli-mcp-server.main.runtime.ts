@@ -17,6 +17,7 @@ import { z } from 'zod';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import { Http } from '@teambit/scope.network';
+import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 import fetch from 'node-fetch';
 import { McpSetupCmd } from './setup-cmd';
@@ -129,23 +130,20 @@ export class CliMcpServerMain {
   /**
    * Read the bearer token written by bit-server (1.13.166+) for authenticating
    * to the local HTTP API. Returns undefined for older bit-server versions
-   * that don't write a token file (no auth required).
+   * that don't write a token file (no auth required), or when the workspace
+   * has no scope yet. Other read errors (EACCES, etc.) surface so the user
+   * sees the real cause instead of a misleading 401.
    */
   private getBitServerToken(cwd: string): string | undefined {
+    const scopePath = findScopePath(cwd);
+    if (!scopePath) return undefined;
+    const filePath = path.join(scopePath, 'server-token.txt');
     try {
-      const result = childProcess.spawnSync(this.bitBin, ['cli-server-token'], {
-        cwd,
-        env: { ...process.env, BIT_CLI_SERVER: 'true' },
-        encoding: 'utf8',
-      });
-      if (result.error) throw result.error;
-      if (result.status !== 0) {
-        throw new Error(`Command failed with status ${result.status}: ${result.stderr}`);
-      }
-      return result.stdout.trim() || undefined;
+      const token = fs.readFileSync(filePath, 'utf8').trim();
+      return token || undefined;
     } catch (err: any) {
-      this.logger.error(`[MCP-DEBUG] error getting server token at ${cwd}. err: ${err.message}`);
-      return undefined;
+      if (err.code === 'ENOENT') return undefined;
+      throw err;
     }
   }
 
