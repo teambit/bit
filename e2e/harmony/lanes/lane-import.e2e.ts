@@ -443,22 +443,32 @@ describe('bit lane import operations', function () {
         helper.command.expectCurrentLaneToBe('lane-a');
       });
     });
-    describe('when on a different lane with local file changes', () => {
+    describe('when on a different lane with an uncommitted edit to a tracked component', () => {
       let output: string;
-      const localFileContent = '// pending uncommitted change';
+      const localEdit = '// uncommitted local edit on lane-b';
       before(() => {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.scopeHelper.getClonedRemoteScope(remoteScope);
         helper.command.createLane('lane-b');
-        helper.fs.outputFile('scratch.txt', localFileContent);
+        // add a component exclusive to lane-b (different name from lane-a's comp1 to avoid lane-merge conflicts)
+        helper.fs.outputFile('comp-on-b/index.js', "module.exports = () => 'comp-on-b initial';");
+        helper.command.addComponent('comp-on-b');
+        helper.command.snapAllComponentsWithoutBuild();
+        // make an uncommitted edit on top of the snap
+        helper.fs.outputFile('comp-on-b/index.js', localEdit);
         output = helper.command.importLane('lane-a', '-x');
       });
       it('should not switch lanes', () => {
         helper.command.expectCurrentLaneToBe('lane-b');
       });
-      it('should preserve the local file changes', () => {
-        expect(helper.fs.readFile('scratch.txt')).to.equal(localFileContent);
+      it('should preserve the uncommitted edit to the tracked component', () => {
+        expect(helper.fs.readFile('comp-on-b/index.js')).to.equal(localEdit);
+      });
+      it('should keep the lane-b component in the workspace', () => {
+        const list = helper.command.listParsed();
+        const ids = list.map((c) => c.id);
+        expect(ids.some((id) => id.includes('comp-on-b'))).to.equal(true);
       });
       it('should print a hint instructing the user to run "bit switch" to actually switch', () => {
         expect(output).to.have.string('bit switch');
