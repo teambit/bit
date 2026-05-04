@@ -470,31 +470,45 @@ describe('bit lane import operations', function () {
         expect(laneNames).to.include('lane-a');
       });
     });
+    describe('when on a different lane and using switch-only flags', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.scopeHelper.getClonedRemoteScope(remoteScope);
+        helper.command.createLane('lane-b');
+      });
+      it('should reject --branch with a clear error', () => {
+        expect(() => helper.command.importLane('lane-a', '-x --branch')).to.throw('--branch only applies');
+      });
+      it('should reject --pattern with a clear error', () => {
+        expect(() => helper.command.importLane('lane-a', `-x --pattern ${helper.scopes.remote}/comp1`)).to.throw(
+          '--pattern only applies'
+        );
+      });
+    });
     describe('when on the same lane being imported', () => {
-      let secondWorkspace: string;
-      let firstWorkspace: string;
+      let workspaceWithLocalEdit: string;
       let newRemoteHead: string;
       const localFileContent = '// uncommitted local change';
       before(() => {
-        // workspace #1: import lane-a (becomes the current lane)
+        // primary workspace: import lane-a (becomes the current lane), make an uncommitted edit, snapshot it
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.scopeHelper.getClonedRemoteScope(remoteScope);
         helper.command.importLane('lane-a', '-x');
         helper.fs.outputFile('comp1/local.ts', localFileContent);
-        secondWorkspace = helper.scopeHelper.cloneWorkspace();
+        workspaceWithLocalEdit = helper.scopeHelper.cloneWorkspace();
 
-        // workspace #2: from a separate workspace, snap and export new head on the same lane
+        // collaborator workspace: snap and export a new head on the same lane to advance the remote
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.importLane('lane-a', '-x');
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
         helper.command.export();
         newRemoteHead = helper.command.getHeadOfLane('lane-a', 'comp1', helper.scopes.remotePath);
-        firstWorkspace = helper.scopeHelper.cloneWorkspace();
 
-        // back to workspace #1: run "bit lane import" of the same lane
-        helper.scopeHelper.getClonedWorkspace(secondWorkspace);
+        // restore the primary workspace (with the local edit and stale lane head) to test "bit lane import" on it
+        helper.scopeHelper.getClonedWorkspace(workspaceWithLocalEdit);
       });
       describe('running "bit lane import" for the current lane', () => {
         let output: string;
@@ -514,10 +528,6 @@ describe('bit lane import operations', function () {
         it('should print a hint suggesting "bit checkout head" to update the workspace', () => {
           expect(output).to.have.string('bit checkout head');
         });
-      });
-      after(() => {
-        // make sure to use the up-to-date first workspace state in case other suites run after this one
-        helper.scopeHelper.getClonedWorkspace(firstWorkspace);
       });
     });
   });

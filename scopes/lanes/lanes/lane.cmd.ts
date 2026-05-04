@@ -665,6 +665,7 @@ export class LaneImportCmd implements Command {
   name = 'import <lane>';
   description = `import a remote lane to your workspace`;
   extendedDescription = `when on the default lane, the workspace is switched to the imported lane.
+when already on the same lane, only the latest objects are fetched from the remote — run "bit checkout head" to update the workspace.
 when on a different lane, the lane is fetched locally without switching to avoid disrupting your work — run "bit switch <lane>" to switch.`;
   arguments = [{ name: 'lane', description: 'the remote lane name' }];
   alias = '';
@@ -727,6 +728,18 @@ when on a different lane, the lane is fetched locally without switching to avoid
     }
 
     // already on a (non-default) lane: do not auto-switch, only fetch the lane locally.
+    // these flags only make sense during a switch, so reject them explicitly to avoid silently ignoring them.
+    if (branch) {
+      throw new BitError(
+        `--branch only applies when switching from the default lane. you are already on lane "${currentLaneId.toString()}", so no switch will happen.\nrun "bit switch <lane> --branch" to switch and create a git branch.`
+      );
+    }
+    if (pattern) {
+      throw new BitError(
+        `--pattern only applies when switching to the imported lane. you are already on lane "${currentLaneId.toString()}", so no switch will happen.\nrun "bit switch <lane> --pattern <component-pattern>" to switch and filter components.`
+      );
+    }
+
     const targetLaneId = await this.lanes.parseLaneId(lane);
     await this.lanes.fetchLaneWithItsComponents(targetLaneId);
 
