@@ -72,20 +72,23 @@ export class CLIRawRoute implements Route {
       const originalStdoutWrite = process.stdout.write;
       const originalStderrWrite = process.stderr.write;
 
+      let fileHandle: number | undefined;
       if (ttyPath) {
-        const fileHandle = await fs.open(ttyPath, 'w');
+        fileHandle = await fs.open(ttyPath, 'w');
         if (!isatty(fileHandle)) {
           await fs.close(fileHandle);
+          fileHandle = undefined;
           throw new Error(`Invalid ttyPath parameter. Path is not a TTY.`);
         }
+        const ttyFd = fileHandle;
         // @ts-ignore monkey patch the process stdout write method
         process.stdout.write = (chunk, encoding, callback) => {
-          fs.writeSync(fileHandle, chunk.toString());
+          fs.writeSync(ttyFd, chunk.toString());
           return originalStdoutWrite.call(process.stdout, chunk, encoding, callback);
         };
         // @ts-ignore monkey patch the process stderr write method
         process.stderr.write = (chunk, encoding, callback) => {
-          fs.writeSync(fileHandle, chunk.toString());
+          fs.writeSync(ttyFd, chunk.toString());
           return originalStderrWrite.call(process.stdout, chunk, encoding, callback);
         };
       }
@@ -145,6 +148,13 @@ export class CLIRawRoute implements Route {
         if (ttyPath) {
           process.stdout.write = originalStdoutWrite;
           process.stderr.write = originalStderrWrite;
+          if (fileHandle !== undefined) {
+            try {
+              await fs.close(fileHandle);
+            } catch (err) {
+              this.logger.debug(`cli-raw: failed to close tty fd: ${(err as Error).message}`);
+            }
+          }
         }
         if (isSSE) {
           delete process.env.BIT_CLI_SERVER_NO_TTY;

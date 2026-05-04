@@ -166,7 +166,7 @@ export class CliMcpServerMain {
                 const port = parseInt(portMatch[1], 10);
                 this.logger.debug(`[MCP-DEBUG] bit-server started on port ${port}`);
                 this.serverPort = port;
-                this.serverUrl = `http://localhost:${port}/api`;
+                this.serverUrl = `http://127.0.0.1:${port}/api`;
                 resolve(port);
               }
             }
@@ -258,14 +258,14 @@ export class CliMcpServerMain {
       if (!cwd) throw new Error('CWD is required to call bit-server API');
       this.serverPort = await this.getBitServerPort(cwd);
       if (this.serverPort) {
-        this.serverUrl = `http://localhost:${this.serverPort}/api`;
+        this.serverUrl = `http://127.0.0.1:${this.serverPort}/api`;
       } else {
         // No server running, try to start one
         this.logger.debug('[MCP-DEBUG] No bit-server found, attempting to start one');
         const startedPort = await this.startBitServer(cwd);
         if (startedPort) {
           this.serverPort = startedPort;
-          this.serverUrl = `http://localhost:${this.serverPort}/api`;
+          this.serverUrl = `http://127.0.0.1:${this.serverPort}/api`;
         }
       }
     }

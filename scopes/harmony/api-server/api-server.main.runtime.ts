@@ -243,6 +243,10 @@ export class ApiServerMain {
   writeUsedPort(port: number) {
     const filePath = this.getServerPortFilePath();
     fs.writeFileSync(filePath, port.toString(), { mode: 0o600 });
+    // Node's `mode` write option is only honored when the file is created.
+    // chmod explicitly so a pre-existing file with broader permissions gets
+    // tightened to 0600.
+    fs.chmodSync(filePath, 0o600);
   }
 
   /**
