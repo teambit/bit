@@ -663,7 +663,9 @@ export class LaneRemoveCompCmd implements Command {
 
 export class LaneImportCmd implements Command {
   name = 'import <lane>';
-  description = `import a remote lane to your workspace and switch to that lane`;
+  description = `import a remote lane to your workspace`;
+  extendedDescription = `when on the default lane, the workspace is switched to the imported lane.
+when on a different lane, the lane is fetched locally without switching to avoid disrupting your work — run "bit switch <lane>" to switch.`;
   arguments = [{ name: 'lane', description: 'the remote lane name' }];
   alias = '';
   options = [
@@ -684,7 +686,10 @@ export class LaneImportCmd implements Command {
   ] as CommandOptions;
   loader = true;
 
-  constructor(private switchCmd: SwitchCmd) {}
+  constructor(
+    private switchCmd: SwitchCmd,
+    private lanes: LanesMain
+  ) {}
 
   async report(
     [lane]: [string],
@@ -707,14 +712,37 @@ export class LaneImportCmd implements Command {
     if (forceOurs && forceTheirs) {
       throw new BitError('please use either --force-ours or --force-theirs, not both');
     }
-    return this.switchCmd.report([lane], {
-      skipDependencyInstallation,
-      pattern,
-      branch,
-      autoMergeResolve,
-      forceOurs,
-      forceTheirs,
-    });
+
+    const currentLaneId = this.lanes.getCurrentLaneId();
+    // when on the default lane (or outside a workspace), keep the original behavior: switch to the imported lane.
+    if (!currentLaneId || currentLaneId.isDefault()) {
+      return this.switchCmd.report([lane], {
+        skipDependencyInstallation,
+        pattern,
+        branch,
+        autoMergeResolve,
+        forceOurs,
+        forceTheirs,
+      });
+    }
+
+    // already on a (non-default) lane: do not auto-switch, only fetch the lane locally.
+    const targetLaneId = await this.lanes.parseLaneId(lane);
+    await this.lanes.fetchLaneWithItsComponents(targetLaneId);
+
+    if (currentLaneId.isEqual(targetLaneId)) {
+      return joinSections([
+        formatSuccessSummary(`fetched the latest objects of lane "${chalk.bold(targetLaneId.toString())}"`),
+        formatHint(`already on this lane. to update the workspace to the latest, run "bit checkout head"`),
+      ]);
+    }
+
+    return joinSections([
+      formatSuccessSummary(`imported lane "${chalk.bold(targetLaneId.toString())}" locally`),
+      formatHint(
+        `you are still on lane "${currentLaneId.toString()}". to switch to the imported lane, run "bit switch ${targetLaneId.toString()}"`
+      ),
+    ]);
   }
 }
 
