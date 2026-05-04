@@ -116,7 +116,7 @@ export class ServerCommander {
     if (process.argv.includes(CMD_SERVER_TOKEN)) return this.printServerTokenAndExit();
     printBitVersionIfAsked();
     const port = await this.getExistingUsedPort();
-    const url = `http://localhost:${port}/api`;
+    const url = `http://127.0.0.1:${port}/api`;
     const shouldUsePTY = process.env.BIT_CLI_SERVER_PTY === 'true';
 
     if (shouldUsePTY) {

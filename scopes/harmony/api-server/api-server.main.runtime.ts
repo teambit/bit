@@ -137,7 +137,10 @@ export class ApiServerMain {
     // trigger large-body parsing. CORS is registered before auth so 401
     // responses still carry CORS headers; otherwise browser-based clients
     // (bit-vscode) see a misleading CORS failure instead of the JSON 401.
+    // The host-check middleware runs first to reject DNS-rebinding attacks
+    // (where a malicious page resolves attacker.example to 127.0.0.1).
     const app = expressFactory();
+    app.use(this.createHostCheckMiddleware());
     app.use(
       cors({
         origin(origin, callback) {
@@ -215,12 +218,13 @@ export class ApiServerMain {
         pathFilter: '/',
         target: symphonyUrl,
         ws: true,
-        secure: false, // Disable SSL verification for proxy to remote server
         changeOrigin: true,
       })
     );
 
-    const server = await app.listen(port);
+    // Bind to loopback only — never accept connections from the LAN. Clients
+    // are expected to use 127.0.0.1 (or localhost, which resolves to it).
+    const server = await app.listen(port, '127.0.0.1');
 
     return new Promise((resolve, reject) => {
       server.on('error', (err) => {
@@ -238,7 +242,7 @@ export class ApiServerMain {
 
   writeUsedPort(port: number) {
     const filePath = this.getServerPortFilePath();
-    fs.writeFileSync(filePath, port.toString());
+    fs.writeFileSync(filePath, port.toString(), { mode: 0o600 });
   }
 
   /**
@@ -269,9 +273,44 @@ export class ApiServerMain {
   }
 
   /**
+   * Host-header check: only accept requests targeting a loopback hostname.
+   * Defends against DNS-rebinding attacks where a malicious page on
+   * `evil.example` flips DNS to 127.0.0.1 — the browser sends `Host:
+   * evil.example`, which we reject with 403 here.
+   *
+   * The server already listens on 127.0.0.1 only, so any request reaching us
+   * arrived via loopback. The remaining concern is the *named* origin the
+   * browser thinks it's talking to.
+   */
+  private createHostCheckMiddleware(): Middleware {
+    const allowed = new Set(['localhost', '127.0.0.1', '::1']);
+    return (req: Request, res: Response, next: NextFunction) => {
+      const hostHeader = req.headers.host || '';
+      // Parse hostname from "host:port". IPv6 may be bracketed: "[::1]:1234"
+      // → "::1"; IPv4 / hostname is plain: "127.0.0.1:1234" → "127.0.0.1".
+      const match = hostHeader.match(/^\[([^\]]+)\]|^([^:]+)/);
+      const host = match ? match[1] || match[2] : '';
+      if (!allowed.has(host)) {
+        this.logger.debug(`api-server: rejected non-loopback Host header: ${hostHeader}`);
+        res.status(403).end();
+        return;
+      }
+      return next();
+    };
+  }
+
+  /**
    * Authentication middleware: requires `Authorization: Bearer <serverToken>`
    * on every request except OPTIONS preflight (handled by cors) and the
    * unauthenticated `/api/_health` liveness probe.
+   *
+   * For GET requests — specifically WebSocket upgrades and browser-native
+   * EventSource (SSE) connections — the underlying APIs cannot set custom
+   * headers from JavaScript. The token is therefore also accepted as a
+   * `?token=` query parameter on GET requests. We strip it from `req.url`
+   * before downstream processing so it never reaches the upstream Bit
+   * Cloud proxy or our own logs. POST/PUT/DELETE always require the
+   * Authorization header — they can set it.
    *
    * Runs before bodyParser so unauthenticated requests can't trigger
    * large-body parsing.
@@ -284,7 +323,22 @@ export class ApiServerMain {
       if (req.path === '/api/_health') return next();
 
       const provided = parseBearerToken(req.headers.authorization);
-      if (!this.serverToken || provided !== this.serverToken) {
+      let authorized = !!this.serverToken && provided === this.serverToken;
+
+      if (!authorized && this.serverToken && req.method === 'GET') {
+        const queryIdx = req.url.indexOf('?');
+        if (queryIdx >= 0) {
+          const params = new URLSearchParams(req.url.slice(queryIdx + 1));
+          if (params.get('token') === this.serverToken) {
+            authorized = true;
+            params.delete('token');
+            const remaining = params.toString();
+            req.url = req.url.slice(0, queryIdx) + (remaining ? `?${remaining}` : '');
+          }
+        }
+      }
+
+      if (!authorized) {
         this.logger.debug(`api-server: rejected unauthenticated request to ${req.path}`);
         res.status(401).jsonp({
           error: 'unauthorized',
@@ -364,8 +418,8 @@ export class ApiServerMain {
 
   async getRandomPort() {
     const startingPort = 4000; // we prefer to have the ports between 4000 and 4999.
-    // get random number in the range of [startingPort, 4999].
-    const randomNumber = Math.floor(Math.random() * (4999 - startingPort + 1) + startingPort);
+    // randomInt(min, max) returns a uniformly random int in [min, max).
+    const randomNumber = crypto.randomInt(startingPort, 5000);
     const port = await Port.getPort(randomNumber, 65500);
     return port;
   }
