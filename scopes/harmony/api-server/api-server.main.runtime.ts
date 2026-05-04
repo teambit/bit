@@ -304,13 +304,10 @@ export class ApiServerMain {
    * on every request except OPTIONS preflight (handled by cors) and the
    * unauthenticated `/api/_health` liveness probe.
    *
-   * For GET requests — specifically WebSocket upgrades and browser-native
-   * EventSource (SSE) connections — the underlying APIs cannot set custom
-   * headers from JavaScript. The token is therefore also accepted as a
-   * `?token=` query parameter on GET requests. We strip it from `req.url`
-   * before downstream processing so it never reaches the upstream Bit
-   * Cloud proxy or our own logs. POST/PUT/DELETE always require the
-   * Authorization header — they can set it.
+   * GET requests can also authenticate via a `?token=...` query parameter,
+   * since browser-native WebSocket and EventSource cannot set custom headers
+   * from JavaScript. The param is stripped from `req.url` before downstream
+   * handling so the proxy and logs never see it.
    *
    * Runs before bodyParser so unauthenticated requests can't trigger
    * large-body parsing.
@@ -418,7 +415,6 @@ export class ApiServerMain {
 
   async getRandomPort() {
     const startingPort = 4000; // we prefer to have the ports between 4000 and 4999.
-    // randomInt(min, max) returns a uniformly random int in [min, max).
     const randomNumber = crypto.randomInt(startingPort, 5000);
     const port = await Port.getPort(randomNumber, 65500);
     return port;
