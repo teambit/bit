@@ -45,6 +45,7 @@ export class CliMcpServerMain {
   private isConsumerProjectMode: boolean = false;
   private serverPort?: number;
   private serverUrl?: string;
+  private serverToken?: string;
   private serverProcess: childProcess.ChildProcess | null = null;
 
   // Whitelist of commands that are considered read-only/query operations
@@ -121,6 +122,29 @@ export class CliMcpServerMain {
       return parseInt(existingPort, 10);
     } catch (err: any) {
       this.logger.error(`[MCP-DEBUG] error getting existing port from bit server at ${cwd}. err: ${err.message}`);
+      return undefined;
+    }
+  }
+
+  /**
+   * Read the bearer token written by bit-server (1.13.166+) for authenticating
+   * to the local HTTP API. Returns undefined for older bit-server versions
+   * that don't write a token file (no auth required).
+   */
+  private getBitServerToken(cwd: string): string | undefined {
+    try {
+      const result = childProcess.spawnSync(this.bitBin, ['cli-server-token'], {
+        cwd,
+        env: { ...process.env, BIT_CLI_SERVER: 'true' },
+        encoding: 'utf8',
+      });
+      if (result.error) throw result.error;
+      if (result.status !== 0) {
+        throw new Error(`Command failed with status ${result.status}: ${result.stderr}`);
+      }
+      return result.stdout.trim() || undefined;
+    } catch (err: any) {
+      this.logger.error(`[MCP-DEBUG] error getting server token at ${cwd}. err: ${err.message}`);
       return undefined;
     }
   }
@@ -268,6 +292,9 @@ export class CliMcpServerMain {
           this.serverUrl = `http://127.0.0.1:${this.serverPort}/api`;
         }
       }
+      // bit-server 1.13.166+ requires a bearer token; older versions don't
+      // write the token file and getBitServerToken returns undefined.
+      if (this.serverPort) this.serverToken = this.getBitServerToken(cwd);
     }
 
     if (!this.serverUrl) {
@@ -306,12 +333,22 @@ export class CliMcpServerMain {
       url = `${this.serverUrl}/${route}`;
     }
 
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (this.serverToken) headers.Authorization = `Bearer ${this.serverToken}`;
+
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(body),
       });
+
+      if (response.status === 401 && !isReTrying) {
+        // Token may be stale (server restarted with a new one); refresh and retry once.
+        this.logger.debug('[MCP-DEBUG] 401 from bit-server, refreshing token and retrying');
+        this.serverToken = this.getBitServerToken(cwd);
+        return this.callBitServerAPIWithRoute(route, commandOrMethod, argsOrParams, flags, cwd, true, isIDERoute);
+      }
 
       if (!response.ok) {
         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
@@ -330,6 +367,7 @@ export class CliMcpServerMain {
         // Server is no longer running, reset cached values and try to restart
         this.serverPort = undefined;
         this.serverUrl = undefined;
+        this.serverToken = undefined;
         this.logger.debug('[MCP-DEBUG] Connection refused, attempting to restart bit-server');
         return this.callBitServerAPIWithRoute(route, commandOrMethod, argsOrParams, flags, cwd, true, isIDERoute);
       }
