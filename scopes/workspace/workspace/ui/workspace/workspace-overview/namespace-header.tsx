@@ -1,5 +1,4 @@
 import React from 'react';
-import { getAccent, getTint } from './namespace-hues';
 import { getComponentStatus } from './filter-utils';
 import type { WorkspaceItem } from './workspace-overview.types';
 import styles from './namespace-header.module.scss';
@@ -12,8 +11,8 @@ export interface NamespaceHeaderProps {
 }
 
 export function NamespaceHeader({ namespace, items, scopeIcon, scopeIconColor }: NamespaceHeaderProps) {
-  const accent = getAccent(namespace);
-  const tint = getTint(namespace);
+  const accent = 'var(--bit-accent-color, #6c5ce7)';
+  const tint = 'color-mix(in srgb, var(--bit-accent-color, #6c5ce7) 12%, transparent)';
 
   let buildingCount = 0;
   let readyCount = 0;

@@ -8,7 +8,6 @@ import type { ComponentModel } from '@teambit/component';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import type { ScopeID } from '@teambit/scopes.scope-id';
 import { getComponentStatus } from './filter-utils';
-import { getAccent } from './namespace-hues';
 import { ChangedPill, BuildSpinner, BuildingPreview, QueuedPreview } from './card-overlays';
 import styles from './hope-component-card.module.scss';
 
@@ -42,8 +41,7 @@ export function HopeComponentCard({
 
   const item = { component } as any;
   const status = getComponentStatus(item);
-  const ns = component.id.namespace || '/';
-  const accent = getAccent(ns);
+  const accent = 'var(--bit-accent-color, #6c5ce7)';
 
   const isBuilding = status === 'building';
   const isQueued = status === 'queued';
@@ -65,7 +63,12 @@ export function HopeComponentCard({
   const envComponentId = env?.id ? ComponentID.fromString(env.id) : undefined;
 
   const cardClass = isBuilding ? styles.cardBuilding : styles.card;
-  const buildingBorderStyle = isBuilding ? { borderColor: accent, boxShadow: `0 0 0 3px ${accent}1A` } : undefined;
+  const buildingBorderStyle = isBuilding
+    ? {
+        borderColor: accent,
+        boxShadow: `0 0 0 3px color-mix(in srgb, var(--bit-accent-color, #6c5ce7) 10%, transparent)`,
+      }
+    : undefined;
 
   const nameLabel = component.id.namespace ? `${component.id.namespace}/${component.id.name}` : component.id.name;
 
@@ -84,7 +87,6 @@ export function HopeComponentCard({
               component={component}
               componentDescriptor={componentDescriptor}
               status={status}
-              accent={accent}
               shouldShowPreview={shouldShowPreview}
             />
           </div>
@@ -100,7 +102,7 @@ export function HopeComponentCard({
           {(isChanged || isBuilding) && (
             <div className={styles.statusCorner}>
               {isChanged && <ChangedPill />}
-              {isBuilding && <BuildSpinner accent={accent} />}
+              {isBuilding && <BuildSpinner />}
             </div>
           )}
         </div>
@@ -132,17 +134,15 @@ function CardPreview({
   component,
   componentDescriptor,
   status,
-  accent,
   shouldShowPreview,
 }: {
   component: ComponentModel;
   componentDescriptor: ComponentDescriptor;
   status: string;
-  accent: string;
   shouldShowPreview: boolean;
 }) {
-  if (status === 'queued') return <QueuedPreview accent={accent} />;
-  if (status === 'building') return <BuildingPreview accent={accent} />;
+  if (status === 'queued') return <QueuedPreview />;
+  if (status === 'building') return <BuildingPreview />;
 
   return (
     <PreviewPlaceholder
