@@ -1,10 +1,7 @@
 import React, { useMemo } from 'react';
 import { ToggleButton } from '@teambit/design.inputs.toggle-button';
 import { BaseFilter } from '@teambit/component.filters.base-filter';
-import { StatusPills } from './status-pills';
-import { DensityToggle } from './density-toggle';
-import type { WorkspaceItem, AggregationType, Density, ComponentStatus } from './workspace-overview.types';
-import { getComponentStatus } from './filter-utils';
+import type { WorkspaceItem, AggregationType } from './workspace-overview.types';
 import styles from './workspace-overview.module.scss';
 
 export interface WorkspaceFilterPanelProps {
@@ -16,10 +13,6 @@ export interface WorkspaceFilterPanelProps {
   onNamespacesChange: (namespaces: string[]) => void;
   activeScopes: string[];
   onScopesChange: (scopes: string[]) => void;
-  statuses: Set<ComponentStatus>;
-  onToggleStatus: (status: ComponentStatus) => void;
-  density: Density;
-  onDensityChange: (density: Density) => void;
 }
 
 const LABELS: Record<AggregationType, string> = {
@@ -37,10 +30,6 @@ export function WorkspaceFilterPanel({
   onNamespacesChange,
   activeScopes,
   onScopesChange,
-  statuses,
-  onToggleStatus,
-  density,
-  onDensityChange,
 }: WorkspaceFilterPanelProps) {
   const namespaceOptions = useMemo(
     () =>
@@ -57,15 +46,6 @@ export function WorkspaceFilterPanel({
       })),
     [items]
   );
-
-  const counts = useMemo(() => {
-    const c: Record<ComponentStatus, number> = { built: 0, changed: 0, building: 0, queued: 0 };
-    for (const item of items) {
-      const s = getComponentStatus(item);
-      c[s]++;
-    }
-    return c;
-  }, [items]);
 
   const activeNsOptions = activeNamespaces.map((v) => ({ value: v }));
   const activeScopeOptions = activeScopes.map((v) => ({ value: v }));
@@ -109,12 +89,9 @@ export function WorkspaceFilterPanel({
           onChange={applyScopes}
           isSearchable
         />
-        <span className={styles.verticalDivider} />
-        <StatusPills statuses={statuses} onToggle={onToggleStatus} counts={counts} />
       </div>
 
       <div className={styles.rightCluster}>
-        <DensityToggle value={density} onChange={onDensityChange} />
         <ToggleButton
           className={styles.aggToggle}
           defaultIndex={currentIndex}

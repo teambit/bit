@@ -1,0 +1,162 @@
+.card {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface-color);
+  border: 1px solid var(--border-medium-color);
+  cursor: pointer;
+  transition:
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    box-shadow: 0 4px 14px rgba(20, 0, 104, 0.06);
+  }
+}
+
+.cardBuilding {
+  composes: card;
+
+  &:hover {
+    box-shadow: none;
+  }
+}
+
+.linkWrapper {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+/* ---- Preview ---- */
+
+.preview {
+  height: 180px;
+  position: relative;
+  overflow: hidden;
+  background: white;
+  border-bottom: 1px solid var(--border-medium-color);
+}
+
+.previewQueued {
+  composes: preview;
+  background: var(--surface01-color);
+}
+
+.previewInner {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* ---- Env badge ---- */
+
+.envBadge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: var(--surface-color);
+  padding: 4px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  z-index: 3;
+}
+
+.envIcon {
+  height: 14px;
+  display: block;
+}
+
+/* ---- Status corner ---- */
+
+.statusCorner {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+}
+
+/* ---- Footer ---- */
+
+.footer {
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  color: var(--on-background-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.nameQueued {
+  composes: name;
+  color: var(--on-background-medium-color);
+}
+
+.hash {
+  font-size: 10.5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--surface01-color);
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  color: var(--on-background-low-color);
+  flex-shrink: 0;
+}
+
+.scopeBadge {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.scopeBadgeIcon {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.scopeBadgeInitial {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  line-height: 1;
+}
+
+.buildingLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* ---- Load preview button ---- */
+
+.loadPreview {
+  position: absolute;
+  right: 4px !important;
+  left: unset !important;
+  z-index: 4;
+}

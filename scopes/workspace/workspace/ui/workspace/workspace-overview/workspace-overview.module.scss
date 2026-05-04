@@ -1,13 +1,16 @@
 @import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 .container {
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 20px 40px 80px;
   overflow-y: auto;
   height: 100%;
   box-sizing: border-box;
   z-index: 1;
+}
+
+.content {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 40px 80px;
 }
 
 /* ---- Command bar ---- */
@@ -18,8 +21,11 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  padding-bottom: 18px;
-  position: relative;
+  padding: 12px 40px;
+  background: color-mix(in srgb, var(--bit-accent-color, #6c5ce7) 3%, var(--background-color, #fff));
+  border-bottom: 1px solid var(--border-medium-color);
+  position: sticky;
+  top: 0;
   z-index: $modal-z-index - 1;
 }
 
@@ -37,16 +43,10 @@
   margin-left: auto;
 }
 
-.verticalDivider {
-  width: 1px;
-  height: 18px;
-  background: var(--border-medium-color);
-  margin: 0 4px;
-}
-
 .aggToggle {
   height: 32px !important;
   font-size: 12.5px;
+  --surface02-color: color-mix(in srgb, var(--bit-accent-color, #6c5ce7) 20%, var(--surface-color, #f5f5f5));
 }
 
 /* ---- Base filter overrides ---- */
@@ -73,132 +73,21 @@
 /* ---- Section ---- */
 
 .section {
-  margin-bottom: 36px;
+  margin-bottom: 40px;
+}
+
+.sectionHeader {
+  position: sticky;
+  top: 57px;
+  z-index: $nav-z-index;
+  background: var(--background-color);
+  padding: 12px 0 18px;
 }
 
 /* ---- Card grid ---- */
 
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--card-min, 280px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 14px;
-}
-
-/* ---- Card overrides (applied via parent wrapper) ---- */
-
-.cardWrapper {
-  position: relative;
-}
-
-.cardWrapper :global(.componentCard) {
-  border-radius: 10px;
-  transition:
-    box-shadow 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.cardWrapper :global(.componentCard):hover {
-  box-shadow: 0 4px 14px rgba(20, 0, 104, 0.06);
-}
-
-.cardWrapper :global(.previewContainer) {
-  padding-bottom: 0;
-  height: var(--preview-h, 180px);
-}
-
-/* ---- Preview plugins ---- */
-
-.rightPreviewPlugins {
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  width: 100%;
-  height: 100%;
-}
-
-.envIcon {
-  height: 14px;
-}
-
-.badge {
-  background-color: var(--surface-color);
-  padding: 4px;
-  height: 15px;
-  margin-right: 4px;
-  z-index: $nav-z-index;
-  border-radius: 8px;
-  margin-bottom: 4px;
-  box-shadow: 0px 2px 18px rgb(0 0 0 / 10%);
-}
-
-/* ---- Card footer ---- */
-
-.cardFooter {
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.cardName {
-  flex: 1;
-  min-width: 0;
-  font-size: 12.5px;
-  font-weight: 500;
-  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
-  color: var(--on-background-color);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  letter-spacing: -0.01em;
-}
-
-.cardNameQueued {
-  composes: cardName;
-  color: var(--on-background-medium-color);
-}
-
-.hashChip {
-  font-size: 10.5px;
-  padding: 1px 6px;
-  border-radius: 4px;
-  background: var(--surface01-color);
-  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
-  color: var(--on-background-low-color);
-  flex-shrink: 0;
-}
-
-.buildingLabel {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  flex-shrink: 0;
-}
-
-/* ---- Status corner ---- */
-
-.statusCorner {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 2;
-}
-
-/* ---- Building card border ---- */
-
-.cardBuilding :global(.componentCard) {
-  transition:
-    box-shadow 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.cardBuilding :global(.componentCard):hover {
-  box-shadow: none;
-}
-
-/* ---- Queued preview bg ---- */
-
-.previewQueued {
-  background: var(--surface01-color) !important;
 }

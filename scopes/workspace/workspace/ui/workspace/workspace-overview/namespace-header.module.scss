@@ -2,21 +2,20 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
 }
 
 .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
   flex-shrink: 0;
 }
 
 .name {
   font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--on-background-color);
   flex-shrink: 0;
@@ -46,6 +45,32 @@
   height: 5px;
   border-radius: 50%;
   animation: pulse 1.4s ease-in-out infinite;
+}
+
+.scopeIconBadge {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.scopeIconImg {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.scopeInitial {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  line-height: 1;
 }
 
 .divider {

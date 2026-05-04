@@ -7,9 +7,11 @@ import styles from './namespace-header.module.scss';
 export interface NamespaceHeaderProps {
   namespace: string;
   items: WorkspaceItem[];
+  scopeIcon?: string;
+  scopeIconColor?: string;
 }
 
-export function NamespaceHeader({ namespace, items }: NamespaceHeaderProps) {
+export function NamespaceHeader({ namespace, items, scopeIcon, scopeIconColor }: NamespaceHeaderProps) {
   const accent = getAccent(namespace);
   const tint = getTint(namespace);
 
@@ -23,7 +25,7 @@ export function NamespaceHeader({ namespace, items }: NamespaceHeaderProps) {
 
   return (
     <header className={styles.header}>
-      <span className={styles.dot} style={{ background: accent }} />
+      <HeaderIcon scopeIcon={scopeIcon} scopeIconColor={scopeIconColor} namespace={namespace} accent={accent} />
       <span className={styles.name}>{namespace}</span>
       <span className={styles.count}>
         {readyCount}/{items.length}
@@ -37,4 +39,35 @@ export function NamespaceHeader({ namespace, items }: NamespaceHeaderProps) {
       <div className={styles.divider} />
     </header>
   );
+}
+
+function HeaderIcon({
+  scopeIcon,
+  scopeIconColor,
+  namespace,
+  accent,
+}: {
+  scopeIcon?: string;
+  scopeIconColor?: string;
+  namespace: string;
+  accent: string;
+}) {
+  if (scopeIcon) {
+    return (
+      <div className={styles.scopeIconBadge} style={{ background: scopeIconColor || accent }}>
+        <img src={scopeIcon} className={styles.scopeIconImg} alt="" />
+      </div>
+    );
+  }
+
+  if (scopeIconColor) {
+    const initial = namespace.split(/[./]/).pop()?.charAt(0).toUpperCase() || '?';
+    return (
+      <div className={styles.scopeIconBadge} style={{ background: scopeIconColor }}>
+        <span className={styles.scopeInitial}>{initial}</span>
+      </div>
+    );
+  }
+
+  return <span className={styles.dot} style={{ background: accent }} />;
 }

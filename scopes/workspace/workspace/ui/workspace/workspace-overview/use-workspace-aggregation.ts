@@ -58,11 +58,17 @@ export function useWorkspaceAggregation(
 
   const sortedScopes = [...map.keys()].sort();
 
-  const groups: AggregationGroup[] = sortedScopes.map((sc) => ({
-    name: sc,
-    displayName: sc,
-    items: sortItemsByNamespace(map.get(sc)!),
-  }));
+  const groups: AggregationGroup[] = sortedScopes.map((sc) => {
+    const groupItems = map.get(sc)!;
+    const sampleScope = groupItems.find((i) => i.scope?.icon)?.scope;
+    return {
+      name: sc,
+      displayName: sc,
+      items: sortItemsByNamespace(groupItems),
+      scopeIcon: sampleScope?.icon,
+      scopeIconColor: sampleScope?.backgroundIconColor,
+    };
+  });
 
   return {
     groups,
