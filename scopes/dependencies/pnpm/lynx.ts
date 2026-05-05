@@ -50,21 +50,17 @@ const UNTRUSTED_PACKAGE_NAMES = ['es5-ext', 'less', 'protobufjs', 'ssh', 'core-j
 const installsRunning: Record<string, Promise<any>> = {};
 const cafsLocker = new Map<string, number>();
 
-/**
- * Convert a flat rawConfig-style auth dict (keys like `//registry/:_authToken`, `_auth`, etc.)
- * into the `configByUri: Record<string, RegistryConfig>` structure that pnpm v11 APIs expect.
- */
+// Reshape a flat rawConfig-style auth dict (keys like `//registry/:_authToken`, `_auth`, ...)
+// into the `configByUri` structure that pnpm v11 APIs expect.
 function authConfigToConfigByUri(authConfig: Record<string, any>, defaultRegistry?: string): Record<string, any> {
   const configByUri: Record<string, any> = {};
   const defaultCreds: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(authConfig)) {
     if (value == null) continue;
-    // Default-registry creds (no `:` prefix): _auth, _authToken, _password, username, tokenHelper
     if (key === '_auth' || key === '_authToken' || key === '_password' || key === 'username' || key === 'tokenHelper') {
       defaultCreds[key] = value;
       continue;
     }
-    // Per-registry keys end with ':<credsField>' or ':<sslField>' or ':<sslField>file'
     const credMatch = key.match(/^(.+):(_auth|_authToken|_password|username|tokenHelper)$/);
     if (credMatch) {
       const [, uri, field] = credMatch;
@@ -84,7 +80,6 @@ function authConfigToConfigByUri(authConfig: Record<string, any>, defaultRegistr
       configByUri[uri].tls[field] = value;
     }
   }
-  // Build default creds entry keyed by default registry
   if (defaultRegistry && Object.keys(defaultCreds).length > 0) {
     configByUri[''] ??= {};
     configByUri[''].creds ??= {};
@@ -454,11 +449,8 @@ function resolveScriptPolicies({
 }: ScriptPolicyConfig): { allowBuilds: Record<string, boolean | string>; dangerouslyAllowAllBuilds?: boolean } {
   const allowBuilds: Record<string, boolean | string> = {};
   if (dangerouslyAllowAllScripts) {
-    // pnpm v11's createAllowBuildFunction short-circuits on dangerouslyAllowAllBuilds
-    // and ignores allowBuilds entries. To keep the "allow everything except these"
-    // pattern working, only set dangerouslyAllowAllBuilds when no deny list is given;
-    // otherwise emit allowBuilds with just the deny entries (leaving other packages
-    // to default pnpm v11 behavior).
+    // pnpm v11's createAllowBuildFunction ignores allowBuilds when dangerouslyAllowAllBuilds is
+    // set, so emit allowBuilds with just the deny entries whenever a deny list exists.
     if (!neverBuiltDependencies?.length) {
       allowBuilds['core-js'] = false;
       return { dangerouslyAllowAllBuilds: true, allowBuilds };

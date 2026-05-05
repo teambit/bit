@@ -323,13 +323,10 @@ export class DependencyLinker {
     }
 
     if (mainAspectPath) {
-      // best-effort link of @teambit/legacy for external repos still importing it; the repo
-      // itself no longer references @teambit/legacy, so failure to resolve it must not abort linking.
+      // best-effort: kept only for external repos still importing @teambit/legacy.
       try {
         result.teambitLegacyLink = this.linkNonAspectCorePackages(rootDir, 'legacy', mainAspectPath);
-      } catch {
-        // ignored
-      }
+      } catch {} // eslint-disable-line no-empty
       result.harmonyLink = this.linkNonAspectCorePackages(rootDir, 'harmony', mainAspectPath);
     }
     return result;

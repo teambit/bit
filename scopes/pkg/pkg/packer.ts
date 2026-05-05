@@ -132,10 +132,6 @@ export class Packer {
         warnings.push(`"package.json at ${cwd}" contain a snap version which is not a valid semver, can't pack it`);
         return { warnings, startTime, endTime: Date.now() };
       }
-      // @pnpm/releasing.commands is ESM-only in pnpm v11. The dynamic import lives
-      // in a sibling .cjs file so Babel's modules-commonjs transform doesn't rewrite
-      // it to require() during aspect compilation.
-      // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
       const { loadPack } = require('./load-pnpm-pack.cjs') as { loadPack: () => Promise<any> };
       const pack = await loadPack();
       const { tarballPath: tgzName } = await pack.api({
