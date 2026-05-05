@@ -56,7 +56,7 @@
         "@pnpm/cli.default-reporter": "1100.0.8",
         "@pnpm/colorize-semver-diff": "1.0.1",
         "@pnpm/config.parse-overrides": "1100.0.1",
-        "@pnpm/config.reader": "1101.1.4",
+        "@pnpm/config.reader": "1101.2.0",
         "@pnpm/deps.inspection.list": "1100.0.5",
         "@pnpm/deps.inspection.tree-builder": "1100.0.4",
         "@pnpm/deps.path": "1100.0.2",

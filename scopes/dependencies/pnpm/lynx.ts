@@ -28,6 +28,7 @@ import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
 import type { MutatedProject, InstallOptions, PeerDependencyIssuesByProjects, ProjectOptions } from '@pnpm/installing.deps-installer';
 import { mutateModules } from '@pnpm/installing.deps-installer';
 import * as pnpm from '@pnpm/installing.deps-installer';
+import { getDefaultCreds, getNetworkConfigs } from '@pnpm/config.reader';
 import type { ClientOptions } from '@pnpm/installing.client';
 import { createResolver } from '@pnpm/installing.client';
 import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
@@ -50,51 +51,11 @@ const UNTRUSTED_PACKAGE_NAMES = ['es5-ext', 'less', 'protobufjs', 'ssh', 'core-j
 const installsRunning: Record<string, Promise<any>> = {};
 const cafsLocker = new Map<string, number>();
 
-// Reshape a flat rawConfig-style auth dict (keys like `//registry/:_authToken`, `_auth`, ...)
-// into the `configByUri` structure that pnpm v11 APIs expect.
-function authConfigToConfigByUri(authConfig: Record<string, any>, defaultRegistry?: string): Record<string, any> {
-  const configByUri: Record<string, any> = {};
-  const defaultCreds: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(authConfig)) {
-    if (value == null) continue;
-    if (key === '_auth' || key === '_authToken' || key === '_password' || key === 'username' || key === 'tokenHelper') {
-      defaultCreds[key] = value;
-      continue;
-    }
-    const credMatch = key.match(/^(.+):(_auth|_authToken|_password|username|tokenHelper)$/);
-    if (credMatch) {
-      const [, uri, field] = credMatch;
-      configByUri[uri] ??= {};
-      configByUri[uri].creds ??= {};
-      if (field === '_authToken') configByUri[uri].creds.authToken = value;
-      else if (field === '_auth') configByUri[uri].creds.basicAuth = decodeBasicAuth(value);
-      else if (field === 'tokenHelper') configByUri[uri].creds.tokenHelper = value;
-      else configByUri[uri].creds[field] = value;
-      continue;
-    }
-    const sslMatch = key.match(/^(.+):(cert|key|ca)(file)?$/);
-    if (sslMatch) {
-      const [, uri, field] = sslMatch;
-      configByUri[uri] ??= {};
-      configByUri[uri].tls ??= {};
-      configByUri[uri].tls[field] = value;
-    }
-  }
-  if (defaultRegistry && Object.keys(defaultCreds).length > 0) {
-    configByUri[''] ??= {};
-    configByUri[''].creds ??= {};
-    if (defaultCreds._authToken != null) configByUri[''].creds.authToken = defaultCreds._authToken;
-    if (defaultCreds._auth != null) configByUri[''].creds.basicAuth = decodeBasicAuth(defaultCreds._auth as string);
-    if (defaultCreds.tokenHelper != null) configByUri[''].creds.tokenHelper = defaultCreds.tokenHelper;
-  }
-  return configByUri;
-}
-
-function decodeBasicAuth(b64: string): { username: string; password: string } {
-  const decoded = Buffer.from(b64, 'base64').toString('utf8');
-  const idx = decoded.indexOf(':');
-  if (idx < 0) return { username: decoded, password: '' };
-  return { username: decoded.slice(0, idx), password: decoded.slice(idx + 1) };
+function buildConfigByUri(authConfig: Record<string, unknown>): Record<string, any> {
+  const { configByUri } = getNetworkConfigs(authConfig);
+  const defaultCreds = getDefaultCreds(authConfig);
+  if (!defaultCreds) return configByUri ?? {};
+  return { ...configByUri, '': { creds: defaultCreds } };
 }
 
 async function createStoreController(
@@ -113,7 +74,7 @@ async function createStoreController(
     cacheDir: options.cacheDir,
     cafsLocker,
     storeDir: options.storeDir,
-    configByUri: authConfigToConfigByUri(authConfig, options.registries.defaultRegistry.uri),
+    configByUri: buildConfigByUri(authConfig),
     verifyStoreIntegrity: true,
     httpProxy: options.proxyConfig?.httpProxy,
     httpsProxy: options.proxyConfig?.httpsProxy,
@@ -162,7 +123,7 @@ export async function generateResolverAndFetcher({
   networkConfig ??= {};
   const mergedAuthConfig = Object.assign({}, pnpmConfig.config.authConfig, authConfig);
   const opts: Omit<ClientOptions, 'storeIndex'> = {
-    configByUri: authConfigToConfigByUri(mergedAuthConfig, registries.defaultRegistry.uri),
+    configByUri: buildConfigByUri(mergedAuthConfig),
     cacheDir,
     httpProxy: proxyConfig?.httpProxy,
     httpsProxy: proxyConfig?.httpsProxy,
