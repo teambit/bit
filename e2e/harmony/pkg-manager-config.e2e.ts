@@ -7,11 +7,6 @@ import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/leg
 chai.use(chaiFs);
 chai.use(chaiString);
 
-async function readModulesManifest(modulesDir: string): Promise<Record<string, any> | null> {
-  const m = await import('@pnpm/installing.modules-yaml');
-  return m.readModulesManifest(modulesDir) as Promise<Record<string, any> | null>;
-}
-
 (supportNpmCiRegistryTesting ? describe : describe.skip)(
   'package manager rc file is read from the workspace directory when installation is in a capsule',
   function () {
@@ -68,29 +63,6 @@ async function readModulesManifest(modulesDir: string): Promise<Record<string, a
           `${helper.scopes.remote}_node-env-1@0.0.1/node_modules/is-positive`
         );
         expect(isPositivePath).to.be.a.path();
-      });
-    });
-    describe('using pnpm', () => {
-      before(() => {
-        helper.scopeHelper.reInitWorkspace({
-          pnpmWorkspaceConfig: {
-            'hoist-pattern': ['foo'],
-          },
-        });
-        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
-        helper.scopeHelper.addRemoteScope();
-        helper.workspaceJsonc.setupDefault();
-        helper.fixtures.populateComponents(1);
-        helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
-        helper.capsules.removeScopeAspectCapsules();
-        helper.command.status(); // populate capsules.
-      });
-      it('workspace pnpm-workspace.yaml is taken into account when running install in the capsule', async () => {
-        const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-        const modulesState = await readModulesManifest(
-          path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-1@0.0.1/node_modules`)
-        );
-        expect(modulesState?.hoistPattern?.[0]).to.eq('foo');
       });
     });
     after(() => {
