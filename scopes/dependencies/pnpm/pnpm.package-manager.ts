@@ -34,7 +34,11 @@ import {
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
 import { ServerSendOutStream } from '@teambit/legacy.logger';
 import { join } from 'path';
-import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
+import {
+  convertLockfileToGraph,
+  convertGraphToLockfile,
+  init as initLockfileDepsGraphConverter,
+} from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
@@ -86,6 +90,7 @@ export class PnpmPackageManager implements PackageManager {
       networkConfig?: PackageManagerNetworkConfig;
     }
   ) {
+    await initLockfileDepsGraphConverter();
     const registries = opts.registries ?? new Registries(new Registry('https://node-registry.bit.cloud', false), {});
     const { resolve } = await generateResolverAndFetcher({
       ...opts,
@@ -433,6 +438,7 @@ export class PnpmPackageManager implements PackageManager {
    * Calculating the dependencies graph of a given component using the lockfile.
    */
   async calcDependenciesGraph(opts: CalcDepsGraphOptions): Promise<void> {
+    await initLockfileDepsGraphConverter();
     const originalLockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: false });
     if (!originalLockfile) {
       return;
