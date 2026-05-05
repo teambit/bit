@@ -397,6 +397,7 @@
         "@types/lodash.flatten": "4.4.6",
         "@types/lodash.head": "4.0.6",
         "@types/mdx-js__react": "1.5.5",
+        "@types/jest": "29.5.14",
         "@types/memoizee": "0.4.5",
         "@types/mime": "2.0.3",
         "@types/mini-css-extract-plugin": "2.2.0",
@@ -642,7 +643,7 @@
         "tippy.js": "6.2.7",
         "ts-graphviz": "^2.1.6",
         "type-coverage": "2.15.1",
-        "typescript": "5.9.2",
+        "typescript": "6.0.3",
         "ua-parser-js": "0.7.40",
         "uid-number": "0.0.6",
         "uniqid": "5.3.0",
@@ -834,7 +835,7 @@
             "buffer": "6.0.3",
             "process": "0.11.10",
             "react-router-dom": "6.3.0",
-            "typescript": "5.9.2",
+            "typescript": "6.0.3",
             // @parcel/css, lightningcss, @swc/css are used by css-minimizer-webpack-plugin
             // see this issue https://github.com/webpack-contrib/css-minimizer-webpack-plugin/issues/244
             "@parcel/css": "^1.8.3",
