@@ -22,6 +22,7 @@ type SetupWorkspaceOpts = {
   generatePackageJson?: boolean;
   yarnRCConfig?: any;
   npmrcConfig?: any;
+  pnpmWorkspaceConfig?: any;
   interactive?: boolean; // default to false. relevant only when ".git" exits.
 };
 
@@ -92,6 +93,9 @@ export default class ScopeHelper {
         this._writeNpmrc(opts.npmrcConfig);
       }
     }
+    if (opts?.pnpmWorkspaceConfig) {
+      this._writePnpmWorkspace(opts.pnpmWorkspaceConfig);
+    }
   }
   private _writeYarnRC(yarnRCConfig: any) {
     this.fsHelper.writeFile('.yarnrc.yml', yaml.stringify(yarnRCConfig));
@@ -99,6 +103,10 @@ export default class ScopeHelper {
 
   private _writeNpmrc(config: any) {
     this.fsHelper.writeFile('.npmrc', ini.stringify(config));
+  }
+
+  private _writePnpmWorkspace(config: any) {
+    this.fsHelper.writeFile('pnpm-workspace.yaml', yaml.stringify(config));
   }
 
   setWorkspaceWithRemoteScope(opts?: SetupWorkspaceOpts) {
