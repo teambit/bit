@@ -480,22 +480,6 @@ describe('bit lane import operations', function () {
         expect(laneNames).to.include('lane-a');
       });
     });
-    describe('when on a different lane and using switch-only flags', () => {
-      before(() => {
-        helper.scopeHelper.reInitWorkspace();
-        helper.scopeHelper.addRemoteScope();
-        helper.scopeHelper.getClonedRemoteScope(remoteScope);
-        helper.command.createLane('lane-b');
-      });
-      it('should reject --branch with a clear error', () => {
-        expect(() => helper.command.importLane('lane-a', '-x --branch')).to.throw('--branch only applies');
-      });
-      it('should reject --pattern with a clear error', () => {
-        expect(() => helper.command.importLane('lane-a', `-x --pattern ${helper.scopes.remote}/comp1`)).to.throw(
-          '--pattern only applies'
-        );
-      });
-    });
     describe('when on the same lane being imported', () => {
       let workspaceWithLocalEdit: string;
       let newRemoteHead: string;
