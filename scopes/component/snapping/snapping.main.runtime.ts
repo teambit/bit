@@ -771,7 +771,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
         // bound concurrency — each task does scope reads, head population and a diverge-data
         // computation, which can spike I/O on large lanes. Match the convention used elsewhere
         // (e.g., merging.getMergeStatus) of `concurrentComponentsLimit()`.
-        const anyHasLocalHashes = await pMap(
+        const hasLocalHashesByEntry = await pMap(
           hiddenEntries,
           async (entry) => {
             const mc = await this.scope.legacyScope.getModelComponentIfExist(entry.id);
@@ -787,7 +787,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
           },
           { concurrency: concurrentComponentsLimit() }
         );
-        if (!anyHasLocalHashes.some(Boolean)) {
+        if (!hasLocalHashesByEntry.some(Boolean)) {
           currentLane.setOverrideUpdateDependents(false);
           await consumer.scope.lanes.saveLane(currentLane, { saveLaneHistory: false });
         }

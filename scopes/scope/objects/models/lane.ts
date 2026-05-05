@@ -96,11 +96,10 @@ export default class Lane extends BitObject {
     });
     const nextHiddenSorted = [...nextHidden].sort();
     if (isEqual(currentHidden, nextHiddenSorted)) return;
-    // drop every existing hidden entry, then add the replacement set. Preserves array-identity
-    // semantics callers expect from `lane.updateDependents = lane.updateDependents` reassignment.
-    // Also drop any *visible* entry whose id collides with an incoming hidden id — this handles
-    // a remote-merge bucket flip (visible → hidden) without leaving two entries for the same
-    // component, which would violate the no-duplicates invariant in `Lane.validate()`.
+    // drop every existing hidden entry, then add the replacement set. Also drop any *visible*
+    // entry whose id collides with an incoming hidden id — this handles a remote-merge bucket
+    // flip (visible → hidden) without leaving two entries for the same component, which would
+    // violate the no-duplicates invariant in `Lane.validate()`.
     const nextIdsWithoutVersion = new Set((next || []).map((id) => id.toStringWithoutVersion()));
     this.components = this.components.filter(
       (c) => !c.skipWorkspace && !nextIdsWithoutVersion.has(c.id.toStringWithoutVersion())
