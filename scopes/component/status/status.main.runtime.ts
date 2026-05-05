@@ -102,18 +102,18 @@ export class StatusMain {
       loadOpts
     )) as ConsumerComponent[];
     const modifiedComponents = await this.workspace.modified(loadOpts);
-    const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
+    // `listExportPendingComponents` returns every locally-changed pending-export entry, including
+    // hidden lane updateDependents (`skipWorkspace: true`). Status splits them into two views:
+    // visible → "staged components" (workspace-tracked); hidden → "pending update-dependents"
+    // (mirrors `bit export`'s "exported updates" section). Hidden entries don't have a .bitmap
+    // counterpart, so they shouldn't surface as if they were workspace components.
+    const allPendingForExport: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
+    const isHidden = (mc: ModelComponent) => Boolean(laneObj?.getComponent(mc.toComponentId())?.skipWorkspace);
+    const stagedComponents: ModelComponent[] = allPendingForExport.filter((mc) => !isHidden(mc));
+    const pendingUpdateDependents: ComponentID[] = allPendingForExport
+      .filter((mc) => isHidden(mc))
+      .map((mc) => mc.toComponentId());
     await this.addRemovedStagedIfNeeded(stagedComponents);
-    // Hidden lane updateDependents pending export — same locally-changed predicate as
-    // `stagedComponents`, but for entries marked `skipWorkspace: true`. They never flow through
-    // the staged-components view (no .bitmap entry), so `bit status` was silently dropping them
-    // even though `bit export` surfaces them under "exported updates".
-    const allPendingForExportIds = laneObj
-      ? await componentsList.listExportPendingComponentsIds(laneObj, { includeHiddenLaneEntries: true })
-      : [];
-    const pendingUpdateDependents = laneObj
-      ? allPendingForExportIds.filter((id) => laneObj.getComponent(id)?.skipWorkspace)
-      : [];
     const stagedComponentsWithVersions = await pMapSeries(stagedComponents, async (stagedComp) => {
       const id = stagedComp.toComponentId();
       const fromWorkspace = this.workspace.getIdIfExist(id);

@@ -772,7 +772,7 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
     const componentsList = new ComponentsList(this.workspace);
     const componentsToExportWithoutRemoved = includeNonStaged
       ? await componentsList.listNonNewComponentsIds()
-      : await componentsList.listExportPendingComponentsIds(laneObject, { includeHiddenLaneEntries: true });
+      : await componentsList.listExportPendingComponentsIds(laneObject);
     const removedStagedBitIds = await this.getRemovedStagedBitIds();
     const componentsToExport = ComponentIdList.uniqFromArray([
       ...componentsToExportWithoutRemoved,
