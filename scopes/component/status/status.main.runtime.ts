@@ -57,6 +57,10 @@ export type StatusResult = {
   forkedLaneId?: LaneId;
   workspaceIssues: string[];
   localOnly: ComponentID[];
+  // hidden lane updateDependents (`skipWorkspace: true`) that have local snaps pending export.
+  // Cascade snaps from a workspace `bit snap` and bare-scope `_snap --update-dependents` land
+  // here. They mirror what `bit export` surfaces under the "exported updates" section.
+  pendingUpdateDependents: ComponentID[];
 };
 
 export type MiniStatusResults = {
@@ -101,6 +105,16 @@ export class StatusMain {
     const modifiedComponents = await this.workspace.modified(loadOpts);
     const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
     await this.addRemovedStagedIfNeeded(stagedComponents);
+    // Hidden lane updateDependents pending export — same locally-changed predicate as
+    // `stagedComponents`, but for entries marked `skipWorkspace: true`. They never flow through
+    // the staged-components view (no .bitmap entry), so `bit status` was silently dropping them
+    // even though `bit export` surfaces them under "exported updates".
+    const allPendingForExportIds = laneObj
+      ? await componentsList.listExportPendingComponentsIds(laneObj, { includeHiddenLaneEntries: true })
+      : [];
+    const pendingUpdateDependents = laneObj
+      ? allPendingForExportIds.filter((id) => laneObj.getComponent(id)?.skipWorkspace)
+      : [];
     const stagedComponentsWithVersions = await pMapSeries(stagedComponents, async (stagedComp) => {
       const id = stagedComp.toComponentId();
       const fromWorkspace = this.workspace.getIdIfExist(id);
@@ -178,6 +192,7 @@ export class StatusMain {
       forkedLaneId,
       workspaceIssues: workspaceIssues.map((err) => err.message),
       localOnly,
+      pendingUpdateDependents: ComponentID.sortIds(pendingUpdateDependents),
     };
   }
 

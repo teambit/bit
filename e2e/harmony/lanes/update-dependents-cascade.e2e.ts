@@ -664,6 +664,16 @@ describe('local snap cascades updateDependents on the lane', function () {
       expect(stagedNames).to.not.include('comp1');
       expect(stagedNames).to.not.include('comp2');
     });
+
+    it('bit status should surface the locally-cascaded comp2 under pendingUpdateDependents', () => {
+      // After `reset --head`, the lane still has the FIRST-snap cascade entry for comp2 (locally
+      // pending export). It must show up in the dedicated `pendingUpdateDependents` field — the
+      // same set `bit export` later prints under "exported updates".
+      const status = helper.command.statusJson();
+      const pending = (status.pendingUpdateDependents || []) as string[];
+      const comp2InPending = pending.find((id) => id.split('/').pop() === 'comp2');
+      expect(comp2InPending, 'comp2 must appear in pendingUpdateDependents').to.exist;
+    });
   });
 
   // ---------------------------------------------------------------------------------------------
