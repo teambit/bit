@@ -175,12 +175,11 @@ export class VersionMaker {
       );
       // explicit signal to addVersion. Order matters — auto-tag cascade results check the
       // existing entry's bucket BEFORE applying the caller-level `updateDependentsOnLane` flag,
-      // so a bare-scope `_snap --update-dependents` (scenario 4) that auto-tags a *visible*
-      // lane.components dependent (comp1 in the test) doesn't accidentally move it into the
-      // hidden bucket.
-      //  - explicit target of `_snap --update-dependents` → hidden (caller flag)
+      // so a bare-scope reverse cascade that auto-tags a *visible* lane.components dependent
+      // doesn't accidentally move it into the hidden bucket.
+      //  - explicit target of `snapFromScope({ updateDependents: true })` → hidden (caller flag)
       //  - hidden cascade snap (auto-tagged) → keep hidden, raise override flag
-      //  - workspace component (in bitmap) → promote to visible (scenario 6)
+      //  - workspace component (in bitmap) → promote to visible (the promote-on-import path)
       //  - auto-tagged visible lane component → keep visible
       const isExplicitTarget = this.ids.searchWithoutVersion(component.id) !== undefined;
       const addToUpdateDependentsInLane = (updateDependentsOnLane && isExplicitTarget) || isHiddenLaneEntry;
@@ -462,11 +461,11 @@ export class VersionMaker {
     const laneCompIds = ComponentIdList.fromArray(
       candidateLaneEntries.map((c) => c.id.changeVersion(c.head.toString()))
     );
-    // include `idsToTag` in the graph too. For bare-scope `_snap --update-dependents` (scenario
-    // 4), the targeted hidden entry is being NEWLY introduced to the lane and isn't in
-    // candidateLaneEntries yet — without seeding it into the graph, predecessors lookup wouldn't
-    // surface lane.components that depend on it, and the reverse cascade (re-snap visible
-    // dependents) wouldn't fire.
+    // include `idsToTag` in the graph too. For the bare-scope reverse cascade
+    // (`snapFromScope({ updateDependents: true })`), the targeted hidden entry is being NEWLY
+    // introduced to the lane and isn't in candidateLaneEntries yet — without seeding it into
+    // the graph, predecessors lookup wouldn't surface lane.components that depend on it, and
+    // the reverse cascade (re-snap visible dependents) wouldn't fire.
     const graphSeedIds = ComponentIdList.uniqFromArray([...laneCompIds, ...idsToTag]);
     const graphIds = await this.scope.getGraphIds(graphSeedIds);
     const dependentsMap = idsToTag.reduce(

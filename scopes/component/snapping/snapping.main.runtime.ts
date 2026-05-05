@@ -545,9 +545,10 @@ export class SnappingMain {
     let exportedIds: ComponentIdList | undefined;
     if (params.push) {
       const updatedLane = lane ? await this.scope.legacyScope.loadLane(lane.toLaneId()) : undefined;
-      // include auto-tagged ids in the export set. For `_snap --update-dependents` (scenario 4),
-      // `getLaneAutoTagIdsFromScope` re-snaps lane.components that depend on the new hidden
-      // entry, and those new snaps must be pushed alongside the explicit target.
+      // include auto-tagged ids in the export set. For the bare-scope reverse cascade
+      // (`snapFromScope({ updateDependents: true })`), `getLaneAutoTagIdsFromScope` re-snaps
+      // lane.components that depend on the new hidden entry, and those new snaps must be pushed
+      // alongside the explicit target.
       const autoTaggedIds = (results.autoTaggedResults || []).map((r) => r.component.id);
       const idsToExport = ComponentIdList.uniqFromArray([...ids, ...autoTaggedIds]);
       const { exported } = await this.exporter.pushToScopes({

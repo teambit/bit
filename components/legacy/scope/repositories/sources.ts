@@ -748,10 +748,9 @@ possible causes:
       existingLane.setSchemaToNotSupportDeletedData();
     }
     // hidden (skipWorkspace) entries are merged here via the legacy `updateDependents`-shaped
-    // override/wire path. New flows that produce hidden entries (workspace cascade-on-snap, the
-    // bare-scope `_snap --update-dependents`) set `overrideUpdateDependents=true` to claim the
-    // local list as authoritative; we honor it on export and protect it from being clobbered on
-    // import.
+    // override/wire path. Flows that produce hidden entries (workspace cascade-on-snap and the
+    // bare-scope cascade producer) set `overrideUpdateDependents=true` to claim the local list
+    // as authoritative; we honor it on export and protect it from being clobbered on import.
     if (isImport && existingLane && !existingLane.shouldOverrideUpdateDependents()) {
       existingLane.updateDependents = lane.updateDependents;
     }

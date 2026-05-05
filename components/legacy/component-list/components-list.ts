@@ -177,8 +177,9 @@ export class ComponentsList {
       if (!foundInBitMap) {
         // it's not on the .bitmap only in the scope. Two cases land here:
         //  - out-of-sync: a workspace component that lost its bitmap entry but still has scope data
-        //  - hidden lane entry: a `skipWorkspace: true` lane component (cascade-on-snap, bare-scope
-        //    `_snap --update-dependents`) that exists only in scope+lane, never the workspace
+        //  - hidden lane entry: a `skipWorkspace: true` entry on the current lane (produced by
+        //    cascade-on-snap or fetched from a remote that ran the bare-scope cascade producer);
+        //    these never enter the workspace bitmap by design
         const laneEntry = lane?.getComponent(component.toComponentId());
         if (laneEntry?.skipWorkspace) {
           if (!includeHiddenLaneEntries) return false;

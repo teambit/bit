@@ -58,8 +58,7 @@ export type StatusResult = {
   workspaceIssues: string[];
   localOnly: ComponentID[];
   // hidden lane updateDependents (`skipWorkspace: true`) that have local snaps pending export.
-  // Cascade snaps from a workspace `bit snap` and bare-scope `_snap --update-dependents` land
-  // here. They mirror what `bit export` surfaces under the "exported updates" section.
+  // Mirror what `bit export` surfaces under the "exported updates" section.
   pendingUpdateDependents: ComponentID[];
 };
 

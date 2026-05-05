@@ -294,8 +294,10 @@ export default class Lane extends BitObject {
   }
   /**
    * !!! important !!!
-   * this should get called only on a "temp lane", such as running "bit _snap", which the scope gets destroys after the
-   * command is done. when _scope exports the lane, this "overrideUpdateDependents" is not saved to the remote-scope.
+   * this should get called only on a "temp lane" — for example a bare scope running the
+   * snap-from-scope cascade producer, where the scope gets destroyed after the command is done.
+   * when the scope exports the lane, this "overrideUpdateDependents" is not saved to the
+   * remote-scope.
    *
    * on a user local lane object, this prop should never be true. otherwise, it'll override the remote-scope data.
    */
