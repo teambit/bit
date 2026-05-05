@@ -10,8 +10,6 @@ const makeItem = (date: string) => ({
 describe('LaneHistory', () => {
   describe('getHistoryIds', () => {
     it('returns ids sorted by date even when insertion order is not chronological', () => {
-      // Reproduces the "local snap before importing remote history" scenario:
-      // a newer entry is inserted first, then older entries are merged in.
       const laneHistory = LaneHistory.parse(
         JSON.stringify({
           name: 'tmp4',

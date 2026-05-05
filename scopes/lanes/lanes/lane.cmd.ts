@@ -455,15 +455,14 @@ export class LaneHistoryCmd implements Command {
     await this.lanes.importLaneHistory(laneId);
     const laneHistory = await this.lanes.getLaneHistory(laneId);
     const history = laneHistory.getHistory();
-    const sortedIds = laneHistory.getHistoryIds();
 
     if (id) {
       const historyItem = history[id];
       if (!historyItem) throw new Error(`history id ${id} was not found`);
-      return { historyItem, id, history, sortedIds, singleItem: true };
+      return { historyItem, id, history, singleItem: true as const };
     }
 
-    return { history, sortedIds, singleItem: false };
+    return { history, sortedIds: laneHistory.getHistoryIds(), singleItem: false as const };
   }
 
   private getDateString(date: string) {
@@ -471,14 +470,16 @@ export class LaneHistoryCmd implements Command {
   }
 
   async report([laneName]: [string], { id }: { id?: string }): Promise<string> {
-    const { history, historyItem, sortedIds, singleItem } = await this.getHistoryData(laneName, id);
+    const data = await this.getHistoryData(laneName, id);
 
-    if (singleItem && historyItem) {
+    if (data.singleItem) {
+      const { historyItem } = data;
       const date = this.getDateString(historyItem.log.date);
       const message = historyItem.log.message;
       return `${id} ${date} ${historyItem.log.username} ${message}\n\n${historyItem.components.join('\n')}`;
     }
 
+    const { history, sortedIds } = data;
     const items = sortedIds.map((uuid) => {
       const item = history[uuid];
       const date = this.getDateString(item.log.date);
@@ -489,9 +490,10 @@ export class LaneHistoryCmd implements Command {
   }
 
   async json([laneName]: [string], { id }: { id?: string }) {
-    const { history, historyItem, id: historyId, sortedIds, singleItem } = await this.getHistoryData(laneName, id);
+    const data = await this.getHistoryData(laneName, id);
 
-    if (singleItem && historyItem) {
+    if (data.singleItem) {
+      const { historyItem, id: historyId } = data;
       return {
         id: historyId,
         date: historyItem.log.date,
@@ -501,6 +503,7 @@ export class LaneHistoryCmd implements Command {
       };
     }
 
+    const { history, sortedIds } = data;
     return sortedIds.map((uuid) => {
       const item = history[uuid];
       return {
