@@ -50,13 +50,15 @@ export function WorkspaceFilterPanel({
   const activeNsOptions = activeNamespaces.map((v) => ({ value: v }));
   const activeScopeOptions = activeScopes.map((v) => ({ value: v }));
 
-  const applyNs = (opts: { value?: string }[]) => {
-    const list = opts.map((o) => o.value).filter((v): v is string => typeof v === 'string');
+  const applyNs = (opts: readonly { value?: string }[] | { value?: string } | null) => {
+    const arr = Array.isArray(opts) ? opts : opts ? [opts] : [];
+    const list = arr.map((o) => o.value).filter((v): v is string => typeof v === 'string');
     onNamespacesChange(list);
   };
 
-  const applyScopes = (opts: { value?: string }[]) => {
-    const list = opts.map((o) => o.value).filter((v): v is string => typeof v === 'string');
+  const applyScopes = (opts: readonly { value?: string }[] | { value?: string } | null) => {
+    const arr = Array.isArray(opts) ? opts : opts ? [opts] : [];
+    const list = arr.map((o) => o.value).filter((v): v is string => typeof v === 'string');
     onScopesChange(list);
   };
 
