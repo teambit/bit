@@ -323,9 +323,13 @@ export class DependencyLinker {
     }
 
     if (mainAspectPath) {
-      // the following line links @teambit/legacy to the workspace node_modules. at this point, we removed all
-      // @teambit/legacy occurrences from the repo but others/external repos still have it.
-      result.teambitLegacyLink = this.linkNonAspectCorePackages(rootDir, 'legacy', mainAspectPath);
+      // best-effort link of @teambit/legacy for external repos still importing it; the repo
+      // itself no longer references @teambit/legacy, so failure to resolve it must not abort linking.
+      try {
+        result.teambitLegacyLink = this.linkNonAspectCorePackages(rootDir, 'legacy', mainAspectPath);
+      } catch {
+        // ignored
+      }
       result.harmonyLink = this.linkNonAspectCorePackages(rootDir, 'harmony', mainAspectPath);
     }
     return result;
