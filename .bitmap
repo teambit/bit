@@ -26,7 +26,7 @@
     "api-server": {
         "name": "api-server",
         "scope": "teambit.harmony",
-        "version": "1.0.996",
+        "version": "1.0.998",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/api-server"
     },
@@ -215,7 +215,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "1.13.165",
+        "version": "1.13.168",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -271,7 +271,7 @@
     "ci": {
         "name": "ci",
         "scope": "teambit.git",
-        "version": "1.0.352",
+        "version": "1.0.353",
         "mainFile": "index.ts",
         "rootDir": "scopes/git/ci"
     },
@@ -292,7 +292,7 @@
     "cli-mcp-server": {
         "name": "cli-mcp-server",
         "scope": "teambit.mcp",
-        "version": "0.0.169",
+        "version": "0.0.170",
         "mainFile": "index.ts",
         "rootDir": "scopes/mcp/cli-mcp-server"
     },
@@ -495,7 +495,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.1025",
+        "version": "2.0.1028",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
