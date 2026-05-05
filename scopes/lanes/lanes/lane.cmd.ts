@@ -733,8 +733,10 @@ when on a different lane, the lane is fetched locally without switching to avoid
 
     if (currentLaneId.isEqual(targetLaneId)) {
       return joinSections([
-        formatSuccessSummary(`fetched the latest objects of lane "${chalk.bold(targetLaneId.toString())}"`),
-        formatHint(`already on this lane. to update the workspace to the latest, run "bit checkout head"`),
+        formatSuccessSummary(
+          `you are already on lane "${chalk.bold(targetLaneId.toString())}". the lane has been fetched from the remote, but your workspace files were ${chalk.bold('not')} updated.`
+        ),
+        `${chalk.yellow('to update your workspace files to the latest')}, run "${chalk.bold('bit checkout head')}".`,
       ]);
     }
 

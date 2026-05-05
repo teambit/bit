@@ -519,7 +519,12 @@ describe('bit lane import operations', function () {
           const headOnLocalLane = helper.command.getHeadOfLane('lane-a', 'comp1');
           expect(headOnLocalLane).to.equal(newRemoteHead);
         });
-        it('should print a hint suggesting "bit checkout head" to update the workspace', () => {
+        it('should make it clear the user is already on the lane and the workspace was not updated', () => {
+          expect(output).to.have.string('already on lane');
+          expect(output).to.have.string('not');
+          expect(output).to.have.string('updated');
+        });
+        it('should prominently tell the user to run "bit checkout head" to update the workspace', () => {
           expect(output).to.have.string('bit checkout head');
         });
       });
