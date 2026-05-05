@@ -708,8 +708,7 @@
       // https://github.com/garycourt/uri-js/pull/95
       // https://github.com/garycourt/uri-js/issues/97
       "uri-js": "npm:uri-js-replace",
-      "encoding": "-",
-      "@babel/register": "^7.28.0"
+      "encoding": "-"
     },
     "nodeVersion": "22.22.0",
     "engineStrict": true,
