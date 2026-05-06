@@ -4269,8 +4269,8 @@
             "do not merge, just overwrite with incoming files"
           ]
         ],
-        "description": "import a remote lane to your workspace and switch to that lane",
-        "extendedDescription": "",
+        "description": "import a remote lane to your workspace",
+        "extendedDescription": "when on the default lane, the workspace is switched to the imported lane.\nwhen already on the same lane, only the latest objects are fetched from the remote — run \"bit checkout head\" to update the workspace.\nwhen on a different lane, the lane is fetched locally without switching to avoid disrupting your work — run `bit switch <lane>` to switch.",
         "group": "ungrouped",
         "private": false,
         "arguments": [
