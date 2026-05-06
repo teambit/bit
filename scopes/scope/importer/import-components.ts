@@ -549,7 +549,12 @@ if you just want to get a quick look into this snap, create a new workspace and 
     if (!this.options.lanes) {
       throw new Error(`getBitIdsForLanes: this.options.lanes must be set`);
     }
-    const remoteLaneIds = this.remoteLane?.toComponentIds() || new ComponentIdList();
+    // include hidden (skipWorkspace) entries — `importObjectsOnLane` runs with `objectsOnly=true`
+    // and is the workspace's `bit fetch --lanes` fetch path. Hidden entries' Version objects must
+    // be present locally so subsequent merge/diverge checks can resolve their lane heads.
+    // (Hidden entries don't enter the workspace bitmap regardless — the bitmap-write step is
+    // separate and filters them out by `skipWorkspace`.)
+    const remoteLaneIds = this.remoteLane?.toComponentIdsIncludeUpdateDependents() || new ComponentIdList();
 
     if (!this.options.ids.length) {
       const bitMapIds = this.consumer.bitMap.getAllBitIds();
