@@ -1,7 +1,6 @@
 /* eslint no-console: 0 */
 import { addUser, REGISTRY_MOCK_PORT, start as startRegistryMock, prepare } from '@pnpm/registry-mock';
 import type { ChildProcess } from 'child_process';
-import { fetch } from '@pnpm/fetch';
 import fs from 'fs-extra';
 import execa from 'execa';
 import * as path from 'path';
@@ -69,6 +68,7 @@ export class NpmCiRegistry {
           resolved = true;
           let fetchResults;
           try {
+            const { fetch } = await import('@pnpm/network.fetch');
             fetchResults = await fetch(`http://localhost:${REGISTRY_MOCK_PORT}/is-odd`, {
               retry: {
                 minTimeout: 1000,

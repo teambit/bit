@@ -1,7 +1,7 @@
 import getCredentialsByURI from 'credentials-by-uri';
 import type { RegistriesMap } from '@teambit/dependency-resolver';
 import { stripTrailingChar } from '@teambit/toolbox.string.strip-trailing-char';
-import type { Config } from '@pnpm/config';
+import type { Config } from '@pnpm/config.reader';
 import { isEmpty } from 'lodash';
 import toNerfDart from 'nerf-dart';
 
@@ -15,11 +15,11 @@ export function getRegistries(config: Config): RegistriesMap {
 
   Object.keys(config.registries).forEach((regName) => {
     const uri = config.registries[regName];
-    let credentials = getCredentialsByURI(config.rawConfig, uri);
-    let originalAuthConfig = getOriginalAuthConfigByUri(config.rawConfig, uri);
+    let credentials = getCredentialsByURI(config.authConfig, uri);
+    let originalAuthConfig = getOriginalAuthConfigByUri(config.authConfig, uri);
     if (isEmpty(credentials)) {
-      credentials = getCredentialsByURI(config.rawConfig, switchTrailingSlash(uri));
-      originalAuthConfig = getOriginalAuthConfigByUri(config.rawConfig, switchTrailingSlash(uri));
+      credentials = getCredentialsByURI(config.authConfig, switchTrailingSlash(uri));
+      originalAuthConfig = getOriginalAuthConfigByUri(config.authConfig, switchTrailingSlash(uri));
     }
     registriesMap[regName] = {
       uri,

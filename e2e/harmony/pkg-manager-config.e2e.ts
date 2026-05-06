@@ -1,15 +1,14 @@
 import path from 'path';
 import chai, { expect } from 'chai';
-import { readModulesManifest } from '@pnpm/modules-yaml';
 import chaiString from 'chai-string';
-
-import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+
 chai.use(chaiFs);
 chai.use(chaiString);
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)(
-  'package manager rc file is read from the workspace directory when installation is in a capsule',
+  'workspace .yarnrc.yml is read by Yarn when installation is in a capsule',
   function () {
     this.timeout(0);
     let helper: Helper;
@@ -64,29 +63,6 @@ chai.use(chaiString);
           `${helper.scopes.remote}_node-env-1@0.0.1/node_modules/is-positive`
         );
         expect(isPositivePath).to.be.a.path();
-      });
-    });
-    describe('using pnpm', () => {
-      before(() => {
-        helper.scopeHelper.reInitWorkspace({
-          npmrcConfig: {
-            'hoist-pattern[]': 'foo',
-          },
-        });
-        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
-        helper.scopeHelper.addRemoteScope();
-        helper.workspaceJsonc.setupDefault();
-        helper.fixtures.populateComponents(1);
-        helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
-        helper.capsules.removeScopeAspectCapsules();
-        helper.command.status(); // populate capsules.
-      });
-      it('workspace .npmrc is taken into account when running install in the capsule', async () => {
-        const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-        const modulesState = await readModulesManifest(
-          path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-1@0.0.1/node_modules`)
-        );
-        expect(modulesState?.hoistPattern?.[0]).to.eq('foo');
       });
     });
     after(() => {

@@ -1,9 +1,17 @@
 import path from 'path';
 import { ComponentID } from '@teambit/component';
 import { DependenciesGraph, type PackagesMap, type DependencyEdge } from '@teambit/objects';
-import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
+import {
+  convertLockfileToGraph,
+  convertGraphToLockfile,
+  init as initLockfileDepsGraphConverter,
+} from './lockfile-deps-graph-converter';
 import { type BitLockfileFile } from './lynx';
 import { expect } from 'chai';
+
+before(async () => {
+  await initLockfileDepsGraphConverter();
+});
 
 describe('convertLockfileToGraph simple case', () => {
   const lockfile: BitLockfileFile = {
@@ -108,14 +116,17 @@ describe('convertLockfileToGraph simple case', () => {
       },
     },
   };
-  const graph = convertLockfileToGraph(lockfile, {
-    pkgName: 'comp1',
-    componentRelativeDir: 'comps/comp1',
-    componentRootDir: 'node_modules/.bit_roots/env',
-    componentIdByPkgName: new Map([
-      ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
-      ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
-    ]),
+  let graph: DependenciesGraph;
+  before(() => {
+    graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([
+        ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+        ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+      ]),
+    });
   });
   const expected = {
     schemaVersion: '2.0',

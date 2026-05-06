@@ -12,6 +12,7 @@ module.exports = function (api) {
         },
         useBuiltIns: 'usage',
         corejs: 3,
+        exclude: ['@babel/plugin-transform-dynamic-import'],
       },
     ],
   ];

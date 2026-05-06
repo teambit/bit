@@ -1,8 +1,9 @@
 import path from 'path';
 import { type ProjectManifest } from '@pnpm/types';
 import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
-import { type ResolveFunction } from '@pnpm/client';
-import * as dp from '@pnpm/dependency-path';
+import { type ResolveFunction } from '@pnpm/installing.client';
+import type * as Dp from '@pnpm/deps.path';
+import type { getLockfileImporterId as GetLockfileImporterId } from '@pnpm/lockfile.fs';
 import { pick, partition } from 'lodash';
 import { BitError } from '@teambit/bit-error';
 import { snapToSemver } from '@teambit/component-package-version';
@@ -18,9 +19,28 @@ import {
   type CalcDepsGraphForComponentOptions,
   type ComponentIdByPkgName,
 } from '@teambit/dependency-resolver';
-import { getLockfileImporterId } from '@pnpm/lockfile.fs';
 import normalizePath from 'normalize-path';
 import { type BitLockfileFile } from './lynx';
+
+// @pnpm/deps.path and @pnpm/lockfile.fs are ESM-only; load them through a .cjs
+// shim so the require() chain in the build capsule's mocha runner doesn't trip
+// on the transitive ESM import. Call `init()` once before invoking the public
+// converters; helpers reach for these module-level slots synchronously.
+let dp!: typeof Dp;
+let getLockfileImporterId!: typeof GetLockfileImporterId;
+let loading: Promise<void> | undefined;
+
+export function init(): Promise<void> {
+  loading ??= (async () => {
+    const { loadEsm } = require('./load-pnpm-esm.cjs') as {
+      loadEsm: () => Promise<{ dp: typeof Dp; getLockfileImporterId: typeof GetLockfileImporterId }>;
+    };
+    const m = await loadEsm();
+    dp = m.dp;
+    getLockfileImporterId = m.getLockfileImporterId;
+  })();
+  return loading;
+}
 
 function convertLockfileToGraphFromCapsule(
   lockfile: BitLockfileFile,
@@ -336,7 +356,7 @@ export async function convertGraphToLockfile(
         );
         if ('integrity' in resolution && resolution.integrity) {
           lockfile.packages[pkgToResolve.pkgId].resolution = {
-            integrity: resolution.integrity,
+            integrity: resolution.integrity as string,
           };
         }
       }
@@ -399,7 +419,7 @@ function getPkgsToResolve(lockfile: BitLockfileFile, manifests: Record<string, P
   return pkgsToResolve;
 }
 
-function depPathToRef(depPath: dp.DependencyPath): string {
+function depPathToRef(depPath: Dp.DependencyPath): string {
   return `${depPath.version}${depPath.patchHash ?? ''}${depPath.peerDepGraphHash ?? ''}`;
 }
 

@@ -757,7 +757,6 @@ export class SchemaExtractorContext {
         identifier file path ${identifier.filePath}\nrelative dir ${relativeDir}\n
         absFilePath ${absFilePath}`
       );
-      return new TypeRefSchema(location, identifier.id);
     }
 
     const idKey = this.getIdentifierKey(compFilePath?.path);
