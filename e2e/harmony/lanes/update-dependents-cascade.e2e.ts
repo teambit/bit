@@ -879,131 +879,47 @@ describe('local snap cascades updateDependents on the lane', function () {
   });
 
   // ---------------------------------------------------------------------------------------------
-  // Scenario 16: KNOWN LEAK — `overrideUpdateDependents` persists locally after a successful
-  // `bit export`. The flag is cleared on the remote (sources.mergeLane line ~787), but the
-  // workspace's local copy stays `true` — there's no hook in the export-success path that clears
-  // it locally. The only place that clears it locally is `bit reset` (snapping.main.runtime ~791).
-  //
-  // Why it matters: hidden lane entries skip per-component divergence merge in `sources.mergeLane`
-  // (see the visibleIncomingComponents filter ~line 736). They go through a winner-takes-all
-  // override path governed by this flag instead. Once the local flag is stuck at `true`:
-  //   - on import: `if (!existingLane.shouldOverrideUpdateDependents())` blocks the workspace
-  //     from picking up newer hidden entries pushed by a concurrent producer (Ripple CI
-  //     bare-scope cascade, another developer's workspace, etc.). Workspace silently misses
-  //     the update until `bit reset` clears the flag.
-  //   - on export: the workspace's lane object carries override=true on every subsequent push,
-  //     even when the cascade-on-snap step didn't fire (e.g., snapping a different visible
-  //     component on the lane). The remote then replaces its newer hidden entries with the
-  //     workspace's stale ones — silently overwriting a concurrent producer's work.
-  //
-  // The right fix is in `sources.mergeLane`: route hidden entries through the same
-  // `mergeLaneComponent` divergence check as visible ones, which would make the override flag
-  // unnecessary altogether. Until then, at minimum the local flag should be cleared after a
-  // successful export.
+  // Scenario 16: a workspace `bit fetch --lanes` picks up a producer's hidden cascade that
+  // landed on the remote. After unifying hidden entries into mergeLaneComponent's diverge check,
+  // there's no override-flag-governed import guard — the workspace's local lane simply
+  // fast-forwards to the producer's hash on fetch.
   // ---------------------------------------------------------------------------------------------
-  describe('scenario 16: overrideUpdateDependents persists locally after export (known leak)', () => {
-    before(async () => {
-      await buildBaseRemoteState();
-
-      helper.scopeHelper.reInitWorkspace();
-      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
-      helper.command.importLane('dev', '-x');
-      helper.command.importComponent('comp3');
-
-      helper.fs.outputFile(`${helper.scopes.remote}/comp3/index.js`, "module.exports = () => 'comp3-v2';");
-      helper.command.snapAllComponentsWithoutBuild();
-    });
-
-    it('local overrideUpdateDependents is true after the cascade snap (expected)', () => {
-      const localLane = helper.command.catLane('dev');
-      expect(localLane.overrideUpdateDependents).to.equal(true);
-    });
-
-    it('local overrideUpdateDependents stays true after a successful export (LEAK)', () => {
-      helper.command.export();
-      const localLaneAfterExport = helper.command.catLane('dev');
-      // Ideally this would be `undefined` after a successful export — the flag's authoritative
-      // claim has already been honored on the remote. Persisting it locally turns every
-      // subsequent push into an implicit "my hidden list wins" assertion (see scenario 17).
-      expect(localLaneAfterExport.overrideUpdateDependents).to.equal(true);
-    });
-
-    it('the remote lane has the flag cleared (correct)', () => {
-      const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
-      expect(remoteLane.overrideUpdateDependents).to.not.equal(true);
-    });
-  });
-
-  // ---------------------------------------------------------------------------------------------
-  // Scenario 17: KNOWN LEAK — once the local override flag is stuck at `true` (scenario 16),
-  // `bit fetch --lanes` will refuse to refresh the workspace's hidden entries even when the
-  // remote lane has been advanced by an independent producer (Ripple CI bare-scope cascade,
-  // another developer's workspace, etc.). The import-side guard at sources.mergeLane:
-  //   if (isImport && existingLane && !existingLane.shouldOverrideUpdateDependents()) { ... }
-  // treats the persisted local flag as "my unpushed cascade is pending" — but here the local
-  // cascade was already exported, so the guard becomes over-protective and silently drops the
-  // remote update.
-  //
-  // Setup note: the bare-scope producer pre-fetches the lane (`bit fetch <scope>/<lane> --lanes`)
-  // before running snapFromScope. That fetch must include hidden lane entries (regression check
-  // for `fetchLanesUsingScope` using `toComponentIdsIncludeUpdateDependents()` instead of the
-  // visible-only `toComponentIds()`); without it, the producer's import can't resolve comp2's
-  // lane head and snapFromScope blows up before producing anything.
-  // ---------------------------------------------------------------------------------------------
-  describe('scenario 17: persisted local flag blocks fetch from refreshing hidden entries (known leak)', () => {
-    let comp2AfterWorkspaceCascade: string;
+  describe('scenario 16: workspace fetch picks up a producer hidden cascade', () => {
     let comp2AfterProducerPush: string;
+    let comp2InUpdDepInitial: string;
     before(async () => {
-      await buildBaseRemoteState();
+      const base = await buildBaseRemoteState();
+      comp2InUpdDepInitial = base.comp2InUpdDepInitial;
 
-      // Workspace clones the lane, cascade-snaps, exports. Local flag is now stuck at `true`.
+      // Workspace imports the lane but does NOT cascade-snap yet — its local lane sits on the
+      // initial seeded comp2. The override flag is undefined locally.
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
       helper.command.importLane('dev', '-x');
       helper.command.importComponent('comp3');
-      helper.fs.outputFile(`${helper.scopes.remote}/comp3/index.js`, "module.exports = () => 'comp3-v2';");
-      helper.command.snapAllComponentsWithoutBuild();
-      helper.command.export();
-      const laneAfterWorkspaceExport = helper.command.catLane('dev', helper.scopes.remotePath);
-      comp2AfterWorkspaceCascade = laneAfterWorkspaceExport.updateDependents[0].split('@')[1];
+      const localLaneBefore = helper.command.catLane('dev');
+      expect(localLaneBefore.updateDependents[0].split('@')[1]).to.equal(comp2InUpdDepInitial);
 
-      // Independent producer (simulated via bare-scope `snapFromScope` — same code path used by
-      // Ripple CI) pushes a *new* hidden snap for comp2 to the same lane. The bare scope must
-      // first fetch the lane so it knows comp2's current hidden head.
-      const bareProducer = helper.scopeHelper.getNewBareScope('-bare-producer-cascade');
+      // Producer pushes a fresh hidden cascade for comp2. This is non-divergent — the lane on
+      // remote moves from the seed to the producer's hash; workspace just hasn't seen it yet.
+      const bareProducer = helper.scopeHelper.getNewBareScope('-bare-cascade-ahead');
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareProducer.scopePath);
       helper.command.runCmd(`bit fetch ${helper.scopes.remote}/dev --lanes`, bareProducer.scopePath);
       await helper.snapping.snapFromScope(
         bareProducer.scopePath,
-        [{ componentId: `${helper.scopes.remote}/comp2`, message: 'producer cascade after workspace export' }],
+        [{ componentId: `${helper.scopes.remote}/comp2`, message: 'producer cascade before workspace cascade' }],
         { lane: `${helper.scopes.remote}/dev`, updateDependents: true, push: true }
       );
       const laneAfterProducer = helper.command.catLane('dev', helper.scopes.remotePath);
       comp2AfterProducerPush = laneAfterProducer.updateDependents[0].split('@')[1];
+      expect(comp2AfterProducerPush).to.not.equal(comp2InUpdDepInitial);
 
-      expect(comp2AfterProducerPush).to.not.equal(comp2AfterWorkspaceCascade);
-
-      // Workspace fetches. Ideally it should now see the producer's newer hidden entry.
       helper.command.fetchAllLanes();
     });
 
-    it('the producer DID land their hidden snap on the remote (sanity)', () => {
-      const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
-      expect(remoteLane.updateDependents[0].split('@')[1]).to.equal(comp2AfterProducerPush);
-    });
-
-    it('but the workspace does NOT pick up the producer`s hidden snap on fetch (LEAK)', () => {
+    it('the workspace`s local lane reflects the producer`s cascade after fetch', () => {
       const localLane = helper.command.catLane('dev');
-      // Ideally this would equal `comp2AfterProducerPush`. The persisted local flag from
-      // scenario 16 makes the import guard reject the update — workspace stays on the version
-      // it pushed, blind to the producer's newer cascade.
-      expect(localLane.updateDependents[0].split('@')[1]).to.equal(comp2AfterWorkspaceCascade);
-      expect(localLane.updateDependents[0].split('@')[1]).to.not.equal(comp2AfterProducerPush);
-    });
-
-    it('local overrideUpdateDependents is still `true` after fetch (root cause)', () => {
-      const localLane = helper.command.catLane('dev');
-      expect(localLane.overrideUpdateDependents).to.equal(true);
+      expect(localLane.updateDependents[0].split('@')[1]).to.equal(comp2AfterProducerPush);
     });
   });
 });

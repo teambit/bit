@@ -650,7 +650,14 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
         if (isExport) {
           if (existingLane) {
             existingLane.addComponent(component);
-            existingLane.removeComponentFromUpdateDependentsIfExist(component.id);
+            // promote-on-import: a previously hidden updateDependent is being added as visible
+            // (incoming bucket switched). Strip the stale hidden entry so the lane doesn't end
+            // up with both a visible and hidden entry for the same id. Only do this when the
+            // incoming entry is itself visible — otherwise we'd remove the hidden entry we
+            // just added (the seed cascade flow).
+            if (!component.skipWorkspace) {
+              existingLane.removeComponentFromUpdateDependentsIfExist(component.id);
+            }
           }
           if (!sentVersionHashes?.includes(component.head.toString())) {
             // during export, the remote might got a lane when some components were not sent from the client. ignore them.
@@ -727,62 +734,27 @@ possible causes:
       mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
     };
 
-    // hidden (`skipWorkspace: true`) lane components go through the dedicated updateDependents
-    // merge branch below, not the per-component loop. On import, the legacy semantic is "remote is
-    // authoritative for hidden entries"; on export, the `overrideUpdateDependents` wire signal
-    // governs when the client's hidden entries replace the server's. Rewiring hidden entries into
-    // the full per-component diverge-check would need matching cascade mechanics in this layer too,
-    // which is outside the foundation-only scope.
-    const visibleIncomingComponents = lane.components.filter((c) => !c.skipWorkspace);
-    await pMap(
-      visibleIncomingComponents,
-      async (component) => {
-        await mergeLaneComponent(component);
-      },
-      { concurrency: concurrentComponentsLimit() }
-    );
+    // Run every lane entry — visible AND hidden (skipWorkspace) — through the same
+    // per-component diverge check. Earlier this iterated visible-only and routed hidden entries
+    // through a separate override-flag-governed replacement path; that path was winner-takes-all
+    // and could silently overwrite a concurrent producer's hidden cascade. Unifying here gives
+    // hidden entries the same divergence guarantees as visible ones: same-head no-op,
+    // target-ahead accept, local-ahead no-op, diverge → reject on export / silent-keep-local
+    // on import (user resolves via reset+re-cascade).
+    await pMap(lane.components, async (component) => mergeLaneComponent(component), {
+      concurrency: concurrentComponentsLimit(),
+    });
     // downgrade the schema if the incoming lane has a lower schema because it's possible that components are deleted
     // in the incoming lane but because it has an old schema, it doesn't have the "isDeleted" prop. leaving the schema
     // of current lane as 1.0.0 will mistakenly think that the component is not deleted.
     if (existingLane?.hasChanged && existingLane.includeDeletedData() && !lane.includeDeletedData()) {
       existingLane.setSchemaToNotSupportDeletedData();
     }
-    // hidden (skipWorkspace) entries are merged here via the legacy `updateDependents`-shaped
-    // override/wire path. Flows that produce hidden entries (workspace cascade-on-snap and the
-    // bare-scope cascade producer) set `overrideUpdateDependents=true` to claim the local list
-    // as authoritative; we honor it on export and protect it from being clobbered on import.
-    if (isImport && existingLane && !existingLane.shouldOverrideUpdateDependents()) {
-      existingLane.updateDependents = lane.updateDependents;
-    }
-    if (isExport && existingLane && lane.shouldOverrideUpdateDependents()) {
-      // Cache both sides outside the loop. With the unified-components getter, each
-      // `lane.updateDependents` access recomputes (filter + map) the hidden slice; without
-      // caching, an export with N incoming hidden entries against an existing lane with M
-      // recomputes the existing array N times for an O(N·M²) lookup. Snapshot once → O(N·M).
-      const incomingHidden = lane.updateDependents || [];
-      const existingHidden = existingLane.updateDependents || [];
-      const existingByName = new Map(existingHidden.map((id) => [id.toStringWithoutVersion(), id]));
-      // Bound concurrency — each task may load a ModelComponent from storage. With many incoming
-      // hidden entries, an unbounded `Promise.all` could spike I/O during a large export. Match
-      // the per-component merge loop above which uses `concurrentComponentsLimit()`.
-      await pMap(
-        incomingHidden,
-        async (id) => {
-          const existing = existingByName.get(id.toStringWithoutVersion());
-          if (!existing || existing.version !== id.version) {
-            const mergedComponent = await getModelComponent(id);
-            mergeResults.push({ mergedComponent, mergedVersions: [id.version] });
-          }
-        },
-        { concurrency: concurrentComponentsLimit() }
-      );
-      existingLane.updateDependents = incomingHidden;
-    }
 
     const mergeLane = existingLane || lane;
-    // `overrideUpdateDependents` is a one-shot wire signal from client to remote — once we've
-    // honored it above, it must not persist on the remote scope. Clear it so that subsequent
-    // imports of the same lane object don't see a stale "local is authoritative" claim.
+    // `overrideUpdateDependents` no longer drives merge behavior — it's preserved on the wire
+    // for backwards compatibility with older clients but read by no one in the merge path.
+    // Clear it on the remote's stored lane so no stale state lingers.
     if (isExport && mergeLane.shouldOverrideUpdateDependents()) {
       mergeLane.setOverrideUpdateDependents(false);
     }
