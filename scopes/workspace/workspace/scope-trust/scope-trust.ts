@@ -218,7 +218,7 @@ export class ScopeTrust {
         type: 'toggle',
         name: 'trust',
         message:
-          `Component ${componentId.toString()} uses an env from scope "${scopeName}", which isn't on your workspace's trusted list.\n` +
+          `Aspect ${componentId.toString()} comes from scope "${scopeName}", which isn't on your workspace's trusted list.\n` +
           `Trust "${scopeName}" and add it to workspace.jsonc?`,
         enabled: 'Yes',
         disabled: 'No',
@@ -238,7 +238,9 @@ export class ScopeTrust {
       return /^[a-zA-Z0-9_-]+$/.test(owner);
     }
     // exact: either dotless ("my-scope") or owner.name ("acme.frontend").
-    return /^[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_./-]+)?$/.test(pattern);
+    // Slash isn't allowed — scope names don't contain `/` (it separates scope
+    // from component name in component IDs).
+    return /^[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)?$/.test(pattern);
   }
 }
 

@@ -99,7 +99,7 @@ export interface WorkspaceExtConfig {
    * `acme.frontend` → `acme.*`) + entries listed here.
    *
    * Patterns: exact (`acme.frontend`) or owner wildcard (`acme.*`).
-   * Manage via `bit scope trust` / `bit scope untrust`.
+   * Manage via `bit scope trust [enable|disable|add|remove] [pattern]`.
    */
   trustedScopes?: string[];
 
