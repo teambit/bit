@@ -877,4 +877,60 @@ describe('local snap cascades updateDependents on the lane', function () {
       expect(bitMap).to.not.have.property('comp2');
     });
   });
+
+  // ---------------------------------------------------------------------------------------------
+  // Scenario 16: KNOWN LEAK — `overrideUpdateDependents` persists locally after a successful
+  // `bit export`. The flag is cleared on the remote (sources.mergeLane line ~787), but the
+  // workspace's local copy stays `true` — there's no hook in the export-success path that clears
+  // it locally. The only place that clears it locally is `bit reset` (snapping.main.runtime ~791).
+  //
+  // Why it matters: hidden lane entries skip per-component divergence merge in `sources.mergeLane`
+  // (see the visibleIncomingComponents filter ~line 736). They go through a winner-takes-all
+  // override path governed by this flag instead. Once the local flag is stuck at `true`:
+  //   - on import: `if (!existingLane.shouldOverrideUpdateDependents())` blocks the workspace
+  //     from picking up newer hidden entries pushed by a concurrent producer (Ripple CI
+  //     bare-scope cascade, another developer's workspace, etc.). Workspace silently misses
+  //     the update until `bit reset` clears the flag.
+  //   - on export: the workspace's lane object carries override=true on every subsequent push,
+  //     even when the cascade-on-snap step didn't fire (e.g., snapping a different visible
+  //     component on the lane). The remote then replaces its newer hidden entries with the
+  //     workspace's stale ones — silently overwriting a concurrent producer's work.
+  //
+  // The right fix is in `sources.mergeLane`: route hidden entries through the same
+  // `mergeLaneComponent` divergence check as visible ones, which would make the override flag
+  // unnecessary altogether. Until then, at minimum the local flag should be cleared after a
+  // successful export.
+  // ---------------------------------------------------------------------------------------------
+  describe('scenario 16: overrideUpdateDependents persists locally after export (known leak)', () => {
+    before(async () => {
+      await buildBaseRemoteState();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+      helper.command.importLane('dev', '-x');
+      helper.command.importComponent('comp3');
+
+      helper.fs.outputFile(`${helper.scopes.remote}/comp3/index.js`, "module.exports = () => 'comp3-v2';");
+      helper.command.snapAllComponentsWithoutBuild();
+    });
+
+    it('local overrideUpdateDependents is true after the cascade snap (expected)', () => {
+      const localLane = helper.command.catLane('dev');
+      expect(localLane.overrideUpdateDependents).to.equal(true);
+    });
+
+    it('local overrideUpdateDependents stays true after a successful export (LEAK)', () => {
+      helper.command.export();
+      const localLaneAfterExport = helper.command.catLane('dev');
+      // Ideally this would be `undefined` after a successful export — the flag's authoritative
+      // claim has already been honored on the remote. Persisting it locally turns every
+      // subsequent push into an implicit "my hidden list wins" assertion (see scenario 17).
+      expect(localLaneAfterExport.overrideUpdateDependents).to.equal(true);
+    });
+
+    it('the remote lane has the flag cleared (correct)', () => {
+      const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
+      expect(remoteLane.overrideUpdateDependents).to.not.equal(true);
+    });
+  });
 });
