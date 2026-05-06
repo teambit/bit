@@ -482,7 +482,9 @@ DEPRECATED (only use it if you have used add-readme and want to undo it). remove
 
 ## bit lane import <lane>
 
-import a remote lane to your workspace and switch to that lane
+import a remote lane to your workspace
+
+when on the default lane, the workspace is switched to the imported lane. when already on the same lane, only the latest objects are fetched from the remote — run "bit checkout head" to update the workspace. when on a different lane, the lane is fetched locally without switching to avoid disrupting your work — run `bit switch <lane>` to switch.
 Flags: --skip-dependency-installation, --pattern <component-pattern>, --branch, --auto-merge-resolve <merge-strategy>, --force-ours, --force-theirs
 
 ## bit lane remove-comp <component-pattern>

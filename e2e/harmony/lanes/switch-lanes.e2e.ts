@@ -427,4 +427,38 @@ describe('bit lane command', function () {
       expect(details).to.have.string('comp2');
     });
   });
+
+  describe('switching lanes while a component file has uncommitted local changes', () => {
+    const localEditMarker = '// uncommitted local edit on lane-a';
+    let switchError: Error | undefined;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(1, false, 'lane-a-content');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.fixtures.populateComponents(1, false, 'lane-b-content');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('lane-a', '-x');
+      helper.fs.outputFile('comp1/index.js', localEditMarker);
+      try {
+        helper.command.switchLocalLane('lane-b', '-x');
+      } catch (err) {
+        switchError = err as Error;
+      }
+    });
+    it('should block the switch with an automatic-merge-failed error', () => {
+      expect(switchError).to.exist;
+      expect(switchError?.message).to.have.string('automatic merge has failed');
+      expect(switchError?.message).to.have.string('--auto-merge-resolve');
+    });
+    it('should preserve the uncommitted local file changes', () => {
+      expect(helper.fs.readFile('comp1/index.js')).to.equal(localEditMarker);
+    });
+    it('should not change the current lane', () => {
+      helper.command.expectCurrentLaneToBe('lane-a');
+    });
+  });
 });
