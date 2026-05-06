@@ -670,7 +670,7 @@ export class LaneImportCmd implements Command {
   description = `import a remote lane to your workspace`;
   extendedDescription = `when on the default lane, the workspace is switched to the imported lane.
 when already on the same lane, only the latest objects are fetched from the remote — run "bit checkout head" to update the workspace.
-when on a different lane, the lane is fetched locally without switching to avoid disrupting your work — run "bit switch <lane>" to switch.`;
+when on a different lane, the lane is fetched locally without switching to avoid disrupting your work — run \`bit switch <lane>\` to switch.`;
   arguments = [{ name: 'lane', description: 'the remote lane name' }];
   alias = '';
   options = [
