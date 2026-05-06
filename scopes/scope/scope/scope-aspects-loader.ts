@@ -214,7 +214,11 @@ needed-for: ${neededFor || '<unknown>'}`);
       return new RequireableComponent(
         capsule.component,
         async () => {
-          // eslint-disable-next-line global-require, import/no-dynamic-require
+          // Honor the workspace's scope-trust hook if registered. Absent in
+          // pure scope (remote-server) contexts.
+          const guard = this.scope.getAspectLoadGuard();
+          if (guard) await guard(capsule.component.id);
+
           const plugins = this.aspectLoader.getPlugins(capsule.component, capsule.path);
           if (plugins.has()) {
             await this.compileIfNoDist(capsule, capsule.component);
@@ -227,7 +231,6 @@ needed-for: ${neededFor || '<unknown>'}`);
           const runtimePath = scopeRuntime || mainRuntime;
           // eslint-disable-next-line global-require, import/no-dynamic-require
           if (runtimePath) require(runtimePath);
-          // eslint-disable-next-line global-require, import/no-dynamic-require
           return aspect;
         },
         capsule

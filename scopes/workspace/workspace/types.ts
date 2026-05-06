@@ -93,6 +93,17 @@ export interface WorkspaceExtConfig {
   ignoredFiles?: string[];
 
   /**
+   * Scope-name patterns that the workspace trusts when loading aspects (envs,
+   * generators, etc.) imported from those scopes. The effective trust set is:
+   * builtin (`teambit.*`, `bitdev.*`) + the owner of `defaultScope` (e.g.
+   * `acme.frontend` → `acme.*`) + entries listed here.
+   *
+   * Patterns: exact (`acme.frontend`) or owner wildcard (`acme.*`).
+   * Manage via `bit scope trust` / `bit scope untrust`.
+   */
+  trustedScopes?: string[];
+
+  /**
    * If set to `true`, Bit auto-syncs the local `.bitmap` to the latest scope HEAD versions
    * whenever the git HEAD has moved since the last sync (sentinel-driven, runs once per
    * `git pull`). Designed for repos with strict branch-protection rules: combined with
