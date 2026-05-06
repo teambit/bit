@@ -13,7 +13,7 @@ export class ScopeTrustCmd implements Command {
   arguments = [
     {
       name: 'action',
-      description: `one of: ${ACTIONS.join(' | ')}. defaults to "list".`,
+      description: `one of: ${ACTIONS.join(', ')}. defaults to "list".`,
     },
     {
       name: 'pattern',
@@ -30,12 +30,12 @@ export class ScopeTrustCmd implements Command {
   loadAspects = false;
   extendedDescription = `scope-trust is opt-in. when off (the default), aspects from any scope load without a check. when on, aspects from a scope outside the trust list trigger a prompt (interactive shells) or an error (non-interactive).
 
-  bit scope trust              # same as "list"
-  bit scope trust list         # show status; if on, print the effective trust list
-  bit scope trust enable       # turn on (writes "trustedScopes": [] to workspace.jsonc)
-  bit scope trust disable      # turn off (removes "trustedScopes" from workspace.jsonc)
-  bit scope trust add <p>      # add a pattern (auto-enables if needed)
-  bit scope trust remove <p>   # remove a pattern (does NOT disable when list is empty)
+  bit scope trust                    # same as "list"
+  bit scope trust list               # show status; if on, print the effective trust list
+  bit scope trust enable             # turn on (writes "trustedScopes": [] to workspace.jsonc)
+  bit scope trust disable            # turn off (removes "trustedScopes" from workspace.jsonc)
+  bit scope trust add PATTERN        # add a pattern (auto-enables if needed)
+  bit scope trust remove PATTERN     # remove a pattern (does NOT disable when list is empty)
 
 once on, the effective trust set is: builtin (teambit.*, bitdev.*) + the owner of defaultScope + entries listed under "trustedScopes". patterns are exact ("acme.frontend") or owner wildcard ("acme.*").`;
 
