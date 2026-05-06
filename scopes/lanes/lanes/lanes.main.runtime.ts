@@ -237,6 +237,7 @@ export class LanesMain {
       isLane: true,
       lane,
     });
+    await this.restoreUpdateDependentsFromHistory(historyItem, lane);
     return results;
   }
 
@@ -287,7 +288,35 @@ export class LanesMain {
       results.addedComponents = [...(results.addedComponents || []), ...(deletedResults.addedComponents || [])];
     }
 
+    await this.restoreUpdateDependentsFromHistory(historyItem, lane);
+
     return results;
+  }
+
+  /**
+   * Rewind hidden lane entries (`skipWorkspace: true`) to the historical state. The visible
+   * components flow through `checkout.checkout` (workspace materialization); hidden entries have
+   * no workspace counterpart so we rewrite the lane's hidden bucket directly and persist.
+   *
+   * The historical list is treated as authoritative: hidden entries that exist now but weren't in
+   * the snapshot get dropped; entries in the snapshot get added/updated. When the field is
+   * `undefined` (legacy history entry written before this PR), we don't know what was there, so
+   * we leave the current hidden bucket alone.
+   */
+  private async restoreUpdateDependentsFromHistory(historyItem: HistoryItem, lane: Lane | null | undefined) {
+    if (!lane || historyItem.updateDependents === undefined) return;
+    const historicalHidden = historyItem.updateDependents.map((id) => ComponentID.fromString(id));
+    if (historicalHidden.length) {
+      await this.scope.legacyScope.scopeImporter.importMany({
+        ids: ComponentIdList.fromArray(historicalHidden),
+        lane,
+        reason: 'to restore hidden updateDependents from lane history',
+      });
+    }
+    // Setter drops every current hidden entry and applies the historical list (which may be
+    // empty). This is what makes the historical snapshot authoritative.
+    lane.updateDependents = historicalHidden;
+    await this.scope.legacyScope.lanes.saveLane(lane, { saveLaneHistory: false });
   }
 
   private async getHistoryItemOfCurrentLane(historyId: string): Promise<HistoryItem> {

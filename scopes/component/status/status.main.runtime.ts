@@ -57,6 +57,9 @@ export type StatusResult = {
   forkedLaneId?: LaneId;
   workspaceIssues: string[];
   localOnly: ComponentID[];
+  // hidden lane updateDependents (`skipWorkspace: true`) that have local snaps pending export.
+  // Mirror what `bit export` surfaces under the "exported updates" section.
+  pendingUpdateDependents: ComponentID[];
 };
 
 export type MiniStatusResults = {
@@ -99,7 +102,17 @@ export class StatusMain {
       loadOpts
     )) as ConsumerComponent[];
     const modifiedComponents = await this.workspace.modified(loadOpts);
-    const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
+    // `listExportPendingComponents` returns every locally-changed pending-export entry, including
+    // hidden lane updateDependents (`skipWorkspace: true`). Status splits them into two views:
+    // visible → "staged components" (workspace-tracked); hidden → "pending update-dependents"
+    // (mirrors `bit export`'s "exported updates" section). Hidden entries don't have a .bitmap
+    // counterpart, so they shouldn't surface as if they were workspace components.
+    const allPendingForExport: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
+    const isHidden = (mc: ModelComponent) => Boolean(laneObj?.getComponent(mc.toComponentId())?.skipWorkspace);
+    const stagedComponents: ModelComponent[] = allPendingForExport.filter((mc) => !isHidden(mc));
+    const pendingUpdateDependents: ComponentID[] = allPendingForExport
+      .filter((mc) => isHidden(mc))
+      .map((mc) => mc.toComponentId());
     await this.addRemovedStagedIfNeeded(stagedComponents);
     const stagedComponentsWithVersions = await pMapSeries(stagedComponents, async (stagedComp) => {
       const id = stagedComp.toComponentId();
@@ -178,6 +191,7 @@ export class StatusMain {
       forkedLaneId,
       workspaceIssues: workspaceIssues.map((err) => err.message),
       localOnly,
+      pendingUpdateDependents: ComponentID.sortIds(pendingUpdateDependents),
     };
   }
 

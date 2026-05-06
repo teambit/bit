@@ -70,7 +70,9 @@ export class VersionHistoryMain {
     if (options.fromAllLanes) {
       const lanes = await this.scope.legacyScope.lanes.listLanes();
       for await (const lane of lanes) {
-        const headOnLane = lane.getComponentHead(id);
+        // include hidden updateDependent entries — a component's version history should cover
+        // every lane that has a head for it, regardless of which bucket it lives in on the lane.
+        const headOnLane = lane.getCompHeadIncludeUpdateDependents(id);
         if (!headOnLane) continue;
         const laneResults = await modelComponent.populateVersionHistoryIfMissingGracefully(
           repo,

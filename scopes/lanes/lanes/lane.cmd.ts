@@ -476,7 +476,10 @@ export class LaneHistoryCmd implements Command {
       const { historyItem } = data;
       const date = this.getDateString(historyItem.log.date);
       const message = historyItem.log.message;
-      return `${id} ${date} ${historyItem.log.username} ${message}\n\n${historyItem.components.join('\n')}`;
+      const updateDependentsBlock = historyItem.updateDependents?.length
+        ? `\n\nupdateDependents:\n${historyItem.updateDependents.join('\n')}`
+        : '';
+      return `${id} ${date} ${historyItem.log.username} ${message}\n\n${historyItem.components.join('\n')}${updateDependentsBlock}`;
     }
 
     const { history, sortedIds } = data;
@@ -500,6 +503,7 @@ export class LaneHistoryCmd implements Command {
         username: historyItem.log.username,
         message: historyItem.log.message,
         components: historyItem.components,
+        ...(historyItem.updateDependents?.length && { updateDependents: historyItem.updateDependents }),
       };
     }
 
@@ -512,6 +516,7 @@ export class LaneHistoryCmd implements Command {
         username: item.log.username,
         message: item.log.message,
         components: item.components,
+        ...(item.updateDependents?.length && { updateDependents: item.updateDependents }),
       };
     });
   }

@@ -352,7 +352,14 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         }
       }
 
-      const head = component.head || laneItem?.head;
+      // when on a lane, walk the LANE's parent chain — `laneItem.head` is the lane head we're
+      // about to rewind, and the prior snap lives in *its* parent graph, not in main's. Falling
+      // back to `component.head` (main head) here was a long-standing bug that surfaced once the
+      // component-tagged-on-main-then-imported-to-lane case became common (cascade-on-snap):
+      // `bit reset --head` walked main's parents, found none for the tag, returned undefined,
+      // and `lane.removeComponent` was called — leaving the bitmap to rewind all the way back to
+      // the imported tag instead of the previous lane snap.
+      const head = laneItem?.head || component.head;
       if (!head) {
         return undefined;
       }
@@ -643,7 +650,14 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
         if (isExport) {
           if (existingLane) {
             existingLane.addComponent(component);
-            existingLane.removeComponentFromUpdateDependentsIfExist(component.id);
+            // promote-on-import: a previously hidden updateDependent is being added as visible
+            // (incoming bucket switched). Strip the stale hidden entry so the lane doesn't end
+            // up with both a visible and hidden entry for the same id. Only do this when the
+            // incoming entry is itself visible — otherwise we'd remove the hidden entry we
+            // just added (the seed cascade flow).
+            if (!component.skipWorkspace) {
+              existingLane.removeComponentFromUpdateDependentsIfExist(component.id);
+            }
           }
           if (!sentVersionHashes?.includes(component.head.toString())) {
             // during export, the remote might got a lane when some components were not sent from the client. ignore them.
@@ -720,40 +734,31 @@ possible causes:
       mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
     };
 
-    await pMap(
-      lane.components,
-      async (component) => {
-        await mergeLaneComponent(component);
-      },
-      { concurrency: concurrentComponentsLimit() }
-    );
+    // Run every lane entry — visible AND hidden (skipWorkspace) — through the same
+    // per-component diverge check. Earlier this iterated visible-only and routed hidden entries
+    // through a separate override-flag-governed replacement path; that path was winner-takes-all
+    // and could silently overwrite a concurrent producer's hidden cascade. Unifying here gives
+    // hidden entries the same divergence guarantees as visible ones: same-head no-op,
+    // target-ahead accept, local-ahead no-op, diverge → reject on export / silent-keep-local
+    // on import (user resolves via reset+re-cascade).
+    await pMap(lane.components, async (component) => mergeLaneComponent(component), {
+      concurrency: concurrentComponentsLimit(),
+    });
     // downgrade the schema if the incoming lane has a lower schema because it's possible that components are deleted
     // in the incoming lane but because it has an old schema, it doesn't have the "isDeleted" prop. leaving the schema
     // of current lane as 1.0.0 will mistakenly think that the component is not deleted.
     if (existingLane?.hasChanged && existingLane.includeDeletedData() && !lane.includeDeletedData()) {
       existingLane.setSchemaToNotSupportDeletedData();
     }
-    // merging updateDependents is tricky. the end user should never change it, only get it as is from the remote.
-    // this prop gets updated with snap-from-scope with --update-dependents flag. and a graphql query should remove entries
-    // from there. other than these 2 places, it should never change. so when a user imports it, always override.
-    // if it is being exported, the remote should override it only when it comes from the snap-from-scope command, to
-    // indicate this, the lane should have the overrideUpdateDependents prop set to true.
-    if (isImport && existingLane) {
-      existingLane.updateDependents = lane.updateDependents;
-    }
-    if (isExport && existingLane && lane.shouldOverrideUpdateDependents()) {
-      await Promise.all(
-        (lane.updateDependents || []).map(async (id) => {
-          const existing = existingLane.updateDependents?.find((existingId) => existingId.isEqualWithoutVersion(id));
-          if (!existing || existing.version !== id.version) {
-            const mergedComponent = await getModelComponent(id);
-            mergeResults.push({ mergedComponent, mergedVersions: [id.version] });
-          }
-        })
-      );
-      existingLane.updateDependents = lane.updateDependents;
+
+    const mergeLane = existingLane || lane;
+    // `overrideUpdateDependents` no longer drives merge behavior — it's preserved on the wire
+    // for backwards compatibility with older clients but read by no one in the merge path.
+    // Clear it on the remote's stored lane so no stale state lingers.
+    if (isExport && mergeLane.shouldOverrideUpdateDependents()) {
+      mergeLane.setOverrideUpdateDependents(false);
     }
 
-    return { mergeResults, mergeErrors, mergeLane: existingLane || lane };
+    return { mergeResults, mergeErrors, mergeLane };
   }
 }

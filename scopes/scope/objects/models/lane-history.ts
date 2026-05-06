@@ -10,6 +10,11 @@ export type HistoryItem = {
   log: Log;
   components: string[];
   deleted?: string[];
+  // hidden lane entries (`skipWorkspace: true`) at the time of the snapshot. Recorded in their
+  // own field so `historyItem.components` keeps its workspace-checkout/revert contract intact —
+  // those flows must not materialize hidden entries into the bitmap. `lane checkout/revert` use
+  // this list to rewind `lane.updateDependents` directly on the lane object.
+  updateDependents?: string[];
 };
 
 type History = { [uuid: string]: HistoryItem };
@@ -83,7 +88,16 @@ export class LaneHistory extends BitObject {
     const deleted = laneObj.components
       .filter((c) => c.isDeleted)
       .map((c) => c.id.changeVersion(c.head.toString()).toString());
-    this.history[historyKey || v4()] = { log, components, ...(deleted.length && { deleted }) };
+    // Always write `updateDependents` (even when empty) so checkout/revert can distinguish a
+    // post-PR entry that legitimately had no hidden entries (drop current hidden) from a legacy
+    // pre-PR entry that never recorded the field at all (leave current hidden alone).
+    const updateDependents = (laneObj.updateDependents || []).map((id) => id.toString());
+    this.history[historyKey || v4()] = {
+      log,
+      components,
+      ...(deleted.length && { deleted }),
+      updateDependents,
+    };
   }
 
   removeHistoryEntries(keys: string[]) {

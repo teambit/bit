@@ -539,9 +539,15 @@ export class SnappingMain {
     let exportedIds: ComponentIdList | undefined;
     if (params.push) {
       const updatedLane = lane ? await this.scope.legacyScope.loadLane(lane.toLaneId()) : undefined;
+      // include auto-tagged ids in the export set. For the bare-scope reverse cascade
+      // (`snapFromScope({ updateDependents: true })`), `getLaneAutoTagIdsFromScope` re-snaps
+      // lane.components that depend on the new hidden entry, and those new snaps must be pushed
+      // alongside the explicit target.
+      const autoTaggedIds = (results.autoTaggedResults || []).map((r) => r.component.id);
+      const idsToExport = ComponentIdList.uniqFromArray([...ids, ...autoTaggedIds]);
       const { exported } = await this.exporter.pushToScopes({
         scope: this.scope.legacyScope,
-        ids,
+        ids: idsToExport,
         allVersions: false,
         laneObject: updatedLane,
         // no need other snaps. only the latest one. without this option, when snapping on lane from another-scope, it
@@ -738,9 +744,48 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
 
       await pMapSeries(results, async ({ component, versionToSetInBitmap }) => {
         if (!component) return;
+        // hidden lane entries (skipWorkspace) are not in the workspace bitmap, so we shouldn't
+        // try to update bitmap state for them — `removeLocalVersion` already rewound the lane's
+        // hidden head to its prior cascade hash (or removed the entry entirely if no prior).
+        // Check the lane's skipWorkspace flag explicitly — a soft-deleted (visible) entry is also
+        // absent from bitmap but `updateVersions` knows how to restore it from stagedConfig.
+        const isHiddenLaneEntry = Boolean(currentLane?.getComponent(component.toComponentId())?.skipWorkspace);
+        if (isHiddenLaneEntry) return;
         await updateVersions(this.workspace, stagedConfig, currentLaneId, component, versionToSetInBitmap, false);
       });
       await this.workspace.scope.legacyScope.stagedSnaps.write();
+      // if the reset cleared every locally-cascaded hidden entry, drop the wire-level
+      // `overrideUpdateDependents` flag — there's no longer a pending claim of "my hidden list
+      // is authoritative". `bit reset --head` may leave some cascades unresolved (an earlier snap
+      // is still local), in which case the flag must stay raised until those are rewound or
+      // exported.
+      if (currentLane?.shouldOverrideUpdateDependents()) {
+        const repo = this.scope.legacyScope.objects;
+        const hiddenEntries = currentLane.components.filter((c) => c.skipWorkspace);
+        // bound concurrency — each task does scope reads, head population and a diverge-data
+        // computation, which can spike I/O on large lanes. Match the convention used elsewhere
+        // (e.g., merging.getMergeStatus) of `concurrentComponentsLimit()`.
+        const hasLocalHashesByEntry = await pMap(
+          hiddenEntries,
+          async (entry) => {
+            const mc = await this.scope.legacyScope.getModelComponentIfExist(entry.id);
+            if (!mc) return false;
+            // refresh the modelComponent's lane heads against the post-reset lane state, then
+            // force-recompute divergeData (fromCache=false). `getLocalHashes` would otherwise
+            // see a stale source head (the pre-reset cascade hash) because `setDivergeData`
+            // defaults to using the cached value, which still reflects pre-reset state.
+            await mc.populateLocalAndRemoteHeads(repo, currentLane);
+            await mc.setDivergeData(repo, true, false);
+            const local = await mc.getLocalHashes(repo);
+            return local.length > 0;
+          },
+          { concurrency: concurrentComponentsLimit() }
+        );
+        if (!hasLocalHashesByEntry.some(Boolean)) {
+          currentLane.setOverrideUpdateDependents(false);
+          await consumer.scope.lanes.saveLane(currentLane, { saveLaneHistory: false });
+        }
+      }
     } else {
       results = await softUntag();
       consumer.bitMap.markAsChanged();
