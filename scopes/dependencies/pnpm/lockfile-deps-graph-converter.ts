@@ -28,17 +28,18 @@ import { type BitLockfileFile } from './lynx';
 // converters; helpers reach for these module-level slots synchronously.
 let dp!: typeof Dp;
 let getLockfileImporterId!: typeof GetLockfileImporterId;
-let loaded = false;
+let loading: Promise<void> | undefined;
 
-export async function init(): Promise<void> {
-  if (loaded) return;
-  const { loadEsm } = require('./load-pnpm-esm.cjs') as {
-    loadEsm: () => Promise<{ dp: typeof Dp; getLockfileImporterId: typeof GetLockfileImporterId }>;
-  };
-  const m = await loadEsm();
-  dp = m.dp;
-  getLockfileImporterId = m.getLockfileImporterId;
-  loaded = true;
+export function init(): Promise<void> {
+  loading ??= (async () => {
+    const { loadEsm } = require('./load-pnpm-esm.cjs') as {
+      loadEsm: () => Promise<{ dp: typeof Dp; getLockfileImporterId: typeof GetLockfileImporterId }>;
+    };
+    const m = await loadEsm();
+    dp = m.dp;
+    getLockfileImporterId = m.getLockfileImporterId;
+  })();
+  return loading;
 }
 
 function convertLockfileToGraphFromCapsule(

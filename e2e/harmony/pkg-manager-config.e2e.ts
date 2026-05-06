@@ -8,7 +8,7 @@ chai.use(chaiFs);
 chai.use(chaiString);
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)(
-  'package manager rc file is read from the workspace directory when installation is in a capsule',
+  'workspace .yarnrc.yml is read by Yarn when installation is in a capsule',
   function () {
     this.timeout(0);
     let helper: Helper;
