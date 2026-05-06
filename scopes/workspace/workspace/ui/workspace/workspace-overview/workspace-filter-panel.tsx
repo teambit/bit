@@ -50,13 +50,15 @@ export function WorkspaceFilterPanel({
   const activeNsOptions = activeNamespaces.map((v) => ({ value: v }));
   const activeScopeOptions = activeScopes.map((v) => ({ value: v }));
 
-  const applyNs = (opts) => {
-    const list = opts.map((o) => o.value).filter((v): v is string => typeof v === 'string');
+  const applyNs = (opts: readonly { value?: string }[] | { value?: string } | null) => {
+    const arr = Array.isArray(opts) ? opts : opts ? [opts] : [];
+    const list = arr.map((o) => o.value).filter((v): v is string => typeof v === 'string');
     onNamespacesChange(list);
   };
 
-  const applyScopes = (opts) => {
-    const list = opts.map((o) => o.value).filter((v): v is string => typeof v === 'string');
+  const applyScopes = (opts: readonly { value?: string }[] | { value?: string } | null) => {
+    const arr = Array.isArray(opts) ? opts : opts ? [opts] : [];
+    const list = arr.map((o) => o.value).filter((v): v is string => typeof v === 'string');
     onScopesChange(list);
   };
 
@@ -71,8 +73,8 @@ export function WorkspaceFilterPanel({
   };
 
   return (
-    <div className={styles.filterPanel}>
-      <div className={styles.leftFilters}>
+    <div className={styles.commandBar}>
+      <div className={styles.leftCluster}>
         <BaseFilter
           id="namespaces"
           placeholder="Namespaces"
@@ -81,7 +83,6 @@ export function WorkspaceFilterPanel({
           onChange={applyNs}
           isSearchable
         />
-
         <BaseFilter
           id="scopes"
           placeholder="Scopes"
@@ -92,9 +93,9 @@ export function WorkspaceFilterPanel({
         />
       </div>
 
-      <div className={styles.rightAggToggle}>
+      <div className={styles.rightCluster}>
         <ToggleButton
-          className={styles.toggleBtn}
+          className={styles.aggToggle}
           defaultIndex={currentIndex}
           onOptionSelect={(idx) => applyAgg(idx)}
           options={availableAggregations.map((agg) => ({

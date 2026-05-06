@@ -86,6 +86,9 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
 
   workspaceUI.setComponents(workspace.components);
   const inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
+  const location = useLocation();
+  const isOverview = location.pathname === '/' || location.pathname === '';
+  const showTopBar = !isMinimal || (isMinimal && !isOverview);
 
   return (
     <WorkspaceProvider workspace={workspace}>
@@ -94,7 +97,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
         <ThemeFromUrlSync />
         {isMinimal && inIframe && <MinimalModeUrlBroadcasterAndListener />}
         <div className={styles.workspaceWrapper}>
-          {
+          {showTopBar && (
             <TopBar
               className={classNames(styles.topbar, styles[themeName], isMinimal && styles.minimal)}
               Corner={() => (
@@ -102,7 +105,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
                   <Corner
                     className={classNames((isMinimal && styles.minimalCorner) || styles.corner, styles[themeName])}
                     name={isMinimal ? '' : workspace.name}
-                    icon={isMinimal ? 'https://static.bit.dev/bit-icons/house.svg' : workspace.icon}
+                    icon={isMinimal ? 'https://static.bit.dev/brands/bit-logo-min.png' : workspace.icon}
                   />
                   {isMinimal && <WorkspaceBreadcrumb />}
                 </div>
@@ -110,7 +113,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
               // @ts-ignore - getting an error of "Types have separate declarations of a private property 'registerFn'." for some reason after upgrading teambit.harmony/harmony from 0.4.6 to 0.4.7
               menu={menuSlot}
             />
-          }
+          )}
           <SplitPane className={styles.main} size={246} layout={sidebarOpenness}>
             <Pane className={classNames(styles.sidebar, styles[themeName], !isSidebarOpen && styles.closed)}>
               {sidebar}
