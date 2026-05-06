@@ -459,10 +459,10 @@ export class LaneHistoryCmd implements Command {
     if (id) {
       const historyItem = history[id];
       if (!historyItem) throw new Error(`history id ${id} was not found`);
-      return { historyItem, id, history, singleItem: true };
+      return { historyItem, id, history, singleItem: true as const };
     }
 
-    return { history, singleItem: false };
+    return { history, sortedIds: laneHistory.getHistoryIds(), singleItem: false as const };
   }
 
   private getDateString(date: string) {
@@ -470,15 +470,17 @@ export class LaneHistoryCmd implements Command {
   }
 
   async report([laneName]: [string], { id }: { id?: string }): Promise<string> {
-    const { history, historyItem, singleItem } = await this.getHistoryData(laneName, id);
+    const data = await this.getHistoryData(laneName, id);
 
-    if (singleItem && historyItem) {
+    if (data.singleItem) {
+      const { historyItem } = data;
       const date = this.getDateString(historyItem.log.date);
       const message = historyItem.log.message;
       return `${id} ${date} ${historyItem.log.username} ${message}\n\n${historyItem.components.join('\n')}`;
     }
 
-    const items = Object.keys(history).map((uuid) => {
+    const { history, sortedIds } = data;
+    const items = sortedIds.map((uuid) => {
       const item = history[uuid];
       const date = this.getDateString(item.log.date);
       const message = item.log.message;
@@ -488,9 +490,10 @@ export class LaneHistoryCmd implements Command {
   }
 
   async json([laneName]: [string], { id }: { id?: string }) {
-    const { history, historyItem, id: historyId, singleItem } = await this.getHistoryData(laneName, id);
+    const data = await this.getHistoryData(laneName, id);
 
-    if (singleItem && historyItem) {
+    if (data.singleItem) {
+      const { historyItem, id: historyId } = data;
       return {
         id: historyId,
         date: historyItem.log.date,
@@ -500,7 +503,8 @@ export class LaneHistoryCmd implements Command {
       };
     }
 
-    return Object.keys(history).map((uuid) => {
+    const { history, sortedIds } = data;
+    return sortedIds.map((uuid) => {
       const item = history[uuid];
       return {
         id: uuid,
