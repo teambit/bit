@@ -26,6 +26,7 @@ const MARKER_ENV_VAR = 'BIT_SCOPE_TRUST_TEST_MARKER';
     let npmCiRegistry: NpmCiRegistry;
     let markerPath: string;
     let originalMarkerEnv: string | undefined;
+    let importErrorOutput: string;
 
     before(async () => {
       // Stable absolute marker path; passed to spawned bit processes via the
@@ -82,11 +83,14 @@ export default new EmptyEnv();
       fs.removeSync(markerPath);
       expect(fs.existsSync(markerPath), 'marker should be absent before import').to.be.false;
 
+      // The aspect-load gate refuses; the import surfaces the refusal
+      // message. Capture both stdout and any thrown error so we can assert
+      // on the message (avoids a false positive if the import had failed for
+      // an unrelated reason like a network/registry hiccup).
       try {
-        helper.command.importComponent('comp1');
-      } catch {
-        // Aspect load refused → import command may exit non-zero. The
-        // marker-file check below is the source of truth.
+        importErrorOutput = helper.command.importComponent('comp1');
+      } catch (err: any) {
+        importErrorOutput = `${err?.stdout || ''}\n${err?.stderr || ''}\n${err?.message || ''}`;
       }
     });
 
@@ -102,6 +106,10 @@ export default new EmptyEnv();
 
     it('does not load the env from a scope outside the trust list', () => {
       expect(fs.existsSync(markerPath), `env module loaded; marker at ${markerPath}`).to.be.false;
+    });
+
+    it("surfaces a refusal message naming the scope that isn't on the trust list", () => {
+      expect(importErrorOutput).to.match(/isn't on the workspace's trusted list/i);
     });
   }
 );

@@ -22,6 +22,12 @@ export class ScopeTrustCmd implements Command {
   ];
   options = [];
   group = 'component-config';
+  // Don't load aspects for this command. If the workspace already references
+  // an aspect from a scope that the trust list doesn't allow, the pre-command
+  // aspect-load step would itself trip the gate, leaving the user with no way
+  // to run `bit scope trust` to fix it. Skipping aspect-load keeps the command
+  // usable as a recovery path.
+  loadAspects = false;
   extendedDescription = `scope-trust is opt-in. when off (the default), aspects from any scope load without a check. when on, aspects from a scope outside the trust list trigger a prompt (interactive shells) or an error (non-interactive).
 
   bit scope trust              # same as "list"

@@ -106,12 +106,15 @@ export class ScopeTrust {
     const wsConfig = this.workspace.getWorkspaceConfig();
     const existingExt = wsConfig.extension(WORKSPACE_ASPECT_ID, true) || {};
     if (Object.prototype.hasOwnProperty.call(existingExt, 'trustedScopes')) return;
-    const updated = { ...existingExt, trustedScopes: [] };
-    wsConfig.setExtension(WORKSPACE_ASPECT_ID, updated, { overrideExisting: true, ignoreVersion: true });
+    wsConfig.setExtension(WORKSPACE_ASPECT_ID, { trustedScopes: [] }, { mergeIntoExisting: true, ignoreVersion: true });
     await wsConfig.write({ reasonForChange: 'enable scope-trust' });
   }
 
-  /** Opt the workspace out by removing the `trustedScopes` key (idempotent). */
+  /**
+   * Opt the workspace out by removing the `trustedScopes` key (idempotent).
+   * Uses `overrideExisting` because key deletion isn't expressible via
+   * mergeIntoExisting; comments on other keys may be reformatted as a result.
+   */
   async disable(): Promise<void> {
     const wsConfig = this.workspace.getWorkspaceConfig();
     const existingExt = wsConfig.extension(WORKSPACE_ASPECT_ID, true) || {};
@@ -126,15 +129,20 @@ export class ScopeTrust {
   async addTrustedScope(pattern: string): Promise<void> {
     if (!ScopeTrust.isValidPattern(pattern)) {
       throw new BitError(
-        `invalid scope pattern: "${pattern}". use an exact scope name (e.g. "acme.frontend") or an owner wildcard (e.g. "acme.*").`
+        `invalid scope pattern: "${pattern}". use an exact scope name (e.g. "acme.frontend" or "my-scope") or an owner wildcard (e.g. "acme.*").`
       );
     }
     const wsConfig = this.workspace.getWorkspaceConfig();
     const existingExt = wsConfig.extension(WORKSPACE_ASPECT_ID, true) || {};
     const existingList: string[] = Array.isArray(existingExt.trustedScopes) ? existingExt.trustedScopes : [];
     if (existingList.includes(pattern)) return; // idempotent
-    const updated = { ...existingExt, trustedScopes: [...existingList, pattern] };
-    wsConfig.setExtension(WORKSPACE_ASPECT_ID, updated, { overrideExisting: true, ignoreVersion: true });
+    // mergeIntoExisting: only the trustedScopes key is rewritten; comments
+    // and other keys in workspace.jsonc are preserved.
+    wsConfig.setExtension(
+      WORKSPACE_ASPECT_ID,
+      { trustedScopes: [...existingList, pattern] },
+      { mergeIntoExisting: true, ignoreVersion: true }
+    );
     await wsConfig.write({ reasonForChange: `add trusted scope ${pattern}` });
   }
 
@@ -147,8 +155,11 @@ export class ScopeTrust {
     const existingExt = wsConfig.extension(WORKSPACE_ASPECT_ID, true) || {};
     const existingList: string[] = Array.isArray(existingExt.trustedScopes) ? existingExt.trustedScopes : [];
     if (!existingList.includes(pattern)) return; // idempotent
-    const updated = { ...existingExt, trustedScopes: existingList.filter((p) => p !== pattern) };
-    wsConfig.setExtension(WORKSPACE_ASPECT_ID, updated, { overrideExisting: true, ignoreVersion: true });
+    wsConfig.setExtension(
+      WORKSPACE_ASPECT_ID,
+      { trustedScopes: existingList.filter((p) => p !== pattern) },
+      { mergeIntoExisting: true, ignoreVersion: true }
+    );
     await wsConfig.write({ reasonForChange: `remove trusted scope ${pattern}` });
   }
 
@@ -186,9 +197,16 @@ export class ScopeTrust {
 
   private deniedThisRun = new Set<string>();
 
+  /**
+   * Returns the trust pattern derived from the workspace's `defaultScope`:
+   * - `acme.frontend` → `acme.*` (owner wildcard)
+   * - `my-scope` (legacy dotless) → `my-scope` (exact match)
+   * - empty / unset → undefined
+   */
   private getOwnerWildcardFromDefaultScope(): string | undefined {
     const defaultScope = this.workspace.defaultScope;
     if (!defaultScope) return undefined;
+    if (!defaultScope.includes('.')) return defaultScope;
     const owner = defaultScope.split('.')[0];
     if (!owner) return undefined;
     return `${owner}.*`;
@@ -219,8 +237,8 @@ export class ScopeTrust {
       const owner = pattern.slice(0, -2);
       return /^[a-zA-Z0-9_-]+$/.test(owner);
     }
-    // exact: owner.name
-    return /^[a-zA-Z0-9_-]+\.[a-zA-Z0-9_./-]+$/.test(pattern);
+    // exact: either dotless ("my-scope") or owner.name ("acme.frontend").
+    return /^[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_./-]+)?$/.test(pattern);
   }
 }
 
