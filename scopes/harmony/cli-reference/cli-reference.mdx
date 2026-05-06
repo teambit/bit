@@ -1403,7 +1403,10 @@ bit lane diff from to => diff between "from" lane and "to" lane.
 
 **Usage**: `lane import <lane>`
 
-**Description**: import a remote lane to your workspace and switch to that lane
+**Description**: import a remote lane to your workspace  
+when on the default lane, the workspace is switched to the imported lane.  
+when already on the same lane, only the latest objects are fetched from the remote — run "bit checkout head" to update the workspace.  
+when on a different lane, the lane is fetched locally without switching to avoid disrupting your work — run `bit switch <lane>` to switch.
 
 | **Arg** |   **Description**    |
 | ------- | :------------------: |

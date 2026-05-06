@@ -459,10 +459,10 @@ export class LaneHistoryCmd implements Command {
     if (id) {
       const historyItem = history[id];
       if (!historyItem) throw new Error(`history id ${id} was not found`);
-      return { historyItem, id, history, singleItem: true };
+      return { historyItem, id, history, singleItem: true as const };
     }
 
-    return { history, singleItem: false };
+    return { history, sortedIds: laneHistory.getHistoryIds(), singleItem: false as const };
   }
 
   private getDateString(date: string) {
@@ -470,9 +470,10 @@ export class LaneHistoryCmd implements Command {
   }
 
   async report([laneName]: [string], { id }: { id?: string }): Promise<string> {
-    const { history, historyItem, singleItem } = await this.getHistoryData(laneName, id);
+    const data = await this.getHistoryData(laneName, id);
 
-    if (singleItem && historyItem) {
+    if (data.singleItem) {
+      const { historyItem } = data;
       const date = this.getDateString(historyItem.log.date);
       const message = historyItem.log.message;
       const updateDependentsBlock = historyItem.updateDependents?.length
@@ -481,7 +482,8 @@ export class LaneHistoryCmd implements Command {
       return `${id} ${date} ${historyItem.log.username} ${message}\n\n${historyItem.components.join('\n')}${updateDependentsBlock}`;
     }
 
-    const items = Object.keys(history).map((uuid) => {
+    const { history, sortedIds } = data;
+    const items = sortedIds.map((uuid) => {
       const item = history[uuid];
       const date = this.getDateString(item.log.date);
       const message = item.log.message;
@@ -491,9 +493,10 @@ export class LaneHistoryCmd implements Command {
   }
 
   async json([laneName]: [string], { id }: { id?: string }) {
-    const { history, historyItem, id: historyId, singleItem } = await this.getHistoryData(laneName, id);
+    const data = await this.getHistoryData(laneName, id);
 
-    if (singleItem && historyItem) {
+    if (data.singleItem) {
+      const { historyItem, id: historyId } = data;
       return {
         id: historyId,
         date: historyItem.log.date,
@@ -504,7 +507,8 @@ export class LaneHistoryCmd implements Command {
       };
     }
 
-    return Object.keys(history).map((uuid) => {
+    const { history, sortedIds } = data;
+    return sortedIds.map((uuid) => {
       const item = history[uuid];
       return {
         id: uuid,
@@ -668,7 +672,10 @@ export class LaneRemoveCompCmd implements Command {
 
 export class LaneImportCmd implements Command {
   name = 'import <lane>';
-  description = `import a remote lane to your workspace and switch to that lane`;
+  description = `import a remote lane to your workspace`;
+  extendedDescription = `when on the default lane, the workspace is switched to the imported lane.
+when already on the same lane, only the latest objects are fetched from the remote — run "bit checkout head" to update the workspace.
+when on a different lane, the lane is fetched locally without switching to avoid disrupting your work — run \`bit switch <lane>\` to switch.`;
   arguments = [{ name: 'lane', description: 'the remote lane name' }];
   alias = '';
   options = [
@@ -689,7 +696,10 @@ export class LaneImportCmd implements Command {
   ] as CommandOptions;
   loader = true;
 
-  constructor(private switchCmd: SwitchCmd) {}
+  constructor(
+    private switchCmd: SwitchCmd,
+    private lanes: LanesMain
+  ) {}
 
   async report(
     [lane]: [string],
@@ -712,14 +722,39 @@ export class LaneImportCmd implements Command {
     if (forceOurs && forceTheirs) {
       throw new BitError('please use either --force-ours or --force-theirs, not both');
     }
-    return this.switchCmd.report([lane], {
-      skipDependencyInstallation,
-      pattern,
-      branch,
-      autoMergeResolve,
-      forceOurs,
-      forceTheirs,
-    });
+
+    const currentLaneId = this.lanes.getCurrentLaneId();
+    // when on the default lane (or outside a workspace), keep the original behavior: switch to the imported lane.
+    if (!currentLaneId || currentLaneId.isDefault()) {
+      return this.switchCmd.report([lane], {
+        skipDependencyInstallation,
+        pattern,
+        branch,
+        autoMergeResolve,
+        forceOurs,
+        forceTheirs,
+      });
+    }
+
+    // already on a (non-default) lane: do not auto-switch, only fetch the lane locally.
+    const targetLaneId = await this.lanes.parseLaneId(lane);
+    await this.lanes.fetchLaneWithItsComponents(targetLaneId);
+
+    if (currentLaneId.isEqual(targetLaneId)) {
+      return joinSections([
+        formatSuccessSummary(
+          `you are already on lane "${chalk.bold(targetLaneId.toString())}". the lane has been fetched from the remote, but your workspace files were ${chalk.bold('not')} updated.`
+        ),
+        `${chalk.yellow('to update your workspace files to the latest')}, run "${chalk.bold('bit checkout head')}".`,
+      ]);
+    }
+
+    return joinSections([
+      formatSuccessSummary(`imported lane "${chalk.bold(targetLaneId.toString())}" locally`),
+      formatHint(
+        `you are still on lane "${currentLaneId.toString()}". to switch to the imported lane, run "bit switch ${targetLaneId.toString()}"`
+      ),
+    ]);
   }
 }
 
