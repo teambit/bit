@@ -532,12 +532,6 @@ export class SnappingMain {
       isSnap: !shouldTag,
       message: params.message as string,
       updateDependentsOnLane: params.updateDependents,
-      // when adding a hidden updateDependent, the unified architecture relies on autotag
-      // (`getLaneAutoTagIdsFromScope`) to find lane.components that depend on the new entry and
-      // re-snap them with the cascaded dep — that's scenario 4. Callers that pass
-      // `skipAutoTag: true` (e.g., dot-cli's snap-from-scope command) are overridden here in the
-      // updateDependents flow specifically.
-      skipAutoTag: params.updateDependents ? false : params.skipAutoTag,
     };
     const results = await this.makeVersion(ids, components, makeVersionParams);
 
