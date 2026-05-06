@@ -18,10 +18,11 @@ export type TrustedScopesGroups = {
 };
 
 /**
- * Workspace-level scope-trust policy. Determines which scopes' aspects
- * (envs, generators, etc.) may be loaded into the host process.
+ * Workspace-level scope-trust policy. Opt-in: when the `trustedScopes` key is
+ * present in workspace.jsonc (even as an empty array), the aspect-load gate
+ * is active. When the key is absent, no gate runs and any aspect loads.
  *
- * A scope is trusted if it matches any pattern in:
+ * Once opted in, a scope is trusted if it matches any pattern in:
  * - the builtin set (`teambit.*`, `bitdev.*`),
  * - the owner wildcard derived from the workspace's `defaultScope`
  *   (e.g. `acme.frontend` → `acme.*`),
@@ -39,8 +40,22 @@ export class ScopeTrust {
   ) {}
 
   /**
+   * `true` when the workspace has opted in (the `trustedScopes` key is present
+   * in workspace.jsonc, even as an empty array). When `false`, the aspect-load
+   * gate is a no-op.
+   */
+  isOptedIn(): boolean {
+    try {
+      const ext = this.workspace.getWorkspaceConfig().extension(WORKSPACE_ASPECT_ID, true) || {};
+      return Object.prototype.hasOwnProperty.call(ext, 'trustedScopes');
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Effective trust list, broken down by source. Useful for both internal
-   * checks and the `bit scope trust` listing UX.
+   * checks and the `bit scope trust list` UX.
    */
   getEffectiveTrustedPatterns(): TrustedScopesGroups {
     const configured = this.readConfiguredPatterns();
@@ -86,11 +101,32 @@ export class ScopeTrust {
     return false;
   }
 
-  /** Add `pattern` to `trustedScopes` in workspace.jsonc and persist. */
+  /** Opt the workspace in by writing `trustedScopes: []` (idempotent). */
+  async enable(): Promise<void> {
+    const wsConfig = this.workspace.getWorkspaceConfig();
+    const existingExt = wsConfig.extension(WORKSPACE_ASPECT_ID, true) || {};
+    if (Object.prototype.hasOwnProperty.call(existingExt, 'trustedScopes')) return;
+    const updated = { ...existingExt, trustedScopes: [] };
+    wsConfig.setExtension(WORKSPACE_ASPECT_ID, updated, { overrideExisting: true, ignoreVersion: true });
+    await wsConfig.write({ reasonForChange: 'enable scope-trust' });
+  }
+
+  /** Opt the workspace out by removing the `trustedScopes` key (idempotent). */
+  async disable(): Promise<void> {
+    const wsConfig = this.workspace.getWorkspaceConfig();
+    const existingExt = wsConfig.extension(WORKSPACE_ASPECT_ID, true) || {};
+    if (!Object.prototype.hasOwnProperty.call(existingExt, 'trustedScopes')) return;
+    const updated = { ...existingExt };
+    delete updated.trustedScopes;
+    wsConfig.setExtension(WORKSPACE_ASPECT_ID, updated, { overrideExisting: true, ignoreVersion: true });
+    await wsConfig.write({ reasonForChange: 'disable scope-trust' });
+  }
+
+  /** Add `pattern` to `trustedScopes` (auto-enables if not yet). */
   async addTrustedScope(pattern: string): Promise<void> {
     if (!ScopeTrust.isValidPattern(pattern)) {
       throw new BitError(
-        `invalid scope pattern: "${pattern}". Use an exact scope name (e.g. "acme.frontend") or an owner wildcard (e.g. "acme.*").`
+        `invalid scope pattern: "${pattern}". use an exact scope name (e.g. "acme.frontend") or an owner wildcard (e.g. "acme.*").`
       );
     }
     const wsConfig = this.workspace.getWorkspaceConfig();
@@ -102,7 +138,10 @@ export class ScopeTrust {
     await wsConfig.write({ reasonForChange: `add trusted scope ${pattern}` });
   }
 
-  /** Remove `pattern` from `trustedScopes` in workspace.jsonc and persist. */
+  /**
+   * Remove `pattern` from `trustedScopes`. Leaves the key in place even if
+   * the list becomes empty — use `disable()` to fully turn the gate off.
+   */
   async removeTrustedScope(pattern: string): Promise<void> {
     const wsConfig = this.workspace.getWorkspaceConfig();
     const existingExt = wsConfig.extension(WORKSPACE_ASPECT_ID, true) || {};
@@ -114,12 +153,13 @@ export class ScopeTrust {
   }
 
   /**
-   * Build the guard that scope-aspects-loader calls before each `require()`.
-   * Throws to refuse the load. Throws with TOFU-prompt outcome on TTY,
-   * otherwise with a clear instructional error.
+   * Build the aspect-load guard. No-op when not opted in. When opted in:
+   * untrusted scopes get a TTY prompt to extend the trust list, or in
+   * non-TTY contexts an instructional error.
    */
   createGuard(): (componentId: ComponentID) => Promise<void> {
     return async (componentId: ComponentID) => {
+      if (!this.isOptedIn()) return;
       const scopeName = componentId.scope;
       if (this.isScopeTrusted(scopeName)) return;
 
@@ -189,7 +229,7 @@ function makeUntrustedError(scopeName: string, componentId: ComponentID): BitErr
     `cannot load aspect ${componentId.toString()}: scope "${scopeName}" isn't on the workspace's trusted list.\n` +
       `\n` +
       `to trust this scope, run:\n` +
-      `  bit scope trust ${scopeName}\n` +
+      `  bit scope trust add ${scopeName}\n` +
       `or add it to "trustedScopes" under "${WORKSPACE_ASPECT_ID}" in workspace.jsonc.`
   );
 }
