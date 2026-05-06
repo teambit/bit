@@ -1,5 +1,5 @@
 import type { Command } from '@teambit/cli';
-import { formatSuccessSummary } from '@teambit/cli';
+import { formatHint, formatItem, formatSection, formatSuccessSummary, formatTitle, joinSections } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
 import type { ScopeTrust } from './scope-trust';
@@ -57,47 +57,51 @@ once on, the effective trust set is: builtin (teambit.*, bitdev.*) + the owner o
         await this.scopeTrust.disable();
         return formatSuccessSummary('scope-trust disabled (removed trustedScopes from workspace.jsonc)');
       case 'add':
-        if (!pattern) throw new BitError('"add" requires a pattern. example: bit scope trust add acme.frontend');
-        await this.scopeTrust.addTrustedScope(pattern);
+        await this.scopeTrust.addTrustedScope(requirePattern(action, pattern));
         return formatSuccessSummary(`added ${chalk.bold(pattern)} to trustedScopes in workspace.jsonc`);
       case 'remove':
-        if (!pattern) throw new BitError('"remove" requires a pattern. example: bit scope trust remove acme.frontend');
-        await this.scopeTrust.removeTrustedScope(pattern);
+        await this.scopeTrust.removeTrustedScope(requirePattern(action, pattern));
         return formatSuccessSummary(`removed ${chalk.bold(pattern)} from trustedScopes in workspace.jsonc`);
-      default:
-        throw new BitError(`unknown action "${action}". valid actions: ${ACTIONS.join(', ')}.`);
     }
   }
 
   private formatList(): string {
     if (!this.scopeTrust.isOptedIn()) {
-      return [
-        chalk.bold('scope-trust is off for this workspace.'),
+      return joinSections([
+        formatTitle('scope-trust is off for this workspace.'),
         'aspects from any scope load without a check.',
-        '',
-        'to turn on, run:',
-        '  bit scope trust enable           (no scopes added; only builtins + owner-of-defaultScope auto-trusted)',
-        '  bit scope trust add <pattern>    (turns on and adds the first scope)',
-      ].join('\n');
+        formatHint(
+          'to turn on:\n  bit scope trust enable        (no scopes added; only builtins + owner-of-defaultScope auto-trusted)\n  bit scope trust add <pattern> (turns on and adds the first scope)'
+        ),
+      ]);
     }
     const groups = this.scopeTrust.getEffectiveTrustedPatterns();
-    const lines: string[] = [];
-    lines.push(chalk.bold('scope-trust is on. aspects from these scopes load without a prompt:'));
-    lines.push('');
-    lines.push(chalk.dim('builtin:'));
-    groups.builtin.forEach((p) => lines.push(`  ${p}`));
-    if (groups.owner.length) {
-      lines.push('');
-      lines.push(chalk.dim('inferred from workspace defaultScope:'));
-      groups.owner.forEach((p) => lines.push(`  ${p}`));
-    }
-    lines.push('');
-    lines.push(chalk.dim('configured in workspace.jsonc:'));
-    if (!groups.configured.length) {
-      lines.push(`  ${chalk.dim('(none — use "bit scope trust add <pattern>" to add)')}`);
-    } else {
-      groups.configured.forEach((p) => lines.push(`  ${p}`));
-    }
-    return lines.join('\n');
+    return joinSections([
+      formatTitle('scope-trust is on. aspects from these scopes load without a prompt:'),
+      formatSection(
+        'builtin',
+        '',
+        groups.builtin.map((p) => formatItem(p))
+      ),
+      formatSection(
+        'inferred from workspace defaultScope',
+        '',
+        groups.owner.map((p) => formatItem(p))
+      ),
+      groups.configured.length
+        ? formatSection(
+            'configured in workspace.jsonc',
+            '',
+            groups.configured.map((p) => formatItem(p))
+          )
+        : formatHint('no scopes configured in workspace.jsonc. add one with `bit scope trust add <pattern>`.'),
+    ]);
   }
+}
+
+function requirePattern(action: Action, pattern: string | undefined): string {
+  if (!pattern) {
+    throw new BitError(`"${action}" requires a pattern. example: bit scope trust ${action} acme.frontend`);
+  }
+  return pattern;
 }

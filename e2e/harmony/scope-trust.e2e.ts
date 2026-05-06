@@ -18,6 +18,16 @@ import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/leg
 
 const MARKER_ENV_VAR = 'BIT_SCOPE_TRUST_TEST_MARKER';
 
+const ENV_WITH_MARKER_SOURCE = `
+import * as fs from 'fs';
+const marker = process.env.${MARKER_ENV_VAR};
+if (marker) {
+  try { fs.writeFileSync(marker, 'env-module-loaded'); } catch (e) { /* best effort */ }
+}
+export class EmptyEnv {}
+export default new EmptyEnv();
+`;
+
 (supportNpmCiRegistryTesting ? describe : describe.skip)(
   'workspace scope-trust gate around aspect loading',
   function () {
@@ -44,18 +54,7 @@ const MARKER_ENV_VAR = 'BIT_SCOPE_TRUST_TEST_MARKER';
 
       // Env whose module body writes the marker file when MARKER_ENV_VAR is set.
       helper.env.setEmptyEnv();
-      helper.fs.outputFile(
-        'empty-env/empty-env.bit-env.ts',
-        `
-import * as fs from 'fs';
-const marker = process.env.${MARKER_ENV_VAR};
-if (marker) {
-  try { fs.writeFileSync(marker, 'env-module-loaded'); } catch (e) { /* best effort */ }
-}
-export class EmptyEnv {}
-export default new EmptyEnv();
-`
-      );
+      helper.fs.outputFile('empty-env/empty-env.bit-env.ts', ENV_WITH_MARKER_SOURCE);
 
       helper.fixtures.populateComponents(1, false);
       helper.command.setEnv('comp1', 'empty-env');
@@ -151,18 +150,7 @@ export default new EmptyEnv();
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, compRemote.scopePath);
 
       helper.env.setEmptyEnv();
-      helper.fs.outputFile(
-        'empty-env/empty-env.bit-env.ts',
-        `
-import * as fs from 'fs';
-const marker = process.env.${MARKER_ENV_VAR};
-if (marker) {
-  try { fs.writeFileSync(marker, 'env-module-loaded'); } catch (e) { /* best effort */ }
-}
-export class EmptyEnv {}
-export default new EmptyEnv();
-`
-      );
+      helper.fs.outputFile('empty-env/empty-env.bit-env.ts', ENV_WITH_MARKER_SOURCE);
 
       helper.fixtures.populateComponents(1, false);
       helper.command.setEnv('comp1', 'empty-env');

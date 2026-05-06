@@ -1,12 +1,15 @@
 import type { ComponentID } from '@teambit/component-id';
 import type { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
+import { isValidScopeName } from '@teambit/legacy-bit-id';
 import { prompt } from 'enquirer';
 import type { Workspace } from '../workspace';
 
 const BUILTIN_TRUSTED_PATTERNS = ['teambit.*', 'bitdev.*'];
 
 const WORKSPACE_ASPECT_ID = 'teambit.workspace/workspace';
+
+const TRUSTED_SCOPES_KEY = 'trustedScopes';
 
 export type TrustedScopesGroups = {
   /** patterns built into Bit (`teambit.*`, `bitdev.*`) */
@@ -24,8 +27,8 @@ export type TrustedScopesGroups = {
  *
  * Once opted in, a scope is trusted if it matches any pattern in:
  * - the builtin set (`teambit.*`, `bitdev.*`),
- * - the owner wildcard derived from the workspace's `defaultScope`
- *   (e.g. `acme.frontend` → `acme.*`),
+ * - the pattern derived from the workspace's `defaultScope`
+ *   (e.g. `acme.frontend` → `acme.*`; legacy dotless `my-scope` → `my-scope`),
  * - the `trustedScopes` array configured in workspace.jsonc.
  *
  * Patterns are exact (`acme.frontend`) or owner wildcard (`acme.*`).
@@ -34,6 +37,8 @@ export type TrustedScopesGroups = {
  * aspect-loader path so untrusted aspects never reach `require()`.
  */
 export class ScopeTrust {
+  private deniedThisRun = new Set<string>();
+
   constructor(
     private workspace: Workspace,
     private logger: Logger
@@ -45,12 +50,7 @@ export class ScopeTrust {
    * gate is a no-op.
    */
   isOptedIn(): boolean {
-    try {
-      const ext = this.workspace.getWorkspaceConfig().extension(WORKSPACE_ASPECT_ID, true) || {};
-      return Object.prototype.hasOwnProperty.call(ext, 'trustedScopes');
-    } catch {
-      return false;
-    }
+    return Object.prototype.hasOwnProperty.call(this.readExt(), TRUSTED_SCOPES_KEY);
   }
 
   /**
@@ -58,22 +58,14 @@ export class ScopeTrust {
    * checks and the `bit scope trust list` UX.
    */
   getEffectiveTrustedPatterns(): TrustedScopesGroups {
-    const configured = this.readConfiguredPatterns();
-    const owner = this.getOwnerWildcardFromDefaultScope();
+    const ext = this.readExt();
+    const configured = Array.isArray(ext[TRUSTED_SCOPES_KEY]) ? (ext[TRUSTED_SCOPES_KEY] as string[]).slice() : [];
+    const owner = this.getInferredOwnerPattern();
     return {
       builtin: BUILTIN_TRUSTED_PATTERNS.slice(),
       owner: owner ? [owner] : [],
       configured,
     };
-  }
-
-  private readConfiguredPatterns(): string[] {
-    try {
-      const ext = this.workspace.getWorkspaceConfig().extension(WORKSPACE_ASPECT_ID, true) || {};
-      return Array.isArray(ext.trustedScopes) ? ext.trustedScopes.slice() : [];
-    } catch {
-      return [];
-    }
   }
 
   /**
@@ -103,24 +95,20 @@ export class ScopeTrust {
 
   /** Opt the workspace in by writing `trustedScopes: []` (idempotent). */
   async enable(): Promise<void> {
-    const wsConfig = this.workspace.getWorkspaceConfig();
-    const existingExt = wsConfig.extension(WORKSPACE_ASPECT_ID, true) || {};
-    if (Object.prototype.hasOwnProperty.call(existingExt, 'trustedScopes')) return;
-    wsConfig.setExtension(WORKSPACE_ASPECT_ID, { trustedScopes: [] }, { mergeIntoExisting: true, ignoreVersion: true });
-    await wsConfig.write({ reasonForChange: 'enable scope-trust' });
+    if (this.isOptedIn()) return;
+    await this.writeExtPatch({ [TRUSTED_SCOPES_KEY]: [] }, 'enable scope-trust');
   }
 
   /**
    * Opt the workspace out by removing the `trustedScopes` key (idempotent).
    * Uses `overrideExisting` because key deletion isn't expressible via
-   * mergeIntoExisting; comments on other keys may be reformatted as a result.
+   * `mergeIntoExisting`; comments on other keys may be reformatted as a result.
    */
   async disable(): Promise<void> {
+    if (!this.isOptedIn()) return;
+    const updated = { ...this.readExt() };
+    delete updated[TRUSTED_SCOPES_KEY];
     const wsConfig = this.workspace.getWorkspaceConfig();
-    const existingExt = wsConfig.extension(WORKSPACE_ASPECT_ID, true) || {};
-    if (!Object.prototype.hasOwnProperty.call(existingExt, 'trustedScopes')) return;
-    const updated = { ...existingExt };
-    delete updated.trustedScopes;
     wsConfig.setExtension(WORKSPACE_ASPECT_ID, updated, { overrideExisting: true, ignoreVersion: true });
     await wsConfig.write({ reasonForChange: 'disable scope-trust' });
   }
@@ -132,18 +120,10 @@ export class ScopeTrust {
         `invalid scope pattern: "${pattern}". use an exact scope name (e.g. "acme.frontend" or "my-scope") or an owner wildcard (e.g. "acme.*").`
       );
     }
-    const wsConfig = this.workspace.getWorkspaceConfig();
-    const existingExt = wsConfig.extension(WORKSPACE_ASPECT_ID, true) || {};
-    const existingList: string[] = Array.isArray(existingExt.trustedScopes) ? existingExt.trustedScopes : [];
-    if (existingList.includes(pattern)) return; // idempotent
-    // mergeIntoExisting: only the trustedScopes key is rewritten; comments
-    // and other keys in workspace.jsonc are preserved.
-    wsConfig.setExtension(
-      WORKSPACE_ASPECT_ID,
-      { trustedScopes: [...existingList, pattern] },
-      { mergeIntoExisting: true, ignoreVersion: true }
+    await this.mutateConfiguredList(
+      (list) => (list.includes(pattern) ? null : [...list, pattern]),
+      `add trusted scope ${pattern}`
     );
-    await wsConfig.write({ reasonForChange: `add trusted scope ${pattern}` });
   }
 
   /**
@@ -151,16 +131,10 @@ export class ScopeTrust {
    * the list becomes empty — use `disable()` to fully turn the gate off.
    */
   async removeTrustedScope(pattern: string): Promise<void> {
-    const wsConfig = this.workspace.getWorkspaceConfig();
-    const existingExt = wsConfig.extension(WORKSPACE_ASPECT_ID, true) || {};
-    const existingList: string[] = Array.isArray(existingExt.trustedScopes) ? existingExt.trustedScopes : [];
-    if (!existingList.includes(pattern)) return; // idempotent
-    wsConfig.setExtension(
-      WORKSPACE_ASPECT_ID,
-      { trustedScopes: existingList.filter((p) => p !== pattern) },
-      { mergeIntoExisting: true, ignoreVersion: true }
+    await this.mutateConfiguredList(
+      (list) => (list.includes(pattern) ? list.filter((p) => p !== pattern) : null),
+      `remove trusted scope ${pattern}`
     );
-    await wsConfig.write({ reasonForChange: `remove trusted scope ${pattern}` });
   }
 
   /**
@@ -174,28 +148,56 @@ export class ScopeTrust {
       const scopeName = componentId.scope;
       if (this.isScopeTrusted(scopeName)) return;
 
-      // Don't prompt twice for the same untrusted scope in a single run.
-      // The user's answer is persisted to workspace.jsonc on accept.
-      if (this.deniedThisRun.has(scopeName)) {
+      const deny = (): never => {
         throw makeUntrustedError(scopeName, componentId);
-      }
+      };
+
+      // The user's answer is persisted to workspace.jsonc on accept; remember
+      // a denial so we don't re-prompt for the same scope in this run.
+      if (this.deniedThisRun.has(scopeName)) deny();
 
       const isInteractive = Boolean(process.stdin.isTTY) && Boolean(process.stdout.isTTY);
-      if (!isInteractive) {
-        throw makeUntrustedError(scopeName, componentId);
-      }
+      if (!isInteractive) deny();
 
       const accepted = await this.promptForTrust(scopeName, componentId);
       if (!accepted) {
         this.deniedThisRun.add(scopeName);
-        throw makeUntrustedError(scopeName, componentId);
+        deny();
       }
       await this.addTrustedScope(scopeName);
       this.logger.consoleSuccess(`added "${scopeName}" to trustedScopes in workspace.jsonc`);
     };
   }
 
-  private deniedThisRun = new Set<string>();
+  private readExt(): Record<string, unknown> {
+    try {
+      return (this.workspace.getWorkspaceConfig().extension(WORKSPACE_ASPECT_ID, true) || {}) as Record<
+        string,
+        unknown
+      >;
+    } catch {
+      return {};
+    }
+  }
+
+  /**
+   * Apply `mutator` to the current `trustedScopes` list. If the mutator
+   * returns `null`, treat the call as a no-op (idempotent fast path).
+   * Uses `mergeIntoExisting` so other keys' comments are preserved.
+   */
+  private async mutateConfiguredList(mutator: (list: string[]) => string[] | null, reason: string): Promise<void> {
+    const ext = this.readExt();
+    const current: string[] = Array.isArray(ext[TRUSTED_SCOPES_KEY]) ? (ext[TRUSTED_SCOPES_KEY] as string[]) : [];
+    const next = mutator(current);
+    if (next === null) return;
+    await this.writeExtPatch({ [TRUSTED_SCOPES_KEY]: next }, reason);
+  }
+
+  private async writeExtPatch(patch: Record<string, unknown>, reason: string): Promise<void> {
+    const wsConfig = this.workspace.getWorkspaceConfig();
+    wsConfig.setExtension(WORKSPACE_ASPECT_ID, patch, { mergeIntoExisting: true, ignoreVersion: true });
+    await wsConfig.write({ reasonForChange: reason });
+  }
 
   /**
    * Returns the trust pattern derived from the workspace's `defaultScope`:
@@ -203,7 +205,7 @@ export class ScopeTrust {
    * - `my-scope` (legacy dotless) → `my-scope` (exact match)
    * - empty / unset → undefined
    */
-  private getOwnerWildcardFromDefaultScope(): string | undefined {
+  private getInferredOwnerPattern(): string | undefined {
     const defaultScope = this.workspace.defaultScope;
     if (!defaultScope) return undefined;
     if (!defaultScope.includes('.')) return defaultScope;
@@ -223,7 +225,9 @@ export class ScopeTrust {
         enabled: 'Yes',
         disabled: 'No',
         initial: false,
-      } as any)) as { trust: boolean };
+        // The `toggle` prompt's option type isn't exported by enquirer's main
+        // typings; cast just the literal so the rest of the call stays typed.
+      } as Parameters<typeof prompt>[0])) as { trust: boolean };
       return Boolean(response.trust);
     } catch {
       // user cancelled the prompt (Ctrl+C etc.)
@@ -233,14 +237,11 @@ export class ScopeTrust {
 
   static isValidPattern(pattern: string): boolean {
     if (!pattern || typeof pattern !== 'string') return false;
-    if (pattern.endsWith('.*')) {
-      const owner = pattern.slice(0, -2);
-      return /^[a-zA-Z0-9_-]+$/.test(owner);
-    }
-    // exact: either dotless ("my-scope") or owner.name ("acme.frontend").
-    // Slash isn't allowed — scope names don't contain `/` (it separates scope
-    // from component name in component IDs).
-    return /^[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)?$/.test(pattern);
+    // owner wildcard ("acme.*"): the prefix without the trailing ".*" must be
+    // a valid scope-owner segment. The owner alone ("acme") is itself a valid
+    // dotless scope name, so reuse the canonical scope-name validator.
+    const candidate = pattern.endsWith('.*') ? pattern.slice(0, -2) : pattern;
+    return isValidScopeName(candidate);
   }
 }
 
