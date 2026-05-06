@@ -202,6 +202,21 @@ export class ScopeMain implements ComponentFactory {
   localAspects: string[] = [];
 
   /**
+   * Optional hook called immediately before an aspect is `require()`d from a
+   * scope-aspects capsule. Throws to refuse the load. The workspace aspect
+   * registers this to enforce the per-workspace scope-trust list.
+   */
+  private aspectLoadGuard?: (componentId: ComponentID) => Promise<void>;
+
+  setAspectLoadGuard(guard: (componentId: ComponentID) => Promise<void>): void {
+    this.aspectLoadGuard = guard;
+  }
+
+  getAspectLoadGuard(): ((componentId: ComponentID) => Promise<void>) | undefined {
+    return this.aspectLoadGuard;
+  }
+
+  /**
    * name of the scope
    */
   get name(): string {

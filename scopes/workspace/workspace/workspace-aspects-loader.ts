@@ -490,6 +490,11 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       const component = aspectDef.component;
       if (!component) return undefined;
       const requireFunc = async () => {
+        // Honor the workspace's scope-trust hook (registered on ScopeMain).
+        // Workspace and scope-aspects-loader take parallel require paths.
+        const guard = this.scope.getAspectLoadGuard();
+        if (guard) await guard(component.id);
+
         const plugins = this.aspectLoader.getPlugins(component, localPath);
         if (plugins.has()) {
           return plugins.load(MainRuntime.name);
