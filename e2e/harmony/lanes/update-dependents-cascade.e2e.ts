@@ -807,12 +807,13 @@ describe('local snap cascades updateDependents on the lane', function () {
   });
 
   // ---------------------------------------------------------------------------------------------
-  // Scenario 15: `bit lane checkout <history-id>` must rewind hidden updateDependents on the lane
-  // alongside the visible components. Hidden entries don't go through the workspace `checkout`
-  // path (no bitmap, no files), so the rewind happens directly on the lane object —
-  // `lane.updateDependents` is set to the historical hashes and the lane is saved.
+  // Scenario 15: `bit lane checkout <history-id>` is a workspace-navigation operation. It rewrites
+  // the workspace files / bitmap of visible components but never touches the lane object — same
+  // for visible heads (which stay put) and for hidden updateDependents (which stay at the
+  // post-cascade hash). If the user keeps working on the lane, the next snap re-cascades off the
+  // new files; if they fork, the new lane starts fresh.
   // ---------------------------------------------------------------------------------------------
-  describe('scenario 15: bit lane checkout rewinds hidden updateDependents on the lane', () => {
+  describe('scenario 15: bit lane checkout leaves hidden updateDependents untouched on the lane', () => {
     let comp2InUpdDepInitial: string;
     let comp3HeadOnLaneInitial: string;
     let comp2HeadAfterCascade: string;
@@ -829,7 +830,7 @@ describe('local snap cascades updateDependents on the lane', function () {
       helper.command.importLane('dev', '-x');
       helper.command.importComponent('comp3');
 
-      // Snapshot the history-id BEFORE the cascade snap. This is what we'll checkout to.
+      // Snapshot the history-id BEFORE the cascade snap.
       const historyBeforeCascade = helper.command.laneHistoryParsed();
       const matchingEntry = historyBeforeCascade.find((e) =>
         (e.updateDependents || []).some((s: string) => s.endsWith(`@${comp2InUpdDepInitial}`))
@@ -850,13 +851,13 @@ describe('local snap cascades updateDependents on the lane', function () {
       helper.command.runCmd(`bit lane checkout ${preCascadeHistoryId} -x`);
     });
 
-    it('lane.updateDependents should rewind to the pre-cascade comp2 hash', () => {
+    it('lane.updateDependents should stay at the post-cascade hash (lane is not mutated by checkout)', () => {
       const localLane = helper.command.catLane('dev');
       expect(localLane.updateDependents).to.have.lengthOf(1);
-      expect(localLane.updateDependents[0].split('@')[1]).to.equal(comp2InUpdDepInitial);
+      expect(localLane.updateDependents[0].split('@')[1]).to.equal(comp2HeadAfterCascade);
     });
 
-    it('comp2 must stay hidden after the checkout (not promoted to lane.components)', () => {
+    it('comp2 must stay hidden (not promoted to lane.components)', () => {
       const localLane = helper.command.catLane('dev');
       const comp2InComponents = localLane.components.find((c) => c.id.name === 'comp2');
       expect(comp2InComponents, 'comp2 must not leak into lane.components').to.be.undefined;
