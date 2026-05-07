@@ -138,9 +138,11 @@ export class WorkspaceComponentLoader {
   //   componentsExtensionsCache   — scratch state for one load operation:
   //                                 the merged extensions / envId for an id,
   //                                 produced before the full load runs.
-  //   componentLoadedSelfAsAspects — memoization flag (not a value cache):
-  //                                 ensures each component is registered as
-  //                                 an aspect at most once.
+  //
+  // Aspect-load retry suppression is delegated to AspectLoaderMain — its
+  // `isAspectLoaded(id)` returns true for both successfully-loaded and
+  // previously-failed aspects (`failedAspects` registry), so we don't need a
+  // local memoization flag of our own.
   private componentsCache: InMemoryCache<Component>;
   private scopeComponentsCache: InMemoryCache<Component>;
   private componentsExtensionsCache: InMemoryCache<{
@@ -148,7 +150,6 @@ export class WorkspaceComponentLoader {
     errors: Error[] | undefined;
     envId: string | undefined;
   }>;
-  private componentLoadedSelfAsAspects: InMemoryCache<boolean>;
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -159,7 +160,6 @@ export class WorkspaceComponentLoader {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.scopeComponentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.componentsExtensionsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-    this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<GetManyRes> {
@@ -391,33 +391,29 @@ export class WorkspaceComponentLoader {
     components: Component[],
     opts: LoadCompAsAspectsOptions = { loadApps: true, loadEnvs: true, loadAspects: true }
   ): Promise<void> {
+    // Skip components we shouldn't load as aspects, plus those that are
+    // already loaded or previously failed (both reported via
+    // `aspectLoader.isAspectLoaded`, which returns true for failures so we
+    // don't retry). For everything else, decide whether the component qualifies
+    // as an app, env, or aspect based on its registered data.
     const aspectIds: string[] = [];
-    components.forEach((component) => {
-      const firstTimeToLoad = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
-      const excluded = opts.idsToNotLoadAsAspects?.includes(component.id.toString());
-      const isCore = this.aspectLoader.isCoreAspect(component.id.toStringWithoutVersion());
-      const alreadyLoaded = this.aspectLoader.isAspectLoaded(component.id.toString());
-      const skipLoading = excluded || isCore || alreadyLoaded || !firstTimeToLoad;
-
-      if (skipLoading) {
-        return;
-      }
+    for (const component of components) {
       const idStr = component.id.toString();
+      if (
+        opts.idsToNotLoadAsAspects?.includes(idStr) ||
+        this.aspectLoader.isCoreAspect(component.id.toStringWithoutVersion()) ||
+        this.aspectLoader.isAspectLoaded(idStr)
+      ) {
+        continue;
+      }
       const appData = component.state.aspects.get('teambit.harmony/application');
-      if (opts.loadApps && appData?.data?.appName) {
-        aspectIds.push(idStr);
-        this.componentLoadedSelfAsAspects.set(idStr, true);
-      }
       const envsData = component.state.aspects.get(EnvsAspect.id);
-      if (opts.loadEnvs && (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env')) {
-        aspectIds.push(idStr);
-        this.componentLoadedSelfAsAspects.set(idStr, true);
-      }
-      if (opts.loadAspects && envsData?.data?.type === 'aspect') {
-        aspectIds.push(idStr);
-        this.componentLoadedSelfAsAspects.set(idStr, true);
-      }
-    });
+      const isApp = opts.loadApps && appData?.data?.appName;
+      const isEnv =
+        opts.loadEnvs && (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env');
+      const isAspect = opts.loadAspects && envsData?.data?.type === 'aspect';
+      if (isApp || isEnv || isAspect) aspectIds.push(idStr);
+    }
     if (!aspectIds.length) return;
 
     try {
@@ -700,17 +696,11 @@ export class WorkspaceComponentLoader {
     this.componentsCache.deleteAll();
     this.scopeComponentsCache.deleteAll();
     this.componentsExtensionsCache.deleteAll();
-    this.componentLoadedSelfAsAspects.deleteAll();
   }
 
   clearComponentCache(id: ComponentID) {
     const idStr = id.toString();
-    const cachesToClear = [
-      this.componentsCache,
-      this.scopeComponentsCache,
-      this.componentsExtensionsCache,
-      this.componentLoadedSelfAsAspects,
-    ];
+    const cachesToClear = [this.componentsCache, this.scopeComponentsCache, this.componentsExtensionsCache];
     cachesToClear.forEach((cache) => {
       for (const cacheKey of cache.keys()) {
         if (cacheKey === idStr || cacheKey.startsWith(`${idStr}:`)) {
