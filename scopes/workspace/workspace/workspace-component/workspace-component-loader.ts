@@ -25,6 +25,7 @@ import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import type { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 import { MergeConfigConflict } from '../exceptions/merge-config-conflict';
+import { groupEnvsByDepLayer } from './env-dag-sort';
 
 type GetManyRes = {
   components: Component[];
@@ -341,40 +342,20 @@ export class WorkspaceComponentLoader {
   }
 
   /**
-   * This function will get a list of envs ids and will regroup them into two groups:
-   * 1. envs that are envs of envs from the group
-   * 2. other envs (envs which are just envs of regular components of the workspace)
-   * For Example:
-   * envsIds: [ReactEnv, NodeEnv, BitEnv]
-   * The env of ReactEnv and NodeEnv is BitEnv
-   * The result will be:
-   * [ [BitEnv], [ReactEnv, NodeEnv] ]
-   *
-   * At the moment this function is not recursive, in the future we might want to make it recursive
-   * @param envIds
-   * @param envsIdsOfWsComps
-   * @returns
+   * Layer envs so that envs-of-envs load before their dependents.
+   * Thin wrapper over `groupEnvsByDepLayer` — see that function for the algorithm
+   * and the one-level-only limitation.
    */
   private regroupEnvsIdsFromTheList(envIds: ComponentID[] = [], envsIdsOfWsComps: Set<string>): Array<ComponentID[]> {
-    const envsOfEnvs = new Set<string>();
-    envIds.forEach((envId) => {
-      const idStr = envId.toString();
-      const fromCache = this.componentsExtensionsCache.get(idStr);
-      if (!fromCache || !fromCache.extensions) {
-        return;
-      }
-      const envOfEnvId = fromCache.envId;
-      if (envOfEnvId && !envsIdsOfWsComps.has(idStr)) {
-        envsOfEnvs.add(envOfEnvId);
-      }
-    });
-    const existingEnvsOfEnvs = envIds.filter(
-      (id) => envsOfEnvs.has(id.toString()) || envsOfEnvs.has(id.toStringWithoutVersion())
+    return groupEnvsByDepLayer(
+      envIds,
+      (envId) => {
+        const fromCache = this.componentsExtensionsCache.get(envId.toString());
+        if (!fromCache || !fromCache.extensions) return undefined;
+        return fromCache.envId;
+      },
+      envsIdsOfWsComps
     );
-    const notExistingEnvsOfEnvs = envIds.filter(
-      (id) => !envsOfEnvs.has(id.toString()) && !envsOfEnvs.has(id.toStringWithoutVersion())
-    );
-    return [existingEnvsOfEnvs, notExistingEnvsOfEnvs];
   }
 
   private regroupExtIdsFromTheList(ids: ComponentID[]): Array<ComponentID[]> {
