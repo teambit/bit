@@ -18,6 +18,12 @@ export type TsserverClientOpts = {
   checkTypes?: CheckTypes; // whether errors/warnings are monitored and printed to the console.
   printTypeErrors?: boolean; // whether print typescript errors to the console.
   aggregateDiagnosticData?: boolean; // whether to aggregate diagnostic data instead of printing them to the console.
+  /**
+   * if false, files passed to the constructor are NOT opened during init().
+   * useful when the caller wants to control opening (e.g. batched open/close in `getDiagnostic`).
+   * default: true (backward compatible).
+   */
+  openFilesOnInit?: boolean;
 };
 
 export type DiagnosticData = {
@@ -68,13 +74,11 @@ export class TsserverClient {
           this.logger.error('TsserverClient.init failed', err);
         });
 
-      if (this.files.length) {
+      const shouldOpenFiles = this.options.openFilesOnInit !== false;
+      if (this.files.length && shouldOpenFiles) {
         const openPromises = this.files.map((file) => this.open(file));
         await Promise.all(openPromises.map((promise) => promise.catch((error) => error)));
         const failedFiles = openPromises.filter((promise) => promise instanceof Error);
-        if (failedFiles.length > 0) {
-          this.logger.error('TsserverClient.init failed to open files:', failedFiles);
-        }
         if (failedFiles.length > 0) {
           this.logger.error('TsserverClient.init failed to open files:', failedFiles);
         }
@@ -145,7 +149,9 @@ export class TsserverClient {
    * were found or not.
    *
    * @param files files to check
-   * @param batchSize if provided, files will be processed in batches to avoid overwhelming tsserver
+   * @param batchSize if provided, files will be processed in batches. when files were not pre-opened
+   *                  via init(), each batch is opened, checked, then closed — keeping tsserver memory
+   *                  bounded by the batch size to avoid OOM in large workspaces.
    */
   async getDiagnostic(files = this.files, batchSize?: number): Promise<any> {
     this.lastDiagnostics = [];
@@ -154,11 +160,41 @@ export class TsserverClient {
       return this.tsServer?.request(CommandTypes.Geterr, { delay: 0, files });
     }
 
-    // Process files in batches
+    const filesArePreOpened = files === this.files || files.every((f) => this.files.includes(f));
+    const total = files.length;
     for (let i = 0; i < files.length; i += batchSize) {
       const batch = files.slice(i, i + batchSize);
+      const upTo = Math.min(i + batchSize, total);
+      this.logger.setStatusLine(`type-checking files ${i + 1}-${upTo} of ${total}`);
+      if (!filesArePreOpened) {
+        await this.openFiles(batch);
+      }
       await this.tsServer?.request(CommandTypes.Geterr, { delay: 0, files: batch });
+      if (!filesArePreOpened) {
+        await this.closeFiles(batch);
+      }
     }
+    this.logger.clearStatusLine();
+  }
+
+  /**
+   * open multiple files in a single round-trip. useful when batching to bound tsserver memory.
+   */
+  async openFiles(files: string[]): Promise<void> {
+    if (!files.length) return;
+    await this.tsServer?.request(CommandTypes.UpdateOpen, {
+      openFiles: files.map((file) => ({ file, projectRootPath: this.projectPath })),
+    });
+  }
+
+  /**
+   * close multiple files in a single round-trip.
+   */
+  async closeFiles(files: string[]): Promise<void> {
+    if (!files.length) return;
+    await this.tsServer?.request(CommandTypes.UpdateOpen, {
+      closedFiles: files,
+    });
   }
 
   /**
