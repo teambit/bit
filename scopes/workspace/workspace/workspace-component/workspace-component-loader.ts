@@ -301,28 +301,15 @@ export class WorkspaceComponentLoader {
     const groupsToHandle = [
       // Always load first core envs
       { ids: groupedByIsCoreEnvs.true || [], core: true, aspects: true, seeders: true, envs: true },
-      // { ids: groupedByIsEnvOfWsComps.true || [], core: false, aspects: true, seeders: false, envs: true },
+      // The recursive env-DAG sort in `groupEnvsByDepLayer` places envs at the
+      // bottom of the chain (e.g. `core-aspect-env`/`core-aspect-env-jest`) in the
+      // earliest layer naturally. The hardcoded `core-aspect-env` prepending that
+      // used to live here is redundant under the recursive sort — see D-001.
       ...layeredEnvsGroups,
       { ids: extsNotFromTheList || [], core: false, aspects: true, seeders: false, envs: false },
       ...layeredExtGroups,
       { ids: groupedByIsExtOfAnother.false || [], core: false, aspects: false, seeders: true, envs: false },
     ];
-
-    // This is a special use case mostly for the bit core repo
-    const envsOfCoreAspectEnv = ['teambit.harmony/envs/core-aspect-env', 'teambit.harmony/envs/core-aspect-env-jest'];
-    const coreAspectEnvGroup = { ids: [], core: true, aspects: true, seeders: true, envs: true };
-    layeredEnvsGroups.forEach((group) => {
-      const filteredIds = group.ids.filter((id) => envsOfCoreAspectEnv.includes(id.toStringWithoutVersion()));
-      if (filteredIds.length) {
-        // @ts-ignore
-        coreAspectEnvGroup.ids.push(...filteredIds);
-      }
-    });
-    if (coreAspectEnvGroup.ids.length) {
-      // enter first in the list
-      groupsToHandle.unshift(coreAspectEnvGroup);
-    }
-    // END of bit repo special use case
 
     const groupsByWsScope = groupsToHandle.map((group) => {
       if (!group.ids?.length) return undefined;
