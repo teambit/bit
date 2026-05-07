@@ -1,3 +1,36 @@
+/**
+ * WorkspaceComponentLoader — loads components from the workspace.
+ *
+ * Public surface:
+ *   getMany(ids)        — load many components, with batching and shared phases
+ *   get(id)             — load one component
+ *   getIfExist(id)      — load one, return undefined on not-found
+ *   getInvalid(ids)     — return components that fail to load
+ *   clearCache(),
+ *   clearComponentCache(id)
+ *
+ * Internal call shape (getMany):
+ *
+ *   getMany
+ *    ├─ getFromCache (per id)                      [components cache]
+ *    └─ getAndLoadSlotOrdered (for cache misses)
+ *        ├─ groupAndUpdateIds → classifyIds         [discovery.ts, pure]
+ *        ├─ buildLoadGroups
+ *        │   ├─ populateScopeAndExtensionsCache    [warms scratch caches]
+ *        │   └─ buildLoadPlanGroups                 [load-plan.ts, pure]
+ *        │       ├─ groupEnvsByDepLayer             [env-dag-sort.ts, pure]
+ *        │       └─ groupExtsByDepLayer             [dep-dag-sort.ts, pure]
+ *        └─ getAndLoadSlot (per group, in order)
+ *            ├─ getComponentsWithoutLoadExtensions
+ *            │   └─ consumer.loadComponents → loadOne
+ *            ├─ loadComponentsExtensions           [optional]
+ *            ├─ executeLoadSlot                    [onComponentLoad subscribers]
+ *            └─ loadCompsAsAspects                 [register as Harmony aspects]
+ *
+ * Caching: see D-002 in docs/rfcs/component-loading-rewrite/DECISIONS.md.
+ * Recursion / load-order: see D-001 in the same file.
+ */
+
 import pMap from 'p-map';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
