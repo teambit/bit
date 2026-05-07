@@ -431,8 +431,14 @@ export class VersionMaker {
     const fromScope = await this.getLaneAutoTagIdsFromScope(idsToTag, /* hiddenOnly */ Boolean(this.workspace));
     if (!this.workspace) return fromScope;
     // ids without versions are new. it's impossible that tagged (and not-modified) components has
-    // them as dependencies.
-    const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
+    // them as dependencies. Also filter out hidden lane entries — getAutoTagInfo loads
+    // `[potentialComponents, ...changedComponents]` from the workspace, so a hidden id in
+    // changedComponents throws MissingBitMapComponent. Hidden cascade is already covered by the
+    // scope-side `fromScope` pass above.
+    const consumer = this.workspace.consumer;
+    const idsToTriggerAutoTag = idsToTag.filter(
+      (id) => id.hasVersion() && consumer.bitMap.getComponentIfExist(id, { ignoreVersion: true })
+    );
     const autoTagDataWithLocalOnly = await this.workspace.getAutoTagInfo(
       ComponentIdList.fromArray(idsToTriggerAutoTag)
     );
