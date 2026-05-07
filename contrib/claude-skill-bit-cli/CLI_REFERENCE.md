@@ -810,6 +810,12 @@ Sets the scope for specified component/s. If no component is specified, sets the
 
 default scopes for components are set in the bitmap file. the default scope for a workspace is set in the workspace.jsonc. a component is set with a scope (as oppose to default scope) only once it is versioned.' you can use a `<pattern>` for multiple component ids, such as `bit scope set scope-name "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
 
+## bit scope trust [action] [pattern]
+
+manage which scopes are trusted to load aspects (envs, etc.) into the workspace's process
+
+scope-trust is opt-in. when off (the default), aspects from any scope load without a check. when on, aspects from a scope outside the trust list trigger a prompt (interactive shells) or an error (non-interactive). bit scope trust # same as "list" bit scope trust list # show status; if on, print the effective trust list bit scope trust enable # turn on (writes "trustedScopes": [] to workspace.jsonc) bit scope trust disable # turn off (removes "trustedScopes" from workspace.jsonc) bit scope trust add PATTERN # add a pattern (auto-enables if needed) bit scope trust remove PATTERN # remove a pattern (does NOT disable when list is empty) once on, the effective trust set is: builtin scopes (teambit._, bitdev._, and a few others — run "bit scope trust list" to see) + the owner of defaultScope + entries listed under "trustedScopes". patterns are exact ("acme.frontend") or owner wildcard ("acme.\*").
+
 ## bit scope rename <current-scope-name> <new-scope-name>
 
 rename the scope name for all components with the specified 'current scope name'. if exported, create new components and delete the original ones
