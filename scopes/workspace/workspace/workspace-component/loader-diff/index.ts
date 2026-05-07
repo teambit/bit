@@ -16,3 +16,15 @@ export function loaderDiffMode(): string | null {
   if (raw === '1' || raw.toLowerCase() === 'true') return 'v1-vs-v1';
   return raw;
 }
+
+/**
+ * Returns the sample rate from `BIT_LOADER_DIFF_SAMPLE`. Default 1 (every call).
+ * Use larger values on workspaces big enough that running both loaders for every
+ * call would OOM, e.g. `BIT_LOADER_DIFF_SAMPLE=10`.
+ */
+export function loaderDiffSampleEvery(): number {
+  const raw = process.env.BIT_LOADER_DIFF_SAMPLE;
+  if (!raw) return 1;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed >= 1 ? parsed : 1;
+}

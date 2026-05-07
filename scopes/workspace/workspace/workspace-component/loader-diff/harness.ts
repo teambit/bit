@@ -22,6 +22,12 @@ export interface LoaderDiffHarnessOptions {
   outputPath?: string;
   /** Tag written into each log line, e.g. "v1-vs-v1" or "v1-vs-v2". */
   comparisonLabel: string;
+  /**
+   * Sample rate. If `N > 1`, only every Nth call runs the partner loader.
+   * Reduces overhead on large workspaces where running both loaders for every
+   * call would OOM Node's default heap. Default: 1 (every call).
+   */
+  sampleEvery?: number;
 }
 
 /**
@@ -38,6 +44,7 @@ export class LoaderDiffHarness {
   private partner: WorkspaceComponentLoader | null = null;
   private readonly outputPath: string;
   private readonly comparisonLabel: string;
+  private readonly sampleEvery: number;
   private callIndex = 0;
   private writeFailureLogged = false;
 
@@ -49,6 +56,7 @@ export class LoaderDiffHarness {
   ) {
     this.outputPath = options.outputPath ?? path.join(os.tmpdir(), 'bit-loader-diff.jsonl');
     this.comparisonLabel = options.comparisonLabel;
+    this.sampleEvery = Math.max(1, Math.floor(options.sampleEvery ?? 1));
     this.writeHeader();
   }
 
@@ -116,6 +124,7 @@ export class LoaderDiffHarness {
     runPartner: () => Promise<Component[]>
   ): Promise<void> {
     const callId = this.callIndex++;
+    if (callId % this.sampleEvery !== 0) return;
     let partnerComponents: Component[];
     try {
       partnerComponents = await runPartner();

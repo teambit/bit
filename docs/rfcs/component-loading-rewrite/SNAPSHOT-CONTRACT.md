@@ -57,3 +57,30 @@ V1 and the rewritten loader and the harness reports zero diffs), add the
 relevant field here, update `snapshot.ts`, and rerun the V1-vs-V1 baseline. If
 V1-vs-V1 isn't zero on the new field, the field needs a normalization rule
 before it can join the contract.
+
+## Command coverage
+
+The harness wraps `Workspace.componentLoader`, so any command that loads
+components via `workspace.get` / `workspace.getMany` / `workspace.getIfExist`
+is covered. Confirmed:
+
+- `bit status` — covered (loads components, then compares against scope state).
+- `bit show <id>` — covered (calls `host.get(id)` which routes to the loader).
+
+**Not covered, by design:**
+
+- `bit list` — only reads `consumer.bitMap.bitmapIdsFromCurrentLane`. No
+  components are loaded. The harness can't observe what doesn't run.
+
+If you find a command that loads components but doesn't trigger the harness,
+that's a real gap — either the command is using a different loader path
+(`consumer.loadComponents` directly, scope-only loading, etc.) or the wrapping
+in `Workspace`'s constructor missed something. File it as a follow-up.
+
+## Sample rate (`BIT_LOADER_DIFF_SAMPLE`)
+
+On large workspaces (bit7 itself, ~300 components), running both loaders for
+every call doubles cache footprint and can OOM Node's default 4GB heap. Set
+`BIT_LOADER_DIFF_SAMPLE=10` to run the partner only every 10th call. The
+trade-off: sampling can miss regressions that only manifest on the
+non-sampled calls. Use the lowest sample rate the workspace can afford.
