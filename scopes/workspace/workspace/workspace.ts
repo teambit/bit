@@ -112,6 +112,7 @@ import { CompFiles } from './workspace-component/comp-files';
 import { Filter } from './filter';
 import type { ComponentStatusLegacy, ComponentStatusResult } from './workspace-component/component-status-loader';
 import { ComponentStatusLoader } from './workspace-component/component-status-loader';
+import { LoaderDiffHarness, loaderDiffMode } from './workspace-component/loader-diff';
 import execa from 'execa';
 import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
 import { VERSION_ZERO } from '@teambit/objects';
@@ -265,7 +266,18 @@ export class Workspace implements ComponentFactory {
     private configStore: ConfigStoreMain
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-    this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
+    const primaryLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
+    const diffMode = loaderDiffMode();
+    if (diffMode) {
+      this.componentLoader = new LoaderDiffHarness(
+        primaryLoader,
+        () => new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader),
+        logger,
+        { comparisonLabel: diffMode, outputPath: process.env.BIT_LOADER_DIFF_OUT }
+      ) as unknown as WorkspaceComponentLoader;
+    } else {
+      this.componentLoader = primaryLoader;
+    }
     this.validateConfig();
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
