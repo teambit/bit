@@ -26,6 +26,7 @@ import type { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 import { MergeConfigConflict } from '../exceptions/merge-config-conflict';
 import { groupEnvsByDepLayer } from './env-dag-sort';
+import { groupExtsByDepLayer } from './dep-dag-sort';
 
 type GetManyRes = {
   components: Component[];
@@ -344,14 +345,26 @@ export class WorkspaceComponentLoader {
     );
   }
 
-  private regroupExtIdsFromTheList(ids: ComponentID[]): Array<ComponentID[]> {
-    // TODO: implement this function
-    // this should handle a case when you have:
-    // compA that has extA and that extA has extB
-    // in that case we now get the following group:
-    // ids: [extA, extB]
-    // while we need extB to be in a different group before extA
-    return [ids];
+  /**
+   * Layer extension IDs so that extensions-of-extensions load before their dependents.
+   * Thin wrapper over `groupExtsByDepLayer` — see that function for the algorithm.
+   *
+   * Resolves an extension's own extensions via `componentsExtensionsCache`, which
+   * `populateScopeAndExtensionsCache` populates for all extensions in the load list.
+   * Returns extension ids in both with-version and without-version forms; the
+   * topo-sort matches either against the input list.
+   */
+  private regroupExtIdsFromTheList(ids: ComponentID[] = []): Array<ComponentID[]> {
+    return groupExtsByDepLayer(ids, (extId) => {
+      const fromCache = this.componentsExtensionsCache.get(extId.toString());
+      if (!fromCache?.extensions) return [];
+      const depKeys: string[] = [];
+      for (const ext of fromCache.extensions) {
+        if (ext.stringId) depKeys.push(ext.stringId);
+        if (ext.newExtensionId) depKeys.push(ext.newExtensionId.toStringWithoutVersion());
+      }
+      return depKeys;
+    });
   }
 
   private async getAndLoadSlot(
