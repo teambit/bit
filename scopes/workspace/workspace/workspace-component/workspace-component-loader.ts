@@ -95,6 +95,23 @@ type WorkspaceScopeIdsMap = {
   workspaceIds: Map<string, ComponentID>;
 };
 
+/**
+ * Per-operation scratch state shared between the discovery, plan-building, and
+ * load phases of one top-level load. Lives only as long as one `getMany` call;
+ * goes away when the operation ends. (Previously two of these were instance
+ * fields and accumulated across calls — see D-002.)
+ */
+type LoadScratch = {
+  /** id.toString() → scope-only Component (used by loadOne to populate `head`/`tags`). */
+  scope: Map<string, Component>;
+  /** id.toString() → pre-resolved extensions list, errors, envId. */
+  extensions: Map<string, { extensions: ExtensionDataList; errors: Error[] | undefined; envId: string | undefined }>;
+};
+
+function emptyScratch(): LoadScratch {
+  return { scope: new Map(), extensions: new Map() };
+}
+
 export type LoadCompAsAspectsOptions = {
   /**
    * In case the component we are loading is app, whether to load it as app (in a scope aspects capsule)
@@ -124,32 +141,19 @@ export type LoadCompAsAspectsOptions = {
 };
 
 export class WorkspaceComponentLoader {
-  // Loader caches — see D-002 in docs/rfcs/component-loading-rewrite/DECISIONS.md
-  // for the full invariants. Briefly:
+  // The only cache the loader holds across calls is `componentsCache` — final
+  // loaded Component objects, keyed by `${id}:${json(load-opts)}`, looked up
+  // via the "exact-match-or-fully-loaded" rule (see getFromCache + D-002).
   //
-  //   componentsCache             — final loaded Component objects. Key is
-  //                                 `${id}:${json(load-opts)}`. Lookup follows
-  //                                 the "exact-match-or-fully-loaded" rule
-  //                                 (see getFromCache).
-  //   scopeComponentsCache        — scratch state for one load operation:
-  //                                 the scope-only Component for an id.
-  //                                 Read by populateScopeAndExtensionsCache
-  //                                 and load-plan.ts via the loader's lookups.
-  //   componentsExtensionsCache   — scratch state for one load operation:
-  //                                 the merged extensions / envId for an id,
-  //                                 produced before the full load runs.
+  // Per-operation scratch state (the scope-only Component map and the
+  // merged-extensions map) lives in a `LoadScratch` value passed through the
+  // load pipeline — not on this instance.
   //
   // Aspect-load retry suppression is delegated to AspectLoaderMain — its
   // `isAspectLoaded(id)` returns true for both successfully-loaded and
   // previously-failed aspects (`failedAspects` registry), so we don't need a
   // local memoization flag of our own.
   private componentsCache: InMemoryCache<Component>;
-  private scopeComponentsCache: InMemoryCache<Component>;
-  private componentsExtensionsCache: InMemoryCache<{
-    extensions: ExtensionDataList;
-    errors: Error[] | undefined;
-    envId: string | undefined;
-  }>;
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -158,8 +162,6 @@ export class WorkspaceComponentLoader {
     private aspectLoader: AspectLoaderMain
   ) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-    this.scopeComponentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-    this.componentsExtensionsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<GetManyRes> {
@@ -230,9 +232,11 @@ export class WorkspaceComponentLoader {
   ): Promise<GetManyRes> {
     if (!ids?.length) return { components: [], invalidComponents: [] };
 
+    // One scratch for this whole top-level operation; goes away when we return.
+    const scratch = emptyScratch();
     const workspaceScopeIdsMap: WorkspaceScopeIdsMap = await this.groupAndUpdateIds(ids);
     this.logger.profileTrace('buildLoadGroups');
-    const groupsToHandle = await this.buildLoadGroups(workspaceScopeIdsMap);
+    const groupsToHandle = await this.buildLoadGroups(workspaceScopeIdsMap, scratch);
     this.logger.profileTrace('buildLoadGroups');
     // prefix your command with "BIT_LOG=*" to see the detailed groups
     if (process.env.BIT_LOG) {
@@ -246,7 +250,12 @@ export class WorkspaceComponentLoader {
         if (!workspaceIds.length && !scopeIds.length) {
           throw new Error('getAndLoadSlotOrdered - group has no ids to load');
         }
-        const res = await this.getAndLoadSlot(workspaceIds, scopeIds, { ...loadOpts, core, seeders, aspects, envs });
+        const res = await this.getAndLoadSlot(
+          workspaceIds,
+          scopeIds,
+          { ...loadOpts, core, seeders, aspects, envs },
+          scratch
+        );
         this.logger.profileTrace(groupDesc);
         // We don't want to return components that were not asked originally (we do want to load them)
         if (!group.seeders) return undefined;
@@ -265,43 +274,46 @@ export class WorkspaceComponentLoader {
     return finalRes;
   }
 
-  private async buildLoadGroups(workspaceScopeIdsMap: WorkspaceScopeIdsMap): Promise<Array<LoadGroup>> {
+  private async buildLoadGroups(
+    workspaceScopeIdsMap: WorkspaceScopeIdsMap,
+    scratch: LoadScratch
+  ): Promise<Array<LoadGroup>> {
     const wsIds = Array.from(workspaceScopeIdsMap.workspaceIds.values());
     const scopeIds = Array.from(workspaceScopeIdsMap.scopeIds.values());
 
-    // Phase 1 (side-effecting): warm the extensions cache for everything that needs to
+    // Phase 1 (side-effecting): warm scratch state for everything that needs to
     // factor into the plan. This is iterative — we have to populate non-core-envs first
     // to discover what extension components they reference, then populate those too.
     const allIds = [...wsIds, ...scopeIds];
     const nonCoreEnvs = allIds.filter((id) => !this.envs.isCoreEnv(id.toStringWithoutVersion()));
-    await this.populateScopeAndExtensionsCache(nonCoreEnvs, workspaceScopeIdsMap);
+    await this.populateScopeAndExtensionsCache(nonCoreEnvs, workspaceScopeIdsMap, scratch);
 
     const allExtIds = new Map<string, ComponentID>();
     for (const id of nonCoreEnvs) {
-      const fromCache = this.componentsExtensionsCache.get(id.toString());
-      if (!fromCache?.extensions) continue;
-      for (const ext of fromCache.extensions) {
+      const fromScratch = scratch.extensions.get(id.toString());
+      if (!fromScratch?.extensions) continue;
+      for (const ext of fromScratch.extensions) {
         if (!allExtIds.has(ext.stringId) && ext.newExtensionId) {
           allExtIds.set(ext.stringId, ext.newExtensionId);
         }
       }
     }
-    await this.populateScopeAndExtensionsCache(Array.from(allExtIds.values()), workspaceScopeIdsMap);
+    await this.populateScopeAndExtensionsCache(Array.from(allExtIds.values()), workspaceScopeIdsMap, scratch);
 
-    // Phase 2 (pure): build the canonical group structure using cached state.
+    // Phase 2 (pure): build the canonical group structure using scratch state.
     const planInput: LoadPlanInput = {
       workspaceIds: wsIds,
       scopeIds,
       isCoreEnv: (id) => this.envs.isCoreEnv(id.toStringWithoutVersion()),
       extensionsOf: (id) => {
-        const fromCache = this.componentsExtensionsCache.get(id.toString());
-        if (!fromCache?.extensions) return [];
-        return Array.from(fromCache.extensions).map((ext) => ({
+        const fromScratch = scratch.extensions.get(id.toString());
+        if (!fromScratch?.extensions) return [];
+        return Array.from(fromScratch.extensions).map((ext) => ({
           stringId: ext.stringId,
           newExtensionId: ext.newExtensionId,
         }));
       },
-      envIdOf: (id) => this.componentsExtensionsCache.get(id.toString())?.envId,
+      envIdOf: (id) => scratch.extensions.get(id.toString())?.envId,
     };
     const { groups: rawGroups, extraExtensionIds } = buildLoadPlanGroups(planInput);
 
@@ -329,12 +341,14 @@ export class WorkspaceComponentLoader {
   private async getAndLoadSlot(
     workspaceIds: ComponentID[],
     scopeIds: ComponentID[],
-    loadOpts: GetAndLoadSlotOpts
+    loadOpts: GetAndLoadSlotOpts,
+    scratch: LoadScratch
   ): Promise<GetManyRes> {
     const { workspaceComponents, scopeComponents, invalidComponents } = await this.getComponentsWithoutLoadExtensions(
       workspaceIds,
       scopeIds,
-      loadOpts
+      loadOpts,
+      scratch
     );
 
     // If we are here it means we are on workspace, in that case we don't want to load
@@ -424,35 +438,33 @@ export class WorkspaceComponentLoader {
     }
   }
 
-  private async populateScopeAndExtensionsCache(ids: ComponentID[], workspaceScopeIdsMap: WorkspaceScopeIdsMap) {
+  private async populateScopeAndExtensionsCache(
+    ids: ComponentID[],
+    workspaceScopeIdsMap: WorkspaceScopeIdsMap,
+    scratch: LoadScratch
+  ) {
     return mapSeries(ids, async (id) => {
       const idStr = id.toString();
-      let componentFromScope;
-      if (!this.scopeComponentsCache.has(idStr)) {
+      let componentFromScope = scratch.scope.get(idStr);
+      if (!componentFromScope) {
         try {
           // Do not import automatically if it's missing, it will throw an error later
           componentFromScope = await this.workspace.scope.get(id, undefined, false);
-          if (componentFromScope) {
-            this.scopeComponentsCache.set(idStr, componentFromScope);
-          }
-          // This is fine here, as it will be handled later in the process
+          if (componentFromScope) scratch.scope.set(idStr, componentFromScope);
         } catch (err: any) {
           const wsAspectLoader = this.workspace.getWorkspaceAspectsLoader();
           wsAspectLoader.throwWsJsoncAspectNotFoundError(err);
           this.logger.warn(`populateScopeAndExtensionsCache - failed loading component ${idStr} from scope`, err);
         }
       }
-      if (!this.componentsExtensionsCache.has(idStr) && workspaceScopeIdsMap.workspaceIds.has(idStr)) {
-        componentFromScope = componentFromScope || this.scopeComponentsCache.get(idStr);
+      if (!scratch.extensions.has(idStr) && workspaceScopeIdsMap.workspaceIds.has(idStr)) {
         const { extensions, errors, envId } = await this.workspace.componentExtensions(
           id,
           componentFromScope,
           undefined,
-          {
-            loadExtensions: false,
-          }
+          { loadExtensions: false }
         );
-        this.componentsExtensionsCache.set(idStr, { extensions, errors, envId });
+        scratch.extensions.set(idStr, { extensions, errors, envId });
       }
     });
   }
@@ -492,7 +504,8 @@ export class WorkspaceComponentLoader {
   private async getComponentsWithoutLoadExtensions(
     workspaceIds: ComponentID[],
     scopeIds: ComponentID[],
-    loadOpts: GetAndLoadSlotOpts
+    loadOpts: GetAndLoadSlotOpts,
+    scratch: LoadScratch
   ) {
     const invalidComponents: InvalidComponent[] = [];
     const errors: { id: ComponentID; err: Error }[] = [];
@@ -538,23 +551,25 @@ export class WorkspaceComponentLoader {
     });
 
     const getWithCatch = (id, legacyComponent) => {
-      return this.get(id, legacyComponent, undefined, undefined, loadOptsWithDefaults).catch((err) => {
-        if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
-          invalidComponents.push({
-            id,
-            err,
-          });
-          return undefined;
+      return this.get(id, legacyComponent, undefined, undefined, loadOptsWithDefaults, undefined, scratch).catch(
+        (err) => {
+          if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
+            invalidComponents.push({
+              id,
+              err,
+            });
+            return undefined;
+          }
+          if (this.isComponentNotExistsError(err) || err instanceof ComponentNotFoundInPath) {
+            errors.push({
+              id,
+              err,
+            });
+            return undefined;
+          }
+          throw err;
         }
-        if (this.isComponentNotExistsError(err) || err instanceof ComponentNotFoundInPath) {
-          errors.push({
-            id,
-            err,
-          });
-          return undefined;
-        }
-        throw err;
-      });
+      );
     };
 
     // await this.getConsumerComponent(id, loadOpts)
@@ -636,7 +651,10 @@ export class WorkspaceComponentLoader {
     useCache = true,
     storeInCache = true,
     loadOpts?: ComponentLoadOptions,
-    getOpts: ComponentGetOneOptions = { resolveIdVersion: true }
+    getOpts: ComponentGetOneOptions = { resolveIdVersion: true },
+    // Internal: per-operation scratch state. External callers should leave this
+    // undefined; loadOne will fall back to direct workspace lookups.
+    scratch?: LoadScratch
   ): Promise<Component> {
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
       { loadExtensions: true, executeLoadSlot: true },
@@ -655,7 +673,7 @@ export class WorkspaceComponentLoader {
 
     // in case of out-of-sync, the id may changed during the load process
     const updatedId = consumerComponent ? consumerComponent.id : id;
-    const component = await this.loadOne(updatedId, consumerComponent, loadOptsWithDefaults);
+    const component = await this.loadOne(updatedId, consumerComponent, loadOptsWithDefaults, scratch);
     if (storeInCache) {
       this.addMultipleEnvsIssueIfNeeded(component); // it's in storeInCache block, otherwise, it wasn't fully loaded
       this.saveInCache(component, loadOptsWithDefaults);
@@ -694,36 +712,31 @@ export class WorkspaceComponentLoader {
 
   clearCache() {
     this.componentsCache.deleteAll();
-    this.scopeComponentsCache.deleteAll();
-    this.componentsExtensionsCache.deleteAll();
   }
 
   clearComponentCache(id: ComponentID) {
     const idStr = id.toString();
-    const cachesToClear = [this.componentsCache, this.scopeComponentsCache, this.componentsExtensionsCache];
-    cachesToClear.forEach((cache) => {
-      for (const cacheKey of cache.keys()) {
-        if (cacheKey === idStr || cacheKey.startsWith(`${idStr}:`)) {
-          cache.delete(cacheKey);
-        }
+    for (const cacheKey of this.componentsCache.keys()) {
+      if (cacheKey === idStr || cacheKey.startsWith(`${idStr}:`)) {
+        this.componentsCache.delete(cacheKey);
       }
-    });
+    }
   }
 
-  private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent, loadOpts?: ComponentLoadOptions) {
+  private async loadOne(
+    id: ComponentID,
+    consumerComponent?: ConsumerComponent,
+    loadOpts?: ComponentLoadOptions,
+    scratch?: LoadScratch
+  ) {
     const idStr = id.toString();
-    const componentFromScope = this.scopeComponentsCache.has(idStr)
-      ? this.scopeComponentsCache.get(idStr)
-      : await this.workspace.scope.get(id);
+    const componentFromScope = scratch?.scope.get(idStr) ?? (await this.workspace.scope.get(id));
     if (!consumerComponent) {
       if (!componentFromScope) throw new MissingBitMapComponent(id.toString());
       return componentFromScope;
     }
-    const extErrorsFromCache = this.componentsExtensionsCache.has(idStr)
-      ? this.componentsExtensionsCache.get(idStr)
-      : undefined;
     const { extensions, errors } =
-      extErrorsFromCache ||
+      scratch?.extensions.get(idStr) ??
       (await this.workspace.componentExtensions(id, componentFromScope, undefined, {
         loadExtensions: loadOpts?.loadExtensions,
       }));
