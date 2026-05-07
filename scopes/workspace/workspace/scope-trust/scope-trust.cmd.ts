@@ -37,7 +37,7 @@ export class ScopeTrustCmd implements Command {
   bit scope trust add PATTERN        # add a pattern (auto-enables if needed)
   bit scope trust remove PATTERN     # remove a pattern (does NOT disable when list is empty)
 
-once on, the effective trust set is: builtin (teambit.*, bitdev.*) + the owner of defaultScope + entries listed under "trustedScopes". patterns are exact ("acme.frontend") or owner wildcard ("acme.*").`;
+once on, the effective trust set is: builtin scopes (teambit.*, bitdev.*, and a few others — run "bit scope trust list" to see) + the owner of defaultScope + entries listed under "trustedScopes". patterns are exact ("acme.frontend") or owner wildcard ("acme.*").`;
 
   constructor(private scopeTrust: ScopeTrust) {}
 

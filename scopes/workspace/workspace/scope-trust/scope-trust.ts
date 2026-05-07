@@ -5,14 +5,14 @@ import { isValidScopeName } from '@teambit/legacy-bit-id';
 import { prompt } from 'enquirer';
 import type { Workspace } from '../workspace';
 
-const BUILTIN_TRUSTED_PATTERNS = ['teambit.*', 'bitdev.*'];
+const BUILTIN_TRUSTED_PATTERNS = ['teambit.*', 'bitdev.*', 'learn-bit-react.*', 'bitdesign.*', 'frontend.*'];
 
 const WORKSPACE_ASPECT_ID = 'teambit.workspace/workspace';
 
 const TRUSTED_SCOPES_KEY = 'trustedScopes';
 
 export type TrustedScopesGroups = {
-  /** patterns built into Bit (`teambit.*`, `bitdev.*`) */
+  /** patterns built into Bit (e.g. `teambit.*`, `bitdev.*`) */
   builtin: string[];
   /** owner wildcard inferred from `defaultScope` (e.g. `acme.frontend` → `acme.*`) */
   owner: string[];
@@ -26,7 +26,7 @@ export type TrustedScopesGroups = {
  * is active. When the key is absent, no gate runs and any aspect loads.
  *
  * Once opted in, a scope is trusted if it matches any pattern in:
- * - the builtin set (`teambit.*`, `bitdev.*`),
+ * - the builtin set (e.g. `teambit.*`, `bitdev.*`; see `BUILTIN_TRUSTED_PATTERNS`),
  * - the pattern derived from the workspace's `defaultScope`
  *   (e.g. `acme.frontend` → `acme.*`; legacy dotless `my-scope` → `my-scope`),
  * - the `trustedScopes` array configured in workspace.jsonc.

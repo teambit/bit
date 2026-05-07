@@ -95,8 +95,8 @@ export interface WorkspaceExtConfig {
   /**
    * Scope-name patterns that the workspace trusts when loading aspects (envs,
    * generators, etc.) imported from those scopes. The effective trust set is:
-   * builtin (`teambit.*`, `bitdev.*`) + the owner of `defaultScope` (e.g.
-   * `acme.frontend` → `acme.*`) + entries listed here.
+   * a builtin set (e.g. `teambit.*`, `bitdev.*`) + the owner of `defaultScope`
+   * (e.g. `acme.frontend` → `acme.*`) + entries listed here.
    *
    * Patterns: exact (`acme.frontend`) or owner wildcard (`acme.*`).
    * Manage via `bit scope trust [enable|disable|add|remove] [pattern]`.
