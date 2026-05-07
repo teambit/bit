@@ -27,8 +27,6 @@ import { ImporterAspect } from '@teambit/importer';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import { compact } from 'lodash';
-import { sha1 } from '@teambit/toolbox.crypto.sha1';
-import { v4 } from 'uuid';
 import type { ApplyVersionWithComps, CheckoutMain, ComponentStatusBase } from '@teambit/checkout';
 import { CheckoutAspect, removeFilesIfNeeded, updateFileStatus } from '@teambit/checkout';
 import type { ConfigMergerMain, ConfigMergeResult, PolicyDependency } from '@teambit/config-merger';
@@ -702,11 +700,12 @@ export class MergingMain {
       );
       return results;
     }
-    // Split hidden lane updateDependents (skipWorkspace=true) from visible workspace components.
-    // Hidden entries have no workspace files — `loadComponentsForTagOrSnap` -> `workspace.getMany`
-    // would throw `ComponentsPendingImport`, and the snap pipeline's capsule isolator would fail
-    // anyway. Snap them via the scope-side path instead (same approach scenario 10 takes through
-    // `_merge-lane main`). Visible entries continue through the regular workspace snap.
+    // Hidden lane updateDependents (skipWorkspace=true) ride the same `makeVersion` batch as
+    // visible workspace components. version-maker's `isHiddenLaneEntry` detection (workspace flow:
+    // not-in-bitmap) routes each entry correctly. workspace.getMany picks up disk-merged files for
+    // visible; the in-memory merged ConsumerComponents from `applyVersion` are passed through for
+    // hidden (which have no disk state). Single pipeline → consistent log/buildStatus/
+    // flattenedDependencies/lane-history/stagedSnaps for all merge-cascade snaps.
     const lane = await this.scope.legacyScope.getCurrentLaneObject();
     const hiddenIds = lane
       ? ComponentIdList.fromArray(ids.filter((id) => lane.getComponent(id)?.skipWorkspace))
@@ -714,82 +713,16 @@ export class MergingMain {
     const visibleIds = ComponentIdList.fromArray(
       ids.filter((id) => !hiddenIds.find((h) => h.isEqualWithoutVersion(id)))
     );
-
-    let hiddenResults: MergeSnapResults = null;
-    if (hiddenIds.length) {
-      hiddenResults = await this.snapHiddenForMerge(hiddenIds, updatedComponents, snapMessage, lane);
-    }
-
-    if (!visibleIds.length) return hiddenResults;
-
-    const visibleResults = await this.snapping.snap({
-      legacyBitIds: visibleIds,
-      build,
+    const hiddenLegacyComponents = updatedComponents.filter((c) =>
+      hiddenIds.find((h) => h.isEqualWithoutVersion(c.componentId))
+    );
+    return this.snapping.snapForMerge({
+      visibleIds,
+      hiddenLegacyComponents,
       message: snapMessage,
+      build,
       loose,
     });
-
-    if (!hiddenResults) return visibleResults;
-    if (!visibleResults) return hiddenResults;
-    return {
-      ...visibleResults,
-      snappedComponents: [...visibleResults.snappedComponents, ...hiddenResults.snappedComponents],
-      autoSnappedResults: [...visibleResults.autoSnappedResults, ...hiddenResults.autoSnappedResults],
-    };
-  }
-
-  /**
-   * Scope-side snap for hidden lane updateDependents during a workspace merge. We can't go through
-   * `snapping.snap` (loads via workspace, which has no files for hidden entries) and can't call
-   * `snapping.snapFromScope` (it explicitly rejects workspace context). Instead, build the merge
-   * Version directly via `_addCompToObjects` — the second parent comes from the unmergedComponent
-   * entry (set in `applyVersion`), and the merge dep rewrites + main-side content/config changes
-   * are already on the merged `ConsumerComponent` produced by `applyVersion` and threaded in via
-   * `updatedComponents`.
-   */
-  private async snapHiddenForMerge(
-    hiddenIds: ComponentIdList,
-    updatedComponents: ConsumerComponent[],
-    snapMessage: string | undefined,
-    lane: Lane | undefined
-  ): Promise<MergeSnapResults> {
-    const legacyScope = this.scope.legacyScope;
-    const snappedComponents: ConsumerComponent[] = [];
-    await mapSeries(hiddenIds, async (id) => {
-      const laneEntry = lane?.getComponent(id);
-      const previouslyUsedVersion = laneEntry?.head?.toString();
-      if (!previouslyUsedVersion) {
-        throw new BitError(`snapHiddenForMerge: lane entry for ${id.toString()} has no head`);
-      }
-      // Prefer the merged ConsumerComponent produced by `applyVersion` so main-side file/aspect
-      // changes flow into the cascade snap. Fall back to the lane-head version when no merged
-      // result is available (e.g., a future caller path that snaps a hidden entry without
-      // running the merge engine first).
-      const merged = updatedComponents.find((c) => c.componentId.isEqualWithoutVersion(id));
-      const consumerComponent =
-        merged || (await legacyScope.getConsumerComponent(id.changeVersion(previouslyUsedVersion)));
-      if (snapMessage) consumerComponent.log = { ...consumerComponent.log, message: snapMessage } as any;
-      // assign a fresh hash so `_addCompToObjects` records a new snap (and the override flag in
-      // addVersion fires while the lane carries the entry as hidden).
-      consumerComponent.version = sha1(v4());
-      consumerComponent.previouslyUsedVersion = previouslyUsedVersion;
-      await this.snapping._addCompToObjects({
-        source: consumerComponent,
-        lane,
-        // hidden entries cascade only — explicit caller intent here is to refresh the lane's
-        // hidden bucket without promoting to visible (existingEntry.skipWorkspace stays true).
-        addVersionOpts: { addToUpdateDependentsInLane: true },
-      });
-      snappedComponents.push(consumerComponent);
-      legacyScope.objects.unmergedComponents.removeComponent(id);
-    });
-    if (lane) legacyScope.objects.add(lane);
-    await legacyScope.objects.persist();
-    return {
-      snappedComponents,
-      autoSnappedResults: [],
-      removedComponents: new ComponentIdList(),
-    };
   }
 
   private async tagAllLaneComponent(

@@ -683,6 +683,79 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
   }
 
   /**
+   * Workspace-side merge snap. Routes both visible workspace components AND hidden lane
+   * updateDependents (skipWorkspace=true) through the same `makeVersion` pipeline that
+   * `snap`/`snapFromScope` use, so cascade snaps get fresh log/buildStatus/flattenedDependencies/
+   * lane-history/stagedSnaps just like every other snap.
+   *
+   * Visible: workspace.getMany picks up files written to disk by `applyVersion`.
+   * Hidden: applyVersion's in-memory merged ConsumerComponents are passed in directly — they
+   * have no bitmap entry, so they can't go through `loadComponentsForTagOrSnap`.
+   *
+   * version-maker's `isHiddenLaneEntry` detection (workspace-flow: not-in-bitmap) routes the
+   * hidden ones to the right branches (no bitmap update, stagedSnaps tracking,
+   * `addToUpdateDependentsInLane`).
+   */
+  async snapForMerge({
+    visibleIds,
+    hiddenLegacyComponents,
+    message,
+    build,
+    loose,
+  }: {
+    visibleIds: ComponentIdList;
+    hiddenLegacyComponents: ConsumerComponent[];
+    message?: string;
+    build?: boolean;
+    loose?: boolean;
+  }): Promise<{
+    snappedComponents: ConsumerComponent[];
+    autoSnappedResults: AutoTagResult[];
+    removedComponents?: ComponentIdList;
+  } | null> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    if (!visibleIds.length && !hiddenLegacyComponents.length) return null;
+
+    this.logger.debug(`snapForMerge, visible: ${visibleIds.length}, hidden: ${hiddenLegacyComponents.length}`);
+    const visibleHarmony = visibleIds.length ? await this.loadComponentsForTagOrSnap(visibleIds) : [];
+    const hiddenHarmony = hiddenLegacyComponents.length ? await this.scope.getManyByLegacy(hiddenLegacyComponents) : [];
+    // issue checks are workspace-source-tree concerns — hidden entries are scope-only
+    if (visibleHarmony.length) await this.throwForVariousIssues(visibleHarmony);
+
+    const hiddenIds = ComponentIdList.fromArray(hiddenLegacyComponents.map((c) => c.componentId));
+    const allIds = ComponentIdList.uniqFromArray([...visibleIds, ...hiddenIds]);
+    const allComponents = [...visibleHarmony, ...hiddenHarmony];
+
+    const makeVersionParams = {
+      ignoreNewestVersion: false,
+      message: message || '',
+      skipTests: false,
+      skipAutoTag: false,
+      persist: true,
+      soft: false,
+      build,
+      isSnap: true,
+      packageManagerConfigRootDir: this.workspace.path,
+      loose,
+    };
+
+    const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await this.makeVersion(
+      allIds,
+      allComponents,
+      makeVersionParams
+    );
+
+    await this.workspace.consumer.onDestroy(`merge-snap (message: ${message || 'N/A'})`);
+    await stagedConfig?.write();
+
+    return {
+      snappedComponents: taggedComponents,
+      autoSnappedResults: autoTaggedResults,
+      removedComponents,
+    };
+  }
+
+  /**
    * remove tags/snaps that exist locally, which were not exported yet.
    * once a tag/snap is exported, it's impossible to delete it as other components may depend on it
    */
