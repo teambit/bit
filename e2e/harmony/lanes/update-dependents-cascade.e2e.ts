@@ -399,10 +399,9 @@ describe('local snap cascades updateDependents on the lane', function () {
   });
 
   // ---------------------------------------------------------------------------------------------
-  // Scenario 7: import must not clobber a pending local cascade. `bit snap` rewrites
-  // `updateDependents` locally and flags the lane with `overrideUpdateDependents=true` to signal
-  // "these are pending, don't blow them away". A `bit fetch --lanes` between snap and export
-  // must not wipe the cascaded hashes.
+  // Scenario 7: import must not clobber a pending local cascade. After cascade-on-snap rewrites
+  // a hidden updateDependent locally, a `bit fetch --lanes` between snap and export should keep
+  // the local cascade in place — `mergeLaneComponent` sees local-ahead and no-ops on import.
   // ---------------------------------------------------------------------------------------------
   describe('scenario 7: local cascade survives a `bit fetch --lanes` before export', () => {
     let comp2InUpdDepInitial: string;
@@ -479,7 +478,6 @@ describe('local snap cascades updateDependents on the lane', function () {
 
       const laneAfterSnap = helper.command.catLane('dev');
       expect(laneAfterSnap.updateDependents[0].split('@')[1]).to.not.equal(comp2InUpdDepInitial);
-      expect(laneAfterSnap.overrideUpdateDependents).to.equal(true);
 
       helper.command.resetAll();
       laneAfterReset = helper.command.catLane('dev');
@@ -496,10 +494,6 @@ describe('local snap cascades updateDependents on the lane', function () {
       expect(comp2After).to.equal(comp2InUpdDepInitial);
     });
 
-    it('overrideUpdateDependents should be cleared', () => {
-      expect(laneAfterReset.overrideUpdateDependents).to.be.undefined;
-    });
-
     it('a subsequent export should leave the remote lane unchanged from its pre-snap state', () => {
       helper.command.export();
       const remoteLaneAfter = helper.command.catLane('dev', helper.scopes.remotePath);
@@ -514,7 +508,7 @@ describe('local snap cascades updateDependents on the lane', function () {
   // Scenario 9: `bit reset --head` after TWO consecutive local snaps must only rewind the LATEST
   // snap's cascade — the first snap's cascade must stay intact. This exercises the per-batch
   // history on the lane: the first snap's cascade entry must survive while the second snap's
-  // cascade is rolled back, with `overrideUpdateDependents` still `true` (one cascade pending).
+  // cascade is rolled back.
   // ---------------------------------------------------------------------------------------------
   describe('scenario 9: bit reset --head rewinds only the last snap, not both cascades', () => {
     let comp2InUpdDepInitial: string;
@@ -551,10 +545,6 @@ describe('local snap cascades updateDependents on the lane', function () {
       const comp2After = laneAfterResetHead.updateDependents[0].split('@')[1];
       expect(comp2After).to.equal(comp2AfterFirstSnap);
       expect(comp2After).to.not.equal(comp2InUpdDepInitial);
-    });
-
-    it('overrideUpdateDependents should remain true — the first cascade is still pending', () => {
-      expect(laneAfterResetHead.overrideUpdateDependents).to.equal(true);
     });
   });
 

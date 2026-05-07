@@ -754,38 +754,6 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
         await updateVersions(this.workspace, stagedConfig, currentLaneId, component, versionToSetInBitmap, false);
       });
       await this.workspace.scope.legacyScope.stagedSnaps.write();
-      // if the reset cleared every locally-cascaded hidden entry, drop the wire-level
-      // `overrideUpdateDependents` flag — there's no longer a pending claim of "my hidden list
-      // is authoritative". `bit reset --head` may leave some cascades unresolved (an earlier snap
-      // is still local), in which case the flag must stay raised until those are rewound or
-      // exported.
-      if (currentLane?.shouldOverrideUpdateDependents()) {
-        const repo = this.scope.legacyScope.objects;
-        const hiddenEntries = currentLane.components.filter((c) => c.skipWorkspace);
-        // bound concurrency — each task does scope reads, head population and a diverge-data
-        // computation, which can spike I/O on large lanes. Match the convention used elsewhere
-        // (e.g., merging.getMergeStatus) of `concurrentComponentsLimit()`.
-        const hasLocalHashesByEntry = await pMap(
-          hiddenEntries,
-          async (entry) => {
-            const mc = await this.scope.legacyScope.getModelComponentIfExist(entry.id);
-            if (!mc) return false;
-            // refresh the modelComponent's lane heads against the post-reset lane state, then
-            // force-recompute divergeData (fromCache=false). `getLocalHashes` would otherwise
-            // see a stale source head (the pre-reset cascade hash) because `setDivergeData`
-            // defaults to using the cached value, which still reflects pre-reset state.
-            await mc.populateLocalAndRemoteHeads(repo, currentLane);
-            await mc.setDivergeData(repo, true, false);
-            const local = await mc.getLocalHashes(repo);
-            return local.length > 0;
-          },
-          { concurrency: concurrentComponentsLimit() }
-        );
-        if (!hasLocalHashesByEntry.some(Boolean)) {
-          currentLane.setOverrideUpdateDependents(false);
-          await consumer.scope.lanes.saveLane(currentLane, { saveLaneHistory: false });
-        }
-      }
     } else {
       results = await softUntag();
       consumer.bitMap.markAsChanged();

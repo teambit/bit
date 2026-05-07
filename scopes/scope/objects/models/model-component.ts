@@ -719,16 +719,6 @@ export default class Component extends BitObject {
         isDeleted: version.isRemoved(),
         ...(shouldBeHidden && { skipWorkspace: true }),
       });
-      if (shouldBeHidden) {
-        // wire-level signal so `sources.mergeLane` on the export path accepts the new hidden
-        // entry as authoritative (the remote's existing hidden hash for this id gets replaced).
-        // We set this on every write to a hidden entry — bare-scope cascade producer
-        // (`snapFromScope({ updateDependents: true })`), workspace cascade-on-snap, and
-        // merge-snaps that refresh hidden entries during a main→lane refresh. The remote clears
-        // the flag on its stored copy post-merge so it never persists across an unrelated future
-        // fetch.
-        lane.setOverrideUpdateDependents(true);
-      }
 
       if (lane.readmeComponent && lane.readmeComponent.id.fullName === currentBitId.fullName) {
         lane.setReadmeComponent(currentBitId);

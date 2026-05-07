@@ -752,12 +752,6 @@ possible causes:
     }
 
     const mergeLane = existingLane || lane;
-    // `overrideUpdateDependents` no longer drives merge behavior — it's preserved on the wire
-    // for backwards compatibility with older clients but read by no one in the merge path.
-    // Clear it on the remote's stored lane so no stale state lingers.
-    if (isExport && mergeLane.shouldOverrideUpdateDependents()) {
-      mergeLane.setOverrideUpdateDependents(false);
-    }
 
     return { mergeResults, mergeErrors, mergeLane };
   }

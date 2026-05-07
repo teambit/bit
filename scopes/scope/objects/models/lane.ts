@@ -31,7 +31,6 @@ export type LaneProps = {
   schema?: string;
   readmeComponent?: LaneReadmeComponent;
   forkedFrom?: LaneId;
-  overrideUpdateDependents?: boolean;
 };
 
 const OLD_LANE_SCHEMA = '0.0.0';
@@ -59,7 +58,6 @@ export default class Lane extends BitObject {
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
   isNew = false; // doesn't get saved in the object. only needed for in-memory instance
   hasChanged = false; // doesn't get saved in the object. only needed for in-memory instance
-  private overrideUpdateDependents?: boolean;
   constructor(props: LaneProps) {
     super();
     if (!props.name) throw new TypeError('Lane constructor expects to get a name parameter');
@@ -71,7 +69,6 @@ export default class Lane extends BitObject {
     this.readmeComponent = props.readmeComponent;
     this.forkedFrom = props.forkedFrom;
     this.schema = props.schema || OLD_LANE_SCHEMA;
-    this.overrideUpdateDependents = props.overrideUpdateDependents;
   }
   /**
    * Components that live only in the lane's graph (Ripple CI / merge / GC) but are hidden from
@@ -165,7 +162,6 @@ export default class Lane extends BitObject {
         forkedFrom: this.forkedFrom && this.forkedFrom.toObject(),
         schema: this.schema,
         updateDependents,
-        overrideUpdateDependents: this.overrideUpdateDependents,
       },
       (val) => !!val
     );
@@ -229,7 +225,6 @@ export default class Lane extends BitObject {
         head: laneObject.readmeComponent.head && new Ref(laneObject.readmeComponent.head),
       },
       forkedFrom: laneObject.forkedFrom && LaneId.from(laneObject.forkedFrom.name, laneObject.forkedFrom.scope),
-      overrideUpdateDependents: laneObject.overrideUpdateDependents,
       hash: laneObject.hash || hash,
       schema: laneObject.schema,
     });
@@ -287,22 +282,6 @@ export default class Lane extends BitObject {
     const before = this.components.length;
     this.components = this.components.filter((c) => !c.skipWorkspace);
     if (this.components.length !== before) this.hasChanged = true;
-  }
-  shouldOverrideUpdateDependents() {
-    return this.overrideUpdateDependents;
-  }
-  /**
-   * !!! important !!!
-   * this should get called only on a "temp lane" — for example a bare scope running the
-   * snap-from-scope cascade producer, where the scope gets destroyed after the command is done.
-   * when the scope exports the lane, this "overrideUpdateDependents" is not saved to the
-   * remote-scope.
-   *
-   * on a user local lane object, this prop should never be true. otherwise, it'll override the remote-scope data.
-   */
-  setOverrideUpdateDependents(overrideUpdateDependents: boolean) {
-    this.overrideUpdateDependents = overrideUpdateDependents;
-    this.hasChanged = true;
   }
 
   removeComponent(id: ComponentID): boolean {
@@ -474,7 +453,6 @@ export default class Lane extends BitObject {
     return new Lane({
       ...this,
       hash: this._hash,
-      overrideUpdateDependents: this.overrideUpdateDependents,
       components: cloneDeep(this.components),
     });
   }
