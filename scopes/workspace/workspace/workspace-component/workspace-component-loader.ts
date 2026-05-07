@@ -7,7 +7,7 @@ import { ComponentFS, Config, State, TagMap } from '@teambit/component';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import mapSeries from 'p-map-series';
-import { compact, fromPairs, groupBy, pick, uniq, uniqBy } from 'lodash';
+import { compact, fromPairs, pick, uniq, uniqBy } from 'lodash';
 import type { ComponentLoadOptions as LegacyComponentLoadOptions } from '@teambit/legacy.consumer-component';
 import { ComponentNotFoundInPath, ConsumerComponent, Dependencies } from '@teambit/legacy.consumer-component';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
@@ -25,8 +25,8 @@ import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import type { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 import { MergeConfigConflict } from '../exceptions/merge-config-conflict';
-import { groupEnvsByDepLayer } from './env-dag-sort';
-import { groupExtsByDepLayer } from './dep-dag-sort';
+import { buildLoadPlanGroups } from './load-plan';
+import type { LoadPlanInput } from './load-plan';
 
 type GetManyRes = {
   components: Component[];
@@ -220,150 +220,61 @@ export class WorkspaceComponentLoader {
   private async buildLoadGroups(workspaceScopeIdsMap: WorkspaceScopeIdsMap): Promise<Array<LoadGroup>> {
     const wsIds = Array.from(workspaceScopeIdsMap.workspaceIds.values());
     const scopeIds = Array.from(workspaceScopeIdsMap.scopeIds.values());
+
+    // Phase 1 (side-effecting): warm the extensions cache for everything that needs to
+    // factor into the plan. This is iterative — we have to populate non-core-envs first
+    // to discover what extension components they reference, then populate those too.
     const allIds = [...wsIds, ...scopeIds];
-    const groupedByIsCoreEnvs = groupBy(allIds, (id) => {
-      return this.envs.isCoreEnv(id.toStringWithoutVersion());
-    });
-    const nonCoreEnvs = groupedByIsCoreEnvs.false || [];
+    const nonCoreEnvs = allIds.filter((id) => !this.envs.isCoreEnv(id.toStringWithoutVersion()));
     await this.populateScopeAndExtensionsCache(nonCoreEnvs, workspaceScopeIdsMap);
-    const allExtIds: Map<string, ComponentID> = new Map();
-    nonCoreEnvs.forEach((id) => {
-      const idStr = id.toString();
-      const fromCache = this.componentsExtensionsCache.get(idStr);
-      if (!fromCache || !fromCache.extensions) {
-        return;
-      }
-      fromCache.extensions.forEach((ext) => {
+
+    const allExtIds = new Map<string, ComponentID>();
+    for (const id of nonCoreEnvs) {
+      const fromCache = this.componentsExtensionsCache.get(id.toString());
+      if (!fromCache?.extensions) continue;
+      for (const ext of fromCache.extensions) {
         if (!allExtIds.has(ext.stringId) && ext.newExtensionId) {
           allExtIds.set(ext.stringId, ext.newExtensionId);
         }
-      });
-    });
-    const allExtCompIds = Array.from(allExtIds.values());
-    await this.populateScopeAndExtensionsCache(allExtCompIds || [], workspaceScopeIdsMap);
-
-    // const allExtIdsStr = allExtCompIds.map((id) => id.toString());
-
-    const envsIdsOfWsComps = new Set<string>();
-    wsIds.forEach((id) => {
-      const idStr = id.toString();
-      const fromCache = this.componentsExtensionsCache.get(idStr);
-      if (!fromCache || !fromCache.envId) {
-        return;
-      }
-      const envId = fromCache.envId;
-      if (envId) {
-        envsIdsOfWsComps.add(envId);
-      }
-    });
-
-    const groupedByIsEnvOfWsComps = groupBy(allExtCompIds, (id) => {
-      const idStr = id.toString();
-      const withoutVersion = idStr.split('@')[0];
-      return envsIdsOfWsComps.has(idStr) || envsIdsOfWsComps.has(withoutVersion);
-    });
-    const notEnvOfWsCompsStrs = (groupedByIsEnvOfWsComps.false || []).map((id) => id.toString());
-
-    const groupedByIsExtOfAnother = groupBy(nonCoreEnvs, (id) => {
-      return notEnvOfWsCompsStrs.includes(id.toString());
-    });
-    const extIdsFromTheList = (groupedByIsExtOfAnother.true || []).map((id) => id.toString());
-    const extsNotFromTheList: ComponentID[] = [];
-    for (const [, id] of allExtIds.entries()) {
-      if (!extIdsFromTheList.includes(id.toString())) {
-        extsNotFromTheList.push(id);
       }
     }
+    await this.populateScopeAndExtensionsCache(Array.from(allExtIds.values()), workspaceScopeIdsMap);
 
-    await this.groupAndUpdateIds(extsNotFromTheList, workspaceScopeIdsMap);
+    // Phase 2 (pure): build the canonical group structure using cached state.
+    const planInput: LoadPlanInput = {
+      workspaceIds: wsIds,
+      scopeIds,
+      isCoreEnv: (id) => this.envs.isCoreEnv(id.toStringWithoutVersion()),
+      extensionsOf: (id) => {
+        const fromCache = this.componentsExtensionsCache.get(id.toString());
+        if (!fromCache?.extensions) return [];
+        return Array.from(fromCache.extensions).map((ext) => ({
+          stringId: ext.stringId,
+          newExtensionId: ext.newExtensionId,
+        }));
+      },
+      envIdOf: (id) => this.componentsExtensionsCache.get(id.toString())?.envId,
+    };
+    const { groups: rawGroups, extraExtensionIds } = buildLoadPlanGroups(planInput);
 
-    const layeredExtFromTheList = this.regroupExtIdsFromTheList(groupedByIsExtOfAnother.true);
-    const layeredExtGroups = layeredExtFromTheList.map((ids) => {
+    // Phase 3 (side-effecting): register extension comp ids that weren't in the input,
+    // then split each group's ids by ws/scope using the up-to-date map.
+    await this.groupAndUpdateIds(extraExtensionIds, workspaceScopeIdsMap);
+    return rawGroups.map((group) => {
+      const wsIdsInGroup: ComponentID[] = [];
+      const scopeIdsInGroup: ComponentID[] = [];
+      for (const id of group.ids) {
+        if (workspaceScopeIdsMap.workspaceIds.has(id.toString())) wsIdsInGroup.push(id);
+        else scopeIdsInGroup.push(id);
+      }
       return {
-        ids,
-        core: false,
-        aspects: true,
-        seeders: true,
-        envs: false,
-      };
-    });
-
-    const layeredEnvsFromTheList = this.regroupEnvsIdsFromTheList(groupedByIsEnvOfWsComps.true, envsIdsOfWsComps);
-    const layeredEnvsGroups = layeredEnvsFromTheList.map((ids) => {
-      return {
-        ids,
-        core: false,
-        aspects: true,
-        seeders: true,
-        envs: true,
-      };
-    });
-
-    const groupsToHandle = [
-      // Always load first core envs
-      { ids: groupedByIsCoreEnvs.true || [], core: true, aspects: true, seeders: true, envs: true },
-      // The recursive env-DAG sort in `groupEnvsByDepLayer` places envs at the
-      // bottom of the chain (e.g. `core-aspect-env`/`core-aspect-env-jest`) in the
-      // earliest layer naturally. The hardcoded `core-aspect-env` prepending that
-      // used to live here is redundant under the recursive sort — see D-001.
-      ...layeredEnvsGroups,
-      { ids: extsNotFromTheList || [], core: false, aspects: true, seeders: false, envs: false },
-      ...layeredExtGroups,
-      { ids: groupedByIsExtOfAnother.false || [], core: false, aspects: false, seeders: true, envs: false },
-    ];
-
-    const groupsByWsScope = groupsToHandle.map((group) => {
-      if (!group.ids?.length) return undefined;
-      const groupedByWsScope = groupBy(group.ids, (id) => {
-        return workspaceScopeIdsMap.workspaceIds.has(id.toString());
-      });
-      return {
-        workspaceIds: groupedByWsScope.true || [],
-        scopeIds: groupedByWsScope.false || [],
+        workspaceIds: wsIdsInGroup,
+        scopeIds: scopeIdsInGroup,
         core: group.core,
         aspects: group.aspects,
         seeders: group.seeders,
         envs: group.envs,
       };
-    });
-    return compact(groupsByWsScope);
-  }
-
-  /**
-   * Layer envs so that envs-of-envs load before their dependents.
-   * Thin wrapper over `groupEnvsByDepLayer` — see that function for the algorithm.
-   */
-  private regroupEnvsIdsFromTheList(envIds: ComponentID[] = [], envsIdsOfWsComps: Set<string>): Array<ComponentID[]> {
-    return groupEnvsByDepLayer(
-      envIds,
-      (envId) => {
-        const fromCache = this.componentsExtensionsCache.get(envId.toString());
-        if (!fromCache || !fromCache.extensions) return undefined;
-        return fromCache.envId;
-      },
-      envsIdsOfWsComps
-    );
-  }
-
-  /**
-   * Layer extension IDs so that extensions-of-extensions load before their dependents.
-   * Thin wrapper over `groupExtsByDepLayer` — see that function for the algorithm.
-   *
-   * Resolves an extension's own extensions via `componentsExtensionsCache`, which
-   * `populateScopeAndExtensionsCache` populates for all extensions in the load list.
-   * Returns extension ids in both with-version and without-version forms; the
-   * topo-sort matches either against the input list.
-   */
-  private regroupExtIdsFromTheList(ids: ComponentID[] = []): Array<ComponentID[]> {
-    return groupExtsByDepLayer(ids, (extId) => {
-      const fromCache = this.componentsExtensionsCache.get(extId.toString());
-      if (!fromCache?.extensions) return [];
-      const depKeys: string[] = [];
-      for (const ext of fromCache.extensions) {
-        if (ext.stringId) depKeys.push(ext.stringId);
-        if (ext.newExtensionId) depKeys.push(ext.newExtensionId.toStringWithoutVersion());
-      }
-      return depKeys;
     });
   }
 
