@@ -343,8 +343,7 @@ export class WorkspaceComponentLoader {
 
   /**
    * Layer envs so that envs-of-envs load before their dependents.
-   * Thin wrapper over `groupEnvsByDepLayer` — see that function for the algorithm
-   * and the one-level-only limitation.
+   * Thin wrapper over `groupEnvsByDepLayer` — see that function for the algorithm.
    */
   private regroupEnvsIdsFromTheList(envIds: ComponentID[] = [], envsIdsOfWsComps: Set<string>): Array<ComponentID[]> {
     return groupEnvsByDepLayer(
