@@ -18,28 +18,41 @@ something depends on it is not — so err on the side of starting minimal.
 - Timestamp fields are excluded.
 - File contents are excluded — too large, and orthogonal to the loader's job.
 
-## Fields (v0 — minimal)
+## Fields (current)
 
-| Field          | Source                                | Notes                                       |
-| -------------- | ------------------------------------- | ------------------------------------------- |
-| `id`           | `component.id.toString()`             | Full id including scope and version         |
-| `head`         | `component.head?.toString() ?? null`  | Scope HEAD hash, or null for new components |
-| `tags`         | sorted versions from `component.tags` | Tag versions present in scope               |
-| `extensionIds` | sorted aspect ids from `state.config` | Just the ids first; data added in v1        |
+| Field          | Source                                                 | Notes                                        |
+| -------------- | ------------------------------------------------------ | -------------------------------------------- |
+| `id`           | `component.id.toString()`                              | Full id including scope and version          |
+| `head`         | `component.head?.hash ?? null`                         | Scope HEAD hash, or null for new components  |
+| `tags`         | sorted versions from `component.tags`                  | Tag versions present in scope                |
+| `extensionIds` | sorted aspect ids from `state.config.extensions`       | Just the ids                                 |
+| `extensions`   | `state.config.extensions`, sorted by id, `config` only | Pre-slot static configuration                |
+| `aspects`      | `state.aspects.entries`, sorted by id, `config` only   | Post-slot aspects (configs only — see below) |
 
-## Fields (v1 — once v0 is stable on V1-vs-V1)
+### Why `data` is excluded
 
-| Field        | Source                                               | Notes                                       |
-| ------------ | ---------------------------------------------------- | ------------------------------------------- |
-| `extensions` | `state.config.extensions`, sorted by id, with `data` | Full extension payloads, JSON-stable        |
-| `envId`      | env descriptor id                                    | Resolved env, e.g. `teambit.harmony/aspect` |
-| `envType`    | env descriptor type                                  |                                             |
-| `aspects`    | `state.aspects` entries, sorted by id, with `config` | Post-`onComponentLoad` slot state           |
+`data` is the mutable post-load state populated by `onComponentLoad` slots,
+the dep resolver, and other side effects during loading. It depends on cache
+warmth: a cold-cache load eagerly computes resolved dependencies, a warm-cache
+load short-circuits. The harness's primary and partner have different cache
+states when sampling is enabled (the partner only runs on sampled calls, so
+its cache lags the primary's). Comparing `data` produces noisy false positives.
 
-## Fields (v2 — once v1 is stable)
+`config` is the static configuration supplied via `workspace.jsonc` and the
+component's own config — stable across cache states. That's what we compare.
+
+Trade-off: changes to how `data` is computed by the rewrite won't be caught
+by the snapshot. Catching those will require either (a) a comparison
+mechanism that runs both loaders cold-cache for each call, or (b) fixing
+V1's cache-state-dependent eager-vs-lazy behavior so warm and cold loads
+produce identical `data`. Both are post-rewrite concerns.
+
+## Fields (planned — post-rewrite)
 
 | Field          | Source                                | Notes                                            |
 | -------------- | ------------------------------------- | ------------------------------------------------ |
+| `envId`        | env descriptor id                     | Resolved env, e.g. `teambit.harmony/aspect`      |
+| `envType`      | env descriptor type                   |                                                  |
 | `dependencies` | from `dep-resolver` data on component | Sorted by package name; capture version + scope  |
 | `isModified`   | `component.isModified()`              | The single most failure-prone consumer of loader |
 

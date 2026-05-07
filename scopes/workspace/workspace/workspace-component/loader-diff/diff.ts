@@ -1,7 +1,7 @@
-import type { NormalizedSnapshot } from './snapshot';
+import type { AspectSnapshot, NormalizedSnapshot } from './snapshot';
 
 export interface FieldDiff {
-  field: keyof NormalizedSnapshot | `${keyof NormalizedSnapshot}[${number}]`;
+  field: string;
   primary: unknown;
   partner: unknown;
 }
@@ -13,33 +13,21 @@ export interface SnapshotDiff {
 
 /**
  * Diff a single pair of snapshots. Returns null if identical.
- *
- * Both snapshots are produced by serializeComponentForDiff and are already
- * normalized (sorted arrays, stable key order), so a structural compare is
- * sufficient.
  */
 export function diffSnapshots(primary: NormalizedSnapshot, partner: NormalizedSnapshot): SnapshotDiff | null {
   const fields: FieldDiff[] = [];
 
-  if (primary.id !== partner.id) {
-    fields.push({ field: 'id', primary: primary.id, partner: partner.id });
-  }
-  if (primary.head !== partner.head) {
-    fields.push({ field: 'head', primary: primary.head, partner: partner.head });
-  }
+  if (primary.id !== partner.id) fields.push({ field: 'id', primary: primary.id, partner: partner.id });
+  if (primary.head !== partner.head) fields.push({ field: 'head', primary: primary.head, partner: partner.head });
   diffStringArray('tags', primary.tags, partner.tags, fields);
   diffStringArray('extensionIds', primary.extensionIds, partner.extensionIds, fields);
+  diffAspectArray('extensions', primary.extensions, partner.extensions, fields);
+  diffAspectArray('aspects', primary.aspects, partner.aspects, fields);
 
   if (fields.length === 0) return null;
   return { id: primary.id, fields };
 }
 
-/**
- * Diff a result set: lists of snapshots from primary and partner.
- *
- * Components present on one side but not the other are reported as a
- * "missing" diff with the full snapshot in the present-side field.
- */
 export interface ResultDiff {
   missingFromPartner: NormalizedSnapshot[];
   missingFromPrimary: NormalizedSnapshot[];
@@ -77,8 +65,26 @@ export function isResultDiffEmpty(diff: ResultDiff): boolean {
   );
 }
 
-function diffStringArray(field: keyof NormalizedSnapshot, a: string[], b: string[], out: FieldDiff[]): void {
+function diffStringArray(field: string, a: string[], b: string[], out: FieldDiff[]): void {
   if (a.length !== b.length || a.some((v, i) => v !== b[i])) {
     out.push({ field, primary: a, partner: b });
+  }
+}
+
+function diffAspectArray(field: string, a: AspectSnapshot[], b: AspectSnapshot[], out: FieldDiff[]): void {
+  if (a.length !== b.length) {
+    out.push({ field, primary: a.map((x) => x.id), partner: b.map((x) => x.id) });
+    return;
+  }
+  for (let i = 0; i < a.length; i++) {
+    const ax = a[i];
+    const bx = b[i];
+    if (ax.id !== bx.id) {
+      out.push({ field: `${field}[${i}].id`, primary: ax.id, partner: bx.id });
+      continue;
+    }
+    if (ax.config !== bx.config) {
+      out.push({ field: `${field}[${ax.id}].config`, primary: ax.config, partner: bx.config });
+    }
   }
 }
