@@ -41,26 +41,37 @@ the previous approach was discarded.
 
 ---
 
-## Step 2 — Recursion Root-Cause Spike (separate PR)
+## Step 2 — Recursion Root-Cause Spike
 
 > Understand and decide before designing the new pipeline.
 
-- [ ] Trace the env↔component recursion in V1; document the call chain
-- [ ] Evaluate options: pre-pass, lazy env binding, cycle detection
-- [ ] Write up findings in `DECISIONS.md`
+- [x] Trace the env↔component recursion in V1; document the call chain
+- [x] Evaluate options: pre-pass, lazy env binding, cycle detection
+- [x] Write up findings in `DECISIONS.md` (D-001)
 - [ ] Get alignment on the approach before Step 3
+
+Conclusion (see D-001): the recursion is a topological-ordering problem, not
+a true cycle. Keep V1's two-pass shape (bulk load with `loadExtensions:
+false`, then load extensions). Replace V1's one-level env-of-env grouping
+with a proper recursive topological sort. Don't introduce lazy env binding.
 
 ---
 
 ## Step 3 — Incremental Seams (one PR each)
 
 > Each seam is green on the diff harness before merging. No big-bang switchover.
+> Order is deliberate: env-DAG sort first (D-001 says it's the load-order
+> primitive everything else depends on), Enrichment last (most entangled with
+> the recursion).
 
-- [ ] Extract `LoadPlan` construction as a pure function (V1 still drives loading)
+- [ ] Extract env-DAG topological sort (replaces `regroupEnvsIdsFromTheList`,
+      makes `core-aspect-env` special case unnecessary)
+- [ ] Extract `LoadPlan` construction (Discovery + Resolution) as a pure
+      function. V1 still drives loading.
 - [ ] Extract Hydration as a separate concern
-- [ ] Extract Enrichment as a separate concern (depends on Step 2 outcome)
 - [ ] Extract Assembly
 - [ ] Extract Execution
+- [ ] Extract Enrichment (last — most likely to surface env-recursion bugs)
 
 ---
 
