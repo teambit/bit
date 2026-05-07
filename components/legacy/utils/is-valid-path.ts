@@ -10,7 +10,8 @@ const INVALID_CHARS = ['<', '>', '|', '?', '*', ':', '"'];
  * relevant for mainFile, rootDir and files relative-paths. Either in bitmap or in the model.
  * 1) it can't be absolute
  * 2) it must be linux format (`\` is forbidden)
- * 3) it can't point to a parent directory — neither a leading `../` nor an
+ * 3) it can't start with `./` (current directory)
+ * 4) it can't point to a parent directory — neither a leading `../` nor an
  *    embedded `foo/../../` segment (parent traversal via intermediate segments)
  */
 export default function isValidPath(pathStr: string): boolean {
