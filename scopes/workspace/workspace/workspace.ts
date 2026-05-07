@@ -112,7 +112,7 @@ import { CompFiles } from './workspace-component/comp-files';
 import { Filter } from './filter';
 import type { ComponentStatusLegacy, ComponentStatusResult } from './workspace-component/component-status-loader';
 import { ComponentStatusLoader } from './workspace-component/component-status-loader';
-import { LoaderDiffHarness, loaderDiffMode } from './workspace-component/loader-diff';
+import { LoaderDiffHarness, loaderDiffMode, loaderDiffSampleEvery } from './workspace-component/loader-diff';
 import execa from 'execa';
 import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
 import { VERSION_ZERO } from '@teambit/objects';
@@ -273,7 +273,11 @@ export class Workspace implements ComponentFactory {
         primaryLoader,
         () => new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader),
         logger,
-        { comparisonLabel: diffMode, outputPath: process.env.BIT_LOADER_DIFF_OUT }
+        {
+          comparisonLabel: diffMode,
+          outputPath: process.env.BIT_LOADER_DIFF_OUT,
+          sampleEvery: loaderDiffSampleEvery(),
+        }
       ) as unknown as WorkspaceComponentLoader;
     } else {
       this.componentLoader = primaryLoader;

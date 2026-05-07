@@ -72,13 +72,25 @@ describe('loader diff harness — V1-vs-V1 baseline', function () {
         `expected zero diffs but got: ${JSON.stringify(dataLines(lines), null, 2)}`
       ).to.have.lengthOf(0);
     });
+
+    it('bit show writes a harness header and produces zero diffs', () => {
+      helper.command.runCmd(`bit show comp1`, helper.scopes.localPath, 'pipe', undefined, false, {
+        BIT_LOADER_DIFF: '1',
+        BIT_LOADER_DIFF_OUT: logPath,
+      });
+      const lines = readDiffLog(logPath);
+      expect(
+        lines.filter((l) => l.header),
+        'expected at least one header line'
+      ).to.have.length.greaterThan(0);
+      expect(
+        dataLines(lines),
+        `expected zero diffs but got: ${JSON.stringify(dataLines(lines), null, 2)}`
+      ).to.have.lengthOf(0);
+    });
   });
 
-  // TODO: re-enable once the harness's memory footprint is acceptable on workspaces
-  // with scope state. Today, running two WorkspaceComponentLoader instances in parallel
-  // doubles the cache footprint and can OOM Node's default 4GB heap even on tiny
-  // workspaces. Likely needs a sampling mode or a lighter-weight partner.
-  describe.skip('workspace with tagged + modified component', () => {
+  describe('workspace with tagged + modified component', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
@@ -86,10 +98,13 @@ describe('loader diff harness — V1-vs-V1 baseline', function () {
       helper.fs.appendFile('comp1/index.js', '\n// modified after tag');
     });
 
-    it('bit status on a modified component produces zero diffs', () => {
+    it('bit status on a modified component produces zero diffs (sampled)', () => {
+      // BIT_LOADER_DIFF_SAMPLE=50 — workspaces with scope state make many loader
+      // calls per command; sampling caps the partner's footprint.
       helper.command.runCmd(`bit status`, helper.scopes.localPath, 'pipe', undefined, false, {
         BIT_LOADER_DIFF: '1',
         BIT_LOADER_DIFF_OUT: logPath,
+        BIT_LOADER_DIFF_SAMPLE: '50',
       });
       const lines = readDiffLog(logPath);
       expect(
