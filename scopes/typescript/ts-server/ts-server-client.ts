@@ -36,6 +36,7 @@ export class TsserverClient {
   private tsServer: ProcessBasedTsServer | null;
   public lastDiagnostics: ts.server.protocol.DiagnosticEventBody[] = [];
   private serverRunning = false;
+  private filesPreOpenedOnInit = false;
   public diagnosticData: DiagnosticData[] = [];
   constructor(
     /**
@@ -76,12 +77,14 @@ export class TsserverClient {
 
       const shouldOpenFiles = this.options.openFilesOnInit !== false;
       if (this.files.length && shouldOpenFiles) {
-        const openPromises = this.files.map((file) => this.open(file));
-        await Promise.all(openPromises.map((promise) => promise.catch((error) => error)));
-        const failedFiles = openPromises.filter((promise) => promise instanceof Error);
+        const openResults = await Promise.all(
+          this.files.map((file) => this.open(file).catch((error: unknown) => error))
+        );
+        const failedFiles = openResults.filter((result) => result instanceof Error);
         if (failedFiles.length > 0) {
           this.logger.error('TsserverClient.init failed to open files:', failedFiles);
         }
+        this.filesPreOpenedOnInit = true;
         this.checkTypesIfNeeded();
       }
       this.logger.debug('TsserverClient.init completed');
@@ -160,21 +163,27 @@ export class TsserverClient {
       return this.tsServer?.request(CommandTypes.Geterr, { delay: 0, files });
     }
 
-    const filesArePreOpened = files === this.files || files.every((f) => this.files.includes(f));
+    const filesArePreOpened = this.filesPreOpenedOnInit && files.every((f) => this.files.includes(f));
     const total = files.length;
-    for (let i = 0; i < files.length; i += batchSize) {
-      const batch = files.slice(i, i + batchSize);
-      const upTo = Math.min(i + batchSize, total);
-      this.logger.setStatusLine(`type-checking files ${i + 1}-${upTo} of ${total}`);
-      if (!filesArePreOpened) {
-        await this.openFiles(batch);
+    try {
+      for (let i = 0; i < files.length; i += batchSize) {
+        const batch = files.slice(i, i + batchSize);
+        const upTo = Math.min(i + batchSize, total);
+        this.logger.setStatusLine(`type-checking files ${i + 1}-${upTo} of ${total}`);
+        if (!filesArePreOpened) {
+          await this.openFiles(batch);
+        }
+        try {
+          await this.tsServer?.request(CommandTypes.Geterr, { delay: 0, files: batch });
+        } finally {
+          if (!filesArePreOpened) {
+            await this.closeFiles(batch).catch((err) => this.logger.error('failed to close batch', err));
+          }
+        }
       }
-      await this.tsServer?.request(CommandTypes.Geterr, { delay: 0, files: batch });
-      if (!filesArePreOpened) {
-        await this.closeFiles(batch);
-      }
+    } finally {
+      this.logger.clearStatusLine();
     }
-    this.logger.clearStatusLine();
   }
 
   /**
