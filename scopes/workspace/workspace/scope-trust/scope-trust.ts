@@ -237,11 +237,15 @@ export class ScopeTrust {
 
   static isValidPattern(pattern: string): boolean {
     if (!pattern || typeof pattern !== 'string') return false;
-    // owner wildcard ("acme.*"): the prefix without the trailing ".*" must be
-    // a valid scope-owner segment. The owner alone ("acme") is itself a valid
-    // dotless scope name, so reuse the canonical scope-name validator.
-    const candidate = pattern.endsWith('.*') ? pattern.slice(0, -2) : pattern;
-    return isValidScopeName(candidate);
+    if (pattern.endsWith('.*')) {
+      const owner = pattern.slice(0, -2);
+      // wildcard must be a single owner segment ("acme.*"), not nested
+      // ("acme.frontend.*") — the matcher only consults scope owners.
+      if (owner.includes('.')) return false;
+      return isValidScopeName(owner);
+    }
+    // exact match: "acme.frontend" or dotless legacy "my-scope".
+    return isValidScopeName(pattern);
   }
 }
 
