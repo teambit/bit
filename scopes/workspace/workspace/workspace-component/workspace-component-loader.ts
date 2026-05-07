@@ -27,6 +27,8 @@ import { WorkspaceComponent } from './workspace-component';
 import { MergeConfigConflict } from '../exceptions/merge-config-conflict';
 import { buildLoadPlanGroups } from './load-plan';
 import type { LoadPlanInput } from './load-plan';
+import { classifyIds } from './discovery';
+import type { DiscoveredIds } from './discovery';
 
 type GetManyRes = {
   components: Component[];
@@ -422,25 +424,19 @@ export class WorkspaceComponentLoader {
     ids: ComponentID[],
     existingGroups?: WorkspaceScopeIdsMap
   ): Promise<WorkspaceScopeIdsMap> {
-    const result: WorkspaceScopeIdsMap = existingGroups || {
-      scopeIds: new Map(),
-      workspaceIds: new Map(),
-    };
-
-    await Promise.all(
-      ids.map(async (componentId) => {
-        const inWs = await this.isInWsIncludeDeleted(componentId);
-
-        if (!inWs) {
-          result.scopeIds.set(componentId.toString(), componentId);
-          return undefined;
-        }
-        const resolvedVersions = this.resolveVersion(componentId);
-        result.workspaceIds.set(resolvedVersions.toString(), resolvedVersions);
-        return undefined;
-      })
+    // Fetch the workspace's id surface once. Under V1 each call into
+    // isInWsIncludeDeleted re-fetched locallyDeletedIds() per component; the result
+    // is identical for every call within one invocation, so caching here is a behavior-
+    // preserving optimization (and makes the inner classifier pure/synchronous).
+    const knownWorkspaceIds = this.workspace.listIds().concat(await this.workspace.locallyDeletedIds());
+    return classifyIds(
+      ids,
+      {
+        knownWorkspaceIds,
+        resolveWorkspaceVersion: (id) => this.resolveVersion(id),
+      },
+      existingGroups as DiscoveredIds | undefined
     );
-    return result;
   }
 
   private async isInWsIncludeDeleted(componentId: ComponentID): Promise<boolean> {

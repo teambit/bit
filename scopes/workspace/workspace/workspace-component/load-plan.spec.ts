@@ -55,10 +55,13 @@ describe('buildLoadPlanGroups', () => {
   });
 
   it("layers a workspace component's env before the component", () => {
-    const env = { id: id('scope/my-env@1.0.0') };
-    const comp = { id: id('scope/my-comp@1.0.0'), envId: env.id.toStringWithoutVersion() };
+    const env: MockComp = { id: id('scope/my-env@1.0.0') };
     // The component lists my-env in its extensions so it gets discovered as an ext component.
-    comp.extensions = [{ stringId: env.id.toString(), newExtensionId: env.id }];
+    const comp: MockComp = {
+      id: id('scope/my-comp@1.0.0'),
+      envId: env.id.toStringWithoutVersion(),
+      extensions: [{ stringId: env.id.toString(), newExtensionId: env.id }],
+    };
     const result = buildLoadPlanGroups(inputFor([env, comp]));
 
     const envIdx = result.groups.findIndex((g) => g.envs && g.ids.some((c) => c.toString() === env.id.toString()));
