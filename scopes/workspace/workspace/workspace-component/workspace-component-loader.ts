@@ -91,22 +91,31 @@ export type LoadCompAsAspectsOptions = {
 };
 
 export class WorkspaceComponentLoader {
-  private componentsCache: InMemoryCache<Component>; // cache loaded components
-  /**
-   * Cache components that loaded from scope (especially for get many for perf improvements)
-   */
+  // Loader caches — see D-002 in docs/rfcs/component-loading-rewrite/DECISIONS.md
+  // for the full invariants. Briefly:
+  //
+  //   componentsCache             — final loaded Component objects. Key is
+  //                                 `${id}:${json(load-opts)}`. Lookup follows
+  //                                 the "exact-match-or-fully-loaded" rule
+  //                                 (see getFromCache).
+  //   scopeComponentsCache        — scratch state for one load operation:
+  //                                 the scope-only Component for an id.
+  //                                 Read by populateScopeAndExtensionsCache
+  //                                 and load-plan.ts via the loader's lookups.
+  //   componentsExtensionsCache   — scratch state for one load operation:
+  //                                 the merged extensions / envId for an id,
+  //                                 produced before the full load runs.
+  //   componentLoadedSelfAsAspects — memoization flag (not a value cache):
+  //                                 ensures each component is registered as
+  //                                 an aspect at most once.
+  private componentsCache: InMemoryCache<Component>;
   private scopeComponentsCache: InMemoryCache<Component>;
-  /**
-   * Cache extension list for components. used by get many for perf improvements.
-   * And to make sure we load extensions first.
-   */
   private componentsExtensionsCache: InMemoryCache<{
     extensions: ExtensionDataList;
     errors: Error[] | undefined;
     envId: string | undefined;
   }>;
-
-  private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
+  private componentLoadedSelfAsAspects: InMemoryCache<boolean>;
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -163,7 +172,11 @@ export class WorkspaceComponentLoader {
       return comp.id.toString();
     });
 
-    // this.logger.clearStatusLine();
+    // Save under the "fully loaded" key even though loadOptsWithDefaults may have
+    // had loadExtensions/executeLoadSlot set to false. By this point in getMany
+    // the slot has fired (executeLoadSlot runs unconditionally inside getAndLoadSlot)
+    // and extensions were loaded when requested, so the post-load shape is
+    // fully-loaded. See D-002 for why the key tracks post-load state.
     components.forEach((comp) => {
       this.saveInCache(comp, { loadExtensions: true, executeLoadSlot: true });
     });
@@ -730,28 +743,36 @@ export class WorkspaceComponentLoader {
     return this.executeLoadSlot(newComponent, loadOpts);
   }
 
+  /**
+   * Cache the loaded Component under a key derived from `loadOpts`. Callers
+   * typically pass `{ loadExtensions: true, executeLoadSlot: true }` even when
+   * the *initial* load options had those false — by the time the loader
+   * reaches save, the slot has fired and (when applicable) extensions have
+   * been registered, so the post-load state is "fully loaded". See D-002.
+   */
   private saveInCache(component: Component, loadOpts?: ComponentLoadOptions): void {
     const cacheKey = createComponentCacheKey(component.id, loadOpts);
     this.componentsCache.set(cacheKey, component);
   }
 
   /**
-   * make sure that not only the id-str match, but also the legacy-id.
-   * this is needed because the ComponentID.toString() is the same whether or not the legacy-id has
-   * scope-name, as it includes the defaultScope if the scope is empty.
-   * as a result, when out-of-sync is happening and the id is changed to include scope-name in the
-   * legacy-id, the component is the cache has the old id.
+   * Lookup follows the "exact-match-or-fully-loaded" rule (D-002): try the
+   * caller's exact load-opts shape first; on miss, fall back to the
+   * `{ loadExtensions: true, executeLoadSlot: true }` shape that getMany /
+   * get use when saving. A fully-loaded Component is a superset of any
+   * less-loaded one, so the caller gets at least what it asked for.
+   *
+   * Also enforces an id-equality check (not just a string match) — when a
+   * component was loaded out-of-sync the canonical id-string is the same
+   * but the legacy id may have a different scope. We don't want to return
+   * the stale cached version in that case.
    */
   private getFromCache(componentId: ComponentID, loadOpts?: ComponentLoadOptions): Component | undefined {
     const bitIdWithVersion: ComponentID = this.resolveVersion(componentId);
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
     const cacheKey = createComponentCacheKey(id, loadOpts);
-    // If we try to look for the cache without load extensions/ without execute load slot
-    // but there is an entry after the load, we want to use it as well.
-    // as we want the component, so if we already loaded it with everything, it's fine.
-    // this sometime relevant for cases with tiny cache size (during tag)
-    const cacheKeyWithTrueLoadOpts = createComponentCacheKey(id, { loadExtensions: true, executeLoadSlot: true });
-    const fromCache = this.componentsCache.get(cacheKey) || this.componentsCache.get(cacheKeyWithTrueLoadOpts);
+    const cacheKeyForFullyLoaded = createComponentCacheKey(id, { loadExtensions: true, executeLoadSlot: true });
+    const fromCache = this.componentsCache.get(cacheKey) || this.componentsCache.get(cacheKeyForFullyLoaded);
     if (fromCache && fromCache.id.isEqual(id)) {
       return fromCache;
     }
@@ -874,6 +895,21 @@ export class WorkspaceComponentLoader {
   }
 }
 
+/**
+ * Cache key composition for `componentsCache`. Includes only the four flags
+ * that genuinely produce a different Component:
+ *
+ *   - loadExtensions: false → external aspects aren't registered with Harmony
+ *   - executeLoadSlot: false → onComponentLoad slots don't fire, so state.aspects
+ *                              doesn't accumulate post-slot upserts
+ *   - loadDocs: false → docs aspect's slot subscriber early-returns
+ *                       (docs.main.runtime.ts:220), data is empty
+ *   - loadCompositions: false → compositions aspect's slot subscriber
+ *                               early-returns (compositions.main.runtime.ts:141)
+ *
+ * Other ComponentLoadOptions (storeInCache, originatedFromHarmony, etc.) don't
+ * change the Component value and would split the cache without value if included.
+ */
 function createComponentCacheKey(id: ComponentID, loadOpts?: ComponentLoadOptions): string {
   const relevantOpts = pick(loadOpts, ['loadExtensions', 'executeLoadSlot', 'loadDocs', 'loadCompositions']);
   return `${id.toString()}:${JSON.stringify(sortKeys(relevantOpts ?? {}))}`;

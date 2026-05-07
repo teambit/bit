@@ -5,6 +5,129 @@ why, and what evidence shaped it. New decisions go at the top.
 
 ---
 
+## D-002: The cache layout is defensible — write the invariants down before changing them
+
+**Date:** 2026-05-07
+**Status:** Accepted (no code change beyond inline comments)
+
+### Context
+
+The original RFC named "the caching nightmare" as one of the top complexity
+hotspots. It listed:
+
+- 12 boolean flags affect loading, but the cache key uses only 4
+- Cache lookup tries the given options first, then falls back to a hardcoded
+  `{ loadExtensions: true, executeLoadSlot: true }`
+- Multiple overlapping caches with no unified invalidation
+
+After tracing the actual behavior, the rules are coherent — they're just
+undocumented. Recording them here so future changes can preserve them
+deliberately rather than re-discover them.
+
+### The four caches
+
+| Cache                          | Stores                           | Key                        | Populated by                          |
+| ------------------------------ | -------------------------------- | -------------------------- | ------------------------------------- |
+| `componentsCache`              | Fully-loaded `Component` objects | `${id}:${json(load-opts)}` | `saveInCache` after `getMany` / `get` |
+| `scopeComponentsCache`         | Scope-only `Component` objects   | `id.toString()`            | `populateScopeAndExtensionsCache`     |
+| `componentsExtensionsCache`    | `{ extensions, errors, envId }`  | `id.toString()`            | `populateScopeAndExtensionsCache`     |
+| `componentLoadedSelfAsAspects` | A boolean memoization flag       | `id.toString()`            | `loadCompsAsAspects`                  |
+
+`scopeComponentsCache` and `componentsExtensionsCache` are intermediate
+caches used during the load pipeline (`buildLoadGroups` warms them, the
+plan-builder reads them). They're not really "caches of the loader's output"
+— they're scratch state for one load operation.
+
+`componentLoadedSelfAsAspects` is a memoization flag, not a cache of values.
+
+The only output cache is `componentsCache`.
+
+### The cache key for `componentsCache`
+
+`createComponentCacheKey(id, loadOpts)` picks four boolean flags from
+`loadOpts`: `loadExtensions`, `executeLoadSlot`, `loadDocs`,
+`loadCompositions`. Each of the four genuinely produces a distinguishable
+Component:
+
+- `loadExtensions: false` → `loadComponentsExtensions` is skipped, so
+  external aspects aren't registered with Harmony for this load. The
+  Component object itself ends up similar but the side effects on the
+  Harmony aspect graph differ.
+- `executeLoadSlot: false` → the `onComponentLoad` slot subscribers don't
+  fire, so `state.aspects` doesn't accumulate post-slot upserts.
+- `loadDocs: false` → the docs aspect's slot subscriber early-returns
+  (`docs.main.runtime.ts:220`), so the docs aspect's `data` is empty.
+- `loadCompositions: false` → same pattern in the compositions aspect
+  (`compositions.main.runtime.ts:141`).
+
+Other flags from `ComponentLoadOptions` (`storeInCache`,
+`storeDepsInFsCache`, `originatedFromHarmony`, etc.) don't change the
+Component value — they affect whether the loader caches, where it stores fs
+state, etc. Including them in the key would split the cache without value.
+
+### The "exact-match-or-fully-loaded" lookup rule
+
+`getFromCache(id, loadOpts)` looks up two keys:
+
+1. The exact key for the requested options.
+2. A "fully loaded" key built from `{ loadExtensions: true, executeLoadSlot: true }`.
+
+If either hits, the cached Component is returned. The second lookup makes
+sure that once a component has been "fully loaded" by some prior call, every
+subsequent call benefits from the cache — even if it asks for a less-loaded
+shape. This is sound because:
+
+- A "fully loaded" Component contains a _superset_ of what a less-loaded
+  Component would. The requesting caller gets at least what they asked for.
+- The expensive work (slot fires, extension registration) was already paid
+  for; we don't redo it.
+
+The cache is _not_ a per-flag-combination cache; it's a "best-shape we've
+got" cache with a labeling convention.
+
+### Why `getMany` saves with hardcoded `{ loadExtensions: true, executeLoadSlot: true }`
+
+`getMany` defaults `loadExtensions: false, executeLoadSlot: false` for the
+_initial_ `consumer.loadComponents` call — that's a perf optimization, not
+the final state. Inside `getAndLoadSlot` the loader unconditionally runs
+`executeLoadSlot` (line 315) and conditionally runs `loadComponentsExtensions`
+(when `loadOpts.loadExtensions` is true). So by the time `saveInCache` runs,
+each component is "as loaded as the caller asked for, plus the slot fired".
+
+Storing with `{ loadExtensions: true, executeLoadSlot: true }` reflects the
+fact that the slot did fire and (when applicable) extensions were loaded —
+even though the _initial_ call had those flags false. This is what makes the
+exact-match-or-fully-loaded rule work in practice: the cache key tracks the
+post-load state, not the pre-load options.
+
+### Implications for the rewrite
+
+- Don't try to "simplify" the cache by removing the four-flag key. Each flag
+  produces a real difference in `state.aspects` post-slot.
+- Don't try to remove the fully-loaded fallback. Without it, `getMany`
+  results never re-hit on subsequent calls with different default flags,
+  and the cache becomes useless for the most common code paths.
+- Do consider whether `componentLoadedSelfAsAspects` could be folded into a
+  metadata field on the Component itself, so it's not a separate cache to
+  invalidate. Not urgent.
+- `scopeComponentsCache` and `componentsExtensionsCache` are scratch state
+  for one load operation. In the rewrite they should live on the load-plan
+  context, not on the loader instance.
+
+### Evidence index
+
+| Claim                                              | File:Line                                        |
+| -------------------------------------------------- | ------------------------------------------------ |
+| 4 caches in the loader                             | `workspace-component-loader.ts:94, 98, 103, 109` |
+| Cache key picks 4 flags                            | `workspace-component-loader.ts:878`              |
+| `loadDocs` consumed by docs aspect                 | `docs.main.runtime.ts:220`                       |
+| `loadCompositions` consumed by compositions aspect | `compositions.main.runtime.ts:141`               |
+| Fully-loaded fallback in lookup                    | `workspace-component-loader.ts:753-754`          |
+| `getMany` saves with hardcoded fully-loaded key    | `workspace-component-loader.ts:168`              |
+| `executeLoadSlot` runs unconditionally             | `workspace-component-loader.ts:315`              |
+
+---
+
 ## D-001: The env↔component recursion is a topological-ordering problem, not a cycle
 
 **Date:** 2026-05-07
