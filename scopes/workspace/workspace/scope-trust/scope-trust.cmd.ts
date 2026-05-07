@@ -56,12 +56,16 @@ once on, the effective trust set is: builtin scopes (teambit.*, bitdev.*, and a 
       case 'disable':
         await this.scopeTrust.disable();
         return formatSuccessSummary('scope-trust disabled (removed trustedScopes from workspace.jsonc)');
-      case 'add':
-        await this.scopeTrust.addTrustedScope(requirePattern(action, pattern));
-        return formatSuccessSummary(`added ${chalk.bold(pattern)} to trustedScopes in workspace.jsonc`);
-      case 'remove':
-        await this.scopeTrust.removeTrustedScope(requirePattern(action, pattern));
-        return formatSuccessSummary(`removed ${chalk.bold(pattern)} from trustedScopes in workspace.jsonc`);
+      case 'add': {
+        const p = requirePattern(action, pattern);
+        await this.scopeTrust.addTrustedScope(p);
+        return formatSuccessSummary(`added ${chalk.bold(p)} to trustedScopes in workspace.jsonc`);
+      }
+      case 'remove': {
+        const p = requirePattern(action, pattern);
+        await this.scopeTrust.removeTrustedScope(p);
+        return formatSuccessSummary(`removed ${chalk.bold(p)} from trustedScopes in workspace.jsonc`);
+      }
     }
   }
 
