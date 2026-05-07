@@ -18,20 +18,21 @@ type GetManyRes = {
 export type LoaderFactory = () => WorkspaceComponentLoader;
 
 export interface LoaderDiffHarnessOptions {
-  /** Where to write the JSONL diff log. Defaults to `<tmpdir>/bit-loader-diff.jsonl`. */
-  outputPath?: string;
-  /** Tag written into each log line, e.g. "v1-vs-v1" or "v1-vs-v2". */
-  comparisonLabel: string;
   /**
-   * Sample rate. If `N > 1`, only every Nth call runs the partner loader.
-   * Reduces overhead on large workspaces where running both loaders for every
-   * call would OOM Node's default heap. Default: 1 (every call).
+   * Sample rate. `1` runs the partner on every loader call. `N > 1` runs it
+   * every Nth call — use this on large workspaces where running both loaders
+   * for every call would OOM Node's default heap.
    */
-  sampleEvery?: number;
+  sampleEvery: number;
+  /**
+   * Override the default output path. Used by e2e tests that need isolated
+   * logs per test. Not user-facing.
+   */
+  outputPath?: string;
 }
 
 /**
- * Wraps a primary loader and a partner loader, runs both on every call,
+ * Wraps a primary loader and a partner loader, runs both on every (sampled) call,
  * and writes any diffs to a JSONL log. The primary's result is returned —
  * the partner is observation-only.
  *
@@ -43,7 +44,6 @@ export interface LoaderDiffHarnessOptions {
 export class LoaderDiffHarness {
   private partner: WorkspaceComponentLoader | null = null;
   private readonly outputPath: string;
-  private readonly comparisonLabel: string;
   private readonly sampleEvery: number;
   private callIndex = 0;
   private writeFailureLogged = false;
@@ -54,10 +54,11 @@ export class LoaderDiffHarness {
     private logger: Logger,
     options: LoaderDiffHarnessOptions
   ) {
-    this.outputPath = options.outputPath ?? path.join(os.tmpdir(), 'bit-loader-diff.jsonl');
-    this.comparisonLabel = options.comparisonLabel;
-    this.sampleEvery = Math.max(1, Math.floor(options.sampleEvery ?? 1));
+    this.outputPath = options.outputPath ?? path.join(os.tmpdir(), `bit-loader-diff-${process.pid}.jsonl`);
+    this.sampleEvery = Math.max(1, Math.floor(options.sampleEvery));
     this.writeHeader();
+    // eslint-disable-next-line no-console
+    console.error(`[loader-diff] sample 1/${this.sampleEvery} → ${this.outputPath}`);
   }
 
   async getMany(ids: ComponentID[], loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<GetManyRes> {
@@ -154,7 +155,7 @@ export class LoaderDiffHarness {
   private writeHeader(): void {
     this.writeLine({
       header: true,
-      comparisonLabel: this.comparisonLabel,
+      sampleEvery: this.sampleEvery,
       startedAt: new Date().toISOString(),
       pid: process.pid,
       cwd: process.cwd(),

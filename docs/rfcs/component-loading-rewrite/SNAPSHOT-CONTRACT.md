@@ -90,10 +90,21 @@ that's a real gap — either the command is using a different loader path
 (`consumer.loadComponents` directly, scope-only loading, etc.) or the wrapping
 in `Workspace`'s constructor missed something. File it as a follow-up.
 
-## Sample rate (`BIT_LOADER_DIFF_SAMPLE`)
+## How to run it (`BIT_LOADER_DIFF`)
 
-On large workspaces (bit7 itself, ~300 components), running both loaders for
-every call doubles cache footprint and can OOM Node's default 4GB heap. Set
-`BIT_LOADER_DIFF_SAMPLE=10` to run the partner only every 10th call. The
-trade-off: sampling can miss regressions that only manifest on the
-non-sampled calls. Use the lowest sample rate the workspace can afford.
+One env var, one number:
+
+- `BIT_LOADER_DIFF=1 bit status` — compare on every loader call. Use this on
+  small workspaces.
+- `BIT_LOADER_DIFF=50 bit status` — compare every 50th call. Use this on
+  large workspaces (bit7 itself, ~300 components) where running both loaders
+  on every call doubles cache footprint and can OOM Node's default 4GB heap.
+- unset / 0 → off (default).
+
+The harness prints the log path to stderr at startup, e.g.
+`[loader-diff] sample 1/50 → /var/folders/.../bit-loader-diff-12345.jsonl`.
+The first line of the file is a header; every other line is a divergence.
+A clean V1-vs-V1 baseline produces only the header.
+
+Trade-off with `N > 1`: sampling can miss regressions that only manifest on
+non-sampled calls. Use the lowest N the workspace can afford.

@@ -6,25 +6,20 @@ export { LoaderDiffHarness } from './harness';
 export type { LoaderFactory, LoaderDiffHarnessOptions } from './harness';
 
 /**
- * Returns the comparison label if the diff harness is enabled, otherwise null.
- * `BIT_LOADER_DIFF=1` (or `=v1-vs-v1`) → V1-vs-V1 baseline mode.
- * Any other truthy value is used as the label as-is.
+ * Read the diff-harness configuration from `BIT_LOADER_DIFF`. One env var, one number:
+ *
+ *   unset / 0   → off
+ *   1           → on, compare every loader call
+ *   N (>1)      → on, compare every Nth call (use this on big workspaces; running
+ *                 both loaders on every call doubles memory and can OOM Node's
+ *                 default heap)
+ *
+ * Returns null when off, otherwise the sample rate.
  */
-export function loaderDiffMode(): string | null {
+export function loaderDiffSampleEvery(): number | null {
   const raw = process.env.BIT_LOADER_DIFF;
-  if (!raw || raw === '0' || raw.toLowerCase() === 'false') return null;
-  if (raw === '1' || raw.toLowerCase() === 'true') return 'v1-vs-v1';
-  return raw;
-}
-
-/**
- * Returns the sample rate from `BIT_LOADER_DIFF_SAMPLE`. Default 1 (every call).
- * Use larger values on workspaces big enough that running both loaders for every
- * call would OOM, e.g. `BIT_LOADER_DIFF_SAMPLE=10`.
- */
-export function loaderDiffSampleEvery(): number {
-  const raw = process.env.BIT_LOADER_DIFF_SAMPLE;
-  if (!raw) return 1;
+  if (!raw) return null;
   const parsed = Number.parseInt(raw, 10);
-  return Number.isFinite(parsed) && parsed >= 1 ? parsed : 1;
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return parsed;
 }

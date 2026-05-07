@@ -99,12 +99,11 @@ describe('loader diff harness — V1-vs-V1 baseline', function () {
     });
 
     it('bit status on a modified component produces zero diffs (sampled)', () => {
-      // BIT_LOADER_DIFF_SAMPLE=50 — workspaces with scope state make many loader
+      // BIT_LOADER_DIFF=50 — workspaces with scope state make many loader
       // calls per command; sampling caps the partner's footprint.
       helper.command.runCmd(`bit status`, helper.scopes.localPath, 'pipe', undefined, false, {
-        BIT_LOADER_DIFF: '1',
+        BIT_LOADER_DIFF: '50',
         BIT_LOADER_DIFF_OUT: logPath,
-        BIT_LOADER_DIFF_SAMPLE: '50',
       });
       const lines = readDiffLog(logPath);
       expect(
