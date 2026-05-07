@@ -212,9 +212,6 @@ export class VersionMaker {
         const modelComponent = component.modelComponent || (await this.legacyScope.getModelComponent(component.id));
         const hash = modelComponent.getRef(results.addedVersionStr);
         if (hash) this.workspace.scope.legacyScope.stagedSnaps.addSnap(hash.toString());
-      } else {
-        const tagData = this.params.tagDataPerComp?.find((t) => t.componentId.isEqualWithoutVersion(component.id));
-        if (tagData?.isNew) results.version.removeAllParents();
       }
     });
 
