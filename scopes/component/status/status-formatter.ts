@@ -313,6 +313,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
       modifiedComponentOutput,
       snappedComponentsOutput,
       stagedComponentsOutput,
+      pendingUpdateDependentsOutput,
       softTaggedComponentsOutput,
       unavailableOnMainOutput,
       autoTagPendingOutput,

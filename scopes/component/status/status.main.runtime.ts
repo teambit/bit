@@ -108,11 +108,18 @@ export class StatusMain {
     // (mirrors `bit export`'s "exported updates" section). Hidden entries don't have a .bitmap
     // counterpart, so they shouldn't surface as if they were workspace components.
     const allPendingForExport: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
-    const isHidden = (mc: ModelComponent) => Boolean(laneObj?.getComponent(mc.toComponentId())?.skipWorkspace);
-    const stagedComponents: ModelComponent[] = allPendingForExport.filter((mc) => !isHidden(mc));
-    const pendingUpdateDependents: ComponentID[] = allPendingForExport
-      .filter((mc) => isHidden(mc))
-      .map((mc) => mc.toComponentId());
+    // Precompute hidden ids once. Without this each split would call `lane.getComponent()` per
+    // pending-export entry, and that does a linear scan over `lane.components` — O(N·M) on big lanes.
+    const hiddenIds = new Set(
+      (laneObj?.components || []).filter((c) => c.skipWorkspace).map((c) => c.id.toStringWithoutVersion())
+    );
+    const stagedComponents: ModelComponent[] = [];
+    const pendingUpdateDependents: ComponentID[] = [];
+    for (const mc of allPendingForExport) {
+      const id = mc.toComponentId();
+      if (hiddenIds.has(id.toStringWithoutVersion())) pendingUpdateDependents.push(id);
+      else stagedComponents.push(mc);
+    }
     await this.addRemovedStagedIfNeeded(stagedComponents);
     const stagedComponentsWithVersions = await pMapSeries(stagedComponents, async (stagedComp) => {
       const id = stagedComp.toComponentId();
