@@ -31,6 +31,8 @@ export type LaneProps = {
   schema?: string;
   readmeComponent?: LaneReadmeComponent;
   forkedFrom?: LaneId;
+  /** @deprecated kept on the wire so older servers still accept hidden-entry updates from this client. Remove after the rollout window. */
+  overrideUpdateDependents?: boolean;
 };
 
 const OLD_LANE_SCHEMA = '0.0.0';
@@ -58,6 +60,8 @@ export default class Lane extends BitObject {
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
   isNew = false; // doesn't get saved in the object. only needed for in-memory instance
   hasChanged = false; // doesn't get saved in the object. only needed for in-memory instance
+  /** @deprecated wire-format compat shim for older servers — no merge-path reader in this codebase. Remove after the rollout window. */
+  private overrideUpdateDependents?: boolean;
   constructor(props: LaneProps) {
     super();
     if (!props.name) throw new TypeError('Lane constructor expects to get a name parameter');
@@ -69,6 +73,12 @@ export default class Lane extends BitObject {
     this.readmeComponent = props.readmeComponent;
     this.forkedFrom = props.forkedFrom;
     this.schema = props.schema || OLD_LANE_SCHEMA;
+    this.overrideUpdateDependents = props.overrideUpdateDependents;
+  }
+  /** @deprecated wire-format compat shim — set by hidden-entry writers so older servers' export-merge branch still updates their hidden bucket. Remove after the rollout window. */
+  setOverrideUpdateDependents(overrideUpdateDependents: boolean) {
+    this.overrideUpdateDependents = overrideUpdateDependents;
+    this.hasChanged = true;
   }
   /**
    * Components that live only in the lane's graph (Ripple CI / merge / GC) but are hidden from
@@ -162,6 +172,8 @@ export default class Lane extends BitObject {
         forkedFrom: this.forkedFrom && this.forkedFrom.toObject(),
         schema: this.schema,
         updateDependents,
+        // @deprecated kept for older servers' merge gating; remove after the rollout window.
+        overrideUpdateDependents: this.overrideUpdateDependents,
       },
       (val) => !!val
     );
@@ -225,6 +237,8 @@ export default class Lane extends BitObject {
         head: laneObject.readmeComponent.head && new Ref(laneObject.readmeComponent.head),
       },
       forkedFrom: laneObject.forkedFrom && LaneId.from(laneObject.forkedFrom.name, laneObject.forkedFrom.scope),
+      // @deprecated wire-format compat shim — preserve through round-trips. Remove after the rollout window.
+      overrideUpdateDependents: laneObject.overrideUpdateDependents,
       hash: laneObject.hash || hash,
       schema: laneObject.schema,
     });
@@ -453,6 +467,8 @@ export default class Lane extends BitObject {
     return new Lane({
       ...this,
       hash: this._hash,
+      // @deprecated preserve compat shim through clone. Remove after the rollout window.
+      overrideUpdateDependents: this.overrideUpdateDependents,
       components: cloneDeep(this.components),
     });
   }

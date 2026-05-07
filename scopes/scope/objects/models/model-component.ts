@@ -719,6 +719,12 @@ export default class Component extends BitObject {
         isDeleted: version.isRemoved(),
         ...(shouldBeHidden && { skipWorkspace: true }),
       });
+      if (shouldBeHidden) {
+        // @deprecated wire-format compat shim — older servers gate their export-merge hidden-update
+        // branch on this flag. Without it, our cascade pushes wouldn't propagate to a remote that
+        // hasn't yet upgraded to the unified diverge-check path. Remove after the rollout window.
+        lane.setOverrideUpdateDependents(true);
+      }
 
       if (lane.readmeComponent && lane.readmeComponent.id.fullName === currentBitId.fullName) {
         lane.setReadmeComponent(currentBitId);
