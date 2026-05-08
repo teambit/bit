@@ -8,7 +8,7 @@ import type { ComponentModel } from '@teambit/component';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import type { ScopeID } from '@teambit/scopes.scope-id';
 import { getComponentStatus } from './filter-utils';
-import { ChangedPill, BuildSpinner, BuildingPreview, QueuedPreview } from './card-overlays';
+import { ChangedPill, BuildSpinner, BuildingPreview } from './card-overlays';
 import styles from './hope-component-card.module.scss';
 
 export type HopeComponentCardProps = {
@@ -49,8 +49,7 @@ export function HopeComponentCard({
 
   const href = `${component.id.fullName}?scope=${component.id.scope}`;
 
-  const loadPreviewVisible =
-    component.compositions.length > 0 && component.buildStatus !== 'pending' && !shouldShowPreview;
+  const loadPreviewVisible = component.compositions.length > 0 && !isBuilding && !shouldShowPreview;
 
   const showPreviewClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -81,7 +80,7 @@ export function HopeComponentCard({
       {loadPreviewVisible && <LoadPreview className={styles.loadPreview} onClick={showPreviewClick} />}
 
       <Link href={href} className={styles.linkWrapper}>
-        <div className={isQueued ? styles.previewQueued : styles.preview}>
+        <div className={styles.preview}>
           <div className={styles.previewInner}>
             <CardPreview
               component={component}
@@ -117,7 +116,7 @@ export function HopeComponentCard({
               )}
             </div>
           </Tooltip>
-          <span className={isQueued ? styles.nameQueued : styles.name}>{nameLabel}</span>
+          <span className={styles.name}>{nameLabel}</span>
           {!isBuilding && !isQueued && shortHash && <span className={styles.hash}>{shortHash}</span>}
           {isBuilding && (
             <span className={styles.buildingLabel} style={{ color: accent }}>
@@ -141,7 +140,6 @@ function CardPreview({
   status: string;
   shouldShowPreview: boolean;
 }) {
-  if (status === 'queued') return <QueuedPreview />;
   if (status === 'building') return <BuildingPreview />;
 
   return (

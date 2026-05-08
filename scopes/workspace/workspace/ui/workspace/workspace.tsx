@@ -102,11 +102,25 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
               className={classNames(styles.topbar, styles[themeName], isMinimal && styles.minimal)}
               Corner={() => (
                 <div className={classNames(isMinimal && styles.cornerWithBreadcrumb)}>
-                  <Corner
-                    className={classNames((isMinimal && styles.minimalCorner) || styles.corner, styles[themeName])}
-                    name={isMinimal ? '' : workspace.name}
-                    icon={isMinimal ? 'https://static.bit.dev/brands/bit-logo-min.png' : workspace.icon}
-                  />
+                  {isMinimal ? (
+                    <Link to="/" className={styles.backButton}>
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path
+                          d="M11.25 13.5L6.75 9L11.25 4.5"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </Link>
+                  ) : (
+                    <Corner
+                      className={classNames(styles.corner, styles[themeName])}
+                      name={workspace.name}
+                      icon={workspace.icon}
+                    />
+                  )}
                   {isMinimal && <WorkspaceBreadcrumb />}
                 </div>
               )}
