@@ -310,8 +310,9 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
-   * Whether the workspace is configured to use root components (the `.bit_roots`
-   * per-env install layout under `node_modules`).
+   * Whether the workspace is configured to use root components — the per-env install
+   * layout written to `rootComponentsPath` (defaults to `node_modules/.bit_roots`,
+   * relocatable via `dependencyResolver.rootComponentsDirectory`).
    */
   hasRootComponents(): boolean {
     return this.dependencyResolver.hasRootComponents();
