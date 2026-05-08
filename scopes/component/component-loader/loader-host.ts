@@ -75,4 +75,22 @@ export interface LoaderHost {
    *    loader has been adapted to make import an explicit caller step.
    */
   loadAtPhase(id: ComponentID, phase: Phase): Promise<Component | undefined>;
+
+  /**
+   * Optional batched load. If implemented, the unified loader uses this for
+   * `getMany` cache-miss processing instead of dispatching per-ID
+   * `loadAtPhase` calls through its own worker pool.
+   *
+   * Hosts implement this to preserve existing batched optimisations. In
+   * particular: the legacy loader has a `shouldRunInParallel` gate that
+   * switches to sequential loading when the FS dependency-resolution cache
+   * is cold, to avoid OOM from many simultaneous dependency parsers each
+   * walking `node_modules`. Going through `loadAtPhase` per-ID bypasses
+   * this gate; going through this batched method preserves it.
+   *
+   * Contract: returns a `Map` keyed by `ComponentID.toString()`. IDs that
+   * could not be loaded are absent from the map (the loader treats them as
+   * not-found).
+   */
+  loadManyAtPhase?(ids: ComponentID[], phase: Phase): Promise<Map<string, Component>>;
 }

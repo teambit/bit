@@ -93,7 +93,7 @@ import type {
 } from './workspace.main.runtime';
 import type { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
-import type { GetManyOptions, GetOptions, Phase } from '@teambit/component-loader';
+import type { GetOptions, Phase } from '@teambit/component-loader';
 import { ComponentCache, LoadEventEmitter, UnifiedComponentLoader, DEFAULT_PHASE } from '@teambit/component-loader';
 import { WorkspaceLoaderHost } from './workspace-component/workspace-loader-host';
 import { attachLoadProgressRenderer } from './workspace-component/load-progress-renderer';
@@ -830,19 +830,15 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
     this.logger.trace(`get ${componentId.toString()}`);
-    let component: Component;
-    if (this.useNewLoader()) {
-      // Stage-1 dual-mode: route through the unified loader. `useCache=false` is
-      // honoured by invalidating before the load. `legacyComponent` is unused
-      // (the host always re-fetches) and `storeInCache` is honoured by post-
-      // invalidation. The translated `phase` is `aspects` so the env-as-aspect
-      // side-effect below sees the same fully-hydrated component as today.
-      if (!useCache) this.unifiedLoader.invalidate(componentId);
-      component = await this.unifiedLoader.get(componentId, this.translateLoadOpts(loadOpts));
-      if (!storeInCache) this.unifiedLoader.invalidate(componentId);
-    } else {
-      component = await this.componentLoader.get(componentId, legacyComponent, useCache, storeInCache, loadOpts);
-    }
+    // Stage 1: `Workspace.get` always uses the legacy loader, even under
+    // `BIT_LOADER=new`. Reason: aspect loading (loadCompsAsAspects inside the
+    // legacy `getMany`) makes many recursive `workspace.get` calls during a
+    // batch load. Routing those recursive gets through the unified loader
+    // multiplies allocations (event emission, hash computation, cache
+    // bookkeeping) by every recursion frame and triggers OOM on cold cache.
+    // Stage 2 will internalise per-phase paths and rework aspect loading to
+    // be cache-friendly through the unified loader.
+    const component = await this.componentLoader.get(componentId, legacyComponent, useCache, storeInCache, loadOpts);
     // When loading a component if it's an env make sure to load it as aspect as well
     // We only want to try load it as aspect if it's the first time we load the component
     const tryLoadAsAspect = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
@@ -1265,13 +1261,12 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<Component[]> {
     this.logger.debug(`getMany, started. ${ids.length} components`);
-    if (this.useNewLoader()) {
-      const { components } = await this.unifiedLoader.getMany(ids, this.translateLoadOpts(loadOpts) as GetManyOptions, {
-        throwOnMissing: throwOnFailure,
-      });
-      this.logger.debug(`getMany, completed (unified). ${components.length} components`);
-      return components;
-    }
+    // Stage 1: always use the legacy loader for the same reason as `get` —
+    // this method is a frequent target of recursive aspect-loading during
+    // batch loads, and routing each call through the unified loader
+    // multiplies allocations and triggers OOM on cold cache. The unified
+    // loader is still exercised via `Workspace.listWithInvalidAtPhase` for
+    // explicit phase-aware callers (currently `bit status`).
     const { components } = await this.componentLoader.getMany(ids, loadOpts, throwOnFailure);
     this.logger.debug(`getMany, completed. ${components.length} components`);
     return components;

@@ -116,16 +116,33 @@ export class UnifiedComponentLoader {
       }
 
       // Pass 2: only if any component needs work, emit phase events around
-      // the parallel load. This guarantees one phase:start/end per phase
-      // *actually executed* — a fully cached call emits no phase events.
+      // the load. This guarantees one phase:start/end per phase *actually
+      // executed* — a fully cached call emits no phase events.
+      //
+      // For multi-ID batches, prefer the host's batched `loadManyAtPhase`
+      // (when available) so the host can apply its own batching/concurrency
+      // policy (e.g. the legacy loader's `shouldRunInParallel` gate that
+      // prevents OOM during cold-cache loads).
+      //
+      // For single-ID loads we always go through the per-ID `loadAtPhase`.
+      // Routing a 1-ID call through `loadManyAtPhase` would force the host
+      // through its batch machinery, which in the workspace adapter case is
+      // the legacy `componentLoader.getMany` → `getAndLoadSlotOrdered` path
+      // — far heavier than the per-component `componentLoader.get` and a
+      // memory-blowup risk when called recursively (e.g. aspect loading
+      // calling `workspace.get` from inside a batch load).
       if (needsLoad.length) {
         const phaseStart = Date.now();
         this.events.emit({ kind: 'load:phase:start', callId, phase, ids: needsLoad });
-        await runWithConcurrency(needsLoad, concurrency, async (id) => {
-          const component = await this.loadAndCache(id, phase, callId);
-          if (component) components.push(component);
-          else missing.push(id);
-        });
+        if (this.host.loadManyAtPhase && needsLoad.length > 1) {
+          await this.loadBatchAndCache(needsLoad, phase, callId, components, missing);
+        } else {
+          await runWithConcurrency(needsLoad, concurrency, async (id) => {
+            const component = await this.loadAndCache(id, phase, callId);
+            if (component) components.push(component);
+            else missing.push(id);
+          });
+        }
         this.events.emit({
           kind: 'load:phase:end',
           callId,
@@ -190,6 +207,50 @@ export class UnifiedComponentLoader {
   }
 
   // ---- internals ----
+
+  private async loadBatchAndCache(
+    ids: ComponentID[],
+    phase: Phase,
+    callId: string,
+    components: Component[],
+    missing: ComponentID[]
+  ): Promise<void> {
+    // We've already checked the precondition in getMany, but keep this guard
+    // so refactors don't accidentally call us without a host implementation.
+    if (!this.host.loadManyAtPhase) {
+      throw new Error('UnifiedComponentLoader.loadBatchAndCache called but host has no loadManyAtPhase');
+    }
+    const batchStart = Date.now();
+    const loaded = await this.host.loadManyAtPhase(ids, phase);
+    // Distribute the batch's wall-clock duration evenly across components for
+    // observability; per-component timing is not available from the batched
+    // host call.
+    const perCompDuration = Math.round((Date.now() - batchStart) / Math.max(ids.length, 1));
+    for (const id of ids) {
+      const component = loaded.get(id.toString());
+      if (!component) {
+        missing.push(id);
+        continue;
+      }
+      if (phaseRank(component.loadedPhase as Phase) < phaseRank(phase)) {
+        this.logger.warn(
+          `UnifiedComponentLoader: host returned ${id.toString()} at phase "${component.loadedPhase}" but caller requested "${phase}". Treating as "${phase}".`
+        );
+        component.loadedPhase = phase;
+      }
+      const hash = this.computeHash(id, phase);
+      this.cache.set(id, phase, component, hash);
+      components.push(component);
+      this.events.emit({
+        kind: 'load:component',
+        callId,
+        id,
+        phase,
+        durationMs: perCompDuration,
+        cached: false,
+      });
+    }
+  }
 
   private async loadAndCache(id: ComponentID, phase: Phase, callId: string): Promise<Component | undefined> {
     const start = Date.now();

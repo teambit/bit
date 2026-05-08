@@ -5,6 +5,19 @@ import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 import { ComponentNotFound as LegacyComponentNotFound } from '@teambit/legacy.scope';
 import type { Workspace } from '../workspace';
+import type { ComponentLoadOptions } from './workspace-component-loader';
+
+/**
+ * Conservative stage-1 load options used for every load through this adapter.
+ * Matches what the heaviest existing caller (`bit status`) has always passed
+ * to `componentLoader.getMany`, avoiding the cold-cache OOM that hits when
+ * docs and compositions are parsed for hundreds of components alongside
+ * dependency resolution.
+ */
+const STAGE1_LOAD_OPTS: ComponentLoadOptions = {
+  loadDocs: false,
+  loadCompositions: false,
+};
 
 /**
  * Stage-1 adapter that lets the unified loader live in `@teambit/component-loader`
@@ -82,14 +95,14 @@ export class WorkspaceLoaderHost implements LoaderHost {
     return `${id.toString()}@${this.bitmapVersion}-${this.workspaceConfigVersion}`;
   }
 
-  async loadAtPhase(_id: ComponentID, phase: Phase): Promise<Component | undefined> {
+  async loadAtPhase(id: ComponentID, phase: Phase): Promise<Component | undefined> {
     // We accept `phase` for the contract but ignore it during stage 1 (see the
     // class doc-comment for why). The legacy loader always full-hydrates;
     // tagging the result as 'aspects' satisfies the unified loader's phase
     // guard (`loadedPhase >= requested`).
     void phase;
     try {
-      const component = await this.workspace.componentLoader.get(_id);
+      const component = await this.workspace.componentLoader.get(id, undefined, true, true, STAGE1_LOAD_OPTS);
       component.loadedPhase = 'aspects';
       return component;
     } catch (err) {
@@ -102,5 +115,35 @@ export class WorkspaceLoaderHost implements LoaderHost {
       }
       throw err;
     }
+  }
+
+  /**
+   * Batched load — preserves the legacy loader's `shouldRunInParallel`
+   * gate that prevents OOM during cold-cache loads. Without this batched
+   * path, the unified loader would dispatch per-ID `componentLoader.get`
+   * calls through its own worker pool, each of which calls the legacy
+   * `loadMany` with a single ID — and `shouldRunInParallel` returns false
+   * for `ids.length < 2`, so the gate never sees the full batch and never
+   * fires. Routing the whole batch through `componentLoader.getMany` means
+   * the legacy loader sees all 312 IDs in one call and correctly switches
+   * to sequential processing when the FS dependency cache is cold.
+   *
+   * Always passes the conservative `STAGE1_LOAD_OPTS` (loadDocs: false,
+   * loadCompositions: false). Existing direct callers of `componentLoader.
+   * getMany` (status, install, etc.) already pass these — without them,
+   * loading 312 components with docs/compositions parsing in addition to
+   * dep resolution OOMs on cold cache. The few commands that genuinely
+   * need docs or compositions (e.g. `bit show`) call `componentLoader.get`
+   * directly and bypass this adapter.
+   */
+  async loadManyAtPhase(ids: ComponentID[], phase: Phase): Promise<Map<string, Component>> {
+    void phase;
+    const { components } = await this.workspace.componentLoader.getMany(ids, STAGE1_LOAD_OPTS, false);
+    const result = new Map<string, Component>();
+    for (const comp of components) {
+      comp.loadedPhase = 'aspects';
+      result.set(comp.id.toString(), comp);
+    }
+    return result;
   }
 }
