@@ -93,9 +93,10 @@ import type {
 } from './workspace.main.runtime';
 import type { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
-import type { GetManyOptions, GetOptions } from '@teambit/component-loader';
+import type { GetManyOptions, GetOptions, Phase } from '@teambit/component-loader';
 import { ComponentCache, LoadEventEmitter, UnifiedComponentLoader, DEFAULT_PHASE } from '@teambit/component-loader';
 import { WorkspaceLoaderHost } from './workspace-component/workspace-loader-host';
+import { attachLoadProgressRenderer } from './workspace-component/load-progress-renderer';
 import type { ShouldLoadFunc } from './build-graph-from-fs';
 import { GraphFromFsBuilder } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
@@ -291,6 +292,9 @@ export class Workspace implements ComponentFactory {
       this.loadEvents,
       logger
     );
+    // Render unified-loader progress through the existing setStatusLine mechanism.
+    // Silent under the legacy loader because no events fire there.
+    attachLoadProgressRenderer(this.loadEvents, logger);
     this.validateConfig();
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
@@ -496,6 +500,21 @@ export class Workspace implements ComponentFactory {
   }
 
   async listWithInvalid(loadOpts?: ComponentLoadOptions) {
+    return this.listWithInvalidAtPhase(DEFAULT_PHASE, loadOpts);
+  }
+
+  /**
+   * Like `listWithInvalid` but lets the caller pin the load phase used by the
+   * unified loader. Under the legacy loader the `phase` is ignored and behaviour
+   * matches `listWithInvalid` exactly.
+   *
+   * Use this for commands that need only a sub-aspect view of every component
+   * (e.g. `bit status` only needs `dependencies`). Stage-1 host implementation
+   * still full-hydrates internally, so the immediate perf win is just cache
+   * sharing; stage-2 internalization of phase-native paths is where the actual
+   * skipped work materialises.
+   */
+  async listWithInvalidAtPhase(phase: Phase, loadOpts?: ComponentLoadOptions) {
     const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
     if (this.useNewLoader()) {
       // The unified loader's `getMany` returns `{ components, missing }`. The
@@ -505,11 +524,7 @@ export class Workspace implements ComponentFactory {
       // During stage 1 we only have a "missing" channel, so invalidComponents
       // remains empty under the new loader. Stage 2 will surface load errors
       // as a structured event/return value.
-      const { components, missing } = await this.unifiedLoader.getMany(
-        legacyIds,
-        this.translateLoadOpts(loadOpts) as GetManyOptions,
-        { throwOnMissing: false }
-      );
+      const { components, missing } = await this.unifiedLoader.getMany(legacyIds, { phase }, { throwOnMissing: false });
       return { components, invalidComponents: missing.map((id) => ({ id, err: new Error('not found') })) };
     }
     return this.componentLoader.getMany(legacyIds, loadOpts, false);

@@ -89,8 +89,13 @@ export class StatusMain {
       loadDocs: false,
       loadCompositions: false,
     };
+    // Status only needs `dependencies`-phase data: modification status, dep info,
+    // and issues triggered by the issues aspect. Extensions and aspects phases
+    // are pure overhead here. Under the legacy loader the phase is ignored and
+    // behaviour matches `listWithInvalid(loadOpts)` exactly. See
+    // openspec/changes/rewrite-component-loading task 6.2.
     const { components: allComps, invalidComponents: allInvalidComponents } =
-      await this.workspace.listWithInvalid(loadOpts);
+      await this.workspace.listWithInvalidAtPhase('dependencies', loadOpts);
     const consumer = this.workspace.consumer;
     const laneObj = await this.workspace.getCurrentLaneObject();
     const componentsList = new ComponentsList(this.workspace);
