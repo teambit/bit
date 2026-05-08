@@ -12,22 +12,26 @@
  * Internal call shape (getMany):
  *
  *   getMany
- *    ├─ getFromCache (per id)                      [components cache]
- *    └─ getAndLoadSlotOrdered (for cache misses)
+ *    ├─ getFromCache (per id)                      [componentsCache]
+ *    └─ getAndLoadSlotOrdered (for cache misses)   [creates a LoadScratch]
  *        ├─ groupAndUpdateIds → classifyIds         [discovery.ts, pure]
- *        ├─ buildLoadGroups
- *        │   ├─ populateScopeAndExtensionsCache    [warms scratch caches]
+ *        ├─ buildLoadGroups (uses scratch)
+ *        │   ├─ populateScopeAndExtensionsCache    [warms scratch]
  *        │   └─ buildLoadPlanGroups                 [load-plan.ts, pure]
  *        │       ├─ groupEnvsByDepLayer             [env-dag-sort.ts, pure]
  *        │       └─ groupExtsByDepLayer             [dep-dag-sort.ts, pure]
- *        └─ getAndLoadSlot (per group, in order)
+ *        └─ getAndLoadSlot (per group, in order — passes scratch through)
  *            ├─ getComponentsWithoutLoadExtensions
- *            │   └─ consumer.loadComponents → loadOne
+ *            │   └─ consumer.loadComponents → get → loadOne
  *            ├─ loadComponentsExtensions           [optional]
  *            ├─ executeLoadSlot                    [onComponentLoad subscribers]
  *            └─ loadCompsAsAspects                 [register as Harmony aspects]
  *
- * Caching: see D-002 in docs/rfcs/component-loading-rewrite/DECISIONS.md.
+ * State: `componentsCache` is the only instance-lifetime cache (the actual
+ * output cache). Per-operation scratch state lives in a `LoadScratch` value
+ * created at the top of getAndLoadSlotOrdered and threaded down to loadOne.
+ *
+ * Caching invariants: see D-002 in docs/rfcs/component-loading-rewrite/DECISIONS.md.
  * Recursion / load-order: see D-001 in the same file.
  */
 

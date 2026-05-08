@@ -24,7 +24,7 @@ After tracing the actual behavior, the rules are coherent — they're just
 undocumented. Recording them here so future changes can preserve them
 deliberately rather than re-discover them.
 
-### The four caches
+### The four caches _(originally — see "Implications" below for what's left)_
 
 | Cache                          | Stores                           | Key                        | Populated by                          |
 | ------------------------------ | -------------------------------- | -------------------------- | ------------------------------------- |
@@ -107,12 +107,17 @@ post-load state, not the pre-load options.
 - Don't try to remove the fully-loaded fallback. Without it, `getMany`
   results never re-hit on subsequent calls with different default flags,
   and the cache becomes useless for the most common code paths.
-- Do consider whether `componentLoadedSelfAsAspects` could be folded into a
-  metadata field on the Component itself, so it's not a separate cache to
-  invalidate. Not urgent.
-- `scopeComponentsCache` and `componentsExtensionsCache` are scratch state
-  for one load operation. In the rewrite they should live on the load-plan
-  context, not on the loader instance.
+
+### Done after writing this entry
+
+- ✅ `componentLoadedSelfAsAspects` removed. `AspectLoaderMain.isAspectLoaded`
+  already returns true for both successfully-loaded aspects (via `harmony.get`)
+  and previously-failed ones (via the `failedAspects` registry), so the local
+  memoization flag was redundant.
+- ✅ `scopeComponentsCache` and `componentsExtensionsCache` moved off the
+  loader instance. They're now per-operation scratch state (`LoadScratch`)
+  threaded through the call chain. The loader has one cache field
+  (`componentsCache`, the actual output cache) instead of four.
 
 ### Evidence index
 
