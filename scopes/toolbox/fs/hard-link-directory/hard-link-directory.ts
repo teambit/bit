@@ -2,20 +2,21 @@ import path from 'path';
 import fs from 'fs-extra';
 import symlinkDir from 'symlink-dir';
 import resolveLinkTarget from 'resolve-link-target';
+import { logger, printWarning } from '@teambit/legacy.logger';
 
 export interface HardLinkDirectoryOptions {
   /**
    * Called when a non-directory entry is found at a path where a directory is expected
    * (e.g. an ancestor of a destination subdirectory has been replaced by a file or a
    * dangling symlink). The blocking entry is removed before retrying. Defaults to
-   * `console.warn`.
+   * writing the message to the bit log and printing it via `printWarning`.
    */
   onWarn?: (message: string) => void;
 }
 
 const defaultOnWarn = (message: string) => {
-  // eslint-disable-next-line no-console
-  console.warn(`Warning: ${message}`);
+  logger.warn(message);
+  printWarning(message);
 };
 
 /**
