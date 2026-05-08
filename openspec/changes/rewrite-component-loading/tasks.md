@@ -8,10 +8,10 @@
 
 ## 2. Define the public types and event surface
 
-- [ ] 2.1 In `scopes/component/component-loader/`, add `phase.ts` exporting the `Phase` type (`'identity' | 'files' | 'dependencies' | 'extensions' | 'aspects'`) and a `phaseRank(phase): number` helper.
-- [ ] 2.2 In the same package, add `load-events.ts` defining the `LoadEvent` discriminated union (`load:start`, `load:phase:start`, `load:component`, `load:phase:end`, `load:end`) and a typed `LoadEventEmitter` class wrapping Node's `EventEmitter`.
-- [ ] 2.3 Add a `ComponentNotFound` error class with `missingIds: ComponentID[]` to the same package. Export from the package index.
-- [ ] 2.4 Add `Component.loadedPhase: Phase` field (and getter) to `scopes/component/component/component.ts`. Default value `'identity'` for newly constructed instances.
+- [x] 2.1 In `scopes/component/component-loader/`, add `phase.ts` exporting the `Phase` type (`'identity' | 'files' | 'dependencies' | 'extensions' | 'aspects'`) and a `phaseRank(phase): number` helper.
+- [x] 2.2 In the same package, add `load-events.ts` defining the `LoadEvent` discriminated union (`load:start`, `load:phase:start`, `load:component`, `load:phase:end`, `load:end`) and a typed `LoadEventEmitter` class wrapping Node's `EventEmitter`.
+- [x] 2.3 Add a `ComponentNotFound` error class with `missingIds: ComponentID[]` to the same package. Export from the package index.
+- [x] 2.4 Add `Component.loadedPhase: Phase` field (and getter) to `scopes/component/component/component.ts`. Default value `'identity'` for newly constructed instances. (Type aliased locally as `LoadedPhase` to avoid `@teambit/component` ↔ `@teambit/component-loader` circular dependency; canonical `Phase` declaration remains in `@teambit/component-loader/phase.ts`.)
 
 ## 3. Build the unified `ComponentCache`
 
