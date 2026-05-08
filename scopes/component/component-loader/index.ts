@@ -16,5 +16,10 @@ export { getHashInputs } from './hash-inputs';
 export type { InvalidateTarget } from './component-cache';
 export { ComponentCache } from './component-cache';
 
+export type { LoaderHost } from './loader-host';
+
+export type { GetOptions, GetManyOptions, GetManyResult, GetManyExtraOptions } from './unified-component-loader';
+export { UnifiedComponentLoader } from './unified-component-loader';
+
 export default ComponentLoaderAspect;
 export { ComponentLoaderAspect };

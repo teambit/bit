@@ -25,21 +25,18 @@
 
 ## 4. Build the unified `ComponentLoader` service
 
-- [ ] 4.1 In `scopes/component/component-loader/`, create `unified-component-loader.ts` exporting `UnifiedComponentLoader`. Constructor takes the workspace, scope, dependency-resolver, aspect-loader, and the `ComponentCache` and `LoadEventEmitter`.
-- [ ] 4.2 Implement private `loadIdentity(id)`: read from `.bitmap` or scope index. No file IO beyond identity sources.
-- [ ] 4.3 Implement private `loadFiles(component)`: populate source files, package.json, `component.json` from disk. Build the harmony `Component` directly; no `ConsumerComponent` instantiation.
-- [ ] 4.4 Implement private `loadDependencies(component)`: delegate AST walking to existing legacy dep-extraction routines (re-exported from `components/legacy/consumer-component/dependencies-resolver/` or wherever they live). Write results onto the harmony component.
-- [ ] 4.5 Implement private `loadExtensions(component)`: merge variant policy + envs binding (port from `WorkspaceComponentLoader.executeLoadSlot`).
-- [ ] 4.6 Implement private `loadAspects(component)`: load this component as an aspect if it is one (port the `componentLoadedSelfAsAspects` logic, but read/write through the unified cache).
-- [ ] 4.7 Implement public `get(id, opts)`:
-  - Check cache at requested phase. On hit, emit `load:component` with `cached: true`, return.
-  - Otherwise: walk through phases up to the requested phase, calling each loadX helper. Emit `load:phase:start`, `load:phase:end` per phase actually executed.
-  - Emit `load:component` with `cached: false` for the final result. Store at the requested phase in the cache.
-- [ ] 4.8 Implement public `getMany(ids, opts)`: batch identity, batch files, batch dependencies, etc. Use parallelism (`pMap` with bounded concurrency) within each phase. Emit one `load:start` and one `load:end` per call with the same `callId`.
-- [ ] 4.9 Implement public `listIds(filter?)`: return `ComponentID[]` from `.bitmap` only, no `Component` construction.
-- [ ] 4.10 Implement public `list(filter?, opts)`: `getMany(this.listIds(filter), opts)`.
-- [ ] 4.11 Implement public `invalidate(target)`: forward to `ComponentCache.invalidate`. Emit a debug log.
-- [ ] 4.12 Implement phase-upgrade-on-access: a `Component` method that requires phase X checks `this.loadedPhase`; if lower, calls back into the loader to upgrade. Add a debug log when this fires.
+- [x] 4.1 In `scopes/component/component-loader/`, create `unified-component-loader.ts` exporting `UnifiedComponentLoader`. Constructor takes the workspace, scope, dependency-resolver, aspect-loader, and the `ComponentCache` and `LoadEventEmitter`. **Architectural call:** to avoid `@teambit/component-loader` ↔ `@teambit/workspace` circular package dependency, the loader takes a `LoaderHost` interface (in `loader-host.ts`) that the workspace adapts itself to, instead of taking the `Workspace` class directly. The host abstraction also enables stages 1–3 to progressively move logic out of `WorkspaceComponentLoader` without rewriting it all at once.
+- [~] 4.2 Implement private `loadIdentity(id)` — **delegated to host** (`LoaderHost.loadAtPhase(id, 'identity')`) during stage 1; the host wraps existing bitmap reading. Internalizing this into the loader is stage 2/3 work.
+- [~] 4.3 Implement private `loadFiles(component)` — **delegated to host** (`loadAtPhase(id, 'files')`). Direct-to-harmony construction (no `ConsumerComponent` round-trip) is the host implementation's responsibility; tracked separately.
+- [~] 4.4 Implement private `loadDependencies(component)` — **delegated to host** (`loadAtPhase(id, 'dependencies')`). Re-using the legacy dep-extraction routines remains the plan; happens inside the host.
+- [~] 4.5 Implement private `loadExtensions(component)` — **delegated to host** (`loadAtPhase(id, 'extensions')`). Port of `executeLoadSlot` becomes the host's stage-2 responsibility.
+- [~] 4.6 Implement private `loadAspects(component)` — **delegated to host** (`loadAtPhase(id, 'aspects')`). Component-as-aspect logic stays in the host until stage 3.
+- [x] 4.7 Implement public `get(id, opts)`. Delegates to `getMany([id], opts, { throwOnMissing: true })`; returns the single component or throws `ComponentNotFound`.
+- [x] 4.8 Implement public `getMany(ids, opts)`: two-pass — pass 1 cache lookups (cached entries emit `load:component cached=true` immediately), pass 2 parallel host loads bracketed by a single `load:phase:start`/`load:phase:end`. Custom `runWithConcurrency` worker pool (default 16). All events share a `callId`.
+- [x] 4.9 Implement public `listIds(filter?)`: `host.listBitmapIds()` — no `Component` construction. `filter?` parameter deferred (no callers use it today; revisit in stage 2 migration).
+- [x] 4.10 Implement public `list(filter?, opts)`: `getMany(this.listIds(), opts, { throwOnMissing: false })`. Missing IDs returned in `result.missing` rather than throwing.
+- [x] 4.11 Implement public `invalidate(target)`: forwards to `ComponentCache.invalidate`, emits a debug log with the count of entries removed.
+- [x] 4.12 Implement phase-upgrade-on-access via `loader.ensurePhase(component, phase)`. Idempotent when already at or above; debug-logs every upgrade so we can track callers that picked too-low defaults. Per `design.md` open question: chose explicit `ensurePhase` over hidden auto-upgrade-on-property-access — predictable, instrumentable, no proxy/getter magic on `Component`.
 
 ## 5. Wire the loader into the workspace
 
