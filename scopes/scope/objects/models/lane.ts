@@ -223,9 +223,11 @@ export default class Lane extends BitObject {
     this.hasChanged = true;
   }
   /**
-   * wire-format compat shim only — older remotes gate their export-merge hidden-update branch on
-   * this flag. Local code never reads it; setting it is safe only on a temp lane (e.g. `bit _snap`)
-   * since it's discarded before the lane is persisted to the user's scope.
+   * wire-format compat shim — `Lane.toObject` serializes this flag (and `Lane.parse` restores it)
+   * so older remotes can gate their export-merge hidden-update branch on it. Local code does not
+   * read the flag; `model-component.addVersion` sets it whenever a hidden entry is written so the
+   * cascade still propagates to remotes that haven't upgraded to the per-component diverge-check
+   * path. Once those remotes upgrade, this getter/field can be removed entirely.
    */
   setOverrideUpdateDependents(overrideUpdateDependents: boolean) {
     this.overrideUpdateDependents = overrideUpdateDependents;
