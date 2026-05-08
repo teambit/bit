@@ -320,6 +320,54 @@ describe('convertLockfileToGraph simple case', () => {
   });
 });
 
+describe('convertLockfileToGraph with directory packages missing from componentIdByPkgName', () => {
+  it('should not persist orphan @file: pkgIds in the produced graph', () => {
+    // Reproduces how the broken graphs end up in the model: a directory-type
+    // package in the lockfile whose name is absent from componentIdByPkgName.
+    // buildPackages strips the directory resolution but leaves the "@file:"
+    // pkgId untouched, which downstream cannot resolve. The graph creator
+    // must drop these so the model never stores entries that future
+    // installs can't generate a valid lockfile from.
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        '.': {},
+        'comps/comp1': {
+          dependencies: {
+            foo: { version: '1.0.0', specifier: '^1.0.0' },
+            'orphan-comp': { version: 'file:packages/orphan-comp', specifier: '*' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'foo@1.0.0': {},
+        'orphan-comp@file:packages/orphan-comp': {
+          dependencies: { foo: '1.0.0' },
+        },
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-aaa' } },
+        'orphan-comp@file:packages/orphan-comp': {
+          resolution: { directory: 'packages/orphan-comp', type: 'directory' },
+        },
+      },
+    };
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: undefined,
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: undefined,
+      // Intentionally empty: simulates the bug where the workspace map
+      // didn't include the directory dep.
+      componentIdByPkgName: new Map(),
+    });
+    expect([...graph.packages.keys()]).to.eql(['foo@1.0.0']);
+    const rootEdge = graph.findRootEdge();
+    expect(rootEdge?.neighbours.map((n) => n.id)).to.eql(['foo@1.0.0']);
+    expect(graph.edges.find(({ id }) => id.includes('@file:'))).to.equal(undefined);
+  });
+});
+
 describe('convertLockfileToGraph benchmark', () => {
   function generateLargeLockfile(
     numPackages: number,
@@ -487,6 +535,68 @@ describe('convertLockfileToGraph benchmark', () => {
 });
 
 describe('convertGraphToLockfile on invalid graph', () => {
+  // Reproduces the CI failure where a saved deps graph leaks "@file:" entries
+  // because buildPackages couldn't map them to a workspace component. The
+  // directory resolution was deleted and getPkgsToResolve can't recover an
+  // integrity for "file:" versions (dp.parse puts them in nonSemverVersion,
+  // not version), so validation throws "doesn't have a 'resolution' field".
+  // At install time the orphan can't be salvaged: if its name matches a
+  // workspace project pnpm wires it through importers/link entries (so the
+  // packages entry would be wrong), and otherwise we have no published
+  // version to recover. Dropping it is the only safe outcome.
+  it('should drop orphan @file: packages when generating a lockfile', async () => {
+    const packages: PackagesMap = new Map([
+      [
+        '@teambit/dot-launch.apps.whats-new-app@file:dot-launch/apps/whats-new-app',
+        {} as any,
+      ],
+      ['foo@1.0.0', { resolution: { integrity: 'sha512-aaa' } } as any],
+    ]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [
+          { id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0', lifecycle: 'runtime' },
+          {
+            id: '@teambit/dot-launch.apps.whats-new-app@file:dot-launch/apps/whats-new-app',
+            name: '@teambit/dot-launch.apps.whats-new-app',
+            specifier: '*',
+            lifecycle: 'runtime',
+          },
+        ],
+      },
+      {
+        id: 'foo@1.0.0',
+        neighbours: [
+          {
+            id: '@teambit/dot-launch.apps.whats-new-app@file:dot-launch/apps/whats-new-app',
+            optional: false,
+          },
+        ],
+      },
+      {
+        id: '@teambit/dot-launch.apps.whats-new-app@file:dot-launch/apps/whats-new-app',
+        neighbours: [],
+      },
+    ];
+    const graph = new DependenciesGraph({ packages, edges });
+    const lockfile = await convertGraphToLockfile(new DependenciesGraph(graph), {
+      manifests: {
+        [path.resolve('comps/comp1')]: {
+          dependencies: { foo: '1.0.0' },
+        },
+      },
+      rootDir: process.cwd(),
+      resolve: () => ({ resolution: { integrity: '0000' } }) as any,
+    });
+    expect(Object.keys(lockfile.packages!)).to.eql(['foo@1.0.0']);
+    expect(Object.keys(lockfile.snapshots!)).to.eql(['foo@1.0.0']);
+    // The dangling snapshot neighbour pointing at the orphan must also be
+    // filtered out so pnpm doesn't try to resolve a dep that no longer exists.
+    expect(lockfile.snapshots!['foo@1.0.0']).to.eql({});
+  });
+
+
   it('should throw an error if resolution is missing', async () => {
     const packages: PackagesMap = new Map([['foo@1.0.0', {} as any]]);
     const edges: DependencyEdge[] = [

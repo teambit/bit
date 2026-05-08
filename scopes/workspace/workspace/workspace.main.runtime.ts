@@ -47,6 +47,7 @@ import { EnvsUnsetCmd } from './envs-subcommands/envs-unset.cmd';
 import { PatternCommand } from './pattern.cmd';
 import { EnvsReplaceCmd } from './envs-subcommands/envs-replace.cmd';
 import { ScopeSetCmd } from './scope-subcommands/scope-set.cmd';
+import { ScopeTrust, ScopeTrustCmd } from './scope-trust';
 import { UseCmd } from './use.cmd';
 import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
 import { UnuseCmd } from './unuse.cmd';
@@ -301,6 +302,7 @@ export class WorkspaceMain {
         workspace.inInstallContext = true;
       }
       await workspace.importCurrentLaneIfMissing();
+      await workspace.reconcileBitmapWithScopeIfNeeded();
       logger.profile('workspace.registerOnStart');
       const loadAspectsOpts = {
         runSubscribers: false,
@@ -332,6 +334,12 @@ export class WorkspaceMain {
     // add sub-command "set" to scope command.
     const scopeCommand = cli.getCommand('scope');
     scopeCommand?.commands?.push(new ScopeSetCmd(workspace));
+
+    // Workspace scope-trust: aspect-load hook wired into ScopeMain, plus the
+    // bit scope trust subcommand. Opt-in via workspace.jsonc.
+    const scopeTrust = new ScopeTrust(workspace, logger);
+    scope.setAspectLoadGuard(scopeTrust.createGuard());
+    scopeCommand?.commands?.push(new ScopeTrustCmd(scopeTrust));
 
     return workspace;
   }
