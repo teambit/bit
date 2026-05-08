@@ -309,6 +309,14 @@ export class Workspace implements ComponentFactory {
     return path.join(baseDir, BIT_ROOTS_DIR);
   }
 
+  /**
+   * Whether the workspace is configured to use root components (the `.bit_roots`
+   * per-env install layout under `node_modules`).
+   */
+  hasRootComponents(): boolean {
+    return this.dependencyResolver.hasRootComponents();
+  }
+
   /** get the `node_modules` folder of this workspace */
   private get modulesPath() {
     return path.join(this.path, 'node_modules');
