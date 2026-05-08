@@ -18,17 +18,21 @@ import type { Workspace } from '../workspace';
  *     coarse during stage 1: any workspace-wide invalidation event busts every
  *     hash, which is correct (over-invalidates but never serves stale data).
  *   - For `loadAtPhase`, delegates to the existing `WorkspaceComponentLoader.get`
- *     regardless of the requested phase. The existing loader always fully
- *     hydrates (extensions + aspects), so the returned `Component` is always
- *     at phase `aspects` even if a lower phase was requested. This is correct
- *     but does not yet realize the per-phase performance wins — that's stage 2,
- *     where the host implementation moves into the loader proper.
+ *     and tags the returned component with `loadedPhase = 'aspects'` because
+ *     the legacy loader always full-hydrates.
  *
- * Performance during stage 1:
- *   - The new cache short-circuits repeat loads at the same phase.
- *   - A request for `phase: 'files'` still pays the full-hydration cost on a
- *     cache miss; we only save on cache hits.
- *   - Stage 2 is where we add fine-grained per-phase load paths to the host.
+ * **Why stage 1 doesn't deliver the per-phase perf wins yet:** an early
+ * experiment translating `Phase` to the legacy loader's `loadOpts` flags
+ * (`{ loadExtensions: false, executeLoadSlot: false, ... }`) measured a 4×
+ * speed-up on `bit status` but broke correctness — subsequent code in status
+ * (issue checking via `triggerAddComponentIssues`, env-as-aspect detection)
+ * silently relies on extensions being populated on the loaded components.
+ * Properly delivering the perf win requires either:
+ *   (a) status calls upgrading specific components to `extensions`/`aspects`
+ *       phase before passing them to issue checkers, or
+ *   (b) a true phase-native load path inside the host that the legacy loader
+ *       doesn't currently provide.
+ * Both are stage-2 work tracked in tasks 4.2–4.6 and Group 8.
  */
 export class WorkspaceLoaderHost implements LoaderHost {
   private bitmapVersion = 0;
@@ -78,20 +82,15 @@ export class WorkspaceLoaderHost implements LoaderHost {
     return `${id.toString()}@${this.bitmapVersion}-${this.workspaceConfigVersion}`;
   }
 
-  async loadAtPhase(id: ComponentID, phase: Phase): Promise<Component | undefined> {
+  async loadAtPhase(_id: ComponentID, phase: Phase): Promise<Component | undefined> {
+    // We accept `phase` for the contract but ignore it during stage 1 (see the
+    // class doc-comment for why). The legacy loader always full-hydrates;
+    // tagging the result as 'aspects' satisfies the unified loader's phase
+    // guard (`loadedPhase >= requested`).
+    void phase;
     try {
-      const component = await this.workspace.componentLoader.get(id);
-      // The existing loader always full-hydrates; tag the result accordingly so
-      // the unified loader's phase guard sees the right level. This is the
-      // contract the loader expects from the host (`loadedPhase >= requested`).
+      const component = await this.workspace.componentLoader.get(_id);
       component.loadedPhase = 'aspects';
-      // Emit a debug log if the caller asked for a lower phase — that's a hint
-      // that stage 2 has perf headroom there.
-      if (phase !== 'aspects') {
-        this.workspace.logger.debug(
-          `WorkspaceLoaderHost: stage-1 host fully hydrated ${id.toString()} for requested phase "${phase}" — no per-phase shortcut yet`
-        );
-      }
       return component;
     } catch (err) {
       if (
