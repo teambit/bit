@@ -95,9 +95,9 @@ async function linkFileIfNotExists(srcFile: string, destFile: string) {
 /**
  * Like `fs.mkdir(dir, { recursive: true })`, but recovers from a corrupted node_modules
  * tree where some ancestor of `dir` exists as a regular file or a non-directory symlink
- * (which causes `mkdir` to throw `ENOTDIR`). The blocking entry is removed and `mkdir`
- * is retried. The expected ancestors are package directories under `.bit_roots/<env>/...`,
- * which bit owns and rebuilds on every install — so deleting a stray entry is safe.
+ * (which causes `mkdir` to throw `ENOTDIR` or `ENOENT` through a broken symlink). The
+ * blocking entry is moved aside (not deleted — the offender could be high up the tree
+ * and we don't want to discard the user's data) and `mkdir` is retried.
  */
 async function ensureDir(dir: string) {
   try {
@@ -115,11 +115,32 @@ async function ensureDir(dir: string) {
       if (code === 'EEXIST') return;
       throw err;
     }
-    const msg = `removing non-directory entry blocking link target at ${offender} (expected directory ${dir})`;
+    const quarantined = await quarantineStrayEntry(offender);
+    const msg =
+      `non-directory entry at ${offender} blocked link target ${dir}; ` +
+      `moved aside to ${quarantined} so the install could continue. inspect or delete it manually if it isn't expected.`;
     logger.warn(msg);
     printWarning(msg);
-    await fs.remove(offender);
     await fs.mkdir(dir, { recursive: true });
+  }
+}
+
+/**
+ * Rename `offender` to a sibling path that won't collide with anything bit creates.
+ * On the rare chance the suffixed name already exists (e.g. a previous recovery in the
+ * same millisecond, or a leftover from a prior failed run), keep bumping a counter.
+ */
+async function quarantineStrayEntry(offender: string): Promise<string> {
+  const base = `${offender}.bit-stray-${Date.now()}`;
+  let candidate = base;
+  for (let i = 1; ; i++) {
+    try {
+      await fs.rename(offender, candidate);
+      return candidate;
+    } catch (err) {
+      if (errnoCode(err) !== 'EEXIST' && errnoCode(err) !== 'ENOTEMPTY') throw err;
+      candidate = `${base}-${i}`;
+    }
   }
 }
 

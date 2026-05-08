@@ -97,6 +97,10 @@ test('skip broken symlink', async () => {
   expect(fs.readdirSync(dest2Dir)).toEqual([]);
 });
 
+function findQuarantined(parentDir: string, originalName: string): string | undefined {
+  return fs.readdirSync(parentDir).find((entry) => entry.startsWith(`${originalName}.bit-stray-`));
+}
+
 test('recover when an ancestor of the destination subdirectory is a regular file', async () => {
   const tempDir = globalBitTempDir();
   const srcDir = path.join(tempDir, 'source');
@@ -115,6 +119,10 @@ test('recover when an ancestor of the destination subdirectory is a regular file
   await hardLinkDirectory(srcDir, [destDir]);
 
   expect(fs.readFileSync(path.join(destDir, '@scope/pkg/file.txt'), 'utf8')).toBe('Hello World');
+  // The stray entry must be preserved (renamed, not deleted) so the user can recover it.
+  const quarantined = findQuarantined(destDir, '@scope');
+  expect(quarantined).toBeDefined();
+  expect(fs.readFileSync(path.join(destDir, quarantined!), 'utf8')).toBe('stray file');
 });
 
 test('recover when the exact destination subdirectory exists as a regular file', async () => {
@@ -132,6 +140,9 @@ test('recover when the exact destination subdirectory exists as a regular file',
   await hardLinkDirectory(srcDir, [destDir]);
 
   expect(fs.readFileSync(path.join(destDir, 'subdir/file.txt'), 'utf8')).toBe('Hello World');
+  const quarantined = findQuarantined(destDir, 'subdir');
+  expect(quarantined).toBeDefined();
+  expect(fs.readFileSync(path.join(destDir, quarantined!), 'utf8')).toBe('stray file');
 });
 
 test('recover when an ancestor of the destination subdirectory is a dangling symlink', async () => {
@@ -151,4 +162,8 @@ test('recover when an ancestor of the destination subdirectory is a dangling sym
   await hardLinkDirectory(srcDir, [destDir]);
 
   expect(fs.readFileSync(path.join(destDir, '@scope/pkg/file.txt'), 'utf8')).toBe('Hello World');
+  // The dangling symlink itself must be preserved as a symlink at the quarantined name.
+  const quarantined = findQuarantined(destDir, '@scope');
+  expect(quarantined).toBeDefined();
+  expect(fs.lstatSync(path.join(destDir, quarantined!)).isSymbolicLink()).toBe(true);
 });
