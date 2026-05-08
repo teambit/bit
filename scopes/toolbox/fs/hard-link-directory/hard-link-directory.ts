@@ -4,31 +4,14 @@ import symlinkDir from 'symlink-dir';
 import resolveLinkTarget from 'resolve-link-target';
 import { logger, printWarning } from '@teambit/legacy.logger';
 
-export interface HardLinkDirectoryOptions {
-  /**
-   * Called when a non-directory entry is found at a path where a directory is expected
-   * (e.g. an ancestor of a destination subdirectory has been replaced by a file or a
-   * dangling symlink). The blocking entry is removed before retrying. Defaults to
-   * writing the message to the bit log and printing it via `printWarning`.
-   */
-  onWarn?: (message: string) => void;
-}
-
-const defaultOnWarn = (message: string) => {
-  logger.warn(message);
-  printWarning(message);
-};
-
 /**
  * Hard link all files from a directory to several target directories.
  *
  * @param src - The directory to hard link files from.
  * @param destDirs - The target directories.
- * @param options - Optional behaviors. See {@link HardLinkDirectoryOptions}.
  */
-export async function hardLinkDirectory(src: string, destDirs: string[], options: HardLinkDirectoryOptions = {}) {
+export async function hardLinkDirectory(src: string, destDirs: string[]) {
   if (destDirs.length === 0) return;
-  const onWarn = options.onWarn ?? defaultOnWarn;
   const files = await fs.readdir(src, { withFileTypes: true });
   await Promise.all(
     files.map(async (file) => {
@@ -38,11 +21,11 @@ export async function hardLinkDirectory(src: string, destDirs: string[], options
         const destSubdirs = await Promise.all(
           destDirs.map(async (destDir) => {
             const destSubdir = path.join(destDir, file.name);
-            await ensureDir(destSubdir, onWarn);
+            await ensureDir(destSubdir);
             return destSubdir;
           })
         );
-        await hardLinkDirectory(srcFile, destSubdirs, options);
+        await hardLinkDirectory(srcFile, destSubdirs);
         return;
       }
       if (file.isSymbolicLink()) {
@@ -69,7 +52,7 @@ export async function hardLinkDirectory(src: string, destDirs: string[], options
         destDirs.map(async (destDir) => {
           const destFile = path.join(destDir, file.name);
           try {
-            await linkFile(srcFile, destFile, onWarn);
+            await linkFile(srcFile, destFile);
           } catch (err: any) {
             if (err.code === 'ENOENT') {
               // broken symlinks are skipped
@@ -83,12 +66,12 @@ export async function hardLinkDirectory(src: string, destDirs: string[], options
   );
 }
 
-async function linkFile(srcFile: string, destFile: string, onWarn: (message: string) => void) {
+async function linkFile(srcFile: string, destFile: string) {
   try {
     await fs.link(srcFile, destFile);
   } catch (err: any) {
     if (err.code === 'ENOENT' || err.code === 'ENOTDIR') {
-      await ensureDir(path.dirname(destFile), onWarn);
+      await ensureDir(path.dirname(destFile));
       await linkFileIfNotExists(srcFile, destFile);
       return;
     }
@@ -115,7 +98,7 @@ async function linkFileIfNotExists(srcFile: string, destFile: string) {
  * is retried. The expected ancestors are package directories under `.bit_roots/<env>/...`,
  * which bit owns and rebuilds on every install — so deleting a stray entry is safe.
  */
-async function ensureDir(dir: string, onWarn: (message: string) => void) {
+async function ensureDir(dir: string) {
   try {
     await fs.mkdir(dir, { recursive: true });
     return;
@@ -130,7 +113,9 @@ async function ensureDir(dir: string, onWarn: (message: string) => void) {
       if (err.code === 'EEXIST') return;
       throw err;
     }
-    onWarn(`removing non-directory entry blocking link target at ${offender} (expected directory ${dir})`);
+    const msg = `removing non-directory entry blocking link target at ${offender} (expected directory ${dir})`;
+    logger.warn(msg);
+    printWarning(msg);
     await fs.remove(offender);
     await fs.mkdir(dir, { recursive: true });
   }

@@ -112,11 +112,9 @@ test('recover when an ancestor of the destination subdirectory is a regular file
   fs.mkdirpSync(destDir);
   fs.writeFileSync(path.join(destDir, '@scope'), 'stray file');
 
-  const warnings: string[] = [];
-  await hardLinkDirectory(srcDir, [destDir], { onWarn: (msg) => warnings.push(msg) });
+  await hardLinkDirectory(srcDir, [destDir]);
 
   expect(fs.readFileSync(path.join(destDir, '@scope/pkg/file.txt'), 'utf8')).toBe('Hello World');
-  expect(warnings.some((msg) => msg.includes('@scope'))).toBe(true);
 });
 
 test('recover when the exact destination subdirectory exists as a regular file', async () => {
@@ -131,11 +129,9 @@ test('recover when the exact destination subdirectory exists as a regular file',
   fs.mkdirpSync(destDir);
   fs.writeFileSync(path.join(destDir, 'subdir'), 'stray file');
 
-  const warnings: string[] = [];
-  await hardLinkDirectory(srcDir, [destDir], { onWarn: (msg) => warnings.push(msg) });
+  await hardLinkDirectory(srcDir, [destDir]);
 
   expect(fs.readFileSync(path.join(destDir, 'subdir/file.txt'), 'utf8')).toBe('Hello World');
-  expect(warnings.some((msg) => msg.includes('subdir'))).toBe(true);
 });
 
 test('recover when an ancestor of the destination subdirectory is a dangling symlink', async () => {
@@ -149,12 +145,10 @@ test('recover when an ancestor of the destination subdirectory is a dangling sym
 
   fs.mkdirpSync(destDir);
   // Dangling symlink at '@scope' — points to a non-existent target. lstat reports it
-  // as a symlink (not a directory), so mkdir(@scope/pkg) fails with ENOTDIR.
+  // as a symlink (not a directory), so mkdir(@scope/pkg) fails with ENOENT through it.
   fs.symlinkSync(path.join(tempDir, 'does-not-exist'), path.join(destDir, '@scope'));
 
-  const warnings: string[] = [];
-  await hardLinkDirectory(srcDir, [destDir], { onWarn: (msg) => warnings.push(msg) });
+  await hardLinkDirectory(srcDir, [destDir]);
 
   expect(fs.readFileSync(path.join(destDir, '@scope/pkg/file.txt'), 'utf8')).toBe('Hello World');
-  expect(warnings.length).toBeGreaterThan(0);
 });
