@@ -127,8 +127,30 @@ export function buildLoadPlanGroups(input: LoadPlanInput): BuildLoadPlanResult {
     return out;
   });
 
+  // Step 7b: pull `core-aspect-env` and `core-aspect-env-jest` out as a *core*
+  // group and prepend it. Without this they get loaded later with `core: false`,
+  // and `getAndLoadSlot` only triggers `loadCompsAsAspects` on a core+aspects
+  // group (or a seeders-as-aspects group). Components configured to use these
+  // envs then warn "env was not loaded" because the env aspect wasn't
+  // registered with Harmony at the right time. The recursive env-DAG sort
+  // gives correct *ordering*; this special case is about the *core flag*.
+  // (D-001 originally claimed this special case was redundant; it isn't.)
+  const CORE_ASPECT_ENV_IDS = new Set([
+    'teambit.harmony/envs/core-aspect-env',
+    'teambit.harmony/envs/core-aspect-env-jest',
+  ]);
+  const coreAspectEnvIds: ComponentID[] = [];
+  for (const layer of layeredEnvs) {
+    for (const envId of layer) {
+      if (CORE_ASPECT_ENV_IDS.has(envId.toStringWithoutVersion())) coreAspectEnvIds.push(envId);
+    }
+  }
+
   // Step 8: assemble groups in canonical order.
   const rawGroups: RawLoadGroup[] = [
+    ...(coreAspectEnvIds.length > 0
+      ? [{ ids: coreAspectEnvIds, core: true, aspects: true, seeders: true, envs: true }]
+      : []),
     { ids: coreEnvs, core: true, aspects: true, seeders: true, envs: true },
     ...layeredEnvs.map((ids) => ({ ids, core: false, aspects: true, seeders: true, envs: true })),
     { ids: extraExtensionIds, core: false, aspects: true, seeders: false, envs: false },

@@ -224,9 +224,21 @@ Treat env loading as a topological-ordering problem, not as something to
 
 2. **Make env-DAG resolution properly recursive.** Replace
    `regroupEnvsIdsFromTheList`'s one-level grouping with a real topological
-   sort over the env-of-env DAG. The hardcoded `core-aspect-env` workaround
-   at `loader.ts:311-323` should fall out of this — if the sort is correct,
-   no special-case is needed.
+   sort over the env-of-env DAG.
+
+   ~~The hardcoded `core-aspect-env` workaround at `loader.ts:311-323` should
+   fall out of this — if the sort is correct, no special-case is needed.~~
+
+   **Correction (2026-05-08):** the recursive sort gives correct _ordering_
+   but the special case was doing more than ordering — it was emitting
+   `core-aspect-env` / `core-aspect-env-jest` in a group with `core: true`,
+   which is the flag `getAndLoadSlot` checks before triggering
+   `loadCompsAsAspects`. Without that flag, components configured to use
+   these envs warn "env was not loaded" because the env aspect wasn't
+   registered with Harmony at the right time. The special case is preserved
+   in `load-plan.ts` (Step 7b), and pinned by a unit test in
+   `load-plan.spec.ts`. Caught by inspection, not by the harness — V1-vs-V1
+   comparison can't catch a regression where the V1 itself gets worse.
 
 3. **Avoid `getEnvComponentByEnvId` during the inline enrichment of regular
    components.** What enrichment actually needs from the env is the env's

@@ -109,4 +109,22 @@ describe('buildLoadPlanGroups', () => {
     const result = buildLoadPlanGroups(inputFor([{ id: id('scope/regular@1.0.0') }]));
     for (const g of result.groups) expect(g.ids.length).to.be.greaterThan(0);
   });
+
+  it('emits core-aspect-env / core-aspect-env-jest as a CORE group at the front', () => {
+    // Removing this special case caused a regression: components configured to use
+    // core-aspect-env warned "env was not loaded" because the env wasn't loaded
+    // with the core flag, so loadCompsAsAspects was skipped. The recursive sort
+    // gives correct ORDER but doesn't promote the env's group to core.
+    const coreAspectEnv = id('teambit.harmony/envs/core-aspect-env@0.1.4');
+    const userComp: MockComp = {
+      id: id('teambit.envs/env@1.0.0'),
+      envId: coreAspectEnv.toStringWithoutVersion(),
+      extensions: [{ stringId: coreAspectEnv.toString(), newExtensionId: coreAspectEnv }],
+    };
+    const result = buildLoadPlanGroups(inputFor([userComp]));
+    const firstGroup = result.groups[0];
+    expect(firstGroup.core, 'first group should be core: true').to.equal(true);
+    expect(firstGroup.envs, 'first group should be envs: true').to.equal(true);
+    expect(firstGroup.ids.map((c) => c.toStringWithoutVersion())).to.include('teambit.harmony/envs/core-aspect-env');
+  });
 });
