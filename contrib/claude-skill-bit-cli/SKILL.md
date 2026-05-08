@@ -41,7 +41,7 @@ Component Configuration
 envs - show components and their assigned environments
 Subcommands: list, get, set, unset, replace, update
 scope <sub-command> - manage component scope names and assignments
-Subcommands: set, rename, rename-owner, fork
+Subcommands: set, trust, rename, rename-owner, fork
 eject-conf <pattern> - create component.json configuration files for components
 local-only <sub-command> - manage components that exist only in the workspace
 Subcommands: set, unset, list

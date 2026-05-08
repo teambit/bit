@@ -658,6 +658,23 @@
         ]
       },
       {
+        "name": "trust [action] [pattern]",
+        "options": [],
+        "description": "manage which scopes are trusted to load aspects (envs, etc.) into the workspace's process",
+        "extendedDescription": "scope-trust is opt-in. when off (the default), aspects from any scope load without a check. when on, aspects from a scope outside the trust list trigger a prompt (interactive shells) or an error (non-interactive).\n\n  bit scope trust                    # same as \"list\"\n  bit scope trust list               # show status; if on, print the effective trust list\n  bit scope trust enable             # turn on (writes \"trustedScopes\": [] to workspace.jsonc)\n  bit scope trust disable            # turn off (removes \"trustedScopes\" from workspace.jsonc)\n  bit scope trust add PATTERN        # add a pattern (auto-enables if needed)\n  bit scope trust remove PATTERN     # remove a pattern (does NOT disable when list is empty)\n\nonce on, the effective trust set is: builtin scopes (teambit.*, bitdev.*, and a few others — run \"bit scope trust list\" to see) + the owner of defaultScope + entries listed under \"trustedScopes\". patterns are exact (\"acme.frontend\") or owner wildcard (\"acme.*\").",
+        "group": "component-config",
+        "arguments": [
+          {
+            "name": "action",
+            "description": "one of: list, enable, disable, add, remove. defaults to \"list\"."
+          },
+          {
+            "name": "pattern",
+            "description": "scope pattern (required for \"add\" and \"remove\")"
+          }
+        ]
+      },
+      {
         "name": "rename <current-scope-name> <new-scope-name>",
         "options": [
           [

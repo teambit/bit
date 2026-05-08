@@ -2355,6 +2355,27 @@ use `bit pattern --help` to understand patterns better and `bit pattern <pattern
 | `scope-name`        |                                                                                                                                                                                                                         name of the scope to set                                                                                                                                                                                                                         |
 | `component-pattern` | component name, component id, component pattern, or relative directory path. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
+### scope trust
+
+**Usage**: `scope trust [action] [pattern]`
+
+**Description**: manage which scopes are trusted to load aspects (envs, etc.) into the workspace's process  
+scope-trust is opt-in. when off (the default), aspects from any scope load without a check. when on, aspects from a scope outside the trust list trigger a prompt (interactive shells) or an error (non-interactive).
+
+bit scope trust # same as "list"  
+ bit scope trust list # show status; if on, print the effective trust list  
+ bit scope trust enable # turn on (writes "trustedScopes": [] to workspace.jsonc)  
+ bit scope trust disable # turn off (removes "trustedScopes" from workspace.jsonc)  
+ bit scope trust add PATTERN # add a pattern (auto-enables if needed)  
+ bit scope trust remove PATTERN # remove a pattern (does NOT disable when list is empty)
+
+once on, the effective trust set is: builtin scopes (teambit._, bitdev._, and a few others — run "bit scope trust list" to see) + the owner of defaultScope + entries listed under "trustedScopes". patterns are exact ("acme.frontend") or owner wildcard ("acme.\*").
+
+| **Arg**   |                         **Description**                         |
+| --------- | :-------------------------------------------------------------: |
+| `action`  | one of: list, enable, disable, add, remove. defaults to "list". |
+| `pattern` |         scope pattern (required for "add" and "remove")         |
+
 ### scope rename
 
 **Usage**: `scope rename <current-scope-name> <new-scope-name>`
