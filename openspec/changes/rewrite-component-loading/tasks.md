@@ -40,10 +40,10 @@
 
 ## 5. Wire the loader into the workspace
 
-- [ ] 5.1 In `scopes/workspace/workspace/workspace.ts`, instantiate `UnifiedComponentLoader` in the workspace constructor. Wire the `LoadEventEmitter` to a public `Workspace.loadEvents` field.
-- [ ] 5.2 Add a `BIT_LOADER` env-flag check. When `BIT_LOADER=new`, route `Workspace.get`, `getMany`, `list`, `listWithInvalid` through the unified loader. Otherwise keep current behaviour.
-- [ ] 5.3 In dual-mode: `Workspace.get(id, legacyComponent?, useCache, storeInCache, loadOpts?)` translates the old positional args + `loadOpts` to the new `{ phase, consistency }` shape. Default phase = `aspects` to preserve current behaviour exactly.
-- [ ] 5.4 Add `Workspace.getOrImport(id)` helper: explicit `scope.import` then load. Document in JSDoc as the explicit replacement for the implicit auto-import behaviour.
+- [x] 5.1 In `scopes/workspace/workspace/workspace.ts`, instantiate `UnifiedComponentLoader` in the workspace constructor. Wire the `LoadEventEmitter` to a public `Workspace.loadEvents` field. Also added `WorkspaceLoaderHost` adapter under `scopes/workspace/workspace/workspace-component/workspace-loader-host.ts` that implements the `LoaderHost` interface against the existing workspace machinery.
+- [x] 5.2 Add a `BIT_LOADER` env-flag check (`Workspace.useNewLoader()`). When `BIT_LOADER=new`, `Workspace.get` / `getMany` / `listWithInvalid` route through `unifiedLoader`. `Workspace.list` is unchanged (it already calls `getMany`, so it follows the routing automatically). `clearCache` and `clearComponentCache` invalidate the unified cache alongside the legacy ones so both modes stay in sync.
+- [x] 5.3 In dual-mode: `Workspace.get(id, legacyComponent?, useCache, storeInCache, loadOpts?)` translates the old positional args + `loadOpts` to the new `{ phase, consistency }` shape via `Workspace.translateLoadOpts`. Stage-1 mapping is conservative — every translation goes to `phase: 'aspects'` (full hydration) so behaviour is preserved exactly. `useCache=false` honoured by pre-invalidating; `storeInCache=false` honoured by post-invalidating. Per-command sub-aspect phases come in stage 2 (Group 8).
+- [x] 5.4 Added `Workspace.getOrImport(id, loadOpts?)`: tries `getIfExist` first; if missing, calls `scope.import([id])` then `get`. Documented in JSDoc as the explicit replacement for `ScopeComponentLoader.get`'s implicit auto-import behaviour.
 
 ## 6. Migrate `bit list` and `bit status` (Stage 1 pilot)
 
