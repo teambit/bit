@@ -10,5 +10,11 @@ export { LoadEventEmitter } from './load-events';
 
 export { ComponentNotFound } from './component-not-found';
 
+export type { HashInputContext } from './hash-inputs';
+export { getHashInputs } from './hash-inputs';
+
+export type { InvalidateTarget } from './component-cache';
+export { ComponentCache } from './component-cache';
+
 export default ComponentLoaderAspect;
 export { ComponentLoaderAspect };

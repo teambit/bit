@@ -15,13 +15,13 @@
 
 ## 3. Build the unified `ComponentCache`
 
-- [ ] 3.1 In `scopes/component/component-loader/`, create `component-cache.ts` with a `ComponentCache` class. Internal storage: `Map<string, CacheEntry>` keyed by `${componentId}::${phase}`.
-- [ ] 3.2 Implement `getHashInputs(phase, ctx): string` that composes the hash inputs documented in design Decision 2 (file mtimes, `.bitmap` hash, `workspace.jsonc` hash where applicable). Make the input set per-phase explicit and unit-tested.
-- [ ] 3.3 Implement `cache.get(id, phase)`: validate stored hash against current inputs; return entry on match, undefined on stale.
-- [ ] 3.4 Implement `cache.set(id, phase, component)`: compute hash and store.
-- [ ] 3.5 Implement `cache.invalidate(target)`: handle `ComponentID`, `ComponentID[]`, `'all'`, `{ phase }`.
-- [ ] 3.6 Wire LRU eviction at the same size limit used by today's `createInMemoryCache(maxSize: getMaxSizeForComponents())`.
-- [ ] 3.7 Unit tests: hit, stale-on-file-change, stale-on-bitmap-change, invalidate-one, invalidate-all, invalidate-phase, eviction.
+- [x] 3.1 In `scopes/component/component-loader/`, create `component-cache.ts` with a `ComponentCache` class. Internal storage: `Map<string, CacheEntry>` keyed by `${componentId}::${phase}`. (Wraps existing `LRUCacheAdapter` from `@teambit/harmony.modules.in-memory-cache` to reuse battle-tested LRU; key shape preserved.)
+- [x] 3.2 Implement `getHashInputs(phase, ctx): string` that composes the hash inputs documented in design Decision 2 (file mtimes, `.bitmap` hash, `workspace.jsonc` hash where applicable). Make the input set per-phase explicit and unit-tested. → `hash-inputs.ts` (`v1` version prefix lets us bust all hashes if the format changes; throws if the loader supplies an incomplete context for the requested phase).
+- [x] 3.3 Implement `cache.get(id, phase)`: validate stored hash against current inputs; return entry on match, undefined on stale. (Caller supplies `currentHash`; cache compares for equality only.)
+- [x] 3.4 Implement `cache.set(id, phase, component)`: compute hash and store. (Hash is computed by the caller via `getHashInputs` and passed in — keeps the cache pure storage.)
+- [x] 3.5 Implement `cache.invalidate(target)`: handle `ComponentID`, `ComponentID[]`, `'all'`, `{ phase }`. (Returns count of entries deleted.)
+- [x] 3.6 Wire LRU eviction at the same size limit used by today's `createInMemoryCache(maxSize: getMaxSizeForComponents())`. (Default `maxSize` from same config key, `CFG_CACHE_MAX_ITEMS_COMPONENTS`, fallback 500.)
+- [x] 3.7 Unit tests: hit, stale-on-file-change, stale-on-bitmap-change, invalidate-one, invalidate-all, invalidate-phase, eviction. → `component-cache.spec.ts` (16 tests) + `hash-inputs.spec.ts` (10 tests). All 26 pass via `bit6 test`.
 
 ## 4. Build the unified `ComponentLoader` service
 
