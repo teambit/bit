@@ -342,10 +342,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const componentHadHead = component.hasHead();
     const compId = component.toComponentId();
     const visibleLaneItem = lane?.getComponent(compId);
-    const hiddenLaneId = lane?.updateDependents?.find((id) => id.isEqualWithoutVersion(compId));
-    const laneItemHead: Ref | undefined =
-      visibleLaneItem?.head || (hiddenLaneId?.version ? Ref.from(hiddenLaneId.version) : undefined);
-    const isHiddenLaneEntry = !visibleLaneItem && Boolean(hiddenLaneId);
+    const hiddenLaneItem = lane?.getUpdateDependentAsLaneComponent(compId);
+    const laneItemHead: Ref | undefined = visibleLaneItem?.head || hiddenLaneItem?.head;
+    const isHiddenLaneEntry = !visibleLaneItem && Boolean(hiddenLaneItem);
 
     let allVersionsObjects: Version[] | undefined;
 
@@ -357,13 +356,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         }
       }
 
-      // when on a lane, walk the LANE's parent chain — the lane head we're about to rewind, and
-      // the prior snap lives in *its* parent graph, not in main's. Falling back to `component.head`
-      // (main head) here was a long-standing bug that surfaced once the
-      // component-tagged-on-main-then-imported-to-lane case became common (cascade-on-snap):
-      // `bit reset --head` walked main's parents, found none for the tag, returned undefined,
-      // and the entry was removed — leaving the bitmap to rewind all the way back to the
-      // imported tag instead of the previous lane snap.
+      // when on a lane, walk the LANE's parent chain — the prior snap lives in its parent graph,
+      // not in main's. Falling back to `component.head` (main head) loses the lane history when
+      // the component was tagged on main and then imported to the lane (cascade-on-snap).
       const head = laneItemHead || component.head;
       if (!head) {
         return undefined;
@@ -657,21 +652,12 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
       return modelComponent;
     };
 
-    const findExistingHidden = (id: ComponentID): LaneComponent | undefined => {
-      if (!existingLane) return undefined;
-      const hiddenId = existingLane.updateDependents?.find((d) => d.isEqualWithoutVersion(id));
-      if (!hiddenId || !hiddenId.version) return undefined;
-      return { id: hiddenId.changeVersion(undefined), head: Ref.from(hiddenId.version) };
-    };
-
     const addToBucket = (c: LaneComponent, isHidden: boolean) => {
       if (!existingLane) return;
       if (isHidden) {
-        // demoting visible→hidden: drop any stale visible entry first
         existingLane.removeComponent(c.id);
         existingLane.addComponentToUpdateDependents(c.id.changeVersion(c.head.toString()));
       } else {
-        // promoting hidden→visible: drop any stale hidden entry first
         existingLane.removeComponentFromUpdateDependentsIfExist(c.id);
         existingLane.addComponent(c);
       }
@@ -680,7 +666,7 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
     const mergeLaneComponent = async (component: LaneComponent, isHidden: boolean) => {
       const modelComponent = await getModelComponent(component.id);
       const existingComponent = isHidden
-        ? findExistingHidden(component.id)
+        ? existingLane?.getUpdateDependentAsLaneComponent(component.id)
         : existingLane?.components.find((c) => c.id.isEqual(component.id));
       if (!existingComponent) {
         if (isExport) {
@@ -760,24 +746,19 @@ possible causes:
       mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
     };
 
-    // Both visible and hidden (lane.updateDependents) entries flow through the same
-    // per-component diverge check. Earlier the hidden flow was wholesale-replace governed by an
-    // override flag; that was winner-takes-all and could silently overwrite a concurrent
-    // producer's cascade. Per-component diverge gives them the same guarantees as visible:
-    // same-head no-op, target-ahead accept, local-ahead no-op, diverge → reject on export /
-    // silent-keep-local on import (user resolves via reset+re-cascade).
-    await pMap(lane.components, async (component) => mergeLaneComponent(component, false), {
+    // Both visible and hidden entries flow through the same per-component diverge check, so
+    // they share guarantees: same-head no-op, target-ahead accept, local-ahead no-op,
+    // diverge → reject on export / silent-keep-local on import.
+    const allEntries: Array<{ component: LaneComponent; isHidden: boolean }> = [
+      ...lane.components.map((component) => ({ component, isHidden: false })),
+      ...(lane.updateDependents || []).map((id) => ({
+        component: { id: id.changeVersion(undefined), head: Ref.from(id.version as string) },
+        isHidden: true,
+      })),
+    ];
+    await pMap(allEntries, ({ component, isHidden }) => mergeLaneComponent(component, isHidden), {
       concurrency: concurrentComponentsLimit(),
     });
-    if (lane.updateDependents?.length) {
-      const hiddenAsLaneComponents = lane.updateDependents.map((id) => ({
-        id: id.changeVersion(undefined),
-        head: Ref.from(id.version as string),
-      }));
-      await pMap(hiddenAsLaneComponents, async (component) => mergeLaneComponent(component, true), {
-        concurrency: concurrentComponentsLimit(),
-      });
-    }
     // downgrade the schema if the incoming lane has a lower schema because it's possible that components are deleted
     // in the incoming lane but because it has an old schema, it doesn't have the "isDeleted" prop. leaving the schema
     // of current lane as 1.0.0 will mistakenly think that the component is not deleted.

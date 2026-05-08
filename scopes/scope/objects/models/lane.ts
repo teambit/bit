@@ -195,12 +195,18 @@ export default class Lane extends BitObject {
       this.hasChanged = true;
     }
   }
+  findUpdateDependent(componentId: ComponentID): ComponentID | undefined {
+    return this.updateDependents?.find((c) => c.isEqualWithoutVersion(componentId));
+  }
+  getUpdateDependentAsLaneComponent(componentId: ComponentID): LaneComponent | undefined {
+    const found = this.findUpdateDependent(componentId);
+    if (!found?.version) return undefined;
+    return { id: found.changeVersion(undefined), head: Ref.from(found.version) };
+  }
   removeComponentFromUpdateDependentsIfExist(componentId: ComponentID) {
-    const updateDependentsList = ComponentIdList.fromArray(this.updateDependents || []);
-    const exist = updateDependentsList.searchWithoutVersion(componentId);
-    if (!exist) return;
-    this.updateDependents = updateDependentsList.removeIfExist(exist);
-    if (!this.updateDependents.length) this.updateDependents = undefined;
+    if (!this.findUpdateDependent(componentId)) return;
+    this.updateDependents = this.updateDependents?.filter((c) => !c.isEqualWithoutVersion(componentId));
+    if (!this.updateDependents?.length) this.updateDependents = undefined;
     this.hasChanged = true;
   }
   addComponentToUpdateDependents(componentId: ComponentID) {
@@ -216,15 +222,10 @@ export default class Lane extends BitObject {
     this.updateDependents = undefined;
     this.hasChanged = true;
   }
-  shouldOverrideUpdateDependents() {
-    return this.overrideUpdateDependents;
-  }
   /**
-   * !!! important !!!
-   * this should get called only on a "temp lane", such as running "bit _snap", which the scope gets destroys after the
-   * command is done. when _scope exports the lane, this "overrideUpdateDependents" is not saved to the remote-scope.
-   *
-   * on a user local lane object, this prop should never be true. otherwise, it'll override the remote-scope data.
+   * wire-format compat shim only — older remotes gate their export-merge hidden-update branch on
+   * this flag. Local code never reads it; setting it is safe only on a temp lane (e.g. `bit _snap`)
+   * since it's discarded before the lane is persisted to the user's scope.
    */
   setOverrideUpdateDependents(overrideUpdateDependents: boolean) {
     this.overrideUpdateDependents = overrideUpdateDependents;
@@ -338,9 +339,7 @@ export default class Lane extends BitObject {
   getCompHeadIncludeUpdateDependents(componentId: ComponentID): Ref | undefined {
     const comp = this.getComponent(componentId);
     if (comp) return comp.head;
-    const fromUpdateDependents = this.updateDependents?.find((c) => c.isEqualWithoutVersion(componentId));
-    if (fromUpdateDependents) return Ref.from(fromUpdateDependents.version as string);
-    return undefined;
+    return this.getUpdateDependentAsLaneComponent(componentId)?.head;
   }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;

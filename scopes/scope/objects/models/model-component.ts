@@ -706,24 +706,18 @@ export default class Component extends BitObject {
       if (parent && !parent.isEqual(versionToAddRef)) {
         version.addAsOnlyParent(parent);
       }
-      // when the caller didn't explicitly opt in or out, preserve the existing entry's bucket.
-      // This is what makes scenario 10 work: a merge-from-main that produces a new snap for a
-      // hidden updateDependent must keep that entry hidden, not promote it into workspace-tracked
-      // state. Workspace-snap producers that want to PROMOTE a previously-hidden entry
-      // (scenario 6) pass `addToUpdateDependentsInLane: false` explicitly.
-      const existingHidden = lane.updateDependents?.find((id) => id.isEqualWithoutVersion(currentBitId));
+      // When the caller didn't explicitly opt in or out, preserve the existing entry's bucket so
+      // a merge-from-main producing a new snap for a hidden updateDependent keeps it hidden
+      // rather than promoting it into workspace-tracked state.
+      const existingHidden = lane.findUpdateDependent(currentBitId);
       const existingVisible = lane.getComponent(currentBitId);
       const shouldBeHidden = addToUpdateDependentsInLane ?? (Boolean(existingHidden) && !existingVisible);
       if (shouldBeHidden) {
-        // demoting a visible entry → drop the visible row first
         if (existingVisible) lane.removeComponent(currentBitId);
         lane.addComponentToUpdateDependents(currentBitId.changeVersion(versionToAddRef.toString()));
-        // older servers gate their export-merge hidden-update branch on this flag. Without it,
-        // cascade pushes wouldn't propagate to a remote that hasn't yet upgraded to the per-component
-        // diverge-check path.
+        // older servers gate their export-merge hidden-update branch on this flag.
         lane.setOverrideUpdateDependents(true);
       } else {
-        // promoting a hidden entry → drop the hidden row first
         if (existingHidden) lane.removeComponentFromUpdateDependentsIfExist(currentBitId);
         lane.addComponent({
           id: currentBitId,

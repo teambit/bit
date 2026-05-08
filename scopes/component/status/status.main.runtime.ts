@@ -57,8 +57,7 @@ export type StatusResult = {
   forkedLaneId?: LaneId;
   workspaceIssues: string[];
   localOnly: ComponentID[];
-  // hidden lane.updateDependents that have local snaps pending export. Mirror what `bit export`
-  // surfaces under the "exported updates" section.
+  /** hidden lane.updateDependents with local snaps pending export — mirrors `bit export`'s "exported updates" section. */
   pendingUpdateDependents: ComponentID[];
 };
 
@@ -102,11 +101,9 @@ export class StatusMain {
       loadOpts
     )) as ConsumerComponent[];
     const modifiedComponents = await this.workspace.modified(loadOpts);
-    // `listExportPendingComponents` returns every locally-changed pending-export entry, including
-    // hidden lane updateDependents. Status splits them into two views: visible → "staged
-    // components" (workspace-tracked); hidden → "pending update-dependents" (mirrors `bit export`'s
-    // "exported updates" section). Hidden entries don't have a .bitmap counterpart, so they
-    // shouldn't surface as if they were workspace components.
+    // split pending-export entries into visible "staged components" (workspace-tracked) vs
+    // hidden "pending update-dependents" — the latter have no .bitmap counterpart and mirror
+    // `bit export`'s "exported updates" section.
     const allPendingForExport: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
     const hiddenIds = new Set((laneObj?.updateDependents || []).map((id) => id.toStringWithoutVersion()));
     const stagedComponents: ModelComponent[] = [];

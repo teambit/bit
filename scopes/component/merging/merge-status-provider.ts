@@ -6,8 +6,7 @@ import type { LaneId } from '@teambit/lane-id';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import type { SnapsDistance } from '@teambit/component.snap-distance';
 import { getDivergeData } from '@teambit/component.snap-distance';
-import { Ref } from '@teambit/objects';
-import type { Lane, ModelComponent, Version } from '@teambit/objects';
+import type { Lane, ModelComponent, Ref, Version } from '@teambit/objects';
 import { NoCommonSnap, Tmp } from '@teambit/legacy.scope';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { ImporterMain } from '@teambit/importer';
@@ -267,16 +266,11 @@ other:   ${otherLaneHead.toString()}`);
     const existingBitMapId = consumer?.bitMap.getComponentIdIfExist(id, { ignoreVersion: true });
     const componentOnOther: Version = await modelComponent.loadVersion(version, this.scope.legacyScope.objects);
     // include hidden lane.updateDependents — when merging main into a lane, a hidden cascade
-    // entry is the lane-side baseline for the 3-way merge. Without this, the merge engine treats
+    // entry is the lane-side baseline for the 3-way merge. Without this the merge engine treats
     // the comp as "not on the lane" and produces a snap with parents=[mainHead], losing the
     // ancestral link to the lane's hidden head.
-    const visibleIdOnLane = this.currentLane?.getComponent(id);
-    const hiddenIdOnLane = this.currentLane?.updateDependents?.find((u) => u.isEqualWithoutVersion(id));
     const idOnCurrentLane =
-      visibleIdOnLane ||
-      (hiddenIdOnLane?.version
-        ? { id: hiddenIdOnLane.changeVersion(undefined), head: Ref.from(hiddenIdOnLane.version) }
-        : undefined);
+      this.currentLane?.getComponent(id) || this.currentLane?.getUpdateDependentAsLaneComponent(id);
 
     if (componentOnOther.isRemoved()) {
       // if exist in current lane, we want the current lane to get the soft-remove update.

@@ -817,17 +817,11 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
 
       await pMapSeries(results, async ({ component, versionToSetInBitmap }) => {
         if (!component) return;
-        // hidden lane entries (lane.updateDependents) are not in the workspace bitmap, so we
-        // shouldn't try to update bitmap state for them — `removeLocalVersion` already rewound
-        // the lane's hidden head to its prior cascade hash (or removed the entry entirely).
-        // Check membership in lane.updateDependents explicitly — a soft-deleted (visible) entry
-        // is also absent from bitmap but `updateVersions` knows how to restore it from
-        // stagedConfig.
+        // hidden lane entries (lane.updateDependents) are not in the workspace bitmap, so skip
+        // bitmap updates for them. A soft-deleted (visible) entry is also absent from bitmap but
+        // `updateVersions` knows how to restore it from stagedConfig.
         const compId = component.toComponentId();
-        const isHiddenLaneEntry = Boolean(
-          currentLane?.updateDependents?.find((id) => id.isEqualWithoutVersion(compId))
-        );
-        if (isHiddenLaneEntry) return;
+        if (currentLane?.findUpdateDependent(compId)) return;
         await updateVersions(this.workspace, stagedConfig, currentLaneId, component, versionToSetInBitmap, false);
       });
       await this.workspace.scope.legacyScope.stagedSnaps.write();

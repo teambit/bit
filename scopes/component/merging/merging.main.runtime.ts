@@ -481,13 +481,11 @@ export class MergingMain {
 
     const addToCurrentLane = (head: Ref) => {
       if (!currentLane) throw new Error('currentLane must be defined when adding to the lane');
-      const existingOnLane = currentLane.components.find((c) => c.id.isEqualWithoutVersion(id));
-      const existingInUpdateDependents = currentLane.updateDependents?.find((d) => d.isEqualWithoutVersion(id));
+      const existingOnLane = currentLane.getComponent(id);
+      const existingInUpdateDependents = currentLane.findUpdateDependent(id);
       if (otherLaneId.isDefault() && !existingOnLane && !existingInUpdateDependents) return;
-      // preserve the existing entry's bucket so a merge that refreshes a hidden updateDependent
-      // doesn't accidentally promote it into the workspace-tracked bucket (and vice versa). This
-      // is how scenario 10 (`_merge-lane main dev`) keeps the cascaded entry in
-      // `lane.updateDependents` after the merge advances it to main's new head.
+      // preserve the existing entry's bucket so a merge refreshing a hidden updateDependent
+      // doesn't accidentally promote it into the workspace-tracked bucket (and vice versa).
       if (existingInUpdateDependents && !existingOnLane) {
         currentLane.addComponentToUpdateDependents(id.changeVersion(head.toString()));
       } else {

@@ -165,14 +165,10 @@ export class ComponentsList {
     const pendingExportComponents = await pFilter(modelComponents, async (component: ModelComponent) => {
       const foundInBitMap = fromBitMap.searchWithoutVersion(component.toComponentId());
       if (!foundInBitMap) {
-        // not in .bitmap. Three cases land here:
-        //  - out-of-sync: a workspace component that lost its bitmap entry but still has scope data
-        //  - visible lane entry not in bitmap (rare)
-        //  - hidden lane.updateDependents entry produced by cascade-on-snap; never enters bitmap
+        // not in .bitmap — out-of-sync workspace comps and hidden updateDependents entries land
+        // here. Defer to the lane-aware check when the comp is on the lane in either bucket.
         const compId = component.toComponentId();
-        const inUpdateDependents = lane?.updateDependents?.find((id) => id.isEqualWithoutVersion(compId));
-        const laneEntry = lane?.getComponent(compId);
-        if (lane && (laneEntry || inUpdateDependents)) {
+        if (lane && (lane.getComponent(compId) || lane.findUpdateDependent(compId))) {
           return component.isLocallyChanged(this.scope.objects, lane);
         }
         return component.isLocallyChangedRegardlessOfLanes();

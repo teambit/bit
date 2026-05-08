@@ -163,17 +163,11 @@ export class VersionMaker {
     const currentLane = this.consumer?.getCurrentLaneId();
     await mapSeries(this.allComponentsToTag, async (component) => {
       // hidden lane entries (lane.updateDependents) cascade through autotag but must not enter
-      // the workspace bitmap. Detect via two signals:
-      //  - workspace flow: absence-from-bitmap (cascade autotag loaded the comp from scope)
-      //  - bare-scope flow: the lane already lists the entry under updateDependents
-      // Workspace flow that *promotes* a previously-hidden entry (scenario 6 — `bit import` then
-      // `bit snap`) relies on the workspace having the bitmap entry, so we treat it as visible.
-      const isInUpdateDependents = Boolean(
-        lane?.updateDependents?.find((id) => id.isEqualWithoutVersion(component.id))
-      );
+      // the workspace bitmap. Detect via two signals: workspace flow uses absence-from-bitmap
+      // (cascade autotag loaded the comp from scope); bare-scope flow checks updateDependents.
       const isHiddenLaneEntry = Boolean(
         (this.consumer && !this.consumer.bitMap.getComponentIfExist(component.id, { ignoreVersion: true })) ||
-          (!this.consumer && isInUpdateDependents)
+          (!this.consumer && lane?.findUpdateDependent(component.id))
       );
       // explicit signal to addVersion. Order matters — auto-tag cascade results check the
       // existing entry's bucket BEFORE applying the caller-level `updateDependentsOnLane` flag,

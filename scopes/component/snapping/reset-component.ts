@@ -35,11 +35,9 @@ export async function removeLocalVersion(
   const component: ModelComponent = await consumer.scope.getModelComponent(id);
   const idStr = id.toString();
   const fromBitmap = consumer.bitMap.getComponentIdIfExist(id);
-  // populate lane-aware heads so `getLocalHashes` computes diverge against the LANE remote head
-  // (not the empty main remote head). Without this, a hidden cascade entry — which has no
-  // bitmap row and no main-side state pointing at the lane — would compute diverge against
-  // null and surface the entire local history (including the seeded base) as "local", causing
-  // `removeComponentVersions` to wipe the updateDependents entry instead of rewinding it.
+  // populate lane-aware heads so `getLocalHashes` diverges against the LANE remote head, not
+  // the empty main one — otherwise a hidden cascade entry (no bitmap row, no main-side state)
+  // would treat the entire local history as "local" and wipe the seeded base on reset.
   if (lane) await component.populateLocalAndRemoteHeads(consumer.scope.objects, lane);
   const localVersions = await component.getLocalHashes(consumer.scope.objects, fromBitmap);
   if (!localVersions.length) throw new BitError(`unable to untag ${idStr}, the component is not staged`);
