@@ -57,8 +57,8 @@ export type StatusResult = {
   forkedLaneId?: LaneId;
   workspaceIssues: string[];
   localOnly: ComponentID[];
-  // hidden lane updateDependents (`skipWorkspace: true`) that have local snaps pending export.
-  // Mirror what `bit export` surfaces under the "exported updates" section.
+  // hidden lane.updateDependents that have local snaps pending export. Mirror what `bit export`
+  // surfaces under the "exported updates" section.
   pendingUpdateDependents: ComponentID[];
 };
 
@@ -103,16 +103,12 @@ export class StatusMain {
     )) as ConsumerComponent[];
     const modifiedComponents = await this.workspace.modified(loadOpts);
     // `listExportPendingComponents` returns every locally-changed pending-export entry, including
-    // hidden lane updateDependents (`skipWorkspace: true`). Status splits them into two views:
-    // visible → "staged components" (workspace-tracked); hidden → "pending update-dependents"
-    // (mirrors `bit export`'s "exported updates" section). Hidden entries don't have a .bitmap
-    // counterpart, so they shouldn't surface as if they were workspace components.
+    // hidden lane updateDependents. Status splits them into two views: visible → "staged
+    // components" (workspace-tracked); hidden → "pending update-dependents" (mirrors `bit export`'s
+    // "exported updates" section). Hidden entries don't have a .bitmap counterpart, so they
+    // shouldn't surface as if they were workspace components.
     const allPendingForExport: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
-    // Precompute hidden ids once. Without this each split would call `lane.getComponent()` per
-    // pending-export entry, and that does a linear scan over `lane.components` — O(N·M) on big lanes.
-    const hiddenIds = new Set(
-      (laneObj?.components || []).filter((c) => c.skipWorkspace).map((c) => c.id.toStringWithoutVersion())
-    );
+    const hiddenIds = new Set((laneObj?.updateDependents || []).map((id) => id.toStringWithoutVersion()));
     const stagedComponents: ModelComponent[] = [];
     const pendingUpdateDependents: ComponentID[] = [];
     for (const mc of allPendingForExport) {

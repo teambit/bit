@@ -10,10 +10,9 @@ export type HistoryItem = {
   log: Log;
   components: string[];
   deleted?: string[];
-  // hidden lane entries (`skipWorkspace: true`) at the time of the snapshot. Recorded in their
-  // own field so `historyItem.components` keeps its workspace-checkout/revert contract intact —
-  // those flows must not materialize hidden entries into the bitmap. `lane checkout/revert` use
-  // this list to rewind `lane.updateDependents` directly on the lane object.
+  // hidden lane.updateDependents at the time of the snapshot. Recorded in their own field so
+  // `historyItem.components` keeps its workspace-checkout/revert contract intact — those flows
+  // must not materialize hidden entries into the bitmap.
   updateDependents?: string[];
 };
 

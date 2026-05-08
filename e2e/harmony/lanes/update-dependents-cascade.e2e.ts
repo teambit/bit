@@ -6,7 +6,7 @@ import chaiFs from 'chai-fs';
 chai.use(chaiFs);
 
 /**
- * Cascade behavior on a lane that has `updateDependents` (hidden `skipWorkspace: true` entries).
+ * Cascade behavior on a lane that has `updateDependents` (hidden cascade entries on the lane).
  * The seed step uses `helper.snapping.snapFromScope` — an in-process call to
  * `SnappingMain.snapFromScope` against a bare scope, which is what produces those entries.
  *
@@ -734,8 +734,8 @@ describe('local snap cascades updateDependents on the lane', function () {
   // ---------------------------------------------------------------------------------------------
   // Scenario 14: `bit lane history` on a lane that contains hidden updateDependents must run
   // cleanly and produce a fresh entry whenever the lane changes — including when the only change
-  // is a hidden cascade. `Lane.isEqual` covers `skipWorkspace`, so a cascade-only state delta
-  // flips `hasChanged` and triggers `updateLaneHistory` in `saveLane`.
+  // is a hidden cascade. `Lane.isEqual` covers `lane.updateDependents`, so a cascade-only state
+  // delta flips `hasChanged` and triggers `updateLaneHistory` in `saveLane`.
   // ---------------------------------------------------------------------------------------------
   describe('scenario 14: bit lane history on a lane with hidden updateDependents', () => {
     let historyBeforeLocalSnap: Array<Record<string, any>>;

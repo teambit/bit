@@ -7,8 +7,7 @@ import type { SnapDataPerCompRaw } from '@teambit/snapping';
  * `snap-from-scope-runner.js` so each call gets a fresh Node process — `loadBit` accumulates
  * module-level state across in-process invocations and that state leaks into downstream
  * shell-spawned `bit` commands when many scenarios share a single test process. Used by e2e tests
- * that need to seed `lane.updateDependents` (hidden cascade entries with `skipWorkspace: true`)
- * on a remote lane.
+ * that need to seed `lane.updateDependents` (hidden cascade entries) on a remote lane.
  */
 export default class SnappingHelper {
   async snapFromScope(

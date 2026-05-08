@@ -140,10 +140,10 @@ export class ImporterMain {
    * once done, merge the lane object and save it as well.
    */
   async fetchLaneComponents(lane: Lane, includeUpdateDependents = false) {
-    // hidden (skipWorkspace) entries are part of the lane's graph and the merge engine needs
+    // hidden lane.updateDependents are part of the lane's graph and the merge engine needs
     // their Version objects available locally to do per-component diverge checks. We always
     // fetch the full set; the `includeUpdateDependents` flag now only controls server-side
-    // semantics around the wire-format `updateDependents` array, not whether to fetch them.
+    // semantics around how the remote handles the updateDependents array, not whether to fetch.
     const ids = lane.toComponentIdsIncludeUpdateDependents();
     await this.scope.legacyScope.scopeImporter.importMany({
       ids,
@@ -263,7 +263,7 @@ export class ImporterMain {
   private async fetchLanesUsingScope(lanes: Lane[]): Promise<ComponentID[]> {
     const resultsPerLane = await pMapSeries(lanes, async (lane) => {
       this.logger.setStatusLine(`fetching lane ${lane.name}`);
-      // include hidden (skipWorkspace) entries — bare-scope consumers (Ripple CI cascade producer,
+      // include hidden lane.updateDependents — bare-scope consumers (Ripple CI cascade producer,
       // GC, anything calling `bit fetch <scope>/<lane> --lanes`) need their Version objects
       // locally to operate on the lane. Without them, the lane object references heads whose
       // Version objects are missing — `snapFromScope`, merge, and `getDivergeData` blow up.

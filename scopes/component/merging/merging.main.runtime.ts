@@ -424,15 +424,13 @@ export class MergingMain {
     );
 
     if (this.workspace) {
-      // Hidden lane updateDependents (skipWorkspace=true) live only on the lane and in the scope.
-      // Writing them to the workspace would (a) leak internal lane plumbing into bitmap/files,
-      // and (b) confuse downstream classifiers that key off bitmap-presence (for example, the
-      // cascade-on-snap detector in version-maker treats "in bitmap" as "workspace tracked",
-      // which would route the subsequent merge-snap into `lane.components` instead of refreshing
-      // `lane.updateDependents`). Filter them out here — they participate in the merge through
-      // the unmergedComponents queue and the snap path, but not through workspace I/O.
+      // Hidden lane updateDependents live only on the lane and in the scope. Writing them to
+      // the workspace would (a) leak internal lane plumbing into bitmap/files, and (b) confuse
+      // downstream classifiers that key off bitmap-presence (the cascade-on-snap detector in
+      // version-maker treats "in bitmap" as "workspace tracked"). Filter them out here.
+      const hiddenIds = currentLane?.updateDependents || [];
       const visibleResults = componentsResults.filter(
-        (c) => !currentLane?.getComponent(c.applyVersionResult.id)?.skipWorkspace
+        (c) => !hiddenIds.find((id) => id.isEqualWithoutVersion(c.applyVersionResult.id))
       );
       const compsToWrite = compact(visibleResults.map((c) => c.legacyCompToWrite));
       const manyComponentsWriterOpts = {
@@ -484,16 +482,17 @@ export class MergingMain {
     const addToCurrentLane = (head: Ref) => {
       if (!currentLane) throw new Error('currentLane must be defined when adding to the lane');
       const existingOnLane = currentLane.components.find((c) => c.id.isEqualWithoutVersion(id));
-      if (otherLaneId.isDefault() && !existingOnLane) return;
-      // preserve the existing entry's `skipWorkspace` flag so a merge that refreshes a hidden
-      // updateDependent doesn't accidentally promote it into the workspace-tracked bucket (and
-      // vice versa). This is how scenario 10 (`_merge-lane main dev`) keeps the cascaded entry
-      // in `lane.updateDependents` after the merge advances it to main's new head.
-      currentLane.addComponent({
-        id,
-        head,
-        ...(existingOnLane?.skipWorkspace && { skipWorkspace: true }),
-      });
+      const existingInUpdateDependents = currentLane.updateDependents?.find((d) => d.isEqualWithoutVersion(id));
+      if (otherLaneId.isDefault() && !existingOnLane && !existingInUpdateDependents) return;
+      // preserve the existing entry's bucket so a merge that refreshes a hidden updateDependent
+      // doesn't accidentally promote it into the workspace-tracked bucket (and vice versa). This
+      // is how scenario 10 (`_merge-lane main dev`) keeps the cascaded entry in
+      // `lane.updateDependents` after the merge advances it to main's new head.
+      if (existingInUpdateDependents && !existingOnLane) {
+        currentLane.addComponentToUpdateDependents(id.changeVersion(head.toString()));
+      } else {
+        currentLane.addComponent({ id, head });
+      }
     };
 
     const convertHashToTagIfPossible = (componentId: ComponentID): ComponentID => {
@@ -700,16 +699,17 @@ export class MergingMain {
       );
       return results;
     }
-    // Hidden lane updateDependents (skipWorkspace=true) ride the same `makeVersion` batch as
-    // visible workspace components. version-maker's `isHiddenLaneEntry` detection (workspace flow:
-    // not-in-bitmap) routes each entry correctly. workspace.getMany picks up disk-merged files for
-    // visible; the in-memory merged ConsumerComponents from `applyVersion` are passed through for
-    // hidden (which have no disk state). Single pipeline → consistent log/buildStatus/
+    // Hidden lane updateDependents ride the same `makeVersion` batch as visible workspace
+    // components. version-maker's `isHiddenLaneEntry` detection (workspace flow: not-in-bitmap)
+    // routes each entry correctly. workspace.getMany picks up disk-merged files for visible; the
+    // in-memory merged ConsumerComponents from `applyVersion` are passed through for hidden
+    // (which have no disk state). Single pipeline → consistent log/buildStatus/
     // flattenedDependencies/lane-history/stagedSnaps for all merge-cascade snaps.
     const lane = await this.scope.legacyScope.getCurrentLaneObject();
-    const hiddenIds = lane
-      ? ComponentIdList.fromArray(ids.filter((id) => lane.getComponent(id)?.skipWorkspace))
-      : new ComponentIdList();
+    const updateDependentsIds = lane?.updateDependents || [];
+    const hiddenIds = ComponentIdList.fromArray(
+      ids.filter((id) => updateDependentsIds.find((u) => u.isEqualWithoutVersion(id)))
+    );
     const visibleIds = ComponentIdList.fromArray(
       ids.filter((id) => !hiddenIds.find((h) => h.isEqualWithoutVersion(id)))
     );

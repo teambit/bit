@@ -238,10 +238,10 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const removedIds = await this.getRemovedStagedBitIds();
     const workspaceIds = this.workspace.listIds();
-    // Hidden lane updateDependents (skipWorkspace=true entries) are intentionally not tracked in
-    // the workspace bitmap — they exist only to re-align the lane with its dependencies during
-    // cascade. Excluding them here suppresses the misleading "component files are not tracked"
-    // warning that would otherwise fire on every export carrying updateDependents.
+    // Hidden lane.updateDependents are intentionally not tracked in the workspace bitmap — they
+    // exist only to re-align the lane with its dependencies during cascade. Excluding them here
+    // suppresses the misleading "component files are not tracked" warning that would otherwise
+    // fire on every export carrying updateDependents.
     const laneUpdateDependents = laneObject?.updateDependents
       ? ComponentIdList.fromArray(laneObject.updateDependents)
       : undefined;
@@ -374,6 +374,11 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         return [head];
       }
       const fromWorkspace = this.workspace?.getIdIfExist(modelComponent.toComponentId());
+      // populate lane-aware heads so divergence is computed against the LANE remote head — for
+      // hidden lane.updateDependents entries (no bitmap row) this is the only way to surface
+      // the cascade snap as the local head; otherwise divergence falls back to main and misses
+      // the cascade entirely, exporting 0 versions and triggering a remote merge error.
+      if (laneObject) await modelComponent.populateLocalAndRemoteHeads(scope.objects, laneObject);
       const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects, fromWorkspace);
       if (!allVersions) {
         return localTagsOrHashes;

@@ -151,6 +151,14 @@ export class RemoteLanes {
       await this.loadRemoteLane(remoteLaneId);
     }
     await Promise.all(lane.components.map((component) => this.addEntry(remoteLaneId, component.id, component.head)));
+    // also track lane.updateDependents — hidden cascade entries are part of the lane's graph and
+    // their remote head must be cached so reset/divergence checks compute against the lane's
+    // remote state, not against main's.
+    await Promise.all(
+      (lane.updateDependents || []).map((id) =>
+        this.addEntry(remoteLaneId, id.changeVersion(undefined), Ref.from(id.version as string))
+      )
+    );
   }
 
   private composeRemoteLanePath(remoteName: string, laneName: string) {

@@ -382,7 +382,9 @@ export default class Component extends BitObject {
 
   setLaneHeadLocal(lane?: Lane) {
     if (lane) {
-      this.laneHeadLocal = lane.getComponentHead(this.toComponentId());
+      // include lane.updateDependents — hidden cascade entries need a lane-local head so the
+      // export-pending detector picks them up after a workspace cascade snap.
+      this.laneHeadLocal = lane.getCompHeadIncludeUpdateDependents(this.toComponentId()) || null;
     }
   }
 
@@ -704,26 +706,30 @@ export default class Component extends BitObject {
       if (parent && !parent.isEqual(versionToAddRef)) {
         version.addAsOnlyParent(parent);
       }
-      // when the caller didn't explicitly opt in or out, preserve the existing entry's
-      // skipWorkspace state. This is what makes scenario 10 work via the unified architecture:
-      // a merge-from-main that produces a new snap for a hidden updateDependent must keep that
-      // entry hidden, not promote it into workspace-tracked state. Workspace-snap producers that
-      // want to PROMOTE a previously-hidden entry (scenario 6) need to pass
-      // `addToUpdateDependentsInLane: false` explicitly — they know they're acting on a workspace
-      // comp.
-      const existingEntry = lane.getComponent(currentBitId);
-      const shouldBeHidden = addToUpdateDependentsInLane ?? existingEntry?.skipWorkspace ?? false;
-      lane.addComponent({
-        id: currentBitId,
-        head: versionToAddRef,
-        isDeleted: version.isRemoved(),
-        ...(shouldBeHidden && { skipWorkspace: true }),
-      });
+      // when the caller didn't explicitly opt in or out, preserve the existing entry's bucket.
+      // This is what makes scenario 10 work: a merge-from-main that produces a new snap for a
+      // hidden updateDependent must keep that entry hidden, not promote it into workspace-tracked
+      // state. Workspace-snap producers that want to PROMOTE a previously-hidden entry
+      // (scenario 6) pass `addToUpdateDependentsInLane: false` explicitly.
+      const existingHidden = lane.updateDependents?.find((id) => id.isEqualWithoutVersion(currentBitId));
+      const existingVisible = lane.getComponent(currentBitId);
+      const shouldBeHidden = addToUpdateDependentsInLane ?? (Boolean(existingHidden) && !existingVisible);
       if (shouldBeHidden) {
-        // @deprecated wire-format compat shim — older servers gate their export-merge hidden-update
-        // branch on this flag. Without it, our cascade pushes wouldn't propagate to a remote that
-        // hasn't yet upgraded to the unified diverge-check path. Remove after the rollout window.
+        // demoting a visible entry → drop the visible row first
+        if (existingVisible) lane.removeComponent(currentBitId);
+        lane.addComponentToUpdateDependents(currentBitId.changeVersion(versionToAddRef.toString()));
+        // older servers gate their export-merge hidden-update branch on this flag. Without it,
+        // cascade pushes wouldn't propagate to a remote that hasn't yet upgraded to the per-component
+        // diverge-check path.
         lane.setOverrideUpdateDependents(true);
+      } else {
+        // promoting a hidden entry → drop the hidden row first
+        if (existingHidden) lane.removeComponentFromUpdateDependentsIfExist(currentBitId);
+        lane.addComponent({
+          id: currentBitId,
+          head: versionToAddRef,
+          isDeleted: version.isRemoved(),
+        });
       }
 
       if (lane.readmeComponent && lane.readmeComponent.id.fullName === currentBitId.fullName) {

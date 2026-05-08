@@ -162,16 +162,18 @@ export class VersionMaker {
 
     const currentLane = this.consumer?.getCurrentLaneId();
     await mapSeries(this.allComponentsToTag, async (component) => {
-      // hidden lane entries (skipWorkspace) cascade through autotag but must not enter the
-      // workspace bitmap. Detect via two signals:
+      // hidden lane entries (lane.updateDependents) cascade through autotag but must not enter
+      // the workspace bitmap. Detect via two signals:
       //  - workspace flow: absence-from-bitmap (cascade autotag loaded the comp from scope)
-      //  - bare-scope flow: the lane already marks the entry as `skipWorkspace`
+      //  - bare-scope flow: the lane already lists the entry under updateDependents
       // Workspace flow that *promotes* a previously-hidden entry (scenario 6 — `bit import` then
       // `bit snap`) relies on the workspace having the bitmap entry, so we treat it as visible.
-      const laneEntry = lane?.getComponent(component.id);
+      const isInUpdateDependents = Boolean(
+        lane?.updateDependents?.find((id) => id.isEqualWithoutVersion(component.id))
+      );
       const isHiddenLaneEntry = Boolean(
         (this.consumer && !this.consumer.bitMap.getComponentIfExist(component.id, { ignoreVersion: true })) ||
-          (!this.consumer && laneEntry?.skipWorkspace)
+          (!this.consumer && isInUpdateDependents)
       );
       // explicit signal to addVersion. Order matters — auto-tag cascade results check the
       // existing entry's bucket BEFORE applying the caller-level `updateDependentsOnLane` flag,
@@ -424,7 +426,7 @@ export class VersionMaker {
 
   private async getAutoTagData(idsToTag: ComponentIdList): Promise<AutoTagResult[]> {
     if (this.params.skipAutoTag) return [];
-    // hidden lane entries (skipWorkspace: true) are scope-only — they're not in the workspace
+    // hidden lane.updateDependents are scope-only — they're not in the workspace
     // bitmap, so the workspace autotag candidate pool can't see them. Always run the scope-side
     // autotag pass alongside the workspace one when on a lane, so cascading a hidden updateDependent
     // off a workspace snap (scenario 1) works.
@@ -459,11 +461,10 @@ export class VersionMaker {
     if (!lane) return [];
     // for the workspace+lane path we only care about hidden entries — workspace autotag handles
     // visible ones. for the bare-scope path (no workspace), include all lane entries.
-    const candidateLaneEntries = hiddenOnly ? lane.components.filter((c) => c.skipWorkspace) : lane.components;
-    if (!candidateLaneEntries.length) return [];
-    const laneCompIds = ComponentIdList.fromArray(
-      candidateLaneEntries.map((c) => c.id.changeVersion(c.head.toString()))
-    );
+    const hiddenLaneIds = lane.updateDependents || [];
+    const candidateLaneIds = hiddenOnly ? hiddenLaneIds : [...lane.toComponentIds(), ...hiddenLaneIds];
+    if (!candidateLaneIds.length) return [];
+    const laneCompIds = ComponentIdList.fromArray(candidateLaneIds);
     // include `idsToTag` in the graph too. For the bare-scope reverse cascade
     // (`snapFromScope({ updateDependents: true })`), the targeted hidden entry is being NEWLY
     // introduced to the lane and isn't in candidateLaneEntries yet — without seeding it into

@@ -684,7 +684,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
 
   /**
    * Workspace-side merge snap. Routes both visible workspace components AND hidden lane
-   * updateDependents (skipWorkspace=true) through the same `makeVersion` pipeline that
+   * lane.updateDependents through the same `makeVersion` pipeline that
    * `snap`/`snapFromScope` use, so cascade snaps get fresh log/buildStatus/flattenedDependencies/
    * lane-history/stagedSnaps just like every other snap.
    *
@@ -817,12 +817,16 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
 
       await pMapSeries(results, async ({ component, versionToSetInBitmap }) => {
         if (!component) return;
-        // hidden lane entries (skipWorkspace) are not in the workspace bitmap, so we shouldn't
-        // try to update bitmap state for them — `removeLocalVersion` already rewound the lane's
-        // hidden head to its prior cascade hash (or removed the entry entirely if no prior).
-        // Check the lane's skipWorkspace flag explicitly — a soft-deleted (visible) entry is also
-        // absent from bitmap but `updateVersions` knows how to restore it from stagedConfig.
-        const isHiddenLaneEntry = Boolean(currentLane?.getComponent(component.toComponentId())?.skipWorkspace);
+        // hidden lane entries (lane.updateDependents) are not in the workspace bitmap, so we
+        // shouldn't try to update bitmap state for them — `removeLocalVersion` already rewound
+        // the lane's hidden head to its prior cascade hash (or removed the entry entirely).
+        // Check membership in lane.updateDependents explicitly — a soft-deleted (visible) entry
+        // is also absent from bitmap but `updateVersions` knows how to restore it from
+        // stagedConfig.
+        const compId = component.toComponentId();
+        const isHiddenLaneEntry = Boolean(
+          currentLane?.updateDependents?.find((id) => id.isEqualWithoutVersion(compId))
+        );
         if (isHiddenLaneEntry) return;
         await updateVersions(this.workspace, stagedConfig, currentLaneId, component, versionToSetInBitmap, false);
       });

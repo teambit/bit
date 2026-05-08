@@ -155,9 +155,9 @@ export class ComponentsList {
    * @todo: this is not the full list. It's missing the deleted-components. will be easier to add it
    * here once all legacy are not using this class and then ScopeMain will be in the constructor.
    *
-   * Returns every locally-changed component pending export, including hidden lane entries
-   * (`skipWorkspace: true`). Callers that need a workspace-only view (e.g. `bit status`'s "staged
-   * components" section) filter out hidden entries themselves at the call site.
+   * Returns every locally-changed component pending export, including hidden lane.updateDependents
+   * entries. Callers that need a workspace-only view (e.g. `bit status`'s "staged components"
+   * section) filter out hidden entries themselves at the call site.
    */
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<ComponentIdList> {
     const fromBitMap = this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
@@ -165,13 +165,14 @@ export class ComponentsList {
     const pendingExportComponents = await pFilter(modelComponents, async (component: ModelComponent) => {
       const foundInBitMap = fromBitMap.searchWithoutVersion(component.toComponentId());
       if (!foundInBitMap) {
-        // it's not on the .bitmap only in the scope. Two cases land here:
+        // not in .bitmap. Three cases land here:
         //  - out-of-sync: a workspace component that lost its bitmap entry but still has scope data
-        //  - hidden lane entry: a `skipWorkspace: true` entry on the current lane (produced by
-        //    cascade-on-snap or fetched from a remote that ran the bare-scope cascade producer);
-        //    these never enter the workspace bitmap by design
-        const laneEntry = lane?.getComponent(component.toComponentId());
-        if (lane && laneEntry) {
+        //  - visible lane entry not in bitmap (rare)
+        //  - hidden lane.updateDependents entry produced by cascade-on-snap; never enters bitmap
+        const compId = component.toComponentId();
+        const inUpdateDependents = lane?.updateDependents?.find((id) => id.isEqualWithoutVersion(compId));
+        const laneEntry = lane?.getComponent(compId);
+        if (lane && (laneEntry || inUpdateDependents)) {
           return component.isLocallyChanged(this.scope.objects, lane);
         }
         return component.isLocallyChangedRegardlessOfLanes();

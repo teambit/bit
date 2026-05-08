@@ -23,15 +23,12 @@ export type LaneProps = {
   name: string;
   scope: string;
   log: Log;
-  // hidden lane entries (formerly the separate `updateDependents` array) are part of `components`
-  // with `skipWorkspace: true`. There is no separate `updateDependents` field on `LaneProps` —
-  // `Lane.parse` hoists the wire-format `updateDependents` into `components` before constructing.
   components?: LaneComponent[];
   hash: string;
   schema?: string;
   readmeComponent?: LaneReadmeComponent;
   forkedFrom?: LaneId;
-  /** @deprecated kept on the wire so older servers still accept hidden-entry updates from this client. Remove after the rollout window. */
+  updateDependents?: ComponentID[];
   overrideUpdateDependents?: boolean;
 };
 
@@ -39,15 +36,7 @@ const OLD_LANE_SCHEMA = '0.0.0';
 const SCHEMA_INCLUDING_DELETED_COMPONENTS_DATA = '1.0.0';
 const CURRENT_LANE_SCHEMA = SCHEMA_INCLUDING_DELETED_COMPONENTS_DATA;
 
-/**
- * `skipWorkspace: true` marks a component that participates in the lane's graph (Ripple CI builds
- * it, merges refresh it) but is hidden from workspace-facing flows (`bit status`, `bit compile`,
- * `bit install`, the bitmap). On the wire and on disk, these entries live in the separate
- * `updateDependents` array for backward compatibility with older clients; in-memory they are
- * hoisted into `components` so every per-component machinery (autotag, 3-way merge, reset,
- * garbage collection) operates on one unified list instead of branching on "regular vs. hidden".
- */
-export type LaneComponent = { id: ComponentID; head: Ref; isDeleted?: boolean; skipWorkspace?: boolean };
+export type LaneComponent = { id: ComponentID; head: Ref; isDeleted?: boolean };
 export type LaneReadmeComponent = { id: ComponentID; head: Ref | null };
 export default class Lane extends BitObject {
   name: string;
@@ -60,7 +49,14 @@ export default class Lane extends BitObject {
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
   isNew = false; // doesn't get saved in the object. only needed for in-memory instance
   hasChanged = false; // doesn't get saved in the object. only needed for in-memory instance
-  /** @deprecated wire-format compat shim for older servers — no merge-path reader in this codebase. Remove after the rollout window. */
+  /**
+   * components that are dependents of components in the lane and need to be re-snapped against the
+   * lane's heads. populated by the bare-scope cascade producer (UI "snap updates" / `bit _snap`)
+   * and by `bit _merge-lane`. these entries are part of the lane's graph (Ripple CI builds them,
+   * merge engine refreshes them) but are intentionally hidden from workspace-facing flows
+   * (`bit status`, `bit compile`, `bit install`, the bitmap).
+   */
+  updateDependents?: ComponentID[];
   private overrideUpdateDependents?: boolean;
   constructor(props: LaneProps) {
     super();
@@ -73,54 +69,8 @@ export default class Lane extends BitObject {
     this.readmeComponent = props.readmeComponent;
     this.forkedFrom = props.forkedFrom;
     this.schema = props.schema || OLD_LANE_SCHEMA;
+    this.updateDependents = props.updateDependents;
     this.overrideUpdateDependents = props.overrideUpdateDependents;
-  }
-  /** @deprecated wire-format compat shim — set by hidden-entry writers so older servers' export-merge branch still updates their hidden bucket. Remove after the rollout window. */
-  setOverrideUpdateDependents(overrideUpdateDependents: boolean) {
-    this.overrideUpdateDependents = overrideUpdateDependents;
-    this.hasChanged = true;
-  }
-  /**
-   * Components that live only in the lane's graph (Ripple CI / merge / GC) but are hidden from
-   * workspace-facing flows. Kept as a derived view over `components` for source-compat with
-   * callers that read or assign to `lane.updateDependents` directly.
-   */
-  get updateDependents(): ComponentID[] | undefined {
-    const hidden = this.components.filter((c) => c.skipWorkspace);
-    if (!hidden.length) return undefined;
-    return hidden.map((c) => c.id.changeVersion(c.head.toString()));
-  }
-  set updateDependents(next: ComponentID[] | undefined) {
-    const currentHidden = this.components
-      .filter((c) => c.skipWorkspace)
-      .map((c) => c.id.changeVersion(c.head.toString()).toString())
-      .sort();
-    const nextHidden = (next || []).map((id) => {
-      if (!id.hasVersion()) {
-        throw new ValidationError(`Lane.updateDependents: component "${id.toString()}" is missing a version`);
-      }
-      return id.toString();
-    });
-    const nextHiddenSorted = [...nextHidden].sort();
-    if (isEqual(currentHidden, nextHiddenSorted)) return;
-    // drop every existing hidden entry, then add the replacement set. Also drop any *visible*
-    // entry whose id collides with an incoming hidden id — this handles a remote-merge bucket
-    // flip (visible → hidden) without leaving two entries for the same component, which would
-    // violate the no-duplicates invariant in `Lane.validate()`.
-    const nextIdsWithoutVersion = new Set((next || []).map((id) => id.toStringWithoutVersion()));
-    this.components = this.components.filter(
-      (c) => !c.skipWorkspace && !nextIdsWithoutVersion.has(c.id.toStringWithoutVersion())
-    );
-    if (next?.length) {
-      for (const id of next) {
-        this.components.push({
-          id: id.changeVersion(undefined),
-          head: Ref.from(id.version as string),
-          skipWorkspace: true,
-        });
-      }
-    }
-    this.hasChanged = true;
   }
   id(): string {
     return this.scope + LANE_REMOTE_DELIMITER + this.name;
@@ -148,18 +98,11 @@ export default class Lane extends BitObject {
     lane.validate();
   }
   toObject() {
-    // split the unified components list at the wire boundary so older clients (which only know
-    // the separate `components` / `updateDependents` arrays) keep round-tripping cleanly.
-    const visibleComponents = this.components.filter((c) => !c.skipWorkspace);
-    const hiddenComponents = this.components.filter((c) => c.skipWorkspace);
-    const updateDependents = hiddenComponents.length
-      ? hiddenComponents.map((c) => c.id.changeVersion(c.head.toString()).toString())
-      : undefined;
     const obj = pickBy(
       {
         name: this.name,
         scope: this.scope,
-        components: visibleComponents.map((component) => ({
+        components: this.components.map((component) => ({
           id: { scope: component.id.scope, name: component.id.fullName },
           head: component.head.toString(),
           ...(component.isDeleted && { isDeleted: component.isDeleted }),
@@ -171,12 +114,8 @@ export default class Lane extends BitObject {
         },
         forkedFrom: this.forkedFrom && this.forkedFrom.toObject(),
         schema: this.schema,
-        updateDependents,
-        // @deprecated kept for older servers' merge gating; remove after the rollout window.
-        // Only emit when hidden entries are actually present — emitting it alongside
-        // `updateDependents: undefined` would let an older server interpret the payload as
-        // "authoritatively clear updateDependents" and wipe its remote hidden bucket.
-        overrideUpdateDependents: updateDependents ? this.overrideUpdateDependents : undefined,
+        updateDependents: this.updateDependents?.map((c) => c.toString()),
+        overrideUpdateDependents: this.overrideUpdateDependents,
       },
       (val) => !!val
     );
@@ -208,30 +147,15 @@ export default class Lane extends BitObject {
   }
   static parse(contents: string, hash: string): Lane {
     const laneObject = JSON.parse(contents);
-    const visibleComponents: LaneComponent[] = laneObject.components.map((component) => ({
-      id: ComponentID.fromObject({ scope: component.id.scope, name: component.id.name }),
-      head: new Ref(component.head),
-      isDeleted: component.isDeleted,
-    }));
-    // hoist wire-format `updateDependents` into the unified components list with
-    // `skipWorkspace: true`. Old clients on the other side of the wire still see the separate
-    // `updateDependents` array thanks to the reverse demote in `toObject()`.
-    const hiddenComponents: LaneComponent[] = (laneObject.updateDependents || []).map((raw: string) => {
-      const compId = ComponentID.fromString(raw);
-      if (!compId.hasVersion()) {
-        throw new ValidationError(`Lane.parse: updateDependents entry ${raw} is missing a version`);
-      }
-      return {
-        id: compId.changeVersion(undefined),
-        head: Ref.from(compId.version as string),
-        skipWorkspace: true,
-      };
-    });
     return Lane.from({
       name: laneObject.name,
       scope: laneObject.scope,
       log: laneObject.log,
-      components: [...visibleComponents, ...hiddenComponents],
+      components: laneObject.components.map((component) => ({
+        id: ComponentID.fromObject({ scope: component.id.scope, name: component.id.name }),
+        head: new Ref(component.head),
+        isDeleted: component.isDeleted,
+      })),
       readmeComponent: laneObject.readmeComponent && {
         id: ComponentID.fromObject({
           scope: laneObject.readmeComponent.id.scope,
@@ -240,7 +164,7 @@ export default class Lane extends BitObject {
         head: laneObject.readmeComponent.head && new Ref(laneObject.readmeComponent.head),
       },
       forkedFrom: laneObject.forkedFrom && LaneId.from(laneObject.forkedFrom.name, laneObject.forkedFrom.scope),
-      // @deprecated wire-format compat shim — preserve through round-trips. Remove after the rollout window.
+      updateDependents: laneObject.updateDependents?.map((c) => ComponentID.fromString(c)),
       overrideUpdateDependents: laneObject.overrideUpdateDependents,
       hash: laneObject.hash || hash,
       schema: laneObject.schema,
@@ -256,12 +180,8 @@ export default class Lane extends BitObject {
   addComponent(component: LaneComponent) {
     const existsComponent = this.getComponent(component.id);
     if (existsComponent) {
-      // note: `skipWorkspace` follows the incoming value (including undefined). That's how
-      // scenario 6 "promote-on-import" works — a hidden entry being re-added without the flag
-      // flips to a visible first-class lane component without a separate move operation.
       if (
         !existsComponent.head.isEqual(component.head) ||
-        existsComponent.skipWorkspace !== component.skipWorkspace ||
         Boolean(existsComponent.isDeleted) !== Boolean(component.isDeleted)
       ) {
         this.hasChanged = true;
@@ -269,7 +189,6 @@ export default class Lane extends BitObject {
       existsComponent.id = component.id;
       existsComponent.head = component.head;
       existsComponent.isDeleted = component.isDeleted;
-      existsComponent.skipWorkspace = component.skipWorkspace;
     } else {
       logger.debug(`Lane.addComponent, adding component ${component.id.toString()} to lane ${this.id()}`);
       this.components.push(component);
@@ -277,28 +196,39 @@ export default class Lane extends BitObject {
     }
   }
   removeComponentFromUpdateDependentsIfExist(componentId: ComponentID) {
-    const before = this.components.length;
-    this.components = this.components.filter((c) => !(c.skipWorkspace && c.id.isEqualWithoutVersion(componentId)));
-    if (this.components.length !== before) this.hasChanged = true;
+    const updateDependentsList = ComponentIdList.fromArray(this.updateDependents || []);
+    const exist = updateDependentsList.searchWithoutVersion(componentId);
+    if (!exist) return;
+    this.updateDependents = updateDependentsList.removeIfExist(exist);
+    if (!this.updateDependents.length) this.updateDependents = undefined;
+    this.hasChanged = true;
   }
   addComponentToUpdateDependents(componentId: ComponentID) {
     if (!componentId.hasVersion()) {
       throw new ValidationError(`Lane.addComponentToUpdateDependents: ${componentId.toString()} is missing a version`);
     }
-    // replace any existing entry (hidden or visible) for this id so we never land with two
-    // entries for the same component, regardless of which bucket it was previously in.
-    this.components = this.components.filter((c) => !c.id.isEqualWithoutVersion(componentId));
-    this.components.push({
-      id: componentId.changeVersion(undefined),
-      head: Ref.from(componentId.version as string),
-      skipWorkspace: true,
-    });
+    this.removeComponentFromUpdateDependentsIfExist(componentId);
+    (this.updateDependents ||= []).push(componentId);
     this.hasChanged = true;
   }
   removeAllUpdateDependents() {
-    const before = this.components.length;
-    this.components = this.components.filter((c) => !c.skipWorkspace);
-    if (this.components.length !== before) this.hasChanged = true;
+    if (!this.updateDependents?.length) return;
+    this.updateDependents = undefined;
+    this.hasChanged = true;
+  }
+  shouldOverrideUpdateDependents() {
+    return this.overrideUpdateDependents;
+  }
+  /**
+   * !!! important !!!
+   * this should get called only on a "temp lane", such as running "bit _snap", which the scope gets destroys after the
+   * command is done. when _scope exports the lane, this "overrideUpdateDependents" is not saved to the remote-scope.
+   *
+   * on a user local lane object, this prop should never be true. otherwise, it'll override the remote-scope data.
+   */
+  setOverrideUpdateDependents(overrideUpdateDependents: boolean) {
+    this.overrideUpdateDependents = overrideUpdateDependents;
+    this.hasChanged = true;
   }
 
   removeComponent(id: ComponentID): boolean {
@@ -323,7 +253,6 @@ export default class Lane extends BitObject {
       id: c.id.clone(),
       head: c.head.clone(),
       ...(c.isDeleted && { isDeleted: c.isDeleted }),
-      ...(c.skipWorkspace && { skipWorkspace: c.skipWorkspace }),
     }));
     this.hasChanged = true;
   }
@@ -377,18 +306,11 @@ export default class Lane extends BitObject {
   toBitIds(): ComponentIdList {
     return this.toComponentIds();
   }
-  /**
-   * Returns only visible (non-skipWorkspace) components — the workspace-facing view.
-   * Callers that need every entry in the lane's graph (Ripple CI build set, garbage collector,
-   * merge engine) should use {@link toComponentIdsIncludeUpdateDependents} instead.
-   */
   toComponentIds(): ComponentIdList {
-    return ComponentIdList.fromArray(
-      this.components.filter((c) => !c.skipWorkspace).map((c) => c.id.changeVersion(c.head.toString()))
-    );
+    return ComponentIdList.fromArray(this.components.map((c) => c.id.changeVersion(c.head.toString())));
   }
   toComponentIdsIncludeUpdateDependents(): ComponentIdList {
-    return ComponentIdList.fromArray(this.components.map((c) => c.id.changeVersion(c.head.toString())));
+    return ComponentIdList.fromArray(this.toComponentIds().concat(this.updateDependents || []));
   }
   toLaneId() {
     return new LaneId({ scope: this.scope, name: this.name });
@@ -414,18 +336,17 @@ export default class Lane extends BitObject {
     this.hasChanged = true;
   }
   getCompHeadIncludeUpdateDependents(componentId: ComponentID): Ref | undefined {
-    // `getComponent` scans the unified `components` list, which already contains hidden entries
-    // (formerly `updateDependents`), so the dual lookup collapses into a single call.
-    return this.getComponent(componentId)?.head;
+    const comp = this.getComponent(componentId);
+    if (comp) return comp.head;
+    const fromUpdateDependents = this.updateDependents?.find((c) => c.isEqualWithoutVersion(componentId));
+    if (fromUpdateDependents) return Ref.from(fromUpdateDependents.version as string);
+    return undefined;
   }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;
-    // validate over ALL components including hidden ones — a duplicate id across the visible and
-    // hidden buckets is still an invariant violation (the wire format serializes them separately,
-    // but the in-memory unified list must not carry the same id twice).
-    const allBitIds = this.toComponentIdsIncludeUpdateDependents();
+    const bitIds = this.toComponentIds();
     this.components.forEach((component) => {
-      if (allBitIds.filterWithoutVersion(component.id).length > 1) {
+      if (bitIds.filterWithoutVersion(component.id).length > 1) {
         throw new ValidationError(`${message}, the following component is duplicated "${component.id.fullName}"`);
       }
       if (!isSnap(component.head.hash)) {
@@ -445,34 +366,30 @@ export default class Lane extends BitObject {
   }
   isEqual(lane: Lane): boolean {
     if (this.id() !== lane.id()) return false;
-    // include every per-component bit that affects the wire format (id, head, skipWorkspace,
-    // isDeleted), not just id+head. The three real callers (`importer.fetchLaneComponents`,
-    // `importer.fetchLanesUsingScope`, `import-components`) use this to decide whether to write
-    // a LaneHistory entry. A bucket flip (skipWorkspace) or a soft-delete flip with the same
-    // head is still a meaningful state change — a different `toObject()` payload — so it must
-    // trigger the history write. Sort by a stable key so order doesn't affect equality.
+    // include isDeleted in equality so a soft-delete flip with the same head still counts as a
+    // state change — `Lane.isEqual` is used by importers to decide whether to write a
+    // LaneHistory entry.
     const normalize = (l: Lane) =>
       l.components
         .map((c) => ({
           id: c.id.toStringWithoutVersion(),
           head: c.head.toString(),
-          skipWorkspace: Boolean(c.skipWorkspace),
           isDeleted: Boolean(c.isDeleted),
         }))
         .sort((a, b) =>
-          `${a.id}@${a.head}:${a.skipWorkspace ? 1 : 0}:${a.isDeleted ? 1 : 0}`.localeCompare(
-            `${b.id}@${b.head}:${b.skipWorkspace ? 1 : 0}:${b.isDeleted ? 1 : 0}`
-          )
+          `${a.id}@${a.head}:${a.isDeleted ? 1 : 0}`.localeCompare(`${b.id}@${b.head}:${b.isDeleted ? 1 : 0}`)
         );
-    return isEqual(normalize(this), normalize(lane));
+    const thisUpdDeps = (this.updateDependents || []).map((c) => c.toString()).sort();
+    const otherUpdDeps = (lane.updateDependents || []).map((c) => c.toString()).sort();
+    return isEqual(normalize(this), normalize(lane)) && isEqual(thisUpdDeps, otherUpdDeps);
   }
   clone() {
     return new Lane({
       ...this,
       hash: this._hash,
-      // @deprecated preserve compat shim through clone. Remove after the rollout window.
       overrideUpdateDependents: this.overrideUpdateDependents,
       components: cloneDeep(this.components),
+      updateDependents: this.updateDependents ? cloneDeep(this.updateDependents) : undefined,
     });
   }
 }
