@@ -454,9 +454,11 @@ describe('local snap cascades updateDependents on the lane', function () {
   });
 
   // ---------------------------------------------------------------------------------------------
-  // Scenario 8: `bit reset` must revert the cascade, not just the user's direct snap. We capture
-  // the pre-cascade `updateDependents` in `Lane.updateDependentsBeforeCascade` at cascade time,
-  // and `reset` uses it to restore the lane to its pre-snap state end-to-end.
+  // Scenario 8: `bit reset` must revert the cascade, not just the user's direct snap. The cascade
+  // snap shares a `batchId` with the user's direct snap (set in `version-maker.makeVersion`), and
+  // `reset` collects every batchId from the versions it removes and walks the lane-history
+  // backwards through those entries — including the cascade ones — to restore the lane to its
+  // pre-snap state end-to-end.
   // ---------------------------------------------------------------------------------------------
   describe('scenario 8: bit reset reverts the cascade, not just the direct snap', () => {
     let comp2InUpdDepInitial: string;

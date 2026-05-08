@@ -173,7 +173,10 @@ export default class Lane extends BitObject {
         schema: this.schema,
         updateDependents,
         // @deprecated kept for older servers' merge gating; remove after the rollout window.
-        overrideUpdateDependents: this.overrideUpdateDependents,
+        // Only emit when hidden entries are actually present — emitting it alongside
+        // `updateDependents: undefined` would let an older server interpret the payload as
+        // "authoritatively clear updateDependents" and wipe its remote hidden bucket.
+        overrideUpdateDependents: updateDependents ? this.overrideUpdateDependents : undefined,
       },
       (val) => !!val
     );
