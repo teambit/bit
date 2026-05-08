@@ -33,9 +33,9 @@ export async function hardLinkDirectory(src: string, destDirs: string[]) {
         let srcStats: fs.Stats;
         try {
           srcStats = await fs.stat(srcFile);
-        } catch (err: any) {
+        } catch (err) {
           // if the link is broken, ignore it
-          if (err.code === 'ENOENT') return;
+          if (errnoCode(err) === 'ENOENT') return;
           throw err;
         }
         if (srcStats.isDirectory()) {
@@ -53,8 +53,8 @@ export async function hardLinkDirectory(src: string, destDirs: string[]) {
           const destFile = path.join(destDir, file.name);
           try {
             await linkFile(srcFile, destFile);
-          } catch (err: any) {
-            if (err.code === 'ENOENT') {
+          } catch (err) {
+            if (errnoCode(err) === 'ENOENT') {
               // broken symlinks are skipped
               return;
             }
@@ -69,13 +69,14 @@ export async function hardLinkDirectory(src: string, destDirs: string[]) {
 async function linkFile(srcFile: string, destFile: string) {
   try {
     await fs.link(srcFile, destFile);
-  } catch (err: any) {
-    if (err.code === 'ENOENT' || err.code === 'ENOTDIR') {
+  } catch (err) {
+    const code = errnoCode(err);
+    if (code === 'ENOENT' || code === 'ENOTDIR') {
       await ensureDir(path.dirname(destFile));
       await linkFileIfNotExists(srcFile, destFile);
       return;
     }
-    if (err.code !== 'EEXIST') {
+    if (code !== 'EEXIST') {
       throw err;
     }
   }
@@ -84,8 +85,8 @@ async function linkFile(srcFile: string, destFile: string) {
 async function linkFileIfNotExists(srcFile: string, destFile: string) {
   try {
     await fs.link(srcFile, destFile);
-  } catch (err: any) {
-    if (err.code !== 'EEXIST') {
+  } catch (err) {
+    if (errnoCode(err) !== 'EEXIST') {
       throw err;
     }
   }
@@ -102,15 +103,16 @@ async function ensureDir(dir: string) {
   try {
     await fs.mkdir(dir, { recursive: true });
     return;
-  } catch (err: any) {
+  } catch (err) {
     // ENOTDIR: a regular file blocks the path. EEXIST: leaf already exists as a non-directory
     // (rare with recursive: true). ENOENT: a dangling symlink in the path can't be traversed.
-    if (err.code !== 'ENOTDIR' && err.code !== 'EEXIST' && err.code !== 'ENOENT') throw err;
+    const code = errnoCode(err);
+    if (code !== 'ENOTDIR' && code !== 'EEXIST' && code !== 'ENOENT') throw err;
     const offender = await findNonDirectoryAncestor(dir);
     if (offender == null) {
       // EEXIST with a directory already at `dir` is benign — recursive mkdir normally
       // swallows it, but be defensive against races.
-      if (err.code === 'EEXIST') return;
+      if (code === 'EEXIST') return;
       throw err;
     }
     const msg = `removing non-directory entry blocking link target at ${offender} (expected directory ${dir})`;
@@ -131,8 +133,9 @@ async function findNonDirectoryAncestor(dir: string): Promise<string | null> {
     let stat: fs.Stats;
     try {
       stat = await fs.lstat(current);
-    } catch (err: any) {
-      if (err.code === 'ENOENT' || err.code === 'ENOTDIR') {
+    } catch (err) {
+      const code = errnoCode(err);
+      if (code === 'ENOENT' || code === 'ENOTDIR') {
         current = path.dirname(current);
         continue;
       }
@@ -141,4 +144,8 @@ async function findNonDirectoryAncestor(dir: string): Promise<string | null> {
     return stat.isDirectory() ? null : current;
   }
   return null;
+}
+
+function errnoCode(err: unknown): string | undefined {
+  return (err as NodeJS.ErrnoException | undefined)?.code;
 }
