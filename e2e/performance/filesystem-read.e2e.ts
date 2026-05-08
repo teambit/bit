@@ -11,7 +11,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const MAX_FILES_READ = 1057;
+const MAX_FILES_READ = 1062;
 const MAX_FILES_READ_STATUS = 1500;
 
 /**
