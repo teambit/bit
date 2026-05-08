@@ -48,6 +48,12 @@ export class CliMcpServerMain {
   private serverUrl?: string;
   private serverToken?: string;
   private serverProcess: childProcess.ChildProcess | null = null;
+  // In-flight init promise so concurrent callers share a single bit-server
+  // discovery/spawn. Without this, parallel tool calls race in the
+  // `if (!this.serverPort)` block below — each spawns its own bit-server, the
+  // second `writeServerToken` overwrites the first, and the earlier caller's
+  // cached token no longer matches its server (401 "requires authentication").
+  private serverInitPromise?: Promise<void>;
 
   // Whitelist of commands that are considered read-only/query operations
   private readonly readOnlyCommands = new Set([
@@ -95,6 +101,38 @@ export class CliMcpServerMain {
       this._http = await Http.connect(SYMPHONY_GRAPHQL, CENTRAL_BIT_HUB_NAME);
     }
     return this._http;
+  }
+
+  /**
+   * Discover or spawn a bit-server, then read its bearer token. Concurrent
+   * callers share a single in-flight promise so they can't race each other
+   * into spawning duplicate servers (which would otherwise overwrite the
+   * shared `server-token.txt`).
+   */
+  private async ensureBitServer(cwd: string): Promise<void> {
+    if (this.serverPort) return;
+    if (!this.serverInitPromise) {
+      this.serverInitPromise = (async () => {
+        const existingPort = await this.getBitServerPort(cwd);
+        if (existingPort) {
+          this.serverPort = existingPort;
+        } else {
+          this.logger.debug('[MCP-DEBUG] No bit-server found, attempting to start one');
+          const startedPort = await this.startBitServer(cwd);
+          if (startedPort) this.serverPort = startedPort;
+        }
+        if (this.serverPort) {
+          this.serverUrl = `http://127.0.0.1:${this.serverPort}/api`;
+          // bit-server 1.13.166+ requires a bearer token; older versions don't
+          // write the token file and getBitServerToken returns undefined.
+          this.serverToken = this.getBitServerToken(cwd);
+        }
+      })().finally(() => {
+        // On failure (no port resolved), clear so a later call can retry.
+        if (!this.serverPort) this.serverInitPromise = undefined;
+      });
+    }
+    await this.serverInitPromise;
   }
 
   private async getBitServerPort(cwd: string, skipValidatePortFlag = false): Promise<number | undefined> {
@@ -278,21 +316,7 @@ export class CliMcpServerMain {
   ): Promise<any> {
     if (!this.serverPort) {
       if (!cwd) throw new Error('CWD is required to call bit-server API');
-      this.serverPort = await this.getBitServerPort(cwd);
-      if (this.serverPort) {
-        this.serverUrl = `http://127.0.0.1:${this.serverPort}/api`;
-      } else {
-        // No server running, try to start one
-        this.logger.debug('[MCP-DEBUG] No bit-server found, attempting to start one');
-        const startedPort = await this.startBitServer(cwd);
-        if (startedPort) {
-          this.serverPort = startedPort;
-          this.serverUrl = `http://127.0.0.1:${this.serverPort}/api`;
-        }
-      }
-      // bit-server 1.13.166+ requires a bearer token; older versions don't
-      // write the token file and getBitServerToken returns undefined.
-      if (this.serverPort) this.serverToken = this.getBitServerToken(cwd);
+      await this.ensureBitServer(cwd);
     }
 
     if (!this.serverUrl) {
@@ -366,6 +390,7 @@ export class CliMcpServerMain {
         this.serverPort = undefined;
         this.serverUrl = undefined;
         this.serverToken = undefined;
+        this.serverInitPromise = undefined;
         this.logger.debug('[MCP-DEBUG] Connection refused, attempting to restart bit-server');
         return this.callBitServerAPIWithRoute(route, commandOrMethod, argsOrParams, flags, cwd, true, isIDERoute);
       }
