@@ -68,6 +68,12 @@ export class TsserverClient {
           this.logger.error('TsserverClient.init failed', err);
         });
 
+      // TS 6 flipped the `strict` default from false to true for inferred projects.
+      // Files outside any tsconfig (e.g., components whose env's tsconfig isn't included
+      // by the workspace config writer) would otherwise get strict-mode errors that didn't
+      // surface in TS 5. Pin inferred-project options to the TS 5 default to preserve behavior.
+      await this.setCompilerOptionsForInferredProjects({ strict: false });
+
       if (this.files.length) {
         const openPromises = this.files.map((file) => this.open(file));
         await Promise.all(openPromises.map((promise) => promise.catch((error) => error)));
@@ -249,6 +255,12 @@ export class TsserverClient {
     configureArgs: ts.server.protocol.ConfigureRequestArguments = {}
   ): Promise<ts.server.protocol.ConfigureResponse | undefined> {
     return this.tsServer?.request(CommandTypes.Configure, configureArgs);
+  }
+
+  private async setCompilerOptionsForInferredProjects(
+    options: ts.server.protocol.ExternalProjectCompilerOptions
+  ): Promise<void> {
+    await this.tsServer?.request(CommandTypes.CompilerOptionsForInferredProjects, { options });
   }
 
   /**
