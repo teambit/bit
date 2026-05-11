@@ -442,7 +442,7 @@ export class SnappingMain {
     const existingComponents = compact(
       await pMapSeries(componentIdsLatest, async (id) => {
         const foundInUpdated = updatedComponents.find((c) => c.id.isEqualWithoutVersion(id));
-        return foundInUpdated || this.scope.get(id);
+        return foundInUpdated || this.scope.get(id, true, false);
       })
     );
     // in case of update-dependents, align the dependencies of the dependents according to the lane

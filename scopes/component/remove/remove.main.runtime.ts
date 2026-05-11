@@ -222,7 +222,7 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
 
       if (item.action === 'writeFromScope') {
         // Case #1a: write from local scope and remove the "removed" config
-        const compFromScope = await this.workspace.scope.get(item.bitMapEntry!.id);
+        const compFromScope = await this.workspace.scope.get(item.bitMapEntry!.id, true, false);
         if (compFromScope) {
           await this.workspace.write(compFromScope, item.bitMapEntry!.rootDir);
           this.workspace.bitMap.removeComponentConfig(item.bitMapEntry!.id, RemoveAspect.id, false);
@@ -259,7 +259,7 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
 
     // Case #1: Component in .bitmap with "removed" aspect entry
     if (bitMapEntry?.config?.[RemoveAspect.id]) {
-      const compFromScope = await this.workspace.scope.get(bitMapEntry.id);
+      const compFromScope = await this.workspace.scope.get(bitMapEntry.id, true, false);
       if (compFromScope) {
         // Case #1a: exists in local scope - write from there
         return {
@@ -297,7 +297,7 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
     const currentLane = await this.workspace.getCurrentLaneObject();
     const idOnLane = currentLane?.getComponent(compId);
     const compIdWithPossibleVer = idOnLane ? compId.changeVersion(idOnLane.head.toString()) : compId;
-    const compFromScope = await this.workspace.scope.get(compIdWithPossibleVer);
+    const compFromScope = await this.workspace.scope.get(compIdWithPossibleVer, true, false);
 
     if (compFromScope && (await this.isDeleted(compFromScope))) {
       // Cases #2 and #3: soft-removed and snapped/exported
@@ -410,7 +410,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     ) {
       const headComp = this.workspace // if workspace exits, prefer using the workspace as it may be modified
         ? await this.workspace.get(component.id.changeVersion(undefined))
-        : await this.scope.get(component.id.changeVersion(component.head.hash));
+        : await this.scope.get(component.id.changeVersion(component.head.hash), true, false);
       if (!headComp) throw new Error(`unable to get the head of ${component.id.toString()}`);
       return headComp;
     }

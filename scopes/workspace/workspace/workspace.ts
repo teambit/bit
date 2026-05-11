@@ -1145,7 +1145,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   async getExtensionsFromScopeAndSpecific(id: ComponentID, excludeComponentJson = false): Promise<ExtensionDataList> {
-    const componentFromScope = await this.scope.get(id);
+    const componentFromScope = await this.scope.getOrImport(id);
     const exclude: ExtensionsOrigin[] = ['WorkspaceVariants'];
     if (excludeComponentJson) exclude.push('ComponentJsonFile');
     const { extensions } = await this.componentExtensions(id, componentFromScope, exclude);
@@ -1847,7 +1847,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   async getUnmergedComponent(componentId: ComponentID): Promise<Component | undefined> {
     const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId);
     if (unmerged?.head) {
-      return this.scope.get(componentId.changeVersion(unmerged?.head.toString()));
+      return this.scope.getOrImport(componentId.changeVersion(unmerged?.head.toString()));
     }
     return undefined;
   }

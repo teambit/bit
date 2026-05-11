@@ -78,7 +78,7 @@ export class DeprecationMain {
     ) {
       const headComp = this.workspace // if workspace exits, prefer using the workspace as it may be modified
         ? await this.workspace.get(component.id.changeVersion(undefined))
-        : await this.scope.get(component.id.changeVersion(component.head.hash));
+        : await this.scope.get(component.id.changeVersion(component.head.hash), true, false);
       if (!headComp) throw new Error(`unable to get the head of ${component.id.toString()}`);
       return headComp;
     }
