@@ -27,6 +27,8 @@ import { DEFAULT_LANE } from '@teambit/lane-id';
 import type { ConfigMergeResult } from '@teambit/config-merger';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
+import { getScopeRemotes, ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
+import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import type { CheckoutMain, CheckoutProps } from '@teambit/checkout';
 import { CheckoutAspect, throwForFailures } from '@teambit/checkout';
 import type { SnapsDistance } from '@teambit/component.snap-distance';
@@ -116,6 +118,10 @@ export class MergeLanesMain {
       currentLaneId,
       options
     );
+
+    if (currentLaneId.isDefault()) {
+      await this.throwForLaneComponentsWithMissingScope(idsToMerge);
+    }
 
     const {
       mergeStrategy,
@@ -278,6 +284,46 @@ export class MergeLanesMain {
     await this.workspace?.consumer.onDestroy(`lane-merge (${otherLaneId.name})`);
 
     return { mergeResults, deleteResults, configMergeResults, mergedSuccessfullyIds, conflicts };
+  }
+
+  /**
+   * snapping/exporting a lane is allowed even if a new component's scope doesn't exist remotely yet —
+   * developers may iterate on a lane before the scope is created. once the lane gets merged into main,
+   * those scopes must exist, otherwise the merged snaps can never be exported. surfacing this here gives
+   * a clear error at merge time rather than a confusing failure at the next "bit export".
+   */
+  private async throwForLaneComponentsWithMissingScope(idsToMerge: ComponentID[]) {
+    if (!idsToMerge.length) return;
+    const scopeNames = uniq(idsToMerge.map((id) => id.scope));
+    const scopeRemotes = await getScopeRemotes(this.scope.legacyScope);
+    const missingScopes: string[] = [];
+    await pMapSeries(scopeNames, async (scopeName) => {
+      try {
+        await scopeRemotes.resolve(scopeName);
+      } catch (err) {
+        if (
+          err instanceof ScopeNotFoundOrDenied ||
+          err instanceof InvalidScopeNameFromRemote ||
+          err instanceof InvalidScopeName
+        ) {
+          missingScopes.push(scopeName);
+          return;
+        }
+        throw err;
+      }
+    });
+    if (!missingScopes.length) return;
+    const compsByScope = missingScopes
+      .map((scopeName) => {
+        const ids = idsToMerge.filter((id) => id.scope === scopeName).map((id) => `  - ${id.toString()}`);
+        return `scope "${scopeName}":\n${ids.join('\n')}`;
+      })
+      .join('\n');
+    throw new BitError(
+      `unable to merge into main: the following component(s) reference scope(s) that don't exist or are inaccessible.
+create the missing scope(s), or rename them via "bit scope rename <old> <new>", then retry the merge:
+${compsByScope}`
+    );
   }
 
   private validateMergeFlags(otherLaneId: LaneId, currentLaneId: LaneId, options: MergeLaneOptions) {

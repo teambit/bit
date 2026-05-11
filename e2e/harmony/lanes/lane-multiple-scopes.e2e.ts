@@ -221,8 +221,15 @@ describe('bit lane multiple scopes', function () {
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
     });
-    it('bit export should throw an error saying the scope does not exist', () => {
-      expect(() => helper.command.export()).to.throw('cannot find scope');
+    // developers may iterate on a lane before the target scope is created. the missing-scope
+    // error is deferred to merge-to-main time (see the test below).
+    it('bit export should succeed', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+    it('merging the lane into main should throw, pointing at the missing scope', () => {
+      helper.command.switchLocalLane('main');
+      const mergeFn = () => helper.command.mergeLaneWithoutBuild('dev');
+      expect(mergeFn).to.throw('non-exist-scope');
     });
   });
 

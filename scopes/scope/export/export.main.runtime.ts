@@ -21,7 +21,8 @@ import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import type { Remotes, Remote } from '@teambit/scope.remotes';
-import { getScopeRemotes } from '@teambit/scope.remotes';
+import { getScopeRemotes, ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
+import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import type { EjectMain, EjectResults } from '@teambit/eject';
 import { EjectAspect } from '@teambit/eject';
 import type { ExportOrigin } from '@teambit/scope.network';
@@ -323,8 +324,22 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           // this validation is redundant if the lane-component is in the same scope as the lane-object
           return;
         }
-        // by getting the remote we also validate that this scope actually exists.
-        const remote = await scopeRemotes.resolve(scopeName);
+        // we only need to check name conflicts with the original scope. if that scope doesn't exist
+        // remotely yet, there's no conflict to worry about — the missing-scope error is raised later,
+        // when the lane gets merged into main.
+        let remote: Remote;
+        try {
+          remote = await scopeRemotes.resolve(scopeName);
+        } catch (err) {
+          if (
+            err instanceof ScopeNotFoundOrDenied ||
+            err instanceof InvalidScopeNameFromRemote ||
+            err instanceof InvalidScopeName
+          ) {
+            return;
+          }
+          throw err;
+        }
         const list = await remote.list();
         const listIds = ComponentIdList.fromArray(list.map((listItem) => listItem.id));
         newIdsGrouped[scopeName].forEach((id) => {
