@@ -37,6 +37,8 @@ type ArtifactListPerId = {
 };
 
 export class ArtifactExtractor {
+  savedFilesCount = 0;
+
   constructor(
     private componentMain: ComponentMain,
     private builder: BuilderMain,
@@ -58,7 +60,7 @@ export class ArtifactExtractor {
       };
     });
     this.filterByOptions(artifactListPerId);
-    await this.saveFilesInFileSystemIfAsked(artifactListPerId);
+    this.savedFilesCount = await this.saveFilesInFileSystemIfAsked(artifactListPerId);
 
     return this.artifactsObjectsToExtractorResults(artifactListPerId);
   }
@@ -73,12 +75,13 @@ export class ArtifactExtractor {
     });
   }
 
-  private async saveFilesInFileSystemIfAsked(artifactListPerId: ArtifactListPerId[]) {
+  private async saveFilesInFileSystemIfAsked(artifactListPerId: ArtifactListPerId[]): Promise<number> {
     const outDir = this.options.outDir;
     if (!outDir) {
-      return;
+      return 0;
     }
     const scope = this.componentMain.getHost(ScopeAspect.id) as ScopeMain;
+    let totalSaved = 0;
     // @todo: optimize this to first import all missing hashes.
     await pMapSeries(artifactListPerId, async ({ id, artifacts }) => {
       const vinyls = await artifacts.getVinylsAndImportIfMissing(id, scope.legacyScope);
@@ -86,7 +89,9 @@ export class ArtifactExtractor {
       const idAsFilename = filenamify(id.toStringWithoutVersion(), { replacement: '_' });
       const compPath = path.join(outDir, idAsFilename);
       await Promise.all(vinyls.map((vinyl) => fs.outputFile(path.join(compPath, vinyl.path), vinyl.contents)));
+      totalSaved += vinyls.length;
     });
+    return totalSaved;
   }
 
   private artifactsObjectsToExtractorResults(artifactListPerId: ArtifactListPerId[]): ExtractorResult[] {
