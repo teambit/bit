@@ -53,13 +53,12 @@ export class ArtifactExtractor {
     const scope = this.componentMain.getHost(ScopeAspect.id) as ScopeMain;
     // re-import the version objects so we pick up any builder data added by the remote build
     // pipeline after the local snap was created (the local Version may have been stored with
-    // empty BuilderAspect data — the hash excludes extension data, so it isn't replaced on a
-    // normal cached import). cache: false forces the fetch; passing the current lane makes the
-    // fetch hit the lane's scope where snaps actually live.
+    // empty BuilderAspect data — the Version hash excludes extension data, so it isn't replaced
+    // on a normal cached import). passing the current lane routes the fetch to the lane's scope
+    // where snaps actually live, and the lane-aware fetcher writes back any updated Version.
     const currentLane = await scope.legacyScope.getCurrentLaneObject();
     await scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(ids), {
-      cache: false,
-      lane: currentLane || undefined,
+      lane: currentLane,
       reason: 'to refresh build artifacts',
     });
     const components = await host.getMany(ids);
