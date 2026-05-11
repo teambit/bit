@@ -221,12 +221,15 @@ describe('bit lane multiple scopes', function () {
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
     });
-    // the central hub rejects pushes for unknown scopes, so we fail fast locally with a clear,
-    // actionable error rather than letting users hit a cryptic network error.
-    it('bit export should throw a clear error explaining the cause and remediation', () => {
-      const exportFn = () => helper.command.export();
-      expect(exportFn).to.throw('non-exist-scope');
-      expect(exportFn).to.throw('bit scope set');
+    // developers may iterate on a lane before the target scope is created. the missing-scope
+    // error is deferred to merge-to-main time (see the test below).
+    it('bit export should succeed', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+    it('merging the lane into main should throw, pointing at the missing scope', () => {
+      helper.command.switchLocalLane('main');
+      const mergeFn = () => helper.command.mergeLaneWithoutBuild('dev');
+      expect(mergeFn).to.throw('non-exist-scope');
     });
   });
 
