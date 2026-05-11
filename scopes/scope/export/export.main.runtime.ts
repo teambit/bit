@@ -325,10 +325,11 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           // this validation is redundant if the lane-component is in the same scope as the lane-object
           return;
         }
-        // we only need to check name conflicts with the original scope. if the scope doesn't exist
-        // on the hub yet, or the user lacks access to it, there's no conflict to worry about — skip
-        // the check. malformed scope names (InvalidScopeName) are still raised, since those are a
-        // genuine user error worth surfacing.
+        // this check guards against a same-named component already existing in the target scope
+        // (which would make the eventual lane-merge impossible — two components, same id, no shared
+        // snap history). if the scope doesn't exist on the hub yet, or the user lacks access to it,
+        // there's nothing there to conflict with, so skip the check. malformed scope names
+        // (InvalidScopeName) are intentionally still raised — those are a genuine user error.
         let list: ListScopeResult[];
         try {
           const remote = await scopeRemotes.resolve(scopeName);
