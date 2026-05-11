@@ -23,7 +23,7 @@ import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import type { Remotes, Remote } from '@teambit/scope.remotes';
 import { getScopeRemotes, ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
-import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
+import { InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import type { EjectMain, EjectResults } from '@teambit/eject';
 import { EjectAspect } from '@teambit/eject';
 import type { ExportOrigin } from '@teambit/scope.network';
@@ -325,20 +325,16 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           // this validation is redundant if the lane-component is in the same scope as the lane-object
           return;
         }
-        // we only need to check name conflicts with the original scope. if that scope can't be
-        // resolved or listed — because it doesn't exist remotely yet, the user lacks access, or the
-        // name is invalid — there's no conflict to worry about here. the missing-scope/access error
-        // is raised later, when the lane gets merged into main.
+        // we only need to check name conflicts with the original scope. if the scope doesn't exist
+        // on the hub yet, or the user lacks access to it, there's no conflict to worry about — skip
+        // the check. malformed scope names (InvalidScopeName) are still raised, since those are a
+        // genuine user error worth surfacing.
         let list: ListScopeResult[];
         try {
           const remote = await scopeRemotes.resolve(scopeName);
           list = await remote.list();
         } catch (err) {
-          if (
-            err instanceof ScopeNotFoundOrDenied ||
-            err instanceof InvalidScopeNameFromRemote ||
-            err instanceof InvalidScopeName
-          ) {
+          if (err instanceof ScopeNotFoundOrDenied || err instanceof InvalidScopeNameFromRemote) {
             return;
           }
           throw err;
