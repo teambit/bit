@@ -9,6 +9,7 @@ import { ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
 import minimatch from 'minimatch';
 import { ArtifactFiles } from '@teambit/component.sources';
+import { isValidPath } from '@teambit/legacy.utils';
 import type { BuilderMain } from '../builder.main.runtime';
 import type { ArtifactsOpts } from './artifacts.cmd';
 import { ArtifactList } from './artifact-list';
@@ -88,7 +89,14 @@ export class ArtifactExtractor {
       // make sure the component-dir is just one dir. without this, every slash in the component-id will create a new dir.
       const idAsFilename = filenamify(id.toStringWithoutVersion(), { replacement: '_' });
       const compPath = path.join(outDir, idAsFilename);
-      await Promise.all(vinyls.map((vinyl) => fs.outputFile(path.join(compPath, vinyl.path), vinyl.contents)));
+      await Promise.all(
+        vinyls.map((vinyl) => {
+          if (!isValidPath(vinyl.path)) {
+            throw new Error(`refusing to write artifact "${vinyl.path}" for ${id.toString()}: unsafe path`);
+          }
+          return fs.outputFile(path.join(compPath, vinyl.path), vinyl.contents);
+        })
+      );
       totalSaved += vinyls.length;
     });
     return totalSaved;
