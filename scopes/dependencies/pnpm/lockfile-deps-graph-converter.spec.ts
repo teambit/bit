@@ -389,6 +389,66 @@ describe('convertLockfileToGraph with a circular workspace dependency back to th
     expect(referencingComp1).to.eql([]);
     expect(graph.packages.has('comp1@1.0.0')).to.equal(false);
   });
+
+  // Same bug, but the cycle closes through an intermediate workspace
+  // component (comp1 → comp2 → comp3 → comp1). The back-edge in the
+  // lockfile lives on comp3's snapshot, not comp2's. Scrubbing only
+  // direct dependents of comp1 would miss it; the fix iterates every
+  // remaining snapshot so chain-length doesn't matter.
+  it('should drop edges that reference the component via a multi-hop chain', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        '.': {},
+        'node_modules/.bit_roots/env': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+        'comps/comp1': {
+          dependencies: {
+            comp2: { version: 'file:comps/comp2', specifier: '*' },
+          },
+        },
+        'comps/comp2': {
+          dependencies: {
+            comp3: { version: 'file:comps/comp3', specifier: '*' },
+          },
+        },
+        'comps/comp3': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'comp1@file:comps/comp1': { dependencies: { comp2: 'file:comps/comp2' } },
+        'comp2@file:comps/comp2': { dependencies: { comp3: 'file:comps/comp3' } },
+        'comp3@file:comps/comp3': { dependencies: { comp1: 'file:comps/comp1' } },
+      },
+      packages: {
+        'comp1@file:comps/comp1': { resolution: { directory: 'comps/comp1', type: 'directory' } },
+        'comp2@file:comps/comp2': { resolution: { directory: 'comps/comp2', type: 'directory' } },
+        'comp3@file:comps/comp3': { resolution: { directory: 'comps/comp3', type: 'directory' } },
+      },
+    };
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([
+        ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+        ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+        ['comp3', ComponentID.fromString('my-scope/comp3@1.0.0')],
+      ]),
+    });
+    const referencingComp1 = graph.edges.filter((edge) =>
+      edge.neighbours.some((n) => n.id === 'comp1@1.0.0')
+    );
+    expect(referencingComp1).to.eql([]);
+    expect(graph.packages.has('comp1@1.0.0')).to.equal(false);
+  });
 });
 
 describe('convertLockfileToGraph with directory packages missing from componentIdByPkgName', () => {
