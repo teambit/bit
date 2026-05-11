@@ -320,8 +320,12 @@ export class MergeLanesMain {
       })
       .join('\n');
     throw new BitError(
-      `unable to merge into main: the following component(s) reference scope(s) that don't exist or are inaccessible.
-create the missing scope(s), or rename them via "bit scope rename <old> <new>", then retry the merge:
+      `unable to merge into main: the following component(s) reference scope(s) that don't exist, are inaccessible, or have an invalid name.
+to resolve, depending on the cause:
+  - if the scope doesn't exist yet, create it on bit.cloud (or wherever it's hosted)
+  - if you don't have access, run "bit login" or verify your permissions on the scope
+  - if the scope name was a typo, rename it via "bit scope rename <old> <new>"
+then retry the merge:
 ${compsByScope}`
     );
   }

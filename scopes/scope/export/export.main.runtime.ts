@@ -324,9 +324,10 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           // this validation is redundant if the lane-component is in the same scope as the lane-object
           return;
         }
-        // we only need to check name conflicts with the original scope. if that scope doesn't exist
-        // remotely yet, there's no conflict to worry about — the missing-scope error is raised later,
-        // when the lane gets merged into main.
+        // we only need to check name conflicts with the original scope. if that scope can't be
+        // resolved — because it doesn't exist remotely yet, the user lacks access, or the name is
+        // invalid — there's no conflict to worry about here. the missing-scope/access error is
+        // raised later, when the lane gets merged into main.
         let remote: Remote;
         try {
           remote = await scopeRemotes.resolve(scopeName);
