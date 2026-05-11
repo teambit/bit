@@ -419,4 +419,115 @@ describe('bit lane import operations', function () {
       });
     });
   });
+
+  describe('"bit lane import" current-lane behavior', () => {
+    let remoteLaneRef: string;
+    let remoteScope: string;
+    before(() => {
+      // create the remote lane "lane-a" with one component
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      remoteLaneRef = `${helper.scopes.remote}/lane-a`;
+      remoteScope = helper.scopeHelper.cloneRemoteScope();
+    });
+    describe('when on the default lane (main)', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importLane('lane-a', '-x');
+      });
+      it('should switch to the imported lane', () => {
+        helper.command.expectCurrentLaneToBe('lane-a');
+      });
+    });
+    describe('when on a different lane with an uncommitted edit to a tracked component', () => {
+      let output: string;
+      const localEdit = '// uncommitted local edit on lane-b';
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.scopeHelper.getClonedRemoteScope(remoteScope);
+        helper.command.createLane('lane-b');
+        // add a component exclusive to lane-b (different name from lane-a's comp1 to avoid lane-merge conflicts)
+        helper.fs.outputFile('comp-on-b/index.js', "module.exports = () => 'comp-on-b initial';");
+        helper.command.addComponent('comp-on-b');
+        helper.command.snapAllComponentsWithoutBuild();
+        // make an uncommitted edit on top of the snap
+        helper.fs.outputFile('comp-on-b/index.js', localEdit);
+        output = helper.command.importLane('lane-a', '-x');
+      });
+      it('should not switch lanes', () => {
+        helper.command.expectCurrentLaneToBe('lane-b');
+      });
+      it('should preserve the uncommitted edit to the tracked component', () => {
+        expect(helper.fs.readFile('comp-on-b/index.js')).to.equal(localEdit);
+      });
+      it('should keep the lane-b component in the workspace', () => {
+        const list = helper.command.listParsed();
+        const ids = list.map((c) => c.id);
+        expect(ids.some((id) => id.includes('comp-on-b'))).to.equal(true);
+      });
+      it('should print a hint instructing the user to run "bit switch" to actually switch', () => {
+        expect(output).to.have.string('bit switch');
+        expect(output).to.have.string(remoteLaneRef);
+      });
+      it('should make the imported lane appear in "bit lane list"', () => {
+        const lanes = helper.command.listLanesParsed();
+        const laneNames = lanes.lanes.map((l) => l.name);
+        expect(laneNames).to.include('lane-a');
+      });
+    });
+    describe('when on the same lane being imported', () => {
+      let workspaceWithLocalEdit: string;
+      let newRemoteHead: string;
+      const localFileContent = '// uncommitted local change';
+      before(() => {
+        // primary workspace: import lane-a (becomes the current lane), make an uncommitted edit, snapshot it
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.scopeHelper.getClonedRemoteScope(remoteScope);
+        helper.command.importLane('lane-a', '-x');
+        helper.fs.outputFile('comp1/local.ts', localFileContent);
+        workspaceWithLocalEdit = helper.scopeHelper.cloneWorkspace();
+
+        // collaborator workspace: snap and export a new head on the same lane to advance the remote
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importLane('lane-a', '-x');
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.export();
+        newRemoteHead = helper.command.getHeadOfLane('lane-a', 'comp1', helper.scopes.remotePath);
+
+        // restore the primary workspace (with the local edit and stale lane head) to test "bit lane import" on it
+        helper.scopeHelper.getClonedWorkspace(workspaceWithLocalEdit);
+      });
+      describe('running "bit lane import" for the current lane', () => {
+        let output: string;
+        before(() => {
+          output = helper.command.importLane('lane-a', '-x');
+        });
+        it('should keep the same current lane', () => {
+          helper.command.expectCurrentLaneToBe('lane-a');
+        });
+        it('should preserve uncommitted local file changes', () => {
+          expect(helper.fs.readFile('comp1/local.ts')).to.equal(localFileContent);
+        });
+        it('should fetch the latest lane head from the remote', () => {
+          const headOnLocalLane = helper.command.getHeadOfLane('lane-a', 'comp1');
+          expect(headOnLocalLane).to.equal(newRemoteHead);
+        });
+        it('should make it clear the user is already on the lane and the workspace was not updated', () => {
+          expect(output).to.have.string('already on lane');
+          expect(output).to.have.string('not');
+          expect(output).to.have.string('updated');
+        });
+        it('should prominently tell the user to run "bit checkout head" to update the workspace', () => {
+          expect(output).to.have.string('bit checkout head');
+        });
+      });
+    });
+  });
 });

@@ -390,15 +390,17 @@ export class CiMain {
 
     // Use unique temp lane name to avoid race conditions when multiple CI jobs run concurrently
     const tempLaneName = `${laneId.name}-${generateRandomStr(5)}`;
-    this.logger.console(chalk.blue(`Creating temporary lane ${laneId.scope}/${tempLaneName}`));
 
     let foundErr: Error | undefined;
     let renamedToFinalName = false;
     try {
-      await this.lanes.createLane(tempLaneName, {
+      const createLaneResult = await this.lanes.createLane(tempLaneName, {
         scope: laneId.scope,
         forkLaneNewScope: true,
       });
+      this.logger.console(
+        chalk.blue(`Created temporary lane ${laneId.scope}/${tempLaneName} (hash: ${createLaneResult.hash})`)
+      );
 
       const currentLane = await this.lanes.getCurrentLane();
 
