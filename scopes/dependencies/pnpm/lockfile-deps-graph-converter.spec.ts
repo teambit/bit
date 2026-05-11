@@ -344,6 +344,11 @@ describe('convertLockfileToGraph with a circular workspace dependency back to th
             comp2: { version: 'file:comps/comp2', specifier: '*' },
           },
         },
+        'comps/comp2': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
       },
       lockfileVersion: '9.0',
       snapshots: {
