@@ -9,6 +9,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, getCloudDomain } from '@teambit/legacy.constants';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { BitMap } from '@teambit/legacy.bit-map';
+import type { ListScopeResult } from '@teambit/legacy.component-list';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import type { RemoveMain } from '@teambit/remove';
 import { RemoveAspect } from '@teambit/remove';
@@ -325,12 +326,13 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           return;
         }
         // we only need to check name conflicts with the original scope. if that scope can't be
-        // resolved — because it doesn't exist remotely yet, the user lacks access, or the name is
-        // invalid — there's no conflict to worry about here. the missing-scope/access error is
-        // raised later, when the lane gets merged into main.
-        let remote: Remote;
+        // resolved or listed — because it doesn't exist remotely yet, the user lacks access, or the
+        // name is invalid — there's no conflict to worry about here. the missing-scope/access error
+        // is raised later, when the lane gets merged into main.
+        let list: ListScopeResult[];
         try {
-          remote = await scopeRemotes.resolve(scopeName);
+          const remote = await scopeRemotes.resolve(scopeName);
+          list = await remote.list();
         } catch (err) {
           if (
             err instanceof ScopeNotFoundOrDenied ||
@@ -341,7 +343,6 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           }
           throw err;
         }
-        const list = await remote.list();
         const listIds = ComponentIdList.fromArray(list.map((listItem) => listItem.id));
         newIdsGrouped[scopeName].forEach((id) => {
           if (listIds.hasWithoutVersion(id)) {
