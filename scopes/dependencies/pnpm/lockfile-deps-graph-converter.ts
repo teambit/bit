@@ -88,6 +88,23 @@ export function convertLockfileToGraph(
   }
   delete lockfile.snapshots![lockedPkgDepPath];
   delete lockfile.packages![dp.removeSuffix(lockedPkgDepPath)];
+  // Scrub back-edges from a circular workspace dep (another workspace
+  // component depending on the one we're processing). Otherwise the
+  // back-edge survives buildEdges but its target — the just-deleted
+  // pkgId — has no entry in buildPackages, leaving a dangling neighbour.
+  // convertGraphToLockfile would later materialise that neighbour as an
+  // empty packages entry and ask the registry for the workspace
+  // snap-version, which may never have been published.
+  const lockedFileVersion = lockfile.importers![componentRootDir].dependencies![pkgName].version;
+  for (const snapshot of Object.values(lockfile.snapshots ?? {})) {
+    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+      const deps = snapshot[depType];
+      if (deps?.[pkgName] === lockedFileVersion) {
+        delete deps[pkgName];
+        if (Object.keys(deps).length === 0) delete snapshot[depType];
+      }
+    }
+  }
   return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
 }
 
