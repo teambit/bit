@@ -51,8 +51,19 @@ export class ArtifactExtractor {
     const host = this.componentMain.getHost();
     const ids = await host.idsByPattern(this.pattern);
     const scope = this.componentMain.getHost(ScopeAspect.id) as ScopeMain;
-    // import in case the components are with build status "pending"
-    await scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(ids), { reason: 'artifact' });
+    // re-import the version objects so we pick up any builder data added by the remote build pipeline
+    // after the local snap was created. importMany with reFetchUnBuiltVersion treats versions whose
+    // buildStatus isn't "succeed"/"skipped" as stale and re-fetches them from the remote (including
+    // from the current lane's scope, in case the snap lives on a lane).
+    const currentLane = await scope.legacyScope.getCurrentLaneObject();
+    await scope.legacyScope.scopeImporter.importMany({
+      ids: ComponentIdList.fromArray(ids),
+      reFetchUnBuiltVersion: true,
+      preferDependencyGraph: true,
+      throwForSeederNotFound: false,
+      lane: currentLane || undefined,
+      reason: 'to refresh build artifacts',
+    });
     const components = await host.getMany(ids);
     const artifactListPerId: ArtifactListPerId[] = components.map((component) => {
       return {
