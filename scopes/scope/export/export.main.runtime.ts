@@ -319,15 +319,15 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       }
       const newIds = ComponentIdList.fromArray(ids.filter((id) => !scope.isExported(id)));
       const newIdsGrouped = groupByScopeName(newIds);
+      const unresolvableScopes: string[] = [];
       await mapSeries(Object.keys(newIdsGrouped), async (scopeName) => {
         if (scopeName === laneObject.scope) {
           // this validation is redundant if the lane-component is in the same scope as the lane-object
           return;
         }
-        // we only need to check name conflicts with the original scope. if that scope can't be
-        // resolved — because it doesn't exist remotely yet, the user lacks access, or the name is
-        // invalid — there's no conflict to worry about here. the missing-scope/access error is
-        // raised later, when the lane gets merged into main.
+        // the central hub rejects pushes that reference scopes it doesn't know about, so we have to
+        // fail fast here with a clear error rather than let the user hit a cryptic "scope ID X is
+        // invalid." network error from the hub.
         let remote: Remote;
         try {
           remote = await scopeRemotes.resolve(scopeName);
@@ -337,6 +337,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
             err instanceof InvalidScopeNameFromRemote ||
             err instanceof InvalidScopeName
           ) {
+            unresolvableScopes.push(scopeName);
             return;
           }
           throw err;
@@ -350,6 +351,23 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           }
         });
       });
+      if (unresolvableScopes.length) {
+        const compsByScope = unresolvableScopes
+          .map((scopeName) => {
+            const compIds = newIdsGrouped[scopeName].map((id) => `  - ${id.toString()}`);
+            return `scope "${scopeName}":\n${compIds.join('\n')}`;
+          })
+          .join('\n');
+        throw new BitError(
+          `unable to export the lane: the following component(s) reference scope(s) that don't exist, are inaccessible, or have an invalid name.
+to resolve, depending on the cause:
+  - if the scope doesn't exist yet, create it on bit.cloud (or wherever it's hosted)
+  - if you don't have access, run "bit login" or verify your permissions on the scope
+  - if the scope name was a typo or placeholder (e.g. the default "my-scope"), set a real one via "bit scope set <scope-name>" (workspace-wide) or "bit scope set <scope-name> <component-pattern>" (per-component)
+then retry "bit export":
+${compsByScope}`
+        );
+      }
     };
 
     /**
