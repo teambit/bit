@@ -643,12 +643,14 @@ once done, to continue working, please run "bit cc"`
    * Build the on-disk path for a pending export's directory.
    *
    * `clientId` is request-supplied (push-options header for /scope/put, or
-   * options.clientId for /scope/action) and must be treated as an opaque
-   * identifier — never a path. `isValidPath` blocks the traversal shapes
-   * (`..` segments, absolute, backslash, NUL, etc.).
+   * options.clientId for /scope/action) and must be a single opaque
+   * segment, not a path. `isValidPath` blocks the traversal shapes (`..`/`.`,
+   * absolute, backslash, NUL, etc.); the additional `/` check enforces the
+   * single-segment invariant since `isValidPath` legitimately allows `/`
+   * for nested relative file paths in its other callers.
    */
   private getPendingDirPath(clientId: string): PathOsBasedAbsolute {
-    if (!isValidPath(clientId)) {
+    if (!isValidPath(clientId) || clientId.includes('/')) {
       throw new BitError(`invalid clientId: ${JSON.stringify(clientId)}`);
     }
     return pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
