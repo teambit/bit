@@ -14,6 +14,9 @@ const INVALID_CHARS = ['<', '>', '|', '?', '*', ':', '"'];
  * 4) it can't point to a parent directory — neither a leading `../` nor an
  *    embedded `foo/../../` segment (parent traversal via intermediate segments)
  * 5) it can't contain a NUL byte (would truncate path handling in C-level callers)
+ * 6) no `.` or `..` segment anywhere — `.` resolves to the parent dir when
+ *    used as the final `path.join` arg (callers that join `clientId` into a
+ *    base dir would land on the base dir itself, not a per-client subdir)
  */
 export default function isValidPath(pathStr: string): boolean {
   if (
@@ -25,7 +28,7 @@ export default function isValidPath(pathStr: string): boolean {
     path.isAbsolute(pathStr) ||
     pathStr.startsWith('./') ||
     pathStr.includes('\\') ||
-    pathStr.split('/').some((seg) => seg === '..')
+    pathStr.split('/').some((seg) => seg === '..' || seg === '.')
   ) {
     return false;
   }
