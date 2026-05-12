@@ -223,15 +223,19 @@ export default class Lane extends BitObject {
     this.hasChanged = true;
   }
   /**
-   * wire-format compat shim — `Lane.toObject` serializes this flag (and `Lane.parse` restores it)
-   * so older remotes can gate their export-merge hidden-update branch on it. Local code does not
-   * read the flag; `model-component.addVersion` sets it whenever a hidden entry is written so the
-   * cascade still propagates to remotes that haven't upgraded to the per-component diverge-check
-   * path. Once those remotes upgrade, this getter/field can be removed entirely.
+   * Signals an explicit `_snap --update-dependents` insertion. On export, the receiving scope
+   * gates its "add this new hidden entry" branch on this flag so a stale workspace lane can't
+   * resurrect entries the Cloud UI dropped. Workspace cascades — which only update existing
+   * entries — deliberately do NOT set the flag. The field is also serialized by `Lane.toObject`
+   * for older remotes that gate their pre-diverge-check override branch on it.
    */
   setOverrideUpdateDependents(overrideUpdateDependents: boolean) {
     this.overrideUpdateDependents = overrideUpdateDependents;
     this.hasChanged = true;
+  }
+
+  shouldOverrideUpdateDependents(): boolean {
+    return Boolean(this.overrideUpdateDependents);
   }
 
   removeComponent(id: ComponentID): boolean {

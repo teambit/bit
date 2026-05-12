@@ -715,8 +715,11 @@ export default class Component extends BitObject {
       if (shouldBeHidden) {
         if (existingVisible) lane.removeComponent(currentBitId);
         lane.addComponentToUpdateDependents(currentBitId.changeVersion(versionToAddRef.toString()));
-        // older servers gate their export-merge hidden-update branch on this flag.
-        lane.setOverrideUpdateDependents(true);
+        // Only brand-new hidden insertions raise the wire flag — that's the `_snap --update-dependents`
+        // path adding a component that wasn't already on the lane. Cascades update an existing
+        // hidden entry (wasAlreadyHidden=true) and must NOT raise the flag, otherwise origin would
+        // re-add entries the Cloud UI explicitly dropped.
+        if (!existingHidden) lane.setOverrideUpdateDependents(true);
       } else {
         if (existingHidden) lane.removeComponentFromUpdateDependentsIfExist(currentBitId);
         lane.addComponent({

@@ -30,4 +30,16 @@ export default class SnappingHelper {
       stdio: 'inherit',
     });
   }
+
+  /**
+   * Mirrors the Cloud UI's `removeUpdateDependents` GraphQL mutation by invoking
+   * `LanesMain.removeUpdateDependents` directly against a bare scope. Default behavior (no `ids`)
+   * clears every entry on the lane.
+   */
+  async removeUpdateDependents(scopePath: string, laneId: string, ids?: string[]): Promise<void> {
+    const runnerPath = path.resolve(__dirname, 'remove-update-dependents-runner.js');
+    const args = [runnerPath, scopePath, laneId];
+    if (ids?.length) args.push(JSON.stringify(ids));
+    execFileSync('node', args, { stdio: 'inherit' });
+  }
 }

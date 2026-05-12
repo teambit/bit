@@ -670,6 +670,13 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
         : existingLane?.components.find((c) => c.id.isEqual(component.id));
       if (!existingComponent) {
         if (isExport) {
+          if (isHidden && !lane.shouldOverrideUpdateDependents()) {
+            // Stale local hidden entry that the origin has already dropped (via Cloud UI
+            // `removeUpdateDependents`). Workspace cascades only update existing entries, so a
+            // hidden incoming entry with no match on origin must be a stale leftover — refuse to
+            // resurrect it. Legitimate adds from `_snap --update-dependents` set the wire flag.
+            return;
+          }
           addToBucket(component, isHidden);
           if (!sentVersionHashes?.includes(component.head.toString())) {
             // during export, the remote might got a lane when some components were not sent from the client. ignore them.
@@ -759,6 +766,18 @@ possible causes:
     await pMap(allEntries, ({ component, isHidden }) => mergeLaneComponent(component, isHidden), {
       concurrency: concurrentComponentsLimit(),
     });
+    // Reconcile origin-side removals of hidden entries (Cloud UI `removeUpdateDependents`). The
+    // per-component loop only iterates incoming entries, so entries the origin dropped would
+    // otherwise linger locally. Match by component-id, not version, so a local pending cascade
+    // (same id, newer hash) survives — only entries whose id is absent from incoming are pruned.
+    if (isImport && existingLane?.updateDependents?.length) {
+      const incomingIds = new Set((lane.updateDependents || []).map((id) => id.toStringWithoutVersion()));
+      const kept = existingLane.updateDependents.filter((id) => incomingIds.has(id.toStringWithoutVersion()));
+      if (kept.length !== existingLane.updateDependents.length) {
+        existingLane.updateDependents = kept.length ? kept : undefined;
+        existingLane.hasChanged = true;
+      }
+    }
     // downgrade the schema if the incoming lane has a lower schema because it's possible that components are deleted
     // in the incoming lane but because it has an old schema, it doesn't have the "isDeleted" prop. leaving the schema
     // of current lane as 1.0.0 will mistakenly think that the component is not deleted.
@@ -767,6 +786,17 @@ possible causes:
     }
 
     const mergeLane = existingLane || lane;
+
+    // The `overrideUpdateDependents` flag is a per-push signal — set by `_snap --update-dependents`
+    // to mark legitimate hidden additions, consumed here on export. Without clearing it on the
+    // saved lane, the next consumer's import would inherit the flag via wire-format serialization
+    // and any subsequent workspace export would re-trigger the "allow hidden adds" branch on
+    // origin, resurrecting entries the Cloud UI dropped. Clearing here means future cascades from
+    // workspaces flow through the per-component-merge path with no chance of resurrection, while
+    // legitimate `_snap` pushes re-set the flag for the duration of their own push.
+    if (mergeLane.shouldOverrideUpdateDependents()) {
+      mergeLane.setOverrideUpdateDependents(false);
+    }
 
     return { mergeResults, mergeErrors, mergeLane };
   }

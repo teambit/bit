@@ -915,4 +915,85 @@ describe('local snap cascades updateDependents on the lane', function () {
       expect(localLane.updateDependents[0].split('@')[1]).to.equal(comp2AfterProducerPush);
     });
   });
+
+  // ---------------------------------------------------------------------------------------------
+  // Scenario 17: a Cloud-UI-driven `removeUpdateDependents` (GraphQL mutation against the origin
+  // scope) must propagate to consumers. After the origin lane drops a hidden entry, the next
+  // `bit fetch --lanes` / `bit import` from a workspace that previously imported the lane has to
+  // reflect that removal locally — leaving stale `updateDependents` would silently let the entry
+  // get resurrected on the next export or surface in downstream cascades.
+  // ---------------------------------------------------------------------------------------------
+  describe('scenario 17: fetch reflects origin-side removeUpdateDependents (Cloud UI mutation)', () => {
+    before(async () => {
+      const base = await buildBaseRemoteState();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+      helper.command.importLane('dev', '-x');
+      const localLaneBefore = helper.command.catLane('dev');
+      expect(localLaneBefore.updateDependents).to.have.lengthOf(1);
+      expect(localLaneBefore.updateDependents[0].split('@')[1]).to.equal(base.comp2InUpdDepInitial);
+
+      // Origin-side removal: simulates the Cloud UI clicking "remove" on the lane's hidden entry.
+      await helper.snapping.removeUpdateDependents(helper.scopes.remotePath, `${helper.scopes.remote}/dev`);
+      const remoteLaneAfterRemove = helper.command.catLane('dev', helper.scopes.remotePath);
+      expect(remoteLaneAfterRemove.updateDependents || []).to.have.lengthOf(0);
+
+      helper.command.fetchAllLanes();
+    });
+
+    it('local lane.updateDependents should be cleared after fetch', () => {
+      const localLane = helper.command.catLane('dev');
+      expect(localLane.updateDependents || []).to.have.lengthOf(0);
+    });
+  });
+
+  // ---------------------------------------------------------------------------------------------
+  // Scenario 18: a workspace that hasn't refreshed since the Cloud UI dropped a hidden entry must
+  // not resurrect that entry on its next export. Workspace cascade snaps only update existing
+  // hidden entries — so the origin's `mergeLane` skips incoming hidden adds when the
+  // `overrideUpdateDependents` flag isn't set (which only `_snap --update-dependents` sets).
+  // ---------------------------------------------------------------------------------------------
+  describe('scenario 18: export does not resurrect entries the origin dropped via UI', () => {
+    let comp2InUpdDepInitial: string;
+    let comp3HeadAfterSnap: string;
+
+    before(async () => {
+      const base = await buildBaseRemoteState();
+      comp2InUpdDepInitial = base.comp2InUpdDepInitial;
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+      helper.command.importLane('dev', '-x');
+      helper.command.importComponent('comp3');
+
+      // Cloud UI drops the hidden entry on the origin while the workspace is offline. The
+      // workspace's local lane still carries the stale comp2 reference.
+      await helper.snapping.removeUpdateDependents(helper.scopes.remotePath, `${helper.scopes.remote}/dev`);
+      const remoteLaneAfterRemove = helper.command.catLane('dev', helper.scopes.remotePath);
+      expect(remoteLaneAfterRemove.updateDependents || []).to.have.lengthOf(0);
+
+      // Workspace snaps comp3 — the cascade re-snaps the stale comp2 in lane.updateDependents.
+      helper.fs.outputFile(`${helper.scopes.remote}/comp3/index.js`, "module.exports = () => 'comp3-v2';");
+      helper.command.snapAllComponentsWithoutBuild();
+      comp3HeadAfterSnap = helper.command.getHeadOfLane('dev', 'comp3');
+
+      const localLaneAfterSnap = helper.command.catLane('dev');
+      expect(localLaneAfterSnap.updateDependents).to.have.lengthOf(1);
+      expect(localLaneAfterSnap.updateDependents[0].split('@')[1]).to.not.equal(comp2InUpdDepInitial);
+
+      helper.command.export();
+    });
+
+    it('origin lane.updateDependents stays empty (stale workspace entry not resurrected)', () => {
+      const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
+      expect(remoteLane.updateDependents || []).to.have.lengthOf(0);
+    });
+
+    it('origin lane.components still receives the cascaded comp3 head (visible export unaffected)', () => {
+      const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
+      const comp3OnRemote = remoteLane.components.find((c) => c.id.name === 'comp3');
+      expect(comp3OnRemote.head).to.equal(comp3HeadAfterSnap);
+    });
+  });
 });
