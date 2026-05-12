@@ -1479,13 +1479,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/renderers/tuple-type"
     },
-    "rendering/ssr": {
-        "name": "rendering/ssr",
-        "scope": "teambit.react",
-        "version": "1.0.3",
-        "mainFile": "index.ts",
-        "rootDir": "components/rendering/ssr"
-    },
     "ripple": {
         "name": "ripple",
         "scope": "teambit.cloud",
