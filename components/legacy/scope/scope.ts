@@ -639,8 +639,37 @@ once done, to continue working, please run "bit cc"`
     return ComponentID.fromString(id);
   }
 
+  /**
+   * Build the on-disk path for a pending export's directory.
+   *
+   * `clientId` is request-supplied (push-options header for /scope/put, or
+   * options.clientId for /scope/action). It must be treated as an opaque
+   * identifier — never a path. Path-shaped values (`..`, `/`, `\`, leading
+   * separator, NUL) are rejected so the joined path can't escape
+   * `pending-objects/`. Intentionally permissive otherwise so the clientId
+   * format can evolve (currently a numeric timestamp; future may be a
+   * string) without lockstep client/server changes.
+   */
+  private getPendingDirPath(clientId: string): PathOsBasedAbsolute {
+    if (
+      !clientId ||
+      typeof clientId !== 'string' ||
+      clientId.length > 128 ||
+      clientId.includes('\0') ||
+      clientId.includes('/') ||
+      clientId.includes('\\') ||
+      pathLib.isAbsolute(clientId) ||
+      clientId.split(/[\\/]/).some((seg) => seg === '..')
+    ) {
+      throw new BitError(
+        `invalid clientId: ${typeof clientId === 'string' ? JSON.stringify(clientId) : typeof clientId}`
+      );
+    }
+    return pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+  }
+
   async writeObjectsToPendingDir(objectList: ObjectList, clientId: string): Promise<void> {
-    const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+    const pendingDir = this.getPendingDirPath(clientId);
     if (fs.pathExistsSync(pendingDir)) {
       throw new ClientIdInUse(clientId);
     }
@@ -649,12 +678,12 @@ once done, to continue working, please run "bit cc"`
 
   async readObjectsFromPendingDir(clientId: string): Promise<ObjectList> {
     // @todo: implement the wait() mechanism.
-    const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+    const pendingDir = this.getPendingDirPath(clientId);
     return this.objects.readObjectsFromPendingDir(pendingDir);
   }
 
   async removePendingDir(clientId: string) {
-    const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+    const pendingDir = this.getPendingDirPath(clientId);
     try {
       await fs.remove(pendingDir); // no error is thrown if not exists
     } catch (err: any) {
