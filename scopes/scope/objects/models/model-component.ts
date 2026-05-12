@@ -382,7 +382,9 @@ export default class Component extends BitObject {
 
   setLaneHeadLocal(lane?: Lane) {
     if (lane) {
-      this.laneHeadLocal = lane.getComponentHead(this.toComponentId());
+      // include lane.updateDependents — hidden cascade entries need a lane-local head so the
+      // export-pending detector picks them up after a workspace cascade snap.
+      this.laneHeadLocal = lane.getCompHeadIncludeUpdateDependents(this.toComponentId()) || null;
     }
   }
 
@@ -704,11 +706,27 @@ export default class Component extends BitObject {
       if (parent && !parent.isEqual(versionToAddRef)) {
         version.addAsOnlyParent(parent);
       }
-      if (addToUpdateDependentsInLane) {
+      // When the caller didn't explicitly opt in or out, preserve the existing entry's bucket so
+      // a merge-from-main producing a new snap for a hidden updateDependent keeps it hidden
+      // rather than promoting it into workspace-tracked state.
+      const existingHidden = lane.findUpdateDependent(currentBitId);
+      const existingVisible = lane.getComponent(currentBitId);
+      const shouldBeHidden = addToUpdateDependentsInLane ?? (Boolean(existingHidden) && !existingVisible);
+      if (shouldBeHidden) {
+        if (existingVisible) lane.removeComponent(currentBitId);
         lane.addComponentToUpdateDependents(currentBitId.changeVersion(versionToAddRef.toString()));
-        lane.setOverrideUpdateDependents(true);
+        // Only brand-new hidden insertions raise the wire flag — that's the `_snap --update-dependents`
+        // path adding a component that wasn't already on the lane. Cascades update an existing
+        // hidden entry (wasAlreadyHidden=true) and must NOT raise the flag, otherwise origin would
+        // re-add entries the Cloud UI explicitly dropped.
+        if (!existingHidden) lane.setOverrideUpdateDependents(true);
       } else {
-        lane.addComponent({ id: currentBitId, head: versionToAddRef, isDeleted: version.isRemoved() });
+        if (existingHidden) lane.removeComponentFromUpdateDependentsIfExist(currentBitId);
+        lane.addComponent({
+          id: currentBitId,
+          head: versionToAddRef,
+          isDeleted: version.isRemoved(),
+        });
       }
 
       if (lane.readmeComponent && lane.readmeComponent.id.fullName === currentBitId.fullName) {
