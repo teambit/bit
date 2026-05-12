@@ -95,19 +95,16 @@ Group 8 splits into three tiers:
 
 **Tier 2 — design-first** (requires written design before coding, given findings 1–3):
 
-- [ ] 8.10 (new) Design and document a stable approach to per-phase perf wins. Options to evaluate:
-  - (A) Status-side phase upgrades: callers load at low phase, then `await loader.ensurePhase(comp, 'aspects')` before passing to downstream code that needs extensions. Pro: targeted. Con: upgrade still pays full cost; net win small unless callers can also skip extensions-dependent steps.
-  - (B) Host grows native sub-aspect paths: rewrite parts of `WorkspaceComponentLoader.getAndLoadSlotOrdered` so it can stop early. Pro: real perf win across all callers. Con: substantial refactor; high regression risk.
-  - (C) Hybrid: extend `STAGE1_LOAD_OPTS` with explicit "skip aspects" flag controllable from the caller side; commands that don't need aspects opt in. Pro: incremental. Con: still all-or-nothing per command.
+- [x] 8.10 (new) Design and document a stable approach to per-phase perf wins. → **`design-stage2-perf.md`** (2026-05-12 explore session). Key outcomes: (A), (B), (C) as originally framed are all dead — they assumed sub-aspects Components are usable, but aspects-onLoad slots populate Component state that downstream readers depend on, so every returned Component must be at `aspects` phase. The perf strategy shifts from "skip phases" to **caching-first**: cache short-circuit at `unified.getMany`, fine-grained invalidation audit, recursive `workspace.get` reliably hitting the cache (replaces stage-1's OOM workaround). Also: "extensions" and "aspects" are the same concept in two vocabularies; the phase ladder collapses one rung. See the design doc for the 5-step plan and 5 open follow-up questions.
 
-Only after 8.10 lands can the per-command migrations below safely proceed:
+The per-command migrations 8.2–8.7 are **reframed by the design**:
 
-- [ ] 8.2 Migrate `bit show` to `componentLoader.get(id, { phase: 'files' })` (or `dependencies` if dep info is shown). Verify all output fields populate correctly under the chosen phase.
-- [ ] 8.3 Migrate `bit graph` to `componentLoader.list({ phase: 'dependencies' })`. Verify graph data still resolves.
-- [ ] 8.4 Migrate `bit compile`, `bit build`, `bit test` to `componentLoader.list({ phase: 'aspects' })` (these need full hydration). Should be a no-op behaviour change.
-- [ ] 8.5 Migrate `bit tag`, `bit snap`, `bit export` to phase `aspects` for the components being tagged; keep phase `dependencies` for change detection.
-- [ ] 8.6 Migrate `bit start` (UI dev server) to phase `aspects`.
-- [ ] 8.7 Walk every call site from 1.1 and assign each its lowest sufficient phase. Update the call site.
+- [ ] 8.2 ~~Migrate `bit show` to phase `files`~~ → **Audit `bit show`**: confirm it returns Component to user code → must run at `aspects`. Likely zero code change; verify and close.
+- [ ] 8.3 ~~Migrate `bit graph` to phase `dependencies`~~ → **Audit `bit graph`**: graph rendering reads aspect-populated dep annotations → must run at `aspects`. Likely zero code change; verify and close.
+- [ ] 8.4 ~~Migrate `bit compile`/`build`/`test` to phase `aspects`~~ → Already at `aspects`; confirm and close.
+- [ ] 8.5 ~~Migrate `bit tag`/`snap`/`export` per-phase~~ → All run at `aspects` (full hydration needed for build pipeline). Confirm and close.
+- [ ] 8.6 ~~Migrate `bit start` to phase `aspects`~~ → Already at `aspects`. Confirm and close.
+- [ ] 8.7 ~~Walk every call site and assign lowest sufficient phase~~ → **Refocus**: walk every call site and confirm the unified-loader cache short-circuit (Lever 1 in design-stage2-perf.md) covers it. The win is per-cache-hit, not per-phase-tuning.
 
 **Tier 3 — calendar / release work**:
 
