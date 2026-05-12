@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { IssuesClasses } from '@teambit/component-issues';
 import { Helper } from '@teambit/legacy.e2e-helper';
 
 // Regression test: a require/import with a trailing slash like `require('events/')` —
@@ -21,7 +22,7 @@ describe('MissingPackagesDependenciesOnFs strips trailing slash from package nam
     helper.fixtures.addComponentBarFoo();
     const status = helper.command.statusJson();
     const issues = status.componentsWithIssues[0]?.issues || [];
-    const missingPkgIssue = issues.find((i: any) => i.type === 'MissingPackagesDependenciesOnFs');
+    const missingPkgIssue = issues.find((i: any) => i.type === IssuesClasses.MissingPackagesDependenciesOnFs.name);
     missingPackages = missingPkgIssue?.data?.[0]?.missingPackages || [];
   });
   after(() => {
