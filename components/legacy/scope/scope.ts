@@ -27,7 +27,7 @@ import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-co
 import type { Consumer } from '@teambit/legacy.consumer';
 import { UnexpectedPackageName } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
-import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { isValidPath, type PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import { ScopeComponentsImporter } from './component-ops/scope-components-importer';
 import type { ComponentVersion } from './component-version';
@@ -643,27 +643,13 @@ once done, to continue working, please run "bit cc"`
    * Build the on-disk path for a pending export's directory.
    *
    * `clientId` is request-supplied (push-options header for /scope/put, or
-   * options.clientId for /scope/action). It must be treated as an opaque
-   * identifier — never a path. Path-shaped values (`..`, `/`, `\`, leading
-   * separator, NUL) are rejected so the joined path can't escape
-   * `pending-objects/`. Intentionally permissive otherwise so the clientId
-   * format can evolve (currently a numeric timestamp; future may be a
-   * string) without lockstep client/server changes.
+   * options.clientId for /scope/action) and must be treated as an opaque
+   * identifier — never a path. `isValidPath` blocks the traversal shapes
+   * (`..` segments, absolute, backslash, NUL, etc.).
    */
   private getPendingDirPath(clientId: string): PathOsBasedAbsolute {
-    if (
-      !clientId ||
-      typeof clientId !== 'string' ||
-      clientId.length > 128 ||
-      clientId.includes('\0') ||
-      clientId.includes('/') ||
-      clientId.includes('\\') ||
-      pathLib.isAbsolute(clientId) ||
-      clientId.split(/[\\/]/).some((seg) => seg === '..')
-    ) {
-      throw new BitError(
-        `invalid clientId: ${typeof clientId === 'string' ? JSON.stringify(clientId) : typeof clientId}`
-      );
+    if (!isValidPath(clientId)) {
+      throw new BitError(`invalid clientId: ${JSON.stringify(clientId)}`);
     }
     return pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
   }

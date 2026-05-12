@@ -705,16 +705,18 @@ export default class Repository {
   }
 
   async writeObjectsToPendingDir(objectList: ObjectList, pendingDir: PathOsBasedAbsolute) {
+    // Refs come from client-supplied tar entry names. Validate the whole batch
+    // before any writes so a crafted ref can't escape pendingDir AND so we
+    // don't leave orphan files in pendingDir when one entry is rejected mid-batch.
+    // Mirrors the isSnap check listRefs already applies on the read path.
+    for (const object of objectList.objects) {
+      const ref = object.ref.toString();
+      if (!isSnap(ref)) throw new BitError(`invalid object ref: ${JSON.stringify(ref)}`);
+    }
     const options: ChownOptions = {};
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     await Promise.all(
       objectList.objects.map(async (object) => {
-        // `ref` is derived from the client-supplied tar entry name. Validate
-        // it is a real snap (40-char hex) before joining into a path so a
-        // crafted ref can't escape pendingDir. Mirrors the isSnap check
-        // listRefs already applies on the read path.
-        const ref = object.ref.toString();
-        if (!isSnap(ref)) throw new BitError(`invalid object ref: ${JSON.stringify(ref)}`);
         const objPath = path.join(pendingDir, this.hashPath(object.ref));
         await writeFile(objPath, object.buffer, options);
       })

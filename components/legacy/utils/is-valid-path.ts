@@ -13,6 +13,7 @@ const INVALID_CHARS = ['<', '>', '|', '?', '*', ':', '"'];
  * 3) it can't start with `./` (current directory)
  * 4) it can't point to a parent directory — neither a leading `../` nor an
  *    embedded `foo/../../` segment (parent traversal via intermediate segments)
+ * 5) it can't contain a NUL byte (would truncate path handling in C-level callers)
  */
 export default function isValidPath(pathStr: string): boolean {
   if (
@@ -20,6 +21,7 @@ export default function isValidPath(pathStr: string): boolean {
     typeof pathStr !== 'string' ||
     INVALID_CHARS.some((c) => pathStr.includes(c)) ||
     pathStr.length > MAX_LENGTH ||
+    pathStr.includes('\0') ||
     path.isAbsolute(pathStr) ||
     pathStr.startsWith('./') ||
     pathStr.includes('\\') ||
