@@ -32,7 +32,7 @@ Use the shared formatting toolkit from `@teambit/cli` (`scopes/harmony/cli/outpu
 
 - `bit test` - Run unit tests for components/aspects
 - `bit test --debug` - Run unit tests in debug mode (prints workspace location, keeps workspaces)
-- `npm run e2e-test` - Run end-to-end tests (can take hours, usually run on CI)
+- `npm run e2e-test` - Run end-to-end tests (can take hours, usually run on CI). Sets `BIT_LOADER=new` so CI exercises the unified component loader (rewrite-component-loading change). Override with `BIT_LOADER=old npm run e2e-test` to run against the legacy loader.
 - `npm run e2e-test:debug` - Run e2e tests in debug mode (keeps workspaces, prints output)
 - `npm run mocha-circleci` - Run mocha tests with CircleCI configuration
 

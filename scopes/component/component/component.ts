@@ -28,9 +28,25 @@ type SnapsIterableOpts = {
 export type InvalidComponent = { id: ComponentID; err: Error };
 
 /**
+ * Hydration phase of a loaded component. Mirrored locally to avoid a circular
+ * dependency on `@teambit/component-loader`, which depends on this package.
+ * The canonical declaration lives in `@teambit/component-loader` (`phase.ts`).
+ */
+export type LoadedPhase = 'identity' | 'files' | 'dependencies' | 'extensions' | 'aspects';
+
+/**
  * in-memory representation of a component.
  */
 export class Component implements IComponent {
+  /**
+   * Hydration phase of this component instance. Set by the loader as the
+   * component is upgraded through phases. Defaults to `'identity'` for
+   * freshly constructed instances; the loader bumps this as it computes
+   * each successive phase. Treat as loader-managed state — callers read,
+   * but only the loader writes.
+   */
+  loadedPhase: LoadedPhase = 'identity';
+
   constructor(
     /**
      * component ID represented by the `ComponentId` type.

@@ -93,6 +93,10 @@ import type {
 } from './workspace.main.runtime';
 import type { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
+import type { GetOptions, Phase } from '@teambit/component-loader';
+import { ComponentCache, LoadEventEmitter, UnifiedComponentLoader, DEFAULT_PHASE } from '@teambit/component-loader';
+import { WorkspaceLoaderHost } from './workspace-component/workspace-loader-host';
+import { attachLoadProgressRenderer } from './workspace-component/load-progress-renderer';
 import type { ShouldLoadFunc } from './build-graph-from-fs';
 import { GraphFromFsBuilder } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
@@ -179,6 +183,21 @@ export class Workspace implements ComponentFactory {
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
   componentLoader: WorkspaceComponentLoader;
+  /**
+   * Unified component loader (rewrite-component-loading change). During stage 1
+   * this runs alongside `componentLoader` and is opt-in via `BIT_LOADER=new`.
+   * The unified loader owns a single phase-keyed cache and a typed progress
+   * event stream (`loadEvents`), and delegates the actual load work to a
+   * `WorkspaceLoaderHost` adapter that wraps `componentLoader` for now.
+   */
+  readonly unifiedLoader: UnifiedComponentLoader;
+  /**
+   * Typed progress event stream surfaced by the unified loader. Subscribe with
+   * `workspace.loadEvents.on(event => ...)`. Emits `load:start`, `load:phase:start`,
+   * `load:component`, `load:phase:end`, `load:end`. With no subscribers the
+   * per-event cost is a single `EventEmitter.emit` returning false.
+   */
+  readonly loadEvents: LoadEventEmitter;
   private componentStatusLoader: ComponentStatusLoader;
   bitMap: BitMap;
   /**
@@ -266,11 +285,40 @@ export class Workspace implements ComponentFactory {
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
+    this.loadEvents = new LoadEventEmitter();
+    this.unifiedLoader = new UnifiedComponentLoader(
+      new WorkspaceLoaderHost(this),
+      new ComponentCache(),
+      this.loadEvents,
+      logger
+    );
+    // Render unified-loader progress through the existing setStatusLine mechanism.
+    // Silent under the legacy loader because no events fire there.
+    attachLoadProgressRenderer(this.loadEvents, logger);
     this.validateConfig();
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
     this.filter = new Filter(this);
     this.componentStatusLoader = new ComponentStatusLoader(this);
+  }
+
+  /**
+   * Whether the unified component loader is enabled for this process.
+   * Stage 1: opt-in via `BIT_LOADER=new`. Stage 2 will flip the default; stage 3
+   * removes the flag entirely. See `openspec/changes/rewrite-component-loading`.
+   */
+  private useNewLoader(): boolean {
+    return process.env.BIT_LOADER === 'new';
+  }
+
+  /**
+   * Translates the old positional `Workspace.get` args + `loadOpts` into the
+   * unified loader's `{ phase }` shape. Stage 1: every translation maps to
+   * `phase: 'aspects'` (full hydration) so behaviour is preserved exactly;
+   * stage 2 starts mapping specific commands to lower phases for perf wins.
+   */
+  private translateLoadOpts(_loadOpts?: ComponentLoadOptions): GetOptions {
+    return { phase: DEFAULT_PHASE };
   }
 
   private validateConfig() {
@@ -461,7 +509,33 @@ export class Workspace implements ComponentFactory {
   }
 
   async listWithInvalid(loadOpts?: ComponentLoadOptions) {
+    return this.listWithInvalidAtPhase(DEFAULT_PHASE, loadOpts);
+  }
+
+  /**
+   * Like `listWithInvalid` but lets the caller pin the load phase used by the
+   * unified loader. Under the legacy loader the `phase` is ignored and behaviour
+   * matches `listWithInvalid` exactly.
+   *
+   * Use this for commands that need only a sub-aspect view of every component
+   * (e.g. `bit status` only needs `dependencies`). Stage-1 host implementation
+   * still full-hydrates internally, so the immediate perf win is just cache
+   * sharing; stage-2 internalization of phase-native paths is where the actual
+   * skipped work materialises.
+   */
+  async listWithInvalidAtPhase(phase: Phase, loadOpts?: ComponentLoadOptions) {
     const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
+    if (this.useNewLoader()) {
+      // The unified loader's `getMany` returns `{ components, missing }`. The
+      // legacy shape returned by `componentLoader.getMany` is
+      // `{ components, invalidComponents }` — invalid here means components
+      // that loaded with errors, not components that are missing entirely.
+      // During stage 1 we only have a "missing" channel, so invalidComponents
+      // remains empty under the new loader. Stage 2 will surface load errors
+      // as a structured event/return value.
+      const { components, missing } = await this.unifiedLoader.getMany(legacyIds, { phase }, { throwOnMissing: false });
+      return { components, invalidComponents: missing.map((id) => ({ id, err: new Error('not found') })) };
+    }
     return this.componentLoader.getMany(legacyIds, loadOpts, false);
   }
 
@@ -765,6 +839,14 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
     this.logger.trace(`get ${componentId.toString()}`);
+    // Stage 1: `Workspace.get` always uses the legacy loader, even under
+    // `BIT_LOADER=new`. Reason: aspect loading (loadCompsAsAspects inside the
+    // legacy `getMany`) makes many recursive `workspace.get` calls during a
+    // batch load. Routing those recursive gets through the unified loader
+    // multiplies allocations (event emission, hash computation, cache
+    // bookkeeping) by every recursion frame and triggers OOM on cold cache.
+    // Stage 2 will internalise per-phase paths and rework aspect loading to
+    // be cache-friendly through the unified loader.
     const component = await this.componentLoader.get(componentId, legacyComponent, useCache, storeInCache, loadOpts);
     // When loading a component if it's an env make sure to load it as aspect as well
     // We only want to try load it as aspect if it's the first time we load the component
@@ -831,6 +913,9 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.componentLoader.clearCache();
     this.consumer.componentLoader.clearComponentsCache();
     this.componentStatusLoader.clearCache();
+    // The unified loader's cache is invalidated alongside the legacy caches so
+    // both modes stay in sync during stage 1.
+    this.unifiedLoader.invalidate('all');
     this._componentList = new ComponentsList(this);
   }
 
@@ -838,6 +923,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.componentLoader.clearComponentCache(id);
     this.componentStatusLoader.clearOneComponentCache(id);
     this.consumer.clearOneComponentCache(id);
+    this.unifiedLoader.invalidate(id);
     this._componentList = new ComponentsList(this);
   }
 
@@ -1184,6 +1270,12 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<Component[]> {
     this.logger.debug(`getMany, started. ${ids.length} components`);
+    // Stage 1: always use the legacy loader for the same reason as `get` —
+    // this method is a frequent target of recursive aspect-loading during
+    // batch loads, and routing each call through the unified loader
+    // multiplies allocations and triggers OOM on cold cache. The unified
+    // loader is still exercised via `Workspace.listWithInvalidAtPhase` for
+    // explicit phase-aware callers (currently `bit status`).
     const { components } = await this.componentLoader.getMany(ids, loadOpts, throwOnFailure);
     this.logger.debug(`getMany, completed. ${components.length} components`);
     return components;
@@ -1201,6 +1293,29 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
    */
   async getIfExist(componentId: ComponentID): Promise<Component | undefined> {
     return this.componentLoader.getIfExist(componentId);
+  }
+
+  /**
+   * Explicit replacement for the implicit auto-import behaviour that
+   * `ScopeComponentLoader.get` performs today (see
+   * `audit/04-auto-import-sites.md`). Tries to load the component locally;
+   * if it is not present in the workspace or local scope and is exported
+   * to a remote, fetches it via `scope.import` and then loads.
+   *
+   * Use this for callers that genuinely need the network round-trip (IDE
+   * server, lane head resolution, debug-aspects). Callers that only operate
+   * on local data should call `get` directly so that a missing component
+   * surfaces as `ComponentNotFound` rather than silently triggering a fetch.
+   *
+   * Stage 2 will deprecate the implicit auto-import in `ScopeComponentLoader`;
+   * any site still relying on it will emit a warning and should migrate to
+   * `getOrImport` (or to plain `get` if it never needed the network).
+   */
+  async getOrImport(componentId: ComponentID, loadOpts?: ComponentLoadOptions): Promise<Component> {
+    const existing = await this.getIfExist(componentId);
+    if (existing) return existing;
+    await this.scope.import([componentId], { reason: `${componentId.toString()} via workspace.getOrImport` });
+    return this.get(componentId, undefined, true, true, loadOpts);
   }
 
   /**
