@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatTitle, formatSuccessSummary } from '@teambit/cli';
+import { formatTitle, formatSuccessSummary, formatWarningSummary } from '@teambit/cli';
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { ComponentMain } from '@teambit/component';
@@ -52,6 +52,10 @@ use --out-dir to download artifacts locally for inspection or deployment purpose
   async report([componentPattern]: [string], artifactsOpts: ArtifactsOpts): Promise<string> {
     const artifactExtractor = new ArtifactExtractor(this.componentMain, this.builder, componentPattern, artifactsOpts);
     const list = await artifactExtractor.list();
+    const totalArtifacts = list.reduce((sum, r) => sum + r.artifacts.length, 0);
+    if (totalArtifacts === 0) {
+      return formatWarningSummary(`no artifacts found for "${componentPattern}"`);
+    }
     const grouped = artifactExtractor.groupResultsByAspect(list);
     const outputArtifacts = (aspectId: string, artifactData: ExtractorArtifactResult[]) => {
       const title = formatTitle(aspectId);
@@ -72,7 +76,7 @@ use --out-dir to download artifacts locally for inspection or deployment purpose
       return `${idStr}\n${artifacts}`;
     };
     const footer = artifactsOpts.outDir
-      ? `\n\n${formatSuccessSummary('The above files were saved to the file system')}`
+      ? `\n\n${formatSuccessSummary(`${artifactExtractor.savedFilesCount} file(s) saved to "${artifactsOpts.outDir}"`)}`
       : '';
     return grouped.map(outputResult).join('\n\n') + footer;
   }
