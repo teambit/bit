@@ -305,6 +305,25 @@ with no args, only workspace's capsules are deleted
 
 ---
 
+## cat
+
+**Description**: print source files or config of a component at a specific version
+
+`bit cat <component-id>`
+
+| **Arg**        |                        **Description**                         |
+| -------------- | :------------------------------------------------------------: |
+| `component-id` | component ID, optionally with @version (e.g. scope/name@1.0.0) |
+
+| **Option**      | **Option alias** | **Description**                                                          |
+| --------------- | :--------------: | ------------------------------------------------------------------------ |
+| `--file <path>` |       `-f`       | show only the specified file (relative to component root)                |
+| `--config`      |       `-c`       | show component configuration (env, dependencies) instead of source files |
+| `--all`         |       `-a`       | show both source files and configuration                                 |
+| `--json`        |       `-j`       | output as JSON                                                           |
+
+---
+
 ## check-types
 
 **Description**: validate TypeScript type correctness  
@@ -399,24 +418,25 @@ Resolves the lane name from --lane or the current Git branch, validates it, and 
 **Description**: Tags and exports new semantic versions after merging a PR to main.  
 By default, bumps patch versions when merging to main. If specific configuration variables are set, it can use commit messages or explicit flags to determine the version bump. Runs install, tag, build, and export, then archives the remote lane and syncs lockfiles. Use in merge-to-main CI pipelines to publish releases.
 
-| **Option**                              | **Option alias** | **Description**                                                                                               |
-| --------------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------- |
-| `--message <message>`                   |       `-m`       | If set, use it as the tag message, if not, try and grab from git-commit-message                               |
-| `--build`                               |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI                                 |
-| `--strict`                              |       `-s`       | Set to true to fail on warnings as well as errors, false (default) only fails on errors                       |
-| `--increment <level>`                   |       `-l`       | options are: [major, premajor, minor, preminor, patch, prepatch, prerelease], default to patch                |
-| `--prerelease-id <id>`                  |                  | prerelease identifier (e.g. "dev" to get "1.0.0-dev.1")                                                       |
-| `--patch`                               |       `-p`       | syntactic sugar for "--increment patch"                                                                       |
-| `--minor`                               |                  | syntactic sugar for "--increment minor"                                                                       |
-| `--major`                               |                  | syntactic sugar for "--increment major"                                                                       |
-| `--pre-release [identifier]`            |                  | syntactic sugar for "--increment prerelease" and `--prerelease-id <identifier>`                               |
-| `--increment-by <number>`               |                  | (default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3.    |
-| `--versions-file <path>`                |                  | path to a file containing component versions. format: "component-id: version"                                 |
-| `--verbose`                             |                  | show verbose output                                                                                           |
-| `--auto-merge-resolve <merge-strategy>` |       `-r`       | in case of merge conflict during checkout, resolve according to the provided strategy: [ours, theirs, manual] |
-| `--force-theirs`                        |                  | do not merge during checkout, just overwrite with incoming files                                              |
-| `--lane-name <name>`                    |                  | specify the lane name to delete after merge (auto-detected if not provided)                                   |
-| `--skip-push`                           |                  | skip pushing the changes to the remote repository (useful when CI handles the push separately)                |
+| **Option**                              | **Option alias** | **Description**                                                                                                                                                                                                                                                                                            |
+| --------------------------------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--message <message>`                   |       `-m`       | If set, use it as the tag message, if not, try and grab from git-commit-message                                                                                                                                                                                                                            |
+| `--build`                               |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI                                                                                                                                                                                                                              |
+| `--strict`                              |       `-s`       | Set to true to fail on warnings as well as errors, false (default) only fails on errors                                                                                                                                                                                                                    |
+| `--increment <level>`                   |       `-l`       | options are: [major, premajor, minor, preminor, patch, prepatch, prerelease], default to patch                                                                                                                                                                                                             |
+| `--prerelease-id <id>`                  |                  | prerelease identifier (e.g. "dev" to get "1.0.0-dev.1")                                                                                                                                                                                                                                                    |
+| `--patch`                               |       `-p`       | syntactic sugar for "--increment patch"                                                                                                                                                                                                                                                                    |
+| `--minor`                               |                  | syntactic sugar for "--increment minor"                                                                                                                                                                                                                                                                    |
+| `--major`                               |                  | syntactic sugar for "--increment major"                                                                                                                                                                                                                                                                    |
+| `--pre-release [identifier]`            |                  | syntactic sugar for "--increment prerelease" and `--prerelease-id <identifier>`                                                                                                                                                                                                                            |
+| `--increment-by <number>`               |                  | (default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3.                                                                                                                                                                                                 |
+| `--versions-file <path>`                |                  | path to a file containing component versions. format: "component-id: version"                                                                                                                                                                                                                              |
+| `--verbose`                             |                  | show verbose output                                                                                                                                                                                                                                                                                        |
+| `--auto-merge-resolve <merge-strategy>` |       `-r`       | in case of merge conflict during checkout, resolve according to the provided strategy: [ours, theirs, manual]                                                                                                                                                                                              |
+| `--force-theirs`                        |                  | do not merge during checkout, just overwrite with incoming files                                                                                                                                                                                                                                           |
+| `--lane-name <name>`                    |                  | specify the lane name to delete after merge (auto-detected if not provided)                                                                                                                                                                                                                                |
+| `--skip-push`                           |                  | skip pushing the changes to the remote repository (useful when CI handles the push separately)                                                                                                                                                                                                             |
+| `--no-bitmap-commit`                    |                  | skip the post-tag git add/commit/push entirely. The new versions still land in the scope, but no .bitmap (or lockfile) commit is created on the default branch. Pair with `bitmapAutoSync: true` in workspace.jsonc so developers auto-sync their local .bitmap on the first bit command after `git pull`. |
 
 ---
 
@@ -789,7 +809,9 @@ scans node_modules/.pnpm to report actual installed copies, identifies packages 
 **Description**: compare component changes between versions or against the current workspace  
 shows a detailed diff of component files, dependencies, and configuration changes.  
 by default, compares workspace changes against the latest version. specify versions to compare historical changes.  
-supports pattern matching to filter components and various output formats for better readability.
+supports pattern matching to filter components and various output formats for better readability.  
+for ai-agent workflows, use --name-only to list what changed, --file to drill into a specific file,  
+--files-only / --configs-only to focus on one diff category, or --json for machine-readable output.
 
 `bit diff [component-pattern] [version] [to-version]`
 
@@ -799,11 +821,17 @@ supports pattern matching to filter components and various output formats for be
 | `version`           |                                                                                                                                                                         the base version to compare from. if omitted, compares the workspace's current files to the component's latest version.                                                                                                                                                                          |
 | `to-version`        |                                                                                                                                                     the target version to compare against "version". if both "version" and "to-version" are provided, compare those two versions directly (ignoring the workspace).                                                                                                                                                      |
 
-| **Option**  | **Option alias** | **Description**                                                                                 |
-| ----------- | :--------------: | ----------------------------------------------------------------------------------------------- |
-| `--parent`  |       `-p`       | compare the specified "version" to its immediate parent instead of comparing to the current one |
-| `--verbose` |       `-v`       | show a more verbose output where possible                                                       |
-| `--table`   |       `-t`       | show tables instead of plain text for dependencies diff                                         |
+| **Option**       | **Option alias** | **Description**                                                                                      |
+| ---------------- | :--------------: | ---------------------------------------------------------------------------------------------------- |
+| `--parent`       |       `-p`       | compare the specified "version" to its immediate parent instead of comparing to the current one      |
+| `--verbose`      |       `-v`       | show a more verbose output where possible                                                            |
+| `--table`        |       `-t`       | show tables instead of plain text for dependencies diff                                              |
+| `--file <paths>` |                  | show only file diffs for the given component-relative path(s). comma-separated. implies --files-only |
+| `--files-only`   |                  | show only file-content diffs; omit dependency, env, and aspect-config changes                        |
+| `--configs-only` |                  | show only dependency, env, and aspect-config changes; omit file-content diffs                        |
+| `--name-only`    |                  | summary: list changed files with status (M/A/D) and changed field categories; no diff bodies         |
+| `--stat`         |                  | summary: like --name-only but includes +N -M line counts per file                                    |
+| `--json`         |       `-j`       | return the diff result as json                                                                       |
 
 ---
 
@@ -1183,6 +1211,7 @@ supports various reset options to recover from corrupted state or restart from s
 | `--shared <groupname>`                    |       `-s`       | add group write permissions to a scope properly                                                                                           |
 | `--external-package-manager`              |                  | enable external package manager mode (npm/yarn/pnpm)                                                                                      |
 | `--skip-interactive`                      |                  | skip interactive mode for Git repositories                                                                                                |
+| `--agent [type]`                          |                  | create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)                                               |
 
 ---
 
@@ -1374,7 +1403,10 @@ bit lane diff from to => diff between "from" lane and "to" lane.
 
 **Usage**: `lane import <lane>`
 
-**Description**: import a remote lane to your workspace and switch to that lane
+**Description**: import a remote lane to your workspace  
+when on the default lane, the workspace is switched to the imported lane.  
+when already on the same lane, only the latest objects are fetched from the remote — run "bit checkout head" to update the workspace.  
+when on a different lane, the lane is fetched locally without switching to avoid disrupting your work — run `bit switch <lane>` to switch.
 
 | **Arg** |   **Description**    |
 | ------- | :------------------: |
@@ -1915,6 +1947,7 @@ installs dependencies and configures the workspace for immediate development.
 | `--empty`                        |       `-e`       | skip template's default component creation (relevant for templates that add components by default)                                  |
 | `--load-from <path-to-template>` |                  | local path to the workspace containing the template. Helpful during a development of a workspace-template                           |
 | `--current-dir`                  |       `-c`       | create the new workspace in current directory (default is to create a new directory, inside the current dir)                        |
+| `--agent [type]`                 |                  | create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)                                         |
 
 ---
 
@@ -2171,11 +2204,11 @@ view, retry, and manage Ripple CI jobs that build your components in the cloud a
 
 **Usage**: `ripple log [job-id]`
 
-**Description**: show job details and component build task summaries (auto-detects current lane when no job-id given)
+**Description**: show job details and component build task summaries (auto-detects current lane, or your last export when on main)
 
-| **Arg**  |                         **Description**                          |
-| -------- | :--------------------------------------------------------------: |
-| `job-id` | the Ripple CI job ID (optional — auto-detects from current lane) |
+| **Arg**  |                                          **Description**                                           |
+| -------- | :------------------------------------------------------------------------------------------------: |
+| `job-id` | the Ripple CI job ID (optional — auto-detects from current lane, or your last export when on main) |
 
 | **Option**                | **Option alias** | **Description**                                                     |
 | ------------------------- | :--------------: | ------------------------------------------------------------------- |
@@ -2187,17 +2220,17 @@ view, retry, and manage Ripple CI jobs that build your components in the cloud a
 
 **Usage**: `ripple errors [job-id]`
 
-**Description**: show build errors for a Ripple CI job (auto-detects current lane when no job-id given)
+**Description**: show build errors for a Ripple CI job (auto-detects current lane, or your last export when on main)
 
-| **Arg**  |                         **Description**                          |
-| -------- | :--------------------------------------------------------------: |
-| `job-id` | the Ripple CI job ID (optional — auto-detects from current lane) |
+| **Arg**  |                                          **Description**                                           |
+| -------- | :------------------------------------------------------------------------------------------------: |
+| `job-id` | the Ripple CI job ID (optional — auto-detects from current lane, or your last export when on main) |
 
-| **Option**      | **Option alias** | **Description**                                                            |
-| --------------- | :--------------: | -------------------------------------------------------------------------- |
-| `--lane <lane>` |                  | lane ID to find the latest failed job for (default: detected from .bitmap) |
-| `--log`         |                  | show full build log for failed containers (not just the error summary)     |
-| `--json`        |       `-j`       | return the output as JSON                                                  |
+| **Option**      | **Option alias** | **Description**                                                        |
+| --------------- | :--------------: | ---------------------------------------------------------------------- |
+| `--lane <lane>` |                  | lane ID to find the latest job for (default: detected from .bitmap)    |
+| `--log`         |                  | show full build log for failed containers (not just the error summary) |
+| `--json`        |       `-j`       | return the output as JSON                                              |
 
 ### ripple retry
 
@@ -2258,6 +2291,7 @@ when no app name is specified, automatically detects and runs the app if only on
 
 ## schema
 
+**Alias**: `api`  
 **Description**: display component API schema and type definitions  
 extracts and displays the public API structure of components including types, functions, classes, and interfaces.  
 shows detailed type information, function signatures, and JSDoc documentation for exported elements.  
@@ -2321,6 +2355,27 @@ use `bit pattern --help` to understand patterns better and `bit pattern <pattern
 | `scope-name`        |                                                                                                                                                                                                                         name of the scope to set                                                                                                                                                                                                                         |
 | `component-pattern` | component name, component id, component pattern, or relative directory path. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
+### scope trust
+
+**Usage**: `scope trust [action] [pattern]`
+
+**Description**: manage which scopes are trusted to load aspects (envs, etc.) into the workspace's process  
+scope-trust is opt-in. when off (the default), aspects from any scope load without a check. when on, aspects from a scope outside the trust list trigger a prompt (interactive shells) or an error (non-interactive).
+
+bit scope trust # same as "list"  
+ bit scope trust list # show status; if on, print the effective trust list  
+ bit scope trust enable # turn on (writes "trustedScopes": [] to workspace.jsonc)  
+ bit scope trust disable # turn off (removes "trustedScopes" from workspace.jsonc)  
+ bit scope trust add PATTERN # add a pattern (auto-enables if needed)  
+ bit scope trust remove PATTERN # remove a pattern (does NOT disable when list is empty)
+
+once on, the effective trust set is: builtin scopes (teambit._, bitdev._, and a few others — run "bit scope trust list" to see) + the owner of defaultScope + entries listed under "trustedScopes". patterns are exact ("acme.frontend") or owner wildcard ("acme.\*").
+
+| **Arg**   |                         **Description**                         |
+| --------- | :-------------------------------------------------------------: |
+| `action`  | one of: list, enable, disable, add, remove. defaults to "list". |
+| `pattern` |         scope pattern (required for "add" and "remove")         |
+
 ### scope rename
 
 **Usage**: `scope rename <current-scope-name> <new-scope-name>`
@@ -2335,11 +2390,12 @@ as a result of this change
 | `current-scope-name` | the scope name to be replaced by another scope name |
 | `new-scope-name`     | a new scope name to replace the current scope name  |
 
-| **Option**    | **Option alias** | **Description**                                                                                                 |
-| ------------- | :--------------: | --------------------------------------------------------------------------------------------------------------- |
-| `--preserve`  |                  | avoid renaming files and variables/classes according to the new scope name                                      |
-| `--refactor`  |       `-r`       | update the import statements in all dependent components to the new package name (i.e. with the new scope name) |
-| `--deprecate` |                  | for exported components, instead of deleting the original components, deprecating them                          |
+| **Option**                       | **Option alias** | **Description**                                                                                                 |
+| -------------------------------- | :--------------: | --------------------------------------------------------------------------------------------------------------- |
+| `--preserve`                     |                  | avoid renaming files and variables/classes according to the new scope name                                      |
+| `--refactor`                     |       `-r`       | update the import statements in all dependent components to the new package name (i.e. with the new scope name) |
+| `--deprecate`                    |                  | for exported components, instead of deleting the original components, deprecating them                          |
+| `--skip-dependency-installation` |       `-x`       | do not install dependencies after the rename                                                                    |
 
 ### scope rename-owner
 
@@ -2394,6 +2450,25 @@ use --list to see all available scripts.
 | **Option** | **Option alias** | **Description**                                  |
 | ---------- | :--------------: | ------------------------------------------------ |
 | `--list`   |       `-l`       | list all available scripts from all environments |
+
+---
+
+## search
+
+**Description**: search for components by keyword in the local workspace and remote bit cloud  
+runs the provided query terms in parallel against bit cloud and against the local workspace.  
+multiple queries are unioned (deduplicated) in the output. by default, remote results are filtered by the  
+owner extracted from the workspace's defaultScope; use --owners or --skip-auto-owner to change this.
+
+`bit search <query...>`
+
+| **Option**          | **Option alias** | **Description**                                                 |
+| ------------------- | :--------------: | --------------------------------------------------------------- |
+| `--owners <list>`   |       `-o`       | comma-separated list of owners/orgs to filter remote results by |
+| `--skip-auto-owner` |                  | do not auto-extract owner from workspace defaultScope           |
+| `--remote-only`     |       `-r`       | only search remote bit cloud, skip local workspace              |
+| `--local-only`      |       `-l`       | only search the local workspace, skip remote bit cloud          |
+| `--json`            |       `-j`       | show the output in JSON format                                  |
 
 ---
 
@@ -2494,6 +2569,7 @@ includes hot module reloading for development.
 | `--skip-compilation`    |                  | skip the auto-compilation before starting the web-server                                                                                                                   |
 | `--ui-root-name [type]` |       `-u`       | name of the ui root to use, e.g. "teambit.scope/scope" or "teambit.workspace/workspace"                                                                                    |
 | `--use-root-modules`    |                  | EXPERIMENTAL. resolve component previews from root node_modules instead of .bit_roots. mainly for internal usage, use with caution only if you understand the implications |
+| `--use-source`          |                  | EXPERIMENTAL. resolve local workspace component previews from source files instead of .bit_roots or package artifacts. intended for debugging and HMR investigations       |
 
 ---
 
@@ -2668,18 +2744,20 @@ supports watch mode, coverage reporting, and debug mode for development workflow
 | ------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-pattern` | component name, component id, component pattern, or relative directory path. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
-| **Option**             | **Option alias** | **Description**                                                                         |
-| ---------------------- | :--------------: | --------------------------------------------------------------------------------------- |
-| `--watch`              |       `-w`       | start the tester in watch mode.                                                         |
-| `--debug`              |       `-d`       | start the tester in debug mode.                                                         |
-| `--all`                |       `-a`       | DEPRECATED. (use --unmodified)                                                          |
-| `--unmodified`         |       `-u`       | test all components, not only new and modified                                          |
-| `--junit <filepath>`   |                  | write tests results as JUnit XML format into the specified file path                    |
-| `--coverage`           |                  | show code coverage data                                                                 |
-| `--env <id>`           |       `-e`       | test only components assigned the given env                                             |
-| `--update-snapshot`    |                  | if supported by the tester, re-record every snapshot that fails during the test run     |
-| `--scope <scope-name>` |       `-s`       | DEPRECATED. (use the pattern instead, e.g. "scopeName/\*\*"). name of the scope to test |
-| `--json`               |       `-j`       | return the results in json format                                                       |
+| **Option**             | **Option alias** | **Description**                                                                                 |
+| ---------------------- | :--------------: | ----------------------------------------------------------------------------------------------- |
+| `--watch`              |       `-w`       | start the tester in watch mode.                                                                 |
+| `--debug`              |       `-d`       | start the tester in debug mode.                                                                 |
+| `--all`                |       `-a`       | DEPRECATED. (use --unmodified)                                                                  |
+| `--unmodified`         |       `-u`       | test all components, not only new and modified                                                  |
+| `--junit <filepath>`   |                  | write tests results as JUnit XML format into the specified file path                            |
+| `--coverage`           |                  | show code coverage data                                                                         |
+| `--env <id>`           |       `-e`       | test only components assigned the given env                                                     |
+| `--update-snapshot`    |                  | if supported by the tester, re-record every snapshot that fails during the test run             |
+| `--scope <scope-name>` |       `-s`       | DEPRECATED. (use the pattern instead, e.g. "scopeName/\*\*"). name of the scope to test         |
+| `--json`               |       `-j`       | return the results in json format                                                               |
+| `--verbose`            |                  | list the component ids that have no tests (default collapses them into a count)                 |
+| `--summary`            |                  | suppress tester output, print only the final pass/fail headline (or summary object with --json) |
 
 ---
 

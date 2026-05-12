@@ -1,11 +1,12 @@
 import chalk from 'chalk';
-import type { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions, Report } from '@teambit/cli';
 import {
   formatTitle,
   formatSection,
   formatItem,
   formatSuccessSummary,
   formatHint,
+  formatDetailsHint,
   warnSymbol,
   joinSections,
 } from '@teambit/cli';
@@ -168,7 +169,7 @@ export function checkoutOutput(
   checkoutResults: ApplyVersionResults,
   checkoutProps: CheckoutProps,
   alternativeTitle?: string
-) {
+): string | Report {
   const {
     components,
     version,
@@ -194,13 +195,21 @@ export function checkoutOutput(
   // components that weren't checked out for legitimate reasons, e.g. up-to-date.
   const notCheckedOutComponents = failedComponents || [];
 
-  const getNotCheckedOutOutput = () => {
+  const hasSkippedComponents = notCheckedOutComponents.length > 0 && all && !verbose;
+
+  const getNotCheckedOutOutputMinimal = () => {
     if (!notCheckedOutComponents.length) return '';
-    if (!verbose && all) {
-      return formatHint(
-        `checkout was not needed for ${notCheckedOutComponents.length} components (use --verbose to get more details)`
-      );
+    if (all && !verbose) {
+      return formatDetailsHint(`full list of ${notCheckedOutComponents.length} skipped component(s)`);
     }
+    const items = notCheckedOutComponents.map((failedComponent) =>
+      formatItem(`${failedComponent.id.toString()} - ${failedComponent.unchangedMessage}`)
+    );
+    return formatSection('checkout skipped', '', items);
+  };
+
+  const getNotCheckedOutOutputDetailed = () => {
+    if (!notCheckedOutComponents.length) return '';
     const items = notCheckedOutComponents.map((failedComponent) =>
       formatItem(`${failedComponent.id.toString()} - ${failedComponent.unchangedMessage}`)
     );
@@ -282,18 +291,27 @@ export function checkoutOutput(
     return title + checkedOutStr + unchangedLegitimatelyStr + newOnLaneStr + newFromScopeStr;
   };
 
-  return joinSections([
-    getWsConfigUpdateLogs(),
-    getNotCheckedOutOutput(),
-    getSuccessfulOutput(),
-    getRemovedOutput(removedComponents),
-    getAddedOutput(addedComponents),
-    getNewOnLaneOutput(),
-    getNewFromScopeOutput(),
-    getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult),
-    getConflictSummary(),
-    getSummary(),
-    installationErrorOutput(installationError),
-    compilationErrorOutput(compilationError),
-  ]);
+  const buildOutput = (notCheckedOutSection: string) =>
+    joinSections([
+      getWsConfigUpdateLogs(),
+      notCheckedOutSection,
+      getSuccessfulOutput(),
+      getRemovedOutput(removedComponents),
+      getAddedOutput(addedComponents),
+      getNewOnLaneOutput(),
+      getNewFromScopeOutput(),
+      getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult),
+      getConflictSummary(),
+      getSummary(),
+      installationErrorOutput(installationError),
+      compilationErrorOutput(compilationError),
+    ]);
+
+  if (!hasSkippedComponents) {
+    return buildOutput(getNotCheckedOutOutputMinimal());
+  }
+
+  const data = buildOutput(getNotCheckedOutOutputMinimal());
+  const details = buildOutput(getNotCheckedOutOutputDetailed());
+  return { data, code: 0, details };
 }

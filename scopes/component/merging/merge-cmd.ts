@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import type { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions, Report } from '@teambit/cli';
 import {
   warnSymbol,
   errorSymbol,
@@ -7,6 +7,7 @@ import {
   formatSection,
   formatItem,
   formatHint,
+  formatDetailsHint,
   joinSections,
 } from '@teambit/cli';
 import {
@@ -165,7 +166,7 @@ export function mergeReport({
   verbose,
   configMergeResults,
   workspaceConfigUpdateResult,
-}: ApplyVersionResults & { configMergeResults?: ConfigMergeResult[] }): string {
+}: ApplyVersionResults & { configMergeResults?: ConfigMergeResult[] }): string | Report {
   const getSuccessOutput = () => {
     if (!components || !components.length) return '';
     const title = formatTitle(
@@ -219,33 +220,30 @@ export function mergeReport({
     return formatSection('merge-snapped components', 'components snapped as a result of the merge', items);
   };
 
-  const getFailureOutput = () => {
+  const getSkippedRemovedOutput = () => {
     if (!failedComponents || !failedComponents.length) return '';
-    // always show removed components - the user needs to know about these
     const skippedRemoved = failedComponents.filter((fc) => fc.unchangedMessage === compHasBeenRemovedMsg);
-    const otherComponents = failedComponents.filter((fc) => fc.unchangedMessage !== compHasBeenRemovedMsg);
+    if (!skippedRemoved.length) return '';
+    const items = skippedRemoved.map((fc) => formatItem(chalk.bold(fc.id.toString()), warnSymbol));
+    const section = formatSection('merge skipped - soft-removed', '', items);
+    const hint = formatHint('use "bit recover <component-id>" to restore, then re-run the merge');
+    return `${section}\n${hint}`;
+  };
 
-    const parts: string[] = [];
+  const otherSkippedComponents = (failedComponents || []).filter((fc) => fc.unchangedMessage !== compHasBeenRemovedMsg);
+  const hasSkippedComponents = otherSkippedComponents.length > 0 && !verbose;
 
-    if (skippedRemoved.length) {
-      const items = skippedRemoved.map((fc) => formatItem(chalk.bold(fc.id.toString()), warnSymbol));
-      const section = formatSection('merge skipped - soft-removed', '', items);
-      const hint = formatHint('use "bit recover <component-id>" to restore, then re-run the merge');
-      parts.push(`${section}\n${hint}`);
-    }
+  const getFailureOutputMinimal = () => {
+    if (!hasSkippedComponents) return '';
+    return formatDetailsHint(`full list of ${otherSkippedComponents.length} skipped component(s)`);
+  };
 
-    if (otherComponents.length) {
-      if (!verbose) {
-        parts.push(formatHint(`merge skipped for ${otherComponents.length} component(s) (use --verbose to list them)`));
-      } else {
-        const items = otherComponents.map((failedComponent) =>
-          formatItem(`${chalk.bold(failedComponent.id.toString())} - ${failedComponent.unchangedMessage}`)
-        );
-        parts.push(formatSection('merge skipped', '', items));
-      }
-    }
-
-    return parts.join('\n\n');
+  const getFailureOutputDetailed = () => {
+    if (!otherSkippedComponents.length) return '';
+    const items = otherSkippedComponents.map((failedComponent) =>
+      formatItem(`${chalk.bold(failedComponent.id.toString())} - ${failedComponent.unchangedMessage}`)
+    );
+    return formatSection('merge skipped', '', items);
   };
 
   const getSummary = () => {
@@ -270,14 +268,22 @@ export function mergeReport({
     return title + mergedStr + unchangedLegitimatelyStr + autoSnappedStr + removedStr + conflictStr;
   };
 
-  return joinSections([
-    getSuccessOutput(),
-    getFailureOutput(),
+  const commonSections = () => [getSuccessOutput(), getSkippedRemovedOutput()];
+  const tailSections = () => [
     getRemovedOutput(removedComponents),
     getSnapsOutput(),
     getConfigMergeConflictSummary(),
     getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult),
     getConflictSummary(),
     getSummary(),
-  ]);
+  ];
+
+  // when --verbose is passed or no skipped components, show detailed output inline
+  if (!hasSkippedComponents) {
+    return joinSections([...commonSections(), getFailureOutputDetailed(), ...tailSections()]);
+  }
+
+  const data = joinSections([...commonSections(), getFailureOutputMinimal(), ...tailSections()]);
+  const details = joinSections([...commonSections(), getFailureOutputDetailed(), ...tailSections()]);
+  return { data, code: 0, details };
 }

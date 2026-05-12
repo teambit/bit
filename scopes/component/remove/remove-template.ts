@@ -20,10 +20,12 @@ export function removeTemplate(
     const compToItems = (comps: ComponentIdList) =>
       comps.map((id) => formatItem(id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()));
     const getMsg = (isLane = false) => {
-      const removedFrom = isLane ? 'lane' : 'scope';
-      return isRemote
-        ? `successfully removed components from the remote ${removedFrom}`
-        : `successfully removed components from the local ${removedFrom}`;
+      if (isRemote) {
+        const removedFrom = isLane ? 'lane' : 'scope';
+        return `successfully removed components from the remote ${removedFrom}`;
+      }
+      const removedFrom = isLane ? 'lane' : 'workspace';
+      return `successfully removed components from the local ${removedFrom}`;
     };
     const compOutput = isEmpty(removedComponentIds)
       ? ''

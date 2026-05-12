@@ -27,6 +27,14 @@ import type { Version, LaneComponent } from '@teambit/objects';
 import { SourceBranchDetector } from './source-branch-detector';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 
+/**
+ * Sentinel substring emitted by the hub when a lane push is rejected because a lane with the same
+ * id already exists with a different hash. Thrown as `BitError` from
+ * `components/legacy/scope/repositories/sources.ts` and wrapped in `UnexpectedNetworkError` across
+ * the wire, so we match on the message text rather than an error class.
+ */
+const LANE_HASH_MISMATCH_MARKER = 'a lane with the same id already exists with a different hash';
+
 export interface CiWorkspaceConfig {
   /**
    * Path to a custom script that generates commit messages for `bit ci merge` operations.
@@ -382,14 +390,17 @@ export class CiMain {
 
     // Use unique temp lane name to avoid race conditions when multiple CI jobs run concurrently
     const tempLaneName = `${laneId.name}-${generateRandomStr(5)}`;
-    this.logger.console(chalk.blue(`Creating temporary lane ${laneId.scope}/${tempLaneName}`));
 
     let foundErr: Error | undefined;
+    let renamedToFinalName = false;
     try {
-      await this.lanes.createLane(tempLaneName, {
+      const createLaneResult = await this.lanes.createLane(tempLaneName, {
         scope: laneId.scope,
         forkLaneNewScope: true,
       });
+      this.logger.console(
+        chalk.blue(`Created temporary lane ${laneId.scope}/${tempLaneName} (hash: ${createLaneResult.hash})`)
+      );
 
       const currentLane = await this.lanes.getCurrentLane();
 
@@ -446,16 +457,38 @@ export class CiMain {
 
       if (existingLanes.length) {
         this.logger.console(chalk.blue(`Deleting existing remote lane ${laneId.toString()}`));
-        await this.archiveLane(laneId.toString(), true); // throwOnError: delete must succeed before export
+        const archiveResult = await this.archiveLane(laneId.toString(), true); // throwOnError: delete must succeed before export
+        if (archiveResult === 'not-found') {
+          // `getLanes` just reported the lane exists, but the delete API says "not found". Re-query
+          // to confirm. If the lane still shows up, something is off on the remote (delete can't
+          // see what list/export can), and retrying will never converge.
+          let stillExists;
+          try {
+            stillExists = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name });
+          } catch (verifyErr: any) {
+            throw new Error(
+              `failed to verify whether remote lane ${laneId.toString()} still exists after delete returned "not found": ${verifyErr?.message || verifyErr}`
+            );
+          }
+          if (stillExists.length) {
+            throw new Error(
+              `unable to delete remote lane ${laneId.toString()}: the remote reports the lane as "not found" from ` +
+                `the delete API but still lists it from the query API. maybe this is a remote issue on bit.cloud. ` +
+                `please contact support or manually delete the lane on bit.cloud before re-running CI.`
+            );
+          }
+        }
       }
 
       // Rename temp lane to original name
       this.logger.console(chalk.blue(`Renaming lane from ${tempLaneName} to ${laneId.name}`));
       await this.lanes.rename(laneId.name, tempLaneName);
+      renamedToFinalName = true;
 
-      // Export with the correct name
+      // Export with the correct name. Retry on hash-mismatch, which indicates a concurrent CI job
+      // pushed the same lane id between our pre-export delete and our merge on the hub.
       this.logger.console(chalk.blue(`Exporting ${snappedComponents.length} components`));
-      const exportResults = await this.exporter.export();
+      const exportResults = await this.exportWithRetryOnLaneHashMismatch(laneId.toString());
       this.logger.console(chalk.green(`Exported ${exportResults.componentsIds.length} components`));
     } catch (e: any) {
       foundErr = e;
@@ -477,8 +510,10 @@ export class CiMain {
         await this.lanes.checkout.checkout({ head: true, skipNpmInstall: true });
       }
 
-      // Clean up orphaned temporary lane on error
-      if (foundErr) {
+      // Clean up orphaned temporary lane on error. Skip if the rename to the final name already
+      // happened - in that case the temp name no longer exists locally, and the lane under the
+      // final name may have been partially exported; leave it alone rather than wipe evidence.
+      if (foundErr && !renamedToFinalName) {
         const tempLaneFullName = `${laneId.scope}/${tempLaneName}`;
         this.logger.console(chalk.blue(`Cleaning up temporary lane ${tempLaneFullName}`));
         try {
@@ -506,6 +541,7 @@ export class CiMain {
     forceTheirs,
     laneName,
     skipPush,
+    noBitmapCommit,
   }: {
     message?: string;
     build?: boolean;
@@ -520,6 +556,7 @@ export class CiMain {
     forceTheirs?: boolean;
     laneName?: string;
     skipPush?: boolean;
+    noBitmapCommit?: boolean;
   }) {
     // Capture the initial commit SHA before any operations modify the repository
     const initialCommitSha = await git.revparse(['HEAD']);
@@ -587,7 +624,7 @@ export class CiMain {
     const checkoutResults = await this.checkout.checkout(checkoutProps);
 
     await this.workspace.bitMap.write('checkout head');
-    this.logger.console(checkoutOutput(checkoutResults, checkoutProps));
+    this.logger.console(reportToString(checkoutOutput(checkoutResults, checkoutProps)));
 
     if (laneComponents?.length) {
       await this.restoreLaneConfigChanges(laneComponents);
@@ -669,51 +706,19 @@ export class CiMain {
         this.logger.console(chalk.yellow('Nothing to export'));
       }
 
-      this.logger.console('🔄 Git Operations');
-      // Set user.email and user.name
-      await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
-      await git.addConfig('user.name', 'Bit CI');
-
-      // Check git status before commit
-      const statusBeforeCommit = await git.status();
-      this.logger.console(chalk.blue(`Git status before commit: ${statusBeforeCommit.files.length} files`));
-      statusBeforeCommit.files.forEach((file) => {
-        this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
-      });
-
-      // Show git diff if there are uncommitted changes
-      if (verbose && statusBeforeCommit.files.length > 0) {
-        try {
-          const diff = await git.diff();
-          if (diff) {
-            this.logger.console(chalk.blue('Git diff before commit:'));
-            this.logger.console(diff);
-          }
-        } catch (error) {
-          this.logger.console(chalk.yellow(`Failed to show git diff: ${error}`));
-        }
-      }
-
-      // Previously we committed only .bitmap and pnpm-lock.yaml files.
-      // However, it's possible that "bit checkout head" we did above, modified other files as well.
-      // So now we commit all files that were changed.
-      await git.add(['.']);
-
-      const commitMessage = await this.getCustomCommitMessage();
-      await git.commit(commitMessage);
-
-      // Check git status after commit
-      const statusAfterCommit = await git.status();
-      this.logger.console(chalk.blue(`Git status after commit: ${statusAfterCommit.files.length} files`));
-      statusAfterCommit.files.forEach((file) => {
-        this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
-      });
-
-      await git.pull('origin', defaultBranch, { '--rebase': 'true' });
-      if (skipPush) {
-        this.logger.console(chalk.yellow('Skipping git push (--skip-push flag)'));
+      if (noBitmapCommit) {
+        this.logger.console(
+          chalk.yellow(
+            'Skipping bitmap commit (--no-bitmap-commit flag). The new versions are in scope; no git commit will be created on the default branch.'
+          )
+        );
+        this.logger.console(
+          chalk.gray(
+            'Developers auto-sync their local .bitmap on the next bit command after `git pull` when `bitmapAutoSync: true` is set in workspace.jsonc.'
+          )
+        );
       } else {
-        await git.push('origin', defaultBranch);
+        await this.commitAndPushBitmapChanges({ verbose, skipPush, defaultBranch });
       }
     } else {
       this.logger.console(chalk.yellow('No components were tagged, skipping export and git operations'));
@@ -725,6 +730,62 @@ export class CiMain {
     await this.performLaneCleanup(currentLane, laneName, initialCommitSha);
 
     return { code: 0, data: '' };
+  }
+
+  /**
+   * Stage every changed file (post-tag/export the bitmap, lockfiles, and any files
+   * touched by `bit checkout head` may differ), commit with the configured message,
+   * rebase against origin, and push — unless `skipPush` was passed.
+   */
+  private async commitAndPushBitmapChanges({
+    verbose,
+    skipPush,
+    defaultBranch,
+  }: {
+    verbose?: boolean;
+    skipPush?: boolean;
+    defaultBranch: string;
+  }) {
+    this.logger.console('🔄 Git Operations');
+    await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
+    await git.addConfig('user.name', 'Bit CI');
+
+    const statusBeforeCommit = await git.status();
+    this.logger.console(chalk.blue(`Git status before commit: ${statusBeforeCommit.files.length} files`));
+    statusBeforeCommit.files.forEach((file) => {
+      this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
+    });
+
+    if (verbose && statusBeforeCommit.files.length > 0) {
+      try {
+        const diff = await git.diff();
+        if (diff) {
+          this.logger.console(chalk.blue('Git diff before commit:'));
+          this.logger.console(diff);
+        }
+      } catch (error) {
+        this.logger.console(chalk.yellow(`Failed to show git diff: ${error}`));
+      }
+    }
+
+    // Stage everything: `bit checkout head` earlier in the flow may modify files
+    // beyond .bitmap and pnpm-lock.yaml, so a narrow `git add` would miss them.
+    await git.add(['.']);
+    const commitMessage = await this.getCustomCommitMessage();
+    await git.commit(commitMessage);
+
+    const statusAfterCommit = await git.status();
+    this.logger.console(chalk.blue(`Git status after commit: ${statusAfterCommit.files.length} files`));
+    statusAfterCommit.files.forEach((file) => {
+      this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
+    });
+
+    await git.pull('origin', defaultBranch, { '--rebase': 'true' });
+    if (skipPush) {
+      this.logger.console(chalk.yellow('Skipping git push (--skip-push flag)'));
+      return;
+    }
+    await git.push('origin', defaultBranch);
   }
 
   /**
@@ -829,29 +890,70 @@ export class CiMain {
   }
 
   /**
+   * Export with retry on lane hash-mismatch, caused by a concurrent `bit ci pr` run pushing the
+   * same lane id between our pre-export delete and the hub's merge (the export takes 1-2 minutes,
+   * plenty of time to race). Before each retry we skip if the PR branch has advanced past our
+   * commit - in that case a newer run will publish the correct lane, and retrying with our older
+   * snaps would regress the PR preview.
+   */
+  private async exportWithRetryOnLaneHashMismatch(laneIdStr: string, maxAttempts = 3) {
+    const isHashMismatchErr = (err: any) => (err?.message || err?.toString() || '').includes(LANE_HASH_MISMATCH_MARKER);
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        return await this.exporter.export();
+      } catch (e: any) {
+        if (!isHashMismatchErr(e) || attempt === maxAttempts) throw e;
+        this.logger.console(
+          chalk.yellow(
+            `Export attempt ${attempt}/${maxAttempts} failed with lane hash mismatch on "${laneIdStr}" (likely a concurrent CI push). Deleting remote lane and retrying.`
+          )
+        );
+        try {
+          await this.archiveLane(laneIdStr, true);
+        } catch (archiveErr: any) {
+          // Preserve the original export error - rethrowing the archive error would hide the real
+          // reason the push was rejected.
+          this.logger.console(
+            chalk.yellow(
+              `Failed to delete remote lane "${laneIdStr}" while recovering from hash mismatch: ${archiveErr?.message || archiveErr}. Rethrowing the original export error.`
+            )
+          );
+          if (e && typeof e === 'object' && (e as any).cause == null) {
+            (e as any).cause = archiveErr;
+          }
+          throw e;
+        }
+      }
+    }
+    throw new Error(`exportWithRetryOnLaneHashMismatch: exhausted ${maxAttempts} attempts for lane ${laneIdStr}`);
+  }
+
+  /**
    * Archives (deletes) a lane with proper error handling and logging.
    * @param throwOnError - if true, throws on failure (use for critical operations like pre-export cleanup)
    */
-  private async archiveLane(laneId: string, throwOnError = false) {
+  private async archiveLane(laneId: string, throwOnError = false): Promise<'deleted' | 'not-found' | 'error'> {
     try {
       this.logger.console(chalk.blue(`Archiving lane ${laneId}`));
       // force means to remove the lane even if it was not merged. in this case, we don't care much because main already has the changes.
       const archiveLane = await this.lanes.removeLanes([laneId], { remote: true, force: true });
       if (archiveLane.length) {
         this.logger.console(chalk.green(`Lane '${laneId}' archived successfully`));
-      } else {
-        this.logger.console(chalk.yellow(`Failed to archive lane '${laneId}' - no lanes were removed`));
+        return 'deleted';
       }
+      this.logger.console(chalk.yellow(`Failed to archive lane '${laneId}' - no lanes were removed`));
+      return 'not-found';
     } catch (e: any) {
-      // "not found" is success - another concurrent job may have deleted it
       if (e.message?.includes('was not found') || e.toString().includes('was not found')) {
-        this.logger.console(chalk.yellow(`Lane '${laneId}' was already deleted (likely by concurrent job)`));
-        return;
+        this.logger.console(chalk.yellow(`Lane '${laneId}' was not found on the remote`));
+        return 'not-found';
       }
       this.logger.console(chalk.red(`Error archiving lane '${laneId}': ${e.message}`));
       if (throwOnError) {
         throw new Error(`Failed to delete remote lane '${laneId}': ${e.message}`);
       }
+      return 'error';
       // Don't throw the error - lane cleanup is not critical to the merge process
     }
   }
@@ -878,6 +980,10 @@ export class CiMain {
     this.logger.console(chalk.blue('No specific version bump detected, using default patch'));
     return releaseType;
   }
+}
+
+function reportToString(result: string | { data: string }): string {
+  return typeof result === 'string' ? result : result.data;
 }
 
 CiAspect.addRuntime(CiMain);

@@ -1,5 +1,5 @@
 import type { Command, CommandOptions, GenericObject } from '@teambit/cli';
-import { formatHint, formatSuccessSummary } from '@teambit/cli';
+import { formatHint } from '@teambit/cli';
 import chalk from 'chalk';
 import type { Logger } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
@@ -7,6 +7,7 @@ import { OutsideWorkspaceError } from '@teambit/workspace';
 import { Timer } from '@teambit/toolbox.time.timer';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { TesterMain, TestResults } from './tester.main.runtime';
+import { aggregateTestResults, formatTestReport } from './test-output-formatter';
 
 type TestFlags = {
   watch: boolean;
@@ -18,6 +19,8 @@ type TestFlags = {
   junit?: string;
   coverage?: boolean;
   updateSnapshot: boolean;
+  verbose?: boolean;
+  summary?: boolean;
 };
 
 export class TestCmd implements Command {
@@ -50,6 +53,8 @@ supports watch mode, coverage reporting, and debug mode for development workflow
       'DEPRECATED. (use the pattern instead, e.g. "scopeName/**"). name of the scope to test',
     ],
     ['j', 'json', 'return the results in json format'],
+    ['', 'verbose', 'list the component ids that have no tests (default collapses them into a count)'],
+    ['', 'summary', 'suppress tester output, print only the final pass/fail headline (or summary object with --json)'],
     // TODO: we need to reduce this redundant casting every time.
   ] as CommandOptions;
 
@@ -71,6 +76,8 @@ supports watch mode, coverage reporting, and debug mode for development workflow
       coverage = false,
       unmodified = false,
       updateSnapshot = false,
+      verbose = false,
+      summary: summaryOnly = false,
     }: TestFlags
   ) {
     const timer = Timer.create();
@@ -109,11 +116,14 @@ supports watch mode, coverage reporting, and debug mode for development workflow
       };
     }
 
-    this.logger.console(
-      `testing total of ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`
-    );
+    if (!summaryOnly) {
+      this.logger.console(
+        `testing total of ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`
+      );
+    }
 
     let code = 0;
+    let tests: TestResults | undefined;
     if (watch && !debug) {
       // avoid turning off the logger for non-watch scenario. otherwise, when this aspect throws errors, they'll be
       // swallowed. (Jest errors are shown regardless via Jest, but if the tester is unable to run Jest in the first
@@ -127,14 +137,23 @@ supports watch mode, coverage reporting, and debug mode for development workflow
         updateSnapshot,
       });
     } else {
-      const tests = await this.tester.test(components, {
-        watch,
-        debug,
-        env,
-        junit,
-        coverage,
-        updateSnapshot,
-      });
+      // testers such as Jest reassign `console.warn` to forward into `this.logger.warn` inside their `test()`,
+      // bypassing our stdout/console monkey-patch. also turn the logger off so those re-routed calls don't surface.
+      if (summaryOnly) this.logger.off();
+      const restore = summaryOnly ? silenceConsoleAndStdout() : undefined;
+      try {
+        tests = await this.tester.test(components, {
+          watch,
+          debug,
+          env,
+          junit,
+          coverage,
+          updateSnapshot,
+        });
+      } finally {
+        restore?.();
+        if (summaryOnly) this.logger.on();
+      }
       if (tests.hasErrors()) code = 1;
       if (process.exitCode && process.exitCode !== 0 && typeof process.exitCode === 'number') {
         // this is needed for testers such as "vitest", where it sets the exitCode to non zero when the coverage is not met.
@@ -144,10 +163,11 @@ supports watch mode, coverage reporting, and debug mode for development workflow
     const { seconds } = timer.stop();
 
     if (watch) return '';
-    const data =
-      code === 0
-        ? formatSuccessSummary(`tests completed in ${seconds} seconds`)
-        : formatHint(`tests completed in ${seconds} seconds`);
+    const summary = tests ? aggregateTestResults(tests, components) : undefined;
+    const failedDueToExitCode = code !== 0 && !!tests && !tests.hasErrors();
+    const data = summary
+      ? `${summaryOnly ? '' : '\n'}${formatTestReport(summary, { verbose, duration: `${seconds}s`, summaryOnly, failedDueToExitCode })}`
+      : formatHint(`tests completed in ${seconds} seconds`);
     return {
       code,
       data,
@@ -164,6 +184,7 @@ supports watch mode, coverage reporting, and debug mode for development workflow
       coverage = false,
       unmodified = false,
       updateSnapshot = false,
+      summary: summaryOnly = false,
     }: TestFlags
   ): Promise<GenericObject> {
     const timer = Timer.create();
@@ -193,6 +214,9 @@ supports watch mode, coverage reporting, and debug mode for development workflow
     }
 
     let code = 0;
+    // also disable the logger: testers like Jest reassign `console.warn` to `this.logger.warn`,
+    // which bypasses the stdout/console silencer and can corrupt machine-readable JSON output.
+    this.logger.off();
     const restore = silenceConsoleAndStdout();
     let tests: TestResults;
     try {
@@ -204,15 +228,35 @@ supports watch mode, coverage reporting, and debug mode for development workflow
         coverage,
         updateSnapshot,
       });
-    } catch (err) {
+    } finally {
       restore();
-      throw err;
+      this.logger.on();
     }
-    restore();
     if (tests.hasErrors()) code = 1;
     if (process.exitCode && process.exitCode !== 0 && typeof process.exitCode === 'number') {
       // this is needed for testers such as "vitest", where it sets the exitCode to non zero when the coverage is not met.
       code = process.exitCode;
+    }
+
+    const aggregated = aggregateTestResults(tests, components);
+    const summary = {
+      totals: aggregated.totals,
+      componentsWithTests: aggregated.componentsWithTests.map((c) => ({
+        id: c.id.toString({ ignoreVersion: true }),
+        passed: c.passed,
+        failed: c.failed,
+        pending: c.pending,
+        hasError: c.hasError,
+      })),
+      componentsWithoutTests: aggregated.componentsWithoutTests.map((id) => id.toString({ ignoreVersion: true })),
+      componentsAffectedByEnvError: aggregated.componentsAffectedByEnvError.map((id) =>
+        id.toString({ ignoreVersion: true })
+      ),
+      envErrors: aggregated.envErrors.map((e) => ({ envId: e.envId, message: e.error.message })),
+    };
+
+    if (summaryOnly) {
+      return { code, data: summary };
     }
 
     const data = tests.results.map((r) => ({
@@ -239,25 +283,31 @@ supports watch mode, coverage reporting, and debug mode for development workflow
  * restores everything back to normal.
  */
 function silenceConsoleAndStdout(): () => void {
-  // Keep copies of the original methods so we can restore them later
-  const originalConsole = { ...console };
-  const originalStdoutWrite = process.stdout.write;
-  const originalStderrWrite = process.stderr.write;
+  const CONSOLE_METHODS = ['log', 'warn', 'error', 'info', 'debug'] as const;
+  const originalConsole = Object.fromEntries(
+    // eslint-disable-next-line no-console
+    CONSOLE_METHODS.map((m) => [m, console[m]])
+  ) as Record<(typeof CONSOLE_METHODS)[number], (...args: any[]) => void>;
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStderrWrite = process.stderr.write.bind(process.stderr);
 
-  // No-op implementations for console.* methods
-  for (const method of ['log', 'warn', 'error', 'info', 'debug'] as const) {
+  for (const method of CONSOLE_METHODS) {
     // eslint-disable-next-line no-console
     console[method] = () => {};
   }
 
-  // Replace process.stdout.write and process.stderr.write with no-ops
-  process.stdout.write = (() => true) as any;
-  process.stderr.write = (() => true) as any;
+  // process.stdout.write(chunk, encoding?, callback?) — callers may rely on the optional
+  // callback firing. Invoke it so we don't leave writers hanging.
+  const stubWrite = (...args: any[]): boolean => {
+    const cb = args.find((a) => typeof a === 'function') as ((err?: Error | null) => void) | undefined;
+    if (cb) cb();
+    return true;
+  };
+  process.stdout.write = stubWrite as typeof process.stdout.write;
+  process.stderr.write = stubWrite as typeof process.stderr.write;
 
-  // Return a function to restore original behavior
   return () => {
-    for (const method of Object.keys(originalConsole) as (keyof Console)[]) {
-      // @ts-ignore
+    for (const method of CONSOLE_METHODS) {
       // eslint-disable-next-line no-console
       console[method] = originalConsole[method];
     }

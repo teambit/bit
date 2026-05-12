@@ -112,6 +112,9 @@ import { CompFiles } from './workspace-component/comp-files';
 import { Filter } from './filter';
 import type { ComponentStatusLegacy, ComponentStatusResult } from './workspace-component/component-status-loader';
 import { ComponentStatusLoader } from './workspace-component/component-status-loader';
+import execa from 'execa';
+import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
+import { VERSION_ZERO } from '@teambit/objects';
 import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
 import type { ConfigStoreMain, Store } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
@@ -1345,6 +1348,174 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
     await scopeComponentsImporter.importMany({ ids, lane, reason: 'for making sure the current lane has all ' });
     return lane;
+  }
+
+  /**
+   * When `bitmapAutoSync` is enabled in workspace.jsonc, reconcile `.bitmap` with the
+   * latest scope HEAD versions on the first Bit command after `git pull`. The sentinel
+   * file at `.bit/last-pull-sync` makes subsequent commands at the same git HEAD a no-op.
+   *
+   * On a failed remote-scope fetch the sentinel is NOT advanced, so the next command
+   * retries.
+   */
+  async reconcileBitmapWithScopeIfNeeded(): Promise<void> {
+    if (!this.config.bitmapAutoSync) return;
+    if (!this.consumer.isOnMain()) return;
+    if (!(await fs.pathExists(path.join(this.path, '.git')))) return;
+
+    // Read the sentinel before resolving git HEAD — most invocations are cached and
+    // exit cheaply here without forking a git subprocess. ENOENT (no sentinel yet) is
+    // the normal first-run path; any other read error (EACCES, EIO, etc.) indicates
+    // a genuine problem and should surface rather than be silently swallowed — masking
+    // it would put every subsequent command on the slow full-fetch path with no signal.
+    const sentinelPath = path.join(this.path, '.bit', 'last-pull-sync');
+    let sentinelHead: string | undefined;
+    try {
+      sentinelHead = (await fs.readFile(sentinelPath, 'utf-8')).trim();
+    } catch (err: any) {
+      if (err?.code !== 'ENOENT') throw err;
+    }
+
+    const currentGitHead = await this.readCurrentGitHead();
+    if (!currentGitHead) return;
+    if (sentinelHead === currentGitHead) return;
+
+    this.logger.debug(`bitmapAutoSync: git HEAD changed since last sync, reconciling .bitmap with scope`);
+
+    // Resolve every bitmap entry to a "lookup id" that has scope filled in. New
+    // components (added via `bit add` on a feature branch but tagged only by CI) have
+    // an empty `scope` in the bitmap — only `defaultScope` is set. We must resolve
+    // those before the import, because the scope import filters out IDs without scope
+    // and the model lookup below needs scope to find the component.
+    //
+    // Related: `ComponentLoader._handleOutOfSyncScenarios` in
+    // components/legacy/consumer-component/component-loader.ts uses the same primitives
+    // (`getModelComponentIfExist`, `bitMap.updateComponentId`) to fix per-component
+    // out-of-sync states during component loading. It does NOT handle:
+    //   - scope HEAD has advanced past bitmap's version when that version still exists
+    //     in scope (the main case `bitmapAutoSync` is built for),
+    //   - bitmap entries with empty `scope` field (it doesn't fall back to defaultScope),
+    //   - triggering the import itself with `includeUnexported: true` for components
+    //     not yet in local scope.
+    // This reconcile fills those gaps; afterwards `_handleOutOfSyncScenarios` is a
+    // no-op for the same components (bitmap is already aligned with scope).
+    const lookupIds: ComponentID[] = [];
+    for (const bitmapId of this.consumer.bitMap.getAllIdsAvailableOnLane()) {
+      if (bitmapId.hasScope()) {
+        lookupIds.push(bitmapId);
+        continue;
+      }
+      const componentMap = this.consumer.bitMap.getComponentIfExist(bitmapId);
+      const defaultScope = componentMap?.defaultScope;
+      if (!defaultScope) continue;
+      lookupIds.push(bitmapId.changeScope(defaultScope));
+    }
+
+    // Fetch the latest scope HEADs from remote for all of these. Use the lower-level
+    // scope importer with `includeUnexported: true` — `importCurrentObjects` filters
+    // out IDs that aren't already in the local scope, which would skip brand-new
+    // components introduced by another teammate's PR (they exist on remote but the
+    // current workspace's local scope has never seen them).
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
+    const idList = ComponentIdList.fromArray(lookupIds);
+    try {
+      await scopeComponentsImporter.importWithoutDeps(idList.toVersionLatest(), {
+        cache: false,
+        includeVersionHistory: true,
+        fetchHeadIfLocalIsBehind: true,
+        ignoreMissingHead: true,
+        includeUnexported: true,
+        reason: 'bitmapAutoSync: latest scope HEAD',
+      });
+      await scopeComponentsImporter.importMany({
+        ids: idList,
+        ignoreMissingHead: true,
+        preferDependencyGraph: true,
+        reFetchUnBuiltVersion: true,
+        throwForSeederNotFound: false,
+        includeUnexported: true,
+        reason: 'bitmapAutoSync: dependencies for sync',
+      });
+    } catch (err: any) {
+      this.logger.warn(
+        `bitmapAutoSync: failed to fetch latest scope objects: ${err?.message ?? err}. ` +
+          `Continuing with the cached state. The next bit command will re-attempt the sync.`
+      );
+      // Sentinel stays at the previous HEAD so the next command retries the fetch.
+      return;
+    }
+
+    const updatedIds = compact(
+      await pMap(
+        lookupIds,
+        async (lookupId) => {
+          const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(
+            lookupId.changeVersion(undefined)
+          );
+          if (!modelComponent) return undefined;
+          let scopeHead: string;
+          try {
+            scopeHead = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
+          } catch {
+            return undefined;
+          }
+          if (!scopeHead || scopeHead === VERSION_ZERO) return undefined;
+          if (lookupId.version === scopeHead) return undefined;
+          const newId = lookupId.changeVersion(scopeHead);
+          this.consumer.bitMap.updateComponentId(newId);
+          return newId;
+        },
+        { concurrency: 30 }
+      )
+    );
+
+    if (updatedIds.length > 0) {
+      await this.bitMap.write('bitmapAutoSync: reconciled with scope HEAD');
+      this.logger.console(`bitmapAutoSync: synced ${updatedIds.length} component(s) to scope HEAD`);
+    }
+
+    // Let a sentinel write failure throw — `.bit/` was already written above (bitmap
+    // and scope objects), so a permission failure here means something is genuinely
+    // broken. Catching would silently leave the sentinel stale and force every later
+    // command into the slow full-fetch path with no signal to the user.
+    await fs.outputFile(sentinelPath, currentGitHead);
+  }
+
+  /**
+   * Resolve the current git HEAD. Tries a direct read of `.git/HEAD` (+ the loose ref
+   * file it points at) for the common case to avoid forking a process. Falls back to
+   * `git rev-parse HEAD` for packed-refs, git worktrees / submodules (where `.git` is
+   * a file pointing at the real gitdir, not a directory), and any other layout. Returns
+   * null when HEAD can't be resolved at all — the caller treats that as "skip auto-sync."
+   */
+  private async readCurrentGitHead(): Promise<string | null> {
+    const gitPath = path.join(this.path, '.git');
+    let gitIsDir = false;
+    try {
+      gitIsDir = (await fs.stat(gitPath)).isDirectory();
+    } catch {
+      return null;
+    }
+
+    if (gitIsDir) {
+      try {
+        const headContent = (await fs.readFile(path.join(gitPath, 'HEAD'), 'utf-8')).trim();
+        if (!headContent.startsWith('ref: ')) return headContent; // detached HEAD
+        const refName = headContent.slice('ref: '.length);
+        return (await fs.readFile(path.join(gitPath, refName), 'utf-8')).trim();
+      } catch {
+        // Loose ref missing (likely packed) or some other unusual state. Fall through.
+      }
+    }
+
+    // Fallback: invoke git itself. Handles worktrees (where `.git` is a file with
+    // `gitdir:` indirection), packed-refs, submodules, and any other layout.
+    try {
+      const result = await execa(getGitExecutablePath(), ['rev-parse', 'HEAD'], { cwd: this.path });
+      return result.stdout.trim();
+    } catch {
+      return null;
+    }
   }
 
   async use(aspectIdStr: string): Promise<string> {

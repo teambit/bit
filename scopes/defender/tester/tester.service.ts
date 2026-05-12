@@ -109,18 +109,16 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       return new Tests([]);
     }
     const tester: Tester = context.env.getTester();
-    const specFiles = ComponentMap.as(context.components, (component) => {
+    const allSpecFiles = ComponentMap.as(context.components, (component) => {
       return detectTestFiles(component, this.devFiles);
     });
-    const testCount = specFiles.toArray().reduce((acc, [, specs]) => acc + specs.length, 0);
+    // drop components with zero spec files before handing them to the tester — otherwise testers
+    // like Mocha invoke their reporter once per component and print "0 passing (0ms)" noise.
+    const specFiles = allSpecFiles.filter((files) => files.length > 0);
+    const componentWithTests = specFiles.toArray().length;
 
-    const componentWithTests = specFiles.toArray().reduce((acc: number, [, specs]) => {
-      if (specs.length > 0) acc += 1;
-      return acc;
-    }, 0);
-
-    if (testCount === 0 && !options.ui) {
-      this.logger.consoleWarning(`no tests found for components using environment ${chalk.cyan(context.id)}\n`);
+    if (componentWithTests === 0 && !options.ui) {
+      // silent: the final summary in `bit test` collapses no-test components into a single line.
       return new Tests([]);
     }
 

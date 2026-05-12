@@ -91,24 +91,34 @@ otherwise, only new and modified components will be checked`);
     unmodified: boolean
   ): Promise<{ tsserver: ReturnType<TypescriptMain['getTsserverClient']>; componentsCount: number }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
-    // If pattern is provided, don't pass the unmodified flag - the pattern should take precedence
-    const components = await this.workspace.getComponentsByUserInput(pattern ? false : unmodified, pattern);
-    if (!components.length) {
-      return { tsserver: undefined, componentsCount: 0 };
+    try {
+      this.logger.setStatusLine('check-types: loading components...');
+      // If pattern is provided, don't pass the unmodified flag - the pattern should take precedence
+      const components = await this.workspace.getComponentsByUserInput(pattern ? false : unmodified, pattern);
+      if (!components.length) {
+        return { tsserver: undefined, componentsCount: 0 };
+      }
+      const files = this.typescript.getSupportedFilesForTsserver(components);
+      this.logger.setStatusLine(
+        `check-types: starting tsserver for ${components.length} component(s), ${files.length} file(s)...`
+      );
+      await this.typescript.initTsserverClientFromWorkspace(
+        {
+          aggregateDiagnosticData: isJson,
+          printTypeErrors: !isJson,
+          // skip pre-opening so getDiagnostic can open/close per batch — keeps tsserver memory bounded
+          // by one batch's worth of files instead of the whole workspace.
+          openFilesOnInit: false,
+        },
+        files
+      );
+      const tsserver = this.typescript.getTsserverClient();
+      if (!tsserver) throw new Error(`unable to start tsserver`);
+      const BATCH_SIZE = 50;
+      await tsserver.getDiagnostic(files, files.length > BATCH_SIZE ? BATCH_SIZE : undefined);
+      return { tsserver, componentsCount: components.length };
+    } finally {
+      this.logger.clearStatusLine();
     }
-    const files = this.typescript.getSupportedFilesForTsserver(components);
-    await this.typescript.initTsserverClientFromWorkspace(
-      {
-        aggregateDiagnosticData: isJson,
-        printTypeErrors: !isJson,
-      },
-      files
-    );
-    const tsserver = this.typescript.getTsserverClient();
-    if (!tsserver) throw new Error(`unable to start tsserver`);
-    // Use batching for large file sets to avoid overwhelming tsserver
-    const BATCH_SIZE = 50;
-    await tsserver.getDiagnostic(files, files.length > BATCH_SIZE ? BATCH_SIZE : undefined);
-    return { tsserver, componentsCount: components.length };
   }
 }

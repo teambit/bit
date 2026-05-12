@@ -5,6 +5,7 @@ import { CloudAspect, type CloudMain } from '@teambit/cloud';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { getCloudDomain } from '@teambit/legacy.constants';
+import { readLastExport, type LastExportData } from '@teambit/export';
 import { stripComponentVersion } from './ripple-utils';
 import stripAnsi from 'strip-ansi';
 import { RippleAspect } from './ripple.aspect';
@@ -18,12 +19,16 @@ export type JobStatus = {
 
 export type RippleJob = {
   id: string;
+  /** url-safe identifier used by the cloud UI; the bit.cloud /ripple-ci/job/ page resolves by slug, not id */
+  slug?: string;
   name?: string;
   laneId?: string;
   simulation?: boolean;
   user?: { username?: string; displayName?: string };
   status?: JobStatus;
 };
+
+export type RippleJobFull = RippleJob & { hash?: string; ciGraph?: string; ciComponentGraph?: string };
 
 export type BuildTaskStatus = {
   status?: string;
@@ -76,6 +81,24 @@ export class RippleMain {
     query getJob($jobId: ID!) {
       getJob(jobId: $jobId) {
         id
+        slug
+        name
+        laneId
+        hash
+        simulation
+        user { username displayName }
+        status { startedAt finishedAt phase }
+        ciGraph
+        ciComponentGraph
+      }
+    }
+  `;
+
+  private static GET_JOB_BY_SLUG = `
+    query getJobBySlug($slug: ID!) {
+      getJob(slug: $slug) {
+        id
+        slug
         name
         laneId
         hash
@@ -107,6 +130,7 @@ export class RippleMain {
     mutation retryJob($jobId: ID!) {
       retryJob(jobId: $jobId) {
         id
+        slug
         name
         laneId
         status { startedAt finishedAt phase }
@@ -118,6 +142,7 @@ export class RippleMain {
     mutation stopJob($jobId: ID!) {
       stopJob(jobId: $jobId) {
         id
+        slug
         name
         laneId
         status { startedAt finishedAt phase }
@@ -165,11 +190,9 @@ export class RippleMain {
     return data?.listJobs ?? [];
   }
 
-  async getJob(
-    jobId: string
-  ): Promise<(RippleJob & { hash?: string; ciGraph?: string; ciComponentGraph?: string }) | null> {
+  async getJob(jobId: string): Promise<RippleJobFull | null> {
     const data = await this.fetchRippleGQL<{
-      getJob: RippleJob & { hash?: string; ciGraph?: string; ciComponentGraph?: string };
+      getJob: RippleJobFull;
     }>(RippleMain.GET_JOB, { jobId });
     return data?.getJob ?? null;
   }
@@ -326,6 +349,26 @@ export class RippleMain {
   }
 
   /**
+   * read the last-export.json written by ExportMain after a successful export.
+   * used to auto-resolve the ripple job when the user is on main (no current lane).
+   */
+  async getLastExport(): Promise<LastExportData | null> {
+    if (!this.workspace) return null;
+    return readLastExport(this.workspace.scope.path);
+  }
+
+  /**
+   * the central-hub returns url slugs in `metadata.jobs`, not the GraphQL job ids accepted by getJob(jobId).
+   * the schema also supports getJob(slug: ID!), which we use here to fetch the job directly from a slug.
+   */
+  async getJobBySlug(slug: string): Promise<RippleJobFull | null> {
+    const data = await this.fetchRippleGQL<{
+      getJob: RippleJobFull;
+    }>(RippleMain.GET_JOB_BY_SLUG, { slug });
+    return data?.getJob ?? null;
+  }
+
+  /**
    * find the latest job for a given laneId, optionally filtered by status phase.
    */
   async findLatestJobForLane(laneId: string, phase?: string): Promise<RippleJob | null> {
@@ -347,15 +390,18 @@ export class RippleMain {
   }
 
   getJobUrl(job: RippleJob): string {
+    // the bit.cloud UI resolves the /ripple-ci/job/<id-or-slug> segment by slug;
+    // job.id (a uuid) returns "No CI job found", so prefer slug when present.
+    const segment = job.slug || job.id;
     if (job.laneId) {
       // laneId format: "scope/lane-name", e.g. "att-bit.duc/my-lane"
       const [scope, ...laneParts] = job.laneId.split('/');
       const laneName = laneParts.join('/');
       if (scope && laneName) {
-        return `https://${getCloudDomain()}/${scope.split('.').join('/')}/~lane/${laneName}/~ripple-ci/job/${job.id}`;
+        return `https://${getCloudDomain()}/${scope.split('.').join('/')}/~lane/${laneName}/~ripple-ci/job/${segment}`;
       }
     }
-    return `https://${getCloudDomain()}/ripple-ci/job/${job.id}`;
+    return `https://${getCloudDomain()}/ripple-ci/job/${segment}`;
   }
 
   static async provider([cli, cloud, loggerAspect, workspace]: [CLIMain, CloudMain, LoggerMain, Workspace]) {

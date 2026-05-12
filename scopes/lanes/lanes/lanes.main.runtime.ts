@@ -1352,7 +1352,7 @@ please create a new lane instead, which will include all components of this lane
       new LaneRenameCmd(lanesMain),
       new LaneDiffCmd(workspace, scope, componentCompare),
       new LaneRemoveReadmeCmd(lanesMain),
-      new LaneImportCmd(switchCmd),
+      new LaneImportCmd(switchCmd, lanesMain),
       new LaneRemoveCompCmd(workspace, lanesMain),
       new LaneFetchCmd(fetchCmd, lanesMain),
       new LaneEjectCmd(lanesMain),

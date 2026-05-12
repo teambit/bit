@@ -346,5 +346,27 @@ describe('Workspace Config files - dedupe paths', function () {
         expect(result).to.deep.equal(prettierExpectedDedupedPaths);
       });
     });
+
+    describe('empty component paths', () => {
+      it('should return empty array when envCompsDirsMap has no paths for the envIds', () => {
+        const emptyEnvCompsDirsMap = {
+          'teambit.harmony/node': { id: 'teambit.harmony/node', paths: [] },
+        };
+        const configMap: ExtendingConfigFilesMap = {
+          somehash: {
+            extendingConfigFile: {
+              useAbsPaths: false,
+              content: 'some content',
+              name: 'tsconfig.json',
+              extendingTarget: { hash: 'abc', content: '', name: 'tsconfig.bit.abc.json', filePath: '/some/path' },
+              hash: 'somehash',
+            },
+            envIds: ['teambit.harmony/node'],
+          },
+        };
+        const result = dedupePaths(configMap, emptyEnvCompsDirsMap as any, undefined);
+        expect(result).to.deep.equal([]);
+      });
+    });
   });
 });

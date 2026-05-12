@@ -10,8 +10,9 @@ import { snapToSemver } from '@teambit/component-package-version';
 import type { Logger } from '@teambit/logger';
 import type { DependencyList, PackageName } from '../dependencies';
 import { ComponentDependency } from '../dependencies';
-import type { WorkspacePolicy, EnvPolicy } from '../policy';
+import type { WorkspacePolicy, EnvPolicy, VariantPolicyConfigEntryValue, VariantPolicyEntryValue } from '../policy';
 import { VariantPolicy } from '../policy';
+import { DependencyResolverAspect } from '../dependency-resolver.aspect';
 import type { VariantPolicyEntry } from '../policy/variant-policy';
 import { createVariantPolicyEntry } from '../policy/variant-policy';
 import type { DependencyResolverMain } from '../dependency-resolver.main.runtime';
@@ -464,6 +465,12 @@ export class WorkspaceManifestFactory {
       if (!this.resolveEnvPeersFromRoot) {
         // Legacy behavior: inject env peer deps into each component's manifest
         const envPeerDependencies = await this._getEnvPeerDependencies(component, packageNames);
+        // Also include packages that are explicitly listed in the component's
+        // dep-resolver config (e.g. with version "+").  Without this, a fresh
+        // workspace after `bit new`/`bit fork` hits a chicken-and-egg problem:
+        // "+" can't resolve → package absent from manifest → filter excludes it
+        // → package never installed.
+        const componentExplicitPkgs = this.getComponentExplicitPackages(component);
         if (includeAllEnvPeers ?? true) {
           peerDepsForManifest = envPeerDependencies;
         } else {
@@ -471,7 +478,8 @@ export class WorkspaceManifestFactory {
             return (
               depManifestBeforeFiltering.dependencies[pkgName] ||
               depManifestBeforeFiltering.devDependencies[pkgName] ||
-              depManifestBeforeFiltering.peerDependencies[pkgName]
+              depManifestBeforeFiltering.peerDependencies[pkgName] ||
+              componentExplicitPkgs.has(pkgName)
             );
           });
 
@@ -515,6 +523,20 @@ export class WorkspaceManifestFactory {
     }
 
     return result;
+  }
+
+  /**
+   * Collect package names explicitly listed in the component's dep-resolver policy,
+   * excluding entries that represent removals ("-" or `{ version: "-" }`).
+   */
+  private getComponentExplicitPackages(component: Component): Set<string> {
+    const depResolverEntry = component.get(DependencyResolverAspect.id);
+    const explicitPolicy = depResolverEntry?.config?.policy ?? {};
+    return new Set<string>([
+      ...nonRemovedEntryNames(explicitPolicy.dependencies),
+      ...nonRemovedEntryNames(explicitPolicy.devDependencies),
+      ...nonRemovedEntryNames(explicitPolicy.peerDependencies),
+    ]);
   }
 
   private async _getEnvPeerDependencies(
@@ -674,4 +696,21 @@ async function getMissingPackages(component: Component): Promise<{ devMissings: 
     devMissings,
     runtimeMissings,
   };
+}
+
+function nonRemovedEntryNames(policySection?: Record<string, VariantPolicyConfigEntryValue>): string[] {
+  if (!policySection) return [];
+  const names: string[] = [];
+  for (const [name, versionSpec] of Object.entries(policySection)) {
+    // Skip explicit removals expressed as "-" or as removal objects.
+    if (versionSpec !== '-' && !isRemovalObject(versionSpec)) {
+      names.push(name);
+    }
+  }
+  return names;
+}
+
+function isRemovalObject(val: VariantPolicyConfigEntryValue): boolean {
+  if (!val || typeof val !== 'object') return false;
+  return (val as VariantPolicyEntryValue).version === '-';
 }

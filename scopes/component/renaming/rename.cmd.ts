@@ -10,6 +10,7 @@ export type RenameOptions = {
   preserve?: boolean;
   ast?: boolean;
   deprecate?: boolean;
+  skipCompile?: boolean;
 };
 
 export class RenameCmd implements Command {

@@ -233,7 +233,14 @@ export class CLIParser {
 
     const lines = help.split('\n');
     const linesWithoutEmpty = compact(lines);
-    const cmdLine = linesWithoutEmpty[0];
+    let cmdLine = linesWithoutEmpty[0];
+    if (command?.alias) {
+      const enteredCommand = process.argv[2];
+      if (enteredCommand === command.alias) {
+        const commandId = getCommandId(command.name);
+        cmdLine = cmdLine.replace(commandId, command.alias);
+      }
+    }
     const description: string[] = [];
     const options: string[] = [];
     const globalOptions: string[] = [];

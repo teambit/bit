@@ -7,7 +7,6 @@
   &.isResizing {
     cursor: ns-resize;
 
-    // Prevent iframes from capturing pointer events during resize
     iframe {
       pointer-events: none;
     }
@@ -74,15 +73,14 @@
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  background: var(--background-color);
   min-height: 36px;
   overflow: hidden;
-  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  border-top: 1px solid var(--bit-border-color-lightest, #eaeaec);
   contain: layout;
 }
 
 .controlsResizeHandle {
-  height: 6px;
+  height: 8px;
   cursor: ns-resize;
   background: transparent;
   display: flex;
@@ -91,60 +89,83 @@
   flex-shrink: 0;
   user-select: none;
   touch-action: none;
+  transition: background 120ms ease;
 
   &::before {
     content: '';
     display: block;
     width: 32px;
     height: 3px;
-    border-radius: 3px;
-    background: var(--border-medium-color, rgba(0, 0, 0, 0.12));
+    border-radius: 2px;
+    background: var(--bit-border-color-lightest, #d0d0d3);
+    transition: all 140ms ease;
   }
 
-  &:hover::before,
+  &:hover {
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  &:hover::before {
+    background: var(--bit-text-color-light, #8b8d98);
+    width: 48px;
+  }
+
   &:active::before {
-    background: var(--primary-color, #6a57fd);
+    background: var(--bit-accent-color, #6c5ce7);
   }
 }
 
 .controlsPanelHeader {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
+  justify-content: space-between;
+  padding: 4px 14px 8px;
   cursor: pointer;
   user-select: none;
-  background: var(--background-color);
   flex-shrink: 0;
+  transition: background 120ms ease;
 
   &:hover {
-    background: var(--background-hover-color, rgba(0, 0, 0, 0.02));
+    background: rgba(0, 0, 0, 0.025);
   }
+}
+
+.controlsTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.controlsIcon {
+  font-size: 13px;
+  color: var(--bit-accent-color, #6c5ce7);
 }
 
 .controlsArrow {
   font-size: 10px;
-  color: var(--on-background-color, #222);
-  opacity: 0.5;
+  color: var(--bit-text-color-light, #8b8d98);
 }
 
 .controlsPanelTitle {
-  font-size: var(--bit-p-xs, 13px);
-  font-weight: 500;
-  color: var(--on-background-color, #222);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--bit-text-color-light, #8b8d98);
 }
 
 .controlsPanelContent {
   flex: 1 1 auto;
   overflow: auto;
-  padding: 12px 16px;
+  padding: 4px 16px 12px;
   min-height: 0;
 }
 
+// ─── Empty / missing states ─────────────────────────────────────────────
 .missingComposition {
   margin: 24px;
   padding: 20px;
-  border: 1px dashed var(--border-color, rgba(0, 0, 0, 0.12));
+  border: 1px dashed var(--bit-border-color-lightest, rgba(0, 0, 0, 0.1));
   border-radius: 10px;
   background: var(--background-color, #ffffff);
   text-align: center;
@@ -153,12 +174,12 @@
 .missingCompositionTitle {
   font-size: 14px;
   font-weight: 600;
-  color: var(--on-background-color, #222222);
+  color: var(--on-background-color, #1c2024);
 }
 
 .missingCompositionSubtitle {
   margin-top: 6px;
   font-size: 12px;
-  color: var(--on-background-color, #222222);
-  opacity: 0.7;
+  color: var(--bit-text-color-light, #8b8d98);
+  line-height: 1.5;
 }

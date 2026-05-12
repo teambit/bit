@@ -40,9 +40,8 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
 
   async write(
     writePath?: string,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    override?: boolean = this.override,
-    verbose?: boolean = this.verbose
+    override: boolean = this.override,
+    verbose: boolean = this.verbose
   ): Promise<string | null | undefined> {
     const filePath = writePath || this.path;
     const msg = _verboseMsg(filePath, override);
