@@ -1066,6 +1066,43 @@ describe('local snap cascades updateDependents on the lane', function () {
         expect(promotedSnap.parents).to.include(comp2HashOnMain);
         expect(promotedSnap.parents).to.not.include(comp2InUpdDepInitial);
       });
+
+      // -------------------------------------------------------------------------------------
+      // After the export, a second consumer who imports the lane from scratch must see comp2
+      // as a real lane component — both on the lane object and in the workspace bitmap. This
+      // confirms the promotion is observable to consumers, not just a workspace-local rewrite.
+      // -------------------------------------------------------------------------------------
+      describe('a fresh workspace then imports the exported lane', () => {
+        let comp2HeadAfterPromote: string;
+        before(() => {
+          const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
+          const comp2OnRemoteLane = remoteLane.components.find((c) => c.id.name === 'comp2') as { head: string };
+          comp2HeadAfterPromote = comp2OnRemoteLane.head;
+
+          helper.scopeHelper.reInitWorkspace();
+          helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+          helper.command.importLane('dev', '-x');
+        });
+
+        it('the imported lane object lists comp2 under components (visible, not hidden)', () => {
+          const localLane = helper.command.catLane('dev');
+          const comp2InComp = localLane.components.find((c) => c.id.name === 'comp2') as { head: string };
+          expect(comp2InComp, 'comp2 should be visible on the imported lane').to.exist;
+          expect(comp2InComp.head).to.equal(comp2HeadAfterPromote);
+        });
+
+        it('the imported lane does NOT carry comp2 in updateDependents', () => {
+          const localLane = helper.command.catLane('dev');
+          const comp2InUpdDep = (localLane.updateDependents || []).find((s) => s.includes('comp2'));
+          expect(comp2InUpdDep, 'comp2 must not appear in updateDependents on the imported lane').to.be.undefined;
+        });
+
+        it('comp2 lands in the fresh workspace bitmap at the promoted lane head', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap).to.have.property('comp2');
+          expect(bitMap.comp2.version).to.equal(comp2HeadAfterPromote);
+        });
+      });
     });
   });
 });
