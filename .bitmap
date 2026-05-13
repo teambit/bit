@@ -1972,6 +1972,14 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-config-compare"
     },
+    "ui/inline-deps-compare": {
+        "name": "ui/inline-deps-compare",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.review",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/inline-deps-compare"
+    },
     "ui/inline-diff-viewer": {
         "name": "ui/inline-diff-viewer",
         "scope": "",
