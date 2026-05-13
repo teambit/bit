@@ -305,8 +305,11 @@ export class DoctorMain {
       return packExamineResults(pack);
     }
 
+    const doctorResultsRegex = /^doctor-results-\d+\.tar(\.gz)?$/;
     const ignore = (fileName: string) => {
       if (fileName === '.DS_Store') return true;
+      const baseName = path.basename(fileName);
+      if (doctorResultsRegex.test(baseName)) return true;
       if (
         !includeNodeModules &&
         (fileName.startsWith(`node_modules${path.sep}`) || fileName.includes(`${path.sep}node_modules${path.sep}`))
