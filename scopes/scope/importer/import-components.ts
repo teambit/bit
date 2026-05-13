@@ -208,37 +208,48 @@ export default class ImportComponents {
     const bitIds: ComponentIdList = await this.getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
-    // Off-lane ids (incl. hidden `lane.updateDependents`) must not be resolved through the lane:
-    // `laneHeadLocal` carries the hidden cascade head — legitimate for export-pending detection,
-    // but it would leak into `toComponentVersion` and land the cascade snap in the bitmap instead
-    // of main's tag. Pre-pin off-lane ids to `modelComponent.head` so the downstream resolution
-    // can't fall back to `laneHeadLocal`.
-    const visibleLaneIds = this.visibleLaneIds;
-    const [onLaneRaw, offLaneRawList] = partition(bitIds, (id) => Boolean(visibleLaneIds.searchWithoutVersion(id)));
-    const onLaneIds = ComponentIdList.fromArray(onLaneRaw);
-    const offLaneNeedingHead = offLaneRawList.filter((id) => !id.hasVersion());
-    const headDefs = await this.scope.sources.getMany(offLaneNeedingHead);
+    const versionDependenciesArr = await this.fetchVersionDependenciesForImport(bitIds);
+
+    return this.processAndWriteComponents(beforeImportVersions, versionDependenciesArr);
+  }
+
+  /**
+   * Hidden `lane.updateDependents` entries must not resolve through the lane: `laneHeadLocal`
+   * carries the cascade head — legitimate for export-pending detection — but it would leak into
+   * `toComponentVersion` and land the cascade snap in the bitmap instead of main's tag. Pre-pin
+   * hidden ids to `modelComponent.head` and fetch them via the no-lane path. Visible-on-lane
+   * and truly off-lane ids stay on the original lane-fetch path so their normal delta logic
+   * (lane head for visible, latest-from-main for off-lane) is preserved.
+   */
+  private async fetchVersionDependenciesForImport(bitIds: ComponentIdList): Promise<VersionDependencies[]> {
+    const lane = this.remoteLane;
+    if (!lane) {
+      return this._importComponentsObjects(bitIds, {});
+    }
+    const [hiddenRaw, others] = partition(bitIds, (id) => Boolean(lane.findUpdateDependent(id)));
+    const othersList = ComponentIdList.fromArray(others);
+    const hiddenNeedingHead = hiddenRaw.filter((id) => !id.hasVersion());
+    const headDefs = await this.scope.sources.getMany(hiddenNeedingHead);
     const headByIdStr = new Map(
       headDefs.map(({ id, component }) => [id.toStringWithoutVersion(), component?.head] as const)
     );
-    const offLaneIds = ComponentIdList.fromArray(
-      offLaneRawList.map((id) => {
+    const hiddenIds = ComponentIdList.fromArray(
+      hiddenRaw.map((id) => {
         if (id.hasVersion()) return id;
         const mainHead = headByIdStr.get(id.toStringWithoutVersion());
         return mainHead ? id.changeVersion(mainHead.toString()) : id;
       })
     );
     const versionDependenciesArr: VersionDependencies[] = [];
-    if (onLaneIds.length) {
-      const onLaneResults = await this._importComponentsObjects(onLaneIds, { lane: this.remoteLane });
-      versionDependenciesArr.push(...onLaneResults);
+    if (othersList.length) {
+      const r = await this._importComponentsObjects(othersList, { lane });
+      versionDependenciesArr.push(...r);
     }
-    if (offLaneIds.length) {
-      const offLaneResults = await this._importComponentsObjects(offLaneIds, {});
-      versionDependenciesArr.push(...offLaneResults);
+    if (hiddenIds.length) {
+      const r = await this._importComponentsObjects(hiddenIds, {});
+      versionDependenciesArr.push(...r);
     }
-
-    return this.processAndWriteComponents(beforeImportVersions, versionDependenciesArr);
+    return versionDependenciesArr;
   }
 
   /**
