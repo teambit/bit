@@ -66,14 +66,11 @@ export class TsserverClient {
         onEvent: this.onTsserverEvent.bind(this),
       });
 
-      this.tsServer
-        .start()
-        .then(() => {
-          this.serverRunning = true;
-        })
-        .catch((err) => {
-          this.logger.error('TsserverClient.init failed', err);
-        });
+      // Await the server to be ready before issuing any requests, so a start() failure
+      // (e.g., tsserver writing to stderr) surfaces here rather than producing a write to a
+      // broken stdin, and so the inferred-project options below are applied to a live server.
+      await this.tsServer.start();
+      this.serverRunning = true;
 
       // TS 6 flipped the `strict` default from false to true for inferred projects.
       // Files outside any tsconfig (e.g., components whose env's tsconfig isn't included
