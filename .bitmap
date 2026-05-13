@@ -2004,6 +2004,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs"
     },
+    "ui/queries/get-file-content": {
+        "name": "ui/queries/get-file-content",
+        "scope": "teambit.code",
+        "version": "0.0.505",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/queries/get-file-content"
+    },
     "ui/react-router/slot-router": {
         "name": "ui/react-router/slot-router",
         "scope": "teambit.ui-foundation",
