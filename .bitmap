@@ -1871,6 +1871,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/ui/current-user"
     },
+    "ui/deps-diff-table": {
+        "name": "ui/deps-diff-table",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.dependencies",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/deps-diff-table"
+    },
     "ui/docs-app": {
         "name": "ui/docs-app",
         "scope": "teambit.react",
