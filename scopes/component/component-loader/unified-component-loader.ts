@@ -190,6 +190,27 @@ export class UnifiedComponentLoader {
   }
 
   /**
+   * Pre-populate the cache with an already-built component, used by hosts
+   * that build a batch internally and need recursive lookups against the same
+   * batch to short-circuit on cache hits.
+   *
+   * Without this, a host whose load path calls back into the workspace (e.g.
+   * `workspace.loadComponentsExtensions` -> `workspace.getMany`) would
+   * trigger another full host call for components the outer pass already
+   * built — at minimum redundant work, at worst a recursion deadlock.
+   *
+   * The host calls this for each component as soon as it's safe to share
+   * (typically at the end of pass 1, before any code path that might recurse
+   * back through `workspace.getMany`). The component must be at or above
+   * `phase` already; passing a lower-phase component will be cached and
+   * served to subsequent callers, breaking the phase contract.
+   */
+  publish(id: ComponentID, phase: Phase, component: Component): void {
+    const hash = this.computeHash(id, phase);
+    this.cache.set(id, phase, component, hash);
+  }
+
+  /**
    * Phase-upgrade-on-access: ensures `component` is loaded at least up to
    * `phase`, upgrading it in place if needed. Idempotent when the component
    * is already at or above the requested phase.

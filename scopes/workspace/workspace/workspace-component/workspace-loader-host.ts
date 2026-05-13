@@ -13,7 +13,7 @@ import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { ComponentNotFound as LegacyComponentNotFound } from '@teambit/legacy.scope';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { IssuesClasses } from '@teambit/component-issues';
-import type { LoaderHost, Phase } from '@teambit/component-loader';
+import type { LoaderHost, Phase, UnifiedComponentLoader } from '@teambit/component-loader';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { EnvsMain } from '@teambit/envs';
@@ -48,6 +48,24 @@ export class WorkspaceLoaderHost implements LoaderHost {
   private workspaceConfigVersion = 0;
   private aspectStateVersion = 0;
 
+  /**
+   * Back-reference to the unified loader. Wired in by `Workspace` constructor
+   * via `attachUnifiedLoader`. Currently unused but kept for future use
+   * (e.g. publishing partial components to the cache to short-circuit
+   * recursive lookups, if we later need that).
+   */
+  private unifiedLoader?: UnifiedComponentLoader;
+
+  /**
+   * Recursion depth of nested `loadMany` calls. The new host's pass 1 chains
+   * through `loadComponentsExtensions` → `workspace.importAndGetMany` →
+   * `workspace.getMany` → back into this host. Pass 1 of the inner call must
+   * skip the `loadComponentsExtensions` step to avoid infinite recursion;
+   * the outer call's call to that method handles the full merged extension
+   * set anyway.
+   */
+  private loadingDepth = 0;
+
   constructor(
     private readonly workspace: Workspace,
     private readonly logger: Logger,
@@ -61,6 +79,10 @@ export class WorkspaceLoaderHost implements LoaderHost {
     workspace.registerOnWorkspaceConfigChange(async () => {
       this.workspaceConfigVersion += 1;
     });
+  }
+
+  attachUnifiedLoader(loader: UnifiedComponentLoader): void {
+    this.unifiedLoader = loader;
   }
 
   // === LoaderHost contract: hash inputs ============================
@@ -110,22 +132,30 @@ export class WorkspaceLoaderHost implements LoaderHost {
   private async loadMany(ids: ComponentID[]): Promise<Map<string, Component>> {
     if (!ids.length) return new Map();
 
-    const { workspaceIds, scopeIds } = await this.partitionIds(ids);
-    const pass1 = await this.pass1BuildComponentsNoSlots(workspaceIds, scopeIds);
-    await this.pass2LoadAspectsInOrder(pass1.workspaceComponents, pass1.scopeComponents, pass1.envIdByCompKey);
-    await this.pass3FireSlotsForTheRest(pass1.workspaceComponents);
-    await this.applyPostLoadIssuesAndWarnings(pass1.workspaceComponents);
+    this.loadingDepth += 1;
+    try {
+      const { workspaceIds, scopeIds } = await this.partitionIds(ids);
+      const pass1 = await this.pass1BuildComponentsNoSlots(workspaceIds, scopeIds);
 
-    const result = new Map<string, Component>();
-    for (const c of pass1.workspaceComponents) {
-      c.loadedPhase = 'aspects';
-      result.set(c.id.toString(), c);
+      // Recursive calls return config-only components without firing slots.
+      // The outer call's pass 2/3 handle the full aspect-loading; inner
+      // callers (typically aspect-resolve flows) need config-level state
+      // but not slot data.
+      if (this.loadingDepth === 1) {
+        await this.pass2LoadAspectsInOrder(pass1.workspaceComponents, pass1.scopeComponents, pass1.envIdByCompKey);
+        await this.pass3FireSlotsForTheRest(pass1.workspaceComponents);
+        await this.applyPostLoadIssuesAndWarnings(pass1.workspaceComponents);
+        for (const c of pass1.workspaceComponents) c.loadedPhase = 'aspects';
+        for (const c of pass1.scopeComponents) c.loadedPhase = 'aspects';
+      }
+
+      const result = new Map<string, Component>();
+      for (const c of pass1.workspaceComponents) result.set(c.id.toString(), c);
+      for (const c of pass1.scopeComponents) result.set(c.id.toString(), c);
+      return result;
+    } finally {
+      this.loadingDepth -= 1;
     }
-    for (const c of pass1.scopeComponents) {
-      c.loadedPhase = 'aspects';
-      result.set(c.id.toString(), c);
-    }
-    return result;
   }
 
   // === Pass 0: partition workspace vs scope ids ====================
@@ -171,6 +201,13 @@ export class WorkspaceLoaderHost implements LoaderHost {
           executeLoadSlot: false,
           loadDocs: false,
           loadCompositions: false,
+          // Suppress the global onComponentLoad subscriber from firing
+          // workspace.get for every legacy component we load. The subscriber
+          // exists to bridge legacy-only callers back to the harmony side;
+          // here we ARE the harmony side, so the bridge would be a redundant
+          // round-trip and (once Workspace.get routes through unified) a
+          // recursion path.
+          originatedFromHarmony: true,
         } as any
       );
       legacyComps = components;
@@ -233,11 +270,15 @@ export class WorkspaceLoaderHost implements LoaderHost {
     // Register external aspects (envs like react-env, node-env) referenced by
     // the batch's components. Without this, env-issue checking later finds
     // unregistered envs and falsely flags every dependent component.
-    // This is the call that the legacy `getAndLoadSlot` made conditionally on
-    // `loadOpts.loadExtensions`; we always make it because the unified loader
-    // doesn't expose that knob to callers (every Component handed to user
-    // code must be at `aspects` phase — see design-stage2-perf.md).
-    if (workspaceComponents.length) {
+    //
+    // Skipped on recursive calls — `loadComponentsExtensions` chains to
+    // `workspace.importAndGetMany` → `workspace.getMany`, which routes back
+    // through this host. If the inner call also tried to load extensions, it
+    // would recurse again. The outer call's loadComponentsExtensions handles
+    // the full merged set anyway, so inner calls returning config-only
+    // components is sufficient for the aspect-resolve work they participate
+    // in (which reads `state.aspects` config, not slot-fired data).
+    if (workspaceComponents.length && this.loadingDepth === 1) {
       const allExts: ExtensionDataList[] = workspaceComponents.map((c) => c.state._consumer.extensions);
       const merged = ExtensionDataList.mergeConfigs(allExts, false);
       await this.workspace.loadComponentsExtensions(merged);

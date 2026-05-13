@@ -286,12 +286,11 @@ export class Workspace implements ComponentFactory {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
     this.loadEvents = new LoadEventEmitter();
-    this.unifiedLoader = new UnifiedComponentLoader(
-      new WorkspaceLoaderHost(this, logger, dependencyResolver, envs, aspectLoader),
-      new ComponentCache(),
-      this.loadEvents,
-      logger
-    );
+    const workspaceHost = new WorkspaceLoaderHost(this, logger, dependencyResolver, envs, aspectLoader);
+    this.unifiedLoader = new UnifiedComponentLoader(workspaceHost, new ComponentCache(), this.loadEvents, logger);
+    // Back-wire so the host can pre-publish in-batch components to the cache
+    // (avoids recursion deadlock when pass 1 fires loadComponentsExtensions).
+    workspaceHost.attachUnifiedLoader(this.unifiedLoader);
     // Render unified-loader progress through the existing setStatusLine mechanism.
     // Silent under the legacy loader because no events fire there.
     attachLoadProgressRenderer(this.loadEvents, logger);
@@ -830,15 +829,20 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
     this.logger.trace(`get ${componentId.toString()}`);
-    // Stage 1: `Workspace.get` always uses the legacy loader, even under
-    // `BIT_LOADER=new`. Reason: aspect loading (loadCompsAsAspects inside the
-    // legacy `getMany`) makes many recursive `workspace.get` calls during a
-    // batch load. Routing those recursive gets through the unified loader
-    // multiplies allocations (event emission, hash computation, cache
-    // bookkeeping) by every recursion frame and triggers OOM on cold cache.
-    // Stage 2 will internalise per-phase paths and rework aspect loading to
-    // be cache-friendly through the unified loader.
-    const component = await this.componentLoader.get(componentId, legacyComponent, useCache, storeInCache, loadOpts);
+    let component: Component;
+    if (this.useNewLoader() && !legacyComponent) {
+      // Stage-2 (task 8.16.4): single-component loads route through the
+      // unified loader. The new host's pass 1 + recursion-depth tracking
+      // handles the cases that triggered OOM in stage 1.
+      //
+      // The legacyComponent shortcut (used by the legacy onComponentLoad
+      // subscriber to pass an already-loaded ConsumerComponent) keeps using
+      // WCL — that path is the bridge from legacy callers and doesn't go
+      // through the recursion-prone aspect-loading machinery.
+      component = await this.unifiedLoader.get(componentId, { phase: DEFAULT_PHASE });
+    } else {
+      component = await this.componentLoader.get(componentId, legacyComponent, useCache, storeInCache, loadOpts);
+    }
     // When loading a component if it's an env make sure to load it as aspect as well
     // We only want to try load it as aspect if it's the first time we load the component
     const tryLoadAsAspect = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
@@ -1261,21 +1265,20 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<Component[]> {
     this.logger.debug(`getMany, started. ${ids.length} components`);
-    // Stage 1: always use the legacy loader for the same reason as `get` —
-    // this method is a frequent target of recursive aspect-loading during
-    // batch loads, and routing each call through the unified loader
-    // multiplies allocations and triggers OOM on cold cache. The unified
-    // loader is still exercised via `Workspace.listWithInvalidAtPhase` for
-    // explicit phase-aware callers (currently `bit status`).
-    // Task 8.16.4 attempt (2026-05-13): routing through unified hangs.
-    // Root cause: the new host's pass 1 calls `workspace.loadComponentsExtensions`
-    // (to register external envs so the env-issue check passes). That call
-    // chains: loadComponentsExtensions → loadAspects → importAndGetAspects →
-    // `workspace.importAndGetMany` → `workspace.getMany`. If getMany routes
-    // through unified, it recurses back into another host call → infinite
-    // loop. Fix requires either (a) decoupling env registration from
-    // workspace.getMany, or (b) detecting in-flight recursion at the
-    // unified-loader level.
+    if (this.useNewLoader()) {
+      // Stage-2 (task 8.16.4): route through the unified loader. The new
+      // two-pass host pre-publishes in-batch components to the unified cache
+      // before triggering `loadComponentsExtensions` — so recursive
+      // `workspace.getMany` calls from inside the extension-load chain hit
+      // the cache instead of triggering another full host call.
+      const { components } = await this.unifiedLoader.getMany(
+        ids,
+        { phase: DEFAULT_PHASE },
+        { throwOnMissing: throwOnFailure }
+      );
+      this.logger.debug(`getMany, completed. ${components.length} components`);
+      return components;
+    }
     const { components } = await this.componentLoader.getMany(ids, loadOpts, throwOnFailure);
     this.logger.debug(`getMany, completed. ${components.length} components`);
     return components;
