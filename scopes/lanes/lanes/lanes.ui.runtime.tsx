@@ -15,6 +15,12 @@ import type { WorkspaceUI } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { ComponentUI } from '@teambit/component';
 import { ComponentAspect, useIdFromLocation, ComponentID } from '@teambit/component';
+import { InlineCodeCompare } from '@teambit/code.ui.inline-code-compare';
+import type { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
+import { InlinePreviewCompare } from '@teambit/preview.ui.inline-preview-compare';
+import { InlineDepsCompare } from '@teambit/review.ui.inline-deps-compare';
+import { InlineTestsCompare } from '@teambit/review.ui.inline-tests-compare';
+import { InlineConfigCompare } from '@teambit/review.ui.inline-config-compare';
 import type { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import type { LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.lane-overview';
 import { LaneOverview } from '@teambit/lanes.ui.lane-overview';
@@ -342,9 +348,20 @@ export class LanesUI {
   }
 
   getLaneCompare = (props: LaneCompareProps) => {
-    const tabs = this.componentCompareUI.tabs;
-
     if (!props.base || !props.compare) return null;
+
+    const tabs: TabItem[] = [
+      { id: 'inline-code', order: 1, displayName: 'Code', element: React.createElement(InlineCodeCompare) },
+      { id: 'inline-preview', order: 2, displayName: 'Preview', element: React.createElement(InlinePreviewCompare) },
+      { id: 'inline-deps', order: 4, displayName: 'Dependencies', element: React.createElement(InlineDepsCompare) },
+      { id: 'inline-tests', order: 5, displayName: 'Tests', element: React.createElement(InlineTestsCompare) },
+      {
+        id: 'inline-config',
+        order: 6,
+        displayName: 'Configuration',
+        element: React.createElement(InlineConfigCompare),
+      },
+    ];
 
     return (
       <LaneCompare
