@@ -59,6 +59,7 @@ export class WorkspaceGenerator {
     try {
       process.chdir(this.workspacePath);
       await this.initGit();
+      const agentType = this.options.agent || undefined;
       await HostInitializerMain.init(
         this.workspacePath,
         this.options.skipGit,
@@ -69,9 +70,14 @@ export class WorkspaceGenerator {
         false,
         false,
         false,
-        {}
+        {},
+        undefined,
+        agentType
       );
       await this.writeWorkspaceFiles();
+      // Write agent instructions with skipGitCheck since bit new always creates a fresh workspace.
+      // When --skip-git is used, init() already wrote the file; hasExistingAgentFile() prevents a duplicate.
+      await HostInitializerMain.writeAgentInstructions(this.workspacePath, agentType, true);
       await this.reloadBitInWorkspaceDir();
       // Setting the workspace to be in install context to prevent errors during the workspace generation
       // the workspace will be in install context until the end of the generation install process

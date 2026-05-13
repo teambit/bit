@@ -143,7 +143,9 @@ describe('ci commands', function () {
       // e.g., "feature-temp-lane-test-a1b2c"
       // Strip chalk/ANSI codes before regex matching to avoid false negatives
       const cleanOutput = removeChalkCharacters(prOutput) as string;
-      expect(cleanOutput).to.match(/Creating temporary lane .+\/feature-temp-lane-test-[a-z0-9]{5}/);
+      expect(cleanOutput).to.match(
+        /Created temporary lane .+\/feature-temp-lane-test-[a-z0-9]{5} \(hash: [a-f0-9]{40}\)/
+      );
     });
     it('should rename the temp lane to the final name before export', () => {
       const cleanOutput = removeChalkCharacters(prOutput) as string;

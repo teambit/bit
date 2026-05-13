@@ -2,7 +2,9 @@ import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { Port } from '@teambit/toolbox.network.get-port';
 import fs from 'fs-extra';
-import type { ExpressMain } from '@teambit/express';
+import crypto from 'crypto';
+import expressFactory from 'express';
+import type { ExpressMain, Middleware, Request, Response, NextFunction } from '@teambit/express';
 import { ExpressAspect } from '@teambit/express';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
@@ -62,6 +64,8 @@ import type { SchemaMain } from '@teambit/schema';
 import { SchemaAspect } from '@teambit/schema';
 
 export class ApiServerMain {
+  private serverToken?: string;
+
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -122,8 +126,21 @@ export class ApiServerMain {
 
     const port = options.port || (await this.getRandomPort());
 
-    const app = this.express.createApp();
+    // Generate a per-server auth token and persist it to a 0600 file before
+    // any HTTP request can be handled. Clients (e.g. the bit-vscode extension)
+    // read it from <workspace.scope.path>/server-token.txt and send it as
+    // `Authorization: Bearer <token>`. See createAuthMiddleware below.
+    this.writeServerToken();
 
+    // Create the app *before* express.createApp registers routes, so the auth
+    // middleware runs before bodyParser — unauthenticated requests can't
+    // trigger large-body parsing. CORS is registered before auth so 401
+    // responses still carry CORS headers; otherwise browser-based clients
+    // (bit-vscode) see a misleading CORS failure instead of the JSON 401.
+    // The host-check middleware runs first to reject DNS-rebinding attacks
+    // (where a malicious page resolves attacker.example to 127.0.0.1).
+    const app = expressFactory();
+    app.use(this.createHostCheckMiddleware());
     app.use(
       cors({
         origin(origin, callback) {
@@ -132,6 +149,8 @@ export class ApiServerMain {
         credentials: true,
       })
     );
+    app.use(this.createAuthMiddleware());
+    this.express.createApp(app);
     const proxyHeaders = {
       Authorization: `${DEFAULT_AUTH_TYPE} ${Http.getToken()}`,
       origin: '',
@@ -199,12 +218,13 @@ export class ApiServerMain {
         pathFilter: '/',
         target: symphonyUrl,
         ws: true,
-        secure: false, // Disable SSL verification for proxy to remote server
         changeOrigin: true,
       })
     );
 
-    const server = await app.listen(port);
+    // Bind to loopback only — never accept connections from the LAN. Clients
+    // are expected to use 127.0.0.1 (or localhost, which resolves to it).
+    const server = await app.listen(port, '127.0.0.1');
 
     return new Promise((resolve, reject) => {
       server.on('error', (err) => {
@@ -222,7 +242,115 @@ export class ApiServerMain {
 
   writeUsedPort(port: number) {
     const filePath = this.getServerPortFilePath();
-    fs.writeFileSync(filePath, port.toString());
+    fs.writeFileSync(filePath, port.toString(), { mode: 0o600 });
+    // Node's `mode` write option is only honored when the file is created.
+    // chmod explicitly so a pre-existing file with broader permissions gets
+    // tightened to 0600.
+    fs.chmodSync(filePath, 0o600);
+  }
+
+  /**
+   * Generate a fresh per-server bearer token and persist it to a 0600 file.
+   * Clients (e.g. the bit-vscode extension) read this file and send the token
+   * as `Authorization: Bearer <token>` on every request.
+   *
+   * Backwards compatibility: clients that don't yet know about this file (older
+   * extension versions) won't send the header and will receive 401 with a
+   * message pointing them at the upgrade. Old bit-server versions don't write
+   * this file, so a new client checking for it gracefully falls back to no
+   * auth header — meaning a NEW extension keeps working against an OLD
+   * bit-server.
+   */
+  private writeServerToken() {
+    const token = crypto.randomBytes(32).toString('hex');
+    const filePath = this.getServerTokenFilePath();
+    fs.writeFileSync(filePath, token, { mode: 0o600 });
+    // Node's `mode` write option is only honored when the file is created.
+    // chmod explicitly so a pre-existing file with broader permissions gets
+    // tightened to 0600.
+    fs.chmodSync(filePath, 0o600);
+    this.serverToken = token;
+  }
+
+  private getServerTokenFilePath() {
+    return join(this.workspace.scope.path, 'server-token.txt');
+  }
+
+  /**
+   * Host-header check: only accept requests targeting a loopback hostname.
+   * Defends against DNS-rebinding attacks where a malicious page on
+   * `evil.example` flips DNS to 127.0.0.1 — the browser sends `Host:
+   * evil.example`, which we reject with 403 here.
+   *
+   * The server already listens on 127.0.0.1 only, so any request reaching us
+   * arrived via loopback. The remaining concern is the *named* origin the
+   * browser thinks it's talking to.
+   */
+  private createHostCheckMiddleware(): Middleware {
+    const allowed = new Set(['localhost', '127.0.0.1', '::1']);
+    return (req: Request, res: Response, next: NextFunction) => {
+      const hostHeader = req.headers.host || '';
+      // Parse hostname from "host:port". IPv6 may be bracketed: "[::1]:1234"
+      // → "::1"; IPv4 / hostname is plain: "127.0.0.1:1234" → "127.0.0.1".
+      // HTTP hostnames are case-insensitive, so normalize before checking.
+      const match = hostHeader.match(/^\[([^\]]+)\]|^([^:]+)/);
+      const host = match ? (match[1] || match[2]).toLowerCase() : '';
+      if (!allowed.has(host)) {
+        this.logger.debug(`api-server: rejected non-loopback Host header: ${hostHeader}`);
+        res.status(403).end();
+        return;
+      }
+      return next();
+    };
+  }
+
+  /**
+   * Authentication middleware: requires `Authorization: Bearer <serverToken>`
+   * on every request except OPTIONS preflight (handled by cors) and the
+   * unauthenticated `/api/_health` liveness probe.
+   *
+   * GET requests can also authenticate via a `?token=...` query parameter,
+   * since browser-native WebSocket and EventSource cannot set custom headers
+   * from JavaScript. The param is stripped from `req.url` before downstream
+   * handling so the proxy and logs never see it.
+   *
+   * Runs before bodyParser so unauthenticated requests can't trigger
+   * large-body parsing.
+   */
+  private createAuthMiddleware(): Middleware {
+    return (req: Request, res: Response, next: NextFunction) => {
+      if (req.method === 'OPTIONS') return next();
+      // Use req.path (not req.url) so query strings don't bypass the
+      // health-check exemption — e.g. /api/_health?cache-buster=1.
+      if (req.path === '/api/_health') return next();
+
+      const provided = parseBearerToken(req.headers.authorization);
+      let authorized = !!this.serverToken && provided === this.serverToken;
+
+      if (!authorized && this.serverToken && req.method === 'GET') {
+        const queryIdx = req.url.indexOf('?');
+        if (queryIdx >= 0) {
+          const params = new URLSearchParams(req.url.slice(queryIdx + 1));
+          if (params.get('token') === this.serverToken) {
+            authorized = true;
+            params.delete('token');
+            const remaining = params.toString();
+            req.url = req.url.slice(0, queryIdx) + (remaining ? `?${remaining}` : '');
+          }
+        }
+      }
+
+      if (!authorized) {
+        this.logger.debug(`api-server: rejected unauthenticated request to ${req.path}`);
+        res.status(401).jsonp({
+          error: 'unauthorized',
+          message:
+            'This bit-server requires authentication. Please upgrade your bit VS Code extension to the latest version.',
+        });
+        return;
+      }
+      return next();
+    };
   }
 
   /**
@@ -292,8 +420,7 @@ export class ApiServerMain {
 
   async getRandomPort() {
     const startingPort = 4000; // we prefer to have the ports between 4000 and 4999.
-    // get random number in the range of [startingPort, 4999].
-    const randomNumber = Math.floor(Math.random() * (4999 - startingPort + 1) + startingPort);
+    const randomNumber = crypto.randomInt(startingPort, 5000);
     const port = await Port.getPort(randomNumber, 65500);
     return port;
   }
@@ -429,5 +556,16 @@ export class ApiServerMain {
 }
 
 ApiServerAspect.addRuntime(ApiServerMain);
+
+/**
+ * Extract the token from an `Authorization: Bearer <token>` header.
+ * Lenient on scheme casing and surrounding whitespace so a slightly
+ * non-canonical client header doesn't get rejected.
+ */
+function parseBearerToken(header: string | undefined): string | undefined {
+  if (!header) return undefined;
+  const match = header.match(/^\s*Bearer\s+(\S+)\s*$/i);
+  return match?.[1];
+}
 
 export default ApiServerMain;

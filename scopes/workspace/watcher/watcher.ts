@@ -458,14 +458,16 @@ export class Watcher {
   /**
    * Setup graceful shutdown handlers for daemon mode.
    * When SIGINT/SIGTERM is received, we need to:
-   * 1. Stop the daemon (cleanup socket, notify clients)
-   * 2. Call process.exit() to actually terminate
+   * 1. Fire-and-forget best-effort cleanup (unsubscribe Parcel, stop daemon)
+   * 2. Call process.exit() immediately — the OS reliably closes sockets,
+   *    FSEvents streams, and file descriptors, and stale lock files are
+   *    detected and cleaned up by WatcherDaemon.isRunning().
    *
-   * Important: Once you add a handler for SIGINT, Node.js no longer exits automatically.
-   * You must call process.exit() explicitly.
+   * Awaiting watcherDaemon.stop() before exit caused hangs in practice:
+   * server.close() can wait indefinitely on sockets, and the unref'd
+   * fallback timer doesn't reliably fire once other handles clear.
    */
   private setupDaemonShutdown(): void {
-    // Remove old handlers to prevent accumulation when transitioning modes
     this.removeSignalHandlers();
 
     let isShuttingDown = false;
@@ -475,25 +477,10 @@ export class Watcher {
       isShuttingDown = true;
 
       this.logger.debug('Daemon shutting down...');
-      // Unsubscribe from Parcel watcher
-      this.parcelSubscription?.unsubscribe().catch((err) => {
-        this.logger.debug(`Error unsubscribing from Parcel watcher: ${err.message}`);
-      });
-      // Stop is async but we need to exit - start the cleanup and exit
-      // The socket will be cleaned up by the OS when the process exits
-      this.watcherDaemon
-        ?.stop()
-        .catch((err) => {
-          this.logger.error(`Error stopping daemon: ${err.message}`);
-        })
-        .finally(() => {
-          process.exit(0);
-        });
+      this.parcelSubscription?.unsubscribe().catch(() => {});
+      this.watcherDaemon?.stop().catch(() => {});
 
-      // Fallback: if stop() hangs, force exit after 1 second
-      setTimeout(() => {
-        process.exit(0);
-      }, 1000).unref();
+      process.exit(0);
     };
 
     this.signalCleanupHandler = cleanup;

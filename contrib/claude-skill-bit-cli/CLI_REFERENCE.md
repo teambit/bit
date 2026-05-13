@@ -147,7 +147,7 @@ Flags: --message <message>, --lane <lane>, --build, --strict, --dry-run
 Tags and exports new semantic versions after merging a PR to main.
 
 By default, bumps patch versions when merging to main. If specific configuration variables are set, it can use commit messages or explicit flags to determine the version bump. Runs install, tag, build, and export, then archives the remote lane and syncs lockfiles. Use in merge-to-main CI pipelines to publish releases.
-Flags: --message <message>, --build, --strict, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --increment-by <number>, --versions-file <path>, --verbose, --auto-merge-resolve <merge-strategy>, --force-theirs, --lane-name <name>, --skip-push
+Flags: --message <message>, --build, --strict, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --increment-by <number>, --versions-file <path>, --verbose, --auto-merge-resolve <merge-strategy>, --force-theirs, --lane-name <name>, --skip-push, --no-bitmap-commit
 
 ## bit clear-cache
 
@@ -296,8 +296,8 @@ show expanded details from the last command that provided them (e.g. tag, snap)
 
 compare component changes between versions or against the current workspace
 
-shows a detailed diff of component files, dependencies, and configuration changes. by default, compares workspace changes against the latest version. specify versions to compare historical changes. supports pattern matching to filter components and various output formats for better readability.
-Flags: --parent, --verbose, --table
+shows a detailed diff of component files, dependencies, and configuration changes. by default, compares workspace changes against the latest version. specify versions to compare historical changes. supports pattern matching to filter components and various output formats for better readability. for ai-agent workflows, use --name-only to list what changed, --file to drill into a specific file, --files-only / --configs-only to focus on one diff category, or --json for machine-readable output.
+Flags: --parent, --verbose, --table, --file <paths>, --files-only, --configs-only, --name-only, --stat, --json
 
 ## bit doctor [diagnosis-name]
 
@@ -418,7 +418,7 @@ Flags: --path <path>, --objects, --override, --verbose, --json, --skip-dependenc
 initialize a Bit workspace in an existing project
 
 creates Bit configuration files in an existing project directory to start tracking components. if already a workspace, validates and repairs Bit files as needed. supports various reset options to recover from corrupted state or restart from scratch.
-Flags: --name <workspace-name>, --generator <env-id>, --standalone, --no-package-json, --reset, --reset-new, --reset-lane-new, --reset-hard, --reset-scope, --default-directory <default-directory>, --default-scope <default-scope>, --force, --bare [name], --shared <groupname>, --external-package-manager, --skip-interactive
+Flags: --name <workspace-name>, --generator <env-id>, --standalone, --no-package-json, --reset, --reset-new, --reset-lane-new, --reset-hard, --reset-scope, --default-directory <default-directory>, --default-scope <default-scope>, --force, --bare [name], --shared <groupname>, --external-package-manager, --skip-interactive, --agent [type]
 
 ## bit install [packages...]
 
@@ -482,7 +482,9 @@ DEPRECATED (only use it if you have used add-readme and want to undo it). remove
 
 ## bit lane import <lane>
 
-import a remote lane to your workspace and switch to that lane
+import a remote lane to your workspace
+
+when on the default lane, the workspace is switched to the imported lane. when already on the same lane, only the latest objects are fetched from the remote — run "bit checkout head" to update the workspace. when on a different lane, the lane is fetched locally without switching to avoid disrupting your work — run `bit switch <lane>` to switch.
 Flags: --skip-dependency-installation, --pattern <component-pattern>, --branch, --auto-merge-resolve <merge-strategy>, --force-ours, --force-theirs
 
 ## bit lane remove-comp <component-pattern>
@@ -653,7 +655,7 @@ moves component files to a new location within the workspace and updates the .bi
 create a new Bit workspace from a template
 
 initializes a new Bit workspace with pre-configured settings, environments, and optionally starter components. templates provide different setups for React, Angular, Node.js, or custom development workflows. installs dependencies and configures the workspace for immediate development.
-Flags: --aspect <aspect-id>, --template <env-id>, --env <env-id>, --default-scope <scope-name>, --skip-git, --empty, --load-from <path-to-template>, --current-dir
+Flags: --aspect <aspect-id>, --template <env-id>, --env <env-id>, --default-scope <scope-name>, --skip-git, --empty, --load-from <path-to-template>, --current-dir, --agent [type]
 
 ## bit npmrc [sub-command]
 
@@ -757,12 +759,12 @@ Flags: --all, --owner <owner>, --scope <scope>, --lane <lane>, --user <user>, --
 
 ## bit ripple log [job-id]
 
-show job details and component build task summaries (auto-detects current lane when no job-id given)
+show job details and component build task summaries (auto-detects current lane, or your last export when on main)
 Flags: --lane <lane>, --component <component>, --json
 
 ## bit ripple errors [job-id]
 
-show build errors for a Ripple CI job (auto-detects current lane when no job-id given)
+show build errors for a Ripple CI job (auto-detects current lane, or your last export when on main)
 Flags: --lane <lane>, --log, --json
 
 ## bit ripple retry [job-id]
@@ -808,12 +810,18 @@ Sets the scope for specified component/s. If no component is specified, sets the
 
 default scopes for components are set in the bitmap file. the default scope for a workspace is set in the workspace.jsonc. a component is set with a scope (as oppose to default scope) only once it is versioned.' you can use a `<pattern>` for multiple component ids, such as `bit scope set scope-name "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
 
+## bit scope trust [action] [pattern]
+
+manage which scopes are trusted to load aspects (envs, etc.) into the workspace's process
+
+scope-trust is opt-in. when off (the default), aspects from any scope load without a check. when on, aspects from a scope outside the trust list trigger a prompt (interactive shells) or an error (non-interactive). bit scope trust # same as "list" bit scope trust list # show status; if on, print the effective trust list bit scope trust enable # turn on (writes "trustedScopes": [] to workspace.jsonc) bit scope trust disable # turn off (removes "trustedScopes" from workspace.jsonc) bit scope trust add PATTERN # add a pattern (auto-enables if needed) bit scope trust remove PATTERN # remove a pattern (does NOT disable when list is empty) once on, the effective trust set is: builtin scopes (teambit._, bitdev._, and a few others — run "bit scope trust list" to see) + the owner of defaultScope + entries listed under "trustedScopes". patterns are exact ("acme.frontend") or owner wildcard ("acme.\*").
+
 ## bit scope rename <current-scope-name> <new-scope-name>
 
 rename the scope name for all components with the specified 'current scope name'. if exported, create new components and delete the original ones
 
 Note: if `<current-scope-name>` is also the defaultScope for the workspace, this command will set `<new-scope-name>` as the defaultScope instead, and that will then be set for all components by default. You may see updates in your .bitmap file as a result of this change
-Flags: --preserve, --refactor, --deprecate
+Flags: --preserve, --refactor, --deprecate, --skip-dependency-installation
 
 ## bit scope rename-owner <current-owner-name> <new-owner-name>
 
@@ -833,6 +841,13 @@ run a script defined by the environment
 
 executes custom scripts defined by component environments. scripts can be shell commands or JavaScript functions defined in env.scripts(). runs the script for all components grouped by their environment. use --list to see all available scripts.
 Flags: --list
+
+## bit search <query...>
+
+search for components by keyword in the local workspace and remote bit cloud
+
+runs the provided query terms in parallel against bit cloud and against the local workspace. multiple queries are unioned (deduplicated) in the output. by default, remote results are filtered by the owner extracted from the workspace's defaultScope; use --owners or --skip-auto-owner to change this.
+Flags: --owners <list>, --skip-auto-owner, --remote-only, --local-only, --json
 
 ## bit set-peer <component-id> <range>
 
@@ -859,7 +874,7 @@ Flags: --message <message>, --unmodified, --unmerged, --build, --editor [editor]
 launch the Bit development server
 
 starts the local development server providing a UI to browse, preview, and interact with components. works in both workspaces and scopes. opens automatically in your browser at http://localhost:3000 (or specified port). includes hot module reloading for development.
-Flags: --dev, --port [port-number], --rebuild, --skip-ui-build, --verbose, --no-browser, --show-internal-urls, --skip-compilation, --ui-root-name [type], --use-root-modules
+Flags: --dev, --port [port-number], --rebuild, --skip-ui-build, --verbose, --no-browser, --show-internal-urls, --skip-compilation, --ui-root-name [type], --use-root-modules, --use-source
 
 ## bit stash <sub-command>
 
@@ -924,7 +939,7 @@ Flags: --show-all, --aspect <aspect-id>, --json
 run component tests
 
 executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.). by default only runs tests for new and modified components. use --unmodified to test all components. supports watch mode, coverage reporting, and debug mode for development workflows.
-Flags: --watch, --debug, --unmodified, --junit <filepath>, --coverage, --env <id>, --update-snapshot, --json
+Flags: --watch, --debug, --unmodified, --junit <filepath>, --coverage, --env <id>, --update-snapshot, --json, --verbose, --summary
 
 ## bit undeprecate <id>
 

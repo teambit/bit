@@ -5,9 +5,11 @@
   z-index: $modal-z-index - 1;
   overflow-y: auto;
   background: var(--surface-neutral-color, #fff);
-  border: 1px solid var(--border-medium-color, #ededed);
+  border: 1px solid var(--bit-border-color-lightest, #eaeaec);
   border-radius: 8px;
-  box-shadow: var(--bit-shadow-hover-low, 0 2px 8px 0 rgba(0, 0, 0, 0.2));
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .suppressNativeMenu {

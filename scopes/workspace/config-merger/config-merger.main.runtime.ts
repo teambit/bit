@@ -428,6 +428,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
           return;
         }
         addNotUpdateToLogs(`the min version from comp ${compMinVer} is less than ${depInWsVer} from ws`);
+        return;
       }
       throw new Error(`unhandled case: comp: ${depInCompVer}, ws: ${depInWsVer}`);
     });

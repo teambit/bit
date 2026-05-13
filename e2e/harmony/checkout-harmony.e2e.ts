@@ -641,6 +641,14 @@ describe('bit checkout command', function () {
       const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
       expect(policy.dependencies['lodash.get']).to.equal('4.4.1');
     });
+
+    // reproduces a bug where the comp has a range and the ws has an exact version higher than
+    // that range's min. e.g. comp: ^4.4.2, ws: 5.0.0. Previously threw "unhandled case".
+    it('if the ws has an exact version higher than the comp range, it should not throw', () => {
+      expect(() => initWsWithVer('5.0.0')).to.not.throw();
+      const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+      expect(policy.dependencies['lodash.get']).to.equal('5.0.0');
+    });
   });
   describe('checkout reset with changes in component.json', () => {
     before(() => {

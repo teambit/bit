@@ -452,6 +452,7 @@ export class ReactEnv
       strategyName: COMPONENT_PREVIEW_STRATEGY_NAME as PreviewStrategyName,
       splitComponentBundle: true,
       isScaling: true,
+      supportsUseSource: true,
     };
   }
 
