@@ -1,7 +1,6 @@
 import { expect, use } from 'chai';
 import fs from 'fs-extra';
 import type { Harmony } from '@teambit/harmony';
-import type { ComponentID } from '@teambit/component-id';
 import { loadAspect, loadManyAspects } from '@teambit/harmony.testing.load-aspect';
 import type { SnappingMain } from '@teambit/snapping';
 import { SnappingAspect } from '@teambit/snapping';
@@ -25,7 +24,6 @@ describe('CheckoutAspect', function () {
     let workspace: Workspace;
     let workspaceData: WorkspaceData;
     let compDir: string;
-    let compId: ComponentID;
     before(async () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
@@ -33,14 +31,13 @@ describe('CheckoutAspect', function () {
       const snapping: SnappingMain = await loadAspect(SnappingAspect, workspacePath);
       await snapping.tag({ ids: ['comp1'], build: false, ignoreIssues: 'MissingManuallyConfiguredPackages' });
       const { id, dir } = compsDir[0];
-      compId = id;
       compDir = dir;
       await fs.remove(dir);
 
       // an intermediate step, check sure that the dir is not there and the component is invalid
       expect(dir).to.not.be.a.path();
       workspace = await loadAspect(WorkspaceAspect, workspacePath);
-      const { components, invalidComponents } = await workspace.componentLoader.getMany([id], undefined, false);
+      const { components, invalidComponents } = await workspace.listWithInvalid();
       expect(components).to.have.lengthOf(0);
       expect(invalidComponents).to.have.lengthOf(1);
 
@@ -55,7 +52,7 @@ describe('CheckoutAspect', function () {
     });
     it('the workspace should get the component as a valid component', async () => {
       workspace = await loadAspect(WorkspaceAspect, workspaceData.workspacePath);
-      const { components, invalidComponents } = await workspace.componentLoader.getMany([compId], undefined, false);
+      const { components, invalidComponents } = await workspace.listWithInvalid();
       expect(components).to.have.lengthOf(1);
       expect(invalidComponents).to.have.lengthOf(0);
     });

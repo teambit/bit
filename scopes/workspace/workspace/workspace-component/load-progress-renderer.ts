@@ -36,11 +36,6 @@ const UPDATE_INTERVAL_MS = 100;
  *    during a single command.
  *  - Does NOT call `clearStatusLine` on `load:end`; the next caller (status,
  *    list, install, etc.) typically replaces the line with its own message.
- *
- * The renderer is silent under the legacy loader because the unified loader's
- * events only fire when its `get`/`getMany` are actually invoked. With
- * `BIT_LOADER` unset, the dual-mode `Workspace.get/getMany/listWithInvalid`
- * routes around the unified loader so no events fire.
  */
 export function attachLoadProgressRenderer(events: LoadEventEmitter, logger: Logger): void {
   let total = 0;

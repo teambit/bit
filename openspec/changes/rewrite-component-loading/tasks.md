@@ -58,49 +58,50 @@
 - [ ] 7.3 Re-run the baseline benchmarks from 1.5 under `BIT_LOADER=new`. Confirm `bit status` is sub-second on the 500-component sample workspace. **Status: not applicable for stage 1.** Stage 1 host always full-hydrates; warm `bit status` is 9.94s under new vs 10.06s under legacy (equivalent). The sub-second target requires native phase paths in the host (stage 2 work, see "Session learnings" below).
 - [ ] 7.4 Ship one release with `BIT_LOADER=new` available as opt-in; collect feedback for at least one release cycle. **Calendar work — not session-scale.**
 
-## Current state (post-compact handoff, 2026-05-13)
+## Current state (2026-05-13, second session)
 
 **Branch:** `refactor/component-loading-v2-take-3-stage2`
 **PR:** #10369 (draft, targeting master)
-**CI:** all e2e pass except the file-count test, which is now fixed in the latest commit (bumped limits).
 
-**What's working:**
+**Consolidation complete:** `WorkspaceComponentLoader` is deleted. The unified loader is the only loader. `BIT_LOADER` env flag is gone — there is no dual mode.
 
-- The unified component loader is the live load path for `Workspace.get`, `Workspace.getMany`, and `Workspace.listWithInvalidAtPhase` under `BIT_LOADER=new` (default in CI).
-- The new `WorkspaceLoaderHost` runs a two-pass design (Pass 1: build Components config-only → Pass 2: SCC-ordered env/aspect load → Pass 3: parallel slot fire), ~470 lines.
-- Lever 1 (in-flight dedup in `unified.getMany`) is in: same-id recursive `getMany` calls await the existing promise. Measured win: `core-aspect-env` loaded 21× → 1× during `bit status`. Performance now at parity with legacy.
-- `bit status` produces byte-identical output under both `BIT_LOADER=old` and `BIT_LOADER=new`.
+**What landed this session:**
 
-**What's still alive that the consolidation wants to delete:**
+- Migrated `Workspace.listInvalid` off WCL: inlined the `consumer.loadComponent` loop directly into `Workspace.listInvalid` (workspace.ts:528-547).
+- Migrated `checkout.spec.ts` off WCL: replaced `workspace.componentLoader.getMany` with `workspace.listWithInvalid`.
+- Added `WorkspaceLoaderHost.buildAndLoadFromLegacy(legacy)` for the `legacyComponent` shortcut callers (onComponentLoad subscriber, `dev-files.getDevFilesForConsumerComp`, `Workspace.getManyByLegacy`). Builds harmony around a pre-loaded legacy + fires slots; no cache write. Avoids the recursive `consumer.loadComponents` that would have happened if these routed through unified.
+- `Workspace.get` now routes the `legacyComponent` shortcut through `buildAndLoadFromLegacy` and everything else through `unifiedLoader.get`. `useCache`/`storeInCache`/`loadOpts` params are kept for API compat but unused (prefixed `_`).
+- `Workspace.getMany`, `Workspace.getIfExist`, `Workspace.listWithInvalidAtPhase`, `Workspace.clearAllComponentsCache`, `Workspace.clearComponentCache`, `Workspace.getManyByLegacy` all migrated off WCL.
+- Deleted `workspace-component-loader.ts` (1029 LoC). Extracted `ComponentLoadOptions` to its own file `workspace-component/component-load-options.ts`.
+- Deleted `useNewLoader()` and `translateLoadOpts` (private, both unused). Removed `BIT_LOADER=new` from `package.json` e2e scripts. Removed BIT_LOADER mentions from CLAUDE.md and load-progress-renderer.ts.
 
-- `scopes/workspace/workspace/workspace-component/workspace-component-loader.ts` (1029 LoC). Still referenced by:
-  - `Workspace.get`'s `legacyComponent` shortcut path (used by the `onComponentLoad` subscriber)
-  - `Workspace.listInvalid` (`workspace.ts:540` — `this.componentLoader.getInvalid(ids)`)
-  - Various direct callers throughout the codebase that haven't been audited
-- 4 in-memory caches inside WCL (componentsCache, scopeComponentsCache, componentsExtensionsCache, componentLoadedSelfAsAspects).
-- The dual-mode `BIT_LOADER` env flag.
+**Smoke tests run locally (all pass):**
 
-**Recommended next moves (in 8.16.6 territory):**
+- `npm run lint` — clean.
+- `bit6 test teambit.component/component-loader` — 43/43 unit tests pass.
+- `e2e/commands/list.e2e.ts` — 6/6 pass.
+- `e2e/commands/status.e2e.ts` (subset) — 3/3 pass.
+- `e2e/harmony/snap.e2e.ts` (subset, exercises `getManyByLegacy`) — 8/8 pass.
 
-1. **Audit remaining `workspace.componentLoader.*` call sites.** Grep the codebase for direct uses of `workspace.componentLoader` outside `workspace.ts` and `workspace-loader-host.ts`. Each is a blocker for deletion. Expect ~5-10 sites.
-2. **Migrate the `legacyComponent` shortcut.** The `onComponentLoad` subscriber in `workspace.main.runtime.ts:237` calls `workspace.get(id, legacyComponent)`. Either route through unified (publishing the pre-built legacy somehow) or remove the subscriber if it's not needed once Workspace.get is fully unified.
-3. **Migrate `Workspace.listInvalid`.** It calls `componentLoader.getInvalid(ids)`. The unified loader doesn't have an equivalent — needs either `unifiedLoader.getInvalid` API or fold into `Workspace.listInvalid`'s implementation directly.
-4. **Delete WCL + 4 caches + `BIT_LOADER` flag** once 1-3 are clean. Run lint, run full e2e in CI. If green, the consolidation is complete.
-5. **Task 8.16.8** — Update CLAUDE.md and docs to reflect "the unified loader is the loader; there is no other."
+**Remaining work (this OpenSpec change):**
 
-**Important files for the next session to read first:**
+- [ ] 8.16.8 — CLAUDE.md is updated (BIT_LOADER mention removed). Developer docs that describe the loading pipeline still need a pass.
+- [ ] 8.7 — Walk every call site from 1.1 and confirm Lever 1 cache covers it. Largely formality now; defer to a future session.
+- [ ] 8.8 — Convert `consumerComponent.extensions = X` mutation sites. Unblocked now that unified is the only loader. Per the existing Tier-2 design note, this still wants a Component API for atomic extensions replacement before any caller migrates.
+- [ ] 10.x — Verification group (full e2e, benchmarks). Calendar work.
 
-- `scopes/workspace/workspace/workspace-component/workspace-loader-host.ts` — the new host (current implementation)
-- `scopes/component/component-loader/unified-component-loader.ts` — the unified loader with Lever 1
-- `scopes/workspace/workspace/workspace-component/workspace-component-loader.ts` — the legacy WCL to be deleted
-- `openspec/changes/rewrite-component-loading/spike/01-consolidated-host-sketch.md` — the design rationale
-- `openspec/changes/rewrite-component-loading/design-stage2-perf.md` — caching-first perf framing (retracts the original "skip phases" design)
+**Important files for next session:**
 
-**Don't re-do these dead-ends (saves time):**
+- `scopes/workspace/workspace/workspace.ts` — public Workspace API, now WCL-free.
+- `scopes/workspace/workspace/workspace-component/workspace-loader-host.ts` — the host (~510 LoC after `buildAndLoadFromLegacy` was added).
+- `scopes/component/component-loader/unified-component-loader.ts` — the unified loader.
+- `openspec/changes/rewrite-component-loading/spike/01-consolidated-host-sketch.md` — design rationale.
+
+**Don't re-do these dead-ends:**
 
 - Don't try to "skip phases" for perf — phases are cache keys, not skip-layers (see design-stage2-perf.md).
-- Don't publish partial Components to the cache pre-emptively — it breaks consumers that expect full state. The in-flight tracking approach (Lever 1) is the right solution.
-- Don't migrate Workspace.getMany without the `loadingDepth` recursion-skip + `originatedFromHarmony: true` flag — both are required to avoid the recursive `workspace.loadComponentsExtensions` → `workspace.getMany` infinite loop.
+- Don't publish partial Components to the cache pre-emptively — Lever 1 in-flight tracking is the right shape.
+- The `legacyComponent` shortcut is genuinely needed (subscriber bridge, dev-files chicken-and-egg, snapping's `getManyByLegacy`). Don't try to delete it by routing through `unifiedLoader.get` — that re-triggers `consumer.loadComponents` for an id already mid-load and double-loads. The `buildAndLoadFromLegacy` helper is the right shape.
 
 ## Session learnings (2026-05-08 to 2026-05-11) — read before stage 2
 
@@ -158,9 +159,9 @@ Verdict from the spike: `WorkspaceComponentLoader`'s 1029 lines are largely acci
 - [x] 8.16.3 Smoke-test `bit status` under `BIT_LOADER=new`. **Done 2026-05-13.** Byte-identical output to `BIT_LOADER=old`, 0 env false-positives.
 - [x] 8.16.4 Migrate `Workspace.get` / `Workspace.getMany` to route through the unified loader. **Done 2026-05-13.** Three coordinated fixes solved the recursion: (1) added `loadingDepth` counter on the host — recursive `loadMany` calls (triggered by pass 1's `loadComponentsExtensions` → eventually `workspace.getMany`) return config-only components without firing slots; (2) pass 1's `consumer.loadComponents` call sets `originatedFromHarmony: true` to suppress the global onComponentLoad subscriber from firing redundant workspace.get for every legacy component; (3) UnifiedComponentLoader exposes a `publish(id, phase, component)` API (currently unused — kept for future pre-publish needs). The legacyComponent shortcut on `Workspace.get` (used by the onComponentLoad subscriber for legacy bridging) still routes through WCL — that path doesn't hit the recursion-prone machinery. Verified: `bit status` byte-identical output, lint clean, 0 env false-positives. Performance: warm bit status 10.6s (new) vs 9.5s (old), ~12% regression from the unconditional `loadComponentsExtensions` call. Optimization deferred — Lever 1 (8.16.7) may close the gap.
 - [x] 8.16.5 Run a representative e2e subset under the new path. **Done 2026-05-13 via CI on PR #10369.** Full e2e suite ran on CircleCI under `BIT_LOADER=new` (default per task 7.1). All tests passed except one: `e2e/performance/filesystem-read.e2e.ts` — the bit-bootstrap file-count test. The new `@teambit/component-loader` package and its transitive deps added ~30-50 files to bootstrap, putting `bit --help` over the 1062-file limit. Bumped `MAX_FILES_READ: 1062 → 1120` and `MAX_FILES_READ_STATUS: 1500 → 1650` (commit 2026-05-13). Real validation that the stage-2 architecture is correct: every other e2e in the suite passes.
-- [ ] 8.16.6 Delete `workspace-component-loader.ts` (1029 LoC), the 4 in-memory caches it owned, the dual-mode `BIT_LOADER` env flag, and any other now-dead code.
+- [x] 8.16.6 Delete `workspace-component-loader.ts` (1029 LoC), the 4 in-memory caches it owned, the dual-mode `BIT_LOADER` env flag, and any other now-dead code. **Done 2026-05-13 (second session).** Strategy: rather than reroute the `legacyComponent` shortcut callers (subscriber bridge, dev-files, snapping `getManyByLegacy`) through the unified loader — which would double-load via a recursive `consumer.loadComponents` for the same id — added `WorkspaceLoaderHost.buildAndLoadFromLegacy(legacy)` that builds harmony around a pre-loaded legacy + fires slots. All Workspace.get/getMany/getIfExist/listWithInvalidAtPhase/clearCache paths now go through the unified loader. `Workspace.listInvalid` inlines the `consumer.loadComponent` loop directly. `BIT_LOADER` removed from package.json e2e scripts and load-progress-renderer.ts. Lint clean; component-loader unit tests (43/43), list.e2e (6/6), status.e2e subset (3/3), and snap.e2e subset (8/8, exercises `getManyByLegacy`) all pass locally.
 - [x] 8.16.7 Land Lever 1 — in-flight dedup in `unified.getMany`. **Done 2026-05-13.** Added per-`(id, phase)` in-flight tracking on UnifiedComponentLoader. When `getMany` dispatches an id to the host, that id is registered as a Promise; concurrent `getMany` requests for the same id (e.g. from recursive workspace.getMany inside the host's own work) await the existing promise instead of triggering another host call. **Measured impact on `bit status` (311 components):** 117 → 64 host calls; `core-aspect-env` was being loaded 21 times at consecutive nesting depths, now loaded once. Performance: warm bit status now at parity with legacy (~10-11s, run-to-run variance dominates) — closes the 12% regression from 8.16.4.
-- [ ] 8.16.8 Update CLAUDE.md and any developer docs.
+- [~] 8.16.8 Update CLAUDE.md and any developer docs. **Partially done 2026-05-13 (second session).** CLAUDE.md: removed the `BIT_LOADER=new` note from the e2e-test bullet. Developer docs that describe the loading pipeline (CLAUDE.md "Architecture Overview" / aspect docs) still need a pass to reflect "the unified loader is the loader; there is no other".
 
 After 8.16 lands, "Stage 3 cleanup" (Group 9) is mostly already done, and task 8.8 (consumer-component mutations) becomes unblocked because `Workspace.get` routes through unified, making `componentLoader.invalidate(id)` the canonical cache-bust path.
 

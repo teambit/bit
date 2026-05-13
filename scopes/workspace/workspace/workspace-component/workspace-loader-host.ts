@@ -127,6 +127,38 @@ export class WorkspaceLoaderHost implements LoaderHost {
     return this.loadMany(ids);
   }
 
+  /**
+   * Build a harmony Component around a pre-loaded legacy `ConsumerComponent`
+   * and fire its onLoad slots. Used by the `consumer.loadComponents` →
+   * `onComponentLoadSubscriber` bridge (workspace.main.runtime.ts) and by
+   * `getDevFilesForConsumerComp` (dev-files), both of which already hold a
+   * mid-load legacy and need the harmony view + slot data without paying for
+   * a full unified load (which would re-trigger `consumer.loadComponents` for
+   * the same id and recurse). No cache write — the caller's existing legacy
+   * cache flow is the source of truth.
+   */
+  async buildAndLoadFromLegacy(legacy: ConsumerComponentType): Promise<Component> {
+    const id = legacy.id;
+    const fromScope = await this.workspace.scope.get(id);
+    const { extensions, errors } = await this.workspace.componentExtensions(id, fromScope);
+    if (errors?.some((e) => e instanceof MergeConfigConflict)) {
+      legacy.issues.getOrCreate(IssuesClasses.MergeConfigHasConflict).data = true;
+    }
+    legacy.extensions = extensions;
+    const state = new State(
+      new Config(legacy),
+      await this.workspace.createAspectList(extensions),
+      ComponentFS.fromVinyls(legacy.files),
+      legacy.dependencies,
+      legacy
+    );
+    const component = fromScope
+      ? new WorkspaceComponent(fromScope.id, fromScope.head, state, fromScope.tags, this.workspace)
+      : new WorkspaceComponent(id, null, state, new TagMap(), this.workspace);
+    await this.executeLoadSlot(component);
+    return component;
+  }
+
   // === Two-pass load orchestration =================================
 
   private async loadMany(ids: ComponentID[]): Promise<Map<string, Component>> {

@@ -30,7 +30,7 @@ import type {
   OnRootAspectAdded,
   OnRootAspectAddedSlot,
 } from './workspace.main.runtime';
-import type { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
+import type { ComponentLoadOptions } from './workspace-component/component-load-options';
 import type { ConfigStoreMain } from '@teambit/config-store';
 
 export type GetConfiguredUserAspectsPackagesOptions = {
