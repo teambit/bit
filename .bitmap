@@ -1956,6 +1956,14 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/hooks/use-core-aspects"
     },
+    "ui/inline-code-compare": {
+        "name": "ui/inline-code-compare",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.code",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/inline-code-compare"
+    },
     "ui/inline-diff-viewer": {
         "name": "ui/inline-diff-viewer",
         "scope": "",
