@@ -1267,6 +1267,15 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     // multiplies allocations and triggers OOM on cold cache. The unified
     // loader is still exercised via `Workspace.listWithInvalidAtPhase` for
     // explicit phase-aware callers (currently `bit status`).
+    // Task 8.16.4 attempt (2026-05-13): routing through unified hangs.
+    // Root cause: the new host's pass 1 calls `workspace.loadComponentsExtensions`
+    // (to register external envs so the env-issue check passes). That call
+    // chains: loadComponentsExtensions → loadAspects → importAndGetAspects →
+    // `workspace.importAndGetMany` → `workspace.getMany`. If getMany routes
+    // through unified, it recurses back into another host call → infinite
+    // loop. Fix requires either (a) decoupling env registration from
+    // workspace.getMany, or (b) detecting in-flight recursion at the
+    // unified-loader level.
     const { components } = await this.componentLoader.getMany(ids, loadOpts, throwOnFailure);
     this.logger.debug(`getMany, completed. ${components.length} components`);
     return components;
