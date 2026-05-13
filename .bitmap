@@ -1980,6 +1980,14 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-diff-viewer"
     },
+    "ui/inline-preview-compare": {
+        "name": "ui/inline-preview-compare",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.preview",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/inline-preview-compare"
+    },
     "ui/inline-tests-compare": {
         "name": "ui/inline-tests-compare",
         "scope": "",
