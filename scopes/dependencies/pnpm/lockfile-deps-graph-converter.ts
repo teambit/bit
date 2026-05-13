@@ -88,6 +88,23 @@ export function convertLockfileToGraph(
   }
   delete lockfile.snapshots![lockedPkgDepPath];
   delete lockfile.packages![dp.removeSuffix(lockedPkgDepPath)];
+  // Scrub back-edges from a circular workspace dep (another workspace
+  // component depending on the one we're processing). Otherwise the
+  // back-edge survives buildEdges but its target — the just-deleted
+  // pkgId — has no entry in buildPackages, leaving a dangling neighbour.
+  // convertGraphToLockfile would later materialise that neighbour as an
+  // empty packages entry and ask the registry for the workspace
+  // snap-version, which may never have been published.
+  const lockedFileVersion = lockfile.importers![componentRootDir].dependencies![pkgName].version;
+  for (const snapshot of Object.values(lockfile.snapshots ?? {})) {
+    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+      const deps = snapshot[depType];
+      if (deps?.[pkgName] === lockedFileVersion) {
+        delete deps[pkgName];
+        if (Object.keys(deps).length === 0) delete snapshot[depType];
+      }
+    }
+  }
   return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
 }
 
@@ -101,10 +118,12 @@ function _convertLockfileToGraph(
     directDependencies: DependencyNeighbour[];
   }
 ): DependenciesGraph {
-  return new DependenciesGraph({
+  const graph = new DependenciesGraph({
     edges: buildEdges(lockfile, { directDependencies, componentIdByPkgName }),
     packages: buildPackages(lockfile, { componentIdByPkgName }),
   });
+  dropOrphanFilePkgs(graph);
+  return graph;
 }
 
 function buildEdges(
@@ -245,6 +264,7 @@ export async function convertGraphToLockfile(
 ): Promise<BitLockfileFile> {
   const graphString = _graph.serialize();
   const graph = DependenciesGraph.deserialize(graphString)!;
+  dropOrphanFilePkgs(graph);
   const packages = {};
   const snapshots = {};
   const allEdgeIds = new Set(graph.edges.map(({ id }) => id));
@@ -398,6 +418,56 @@ function getPkgsToResolve(lockfile: BitLockfileFile, manifests: Record<string, P
 
 function depPathToRef(depPath: dp.DependencyPath): string {
   return `${depPath.version}${depPath.patchHash ?? ''}${depPath.peerDepGraphHash ?? ''}`;
+}
+
+function isFilePkgId(pkgId: string): boolean {
+  return dp.parse(pkgId).nonSemverVersion?.startsWith('file:') ?? false;
+}
+
+/**
+ * Strip orphan "@file:" entries from the graph (mutates in place).
+ *
+ * The "@file:" pkgIds in pnpm's lockfile are workspace components linked as
+ * directory deps. buildPackages is supposed to rewrite them to
+ * "name@<semverVersion>" via componentIdByPkgName, but if a name is missing
+ * from that map (older bit, partial isolation, a component renamed/removed
+ * between install and tag) the orphan leaks through with its resolution
+ * stripped (directory type). We can't recover an integrity for it later —
+ * getPkgsToResolve won't try because dp.parse shoves "file:..." into
+ * nonSemverVersion, leaving parsed.version undefined, and at install time
+ * the component is either a workspace project pnpm wires through importers
+ * (so it doesn't belong in the packages map) or no longer in the workspace
+ * at all. Either way the orphan entry is unusable, so drop it both at graph
+ * creation (don't persist broken graphs) and at lockfile generation
+ * (recover graphs already saved in the model).
+ */
+function dropOrphanFilePkgs(graph: DependenciesGraph): void {
+  const orphanPkgIds = new Set<string>();
+  for (const pkgId of graph.packages.keys()) {
+    if (isFilePkgId(pkgId)) {
+      orphanPkgIds.add(pkgId);
+    }
+  }
+  for (const edge of graph.edges) {
+    const pkgId = edge.attr?.pkgId ?? edge.id;
+    if (isFilePkgId(pkgId) || isFilePkgId(edge.id)) {
+      orphanPkgIds.add(pkgId);
+      orphanPkgIds.add(edge.id);
+    }
+  }
+  if (orphanPkgIds.size === 0) return;
+  for (const id of orphanPkgIds) {
+    graph.packages.delete(id);
+  }
+  graph.edges = graph.edges
+    .filter((edge) => !orphanPkgIds.has(edge.id) && !orphanPkgIds.has(edge.attr?.pkgId ?? edge.id))
+    .map((edge) => {
+      if (!edge.neighbours.some((n) => orphanPkgIds.has(n.id))) return edge;
+      return {
+        ...edge,
+        neighbours: edge.neighbours.filter((n) => !orphanPkgIds.has(n.id)),
+      };
+    });
 }
 
 function convertGraphPackageToLockfilePackage(pkgAttr: PackageAttributes) {
