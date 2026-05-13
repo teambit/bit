@@ -95,6 +95,16 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         hash: String
         laneComponentIds: [ComponentID!]!
         components(offset: Int, limit: Int): [Component!]!
+        """
+        IDs of hidden cascade entries (lane.updateDependents). Separate from \`laneComponentIds\`
+        so workspace-facing consumers don't surface them by default.
+        """
+        updateDependentIds: [ComponentID!]!
+        """
+        Hidden cascade entries materialized as Components. Separate from \`components\` for the
+        same reason — consumers opt in by selecting this field.
+        """
+        updateDependentComponents(offset: Int, limit: Int): [Component!]!
         readmeComponent: Component
         createdBy: LaneOwner
         createdAt: String
@@ -271,6 +281,13 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         components: async (lane: LaneData) => {
           const laneComponents = await lanesMainRuntime.getLaneComponentModels(lane);
           return laneComponents;
+        },
+        updateDependentIds: async (lane: LaneData) => {
+          const ids = await lanesMainRuntime.getLaneUpdateDependentIds(lane);
+          return ids.map((id) => id.toObject());
+        },
+        updateDependentComponents: async (lane: LaneData) => {
+          return lanesMainRuntime.getLaneUpdateDependentComponents(lane);
         },
         readmeComponent: async (lane: LaneData) => {
           const laneReadmeComponent = await lanesMainRuntime.getLaneReadmeComponent(lane);

@@ -232,12 +232,19 @@ export default class Lanes {
         }
         return comps;
       };
+      const updateDependents = laneObject.updateDependents?.length
+        ? laneObject.updateDependents.map((id) => ({
+            id: id.changeVersion(undefined),
+            head: id.version as string,
+          }))
+        : undefined;
       return {
         name: laneName,
         remote: laneObject.toLaneId().toString(),
         id: laneObject.toLaneId(),
         alias: alias !== laneName ? alias : null,
         components: await filterDeletedComponents(),
+        updateDependents,
         log: laneObject.log,
         isMerged: mergeData ? await laneObject.isFullyMerged(scope) : null,
         readmeComponent: laneObject.readmeComponent && {
@@ -275,6 +282,11 @@ export type LaneData = {
   id: LaneId;
   alias?: string | null;
   components: Array<{ id: ComponentID; head: string }>;
+  /**
+   * hidden cascade entries — kept separate from `components` so workspace-facing consumers don't
+   * surface them by default. Opt in by reading this field explicitly.
+   */
+  updateDependents?: Array<{ id: ComponentID; head: string }>;
   isMerged: boolean | null;
   readmeComponent?: { id: ComponentID; head?: string };
   log?: LaneLog;
@@ -285,6 +297,7 @@ export function serializeLaneData(laneData: LaneData) {
   return {
     ...laneData,
     components: laneData.components.map((c) => ({ id: c.id.toString(), head: c.head })),
+    updateDependents: laneData.updateDependents?.map((c) => ({ id: c.id.toString(), head: c.head })),
     readmeComponent: laneData.readmeComponent && {
       id: laneData.readmeComponent.id.toString(),
       head: laneData.readmeComponent.head,

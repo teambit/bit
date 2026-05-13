@@ -162,19 +162,36 @@ export class VersionMaker {
 
     const currentLane = this.consumer?.getCurrentLaneId();
     await mapSeries(this.allComponentsToTag, async (component) => {
+      // hidden lane entries (lane.updateDependents) cascade through autotag but must not enter
+      // the workspace bitmap. Detect via two signals: workspace flow uses absence-from-bitmap
+      // (cascade autotag loaded the comp from scope); bare-scope flow checks updateDependents.
+      const isHiddenLaneEntry = Boolean(
+        (this.consumer && !this.consumer.bitMap.getComponentIfExist(component.id, { ignoreVersion: true })) ||
+          (!this.consumer && lane?.findUpdateDependent(component.id))
+      );
+      // explicit signal to addVersion. Order matters — auto-tag cascade results check the
+      // existing entry's bucket BEFORE applying the caller-level `updateDependentsOnLane` flag,
+      // so a bare-scope reverse cascade that auto-tags a *visible* lane.components dependent
+      // doesn't accidentally move it into the hidden bucket.
+      //  - explicit target of `snapFromScope({ updateDependents: true })` → hidden (caller flag)
+      //  - hidden cascade snap (auto-tagged) → keep hidden, raise override flag
+      //  - workspace component (in bitmap) → promote to visible (the promote-on-import path)
+      //  - auto-tagged visible lane component → keep visible
+      const isExplicitTarget = this.ids.searchWithoutVersion(component.id) !== undefined;
+      const addToUpdateDependentsInLane = (updateDependentsOnLane && isExplicitTarget) || isHiddenLaneEntry;
       const results = await this.snapping._addCompToObjects({
         source: component,
         lane,
         shouldValidateVersion: Boolean(build),
         addVersionOpts: {
-          addToUpdateDependentsInLane: updateDependentsOnLane,
+          addToUpdateDependentsInLane,
           setHeadAsParent,
           detachHead,
           overrideHead: overrideHead,
         },
         batchId: this.batchId,
       });
-      if (this.workspace) {
+      if (this.workspace && !isHiddenLaneEntry) {
         const modelComponent = component.modelComponent || (await this.legacyScope.getModelComponent(component.id));
         await updateVersions(
           this.workspace,
@@ -184,9 +201,13 @@ export class VersionMaker {
           results.addedVersionStr,
           true
         );
-      } else {
-        const tagData = this.params.tagDataPerComp?.find((t) => t.componentId.isEqualWithoutVersion(component.id));
-        if (tagData?.isNew) results.version.removeAllParents();
+      } else if (this.workspace && isHiddenLaneEntry) {
+        // hidden cascade snaps don't get a bitmap entry, but the new Version still needs to be
+        // tracked in stagedSnaps so `bit export` includes it when computing the export set and
+        // sends its objects over the wire.
+        const modelComponent = component.modelComponent || (await this.legacyScope.getModelComponent(component.id));
+        const hash = modelComponent.getRef(results.addedVersionStr);
+        if (hash) this.workspace.scope.legacyScope.stagedSnaps.addSnap(hash.toString());
       }
     });
 
@@ -194,7 +215,18 @@ export class VersionMaker {
       await this.workspace.scope.legacyScope.stagedSnaps.write();
     }
     const publishedPackages: string[] = [];
-    const harmonyCompsToTag = await (this.workspace || this.scope).getManyByLegacy(this.allComponentsToTag);
+    // hidden lane entries are scope-only — `workspace.getManyByLegacy` would throw
+    // MissingBitMapComponent for them. Route the workspace path through visible-only and load
+    // any hidden cascade entries from scope so the build pipeline still sees them.
+    const visibleCompsToTag = this.workspace
+      ? this.allComponentsToTag.filter((c) => this.consumer?.bitMap.getComponentIfExist(c.id, { ignoreVersion: true }))
+      : this.allComponentsToTag;
+    const hiddenCompsToTag = this.workspace
+      ? this.allComponentsToTag.filter((c) => !this.consumer?.bitMap.getComponentIfExist(c.id, { ignoreVersion: true }))
+      : [];
+    const harmonyVisibleCompsToTag = await (this.workspace || this.scope).getManyByLegacy(visibleCompsToTag);
+    const harmonyHiddenCompsToTag = hiddenCompsToTag.length ? await this.scope.getManyByLegacy(hiddenCompsToTag) : [];
+    const harmonyCompsToTag = [...harmonyVisibleCompsToTag, ...harmonyHiddenCompsToTag];
     // this is not necessarily the same as the previous allComponentsToTag. although it should be, because
     // harmonyCompsToTag is created from allComponentsToTag. however, for aspects, the getMany returns them from cache
     // and therefore, their instance of ConsumerComponent can be different than the one in allComponentsToTag.
@@ -388,24 +420,52 @@ export class VersionMaker {
 
   private async getAutoTagData(idsToTag: ComponentIdList): Promise<AutoTagResult[]> {
     if (this.params.skipAutoTag) return [];
-    if (!this.workspace) return this.getLaneAutoTagIdsFromScope(idsToTag);
+    // hidden lane.updateDependents are scope-only — they're not in the workspace
+    // bitmap, so the workspace autotag candidate pool can't see them. Always run the scope-side
+    // autotag pass alongside the workspace one when on a lane, so cascading a hidden updateDependent
+    // off a workspace snap (scenario 1) works.
+    const fromScope = await this.getLaneAutoTagIdsFromScope(idsToTag, /* hiddenOnly */ Boolean(this.workspace));
+    if (!this.workspace) return fromScope;
     // ids without versions are new. it's impossible that tagged (and not-modified) components has
-    // them as dependencies.
-    const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
+    // them as dependencies. Also filter out hidden lane entries — getAutoTagInfo loads
+    // `[potentialComponents, ...changedComponents]` from the workspace, so a hidden id in
+    // changedComponents throws MissingBitMapComponent. Hidden cascade is already covered by the
+    // scope-side `fromScope` pass above.
+    const consumer = this.workspace.consumer;
+    const idsToTriggerAutoTag = idsToTag.filter(
+      (id) => id.hasVersion() && consumer.bitMap.getComponentIfExist(id, { ignoreVersion: true })
+    );
     const autoTagDataWithLocalOnly = await this.workspace.getAutoTagInfo(
       ComponentIdList.fromArray(idsToTriggerAutoTag)
     );
     const localOnly = this.workspace?.listLocalOnly();
-    return localOnly
+    const fromWorkspace = localOnly
       ? autoTagDataWithLocalOnly.filter((autoTagItem) => !localOnly.hasWithoutVersion(autoTagItem.component.id))
       : autoTagDataWithLocalOnly;
+    if (!fromScope.length) return fromWorkspace;
+    // Dedupe: workspace autotag wins if the same id surfaces in both (the workspace consumer
+    // component is the authoritative one to snap).
+    const workspaceIds = new Set(fromWorkspace.map((a) => a.component.id.toStringWithoutVersion()));
+    const fromScopeFiltered = fromScope.filter((a) => !workspaceIds.has(a.component.id.toStringWithoutVersion()));
+    return [...fromWorkspace, ...fromScopeFiltered];
   }
 
-  private async getLaneAutoTagIdsFromScope(idsToTag: ComponentIdList): Promise<AutoTagResult[]> {
+  private async getLaneAutoTagIdsFromScope(idsToTag: ComponentIdList, hiddenOnly = false): Promise<AutoTagResult[]> {
     const lane = await this.legacyScope.getCurrentLaneObject();
     if (!lane) return [];
-    const laneCompIds = lane.toComponentIds();
-    const graphIds = await this.scope.getGraphIds(laneCompIds);
+    // for the workspace+lane path we only care about hidden entries — workspace autotag handles
+    // visible ones. for the bare-scope path (no workspace), include all lane entries.
+    const hiddenLaneIds = lane.updateDependents || [];
+    const candidateLaneIds = hiddenOnly ? hiddenLaneIds : [...lane.toComponentIds(), ...hiddenLaneIds];
+    if (!candidateLaneIds.length) return [];
+    const laneCompIds = ComponentIdList.fromArray(candidateLaneIds);
+    // include `idsToTag` in the graph too. For the bare-scope reverse cascade
+    // (`snapFromScope({ updateDependents: true })`), the targeted hidden entry is being NEWLY
+    // introduced to the lane and isn't in candidateLaneEntries yet — without seeding it into
+    // the graph, predecessors lookup wouldn't surface lane.components that depend on it, and
+    // the reverse cascade (re-snap visible dependents) wouldn't fire.
+    const graphSeedIds = ComponentIdList.uniqFromArray([...laneCompIds, ...idsToTag]);
+    const graphIds = await this.scope.getGraphIds(graphSeedIds);
     const dependentsMap = idsToTag.reduce(
       (acc, id) => {
         const dependents = graphIds.predecessors(id.toString());

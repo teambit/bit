@@ -162,7 +162,6 @@
         "@teambit/code.ui.hooks.use-code-params": "0.0.497",
         "@teambit/code.ui.object-formatter": "0.0.1",
         "@teambit/code.ui.queries.get-component-code": "^0.0.503",
-        "@teambit/code.ui.queries.get-file-content": "^0.0.505",
         "@teambit/code.ui.utils.get-file-icon": "0.0.496",
         "@teambit/community.starters.hello-world": "^0.1.2",
         "@teambit/compilation.babel-compiler": "^1.1.18",

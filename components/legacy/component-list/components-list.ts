@@ -152,9 +152,12 @@ export class ComponentsList {
   }
 
   /**
-   * @todo: this is not the full list. It's missing the deleted-components.
-   * will be easier to add it here once all legacy are not using this class and then ScopeMain will be in the
-   * constructor.
+   * @todo: this is not the full list. It's missing the deleted-components. will be easier to add it
+   * here once all legacy are not using this class and then ScopeMain will be in the constructor.
+   *
+   * Returns every locally-changed component pending export, including hidden lane.updateDependents
+   * entries. Callers that need a workspace-only view (e.g. `bit status`'s "staged components"
+   * section) filter out hidden entries themselves at the call site.
    */
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<ComponentIdList> {
     const fromBitMap = this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
@@ -162,12 +165,12 @@ export class ComponentsList {
     const pendingExportComponents = await pFilter(modelComponents, async (component: ModelComponent) => {
       const foundInBitMap = fromBitMap.searchWithoutVersion(component.toComponentId());
       if (!foundInBitMap) {
-        // it's not on the .bitmap only in the scope, as part of the out-of-sync feature, it should
-        // be considered as staged and should be exported. same for soft-removed components, which are on scope only.
-        // notice that we use `hasLocalChanges`
-        // and not `isLocallyChanged` by purpose. otherwise, cached components that were not
-        // updated from a remote will be calculated as remote-ahead in the setDivergeData and will
-        // be exported unexpectedly.
+        // not in .bitmap — out-of-sync workspace comps and hidden updateDependents entries land
+        // here. Defer to the lane-aware check when the comp is on the lane in either bucket.
+        const compId = component.toComponentId();
+        if (lane && (lane.getComponent(compId) || lane.findUpdateDependent(compId))) {
+          return component.isLocallyChanged(this.scope.objects, lane);
+        }
         return component.isLocallyChangedRegardlessOfLanes();
       }
       return component.isLocallyChanged(this.scope.objects, lane, foundInBitMap);
