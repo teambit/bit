@@ -1,0 +1,89 @@
+$border-color: var(--border-medium-color, #e8ecf0);
+$surface-color: var(--surface-color, #fff);
+$accent-color: var(--bit-accent-color, #6c5ce7);
+$text-primary: var(--on-surface-color, #1a1a2e);
+$text-muted: var(--on-background-medium-color, #a0aec0);
+
+.toolbar {
+  --sidebar-width: 280px;
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid $border-color;
+  background: $surface-color;
+  gap: 0;
+}
+
+.toolbarSearch {
+  width: calc(var(--sidebar-width) - 16px);
+  flex-shrink: 0;
+}
+
+.toolbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  flex: 1;
+  min-width: 0;
+  padding-left: 16px;
+  border-left: 1px solid $border-color;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.toolbarOption {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+}
+
+.toolbarBadge {
+  font-size: 11px;
+  font-weight: 600;
+  color: $text-muted;
+  background: rgba(0, 0, 0, 0.06);
+  padding: 1px 6px;
+  border-radius: 8px;
+  min-width: 16px;
+  text-align: center;
+}
+
+.toolbarBadgeSkeleton {
+  display: inline-block;
+  width: 20px;
+  height: 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.06);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.viewModeToggle,
+.groupByToggle {
+  font-size: 13px;
+  height: 34px;
+}
+
+.toolbarSeparator {
+  width: 1px;
+  height: 22px;
+  background: $border-color;
+}
+
+.diffModeToggle {
+  font-size: 13px;
+  height: 34px;
+}

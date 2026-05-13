@@ -10,3 +10,5 @@ export {
   useCompositionsRegistryRegister,
 } from './file-registry';
 export type { FileInfo } from './file-registry';
+export { CompareToolbar } from './compare-toolbar';
+export type { CompareToolbarProps, CompareViewMode, CompareGroupByOption, DiffMode } from './compare-toolbar';
