@@ -299,6 +299,15 @@ without arguments, fetches all workspace components' latest versions from their 
     if (!ids.length && dependents) {
       throw new BitError('you have to specify ids to use "--dependents" flag');
     }
+    if (!ids.length && dependentsVia) {
+      throw new BitError('you have to specify ids to use "--dependents-via" flag');
+    }
+    if (!ids.length && trackOnly) {
+      throw new BitError('you have to specify ids to use "--track-only" flag');
+    }
+    if (owner && ids.length !== 1) {
+      throw new BitError('--owner flag requires exactly one argument (the owner name)');
+    }
     let dependenciesDepthNum: number | undefined;
     if (dependenciesDepth !== undefined) {
       if (!dependencies && !dependenciesHead) {
@@ -308,15 +317,6 @@ without arguments, fetches all workspace components' latest versions from their 
       if (!Number.isInteger(dependenciesDepthNum) || dependenciesDepthNum < 1) {
         throw new BitError(`"--dependencies-depth" must be a positive integer, got "${dependenciesDepth}"`);
       }
-    }
-    if (!ids.length && dependentsVia) {
-      throw new BitError('you have to specify ids to use "--dependents-via" flag');
-    }
-    if (!ids.length && trackOnly) {
-      throw new BitError('you have to specify ids to use "--track-only" flag');
-    }
-    if (owner && ids.length !== 1) {
-      throw new BitError('--owner flag requires exactly one argument (the owner name)');
     }
     let mergeStrategy;
     if (merge && typeof merge === 'string') {

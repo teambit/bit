@@ -451,8 +451,7 @@ describe('bit import', function () {
       });
     });
   });
-  describe('import with --dependencies-depth', () => {
-    // populateComponents(4) creates a chain: comp1 -> comp2 -> comp3 -> comp4
+  describe('import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4)', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(4);
@@ -466,11 +465,10 @@ describe('bit import', function () {
         helper.command.importComponent('comp1', '--dependencies --dependencies-depth 1');
       });
       it('should import only the direct dependency (comp2) and the requested component', () => {
-        const bitMap = helper.bitMap.read();
-        expect(bitMap).to.have.property('comp1');
-        expect(bitMap).to.have.property('comp2');
-        expect(bitMap).to.not.have.property('comp3');
-        expect(bitMap).to.not.have.property('comp4');
+        helper.bitMap.expectToHaveId('comp1');
+        helper.bitMap.expectToHaveId('comp2');
+        helper.bitMap.expectNotToHaveId('comp3');
+        helper.bitMap.expectNotToHaveId('comp4');
       });
     });
     describe('--dependencies-depth 2', () => {
@@ -479,26 +477,24 @@ describe('bit import', function () {
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp1', '--dependencies --dependencies-depth 2');
       });
-      it('should import direct dependencies and their direct dependencies (comp2, comp3) but not deeper', () => {
-        const bitMap = helper.bitMap.read();
-        expect(bitMap).to.have.property('comp1');
-        expect(bitMap).to.have.property('comp2');
-        expect(bitMap).to.have.property('comp3');
-        expect(bitMap).to.not.have.property('comp4');
+      it('should import direct deps and their direct deps (comp2, comp3) but not deeper', () => {
+        helper.bitMap.expectToHaveId('comp1');
+        helper.bitMap.expectToHaveId('comp2');
+        helper.bitMap.expectToHaveId('comp3');
+        helper.bitMap.expectNotToHaveId('comp4');
       });
     });
-    describe('--dependencies (no depth) preserves existing all-transitive behavior', () => {
+    describe('--dependencies without depth', () => {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp1', '--dependencies');
       });
       it('should import all transitive dependencies', () => {
-        const bitMap = helper.bitMap.read();
-        expect(bitMap).to.have.property('comp1');
-        expect(bitMap).to.have.property('comp2');
-        expect(bitMap).to.have.property('comp3');
-        expect(bitMap).to.have.property('comp4');
+        helper.bitMap.expectToHaveId('comp1');
+        helper.bitMap.expectToHaveId('comp2');
+        helper.bitMap.expectToHaveId('comp3');
+        helper.bitMap.expectToHaveId('comp4');
       });
     });
     describe('validation errors', () => {

@@ -51,7 +51,7 @@ export type ImportOptions = {
   objectsOnly?: boolean;
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages, not as imported
   importHeadDependenciesDirectly?: boolean; // default: false, similar to importDependenciesDirectly, but it checks out to their head
-  dependenciesDepth?: number; // when set, BFS through the dependency graph up to N levels (1=direct deps only). Otherwise, all transitive deps.
+  dependenciesDepth?: number; // max depth of transitive deps to import (1=direct only); omit for all
   importDependents?: boolean;
   dependentsVia?: string;
   dependentsAll?: boolean;
@@ -674,16 +674,13 @@ if you just want to get a quick look into this snap, create a new workspace and 
   private async getAllFlattenedDeps(bitIds: ComponentID[]): Promise<ComponentIdList> {
     const remoteComps = await this.scope.scopeImporter.getManyRemoteComponents(bitIds);
     const versions = remoteComps.getVersions();
-    if (versions.length === 1) return versions[0].flattenedDependencies;
-    const flattenedDeps = versions.map((v) => v.flattenedDependencies).flat();
-    return ComponentIdList.uniqFromArray(flattenedDeps);
+    return ComponentIdList.uniqFromArray(versions.flatMap((v) => [...v.flattenedDependencies]));
   }
 
-  /**
-   * BFS through the dependency graph, fetching one level at a time from the remote.
-   * Uses each version's direct deps (`getAllDependenciesIds`) — N levels = N round-trips.
-   */
+  /** BFS one level at a time from the remote; N levels = N round-trips. */
   private async getDepsByDepth(bitIds: ComponentID[], depth: number): Promise<ComponentIdList> {
+    // root bitIds are seeded into `visited` so they're excluded from the returned list —
+    // the caller already adds them to the import set, and including them here would duplicate.
     const collected = new Map<string, ComponentID>();
     const visited = new Set<string>(bitIds.map((id) => id.toString()));
     let currentBatch: ComponentID[] = bitIds;
@@ -704,7 +701,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
       currentBatch = nextBatch;
     }
 
-    return ComponentIdList.fromArray(Array.from(collected.values()));
+    return ComponentIdList.uniqFromArray(Array.from(collected.values()));
   }
 
   private uniqWithoutVersions(flattened: ComponentIdList) {
