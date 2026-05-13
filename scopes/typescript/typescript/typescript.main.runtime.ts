@@ -146,7 +146,9 @@ export class TypescriptMain {
         if (compilerOptions.strict === undefined) compilerOptions.strict = false;
         // TS 6 stopped auto-discovering @types/* packages (types defaults to []).
         // Seed the types every Bit env installs — @types/node universally and @types/jest
-        // (provides describe/it/expect globals). React env excludes @types/mocha, so don't seed it.
+        // (provides describe/it/expect globals). Don't seed 'mocha': the React env
+        // removes @types/mocha via the `-` convention (see react.env.ts), so seeding it
+        // would make tsc fail to resolve a type package that isn't installed.
         if (compilerOptions.types === undefined) compilerOptions.types = ['node', 'jest'];
       }
     }
