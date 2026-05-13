@@ -194,6 +194,8 @@
         "@teambit/component.ui.deprecation-icon": "^0.0.509",
         "@teambit/component.ui.hooks.use-fetch-docs": "^0.0.21",
         "@teambit/component.ui.version-label": "^0.0.509",
+        "@teambit/components.hooks.use-list-components": "^0.0.22",
+        "@teambit/components.legacy.create-component-model": "^0.0.12",
         "@teambit/compositions.ui.composition-live-controls": "^0.0.6",
         "@teambit/compositions.ui.compositions-menu-bar": "^0.0.177",
         "@teambit/compositions.ui.compositions-overview": "^0.0.10",
