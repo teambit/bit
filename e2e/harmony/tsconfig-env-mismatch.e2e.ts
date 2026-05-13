@@ -42,8 +42,8 @@ describe('tsconfig env mismatch between check-types and build', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
 
       // Create permissive tsconfig (strict mode explicitly off).
-      // strict must be set explicitly because TS 6 changed the default from false to true,
-      // and this fixture was relying on the TS 5 default.
+      // Setting strict explicitly makes the fixture's intent self-documenting and
+      // independent of any future change to TypeScript's tsconfig defaults.
       const permissiveTsconfig = JSON.stringify(
         {
           compilerOptions: {
