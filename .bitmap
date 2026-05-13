@@ -1696,6 +1696,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/ui"
     },
+    "ui/api-diff-view": {
+        "name": "ui/api-diff-view",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.semantics",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/api-diff-view"
+    },
     "ui/aspect-box": {
         "name": "ui/aspect-box",
         "scope": "teambit.harmony",
