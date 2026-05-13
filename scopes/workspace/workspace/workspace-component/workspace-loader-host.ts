@@ -319,14 +319,32 @@ export class WorkspaceLoaderHost implements LoaderHost {
     return { workspaceComponents, scopeComponents: scopeOnly, invalid, envIdByCompKey };
   }
 
+  /**
+   * Per-id scope fetch. Workspace components frequently reference a scope
+   * version whose objects aren't fully present locally (e.g. a tagged version
+   * with missing dependency objects). The pre-rewrite WCL handled this by
+   * passing `importIfMissing=false` to `scope.get` and swallowing per-id
+   * errors with a warning — the scope view is used for extension merging,
+   * which has its own fallback when the scope component is absent.
+   *
+   * Matches that behaviour. The `throwWsJsoncAspectNotFoundError` re-throw
+   * is the one case we still want to surface, because it indicates the
+   * workspace.jsonc references an aspect that wasn't fetched.
+   */
   private async getScopeComponentsSafe(ids: ComponentID[]): Promise<Component[]> {
-    try {
-      return await this.workspace.scope.getMany(ids);
-    } catch (err) {
-      const wsAspectLoader = this.workspace.getWorkspaceAspectsLoader();
-      wsAspectLoader.throwWsJsoncAspectNotFoundError(err);
-      throw err;
-    }
+    const results = await Promise.all(
+      ids.map(async (id) => {
+        try {
+          return await this.workspace.scope.get(id, undefined, false);
+        } catch (err: any) {
+          const wsAspectLoader = this.workspace.getWorkspaceAspectsLoader();
+          wsAspectLoader.throwWsJsoncAspectNotFoundError(err);
+          this.logger.warn(`failed loading component ${id.toString()} from scope`, err);
+          return undefined;
+        }
+      })
+    );
+    return compact(results);
   }
 
   // === Pass 2: SCC-ordered env/aspect load =========================
