@@ -49,6 +49,7 @@ export function formatStatusOutput(
     componentsWithIssues,
     importPendingComponents,
     autoTagPendingComponents,
+    pendingUpdateDependents,
     invalidComponents,
     locallySoftRemoved,
     remotelySoftRemoved,
@@ -185,6 +186,14 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
     autoTagPendingComponents.map((c) => format(c))
   );
 
+  const pendingUpdateDependentsDesc =
+    "(impacted dependents that will be pushed on next export — from local cascade or 'Snap updates')";
+  const pendingUpdateDependentsOutput = formatSection(
+    'pending update-dependents',
+    pendingUpdateDependentsDesc,
+    pendingUpdateDependents.map((c) => format(c))
+  );
+
   const componentsWithIssuesToPrint = componentsWithIssues.filter((c) => c.issues.hasTagBlockerIssues() || warnings);
   const compWithIssuesDesc = '(fix the issues according to the suggested solution)';
   const compWithIssuesOutput = formatSection(
@@ -304,6 +313,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
       modifiedComponentOutput,
       snappedComponentsOutput,
       stagedComponentsOutput,
+      pendingUpdateDependentsOutput,
       softTaggedComponentsOutput,
       unavailableOnMainOutput,
       autoTagPendingOutput,
@@ -339,7 +349,8 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
     sections.push({ content: importPendingWarning.trimEnd() });
   }
 
-  const sectionEntries: Array<{ content: string; autoTag?: boolean }> = [
+  type CollapsibleSpec = { ids: ComponentID[]; title: string; desc: string };
+  const sectionEntries: Array<{ content: string; collapse?: CollapsibleSpec }> = [
     { content: outdatedStr },
     { content: pendingMergeStr },
     { content: updatesFromMainOutput },
@@ -350,35 +361,44 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
     { content: modifiedComponentOutput },
     { content: snappedComponentsOutput },
     { content: stagedComponentsOutput },
+    {
+      content: pendingUpdateDependentsOutput,
+      collapse: {
+        ids: pendingUpdateDependents,
+        title: 'pending update-dependents',
+        desc: pendingUpdateDependentsDesc,
+      },
+    },
     { content: softTaggedComponentsOutput },
     { content: unavailableOnMainOutput },
-    { content: autoTagPendingOutput, autoTag: true },
+    {
+      content: autoTagPendingOutput,
+      collapse: { ids: autoTagPendingComponents, title: 'components pending auto-tag', desc: autoTagPendingDesc },
+    },
     { content: compWithIssuesOutput },
     { content: invalidComponentOutput },
     { content: locallySoftRemovedOutput },
     { content: remotelySoftRemovedOutput },
   ];
 
+  const buildCollapsibleSummary = ({ ids, title, desc }: CollapsibleSpec): string => {
+    const scopeCounts = countBy(ids, (id) => id.scope);
+    const sorted = Object.entries(scopeCounts).sort(([, a], [, b]) => b - a);
+    const MAX_SHOWN = 4;
+    const shown = sorted.slice(0, MAX_SHOWN).map(([scope, n]) => `${scope} (${n})`);
+    const remaining = sorted.length - MAX_SHOWN;
+    const scopeLine = remaining > 0 ? [...shown, `+ ${remaining} more scopes`].join(' · ') : shown.join(' · ');
+    const titleLine = formatTitle(`${title} (${ids.length})`);
+    const descLine = chalk.dim(`  ${desc}`);
+    const scopesLine = `   ${scopeLine}`;
+    const hint = chalk.dim('— use --expand to list');
+    return `${titleLine}\n${descLine}\n${scopesLine}  ${hint}`;
+  };
+
   for (const entry of sectionEntries) {
     if (!entry.content) continue;
-    if (entry.autoTag) {
-      const count = autoTagPendingComponents.length;
-      const scopeCounts = countBy(autoTagPendingComponents, (id) => id.scope);
-      const sorted = Object.entries(scopeCounts).sort(([, a], [, b]) => b - a);
-      const MAX_SHOWN = 4;
-      const shown = sorted.slice(0, MAX_SHOWN).map(([scope, n]) => `${scope} (${n})`);
-      const remaining = sorted.length - MAX_SHOWN;
-      const scopeLine = remaining > 0 ? [...shown, `+ ${remaining} more scopes`].join(' · ') : shown.join(' · ');
-      const title = formatTitle(`components pending auto-tag (${count})`);
-      const desc = chalk.dim(`  ${autoTagPendingDesc}`);
-      const scopes = `   ${scopeLine}`;
-      const hint = chalk.dim('— use --expand to list');
-      sections.push({
-        content: entry.content,
-        collapsible: {
-          summary: `${title}\n${desc}\n${scopes}  ${hint}`,
-        },
-      });
+    if (entry.collapse) {
+      sections.push({ content: entry.content, collapsible: { summary: buildCollapsibleSummary(entry.collapse) } });
     } else {
       sections.push({ content: entry.content });
     }
