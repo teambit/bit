@@ -1972,6 +1972,14 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-diff-viewer"
     },
+    "ui/inline-tests-compare": {
+        "name": "ui/inline-tests-compare",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.review",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/inline-tests-compare"
+    },
     "ui/inputs/lane-selector": {
         "name": "ui/inputs/lane-selector",
         "scope": "teambit.lanes",
