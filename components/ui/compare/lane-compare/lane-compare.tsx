@@ -150,11 +150,12 @@ function LaneCompareInline({
     return typeof _tabs === 'function' ? _tabs() : _tabs;
   }, [_tabs]);
 
-  const laneComponents = useLaneComponents(compare?.id?.toString(), undefined, compare?.hash);
+  // __bit's useLaneComponents keys on LaneId; hash-based invalidation is not needed here.
+  const { components: laneComponents, componentDescriptors: laneComponentDescriptors } = useLaneComponents(compare?.id);
   const compositionsMap = useMemo(() => {
     const map = new Map<string, boolean>();
-    if (!laneComponents) return map;
-    for (const comp of laneComponents) {
+    if (!laneComponentDescriptors) return map;
+    for (const comp of laneComponentDescriptors) {
       const aspect = comp.get<any>('teambit.compositions/compositions');
       const compositions = aspect?.data?.compositions;
       map.set(comp.id.toStringWithoutVersion(), Array.isArray(compositions) && compositions.length > 0);

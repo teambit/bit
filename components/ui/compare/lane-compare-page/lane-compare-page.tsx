@@ -39,7 +39,7 @@ export function LaneComparePage({
       setBase(defaultLane);
     }
     if (!base && compare?.id.isDefault() && (nonMainLanes?.length ?? 0) > 0) {
-      const firstActive = nonMainLanes.find((l) => !l.deleted && !l.isMerged);
+      const firstActive = nonMainLanes.find((l) => !l.deleted);
       if (firstActive) setBase(firstActive);
     }
   }, [defaultLane, compare?.id.toString(), nonMainLanes?.length]);
@@ -47,7 +47,7 @@ export function LaneComparePage({
   const LaneCompareComponent = getLaneCompare({ base, compare, groupBy: 'status' });
 
   const lanes: Array<LaneModel> = useMemo(() => {
-    return nonMainLanes.filter((l) => l.toString() !== compare?.id.toString() && !l.deleted && !l.isMerged);
+    return nonMainLanes.filter((l) => l.toString() !== compare?.id.toString() && !l.deleted);
   }, [base?.id.toString(), compare?.id.toString(), lanesModel?.lanes.length]);
 
   useEffect(() => {
