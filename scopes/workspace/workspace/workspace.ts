@@ -287,7 +287,7 @@ export class Workspace implements ComponentFactory {
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
     this.loadEvents = new LoadEventEmitter();
     this.unifiedLoader = new UnifiedComponentLoader(
-      new WorkspaceLoaderHost(this),
+      new WorkspaceLoaderHost(this, logger, dependencyResolver, envs, aspectLoader),
       new ComponentCache(),
       this.loadEvents,
       logger
