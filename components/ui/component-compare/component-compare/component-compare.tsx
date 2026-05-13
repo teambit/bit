@@ -1,8 +1,14 @@
 /* eslint-disable react/destructuring-assignment */
 /* eslint-disable react/require-default-props */
-import type { HTMLAttributes } from 'react';
-import React, { useContext, useMemo } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState, forwardRef } from 'react';
 import classnames from 'classnames';
+import { useGetComponents } from '@teambit/components.hooks.use-list-components';
+import { createComponentModel, getCompositions } from '@teambit/components.legacy.create-component-model';
+import { useCode } from '@teambit/code.ui.queries.get-component-code';
+import { ComponentID as ComponentIdValue } from '@teambit/component-id';
+import { head } from 'lodash';
+import { useFileRegistryRegister, useAspectRegistryRegister, useCompositionsRegistryRegister } from './file-registry';
 import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentID, NavPlugin } from '@teambit/component';
 import { CollapsibleMenuNav, ComponentContext, ComponentDescriptorContext, useComponent } from '@teambit/component';
@@ -578,5 +584,443 @@ export function ComponentCompare(props: ComponentCompareProps) {
         />
       </div>
     </ComponentCompareContext.Provider>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// InlineComponentCompare + ComponentCompareHeader (ported from new-changes)
+// ---------------------------------------------------------------------------
+
+export type InlineComponentCompareProps = {
+  name: string;
+  baseId?: string;
+  compareId: string;
+  baseVersion?: string;
+  compareVersion?: string;
+  baseUrl?: string;
+  compareUrl?: string;
+  envIcon?: string;
+  changeTags?: Array<{ label: string; color: string }>;
+  accentColor?: string;
+  tabs?: TabItem[];
+  allTabs?: TabItem[];
+  children?: ReactNode;
+  className?: string;
+  host?: string;
+  previewUrl?: string;
+};
+
+export const InlineComponentCompare = forwardRef<HTMLDivElement, InlineComponentCompareProps>(
+  function InlineComponentCompare(
+    {
+      name,
+      baseId,
+      compareId,
+      baseVersion,
+      compareVersion,
+      baseUrl,
+      compareUrl,
+      envIcon,
+      changeTags,
+      accentColor,
+      tabs,
+      allTabs,
+      children,
+      className,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      host,
+      previewUrl,
+    },
+    ref
+  ) {
+    const sectionRef = useRef<HTMLDivElement>(null);
+    const [hasBeenVisible, setHasBeenVisible] = useState(false);
+
+    const setRefs = React.useCallback(
+      (node: HTMLDivElement | null) => {
+        (sectionRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        if (typeof ref === 'function') ref(node);
+        else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      },
+      [ref]
+    );
+
+    useEffect(() => {
+      const el = sectionRef.current;
+      if (!el) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setHasBeenVisible(true);
+            observer.disconnect();
+          }
+        },
+        { rootMargin: '400px 0px' }
+      );
+      observer.observe(el);
+      return () => observer.disconnect();
+    }, []);
+
+    const headerStyle = accentColor ? ({ '--component-accent': accentColor } as React.CSSProperties) : undefined;
+
+    return (
+      <div
+        ref={setRefs}
+        className={`${styles.componentCompare} ${className || ''}`}
+        data-component-id={compareId.split('@')[0]}
+        style={headerStyle}
+      >
+        <ComponentCompareHeader
+          name={name}
+          envIcon={envIcon}
+          baseVersion={baseVersion}
+          compareVersion={compareVersion}
+          baseUrl={baseUrl}
+          compareUrl={compareUrl}
+          changeTags={changeTags}
+        />
+
+        <EagerFileRegistrar baseId={baseId} compareId={compareId} />
+        <EagerAspectRegistrar baseId={baseId} compareId={compareId} />
+
+        {!hasBeenVisible && <InlineSkeleton lines={1} />}
+
+        {hasBeenVisible && (
+          <InlineContextProvider baseId={baseId} compareId={compareId} previewUrl={previewUrl}>
+            {allTabs
+              ? allTabs.map((tab) => (
+                  <DeferredTab key={tab.id} tabId={tab.id}>
+                    {tab.element}
+                  </DeferredTab>
+                ))
+              : tabs && tabs.map((tab) => <div key={tab.id}>{tab.element}</div>)}
+            {children}
+          </InlineContextProvider>
+        )}
+      </div>
+    );
+  }
+);
+
+export function DeferredTab({ tabId, children }: { tabId: string; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [activated, setActivated] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (el.offsetParent !== null) {
+      setActivated(true);
+      return;
+    }
+
+    const container = el.closest('[data-view-mode]');
+    if (!container) {
+      setActivated(true);
+      return;
+    }
+
+    const observer = new MutationObserver(() => {
+      if (el.offsetParent !== null) {
+        setActivated(true);
+        observer.disconnect();
+      }
+    });
+
+    observer.observe(container, { attributes: true, attributeFilter: ['data-view-mode'] });
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} data-tab-id={tabId}>
+      {activated ? children : null}
+    </div>
+  );
+}
+
+function InlineContextProvider({
+  baseId,
+  compareId,
+  previewUrl,
+  children,
+}: {
+  baseId?: string;
+  compareId?: string;
+  previewUrl?: string;
+  children: ReactNode;
+}) {
+  const baseIds = baseId ? [baseId] : undefined;
+  const compareIds = compareId ? [compareId] : undefined;
+
+  const baseResult = useGetComponents(baseIds, !baseId);
+  const compareResult = useGetComponents(compareIds, !compareId);
+
+  const baseDescriptor = head(baseResult.components);
+  const compareDescriptor = head(compareResult.components);
+
+  const hasBase = !baseId || !!baseDescriptor;
+  const hasCompare = !compareId || !!compareDescriptor;
+
+  const isNew = !baseId && !!compareId;
+
+  const { loading: compCompareLoading, componentCompareData } = useComponentCompareQuery(
+    isNew ? compareId : baseId,
+    compareId,
+    undefined,
+    !compareId || isNew
+  );
+
+  const models = useMemo(() => {
+    try {
+      const base = baseDescriptor
+        ? createComponentModel(baseDescriptor, undefined, previewUrl || 'https://preview.v2.bit.cloud')
+        : undefined;
+      const compare = compareDescriptor
+        ? createComponentModel(compareDescriptor, undefined, previewUrl || 'https://preview.v2.bit.cloud')
+        : undefined;
+      return { base, compare };
+    } catch {
+      return null;
+    }
+  }, [baseDescriptor, compareDescriptor, previewUrl]);
+
+  const compareComponentId = models?.compare?.id;
+  const { fileTree: newCompFileTree, loading: newCompCodeLoading } = useCode(isNew ? compareComponentId : undefined);
+
+  const fileCompareDataByName = useMemo(() => {
+    if (isNew) {
+      if (newCompCodeLoading || !newCompFileTree) return undefined;
+      const lookup = new Map();
+      newCompFileTree.forEach((fileName: string) => {
+        lookup.set(fileName, { fileName, baseContent: '', compareContent: undefined, status: 'NEW' });
+      });
+      return lookup;
+    }
+    if (compCompareLoading) return undefined;
+    if (!componentCompareData) return null;
+    const lookup = new Map();
+    (componentCompareData?.code || []).forEach((f: any) => {
+      lookup.set(f.fileName, f);
+    });
+    return lookup;
+  }, [isNew, newCompCodeLoading, newCompFileTree, compCompareLoading, componentCompareData]);
+
+  const fieldCompareDataByName = useMemo(() => {
+    if (compCompareLoading) return undefined;
+    if (!componentCompareData) return null;
+    const lookup = new Map();
+    (componentCompareData?.aspects || []).forEach((a: any) => lookup.set(a.fieldName, a));
+    return lookup;
+  }, [compCompareLoading, componentCompareData]);
+
+  const testCompareDataByName = useMemo(() => {
+    if (compCompareLoading) return undefined;
+    if (!componentCompareData) return null;
+    const lookup = new Map();
+    (componentCompareData?.tests || []).forEach((t: any) => lookup.set(t.fileName, t));
+    return lookup;
+  }, [compCompareLoading, componentCompareData]);
+
+  if (!hasBase || !hasCompare) {
+    return <InlineSkeleton lines={2} />;
+  }
+
+  if (!models) return null;
+
+  const contextValue = {
+    base: models.base ? { model: models.base, descriptor: baseDescriptor } : undefined,
+    compare: models.compare ? { model: models.compare, descriptor: compareDescriptor } : undefined,
+    loading: compCompareLoading,
+    logsByVersion: new Map(),
+    fileCompareDataByName,
+    fieldCompareDataByName,
+    testCompareDataByName,
+    isFullScreen: false,
+    hidden: false,
+  };
+
+  return <ComponentCompareContext.Provider value={contextValue as any}>{children}</ComponentCompareContext.Provider>;
+}
+
+export function EagerFileRegistrar({ baseId, compareId }: { baseId?: string; compareId?: string }) {
+  const isNew = !baseId && !!compareId;
+
+  const { loading, componentCompareData } = useComponentCompareQuery(
+    isNew ? compareId : baseId,
+    compareId,
+    undefined,
+    !compareId || isNew
+  );
+
+  const newCompId = useMemo(
+    () => (isNew && compareId ? ComponentIdValue.fromString(compareId) : undefined),
+    [isNew, compareId]
+  );
+  const { fileTree: newCompFileTree, loading: newCompLoading } = useCode(newCompId);
+
+  const compareIds = compareId ? [compareId] : undefined;
+  const descriptorResult = useGetComponents(compareIds, !compareId);
+  const descriptor = head(descriptorResult.components);
+
+  const hasCompositions = useMemo(() => {
+    if (!descriptor) return undefined;
+    return getCompositions(descriptor).length > 0;
+  }, [descriptor]);
+
+  const registryFiles = useMemo(() => {
+    if (isNew) {
+      if (newCompLoading || !newCompFileTree?.length) return undefined;
+      return newCompFileTree.map((n: string) => ({ name: n, status: 'NEW' }));
+    }
+    if (loading || !componentCompareData) return undefined;
+    return (componentCompareData?.code || [])
+      .filter((f: any) => f.status !== 'UNCHANGED')
+      .map((f: any) => ({ name: f.fileName, status: f.status }));
+  }, [isNew, newCompLoading, newCompFileTree, loading, componentCompareData]);
+
+  const componentIdStr = compareId?.split('@')[0];
+  useFileRegistryRegister(componentIdStr, registryFiles);
+  useCompositionsRegistryRegister(componentIdStr, hasCompositions);
+
+  return null;
+}
+
+const GET_COMPONENT_ASPECTS = gql`
+  query GetComponentAspectData($id: String!) {
+    getHost {
+      id
+      get(id: $id) {
+        id {
+          name
+          version
+          scope
+        }
+        aspects {
+          id
+          config
+          data
+        }
+      }
+    }
+  }
+`;
+
+export function EagerAspectRegistrar({ baseId, compareId }: { baseId?: string; compareId?: string }) {
+  const { data: baseData, loading: baseLoading } = useDataQuery(GET_COMPONENT_ASPECTS, {
+    variables: { id: baseId },
+    skip: !baseId,
+    fetchPolicy: 'no-cache',
+  });
+  const { data: compareData, loading: compareLoading } = useDataQuery(GET_COMPONENT_ASPECTS, {
+    variables: { id: compareId },
+    skip: !compareId,
+    fetchPolicy: 'no-cache',
+  });
+
+  const loading = baseLoading || compareLoading;
+
+  const aspectRegistryFiles = useMemo(() => {
+    if (loading) return undefined;
+    const baseAspects: any[] = (baseData as any)?.getHost?.get?.aspects || [];
+    const compareAspects: any[] = (compareData as any)?.getHost?.get?.aspects || [];
+
+    const baseMap = new Map<string, any>();
+    baseAspects.forEach((a) => baseMap.set(a.id, a));
+    const compareMap = new Map<string, any>();
+    compareAspects.forEach((a) => compareMap.set(a.id, a));
+
+    const allIds = new Set([...baseMap.keys(), ...compareMap.keys()]);
+    const changed: Array<{ name: string; status: string }> = [];
+
+    allIds.forEach((id) => {
+      const base = baseMap.get(id);
+      const compare = compareMap.get(id);
+      const configDiff = JSON.stringify(base?.config ?? null) !== JSON.stringify(compare?.config ?? null);
+      const dataDiff = JSON.stringify(base?.data ?? null) !== JSON.stringify(compare?.data ?? null);
+      if (configDiff || dataDiff) {
+        changed.push({ name: id.split('/').pop() || id, status: 'MODIFIED' });
+      }
+    });
+
+    return changed.length > 0 ? changed : undefined;
+  }, [loading, baseData, compareData]);
+
+  const componentIdStr = compareId?.split('@')[0] || baseId?.split('@')[0];
+  useAspectRegistryRegister(componentIdStr, aspectRegistryFiles);
+
+  return null;
+}
+
+export type ComponentCompareHeaderProps = {
+  name: string;
+  envIcon?: string;
+  baseVersion?: string;
+  compareVersion?: string;
+  baseUrl?: string;
+  compareUrl?: string;
+  changeTags?: Array<{ label: string; color: string }>;
+};
+
+export function ComponentCompareHeader({
+  name,
+  envIcon,
+  baseVersion,
+  compareVersion,
+  baseUrl,
+  compareUrl,
+  changeTags,
+}: ComponentCompareHeaderProps) {
+  return (
+    <div className={styles.header}>
+      <div className={styles.headerLeft}>
+        {envIcon ? (
+          <img src={envIcon} className={styles.envIcon} alt="" />
+        ) : (
+          <span className={styles.envIconPlaceholder} />
+        )}
+        <span className={styles.componentName}>{name}</span>
+      </div>
+      <div className={styles.headerRight}>
+        {changeTags && changeTags.length > 0 && (
+          <div className={styles.changeTags}>
+            {changeTags.map((t) => (
+              <span key={t.label} className={styles.changeTag} style={{ color: t.color, background: `${t.color}14` }}>
+                {t.label}
+              </span>
+            ))}
+          </div>
+        )}
+        <div className={styles.versions}>
+          {baseVersion &&
+            (baseUrl ? (
+              <a className={styles.versionHash} href={baseUrl} target="_blank" rel="noopener noreferrer">
+                {baseVersion}
+              </a>
+            ) : (
+              <span className={styles.versionHash}>{baseVersion}</span>
+            ))}
+          {baseVersion && compareVersion && <span className={styles.versionArrow}>{'→'}</span>}
+          {compareVersion &&
+            (compareUrl ? (
+              <a className={styles.versionHash} href={compareUrl} target="_blank" rel="noopener noreferrer">
+                {compareVersion}
+              </a>
+            ) : (
+              <span className={styles.versionHash}>{compareVersion}</span>
+            ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InlineSkeleton({ lines = 3 }: { lines?: number }) {
+  return (
+    <div className={styles.skeleton}>
+      {Array.from({ length: lines }).map((_, i) => (
+        <div key={i} className={styles.skeletonBar} style={{ width: `${40 + (i % 3) * 20}%` }} />
+      ))}
+    </div>
   );
 }
