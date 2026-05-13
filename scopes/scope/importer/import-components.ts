@@ -51,6 +51,7 @@ export type ImportOptions = {
   objectsOnly?: boolean;
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages, not as imported
   importHeadDependenciesDirectly?: boolean; // default: false, similar to importDependenciesDirectly, but it checks out to their head
+  dependenciesDepth?: number; // when set, BFS through the dependency graph up to N levels (1=direct deps only). Otherwise, all transitive deps.
   importDependents?: boolean;
   dependentsVia?: string;
   dependentsAll?: boolean;
@@ -664,15 +665,68 @@ if you just want to get a quick look into this snap, create a new workspace and 
   private async getFlattenedDepsUnique(bitIds: ComponentID[]): Promise<ComponentID[]> {
     const remoteComps = await this.scope.scopeImporter.getManyRemoteComponents(bitIds);
     const versions = remoteComps.getVersions();
-    const getFlattened = (): ComponentIdList => {
-      if (versions.length === 1) return versions[0].flattenedDependencies;
-      const flattenedDeps = versions.map((v) => v.flattenedDependencies).flat();
-      return ComponentIdList.uniqFromArray(flattenedDeps);
-    };
-    const flattened = getFlattened();
+    const flattened = this.options.dependenciesDepth
+      ? await this.getDepsByDepth(versions, this.options.dependenciesDepth)
+      : this.getAllFlattenedDeps(versions);
     return this.options.importHeadDependenciesDirectly
       ? this.uniqWithoutVersions(flattened)
       : this.removeMultipleVersionsKeepLatest(flattened);
+  }
+
+  private getAllFlattenedDeps(versions: Version[]): ComponentIdList {
+    if (versions.length === 1) return versions[0].flattenedDependencies;
+    const flattenedDeps = versions.map((v) => v.flattenedDependencies).flat();
+    return ComponentIdList.uniqFromArray(flattenedDeps);
+  }
+
+  private async getDepsByDepth(versions: Version[], depth: number): Promise<ComponentIdList> {
+    // Build a merged adjacency map from all versions' flattenedEdges. Each version's
+    // flattenedEdges captures its full transitive graph, so this single map is enough
+    // to BFS to any depth without additional remote fetches.
+    const adjacency = new Map<string, Map<string, ComponentID>>();
+    for (const v of versions) {
+      const edges = await v.getFlattenedEdges(this.scope.objects);
+      for (const edge of edges) {
+        const key = edge.source.toString();
+        let targets = adjacency.get(key);
+        if (!targets) {
+          targets = new Map();
+          adjacency.set(key, targets);
+        }
+        targets.set(edge.target.toString(), edge.target);
+      }
+    }
+
+    const collected = new Map<string, ComponentID>();
+    const visited = new Set<string>();
+    let currentLevel: ComponentID[] = [];
+    for (const v of versions) {
+      for (const id of v.getAllDependenciesIds()) {
+        const key = id.toString();
+        if (visited.has(key)) continue;
+        visited.add(key);
+        collected.set(key, id);
+        currentLevel.push(id);
+      }
+    }
+
+    for (let level = 1; level < depth && currentLevel.length; level++) {
+      const nextLevel: ComponentID[] = [];
+      for (const id of currentLevel) {
+        const targets = adjacency.get(id.toString());
+        if (!targets) continue;
+        for (const target of targets.values()) {
+          const key = target.toString();
+          if (visited.has(key)) continue;
+          visited.add(key);
+          collected.set(key, target);
+          nextLevel.push(target);
+        }
+      }
+      currentLevel = nextLevel;
+    }
+
+    return ComponentIdList.fromArray(Array.from(collected.values()));
   }
 
   private uniqWithoutVersions(flattened: ComponentIdList) {
