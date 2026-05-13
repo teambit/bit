@@ -6,13 +6,7 @@ import { ScopeAspect } from '@teambit/scope';
 import { BitError } from '@teambit/bit-error';
 import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import {
-  CENTRAL_BIT_HUB_NAME,
-  CENTRAL_BIT_HUB_URL,
-  CFG_USER_TOKEN_KEY,
-  getCloudDomain,
-} from '@teambit/legacy.constants';
-import { getConfig } from '@teambit/config-store';
+import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, getCloudDomain } from '@teambit/legacy.constants';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { BitMap } from '@teambit/legacy.bit-map';
 import type { ListScopeResult } from '@teambit/legacy.component-list';
@@ -327,11 +321,13 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       try {
         return await scopeRemotes.resolve(scopeName);
       } catch (err) {
-        if (err instanceof ScopeNotFoundOrDenied && getConfig(CFG_USER_TOKEN_KEY)) {
-          throw new BitError(
+        if (err instanceof ScopeNotFoundOrDenied && Http.getToken()) {
+          const bitError = new BitError(
             `unable to export to the remote scope "${scopeName}". the scope may not exist, or you don't have access to it.
-if the scope name is wrong and you've already snapped/tagged, run "bit reset --all" to undo, then run "bit scope rename ${scopeName} <new-scope>" and snap/tag again`
+if the scope name is wrong and you've already snapped/tagged, run "bit reset" to undo, then run "bit scope rename ${scopeName} <new-scope>" and snap/tag again`
           );
+          (bitError as Error).cause = err;
+          throw bitError;
         }
         throw err;
       }
