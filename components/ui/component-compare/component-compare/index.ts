@@ -12,3 +12,5 @@ export {
 export type { FileInfo } from './file-registry';
 export { CompareToolbar } from './compare-toolbar';
 export type { CompareToolbarProps, CompareViewMode, CompareGroupByOption, DiffMode } from './compare-toolbar';
+export { CompareSidebar } from './compare-sidebar';
+export type { CompareSidebarProps, CompareSidebarItem, CompareSidebarGroup } from './compare-sidebar';
