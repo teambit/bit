@@ -103,22 +103,22 @@ Group 8 splits into three tiers:
 
 **8.16 (new, highest priority) — Consolidate the loader: delete `WorkspaceComponentLoader`**
 
-→ Design: `spike/01-consolidated-host-sketch.md` + `spike/02-loader-host-sketch.ts.txt` (2026-05-12 spike).
+→ Design: `spike/01-consolidated-host-sketch.md` + `spike/02-loader-host-sketch.ts.txt` (2026-05-12 spike, corrected 2026-05-13 for cycle handling + dropped v1/v2 hedge).
 
-Verdict from the spike: `WorkspaceComponentLoader`'s 1029 lines are largely accidental — built around a per-group state machine that exists to navigate the env→aspect topology in a specific order. A two-pass design (build all Components config-only → topo-sort env/aspect subset → fire slots in parallel for the rest) replaces it in ~430 lines.
+Verdict from the spike: `WorkspaceComponentLoader`'s 1029 lines are largely accidental. A two-pass design (build all Components config-only → SCC-ordered env/aspect load → parallel slot fire) replaces it in ~430 lines.
 
-Sub-tasks, in order:
+**Strategy (corrected 2026-05-13):** no dual-mode hedge. Implement in-place, smoke-test, migrate, delete. The PR + CI e2e suite is the safety net. Sub-tasks, in order:
 
-- [ ] 8.16.1 Prototype `WorkspaceLoaderHostV2` in `scopes/workspace/workspace/workspace-component/workspace-loader-host.ts` (or sibling file). Implements `LoaderHost` interface like today's host but with the two-pass design. Live alongside current host; gate via `BIT_LOADER_HOST=v2` env flag.
-- [ ] 8.16.2 Verify env-of-env topo sort works recursively. If empirical env chains are 1-level, the simpler non-recursive version (~10 LoC) is sufficient; if recursive in real workspaces, the ~25 LoC version. Decide based on grepping aspect-env definitions in bit6 + a representative user workspace.
-- [ ] 8.16.3 Run full e2e suite under `BIT_LOADER_HOST=v2`. Fix divergences. (Existing `BIT_LOADER=new` infrastructure already runs all e2e under the unified loader; this is one more flag layered on top.)
-- [ ] 8.16.4 Bench `bit status` cold and warm under v2. Expect parity-or-better vs. legacy host; the perf wins come from 8.16.6 below.
-- [ ] 8.16.5 Promote `BIT_LOADER_HOST=v2` to default. Keep `=v1` as emergency rollback for one release.
-- [ ] 8.16.6 With only one host in use, land Lever 1 from `design-stage2-perf.md` — cache short-circuit in `unified.getMany`. Route `Workspace.get`/`getMany` through unified (the OOM workaround from stage 1 is no longer needed because v2 host doesn't have the recursive-aspect-load problem). Re-bench; target sub-second warm `bit status`.
-- [ ] 8.16.7 Delete `workspace-component-loader.ts` (1029 LoC), the 4 in-memory caches it owned, the dual-mode routing flag, and any other now-dead code.
-- [ ] 8.16.8 Update CLAUDE.md and any developer docs that describe the loading pipeline.
+- [ ] 8.16.1 Implement the two-pass design directly in `WorkspaceLoaderHost` (`scopes/workspace/workspace/workspace-component/workspace-loader-host.ts`). Replace the bodies of `loadAtPhase` / `loadManyAtPhase` with calls to a new internal `loadMany(ids)` method that does pass 1 (build Components config-only) + pass 2 (SCC-ordered env/aspect load) + pass 3 (parallel slot fire).
+- [ ] 8.16.2 SCC-based env topo sort (~30 LoC). Cycles between envs are real (Bit supports circular deps); the new code uses SCC detection so cycle members get processed together rather than deadlocking. Matches today's group-machinery cycle behavior.
+- [ ] 8.16.3 Smoke-test `bit status` under `BIT_LOADER=new` (already wired). Verify parity with `BIT_LOADER=old`.
+- [ ] 8.16.4 Migrate `Workspace.get` / `Workspace.getMany` to route through the unified loader. The stage-1 OOM workaround (routing them through legacy) is no longer needed — the two-pass design's Pass 1 populates the cache for the whole batch, so recursive `workspace.get` from inside Pass 2/3 hits the cache.
+- [ ] 8.16.5 Run a representative e2e subset under the new path. Identify divergences. Fix.
+- [ ] 8.16.6 Delete `workspace-component-loader.ts` (1029 LoC), the 4 in-memory caches it owned, the dual-mode `BIT_LOADER` env flag, and any other now-dead code.
+- [ ] 8.16.7 Land Lever 1 (cache short-circuit in `unified.getMany`). Trivial now that there's one loader. Re-bench; target sub-second warm `bit status`.
+- [ ] 8.16.8 Update CLAUDE.md and any developer docs.
 
-This task block replaces the original Stage 2 / Stage 3 split. After 8.16 lands, "Stage 3 cleanup" (Group 9 below) is mostly already done, and tasks 8.8 (consumer-component mutations) become unblocked because `Workspace.get` routes through unified, making `componentLoader.invalidate(id)` the canonical cache-bust path.
+After 8.16 lands, "Stage 3 cleanup" (Group 9) is mostly already done, and task 8.8 (consumer-component mutations) becomes unblocked because `Workspace.get` routes through unified, making `componentLoader.invalidate(id)` the canonical cache-bust path.
 
 **Tier 2 — design-first** (requires written design before coding, given findings 1–3):
 

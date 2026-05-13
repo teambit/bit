@@ -154,18 +154,38 @@ The cost is the verification phase: every e2e scenario that exercises env-of-env
 
 The single biggest concrete risk is the recursive env-of-env case (edge case #1), which today is handled non-recursively because in practice it doesn't recurse. If a user workspace has env-of-env-of-env that worked before because of a serendipitous group ordering, the two-pass design's explicit topo-sort might surface a bug the current code accidentally avoided.
 
-## Recommendation
+## Cycle handling — explicit (corrected 2026-05-13)
 
-Proceed with the consolidation as **stage 2 work** (inverting the original stage 2 / stage 3 ordering). Concretely:
+Bit supports circular dependencies between components, including between aspects/envs (highly discouraged but supported). The two-pass design handles this:
 
-1. **Write the two-pass orchestration** inside a new method on `WorkspaceLoaderHost`, alongside today's `loadAtPhase` / `loadManyAtPhase`. Don't delete anything yet.
-2. **Gate by an env flag** (e.g. `BIT_LOADER_HOST=v2`) so we can A/B compare with the current host implementation.
-3. **Run e2e under both flags** in CI. Fix divergences.
-4. **Promote v2 to default** once green. Delete `WorkspaceComponentLoader`.
+- **Pass 1** — file reads + config merge. Does NOT recurse on component deps. Cycles between components are invisible at this layer (we're just reading files and merging extension config). ✓
+- **Pass 2** — env/aspect ordering. Cycles between envs are the only place a strict topo-sort would deadlock. The replacement:
+  - Compute the env-dependency graph (envId → envId-of-that-env).
+  - Find SCCs (strongly-connected components) using Tarjan's or Kosaraju's. Each SCC of size 1 is a normal node; each SCC of size >1 is a cycle group.
+  - Process SCCs in reverse topological order (sinks first). Within an SCC of size >1, process members in arbitrary order — each member fires its slot with whatever state the other cycle-members have at that moment. This matches today's behavior, which uses 1-level grouping that breaks cycles by accident.
+  - Cost: a real SCC algorithm is ~30 LoC (still well within the ~25 LoC budget for `topoSortByEnv` in the sketch).
+- **Pass 3** — parallel slot fire on non-aspect components. Slot firing doesn't recurse on component deps, so cycles between regular components don't affect this pass. ✓
 
-This is structurally identical to the stage-1 dual-mode strategy, just one level down. Same risk profile, same rollback story.
+The cycle-handling behavior matches today's: when a cycle exists, members of the cycle get a "best-effort" load where each sees the others' state-as-of-pass-1 (config but no slot data). The current code reaches the same outcome via the group machinery; the new code reaches it via SCC detection.
 
-After the consolidation: the perf-bearing work from `design-stage2-perf.md` (cache short-circuit in `unified.getMany`, Lever 1) lands trivially on top because there's only one path to optimize.
+## Recommendation (corrected 2026-05-13)
+
+Drop the v1/v2 dual-mode hedge. We're in a PR; the PR + e2e suite + CI is the safety net. Concretely:
+
+1. **Implement the two-pass design directly in `WorkspaceLoaderHost`**, replacing the current bodies of `loadAtPhase` / `loadManyAtPhase`. No new file, no flag.
+2. **Smoke-test** under `BIT_LOADER=new` (which already routes `workspace.listWithInvalidAtPhase` through the host).
+3. **Migrate `Workspace.get` / `Workspace.getMany` to route through the unified loader** (the OOM workaround from stage 1 is no longer needed — the two-pass design's Pass 1 populates the cache for the whole batch, so any recursive `workspace.get` from inside Pass 2/3 hits the cache).
+4. **Delete `workspace-component-loader.ts`** (1029 LoC), its 4 in-memory caches, and the dual-mode `BIT_LOADER` flag itself (which becomes redundant when there's only one loader).
+5. **Land Lever 1** (cache short-circuit) trivially on top — there's only one path to optimize.
+
+This is the real consolidation. The PR catches regressions before merge.
+
+## Risk profile under the corrected plan
+
+- **No rollback flag inside the codebase.** The PR boundary IS the rollback. If something breaks after merge, we revert the PR. This is consistent with how Bit's other refactors ship.
+- **The bigger e2e-suite question.** Under `BIT_LOADER=new` (already CI default), the unified loader is exercised, but stage-1 narrowed routing to `listWithInvalidAtPhase`. The new plan widens that to all `Workspace.get`/`getMany`/`list`. E2e behavior may diverge in scenarios the stage-1 routing didn't exercise. Mitigation: run the e2e suite explicitly on this PR before merge.
+- **Cycles between aspects** — addressed above with SCC handling.
+- **Deletion sequence:** the safe order is: implement new → smoke test → migrate `Workspace.get/getMany` → smoke test → run e2e → delete WCL. Each step is independently committable and verifiable.
 
 ## Counterfactual: what if the spike is wrong?
 
