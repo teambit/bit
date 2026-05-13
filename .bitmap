@@ -1964,6 +1964,14 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-code-compare"
     },
+    "ui/inline-config-compare": {
+        "name": "ui/inline-config-compare",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.review",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/inline-config-compare"
+    },
     "ui/inline-diff-viewer": {
         "name": "ui/inline-diff-viewer",
         "scope": "",
