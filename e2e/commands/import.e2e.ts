@@ -451,6 +451,76 @@ describe('bit import', function () {
       });
     });
   });
+  describe('import with --dependencies-depth', () => {
+    // populateComponents(4) creates a chain: comp1 -> comp2 -> comp3 -> comp4
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(4);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+    });
+    describe('--dependencies-depth 1', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('comp1', '--dependencies --dependencies-depth 1');
+      });
+      it('should import only the direct dependency (comp2) and the requested component', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.have.property('comp1');
+        expect(bitMap).to.have.property('comp2');
+        expect(bitMap).to.not.have.property('comp3');
+        expect(bitMap).to.not.have.property('comp4');
+      });
+    });
+    describe('--dependencies-depth 2', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('comp1', '--dependencies --dependencies-depth 2');
+      });
+      it('should import direct dependencies and their direct dependencies (comp2, comp3) but not deeper', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.have.property('comp1');
+        expect(bitMap).to.have.property('comp2');
+        expect(bitMap).to.have.property('comp3');
+        expect(bitMap).to.not.have.property('comp4');
+      });
+    });
+    describe('--dependencies (no depth) preserves existing all-transitive behavior', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('comp1', '--dependencies');
+      });
+      it('should import all transitive dependencies', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.have.property('comp1');
+        expect(bitMap).to.have.property('comp2');
+        expect(bitMap).to.have.property('comp3');
+        expect(bitMap).to.have.property('comp4');
+      });
+    });
+    describe('validation errors', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+      });
+      it('should error when --dependencies-depth is used without --dependencies/--dependencies-head', () => {
+        const output = helper.general.runWithTryCatch(
+          `bit import ${helper.scopes.remote}/comp1 --dependencies-depth 1`
+        );
+        expect(output).to.have.string('--dependencies-depth');
+        expect(output).to.have.string('--dependencies');
+      });
+      it('should error when --dependencies-depth is not a positive integer', () => {
+        const output = helper.general.runWithTryCatch(
+          `bit import ${helper.scopes.remote}/comp1 --dependencies --dependencies-depth 0`
+        );
+        expect(output).to.have.string('positive integer');
+      });
+    });
+  });
   describe('external package manager mode', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();

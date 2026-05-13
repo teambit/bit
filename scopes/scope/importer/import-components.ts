@@ -663,67 +663,45 @@ if you just want to get a quick look into this snap, create a new workspace and 
   }
 
   private async getFlattenedDepsUnique(bitIds: ComponentID[]): Promise<ComponentID[]> {
-    const remoteComps = await this.scope.scopeImporter.getManyRemoteComponents(bitIds);
-    const versions = remoteComps.getVersions();
     const flattened = this.options.dependenciesDepth
-      ? await this.getDepsByDepth(versions, this.options.dependenciesDepth)
-      : this.getAllFlattenedDeps(versions);
+      ? await this.getDepsByDepth(bitIds, this.options.dependenciesDepth)
+      : await this.getAllFlattenedDeps(bitIds);
     return this.options.importHeadDependenciesDirectly
       ? this.uniqWithoutVersions(flattened)
       : this.removeMultipleVersionsKeepLatest(flattened);
   }
 
-  private getAllFlattenedDeps(versions: Version[]): ComponentIdList {
+  private async getAllFlattenedDeps(bitIds: ComponentID[]): Promise<ComponentIdList> {
+    const remoteComps = await this.scope.scopeImporter.getManyRemoteComponents(bitIds);
+    const versions = remoteComps.getVersions();
     if (versions.length === 1) return versions[0].flattenedDependencies;
     const flattenedDeps = versions.map((v) => v.flattenedDependencies).flat();
     return ComponentIdList.uniqFromArray(flattenedDeps);
   }
 
-  private async getDepsByDepth(versions: Version[], depth: number): Promise<ComponentIdList> {
-    // Build a merged adjacency map from all versions' flattenedEdges. Each version's
-    // flattenedEdges captures its full transitive graph, so this single map is enough
-    // to BFS to any depth without additional remote fetches.
-    const adjacency = new Map<string, Map<string, ComponentID>>();
-    for (const v of versions) {
-      const edges = await v.getFlattenedEdges(this.scope.objects);
-      for (const edge of edges) {
-        const key = edge.source.toString();
-        let targets = adjacency.get(key);
-        if (!targets) {
-          targets = new Map();
-          adjacency.set(key, targets);
-        }
-        targets.set(edge.target.toString(), edge.target);
-      }
-    }
-
+  /**
+   * BFS through the dependency graph, fetching one level at a time from the remote.
+   * Uses each version's direct deps (`getAllDependenciesIds`) — N levels = N round-trips.
+   */
+  private async getDepsByDepth(bitIds: ComponentID[], depth: number): Promise<ComponentIdList> {
     const collected = new Map<string, ComponentID>();
-    const visited = new Set<string>();
-    let currentLevel: ComponentID[] = [];
-    for (const v of versions) {
-      for (const id of v.getAllDependenciesIds()) {
-        const key = id.toString();
-        if (visited.has(key)) continue;
-        visited.add(key);
-        collected.set(key, id);
-        currentLevel.push(id);
-      }
-    }
+    const visited = new Set<string>(bitIds.map((id) => id.toString()));
+    let currentBatch: ComponentID[] = bitIds;
 
-    for (let level = 1; level < depth && currentLevel.length; level++) {
-      const nextLevel: ComponentID[] = [];
-      for (const id of currentLevel) {
-        const targets = adjacency.get(id.toString());
-        if (!targets) continue;
-        for (const target of targets.values()) {
-          const key = target.toString();
+    for (let level = 0; level < depth && currentBatch.length; level++) {
+      const remoteComps = await this.scope.scopeImporter.getManyRemoteComponents(currentBatch);
+      const versions = remoteComps.getVersions();
+      const nextBatch: ComponentID[] = [];
+      for (const v of versions) {
+        for (const id of v.getAllDependenciesIds()) {
+          const key = id.toString();
           if (visited.has(key)) continue;
           visited.add(key);
-          collected.set(key, target);
-          nextLevel.push(target);
+          collected.set(key, id);
+          nextBatch.push(id);
         }
       }
-      currentLevel = nextLevel;
+      currentBatch = nextBatch;
     }
 
     return ComponentIdList.fromArray(Array.from(collected.values()));
