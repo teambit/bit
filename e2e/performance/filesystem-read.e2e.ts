@@ -11,16 +11,22 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const MAX_FILES_READ = 1062;
-const MAX_FILES_READ_STATUS = 1500;
+const MAX_FILES_READ = 1120;
+const MAX_FILES_READ_STATUS = 1650;
 
 /**
- * as of now (2025/03/03) 1,030 files are loaded during bit-bootstrap.
- * for "bit status", around 1,433 files are loaded.
+ * as of now (2026/05/13) ~1,065 files are loaded during bit-bootstrap.
+ * for "bit status", around 1,600 files are loaded.
  *
- * two weeks ago we were at 2,964 files. a few PRs helped to reduce the number of files. among them:
- * #9568, #9572, #9576, #9577, #9578, #9584, #9587, #9588, #9590, #9593, #9594, #9598.
- * it can be helpful to take a look into those PRs in the future in case the number grows.
+ * The bump from 1062 -> 1120 (--help) and 1500 -> 1650 (status) is from the
+ * stage-2 component-loading rewrite (PR #10369): the new @teambit/component-loader
+ * package, the consolidated workspace-loader-host, and their transitive deps
+ * add ~30-50 files to each bootstrap.
+ *
+ * Historical context: in early 2025 we were at 2,964 files. A series of PRs
+ * (#9568, #9572, #9576, #9577, #9578, #9584, #9587, #9588, #9590, #9593,
+ * #9594, #9598) reduced it. If the count grows unexpectedly, those PRs are
+ * a useful reference for where reductions came from.
  */
 describe('Filesystem read count', function () {
   this.timeout(0);
