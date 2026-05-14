@@ -159,6 +159,7 @@ export function Overview({
                 viewport={null}
                 fullContentHeight
                 disableScroll={true}
+                propagateError={isMinimal}
                 sandbox={sandboxValue}
                 {...rest}
                 component={component}

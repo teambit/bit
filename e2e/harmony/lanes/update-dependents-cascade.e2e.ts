@@ -996,4 +996,113 @@ describe('local snap cascades updateDependents on the lane', function () {
       expect(comp3OnRemote.head).to.equal(comp3HeadAfterSnap);
     });
   });
+
+  // ---------------------------------------------------------------------------------------------
+  // Scenario 19: explicit `bit import <id>` of a hidden updateDependent must land main's tagged
+  // version in the workspace bitmap — not the lane's cascade snap. A subsequent snap then
+  // promotes the component cleanly into `lane.components` and clears the hidden entry, so it
+  // never lives in both buckets at once. Also locks down the snap's parent chain: it descends
+  // from main's head, not the cascade hash, so promote-on-import doesn't silently graft the
+  // cascade history into the lane component graph.
+  // ---------------------------------------------------------------------------------------------
+  describe('scenario 19: bit import of hidden updateDependent lands main version; snap promotes cleanly', () => {
+    let comp2InUpdDepInitial: string;
+    let comp2HashOnMain: string;
+
+    before(async () => {
+      const base = await buildBaseRemoteState();
+      comp2InUpdDepInitial = base.comp2InUpdDepInitial;
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+      helper.command.importLane('dev', '-x');
+      helper.command.importComponent('comp2');
+
+      comp2HashOnMain = helper.command.getHead(`${helper.scopes.remote}/comp2`);
+      // sanity — the cascade snap on the lane and main's head are distinct hashes
+      expect(comp2InUpdDepInitial).to.not.equal(comp2HashOnMain);
+    });
+
+    it("bitmap.comp2 should land at main's tag (0.0.1), not the lane's cascade snap", () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('comp2');
+      expect(bitMap.comp2.version).to.equal('0.0.1');
+      expect(bitMap.comp2.version).to.not.equal(comp2InUpdDepInitial);
+    });
+
+    it('comp2 stays hidden on the remote (import alone does not promote)', () => {
+      const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
+      expect(remoteLane.updateDependents).to.have.lengthOf(1);
+      expect(remoteLane.updateDependents[0].split('@')[1]).to.equal(comp2InUpdDepInitial);
+    });
+
+    describe('after editing and snapping the imported comp2', () => {
+      before(() => {
+        helper.fs.outputFile(`${helper.scopes.remote}/comp2/index.js`, "module.exports = () => 'comp2-v2';");
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.export();
+      });
+
+      it('comp2 lands in lane.components on the remote (promoted from hidden)', () => {
+        const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
+        const comp2InComp = remoteLane.components.find((c) => c.id.name === 'comp2');
+        expect(comp2InComp, 'comp2 should be in lane.components after promotion').to.exist;
+      });
+
+      it('comp2 is removed from lane.updateDependents (no duplicate across both buckets)', () => {
+        const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
+        const comp2InUpdDep = (remoteLane.updateDependents || []).find((s) => s.includes('comp2'));
+        expect(comp2InUpdDep, 'comp2 must not remain in updateDependents after promotion').to.be.undefined;
+      });
+
+      it("the promoted snap descends from main's head, not the prior cascade snap", () => {
+        const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
+        const comp2OnLane = remoteLane.components.find((c) => c.id.name === 'comp2') as { head: string };
+        const promotedSnap = helper.command.catComponent(
+          `${helper.scopes.remote}/comp2@${comp2OnLane.head}`,
+          helper.scopes.remotePath
+        );
+        expect(promotedSnap.parents).to.have.lengthOf(1);
+        expect(promotedSnap.parents).to.include(comp2HashOnMain);
+        expect(promotedSnap.parents).to.not.include(comp2InUpdDepInitial);
+      });
+
+      // -------------------------------------------------------------------------------------
+      // After the export, a second consumer who imports the lane from scratch must see comp2
+      // as a real lane component — both on the lane object and in the workspace bitmap. This
+      // confirms the promotion is observable to consumers, not just a workspace-local rewrite.
+      // -------------------------------------------------------------------------------------
+      describe('a fresh workspace then imports the exported lane', () => {
+        let comp2HeadAfterPromote: string;
+        before(() => {
+          const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
+          const comp2OnRemoteLane = remoteLane.components.find((c) => c.id.name === 'comp2') as { head: string };
+          comp2HeadAfterPromote = comp2OnRemoteLane.head;
+
+          helper.scopeHelper.reInitWorkspace();
+          helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+          helper.command.importLane('dev', '-x');
+        });
+
+        it('the imported lane object lists comp2 under components (visible, not hidden)', () => {
+          const localLane = helper.command.catLane('dev');
+          const comp2InComp = localLane.components.find((c) => c.id.name === 'comp2') as { head: string };
+          expect(comp2InComp, 'comp2 should be visible on the imported lane').to.exist;
+          expect(comp2InComp.head).to.equal(comp2HeadAfterPromote);
+        });
+
+        it('the imported lane does NOT carry comp2 in updateDependents', () => {
+          const localLane = helper.command.catLane('dev');
+          const comp2InUpdDep = (localLane.updateDependents || []).find((s) => s.includes('comp2'));
+          expect(comp2InUpdDep, 'comp2 must not appear in updateDependents on the imported lane').to.be.undefined;
+        });
+
+        it('comp2 lands in the fresh workspace bitmap at the promoted lane head', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap).to.have.property('comp2');
+          expect(bitMap.comp2.version).to.equal(comp2HeadAfterPromote);
+        });
+      });
+    });
+  });
 });
