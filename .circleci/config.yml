@@ -62,11 +62,13 @@ parameters:
     type: string
     default: ""
   release_stable:
-    type: boolean
-    default: true
+    type: enum
+    enum: ["true", "false"]
+    default: "true"
   release_test_mode:
-    type: boolean
-    default: false
+    type: enum
+    enum: ["true", "false"]
+    default: "false"
 
 # ========================================
 # ORBS
