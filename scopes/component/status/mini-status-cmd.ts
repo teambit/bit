@@ -1,8 +1,8 @@
-import type { Command, CommandOptions } from '@teambit/cli';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
+import type { Command } from '@teambit/cli';
 import type { ComponentID } from '@teambit/component-id';
 import chalk from 'chalk';
 import type { StatusMain } from './status.main.runtime';
+import { miniStatusCommand } from './status.commands';
 
 export type MiniStatusOpts = {
   showIssues?: boolean;
@@ -10,30 +10,16 @@ export type MiniStatusOpts = {
 };
 
 export class MiniStatusCmd implements Command {
-  name = 'mini-status [component-pattern]';
-  description = 'basic status for fast execution';
-  extendedDescription = `shows only modified/new components with code changes. for the full status, use "bit status".
-this command only checks source code changes, it doesn't check for config/aspect/dependency changes`;
-  arguments = [
-    {
-      name: 'component-pattern',
-      description: COMPONENT_PATTERN_HELP,
-    },
-  ];
-  group = 'info-analysis';
-  alias = 'ms';
-  private = true;
-  options = [
-    ['', 'show-issues', 'show component issues (slows down the command)'],
-    [
-      'c',
-      'ignore-circular-dependencies',
-      'do not check for circular dependencies to get the results quicker (relevant when --show-issues flag is used)',
-    ],
-    ['j', 'json', 'json format'],
-  ] as CommandOptions;
-  loadAspects = false;
-  loader = true;
+  name = miniStatusCommand.name;
+  description = miniStatusCommand.description;
+  extendedDescription = miniStatusCommand.extendedDescription;
+  arguments = miniStatusCommand.arguments;
+  group = miniStatusCommand.group;
+  alias = miniStatusCommand.alias;
+  private = miniStatusCommand.private;
+  options = miniStatusCommand.options;
+  loadAspects = miniStatusCommand.loadAspects;
+  loader = miniStatusCommand.loader;
 
   constructor(private status: StatusMain) {}
 
