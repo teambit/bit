@@ -13,8 +13,6 @@ import { LaneOverviewHeader } from './lane-overview-header';
 import { ComponentsOverview } from '@teambit/explorer.ui.components-overview';
 import { EmptyLaneOverview } from './empty-lane-overview';
 
-import styles from './lane-overview.module.scss';
-
 export type LaneOverviewLine = ComponentType;
 export type LaneOverviewLineSlot = SlotRegistry<LaneOverviewLine[]>;
 
@@ -57,7 +55,6 @@ function LaneOverviewBody({ currentLane, host: _host, routeSlot, overviewSlot }:
 
   return (
     <ComponentsOverview
-      className={styles.container}
       components={components ?? []}
       componentDescriptors={componentDescriptors ?? []}
       getHref={getHref}
