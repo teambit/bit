@@ -70,6 +70,16 @@ export class CLIMain {
   }
 
   /**
+   * Pairs of (aspectId, commands) as registered in the commands slot.
+   * Used by the codegen script (`scripts/generate-command-index.mjs`) and the
+   * load-bit assertion that the generated command index matches live state.
+   * See docs/rfc-esm-lazy-aspects.md, Slice 2.
+   */
+  commandsByAspect(): Array<[string, CommandList]> {
+    return this.commandsSlot.toArray();
+  }
+
+  /**
    * get an instance of a registered command. (useful for aspects to modify and extend existing commands)
    */
   getCommand(name: string): Command | undefined {
