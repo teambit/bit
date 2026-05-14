@@ -268,8 +268,14 @@ export class WorkspaceLoaderHost implements LoaderHost {
     const allLegacy = legacyComps.concat(removedLegacy);
 
     // -- scope side: fetch scope versions for extension merging --
-    const scopeForWs = workspaceIds.length ? await this.getScopeComponentsSafe(workspaceIds) : [];
-    const scopeOnly = scopeIds.length ? await this.getScopeComponentsSafe(scopeIds) : [];
+    // Workspace ids: scope view is only used for extension merging, so a
+    // missing scope version is tolerable — degrade silently per-id, no import.
+    const scopeForWs = workspaceIds.length ? await this.getScopeComponentsSafe(workspaceIds, false) : [];
+    // Scope-only ids: the caller explicitly asked for these as components
+    // (typically external envs/aspects). Mirror the pre-rewrite WCL flow that
+    // routed through `scope.get(id)` with `importIfMissing=true` so a missing
+    // model is fetched from the remote rather than reported as not-found.
+    const scopeOnly = scopeIds.length ? await this.getScopeComponentsSafe(scopeIds, true) : [];
     const scopeByKey = new Map(scopeForWs.map((c) => [c.id.toStringWithoutVersion(), c]));
 
     // -- build harmony Components with merged extensions (no slots fired) --
@@ -335,22 +341,27 @@ export class WorkspaceLoaderHost implements LoaderHost {
   }
 
   /**
-   * Per-id scope fetch. Workspace components frequently reference a scope
-   * version whose objects aren't fully present locally (e.g. a tagged version
-   * with missing dependency objects). The pre-rewrite WCL handled this by
-   * passing `importIfMissing=false` to `scope.get` and swallowing per-id
-   * errors with a warning — the scope view is used for extension merging,
-   * which has its own fallback when the scope component is absent.
+   * Per-id scope fetch.
    *
-   * Matches that behaviour. The `throwWsJsoncAspectNotFoundError` re-throw
-   * is the one case we still want to surface, because it indicates the
-   * workspace.jsonc references an aspect that wasn't fetched.
+   * `importIfMissing=false` is used for workspace ids — the scope view is just
+   * for extension merging and a missing version is tolerable (the pre-rewrite
+   * WCL took this same shortcut in `populateScopeAndExtensionsCache`).
+   *
+   * `importIfMissing=true` is used for scope-only ids — these are external
+   * aspects/envs the caller explicitly asked for; the pre-rewrite WCL routed
+   * them through `scope.get(id)` (default `importIfMissing=true`), so a
+   * missing model was fetched from the remote rather than reported as
+   * not-found.
+   *
+   * The `throwWsJsoncAspectNotFoundError` re-throw is the one case we still
+   * want to surface — it indicates the workspace.jsonc references an aspect
+   * that wasn't fetched.
    */
-  private async getScopeComponentsSafe(ids: ComponentID[]): Promise<Component[]> {
+  private async getScopeComponentsSafe(ids: ComponentID[], importIfMissing: boolean): Promise<Component[]> {
     const results = await Promise.all(
       ids.map(async (id) => {
         try {
-          return await this.workspace.scope.get(id, undefined, false);
+          return await this.workspace.scope.get(id, undefined, importIfMissing);
         } catch (err: any) {
           const wsAspectLoader = this.workspace.getWorkspaceAspectsLoader();
           wsAspectLoader.throwWsJsoncAspectNotFoundError(err);
