@@ -90,11 +90,17 @@ breaking change to a shared component):
 
 - `EagerFileRegistrar` / `EagerAspectRegistrar` — removed as query-firing components.
   Replaced by a single thin `RegistryFeeder` component rendered by the provider that, as
-  bulk pages arrive, registers changed files / aspects into `FileRegistry`.
-- `InlineContextProvider` — reads `componentCompareData` from the bulk context (keyed by
-  `compareId` / `baseId`) instead of calling `useComponentCompareQuery`.
+  bulk pages arrive, registers changed files / aspects into `FileRegistry` for every
+  component that has a base (i.e. is in the bulk pairs list).
+- `InlineContextProvider` — for components with a base, reads `componentCompareData` from
+  the bulk context (keyed by `compareId` / `baseId`) instead of calling
+  `useComponentCompareQuery`.
 - `GET_COMPONENT_ASPECTS` and its two `no-cache` queries are **deleted**; the bulk
   result's `aspects` field replaces the client-side config/data diffing.
+- **New components** (no base) are _not_ part of the bulk pairs. Their existing
+  `useCode`-based path in `InlineContextProvider` is kept as-is, and a minimal
+  new-component file registrar (the `isNew` slice of the old `EagerFileRegistrar`) is
+  retained for the sidebar. New components are typically a small minority of a lane diff.
 
 ### 3. Scoped opt-in batching
 
@@ -109,9 +115,14 @@ aspect (the shared side effect), while actual behavior only changes for operatio
 explicitly set `context: { batch: true }`. The global `enableBatching` config and the
 `createLinkBatched` path are left untouched.
 
-- `useComponent` / `useCode` get a minimal change to forward an Apollo `context` option.
-- Lane-compare's remaining per-component queries — `useComponent` (base/compare) and
-  `useCode` (new components) — pass `context: { batch: true }`.
+- `useComponent` (and its internal `useComponentLogs`) get a minimal change to forward
+  an optional Apollo `context` option through to their `useDataQuery` calls.
+- Lane-compare's remaining per-component queries — `useComponent` (base/compare) in
+  `InlineContextProvider` — pass `context: { batch: true }`.
+- `useCode` (`@teambit/code.ui.queries.get-component-code`) is an external published
+  component with no source in this repo, so it **cannot** forward a `context` option.
+  The new-component `useCode` queries therefore stay unbatched — an accepted, documented
+  limitation given new components are a minority.
 - The bulk `compareComponents` query is **not** batched (it is already a single large
   query; batching coalesces many small ones).
 
@@ -134,8 +145,9 @@ componentsToDiff (lane-compare)
   → context: Map<idStr, ComponentCompareResult | null>
       → RegistryFeeder registers changed files/aspects into FileRegistry  → sidebar
       → InlineContextProvider reads componentCompareData by id            → inline diff
-  → useComponent / useCode (visible components only) with context:{batch:true}
+  → useComponent (visible components only) with context:{batch:true}
       → BatchHttpLink coalesces
+  → new components: useCode path unchanged (unbatched, minority case)
 ```
 
 ## Error handling
@@ -149,14 +161,16 @@ componentsToDiff (lane-compare)
 
 ## Testing
 
-- **Server unit tests** (`component-compare`): `compareComponents` resolver — pagination
-  slicing (offset/limit), per-pair error isolation (one throwing pair → `null`, others
-  unaffected), concurrency.
-- **E2E:** a component-compare e2e exercising the bulk resolver, following existing
-  `lanes.spec.ts` patterns.
-- **Provider paging:** a small unit test for offset progression / termination.
-- **UI behavior:** verified manually by the user (per established preference) —
-  no automated UI runs in the plan.
+- **Server unit tests** (`component-compare`): the new pagination + error-isolation
+  logic is extracted into a pure helper (`compareComponentPairs`) so it can be unit
+  tested without a workspace fixture — offset/limit slicing, per-pair error isolation
+  (one throwing pair → `null`, others unaffected), concurrency, empty/out-of-range
+  inputs. This is the real risk surface and gets full TDD coverage.
+- **Integration / e2e:** an integration spec for `ComponentCompareMain.compareComponents`
+  modeled on `lanes.spec.ts` (`loadManyAspects` + real components) is a recommended
+  follow-up; not blocking, since the pure helper covers the new logic.
+- **UI behavior:** verified manually by the user (per established preference) — no
+  automated UI runs in the plan.
 
 ## Known details / risks
 
@@ -165,6 +179,7 @@ componentsToDiff (lane-compare)
   field granularity may differ from the previous per-aspect-id list; the registrar
   mapping (or the resolver) is adjusted during implementation to preserve the sidebar's
   aspect list.
-- **Context passthrough:** `useComponent` / `useCode` currently may not forward an
-  Apollo `context` option — a minimal one-line change each.
+- **Context passthrough:** `useComponent` / `useComponentQuery` / `useComponentLogs`
+  need a small additive change to accept and forward an optional Apollo `context`.
+  `useCode` is external and cannot be changed — its new-component queries stay unbatched.
 - **PAGE_SIZE** is a guess (25) pending real-world tuning.
