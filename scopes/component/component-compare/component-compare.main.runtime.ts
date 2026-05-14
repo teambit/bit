@@ -31,6 +31,9 @@ import { ComponentCompareAspect } from './component-compare.aspect';
 import { DiffCmd } from './diff-cmd';
 import type { ImporterMain } from '@teambit/importer';
 import { ImporterAspect } from '@teambit/importer';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { compareComponentPairs } from './compare-component-pairs';
+import type { ComponentComparePair } from './compare-component-pairs';
 
 export type ComponentCompareResult = {
   id: string;
@@ -113,6 +116,26 @@ export class ComponentCompareMain {
       fields: diff.fieldsDiff || [],
       tests: testFilesDiff,
     };
+  }
+
+  /**
+   * compare a paginated slice of component pairs in one call.
+   * a pair that fails to compare (e.g. a component without versions) becomes `null` in the
+   * returned array rather than failing the whole batch. the array is aligned to the requested
+   * slice (`pairs[offset .. offset + limit]`).
+   */
+  async compareComponents(
+    pairs: ComponentComparePair[],
+    options?: { offset?: number; limit?: number }
+  ): Promise<Array<ComponentCompareResult | null>> {
+    return compareComponentPairs(pairs, (baseId, compareId) => this.compare(baseId, compareId), {
+      offset: options?.offset,
+      limit: options?.limit,
+      concurrency: concurrentComponentsLimit(),
+      onError: (pair, err) => {
+        this.logger.warn(`compareComponents: failed to compare ${pair.baseId} <> ${pair.compareId}: ${err}`);
+      },
+    });
   }
 
   async getAPIDiff(baseIdStr: string, compareIdStr: string): Promise<Record<string, any> | null> {
