@@ -133,7 +133,7 @@ export class ComponentCompareMain {
       limit: options?.limit,
       concurrency: concurrentComponentsLimit(),
       onError: (pair, err) => {
-        this.logger.warn(`compareComponents: failed to compare ${pair.baseId} <> ${pair.compareId}: ${err}`);
+        this.logger.warn(`compareComponents: failed to compare ${pair.baseId} <> ${pair.compareId}`, err);
       },
     });
   }
