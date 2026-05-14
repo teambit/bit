@@ -7,10 +7,22 @@ const path = require('path');
 const BASELINE_FILE = path.join(__dirname, 'workspace-cycle-baseline.json');
 
 function getWorkspaceCycle() {
+  let output;
   try {
-    const output = execSync('bit insights circular --json', { encoding: 'utf-8', cwd: path.join(__dirname, '../..') });
+    output = execSync('bit insights circular --json', { encoding: 'utf-8', cwd: path.join(__dirname, '../..'), stdio: ['pipe', 'pipe', 'inherit'] });
+  } catch (error) {
+    console.error('❌ execSync error:', error.message);
+    if (error.stdout) console.error('--- stdout (first 500 chars) ---\n', String(error.stdout).slice(0, 500));
+    process.exit(1);
+  }
+  try {
+    if (!output || output.trim() === '') {
+      console.error('❌ bit insights circular --json produced empty output (exit 0)');
+      console.error('--- raw output as JSON ---', JSON.stringify(output));
+      process.exit(1);
+    }
     const data = JSON.parse(output);
-    
+
     if (!data || !data[0] || !data[0].data) {
       throw new Error('Invalid circular dependencies data structure');
     }
