@@ -679,10 +679,12 @@ if you just want to get a quick look into this snap, create a new workspace and 
 
   /** BFS one level at a time from the remote; N levels = N round-trips. */
   private async getDepsByDepth(bitIds: ComponentID[], depth: number): Promise<ComponentIdList> {
-    // root bitIds are seeded into `visited` so they're excluded from the returned list —
-    // the caller already adds them to the import set, and including them here would duplicate.
+    // root bitIds are excluded from the returned list — the caller already adds them
+    // to the import set. Tracked without version because input may be versionless while
+    // dep references inside the graph carry a specific hash.
+    const rootKeys = new Set<string>(bitIds.map((id) => id.toStringWithoutVersion()));
     const collected = new Map<string, ComponentID>();
-    const visited = new Set<string>(bitIds.map((id) => id.toString()));
+    const visited = new Set<string>();
     let currentBatch: ComponentID[] = bitIds;
 
     for (let level = 0; level < depth && currentBatch.length; level++) {
@@ -690,9 +692,11 @@ if you just want to get a quick look into this snap, create a new workspace and 
       const versions = remoteComps.getVersions();
       const nextBatch: ComponentID[] = [];
       for (const v of versions) {
-        for (const id of v.getAllDependenciesIds()) {
+        // matches flattenedDependencies semantics: prod + dev + extension; excludes peers
+        for (const dep of v.getAllDependencies()) {
+          const id = dep.id;
           const key = id.toString();
-          if (visited.has(key)) continue;
+          if (visited.has(key) || rootKeys.has(id.toStringWithoutVersion())) continue;
           visited.add(key);
           collected.set(key, id);
           nextBatch.push(id);

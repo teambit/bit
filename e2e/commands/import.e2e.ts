@@ -484,6 +484,19 @@ describe('bit import', function () {
         helper.bitMap.expectNotToHaveId('comp4');
       });
     });
+    describe('--dependencies-head --dependencies-depth 1', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('comp1', '--dependencies-head --dependencies-depth 1');
+      });
+      it('should import only the direct dependency at its head version', () => {
+        helper.bitMap.expectToHaveId('comp1');
+        helper.bitMap.expectToHaveId('comp2');
+        helper.bitMap.expectNotToHaveId('comp3');
+        helper.bitMap.expectNotToHaveId('comp4');
+      });
+    });
     describe('--dependencies without depth', () => {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
