@@ -1,2 +1,2 @@
 export { WorkspaceOverview } from './workspace-overview';
-export { useQueryParamWithDefault, useListParamWithDefault } from './use-query-param-with-default';
+export { useQueryParamWithDefault, useListParamWithDefault } from '@teambit/explorer.ui.components-overview';
