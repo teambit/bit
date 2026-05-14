@@ -14,11 +14,14 @@ import {
   FileRegistryProvider,
   useFileRegistry,
   DiffModeProvider,
+  CompareDataProvider,
+  RegistryFeeder,
 } from '@teambit/component.ui.component-compare.component-compare';
 import type {
   CompareViewMode,
   CompareGroupByOption,
   CompareSidebarGroup,
+  ComponentComparePair,
 } from '@teambit/component.ui.component-compare.component-compare';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
@@ -251,6 +254,15 @@ function LaneCompareInline({
     [componentsToDiff, laneComponentDiffByCompId]
   );
 
+  // pairs for the bulk compare query — only components that have a base (new components use the useCode path).
+  const comparePairs = useMemo<ComponentComparePair[]>(
+    () =>
+      allComponents
+        .filter((c) => !!c.baseId && !!c.compareId)
+        .map((c) => ({ baseId: c.baseId as string, compareId: c.compareId })),
+    [allComponents]
+  );
+
   const componentOptions = useMemo(
     () => allComponents.map((c) => ({ value: c.name, payload: c.idStr })),
     [allComponents]
@@ -396,94 +408,97 @@ function LaneCompareInline({
   }
 
   return (
-    <div {...rest} className={classnames(styles.rootLaneCompare, className)}>
-      {/* Toolbar */}
-      <CompareToolbar
-        viewMode={viewMode}
-        onViewModeChange={(v) => setViewMode(v as ViewMode)}
-        groupBy={groupBy}
-        onGroupByChange={(g) => setGroupBy(g as GroupBy)}
-        diffMode={diffMode}
-        onDiffModeChange={setDiffMode}
-        viewModes={compareViewModes}
-        groupByOptions={groupByOptions}
-        counts={counts}
-        loading={loadingLaneDiff}
-        componentOptions={componentOptions}
-        selectedComponents={selectedSearchComponents}
-        onSelectedComponentsChange={setSelectedSearchComponents}
-      />
-
-      {/* Layout */}
-      <div className={styles.layout}>
-        {/* Sidebar */}
-        <CompareSidebar
-          groups={sidebarGroups}
-          selectedId={selectedId}
-          selectedFile={selectedFile}
-          defaultExpandFiles={viewMode === 'code' || viewMode === 'config'}
-          onSelect={(id, fileName) => {
-            setSelectedFile(fileName);
-            setSelectedId(selectedId === id && !fileName ? undefined : id || undefined);
-            if (id) {
-              scrollToElement(diffPaneRef.current, id, fileName);
-            }
-          }}
+    <CompareDataProvider pairs={comparePairs}>
+      <RegistryFeeder pairs={comparePairs} />
+      <div {...rest} className={classnames(styles.rootLaneCompare, className)}>
+        {/* Toolbar */}
+        <CompareToolbar
+          viewMode={viewMode}
+          onViewModeChange={(v) => setViewMode(v as ViewMode)}
+          groupBy={groupBy}
+          onGroupByChange={(g) => setGroupBy(g as GroupBy)}
+          diffMode={diffMode}
+          onDiffModeChange={setDiffMode}
+          viewModes={compareViewModes}
+          groupByOptions={groupByOptions}
+          counts={counts}
           loading={loadingLaneDiff}
+          componentOptions={componentOptions}
+          selectedComponents={selectedSearchComponents}
+          onSelectedComponentsChange={setSelectedSearchComponents}
         />
 
-        {/* Full-pane view (API) — kept mounted to preserve query cache */}
-        <div
-          ref={isFullPaneView ? diffPaneRef : undefined}
-          className={styles.diffPane}
-          style={isFullPaneView ? undefined : { display: 'none' }}
-        >
-          <ApiDiffFullView diffs={apiDiffs} />
-        </div>
+        {/* Layout */}
+        <div className={styles.layout}>
+          {/* Sidebar */}
+          <CompareSidebar
+            groups={sidebarGroups}
+            selectedId={selectedId}
+            selectedFile={selectedFile}
+            defaultExpandFiles={viewMode === 'code' || viewMode === 'config'}
+            onSelect={(id, fileName) => {
+              setSelectedFile(fileName);
+              setSelectedId(selectedId === id && !fileName ? undefined : id || undefined);
+              if (id) {
+                scrollToElement(diffPaneRef.current, id, fileName);
+              }
+            }}
+            loading={loadingLaneDiff}
+          />
 
-        {/* Per-component diff pane */}
-        <DiffModeProvider mode={diffMode}>
+          {/* Full-pane view (API) — kept mounted to preserve query cache */}
           <div
-            ref={isFullPaneView ? undefined : diffPaneRef}
+            ref={isFullPaneView ? diffPaneRef : undefined}
             className={styles.diffPane}
-            data-view-mode={viewMode}
-            style={isFullPaneView ? { display: 'none' } : undefined}
+            style={isFullPaneView ? undefined : { display: 'none' }}
           >
-            {grouped.map(([key, comps]) => (
-              <div key={key} className={styles.laneCompareGroup}>
-                {groupBy !== 'none' && (
-                  <div className={styles.laneCompareGroupHeader}>
-                    <span className={styles.laneCompareGroupLabel}>
-                      {groupBy === 'status' ? displayChangeType(key as ChangeType) : key}
-                    </span>
-                    <span className={styles.laneCompareGroupCount}>{comps.length}</span>
-                  </div>
-                )}
-                {comps.map((c) => (
-                  <InlineComponentCompare
-                    key={c.idStr}
-                    name={c.name}
-                    baseId={c.baseId}
-                    compareId={c.compareId}
-                    baseVersion={c.baseVersion}
-                    compareVersion={c.compareVersion}
-                    baseUrl={c.baseUrl}
-                    compareUrl={c.compareUrl}
-                    envIcon={envIcons?.get(c.idStr)}
-                    allTabs={resolvedTabs}
-                    accentColor={ACCENT_COLORS[c.changeType] || undefined}
-                    host="teambit.scope/scope"
-                  />
-                ))}
-              </div>
-            ))}
-            {filteredComponents.length === 0 && (
-              <div className={styles.emptyState}>No components match the current filters</div>
-            )}
+            <ApiDiffFullView diffs={apiDiffs} />
           </div>
-        </DiffModeProvider>
+
+          {/* Per-component diff pane */}
+          <DiffModeProvider mode={diffMode}>
+            <div
+              ref={isFullPaneView ? undefined : diffPaneRef}
+              className={styles.diffPane}
+              data-view-mode={viewMode}
+              style={isFullPaneView ? { display: 'none' } : undefined}
+            >
+              {grouped.map(([key, comps]) => (
+                <div key={key} className={styles.laneCompareGroup}>
+                  {groupBy !== 'none' && (
+                    <div className={styles.laneCompareGroupHeader}>
+                      <span className={styles.laneCompareGroupLabel}>
+                        {groupBy === 'status' ? displayChangeType(key as ChangeType) : key}
+                      </span>
+                      <span className={styles.laneCompareGroupCount}>{comps.length}</span>
+                    </div>
+                  )}
+                  {comps.map((c) => (
+                    <InlineComponentCompare
+                      key={c.idStr}
+                      name={c.name}
+                      baseId={c.baseId}
+                      compareId={c.compareId}
+                      baseVersion={c.baseVersion}
+                      compareVersion={c.compareVersion}
+                      baseUrl={c.baseUrl}
+                      compareUrl={c.compareUrl}
+                      envIcon={envIcons?.get(c.idStr)}
+                      allTabs={resolvedTabs}
+                      accentColor={ACCENT_COLORS[c.changeType] || undefined}
+                      host="teambit.scope/scope"
+                    />
+                  ))}
+                </div>
+              ))}
+              {filteredComponents.length === 0 && (
+                <div className={styles.emptyState}>No components match the current filters</div>
+              )}
+            </div>
+          </DiffModeProvider>
+        </div>
       </div>
-    </div>
+    </CompareDataProvider>
   );
 }
 
