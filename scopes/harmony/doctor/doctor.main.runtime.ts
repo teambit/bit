@@ -243,11 +243,10 @@ export class DoctorMain {
     if (fileName === '.') {
       return this._getDefaultFileName();
     }
-    let finalFileName = fileName;
-    if (getExt(fileName) !== 'tar' && getExt(fileName) !== 'tar.gz') {
-      finalFileName = `${this.getWithoutExt(finalFileName)}.tar`;
+    if (fileName.endsWith('.tar') || fileName.endsWith('.tar.gz')) {
+      return fileName;
     }
-    return finalFileName;
+    return `${this.getWithoutExt(fileName)}.tar`;
   }
 
   private _getDefaultFileName() {
