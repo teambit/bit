@@ -3,11 +3,8 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 import React, { useContext, useEffect, useMemo, useRef, useState, forwardRef } from 'react';
 import classnames from 'classnames';
-import { useGetComponents } from '@teambit/components.hooks.use-list-components';
-import { createComponentModel, getCompositions } from '@teambit/components.legacy.create-component-model';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { ComponentID as ComponentIdValue } from '@teambit/component-id';
-import { head } from 'lodash';
 import { useFileRegistryRegister, useAspectRegistryRegister, useCompositionsRegistryRegister } from './file-registry';
 import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentID, NavPlugin } from '@teambit/component';
@@ -627,9 +624,7 @@ export const InlineComponentCompare = forwardRef<HTMLDivElement, InlineComponent
       allTabs,
       children,
       className,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      host,
-      previewUrl,
+      host = 'teambit.scope/scope',
     },
     ref
   ) {
@@ -680,13 +675,13 @@ export const InlineComponentCompare = forwardRef<HTMLDivElement, InlineComponent
           changeTags={changeTags}
         />
 
-        <EagerFileRegistrar baseId={baseId} compareId={compareId} />
+        <EagerFileRegistrar baseId={baseId} compareId={compareId} host={host} />
         <EagerAspectRegistrar baseId={baseId} compareId={compareId} />
 
         {!hasBeenVisible && <InlineSkeleton lines={1} />}
 
         {hasBeenVisible && (
-          <InlineContextProvider baseId={baseId} compareId={compareId} previewUrl={previewUrl}>
+          <InlineContextProvider baseId={baseId} compareId={compareId} host={host}>
             {allTabs
               ? allTabs.map((tab) => (
                   <DeferredTab key={tab.id} tabId={tab.id}>
@@ -742,27 +737,25 @@ export function DeferredTab({ tabId, children }: { tabId: string; children: Reac
 function InlineContextProvider({
   baseId,
   compareId,
-  previewUrl,
+  host = 'teambit.scope/scope',
   children,
 }: {
   baseId?: string;
   compareId?: string;
-  previewUrl?: string;
+  host?: string;
   children: ReactNode;
 }) {
-  const baseIds = baseId ? [baseId] : undefined;
-  const compareIds = compareId ? [compareId] : undefined;
-
-  const baseResult = useGetComponents(baseIds, !baseId);
-  const compareResult = useGetComponents(compareIds, !compareId);
-
-  const baseDescriptor = head(baseResult.components);
-  const compareDescriptor = head(compareResult.components);
-
-  const hasBase = !baseId || !!baseDescriptor;
-  const hasCompare = !compareId || !!compareDescriptor;
-
   const isNew = !baseId && !!compareId;
+
+  const { component: baseModel, componentDescriptor: baseDescriptor } = useComponent(host, baseId, {
+    skip: !baseId,
+  });
+  const { component: compareModel, componentDescriptor: compareDescriptor } = useComponent(host, compareId, {
+    skip: !compareId,
+  });
+
+  const hasBase = !baseId || !!baseModel;
+  const hasCompare = !compareId || !!compareModel;
 
   const { loading: compCompareLoading, componentCompareData } = useComponentCompareQuery(
     isNew ? compareId : baseId,
@@ -771,22 +764,7 @@ function InlineContextProvider({
     !compareId || isNew
   );
 
-  const models = useMemo(() => {
-    try {
-      const base = baseDescriptor
-        ? createComponentModel(baseDescriptor, undefined, previewUrl || 'https://preview.v2.bit.cloud')
-        : undefined;
-      const compare = compareDescriptor
-        ? createComponentModel(compareDescriptor, undefined, previewUrl || 'https://preview.v2.bit.cloud')
-        : undefined;
-      return { base, compare };
-    } catch {
-      return null;
-    }
-  }, [baseDescriptor, compareDescriptor, previewUrl]);
-
-  const compareComponentId = models?.compare?.id;
-  const { fileTree: newCompFileTree, loading: newCompCodeLoading } = useCode(isNew ? compareComponentId : undefined);
+  const { fileTree: newCompFileTree, loading: newCompCodeLoading } = useCode(isNew ? compareModel?.id : undefined);
 
   const fileCompareDataByName = useMemo(() => {
     if (isNew) {
@@ -826,11 +804,9 @@ function InlineContextProvider({
     return <InlineSkeleton lines={2} />;
   }
 
-  if (!models) return null;
-
   const contextValue = {
-    base: models.base ? { model: models.base, descriptor: baseDescriptor } : undefined,
-    compare: models.compare ? { model: models.compare, descriptor: compareDescriptor } : undefined,
+    base: baseModel ? { model: baseModel, descriptor: baseDescriptor } : undefined,
+    compare: compareModel ? { model: compareModel, descriptor: compareDescriptor } : undefined,
     loading: compCompareLoading,
     logsByVersion: new Map(),
     fileCompareDataByName,
@@ -843,7 +819,15 @@ function InlineContextProvider({
   return <ComponentCompareContext.Provider value={contextValue as any}>{children}</ComponentCompareContext.Provider>;
 }
 
-export function EagerFileRegistrar({ baseId, compareId }: { baseId?: string; compareId?: string }) {
+export function EagerFileRegistrar({
+  baseId,
+  compareId,
+  host = 'teambit.scope/scope',
+}: {
+  baseId?: string;
+  compareId?: string;
+  host?: string;
+}) {
   const isNew = !baseId && !!compareId;
 
   const { loading, componentCompareData } = useComponentCompareQuery(
@@ -859,14 +843,12 @@ export function EagerFileRegistrar({ baseId, compareId }: { baseId?: string; com
   );
   const { fileTree: newCompFileTree, loading: newCompLoading } = useCode(newCompId);
 
-  const compareIds = compareId ? [compareId] : undefined;
-  const descriptorResult = useGetComponents(compareIds, !compareId);
-  const descriptor = head(descriptorResult.components);
+  const { component: compareModel } = useComponent(host, compareId, { skip: !compareId });
 
   const hasCompositions = useMemo(() => {
-    if (!descriptor) return undefined;
-    return getCompositions(descriptor).length > 0;
-  }, [descriptor]);
+    if (!compareModel) return undefined;
+    return (compareModel.compositions?.length ?? 0) > 0;
+  }, [compareModel]);
 
   const registryFiles = useMemo(() => {
     if (isNew) {
