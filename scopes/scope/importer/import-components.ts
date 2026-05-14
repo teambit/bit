@@ -722,29 +722,46 @@ if you just want to get a quick look into this snap, create a new workspace and 
     return ComponentIdList.uniqFromArray(versions.flatMap((v) => [...v.flattenedDependencies]));
   }
 
-  /** BFS one level at a time from the remote; N levels = N round-trips. */
+  /**
+   * Single remote fetch; BFS in-process over each root version's `flattenedEdges`
+   * (which captures the full transitive graph rooted at that version).
+   */
   private async getDepsByDepth(bitIds: ComponentID[], depth: number): Promise<ComponentIdList> {
-    // root bitIds are excluded from the returned list — the caller already adds them
-    // to the import set. Tracked without version because input may be versionless while
-    // dep references inside the graph carry a specific hash.
-    const rootKeys = new Set<string>(bitIds.map((id) => id.toStringWithoutVersion()));
+    const idList = ComponentIdList.fromArray(bitIds);
+    await this.scope.scopeImporter.importWithoutDeps(idList, { cache: true, lane: this.remoteLane });
+    const componentsAndVersions = await this.scope.getComponentsAndVersions(idList);
+
+    // build adjacency from the merged flattenedEdges of all root versions
+    const adjacency = new Map<string, ComponentID[]>();
+    for (const { version } of componentsAndVersions) {
+      const edges = await version.getFlattenedEdges(this.scope.objects);
+      for (const edge of edges) {
+        const key = edge.source.toString();
+        const targets = adjacency.get(key);
+        if (targets) targets.push(edge.target);
+        else adjacency.set(key, [edge.target]);
+      }
+    }
+
+    // BFS up to `depth` levels. roots tracked without version because input may be versionless
+    // while dep references inside the graph carry a specific hash.
+    const rootKeysNoVersion = new Set<string>(bitIds.map((id) => id.toStringWithoutVersion()));
     const collected = new Map<string, ComponentID>();
     const visited = new Set<string>();
-    let currentBatch: ComponentID[] = bitIds;
+    let currentBatch: ComponentID[] = componentsAndVersions.map(({ component, versionStr }) =>
+      component.toComponentId().changeVersion(versionStr)
+    );
 
     for (let level = 0; level < depth && currentBatch.length; level++) {
-      const remoteComps = await this.scope.scopeImporter.getManyRemoteComponents(currentBatch);
-      const versions = remoteComps.getVersions();
       const nextBatch: ComponentID[] = [];
-      for (const v of versions) {
-        // matches flattenedDependencies semantics: prod + dev + extension; excludes peers
-        for (const dep of v.getAllDependencies()) {
-          const id = dep.id;
-          const key = id.toString();
-          if (visited.has(key) || rootKeys.has(id.toStringWithoutVersion())) continue;
+      for (const id of currentBatch) {
+        const targets = adjacency.get(id.toString()) || [];
+        for (const target of targets) {
+          const key = target.toString();
+          if (visited.has(key) || rootKeysNoVersion.has(target.toStringWithoutVersion())) continue;
           visited.add(key);
-          collected.set(key, id);
-          nextBatch.push(id);
+          collected.set(key, target);
+          nextBatch.push(target);
         }
       }
       currentBatch = nextBatch;
