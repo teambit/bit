@@ -824,6 +824,8 @@ function InlineContextProvider({
  * registers the file list of a NEW component (one with no base) into the FileRegistry for the sidebar.
  * non-new components are fed in bulk by `RegistryFeeder`. `useCode` is an external hook that cannot
  * forward a batch context, so these (minority) queries stay unbatched.
+ * compositions are intentionally not registered here — the FileRegistry compositions store has no
+ * readers; `lane-compare.tsx` derives composition info independently from `useLaneComponents`.
  */
 export function NewComponentFileRegistrar({ compareId }: { compareId: string }) {
   const newCompId = useMemo(() => ComponentIdValue.fromString(compareId), [compareId]);
@@ -918,6 +920,8 @@ function CompareRegistryEntry({ compareId }: { compareId: string }) {
   const data: CompareComponentData | null | undefined = compareData?.getData(compareId);
   const componentIdStr = compareId.split('@')[0];
 
+  // `data` is undefined while the bulk page loads and null if the pair failed to compare;
+  // both intentionally register nothing (matching the prior per-component behavior on failure).
   const registryFiles = useMemo(() => {
     if (!data) return undefined;
     return (data.code || [])
