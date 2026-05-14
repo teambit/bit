@@ -5,7 +5,9 @@ import React, { useContext, useEffect, useMemo, useRef, useState, forwardRef } f
 import classnames from 'classnames';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { ComponentID as ComponentIdValue } from '@teambit/component-id';
-import { useFileRegistryRegister, useAspectRegistryRegister, useCompositionsRegistryRegister } from './file-registry';
+import { useFileRegistryRegister, useAspectRegistryRegister } from './file-registry';
+import { useCompareData } from './compare-data-context';
+import type { ComponentComparePair, CompareComponentData } from './compare-data-context';
 import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentID, NavPlugin } from '@teambit/component';
 import { CollapsibleMenuNav, ComponentContext, ComponentDescriptorContext, useComponent } from '@teambit/component';
@@ -675,8 +677,7 @@ export const InlineComponentCompare = forwardRef<HTMLDivElement, InlineComponent
           changeTags={changeTags}
         />
 
-        <EagerFileRegistrar baseId={baseId} compareId={compareId} host={host} />
-        <EagerAspectRegistrar baseId={baseId} compareId={compareId} />
+        {!baseId && !!compareId && <NewComponentFileRegistrar compareId={compareId} />}
 
         {!hasBeenVisible && <InlineSkeleton lines={1} />}
 
@@ -749,20 +750,20 @@ function InlineContextProvider({
 
   const { component: baseModel, componentDescriptor: baseDescriptor } = useComponent(host, baseId, {
     skip: !baseId,
+    context: { batch: true },
   });
   const { component: compareModel, componentDescriptor: compareDescriptor } = useComponent(host, compareId, {
     skip: !compareId,
+    context: { batch: true },
   });
 
   const hasBase = !baseId || !!baseModel;
   const hasCompare = !compareId || !!compareModel;
 
-  const { loading: compCompareLoading, componentCompareData } = useComponentCompareQuery(
-    isNew ? compareId : baseId,
-    compareId,
-    undefined,
-    !compareId || isNew
-  );
+  const compareData = useCompareData();
+  const componentCompareData = compareId ? compareData?.getData(compareId) : undefined;
+  // for non-new components: undefined = bulk page not loaded yet, null = pair failed to compare.
+  const compCompareLoading = !isNew && componentCompareData === undefined;
 
   const { fileTree: newCompFileTree, loading: newCompCodeLoading } = useCode(isNew ? compareModel?.id : undefined);
 
@@ -778,7 +779,7 @@ function InlineContextProvider({
     if (compCompareLoading) return undefined;
     if (!componentCompareData) return null;
     const lookup = new Map();
-    (componentCompareData?.code || []).forEach((f: any) => {
+    (componentCompareData.code || []).forEach((f: any) => {
       lookup.set(f.fileName, f);
     });
     return lookup;
@@ -788,7 +789,7 @@ function InlineContextProvider({
     if (compCompareLoading) return undefined;
     if (!componentCompareData) return null;
     const lookup = new Map();
-    (componentCompareData?.aspects || []).forEach((a: any) => lookup.set(a.fieldName, a));
+    (componentCompareData.aspects || []).forEach((a: any) => lookup.set(a.fieldName, a));
     return lookup;
   }, [compCompareLoading, componentCompareData]);
 
@@ -796,7 +797,7 @@ function InlineContextProvider({
     if (compCompareLoading) return undefined;
     if (!componentCompareData) return null;
     const lookup = new Map();
-    (componentCompareData?.tests || []).forEach((t: any) => lookup.set(t.fileName, t));
+    (componentCompareData.tests || []).forEach((t: any) => lookup.set(t.fileName, t));
     return lookup;
   }, [compCompareLoading, componentCompareData]);
 
@@ -819,117 +820,21 @@ function InlineContextProvider({
   return <ComponentCompareContext.Provider value={contextValue as any}>{children}</ComponentCompareContext.Provider>;
 }
 
-export function EagerFileRegistrar({
-  baseId,
-  compareId,
-  host = 'teambit.scope/scope',
-}: {
-  baseId?: string;
-  compareId?: string;
-  host?: string;
-}) {
-  const isNew = !baseId && !!compareId;
-
-  const { loading, componentCompareData } = useComponentCompareQuery(
-    isNew ? compareId : baseId,
-    compareId,
-    undefined,
-    !compareId || isNew
-  );
-
-  const newCompId = useMemo(
-    () => (isNew && compareId ? ComponentIdValue.fromString(compareId) : undefined),
-    [isNew, compareId]
-  );
-  const { fileTree: newCompFileTree, loading: newCompLoading } = useCode(newCompId);
-
-  const { component: compareModel } = useComponent(host, compareId, { skip: !compareId });
-
-  const hasCompositions = useMemo(() => {
-    if (!compareModel) return undefined;
-    return (compareModel.compositions?.length ?? 0) > 0;
-  }, [compareModel]);
+/**
+ * registers the file list of a NEW component (one with no base) into the FileRegistry for the sidebar.
+ * non-new components are fed in bulk by `RegistryFeeder`. `useCode` is an external hook that cannot
+ * forward a batch context, so these (minority) queries stay unbatched.
+ */
+export function NewComponentFileRegistrar({ compareId }: { compareId: string }) {
+  const newCompId = useMemo(() => ComponentIdValue.fromString(compareId), [compareId]);
+  const { fileTree: newCompFileTree, loading } = useCode(newCompId);
 
   const registryFiles = useMemo(() => {
-    if (isNew) {
-      if (newCompLoading || !newCompFileTree?.length) return undefined;
-      return newCompFileTree.map((n: string) => ({ name: n, status: 'NEW' }));
-    }
-    if (loading || !componentCompareData) return undefined;
-    return (componentCompareData?.code || [])
-      .filter((f: any) => f.status !== 'UNCHANGED')
-      .map((f: any) => ({ name: f.fileName, status: f.status }));
-  }, [isNew, newCompLoading, newCompFileTree, loading, componentCompareData]);
+    if (loading || !newCompFileTree?.length) return undefined;
+    return newCompFileTree.map((n: string) => ({ name: n, status: 'NEW' }));
+  }, [loading, newCompFileTree]);
 
-  const componentIdStr = compareId?.split('@')[0];
-  useFileRegistryRegister(componentIdStr, registryFiles);
-  useCompositionsRegistryRegister(componentIdStr, hasCompositions);
-
-  return null;
-}
-
-const GET_COMPONENT_ASPECTS = gql`
-  query GetComponentAspectData($id: String!) {
-    getHost {
-      id
-      get(id: $id) {
-        id {
-          name
-          version
-          scope
-        }
-        aspects {
-          id
-          config
-          data
-        }
-      }
-    }
-  }
-`;
-
-export function EagerAspectRegistrar({ baseId, compareId }: { baseId?: string; compareId?: string }) {
-  const { data: baseData, loading: baseLoading } = useDataQuery(GET_COMPONENT_ASPECTS, {
-    variables: { id: baseId },
-    skip: !baseId,
-    fetchPolicy: 'no-cache',
-  });
-  const { data: compareData, loading: compareLoading } = useDataQuery(GET_COMPONENT_ASPECTS, {
-    variables: { id: compareId },
-    skip: !compareId,
-    fetchPolicy: 'no-cache',
-  });
-
-  const loading = baseLoading || compareLoading;
-
-  const aspectRegistryFiles = useMemo(() => {
-    if (loading) return undefined;
-    const baseAspects: any[] = (baseData as any)?.getHost?.get?.aspects || [];
-    const compareAspects: any[] = (compareData as any)?.getHost?.get?.aspects || [];
-
-    const baseMap = new Map<string, any>();
-    baseAspects.forEach((a) => baseMap.set(a.id, a));
-    const compareMap = new Map<string, any>();
-    compareAspects.forEach((a) => compareMap.set(a.id, a));
-
-    const allIds = new Set([...baseMap.keys(), ...compareMap.keys()]);
-    const changed: Array<{ name: string; status: string }> = [];
-
-    allIds.forEach((id) => {
-      const base = baseMap.get(id);
-      const compare = compareMap.get(id);
-      const configDiff = JSON.stringify(base?.config ?? null) !== JSON.stringify(compare?.config ?? null);
-      const dataDiff = JSON.stringify(base?.data ?? null) !== JSON.stringify(compare?.data ?? null);
-      if (configDiff || dataDiff) {
-        changed.push({ name: id.split('/').pop() || id, status: 'MODIFIED' });
-      }
-    });
-
-    return changed.length > 0 ? changed : undefined;
-  }, [loading, baseData, compareData]);
-
-  const componentIdStr = compareId?.split('@')[0] || baseId?.split('@')[0];
-  useAspectRegistryRegister(componentIdStr, aspectRegistryFiles);
+  useFileRegistryRegister(compareId.split('@')[0], registryFiles);
 
   return null;
 }
@@ -1004,5 +909,43 @@ function InlineSkeleton({ lines = 3 }: { lines?: number }) {
         <div key={i} className={styles.skeletonBar} style={{ width: `${40 + (i % 3) * 20}%` }} />
       ))}
     </div>
+  );
+}
+
+/** registers one component's bulk compare data into the FileRegistry. renders nothing. */
+function CompareRegistryEntry({ compareId }: { compareId: string }) {
+  const compareData = useCompareData();
+  const data: CompareComponentData | null | undefined = compareData?.getData(compareId);
+  const componentIdStr = compareId.split('@')[0];
+
+  const registryFiles = useMemo(() => {
+    if (!data) return undefined;
+    return (data.code || [])
+      .filter((f) => f.status !== 'UNCHANGED')
+      .map((f) => ({ name: f.fileName, status: f.status }));
+  }, [data]);
+
+  const aspectRegistryFiles = useMemo(() => {
+    if (!data) return undefined;
+    return (data.aspects || []).map((a) => ({ name: a.fieldName, status: 'MODIFIED' }));
+  }, [data]);
+
+  useFileRegistryRegister(componentIdStr, registryFiles);
+  useAspectRegistryRegister(componentIdStr, aspectRegistryFiles);
+
+  return null;
+}
+
+/**
+ * feeds the FileRegistry from the bulk `CompareDataProvider` for every component pair that has a base.
+ * renders one null-rendering `CompareRegistryEntry` per pair — no per-component queries are fired.
+ */
+export function RegistryFeeder({ pairs }: { pairs: ComponentComparePair[] }) {
+  return (
+    <>
+      {pairs.map((pair) => (
+        <CompareRegistryEntry key={pair.compareId} compareId={pair.compareId} />
+      ))}
+    </>
   );
 }

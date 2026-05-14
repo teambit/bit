@@ -18,3 +18,4 @@ export { InlineComponentCompare, ComponentCompareHeader } from './component-comp
 export type { InlineComponentCompareProps, ComponentCompareHeaderProps } from './component-compare';
 export { CompareDataProvider, useCompareData, COMPARE_PAGE_SIZE } from './compare-data-context';
 export type { CompareDataContextModel, CompareComponentData, ComponentComparePair } from './compare-data-context';
+export { RegistryFeeder } from './component-compare';
