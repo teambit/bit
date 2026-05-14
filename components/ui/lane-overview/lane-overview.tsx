@@ -9,7 +9,7 @@ import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
 import flatten from 'lodash.flatten';
 import type { SlotRegistry } from '@teambit/harmony';
 import type { ComponentModel } from '@teambit/component';
-import { LaneDetails } from '@teambit/lanes.ui.lane-details';
+import { LaneOverviewHeader } from './lane-overview-header';
 import { ComponentsOverview } from '@teambit/explorer.ui.components-overview';
 import { EmptyLaneOverview } from './empty-lane-overview';
 
@@ -62,14 +62,7 @@ function LaneOverviewBody({ currentLane, host: _host, routeSlot, overviewSlot }:
       componentDescriptors={componentDescriptors ?? []}
       getHref={getHref}
       storageNamespace="lane-overview"
-      header={
-        <LaneDetails
-          className={styles.laneDetails}
-          laneId={currentLane.id}
-          description=""
-          componentCount={currentLane.components.length}
-        />
-      }
+      header={<LaneOverviewHeader laneId={currentLane.id} componentCount={currentLane.components.length} />}
       footer={
         <>
           {routeSlot && <SlotRouter slot={routeSlot} />}
