@@ -51,6 +51,26 @@ master_only_filter: &master_only_filter
       only: master
 
 # ========================================
+# PIPELINE PARAMETERS
+# ========================================
+
+parameters:
+  run_set_stable:
+    type: boolean
+    default: false
+  release_version:
+    type: string
+    default: ""
+  release_stable:
+    type: enum
+    enum: ["true", "false"]
+    default: "true"
+  release_test_mode:
+    type: enum
+    enum: ["true", "false"]
+    default: "false"
+
+# ========================================
 # ORBS
 # ========================================
 
@@ -970,6 +990,35 @@ jobs:
       - store_artifacts:
           path: bit/index.json
 
+  set_release_stable_flag:
+    docker:
+      - image: bitcli/node-gcloud-sdk
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: Configure gcloud auth
+          command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
+      - run:
+          name: Update stable flag in index.json
+          environment:
+            RELEASE_VERSION: "<< pipeline.parameters.release_version >>"
+            RELEASE_STABLE: "<< pipeline.parameters.release_stable >>"
+            RELEASE_TEST_MODE: "<< pipeline.parameters.release_test_mode >>"
+          command: node scripts/update-bit-stable-flag.js
+      - run:
+          name: Upload index.json
+          command: |
+            if [ "<< pipeline.parameters.release_test_mode >>" = "true" ]; then
+              TARGET="index-test.json"
+            else
+              TARGET="index.json"
+            fi
+            gsutil cp index.json "gs://bvm.bit.dev/bit/$TARGET"
+            gsutil setmeta -h "Cache-Control:no-cache" "gs://bvm.bit.dev/bit/$TARGET"
+      - store_artifacts:
+          path: index.json
+
   # ========== Docker Jobs ==========
   docker_build_node_22:
     machine:
@@ -1172,8 +1221,16 @@ jobs:
 # ========================================
 
 workflows:
+  # Manual workflow: flip a published version's stable flag in index.json.
+  # Trigger from the CircleCI web app with run_set_stable=true, release_version=<version>, release_stable=<true|false>.
+  set_release_stable_flag:
+    when: << pipeline.parameters.run_set_stable >>
+    jobs:
+      - set_release_stable_flag
+
   # Main build and test workflow
   build_and_test:
+    unless: << pipeline.parameters.run_set_stable >>
     jobs:
       - checkout_code
       - set_ssh_key
@@ -1324,6 +1381,7 @@ workflows:
 
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:
+    unless: << pipeline.parameters.run_set_stable >>
     jobs:
       - harmony_deploy_approval_job:
           <<: *master_only_filter
