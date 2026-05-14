@@ -5,7 +5,7 @@ export type Example = {
   title?: string;
   description?: ReactElement;
   scope?: { [key: string]: any };
-  jsx?: JSX.Element;
+  jsx?: React.JSX.Element;
   code: string;
 };
 
