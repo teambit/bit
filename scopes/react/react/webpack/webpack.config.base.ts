@@ -81,6 +81,9 @@ export default function (isEnvProduction = false): Configuration {
         'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime'),
         'react/jsx-runtime': require.resolve('react/jsx-runtime'),
         'react-dom/server': require.resolve('react-dom/server'),
+        // dedupe to a single copy — multiple versions in the pnpm store break the
+        // module namespace when bundled (see lane-compare runtime error).
+        '@teambit/lanes.entities.lane-diff': require.resolve('@teambit/lanes.entities.lane-diff'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',

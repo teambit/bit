@@ -42,6 +42,7 @@ export function resolveAlias(opts?: { profile?: boolean }): Record<string, strin
     '@teambit/api-reference.hooks.use-api': require.resolve('@teambit/api-reference.hooks.use-api'),
     '@teambit/api-reference.hooks.use-api-renderers': require.resolve('@teambit/api-reference.hooks.use-api-renderers'),
     '@teambit/lanes.hooks.use-lanes': require.resolve('@teambit/lanes.hooks.use-lanes'),
+    '@teambit/lanes.entities.lane-diff': require.resolve('@teambit/lanes.entities.lane-diff'),
   };
 }
 
