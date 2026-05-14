@@ -313,6 +313,14 @@ export class UnifiedComponentLoader {
         resolvers.set(key, resolve);
         rejecters.push(reject);
       });
+      // Attach a no-op rejection handler so the promise's rejection is always
+      // considered "handled" even when no recursive caller is awaiting it.
+      // Otherwise a host throw triggers an `unhandledRejection` event which —
+      // during plugin loading windows where the aspect loader calls
+      // setExitOnUnhandledRejection(false) — gets silently ignored. That makes
+      // the outer command appear to exit 0 with empty stdout, hiding the real
+      // failure.
+      promise.catch(() => undefined);
       this.inFlight.set(key, promise);
     }
 
@@ -373,6 +381,10 @@ export class UnifiedComponentLoader {
       resolveInFlight = resolve;
       rejectInFlight = reject;
     });
+    // See loadBatchAndCache for why we attach this no-op catch — without it,
+    // a host throw becomes an unhandledRejection that the aspect loader's
+    // setExitOnUnhandledRejection(false) window can silently swallow.
+    promise.catch(() => undefined);
     this.inFlight.set(inFlightKey, promise);
 
     let component: Component | undefined;
