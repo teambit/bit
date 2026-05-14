@@ -13,7 +13,8 @@ export function useComponentQuery(
   componentId: string,
   host: string,
   filters?: Filters,
-  skip?: boolean
+  skip?: boolean,
+  context?: Record<string, any>
 ): ComponentQueryResult {
   const idRef = useRef(componentId);
   idRef.current = componentId;
@@ -26,9 +27,16 @@ export function useComponentQuery(
     variables,
     skip,
     errorPolicy: 'all',
+    context,
   });
 
-  const { loading: loadingLogs, componentLogs: { logs } = {} } = useComponentLogs(componentId, host, filters, skip);
+  const { loading: loadingLogs, componentLogs: { logs } = {} } = useComponentLogs(
+    componentId,
+    host,
+    filters,
+    skip,
+    context
+  );
 
   const rawComponent = data?.getHost?.get;
 
