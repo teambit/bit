@@ -36,6 +36,7 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
 
       extend type ComponentHost {
         compareComponent(baseId: String!, compareId: String!): ComponentCompareResult
+        # bulk compare a paginated slice of pairs; an element is null if that pair failed to compare
         compareComponents(pairs: [ComponentComparePair!]!, offset: Int, limit: Int): [ComponentCompareResult]!
       }
     `,
