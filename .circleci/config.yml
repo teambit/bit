@@ -64,6 +64,9 @@ parameters:
   release_stable:
     type: boolean
     default: true
+  release_test_mode:
+    type: boolean
+    default: false
 
 # ========================================
 # ORBS
@@ -999,13 +1002,18 @@ jobs:
           environment:
             RELEASE_VERSION: "<< pipeline.parameters.release_version >>"
             RELEASE_STABLE: "<< pipeline.parameters.release_stable >>"
+            RELEASE_TEST_MODE: "<< pipeline.parameters.release_test_mode >>"
           command: node scripts/update-bit-stable-flag.js
       - run:
           name: Upload index.json
-          command: gsutil cp index.json gs://bvm.bit.dev/bit/index.json
-      - run:
-          name: clear index.json cache
-          command: gsutil setmeta -h "Cache-Control:no-cache" gs://bvm.bit.dev/bit/index.json
+          command: |
+            if [ "<< pipeline.parameters.release_test_mode >>" = "true" ]; then
+              TARGET="index-test.json"
+            else
+              TARGET="index.json"
+            fi
+            gsutil cp index.json "gs://bvm.bit.dev/bit/$TARGET"
+            gsutil setmeta -h "Cache-Control:no-cache" "gs://bvm.bit.dev/bit/$TARGET"
       - store_artifacts:
           path: index.json
 

@@ -3,6 +3,7 @@ const https = require('https');
 
 const BIT_VERSION = process.env.RELEASE_VERSION;
 const STABLE = process.env.RELEASE_STABLE;
+const TEST_MODE = process.env.RELEASE_TEST_MODE === 'true';
 
 if (!BIT_VERSION) {
   console.error('RELEASE_VERSION env variable is required');
@@ -14,6 +15,7 @@ if (STABLE !== 'true' && STABLE !== 'false') {
 }
 
 const stable = STABLE === 'true';
+const indexObjectName = TEST_MODE ? 'index-test.json' : 'index.json';
 const random = Math.floor(Math.random() * 100000);
 
 // Fetch directly from GCS to bypass any CDN caching.
@@ -21,7 +23,7 @@ https
   .get(
     {
       host: 'storage.googleapis.com',
-      path: `/bvm.bit.dev/bit/index.json?random=${random}`,
+      path: `/bvm.bit.dev/bit/${indexObjectName}?random=${random}`,
       port: 443,
       headers: { 'Content-Type': 'application/json' },
     },
@@ -47,7 +49,9 @@ https
           delete release.stable;
         }
         fs.writeFileSync('index.json', JSON.stringify(index), 'utf8');
-        console.log(`Marked version ${BIT_VERSION} as ${stable ? 'stable' : 'not stable'}`);
+        console.log(
+          `Marked version ${BIT_VERSION} as ${stable ? 'stable' : 'not stable'} in ${indexObjectName}`
+        );
       });
     }
   )
