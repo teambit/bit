@@ -762,8 +762,9 @@ function InlineContextProvider({
 
   const compareData = useCompareData();
   const componentCompareData = compareId ? compareData?.getData(compareId) : undefined;
-  // for non-new components: undefined = bulk page not loaded yet, null = pair failed to compare.
-  const compCompareLoading = !isNew && componentCompareData === undefined;
+  // for non-new components with a compareId: undefined = bulk page not loaded yet, null = pair failed to compare.
+  // a component with no compareId (deleted in the compare lane) is never in the bulk pairs, so it is not "loading".
+  const compCompareLoading = !isNew && !!compareId && componentCompareData === undefined;
 
   const { fileTree: newCompFileTree, loading: newCompCodeLoading } = useCode(isNew ? compareModel?.id : undefined);
 
