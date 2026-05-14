@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useLayoutEffect } from 'react';
 import classnames from 'classnames';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import compact from 'lodash.compact';
@@ -45,6 +45,22 @@ export function ComponentsOverview({
   className,
 }: ComponentsOverviewProps) {
   const storageKeyPrefix = `${storageNamespace}:`;
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const containerEl = containerRef.current;
+    const stickyEl = stickyRef.current;
+    if (!containerEl || !stickyEl) return undefined;
+    const apply = () => {
+      containerEl.style.setProperty('--components-overview-sticky-height', `${stickyEl.offsetHeight}px`);
+    };
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(stickyEl);
+    return () => observer.disconnect();
+  }, []);
 
   const uniqueScopes = useMemo(() => [...new Set(components.map((c) => c.id.scope))], [components]);
   const { cloudScopes } = useCloudScopes(uniqueScopes);
@@ -100,19 +116,21 @@ export function ComponentsOverview({
   );
 
   return (
-    <div className={classnames(styles.container, className)}>
-      {header}
+    <div ref={containerRef} className={classnames(styles.container, className)}>
+      <div ref={stickyRef} className={styles.stickyHeader}>
+        {header}
 
-      <ComponentsOverviewFilterPanel
-        aggregation={aggregation}
-        onAggregationChange={setAggregation}
-        availableAggregations={availableAggregations}
-        items={items}
-        activeNamespaces={activeNamespaces}
-        onNamespacesChange={setActiveNamespaces}
-        activeScopes={activeScopes}
-        onScopesChange={setActiveScopes}
-      />
+        <ComponentsOverviewFilterPanel
+          aggregation={aggregation}
+          onAggregationChange={setAggregation}
+          availableAggregations={availableAggregations}
+          items={items}
+          activeNamespaces={activeNamespaces}
+          onNamespacesChange={setActiveNamespaces}
+          activeScopes={activeScopes}
+          onScopesChange={setActiveScopes}
+        />
+      </div>
 
       <div className={styles.content}>
         {filteredCount === 0 && emptyState}

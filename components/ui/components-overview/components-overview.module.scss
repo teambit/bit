@@ -11,6 +11,14 @@
   padding: 20px 40px 80px;
 }
 
+.stickyHeader {
+  position: sticky;
+  top: 0;
+  z-index: $modal-z-index - 1;
+  background: color-mix(in srgb, var(--bit-accent-color, #6c5ce7) 3%, var(--background-color, #fff));
+  border-bottom: 1px solid var(--border-medium-color);
+}
+
 /* ---- Command bar ---- */
 
 .commandBar {
@@ -20,11 +28,6 @@
   gap: 12px;
   flex-wrap: wrap;
   padding: 12px 40px;
-  background: color-mix(in srgb, var(--bit-accent-color, #6c5ce7) 3%, var(--background-color, #fff));
-  border-bottom: 1px solid var(--border-medium-color);
-  position: sticky;
-  top: 0;
-  z-index: $modal-z-index - 1;
 }
 
 .leftCluster {
@@ -76,7 +79,7 @@
 
 .sectionHeader {
   position: sticky;
-  top: 57px;
+  top: var(--components-overview-sticky-height, 57px);
   z-index: $nav-z-index;
   background: var(--background-color);
   padding: 12px 0 18px;
