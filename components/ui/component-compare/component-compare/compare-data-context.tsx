@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { gql, useQuery } from '@apollo/client';
 
@@ -30,6 +30,10 @@ export type CompareComponentData = {
     baseContent?: string;
     compareContent?: string;
   }>;
+};
+
+type CompareComponentsQueryResult = {
+  getHost: { id: string; compareComponents: Array<CompareComponentData | null> } | null;
 };
 
 export const QUERY_COMPARE_COMPONENTS = gql`
@@ -64,7 +68,11 @@ export const QUERY_COMPARE_COMPONENTS = gql`
 `;
 
 export type CompareDataContextModel = {
-  /** look up bulk compare data for a component by its `compareId`; `null` = failed to compare, `undefined` = not loaded yet */
+  /**
+   * look up bulk compare data for a component by its `compareId`.
+   * `null` = the pair failed to compare; `undefined` = the pair is not in this provider's
+   * list, or its page has not loaded yet (check `loading` to disambiguate).
+   */
   getData: (compareId: string) => CompareComponentData | null | undefined;
   /** true until every page has loaded */
   loading: boolean;
@@ -81,50 +89,65 @@ export function useCompareData(): CompareDataContextModel | undefined {
 /**
  * fires the bulk `compareComponents` query for the whole `pairs` list and exposes the results via context.
  * loads sequentially in pages of COMPARE_PAGE_SIZE — page 1 first, then fetchMore for each subsequent page
- * in the background until all pairs are covered.
+ * in the background until all pairs are covered. `pairs` is stabilized internally by content, so callers
+ * do not have to memoize it.
  */
 export function CompareDataProvider({ pairs, children }: { pairs: ComponentComparePair[]; children: ReactNode }) {
-  const skip = pairs.length === 0;
+  // stabilize by content: a new array reference with the same pairs must not restart the query.
+  const pairsKey = JSON.stringify(pairs);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const stablePairs = useMemo(() => pairs, [pairsKey]);
 
-  const { data, loading, fetchMore } = useQuery(QUERY_COMPARE_COMPONENTS, {
-    variables: { pairs, offset: 0, limit: COMPARE_PAGE_SIZE },
+  const skip = stablePairs.length === 0;
+
+  const { data, loading, fetchMore } = useQuery<CompareComponentsQueryResult>(QUERY_COMPARE_COMPONENTS, {
+    variables: { pairs: stablePairs, offset: 0, limit: COMPARE_PAGE_SIZE },
     skip,
     notifyOnNetworkStatusChange: true,
   });
 
   const results: Array<CompareComponentData | null> = data?.getHost?.compareComponents ?? [];
-  const allLoaded = skip || results.length >= pairs.length;
+  const allLoaded = skip || results.length >= stablePairs.length;
+
+  // flips off once a page returns empty (or a page fails) — guarantees the paging loop terminates
+  // even if the server returns fewer results than requested. reset when the pairs list changes.
+  const hasMoreRef = useRef(true);
+  useEffect(() => {
+    hasMoreRef.current = true;
+  }, [pairsKey]);
 
   // sequential background paging: whenever a page settles and pairs remain, request the next page.
   useEffect(() => {
-    if (skip || loading || allLoaded) return;
+    if (skip || loading || allLoaded || !hasMoreRef.current) return;
     fetchMore({
-      variables: { pairs, offset: results.length, limit: COMPARE_PAGE_SIZE },
+      variables: { pairs: stablePairs, offset: results.length, limit: COMPARE_PAGE_SIZE },
       updateQuery: (prev: any, { fetchMoreResult }: any) => {
-        if (!fetchMoreResult) return prev;
+        const prevHost = prev.getHost;
+        if (!fetchMoreResult || !prevHost) return prev;
+        const newItems = fetchMoreResult.getHost?.compareComponents ?? [];
+        if (newItems.length === 0) hasMoreRef.current = false;
         return {
           getHost: {
-            ...prev.getHost,
-            compareComponents: [
-              ...(prev.getHost?.compareComponents ?? []),
-              ...(fetchMoreResult.getHost?.compareComponents ?? []),
-            ],
+            ...prevHost,
+            compareComponents: [...prevHost.compareComponents, ...newItems],
           },
         };
       },
     }).catch(() => {
       // a failed page stops the sequence; pages already loaded stay usable.
+      hasMoreRef.current = false;
     });
-  }, [skip, loading, allLoaded, results.length, pairs, fetchMore]);
+  }, [skip, loading, allLoaded, results.length, stablePairs, fetchMore]);
 
   const dataByCompareId = useMemo(() => {
     const map = new Map<string, CompareComponentData | null>();
     results.forEach((res, i) => {
-      const pair = pairs[i];
-      if (pair) map.set(pair.compareId, res ?? null);
+      // prefer the result's own compareId; fall back to positional alignment for null (failed) slots.
+      const key = res?.compareId ?? stablePairs[i]?.compareId;
+      if (key) map.set(key, res ?? null);
     });
     return map;
-  }, [results, pairs]);
+  }, [results, stablePairs]);
 
   const value = useMemo<CompareDataContextModel>(
     () => ({
