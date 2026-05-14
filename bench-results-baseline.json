@@ -1,0 +1,1694 @@
+{
+  "meta": {
+    "node": "v24.15.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "bitBin": "/Volumes/src/teambit/bit/bin/bit.js",
+    "iters": 3,
+    "warmups": 2,
+    "aspectIters": 3,
+    "smallWs": null,
+    "largeWs": null,
+    "timestamp": "2026-05-14T23:15:48.617Z"
+  },
+  "scenarios": [
+    {
+      "name": "bit --version",
+      "argv": [
+        "--version"
+      ],
+      "cwd": "/var/folders/g7/5ygp0ncd6qx5g4fn5hpsqq5c0000gn/T/bit-bench-no-ws-51AHPj",
+      "cold": {
+        "n": 3,
+        "min": 171.799625,
+        "p50": 173.710417,
+        "p95": 186.7816039,
+        "mean": 177.91466666666668,
+        "max": 188.233958,
+        "samples": [
+          188.233958,
+          173.710417,
+          171.799625
+        ],
+        "exits": [
+          0,
+          0,
+          0
+        ]
+      },
+      "warm": {
+        "n": 3,
+        "min": 171.002584,
+        "p50": 171.626666,
+        "p95": 174.964316,
+        "mean": 172.65480533333334,
+        "max": 175.335166,
+        "samples": [
+          171.002584,
+          171.626666,
+          175.335166
+        ],
+        "exits": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "bit --help",
+      "argv": [
+        "--help"
+      ],
+      "cwd": "/var/folders/g7/5ygp0ncd6qx5g4fn5hpsqq5c0000gn/T/bit-bench-no-ws-51AHPj",
+      "cold": {
+        "n": 3,
+        "min": 462.961417,
+        "p50": 476.151125,
+        "p95": 482.62917469999996,
+        "mean": 474.1538333333333,
+        "max": 483.348958,
+        "samples": [
+          462.961417,
+          476.151125,
+          483.348958
+        ],
+        "exits": [
+          0,
+          0,
+          0
+        ]
+      },
+      "warm": {
+        "n": 3,
+        "min": 433.98375,
+        "p50": 443.798042,
+        "p95": 449.4571673,
+        "mean": 442.6225836666667,
+        "max": 450.085959,
+        "samples": [
+          433.98375,
+          443.798042,
+          450.085959
+        ],
+        "exits": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "bit <typo>",
+      "argv": [
+        "zzz-typo-cmd"
+      ],
+      "cwd": "/var/folders/g7/5ygp0ncd6qx5g4fn5hpsqq5c0000gn/T/bit-bench-no-ws-51AHPj",
+      "cold": {
+        "n": 3,
+        "min": 457.234375,
+        "p50": 489.521542,
+        "p95": 519.0095541999999,
+        "mean": 489.680639,
+        "max": 522.286,
+        "samples": [
+          522.286,
+          457.234375,
+          489.521542
+        ],
+        "exits": [
+          1,
+          1,
+          1
+        ]
+      },
+      "warm": {
+        "n": 3,
+        "min": 434.293875,
+        "p50": 435.727208,
+        "p95": 445.3926455,
+        "mean": 438.829222,
+        "max": 446.466583,
+        "samples": [
+          434.293875,
+          435.727208,
+          446.466583
+        ],
+        "exits": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "bit status (no ws)",
+      "argv": [
+        "status"
+      ],
+      "cwd": "/var/folders/g7/5ygp0ncd6qx5g4fn5hpsqq5c0000gn/T/bit-bench-no-ws-51AHPj",
+      "cold": {
+        "n": 3,
+        "min": 669.021375,
+        "p50": 689.710292,
+        "p95": 700.1963423,
+        "mean": 686.6977086666666,
+        "max": 701.361459,
+        "samples": [
+          701.361459,
+          689.710292,
+          669.021375
+        ],
+        "exits": [
+          1,
+          1,
+          1
+        ]
+      },
+      "warm": {
+        "n": 3,
+        "min": 650.47275,
+        "p50": 661.173833,
+        "p95": 679.8305711,
+        "mean": 664.5167083333333,
+        "max": 681.903542,
+        "samples": [
+          661.173833,
+          650.47275,
+          681.903542
+        ],
+        "exits": [
+          1,
+          1,
+          1
+        ]
+      }
+    }
+  ],
+  "aspects": [
+    {
+      "pkg": "@teambit/api-server",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/api-server/dist/api-server.main.runtime.js",
+      "samples": [
+        26.884,
+        25.228,
+        23.47
+      ],
+      "n": 3,
+      "min": 23.47,
+      "p50": 25.228,
+      "p95": 26.7184,
+      "mean": 25.194,
+      "max": 26.884
+    },
+    {
+      "pkg": "@teambit/application",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/application/dist/application.main.runtime.js",
+      "samples": [
+        22.917,
+        20.912,
+        21.259
+      ],
+      "n": 3,
+      "min": 20.912,
+      "p50": 21.259,
+      "p95": 22.7512,
+      "mean": 21.695999999999998,
+      "max": 22.917
+    },
+    {
+      "pkg": "@teambit/aspect",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/aspect/dist/aspect.main.runtime.js",
+      "samples": [
+        24.808,
+        23.499,
+        23.73
+      ],
+      "n": 3,
+      "min": 23.499,
+      "p50": 23.73,
+      "p95": 24.7002,
+      "mean": 24.012333333333334,
+      "max": 24.808
+    },
+    {
+      "pkg": "@teambit/aspect-loader",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/aspect-loader/dist/aspect-loader.main.runtime.js",
+      "samples": [
+        19.989,
+        18.298,
+        18.805
+      ],
+      "n": 3,
+      "min": 18.298,
+      "p50": 18.805,
+      "p95": 19.8706,
+      "mean": 19.030666666666665,
+      "max": 19.989
+    },
+    {
+      "pkg": "@teambit/babel",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/babel/dist/babel.main.runtime.js",
+      "samples": [
+        18.232,
+        19.613,
+        17.219
+      ],
+      "n": 3,
+      "min": 17.219,
+      "p50": 18.232,
+      "p95": 19.474899999999998,
+      "mean": 18.354666666666667,
+      "max": 19.613
+    },
+    {
+      "pkg": "@teambit/builder",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/builder/dist/builder.main.runtime.js",
+      "samples": [
+        23.641,
+        23.506,
+        24.601
+      ],
+      "n": 3,
+      "min": 23.506,
+      "p50": 23.641,
+      "p95": 24.505,
+      "mean": 23.915999999999997,
+      "max": 24.601
+    },
+    {
+      "pkg": "@teambit/bundler",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/bundler/dist/bundler.main.runtime.js",
+      "samples": [
+        17.728,
+        18.664,
+        19.88
+      ],
+      "n": 3,
+      "min": 17.728,
+      "p50": 18.664,
+      "p95": 19.758399999999998,
+      "mean": 18.757333333333335,
+      "max": 19.88
+    },
+    {
+      "pkg": "@teambit/cache",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/cache/dist/cache.main.runtime.js",
+      "samples": [
+        31.517,
+        30.705,
+        31.381
+      ],
+      "n": 3,
+      "min": 30.705,
+      "p50": 31.381,
+      "p95": 31.5034,
+      "mean": 31.200999999999997,
+      "max": 31.517
+    },
+    {
+      "pkg": "@teambit/checkout",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/checkout/dist/checkout.main.runtime.js",
+      "samples": [
+        21.474,
+        18.27,
+        21.224
+      ],
+      "n": 3,
+      "min": 18.27,
+      "p50": 21.224,
+      "p95": 21.449,
+      "mean": 20.322666666666667,
+      "max": 21.474
+    },
+    {
+      "pkg": "@teambit/ci",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/ci/dist/ci.main.runtime.js",
+      "samples": [
+        21.049,
+        22.484,
+        22.622
+      ],
+      "n": 3,
+      "min": 21.049,
+      "p50": 22.484,
+      "p95": 22.6082,
+      "mean": 22.051666666666666,
+      "max": 22.622
+    },
+    {
+      "pkg": "@teambit/clear-cache",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/clear-cache/dist/clear-cache.main.runtime.js",
+      "samples": [
+        14.753,
+        17.061,
+        15.421
+      ],
+      "n": 3,
+      "min": 14.753,
+      "p50": 15.421,
+      "p95": 16.897,
+      "mean": 15.745,
+      "max": 17.061
+    },
+    {
+      "pkg": "@teambit/cli",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/cli/dist/cli.main.runtime.js",
+      "samples": [
+        14.364,
+        17.151,
+        15.868
+      ],
+      "n": 3,
+      "min": 14.364,
+      "p50": 15.868,
+      "p95": 17.0227,
+      "mean": 15.794333333333332,
+      "max": 17.151
+    },
+    {
+      "pkg": "@teambit/cli-mcp-server",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/cli-mcp-server/dist/cli-mcp-server.main.runtime.js",
+      "samples": [
+        18.503,
+        15.868,
+        17.584
+      ],
+      "n": 3,
+      "min": 15.868,
+      "p50": 17.584,
+      "p95": 18.4111,
+      "mean": 17.31833333333333,
+      "max": 18.503
+    },
+    {
+      "pkg": "@teambit/cloud",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/cloud/dist/cloud.main.runtime.js",
+      "samples": [
+        32.399,
+        33.733,
+        34.262
+      ],
+      "n": 3,
+      "min": 32.399,
+      "p50": 33.733,
+      "p95": 34.2091,
+      "mean": 33.464666666666666,
+      "max": 34.262
+    },
+    {
+      "pkg": "@teambit/community",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/community/dist/community.main.runtime.js",
+      "samples": [
+        28.771,
+        30.245,
+        29.506
+      ],
+      "n": 3,
+      "min": 28.771,
+      "p50": 29.506,
+      "p95": 30.1711,
+      "mean": 29.507333333333335,
+      "max": 30.245
+    },
+    {
+      "pkg": "@teambit/compiler",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/compiler/dist/compiler.main.runtime.js",
+      "samples": [
+        22.593,
+        21.026,
+        23.457
+      ],
+      "n": 3,
+      "min": 21.026,
+      "p50": 22.593,
+      "p95": 23.3706,
+      "mean": 22.358666666666664,
+      "max": 23.457
+    },
+    {
+      "pkg": "@teambit/component",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/component/dist/component.main.runtime.js",
+      "samples": [
+        19.346,
+        18.131,
+        17.523
+      ],
+      "n": 3,
+      "min": 17.523,
+      "p50": 18.131,
+      "p95": 19.2245,
+      "mean": 18.333333333333332,
+      "max": 19.346
+    },
+    {
+      "pkg": "@teambit/component-compare",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/component-compare/dist/component-compare.main.runtime.js",
+      "samples": [
+        23.33,
+        22.1,
+        22.877
+      ],
+      "n": 3,
+      "min": 22.1,
+      "p50": 22.877,
+      "p95": 23.284699999999997,
+      "mean": 22.769000000000002,
+      "max": 23.33
+    },
+    {
+      "pkg": "@teambit/component-log",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/component-log/dist/component-log.main.runtime.js",
+      "samples": [
+        18.11,
+        16.043,
+        19.707
+      ],
+      "n": 3,
+      "min": 16.043,
+      "p50": 18.11,
+      "p95": 19.5473,
+      "mean": 17.953333333333333,
+      "max": 19.707
+    },
+    {
+      "pkg": "@teambit/component-sizer",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/component-sizer/dist/component-sizer.main.runtime.js",
+      "samples": [
+        19.584,
+        19.422,
+        18.639
+      ],
+      "n": 3,
+      "min": 18.639,
+      "p50": 19.422,
+      "p95": 19.5678,
+      "mean": 19.215,
+      "max": 19.584
+    },
+    {
+      "pkg": "@teambit/component-writer",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/component-writer/dist/component-writer.main.runtime.js",
+      "samples": [
+        21.023,
+        20.701,
+        21.863
+      ],
+      "n": 3,
+      "min": 20.701,
+      "p50": 21.023,
+      "p95": 21.779,
+      "mean": 21.195666666666668,
+      "max": 21.863
+    },
+    {
+      "pkg": "@teambit/compositions",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/compositions/dist/compositions.main.runtime.js",
+      "samples": [
+        22.788,
+        19.834,
+        21.341
+      ],
+      "n": 3,
+      "min": 19.834,
+      "p50": 21.341,
+      "p95": 22.6433,
+      "mean": 21.320999999999998,
+      "max": 22.788
+    },
+    {
+      "pkg": "@teambit/config",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/config/dist/config.main.runtime.js",
+      "samples": [
+        16.64,
+        17.919,
+        17.094
+      ],
+      "n": 3,
+      "min": 16.64,
+      "p50": 17.094,
+      "p95": 17.8365,
+      "mean": 17.21766666666667,
+      "max": 17.919
+    },
+    {
+      "pkg": "@teambit/config-merger",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/config-merger/dist/config-merger.main.runtime.js",
+      "samples": [
+        20.666,
+        21.16,
+        20.604
+      ],
+      "n": 3,
+      "min": 20.604,
+      "p50": 20.666,
+      "p95": 21.1106,
+      "mean": 20.81,
+      "max": 21.16
+    },
+    {
+      "pkg": "@teambit/config-store",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/config-store/dist/config-store.main.runtime.js",
+      "samples": [
+        16.678,
+        16.125,
+        17.037
+      ],
+      "n": 3,
+      "min": 16.125,
+      "p50": 16.678,
+      "p95": 17.001099999999997,
+      "mean": 16.613333333333333,
+      "max": 17.037
+    },
+    {
+      "pkg": "@teambit/dependencies",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/dependencies/dist/dependencies.main.runtime.js",
+      "samples": [
+        21.905,
+        21.591,
+        22.052
+      ],
+      "n": 3,
+      "min": 21.591,
+      "p50": 21.905,
+      "p95": 22.0373,
+      "mean": 21.849333333333334,
+      "max": 22.052
+    },
+    {
+      "pkg": "@teambit/dependency-resolver",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/dependency-resolver/dist/dependency-resolver.main.runtime.js",
+      "samples": [
+        33.933,
+        33.947,
+        33.866
+      ],
+      "n": 3,
+      "min": 33.866,
+      "p50": 33.933,
+      "p95": 33.9456,
+      "mean": 33.915333333333336,
+      "max": 33.947
+    },
+    {
+      "pkg": "@teambit/deprecation",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/deprecation/dist/deprecation.main.runtime.js",
+      "samples": [
+        21.88,
+        21.142,
+        21.596
+      ],
+      "n": 3,
+      "min": 21.142,
+      "p50": 21.596,
+      "p95": 21.851599999999998,
+      "mean": 21.53933333333333,
+      "max": 21.88
+    },
+    {
+      "pkg": "@teambit/dev-files",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/dev-files/dist/dev-files.main.runtime.js",
+      "samples": [
+        21.26,
+        20.839,
+        19.953
+      ],
+      "n": 3,
+      "min": 19.953,
+      "p50": 20.839,
+      "p95": 21.2179,
+      "mean": 20.684,
+      "max": 21.26
+    },
+    {
+      "pkg": "@teambit/diagnostic",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/diagnostic/dist/diagnostic.main.runtime.js",
+      "samples": [
+        16.289,
+        17.835,
+        16.785
+      ],
+      "n": 3,
+      "min": 16.289,
+      "p50": 16.785,
+      "p95": 17.73,
+      "mean": 16.969666666666665,
+      "max": 17.835
+    },
+    {
+      "pkg": "@teambit/docs",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/docs/dist/docs.main.runtime.js",
+      "samples": [
+        23.171,
+        23.399,
+        23.796
+      ],
+      "n": 3,
+      "min": 23.171,
+      "p50": 23.399,
+      "p95": 23.7563,
+      "mean": 23.455333333333332,
+      "max": 23.796
+    },
+    {
+      "pkg": "@teambit/doctor",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/doctor/dist/doctor.main.runtime.js",
+      "samples": [
+        17.02,
+        17.948,
+        18.269
+      ],
+      "n": 3,
+      "min": 17.02,
+      "p50": 17.948,
+      "p95": 18.2369,
+      "mean": 17.74566666666667,
+      "max": 18.269
+    },
+    {
+      "pkg": "@teambit/eject",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/eject/dist/eject.main.runtime.js",
+      "samples": [
+        19.455,
+        19.656,
+        18.898
+      ],
+      "n": 3,
+      "min": 18.898,
+      "p50": 19.455,
+      "p95": 19.6359,
+      "mean": 19.336333333333332,
+      "max": 19.656
+    },
+    {
+      "pkg": "@teambit/env",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/env/dist/env.main.runtime.js",
+      "samples": [
+        17.988,
+        18.171,
+        18.922
+      ],
+      "n": 3,
+      "min": 17.988,
+      "p50": 18.171,
+      "p95": 18.8469,
+      "mean": 18.360333333333333,
+      "max": 18.922
+    },
+    {
+      "pkg": "@teambit/envs",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/envs/dist/environments.main.runtime.js",
+      "samples": [
+        20.771,
+        21.188,
+        21.767
+      ],
+      "n": 3,
+      "min": 20.771,
+      "p50": 21.188,
+      "p95": 21.7091,
+      "mean": 21.242,
+      "max": 21.767
+    },
+    {
+      "pkg": "@teambit/eslint",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/eslint/dist/eslint.main.runtime.js",
+      "samples": [
+        18.04,
+        17.006,
+        16.879
+      ],
+      "n": 3,
+      "min": 16.879,
+      "p50": 17.006,
+      "p95": 17.9366,
+      "mean": 17.308333333333334,
+      "max": 18.04
+    },
+    {
+      "pkg": "@teambit/export",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/export/dist/export.main.runtime.js",
+      "samples": [
+        21.479,
+        22.091,
+        21.037
+      ],
+      "n": 3,
+      "min": 21.037,
+      "p50": 21.479,
+      "p95": 22.0298,
+      "mean": 21.535666666666668,
+      "max": 22.091
+    },
+    {
+      "pkg": "@teambit/express",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/express/dist/express.main.runtime.js",
+      "samples": [
+        19.207,
+        15.312,
+        17.412
+      ],
+      "n": 3,
+      "min": 15.312,
+      "p50": 17.412,
+      "p95": 19.0275,
+      "mean": 17.310333333333332,
+      "max": 19.207
+    },
+    {
+      "pkg": "@teambit/forking",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/forking/dist/forking.main.runtime.js",
+      "samples": [
+        22.16,
+        22.678,
+        24.257
+      ],
+      "n": 3,
+      "min": 22.16,
+      "p50": 22.678,
+      "p95": 24.0991,
+      "mean": 23.031666666666666,
+      "max": 24.257
+    },
+    {
+      "pkg": "@teambit/formatter",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/formatter/dist/formatter.main.runtime.js",
+      "samples": [
+        22.042,
+        21.901,
+        21.572
+      ],
+      "n": 3,
+      "min": 21.572,
+      "p50": 21.901,
+      "p95": 22.027900000000002,
+      "mean": 21.838333333333335,
+      "max": 22.042
+    },
+    {
+      "pkg": "@teambit/generator",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/generator/dist/generator.main.runtime.js",
+      "samples": [
+        20.865,
+        23.113,
+        22.556
+      ],
+      "n": 3,
+      "min": 20.865,
+      "p50": 22.556,
+      "p95": 23.057299999999998,
+      "mean": 22.177999999999997,
+      "max": 23.113
+    },
+    {
+      "pkg": "@teambit/git",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/git/dist/git.main.runtime.js",
+      "samples": [
+        18.867,
+        17.556,
+        19.93
+      ],
+      "n": 3,
+      "min": 17.556,
+      "p50": 18.867,
+      "p95": 19.8237,
+      "mean": 18.784333333333333,
+      "max": 19.93
+    },
+    {
+      "pkg": "@teambit/global-config",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/global-config/dist/global-config.main.runtime.js",
+      "samples": [
+        21.707,
+        17.111,
+        18.259
+      ],
+      "n": 3,
+      "min": 17.111,
+      "p50": 18.259,
+      "p95": 21.3622,
+      "mean": 19.02566666666667,
+      "max": 21.707
+    },
+    {
+      "pkg": "@teambit/graph",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/graph/dist/graph.main.runtime.js",
+      "samples": [
+        18.771,
+        16.277,
+        19.145
+      ],
+      "n": 3,
+      "min": 16.277,
+      "p50": 18.771,
+      "p95": 19.107599999999998,
+      "mean": 18.064333333333334,
+      "max": 19.145
+    },
+    {
+      "pkg": "@teambit/graphql",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/graphql/dist/graphql.main.runtime.js",
+      "samples": [
+        16.909,
+        17.36,
+        17.643
+      ],
+      "n": 3,
+      "min": 16.909,
+      "p50": 17.36,
+      "p95": 17.6147,
+      "mean": 17.304,
+      "max": 17.643
+    },
+    {
+      "pkg": "@teambit/harmony-ui-app",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/harmony-ui-app/dist/harmony-ui-app.main.runtime.js",
+      "samples": [
+        19.583,
+        17.451,
+        19.022
+      ],
+      "n": 3,
+      "min": 17.451,
+      "p50": 19.022,
+      "p95": 19.526899999999998,
+      "mean": 18.685333333333332,
+      "max": 19.583
+    },
+    {
+      "pkg": "@teambit/host-initializer",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/host-initializer/dist/host-initializer.main.runtime.js",
+      "samples": [
+        18.09,
+        17.393,
+        19.127
+      ],
+      "n": 3,
+      "min": 17.393,
+      "p50": 18.09,
+      "p95": 19.0233,
+      "mean": 18.203333333333333,
+      "max": 19.127
+    },
+    {
+      "pkg": "@teambit/importer",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/importer/dist/importer.main.runtime.js",
+      "samples": [
+        24.165,
+        22.428,
+        22.493
+      ],
+      "n": 3,
+      "min": 22.428,
+      "p50": 22.493,
+      "p95": 23.997799999999998,
+      "mean": 23.028666666666666,
+      "max": 24.165
+    },
+    {
+      "pkg": "@teambit/insights",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/insights/dist/insights.main.runtime.js",
+      "samples": [
+        17.706,
+        15.792,
+        18.849
+      ],
+      "n": 3,
+      "min": 15.792,
+      "p50": 17.706,
+      "p95": 18.7347,
+      "mean": 17.448999999999998,
+      "max": 18.849
+    },
+    {
+      "pkg": "@teambit/install",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/install/dist/install.main.runtime.js",
+      "samples": [
+        35.119,
+        23.498,
+        23.46
+      ],
+      "n": 3,
+      "min": 23.46,
+      "p50": 23.498,
+      "p95": 33.9569,
+      "mean": 27.358999999999998,
+      "max": 35.119
+    },
+    {
+      "pkg": "@teambit/ipc-events",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/ipc-events/dist/ipc-events.main.runtime.js",
+      "samples": [
+        16.037,
+        17.345,
+        16.545
+      ],
+      "n": 3,
+      "min": 16.037,
+      "p50": 16.545,
+      "p95": 17.265,
+      "mean": 16.642333333333333,
+      "max": 17.345
+    },
+    {
+      "pkg": "@teambit/isolator",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/isolator/dist/isolator.main.runtime.js",
+      "samples": [
+        21.556,
+        20.558,
+        20.66
+      ],
+      "n": 3,
+      "min": 20.558,
+      "p50": 20.66,
+      "p95": 21.4664,
+      "mean": 20.924666666666667,
+      "max": 21.556
+    },
+    {
+      "pkg": "@teambit/issues",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/issues/dist/issues.main.runtime.js",
+      "samples": [
+        16.514,
+        17.706,
+        17.129
+      ],
+      "n": 3,
+      "min": 16.514,
+      "p50": 17.129,
+      "p95": 17.6483,
+      "mean": 17.116333333333333,
+      "max": 17.706
+    },
+    {
+      "pkg": "@teambit/jest",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/jest/dist/jest.main.runtime.js",
+      "samples": [
+        18.325,
+        17.278,
+        16.99
+      ],
+      "n": 3,
+      "min": 16.99,
+      "p50": 17.278,
+      "p95": 18.220299999999998,
+      "mean": 17.531000000000002,
+      "max": 18.325
+    },
+    {
+      "pkg": "@teambit/lanes",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/lanes/dist/lanes.main.runtime.js",
+      "samples": [
+        22.061,
+        23.296,
+        24.422
+      ],
+      "n": 3,
+      "min": 22.061,
+      "p50": 23.296,
+      "p95": 24.3094,
+      "mean": 23.259666666666664,
+      "max": 24.422
+    },
+    {
+      "pkg": "@teambit/linter",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/linter/dist/linter.main.runtime.js",
+      "samples": [
+        21.184,
+        19.816,
+        21.329
+      ],
+      "n": 3,
+      "min": 19.816,
+      "p50": 21.184,
+      "p95": 21.314500000000002,
+      "mean": 20.776333333333334,
+      "max": 21.329
+    },
+    {
+      "pkg": "@teambit/lister",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/lister/dist/lister.main.runtime.js",
+      "samples": [
+        18.24,
+        19.64,
+        19.438
+      ],
+      "n": 3,
+      "min": 18.24,
+      "p50": 19.438,
+      "p95": 19.6198,
+      "mean": 19.105999999999998,
+      "max": 19.64
+    },
+    {
+      "pkg": "@teambit/logger",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/logger/dist/logger.main.runtime.js",
+      "samples": [
+        16.489,
+        15.299,
+        16.169
+      ],
+      "n": 3,
+      "min": 15.299,
+      "p50": 16.169,
+      "p95": 16.457,
+      "mean": 15.985666666666667,
+      "max": 16.489
+    },
+    {
+      "pkg": "@teambit/mdx",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/mdx/dist/mdx.main.runtime.js",
+      "samples": [
+        20.929,
+        21.719,
+        21.503
+      ],
+      "n": 3,
+      "min": 20.929,
+      "p50": 21.503,
+      "p95": 21.697400000000002,
+      "mean": 21.38366666666667,
+      "max": 21.719
+    },
+    {
+      "pkg": "@teambit/merge-lanes",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/merge-lanes/dist/merge-lanes.main.runtime.js",
+      "samples": [
+        23.243,
+        23.838,
+        22.401
+      ],
+      "n": 3,
+      "min": 22.401,
+      "p50": 23.243,
+      "p95": 23.7785,
+      "mean": 23.160666666666668,
+      "max": 23.838
+    },
+    {
+      "pkg": "@teambit/merging",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/merging/dist/merging.main.runtime.js",
+      "samples": [
+        22.549,
+        24.599,
+        23.033
+      ],
+      "n": 3,
+      "min": 22.549,
+      "p50": 23.033,
+      "p95": 24.4424,
+      "mean": 23.393666666666665,
+      "max": 24.599
+    },
+    {
+      "pkg": "@teambit/mocha",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/mocha/dist/mocha.main.runtime.js",
+      "samples": [
+        16.126,
+        18.039,
+        17.506
+      ],
+      "n": 3,
+      "min": 16.126,
+      "p50": 17.506,
+      "p95": 17.9857,
+      "mean": 17.22366666666667,
+      "max": 18.039
+    },
+    {
+      "pkg": "@teambit/mover",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/mover/dist/mover.main.runtime.js",
+      "samples": [
+        17.184,
+        19.047,
+        25.71
+      ],
+      "n": 3,
+      "min": 17.184,
+      "p50": 19.047,
+      "p95": 25.0437,
+      "mean": 20.647000000000002,
+      "max": 25.71
+    },
+    {
+      "pkg": "@teambit/multi-compiler",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/multi-compiler/dist/multi-compiler.main.runtime.js",
+      "samples": [
+        15.442,
+        16.629,
+        16.586
+      ],
+      "n": 3,
+      "min": 15.442,
+      "p50": 16.586,
+      "p95": 16.6247,
+      "mean": 16.218999999999998,
+      "max": 16.629
+    },
+    {
+      "pkg": "@teambit/multi-tester",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/multi-tester/dist/multi-tester.main.runtime.js",
+      "samples": [
+        17.382,
+        17.282,
+        17.621
+      ],
+      "n": 3,
+      "min": 17.282,
+      "p50": 17.382,
+      "p95": 17.597099999999998,
+      "mean": 17.42833333333333,
+      "max": 17.621
+    },
+    {
+      "pkg": "@teambit/new-component-helper",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/new-component-helper/dist/new-component-helper.main.runtime.js",
+      "samples": [
+        33.3,
+        32.024,
+        32.464
+      ],
+      "n": 3,
+      "min": 32.024,
+      "p50": 32.464,
+      "p95": 33.2164,
+      "mean": 32.596,
+      "max": 33.3
+    },
+    {
+      "pkg": "@teambit/node",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/node/dist/node.main.runtime.js",
+      "samples": [
+        21.282,
+        20.132,
+        21.448
+      ],
+      "n": 3,
+      "min": 20.132,
+      "p50": 21.282,
+      "p95": 21.4314,
+      "mean": 20.954,
+      "max": 21.448
+    },
+    {
+      "pkg": "@teambit/objects",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/objects/dist/objects.main.runtime.js",
+      "samples": [
+        17.635,
+        17.223,
+        16.629
+      ],
+      "n": 3,
+      "min": 16.629,
+      "p50": 17.223,
+      "p95": 17.5938,
+      "mean": 17.162333333333336,
+      "max": 17.635
+    },
+    {
+      "pkg": "@teambit/panels",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/panels/dist/panel-ui.main.runtime.js",
+      "samples": [
+        16.497,
+        16.229,
+        15.659
+      ],
+      "n": 3,
+      "min": 15.659,
+      "p50": 16.229,
+      "p95": 16.4702,
+      "mean": 16.128333333333334,
+      "max": 16.497
+    },
+    {
+      "pkg": "@teambit/pkg",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/pkg/dist/pkg.main.runtime.js",
+      "samples": [
+        23.173,
+        21.341,
+        23.091
+      ],
+      "n": 3,
+      "min": 21.341,
+      "p50": 23.091,
+      "p95": 23.1648,
+      "mean": 22.535,
+      "max": 23.173
+    },
+    {
+      "pkg": "@teambit/pnpm",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/pnpm/dist/pnpm.main.runtime.js",
+      "samples": [
+        18.541,
+        17.896,
+        18.645
+      ],
+      "n": 3,
+      "min": 17.896,
+      "p50": 18.541,
+      "p95": 18.6346,
+      "mean": 18.360666666666663,
+      "max": 18.645
+    },
+    {
+      "pkg": "@teambit/prettier",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/prettier/dist/prettier.main.runtime.js",
+      "samples": [
+        15.869,
+        18.251,
+        15.482
+      ],
+      "n": 3,
+      "min": 15.482,
+      "p50": 15.869,
+      "p95": 18.012800000000002,
+      "mean": 16.534000000000002,
+      "max": 18.251
+    },
+    {
+      "pkg": "@teambit/preview",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/preview/dist/preview.main.runtime.js",
+      "samples": [
+        39.816,
+        38.415,
+        33.489
+      ],
+      "n": 3,
+      "min": 33.489,
+      "p50": 38.415,
+      "p95": 39.6759,
+      "mean": 37.24,
+      "max": 39.816
+    },
+    {
+      "pkg": "@teambit/pubsub",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/pubsub/dist/pubsub.main.runtime.js",
+      "samples": [
+        16.201,
+        14.925,
+        15.017
+      ],
+      "n": 3,
+      "min": 14.925,
+      "p50": 15.017,
+      "p95": 16.0826,
+      "mean": 15.381,
+      "max": 16.201
+    },
+    {
+      "pkg": "@teambit/react",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/react/dist/react.main.runtime.js",
+      "samples": [
+        24.983,
+        24.565,
+        25.021
+      ],
+      "n": 3,
+      "min": 24.565,
+      "p50": 24.983,
+      "p95": 25.017200000000003,
+      "mean": 24.856333333333335,
+      "max": 25.021
+    },
+    {
+      "pkg": "@teambit/readme",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/readme/dist/readme.main.runtime.js",
+      "samples": [
+        18.996,
+        18.815,
+        20.215
+      ],
+      "n": 3,
+      "min": 18.815,
+      "p50": 18.996,
+      "p95": 20.0931,
+      "mean": 19.342,
+      "max": 20.215
+    },
+    {
+      "pkg": "@teambit/refactoring",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/refactoring/dist/refactoring.main.runtime.js",
+      "samples": [
+        18.917,
+        18.859,
+        17.488
+      ],
+      "n": 3,
+      "min": 17.488,
+      "p50": 18.859,
+      "p95": 18.9112,
+      "mean": 18.421333333333333,
+      "max": 18.917
+    },
+    {
+      "pkg": "@teambit/remove",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/remove/dist/remove.main.runtime.js",
+      "samples": [
+        23.019,
+        20.414,
+        21.395
+      ],
+      "n": 3,
+      "min": 20.414,
+      "p50": 21.395,
+      "p95": 22.856599999999997,
+      "mean": 21.609333333333336,
+      "max": 23.019
+    },
+    {
+      "pkg": "@teambit/renaming",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/renaming/dist/renaming.main.runtime.js",
+      "samples": [
+        24,
+        26.666,
+        23.1
+      ],
+      "n": 3,
+      "min": 23.1,
+      "p50": 24,
+      "p95": 26.3994,
+      "mean": 24.58866666666667,
+      "max": 26.666
+    },
+    {
+      "pkg": "@teambit/ripple",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/ripple/dist/ripple.main.runtime.js",
+      "samples": [
+        19.897,
+        19.459,
+        17.861
+      ],
+      "n": 3,
+      "min": 17.861,
+      "p50": 19.459,
+      "p95": 19.853199999999998,
+      "mean": 19.072333333333333,
+      "max": 19.897
+    },
+    {
+      "pkg": "@teambit/schema",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/schema/dist/schema.main.runtime.js",
+      "samples": [
+        20.872,
+        21.36,
+        20.48
+      ],
+      "n": 3,
+      "min": 20.48,
+      "p50": 20.872,
+      "p95": 21.3112,
+      "mean": 20.904,
+      "max": 21.36
+    },
+    {
+      "pkg": "@teambit/scope",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/scope/dist/scope.main.runtime.js",
+      "samples": [
+        21.477,
+        30.267,
+        22.43
+      ],
+      "n": 3,
+      "min": 21.477,
+      "p50": 22.43,
+      "p95": 29.4833,
+      "mean": 24.724666666666664,
+      "max": 30.267
+    },
+    {
+      "pkg": "@teambit/scripts",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/scripts/dist/scripts.main.runtime.js",
+      "samples": [
+        19.224,
+        20.014,
+        20.285
+      ],
+      "n": 3,
+      "min": 19.224,
+      "p50": 20.014,
+      "p95": 20.2579,
+      "mean": 19.840999999999998,
+      "max": 20.285
+    },
+    {
+      "pkg": "@teambit/snapping",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/snapping/dist/snapping.main.runtime.js",
+      "samples": [
+        20.779,
+        23.059,
+        20.716
+      ],
+      "n": 3,
+      "min": 20.716,
+      "p50": 20.779,
+      "p95": 22.831,
+      "mean": 21.518,
+      "max": 23.059
+    },
+    {
+      "pkg": "@teambit/stash",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/stash/dist/stash.main.runtime.js",
+      "samples": [
+        21.481,
+        20.75,
+        19.455
+      ],
+      "n": 3,
+      "min": 19.455,
+      "p50": 20.75,
+      "p95": 21.4079,
+      "mean": 20.562,
+      "max": 21.481
+    },
+    {
+      "pkg": "@teambit/status",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/status/dist/status.main.runtime.js",
+      "samples": [
+        21.158,
+        21.209,
+        22.254
+      ],
+      "n": 3,
+      "min": 21.158,
+      "p50": 21.209,
+      "p95": 22.1495,
+      "mean": 21.540333333333336,
+      "max": 22.254
+    },
+    {
+      "pkg": "@teambit/tester",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/tester/dist/tester.main.runtime.js",
+      "samples": [
+        21.482,
+        21.58,
+        21.393
+      ],
+      "n": 3,
+      "min": 21.393,
+      "p50": 21.482,
+      "p95": 21.5702,
+      "mean": 21.485,
+      "max": 21.58
+    },
+    {
+      "pkg": "@teambit/tracker",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/tracker/dist/tracker.main.runtime.js",
+      "samples": [
+        19.065,
+        19.997,
+        17.203
+      ],
+      "n": 3,
+      "min": 17.203,
+      "p50": 19.065,
+      "p95": 19.9038,
+      "mean": 18.755,
+      "max": 19.997
+    },
+    {
+      "pkg": "@teambit/typescript",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/typescript/dist/typescript.main.runtime.js",
+      "samples": [
+        22.136,
+        22.945,
+        22.865
+      ],
+      "n": 3,
+      "min": 22.136,
+      "p50": 22.865,
+      "p95": 22.937,
+      "mean": 22.648666666666667,
+      "max": 22.945
+    },
+    {
+      "pkg": "@teambit/ui",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/ui/dist/ui.main.runtime.js",
+      "samples": [
+        20.32,
+        18.936,
+        21.04
+      ],
+      "n": 3,
+      "min": 18.936,
+      "p50": 20.32,
+      "p95": 20.968,
+      "mean": 20.098666666666666,
+      "max": 21.04
+    },
+    {
+      "pkg": "@teambit/validator",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/validator/dist/validator.main.runtime.js",
+      "samples": [
+        18.572,
+        18.956,
+        20.349
+      ],
+      "n": 3,
+      "min": 18.572,
+      "p50": 18.956,
+      "p95": 20.2097,
+      "mean": 19.292333333333332,
+      "max": 20.349
+    },
+    {
+      "pkg": "@teambit/variants",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/variants/dist/variants.main.runtime.js",
+      "samples": [
+        17.495,
+        17.063,
+        17.479
+      ],
+      "n": 3,
+      "min": 17.063,
+      "p50": 17.479,
+      "p95": 17.4934,
+      "mean": 17.34566666666667,
+      "max": 17.495
+    },
+    {
+      "pkg": "@teambit/version-history",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/version-history/dist/version-history.main.runtime.js",
+      "samples": [
+        17.439,
+        18.536,
+        17.142
+      ],
+      "n": 3,
+      "min": 17.142,
+      "p50": 17.439,
+      "p95": 18.4263,
+      "mean": 17.70566666666667,
+      "max": 18.536
+    },
+    {
+      "pkg": "@teambit/vue-aspect",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/vue-aspect/dist/vue.main.runtime.js",
+      "samples": [
+        17.576,
+        17.987,
+        17.854
+      ],
+      "n": 3,
+      "min": 17.576,
+      "p50": 17.854,
+      "p95": 17.973699999999997,
+      "mean": 17.805666666666667,
+      "max": 17.987
+    },
+    {
+      "pkg": "@teambit/watcher",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/watcher/dist/watcher.main.runtime.js",
+      "samples": [
+        20.62,
+        20.654,
+        18.134
+      ],
+      "n": 3,
+      "min": 18.134,
+      "p50": 20.62,
+      "p95": 20.6506,
+      "mean": 19.802666666666667,
+      "max": 20.654
+    },
+    {
+      "pkg": "@teambit/webpack",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/webpack/dist/webpack.main.runtime.js",
+      "samples": [
+        20.226,
+        20.582,
+        20.962
+      ],
+      "n": 3,
+      "min": 20.226,
+      "p50": 20.582,
+      "p95": 20.924,
+      "mean": 20.59,
+      "max": 20.962
+    },
+    {
+      "pkg": "@teambit/worker",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/worker/dist/worker.main.runtime.js",
+      "samples": [
+        15.661,
+        15.666,
+        15.554
+      ],
+      "n": 3,
+      "min": 15.554,
+      "p50": 15.661,
+      "p95": 15.6655,
+      "mean": 15.627,
+      "max": 15.666
+    },
+    {
+      "pkg": "@teambit/workspace",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/workspace/dist/workspace.main.runtime.js",
+      "samples": [
+        23.493,
+        23.338,
+        23.141
+      ],
+      "n": 3,
+      "min": 23.141,
+      "p50": 23.338,
+      "p95": 23.4775,
+      "mean": 23.323999999999998,
+      "max": 23.493
+    },
+    {
+      "pkg": "@teambit/workspace-config-files",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/workspace-config-files/dist/workspace-config-files.main.runtime.js",
+      "samples": [
+        20.009,
+        18.218,
+        20.559
+      ],
+      "n": 3,
+      "min": 18.218,
+      "p50": 20.009,
+      "p95": 20.504,
+      "mean": 19.595333333333333,
+      "max": 20.559
+    },
+    {
+      "pkg": "@teambit/yarn",
+      "runtimeFile": "/Volumes/src/teambit/bit/node_modules/@teambit/yarn/dist/yarn.main.runtime.js",
+      "samples": [
+        18.522,
+        17.395,
+        18.717
+      ],
+      "n": 3,
+      "min": 17.395,
+      "p50": 18.522,
+      "p95": 18.697499999999998,
+      "mean": 18.211333333333332,
+      "max": 18.717
+    }
+  ],
+  "aspectsMeta": {
+    "packages": 109,
+    "withRuntime": 100
+  }
+}
