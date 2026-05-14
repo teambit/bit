@@ -1758,7 +1758,21 @@
         "scope": "teambit.lanes",
         "version": "0.0.206",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare"
+        "rootDir": "components/ui/compare/lane-compare",
+        "config": {
+            "teambit.dependencies/dependency-resolver": {
+                "policy": {
+                    "dependencies": {
+                        "@teambit/legacy": "-"
+                    },
+                    "devDependencies": {
+                        "@types/mocha": "9.1.0",
+                        "@teambit/legacy": "-"
+                    },
+                    "peerDependencies": {}
+                }
+            }
+        }
     },
     "ui/compare/lane-compare-page": {
         "name": "ui/compare/lane-compare-page",
