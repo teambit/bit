@@ -141,6 +141,19 @@ export class GraphqlUI {
       return this.createLinkBatched(uri, { subscriptionUri });
     }
     const httpLink = new HttpLink({ credentials: 'include', uri });
+    const batchHttpLink = new BatchHttpLink({
+      uri,
+      credentials: 'include',
+      batchInterval: this.config.batchInterval,
+      batchMax: this.config.batchMax,
+    });
+    // opt-in batching: an operation that sets `context: { batch: true }` is coalesced via
+    // BatchHttpLink; every other operation keeps going through the plain HttpLink unchanged.
+    const httpOrBatchLink = ApolloLink.split(
+      (operation) => operation.getContext().batch === true,
+      batchHttpLink,
+      httpLink
+    );
     const subsLink = subscriptionUri
       ? new WebSocketLink({
           uri: subscriptionUri,
@@ -148,7 +161,7 @@ export class GraphqlUI {
         })
       : undefined;
 
-    const hybridLink = subsLink ? createSplitLink(httpLink, subsLink) : httpLink;
+    const hybridLink = subsLink ? createSplitLink(httpOrBatchLink, subsLink) : httpOrBatchLink;
     const errorLogger = onError(logError);
 
     return ApolloLink.from([errorLogger, hybridLink]);
