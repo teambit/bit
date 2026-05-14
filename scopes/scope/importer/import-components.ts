@@ -26,7 +26,7 @@ import type {
 } from '@teambit/component-writer';
 import { LATEST_VERSION } from '@teambit/component-version';
 import type { EnvsMain } from '@teambit/envs';
-import { compact, difference, fromPairs } from 'lodash';
+import { compact, difference, fromPairs, partition } from 'lodash';
 import type { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import type { Logger } from '@teambit/logger';
 import { DependentsGetter } from './dependents-getter';
@@ -105,6 +105,14 @@ export default class ImportComponents {
   mergeStatus: { [id: string]: FilesStatus };
   private remoteLane: Lane | undefined;
   private divergeData: Array<ModelComponent> = [];
+  private _visibleLaneIds?: ComponentIdList;
+  /** Visible lane components only — excludes hidden `lane.updateDependents`. */
+  private get visibleLaneIds(): ComponentIdList {
+    if (!this._visibleLaneIds) {
+      this._visibleLaneIds = this.remoteLane?.toComponentIds() || new ComponentIdList();
+    }
+    return this._visibleLaneIds;
+  }
   constructor(
     private workspace: Workspace,
     private graph: GraphMain,
@@ -200,11 +208,48 @@ export default class ImportComponents {
     const bitIds: ComponentIdList = await this.getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
-    const versionDependenciesArr = await this._importComponentsObjects(bitIds, {
-      lane: this.remoteLane,
-    });
+    const versionDependenciesArr = await this.fetchVersionDependenciesForImport(bitIds);
 
     return this.processAndWriteComponents(beforeImportVersions, versionDependenciesArr);
+  }
+
+  /**
+   * Hidden `lane.updateDependents` entries must not resolve through the lane: `laneHeadLocal`
+   * carries the cascade head — legitimate for export-pending detection — but it would leak into
+   * `toComponentVersion` and land the cascade snap in the bitmap instead of main's tag. Pre-pin
+   * hidden ids to `modelComponent.head` and fetch them via the no-lane path. Visible-on-lane
+   * and truly off-lane ids stay on the original lane-fetch path so their normal delta logic
+   * (lane head for visible, latest-from-main for off-lane) is preserved.
+   */
+  private async fetchVersionDependenciesForImport(bitIds: ComponentIdList): Promise<VersionDependencies[]> {
+    const lane = this.remoteLane;
+    if (!lane) {
+      return this._importComponentsObjects(bitIds, {});
+    }
+    const [hiddenRaw, others] = partition(bitIds, (id) => Boolean(lane.findUpdateDependent(id)));
+    const othersList = ComponentIdList.fromArray(others);
+    const hiddenNeedingHead = hiddenRaw.filter((id) => !id.hasVersion());
+    const headDefs = await this.scope.sources.getMany(hiddenNeedingHead);
+    const headByIdStr = new Map(
+      headDefs.map(({ id, component }) => [id.toStringWithoutVersion(), component?.head] as const)
+    );
+    const hiddenIds = ComponentIdList.fromArray(
+      hiddenRaw.map((id) => {
+        if (id.hasVersion()) return id;
+        const mainHead = headByIdStr.get(id.toStringWithoutVersion());
+        return mainHead ? id.changeVersion(mainHead.toString()) : id;
+      })
+    );
+    const versionDependenciesArr: VersionDependencies[] = [];
+    if (othersList.length) {
+      const r = await this._importComponentsObjects(othersList, { lane });
+      versionDependenciesArr.push(...r);
+    }
+    if (hiddenIds.length) {
+      const r = await this._importComponentsObjects(hiddenIds, {});
+      versionDependenciesArr.push(...r);
+    }
+    return versionDependenciesArr;
   }
 
   /**
@@ -549,12 +594,12 @@ if you just want to get a quick look into this snap, create a new workspace and 
     if (!this.options.lanes) {
       throw new Error(`getBitIdsForLanes: this.options.lanes must be set`);
     }
-    // include hidden lane.updateDependents — `importObjectsOnLane` runs with `objectsOnly=true`
-    // and is the workspace's `bit fetch --lanes` fetch path. Hidden entries' Version objects must
-    // be present locally so subsequent merge/diverge checks can resolve their lane heads.
-    // (Hidden entries don't enter the workspace bitmap regardless — they live only in
-    // lane.updateDependents, not in lane.components.)
+    // For the no-ids object-fetch path we include hidden entries — their Version objects must
+    // land locally for merge/diverge calculations. For explicit ids/wildcards we use visible-only,
+    // otherwise `bit import comp2` (when comp2 is hidden on the lane) would resolve to the
+    // cascade snap instead of main's tag.
     const remoteLaneIds = this.remoteLane?.toComponentIdsIncludeUpdateDependents() || new ComponentIdList();
+    const visibleRemoteLaneIds = this.visibleLaneIds;
 
     if (!this.options.ids.length) {
       const bitMapIds = this.consumer.bitMap.getAllBitIds();
@@ -569,7 +614,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
     const idsWithoutWildcardPreferFromLane = await Promise.all(
       idsWithoutWildcard.map(async (idStr) => {
         const id = await this.getIdFromStr(idStr);
-        const fromLane = remoteLaneIds.searchWithoutVersion(id);
+        const fromLane = visibleRemoteLaneIds.searchWithoutVersion(id);
         return fromLane && !id.hasVersion() ? fromLane : id;
       })
     );
@@ -581,7 +626,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
     }
 
     await pMapSeries(idsWithWildcard, async (idStr: string) => {
-      const existingOnLanes = await this.workspace.filterIdsFromPoolIdsByPattern(idStr, remoteLaneIds, false);
+      const existingOnLanes = await this.workspace.filterIdsFromPoolIdsByPattern(idStr, visibleRemoteLaneIds, false);
 
       if (this.options.laneOnly) {
         // When --lane-only is specified, import only components that exist on the lane, never from main
