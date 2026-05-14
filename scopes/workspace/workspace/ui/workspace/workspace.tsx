@@ -86,6 +86,9 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
 
   workspaceUI.setComponents(workspace.components);
   const inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
+  const location = useLocation();
+  const isOverview = location.pathname === '/' || location.pathname === '';
+  const showTopBar = !isMinimal || (isMinimal && !isOverview);
 
   return (
     <WorkspaceProvider workspace={workspace}>
@@ -94,23 +97,37 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
         <ThemeFromUrlSync />
         {isMinimal && inIframe && <MinimalModeUrlBroadcasterAndListener />}
         <div className={styles.workspaceWrapper}>
-          {
+          {showTopBar && (
             <TopBar
               className={classNames(styles.topbar, styles[themeName], isMinimal && styles.minimal)}
               Corner={() => (
                 <div className={classNames(isMinimal && styles.cornerWithBreadcrumb)}>
-                  <Corner
-                    className={classNames((isMinimal && styles.minimalCorner) || styles.corner, styles[themeName])}
-                    name={isMinimal ? '' : workspace.name}
-                    icon={isMinimal ? 'https://static.bit.dev/bit-icons/house.svg' : workspace.icon}
-                  />
+                  {isMinimal ? (
+                    <Link to="/" className={styles.backButton}>
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path
+                          d="M11.25 13.5L6.75 9L11.25 4.5"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </Link>
+                  ) : (
+                    <Corner
+                      className={classNames(styles.corner, styles[themeName])}
+                      name={workspace.name}
+                      icon={workspace.icon}
+                    />
+                  )}
                   {isMinimal && <WorkspaceBreadcrumb />}
                 </div>
               )}
               // @ts-ignore - getting an error of "Types have separate declarations of a private property 'registerFn'." for some reason after upgrading teambit.harmony/harmony from 0.4.6 to 0.4.7
               menu={menuSlot}
             />
-          }
+          )}
           <SplitPane className={styles.main} size={246} layout={sidebarOpenness}>
             <Pane className={classNames(styles.sidebar, styles[themeName], !isSidebarOpen && styles.closed)}>
               {sidebar}

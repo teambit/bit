@@ -35,6 +35,10 @@ export async function removeLocalVersion(
   const component: ModelComponent = await consumer.scope.getModelComponent(id);
   const idStr = id.toString();
   const fromBitmap = consumer.bitMap.getComponentIdIfExist(id);
+  // populate lane-aware heads so `getLocalHashes` diverges against the LANE remote head, not
+  // the empty main one — otherwise a hidden cascade entry (no bitmap row, no main-side state)
+  // would treat the entire local history as "local" and wipe the seeded base on reset.
+  if (lane) await component.populateLocalAndRemoteHeads(consumer.scope.objects, lane);
   const localVersions = await component.getLocalHashes(consumer.scope.objects, fromBitmap);
   if (!localVersions.length) throw new BitError(`unable to untag ${idStr}, the component is not staged`);
   const headRef = component.getHeadRegardlessOfLane();
@@ -147,6 +151,9 @@ export async function getComponentsWithOptionToUntag(
 ): Promise<ModelComponent[]> {
   const componentList = new ComponentsList(workspace);
   const laneObj = await workspace.getCurrentLaneObject();
+  // The result includes hidden updateDependents — `bit reset` reverts cascade snaps end-to-end.
+  // The bitmap-update step in `snapping.reset` skips hidden entries explicitly so we don't try
+  // to write workspace state for components that don't live in the workspace.
   const components: ModelComponent[] = await componentList.listExportPendingComponents(laneObj);
   const removedStagedIds = await remove.getRemovedStaged();
   if (!removedStagedIds.length) return components;

@@ -1,0 +1,152 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { Link } from '@teambit/base-react.navigation.link';
+import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
+import { Tooltip } from '@teambit/design.ui.tooltip';
+import { LoadPreview } from '@teambit/workspace.ui.load-preview';
+import { ComponentID } from '@teambit/component-id';
+import type { ComponentModel } from '@teambit/component';
+import type { ComponentDescriptor } from '@teambit/component-descriptor';
+import type { ScopeID } from '@teambit/scopes.scope-id';
+import { getComponentStatus } from './filter-utils';
+import { ChangedPill, BuildSpinner, BuildingPreview } from './card-overlays';
+import styles from './hope-component-card.module.scss';
+
+export type HopeComponentCardProps = {
+  component: ComponentModel;
+  componentDescriptor: ComponentDescriptor;
+  scope?: { id: ScopeID; icon?: string; backgroundIconColor?: string };
+  showPreview?: boolean;
+};
+
+export function HopeComponentCard({
+  component,
+  componentDescriptor,
+  scope,
+  showPreview: showPreviewProp,
+}: HopeComponentCardProps) {
+  const [shouldShowPreview, setShouldShowPreview] = useState(Boolean(showPreviewProp));
+  const prevServerUrlRef = useRef(component.server?.url);
+
+  useEffect(() => {
+    if (prevServerUrlRef.current !== component.server?.url && shouldShowPreview) {
+      setShouldShowPreview(false);
+      setTimeout(() => setShouldShowPreview(true), 50);
+    }
+    prevServerUrlRef.current = component.server?.url;
+  }, [component.server?.url]);
+
+  useEffect(() => {
+    setShouldShowPreview(Boolean(showPreviewProp));
+  }, [showPreviewProp]);
+
+  const item = { component } as any;
+  const status = getComponentStatus(item);
+  const accent = 'var(--bit-accent-color, #6c5ce7)';
+
+  const isBuilding = status === 'building';
+  const isQueued = status === 'queued';
+  const isChanged = status === 'changed';
+
+  const href = `${component.id.fullName}?scope=${component.id.scope}`;
+
+  const loadPreviewVisible = component.compositions.length > 0 && !isBuilding && !shouldShowPreview;
+
+  const showPreviewClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setShouldShowPreview(true);
+  };
+
+  const envAspect = componentDescriptor.get<any>('teambit.envs/envs');
+  const env = envAspect?.data || envAspect;
+  const envComponentId = env?.id ? ComponentID.fromString(env.id) : undefined;
+
+  const cardClass = isBuilding ? styles.cardBuilding : styles.card;
+  const buildingBorderStyle = isBuilding
+    ? {
+        borderColor: accent,
+        boxShadow: `0 0 0 3px color-mix(in srgb, var(--bit-accent-color, #6c5ce7) 10%, transparent)`,
+      }
+    : undefined;
+
+  const nameLabel = component.id.namespace ? `${component.id.namespace}/${component.id.name}` : component.id.name;
+
+  const shortHash = component.id.version?.slice(0, 7);
+
+  const scopeInitial = component.id.scope?.split('.').pop()?.charAt(0).toUpperCase();
+
+  return (
+    <div className={cardClass} style={buildingBorderStyle}>
+      {loadPreviewVisible && <LoadPreview className={styles.loadPreview} onClick={showPreviewClick} />}
+
+      <Link href={href} className={styles.linkWrapper}>
+        <div className={styles.preview}>
+          <div className={styles.previewInner}>
+            <CardPreview
+              component={component}
+              componentDescriptor={componentDescriptor}
+              status={status}
+              shouldShowPreview={shouldShowPreview}
+            />
+          </div>
+
+          {!isQueued && env?.icon && (
+            <div className={styles.envBadge}>
+              <Tooltip delay={300} content={envComponentId?.name}>
+                <img src={env.icon} className={styles.envIcon} alt="" />
+              </Tooltip>
+            </div>
+          )}
+
+          {(isChanged || isBuilding) && (
+            <div className={styles.statusCorner}>
+              {isChanged && <ChangedPill />}
+              {isBuilding && <BuildSpinner />}
+            </div>
+          )}
+        </div>
+
+        <div className={styles.footer}>
+          <Tooltip delay={300} content={component.id.scope}>
+            <div className={styles.scopeBadge} style={{ background: scope?.backgroundIconColor || accent }}>
+              {scope?.icon ? (
+                <img src={scope.icon} className={styles.scopeBadgeIcon} alt="" />
+              ) : (
+                <span className={styles.scopeBadgeInitial}>{scopeInitial}</span>
+              )}
+            </div>
+          </Tooltip>
+          <span className={styles.name}>{nameLabel}</span>
+          {!isBuilding && !isQueued && shortHash && <span className={styles.hash}>{shortHash}</span>}
+          {isBuilding && (
+            <span className={styles.buildingLabel} style={{ color: accent }}>
+              BUILDING
+            </span>
+          )}
+        </div>
+      </Link>
+    </div>
+  );
+}
+
+function CardPreview({
+  component,
+  componentDescriptor,
+  status,
+  shouldShowPreview,
+}: {
+  component: ComponentModel;
+  componentDescriptor: ComponentDescriptor;
+  status: string;
+  shouldShowPreview: boolean;
+}) {
+  if (status === 'building') return <BuildingPreview />;
+
+  return (
+    <PreviewPlaceholder
+      component={component}
+      componentDescriptor={componentDescriptor}
+      shouldShowPreview={shouldShowPreview}
+    />
+  );
+}

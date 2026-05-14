@@ -770,6 +770,25 @@ please create a new lane instead, which will include all components of this lane
     return filteredComponentIds.map((laneComponent) => laneComponent.id.changeVersion(laneComponent.head));
   }
 
+  /**
+   * hidden lane.updateDependents are intentionally excluded from `getLaneComponentIds` so the
+   * default GraphQL `Lane.components` field stays workspace-facing. Consumers that need the full
+   * lane graph (e.g. a CI dashboard surfacing cascade entries) opt in via this method or its
+   * `updateDependentIds` / `updateDependentComponents` GraphQL counterparts. No bitmap filter
+   * here — hidden entries by definition don't live in the bitmap.
+   */
+  async getLaneUpdateDependentIds(lane: LaneData): Promise<ComponentID[]> {
+    if (!lane?.updateDependents?.length) return [];
+    return lane.updateDependents.map((c) => c.id.changeVersion(c.head));
+  }
+
+  async getLaneUpdateDependentComponents(lane: LaneData): Promise<Component[]> {
+    const ids = await this.getLaneUpdateDependentIds(lane);
+    if (!ids.length) return [];
+    const host = this.componentAspect.getHost();
+    return host.getMany(ids);
+  }
+
   async getLaneReadmeComponent(lane: LaneData): Promise<Component | undefined> {
     if (!lane) return undefined;
     const laneReadmeComponent = lane.readmeComponent;

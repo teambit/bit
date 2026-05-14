@@ -56,6 +56,7 @@ type StatusJsonResults = {
   currentLaneId: string;
   forkedLaneId: string | undefined;
   workspaceIssues: string[];
+  pendingUpdateDependents: string[];
 };
 
 export class StatusCmd implements Command {
@@ -120,6 +121,7 @@ for maximum speed (skips aspect loading entirely), use "bit mini-status".`;
       forkedLaneId,
       workspaceIssues,
       localOnly,
+      pendingUpdateDependents,
     }: StatusResult = await this.status.status({ lanes, ignoreCircularDependencies });
     return {
       newComponents: newComponents.map((c) => c.toStringWithoutVersion()),
@@ -152,6 +154,7 @@ for maximum speed (skips aspect loading entirely), use "bit mini-status".`;
       currentLaneId: currentLaneId.toString(),
       forkedLaneId: forkedLaneId?.toString(),
       workspaceIssues,
+      pendingUpdateDependents: pendingUpdateDependents.map((id) => id.toStringWithoutVersion()),
     };
   }
 

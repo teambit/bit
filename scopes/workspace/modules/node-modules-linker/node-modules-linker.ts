@@ -70,13 +70,20 @@ export default class NodeModuleLinker {
       this.workspace.clearAllComponentsCache();
     }
 
-    await linkPkgsToRootComponents(
-      {
-        rootComponentsPath: this.workspace.rootComponentsPath,
-        workspacePath,
-      },
-      this.components.map((comp) => componentIdToPackageName(comp.state._consumer))
-    );
+    // Only update `.bit_roots` when root components are actually in use. Otherwise
+    // we'd be hard-linking into a stale tree left over from a previous install where
+    // rootComponents was enabled — pnpm no longer manages that subtree, so its layout
+    // can be inconsistent and `mkdir` may throw ENOTDIR/ENOENT through a broken
+    // ancestor inside `.bit_roots/<env>/node_modules/...`.
+    if (this.workspace.hasRootComponents()) {
+      await linkPkgsToRootComponents(
+        {
+          rootComponentsPath: this.workspace.rootComponentsPath,
+          workspacePath,
+        },
+        this.components.map((comp) => componentIdToPackageName(comp.state._consumer))
+      );
+    }
     return linksResults;
   }
   async getLinks(): Promise<DataToPersist> {
