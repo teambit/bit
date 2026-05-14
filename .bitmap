@@ -1851,6 +1851,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/ui/component-preview"
     },
+    "ui/components-overview": {
+        "name": "ui/components-overview",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.explorer",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/components-overview"
+    },
     "ui/composition-compare": {
         "name": "ui/composition-compare",
         "scope": "teambit.compositions",

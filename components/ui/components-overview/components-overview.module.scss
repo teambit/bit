@@ -1,0 +1,91 @@
+@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
+.container {
+  overflow-y: auto;
+  height: 100%;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+.content {
+  padding: 20px 40px 80px;
+}
+
+/* ---- Command bar ---- */
+
+.commandBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 40px;
+  background: color-mix(in srgb, var(--bit-accent-color, #6c5ce7) 3%, var(--background-color, #fff));
+  border-bottom: 1px solid var(--border-medium-color);
+  position: sticky;
+  top: 0;
+  z-index: $modal-z-index - 1;
+}
+
+.leftCluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rightCluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.aggToggle {
+  height: 32px !important;
+  font-size: 12.5px;
+  --surface02-color: color-mix(in srgb, var(--bit-accent-color, #6c5ce7) 20%, var(--surface-color, #f5f5f5));
+}
+
+/* ---- Base filter overrides ---- */
+
+.commandBar :global(.baseFilter) {
+  max-width: 220px;
+  height: 32px;
+}
+
+.commandBar :global(.control) {
+  border-radius: 8px !important;
+  height: 32px;
+  padding: 0 10px !important;
+}
+
+.commandBar :global(.menu) {
+  z-index: $modal-z-index - 1 !important;
+  border-radius: 14px !important;
+  padding: 8px 0 !important;
+  width: 260px;
+  box-shadow: 0 24px 60px -12px rgba(20, 0, 104, 0.2);
+}
+
+/* ---- Section ---- */
+
+.section {
+  margin-bottom: 40px;
+}
+
+.sectionHeader {
+  position: sticky;
+  top: 57px;
+  z-index: $nav-z-index;
+  background: var(--background-color);
+  padding: 12px 0 18px;
+}
+
+/* ---- Card grid ---- */
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}

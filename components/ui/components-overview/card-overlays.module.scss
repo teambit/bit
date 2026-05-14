@@ -1,0 +1,72 @@
+.changedPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--warning-surface-color);
+  color: var(--warning-color);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.changedDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--warning-color);
+}
+
+.spinnerBadge {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.spinnerArc {
+  transform-origin: center;
+  animation: spinSlow 0.9s linear infinite;
+}
+
+.buildingPreview {
+  position: relative;
+  height: 100%;
+}
+
+.dotsPattern {
+  position: absolute;
+  inset: 0;
+}
+
+.buildingPlaceholder {
+  position: absolute;
+  inset: 20% 14%;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 16px;
+  gap: 7px;
+}
+
+.queuedPreview {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes spinSlow {
+  to {
+    transform: rotate(360deg);
+  }
+}
