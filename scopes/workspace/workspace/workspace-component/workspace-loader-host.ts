@@ -166,7 +166,7 @@ export class WorkspaceLoaderHost implements LoaderHost {
 
     this.loadingDepth += 1;
     try {
-      const { workspaceIds, scopeIds } = await this.partitionIds(ids);
+      const { workspaceIds, scopeIds, inputKeyByResolvedKey } = await this.partitionIds(ids);
       const pass1 = await this.pass1BuildComponentsNoSlots(workspaceIds, scopeIds);
 
       // Recursive calls return config-only components without firing slots.
@@ -181,9 +181,20 @@ export class WorkspaceLoaderHost implements LoaderHost {
         for (const c of pass1.scopeComponents) c.loadedPhase = 'aspects';
       }
 
+      // Key by the ORIGINAL input id's `toString()` — partitionIds resolves
+      // workspace ids to their bitmap version, but the unified loader looks up
+      // results by the input id's `toString()` (which may have no version).
+      // Without this mapping, callers like `workspace.getMany(idsWithoutVersions)`
+      // (used by snapping) see every id as missing.
       const result = new Map<string, Component>();
-      for (const c of pass1.workspaceComponents) result.set(c.id.toString(), c);
-      for (const c of pass1.scopeComponents) result.set(c.id.toString(), c);
+      const setBoth = (c: Component) => {
+        const resolvedKey = c.id.toString();
+        result.set(resolvedKey, c);
+        const inputKey = inputKeyByResolvedKey.get(resolvedKey);
+        if (inputKey && inputKey !== resolvedKey) result.set(inputKey, c);
+      };
+      for (const c of pass1.workspaceComponents) setBoth(c);
+      for (const c of pass1.scopeComponents) setBoth(c);
       return result;
     } finally {
       this.loadingDepth -= 1;
@@ -198,15 +209,19 @@ export class WorkspaceLoaderHost implements LoaderHost {
     const all = nonDeleted.concat(deleted);
     const workspaceIds: ComponentID[] = [];
     const scopeIds: ComponentID[] = [];
+    // Resolved-key → input-key mapping. Workspace ids get resolved to their
+    // bitmap version before loading; loadMany uses this to also key the result
+    // Map by the caller's original id string so lookup-by-input-id works for
+    // both versionless and versioned input.
+    const inputKeyByResolvedKey = new Map<string, string>();
     for (const id of ids) {
       const inWs = all.find((wid) => wid.isEqual(id, { ignoreVersion: !id.hasVersion() }));
-      if (inWs) {
-        workspaceIds.push(this.resolveVersion(id));
-      } else {
-        scopeIds.push(id);
-      }
+      const resolved = inWs ? this.resolveVersion(id) : id;
+      inputKeyByResolvedKey.set(resolved.toString(), id.toString());
+      if (inWs) workspaceIds.push(resolved);
+      else scopeIds.push(resolved);
     }
-    return { workspaceIds, scopeIds };
+    return { workspaceIds, scopeIds, inputKeyByResolvedKey };
   }
 
   private resolveVersion(id: ComponentID): ComponentID {
