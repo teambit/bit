@@ -3,7 +3,7 @@ import type { Server } from 'http';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
 import type { Express } from 'express';
 import express from 'express';
 import { concat, flatten, lowerCase, sortBy, omit } from 'lodash';

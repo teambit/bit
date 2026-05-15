@@ -1,9 +1,9 @@
 import type { ScopeMain } from '@teambit/scope';
-import { ScopeAspect } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope/dist/scope.aspect.js';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
 import pMapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import path from 'path';

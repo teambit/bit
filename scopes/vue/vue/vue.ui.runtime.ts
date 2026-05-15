@@ -1,5 +1,5 @@
 import { UIRuntime } from '@teambit/ui';
-import { APIReferenceAspect } from '@teambit/api-reference';
+import { APIReferenceAspect } from '@teambit/api-reference/dist/api-reference.aspect.js';
 import { VueAspect } from './vue.aspect';
 import { VueSchema } from './vue.schema';
 import { vueRenderer } from './vue.renderer';

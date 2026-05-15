@@ -4,7 +4,7 @@ import pMapSeries from 'p-map-series';
 import path from 'path';
 import type { Workspace } from '@teambit/workspace';
 import type { EnvsMain } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
 import camelcase from 'camelcase';
 import { BitError } from '@teambit/bit-error';
 import type { Logger } from '@teambit/logger';

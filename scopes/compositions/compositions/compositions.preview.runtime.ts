@@ -1,6 +1,7 @@
 import type { ComponentID } from '@teambit/component-id';
 import type { PreviewPreview, RenderingContext, PreviewModule, ModuleFile } from '@teambit/preview';
-import { PreviewAspect, PreviewRuntime } from '@teambit/preview';
+import { PreviewAspect } from '@teambit/preview/dist/preview.aspect.js';
+import { PreviewRuntime } from '@teambit/preview';
 import head from 'lodash.head';
 import type { CompositionBrowserMetadataObject } from './composition';
 import { CompositionsAspect } from './compositions.aspect';

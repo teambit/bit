@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { SchemaAspect } from '@teambit/schema';
+import { SchemaAspect } from '@teambit/schema/dist/schema.aspect.js';
 import { VueAspect } from './vue.aspect';
 import { VueSchema } from './vue.schema';
 

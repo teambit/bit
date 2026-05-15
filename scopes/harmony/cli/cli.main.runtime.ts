@@ -6,7 +6,7 @@ import pMapSeries from 'p-map-series';
 import type { GroupsType } from './command-groups';
 import { groups } from './command-groups';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
 import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { getCommandId } from './get-command-id';

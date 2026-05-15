@@ -1,11 +1,12 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
+import { MainRuntime } from '@teambit/cli';
 import type { ComponentMain, ComponentID } from '@teambit/component';
-import { ComponentAspect } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
 import type { GraphqlMain } from '@teambit/graphql';
-import { GraphqlAspect } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
 import { compact, intersection } from 'lodash';
 import type { GetGraphOpts } from './graph-builder';
 import { GraphBuilder } from './graph-builder';

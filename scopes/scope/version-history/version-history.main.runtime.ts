@@ -1,5 +1,6 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
+import { MainRuntime } from '@teambit/cli';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import { loadConsumerIfExist } from '@teambit/legacy.consumer';
 import { VersionHistoryAspect } from './version-history.aspect';
@@ -12,7 +13,7 @@ import {
 } from './version-history-cmd';
 import { catVersionHistoryCommand } from './version-history.commands';
 import type { ScopeMain } from '@teambit/scope';
-import { ScopeAspect } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope/dist/scope.aspect.js';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
@@ -21,7 +22,7 @@ import { Ref } from '@teambit/objects';
 import { ExternalActions } from '@teambit/legacy.scope-api';
 import { BuildVersionHistoryAction } from './build-version-history-action';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
 import { compact } from 'lodash';
 import { CatVersionHistoryCmd } from './cat-version-history-cmd';
 

@@ -324,8 +324,10 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
       filePathRelativeToLocalScope,
       `
 import { MainRuntime } from '@teambit/cli';
-import { ReactAspect, ReactMain } from '@teambit/react';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { ReactAspect } from '@teambit/react/dist/react.aspect.js';
+import { ReactMain } from '@teambit/react';
+import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
+import { EnvsMain } from '@teambit/envs';
 import { ${capitalizedEnvName}Aspect } from './${envName}.aspect';
 
 export class ${capitalizedEnvName}Main {

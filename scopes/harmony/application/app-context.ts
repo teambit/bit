@@ -2,7 +2,7 @@ import { ExecutionContext } from '@teambit/envs';
 import type { Harmony } from '@teambit/harmony';
 import type { Component } from '@teambit/component';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
 
 export class AppContext extends ExecutionContext {
   constructor(

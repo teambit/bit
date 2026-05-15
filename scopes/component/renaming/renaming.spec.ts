@@ -1,7 +1,7 @@
 import { expect, use } from 'chai';
 import { loadManyAspects } from '@teambit/harmony.testing.load-aspect';
 import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
 import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents } from '@teambit/component.testing.mock-components';

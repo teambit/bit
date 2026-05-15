@@ -1,12 +1,14 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
+import { MainRuntime } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import type { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import path from 'path';
 import moment from 'moment';
 import pMap from 'p-map';
 import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
+import { OutsideWorkspaceError } from '@teambit/workspace';
 import { compact } from 'lodash';
 import pMapSeries from 'p-map-series';
 import type { Source, Version } from '@teambit/objects';

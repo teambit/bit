@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ComponentUI } from '@teambit/component';
-import { ComponentAspect } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
 import { UIRuntime } from '@teambit/ui';
 import { CodeCompare, CodeCompareEditorProvider, type CodeCompareProps } from '@teambit/code.ui.code-compare';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
@@ -10,7 +10,7 @@ import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import type { CodePageProps } from '@teambit/code.ui.code-tab-page';
 import { CodePage } from '@teambit/code.ui.code-tab-page';
 import type { ComponentCompareUI } from '@teambit/component-compare';
-import { ComponentCompareAspect } from '@teambit/component-compare';
+import { ComponentCompareAspect } from '@teambit/component-compare/dist/component-compare.aspect.js';
 import { CodeEditorProvider } from '@teambit/code.ui.code-editor';
 import { CodeCompareSection } from '@teambit/code.ui.code-compare-section';
 import { CodeAspect } from './code.aspect';

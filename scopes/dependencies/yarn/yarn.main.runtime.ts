@@ -1,8 +1,8 @@
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver/dist/dependency-resolver.aspect.js';
 import { MainRuntime } from '@teambit/cli';
 import type { LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
 import { YarnPackageManager } from './yarn.package-manager';
 import { YarnAspect } from './yarn.aspect';
 

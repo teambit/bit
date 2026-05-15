@@ -2,7 +2,8 @@ import type { ComponentContext } from '../../../component-template';
 
 export function mainRuntime({ name, namePascalCase }: ComponentContext) {
   return `import { MainRuntime } from '@teambit/cli';
-import { GeneratorMain, GeneratorAspect, ComponentContext } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator/dist/generator.aspect.js';
+import { GeneratorMain, ComponentContext } from '@teambit/generator';
 import { ${namePascalCase}Aspect } from './${name}.aspect';
 
 export class ${namePascalCase}Main {

@@ -1,10 +1,10 @@
 import type { EnvsMain } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
 import { MainRuntime } from '@teambit/cli';
 import type { MdxEnv, MDXMain } from '@teambit/mdx';
-import { MDXAspect } from '@teambit/mdx';
+import { MDXAspect } from '@teambit/mdx/dist/mdx.aspect.js';
 import type { DocsMain } from '@teambit/docs';
-import { DocsAspect } from '@teambit/docs';
+import { DocsAspect } from '@teambit/docs/dist/docs.aspect.js';
 
 import { ReadmeAspect } from './readme.aspect';
 import { ReadmeEnv } from './readme.env';

@@ -11,18 +11,15 @@ process.env.BROWSERSLIST_IGNORE_OLD_DATA = 'true';
 import './hook-require';
 
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import {
-  AspectLoaderAspect,
-  getAspectDir,
-  getAspectDistDir,
-  getCoreAspectPackageName,
-  getCoreAspectName,
-} from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader/dist/aspect-loader.aspect.js';
+import { getAspectDir, getAspectDistDir, getCoreAspectPackageName, getCoreAspectName } from '@teambit/aspect-loader';
 import json from 'comment-json';
 import userHome from 'user-home';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
-import { ConfigAspect, ConfigRuntime } from '@teambit/config';
+import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
+import { MainRuntime } from '@teambit/cli';
+import { ConfigAspect } from '@teambit/config/dist/config.aspect.js';
+import { ConfigRuntime } from '@teambit/config';
 import type { RuntimeDefinition, Extension, Aspect } from '@teambit/harmony';
 import { Harmony } from '@teambit/harmony';
 import { Harmony as LazyHarmony } from '@teambit/core';
@@ -40,7 +37,7 @@ import { LegacyWorkspaceConfig, ComponentOverrides, ComponentConfig } from '@tea
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { satisfies } from 'semver';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
-import { ClearCacheAspect } from '@teambit/clear-cache';
+import { ClearCacheAspect } from '@teambit/clear-cache/dist/clear-cache.aspect.js';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
@@ -54,9 +51,9 @@ import { registerCoreExtensions } from './bit.main.runtime';
 import { assertCommandIndexMatchesLive } from './command-index-assert';
 import type { BitConfig } from './bit.provider';
 import type { EnvsMain } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
 import type { GeneratorMain } from '@teambit/generator';
-import { GeneratorAspect } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator/dist/generator.aspect.js';
 import { HostInitializerMain } from '@teambit/host-initializer';
 
 async function loadLegacyConfig(config: any) {

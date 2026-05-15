@@ -6,7 +6,7 @@ import type { Consumer } from '@teambit/legacy.consumer';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import type { LaneId } from '@teambit/lane-id';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
 import type { PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import { getPathStatIfExist } from '@teambit/toolbox.fs.last-modified';
 

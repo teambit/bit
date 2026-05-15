@@ -2,7 +2,7 @@ import { MainRuntime } from '@teambit/cli';
 import type { Options as PrettierModuleOptions } from 'prettier';
 import type { Formatter, FormatterMain, FormatterOptions } from '@teambit/formatter';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
 import type {
   PrettierConfigTransformContext,
   PrettierConfigTransformer,

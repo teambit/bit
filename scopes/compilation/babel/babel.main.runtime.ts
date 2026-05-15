@@ -1,8 +1,8 @@
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
-import { CompilerAspect } from '@teambit/compiler';
+import { CompilerAspect } from '@teambit/compiler/dist/compiler.aspect.js';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
 import { BabelCompiler } from '@teambit/compilation.babel-compiler';
 import * as babel from '@babel/core';
 import type { BabelCompilerOptions } from './compiler-options';

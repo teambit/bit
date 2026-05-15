@@ -4,9 +4,10 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import semver from 'semver';
 import multimatch from 'multimatch';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
-import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader/dist/aspect-loader.aspect.js';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
+import { MainRuntime } from '@teambit/cli';
 import type {
   AspectData,
   ComponentMain,
@@ -16,19 +17,20 @@ import type {
   Snap,
   State,
 } from '@teambit/component';
-import { ComponentAspect, AspectEntry } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
+import { AspectEntry } from '@teambit/component';
 import type { GraphqlMain } from '@teambit/graphql';
-import { GraphqlAspect } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
-import { IsolatorAspect } from '@teambit/isolator';
+import { IsolatorAspect } from '@teambit/isolator/dist/isolator.aspect.js';
 import type { LoggerMain, Logger } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
 import type { ExpressMain } from '@teambit/express';
-import { ExpressAspect } from '@teambit/express';
+import { ExpressAspect } from '@teambit/express/dist/express.aspect.js';
 import type { UiMain } from '@teambit/ui';
-import { UIAspect } from '@teambit/ui';
+import { UIAspect } from '@teambit/ui/dist/ui.aspect.js';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import type { DependenciesGraph, DepEdge, ModelComponent, Lane, Version } from '@teambit/objects';
 import { Ref, Repository, ObjectList } from '@teambit/objects';
@@ -37,7 +39,7 @@ import { Scope, loadScopeIfExist } from '@teambit/legacy.scope';
 import type { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { ExportPersist, PostSign } from '@teambit/scope.remote-actions';
 import type { DependencyResolverMain, NodeLinker } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver/dist/dependency-resolver.aspect.js';
 import type { Remotes } from '@teambit/scope.remotes';
 import { getScopeRemotes } from '@teambit/scope.remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
@@ -59,7 +61,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { EnvsMain } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
 import { compact, slice, difference, partition } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
@@ -79,7 +81,7 @@ import CatObjectCmd from './debug-commands/cat-object-cmd';
 import CatLaneCmd from './debug-commands/cat-lane-cmd';
 import { RunActionCmd } from './run-action/run-action.cmd';
 import type { ConfigStoreMain, Store } from '@teambit/config-store';
-import { ConfigStoreAspect } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store/dist/config-store.aspect.js';
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;

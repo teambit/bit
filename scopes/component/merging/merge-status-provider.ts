@@ -18,8 +18,8 @@ import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { threeWayMerge } from '@teambit/component.modules.merge-helper';
 import type { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } from './merging.main.runtime';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
-import { BuilderAspect } from '@teambit/builder';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver/dist/dependency-resolver.aspect.js';
+import { BuilderAspect } from '@teambit/builder/dist/builder.aspect.js';
 
 export type MergeStatusProviderOptions = {
   resolveUnrelated?: MergeStrategy;

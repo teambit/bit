@@ -10,7 +10,7 @@ import type { DependencyLoaderOpts, ConsumerComponent as Component } from '@team
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
 import type { Workspace } from '@teambit/workspace';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver/dist/dependency-resolver.aspect.js';
 import type { DevFilesMain } from '@teambit/dev-files';
 import type { Logger } from '@teambit/logger';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';

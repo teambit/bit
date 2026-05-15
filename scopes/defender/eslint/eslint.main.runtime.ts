@@ -3,7 +3,7 @@ import { MainRuntime } from '@teambit/cli';
 import type { ESLint as ESLintLib } from 'eslint';
 import type { Linter, LinterContext, LinterMain } from '@teambit/linter';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
 import type { EslintConfigTransformContext, EslintConfigTransformer } from '@teambit/defender.eslint.config-mutator';
 import { EslintConfigMutator } from '@teambit/defender.eslint.config-mutator';
 import { getCloudDomain } from '@teambit/legacy.constants';

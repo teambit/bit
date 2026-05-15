@@ -4,14 +4,14 @@ import type { Harmony } from '@teambit/harmony';
 import type { ComponentID } from '@teambit/component-id';
 import { loadAspect, loadManyAspects } from '@teambit/harmony.testing.load-aspect';
 import type { SnappingMain } from '@teambit/snapping';
-import { SnappingAspect } from '@teambit/snapping';
+import { SnappingAspect } from '@teambit/snapping/dist/snapping.aspect.js';
 import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
 import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents } from '@teambit/component.testing.mock-components';
 import type { ListerMain } from '@teambit/lister';
-import { ListerAspect } from '@teambit/lister';
+import { ListerAspect } from '@teambit/lister/dist/lister.aspect.js';
 import type { CheckoutMain } from './checkout.main.runtime';
 import { CheckoutAspect } from './checkout.aspect';
 

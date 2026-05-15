@@ -25,9 +25,10 @@ import type {
   VariantPolicyConfigArr,
   WorkspacePolicyEntry,
 } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver/dist/dependency-resolver.aspect.js';
+import { VariantPolicy } from '@teambit/dependency-resolver';
 import type { EnvsMain, EnvJsonc } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
 import type { GraphqlMain } from '@teambit/graphql';
 import type { Harmony } from '@teambit/harmony';
 import type { Logger } from '@teambit/logger';
@@ -117,7 +118,7 @@ import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
 import { VERSION_ZERO } from '@teambit/objects';
 import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
 import type { ConfigStoreMain, Store } from '@teambit/config-store';
-import { ConfigStoreAspect } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store/dist/config-store.aspect.js';
 import type { DependenciesOverridesData } from '@teambit/legacy.consumer-config';
 
 export type EjectConfResult = {

@@ -9,12 +9,12 @@ import { Harmony } from '@teambit/harmony';
 import type { ConfigOptions } from '@teambit/harmony/dist/harmony-config';
 import { Config } from '@teambit/harmony/dist/harmony-config';
 import { ComponentID } from '@teambit/component';
-import { CLIAspect } from '@teambit/cli';
-import { NodeAspect } from '@teambit/node';
+import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
+import { NodeAspect } from '@teambit/node/dist/node.aspect.js';
 import { ComponentLoader } from '@teambit/legacy.consumer-component';
 import { LegacyWorkspaceConfig, ComponentOverrides, ComponentConfig } from '@teambit/legacy.consumer-config';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import { DependenciesAspect } from '@teambit/dependencies';
+import { DependenciesAspect } from '@teambit/dependencies/dist/dependencies.aspect.js';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 
 function getPackageName(aspect: any, id: ComponentID) {

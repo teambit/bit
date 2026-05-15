@@ -7,21 +7,21 @@ import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-t
 import { MainRuntime } from '@teambit/cli';
 import { getRootComponentDir } from '@teambit/workspace.root-components';
 import type { Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
-import { ComponentAspect } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
 import { isRange1GreaterThanRange2Naively } from '@teambit/pkg.modules.semver-helper';
 import type { ConfigMain } from '@teambit/config';
 import { join, relative } from 'path';
 import { compact, get, pick, uniq, omit, cloneDeep } from 'lodash';
-import { ConfigAspect } from '@teambit/config';
-import { EnvsAspect } from '@teambit/envs';
+import { ConfigAspect } from '@teambit/config/dist/config.aspect.js';
+import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
 import type { DependenciesEnv, EnvDefinition, EnvJsonc, EnvsMain } from '@teambit/envs';
 import type { SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { LoggerMain, Logger } from '@teambit/logger';
 import type { GraphqlMain } from '@teambit/graphql';
-import { GraphqlAspect } from '@teambit/graphql';
-import { LoggerAspect } from '@teambit/logger';
+import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
+import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
 import {
   CFG_PACKAGE_MANAGER_CACHE,
   CFG_REGISTRY_URL_KEY,
@@ -46,7 +46,7 @@ import type { SourceFile } from '@teambit/component.sources';
 import type { ProjectManifest, DependencyManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader/dist/aspect-loader.aspect.js';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import type { Registries } from '@teambit/pkg.entities.registry';
 import { Registry } from '@teambit/pkg.entities.registry';
@@ -91,7 +91,7 @@ import type { DependencyDetector } from './detector-hook';
 import { DependenciesService } from './dependencies.service';
 import { EnvPolicy, type EnvJsoncPolicyEntry } from './policy/env-policy';
 import type { ConfigStoreMain } from '@teambit/config-store';
-import { ConfigStoreAspect } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store/dist/config-store.aspect.js';
 
 export const BIT_CLOUD_REGISTRY = `https://node-registry.${getCloudDomain()}/`;
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';

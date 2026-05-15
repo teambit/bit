@@ -3,7 +3,7 @@ import filenamify from 'filenamify';
 import fs from 'fs-extra';
 import type { ComponentMain } from '@teambit/component';
 import type { ScopeMain } from '@teambit/scope';
-import { ScopeAspect } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope/dist/scope.aspect.js';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';

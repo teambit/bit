@@ -1,13 +1,13 @@
 import type { PubsubMain } from '@teambit/pubsub';
-import { PubsubAspect } from '@teambit/pubsub';
+import { PubsubAspect } from '@teambit/pubsub/dist/pubsub.aspect.js';
 import { MainRuntime } from '@teambit/cli';
 import type { Component } from '@teambit/component';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver/dist/dependency-resolver.aspect.js';
 import type { EnvsMain } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
 import type { GraphqlMain } from '@teambit/graphql';
-import { GraphqlAspect } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { BrowserRuntime } from './browser-runtime';

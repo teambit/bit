@@ -1,23 +1,24 @@
 import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
 import type { SnappingMain } from '@teambit/snapping';
-import { SnappingAspect } from '@teambit/snapping';
+import { SnappingAspect } from '@teambit/snapping/dist/snapping.aspect.js';
 import type { Component, ComponentID } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { compact } from 'lodash';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
+import { MainRuntime } from '@teambit/cli';
 import { Ref } from '@teambit/objects';
 import type { CheckoutMain, CheckoutProps } from '@teambit/checkout';
-import { CheckoutAspect } from '@teambit/checkout';
+import { CheckoutAspect } from '@teambit/checkout/dist/checkout.aspect.js';
 import { StashAspect } from './stash.aspect';
 import { StashCmd, StashListCmd, StashLoadCmd, StashSaveCmd } from './stash.cmd';
 import { StashData } from './stash-data';
 import { StashFiles } from './stash-files';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import type { RemoveMain } from '@teambit/remove';
-import { RemoveAspect } from '@teambit/remove';
+import { RemoveAspect } from '@teambit/remove/dist/remove.aspect.js';
 
 type ListResult = {
   id: string;

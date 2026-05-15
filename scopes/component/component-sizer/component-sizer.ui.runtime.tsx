@@ -3,7 +3,7 @@ import { UIRuntime } from '@teambit/ui';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import type { ComponentModel } from '@teambit/component';
 import type { DocsUI } from '@teambit/docs';
-import { DocsAspect } from '@teambit/docs';
+import { DocsAspect } from '@teambit/docs/dist/docs.aspect.js';
 import { ComponentSize } from '@teambit/component.ui.component-size';
 import { WorkspaceContext } from '@teambit/workspace';
 import { PillLabel } from '@teambit/design.ui.pill-label';

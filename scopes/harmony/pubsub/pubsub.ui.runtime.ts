@@ -1,5 +1,6 @@
 import type { UiUI } from '@teambit/ui';
-import { UIRuntime, UIAspect } from '@teambit/ui';
+import { UIAspect } from '@teambit/ui/dist/ui.aspect.js';
+import { UIRuntime } from '@teambit/ui';
 import { EventEmitter2 } from 'eventemitter2';
 import { connectToChild } from 'penpal';
 import type { AsyncMethodReturns } from 'penpal/lib/types';

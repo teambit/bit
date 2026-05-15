@@ -2,7 +2,7 @@ import type { Harmony } from '@teambit/harmony';
 import type { Component } from '@teambit/component';
 import type { UnmergedComponent } from '@teambit/legacy.scope';
 import type { ComponentID } from '@teambit/component-id';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
 import type { VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 import { ExtensionDataList, getCompareExtPredicate } from '@teambit/legacy.extension-data';
 import { partition, mergeWith, merge, uniq, uniqWith, compact, cloneDeep } from 'lodash';

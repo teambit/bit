@@ -1,11 +1,7 @@
 import { flatten } from 'lodash';
 import type { BundlerMain, ComponentServer } from '@teambit/bundler';
-import {
-  BundlerAspect,
-  ComponentServerStartedEvent,
-  ComponentsServerStartedEvent,
-  NewDevServersCreatedEvent,
-} from '@teambit/bundler';
+import { BundlerAspect } from '@teambit/bundler/dist/bundler.aspect.js';
+import { ComponentServerStartedEvent, ComponentsServerStartedEvent, NewDevServersCreatedEvent } from '@teambit/bundler';
 import type { PubsubMain } from '@teambit/pubsub';
 import type { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
 import type { Workspace } from '@teambit/workspace';

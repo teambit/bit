@@ -1,12 +1,14 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
+import { MainRuntime } from '@teambit/cli';
 import path from 'path';
 import type { ComponentID } from '@teambit/component-id';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
 import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
+import { OutsideWorkspaceError } from '@teambit/workspace';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
 import type { PathOsBasedRelative, PathOsBasedAbsolute, PathLinuxRelative } from '@teambit/legacy.utils';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { AddCmd } from './add-cmd';

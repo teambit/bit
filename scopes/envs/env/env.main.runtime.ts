@@ -1,10 +1,10 @@
 import type { AspectMain } from '@teambit/aspect';
-import { AspectAspect } from '@teambit/aspect';
+import { AspectAspect } from '@teambit/aspect/dist/aspect.aspect.js';
 import { MainRuntime } from '@teambit/cli';
 import type { Environment, EnvsMain, EnvTransformer } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader/dist/aspect-loader.aspect.js';
 import { EnvAspect } from './env.aspect';
 import { EnvEnv } from './env.env';
 

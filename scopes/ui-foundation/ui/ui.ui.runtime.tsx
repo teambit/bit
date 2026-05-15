@@ -1,9 +1,9 @@
 import type { GraphqlUI } from '@teambit/graphql';
-import { GraphqlAspect } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { ReactRouterUI } from '@teambit/react-router';
-import { ReactRouterAspect } from '@teambit/react-router';
+import { ReactRouterAspect } from '@teambit/react-router/dist/react-router.aspect.js';
 import { ServerRenderer, BrowserRenderer } from '@teambit/react.rendering.ssr';
 import { SSRBrowserProvider } from '@teambit/ui-foundation.ui.hooks.use-user-agent';
 import type { SsrSession, RenderPlugin, ContextProps } from '@teambit/react.rendering.ssr';

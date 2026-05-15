@@ -1,5 +1,5 @@
 import type { ComponentUI } from '@teambit/component';
-import { ComponentAspect } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
 import { UIRuntime } from '@teambit/ui';
 import React from 'react';
 import type { Harmony } from '@teambit/harmony';

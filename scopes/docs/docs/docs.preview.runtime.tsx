@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import React from 'react';
 import type { RenderingContext, PreviewPreview, PreviewModule } from '@teambit/preview';
-import { PreviewAspect, PreviewRuntime } from '@teambit/preview';
+import { PreviewAspect } from '@teambit/preview/dist/preview.aspect.js';
+import { PreviewRuntime } from '@teambit/preview';
 import type { ComponentID } from '@teambit/component-id';
 
 import { DocsAspect } from './docs.aspect';

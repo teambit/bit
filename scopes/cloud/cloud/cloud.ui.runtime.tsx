@@ -7,11 +7,11 @@ import { Slot } from '@teambit/harmony';
 import type { UserBarItem, UserBarItemSlot, UserBarSection, UserBarSectionSlot } from '@teambit/cloud.ui.user-bar';
 import { UserBar } from '@teambit/cloud.ui.user-bar';
 import type { LanesUI } from '@teambit/lanes';
-import { LanesAspect } from '@teambit/lanes';
+import { LanesAspect } from '@teambit/lanes/dist/lanes.aspect.js';
 import type { WorkspaceUI } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
 import type { ComponentUI } from '@teambit/component';
-import { ComponentAspect } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
 import { CloudAspect } from './cloud.aspect';
 
 export class CloudUI {

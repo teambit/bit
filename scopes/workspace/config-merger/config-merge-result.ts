@@ -1,4 +1,4 @@
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver/dist/dependency-resolver.aspect.js';
 import { compact } from 'lodash';
 import type { MergeStrategyResult, GenericConfigOrRemoved } from './component-config-merger';
 import { conflictIndicator } from './component-config-merger';

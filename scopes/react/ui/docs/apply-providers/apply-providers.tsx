@@ -5,7 +5,7 @@ import { Composer } from '@teambit/base-ui.utils.composer';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 
 import type { RenderingContext } from '@teambit/preview';
-import { ReactAspect } from '@teambit/react';
+import { ReactAspect } from '@teambit/react/dist/react.aspect.js';
 
 export type ApplyProvidersProps = {
   renderingContext: RenderingContext;
