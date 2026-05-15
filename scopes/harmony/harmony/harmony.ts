@@ -4,17 +4,33 @@
 // - `loading` map deduplicates concurrent resolves of the same aspect.
 
 import { Aspect } from './aspect';
+import { SLOT_INDEX } from './slot-index.generated';
 
 export interface RuntimeClass {
   id: string;
   dependencies?: Aspect[];
-  slots?: unknown[];
+  slots?: any[];
   provider: (
-    deps: unknown[],
-    config: unknown,
-    slots: unknown[],
+    deps: any[],
+    config: any,
+    slots: any[],
     harmony: Harmony,
-  ) => Promise<unknown> | unknown;
+  ) => Promise<any> | any;
+}
+
+export class Slot<T> {
+  private values: Map<string, T> = new Map();
+  register(value: T): void {
+    // In a real implementation, we'd need to know which aspect is registering
+    // to keep the map key. For now, we use a simple counter or similar.
+    this.values.set(Math.random().toString(), value);
+  }
+  toArray(): [string, T][] {
+    return Array.from(this.values.entries());
+  }
+  values_(): T[] {
+    return Array.from(this.values.values());
+  }
 }
 
 const traceEnabled = process.env.BIT_TRACE_ASPECT_LOAD === '1';
@@ -29,15 +45,17 @@ export class Harmony {
   readonly runtimeName: string;
   readonly config: Record<string, unknown>;
   readonly manifests: Map<string, Aspect>;
-  readonly instances: Map<string, unknown>;
-  readonly loading: Map<string, Promise<unknown>>;
+  readonly instances: Map<string, any>;
+  readonly loading: Map<string, Promise<any>>;
+  readonly slots: Map<string, Slot<any>>;
 
-  constructor(runtimeName: string, config?: Record<string, unknown>) {
+  constructor(runtimeName: string, config?: Record<string, any>) {
     this.runtimeName = runtimeName;
     this.config = config || {};
     this.manifests = new Map();
     this.instances = new Map();
     this.loading = new Map();
+    this.slots = new Map();
   }
 
   // `roots` are resolved immediately. `manifests` are just registered (cheap)
@@ -93,8 +111,17 @@ export class Harmony {
       (runtimeClass.dependencies || []).map((d) => this.resolve(d.id)),
     );
 
+    const slotInstances = await Promise.all(
+      (runtimeClass.slots || []).map(async (slotDef: any) => {
+        const type = slotDef.type; // This is a bit of a guess on the shape
+        const producers = SLOT_INDEX[type] || [];
+        await Promise.all(producers.map((id) => this.resolve(id)));
+        return this.getSlot(type);
+      }),
+    );
+
     const t1 = Date.now();
-    const instance = await runtimeClass.provider(deps, this.config[aspectId], [], this);
+    const instance = await runtimeClass.provider(deps, this.config[aspectId], slotInstances, this);
     const providerMs = Date.now() - t1;
 
     trace(`load ${aspectId} (import: ${importMs}ms, provider: ${providerMs}ms)`);
@@ -107,6 +134,13 @@ export class Harmony {
       throw new Error(`Aspect ${aspectId} not resolved. Use await harmony.resolve(id).`);
     }
     return this.instances.get(aspectId) as T;
+  }
+
+  getSlot<T>(type: string): Slot<T> {
+    if (!this.slots.has(type)) {
+      this.slots.set(type, new Slot<T>());
+    }
+    return this.slots.get(type) as Slot<T>;
   }
 }
 
