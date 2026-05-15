@@ -383,9 +383,7 @@ describe('convertLockfileToGraph with a circular workspace dependency back to th
     });
     // The graph must never reference comp1 — it is the component being
     // snapped, so it does not belong in its own deps graph.
-    const referencingComp1 = graph.edges.filter((edge) =>
-      edge.neighbours.some((n) => n.id === 'comp1@1.0.0')
-    );
+    const referencingComp1 = graph.edges.filter((edge) => edge.neighbours.some((n) => n.id === 'comp1@1.0.0'));
     expect(referencingComp1).to.eql([]);
     expect(graph.packages.has('comp1@1.0.0')).to.equal(false);
   });
@@ -443,9 +441,7 @@ describe('convertLockfileToGraph with a circular workspace dependency back to th
         ['comp3', ComponentID.fromString('my-scope/comp3@1.0.0')],
       ]),
     });
-    const referencingComp1 = graph.edges.filter((edge) =>
-      edge.neighbours.some((n) => n.id === 'comp1@1.0.0')
-    );
+    const referencingComp1 = graph.edges.filter((edge) => edge.neighbours.some((n) => n.id === 'comp1@1.0.0'));
     expect(referencingComp1).to.eql([]);
     expect(graph.packages.has('comp1@1.0.0')).to.equal(false);
   });
@@ -677,10 +673,7 @@ describe('convertGraphToLockfile on invalid graph', () => {
   // version to recover. Dropping it is the only safe outcome.
   it('should drop orphan @file: packages when generating a lockfile', async () => {
     const packages: PackagesMap = new Map([
-      [
-        '@teambit/dot-launch.apps.whats-new-app@file:dot-launch/apps/whats-new-app',
-        {} as any,
-      ],
+      ['@teambit/dot-launch.apps.whats-new-app@file:dot-launch/apps/whats-new-app', {} as any],
       ['foo@1.0.0', { resolution: { integrity: 'sha512-aaa' } } as any],
     ]);
     const edges: DependencyEdge[] = [
@@ -726,7 +719,6 @@ describe('convertGraphToLockfile on invalid graph', () => {
     // filtered out so pnpm doesn't try to resolve a dep that no longer exists.
     expect(lockfile.snapshots!['foo@1.0.0']).to.eql({});
   });
-
 
   it('should throw an error if resolution is missing', async () => {
     const packages: PackagesMap = new Map([['foo@1.0.0', {} as any]]);

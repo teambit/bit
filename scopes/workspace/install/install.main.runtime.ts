@@ -1055,41 +1055,43 @@ export class InstallMain {
       }
     }
 
-    await Promise.all(Array.from(updatesByComponentId.values()).map(async (pkgs) => {
-      const componentId = pkgs[0].componentId!;
-      const component = await this.workspace.get(componentId);
-      const envJsoncFile = component.filesystem.files.find((file) => file.relative === 'env.jsonc');
-      if (!envJsoncFile) return;
+    await Promise.all(
+      Array.from(updatesByComponentId.values()).map(async (pkgs) => {
+        const componentId = pkgs[0].componentId!;
+        const component = await this.workspace.get(componentId);
+        const envJsoncFile = component.filesystem.files.find((file) => file.relative === 'env.jsonc');
+        if (!envJsoncFile) return;
 
-      const envJsoncContent = envJsoncFile.contents.toString();
-      const updatedContent = updateJsoncPreservingFormatting(envJsoncContent, (envJsonc: EnvJsonc): EnvJsonc => {
-        pkgs.forEach((pkg) => {
-          let field: keyof EnvPolicyEnvJsoncConfigObject | undefined;
-          if (pkg.targetField === 'devDependencies') field = 'dev';
-          if (pkg.targetField === 'dependencies') field = 'runtime';
-          if (pkg.targetField === 'peerDependencies') field = 'peers';
+        const envJsoncContent = envJsoncFile.contents.toString();
+        const updatedContent = updateJsoncPreservingFormatting(envJsoncContent, (envJsonc: EnvJsonc): EnvJsonc => {
+          pkgs.forEach((pkg) => {
+            let field: keyof EnvPolicyEnvJsoncConfigObject | undefined;
+            if (pkg.targetField === 'devDependencies') field = 'dev';
+            if (pkg.targetField === 'dependencies') field = 'runtime';
+            if (pkg.targetField === 'peerDependencies') field = 'peers';
 
-          if (!field) return;
+            if (!field) return;
 
-          const deps = envJsonc.policy?.[field];
-          if (!Array.isArray(deps)) return;
+            const deps = envJsonc.policy?.[field];
+            if (!Array.isArray(deps)) return;
 
-          const depEntry = deps.find(({ name }) => name === pkg.name);
-          if (depEntry) {
-            depEntry.version = pkg.latestRange;
-            if (field === 'peers' && depEntry.supportedRange) {
-              if (!semver.intersects(pkg.latestRange, depEntry.supportedRange)) {
-                depEntry.supportedRange = `${depEntry.supportedRange} || ${pkg.latestRange}`;
+            const depEntry = deps.find(({ name }) => name === pkg.name);
+            if (depEntry) {
+              depEntry.version = pkg.latestRange;
+              if (field === 'peers' && depEntry.supportedRange) {
+                if (!semver.intersects(pkg.latestRange, depEntry.supportedRange)) {
+                  depEntry.supportedRange = `${depEntry.supportedRange} || ${pkg.latestRange}`;
+                }
               }
             }
-          }
+          });
+          return envJsonc;
         });
-        return envJsonc;
-      });
 
-      const absPath = path.join(this.workspace.componentDir(component.id), 'env.jsonc');
-      await fs.writeFile(absPath, updatedContent);
-    }));
+        const absPath = path.join(this.workspace.componentDir(component.id), 'env.jsonc');
+        await fs.writeFile(absPath, updatedContent);
+      })
+    );
   }
 
   private async _getAllUsedEnvIds(): Promise<ComponentID[]> {

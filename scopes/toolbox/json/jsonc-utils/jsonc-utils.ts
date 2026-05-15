@@ -37,11 +37,11 @@ export function stringifyJsonc(data: any, formatting: JsoncFormatting): string {
 
 /**
  * Updates a JSONC file content while preserving its original formatting (indentation, newlines, and comments).
- * 
+ *
  * @param originalContent - The original JSONC file content
  * @param updateFn - Function that receives the parsed data and returns the updated data
  * @returns The stringified updated content with preserved formatting
- * 
+ *
  * @example
  * ```typescript
  * const updatedContent = updateJsoncPreservingFormatting(originalContent, (data) => {
@@ -50,10 +50,7 @@ export function stringifyJsonc(data: any, formatting: JsoncFormatting): string {
  * });
  * ```
  */
-export function updateJsoncPreservingFormatting<T>(
-  originalContent: string,
-  updateFn: (data: T) => T
-): string {
+export function updateJsoncPreservingFormatting<T>(originalContent: string, updateFn: (data: T) => T): string {
   const { data, formatting } = parseJsoncWithFormatting(originalContent);
   const updatedData = updateFn(data);
   return stringifyJsonc(updatedData, formatting);
