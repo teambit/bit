@@ -7,6 +7,7 @@ import ClearCacheCmd from './clear-cache-cmd';
 import { ClearCacheAspect } from './clear-cache.aspect';
 import type { CacheClearResult } from './clear-cache';
 import { clearCache } from './clear-cache';
+import { clearCacheCommand } from './clear-cache.commands';
 
 /**
  * avoid adding `workspace` / `scope` aspects as dependencies to this aspect.
@@ -37,7 +38,7 @@ export class ClearCacheMain {
   static runtime = MainRuntime;
   static async provider([cli]: [CLIMain]) {
     const clearCacheMain = new ClearCacheMain();
-    cli.register(new ClearCacheCmd(clearCacheMain));
+    cli.register(clearCacheCommand, () => new ClearCacheCmd(clearCacheMain));
     return clearCacheMain;
   }
 }

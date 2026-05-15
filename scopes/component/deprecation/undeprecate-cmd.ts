@@ -1,17 +1,18 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import { formatSuccessSummary, formatHint } from '@teambit/cli';
 import type { DeprecationMain } from './deprecation.main.runtime';
+import { undeprecateCommand } from './deprecation.commands';
 
 export class UndeprecateCmd implements Command {
-  name = 'undeprecate <id>';
-  group = 'collaborate';
-  description = 'remove the deprecation status from a component';
-  extendedDescription = 'reverses the deprecation of a component, removing warnings and allowing normal use again.';
-  alias = '';
-  options = [] as CommandOptions;
-  loader = true;
-  skipWorkspace = true;
-  remoteOp = true;
+  name = undeprecateCommand.name;
+  group = undeprecateCommand.group;
+  description = undeprecateCommand.description;
+  extendedDescription = undeprecateCommand.extendedDescription;
+  alias = undeprecateCommand.alias;
+  options = undeprecateCommand.options;
+  loader = undeprecateCommand.loader;
+  skipWorkspace = undeprecateCommand.skipWorkspace;
+  remoteOp = undeprecateCommand.remoteOp;
 
   constructor(private deprecation: DeprecationMain) {}
 

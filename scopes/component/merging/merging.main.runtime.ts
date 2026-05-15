@@ -44,6 +44,7 @@ import { MergingAspect } from './merging.aspect';
 import type { DataMergeResult, MergeStatusProviderOptions } from './merge-status-provider';
 import { MergeStatusProvider } from './merge-status-provider';
 import type {
+import { mergeCommand } from './merging.commands';
   MergeStrategy,
   MergeResultsThreeWay,
   ApplyVersionResults,
@@ -924,7 +925,7 @@ export class MergingMain {
       depResolver,
       application
     );
-    cli.register(new MergeCmd(merging, configStore));
+    cli.register(mergeCommand, () => new MergeCmd(merging, configStore));
     return merging;
   }
 }

@@ -1,5 +1,7 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../../harmony/harmony/aspect';
 
 export const ClearCacheAspect = Aspect.create({
   id: 'teambit.bit/clear-cache',
+  runtimes: { main: () => import('./clear-cache.main.runtime') },
+  commands: () => import('./clear-cache.commands').then((m) => [m.clearCacheCommand]),
 });

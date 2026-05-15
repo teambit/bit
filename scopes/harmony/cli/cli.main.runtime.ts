@@ -1,7 +1,7 @@
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import { logger as legacyLogger } from '@teambit/legacy.logger';
-import type { CLIArgs, Flags, Command } from './command';
+import type { CLIArgs, Flags, Command, CommandDescriptor, CommandFactory } from './command';
 import pMapSeries from 'p-map-series';
 import type { GroupsType } from './command-groups';
 import { groups } from './command-groups';
@@ -16,6 +16,7 @@ import { CliCmd, CliGenerateCmd } from './cli.cmd';
 import { HelpCmd } from './help.cmd';
 import { VersionCmd } from './version.cmd';
 import { DetailsCmd } from './details.cmd';
+import { completionCommand, detailsCommand, versionCommand } from './cli.commands';
 
 export type CommandList = Array<Command>;
 export type OnStart = (hasWorkspace: boolean, currentCommand: string, commandObject?: Command) => Promise<void>;
@@ -39,8 +40,28 @@ export class CLIMain {
 
   /**
    * registers a new command in to the CLI.
+   *
+   * Two forms are supported:
+   *   - Legacy: `cli.register(cmd1, cmd2, ...)` — variadic `Command` instances.
+   *   - Descriptor + factory (RFC §6.2): `cli.register(descriptor, factory)` —
+   *     the descriptor carries the static fields; the factory produces the
+   *     runnable handler. For now the factory is invoked immediately so
+   *     downstream behaviour is unchanged; in later slices the dispatcher
+   *     defers the call until the command is actually run.
    */
-  register(...commands: CommandList) {
+  register(...commands: CommandList): void;
+  register(descriptor: CommandDescriptor, factory: CommandFactory): void;
+  register(...args: unknown[]): void {
+    if (args.length === 2 && typeof args[1] === 'function') {
+      const factory = args[1] as CommandFactory;
+      const command = factory();
+      this.setDefaults(command);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      command.commands!.forEach((cmd) => this.setDefaults(cmd));
+      this.commandsSlot.register([command]);
+      return;
+    }
+    const commands = args as CommandList;
     commands.forEach((command) => {
       this.setDefaults(command);
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -67,6 +88,16 @@ export class CLIMain {
    */
   get commands(): CommandList {
     return this.commandsSlot.values().flat();
+  }
+
+  /**
+   * Pairs of (aspectId, commands) as registered in the commands slot.
+   * Used by the codegen script (`scripts/generate-command-index.mjs`) and the
+   * load-bit assertion that the generated command index matches live state.
+   * See docs/rfc-esm-lazy-aspects.md, Slice 2.
+   */
+  commandsByAspect(): Array<[string, CommandList]> {
+    return this.commandsSlot.toArray();
   }
 
   /**
@@ -196,7 +227,9 @@ export class CLIMain {
     const cliCmd = new CliCmd(cliMain);
     const helpCmd = new HelpCmd(cliMain);
     cliCmd.commands.push(cliGenerateCmd);
-    cliMain.register(new CompletionCmd(), cliCmd, helpCmd, new VersionCmd(), new DetailsCmd());
+    cliMain.register(completionCommand, () => new CompletionCmd());
+    cliMain.register(versionCommand, () => new VersionCmd());
+    cliMain.register(detailsCommand, () => new DetailsCmd());
     return cliMain;
   }
 }

@@ -41,6 +41,7 @@ import { CompilationInitiator } from './types';
 import type { CompileOptions } from './workspace-compiler';
 import { WorkspaceCompiler } from './workspace-compiler';
 import { compilerTemplate } from './templates/compiler';
+import { compileCommand } from './compiler.commands';
 
 export class CompilerMain {
   constructor(
@@ -197,7 +198,7 @@ export class CompilerMain {
       dependencyResolver,
       compilerService
     );
-    cli.register(new CompileCmd(workspaceCompiler, logger, pubsub));
+    cli.register(compileCommand, () => new CompileCmd(workspaceCompiler, logger, pubsub));
     if (issues) {
       issues.registerAddComponentsIssues(compilerMain.addMissingDistsIssue.bind(compilerMain));
     }

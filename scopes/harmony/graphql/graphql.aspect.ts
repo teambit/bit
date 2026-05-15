@@ -1,9 +1,8 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../harmony/aspect';
 
 export const GraphqlAspect = Aspect.create({
   id: 'teambit.harmony/graphql',
-  dependencies: [],
-  defaultConfig: {},
+  runtimes: { main: () => import('./graphql.main.runtime') },
 });
 
 export default GraphqlAspect;

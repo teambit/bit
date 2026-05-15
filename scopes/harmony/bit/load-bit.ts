@@ -25,6 +25,7 @@ import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import type { RuntimeDefinition, Extension, Aspect } from '@teambit/harmony';
 import { Harmony } from '@teambit/harmony';
+import { Harmony as LazyHarmony } from '../harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
 import { Config } from '@teambit/harmony/dist/harmony-config';
 import { readConfigFile } from '@teambit/harmony/dist/harmony-config/config-reader';
@@ -50,6 +51,7 @@ import { resolve, join } from 'path';
 import { getAllCoreAspectsIds, isCoreAspect, manifestsMap } from './manifests';
 import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
+import { assertCommandIndexMatchesLive } from './command-index-assert';
 import type { BitConfig } from './bit.provider';
 import type { EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
@@ -286,9 +288,26 @@ export async function loadBit(path = process.cwd(), additionalAspects?: Aspect[]
   if (shouldRunAsDaemon()) {
     logger.isDaemon = true;
   }
-  const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
-  await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+  const isLazy = process.argv.includes('--lazy') || process.env.BIT_LAZY === '1';
+  const harmony = isLazy
+    ? await (LazyHarmony.load(aspectsToLoad, MainRuntime.name, configMap) as any)
+    : await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
+
+  if (!isLazy) {
+    await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+  }
   if (loadCLIOnly) return harmony;
+  // Slice 2 of the ESM/lazy-aspects RFC: verify the committed command index
+  // matches the live commandsSlot. Skipped when BIT_SKIP_COMMAND_INDEX_ASSERT=1.
+  if (process.env.BIT_SKIP_COMMAND_INDEX_ASSERT !== '1') {
+    try {
+      const cli = harmony.get<CLIMain>(CLIAspect.id);
+      assertCommandIndexMatchesLive(cli);
+    } catch (err: any) {
+      if (process.env.BIT_STRICT_COMMAND_INDEX === '1') throw err;
+      logger.warn(`command-index assertion failed: ${err?.message ?? err}`);
+    }
+  }
   const aspectLoader = harmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
   aspectLoader.setNonCoreAspects(additionalAspects || []);

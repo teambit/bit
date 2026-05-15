@@ -1,0 +1,14 @@
+{
+  "name": "mini-bit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Tiny prototype demonstrating lazy-loaded aspect architecture for Bit's ESM migration (see docs/rfc-esm-lazy-aspects.md)",
+  "bin": {
+    "mini-bit": "./bin/mini-bit.js"
+  },
+  "scripts": {
+    "start": "node bin/mini-bit.js",
+    "demo": "node scripts/demo.js"
+  }
+}

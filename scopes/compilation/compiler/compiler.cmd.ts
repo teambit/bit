@@ -6,30 +6,18 @@ import prettyTime from 'pretty-time';
 import { formatCompileResults } from './output-formatter';
 import type { WorkspaceCompiler, CompileOptions, BuildResult } from './workspace-compiler';
 import { CompilationInitiator } from './types';
+import { compileCommand } from './compiler.commands';
 
 export class CompileCmd implements Command {
-  name = 'compile [component-names...]';
-  description = 'transpile component source files';
-  extendedDescription = `compiles TypeScript, JSX, and other source files into JavaScript using the compiler configured by each component's environment.
-outputs compiled files to node_modules/component-package-name/dist for consumption by other components.
-automatically triggered by "bit watch", "bit start", or IDE extensions, but can be run manually for debugging.`;
-  helpUrl = 'reference/compiling/compiler-overview';
-  arguments = [
-    {
-      name: 'component-names...',
-      description: 'a list of component names or component IDs (defaults to all components)',
-    },
-  ];
-  alias = '';
-  group = 'component-development';
-  options = [
-    ['c', 'changed', 'compile only new and modified components'],
-    ['v', 'verbose', 'show more data, such as, dist paths'],
-    ['j', 'json', 'return the compile results in json format'],
-    ['d', 'delete-dist-dir', 'delete existing dist folder before writing new compiled files'],
-    ['', 'generate-types', 'EXPERIMENTAL. generate d.ts files for typescript components (hurts performance)'],
-  ] as CommandOptions;
-  loader = true;
+  name = compileCommand.name;
+  description = compileCommand.description;
+  extendedDescription = compileCommand.extendedDescription;
+  helpUrl = compileCommand.helpUrl;
+  arguments = compileCommand.arguments;
+  alias = compileCommand.alias;
+  group = compileCommand.group;
+  options = compileCommand.options;
+  loader = compileCommand.loader;
 
   constructor(
     private compile: WorkspaceCompiler,

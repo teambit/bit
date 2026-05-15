@@ -40,6 +40,7 @@ import { getAllVersionHashes } from '@teambit/component.snap-distance';
 import { ExportAspect } from './export.aspect';
 import { ExportCmd } from './export-cmd';
 import { ResumeExportCmd } from './resume-export-cmd';
+import { exportCommand, resumeExportCommand } from './export.commands';
 
 export type OnExportIdTransformer = (id: ComponentID) => ComponentID;
 
@@ -823,7 +824,8 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
   ]) {
     const logger = loggerMain.createLogger(ExportAspect.id);
     const exportMain = new ExportMain(workspace, remove, depResolver, logger, eject);
-    cli.register(new ResumeExportCmd(scope), new ExportCmd(exportMain));
+    cli.register(resumeExportCommand, () => new ResumeExportCmd(scope));
+    cli.register(exportCommand, () => new ExportCmd(exportMain));
     return exportMain;
   }
 }

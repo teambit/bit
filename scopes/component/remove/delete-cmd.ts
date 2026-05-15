@@ -8,50 +8,20 @@ import type { RemovedObjects } from '@teambit/legacy.scope';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { RemoveMain } from './remove.main.runtime';
 import { removeTemplate } from './remove-template';
+import { deleteCommand } from './remove.commands';
 
 export class DeleteCmd implements Command {
-  name = 'delete <component-pattern>';
-  description = 'soft-delete components from remote scopes';
-  extendedDescription = `marks components as deleted so they won't be visible on remote scopes after export.
-components remain recoverable using "bit recover" unless --hard is used (permanent deletion, not recommended).
-to remove components from your local workspace only, use "bit remove" instead.`;
-  arguments = [
-    {
-      name: 'component-pattern',
-      description: COMPONENT_PATTERN_HELP,
-    },
-  ];
-  group = 'collaborate';
-  helpUrl = 'reference/components/removing-components';
-  skipWorkspace = true;
-  alias = '';
-  options = [
-    [
-      '',
-      'lane',
-      'when on a lane, delete the component from this lane only. this removal will not affect main when the lane is merged',
-    ],
-    ['', 'update-main', 'delete component/s on the main lane after merging this lane into main'],
-    [
-      '',
-      'range <string>',
-      'EXPERIMENTAL. enter a Semver range to delete specific tags (cannot be used for snaps). see https://www.npmjs.com/package/semver#ranges for the range syntax',
-    ],
-    ['s', 'silent', 'skip confirmation'],
-    [
-      '',
-      'hard',
-      'NOT-RECOMMENDED. delete a component completely from a remote scope. careful! this is a permanent change that could corrupt dependents.',
-    ],
-    [
-      'f',
-      'force',
-      'relevant for --hard. allow the deletion even if used as a dependency. WARNING: components that depend on this component will corrupt',
-    ],
-    ['', 'snaps <string>', 'comma-separated list of snap hashes to mark as deleted (e.g. --snaps "hash1,hash2,hash3")'],
-  ] as CommandOptions;
-  loader = true;
-  remoteOp = true;
+  name = deleteCommand.name;
+  description = deleteCommand.description;
+  extendedDescription = deleteCommand.extendedDescription;
+  arguments = deleteCommand.arguments;
+  group = deleteCommand.group;
+  helpUrl = deleteCommand.helpUrl;
+  skipWorkspace = deleteCommand.skipWorkspace;
+  alias = deleteCommand.alias;
+  options = deleteCommand.options;
+  loader = deleteCommand.loader;
+  remoteOp = deleteCommand.remoteOp;
 
   constructor(
     private remove: RemoveMain,

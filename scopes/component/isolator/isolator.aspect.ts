@@ -1,7 +1,6 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../../harmony/harmony/aspect';
 
 export const IsolatorAspect = Aspect.create({
   id: 'teambit.component/isolator',
-  dependencies: [],
-  defaultConfig: {},
+  runtimes: { main: () => import('./isolator.main.runtime') },
 });

@@ -4,16 +4,16 @@ import chalk from 'chalk';
 import padRight from 'pad-right';
 import { CACHE_GLOBALS_ENV } from '@teambit/legacy.constants';
 import type { GlobalConfigMain } from './global-config.main.runtime';
+import { globalsCommand } from './global-config.commands';
 
 export class GlobalsCmd implements Command {
-  name = 'globals';
-  description = 'display global directories and paths used by Bit';
-  extendedDescription = `shows all global directories including cache, logs, and config locations used by Bit across your system.
-useful for debugging and understanding where Bit stores data.`;
-  group = 'system';
-  helpUrl = 'reference/config/config-files';
-  alias = '';
-  options = [['j', 'json', 'json format']] as CommandOptions;
+  name = globalsCommand.name;
+  description = globalsCommand.description;
+  extendedDescription = globalsCommand.extendedDescription;
+  group = globalsCommand.group;
+  helpUrl = globalsCommand.helpUrl;
+  alias = globalsCommand.alias;
+  options = globalsCommand.options;
 
   constructor(private globalConfig: GlobalConfigMain) {}
 

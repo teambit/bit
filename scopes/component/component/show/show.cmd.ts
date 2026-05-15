@@ -1,6 +1,7 @@
 import open from 'open';
 import type { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
+import { showCommand } from './component.commands';
 // import { Logger } from '@teambit/logger';
 // import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
@@ -11,24 +12,13 @@ import type { ComponentMain } from '../component.main.runtime';
 import { isLikelyPackageName, resolveComponentIdFromPackageName } from '@teambit/pkg.modules.component-package-name';
 
 export class ShowCmd implements Command {
-  name = 'show <component-name>';
-  description = 'display component metadata, dependencies, and configuration';
-  extendedDescription = `shows detailed information about a component including its version, dependencies, environment, and other metadata.
-note: to see file changes made in a specific version, use \`bit diff <component> <version> --parent\`.`;
-  alias = '';
-  group = 'info-analysis';
-  arguments = [{ name: 'component-name', description: 'component name or component id' }];
-  options = [
-    ['j', 'json', 'return the component data in json format'],
-    ['l', 'legacy', 'use the legacy bit show.'],
-    ['r', 'remote', 'show data for a remote component'],
-    ['b', 'browser', 'open the component page in the browser'],
-    [
-      'c',
-      'compare',
-      'legacy-only. compare current file system component to its latest tagged version [default=latest]',
-    ],
-  ] as CommandOptions;
+  name = showCommand.name;
+  description = showCommand.description;
+  extendedDescription = showCommand.extendedDescription;
+  alias = showCommand.alias;
+  group = showCommand.group;
+  arguments = showCommand.arguments;
+  options = showCommand.options;
 
   constructor(
     private component: ComponentMain,

@@ -25,6 +25,7 @@ import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
 import type { MiniStatusOpts } from './mini-status-cmd';
 import { MiniStatusCmd } from './mini-status-cmd';
+import { statusCommand, miniStatusCommand } from './status.commands';
 import type { LoggerMain, Logger } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import type { MergingMain } from '@teambit/merging';
@@ -280,7 +281,8 @@ export class StatusMain {
   ]) {
     const logger = loggerMain.createLogger(StatusAspect.id);
     const statusMain = new StatusMain(workspace, issues, insights, remove, lanes, logger, merging);
-    cli.register(new StatusCmd(statusMain), new MiniStatusCmd(statusMain));
+    cli.register(statusCommand, () => new StatusCmd(statusMain));
+    cli.register(miniStatusCommand, () => new MiniStatusCmd(statusMain));
     return statusMain;
   }
 }

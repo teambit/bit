@@ -1,9 +1,9 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../harmony/aspect';
 
 /**
  * Main bit aspect
  */
 export const BitAspect = Aspect.create({
   id: 'teambit.harmony/bit',
-  dependencies: [],
+  runtimes: { main: () => import('./bit.main.runtime') },
 });

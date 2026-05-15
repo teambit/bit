@@ -3,7 +3,16 @@ import type { Group } from './command-groups';
 type CommandOption = [string, string, string];
 export type CommandOptions = Array<CommandOption>;
 
-export interface Command {
+/**
+ * Declarative description of a CLI command — everything except the handlers.
+ *
+ * Used by the codegen / bundler pipeline (RFC: ESM Migration with Lazy-Loaded
+ * Aspects, see docs/rfc-esm-lazy-aspects.md §6.2) to drive help/completion
+ * without instantiating the owning aspect's runtime. The handler class
+ * (`Command`) reads its static fields from a descriptor to keep a single
+ * source of truth.
+ */
+export interface CommandDescriptor {
   /**
    * Name of command with arguments:
    * <> for mandatory arguments.
@@ -72,7 +81,7 @@ export interface Command {
    * sub commands for example:
    * bit capsule list to list active capsules.
    */
-  commands?: Command[];
+  commands?: CommandDescriptor[];
 
   /**
    * interact with a remote, e.g. "export" push to a remote
@@ -96,6 +105,18 @@ export interface Command {
    * default is true.
    */
   loadAspects?: boolean;
+}
+
+/**
+ * Factory that produces the runnable handler for a descriptor. Used by the
+ * `cli.register(descriptor, factory)` overload — lets the dispatcher defer
+ * handler construction until the command is actually invoked.
+ */
+export type CommandFactory = () => Command;
+
+export interface Command extends CommandDescriptor {
+  /** override: subcommands carry handlers too. */
+  commands?: Command[];
 
   /**
    * do not set this. it is being set once the command run.

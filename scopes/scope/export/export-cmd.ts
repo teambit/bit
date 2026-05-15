@@ -7,61 +7,19 @@ import chalk from 'chalk';
 import { isEmpty } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
 import type { ExportMain, ExportResult } from './export.main.runtime';
+import { exportCommand } from './export.commands';
 
 export class ExportCmd implements Command {
-  name = 'export [component-patterns...]';
-  description = 'upload components to remote scopes';
-  arguments = [
-    {
-      name: 'component-patterns...',
-      description: `(not recommended) ${COMPONENT_PATTERN_HELP}`,
-    },
-  ];
-  extendedDescription = `uploads staged versions (snaps/tags) to remote scopes, making them available for consumption by other workspaces.
-without arguments, exports all staged components. when on a lane, exports the lane as well.
-exporting is the final step after development and versioning to share components with your team.`;
-  alias = 'e';
-  helpUrl = 'reference/components/exporting-components';
-  options = [
-    ['e', 'eject', 'after export, remove the components from the workspace and install them as packages'],
-    [
-      'a',
-      'all',
-      'export all components, including non-staged (useful when components in the remote scope are corrupted or missing)',
-    ],
-    [
-      '',
-      'all-versions',
-      'export not only staged versions but all of them (useful when versions in the remote scope are corrupted or missing)',
-    ],
-    [
-      '',
-      'origin-directly',
-      'avoid export to the central hub, instead, export directly to the original scopes. not recommended!',
-    ],
-    [
-      '',
-      'resume <string>',
-      'in case the previous export failed and suggested to resume with an export-id, enter the id',
-    ],
-    [
-      '',
-      'head-only',
-      'in case previous export failed and locally it shows exported and only one snap/tag was created, try using this flag',
-    ],
-    [
-      '',
-      'ignore-missing-artifacts',
-      "don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote",
-    ],
-    ['', 'fork-lane-new-scope', 'allow exporting a forked lane into a different scope than the original scope'],
-    ['', 'open-browser', 'open a browser once the export is completed in the cloud job url'],
-    ['', 'verbose', 'per exported component, show the versions being exported'],
-    ['j', 'json', 'show output in json format'],
-  ] as CommandOptions;
-  loader = true;
-  group = 'collaborate';
-  remoteOp = true;
+  name = exportCommand.name;
+  description = exportCommand.description;
+  arguments = exportCommand.arguments;
+  extendedDescription = exportCommand.extendedDescription;
+  alias = exportCommand.alias;
+  helpUrl = exportCommand.helpUrl;
+  options = exportCommand.options;
+  loader = exportCommand.loader;
+  group = exportCommand.group;
+  remoteOp = exportCommand.remoteOp;
 
   constructor(private exportMain: ExportMain) {}
 

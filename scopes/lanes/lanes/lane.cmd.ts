@@ -8,6 +8,7 @@ import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import type { Command, CommandOptions, Report } from '@teambit/cli';
 import {
+import { catLaneHistoryCommand } from './lanes.commands';
   formatTitle,
   formatSection,
   formatItem,
@@ -313,13 +314,13 @@ it is useful e.g. when having multiple lanes with the same name, but with differ
 }
 
 export class CatLaneHistoryCmd implements Command {
-  name = 'cat-lane-history <lane-name>';
-  description = 'cat lane-history object by lane-name';
-  private = true;
-  alias = 'clh';
-  options = [] as CommandOptions;
-  loader = true;
-  group = 'advanced';
+  name = catLaneHistoryCommand.name;
+  description = catLaneHistoryCommand.description;
+  private = catLaneHistoryCommand.private;
+  alias = catLaneHistoryCommand.alias;
+  options = catLaneHistoryCommand.options;
+  loader = catLaneHistoryCommand.loader;
+  group = catLaneHistoryCommand.group;
 
   constructor(private lanes: LanesMain) {}
 

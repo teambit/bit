@@ -36,6 +36,7 @@ import type { ImportOptions, ImportResult } from './import-components';
 import ImportComponents from './import-components';
 import type { ListerMain } from '@teambit/lister';
 import { ListerAspect } from '@teambit/lister';
+import { fetchCommand, importCommand } from './importer.commands';
 
 export class ImporterMain {
   constructor(
@@ -443,7 +444,8 @@ export class ImporterMain {
     install.registerPreLink(async (opts) => {
       if (opts?.fetchObject) await importerMain.importCurrentObjects();
     });
-    cli.register(new ImportCmd(importerMain), new FetchCmd(importerMain));
+    cli.register(importCommand, () => new ImportCmd(importerMain));
+    cli.register(fetchCommand, () => new FetchCmd(importerMain));
     return importerMain;
   }
 }

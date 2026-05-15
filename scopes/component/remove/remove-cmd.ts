@@ -7,41 +7,21 @@ import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { RemovedLocalObjects } from './removed-local-objects';
 import type { RemoveMain } from './remove.main.runtime';
 import { removeTemplate } from './remove-template';
+import { removeCommand } from './remove.commands';
 
 export class RemoveCmd implements Command {
-  name = 'remove <component-pattern>';
-  description = 'untrack components from the workspace';
-  extendedDescription = `removes components from the local workspace only - stops tracking them in .bitmap and deletes their files by default.
-does not affect remote scopes - to delete components from remotes, use "bit delete" instead.
-use --keep-files to preserve component files while only removing the tracking.`;
-  arguments = [
-    {
-      name: 'component-pattern',
-      description: COMPONENT_PATTERN_HELP,
-    },
-  ];
-  group = 'component-development';
-  helpUrl = 'reference/components/removing-components';
-  skipWorkspace = true;
-  alias = 'rm';
-  options = [
-    ['t', 'track', 'keep tracking component in .bitmap (default = false), helps transform a tagged-component to new'],
-    ['', 'keep-files', 'keep component files (just untrack the component)'],
-    [
-      'f',
-      'force',
-      'removes the component from the scope, even if used as a dependency. WARNING: you will need to fix the components that depend on this component',
-    ],
-    ['s', 'silent', 'skip confirmation'],
-  ] as CommandOptions;
-  loader = true;
-  examples = [
-    {
-      cmd: 'remove "$deprecated"',
-      description: 'remove all components that are deprecated',
-    },
-  ];
-  remoteOp = true;
+  name = removeCommand.name;
+  description = removeCommand.description;
+  extendedDescription = removeCommand.extendedDescription;
+  arguments = removeCommand.arguments;
+  group = removeCommand.group;
+  helpUrl = removeCommand.helpUrl;
+  skipWorkspace = removeCommand.skipWorkspace;
+  alias = removeCommand.alias;
+  options = removeCommand.options;
+  loader = removeCommand.loader;
+  examples = removeCommand.examples;
+  remoteOp = removeCommand.remoteOp;
 
   constructor(
     private remove: RemoveMain,

@@ -1,9 +1,10 @@
-import type { Command, CommandOptions } from '@teambit/cli';
+import type { Command } from '@teambit/cli';
 import { renderSections, formatSuccessSummary, formatSection, formatItem, joinSections } from '@teambit/cli';
 import type { ComponentID } from '@teambit/component-id';
 import chalk from 'chalk';
 import type { StatusMain, StatusResult } from './status.main.runtime';
 import { formatStatusOutput } from './status-formatter';
+import { statusCommand } from './status.commands';
 
 type StatusFlags = {
   strict?: boolean;
@@ -60,31 +61,13 @@ type StatusJsonResults = {
 };
 
 export class StatusCmd implements Command {
-  name = 'status';
-  description = 'show workspace component status and issues';
-  group = 'info-analysis';
-  extendedDescription = `displays the current state of all workspace components including new, modified, staged, and problematic components.
-identifies blocking issues that prevent tagging/snapping and provides warnings with --warnings flag.
-essential for understanding workspace health before versioning components.
-use --quick for a faster check that only detects file-level changes (new/modified components).
-for maximum speed (skips aspect loading entirely), use "bit mini-status".`;
-  alias = 's';
-  options = [
-    ['j', 'json', 'return a json version of the component'],
-    ['w', 'warnings', 'show warnings. by default, only issues that block tag/snap are shown'],
-    ['', 'verbose', 'show extra data: full snap hashes for staged components, and divergence point for lanes'],
-    ['l', 'lanes', 'when on a lane, show updates from main and updates from forked lanes'],
-    ['', 'strict', 'exit with code 1 if any issues are found (both errors and warnings)'],
-    ['', 'fail-on-error', 'exit with code 1 only when tag/snap blocker issues are found (not warnings)'],
-    ['c', 'ignore-circular-dependencies', 'do not check for circular dependencies to get the results quicker'],
-    [
-      '',
-      'quick',
-      'show only new and modified components based on file changes. much faster, but does not detect dependency or config changes',
-    ],
-    ['', 'expand', 'expand all collapsed sections (e.g. auto-tag pending components)'],
-  ] as CommandOptions;
-  loader = true;
+  name = statusCommand.name;
+  alias = statusCommand.alias;
+  description = statusCommand.description;
+  extendedDescription = statusCommand.extendedDescription;
+  group = statusCommand.group;
+  options = statusCommand.options;
+  loader = statusCommand.loader;
 
   constructor(private status: StatusMain) {}
 

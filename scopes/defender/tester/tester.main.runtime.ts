@@ -27,6 +27,7 @@ import { TesterTask } from './tester.task';
 import { detectTestFiles } from './utils';
 import { testerSchema } from './tester.graphql';
 import { testsResultsToJUnitFormat } from './utils/junit-generator';
+import { testCommand } from './tester.commands';
 
 export type TesterExtensionConfig = {
   /**
@@ -300,7 +301,7 @@ export class TesterMain {
         return undefined;
       });
     }
-    cli.register(new TestCmd(tester, workspace, logger));
+    cli.register(testCommand, () => new TestCmd(tester, workspace, logger));
 
     graphql.register(() => testerSchema(tester, graphql));
 

@@ -29,6 +29,7 @@ import type { ComponentStatus, ComponentStatusBase } from './checkout-version';
 import { applyVersion, throwForFailures } from './checkout-version';
 import { RevertCmd } from './revert-cmd';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
+import { checkoutCommand, revertCommand } from './checkout.commands';
 
 export type CheckoutProps = {
   version?: string; // if reset/head/latest is true, the version is undefined
@@ -661,7 +662,8 @@ export class CheckoutMain {
   ]) {
     const logger = loggerMain.createLogger(CheckoutAspect.id);
     const checkoutMain = new CheckoutMain(workspace, logger, compWriter, importer, remove, lister);
-    cli.register(new CheckoutCmd(checkoutMain), new RevertCmd(checkoutMain));
+    cli.register(checkoutCommand, () => new CheckoutCmd(checkoutMain));
+    cli.register(revertCommand, () => new RevertCmd(checkoutMain));
     return checkoutMain;
   }
 }

@@ -18,6 +18,7 @@ import { ListCmd } from './list.cmd';
 import { SearchCmd } from './search.cmd';
 import { ListerAspect } from './lister.aspect';
 import { NoIdMatchWildcard } from './no-id-match-wildcard';
+import { listCommand, searchCommand } from './lister.commands';
 
 const BEFORE_REMOTE_LIST = 'listing remote components';
 const BEFORE_LOCAL_LIST = 'listing components';
@@ -290,7 +291,8 @@ export class ListerMain {
   static async provider([cli, loggerMain, workspace]: [CLIMain, LoggerMain, Workspace]) {
     const logger = loggerMain.createLogger(ListerAspect.id);
     const lister = new ListerMain(logger, workspace);
-    cli.register(new ListCmd(lister), new SearchCmd(lister));
+    cli.register(listCommand, () => new ListCmd(lister));
+    cli.register(searchCommand, () => new SearchCmd(lister));
     return lister;
   }
 }

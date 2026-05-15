@@ -22,6 +22,7 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { compact } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
+import { deprecateCommand, undeprecateCommand } from './deprecation.commands';
 
 export type DeprecationInfo = {
   isDeprecate: boolean;
@@ -194,7 +195,8 @@ export class DeprecationMain {
   ]) {
     const deprecation = new DeprecationMain(scope, workspace, depsResolver);
     issues.registerAddComponentsIssues(deprecation.addDeprecatedDependenciesIssues.bind(deprecation));
-    cli.register(new DeprecateCmd(deprecation), new UndeprecateCmd(deprecation));
+    cli.register(deprecateCommand, () => new DeprecateCmd(deprecation));
+    cli.register(undeprecateCommand, () => new UndeprecateCmd(deprecation));
     componentAspect.registerShowFragments([new DeprecationFragment(deprecation)]);
     graphql.register(() => deprecationSchema(deprecation));
 

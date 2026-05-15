@@ -4,16 +4,17 @@ import path from 'path';
 import type { Command, CommandOptions } from './command';
 import { formatTitle, formatHint } from './output-formatter';
 import { LAST_COMMAND_DETAILS_DIR } from './command-runner';
+import { detailsCommand } from './cli.commands';
 
 export class DetailsCmd implements Command {
-  name = 'details';
-  description = 'show expanded details from the last command that provided them (e.g. tag, snap)';
-  alias = '';
-  group = 'general';
-  options = [] as CommandOptions;
-  loader = false;
-  loadAspects = false;
-  skipWorkspace = true;
+  name = detailsCommand.name;
+  description = detailsCommand.description;
+  alias = detailsCommand.alias;
+  group = detailsCommand.group;
+  options = detailsCommand.options;
+  loader = detailsCommand.loader;
+  loadAspects = detailsCommand.loadAspects;
+  skipWorkspace = detailsCommand.skipWorkspace;
 
   async report() {
     const contentPath = path.join(LAST_COMMAND_DETAILS_DIR, 'content');

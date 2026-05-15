@@ -1,6 +1,7 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import { formatTitle, formatHint, formatWarningSummary, joinSections } from '@teambit/cli';
 import type { ListerMain, SearchResults } from './lister.main.runtime';
+import { searchCommand } from './lister.commands';
 
 type SearchFlags = {
   owners?: string;
@@ -11,22 +12,14 @@ type SearchFlags = {
 };
 
 export class SearchCmd implements Command {
-  name = 'search <query...>';
-  description = 'search for components by keyword in the local workspace and remote bit cloud';
-  extendedDescription = `runs the provided query terms in parallel against bit cloud and against the local workspace.
-multiple queries are unioned (deduplicated) in the output. by default, remote results are filtered by the
-owner extracted from the workspace's defaultScope; use --owners or --skip-auto-owner to change this.`;
-  group = 'info-analysis';
-  options = [
-    ['o', 'owners <list>', 'comma-separated list of owners/orgs to filter remote results by'],
-    ['', 'skip-auto-owner', 'do not auto-extract owner from workspace defaultScope'],
-    ['r', 'remote-only', 'only search remote bit cloud, skip local workspace'],
-    ['l', 'local-only', 'only search the local workspace, skip remote bit cloud'],
-    ['j', 'json', 'show the output in JSON format'],
-  ] as CommandOptions;
-  loader = true;
-  skipWorkspace = true;
-  remoteOp = true;
+  name = searchCommand.name;
+  description = searchCommand.description;
+  extendedDescription = searchCommand.extendedDescription;
+  group = searchCommand.group;
+  options = searchCommand.options;
+  loader = searchCommand.loader;
+  skipWorkspace = searchCommand.skipWorkspace;
+  remoteOp = searchCommand.remoteOp;
 
   constructor(private lister: ListerMain) {}
 

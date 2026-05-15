@@ -1,32 +1,20 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import { formatSuccessSummary, formatHint } from '@teambit/cli';
 import type { DeprecationMain } from './deprecation.main.runtime';
+import { deprecateCommand } from './deprecation.commands';
 
 export class DeprecateCmd implements Command {
-  name = 'deprecate <component-name>';
-  arguments = [{ name: 'component-name', description: 'component name or component id' }];
-  description = 'mark a component as deprecated to discourage its use';
-  extendedDescription = `marks a component as deprecated locally, then after snap/tag and export it becomes deprecated in the remote scope.
-optionally specify a replacement component or deprecate only specific version ranges.
-deprecated components remain available but display warnings when installed or imported.`;
-  group = 'collaborate';
-  skipWorkspace = true;
-  alias = 'd';
-  options = [
-    [
-      '',
-      'new-id <string>',
-      'if replaced by another component, enter the new component id. alternatively use "bit rename --deprecate" to do this automatically',
-    ],
-    [
-      '',
-      'range <string>',
-      'enter a Semver range to deprecate specific versions. see https://www.npmjs.com/package/semver#ranges for the range syntax',
-    ],
-  ] as CommandOptions;
-  loader = true;
-  remoteOp = true;
-  helpUrl = 'reference/components/removing-components';
+  name = deprecateCommand.name;
+  arguments = deprecateCommand.arguments;
+  description = deprecateCommand.description;
+  extendedDescription = deprecateCommand.extendedDescription;
+  group = deprecateCommand.group;
+  skipWorkspace = deprecateCommand.skipWorkspace;
+  alias = deprecateCommand.alias;
+  options = deprecateCommand.options;
+  loader = deprecateCommand.loader;
+  remoteOp = deprecateCommand.remoteOp;
+  helpUrl = deprecateCommand.helpUrl;
 
   constructor(private deprecation: DeprecationMain) {}
 

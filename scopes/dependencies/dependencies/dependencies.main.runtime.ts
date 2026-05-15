@@ -26,6 +26,7 @@ import { DependenciesLoader } from './dependencies-loader/dependencies-loader';
 import type { DependenciesData, OverridesDependenciesData } from './dependencies-loader/dependencies-data';
 import type { RemoveDependenciesFlags, SetDependenciesFlags } from './dependencies-cmd';
 import {
+import { dependentsCommand, setPeerCommand, unsetPeerCommand, whyCommand } from './dependencies.commands';
   DependenciesBlameCmd,
   DependenciesCircularCmd,
   DependenciesCmd,
@@ -705,13 +706,10 @@ export class DependenciesMain {
       new DependenciesCircularCmd(depsMain),
       new DependenciesWriteCmd(workspace),
     ];
-    cli.register(
-      depsCmd,
-      new WhyCmd(depsMain),
-      new SetPeerCmd(depsMain),
-      new UnsetPeerCmd(depsMain),
-      new DependentsCmd(workspace)
-    );
+    cli.register(whyCommand, () => new WhyCmd(depsMain));
+    cli.register(setPeerCommand, () => new SetPeerCmd(depsMain));
+    cli.register(unsetPeerCommand, () => new UnsetPeerCmd(depsMain));
+    cli.register(dependentsCommand, () => new DependentsCmd(workspace));
 
     ComponentLoader.loadDeps = depsMain.loadDependencies.bind(depsMain);
 

@@ -8,6 +8,7 @@ import pMapSeries from 'p-map-series';
 import { ComponentIssuesCmd } from './issues-cmd';
 import { IssuesAspect } from './issues.aspect';
 import { NonExistIssueError } from './non-exist-issue-error';
+import { componentIssuesCommand } from './issues.commands';
 
 export type IssuesConfig = {
   ignoreIssues: string[];
@@ -93,7 +94,7 @@ export class IssuesMain {
   static runtime = MainRuntime;
   static async provider([cli]: [CLIMain], config: IssuesConfig, [addComponentsIssuesSlot]: [AddComponentsIssuesSlot]) {
     const issuesMain = new IssuesMain(config, addComponentsIssuesSlot);
-    cli.register(new ComponentIssuesCmd(issuesMain));
+    cli.register(componentIssuesCommand, () => new ComponentIssuesCmd(issuesMain));
     return issuesMain;
   }
 }

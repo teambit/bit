@@ -2,19 +2,18 @@ import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
 import type { ScopeMain } from '@teambit/scope';
 import { resumeExport } from './export-scope-components';
+import { resumeExportCommand } from './export.commands';
 
 export class ResumeExportCmd implements Command {
-  name = 'resume-export <export-id> <remotes...>';
-  description = 'EXPERIMENTAL. resume failed export';
-  extendedDescription = `resume failed export to persist the pending objects on the given remotes.
-the export-id is the id the client received in the error message during the failure.
-alternatively, exporting to any one of the failed scopes, throws server-is-busy error with the export-id`;
-  alias = '';
-  options = [] as CommandOptions;
-  loader = true;
-  group = 'advanced';
-  private = true;
-  remoteOp = true;
+  name = resumeExportCommand.name;
+  description = resumeExportCommand.description;
+  extendedDescription = resumeExportCommand.extendedDescription;
+  alias = resumeExportCommand.alias;
+  options = resumeExportCommand.options;
+  loader = resumeExportCommand.loader;
+  group = resumeExportCommand.group;
+  private = resumeExportCommand.private;
+  remoteOp = resumeExportCommand.remoteOp;
 
   constructor(private scope: ScopeMain) {}
 

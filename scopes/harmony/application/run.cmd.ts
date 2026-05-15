@@ -4,6 +4,7 @@ import { formatItem, formatSection } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import open from 'open';
 import type { ApplicationMain } from './application.main.runtime';
+import { runCommand } from './application.commands';
 
 function openBrowser(url: string): Promise<void> {
   const openUrl =
@@ -25,34 +26,14 @@ type RunOptions = {
 };
 
 export class RunCmd implements Command {
-  name = 'run [app-name]';
-  description = 'start an application component locally';
-  extendedDescription = `runs application components in their own development server, separate from the "bit start" UI.
-apps are components that create deployable applications (React apps, Node.js servers, etc.).
-when no app name is specified, automatically detects and runs the app if only one exists in the workspace.`;
-  helpUrl = 'reference/apps/apps-overview/';
-  arguments = [
-    {
-      name: 'app-name',
-      description:
-        "the app's name is registered by the app (run 'bit app list' to list the names of the available apps)",
-    },
-  ];
-  alias = 'c';
-  group = 'run-serve';
-  options = [
-    ['d', 'dev', 'start the application in dev mode.'],
-    ['p', 'port [port-number]', 'port to run the app on'],
-    ['v', 'verbose', 'show verbose output for inspection and print stack trace'],
-    // ['', 'skip-watch', 'avoid running the watch process that compiles components in the background'],
-    ['w', 'watch', 'watch and compile your components upon changes'],
-    ['n', 'no-browser', 'do not automatically open browser when ready'],
-    [
-      'a',
-      'args <argv>',
-      'the arguments passing to the app. for example, --args="--a=1 --b". don\'t forget to use quotes to wrap the value to escape special characters.',
-    ],
-  ] as CommandOptions;
+  name = runCommand.name;
+  description = runCommand.description;
+  extendedDescription = runCommand.extendedDescription;
+  helpUrl = runCommand.helpUrl;
+  arguments = runCommand.arguments;
+  alias = runCommand.alias;
+  group = runCommand.group;
+  options = runCommand.options;
 
   constructor(
     /**

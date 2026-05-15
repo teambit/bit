@@ -28,6 +28,7 @@ import { MissingDiagnosisName } from './exceptions/missing-diagnosis-name';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import { loadConsumerIfExist } from '@teambit/legacy.consumer';
 import type { Network } from '@teambit/scope.network';
+import { doctorCommand } from './doctor.commands';
 
 import { DoctorAspect } from './doctor.aspect';
 import { DoctorCmd } from './doctor-cmd';
@@ -392,7 +393,7 @@ export class DoctorMain {
   static async provider([cliMain, loggerMain, graphql, scope]: [CLIMain, LoggerMain, GraphqlMain, ScopeMain]) {
     const logger = loggerMain.createLogger(DoctorAspect.id);
     const doctor = new DoctorMain(logger);
-    cliMain.register(new DoctorCmd(doctor));
+    cliMain.register(doctorCommand, () => new DoctorCmd(doctor));
     graphql.register(() => doctorSchema(scope));
     return doctor;
   }

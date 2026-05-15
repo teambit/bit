@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { hasWildcard } from '@teambit/legacy.utils';
 import { listTemplate } from './list-template';
 import type { ListerMain, ListScopeResult } from './lister.main.runtime';
+import { listCommand } from './lister.commands';
 
 type ListFlags = {
   ids?: boolean;
@@ -16,30 +17,16 @@ type ListFlags = {
 };
 
 export class ListCmd implements Command {
-  name = 'list [remote-scope]';
-  description = 'display components in workspace or remote scope';
-  extendedDescription = `shows components in the current workspace by default, or from a specified remote scope.
-supports filtering by scope, namespace, and various display options.
-use --outdated to highlight components that have newer versions available.`;
-  group = 'info-analysis';
-  helpUrl = 'reference/reference/cli-reference#list';
-  alias = 'ls';
-  options = [
-    ['i', 'ids', 'show only component ids, unformatted'],
-    ['l', 'local-scope', 'show only components stored in the local scope, including indirect dependencies'],
-    ['s', 'scope <string>', 'filter components by their scope name (e.g., teambit.workspace)'],
-    ['o', 'outdated', 'highlight outdated components, in comparison with their latest remote version (if one exists)'],
-    ['d', 'include-deleted', 'EXPERIMENTAL. show also deleted components'],
-    ['j', 'json', 'show the output in JSON format'],
-    [
-      'n',
-      'namespace <string>',
-      "filter components by their namespace (a logical grouping within a scope, e.g., 'ui', '*/ui')",
-    ],
-  ] as CommandOptions;
-  loader = true;
-  skipWorkspace = true;
-  remoteOp = true;
+  name = listCommand.name;
+  description = listCommand.description;
+  extendedDescription = listCommand.extendedDescription;
+  group = listCommand.group;
+  helpUrl = listCommand.helpUrl;
+  alias = listCommand.alias;
+  options = listCommand.options;
+  loader = listCommand.loader;
+  skipWorkspace = listCommand.skipWorkspace;
+  remoteOp = listCommand.remoteOp;
 
   constructor(private lister: ListerMain) {}
 

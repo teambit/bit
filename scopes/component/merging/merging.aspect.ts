@@ -1,5 +1,7 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../../harmony/harmony/aspect';
 
 export const MergingAspect = Aspect.create({
   id: 'teambit.component/merging',
+  runtimes: { main: () => import('./merging.main.runtime') },
+  commands: () => import('./merging.commands').then((m) => [m.mergeCommand]),
 });

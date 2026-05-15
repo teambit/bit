@@ -16,12 +16,6 @@ module.exports = function (api) {
     ],
   ];
   const plugins = [
-    [
-      '@babel/plugin-transform-modules-commonjs',
-      {
-        lazy: () => true,
-      },
-    ],
     'babel-plugin-transform-typescript-metadata',
     ['@babel/plugin-proposal-decorators', { legacy: true }],
     ['@babel/plugin-transform-runtime'],

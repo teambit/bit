@@ -35,6 +35,7 @@ import { ScopeAspect } from '@teambit/scope';
 import type { ListerMain } from '@teambit/lister';
 import { ListerAspect } from '@teambit/lister';
 import chalk from 'chalk';
+import { deleteCommand, recoverCommand, removeCommand } from './remove.commands';
 
 const BEFORE_REMOVE = 'removing components';
 
@@ -599,11 +600,9 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     const removeMain = new RemoveMain(workspace, scope, logger, importerMain, depResolver, lister);
     issues.registerAddComponentsIssues(removeMain.addRemovedDependenciesIssues.bind(removeMain));
     componentAspect.registerShowFragments([new RemoveFragment(removeMain)]);
-    cli.register(
-      new RemoveCmd(removeMain, workspace),
-      new DeleteCmd(removeMain, workspace),
-      new RecoverCmd(removeMain)
-    );
+    cli.register(removeCommand, () => new RemoveCmd(removeMain, workspace));
+    cli.register(deleteCommand, () => new DeleteCmd(removeMain, workspace));
+    cli.register(recoverCommand, () => new RecoverCmd(removeMain));
     return removeMain;
   }
 }

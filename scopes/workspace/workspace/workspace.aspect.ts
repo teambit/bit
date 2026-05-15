@@ -1,9 +1,8 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../../harmony/harmony/aspect';
 
 export const WorkspaceAspect = Aspect.create({
   id: 'teambit.workspace/workspace',
-  dependencies: [],
-  defaultConfig: {},
+  runtimes: { main: () => import('./workspace.main.runtime') },
 });
 
 export default WorkspaceAspect;

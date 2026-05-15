@@ -1,17 +1,18 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import { formatTitle, formatItem, formatSuccessSummary, errorSymbol, joinSections } from '@teambit/cli';
 import type { ClearCacheMain } from './clear-cache.main.runtime';
+import { clearCacheCommand } from './clear-cache.commands';
 
 export default class ClearCacheCmd implements Command {
-  name = 'clear-cache';
-  description = 'remove cached data to resolve stale data issues';
-  group = 'system';
+  name = clearCacheCommand.name;
+  description = clearCacheCommand.description;
+  group = clearCacheCommand.group;
   extendedDescription: string;
-  alias = 'cc';
-  options = [['r', 'remote <remote-name>', 'clear memory cache from a remote scope']] as CommandOptions;
-  loader = false;
-  skipWorkspace = true;
-  helpUrl = 'reference/workspace/clearing-cache';
+  alias = clearCacheCommand.alias;
+  options = clearCacheCommand.options;
+  loader = clearCacheCommand.loader;
+  skipWorkspace = clearCacheCommand.skipWorkspace;
+  helpUrl = clearCacheCommand.helpUrl;
 
   constructor(private clearCache: ClearCacheMain) {
     this.extendedDescription = `clears various caches that Bit uses to improve performance. useful when experiencing stale data issues or
