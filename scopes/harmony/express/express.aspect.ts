@@ -1,7 +1,6 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../harmony/aspect';
 
 export const ExpressAspect = Aspect.create({
   id: 'teambit.harmony/express',
-  dependencies: [],
-  defaultConfig: {},
+  runtimes: { main: () => import('./express.main.runtime') },
 });

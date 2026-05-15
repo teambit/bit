@@ -1,7 +1,6 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../harmony/aspect';
 
 export const CacheAspect = Aspect.create({
   id: 'teambit.harmony/cache',
-  dependencies: [],
-  defaultConfig: {},
+  runtimes: { main: () => import('./cache.main.runtime') },
 });
