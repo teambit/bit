@@ -208,7 +208,7 @@
     "babel/bit-react-transformer": {
         "name": "babel/bit-react-transformer",
         "scope": "teambit.react",
-        "version": "1.0.47",
+        "version": "1.0.48",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/bit-react-transformer"
     },
@@ -1013,7 +1013,7 @@
     "modules/component-url": {
         "name": "modules/component-url",
         "scope": "teambit.component",
-        "version": "0.0.187",
+        "version": "0.0.188",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-url"
     },
@@ -1027,7 +1027,7 @@
     "modules/config-mutator": {
         "name": "modules/config-mutator",
         "scope": "teambit.webpack",
-        "version": "0.0.176",
+        "version": "0.0.177",
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/config-mutator"
     },
@@ -1909,16 +1909,9 @@
     "ui/highlighter-provider": {
         "name": "ui/highlighter-provider",
         "scope": "teambit.react",
-        "version": "0.0.220",
+        "version": "0.0.221",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/highlighter-provider"
-    },
-    "ui/highlighter/component-metadata/bit-component-meta": {
-        "name": "ui/highlighter/component-metadata/bit-component-meta",
-        "scope": "teambit.react",
-        "version": "0.0.43",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/bit-component-meta"
     },
     "ui/hooks/scope-context": {
         "name": "ui/hooks/scope-context",
