@@ -48,6 +48,32 @@ function trace(event: string): void {
   process.stderr.write(`[trace +${dt}ms] ${event}\n`);
 }
 
+// Recursive no-op proxy. Used as the placeholder value for "optional" /
+// lazy aspect deps. Any property access returns another no-op proxy;
+// any call returns undefined. So unconditional caller code like
+//   graphql.register(...)
+//   ui.registerUiRoot(...)
+//   ui.registerPreStart(async () => { ... })
+//   ui.getUIServer()
+//   bundler.addNewDevServers(...)
+// all silently no-op without throwing, and the eventual return value is
+// `undefined` (which `if (!x)` style guards already handle).
+function makeNoopProxy(): any {
+  const target: any = function () { return undefined; };
+  return new Proxy(target, {
+    get(_t, prop) {
+      // Pretend not to be a thenable so `await noop` short-circuits.
+      if (prop === 'then') return undefined;
+      // `pubsub.publish(...)` and similar nested-method calls work via
+      // the recursive proxy.
+      return makeNoopProxy();
+    },
+    apply() { return undefined; },
+    has() { return false; },
+    set() { return true; },
+  });
+}
+
 // Minimal shim matching @teambit/harmony/config/config.ts so providers that
 // read `harmony.config.raw.get(...)` keep working under lazy resolve.
 class LazyConfig {
@@ -78,18 +104,31 @@ export class Harmony {
   readonly instances: Map<string, any>;
   readonly loading: Map<string, Promise<any>>;
   readonly slots: Map<string, Slot<any>>;
+  // Aspect ids that should NOT be eagerly resolved as part of another
+  // aspect's `static dependencies` walk. The dep slot is filled with
+  // `undefined`; providers are expected to guard with `if (graphql) ...`.
+  // Mainly used to keep heavy UI / GraphQL / bundler hosts out of the CLI
+  // hot path. If a caller explicitly `harmony.resolve(id)`s one of these
+  // (or it's in `rootAspects`), it resolves normally and subsequent
+  // provider injections see the real instance.
+  readonly lazyAspectIds: Set<string>;
   // The aspect id whose provider is currently being invoked. Read by
   // SlotRegistry.registerFn (built from legacy `Slot.withType<T>()`) to key
   // entries by aspect.
   current: string | null = null;
 
-  constructor(runtimeName: string, config?: Record<string, any> | LazyConfig) {
+  constructor(
+    runtimeName: string,
+    config?: Record<string, any> | LazyConfig,
+    lazyAspectIds: Iterable<string> = [],
+  ) {
     this.runtimeName = runtimeName;
     this.config = config instanceof LazyConfig ? config : new LazyConfig(config || {});
     this.manifests = new Map();
     this.instances = new Map();
     this.loading = new Map();
     this.slots = new Map();
+    this.lazyAspectIds = new Set(lazyAspectIds);
   }
 
   // `roots` are resolved immediately. `manifests` are just registered (cheap)
@@ -99,8 +138,9 @@ export class Harmony {
     runtimeName: string = 'main',
     config: Record<string, unknown> = {},
     manifestOnly: Aspect[] = [],
+    lazyAspectIds: Iterable<string> = [],
   ): Promise<Harmony> {
-    const h = new Harmony(runtimeName, config);
+    const h = new Harmony(runtimeName, config, lazyAspectIds);
     for (const a of [...rootAspects, ...manifestOnly]) h.registerManifestTransitive(a);
     await Promise.all(rootAspects.map((a) => h.resolve(a.id)));
     return h;
@@ -149,7 +189,21 @@ export class Harmony {
     }
 
     const deps = await Promise.all(
-      (runtimeClass.dependencies || []).map((d) => this.resolve(d.id)),
+      (runtimeClass.dependencies || []).map((d) => {
+        // Lazy / "optional" deps: don't trigger eager resolution. If
+        // they've already been resolved (or are mid-resolve) by someone
+        // else, hand back that instance. Otherwise hand back a recursive
+        // no-op proxy so unconditional caller code like
+        // `graphql.register(...)` / `ui.registerUiRoot(...)` becomes a
+        // silent no-op for CLI commands that don't actually need the
+        // graphql / UI server.
+        if (this.lazyAspectIds.has(d.id)) {
+          if (this.instances.has(d.id)) return this.instances.get(d.id);
+          if (this.loading.has(d.id)) return this.loading.get(d.id);
+          return makeNoopProxy();
+        }
+        return this.resolve(d.id);
+      }),
     );
 
     // `runtimeClass.slots` is a list of legacy `Slot.withType<T>()` providers —

@@ -298,6 +298,58 @@ export async function loadBit(path = process.cwd(), additionalAspects?: Aspect[]
   if (shouldRunAsDaemon()) {
     logger.isDaemon = true;
   }
+  // UI / GraphQL / Bundler / Builder are the four heaviest aspects and are
+  // pulled in transitively by ~15 different aspect providers (most of which
+  // only call `graphql.register(...)` / `ui.registerUiRoot(...)` once and
+  // never again). Without the eager-skip below, those providers force
+  // every CLI command to load apollo, react, webpack, etc. — even
+  // commands that have nothing to do with the UI server. The skip flag
+  // tells LazyHarmony to deliver `undefined` for these as DI deps; their
+  // hosts get loaded only when something explicitly resolves them (in
+  // `bit start` / `bit run`, see the entered-command check below).
+  //
+  // Providers that consume one of these MUST guard with `if (graphql) ...`.
+  // The aspect-host's own binder (e.g. `workspace-ui-binder`) is responsible
+  // for the actual registrations under start/UI flows.
+  // Aspects that other providers declare as `static dependencies` but never
+  // really need on the CLI hot path. We hand them out as no-op proxies in
+  // DI; callers like `graphql.register(...)` silently no-op. The aspect
+  // is still resolvable via `harmony.resolve(id)` (which is what the
+  // lazy-dispatch trampoline does for the actual entered command), so
+  // `bit start` / `bit compile` / etc. get the real instance via the
+  // `HEAVY_COMMANDS` opt-out below.
+  const HEAVY_HOSTS = [
+    // The original four — they only matter for UI / start / build flows.
+    'teambit.harmony/graphql',
+    'teambit.ui-foundation/ui',
+    'teambit.compilation/bundler',
+    'teambit.pipelines/builder',
+    // Heavy aspects pulled in transitively by many providers but only
+    // really needed for their own commands.
+    'teambit.compilation/compiler',
+    'teambit.defender/tester',
+    'teambit.harmony/application',
+  ];
+  // Commands that need one of the heavy hosts at runtime opt OUT of the
+  // lazy skip so DI hands back the real instance. Status / list / install
+  // -- the bench-dominant cases -- stay lazy.
+  const HEAVY_COMMANDS = new Set([
+    'start',
+    'run',
+    'build',
+    'tag',
+    'snap',
+    'export',
+    'compile',
+    'test',
+    'preview',
+    'ui-build',
+    'serve-preview',
+    'generate-preview',
+  ]);
+  const entered = process.argv[2];
+  const wantsHeavyHosts = entered && HEAVY_COMMANDS.has(entered);
+  const lazyAspectIds = wantsHeavyHosts ? [] : HEAVY_HOSTS;
   const harmony = isLazy
     ? await (LazyHarmony.load(
         aspectsToLoad,
@@ -305,6 +357,7 @@ export async function loadBit(path = process.cwd(), additionalAspects?: Aspect[]
         configMap,
         // Manifests only — registered for later lazy resolution, no provider call.
         [BitAspect, ...Object.values(manifestsMap)],
+        lazyAspectIds,
       ) as any)
     : await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
 
