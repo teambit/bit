@@ -142,6 +142,24 @@ export class Harmony {
     }
     return this.slots.get(type) as Slot<T>;
   }
+
+  async loadExternalAspect(manifestPath: string): Promise<unknown> {
+    trace(`loading external aspect from ${manifestPath}`);
+    const aspectMod = await import(manifestPath);
+    const aspect = pickAspectExport(aspectMod);
+    if (!aspect) throw new Error(`No Aspect export found in ${manifestPath}`);
+
+    this.registerManifestTransitive(aspect);
+    return this.resolve(aspect.id);
+  }
+}
+
+export function pickAspectExport(mod: any): Aspect | null {
+  if (mod.default instanceof Aspect) return mod.default;
+  for (const key of Object.keys(mod)) {
+    if (mod[key] instanceof Aspect) return mod[key];
+  }
+  return null;
 }
 
 export function pickRuntimeExport(mod: Record<string, unknown>): RuntimeClass | null {

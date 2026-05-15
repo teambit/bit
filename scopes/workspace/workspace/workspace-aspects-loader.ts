@@ -490,32 +490,8 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       const component = aspectDef.component;
       if (!component) return undefined;
       const requireFunc = async () => {
-        // Honor the workspace's scope-trust hook (registered on ScopeMain).
-        // Workspace and scope-aspects-loader take parallel require paths.
-        const guard = this.scope.getAspectLoadGuard();
-        if (guard) await guard(component.id);
-
-        const plugins = this.aspectLoader.getPlugins(component, localPath);
-        if (plugins.has()) {
-          return plugins.load(MainRuntime.name);
-        }
-
-        const isModule = await this.aspectLoader.isEsmModule(localPath);
-
-        const aspect = !isModule
-          ? // eslint-disable-next-line global-require, import/no-dynamic-require
-            require(localPath)
-          : // : await this.aspectLoader.loadEsm(join(localPath, 'dist', 'index.js'));
-            await this.aspectLoader.loadEsm(localPath);
-
-        // require aspect runtimes
-        const runtimePath = await this.aspectLoader.getRuntimePath(component, localPath, MainRuntime.name);
-        if (runtimePath) {
-          if (isModule) await this.aspectLoader.loadEsm(runtimePath);
-          // eslint-disable-next-line global-require, import/no-dynamic-require
-          require(runtimePath);
-        }
-        return aspect;
+        // Delegate to the new Harmony lazy-loader.
+        return this.harmony.loadExternalAspect(localPath);
       };
       return new RequireableComponent(component, requireFunc);
     });
