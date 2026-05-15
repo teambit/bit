@@ -1,8 +1,6 @@
 import fs from 'fs-extra';
 import camelCase from 'camelcase';
 import { resolve } from 'path';
-import type { GraphqlMain } from '@teambit/graphql';
-import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
 import { MainRuntime } from '@teambit/cli';
@@ -42,7 +40,6 @@ import { GeneratorAspect } from './generator.aspect';
 import type { CreateOptions } from './create.cmd';
 import { CreateCmd } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
-import { generatorSchema } from './generator.graphql';
 import type { GenerateResult, InstallOptions, OnComponentCreateFn } from './component-generator';
 import { ComponentGenerator } from './component-generator';
 import { WorkspaceGenerator } from './workspace-generator';
@@ -695,7 +692,6 @@ the reason is that after refactoring, the code will have this invalid class: "cl
   static dependencies = [
     WorkspaceAspect,
     CLIAspect,
-    GraphqlAspect,
     EnvsAspect,
     AspectLoaderAspect,
     NewComponentHelperAspect,
@@ -713,7 +709,6 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     [
       workspace,
       cli,
-      graphql,
       envs,
       aspectLoader,
       newComponentHelper,
@@ -726,7 +721,6 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     ]: [
       Workspace,
       CLIMain,
-      GraphqlMain,
       EnvsMain,
       AspectLoaderMain,
       NewComponentHelperMain,
@@ -769,7 +763,8 @@ the reason is that after refactoring, the code will have this invalid class: "cl
 
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);
-    graphql.register(() => generatorSchema(generator));
+    // graphql.register(() => generatorSchema(generator)) moved to
+    // generator-graphql-binder
     aspectLoader.registerPlugins([new StarterPlugin(generator)]);
     envs.registerService(new GeneratorService());
 

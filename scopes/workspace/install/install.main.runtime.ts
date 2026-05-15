@@ -65,10 +65,6 @@ import { snapToSemver } from '@teambit/component-package-version';
 import type { AspectDefinition, AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader/dist/aspect-loader.aspect.js';
 import hash from 'object-hash';
-import type { BundlerMain } from '@teambit/bundler';
-import { BundlerAspect } from '@teambit/bundler/dist/bundler.aspect.js';
-import type { UiMain } from '@teambit/ui';
-import { UIAspect } from '@teambit/ui/dist/ui.aspect.js';
 import { EXTERNAL_PM_POSTINSTALL_SCRIPT } from '@teambit/host-initializer';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
@@ -1385,8 +1381,6 @@ export class InstallMain {
     GeneratorAspect,
     WorkspaceConfigFilesAspect,
     AspectLoaderAspect,
-    BundlerAspect,
-    UIAspect,
   ];
 
   static runtime = MainRuntime;
@@ -1406,8 +1400,6 @@ export class InstallMain {
       generator,
       wsConfigFiles,
       aspectLoader,
-      bundler,
-      ui,
     ]: [
       DependencyResolverMain,
       Workspace,
@@ -1422,8 +1414,6 @@ export class InstallMain {
       GeneratorMain,
       WorkspaceConfigFilesMain,
       AspectLoaderMain,
-      BundlerMain,
-      UiMain,
     ],
     _,
     [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot],
@@ -1471,13 +1461,9 @@ export class InstallMain {
       workspace.registerOnComponentChange(installExt.onComponentChange.bind(installExt));
     }
 
-    installExt.registerPostInstall(async () => {
-      if (!ui.getUIServer()) {
-        return;
-      }
-      const components = await workspace.list();
-      await bundler.addNewDevServers(components);
-    });
+    // registerPostInstall(...) that touches ui.getUIServer() + bundler
+    // moved to install-ui-binder so this provider doesn't drag in those
+    // deps for CLI commands.
     cli.register(...commands);
     return installExt;
   }

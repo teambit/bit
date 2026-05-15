@@ -7,6 +7,7 @@ import { CacheAspect } from '@teambit/cache/dist/cache.aspect.js';
 import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
 import { CompilerAspect } from '@teambit/compiler/dist/compiler.aspect.js';
 import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
+import { ComponentGraphqlBinderAspect } from '@teambit/component-graphql-binder/dist/component-graphql-binder.aspect.js';
 import { CompositionsAspect } from '@teambit/compositions/dist/compositions.aspect.js';
 import { ConfigAspect } from '@teambit/config/dist/config.aspect.js';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver/dist/dependency-resolver.aspect.js';
@@ -18,6 +19,7 @@ import { EnvAspect } from '@teambit/env/dist/env.aspect.js';
 import { ExpressAspect } from '@teambit/express/dist/express.aspect.js';
 import { YarnAspect } from '@teambit/yarn/dist/yarn.aspect.js';
 import { GeneratorAspect } from '@teambit/generator/dist/generator.aspect.js';
+import { GeneratorGraphqlBinderAspect } from '@teambit/generator-graphql-binder/dist/generator-graphql-binder.aspect.js';
 import { HarmonyUiAppAspect } from '@teambit/harmony-ui-app/dist/harmony-ui-app.aspect.js';
 import { GraphAspect } from '@teambit/graph/dist/graph.aspect.js';
 import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
@@ -51,6 +53,7 @@ import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
 import { WorkspaceUiBinderAspect } from '@teambit/workspace-ui-binder/dist/workspace-ui-binder.aspect.js';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files/dist/workspace-config-files.aspect.js';
 import { InstallAspect } from '@teambit/install/dist/install.aspect.js';
+import { InstallUiBinderAspect } from '@teambit/install-ui-binder/dist/install-ui-binder.aspect.js';
 import { LinterAspect } from '@teambit/linter/dist/linter.aspect.js';
 import { FormatterAspect } from '@teambit/formatter/dist/formatter.aspect.js';
 import { ValidatorAspect } from '@teambit/validator/dist/validator.aspect.js';
@@ -133,6 +136,7 @@ export const manifestsMap = {
   [WorkspaceUiBinderAspect.id]: WorkspaceUiBinderAspect,
   [WorkspaceConfigFilesAspect.id]: WorkspaceConfigFilesAspect,
   [InstallAspect.id]: InstallAspect,
+  [InstallUiBinderAspect.id]: InstallUiBinderAspect,
   [ESLintAspect.id]: ESLintAspect,
   [PrettierAspect.id]: PrettierAspect,
   [CompilerAspect.id]: CompilerAspect,
@@ -140,6 +144,7 @@ export const manifestsMap = {
   [FormatterAspect.id]: FormatterAspect,
   [ValidatorAspect.id]: ValidatorAspect,
   [ComponentAspect.id]: ComponentAspect,
+  [ComponentGraphqlBinderAspect.id]: ComponentGraphqlBinderAspect,
   [MDXAspect.id]: MDXAspect,
   [ReadmeAspect.id]: ReadmeAspect,
   [PreviewAspect.id]: PreviewAspect,
@@ -153,6 +158,7 @@ export const manifestsMap = {
   [MultiCompilerAspect.id]: MultiCompilerAspect,
   [UIAspect.id]: UIAspect,
   [GeneratorAspect.id]: GeneratorAspect,
+  [GeneratorGraphqlBinderAspect.id]: GeneratorGraphqlBinderAspect,
   [EnvsAspect.id]: EnvsAspect,
   [EnvsGraphqlBinderAspect.id]: EnvsGraphqlBinderAspect,
   [EnvAspect.id]: EnvAspect,

@@ -3,8 +3,6 @@ import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
 import { MainRuntime } from '@teambit/cli';
 import type { ExpressMain, Route } from '@teambit/express';
 import { ExpressAspect } from '@teambit/express/dist/express.aspect.js';
-import type { GraphqlMain } from '@teambit/graphql';
-import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { ComponentID } from '@teambit/component-id';
@@ -15,7 +13,6 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
-import { componentSchema } from './component.graphql';
 import type { RegisteredComponentRoute } from './component.route';
 import { ComponentRoute } from './component.route';
 import { AspectList } from './aspect-list';
@@ -163,10 +160,10 @@ export class ComponentMain {
   static slots = [Slot.withType<ComponentFactory>(), Slot.withType<Route[]>(), Slot.withType<ShowFragment[]>()];
 
   static runtime = MainRuntime;
-  static dependencies = [GraphqlAspect, ExpressAspect, CLIAspect, LoggerAspect];
+  static dependencies = [ExpressAspect, CLIAspect, LoggerAspect];
 
   static async provider(
-    [graphql, express, cli, loggerMain]: [GraphqlMain, ExpressMain, CLIMain, LoggerMain],
+    [express, cli, loggerMain]: [ExpressMain, CLIMain, LoggerMain],
     config,
     [hostSlot, showFragmentSlot]: [ComponentHostSlot, ShowFragmentSlot]
   ) {
@@ -183,8 +180,8 @@ export class ComponentMain {
       new FilesFragment(),
       new ExtensionsFragment(),
     ]);
-    graphql.register(() => componentSchema(componentExtension));
-
+    // graphql.register(() => componentSchema(...)) moved to
+    // component-graphql-binder
     return componentExtension;
   }
 }

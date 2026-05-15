@@ -367,6 +367,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component"
     },
+    "component-graphql-binder": {
+        "name": "component-graphql-binder",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-graphql-binder"
+    },
     "component-compare": {
         "name": "component-compare",
         "scope": "teambit.component",
@@ -754,6 +762,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/generator/generator"
     },
+    "generator-graphql-binder": {
+        "name": "generator-graphql-binder",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.generator",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/generator/generator-graphql-binder"
+    },
     "get-bit-version": {
         "name": "get-bit-version",
         "scope": "teambit.bit",
@@ -879,6 +895,14 @@
         "version": "1.0.986",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/install"
+    },
+    "install-ui-binder": {
+        "name": "install-ui-binder",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/install-ui-binder"
     },
     "ipc-events": {
         "name": "ipc-events",
