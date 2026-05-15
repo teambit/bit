@@ -125,6 +125,82 @@ function stubAssetsPlugin() {
   };
 }
 
+// Browser-only files that should never end up in the Node-CLI bundle. We
+// stub them to empty modules so Rollup's static graph walk doesn't error
+// on missing exports inside UI-only files (e.g. b808f4cf5's WIP
+// barrel-split removed `ComponentModel` from the component barrel, but
+// some UI-only callers still import it — those callers never load on
+// the CLI path at runtime, but Rollup's static analysis doesn't know
+// that and errors).
+//
+// The aspect's UI runtime is genuinely UI-only — it's only loaded when
+// `bit start` runs and the harmony resolver calls `aspect.runtimes.ui()`.
+// In the Node bundle we never need it.
+// Path-based UI patterns: anything matching is always-UI and stubbed.
+const UI_FILE_PATTERNS = [
+  // UI runtime files of any aspect.
+  /\.ui\.runtime\.[mc]?[jt]sx?$/,
+  /\.preview\.runtime\.[mc]?[jt]sx?$/,
+  /\.compositions\.[mc]?[jt]sx?$/,
+  /\.docs\.[mc]?[jt]sx?$/,
+  // Browser-only @teambit packages identified by their package name
+  // segment: `.ui.`, `.compositions.`, etc.
+  /^@teambit\/[\w.-]+\.ui\./,
+  /^@teambit\/[\w.-]+\.compositions\./,
+  /^@teambit\/[\w.-]+\.docs\./,
+  // UI-only repo paths.
+  /\/components\/ui\//,
+  /\/components\/hooks\//,
+  /\/components\/lanes\/ui\//,
+];
+
+// Content-based detection for `.tsx` files. Many aspects have `.tsx`
+// files that aren't UI runtimes but are React components (e.g.
+// `scopes/api-reference/api-reference/api-compare.tsx`). Conversely
+// some `.tsx` files are non-UI (e.g. `bundler.service.tsx` is a class
+// with no JSX). Decide by inspecting imports: if the file imports
+// `react` / `react-dom` / `@teambit/*.ui.*`, treat it as UI.
+const UI_IMPORT_RE = /from\s+['"](react|react-dom|@apollo\/client|@teambit\/[\w.-]+\.ui\.|@teambit\/[\w.-]+\.compositions\.)/m;
+
+function isUiPathOnly(id) {
+  return UI_FILE_PATTERNS.some((re) => re.test(id));
+}
+
+function stubUiFilesPlugin() {
+  // Path-cache to avoid re-reading files.
+  const uiByPath = new Map();
+  function isUiContent(id, src) {
+    if (uiByPath.has(id)) return uiByPath.get(id);
+    const ui = UI_IMPORT_RE.test(src);
+    uiByPath.set(id, ui);
+    return ui;
+  }
+  // The stub uses `syntheticNamedExports` so non-UI files that destructure
+  // a stubbed module — e.g. `import { noPreview } from '...static-error'`
+  // — still resolve. Each named import gets `undefined`. At runtime
+  // those imports never execute on the CLI path (they're inside
+  // express middleware / UI server code).
+  const STUB = { code: 'export default {};', syntheticNamedExports: 'default', moduleSideEffects: false };
+  return {
+    name: 'stub-ui-files',
+    resolveId(source) {
+      if (isUiPathOnly(source)) {
+        return { id: source, external: false, moduleSideEffects: false };
+      }
+      return null;
+    },
+    load(id) {
+      if (isUiPathOnly(id)) return STUB;
+      if (/\.tsx$/.test(id)) {
+        let src;
+        try { src = readFileSync(id, 'utf8'); } catch { return null; }
+        if (isUiContent(id, src)) return STUB;
+      }
+      return null;
+    },
+  };
+}
+
 function redirectDirectAspectImports() {
   // `scripts/codemod-aspect-imports.mjs` rewrote source imports to use the
   // compiled-JS subpath `@teambit/<pkg>/dist/<name>.aspect.js`. That's
@@ -180,19 +256,8 @@ async function build() {
   mkdirSync(OUT_DIR, { recursive: true });
 
   const plugins = [
-    // `scripts/codemod-aspect-imports.mjs` rewrote
-    //   `import { XAspect } from '@teambit/x'`
-    // to
-    //   `import { XAspect } from '@teambit/x/dist/x.aspect.js'`
-    // across ~170 source files. That direct-subpath import is great for
-    // unbundled runtime (skips the heavy barrel index.ts) but it points at
-    // the babel-compiled JS, where `() => import('./x.main.runtime')` has
-    // already been rewritten to `() => Promise.resolve().then(() => require(...))`.
-    // Rollup doesn't recognise that as a dynamic-import boundary, so the
-    // build emits 0 chunks. Redirect those subpath imports back to the
-    // barrel here so nodeResolve can follow the `source` field to the
-    // original TS where the dynamic-import thunk is still recognisable.
     redirectDirectAspectImports(),
+    stubUiFilesPlugin(),
     stubAssetsPlugin(),
     nodeResolve({
       exportConditions: ['node', 'source', 'import', 'require', 'default'],

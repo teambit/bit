@@ -202,26 +202,53 @@ can ship:
   (no unbundled regression) but Rollup recognises them as code-split
   boundaries.
 
-- **Open blocker**: the bundle build currently fails on missing exports
-  from commit `b808f4cf5` ("split UI value re-exports out of aspect
-  index barrels"). Rollup's static analysis follows
-  `import { ComponentModel } from '@teambit/component'` in UI-only files
-  like `components/ui/models/lanes-model/lanes-model.ts` and errors
-  because `ComponentModel` is no longer exported from the component
-  barrel. Unbundled runtime never reaches those files (CLI commands
-  don't load UI runtimes) so the b808f4cf5 work is correct — but the
-  bundle's static graph walk doesn't know that.
+- **Externalize-UI plugin (landed)**: `stubUiFilesPlugin()` in
+  `build-publish-bundle.mjs` stubs UI files to empty modules so
+  Rollup's static graph walk doesn't follow them. Matches:
+   - UI runtime files: `*.ui.runtime.*`, `*.preview.runtime.*`,
+     `*.compositions.*`, `*.docs.*`
+   - Browser-only @teambit subpackages: `@teambit/*.ui.*`,
+     `@teambit/*.compositions.*`, `@teambit/*.docs.*`
+   - UI-only repo paths: `components/ui/**`, `components/hooks/**`,
+     `components/lanes/ui/**`
+   - `.tsx` files whose content imports `react`, `react-dom`,
+     `@apollo/client`, or a `@teambit/*.ui.*` / `@teambit/*.compositions.*`
+     subpackage — covers UI components living inside aspect dirs
+     (e.g. `scopes/api-reference/api-reference/api-compare.tsx`)
+     without false-positive-stubbing the rare non-UI `.tsx` files
+     (e.g. `bundler.service.tsx` is a class with no JSX).
+  Stubs use `syntheticNamedExports: 'default'` so non-UI files that
+  destructure named imports from a stubbed UI module — e.g.
+  `import { noPreview } from '@teambit/ui-foundation.ui.pages.static-error'`
+  in `artifact-file-middleware.ts` — still resolve; the named values
+  are `undefined` at runtime but those code paths are never on the
+  CLI hot path.
 
-  Two ways to unblock:
-   1. Add an `externalize-ui` plugin to `build-publish-bundle.mjs` that
-      marks `components/ui/**` and `scopes/*/*.ui.runtime.*` external.
-      Node entry wouldn't carry browser code at all; UI code loads from
-      `node_modules` on demand when `bit start` resolves it. Right shape
-      for a Node-CLI publish artifact.
-   2. Re-export the moved symbols from the barrels via `.ts` re-export
-      shims. Less invasive but partly undoes b808f4cf5.
+  Result: the bundle now **builds** successfully and emits **144
+  chunks** (one per non-stubbed `*.main.runtime.ts`) with a 48.9 KB
+  entry (down from 121 KB).
 
-  Option 1 is the right fit. Skipped here because the `bin/bit.js` swap
-  is a separate question (the bundle isn't on the runtime path yet) and
-  the `lazyAspectIds` work in `scopes/harmony/core/harmony.ts` already
-  captures the bulk of the bench win bundling was meant to deliver.
+- **Next open blocker (different layer)**: the bundle builds but the
+  emitted output has a runtime CJS-ESM interop bug. Running
+  `node dist/bundle/bit.mjs --version` crashes with
+  `TypeError: Cannot read properties of undefined (reading 'BitError')`
+  inside `chunks/runtime-config-*.mjs`. The chunk imports
+  `distExports` from `chunks/runtime-environments-*.mjs` (the shared
+  vendor chunk) and uses `distExports.BitError`, but `distExports`
+  is undefined at the point of access. This is `@rollup/plugin-commonjs`
+  wrapping `@teambit/bit-error`'s CJS exports in a way that doesn't
+  expose `BitError` as a property of the namespace.
+
+  Likely fixes (untried):
+   1. Adjust the commonjs plugin options to use
+      `transformMixedEsModules: true` more aggressively or
+      `requireReturnsDefault: 'auto'`.
+   2. Externalize `@teambit/bit-error` (and similar legacy-CJS
+      packages) so the bundle does a runtime `require('@teambit/bit-error')`
+      and gets the real CJS namespace.
+   3. Migrate `@teambit/bit-error` to ESM (Slice 9).
+
+  The bundle isn't wired into `bin/bit.js` yet so this doesn't affect
+  runtime today — the source path through `dist/app.js` is unchanged.
+  But anyone re-enabling the bundle as the runtime entry needs to
+  fix this first.
