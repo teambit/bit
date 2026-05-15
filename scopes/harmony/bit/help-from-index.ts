@@ -161,3 +161,49 @@ export function isStandaloneHelp(argv: string[]): boolean {
 export function showInternalRequested(argv: string[]): boolean {
   return argv.slice(2).some((a) => a === '--internal');
 }
+
+/**
+ * Returns true when argv represents a standalone `bit --version` / `bit -v`
+ * invocation. No aspect needs to load; the version string is in
+ * `@teambit/bit.get-bit-version`.
+ */
+export function isStandaloneVersion(argv: string[]): boolean {
+  const userArgs = argv.slice(2);
+  if (userArgs.length === 0) return false;
+  const hasVersionFlag = userArgs.some((a) => a === '--version' || a === '-v');
+  if (!hasVersionFlag) return false;
+  const firstPositional = userArgs.find((a) => !a.startsWith('-'));
+  return !firstPositional;
+}
+
+/**
+ * Returns the first positional argument (the entered command name), or
+ * undefined if argv has no positional. Server-mode handshakes
+ * (`server-forever`) and yargs-completion are also "no command" cases.
+ */
+export function enteredCommandName(argv: string[]): string | undefined {
+  const userArgs = argv.slice(2);
+  for (const a of userArgs) {
+    if (a === '--') return undefined;
+    if (!a.startsWith('-')) return a;
+  }
+  return undefined;
+}
+
+/**
+ * Build the set of every command name + alias known to the static
+ * `COMMAND_INDEX`, including all sub-command names. Used to short-circuit
+ * the "unknown command" case before paying the bootstrap cost.
+ */
+export function buildKnownNameSet(index: { name: string; alias?: string; subCommands?: any[] }[]): Set<string> {
+  const out = new Set<string>();
+  const walk = (entries: any[]) => {
+    for (const e of entries) {
+      if (e?.name) out.add(String(e.name).split(' ')[0]);
+      if (e?.alias) out.add(String(e.alias));
+      if (Array.isArray(e?.subCommands)) walk(e.subCommands);
+    }
+  };
+  walk(index);
+  return out;
+}

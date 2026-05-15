@@ -9,7 +9,14 @@ gracefulFs.gracefulify(fs);
 
 import type { Aspect } from '@teambit/harmony';
 import { COMMAND_INDEX } from './command-index.generated';
-import { formatHelpFromIndex, isStandaloneHelp, showInternalRequested } from './help-from-index';
+import {
+  buildKnownNameSet,
+  enteredCommandName,
+  formatHelpFromIndex,
+  isStandaloneHelp,
+  isStandaloneVersion,
+  showInternalRequested,
+} from './help-from-index';
 
 /**
  * run bit cli tool
@@ -27,6 +34,37 @@ export async function runBit(additionalAspects?: Aspect[]) {
   if (isStandaloneHelp(process.argv) && COMMAND_INDEX.length > 0) {
     process.stdout.write(`${formatHelpFromIndex(COMMAND_INDEX, showInternalRequested(process.argv))}\n`);
     process.exit(0);
+  }
+  // Same trick for `bit --version` — read the version string directly without
+  // touching aspects.
+  if (isStandaloneVersion(process.argv)) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
+    const { getBitVersion } = require('@teambit/bit.get-bit-version');
+    process.stdout.write(`${getBitVersion()}\n`);
+    process.exit(0);
+  }
+  // And for unknown commands: if the entered command isn't in the static
+  // index, no aspect can ever register it. Print the familiar suggestion
+  // line and exit 1 without booting Harmony.
+  if (COMMAND_INDEX.length > 0) {
+    const entered = enteredCommandName(process.argv);
+    if (entered && entered !== 'server-forever' && !process.argv.includes('--get-yargs-completions')) {
+      const known = buildKnownNameSet(COMMAND_INDEX);
+      if (!known.has(entered)) {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
+        const chalk = require('chalk');
+        const allNames = [...known];
+        // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
+        const didYouMean = require('didyoumean');
+        didYouMean.returnFirstMatch = true;
+        const suggestion = didYouMean(entered, allNames);
+        const tail = suggestion
+          ? `\nDid you mean ${chalk.bold(Array.isArray(suggestion) ? suggestion[0] : suggestion)}?`
+          : "\nsee 'bit help' for additional information.";
+        process.stderr.write(`warning: '${chalk.bold(entered)}' is not a valid command.${tail}\n`);
+        process.exit(1);
+      }
+    }
   }
 
   // Lazy: only load these once we know we're going to actually run a command.
