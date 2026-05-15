@@ -1,7 +1,6 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../harmony/aspect';
 
 export const LoggerAspect = Aspect.create({
   id: 'teambit.harmony/logger',
-  dependencies: [],
-  defaultConfig: {},
+  runtimes: { main: () => import('./logger.main.runtime') },
 });
