@@ -16,8 +16,6 @@ import type { RequireableComponent } from '@teambit/harmony.modules.requireable-
 import { replaceFileExtToJs } from '@teambit/compilation.modules.babel-compiler';
 import type { EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
-import type { GraphqlMain } from '@teambit/graphql';
-import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
 import mapSeries from 'p-map-series';
 import { difference, compact, flatten, intersection, uniqBy, some, isEmpty, isObject } from 'lodash';
 import type { AspectDefinitionProps } from './aspect-definition';
@@ -29,7 +27,6 @@ import { isEsmModule } from './is-esm-module';
 import { CannotLoadExtension } from './exceptions';
 import { getAspectDef, getCoreAspectPackageName } from './core-aspects';
 import { Plugins } from './plugins';
-import { aspectLoaderSchema } from './aspect-loader.graphql';
 
 export type PluginDefinitionSlot = SlotRegistry<PluginDefinition[]>;
 
@@ -856,7 +853,7 @@ export class AspectLoaderMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [LoggerAspect, EnvsAspect, GraphqlAspect];
+  static dependencies = [LoggerAspect, EnvsAspect];
   static slots = [
     Slot.withType<OnAspectLoadError>(),
     Slot.withType<OnLoadRequireableExtension>(),
@@ -864,7 +861,7 @@ export class AspectLoaderMain {
   ];
 
   static async provider(
-    [loggerExt, envs, graphql]: [LoggerMain, EnvsMain, GraphqlMain],
+    [loggerExt, envs]: [LoggerMain, EnvsMain],
     config,
     [onAspectLoadErrorSlot, onLoadRequireableExtensionSlot, pluginSlot]: [
       OnAspectLoadErrorSlot,
@@ -883,7 +880,8 @@ export class AspectLoaderMain {
       pluginSlot
     );
 
-    graphql.register(() => aspectLoaderSchema(aspectLoader));
+    // graphql.register(() => aspectLoaderSchema(aspectLoader)) moved to
+    // aspect-loader-graphql-binder
     aspectLoader.registerPlugins([envs.getEnvPlugin()]);
 
     return aspectLoader;

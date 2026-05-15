@@ -1,5 +1,6 @@
 import { AspectAspect } from '@teambit/aspect/dist/aspect.aspect.js';
 import { AspectLoaderAspect } from '@teambit/aspect-loader/dist/aspect-loader.aspect.js';
+import { AspectLoaderGraphqlBinderAspect } from '@teambit/aspect-loader-graphql-binder/dist/aspect-loader-graphql-binder.aspect.js';
 import { BuilderAspect } from '@teambit/builder/dist/builder.aspect.js';
 import { BundlerAspect } from '@teambit/bundler/dist/bundler.aspect.js';
 import { CacheAspect } from '@teambit/cache/dist/cache.aspect.js';
@@ -12,6 +13,7 @@ import { DependencyResolverAspect } from '@teambit/dependency-resolver/dist/depe
 import { DeprecationAspect } from '@teambit/deprecation/dist/deprecation.aspect.js';
 import { DocsAspect } from '@teambit/docs/dist/docs.aspect.js';
 import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
+import { EnvsGraphqlBinderAspect } from '@teambit/envs-graphql-binder/dist/envs-graphql-binder.aspect.js';
 import { EnvAspect } from '@teambit/env/dist/env.aspect.js';
 import { ExpressAspect } from '@teambit/express/dist/express.aspect.js';
 import { YarnAspect } from '@teambit/yarn/dist/yarn.aspect.js';
@@ -36,6 +38,7 @@ import { ReactRouterAspect } from '@teambit/react-router/dist/react-router.aspec
 import { SchemaAspect } from '@teambit/schema/dist/schema.aspect.js';
 import { PubsubAspect } from '@teambit/pubsub/dist/pubsub.aspect.js';
 import { ScopeAspect } from '@teambit/scope/dist/scope.aspect.js';
+import { ScopeUiBinderAspect } from '@teambit/scope-ui-binder/dist/scope-ui-binder.aspect.js';
 // import { StencilAspect } from '@teambit/stencil';
 import { TesterAspect } from '@teambit/tester/dist/tester.aspect.js';
 import { MultiTesterAspect } from '@teambit/multi-tester/dist/multi-tester.aspect.js';
@@ -123,6 +126,7 @@ import { ScriptsAspect } from '@teambit/scripts';
  */
 export const manifestsMap = {
   [AspectLoaderAspect.id]: AspectLoaderAspect,
+  [AspectLoaderGraphqlBinderAspect.id]: AspectLoaderGraphqlBinderAspect,
   [CLIAspect.id]: CLIAspect,
   [DevFilesAspect.id]: DevFilesAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
@@ -150,6 +154,7 @@ export const manifestsMap = {
   [UIAspect.id]: UIAspect,
   [GeneratorAspect.id]: GeneratorAspect,
   [EnvsAspect.id]: EnvsAspect,
+  [EnvsGraphqlBinderAspect.id]: EnvsGraphqlBinderAspect,
   [EnvAspect.id]: EnvAspect,
   [GraphAspect.id]: GraphAspect,
   [PubsubAspect.id]: PubsubAspect,
@@ -163,6 +168,7 @@ export const manifestsMap = {
   [WorkerAspect.id]: WorkerAspect,
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,
+  [ScopeUiBinderAspect.id]: ScopeUiBinderAspect,
   [TesterAspect.id]: TesterAspect,
   [MultiTesterAspect.id]: MultiTesterAspect,
   [BuilderAspect.id]: BuilderAspect,

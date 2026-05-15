@@ -19,8 +19,6 @@ import type {
 } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
 import { AspectEntry } from '@teambit/component';
-import type { GraphqlMain } from '@teambit/graphql';
-import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
@@ -29,8 +27,6 @@ import type { LoggerMain, Logger } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
 import type { ExpressMain } from '@teambit/express';
 import { ExpressAspect } from '@teambit/express/dist/express.aspect.js';
-import type { UiMain } from '@teambit/ui';
-import { UIAspect } from '@teambit/ui/dist/ui.aspect.js';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import type { DependenciesGraph, DepEdge, ModelComponent, Lane, Version } from '@teambit/objects';
 import { Ref, Repository, ObjectList } from '@teambit/objects';
@@ -65,8 +61,6 @@ import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
 import { compact, slice, difference, partition } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
-import { scopeSchema } from './scope.graphql';
-import { ScopeUIRoot } from './scope.ui-root';
 import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 import { ScopeComponentLoader } from './scope-component-loader';
 import { ScopeCmd } from './scope-cmd';
@@ -1337,8 +1331,6 @@ export class ScopeMain implements ComponentFactory {
 
   static dependencies = [
     ComponentAspect,
-    UIAspect,
-    GraphqlAspect,
     CLIAspect,
     IsolatorAspect,
     AspectLoaderAspect,
@@ -1354,10 +1346,8 @@ export class ScopeMain implements ComponentFactory {
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver, configStore]: [
+    [componentExt, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver, configStore]: [
       ComponentMain,
-      UiMain,
-      GraphqlMain,
       CLIMain,
       IsolatorMain,
       AspectLoaderMain,
@@ -1497,8 +1487,7 @@ export class ScopeMain implements ComponentFactory {
       new ActionRoute(scope),
       new DeleteRoute(scope),
     ]);
-    ui.registerUiRoot(new ScopeUIRoot(scope));
-    graphql.register(() => scopeSchema(scope));
+    // ui.registerUiRoot / graphql.register moved to scope-ui-binder
     componentExt.registerHost(scope);
 
     return scope;

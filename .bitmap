@@ -198,6 +198,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect-loader"
     },
+    "aspect-loader-graphql-binder": {
+        "name": "aspect-loader-graphql-binder",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/aspect-loader-graphql-binder"
+    },
     "babel": {
         "name": "babel",
         "scope": "teambit.compilation",
@@ -625,6 +633,14 @@
         "version": "1.0.986",
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/envs"
+    },
+    "envs-graphql-binder": {
+        "name": "envs-graphql-binder",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.envs",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/envs/envs-graphql-binder"
     },
     "eslint": {
         "name": "eslint",
@@ -1633,6 +1649,14 @@
         "version": "1.0.986",
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/scope"
+    },
+    "scope-ui-binder": {
+        "name": "scope-ui-binder",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.scope",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/scope/scope-ui-binder"
     },
     "tester": {
         "name": "tester",

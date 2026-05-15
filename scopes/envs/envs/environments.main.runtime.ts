@@ -8,8 +8,6 @@ import { MainRuntime } from '@teambit/cli';
 import type { Component, ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
 import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
-import type { GraphqlMain } from '@teambit/graphql';
-import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
 import type { IssuesMain } from '@teambit/issues';
 import { IssuesAspect } from '@teambit/issues/dist/issues.aspect.js';
 import type { EnvJsoncPatterns } from '@teambit/dev-files';
@@ -30,7 +28,6 @@ import { ComponentID } from '@teambit/component-id';
 import type { EnvService } from './services';
 import type { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
-import { environmentsSchema } from './environments.graphql';
 import { EnvRuntime, Runtime } from './runtime';
 import { EnvDefinition } from './env-definition';
 import { EnvServiceList } from './env-service-list';
@@ -1195,11 +1192,10 @@ if needed, use "bit env set" command to align the env id`;
     Slot.withType<EnvJsoncResolverRegistry>(),
   ];
 
-  static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect, CLIAspect, WorkerAspect, IssuesAspect];
+  static dependencies = [LoggerAspect, ComponentAspect, CLIAspect, WorkerAspect, IssuesAspect];
 
   static async provider(
-    [graphql, loggerAspect, component, cli, worker, issues]: [
-      GraphqlMain,
+    [loggerAspect, component, cli, worker, issues]: [
       LoggerMain,
       ComponentMain,
       CLIMain,
@@ -1234,7 +1230,7 @@ if needed, use "bit env set" command to align the env id`;
     const envsCmd = new EnvsCmd(envs, component);
     envsCmd.commands = [new ListEnvsCmd(envs, component), new GetEnvCmd(envs, component)];
     cli.register(envsCmd);
-    graphql.register(() => environmentsSchema(envs));
+    // graphql.register(() => environmentsSchema(envs)) moved to envs-graphql-binder
     return envs;
   }
 }
