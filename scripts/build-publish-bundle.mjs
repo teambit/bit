@@ -100,6 +100,7 @@ function isExternal(id) {
   for (const prefix of NATIVE_PREFIXES) {
     if (id.startsWith(prefix)) return true;
   }
+  if (isBrowserPackage(id)) return true;
   return false;
 }
 
@@ -122,6 +123,22 @@ function stubAssetsPlugin() {
       return null;
     },
   };
+}
+
+// Browser-only @teambit packages that leak into the dep graph via UI runtime
+// files. They never run in the Node entry — externalizing keeps them out of
+// the bundle and lets node_modules supply them at runtime if the UI runtime
+// actually gets loaded (in `bit start` etc.).
+const BROWSER_PACKAGE_PATTERNS = [
+  /^@teambit\/mdx\./,
+  /^@teambit\/documenter\./,
+];
+
+function isBrowserPackage(id) {
+  for (const re of BROWSER_PACKAGE_PATTERNS) {
+    if (re.test(id)) return true;
+  }
+  return false;
 }
 
 function chunkForId(id) {
