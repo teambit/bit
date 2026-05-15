@@ -10,8 +10,10 @@ export type { WorkspaceUI } from './workspace.ui.runtime';
 export type { SerializableResults, OnComponentLoad, OnComponentEventResult } from './on-component-events';
 export { ComponentStatus } from './workspace-component';
 export type { WorkspaceModelComponent } from './ui/workspace/workspace-model';
-export { Workspace as WorkspaceModel } from './ui/workspace/workspace-model';
-export { WorkspaceContext } from './ui/workspace/workspace-context';
+// UI value exports removed from this barrel:
+//   - WorkspaceModel (was: './ui/workspace/workspace-model')
+//   - WorkspaceContext (was: './ui/workspace/workspace-context')
+// UI callers should import from those paths directly.
 export { OutsideWorkspaceError } from './exceptions/outside-workspace';
 export type { WorkspaceComponent, ComponentLoadOptions as WorkspaceComponentLoadOptions } from './workspace-component';
 export type { ComponentConfigFile } from './component-config-file';

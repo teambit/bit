@@ -4,7 +4,8 @@ import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 export type { GetComponentsOptions } from './get-component-opts';
 export type { UseComponentType } from './ui/use-component';
 export type { ConsumerComponent };
-export { useComponentHost } from './host';
+// `useComponentHost` (UI hook) moved out of this barrel — see comment near
+// the UI block below.
 export { Component, InvalidComponent } from './component';
 export { ComponentID } from '@teambit/component-id';
 export { default as ComponentFS } from './component-fs';
@@ -32,19 +33,18 @@ export { ComponentMap } from './component-map';
 export type { ComponentMain } from './component.main.runtime';
 export type { ComponentUI } from './component.ui.runtime';
 export type { Section } from './section';
-export { ComponentContext, ComponentDescriptorContext, useComponentDescriptor } from './ui/context/component-context';
+// UI runtime symbols moved out of this barrel so that main-runtime callers
+// don't pay for the entire UI graph at module-init. Once babel-lazy was
+// removed (it was deferring these requires for free), every `import` from
+// `@teambit/component` ended up loading the navbar + dropdown packages even
+// for `bit status`. UI callers should import directly from the dist subpath,
+// e.g. `import { ComponentModel } from '@teambit/component/dist/ui/component-model'`.
 export type { ComponentProviderProps, ComponentDescriptorProviderProps } from './ui/context';
-export { ComponentProvider, ComponentDescriptorProvider } from './ui/context';
-export { componentFields, componentIdFields, componentOverviewFields } from './ui';
 export type { NavPlugin, ConsumePlugin, MenuNavProps } from './ui/menu';
-export { CollapsibleMenuNav, ComponentMenu, VersionRelatedDropdowns } from './ui/menu';
 export type { RegisteredComponentRoute, ComponentUrlParams } from './component.route';
 export type { ComponentModelProps } from './ui/component-model';
-export { ComponentModel } from './ui/component-model';
-export { TopBarNav } from './ui/top-bar-nav';
 export type { ShowFragment, ShowRow, ShowJSONRow } from './show';
 export { Config } from './config';
-export { useComponent, useIdFromLocation, useComponentLogs, ComponentLogsResult, Filters } from './ui';
 
 // export { AspectList } from './aspect-list';
 // export { AspectEntry } from './aspect-entry';

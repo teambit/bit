@@ -14,8 +14,9 @@ export type { Docs, Example } from './docs';
 export { defaultDocs } from './docs';
 
 export type { TitleBadgeSlot, TitleBadge, OverviewOptionsSlot, OverviewOptions } from './overview';
-export { BadgePosition } from './overview';
-export { Overview } from './overview';
+// UI value exports removed:
+//   - BadgePosition / Overview (was: './overview')
+// UI callers should import from './overview' directly.
 
 export { DocsAspect };
 export default DocsAspect;

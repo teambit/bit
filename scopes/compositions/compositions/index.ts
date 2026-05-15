@@ -9,10 +9,14 @@ export type {
   UsePreviewSandboxSlot,
 } from './compositions.ui.runtime';
 export type { CompositionProps } from './composition';
-export { Composition } from './composition';
 export type { CompositionContentProps } from './compositions';
-export { CompositionContent } from './compositions';
-export { useDefaultControlsSchemaResponder } from './use-default-controls-schema-responder';
+// UI value exports removed from this barrel — main-runtime imports of
+// `@teambit/compositions` must not drag in UI-side dependencies (which
+// transitively pull `@teambit/documenter.ui.*`, `react`, etc.). UI callers
+// import these directly:
+//   - Composition (was: './composition')
+//   - CompositionContent (was: './compositions')
+//   - ComponentComposition, LiveControls, LiveControlsDiffPanel, LiveControlsRenderer (was: './ui')
+//   - useDefaultControlsSchemaResponder (was: './use-default-controls-schema-responder')
 export type { CompositionsPreview } from './compositions.preview.runtime';
-export { ComponentComposition, LiveControls, LiveControlsDiffPanel, LiveControlsRenderer } from './ui';
 export default CompositionsAspect;

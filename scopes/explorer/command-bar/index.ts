@@ -5,4 +5,6 @@ export type { CommandBarUI, CommandEntry } from './command-bar.ui.runtime';
 export type { CommandHandler, CommandId, Keybinding } from './types';
 export type { SearchResult, ResultsComponentProps, SearchResults } from '@teambit/explorer.ui.command-bar';
 export type { FuzzySearchItem } from '@teambit/explorer.ui.command-bar';
-export { FuzzySearcher, CommandBarItem } from '@teambit/explorer.ui.command-bar';
+// UI value exports removed:
+//   - FuzzySearcher / CommandBarItem (was: '@teambit/explorer.ui.command-bar')
+// UI callers should import from that package directly.

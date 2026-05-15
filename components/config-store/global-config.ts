@@ -1,7 +1,31 @@
 import fs from 'fs-extra';
 import * as path from 'path';
+import { homedir } from 'os';
 
-import { GLOBAL_CONFIG, GLOBAL_CONFIG_FILE } from '@teambit/legacy.constants';
+// Path resolution is inlined here (rather than imported from
+// `@teambit/legacy.constants`) to break the import cycle
+//   config-store → config-getter → global-config → legacy.constants → config-store
+// which used to be papered over by the babel `lazy: () => true` thunk
+// transform. The thunk has been removed because it blocks the ESM migration
+// (lazy require is CJS-only). Keep these constants in sync with the same
+// names in `legacy.constants/constants.ts` if either ever moves.
+
+const CACHE_GLOBALS_ENV = 'BIT_GLOBALS_DIR';
+
+function getCacheRoot(): string {
+  const fromEnvVar = process.env[CACHE_GLOBALS_ENV];
+  if (fromEnvVar && typeof fromEnvVar === 'string') return fromEnvVar;
+  if (process.platform === 'darwin' || process.platform === 'linux') {
+    return path.join(homedir(), 'Library', 'Caches', 'Bit');
+  }
+  if (process.platform === 'win32' && process.env.LOCALAPPDATA) {
+    return path.join(process.env.LOCALAPPDATA, 'Bit');
+  }
+  return path.join(homedir(), '.bit');
+}
+
+const GLOBAL_CONFIG_DIR = path.join(getCacheRoot(), 'config');
+const GLOBAL_CONFIG_FILE = 'config.json';
 
 // Owner-only perms for the global config file. It can hold the user's
 // bit-cloud token and other secrets, so match the AWS/gcloud baseline
@@ -9,7 +33,7 @@ import { GLOBAL_CONFIG, GLOBAL_CONFIG_FILE } from '@teambit/legacy.constants';
 const CONFIG_FILE_MODE = 0o600;
 
 export function getGlobalConfigPath() {
-  return path.join(GLOBAL_CONFIG, GLOBAL_CONFIG_FILE);
+  return path.join(GLOBAL_CONFIG_DIR, GLOBAL_CONFIG_FILE);
 }
 
 export class GlobalConfig extends Map<string, string> {
