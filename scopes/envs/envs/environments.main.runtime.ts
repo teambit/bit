@@ -416,7 +416,16 @@ export class EnvsMain {
    * @param ignoreVersion
    */
   private getEnvIdFromEnvsData(component: Component, ignoreVersion = true): string | undefined {
-    const envsData = this.getEnvData(component);
+    // `getEnvData` throws when env descriptor isn't on the component (e.g. for
+    // components loaded under recursion where pass 2/3 was skipped). Treat
+    // missing descriptor as "no env id" — the callers (getEnvId,
+    // findFirstEnv, etc.) already handle the undefined branch.
+    let envsData;
+    try {
+      envsData = this.getEnvData(component);
+    } catch {
+      return undefined;
+    }
     if (!envsData) return undefined;
     const rawEnvId = envsData.id;
     if (!rawEnvId) return undefined;
