@@ -1,5 +1,5 @@
 import type { Logger } from '@teambit/logger';
-import type { LoadEventEmitter } from '@teambit/component-loader';
+import type { LoadEventEmitter } from '../component-loader';
 
 /**
  * Threshold for surfacing a progress line. Single-component `get` calls and

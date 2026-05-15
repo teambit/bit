@@ -1,7 +1,3 @@
-import { ComponentLoaderAspect } from './component-loader.aspect';
-
-export type { ComponentLoaderMain } from './component-loader.main.runtime';
-
 export type { Phase } from './phase';
 export { PHASES, phaseRank, isPhaseAtLeast, DEFAULT_PHASE } from './phase';
 
@@ -20,6 +16,3 @@ export type { LoaderHost } from './loader-host';
 
 export type { GetOptions, GetManyOptions, GetManyResult, GetManyExtraOptions } from './unified-component-loader';
 export { UnifiedComponentLoader } from './unified-component-loader';
-
-export default ComponentLoaderAspect;
-export { ComponentLoaderAspect };

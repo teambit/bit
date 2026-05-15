@@ -13,7 +13,7 @@ import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { ComponentNotFound as LegacyComponentNotFound } from '@teambit/legacy.scope';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { IssuesClasses } from '@teambit/component-issues';
-import type { LoaderHost, Phase, UnifiedComponentLoader } from '@teambit/component-loader';
+import type { LoaderHost, Phase, UnifiedComponentLoader } from '../component-loader';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { EnvsMain } from '@teambit/envs';

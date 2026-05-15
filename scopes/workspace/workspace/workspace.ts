@@ -96,8 +96,8 @@ import type {
   OnRootAspectAddedSlot,
 } from './workspace.main.runtime';
 import type { ComponentLoadOptions } from './workspace-component/component-load-options';
-import type { Phase } from '@teambit/component-loader';
-import { ComponentCache, LoadEventEmitter, UnifiedComponentLoader, DEFAULT_PHASE } from '@teambit/component-loader';
+import type { Phase } from './component-loader';
+import { ComponentCache, LoadEventEmitter, UnifiedComponentLoader, DEFAULT_PHASE } from './component-loader';
 import { WorkspaceLoaderHost } from './workspace-component/workspace-loader-host';
 import { attachLoadProgressRenderer } from './workspace-component/load-progress-renderer';
 import type { ShouldLoadFunc } from './build-graph-from-fs';
