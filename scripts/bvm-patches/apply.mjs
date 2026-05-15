@@ -21,9 +21,8 @@
 //   3) <bvm-bit>/node_modules/@teambit/bit/dist/load-bit.js
 //      → loadLegacyConfig + the main load switch to LazyHarmony from @teambit/core
 
-import { existsSync, readFileSync, readdirSync, writeFileSync, symlinkSync, lstatSync, copyFileSync, unlinkSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, symlinkSync, lstatSync, copyFileSync, unlinkSync } from 'node:fs';
 import { execSync } from 'node:child_process';
-import { homedir } from 'node:os';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -155,92 +154,6 @@ const CLI_REPLACE = `  register(...args) {
     this.commandsSlot.register(commands);
   }`;
 
-// ── Patch 2: core-aspect-env capsule babel config ──────────────────────────
-//
-// The env that compiles bit's own components is `teambit.harmony/envs/
-// core-aspect-env`, an external Bit-cloud package. Its `cjs.babel.config.js`
-// ships with `@babel/plugin-transform-modules-commonjs` configured with
-// `lazy: () => true`. That wraps every top-level `require()` in a thunk,
-// which used to be a startup-time win — but now stacks on top of the
-// slice 4/7 lazy-aspect machinery + slice 5's command-index short-circuit
-// and adds per-call overhead instead of saving anything. With the babel
-// thunks removed we see −67% on `bit status (no ws)` and −52% on
-// `bit <typo>`; the architectural work is doing its job.
-//
-// We patch the capsule directly because the env is external. Re-run this
-// script after `bit install` if the capsule is rebuilt and reverts.
-
-const ENV_BABEL_FIND_SRC = `const newPlugins = [
-  [
-    require.resolve('@babel/plugin-transform-modules-commonjs'),
-    {
-      lazy: () => true,
-    },
-  ],
-  ...plugins,
-];`;
-
-const ENV_BABEL_REPLACE_SRC = `// bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy.
-// The slice 4/7 + slice 5 work supersedes it; keeping the babel-level
-// lazy hides the impact of the architectural lazy load.
-const newPlugins = [...plugins];`;
-
-const ENV_BABEL_FIND_DIST = `const newPlugins = [[require.resolve('@babel/plugin-transform-modules-commonjs'), {
-  lazy: () => true
-}], ...plugins];`;
-
-const ENV_BABEL_REPLACE_DIST = `// bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy.
-const newPlugins = [...plugins];`;
-
-function patchCoreAspectEnvCapsules() {
-  // Capsule roots vary per workspace hash, so we glob across all of them.
-  const capsuleRoot = join(homedir(), 'Library', 'Caches', 'Bit', 'capsules');
-  if (!existsSync(capsuleRoot)) {
-    log(`no Bit capsule cache at ${capsuleRoot}, skipping env patch`);
-    return;
-  }
-  let patched = 0;
-  for (const workspaceHash of readdirSync(capsuleRoot)) {
-    const wsDir = join(capsuleRoot, workspaceHash);
-    let envEntries;
-    try {
-      envEntries = readdirSync(wsDir);
-    } catch {
-      continue;
-    }
-    for (const entry of envEntries) {
-      if (!entry.startsWith('teambit.harmony_envs_core-aspect-env')) continue;
-      const envDir = join(wsDir, entry);
-      const srcPath = join(envDir, 'config', 'cjs.babel.config.js');
-      const distPath = join(envDir, 'dist', 'config', 'cjs.babel.config.js');
-      patchOnce(srcPath, 'bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy', ENV_BABEL_FIND_SRC, ENV_BABEL_REPLACE_SRC);
-      patchOnce(distPath, 'bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy', ENV_BABEL_FIND_DIST, ENV_BABEL_REPLACE_DIST);
-      patched++;
-    }
-  }
-  if (patched === 0) log('no core-aspect-env capsules to patch');
-}
-
-function revertCoreAspectEnvCapsules() {
-  const capsuleRoot = join(homedir(), 'Library', 'Caches', 'Bit', 'capsules');
-  if (!existsSync(capsuleRoot)) return;
-  for (const workspaceHash of readdirSync(capsuleRoot)) {
-    const wsDir = join(capsuleRoot, workspaceHash);
-    let envEntries;
-    try {
-      envEntries = readdirSync(wsDir);
-    } catch {
-      continue;
-    }
-    for (const entry of envEntries) {
-      if (!entry.startsWith('teambit.harmony_envs_core-aspect-env')) continue;
-      const envDir = join(wsDir, entry);
-      revertOnce(join(envDir, 'config', 'cjs.babel.config.js'));
-      revertOnce(join(envDir, 'dist', 'config', 'cjs.babel.config.js'));
-    }
-  }
-}
-
 // ── Driver ─────────────────────────────────────────────────────────────────
 
 const bvmDir = findBvmBitDir();
@@ -252,7 +165,6 @@ if (REVERT) {
   log(`reverting…`);
   revertOnce(cliFile);
   unlinkCoreOnce(bvmDir);
-  revertCoreAspectEnvCapsules();
   log(`done`);
   process.exit(0);
 }
@@ -264,7 +176,5 @@ if (REVERT) {
 linkCoreOnce(bvmDir);
 
 patchOnce(cliFile, 'bvm-patches: handle new (descriptor, factory)', CLI_FIND, CLI_REPLACE);
-
-patchCoreAspectEnvCapsules();
 
 log(`done`);
