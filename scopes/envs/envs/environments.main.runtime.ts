@@ -1025,13 +1025,30 @@ if needed, use "bit env set" command to align the env id`;
   }
 
   isUsingAspectEnv(component: Component): boolean {
-    const data = this.getEnvData(component);
+    // See isUsingEnvEnv for why this is wrapped — getEnvData throws when the
+    // env descriptor isn't on the component.
+    let data;
+    try {
+      data = this.getEnvData(component);
+    } catch {
+      return false;
+    }
     if (!data) return false;
     return data.type === 'aspect';
   }
 
   isUsingEnvEnv(component: Component): boolean {
-    const data = this.getEnvData(component);
+    // `getEnvData` throws when the env descriptor isn't on the component's
+    // aspect list (happens for components whose slots weren't fired — e.g.
+    // scope-only components or recursive loads where pass 2/3 was skipped).
+    // The callers of this method only need a yes/no signal, so treat a missing
+    // descriptor as "not an env env" rather than propagating the throw.
+    let data;
+    try {
+      data = this.getEnvData(component);
+    } catch {
+      return false;
+    }
     if (!data) return false;
     return data.type === 'env';
   }
