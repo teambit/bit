@@ -844,9 +844,22 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     // We are loading the component as aspect if it's an env, in order to be able to run the env-preview-template task which run only on envs.
     // Without this loading we will have a problem in case the env is the only component in the workspace. in that case we will load it as component
     // then we don't run it's provider so it doesn't register to the env slot, so we don't know it's an env.
+    //
+    // `isUsingEnvEnv` reads `state.aspects.get(EnvsAspect.id)` and throws when
+    // the env descriptor isn't on the component. That happens for components
+    // loaded under recursion (host pass2/3 skipped) or for components whose
+    // env aspect couldn't be resolved. Treat the throw as "not an env env" so
+    // the rest of the load completes — the consumer here only wants a yes/no
+    // signal for self-aspect loading.
+    let usingEnvEnv = false;
+    try {
+      usingEnvEnv = this.envs.isUsingEnvEnv(component);
+    } catch {
+      usingEnvEnv = false;
+    }
     if (
       tryLoadAsAspect &&
-      this.envs.isUsingEnvEnv(component) &&
+      usingEnvEnv &&
       !this.aspectLoader.isCoreAspect(component.id.toStringWithoutVersion()) &&
       !this.aspectLoader.isAspectLoaded(component.id.toString()) &&
       this.hasId(component.id)

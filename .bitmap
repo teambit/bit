@@ -403,8 +403,9 @@
         "rootDir": "scopes/component/component-loader",
         "config": {
             "teambit.harmony/aspect": {},
+            "teambit.harmony/envs/core-aspect-env@0.1.4": {},
             "teambit.envs/envs": {
-                "env": "teambit.harmony/aspect"
+                "env": "teambit.harmony/envs/core-aspect-env"
             }
         }
     },
