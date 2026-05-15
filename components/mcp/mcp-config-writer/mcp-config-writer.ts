@@ -560,10 +560,12 @@ ${baseRulesContent}`;
     const baseRulesContent =
       content ?? (await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard));
 
-    // Add Cursor frontmatter
+    // Add Cursor frontmatter. The auto-apply key is `alwaysApply` (lowercase) —
+    // `Always` is not a recognized Cursor frontmatter key, so rules written with
+    // it would not auto-apply.
     const cursorRulesContent = `---
 description: Bit MCP Agent Instructions
-Always: true
+alwaysApply: true
 ---
 
 ${baseRulesContent}`;
