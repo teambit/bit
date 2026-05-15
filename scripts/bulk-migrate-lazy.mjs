@@ -285,9 +285,22 @@ function lineIndent(text, pos) {
 // ── Find the class declaration for a given Cmd name ────────────────────────
 
 function findClassDeclaration(className, dir) {
-  const candidates = readdirSync(dir, { withFileTypes: true })
-    .filter((e) => e.isFile() && e.name.endsWith('.ts') && !e.name.endsWith('.spec.ts'))
-    .map((e) => join(dir, e.name));
+  const candidates = [];
+  function collect(d) {
+    const entries = readdirSync(d, { withFileTypes: true });
+    for (const e of entries) {
+      if (e.isSymbolicLink()) continue;
+      const full = join(d, e.name);
+      if (e.isDirectory()) {
+        if (e.name === 'node_modules' || e.name === 'dist') continue;
+        collect(full);
+      } else if (e.isFile() && e.name.endsWith('.ts') && !e.name.endsWith('.spec.ts')) {
+        candidates.push(full);
+      }
+    }
+  }
+  collect(dir);
+
   for (const file of candidates) {
     const text = readFileSync(file, 'utf8');
     if (!new RegExp(`class\\s+${escapeRegex(className)}\\b`).test(text)) continue;

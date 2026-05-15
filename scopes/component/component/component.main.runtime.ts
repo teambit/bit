@@ -22,6 +22,7 @@ import { HostNotFound } from './exceptions';
 import type { AspectEntry } from './aspect-entry';
 import type { ShowFragment } from './show';
 import {
+import { catCommand, showCommand } from './component.commands';
   ShowCmd,
   NameFragment,
   MainFileFragment,
@@ -170,7 +171,8 @@ export class ComponentMain {
   ) {
     const logger = loggerMain.createLogger(ComponentAspect.id);
     const componentExtension = new ComponentMain(hostSlot, express, showFragmentSlot);
-    cli.register(new ShowCmd(componentExtension, logger), new CatCmd(componentExtension));
+    cli.register(showCommand, () => new ShowCmd(componentExtension, logger));
+    cli.register(catCommand, () => new CatCmd(componentExtension));
 
     componentExtension.registerShowFragments([
       new NameFragment(),

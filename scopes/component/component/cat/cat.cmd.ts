@@ -3,6 +3,7 @@ import { BitError } from '@teambit/bit-error';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import type { Component } from '../component';
 import type { ComponentMain } from '../component.main.runtime';
+import { catCommand } from './component.commands';
 
 const ENVS_ASPECT_ID = 'teambit.envs/envs';
 
@@ -14,23 +15,13 @@ type CatFlags = {
 };
 
 export class CatCmd implements Command {
-  name = 'cat <component-id>';
-  description = 'print source files or config of a component at a specific version';
-  group = 'info-analysis';
-  alias = '';
-  skipWorkspace = true;
-  arguments = [
-    {
-      name: 'component-id',
-      description: 'component ID, optionally with @version (e.g. scope/name@1.0.0)',
-    },
-  ];
-  options = [
-    ['f', 'file <path>', 'show only the specified file (relative to component root)'],
-    ['c', 'config', 'show component configuration (env, dependencies) instead of source files'],
-    ['a', 'all', 'show both source files and configuration'],
-    ['j', 'json', 'output as JSON'],
-  ] as CommandOptions;
+  name = catCommand.name;
+  description = catCommand.description;
+  group = catCommand.group;
+  alias = catCommand.alias;
+  skipWorkspace = catCommand.skipWorkspace;
+  arguments = catCommand.arguments;
+  options = catCommand.options;
 
   constructor(private component: ComponentMain) {}
 
