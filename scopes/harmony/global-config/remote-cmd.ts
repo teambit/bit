@@ -8,7 +8,7 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import { formatSuccessSummary, formatHint } from '@teambit/cli';
 import { remoteCommand } from './global-config.commands';
 
-class RemoteAdd implements Command {
+export class RemoteAdd implements Command {
   name = 'add <url>';
   description = 'add a bare-scope as a remote';
   extendedDescription = `supported protocols are [file, http].
@@ -23,7 +23,7 @@ for example: "http://localhost:3000", "file:///tmp/local-scope"`;
   }
 }
 
-class RemoteRm implements Command {
+export class RemoteRm implements Command {
   name = 'del <name>';
   description = 'remove a tracked bit remote';
   alias = '';

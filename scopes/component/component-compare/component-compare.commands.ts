@@ -1,4 +1,5 @@
 import type { CommandDescriptor, CommandOptions } from '@teambit/cli';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 
 /**
  * Declarative command descriptors for this aspect.

@@ -1,4 +1,5 @@
 import type { CommandDescriptor, CommandOptions } from '@teambit/cli';
+import { RemoteAdd, RemoteRm, RemoteList } from './remote-cmd';
 
 /**
  * Declarative command descriptors for this aspect.

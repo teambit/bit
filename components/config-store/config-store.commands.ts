@@ -1,4 +1,5 @@
 import type { CommandDescriptor, CommandOptions } from '@teambit/cli';
+import { BASE_DOCS_DOMAIN } from '@teambit/legacy.constants';
 
 /**
  * Declarative command descriptors for this aspect.
