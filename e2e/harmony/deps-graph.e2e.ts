@@ -357,9 +357,7 @@ chai.use(chaiFs);
       await addDistTag({ package: '@pnpm.e2e/bar', version: '100.1.0', distTag: 'latest' });
 
       helper.command.import(`${helper.scopes.remote}/comp1@latest`);
-      lockfileAfterReimport = yaml.load(
-        fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8')
-      );
+      lockfileAfterReimport = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8'));
     });
     after(() => {
       npmCiRegistry.destroy();
