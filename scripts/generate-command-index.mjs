@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Codegen for:
 //   - `scopes/harmony/bit/command-index.generated.ts`  (Slice 2)
-//   - `scopes/harmony/harmony/slot-index.generated.ts` (Slot Type → Aspect ID[])
+//   - `scopes/harmony/core/slot-index.generated.ts` (Slot Type → Aspect ID[])
 //
 // The command index is built by eagerly loading Bit and snapshotting
 // `cli.commandsByAspect()`. The slot index is built by static analysis of
@@ -17,7 +17,7 @@ import { createRequire } from 'node:module';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(HERE, '..');
 const COMMAND_INDEX_FILE = join(REPO_ROOT, 'scopes/harmony/bit/command-index.generated.ts');
-const SLOT_INDEX_FILE = join(REPO_ROOT, 'scopes/harmony/harmony/slot-index.generated.ts');
+const SLOT_INDEX_FILE = join(REPO_ROOT, 'scopes/harmony/core/slot-index.generated.ts');
 
 const SLOT_SEARCH_ROOTS = ['scopes', 'components'];
 const SLOT_SKIP_DIRS = new Set([

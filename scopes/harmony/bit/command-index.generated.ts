@@ -29,28 +29,6 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "group": "component-development"
   },
   {
-    "name": "app",
-    "aspectId": "teambit.harmony/application",
-    "alias": "apps",
-    "description": "manage application components",
-    "group": "run-serve",
-    "subCommands": [
-      {
-        "name": "list",
-        "aspectId": "teambit.harmony/application",
-        "description": "list all registered apps",
-        "group": "run-serve"
-      },
-      {
-        "name": "run",
-        "aspectId": "teambit.harmony/application",
-        "alias": "c",
-        "description": "start an application component locally",
-        "group": "run-serve"
-      }
-    ]
-  },
-  {
     "name": "artifacts",
     "aspectId": "teambit.pipelines/builder",
     "description": "view and download build artifacts",
@@ -206,13 +184,6 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "group": "testing"
   },
   {
-    "name": "checkout",
-    "aspectId": "teambit.component/checkout",
-    "alias": "U",
-    "description": "switch between component versions or remove local changes",
-    "group": "version-control"
-  },
-  {
     "name": "ci",
     "aspectId": "teambit.git/ci",
     "description": "continuous integration commands for automated workflows",
@@ -248,35 +219,10 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "skipWorkspace": true
   },
   {
-    "name": "cli",
-    "aspectId": "teambit.harmony/cli",
-    "description": "EXPERIMENTAL. enters bit cli program and generates commands list",
-    "group": "system",
-    "private": true,
-    "loader": false,
-    "subCommands": [
-      {
-        "name": "generate",
-        "aspectId": "teambit.harmony/cli",
-        "description": "generate an .md file with all commands details",
-        "group": "general",
-        "private": true,
-        "loader": false
-      }
-    ]
-  },
-  {
     "name": "compile",
     "aspectId": "teambit.compilation/compiler",
     "description": "transpile component source files",
     "group": "component-development"
-  },
-  {
-    "name": "completion",
-    "aspectId": "teambit.harmony/cli",
-    "description": "enable bash/zsh-completion shortcuts for commands and options",
-    "group": "system",
-    "private": true
   },
   {
     "name": "component-issues",
@@ -326,108 +272,10 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "group": "component-development"
   },
   {
-    "name": "delete",
-    "aspectId": "teambit.component/remove",
-    "description": "soft-delete components from remote scopes",
-    "group": "collaborate",
-    "remoteOp": true,
-    "skipWorkspace": true
-  },
-  {
     "name": "dependents",
     "aspectId": "teambit.dependencies/dependencies",
     "description": "show components that depend on the specified component",
     "group": "dependencies"
-  },
-  {
-    "name": "deprecate",
-    "aspectId": "teambit.component/deprecation",
-    "alias": "d",
-    "description": "mark a component as deprecated to discourage its use",
-    "group": "collaborate",
-    "remoteOp": true,
-    "skipWorkspace": true
-  },
-  {
-    "name": "deps",
-    "aspectId": "teambit.dependencies/dependencies",
-    "alias": "dependencies",
-    "description": "manage component dependencies",
-    "group": "dependencies",
-    "subCommands": [
-      {
-        "name": "blame",
-        "aspectId": "teambit.dependencies/dependencies",
-        "description": "find out which snap/tag changed a dependency version",
-        "group": "info-analysis"
-      },
-      {
-        "name": "circular",
-        "aspectId": "teambit.dependencies/dependencies",
-        "description": "find circular dependencies in the component graph",
-        "group": "info-analysis"
-      },
-      {
-        "name": "debug",
-        "aspectId": "teambit.dependencies/dependencies",
-        "description": "show the immediate dependencies and how their versions were determined",
-        "group": "info-analysis"
-      },
-      {
-        "name": "diagnose",
-        "aspectId": "teambit.dependencies/dependencies",
-        "description": "analyze workspace dependencies for version spread, peer permutations, and bloat",
-        "group": "info-analysis"
-      },
-      {
-        "name": "eject",
-        "aspectId": "teambit.dependencies/dependencies",
-        "description": "write dependencies that were previously set via \"bit deps set\" into .bitmap",
-        "group": "dependencies"
-      },
-      {
-        "name": "get",
-        "aspectId": "teambit.dependencies/dependencies",
-        "description": "show direct and indirect dependencies of the given component",
-        "group": "info-analysis"
-      },
-      {
-        "name": "remove",
-        "aspectId": "teambit.dependencies/dependencies",
-        "description": "remove a dependency from one or more components",
-        "group": "dependencies"
-      },
-      {
-        "name": "reset",
-        "aspectId": "teambit.dependencies/dependencies",
-        "description": "reset dependencies to the default values (revert any previously \"bit deps set\")",
-        "group": "dependencies"
-      },
-      {
-        "name": "set",
-        "aspectId": "teambit.dependencies/dependencies",
-        "description": "set a dependency to component(s)",
-        "group": "dependencies"
-      },
-      {
-        "name": "unset",
-        "aspectId": "teambit.dependencies/dependencies",
-        "description": "unset a dependency to component(s) that was set via config (e.g. \"bit deps set\" or variants)",
-        "group": "dependencies"
-      },
-      {
-        "name": "usage",
-        "aspectId": "teambit.dependencies/dependencies",
-        "description": "find components that use the specified dependency",
-        "group": "dependencies"
-      },
-      {
-        "name": "write",
-        "aspectId": "teambit.dependencies/dependencies",
-        "description": "write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions",
-        "group": "dependencies"
-      }
-    ]
   },
   {
     "name": "details",
@@ -568,31 +416,10 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     ]
   },
   {
-    "name": "globals",
-    "aspectId": "teambit.harmony/global-config",
-    "description": "display global directories and paths used by Bit",
-    "group": "system"
-  },
-  {
     "name": "graph",
     "aspectId": "teambit.component/graph",
     "description": "visualize component dependencies as a graph image",
     "group": "info-analysis",
-    "remoteOp": true
-  },
-  {
-    "name": "help",
-    "aspectId": "teambit.harmony/cli",
-    "alias": "$0",
-    "description": "display available commands and usage information",
-    "group": "system",
-    "loader": false
-  },
-  {
-    "name": "import",
-    "aspectId": "teambit.scope/importer",
-    "description": "bring components from remote scopes into your workspace",
-    "group": "collaborate",
     "remoteOp": true
   },
   {
@@ -618,161 +445,6 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "group": "dependencies"
   },
   {
-    "name": "lane",
-    "aspectId": "teambit.lanes/lanes",
-    "alias": "l",
-    "description": "manage lanes for parallel development",
-    "group": "collaborate",
-    "remoteOp": true,
-    "skipWorkspace": true,
-    "subCommands": [
-      {
-        "name": "alias",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "adds an alias to a lane",
-        "group": "ungrouped"
-      },
-      {
-        "name": "change-scope",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "changes the remote scope of a lane",
-        "group": "ungrouped"
-      },
-      {
-        "name": "checkout",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "checkout to a previous history of the current lane. see also \"bit lane revert\"",
-        "group": "ungrouped"
-      },
-      {
-        "name": "create",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "creates a new lane and switches to it",
-        "group": "ungrouped"
-      },
-      {
-        "name": "current",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "display the name of the current lane",
-        "group": "ungrouped",
-        "loader": false
-      },
-      {
-        "name": "diff",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "show diff between lanes",
-        "group": "ungrouped",
-        "private": true,
-        "remoteOp": true,
-        "skipWorkspace": true
-      },
-      {
-        "name": "eject",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "delete a component from the lane and install it as a package from main",
-        "group": "ungrouped"
-      },
-      {
-        "name": "fetch",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "fetch component objects from lanes. if no lane-id is provided, it fetches from the current lane",
-        "group": "ungrouped"
-      },
-      {
-        "name": "history",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "show lane history, default to the current lane",
-        "group": "ungrouped"
-      },
-      {
-        "name": "history-diff",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "show diff between lane-history entries",
-        "group": "ungrouped"
-      },
-      {
-        "name": "import",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "import a remote lane to your workspace and switch to that lane",
-        "group": "ungrouped"
-      },
-      {
-        "name": "list",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "list local or remote lanes",
-        "group": "ungrouped",
-        "remoteOp": true,
-        "skipWorkspace": true
-      },
-      {
-        "name": "merge",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "merge a local or a remote lane to the current lane",
-        "private": true,
-        "remoteOp": true
-      },
-      {
-        "name": "merge-abort",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "abort the recent lane-merge. revert the lane object and checkout accordingly",
-        "private": true,
-        "remoteOp": true
-      },
-      {
-        "name": "merge-move",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "EXPERIMENT. move the current merge state into a new lane. the current lane will be reset",
-        "remoteOp": true
-      },
-      {
-        "name": "remove",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "remove or delete lanes",
-        "group": "collaborate"
-      },
-      {
-        "name": "remove-comp",
-        "aspectId": "teambit.lanes/lanes",
-        "alias": "rc",
-        "description": "DEPRECATED. remove components when on a lane",
-        "group": "collaborate"
-      },
-      {
-        "name": "remove-readme",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "DEPRECATED (only use it if you have used add-readme and want to undo it). remove lane readme component",
-        "group": "ungrouped"
-      },
-      {
-        "name": "rename",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "change the lane-name locally",
-        "group": "ungrouped"
-      },
-      {
-        "name": "revert",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "revert to a previous history of the current lane. see also \"bit lane checkout\"",
-        "group": "ungrouped"
-      },
-      {
-        "name": "show",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "show lane details. if no lane specified, show the current lane",
-        "group": "ungrouped",
-        "remoteOp": true,
-        "skipWorkspace": true
-      },
-      {
-        "name": "switch",
-        "aspectId": "teambit.lanes/lanes",
-        "description": "switch to the specified lane",
-        "group": "collaborate",
-        "private": true
-      }
-    ]
-  },
-  {
     "name": "link",
     "aspectId": "teambit.workspace/install",
     "description": "create links between components and node_modules",
@@ -783,15 +455,6 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "aspectId": "teambit.defender/linter",
     "description": "analyze component code for issues and style violations",
     "group": "testing"
-  },
-  {
-    "name": "list",
-    "aspectId": "teambit.component/lister",
-    "alias": "ls",
-    "description": "display components in workspace or remote scope",
-    "group": "info-analysis",
-    "remoteOp": true,
-    "skipWorkspace": true
   },
   {
     "name": "local-only",
@@ -818,20 +481,6 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
         "group": "ungrouped"
       }
     ]
-  },
-  {
-    "name": "log",
-    "aspectId": "teambit.component/component-log",
-    "description": "display component version history",
-    "group": "version-control",
-    "remoteOp": true,
-    "skipWorkspace": true
-  },
-  {
-    "name": "log-file",
-    "aspectId": "teambit.component/component-log",
-    "description": "EXPERIMENTAL. display history of changes to a specific file",
-    "group": "version-control"
   },
   {
     "name": "login",
@@ -993,15 +642,6 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     ]
   },
   {
-    "name": "remove",
-    "aspectId": "teambit.component/remove",
-    "alias": "rm",
-    "description": "untrack components from the workspace",
-    "group": "component-development",
-    "remoteOp": true,
-    "skipWorkspace": true
-  },
-  {
     "name": "rename",
     "aspectId": "teambit.component/renaming",
     "description": "change a component name",
@@ -1014,14 +654,6 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "aspectId": "teambit.component/snapping",
     "description": "revert local tags and snaps to previous versions",
     "group": "version-control"
-  },
-  {
-    "name": "resume-export",
-    "aspectId": "teambit.scope/export",
-    "description": "EXPERIMENTAL. resume failed export",
-    "group": "advanced",
-    "private": true,
-    "remoteOp": true
   },
   {
     "name": "revert",
@@ -1138,6 +770,13 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
         "aspectId": "teambit.scope/scope",
         "description": "Sets the scope for specified component/s. If no component is specified, sets the default scope of the workspace",
         "group": "component-config"
+      },
+      {
+        "name": "trust",
+        "aspectId": "teambit.scope/scope",
+        "description": "manage which scopes are trusted to load aspects (envs, etc.) into the workspace's process",
+        "group": "component-config",
+        "loadAspects": false
       }
     ]
   },
@@ -1168,18 +807,6 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "description": "communicate with bit cli program via http requests",
     "group": "workspace-setup",
     "private": true
-  },
-  {
-    "name": "set-peer",
-    "aspectId": "teambit.dependencies/dependencies",
-    "description": "configure component to always be installed as peer dependency",
-    "group": "dependencies"
-  },
-  {
-    "name": "show",
-    "aspectId": "teambit.component/component",
-    "description": "display component metadata, dependencies, and configuration",
-    "group": "info-analysis"
   },
   {
     "name": "snap",
@@ -1230,42 +857,6 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     ]
   },
   {
-    "name": "status",
-    "aspectId": "teambit.component/status",
-    "alias": "s",
-    "description": "show workspace component status and issues",
-    "group": "info-analysis"
-  },
-  {
-    "name": "switch",
-    "aspectId": "teambit.lanes/lanes",
-    "description": "switch to the specified lane",
-    "group": "collaborate",
-    "private": true
-  },
-  {
-    "name": "system",
-    "aspectId": "teambit.harmony/global-config",
-    "description": "access system-level operations and debugging tools",
-    "group": "system",
-    "subCommands": [
-      {
-        "name": "log",
-        "aspectId": "teambit.harmony/global-config",
-        "description": "print debug.log to the screen",
-        "group": "system",
-        "loader": false
-      },
-      {
-        "name": "tail-log",
-        "aspectId": "teambit.harmony/global-config",
-        "description": "print the log file to the screen as it is being written",
-        "group": "system",
-        "loader": false
-      }
-    ]
-  },
-  {
     "name": "tag",
     "aspectId": "teambit.component/snapping",
     "alias": "t",
@@ -1310,12 +901,6 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "group": "dependencies"
   },
   {
-    "name": "unset-peer",
-    "aspectId": "teambit.dependencies/dependencies",
-    "description": "remove always-peer configuration from component",
-    "group": "dependencies"
-  },
-  {
     "name": "unuse",
     "aspectId": "teambit.workspace/workspace",
     "description": "unset aspects in the workspace config (opposite of \"use\" command)",
@@ -1345,45 +930,6 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "group": "testing"
   },
   {
-    "name": "version",
-    "aspectId": "teambit.harmony/cli",
-    "description": "display the installed Bit version",
-    "group": "system",
-    "loader": false
-  },
-  {
-    "name": "version-history",
-    "aspectId": "teambit.scope/version-history",
-    "alias": "vh",
-    "description": "manage component version history data structures",
-    "group": "version-control",
-    "private": true,
-    "subCommands": [
-      {
-        "name": "build",
-        "aspectId": "teambit.scope/version-history",
-        "description": "rebuild the version history of a component. helpful when it got corrupted for some reason",
-        "group": "version-control",
-        "private": true
-      },
-      {
-        "name": "graph",
-        "aspectId": "teambit.scope/version-history",
-        "description": "generate a graph of the version history of a component and save as an SVG file",
-        "group": "version-control",
-        "private": true
-      },
-      {
-        "name": "show",
-        "aspectId": "teambit.scope/version-history",
-        "alias": "vh",
-        "description": "show the version-history of a component",
-        "group": "version-control",
-        "private": true
-      }
-    ]
-  },
-  {
     "name": "watch",
     "aspectId": "teambit.workspace/watcher",
     "description": "watch and compile components on file changes",
@@ -1395,12 +941,6 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "description": "display the currently authenticated Bit Cloud user",
     "group": "auth",
     "skipWorkspace": true
-  },
-  {
-    "name": "why",
-    "aspectId": "teambit.dependencies/dependencies",
-    "description": "find components that use the specified dependency",
-    "group": "dependencies"
   },
   {
     "name": "ws-config",
