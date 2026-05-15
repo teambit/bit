@@ -1,4 +1,4 @@
-import { Aspect } from '../../harmony/harmony/aspect';
+import { Aspect } from '@teambit/core';
 
 export const CliMcpServerAspect = Aspect.create({
   id: 'teambit.mcp/cli-mcp-server',

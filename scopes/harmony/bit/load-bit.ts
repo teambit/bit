@@ -25,7 +25,7 @@ import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import type { RuntimeDefinition, Extension, Aspect } from '@teambit/harmony';
 import { Harmony } from '@teambit/harmony';
-import { Harmony as LazyHarmony } from '../harmony';
+import { Harmony as LazyHarmony } from '@teambit/core';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
 import { Config } from '@teambit/harmony/dist/harmony-config';
 import { readConfigFile } from '@teambit/harmony/dist/harmony-config/config-reader';

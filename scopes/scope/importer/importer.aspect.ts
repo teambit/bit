@@ -1,4 +1,4 @@
-import { Aspect } from '../../harmony/harmony/aspect';
+import { Aspect } from '@teambit/core';
 
 export const ImporterAspect = Aspect.create({
   id: 'teambit.scope/importer',

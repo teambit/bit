@@ -1,4 +1,4 @@
-import { Aspect } from '../../harmony/harmony/aspect';
+import { Aspect } from '@teambit/core';
 
 export const InstallAspect = Aspect.create({
   id: 'teambit.workspace/install',

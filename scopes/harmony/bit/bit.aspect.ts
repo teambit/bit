@@ -1,4 +1,4 @@
-import { Aspect } from '../harmony/aspect';
+import { Aspect } from '@teambit/core';
 
 /**
  * Main bit aspect

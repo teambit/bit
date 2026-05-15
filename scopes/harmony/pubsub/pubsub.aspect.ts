@@ -1,4 +1,4 @@
-import { Aspect } from '../harmony/aspect';
+import { Aspect } from '@teambit/core';
 
 export const PubsubAspect = Aspect.create({
   id: 'teambit.harmony/pubsub',

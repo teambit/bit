@@ -1,4 +1,4 @@
-import { Aspect } from '../../scopes/harmony/harmony/aspect';
+import { Aspect } from '@teambit/core';
 
 export const ConfigStoreAspect = Aspect.create({
   id: 'teambit.harmony/config-store',

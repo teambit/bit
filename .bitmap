@@ -499,6 +499,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
+    "core": {
+        "name": "core",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/core"
+    },
     "crypto/sha1": {
         "name": "crypto/sha1",
         "scope": "teambit.toolbox",

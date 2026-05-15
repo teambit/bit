@@ -1,4 +1,4 @@
-import { Aspect } from '../../harmony/harmony/aspect';
+import { Aspect } from '@teambit/core';
 
 export const EnvsAspect = Aspect.create({
   id: 'teambit.envs/envs',

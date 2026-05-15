@@ -1,4 +1,4 @@
-import { Aspect } from '../../harmony/harmony/aspect';
+import { Aspect } from '@teambit/core';
 
 export const RippleAspect = Aspect.create({
   id: 'teambit.cloud/ripple',

@@ -1,4 +1,4 @@
-import { Aspect } from '../../harmony/harmony/aspect';
+import { Aspect } from '@teambit/core';
 
 export const DependencyResolverAspect = Aspect.create({
   id: 'teambit.dependencies/dependency-resolver',

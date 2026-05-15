@@ -1,5 +1,5 @@
 import { RuntimeDefinition } from '@teambit/harmony';
-import { Aspect } from '../../harmony/harmony/aspect';
+import { Aspect } from '@teambit/core';
 
 export const PreviewRuntime = new RuntimeDefinition('preview');
 
