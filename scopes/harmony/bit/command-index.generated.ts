@@ -184,6 +184,13 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "group": "testing"
   },
   {
+    "name": "checkout",
+    "aspectId": "teambit.component/checkout",
+    "alias": "U",
+    "description": "switch between component versions or remove local changes",
+    "group": "version-control"
+  },
+  {
     "name": "ci",
     "aspectId": "teambit.git/ci",
     "description": "continuous integration commands for automated workflows",
@@ -223,6 +230,13 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "aspectId": "teambit.compilation/compiler",
     "description": "transpile component source files",
     "group": "component-development"
+  },
+  {
+    "name": "completion",
+    "aspectId": "teambit.harmony/cli",
+    "description": "enable bash/zsh-completion shortcuts for commands and options",
+    "group": "system",
+    "private": true
   },
   {
     "name": "component-issues",
@@ -272,10 +286,27 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "group": "component-development"
   },
   {
+    "name": "delete",
+    "aspectId": "teambit.component/remove",
+    "description": "soft-delete components from remote scopes",
+    "group": "collaborate",
+    "remoteOp": true,
+    "skipWorkspace": true
+  },
+  {
     "name": "dependents",
     "aspectId": "teambit.dependencies/dependencies",
     "description": "show components that depend on the specified component",
     "group": "dependencies"
+  },
+  {
+    "name": "deprecate",
+    "aspectId": "teambit.component/deprecation",
+    "alias": "d",
+    "description": "mark a component as deprecated to discourage its use",
+    "group": "collaborate",
+    "remoteOp": true,
+    "skipWorkspace": true
   },
   {
     "name": "details",
@@ -416,10 +447,23 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     ]
   },
   {
+    "name": "globals",
+    "aspectId": "teambit.harmony/global-config",
+    "description": "display global directories and paths used by Bit",
+    "group": "system"
+  },
+  {
     "name": "graph",
     "aspectId": "teambit.component/graph",
     "description": "visualize component dependencies as a graph image",
     "group": "info-analysis",
+    "remoteOp": true
+  },
+  {
+    "name": "import",
+    "aspectId": "teambit.scope/importer",
+    "description": "bring components from remote scopes into your workspace",
+    "group": "collaborate",
     "remoteOp": true
   },
   {
@@ -457,6 +501,15 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "group": "testing"
   },
   {
+    "name": "list",
+    "aspectId": "teambit.component/lister",
+    "alias": "ls",
+    "description": "display components in workspace or remote scope",
+    "group": "info-analysis",
+    "remoteOp": true,
+    "skipWorkspace": true
+  },
+  {
     "name": "local-only",
     "aspectId": "teambit.workspace/workspace",
     "description": "manage components that exist only in the workspace",
@@ -481,6 +534,20 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
         "group": "ungrouped"
       }
     ]
+  },
+  {
+    "name": "log",
+    "aspectId": "teambit.component/component-log",
+    "description": "display component version history",
+    "group": "version-control",
+    "remoteOp": true,
+    "skipWorkspace": true
+  },
+  {
+    "name": "log-file",
+    "aspectId": "teambit.component/component-log",
+    "description": "EXPERIMENTAL. display history of changes to a specific file",
+    "group": "version-control"
   },
   {
     "name": "login",
@@ -642,6 +709,15 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     ]
   },
   {
+    "name": "remove",
+    "aspectId": "teambit.component/remove",
+    "alias": "rm",
+    "description": "untrack components from the workspace",
+    "group": "component-development",
+    "remoteOp": true,
+    "skipWorkspace": true
+  },
+  {
     "name": "rename",
     "aspectId": "teambit.component/renaming",
     "description": "change a component name",
@@ -654,6 +730,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "aspectId": "teambit.component/snapping",
     "description": "revert local tags and snaps to previous versions",
     "group": "version-control"
+  },
+  {
+    "name": "resume-export",
+    "aspectId": "teambit.scope/export",
+    "description": "EXPERIMENTAL. resume failed export",
+    "group": "advanced",
+    "private": true,
+    "remoteOp": true
   },
   {
     "name": "revert",
@@ -809,6 +893,18 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "private": true
   },
   {
+    "name": "set-peer",
+    "aspectId": "teambit.dependencies/dependencies",
+    "description": "configure component to always be installed as peer dependency",
+    "group": "dependencies"
+  },
+  {
+    "name": "show",
+    "aspectId": "teambit.component/component",
+    "description": "display component metadata, dependencies, and configuration",
+    "group": "info-analysis"
+  },
+  {
     "name": "snap",
     "aspectId": "teambit.component/snapping",
     "description": "create immutable component snapshots for development versions",
@@ -857,6 +953,13 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     ]
   },
   {
+    "name": "status",
+    "aspectId": "teambit.component/status",
+    "alias": "s",
+    "description": "show workspace component status and issues",
+    "group": "info-analysis"
+  },
+  {
     "name": "tag",
     "aspectId": "teambit.component/snapping",
     "alias": "t",
@@ -901,6 +1004,12 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "group": "dependencies"
   },
   {
+    "name": "unset-peer",
+    "aspectId": "teambit.dependencies/dependencies",
+    "description": "remove always-peer configuration from component",
+    "group": "dependencies"
+  },
+  {
     "name": "unuse",
     "aspectId": "teambit.workspace/workspace",
     "description": "unset aspects in the workspace config (opposite of \"use\" command)",
@@ -930,6 +1039,13 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "group": "testing"
   },
   {
+    "name": "version",
+    "aspectId": "teambit.harmony/cli",
+    "description": "display the installed Bit version",
+    "group": "system",
+    "loader": false
+  },
+  {
     "name": "watch",
     "aspectId": "teambit.workspace/watcher",
     "description": "watch and compile components on file changes",
@@ -941,6 +1057,12 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
     "description": "display the currently authenticated Bit Cloud user",
     "group": "auth",
     "skipWorkspace": true
+  },
+  {
+    "name": "why",
+    "aspectId": "teambit.dependencies/dependencies",
+    "description": "find components that use the specified dependency",
+    "group": "dependencies"
   },
   {
     "name": "ws-config",

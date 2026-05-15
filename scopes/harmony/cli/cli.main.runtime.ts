@@ -58,7 +58,7 @@ export class CLIMain {
       this.setDefaults(command);
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       command.commands!.forEach((cmd) => this.setDefaults(cmd));
-      this.commandsSlot.register([command]);
+      this.appendToSlot([command]);
       return;
     }
     const commands = args as CommandList;
@@ -67,7 +67,24 @@ export class CLIMain {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       command.commands!.forEach((cmd) => this.setDefaults(cmd));
     });
+    this.appendToSlot(commands);
+  }
+
+  // The underlying Slot stores one entry per aspect (keyed by harmony.current).
+  // `slot.register(value)` overwrites that entry, so two `cli.register` calls from
+  // the same provider would drop the first registration. We snapshot the slot
+  // before delegating, then merge any pre-existing commands back in.
+  private appendToSlot(commands: CommandList): void {
+    const before = new Map(this.commandsSlot.map);
     this.commandsSlot.register(commands);
+    for (const [id, post] of this.commandsSlot.map) {
+      const prev = before.get(id);
+      if (prev === post) continue;
+      if (prev && prev.length > 0) {
+        this.commandsSlot.map.set(id, [...prev, ...post]);
+      }
+      return;
+    }
   }
 
   /**

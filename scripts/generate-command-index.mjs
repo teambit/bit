@@ -34,6 +34,11 @@ const SLOT_SKIP_DIRS = new Set([
 process.env.BIT_SKIP_COMMAND_INDEX_ASSERT = '1';
 
 const repoRequire = createRequire(join(REPO_ROOT, 'package.json'));
+// Install the require-hook (.scss/.css/etc → {}) BEFORE importing @teambit/bit.
+// @teambit/bit's index.ts re-exports from ./manifests, which eagerly loads
+// every core aspect; without the hook in place first, asset imports inside
+// UI-adjacent aspects (e.g. @teambit/api-reference's *.module.scss) crash Node.
+repoRequire('@teambit/bit/dist/hook-require.js');
 const { loadBit } = repoRequire('@teambit/bit');
 const { CLIAspect } = repoRequire('@teambit/cli');
 
