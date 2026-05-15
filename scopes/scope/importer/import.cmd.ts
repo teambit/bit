@@ -1,6 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import {
-import { importCommand } from './importer.commands';
   formatSection,
   formatItem,
   formatTitle,
@@ -10,6 +9,7 @@ import { importCommand } from './importer.commands';
   errorSymbol,
   joinSections,
 } from '@teambit/cli';
+import { importCommand } from './importer.commands';
 import chalk from 'chalk';
 import { uniq } from 'lodash';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';

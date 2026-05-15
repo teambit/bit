@@ -26,7 +26,6 @@ import { DependenciesLoader } from './dependencies-loader/dependencies-loader';
 import type { DependenciesData, OverridesDependenciesData } from './dependencies-loader/dependencies-data';
 import type { RemoveDependenciesFlags, SetDependenciesFlags } from './dependencies-cmd';
 import {
-import { dependentsCommand, setPeerCommand, unsetPeerCommand, whyCommand } from './dependencies.commands';
   DependenciesBlameCmd,
   DependenciesCircularCmd,
   DependenciesCmd,
@@ -44,6 +43,7 @@ import { dependentsCommand, setPeerCommand, unsetPeerCommand, whyCommand } from 
   UnsetPeerCmd,
   WhyCmd,
 } from './dependencies-cmd';
+import { dependentsCommand, setPeerCommand, unsetPeerCommand, whyCommand } from './dependencies.commands';
 import { DependenciesAspect } from './dependencies.aspect';
 import type { DebugDependencies } from './dependencies-loader/auto-detect-deps';
 import { DependentsCmd } from './dependents-cmd';

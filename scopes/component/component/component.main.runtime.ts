@@ -22,7 +22,6 @@ import { HostNotFound } from './exceptions';
 import type { AspectEntry } from './aspect-entry';
 import type { ShowFragment } from './show';
 import {
-import { catCommand, showCommand } from './component.commands';
   ShowCmd,
   NameFragment,
   MainFileFragment,
@@ -31,6 +30,7 @@ import { catCommand, showCommand } from './component.commands';
   FilesFragment,
   ExtensionsFragment,
 } from './show';
+import { catCommand, showCommand } from './component.commands';
 import { CatCmd } from './cat';
 
 export type ComponentHostSlot = SlotRegistry<ComponentFactory>;

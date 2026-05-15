@@ -8,7 +8,6 @@ import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import type { Command, CommandOptions, Report } from '@teambit/cli';
 import {
-import { catLaneHistoryCommand } from './lanes.commands';
   formatTitle,
   formatSection,
   formatItem,
@@ -17,6 +16,7 @@ import { catLaneHistoryCommand } from './lanes.commands';
   warnSymbol,
   joinSections,
 } from '@teambit/cli';
+import { catLaneHistoryCommand } from './lanes.commands';
 import type { LaneData } from '@teambit/legacy.scope';
 import { serializeLaneData } from '@teambit/legacy.scope';
 import { BitError } from '@teambit/bit-error';

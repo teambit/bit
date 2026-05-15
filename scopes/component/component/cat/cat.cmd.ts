@@ -3,7 +3,7 @@ import { BitError } from '@teambit/bit-error';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import type { Component } from '../component';
 import type { ComponentMain } from '../component.main.runtime';
-import { catCommand } from './component.commands';
+import { catCommand } from '../component.commands';
 
 const ENVS_ASPECT_ID = 'teambit.envs/envs';
 

@@ -1,7 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
 import type { Command, CommandOptions } from '@teambit/cli';
 import {
-import { unsetPeerCommand } from './dependencies.commands';
   formatTitle,
   formatItem,
   formatSection,
@@ -10,6 +9,7 @@ import { unsetPeerCommand } from './dependencies.commands';
   joinSections,
   warnSymbol,
 } from '@teambit/cli';
+import { unsetPeerCommand } from './dependencies.commands';
 import Table from 'cli-table';
 import chalk from 'chalk';
 import archy from 'archy';

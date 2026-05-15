@@ -1,7 +1,7 @@
 import open from 'open';
 import type { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
-import { showCommand } from './component.commands';
+import { showCommand } from '../component.commands';
 // import { Logger } from '@teambit/logger';
 // import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';

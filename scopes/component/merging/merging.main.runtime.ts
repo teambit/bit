@@ -44,13 +44,13 @@ import { MergingAspect } from './merging.aspect';
 import type { DataMergeResult, MergeStatusProviderOptions } from './merge-status-provider';
 import { MergeStatusProvider } from './merge-status-provider';
 import type {
-import { mergeCommand } from './merging.commands';
   MergeStrategy,
   MergeResultsThreeWay,
   ApplyVersionResults,
   FailedComponents,
   MergeSnapResults,
 } from '@teambit/component.modules.merge-helper';
+import { mergeCommand } from './merging.commands';
 import {
   applyModifiedVersion,
   FileStatus,

@@ -1,7 +1,6 @@
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import {
-import { globalsCommand, remoteCommand } from './global-config.commands';
   CACHE_ROOT,
   DEBUG_LOG,
   GLOBAL_SCOPE,
@@ -9,6 +8,7 @@ import { globalsCommand, remoteCommand } from './global-config.commands';
   CFG_CAPSULES_ROOT_BASE_DIR,
   GLOBALS_DEFAULT_CAPSULES,
 } from '@teambit/legacy.constants';
+import { globalsCommand, remoteCommand } from './global-config.commands';
 import { GlobalConfigAspect } from './global-config.aspect';
 import { GlobalsCmd } from './globals.cmd';
 import { SystemCmd, SystemLogCmd, SystemTailLogCmd } from './system.cmd';

@@ -55,7 +55,6 @@ import { removeLanes } from './remove-lanes';
 import { LanesAspect } from './lanes.aspect';
 import type { LaneCheckoutOpts } from './lane.cmd';
 import {
-import { catLaneHistoryCommand } from './lanes.commands';
   LaneCmd,
   LaneCreateCmd,
   LaneCurrentCmd,
@@ -75,6 +74,7 @@ import { catLaneHistoryCommand } from './lanes.commands';
   LaneFetchCmd,
   LaneEjectCmd,
 } from './lane.cmd';
+import { catLaneHistoryCommand } from './lanes.commands';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
 import { LaneSwitcher } from './switch-lanes';

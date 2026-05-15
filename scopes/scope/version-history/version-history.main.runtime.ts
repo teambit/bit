@@ -5,12 +5,12 @@ import { loadConsumerIfExist } from '@teambit/legacy.consumer';
 import { VersionHistoryAspect } from './version-history.aspect';
 import type { BuildOptions, ShowOptions } from './version-history-cmd';
 import {
-import { catVersionHistoryCommand } from './version-history.commands';
   VersionHistoryBuildCmd,
   VersionHistoryCmd,
   VersionHistoryGraphCmd,
   VersionHistoryShowCmd,
 } from './version-history-cmd';
+import { catVersionHistoryCommand } from './version-history.commands';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import type { ComponentID } from '@teambit/component-id';

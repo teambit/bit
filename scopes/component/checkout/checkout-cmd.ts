@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions, Report } from '@teambit/cli';
 import {
-import { checkoutCommand } from './checkout.commands';
   formatTitle,
   formatSection,
   formatItem,
@@ -11,6 +10,7 @@ import { checkoutCommand } from './checkout.commands';
   warnSymbol,
   joinSections,
 } from '@teambit/cli';
+import { checkoutCommand } from './checkout.commands';
 import type { ApplyVersionResults, MergeStrategy } from '@teambit/component.modules.merge-helper';
 import {
   applyVersionReport,

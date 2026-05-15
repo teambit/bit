@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions, Report } from '@teambit/cli';
 import {
-import { mergeCommand } from './merging.commands';
   warnSymbol,
   errorSymbol,
   formatTitle,
@@ -11,6 +10,7 @@ import { mergeCommand } from './merging.commands';
   formatDetailsHint,
   joinSections,
 } from '@teambit/cli';
+import { mergeCommand } from './merging.commands';
 import {
   COMPONENT_PATTERN_HELP,
   AUTO_SNAPPED_MSG,
