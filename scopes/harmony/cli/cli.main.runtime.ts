@@ -16,6 +16,7 @@ import { CliCmd, CliGenerateCmd } from './cli.cmd';
 import { HelpCmd } from './help.cmd';
 import { VersionCmd } from './version.cmd';
 import { DetailsCmd } from './details.cmd';
+import { completionCommand, detailsCommand, versionCommand } from './cli.commands';
 
 export type CommandList = Array<Command>;
 export type OnStart = (hasWorkspace: boolean, currentCommand: string, commandObject?: Command) => Promise<void>;
@@ -226,7 +227,9 @@ export class CLIMain {
     const cliCmd = new CliCmd(cliMain);
     const helpCmd = new HelpCmd(cliMain);
     cliCmd.commands.push(cliGenerateCmd);
-    cliMain.register(new CompletionCmd(), cliCmd, helpCmd, new VersionCmd(), new DetailsCmd());
+    cliMain.register(completionCommand, () => new CompletionCmd());
+    cliMain.register(versionCommand, () => new VersionCmd());
+    cliMain.register(detailsCommand, () => new DetailsCmd());
     return cliMain;
   }
 }

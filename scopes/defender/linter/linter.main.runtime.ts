@@ -14,6 +14,7 @@ import { LintTask } from './lint.task';
 import { LintCmd } from './lint.cmd';
 import type { FixTypes, LinterOptions } from './linter-context';
 import type { Linter } from './linter';
+import { lintCommand } from './linter.commands';
 
 export type LinterConfig = {
   /**
@@ -68,7 +69,7 @@ export class LinterMain {
     const linterService = new LinterService(config, workspace);
     const linterAspect = new LinterMain(envs, linterService);
     envs.registerService(linterService);
-    cli.register(new LintCmd(linterAspect, component.getHost(), workspace));
+    cli.register(lintCommand, () => new LintCmd(linterAspect, component.getHost(), workspace));
 
     return linterAspect;
   }

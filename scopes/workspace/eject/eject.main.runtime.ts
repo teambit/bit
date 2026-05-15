@@ -11,6 +11,7 @@ import { EjectCmd } from './eject-cmd';
 import { EjectAspect } from './eject.aspect';
 import type { EjectOptions, EjectResults } from './components-ejector';
 import { ComponentsEjector } from './components-ejector';
+import { ejectCommand } from './eject.commands';
 
 export class EjectMain {
   constructor(
@@ -42,7 +43,7 @@ export class EjectMain {
   static async provider([cli, workspace, loggerMain, install]: [CLIMain, Workspace, LoggerMain, InstallMain]) {
     const logger = loggerMain.createLogger(EjectAspect.id);
     const ejectMain = new EjectMain(workspace, install, logger);
-    cli.register(new EjectCmd(ejectMain, workspace));
+    cli.register(ejectCommand, () => new EjectCmd(ejectMain, workspace));
 
     return ejectMain;
   }

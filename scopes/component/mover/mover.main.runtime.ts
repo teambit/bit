@@ -14,6 +14,7 @@ import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-co
 import { RemovePath } from '@teambit/component.sources';
 import { MoverAspect } from './mover.aspect';
 import { MoveCmd } from './move-cmd';
+import { moveCommand } from './mover.commands';
 
 export class MoverMain {
   constructor(private workspace: Workspace) {}
@@ -77,7 +78,7 @@ to change the main-file, use "bit add <component-dir> --main <new-main-file>"`);
 
   static async provider([cli, workspace]: [CLIMain, Workspace]) {
     const moverMain = new MoverMain(workspace);
-    cli.register(new MoveCmd(moverMain));
+    cli.register(moveCommand, () => new MoveCmd(moverMain));
     return moverMain;
   }
 }

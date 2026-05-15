@@ -2,15 +2,16 @@ import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
 import { IssuesAspect } from './issues.aspect';
 import type { IssuesMain } from './issues.main.runtime';
+import { componentIssuesCommand } from './issues.commands';
 
 export class ComponentIssuesCmd implements Command {
-  name = 'component-issues';
-  description = 'list available component-issues';
-  alias = '';
-  group = 'info-analysis';
-  options = [['j', 'json', 'output issues in json format']] as CommandOptions;
-  loader = true;
-  private = true;
+  name = componentIssuesCommand.name;
+  description = componentIssuesCommand.description;
+  alias = componentIssuesCommand.alias;
+  group = componentIssuesCommand.group;
+  options = componentIssuesCommand.options;
+  loader = componentIssuesCommand.loader;
+  private = componentIssuesCommand.private;
 
   constructor(private issues: IssuesMain) {}
 

@@ -5,30 +5,17 @@ import type { ComponentID } from '@teambit/component-id';
 import { FileStatus } from '@teambit/component.modules.merge-helper';
 import type { ImporterMain } from './importer.main.runtime';
 import type { ImportDetails, ImportStatus } from './import-components';
+import { fetchCommand } from './importer.commands';
 
 export class FetchCmd implements Command {
-  name = 'fetch [ids...]';
-  description = `fetch remote objects and store locally`;
-  extendedDescription = `for lanes, use "/" as a separator between the remote and the lane name, e.g. teambit.ui/fix-button`;
-  group = 'collaborate';
-  alias = '';
-  private = true;
-  options = [
-    [
-      'l',
-      'lanes',
-      'fetch component objects from lanes. note, it does not save the remote lanes objects locally, only the refs',
-    ],
-    ['c', 'components', 'fetch components'],
-    ['', 'all-history', 'for each component, fetch all its versions. by default, only the latest version is fetched'],
-    ['j', 'json', 'return the output as JSON'],
-    [
-      '',
-      'from-original-scopes',
-      'fetch indirect dependencies from their original scope as opposed to from their dependents',
-    ],
-  ] as CommandOptions;
-  loader = true;
+  name = fetchCommand.name;
+  description = fetchCommand.description;
+  extendedDescription = fetchCommand.extendedDescription;
+  group = fetchCommand.group;
+  alias = fetchCommand.alias;
+  private = fetchCommand.private;
+  options = fetchCommand.options;
+  loader = fetchCommand.loader;
 
   constructor(private importer: ImporterMain) {}
 

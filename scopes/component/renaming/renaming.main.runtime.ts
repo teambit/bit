@@ -41,6 +41,7 @@ import { ScopeRenameCmd } from './scope-rename.cmd';
 import { OldScopeNotFound } from './exceptions/old-scope-not-found';
 import { ScopeRenameOwnerCmd } from './scope-rename-owner.cmd';
 import { RenamingTagged } from './exceptions/renaming-tagged';
+import { renameCommand } from './renaming.commands';
 
 type RenameId = { sourceId: ComponentID; targetId: ComponentID };
 type RenameData = RenameId & {
@@ -401,7 +402,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       envs,
       remove
     );
-    cli.register(new RenameCmd(renaming));
+    cli.register(renameCommand, () => new RenameCmd(renaming));
 
     const scopeCommand = cli.getCommand('scope');
     scopeCommand?.commands?.push(new ScopeRenameCmd(renaming));

@@ -35,6 +35,7 @@ import type { ScopeForkOptions } from './scope-fork.cmd';
 import { ScopeForkCmd } from './scope-fork.cmd';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
+import { forkCommand } from './forking.commands';
 
 export type ForkInfo = {
   forkedFrom: ComponentID;
@@ -543,7 +544,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
       refactoring,
       pkg
     );
-    cli.register(new ForkCmd(forkingMain));
+    cli.register(forkCommand, () => new ForkCmd(forkingMain));
     graphql.register(() => forkingSchema(forkingMain));
     componentMain.registerShowFragments([new ForkingFragment(forkingMain)]);
 

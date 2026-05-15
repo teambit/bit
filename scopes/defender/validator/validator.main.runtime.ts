@@ -14,6 +14,7 @@ import type { Component } from '@teambit/component';
 import chalk from 'chalk';
 import { ValidatorAspect } from './validator.aspect';
 import { ValidateCmd } from './validate.cmd';
+import { validateCommand } from './validator.commands';
 
 export type ValidationResult = {
   code: number;
@@ -163,7 +164,7 @@ export class ValidatorMain {
   ]) {
     const logger = loggerAspect.createLogger(ValidatorAspect.id);
     const validator = new ValidatorMain(workspace, typescript, linter, tester, logger);
-    cli.register(new ValidateCmd(validator, workspace, logger));
+    cli.register(validateCommand, () => new ValidateCmd(validator, workspace, logger));
     return validator;
   }
 }

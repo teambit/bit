@@ -2,17 +2,16 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import type { ComponentLogMain } from './component-log.main.runtime';
 import { getEmptyTableWithoutStyle } from './log-cmd';
+import { blameCommand } from './component-log.commands';
 
 export class BlameCmd implements Command {
-  name = 'blame <filepath>';
-  description = 'EXPERIMENTAL. show line-by-line authorship and modification history';
-  extendedDescription = `displays who last modified each line of a file and when the change was made.
-tracks line-level changes across component versions.
-shows author, date, version hash, and optionally commit messages for each line.`;
-  group = 'version-control';
-  alias = '';
-  options = [['m', 'include-message', 'show the commit message']] as CommandOptions;
-  arguments = [{ name: 'filepath', description: 'file path relative to the workspace' }];
+  name = blameCommand.name;
+  description = blameCommand.description;
+  extendedDescription = blameCommand.extendedDescription;
+  group = blameCommand.group;
+  alias = blameCommand.alias;
+  options = blameCommand.options;
+  arguments = blameCommand.arguments;
 
   constructor(private componentLog: ComponentLogMain) {}
 

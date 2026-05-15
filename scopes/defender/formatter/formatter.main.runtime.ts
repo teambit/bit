@@ -16,6 +16,7 @@ import type { FormatterOptions } from './formatter-context';
 import type { Formatter } from './formatter';
 import type { SnappingMain } from '@teambit/snapping';
 import { SnappingAspect } from '@teambit/snapping';
+import { formatCommand } from './formatter.commands';
 
 export type FormatterConfig = {
   formatOnPreSnap?: boolean;
@@ -85,7 +86,7 @@ export class FormatterMain {
     const formatterService = new FormatterService(config);
     const formatterMain = new FormatterMain(envs, formatterService, logger);
     envs.registerService(formatterService);
-    cli.register(new FormatCmd(formatterMain, component.getHost(), workspace));
+    cli.register(formatCommand, () => new FormatCmd(formatterMain, component.getHost(), workspace));
     snapping.registerOnPreSnap(async (components) => {
       if (!config.formatOnPreSnap) {
         return;

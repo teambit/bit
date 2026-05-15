@@ -1,8 +1,8 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../harmony/aspect';
 
 export const AspectLoaderAspect = Aspect.create({
   id: 'teambit.harmony/aspect-loader',
-  dependencies: [],
+  runtimes: { main: () => import('./aspect-loader.main.runtime') },
 });
 
 export default AspectLoaderAspect;

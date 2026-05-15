@@ -1,9 +1,8 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../../harmony/harmony/aspect';
 
 export const DocsAspect = Aspect.create({
   id: 'teambit.docs/docs',
-  dependencies: [],
-  defaultConfig: {},
+  runtimes: { main: () => import('./docs.main.runtime') },
 });
 
 export default DocsAspect;

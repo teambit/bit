@@ -1,9 +1,7 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../../harmony/harmony/aspect';
 
 export const CodeAspect = Aspect.create({
   id: 'teambit.component/code',
-  dependencies: [],
-  defaultConfig: {},
 });
 
 export default CodeAspect;

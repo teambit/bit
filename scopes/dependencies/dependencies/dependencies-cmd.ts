@@ -1,6 +1,7 @@
 // eslint-disable-next-line max-classes-per-file
 import type { Command, CommandOptions } from '@teambit/cli';
 import {
+import { unsetPeerCommand } from './dependencies.commands';
   formatTitle,
   formatItem,
   formatSection,
@@ -546,14 +547,13 @@ the specified version range will be used when adding this component as a peer de
 }
 
 export class UnsetPeerCmd implements Command {
-  name = 'unset-peer <component-id>';
-  arguments = [{ name: 'component-id', description: 'the component to unset as always peer' }];
-  group = 'dependencies';
-  description = 'remove always-peer configuration from component';
-  extendedDescription = `removes the always-peer marking from a component, allowing it to be installed as a regular dependency.
-reverses the effect of 'bit set-peer' command. the component will be treated normally in dependency resolution.`;
-  alias = '';
-  options = [];
+  name = unsetPeerCommand.name;
+  arguments = unsetPeerCommand.arguments;
+  group = unsetPeerCommand.group;
+  description = unsetPeerCommand.description;
+  extendedDescription = unsetPeerCommand.extendedDescription;
+  alias = unsetPeerCommand.alias;
+  options = unsetPeerCommand.options;
 
   constructor(private deps: DependenciesMain) {}
 

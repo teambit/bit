@@ -11,6 +11,7 @@ import { compact, flatten, groupBy, omit } from 'lodash';
 import type { LinterMain } from './linter.main.runtime';
 import type { ComponentLintResult, LintResults } from './linter';
 import type { FixTypes, LinterOptions } from './linter-context';
+import { lintCommand } from './linter.commands';
 
 export type LintCmdOptions = {
   changed?: boolean;
@@ -42,20 +43,13 @@ export type JsonLintResults = {
 };
 
 export class LintCmd implements Command {
-  name = 'lint [component-pattern]';
-  description = 'analyze component code for issues and style violations';
-  extendedDescription = `runs linters configured by each component's environment (ESLint, etc.) to check for code quality issues.
-by default lints all components. use --changed to lint only new and modified components.
-supports automatic fixing of certain issues with --fix flag.`;
-  arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
-  helpUrl = 'reference/linting/linter-overview';
-  group = 'testing';
-  options = [
-    ['c', 'changed', 'lint only new and modified components'],
-    ['f', 'fix', 'automatically fix problems'],
-    ['', 'fix-type <fixType>', 'specify the types of fixes to apply (problem, suggestion, layout)'],
-    ['j', 'json', 'return the lint results in json format'],
-  ] as CommandOptions;
+  name = lintCommand.name;
+  description = lintCommand.description;
+  extendedDescription = lintCommand.extendedDescription;
+  arguments = lintCommand.arguments;
+  helpUrl = lintCommand.helpUrl;
+  group = lintCommand.group;
+  options = lintCommand.options;
 
   constructor(
     private linter: LinterMain,

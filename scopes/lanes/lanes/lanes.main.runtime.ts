@@ -55,6 +55,7 @@ import { removeLanes } from './remove-lanes';
 import { LanesAspect } from './lanes.aspect';
 import type { LaneCheckoutOpts } from './lane.cmd';
 import {
+import { catLaneHistoryCommand } from './lanes.commands';
   LaneCmd,
   LaneCreateCmd,
   LaneCurrentCmd,
@@ -1381,7 +1382,7 @@ please create a new lane instead, which will include all components of this lane
     laneCmd.commands.push(new LaneHistoryDiffCmd(lanesMain, workspace, scope, componentCompare));
     laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
     laneCmd.commands.push(new LaneRevertCmd(lanesMain));
-    cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));
+    cli.register(catLaneHistoryCommand, () => new CatLaneHistoryCmd(lanesMain));
     cli.registerOnStart(async () => {
       await lanesMain.recreateNewLaneIfDeleted();
     });

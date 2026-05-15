@@ -4,23 +4,17 @@ import type { DependentsResults } from './dependents';
 import { dependents } from './dependents';
 import { generateDependentsInfoTable } from './template';
 import type { Workspace } from '@teambit/workspace';
+import { dependentsCommand } from './dependencies.commands';
 
 export class DependentsCmd implements Command {
-  name = 'dependents <component-name>';
-  helpUrl = 'reference/dependencies/inspecting-dependencies#review-dependents';
-  arguments = [
-    {
-      name: 'component-name',
-      description: 'component name or component id',
-    },
-  ];
-  description = 'show components that depend on the specified component';
-  extendedDescription = `displays components from both workspace and scope that depend on the specified component.
-useful for understanding impact before making changes to a component or when planning refactoring.
-shows both direct and transitive dependents organized by their origin (workspace vs scope).`;
-  group = 'dependencies';
-  alias = '';
-  options = [['j', 'json', 'return the dependents in JSON format']] as CommandOptions;
+  name = dependentsCommand.name;
+  helpUrl = dependentsCommand.helpUrl;
+  arguments = dependentsCommand.arguments;
+  description = dependentsCommand.description;
+  extendedDescription = dependentsCommand.extendedDescription;
+  group = dependentsCommand.group;
+  alias = dependentsCommand.alias;
+  options = dependentsCommand.options;
 
   constructor(private workspace: Workspace) {}
 

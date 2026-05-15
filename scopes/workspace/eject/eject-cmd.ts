@@ -3,33 +3,18 @@ import type { Workspace } from '@teambit/workspace';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { ejectTemplate } from './eject-template';
 import type { EjectMain } from './eject.main.runtime';
+import { ejectCommand } from './eject.commands';
 
 export class EjectCmd implements Command {
-  name = 'eject <component-pattern>';
-  description = 'remove component from workspace and install it as npm package';
-  extendedDescription = `converts workspace components to external npm packages by removing them from .bitmap and installing via package manager.
-by default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency.
-useful for components that no longer need active development in current workspace.`;
-  helpUrl = 'reference/components/exporting-components#ejecting-components';
-  arguments = [
-    {
-      name: 'component-pattern',
-      description: COMPONENT_PATTERN_HELP,
-    },
-  ];
-  alias = 'E';
-  options = [
-    [
-      'f',
-      'force',
-      'ignore local changes/versions. eject component/s even when they are staged or modified. Note: unexported tags/snaps will be lost',
-    ],
-    ['x', 'skip-dependency-installation', 'do not auto-install dependencies'],
-    ['j', 'json', 'print the results in JSON format'],
-    ['', 'keep-files', 'keep the component files in the workspace intact'],
-  ] as CommandOptions;
-  loader = true;
-  group = 'dependencies';
+  name = ejectCommand.name;
+  description = ejectCommand.description;
+  extendedDescription = ejectCommand.extendedDescription;
+  helpUrl = ejectCommand.helpUrl;
+  arguments = ejectCommand.arguments;
+  alias = ejectCommand.alias;
+  options = ejectCommand.options;
+  loader = ejectCommand.loader;
+  group = ejectCommand.group;
 
   constructor(
     private ejectMain: EjectMain,

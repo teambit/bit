@@ -1,9 +1,7 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../../harmony/harmony/aspect';
 
 export const ChangelogAspect = Aspect.create({
   id: 'teambit.component/changelog',
-  dependencies: [],
-  defaultConfig: {},
 });
 
 export default ChangelogAspect;

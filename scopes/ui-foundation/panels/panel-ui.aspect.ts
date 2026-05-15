@@ -1,7 +1,6 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../../harmony/harmony/aspect';
 
 export const PanelUiAspect = Aspect.create({
   id: 'teambit.ui-foundation/panels',
-  dependencies: [],
-  defaultConfig: {},
+  runtimes: { main: () => import('./panel-ui.main.runtime') },
 });

@@ -3,6 +3,7 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import { formatItem, formatSuccessSummary } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { RemoveMain } from './remove.main.runtime';
+import { recoverCommand } from './remove.commands';
 
 export type RecoverOptions = {
   skipDependencyInstallation?: boolean;
@@ -10,22 +11,14 @@ export type RecoverOptions = {
 };
 
 export class RecoverCmd implements Command {
-  name = 'recover <component-pattern>';
-  description = 'restore soft-deleted components';
+  name = recoverCommand.name;
+  description = recoverCommand.description;
   extendedDescription =
-    'reverses the soft-deletion of components marked with "bit delete", restoring them to their previous state. works for both local and remote soft-deleted components. supports patterns like "comp1", "org.scope/*", etc.';
-  arguments = [
-    {
-      name: 'component-pattern',
-      description: COMPONENT_PATTERN_HELP,
-    },
-  ];
-  group = 'collaborate';
-  options = [
-    ['x', 'skip-dependency-installation', 'do not install packages in case of importing components'],
-    ['', 'skip-write-config-files', 'do not write config files (such as eslint, tsconfig, prettier, etc...)'],
-  ] as CommandOptions;
-  loader = true;
+    recoverCommand.extendedDescription;
+  arguments = recoverCommand.arguments;
+  group = recoverCommand.group;
+  options = recoverCommand.options;
+  loader = recoverCommand.loader;
 
   constructor(private remove: RemoveMain) {}
 

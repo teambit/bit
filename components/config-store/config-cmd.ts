@@ -4,6 +4,7 @@ import rightpad from 'pad-right';
 import { BASE_DOCS_DOMAIN } from '@teambit/legacy.constants';
 import type { Command, CommandOptions } from '@teambit/cli';
 import type { ConfigStoreMain, StoreOrigin } from './config-store.main.runtime';
+import { configCommand } from './config-store.commands';
 
 class ConfigSet implements Command {
   name = 'set <key> <val>';
@@ -130,17 +131,14 @@ class ConfigDel implements Command {
 }
 
 export class ConfigCmd implements Command {
-  name = 'config';
-  description = 'manage Bit configuration settings';
-  extendedDescription = `view and modify Bit configuration at different levels: global, workspace, or scope.
-configurations control various aspects of Bit including user settings, registries, and feature flags.
-use environment variables prefixed with BIT_CONFIG_ for temporary overrides.
-${BASE_DOCS_DOMAIN}reference/config/bit-config`;
-  group = 'system';
-  alias = '';
-  loadAspects = false;
-  commands: Command[] = [];
-  options = [] as CommandOptions;
+  name = configCommand.name;
+  description = configCommand.description;
+  extendedDescription = configCommand.extendedDescription;
+  group = configCommand.group;
+  alias = configCommand.alias;
+  loadAspects = configCommand.loadAspects;
+  commands: Command[] = configCommand.commands;
+  options = configCommand.options;
 
   constructor(private configStore: ConfigStoreMain) {
     this.commands = [

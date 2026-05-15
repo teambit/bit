@@ -17,6 +17,7 @@ import type { ComponentGraph } from './component-graph';
 import type { ComponentIdGraph } from './component-id-graph';
 import type { GraphConfig } from '@teambit/legacy.dependency-graph';
 import { VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
+import { graphCommand } from './graph.commands';
 
 export class GraphMain {
   constructor(
@@ -103,7 +104,7 @@ export class GraphMain {
     graphql.register(() => graphSchema(graphBuilder, componentAspect));
 
     const graphMain = new GraphMain(componentAspect, logger);
-    cli.register(new GraphCmd(componentAspect, graphMain));
+    cli.register(graphCommand, () => new GraphCmd(componentAspect, graphMain));
 
     return graphMain;
   }

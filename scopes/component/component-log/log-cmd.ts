@@ -4,6 +4,7 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import { warnSymbol, errorSymbol } from '@teambit/cli';
 import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentLogMain, LogOpts } from './component-log.main.runtime';
+import { logCommand } from './component-log.commands';
 
 type LogFlags = {
   remote?: boolean;
@@ -14,30 +15,16 @@ type LogFlags = {
   showHidden?: boolean;
 };
 export default class LogCmd implements Command {
-  name = 'log <id>';
-  description = 'display component version history';
-  helpUrl = 'reference/components/navigating-history';
-  extendedDescription = `shows chronological history of component versions including tags and snaps with metadata.
-displays commit messages, authors, dates, and version information. supports both local and remote component logs.
-use various format options for compact or detailed views of version history.`;
-  group = 'version-control';
-  alias = '';
-  options = [
-    ['r', 'remote', 'show log of a remote component'],
-    ['', 'parents', 'show parents and lanes data'],
-    ['o', 'one-line', 'show each log entry in one line'],
-    ['f', 'full-hash', 'show full hash of the snap (default to the first 9 characters for --one-line/--parents flags)'],
-    ['m', 'full-message', 'show full message of the snap (default to the first line for --one-line/--parents flags)'],
-    [
-      '',
-      'show-hidden',
-      'show hidden snaps (snaps are marked as hidden typically when the following tag has the same files/config)',
-    ],
-    ['j', 'json', 'json format'],
-  ] as CommandOptions;
-  remoteOp = true; // should support log against remote
-  skipWorkspace = true;
-  arguments = [{ name: 'id', description: 'component-id or component-name' }];
+  name = logCommand.name;
+  description = logCommand.description;
+  helpUrl = logCommand.helpUrl;
+  extendedDescription = logCommand.extendedDescription;
+  group = logCommand.group;
+  alias = logCommand.alias;
+  options = logCommand.options;
+  remoteOp = logCommand.remoteOp; // should support log against remote
+  skipWorkspace = logCommand.skipWorkspace;
+  arguments = logCommand.arguments;
 
   constructor(private componentLog: ComponentLogMain) {}
 

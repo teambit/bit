@@ -1,9 +1,8 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../../harmony/harmony/aspect';
 
 export const PnpmAspect = Aspect.create({
   id: 'teambit.dependencies/pnpm',
-  dependencies: [],
-  defaultConfig: {},
+  runtimes: { main: () => import('./pnpm.main.runtime') },
 });
 
 export default PnpmAspect;

@@ -33,6 +33,7 @@ import { AppPlugin, BIT_APP_PATTERN } from './app.plugin';
 import { AppTypePlugin } from './app-type.plugin';
 import { AppContext } from './app-context';
 import { DeployTask } from './deploy.task';
+import { runCommand } from './application.commands';
 
 export type ApplicationTypeSlot = SlotRegistry<ApplicationType<unknown>[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
@@ -538,7 +539,7 @@ export class ApplicationMain {
     builder.registerTagTasks([new DeployTask(application, builder)]);
     envs.registerService(appService);
     cli.registerGroup('apps', 'Applications');
-    cli.register(new RunCmd(application, logger), appCmd);
+    cli.register(runCommand, () => new RunCmd(application, logger));
     // cli.registerOnStart(async () => {
     //   await application.loadAppsToSlot();
     // });

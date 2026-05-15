@@ -22,6 +22,7 @@ import LogCmd from './log-cmd';
 import { buildSnapGraph } from './snap-graph';
 import { LogFileCmd } from './log-file-cmd';
 import { BlameCmd } from './blame-cmd';
+import { blameCommand, logCommand, logFileCommand } from './component-log.commands';
 
 export type FileLog = {
   hash: string;
@@ -374,7 +375,9 @@ export class ComponentLogMain {
   static runtime = MainRuntime;
   static async provider([cli, workspace]: [CLIMain, Workspace]) {
     const componentLog = new ComponentLogMain(workspace);
-    cli.register(new LogCmd(componentLog), new LogFileCmd(componentLog), new BlameCmd(componentLog));
+    cli.register(logCommand, () => new LogCmd(componentLog));
+    cli.register(logFileCommand, () => new LogFileCmd(componentLog));
+    cli.register(blameCommand, () => new BlameCmd(componentLog));
     return componentLog;
   }
 }

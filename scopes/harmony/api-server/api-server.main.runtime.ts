@@ -62,6 +62,7 @@ import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import type { SchemaMain } from '@teambit/schema';
 import { SchemaAspect } from '@teambit/schema';
+import { serverCommand } from './api-server.commands';
 
 export class ApiServerMain {
   private serverToken?: string;
@@ -519,7 +520,7 @@ export class ApiServerMain {
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
     const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer, importer);
-    cli.register(new ServerCmd(apiServer));
+    cli.register(serverCommand, () => new ServerCmd(apiServer));
 
     const apiForIDE = new APIForIDE(
       workspace,

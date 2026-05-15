@@ -1,7 +1,6 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '../../harmony/harmony/aspect';
 
 export const InsightsAspect = Aspect.create({
   id: 'teambit.explorer/insights',
-  dependencies: [],
-  defaultConfig: {},
+  runtimes: { main: () => import('./insights.main.runtime') },
 });

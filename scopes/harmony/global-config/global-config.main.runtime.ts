@@ -1,6 +1,7 @@
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import {
+import { globalsCommand, remoteCommand } from './global-config.commands';
   CACHE_ROOT,
   DEBUG_LOG,
   GLOBAL_SCOPE,
@@ -100,7 +101,8 @@ export class GlobalConfigMain {
     const globalConfig = new GlobalConfigMain(configStore);
     const systemCmd = new SystemCmd();
     systemCmd.commands = [new SystemLogCmd(), new SystemTailLogCmd()];
-    cli.register(new GlobalsCmd(globalConfig), systemCmd, new RemoteCmd());
+    cli.register(globalsCommand, () => new GlobalsCmd(globalConfig));
+    cli.register(remoteCommand, () => new RemoteCmd());
     return globalConfig;
   }
 }

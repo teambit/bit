@@ -13,6 +13,7 @@ import { AddCmd } from './add-cmd';
 import type { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
 import AddComponents, { addMultipleFromResolvedTrackData } from './add-components';
 import { TrackerAspect } from './tracker.aspect';
+import { addCommand } from './tracker.commands';
 
 export type TrackResult = { files: string[]; warnings: Warnings; componentId: ComponentID };
 
@@ -143,7 +144,7 @@ export class TrackerMain {
   static async provider([cli, workspace, loggerMain]: [CLIMain, Workspace, LoggerMain]) {
     const logger = loggerMain.createLogger(TrackerAspect.id);
     const trackerMain = new TrackerMain(workspace, logger);
-    cli.register(new AddCmd(trackerMain));
+    cli.register(addCommand, () => new AddCmd(trackerMain));
     return trackerMain;
   }
 }

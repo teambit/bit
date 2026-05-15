@@ -5,29 +5,18 @@ import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { ValidatorMain } from './validator.main.runtime';
+import { validateCommand } from './validator.commands';
 
 const VALID_TASKS = ['check-types', 'lint', 'test'] as const;
 
 export class ValidateCmd implements Command {
-  name = 'validate [component-pattern]';
-  description = 'run type-checking, linting, and testing in sequence';
-  extendedDescription = `validates components by running check-types, lint, and test commands in sequence.
-by default runs all checks even when errors are found.
-use --fail-fast to stop at the first failure.
-by default validates only new and modified components. use --all to validate all components.`;
-  arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
-  alias = '';
-  group = 'testing';
-  options = [
-    ['a', 'all', 'validate all components, not only modified and new'],
-    ['', 'fail-fast', 'stop at the first failure instead of running all checks'],
-    ['c', 'continue-on-error', 'DEPRECATED: this is now the default behavior'],
-    [
-      '',
-      'skip-tasks <string>',
-      'skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes. available tasks: "check-types", "lint", "test"',
-    ],
-  ] as CommandOptions;
+  name = validateCommand.name;
+  description = validateCommand.description;
+  extendedDescription = validateCommand.extendedDescription;
+  arguments = validateCommand.arguments;
+  alias = validateCommand.alias;
+  group = validateCommand.group;
+  options = validateCommand.options;
 
   constructor(
     private validator: ValidatorMain,

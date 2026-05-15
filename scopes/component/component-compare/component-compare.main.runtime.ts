@@ -25,6 +25,7 @@ import type { Component, ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import type { SchemaMain } from '@teambit/schema';
 import { SchemaAspect } from '@teambit/schema';
+import { diffCommand } from './component-compare.commands';
 
 import { componentCompareSchema } from './component-compare.graphql';
 import { ComponentCompareAspect } from './component-compare.aspect';
@@ -364,7 +365,7 @@ export class ComponentCompareMain {
       schema,
       workspace
     );
-    cli.register(new DiffCmd(componentCompareMain));
+    cli.register(diffCommand, () => new DiffCmd(componentCompareMain));
     graphql.register(() => componentCompareSchema(componentCompareMain));
     return componentCompareMain;
   }

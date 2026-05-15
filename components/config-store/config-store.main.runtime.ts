@@ -5,6 +5,7 @@ import { ConfigStoreAspect } from './config-store.aspect';
 import type { Store } from './config-getter';
 import { configGetter } from './config-getter';
 import { ConfigCmd } from './config-cmd';
+import { configCommand } from './config-store.commands';
 
 export type StoreOrigin = 'scope' | 'workspace' | 'global';
 
@@ -80,7 +81,7 @@ export class ConfigStoreMain {
   static runtime = MainRuntime;
   static async provider([cli]: [CLIMain]) {
     const configStore = new ConfigStoreMain();
-    cli.register(new ConfigCmd(configStore));
+    cli.register(configCommand, () => new ConfigCmd(configStore));
     return configStore;
   }
 }

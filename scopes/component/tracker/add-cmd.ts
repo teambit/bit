@@ -7,6 +7,7 @@ import type { PathLinux, PathOsBased } from '@teambit/legacy.utils';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { AddActionResults, Warnings } from './add-components';
 import type { TrackerMain } from './tracker.main.runtime';
+import { addCommand } from './tracker.commands';
 
 type AddFlags = {
   id: string | null | undefined;
@@ -23,27 +24,15 @@ type AddResults = {
 };
 
 export class AddCmd implements Command {
-  name = 'add [path...]';
-  description = 'track existing directory contents as new components in the workspace';
-  group = 'component-development';
+  name = addCommand.name;
+  description = addCommand.description;
+  group = addCommand.group;
   extendedDescription =
-    'Registers one or more directories as Bit components without changing your files. Each provided path becomes a component root tracked by Bit.';
-  helpUrl = 'reference/workspace/component-directory';
-  alias = 'a';
-  options = [
-    ['i', 'id <name>', 'manually set component id'],
-    ['m', 'main <file>', 'define component entry point'],
-    ['n', 'namespace <namespace>', 'organize component in a namespace'],
-    ['o', 'override <boolean>', 'override existing component if exists (default = false)'],
-    [
-      's',
-      'scope <string>',
-      `sets the component's scope. if not entered, the default-scope from workspace.jsonc will be used`,
-    ],
-    ['e', 'env <string>', "set the component's environment. (overrides the env from variants if exists)"],
-    ['j', 'json', 'output as json format'],
-  ] as CommandOptions;
-  loader = true;
+    addCommand.extendedDescription;
+  helpUrl = addCommand.helpUrl;
+  alias = addCommand.alias;
+  options = addCommand.options;
+  loader = addCommand.loader;
 
   constructor(private tracker: TrackerMain) {}
 

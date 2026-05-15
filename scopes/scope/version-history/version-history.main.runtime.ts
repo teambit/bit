@@ -5,6 +5,7 @@ import { loadConsumerIfExist } from '@teambit/legacy.consumer';
 import { VersionHistoryAspect } from './version-history.aspect';
 import type { BuildOptions, ShowOptions } from './version-history-cmd';
 import {
+import { catVersionHistoryCommand } from './version-history.commands';
   VersionHistoryBuildCmd,
   VersionHistoryCmd,
   VersionHistoryGraphCmd,
@@ -174,7 +175,7 @@ export class VersionHistoryMain {
       new VersionHistoryShowCmd(versionHistory),
       new VersionHistoryBuildCmd(versionHistory),
     ];
-    cli.register(versionHistoryCmd, new CatVersionHistoryCmd());
+    cli.register(catVersionHistoryCommand, () => new CatVersionHistoryCmd());
     ExternalActions.externalActions.push(new BuildVersionHistoryAction(versionHistory));
     return versionHistory;
   }

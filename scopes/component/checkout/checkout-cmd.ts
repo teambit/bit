@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions, Report } from '@teambit/cli';
 import {
+import { checkoutCommand } from './checkout.commands';
   formatTitle,
   formatSection,
   formatItem,
@@ -26,63 +27,15 @@ import { BitError } from '@teambit/bit-error';
 import type { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
 
 export class CheckoutCmd implements Command {
-  name = 'checkout <to> [component-pattern]';
-  arguments = [
-    {
-      name: 'to',
-      description:
-        "permitted values: `[head, latest, reset, {specific-version}, {head~x}]`. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes",
-    },
-    {
-      name: 'component-pattern',
-      description: COMPONENT_PATTERN_HELP,
-    },
-  ];
-  description = 'switch between component versions or remove local changes';
-  helpUrl = 'reference/components/merging-changes#checkout-snaps-to-the-working-directory';
-  group = 'version-control';
-  extendedDescription = `checkout components to specified versions or remove local changes. most commonly used as 'bit checkout head' to get latest versions.
-the \`<to>\` argument accepts these values:
-- head: checkout to last snap/tag (most common usage)
-- specific version: checkout to exact version (e.g. 'bit checkout 1.0.5 component-name')
-- head~x: go back x generations from head (e.g. 'head~2' for two versions back)
-- latest: checkout to latest semver tag
-- reset: remove local modifications and restore original files (also restores deleted component directories)
-when on lanes, 'checkout head' only affects lane components. to update main components, run 'bit lane merge main'.`;
-  alias = 'U';
-  options = [
-    [
-      'i',
-      'interactive-merge',
-      'when a component is modified and the merge process found conflicts, display options to resolve them',
-    ],
-    [
-      'r',
-      'auto-merge-resolve <merge-strategy>',
-      'in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
-    ],
-    [
-      '',
-      'manual',
-      'same as "--auto-merge-resolve manual". in case of merge conflict, write the files with the conflict markers',
-    ],
-    ['a', 'all', 'all components'],
-    [
-      'e',
-      'workspace-only',
-      "only relevant for 'bit checkout head' when on a lane. don't import components from the remote lane that are not already in the workspace",
-    ],
-    ['v', 'verbose', 'showing verbose output for inspection'],
-    ['x', 'skip-dependency-installation', 'do not auto-install dependencies of the imported components'],
-    ['', 'force-ours', 'do not merge, preserve local files as is'],
-    ['', 'force-theirs', 'do not merge, just overwrite with incoming files'],
-    [
-      '',
-      'include-new-from-scope',
-      "relevant for 'bit checkout head'. import components from the defaultScope that don't exist in the workspace",
-    ],
-  ] as CommandOptions;
-  loader = true;
+  name = checkoutCommand.name;
+  arguments = checkoutCommand.arguments;
+  description = checkoutCommand.description;
+  helpUrl = checkoutCommand.helpUrl;
+  group = checkoutCommand.group;
+  extendedDescription = checkoutCommand.extendedDescription;
+  alias = checkoutCommand.alias;
+  options = checkoutCommand.options;
+  loader = checkoutCommand.loader;
 
   constructor(private checkout: CheckoutMain) {}
 
