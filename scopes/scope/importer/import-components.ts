@@ -733,14 +733,27 @@ if you just want to get a quick look into this snap, create a new workspace and 
 
     // build adjacency from the merged flattenedEdges of all root versions
     const adjacency = new Map<string, ComponentID[]>();
-    for (const { version } of componentsAndVersions) {
+    const missingEdges: string[] = [];
+    for (const { component, versionStr, version } of componentsAndVersions) {
       const edges = await version.getFlattenedEdges(this.scope.objects);
+      if (!edges.length && version.flattenedDependencies.length) {
+        missingEdges.push(`${component.toComponentId().toStringWithoutVersion()}@${versionStr}`);
+        continue;
+      }
       for (const edge of edges) {
         const key = edge.source.toString();
         const targets = adjacency.get(key);
         if (targets) targets.push(edge.target);
         else adjacency.set(key, [edge.target]);
       }
+    }
+    if (missingEdges.length) {
+      throw new BitError(
+        `unable to honor "--dependencies-depth": dependency-graph data (flattenedEdges) is missing for the following component(s):
+${missingEdges.map((id) => `  ${id}`).join('\n')}
+this typically happens for components tagged before bit 0.0.901, or when the remote scope is on an older version.
+re-run without "--dependencies-depth" to import all transitive dependencies, or re-tag the component(s) on a newer bit.`
+      );
     }
 
     // BFS up to `depth` levels. roots tracked without version because input may be versionless
