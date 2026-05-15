@@ -181,3 +181,47 @@ can ship:
 - Bundling user aspects (they stay unbundled; loaded dynamically).
 - Migrating to esbuild instead of Rollup (Rollup chosen for code-splitting
   maturity; revisit only if needed).
+
+## Status notes
+
+(Updated after the codemod-aspect-imports + dynamic-import work.)
+
+- `scripts/codemod-aspect-imports.mjs` rewrote source imports of `XAspect`
+  to use the `@teambit/<pkg>/dist/<X>.aspect.js` subpath directly. Perf
+  win unbundled (skips heavy barrels) but breaks Rollup's code-split
+  detection (the compiled JS contains `Promise.resolve().then(() => require(...))`
+  which Rollup doesn't recognise as `() => import()`). The
+  `redirectDirectAspectImports()` plugin in `build-publish-bundle.mjs`
+  redirects those subpath imports back to the package barrel so Rollup
+  picks the `source` field (TS entry) and sees the original thunk.
+
+- `scopes/harmony/bit/run-bit.ts` switched its deferred `require()` calls
+  for hook-require / autocomplete / server-commander / server-forever /
+  bootstrap / load-bit / @teambit/cli to `await import(...)`. Babel
+  compiles to `Promise.resolve().then(() => require(...))` at runtime
+  (no unbundled regression) but Rollup recognises them as code-split
+  boundaries.
+
+- **Open blocker**: the bundle build currently fails on missing exports
+  from commit `b808f4cf5` ("split UI value re-exports out of aspect
+  index barrels"). Rollup's static analysis follows
+  `import { ComponentModel } from '@teambit/component'` in UI-only files
+  like `components/ui/models/lanes-model/lanes-model.ts` and errors
+  because `ComponentModel` is no longer exported from the component
+  barrel. Unbundled runtime never reaches those files (CLI commands
+  don't load UI runtimes) so the b808f4cf5 work is correct — but the
+  bundle's static graph walk doesn't know that.
+
+  Two ways to unblock:
+   1. Add an `externalize-ui` plugin to `build-publish-bundle.mjs` that
+      marks `components/ui/**` and `scopes/*/*.ui.runtime.*` external.
+      Node entry wouldn't carry browser code at all; UI code loads from
+      `node_modules` on demand when `bit start` resolves it. Right shape
+      for a Node-CLI publish artifact.
+   2. Re-export the moved symbols from the barrels via `.ts` re-export
+      shims. Less invasive but partly undoes b808f4cf5.
+
+  Option 1 is the right fit. Skipped here because the `bin/bit.js` swap
+  is a separate question (the bundle isn't on the runtime path yet) and
+  the `lazyAspectIds` work in `scopes/harmony/core/harmony.ts` already
+  captures the bulk of the bench win bundling was meant to deliver.

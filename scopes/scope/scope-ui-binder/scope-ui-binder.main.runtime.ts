@@ -5,8 +5,8 @@ import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope/dist/scope.aspect.js';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui/dist/ui.aspect.js';
-import { ScopeUIRoot } from '@teambit/scope/dist/scope.ui-root';
-import { scopeSchema } from '@teambit/scope/dist/scope.graphql';
+import { ScopeUIRoot } from '@teambit/scope/dist/scope.ui-root.js';
+import { scopeSchema } from '@teambit/scope/dist/scope.graphql.js';
 import { ScopeUiBinderAspect } from './scope-ui-binder.aspect';
 
 export class ScopeUiBinderMain {

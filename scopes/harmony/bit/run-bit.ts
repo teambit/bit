@@ -38,8 +38,7 @@ export async function runBit(additionalAspects?: Aspect[]) {
   // Same trick for `bit --version` — read the version string directly without
   // touching aspects.
   if (isStandaloneVersion(process.argv)) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
-    const { getBitVersion } = require('@teambit/bit.get-bit-version');
+    const { getBitVersion } = await import('@teambit/bit.get-bit-version');
     process.stdout.write(`${getBitVersion()}\n`);
     process.exit(0);
   }
@@ -51,11 +50,11 @@ export async function runBit(additionalAspects?: Aspect[]) {
     if (entered && entered !== 'server-forever' && !process.argv.includes('--get-yargs-completions')) {
       const known = buildKnownNameSet(COMMAND_INDEX);
       if (!known.has(entered)) {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
-        const chalk = require('chalk');
+        const chalkMod = await import('chalk');
+        const chalk: any = (chalkMod as any).default || chalkMod;
         const allNames = [...known];
-        // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
-        const didYouMean = require('didyoumean');
+        const didYouMeanMod = await import('didyoumean');
+        const didYouMean: any = (didYouMeanMod as any).default || didYouMeanMod;
         didYouMean.returnFirstMatch = true;
         const suggestion = didYouMean(entered, allNames);
         const tail = suggestion
@@ -68,11 +67,12 @@ export async function runBit(additionalAspects?: Aspect[]) {
   }
 
   // Lazy: only load these once we know we're going to actually run a command.
-  // Top-level `import`s would defeat the help short-circuit above.
-  require('./hook-require');
-  const { autocomplete } = require('./autocomplete');
-  const { ServerCommander, shouldUseBitServer } = require('./server-commander');
-  const { spawnPTY } = require('./server-forever');
+  // Static dynamic imports so the bundler emits a chunk per module while
+  // still keeping the help short-circuit fast.
+  await import('./hook-require');
+  const { autocomplete } = await import('./autocomplete');
+  const { ServerCommander, shouldUseBitServer } = await import('./server-commander');
+  const { spawnPTY } = await import('./server-forever');
 
   if (process.argv.includes('--get-yargs-completions')) {
     autocomplete();
@@ -96,10 +96,12 @@ async function initApp(additionalAspects?: Aspect[]) {
     console.error('uncaughtException', err);
     process.exit(1);
   });
-  // Deferred imports — see runBit() for why.
-  const { bootstrap } = require('./bootstrap');
-  const { runCLI } = require('./load-bit');
-  const { handleErrorAndExit } = require('@teambit/cli');
+  // Deferred dynamic imports — Rollup recognises these as code-split
+  // boundaries so the heavy bootstrap lives in its own chunk(s) instead
+  // of inlining into the entry.
+  const { bootstrap } = await import('./bootstrap');
+  const { runCLI } = await import('./load-bit');
+  const { handleErrorAndExit } = await import('@teambit/cli');
   try {
     await bootstrap();
     await runCLI(additionalAspects);

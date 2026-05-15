@@ -7,8 +7,8 @@ import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui/dist/ui.aspect.js';
 import type { WorkspaceMain } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
-import { WorkspaceUIRoot } from '@teambit/workspace/dist/workspace.ui-root';
-import getWorkspaceSchema from '@teambit/workspace/dist/workspace.graphql';
+import { WorkspaceUIRoot } from '@teambit/workspace/dist/workspace.ui-root.js';
+import getWorkspaceSchema from '@teambit/workspace/dist/workspace.graphql.js';
 import { WorkspaceUiBinderAspect } from './workspace-ui-binder.aspect';
 
 export class WorkspaceUiBinderMain {

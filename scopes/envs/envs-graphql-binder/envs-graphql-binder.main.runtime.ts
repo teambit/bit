@@ -3,7 +3,7 @@ import type { EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
-import { environmentsSchema } from '@teambit/envs/dist/environments.graphql';
+import { environmentsSchema } from '@teambit/envs/dist/environments.graphql.js';
 import { EnvsGraphqlBinderAspect } from './envs-graphql-binder.aspect';
 
 export class EnvsGraphqlBinderMain {

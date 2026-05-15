@@ -3,7 +3,7 @@ import type { ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
-import { componentSchema } from '@teambit/component/dist/component.graphql';
+import { componentSchema } from '@teambit/component/dist/component.graphql.js';
 import { ComponentGraphqlBinderAspect } from './component-graphql-binder.aspect';
 
 export class ComponentGraphqlBinderMain {

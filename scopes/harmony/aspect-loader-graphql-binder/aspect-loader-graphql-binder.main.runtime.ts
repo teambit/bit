@@ -3,7 +3,7 @@ import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader/dist/aspect-loader.aspect.js';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
-import { aspectLoaderSchema } from '@teambit/aspect-loader/dist/aspect-loader.graphql';
+import { aspectLoaderSchema } from '@teambit/aspect-loader/dist/aspect-loader.graphql.js';
 import { AspectLoaderGraphqlBinderAspect } from './aspect-loader-graphql-binder.aspect';
 
 export class AspectLoaderGraphqlBinderMain {

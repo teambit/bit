@@ -125,6 +125,29 @@ function stubAssetsPlugin() {
   };
 }
 
+function redirectDirectAspectImports() {
+  // `scripts/codemod-aspect-imports.mjs` rewrote source imports to use the
+  // compiled-JS subpath `@teambit/<pkg>/dist/<name>.aspect.js`. That's
+  // great for unbundled runtime (avoids the heavy barrel) but breaks the
+  // bundle: the subpath points at babel-compiled JS where
+  // `() => import('./<name>.main.runtime')` has been rewritten to
+  // `() => Promise.resolve().then(() => require(...))`, which Rollup
+  // doesn't recognise as a code-split boundary.
+  //
+  // Redirect those subpath imports back to the package barrel so
+  // nodeResolve picks the `source` field (TS entry) and Rollup sees the
+  // original dynamic-import thunk.
+  const RE = /^(@teambit\/[\w-]+)\/dist\/[\w-]+\.aspect\.js$/;
+  return {
+    name: 'redirect-direct-aspect-imports',
+    resolveId(source, importer, options) {
+      const m = source.match(RE);
+      if (!m) return null;
+      return this.resolve(m[1], importer, { ...options, skipSelf: true });
+    },
+  };
+}
+
 // Browser-only @teambit packages that leak into the dep graph via UI runtime
 // files. They never run in the Node entry — externalizing keeps them out of
 // the bundle and lets node_modules supply them at runtime if the UI runtime
@@ -157,6 +180,19 @@ async function build() {
   mkdirSync(OUT_DIR, { recursive: true });
 
   const plugins = [
+    // `scripts/codemod-aspect-imports.mjs` rewrote
+    //   `import { XAspect } from '@teambit/x'`
+    // to
+    //   `import { XAspect } from '@teambit/x/dist/x.aspect.js'`
+    // across ~170 source files. That direct-subpath import is great for
+    // unbundled runtime (skips the heavy barrel index.ts) but it points at
+    // the babel-compiled JS, where `() => import('./x.main.runtime')` has
+    // already been rewritten to `() => Promise.resolve().then(() => require(...))`.
+    // Rollup doesn't recognise that as a dynamic-import boundary, so the
+    // build emits 0 chunks. Redirect those subpath imports back to the
+    // barrel here so nodeResolve can follow the `source` field to the
+    // original TS where the dynamic-import thunk is still recognisable.
+    redirectDirectAspectImports(),
     stubAssetsPlugin(),
     nodeResolve({
       exportConditions: ['node', 'source', 'import', 'require', 'default'],

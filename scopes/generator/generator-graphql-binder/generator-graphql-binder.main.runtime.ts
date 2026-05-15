@@ -3,7 +3,7 @@ import type { GeneratorMain } from '@teambit/generator';
 import { GeneratorAspect } from '@teambit/generator/dist/generator.aspect.js';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
-import { generatorSchema } from '@teambit/generator/dist/generator.graphql';
+import { generatorSchema } from '@teambit/generator/dist/generator.graphql.js';
 import { GeneratorGraphqlBinderAspect } from './generator-graphql-binder.aspect';
 
 export class GeneratorGraphqlBinderMain {
