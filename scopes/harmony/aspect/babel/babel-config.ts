@@ -13,12 +13,6 @@ const presets = [
   ],
 ];
 const plugins = [
-  [
-    require.resolve('@babel/plugin-transform-modules-commonjs'),
-    {
-      lazy: () => true,
-    },
-  ],
   require.resolve('babel-plugin-transform-typescript-metadata'),
   [require.resolve('@babel/plugin-proposal-decorators'), { legacy: true }],
   // [require.resolve('@babel/plugin-transform-runtime')],

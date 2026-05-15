@@ -50,6 +50,12 @@ that path doesn't exist yet.
 | `node_modules/@teambit/core` | New symlink → workspace `@teambit/core` |
 | `node_modules/@teambit/cli/dist/cli.main.runtime.js` | `register()` learns the `(descriptor, factory)` signature |
 
+Plus, in `~/Library/Caches/Bit/capsules/*/teambit.harmony_envs_core-aspect-env*/`:
+
+| Path inside env capsule | Change |
+| --- | --- |
+| `config/cjs.babel.config.js` + `dist/config/cjs.babel.config.js` | Drop `@babel/plugin-transform-modules-commonjs` with `lazy: () => true`. The slice 4/7 lazy-aspect work + slice 5 command-index short-circuit supersedes it; stacking both made the architectural lazy load impossible to measure. Re-run this script after `bit install` if the capsule is rebuilt. |
+
 Originals are copied to `<file>.bvm-patches.bak` before the edit; `--revert`
 restores them.
 
