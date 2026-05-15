@@ -45,6 +45,7 @@ import { UIAspect } from '@teambit/ui/dist/ui.aspect.js';
 import { VariantsAspect } from '@teambit/variants/dist/variants.aspect.js';
 import { WebpackAspect } from '@teambit/webpack/dist/webpack.aspect.js';
 import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
+import { WorkspaceUiBinderAspect } from '@teambit/workspace-ui-binder/dist/workspace-ui-binder.aspect.js';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files/dist/workspace-config-files.aspect.js';
 import { InstallAspect } from '@teambit/install/dist/install.aspect.js';
 import { LinterAspect } from '@teambit/linter/dist/linter.aspect.js';
@@ -125,6 +126,7 @@ export const manifestsMap = {
   [CLIAspect.id]: CLIAspect,
   [DevFilesAspect.id]: DevFilesAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
+  [WorkspaceUiBinderAspect.id]: WorkspaceUiBinderAspect,
   [WorkspaceConfigFilesAspect.id]: WorkspaceConfigFilesAspect,
   [InstallAspect.id]: InstallAspect,
   [ESLintAspect.id]: ESLintAspect,

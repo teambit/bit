@@ -2194,6 +2194,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace-config-files"
     },
+    "workspace-ui-binder": {
+        "name": "workspace-ui-binder",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/workspace-ui-binder"
+    },
     "yarn": {
         "name": "yarn",
         "scope": "teambit.dependencies",

@@ -1,14 +1,10 @@
 import { AspectLoaderAspect } from '@teambit/aspect-loader/dist/aspect-loader.aspect.js';
-import type { BundlerMain } from '@teambit/bundler';
-import { BundlerAspect } from '@teambit/bundler/dist/bundler.aspect.js';
 import type { CLIMain, CommandList, Command } from '@teambit/cli';
 import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
 import { MainRuntime } from '@teambit/cli';
 import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
 import type { EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
-import type { GraphqlMain } from '@teambit/graphql';
-import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { IsolatorMain } from '@teambit/isolator';
@@ -17,8 +13,6 @@ import type { LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope/dist/scope.aspect.js';
-import type { UiMain } from '@teambit/ui';
-import { UIAspect } from '@teambit/ui/dist/ui.aspect.js';
 import { VariantsAspect } from '@teambit/variants/dist/variants.aspect.js';
 import type { GlobalConfigMain } from '@teambit/global-config';
 import { GlobalConfigAspect } from '@teambit/global-config/dist/global-config.aspect.js';
@@ -40,8 +34,6 @@ import { WorkspaceAspect } from './workspace.aspect';
 import EjectConfCmd from './eject-conf.cmd';
 import type { WorkspaceExtConfig } from './types';
 import { Workspace } from './workspace';
-import getWorkspaceSchema from './workspace.graphql';
-import { WorkspaceUIRoot } from './workspace.ui-root';
 import { CapsuleCmd, CapsuleCreateCmd, CapsuleDeleteCmd, CapsuleListCmd } from './capsule.cmd';
 import { EnvsSetCmd } from './envs-subcommands/envs-set.cmd';
 import { EnvsUnsetCmd } from './envs-subcommands/envs-unset.cmd';
@@ -64,9 +56,6 @@ export type WorkspaceDeps = [
   DependencyResolverMain,
   VariantsMain,
   LoggerMain,
-  GraphqlMain,
-  UiMain,
-  BundlerMain,
   AspectLoaderMain,
   EnvsMain,
   GlobalConfigMain,
@@ -103,9 +92,6 @@ export class WorkspaceMain {
     DependencyResolverAspect,
     VariantsAspect,
     LoggerAspect,
-    GraphqlAspect,
-    UIAspect,
-    BundlerAspect,
     AspectLoaderAspect,
     EnvsAspect,
     GlobalConfigAspect,
@@ -130,9 +116,6 @@ export class WorkspaceMain {
       dependencyResolver,
       variants,
       loggerExt,
-      graphql,
-      ui,
-      bundler,
       aspectLoader,
       envs,
       globalConfig,
@@ -192,7 +175,6 @@ export class WorkspaceMain {
       onComponentRemoveSlot,
       onAspectsResolveSlot,
       onRootAspectAddedSlot,
-      graphql,
       onBitmapChangeSlot,
       onWorkspaceConfigChangeSlot,
       configStore
@@ -270,11 +252,10 @@ export class WorkspaceMain {
       };
     });
 
-    ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
-    ui.registerPreStart(async () => {
-      return workspace.setComponentPathsRegExps();
-    });
-    graphql.register(() => getWorkspaceSchema(workspace, graphql));
+    // UI / GraphQL / Bundler bindings moved to `workspace-ui-binder` so the
+    // CLI hot path doesn't drag in those deps. See its provider for the
+    // registerUiRoot / registerPreStart / graphql.register calls that used
+    // to live here.
     const capsuleCmd = getCapsulesCommands(isolator, scope, workspace);
     const commands: CommandList = [
       new EjectConfCmd(workspace),

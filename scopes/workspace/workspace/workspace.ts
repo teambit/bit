@@ -194,6 +194,10 @@ export class Workspace implements ComponentFactory {
   inInstallAfterPmContext = false;
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
+  // Optionally wired by `workspace-ui-binder` when the GraphQL server is
+  // active. CLI commands don't load graphql, so this stays `undefined` for
+  // most invocations and the `triggerOnComponent*` methods skip publishing.
+  graphql?: GraphqlMain;
   /**
    * Components paths are calculated from the component package names of the workspace
    * They are used in webpack configuration to only track changes from these paths inside `node_modules`
@@ -256,8 +260,6 @@ export class Workspace implements ComponentFactory {
     private onAspectsResolveSlot: OnAspectsResolveSlot,
 
     private onRootAspectAddedSlot: OnRootAspectAddedSlot,
-
-    private graphql: GraphqlMain,
 
     private onBitmapChangeSlot: OnBitmapChangeSlot,
 
@@ -893,7 +895,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     });
 
     // TODO: find way to standardize event names.
-    await this.graphql.pubsub.publish(ComponentChanged, { componentChanged: { component } });
+    if (this.graphql) await this.graphql.pubsub.publish(ComponentChanged, { componentChanged: { component } });
     return results;
   }
 
@@ -911,7 +913,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       if (onAddResult) results.push({ extensionId: extension, results: onAddResult });
     });
 
-    await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
+    if (this.graphql) await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
     return results;
   }
 
@@ -923,7 +925,9 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       results.push({ extensionId: extension, results: onRemoveResult });
     });
 
-    await this.graphql.pubsub.publish(ComponentRemoved, { componentRemoved: { componentIds: [id.toObject()] } });
+    if (this.graphql) {
+      await this.graphql.pubsub.publish(ComponentRemoved, { componentRemoved: { componentIds: [id.toObject()] } });
+    }
     return results;
   }
 
