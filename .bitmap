@@ -1913,13 +1913,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/highlighter-provider"
     },
-    "ui/highlighter/component-metadata/bit-component-meta": {
-        "name": "ui/highlighter/component-metadata/bit-component-meta",
-        "scope": "teambit.react",
-        "version": "0.0.44",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/bit-component-meta"
-    },
     "ui/hooks/scope-context": {
         "name": "ui/hooks/scope-context",
         "scope": "teambit.scope",
