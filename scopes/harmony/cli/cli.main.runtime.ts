@@ -30,6 +30,7 @@ export type OnBeforeExitSlot = SlotRegistry<OnBeforeExitFn>;
 
 export class CLIMain {
   public groups: GroupsType = clone(groups); // if it's not cloned, it is cached across loadBit() instances
+  private lazyHarmony: { resolve: (id: string) => Promise<unknown> } | undefined;
   constructor(
     private commandsSlot: CommandsSlot,
     private onStartSlot: OnStartSlot,
@@ -186,10 +187,99 @@ export class CLIMain {
    * execute commands registered to this aspect.
    */
   async run(hasWorkspace: boolean) {
+    // Lazy bootstrap: if the entered command is still a stub (its owning
+    // aspect's provider hasn't run yet), resolve that aspect now so yargs
+    // sees the real Command — with full options, args, and sub-commands.
+    await this.resolveEnteredCommand();
     await this.invokeOnStart(hasWorkspace);
     const CliParser = new CLIParser(this.commands, this.groups, this.onCommandStartSlot);
     const commandRunner = await CliParser.parse();
     await commandRunner.runCommand();
+  }
+
+  private async resolveEnteredCommand(): Promise<void> {
+    if (!this.lazyHarmony) return;
+    const argv = process.argv.slice(2);
+    const name = argv.find((a) => !a.startsWith('-'));
+    if (!name) return;
+    const match = this.commands.find((c) => {
+      const n = getCommandId(c.name);
+      return n === name || c.alias === name;
+    });
+    if (!match) return;
+    const aspectId = (match as any).aspectId;
+    if (!aspectId) return; // real command already, not a stub
+    // Only stubs carry `aspectId`. Resolve to get the real command in place.
+    await this.lazyHarmony.resolve(aspectId);
+    // Drop any leftover stubs for this aspect (the resolved provider has
+    // registered the real ones with the same name; stubs would shadow them
+    // when `this.commands` returns the slot's flat values).
+    const after = (this.commandsSlot.map.get(aspectId) || []).filter(
+      (c: any) => !c.aspectId, // stubs are tagged with `aspectId`
+    );
+    this.commandsSlot.map.set(aspectId, after);
+  }
+
+  /**
+   * Lazy bootstrap (RFC §6.5). Seed `commandsSlot` with stub Command
+   * objects read from `command-index.generated.ts` so cli.run() can
+   * match argv before any aspect provider has run. Each stub's handler
+   * resolves the owning aspect via Harmony.resolve, then delegates to
+   * the real handler the aspect's provider just registered.
+   */
+  registerLazyStubs(harmony: { resolve: (id: string) => Promise<unknown> }): void {
+    this.lazyHarmony = harmony;
+    // Lazy require to avoid circular dep with @teambit/bit.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
+    const { COMMAND_INDEX } = require('@teambit/bit/dist/command-index.generated.js');
+    for (const entry of COMMAND_INDEX as Array<any>) {
+      const stub = this.makeLazyStub(entry, harmony);
+      // Bypass the slot accumulator — we know each stub is from a distinct
+      // aspect id, and we want it keyed by that aspect, not by `harmony.current`.
+      const existing = this.commandsSlot.map.get(entry.aspectId) || [];
+      this.commandsSlot.map.set(entry.aspectId, [...existing, stub]);
+    }
+  }
+
+  private makeLazyStub(entry: any, harmony: { resolve: (id: string) => Promise<unknown> }): Command {
+    const subCommands = Array.isArray(entry.subCommands) ? entry.subCommands : [];
+    const slot = this.commandsSlot;
+    const self = this;
+    const stub: any = {
+      name: entry.name,
+      description: entry.description ?? '',
+      extendedDescription: '',
+      group: entry.group ?? 'ungrouped',
+      options: [],
+      commands: subCommands.map((s: any) => this.makeLazyStub(s, harmony)),
+      private: entry.private ?? false,
+      alias: entry.alias ?? '',
+      loader: entry.loader !== false,
+      loadAspects: entry.loadAspects !== false,
+      remoteOp: entry.remoteOp ?? false,
+      skipWorkspace: entry.skipWorkspace ?? false,
+      helpUrl: undefined,
+      aspectId: entry.aspectId,
+    };
+
+    async function trampoline(method: 'report' | 'json' | 'wait', args: unknown[]): Promise<unknown> {
+      // Remove the stub so the real Command (just registered by the
+      // resolved aspect's provider) takes over.
+      const before = slot.map.get(entry.aspectId) || [];
+      slot.map.set(entry.aspectId, before.filter((c: any) => c !== stub));
+      await harmony.resolve(entry.aspectId);
+      const real = self.getCommand(entry.name);
+      if (!real) throw new Error(`lazy dispatch: no command "${entry.name}" after resolving ${entry.aspectId}`);
+      const fn = (real as any)[method];
+      if (typeof fn !== 'function') {
+        throw new Error(`command "${entry.name}" has no .${method} handler`);
+      }
+      return fn.apply(real, args);
+    }
+    stub.report = (...args: unknown[]) => trampoline('report', args);
+    stub.json = (...args: unknown[]) => trampoline('json', args);
+    stub.wait = (...args: unknown[]) => trampoline('wait', args);
+    return stub as Command;
   }
 
   private async invokeOnStart(hasWorkspace: boolean) {

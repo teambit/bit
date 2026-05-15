@@ -3,8 +3,15 @@
 // - `instances` map holds resolved provider results.
 // - `loading` map deduplicates concurrent resolves of the same aspect.
 
+import { AsyncLocalStorage } from 'async_hooks';
 import { Aspect } from './aspect';
 import { SLOT_INDEX } from './slot-index.generated';
+
+// Each provider invocation runs inside its own ALS context carrying the
+// invoking aspect's id. Slot register-fns read this so concurrent
+// `_doResolve` calls (Promise.all over deps) don't clobber each other's
+// slot keys.
+const currentAspectStore = new AsyncLocalStorage<string>();
 
 export interface RuntimeClass {
   id: string;
@@ -41,17 +48,44 @@ function trace(event: string): void {
   process.stderr.write(`[trace +${dt}ms] ${event}\n`);
 }
 
+// Minimal shim matching @teambit/harmony/config/config.ts so providers that
+// read `harmony.config.raw.get(...)` keep working under lazy resolve.
+class LazyConfig {
+  readonly raw: Map<string, any>;
+  constructor(entries: Record<string, any> = {}) {
+    this.raw = new Map(Object.entries(entries));
+  }
+  toObject(): Record<string, any> {
+    const out: Record<string, any> = {};
+    for (const [k, v] of this.raw) out[k] = v;
+    return out;
+  }
+  get(id: string): any {
+    return this.raw.get(id);
+  }
+  set(id: string, value: any): void {
+    this.raw.set(id, value);
+  }
+  static from(raw: Record<string, any>): LazyConfig {
+    return new LazyConfig(raw);
+  }
+}
+
 export class Harmony {
   readonly runtimeName: string;
-  readonly config: Record<string, unknown>;
+  readonly config: LazyConfig;
   readonly manifests: Map<string, Aspect>;
   readonly instances: Map<string, any>;
   readonly loading: Map<string, Promise<any>>;
   readonly slots: Map<string, Slot<any>>;
+  // The aspect id whose provider is currently being invoked. Read by
+  // SlotRegistry.registerFn (built from legacy `Slot.withType<T>()`) to key
+  // entries by aspect.
+  current: string | null = null;
 
-  constructor(runtimeName: string, config?: Record<string, any>) {
+  constructor(runtimeName: string, config?: Record<string, any> | LazyConfig) {
     this.runtimeName = runtimeName;
-    this.config = config || {};
+    this.config = config instanceof LazyConfig ? config : new LazyConfig(config || {});
     this.manifests = new Map();
     this.instances = new Map();
     this.loading = new Map();
@@ -91,8 +125,15 @@ export class Harmony {
   private async _doResolve(aspectId: string): Promise<unknown> {
     const aspect = this.manifests.get(aspectId);
     if (!aspect) throw new Error(`Unknown aspect: ${aspectId}`);
-    const loader = aspect.runtimes[this.runtimeName];
-    if (!loader) throw new Error(`Aspect ${aspectId} has no ${this.runtimeName} runtime`);
+    // Some aspects only declare e.g. a `ui` runtime and appear in main-runtime
+    // dependency lists purely as manifests. Treat the absence of a runtime
+    // loader for the current runtime as "no instance" rather than an error —
+    // the same way the legacy harmony loader silently skipped such aspects.
+    const loader = aspect.runtimes?.[this.runtimeName];
+    if (!loader) {
+      this.instances.set(aspectId, undefined);
+      return undefined;
+    }
 
     const t0 = Date.now();
     const mod = await loader();
@@ -111,17 +152,32 @@ export class Harmony {
       (runtimeClass.dependencies || []).map((d) => this.resolve(d.id)),
     );
 
-    const slotInstances = await Promise.all(
-      (runtimeClass.slots || []).map(async (slotDef: any) => {
-        const type = slotDef.type; // This is a bit of a guess on the shape
-        const producers = SLOT_INDEX[type] || [];
-        await Promise.all(producers.map((id) => this.resolve(id)));
-        return this.getSlot(type);
-      }),
-    );
+    // `runtimeClass.slots` is a list of legacy `Slot.withType<T>()` providers —
+    // each is a function `(registerFn) => SlotRegistry<T>`. The registerFn
+    // reads `currentAspectStore` so writes from inside any aspect's provider
+    // get keyed by THAT aspect, not by this slot's owner.
+    const slotInstances = (runtimeClass.slots || []).map((slotProvider: any) => {
+      if (typeof slotProvider === 'function') {
+        return slotProvider(() => currentAspectStore.getStore() ?? this.current ?? aspectId);
+      }
+      // Fallback for the previous experimental shape (slot defs with a `.type`).
+      const type = slotProvider?.type;
+      return type ? this.getSlot(type) : undefined;
+    });
 
     const t1 = Date.now();
-    const instance = await runtimeClass.provider(deps, this.config[aspectId], slotInstances, this);
+    const instance = await currentAspectStore.run(aspectId, async () => {
+      // Also keep `this.current` updated for legacy callers (e.g. graph code
+      // that reads `harmony.current` synchronously). ALS is the source of
+      // truth for concurrent provider isolation.
+      const prev = this.current;
+      this.current = aspectId;
+      try {
+        return await runtimeClass.provider(deps, this.config.get(aspectId) ?? {}, slotInstances, this);
+      } finally {
+        this.current = prev;
+      }
+    });
     const providerMs = Date.now() - t1;
 
     trace(`load ${aspectId} (import: ${importMs}ms, provider: ${providerMs}ms)`);
@@ -202,7 +258,10 @@ export function pickAspectExport(mod: any): Aspect | null {
 export function pickRuntimeExport(mod: Record<string, unknown>): RuntimeClass | null {
   for (const key of Object.keys(mod)) {
     const v = mod[key] as { provider?: unknown } | undefined;
-    if (typeof v === 'function' && typeof v.provider === 'function') {
+    if (!v) continue;
+    // Accept either a class with a static `provider` (the common form,
+    // e.g. `StatusMain`) or a plain object with a `provider` (e.g. `BitMain`).
+    if ((typeof v === 'function' || typeof v === 'object') && typeof v.provider === 'function') {
       return v as unknown as RuntimeClass;
     }
   }

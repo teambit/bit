@@ -282,19 +282,46 @@ export async function loadBit(path = process.cwd(), additionalAspects?: Aspect[]
   if (additionalAspects) additionalAspects.forEach((aspect) => aspectsToLoad.push(aspect));
   const loadCLIOnly = shouldLoadInSafeMode();
   if (isClearCacheCommand()) aspectsToLoad.push(ClearCacheAspect);
-  if (!loadCLIOnly) {
+  // Lazy is the default per RFC §6.5. `BIT_EAGER_LOAD=1` opts back into the
+  // legacy `Harmony.load + harmony.run(requireAspects)` path. The `--lazy`
+  // / `BIT_LAZY=1` flags remain accepted but are now no-ops.
+  const isLazy = process.env.BIT_EAGER_LOAD !== '1';
+  if (!loadCLIOnly && !isLazy) {
+    // Eager mode: BitAspect goes in roots so its `dependencies: manifests`
+    // transitively pulls every core aspect's provider. Lazy mode below
+    // keeps BitAspect manifest-only and resolves aspects on command dispatch.
     aspectsToLoad.push(BitAspect);
+  }
+  if (!loadCLIOnly && isLazy) {
+    // Aspects this function and the wider bootstrap consult via
+    // `harmony.get(...)` after `loadBit` returns. Resolve them eagerly so
+    // the rest of the bootstrap keeps working; everything else stays lazy.
+    aspectsToLoad.push(AspectLoaderAspect, EnvsAspect, GeneratorAspect);
   }
   if (shouldRunAsDaemon()) {
     logger.isDaemon = true;
   }
-  const isLazy = process.argv.includes('--lazy') || process.env.BIT_LAZY === '1';
   const harmony = isLazy
-    ? await (LazyHarmony.load(aspectsToLoad, MainRuntime.name, configMap) as any)
+    ? await (LazyHarmony.load(
+        aspectsToLoad,
+        MainRuntime.name,
+        configMap,
+        // Manifests only — registered for later lazy resolution, no provider call.
+        [BitAspect, ...Object.values(manifestsMap)],
+      ) as any)
     : await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
 
   if (!isLazy) {
     await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+  } else {
+    // Lazy dispatch: seed CLIMain with stub commands read from
+    // command-index.generated.ts so cli.run can match argv even though
+    // no aspect provider has run. The stubs delegate to the real handler
+    // after resolving the owning aspect (see CLIMain.registerLazyStubs).
+    const cli = harmony.get<CLIMain>(CLIAspect.id);
+    if (typeof (cli as any).registerLazyStubs === 'function') {
+      (cli as any).registerLazyStubs(harmony);
+    }
   }
   if (loadCLIOnly) return harmony;
   // Slice 2 of the ESM/lazy-aspects RFC: verify the committed command index
