@@ -1,10 +1,10 @@
 import type { ButtonHTMLAttributes } from 'react';
 import React from 'react';
-import type { ComponentMeta } from './component-meta';
-import { componentMetaField } from './component-meta';
+import type { ComponentMeta } from './component-meta.js';
+import { componentMetaField } from './component-meta.js';
 
 export function MockedComponentWithMeta(props: ButtonHTMLAttributes<HTMLButtonElement>) {
-  return <button type="button" {...props} />;
+  return React.createElement('button', { type: 'button', ...props });
 }
 
 MockedComponentWithMeta[componentMetaField] = {
