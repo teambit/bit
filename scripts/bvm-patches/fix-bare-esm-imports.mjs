@@ -105,6 +105,12 @@ function rewriteSpecifier(fileDir, spec) {
   return resolvePackageSubpath(fileDir, pkgSub.pkg, pkgSub.sub);
 }
 
+// Browser-only asset extensions that show up in UI runtime dist code. Node
+// can't load them; we replace the import statement with a no-op so the rest
+// of the file still loads. They were never used in main-runtime code paths
+// anyway — they survived only because babel-lazy deferred their require.
+const ASSET_EXT_RE = /\.(scss|sass|less|css|module\.css|svg|png|jpe?g|gif|webp|woff2?|ttf|eot|mdx)$/i;
+
 function patchFile(filePath) {
   scanned++;
   const src = readFileSync(filePath, 'utf8');
@@ -113,6 +119,33 @@ function patchFile(filePath) {
   const fileDir = dirname(filePath);
   let out = src;
   let localAdded = 0;
+
+  // Stub asset imports/exports — they're not loadable in Node ESM. Convert
+  // them to a no-op so the file still parses + runs.
+  //   import x from './a.scss'   →  const x = {};
+  //   import './a.scss'           →  /* asset import dropped */
+  //   import { x } from './a.scss' → const { x } = {};
+  out = out.replace(
+    /^([ \t]*)import\s+(?:(\*\s+as\s+\w+|\{[^}]+\}|\w+)\s+from\s+)?(['"])([^'"]+)\3\s*;?\s*$/gm,
+    (match, indent, binding, quote, spec) => {
+      if (!ASSET_EXT_RE.test(spec)) return match;
+      localAdded++;
+      if (!binding) return `${indent}/* asset import dropped: ${spec} */`;
+      if (binding.startsWith('*')) {
+        const name = binding.replace(/^\*\s+as\s+/, '');
+        return `${indent}const ${name} = {};`;
+      }
+      return `${indent}const ${binding} = {};`;
+    },
+  );
+  out = out.replace(
+    /^([ \t]*)export\s+\*\s+from\s+(['"])([^'"]+)\2\s*;?\s*$/gm,
+    (match, indent, quote, spec) => {
+      if (!ASSET_EXT_RE.test(spec)) return match;
+      localAdded++;
+      return `${indent}/* asset re-export dropped: ${spec} */`;
+    },
+  );
 
   // Match `from 'X'` / `from "X"` in import/export statements at any position
   // on the line that starts with import/export.
