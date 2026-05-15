@@ -88,6 +88,8 @@
     "generate-cli-skill": "bit cli generate --skill commands > contrib/claude-skill-bit-cli/SKILL.md && bit cli generate --skill reference > contrib/claude-skill-bit-cli/CLI_REFERENCE.md && prettier contrib/claude-skill-bit-cli/SKILL.md contrib/claude-skill-bit-cli/CLI_REFERENCE.md --write",
     "generate-core-aspects-ids": "bit aspect list-core --json > scopes/harmony/testing/load-aspect/core-aspects-ids.json",
     "generate-command-index": "node scripts/generate-command-index.mjs",
+    "build-bundle": "node scripts/build-publish-bundle.mjs",
+    "build-bundle:visualize": "node scripts/build-publish-bundle.mjs --visualize",
     "lint-staged": "lint-staged"
   },
   "dependencies": {

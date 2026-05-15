@@ -120,16 +120,42 @@ If a scenario regresses, bundling is misconfigured.
 
 ## Acceptance criteria
 
-- [ ] `npm run build-bundle` produces `dist/bundle/bit.mjs` + chunks dir.
-- [ ] Entry bundle is <5MB.
-- [ ] Each `.main.runtime.ts` produces its own named chunk.
-- [ ] Source maps work end-to-end (thrown error → original TS location).
+- [x] `npm run build-bundle` produces `dist/bundle/bit.mjs` + chunks dir.
+      (`scripts/build-publish-bundle.mjs`; npm script: `build-bundle`,
+      `build-bundle:visualize`.)
+- [x] Entry bundle is <5MB. (Enforced by the script; skip with `--no-budget`.)
+- [x] Each `.main.runtime.ts` produces its own named chunk. (`manualChunks`
+      heuristic in `chunkForId`; matches both `.ts` and `.js` so it survives
+      chunk 09.)
+- [x] Source maps work end-to-end (thrown error → original TS location).
+      (`output.sourcemap: true` + `inlineSources: true` in the TS plugin.)
 - [ ] Benchmark scenarios improve vs unbundled lazy baseline.
 - [ ] CI publishes only the bundle (not source).
 - [ ] Published `@teambit/bit` installs and runs cleanly from npm in a fresh
       environment.
 - [ ] Smoke-test workflow: install published package, run `bit --help`,
       `bit status` on a fixture workspace, no errors.
+
+### Status (this branch)
+
+The Rollup driver and budget gate are landed. Outstanding before the bundle
+can ship:
+
+1. **Chunk 09.** Until the workspace emits ESM, Babel rewrites
+   `() => import('./foo')` into `() => Promise.resolve().then(() => require('./foo'))`
+   in the dist output. Rollup does not recognise that pattern as a
+   code-split boundary, so today the driver bundles TS sources directly via
+   `@rollup/plugin-typescript` (`mainFields: ['source', 'module', 'main']`)
+   to preserve native `import()` for splitting. Once chunk 09 lands we can
+   switch to bundling the compiled `.mjs` dist for a faster build.
+2. **CI workflow.** `.github/workflows/publish.yml` needs a `build-bundle`
+   step plus a publish step that ships only `dist/bundle/`. Out of scope for
+   this PR — wire it once chunk 11 removes the eager fallback.
+3. **Smoke test.** The script in this PR exercises the build pipeline but
+   not a fresh-install run. Add an e2e fixture that
+   `npm pack`s the bundle, installs into a temp dir, and runs `bit --help`.
+4. **Bench gates.** Hook the bundle into `scripts/bench-startup.mjs` once
+   chunk 01's harness is restored on this branch.
 
 ## Risks
 
