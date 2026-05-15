@@ -143,6 +143,43 @@ export class Harmony {
     return this.slots.get(type) as Slot<T>;
   }
 
+  // ── Legacy @teambit/harmony compatibility shims ─────────────────────────
+  // Older callers (aspect-loader, workspace-aspects-loader, load-aspect)
+  // expect the eager Harmony API. Keep these thin so the surface stays the
+  // same while the underlying model is lazy.
+
+  // Legacy `harmony.extensionsIds` — list of registered aspect ids.
+  get extensionsIds(): string[] {
+    return Array.from(this.manifests.keys());
+  }
+
+  // Legacy `harmony.extensions.get(id)?.loaded` lookup.
+  get extensions(): { get(id: string): { loaded: boolean } | undefined } {
+    const instances = this.instances;
+    const manifests = this.manifests;
+    return {
+      get(id: string) {
+        if (!manifests.has(id)) return undefined;
+        return { loaded: instances.has(id) };
+      },
+    };
+  }
+
+  // Legacy `harmony.load(manifests)` — register more aspects at runtime and
+  // resolve them (the legacy variant ran their providers immediately).
+  async load(aspects: Aspect[]): Promise<void> {
+    for (const a of aspects) this.registerManifestTransitive(a);
+    await Promise.all(aspects.map((a) => this.resolve(a.id)));
+  }
+
+  // Legacy `harmony.run(requireFn?)` — eagerly drove the full graph load
+  // through a user-supplied require callback. With native `import()` thunks
+  // on each aspect, there's nothing to drive — `load(roots)` already resolved
+  // them transitively. Kept as a no-op so existing call sites keep working.
+  async run(_requireFn?: unknown): Promise<void> {
+    // intentionally empty — lazy resolve handles this on demand
+  }
+
   async loadExternalAspect(manifestPath: string): Promise<unknown> {
     trace(`loading external aspect from ${manifestPath}`);
     const aspectMod = await import(manifestPath);
