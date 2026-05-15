@@ -21,6 +21,7 @@ import { InlinePreviewCompare } from '@teambit/preview.ui.inline-preview-compare
 import { InlineDepsCompare } from '@teambit/review.ui.inline-deps-compare';
 import { InlineTestsCompare } from '@teambit/review.ui.inline-tests-compare';
 import { InlineConfigCompare } from '@teambit/review.ui.inline-config-compare';
+import { flatten } from 'lodash';
 import type { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import type { LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.lane-overview';
 import { LaneOverview } from '@teambit/lanes.ui.lane-overview';
@@ -46,6 +47,40 @@ import styles from './lanes.ui.module.scss';
 
 export type LaneCompareProps = Partial<DefaultLaneCompareProps>;
 export type LaneProviderIgnoreSlot = SlotRegistry<IgnoreDerivingFromUrl>;
+
+/**
+ * Stable, module-scope tabs list. Previously this array (and the `React.createElement(...)` for each
+ * tab's element) was constructed inside `getLaneCompare`, which means every render produced a new
+ * array and new tab-element references. Those flowed into `<LaneCompare tabs={...}>` → `resolvedTabs`
+ * (useMemo keyed on input ref) → new value → new `allTabs` prop on every `InlineComponentCompare`,
+ * defeating React.memo and forcing all 10 component panels (and their nested tabs) to re-render on
+ * every parent re-render — including every `setViewMode` click. Hoisting the array to module scope
+ * gives a single stable reference that survives any number of parent renders.
+ */
+/**
+ * Fallback compare-tab list. Each tab here should ideally be registered by its *owning* aspect
+ * via `LanesUI.registerCompareTab(...)` so that lanes itself doesn't have to import the inline
+ * components. We keep these as fallbacks for tabs whose owners don't yet have a UI runtime in
+ * this repo (preview, review). The docs tab is intentionally absent — it's registered by the
+ * docs aspect with its real `titleBadges` / `overviewOptions` slots.
+ *
+ * TODO: move each entry below to its respective aspect (code, preview, review) and delete this.
+ */
+const FALLBACK_COMPARE_TABS: TabItem[] = [
+  { id: 'inline-code', order: 1, displayName: 'Code', element: React.createElement(InlineCodeCompare) },
+  { id: 'inline-preview', order: 2, displayName: 'Preview', element: React.createElement(InlinePreviewCompare) },
+  { id: 'inline-deps', order: 4, displayName: 'Dependencies', element: React.createElement(InlineDepsCompare) },
+  { id: 'inline-tests', order: 5, displayName: 'Tests', element: React.createElement(InlineTestsCompare) },
+  { id: 'inline-config', order: 6, displayName: 'Configuration', element: React.createElement(InlineConfigCompare) },
+];
+
+/**
+ * Slot signature for `LanesUI.registerCompareTab`. Aspects can register either a single tab or
+ * an array. The registrar carries a stable reference per registration so the resolved tab list
+ * stays stable across renders.
+ */
+export type LaneCompareTabSlot = SlotRegistry<TabItem | TabItem[]>;
+
 export function useComponentFilters() {
   const idFromLocation = useIdFromLocation(undefined, true);
   const { lanesModel, loading } = useLanes();
@@ -115,6 +150,7 @@ export class LanesUI {
     Slot.withType<NavigationSlot>(),
     Slot.withType<MenuWidgetSlot>(),
     Slot.withType<LaneProviderIgnoreSlot>(),
+    Slot.withType<TabItem | TabItem[]>(),
   ];
 
   constructor(
@@ -128,6 +164,12 @@ export class LanesUI {
      */
     private overviewSlot: LaneOverviewLineSlot,
     private laneProviderIgnoreSlot: LaneProviderIgnoreSlot,
+    /**
+     * compare-tab slot. Aspects register their inline-compare tab via `registerCompareTab(...)`;
+     * the registered tabs are merged with the local fallback list, deduped by `id`, and sorted
+     * by `order` before being passed to `<LaneCompare>`.
+     */
+    private compareTabSlot: LaneCompareTabSlot,
     private workspace?: WorkspaceUI,
     private scope?: ScopeUI
   ) {
@@ -347,21 +389,38 @@ export class LanesUI {
     this.navSlot.register(routes);
   }
 
+  /**
+   * Register an inline compare tab. Aspects own their compare-tab entry and call this in their
+   * own UI provider (e.g. the docs aspect registers `inline-docs` so it can pass its real
+   * `titleBadges` / `overviewOptions` slots). Tabs are merged with the lanes-side fallback list,
+   * deduped by `id`, and sorted by `order` at render time.
+   */
+  registerCompareTab(tab: TabItem | TabItem[]) {
+    this.compareTabSlot.register(tab);
+    return this;
+  }
+
+  // memoize the resolved tab list — same identity across renders unless a new registration lands.
+  private _resolvedCompareTabs?: TabItem[];
+  private _resolvedCompareTabsKey?: number;
+  private resolveCompareTabs(): TabItem[] {
+    const slotEntries = this.compareTabSlot.toArray();
+    if (this._resolvedCompareTabs && this._resolvedCompareTabsKey === slotEntries.length) {
+      return this._resolvedCompareTabs;
+    }
+    const registered = flatten(slotEntries.map(([, value]) => value).filter(Boolean) as Array<TabItem | TabItem[]>);
+    const registeredIds = new Set(registered.map((t) => t.id));
+    // registered tabs take precedence; fallbacks fill any id the slot didn't provide.
+    const merged = [...registered, ...FALLBACK_COMPARE_TABS.filter((t) => !registeredIds.has(t.id))].sort(
+      (a, b) => (a.order ?? 0) - (b.order ?? 0)
+    );
+    this._resolvedCompareTabs = merged;
+    this._resolvedCompareTabsKey = slotEntries.length;
+    return merged;
+  }
+
   getLaneCompare = (props: LaneCompareProps) => {
     if (!props.base || !props.compare) return null;
-
-    const tabs: TabItem[] = [
-      { id: 'inline-code', order: 1, displayName: 'Code', element: React.createElement(InlineCodeCompare) },
-      { id: 'inline-preview', order: 2, displayName: 'Preview', element: React.createElement(InlinePreviewCompare) },
-      { id: 'inline-deps', order: 4, displayName: 'Dependencies', element: React.createElement(InlineDepsCompare) },
-      { id: 'inline-tests', order: 5, displayName: 'Tests', element: React.createElement(InlineTestsCompare) },
-      {
-        id: 'inline-config',
-        order: 6,
-        displayName: 'Configuration',
-        element: React.createElement(InlineConfigCompare),
-      },
-    ];
 
     return (
       <LaneCompare
@@ -369,7 +428,7 @@ export class LanesUI {
         base={props.base}
         compare={props.compare}
         host={props.host || this.host}
-        tabs={props.tabs || tabs}
+        tabs={props.tabs || this.resolveCompareTabs()}
       />
     );
   };
@@ -384,12 +443,13 @@ export class LanesUI {
       CommandBarUI,
     ],
     _,
-    [routeSlot, overviewSlot, navSlot, menuWidgetSlot, laneProviderIgnoreSlot]: [
+    [routeSlot, overviewSlot, navSlot, menuWidgetSlot, laneProviderIgnoreSlot, compareTabSlot]: [
       RouteSlot,
       LaneOverviewLineSlot,
       LanesOrderedNavigationSlot,
       MenuWidgetSlot,
       LaneProviderIgnoreSlot,
+      LaneCompareTabSlot,
     ],
     harmony: Harmony
   ) {
@@ -411,6 +471,7 @@ export class LanesUI {
       menuWidgetSlot,
       overviewSlot,
       laneProviderIgnoreSlot,
+      compareTabSlot,
       workspace,
       scope
     );

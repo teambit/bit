@@ -250,6 +250,29 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
       background: rgba(0, 0, 0, 0.25);
     }
   }
+
+  // Tab visibility driven by `data-view-mode` on the pane. All `DeferredTab` siblings are mounted
+  // simultaneously to preserve their internal query/state caches across mode switches; CSS hides
+  // the ones that don't match the active view. Without this every tab stacked on top of each other,
+  // which is what made code show aspect data, config show code, and so on.
+  &[data-view-mode='code'] [data-tab-id]:not([data-tab-id='inline-code']) {
+    display: none;
+  }
+  &[data-view-mode='preview'] [data-tab-id]:not([data-tab-id='inline-preview']) {
+    display: none;
+  }
+  &[data-view-mode='dependencies'] [data-tab-id]:not([data-tab-id='inline-deps']) {
+    display: none;
+  }
+  &[data-view-mode='tests'] [data-tab-id]:not([data-tab-id='inline-tests']) {
+    display: none;
+  }
+  &[data-view-mode='config'] [data-tab-id]:not([data-tab-id='inline-config']) {
+    display: none;
+  }
+  &[data-view-mode='docs'] [data-tab-id]:not([data-tab-id='inline-docs']) {
+    display: none;
+  }
 }
 
 // --- Loading ---

@@ -254,7 +254,10 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         ) => {
           const sourceLaneId = LaneId.parse(source);
           const targetLaneId = target ? LaneId.parse(target) : undefined;
-          return lanesMain.diffStatus(sourceLaneId, targetLaneId, options);
+          // Defer `changes` derivation to the per-component field resolver so the eager pMap inside
+          // `diffStatus` is fast. The field resolver only fires when the client selects `changes`,
+          // and graphql-js runs each component's resolver in parallel via `Promise.all`.
+          return lanesMain.diffStatus(sourceLaneId, targetLaneId, { ...options, deferChanges: true });
         },
         removeUpdateDependents: async (lanesMain: LanesMain, { laneId, ids }: { laneId: string; ids?: string[] }) => {
           const laneIdParsed = LaneId.parse(laneId);
@@ -271,6 +274,11 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
             diffCompStatus.targetHead
           }`,
         componentId: (diffCompStatus: LaneComponentDiffStatus) => diffCompStatus.componentId.toObject(),
+        changes: (diffCompStatus: LaneComponentDiffStatus) => lanesMainRuntime.deriveComponentChanges(diffCompStatus),
+        changeType: async (diffCompStatus: LaneComponentDiffStatus) => {
+          const changes = await lanesMainRuntime.deriveComponentChanges(diffCompStatus);
+          return changes?.[0];
+        },
       },
       Lane: {
         id: (lane: LaneData) => lane.id.toObject(),

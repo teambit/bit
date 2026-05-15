@@ -609,7 +609,14 @@ export type InlineComponentCompareProps = {
   previewUrl?: string;
 };
 
-export const InlineComponentCompare = forwardRef<HTMLDivElement, InlineComponentCompareProps>(
+/**
+ * forwardRef + React.memo. Without memo, every parent re-render (e.g. `setViewMode` in lane-compare)
+ * re-renders all 10 mounted panels and all their nested tab subtrees — which was the source of the
+ * "view-mode switching is slow" feedback. With memo + stable props (lane-compare's `allTabs` array
+ * is hoisted to module scope), a viewMode click is now just a CSS attribute change on the
+ * `[data-view-mode]` container; the panels don't reconcile at all.
+ */
+const InlineComponentCompareInner = forwardRef<HTMLDivElement, InlineComponentCompareProps>(
   function InlineComponentCompare(
     {
       name,
@@ -697,42 +704,19 @@ export const InlineComponentCompare = forwardRef<HTMLDivElement, InlineComponent
     );
   }
 );
+export const InlineComponentCompare = React.memo(InlineComponentCompareInner);
 
+/**
+ * Tab wrapper that just stamps a `data-tab-id` for CSS-driven visibility (rules live in
+ * `lane-compare.module.scss`, scoped by `data-view-mode`). Previously gated children on
+ * `el.offsetParent !== null` to defer mounting until visible — that turned each view-mode switch
+ * into a fresh data-fetch storm because the lazily-mounted panel re-fired all its queries. We now
+ * mount all tabs eagerly and rely on Apollo's per-query cache (warmed by the lane-compare
+ * pre-fetch) to keep first paint cheap. The `data-tab-id` attribute remains so CSS can hide
+ * non-active tabs.
+ */
 export function DeferredTab({ tabId, children }: { tabId: string; children: ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [activated, setActivated] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    if (el.offsetParent !== null) {
-      setActivated(true);
-      return;
-    }
-
-    const container = el.closest('[data-view-mode]');
-    if (!container) {
-      setActivated(true);
-      return;
-    }
-
-    const observer = new MutationObserver(() => {
-      if (el.offsetParent !== null) {
-        setActivated(true);
-        observer.disconnect();
-      }
-    });
-
-    observer.observe(container, { attributes: true, attributeFilter: ['data-view-mode'] });
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div ref={ref} data-tab-id={tabId}>
-      {activated ? children : null}
-    </div>
-  );
+  return <div data-tab-id={tabId}>{children}</div>;
 }
 
 function InlineContextProvider({

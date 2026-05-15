@@ -35,6 +35,7 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  min-width: 0; // critical: lets children shrink instead of overflow
 }
 
 .rightCluster {
@@ -42,6 +43,7 @@
   align-items: center;
   gap: 8px;
   margin-left: auto;
+  min-width: 0; // same reason — the ToggleButton was overflowing instead of wrapping
 }
 
 .aggToggle {
@@ -55,6 +57,7 @@
 .commandBar :global(.baseFilter) {
   max-width: 220px;
   height: 32px;
+  min-width: 0; // lets the filter shrink with its parent on narrow viewports
 }
 
 .commandBar :global(.control) {
@@ -69,6 +72,40 @@
   padding: 8px 0 !important;
   width: 260px;
   box-shadow: 0 24px 60px -12px rgba(20, 0, 104, 0.2);
+}
+
+/* ---- Mobile layout ----
+   On narrow viewports the filter dropdowns and the aggregation toggle were rendering side-by-side
+   in a row that couldn't fit, so each was truncating mid-word ("Namespa", "Sco…") and the toggle
+   was wrapping over the filters. Stack the two clusters vertically and let each take the full
+   available width. The base-filter `max-width: 220px` cap is removed at this breakpoint so the
+   pill expands to whatever the parent allows. */
+@media (max-width: 720px) {
+  .commandBar {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .leftCluster,
+  .rightCluster {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .leftCluster :global(.baseFilter) {
+    flex: 1 1 0;
+    max-width: none;
+    min-width: 120px;
+  }
+
+  .rightCluster {
+    overflow-x: auto;
+  }
+
+  .aggToggle {
+    width: 100%;
+  }
 }
 
 /* ---- Section ---- */

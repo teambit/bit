@@ -1,7 +1,7 @@
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
-import pMapSeries from 'p-map-series';
 import pMap from 'p-map';
+import pLimit from 'p-limit';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import type { GraphqlMain } from '@teambit/graphql';
@@ -15,6 +15,8 @@ import type { LaneDiffResults } from '@teambit/lanes.modules.diff';
 import { LaneDiffCmd, LaneDiffGenerator, LaneHistoryDiffCmd } from '@teambit/lanes.modules.diff';
 import type { Scope as LegacyScope, TrackLane, LaneData } from '@teambit/legacy.scope';
 import { NoCommonSnap } from '@teambit/legacy.scope';
+import { CACHE_ROOT } from '@teambit/legacy.constants';
+import path from 'path';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import type { Logger, LoggerMain } from '@teambit/logger';
@@ -130,10 +132,52 @@ export type LaneComponentDiffStatus = {
   upToDate?: boolean;
   snapsDistance?: SnapsDistanceObj;
   unrelated?: boolean;
+  /**
+   * internal context for deferred derivation of `changes`. not exposed on the GraphQL schema —
+   * the `changes` field resolver consumes this via `deriveComponentChanges` so the heavy
+   * `componentCompare.compare()` + `getAPIDiff()` work only runs when the field is selected,
+   * lazily per-component, in parallel via graphql-js list resolution.
+   */
+  changesContext?: {
+    commonSnap?: { hash: string } | null;
+    skipped?: boolean;
+    pending?: Promise<ChangeType[] | undefined>;
+  };
 };
 
 export type LaneDiffStatusOptions = {
+  /** skip importing the common snaps and computing `changes` entirely */
   skipChanges?: boolean;
+  /**
+   * drop components where the snaps-distance says the source already includes everything on the
+   * target. these contribute nothing to a target→source merge view but each costs an
+   * `importWithoutDeps` round trip + an `apiDiff` schema extraction.
+   */
+  skipUpToDate?: boolean;
+  /**
+   * still classify snap distance, but don't compute `changes` eagerly. callers derive them lazily
+   * via `deriveComponentChanges` (used by GraphQL field resolvers).
+   */
+  deferChanges?: boolean;
+};
+
+type SerializedSnapsDistance = {
+  unrelated?: boolean;
+  isUpToDate: boolean;
+  commonSnapHash?: string;
+  snapsOnSourceHashes: string[];
+  snapsOnTargetHashes: string[];
+};
+
+type SerializedComponentStatus = {
+  componentIdStr: string;
+  sourceHead: string;
+  targetHead?: string;
+  changes?: ChangeType[];
+  changeType?: ChangeType;
+  upToDate?: boolean;
+  unrelated?: boolean;
+  snapsDistance?: SnapsDistanceObj;
 };
 
 export type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
@@ -167,7 +211,360 @@ export class LanesMain {
     private remove: RemoveMain,
     readonly checkout: CheckoutMain,
     private install: InstallMain
-  ) {}
+  ) {
+    this.loadSnapsDistanceMemoFromDisk();
+    this.loadApiDiffMemoFromDisk();
+    this.loadChangeTypesMemoFromDisk();
+    this.loadDiffStatusMemoFromDisk();
+  }
+
+  /**
+   * Snap distance is purely a function of (componentId, sourceHead, targetHead) — all immutable
+   * hashes — so it's safe to memoize indefinitely. Persisted to disk so the *first* lane-diff call
+   * after a server start hits a warm cache (cold compute is the dominant latency: ~1.1s for 30
+   * components walking the snap graph + cold imports). LRU-bounded to keep the file small.
+   */
+  private snapsDistanceMemo = new Map<string, SerializedSnapsDistance>();
+  private snapsDistanceMemoDirty = false;
+  private snapsDistanceMemoSaveTimer: NodeJS.Timeout | undefined;
+  private static SNAPS_DISTANCE_MEMO_MAX = 5000;
+  private static SNAPS_DISTANCE_MEMO_FILE = path.join(CACHE_ROOT, 'lane-diff-snaps-distance.json');
+
+  /**
+   * Memo for API-diff `hasChanges` per `(baseId, compareId)` pair. Schema extraction is the single
+   * most expensive per-component step (cold ~5–15s per component) — but its `hasChanges` result is
+   * deterministic on the immutable hashes, so we persist it to disk like the snaps-distance memo.
+   * On the wire we only consume `apiDiff?.hasChanges`, so caching just that boolean keeps the file
+   * tiny and makes the disk-warm path constant-time.
+   */
+  private apiDiffMemo = new Map<string, boolean>();
+  private apiDiffInflight = new Map<string, Promise<boolean>>();
+  /**
+   * Bound the parallelism of `deriveChangeTypes` across all in-flight requests. With graphql-js
+   * resolving list fields in parallel via `Promise.all`, an uncapped deferred derivation can fire
+   * dozens of `componentCompare.compare` + `getAPIDiff` calls at once, all hitting the same single
+   * TypeScript service worker — which serializes them anyway and degrades sharply under load. A
+   * small cap matches the service's effective concurrency and prevents thundering-herd.
+   */
+  private deriveChangesLimit = pLimit(4);
+
+  /**
+   * Disk-persisted memo for the final `ChangeType[]` array per `(componentId, sourceHead, commonSnapHash)`.
+   * Keyed on immutable hashes — deterministic forever. With this populated, a cold server start can
+   * answer `lanes.diffStatus` without ever invoking `componentCompare.compare` or `getAPIDiff` —
+   * the per-component schema-extraction cost goes from seconds to a Map.get().
+   */
+  private changeTypesMemo = new Map<string, ChangeType[]>();
+  private changeTypesInflight = new Map<string, Promise<ChangeType[]>>();
+  private changeTypesMemoDirty = false;
+  private changeTypesMemoSaveTimer: NodeJS.Timeout | undefined;
+  private static CHANGE_TYPES_MEMO_MAX = 5000;
+  private static CHANGE_TYPES_MEMO_FILE = path.join(CACHE_ROOT, 'lane-diff-change-types.json');
+
+  private async loadChangeTypesMemoFromDisk() {
+    try {
+      const raw = await fs.readFile(LanesMain.CHANGE_TYPES_MEMO_FILE, 'utf8');
+      const parsed = JSON.parse(raw) as Record<string, ChangeType[]>;
+      for (const [k, v] of Object.entries(parsed)) this.changeTypesMemo.set(k, v);
+      this.logger?.debug(`[lane-diff memo] loaded ${this.changeTypesMemo.size} change-types entries`);
+    } catch {
+      // first run / corrupted file.
+    }
+  }
+
+  private scheduleChangeTypesMemoSave() {
+    this.changeTypesMemoDirty = true;
+    if (this.changeTypesMemoSaveTimer) return;
+    this.changeTypesMemoSaveTimer = setTimeout(() => {
+      this.changeTypesMemoSaveTimer = undefined;
+      if (!this.changeTypesMemoDirty) return;
+      this.changeTypesMemoDirty = false;
+      const serialized: Record<string, ChangeType[]> = {};
+      for (const [k, v] of this.changeTypesMemo) serialized[k] = v;
+      fs.outputFile(LanesMain.CHANGE_TYPES_MEMO_FILE, JSON.stringify(serialized)).catch(() => {});
+    }, 500);
+  }
+
+  private memoStoreChangeTypes(key: string, changes: ChangeType[]) {
+    if (this.changeTypesMemo.size >= LanesMain.CHANGE_TYPES_MEMO_MAX) {
+      const firstKey = this.changeTypesMemo.keys().next().value;
+      if (firstKey) this.changeTypesMemo.delete(firstKey);
+    }
+    this.changeTypesMemo.set(key, changes);
+    this.scheduleChangeTypesMemoSave();
+  }
+
+  private changeTypesMemoKey(componentId: ComponentID, sourceHead: string, commonHash: string | null | undefined) {
+    return `${componentId.toStringWithoutVersion()}|${sourceHead}|${commonHash ?? ''}`;
+  }
+
+  /**
+   * Top-level result memo: the entire `LaneDiffStatus.componentsStatus` array keyed on the lane
+   * head hashes + relevant options. With this populated, a cold server start that receives a
+   * lane-diff request for an unchanged pair of lanes answers from disk in a single `Map.get()`,
+   * skipping `importObjectsFromMainIfExist`, per-component object loads, and all derivation.
+   * Invalidated implicitly when either lane head moves — the key embeds both hashes.
+   */
+  private diffStatusResultMemo = new Map<string, SerializedComponentStatus[]>();
+  private diffStatusMemoDirty = false;
+  private diffStatusMemoSaveTimer: NodeJS.Timeout | undefined;
+  private static DIFF_STATUS_MEMO_MAX = 200;
+  private static DIFF_STATUS_MEMO_FILE = path.join(CACHE_ROOT, 'lane-diff-results.json');
+
+  private async loadDiffStatusMemoFromDisk() {
+    try {
+      const raw = await fs.readFile(LanesMain.DIFF_STATUS_MEMO_FILE, 'utf8');
+      const parsed = JSON.parse(raw) as Record<string, SerializedComponentStatus[]>;
+      for (const [k, v] of Object.entries(parsed)) this.diffStatusResultMemo.set(k, v);
+      this.logger?.debug(`[lane-diff memo] loaded ${this.diffStatusResultMemo.size} diff-status entries`);
+    } catch {
+      // first run / corrupted file.
+    }
+  }
+
+  private scheduleDiffStatusMemoSave() {
+    this.diffStatusMemoDirty = true;
+    if (this.diffStatusMemoSaveTimer) return;
+    this.diffStatusMemoSaveTimer = setTimeout(() => {
+      this.diffStatusMemoSaveTimer = undefined;
+      if (!this.diffStatusMemoDirty) return;
+      this.diffStatusMemoDirty = false;
+      const serialized: Record<string, SerializedComponentStatus[]> = {};
+      for (const [k, v] of this.diffStatusResultMemo) serialized[k] = v;
+      fs.outputFile(LanesMain.DIFF_STATUS_MEMO_FILE, JSON.stringify(serialized)).catch(() => {});
+    }, 500);
+  }
+
+  private memoStoreDiffStatus(key: string, statuses: LaneComponentDiffStatus[]) {
+    if (this.diffStatusResultMemo.size >= LanesMain.DIFF_STATUS_MEMO_MAX) {
+      const firstKey = this.diffStatusResultMemo.keys().next().value;
+      if (firstKey) this.diffStatusResultMemo.delete(firstKey);
+    }
+    this.diffStatusResultMemo.set(
+      key,
+      statuses.map((s) => ({
+        componentIdStr: s.componentId.toString(),
+        sourceHead: s.sourceHead,
+        targetHead: s.targetHead,
+        changes: s.changes,
+        changeType: s.changeType,
+        upToDate: s.upToDate,
+        unrelated: s.unrelated,
+        snapsDistance: s.snapsDistance,
+      }))
+    );
+    this.scheduleDiffStatusMemoSave();
+  }
+
+  private diffStatusFromMemo(serialized: SerializedComponentStatus[]): LaneComponentDiffStatus[] {
+    return serialized.map((s) => ({
+      componentId: ComponentID.fromString(s.componentIdStr),
+      sourceHead: s.sourceHead,
+      targetHead: s.targetHead,
+      changes: s.changes,
+      changeType: s.changeType,
+      upToDate: s.upToDate,
+      unrelated: s.unrelated,
+      snapsDistance: s.snapsDistance,
+    }));
+  }
+
+  /**
+   * Build the top-level result memo key. Key on the lane head hashes — they move with every snap,
+   * so this implicitly invalidates whenever the lane composition changes. Returns empty string if
+   * the source lane has no head hash to key on (avoid caching incomplete state).
+   */
+  private diffStatusResultMemoKey(
+    sourceLaneId: LaneId,
+    sourceLane: any,
+    targetLaneId: LaneId | undefined,
+    targetLane: any,
+    options?: LaneDiffStatusOptions
+  ): string {
+    const sourceHeadHash = sourceLane?.hash?.toString?.() ?? sourceLane?.hash ?? '';
+    if (!sourceHeadHash) return '';
+    const targetHeadHash = targetLane?.hash?.toString?.() ?? targetLane?.hash ?? (targetLaneId ? '' : 'default');
+    const optionsKey = `${options?.skipChanges ? '1' : '0'}${options?.skipUpToDate ? '1' : '0'}`;
+    return `${sourceLaneId.toString()}@${sourceHeadHash}|${targetLaneId?.toString() ?? 'default'}@${targetHeadHash}|${optionsKey}`;
+  }
+
+  private tryDiffStatusResultMemo(
+    resultMemoKey: string,
+    sourceLaneId: LaneId,
+    targetLaneId: LaneId | undefined
+  ): LaneDiffStatus | undefined {
+    if (!resultMemoKey) return undefined;
+    const cached = this.diffStatusResultMemo.get(resultMemoKey);
+    if (!cached) return undefined;
+    return {
+      source: sourceLaneId,
+      target: targetLaneId || this.getDefaultLaneId(),
+      componentsStatus: this.diffStatusFromMemo(cached),
+    };
+  }
+
+  /**
+   * Pre-warm the downstream caches the lane-compare UI hits right after `LaneDiffStatus`:
+   * - the scope's `ScopeComponentLoader.componentsCache` via `host.getMany([…])`
+   * - `componentCompare`'s disk-persisted result memo via `compareComponents(pairs)`
+   *
+   * Fire-and-forget. The UI's follow-up `Component` and `CompareComponents` queries arrive ~50–200 ms
+   * after we return; this kickoff happens *before* we return, so the work overlaps the UI's render
+   * tick and the response serialization. By the time the UI's queries land on the server, the caches
+   * are populated (or, worst case, the pre-warm work is in-flight and the resolver-level single-flight
+   * in `componentCompare` dedupes the load).
+   */
+  private prewarmCompareCaches(
+    host: any,
+    visibleDiffProps: Array<{ componentId: ComponentID; sourceHead: string; targetHead?: string }>
+  ) {
+    const allVersionedIds: ComponentID[] = [];
+    const comparePairs: Array<{ baseId: string; compareId: string }> = [];
+    for (const { componentId, sourceHead, targetHead } of visibleDiffProps) {
+      const compareId = componentId.changeVersion(sourceHead);
+      allVersionedIds.push(compareId);
+      if (targetHead) {
+        const baseId = componentId.changeVersion(targetHead);
+        allVersionedIds.push(baseId);
+        comparePairs.push({ baseId: baseId.toString(), compareId: compareId.toString() });
+      }
+    }
+    if (allVersionedIds.length === 0) return;
+    // NOTE: `host.getMany` uses mapSeries internally (sequential). For cold pre-warm to actually
+    // beat the UI's concurrent N-op `Component` batch we have to drive parallelism ourselves. pMap
+    // here uses the same `concurrentComponentsLimit()` cap as the lane diff body, matching what
+    // downstream loaders are tuned for.
+    Promise.all([
+      // wrap in try/catch since `host.get` could be missing or throw synchronously; the previous
+      // `host.get?.(id).catch(...)` chained .catch on `undefined` when get was absent.
+      pMap(
+        allVersionedIds,
+        async (id) => {
+          try {
+            return await host.get?.(id);
+          } catch {
+            return undefined;
+          }
+        },
+        { concurrency: concurrentComponentsLimit() }
+      ).catch(() => undefined),
+      comparePairs.length > 0
+        ? this.componentCompare.compareComponents(comparePairs).catch(() => undefined)
+        : Promise.resolve(),
+    ]).catch(() => {});
+  }
+
+  private populateDiffStatusMemoAsync(resultMemoKey: string, results: LaneComponentDiffStatus[]) {
+    Promise.all(
+      results.map(async (status) => {
+        if (status.changes) return;
+        status.changes = await this.deriveComponentChanges(status);
+      })
+    )
+      .then(() => this.memoStoreDiffStatus(resultMemoKey, results))
+      .catch(() => {});
+  }
+  private apiDiffMemoDirty = false;
+  private apiDiffMemoSaveTimer: NodeJS.Timeout | undefined;
+  private static API_DIFF_MEMO_MAX = 5000;
+  private static API_DIFF_MEMO_FILE = path.join(CACHE_ROOT, 'lane-diff-api-diff.json');
+
+  private async loadApiDiffMemoFromDisk() {
+    try {
+      const raw = await fs.readFile(LanesMain.API_DIFF_MEMO_FILE, 'utf8');
+      const parsed = JSON.parse(raw) as Record<string, boolean>;
+      for (const [k, v] of Object.entries(parsed)) this.apiDiffMemo.set(k, v);
+      this.logger?.debug(`[lane-diff memo] loaded ${this.apiDiffMemo.size} api-diff entries`);
+    } catch {
+      // first run / corrupted file.
+    }
+  }
+
+  private scheduleApiDiffMemoSave() {
+    this.apiDiffMemoDirty = true;
+    if (this.apiDiffMemoSaveTimer) return;
+    this.apiDiffMemoSaveTimer = setTimeout(() => {
+      this.apiDiffMemoSaveTimer = undefined;
+      if (!this.apiDiffMemoDirty) return;
+      this.apiDiffMemoDirty = false;
+      const serialized: Record<string, boolean> = {};
+      for (const [k, v] of this.apiDiffMemo) serialized[k] = v;
+      fs.outputFile(LanesMain.API_DIFF_MEMO_FILE, JSON.stringify(serialized)).catch(() => {});
+    }, 500);
+  }
+
+  private memoStoreApiDiff(key: string, hasChanges: boolean) {
+    if (this.apiDiffMemo.size >= LanesMain.API_DIFF_MEMO_MAX) {
+      const firstKey = this.apiDiffMemo.keys().next().value;
+      if (firstKey) this.apiDiffMemo.delete(firstKey);
+    }
+    this.apiDiffMemo.set(key, hasChanges);
+    this.scheduleApiDiffMemoSave();
+  }
+
+  private snapsDistanceMemoKey(componentId: ComponentID, sourceHead: string, targetHead?: string) {
+    return `${componentId.toStringWithoutVersion()}|${sourceHead}|${targetHead || ''}`;
+  }
+
+  private async loadSnapsDistanceMemoFromDisk() {
+    try {
+      const raw = await fs.readFile(LanesMain.SNAPS_DISTANCE_MEMO_FILE, 'utf8');
+      const parsed = JSON.parse(raw) as Record<string, SerializedSnapsDistance>;
+      for (const [k, v] of Object.entries(parsed)) {
+        this.snapsDistanceMemo.set(k, v);
+      }
+      this.logger?.debug(
+        `[lane-diff memo] loaded ${this.snapsDistanceMemo.size} entries from ${LanesMain.SNAPS_DISTANCE_MEMO_FILE}`
+      );
+    } catch {
+      // first run / corrupted file: start empty.
+    }
+  }
+
+  private scheduleSnapsDistanceMemoSave() {
+    this.snapsDistanceMemoDirty = true;
+    if (this.snapsDistanceMemoSaveTimer) return;
+    this.snapsDistanceMemoSaveTimer = setTimeout(() => {
+      this.snapsDistanceMemoSaveTimer = undefined;
+      if (!this.snapsDistanceMemoDirty) return;
+      this.snapsDistanceMemoDirty = false;
+      const serialized: Record<string, SerializedSnapsDistance> = {};
+      for (const [k, v] of this.snapsDistanceMemo) serialized[k] = v;
+      fs.outputFile(LanesMain.SNAPS_DISTANCE_MEMO_FILE, JSON.stringify(serialized)).catch(() => {
+        // best-effort cache; log nothing — disk failure shouldn't be user-visible noise.
+      });
+    }, 500);
+  }
+
+  private memoStoreSnapsDistance(key: string, snapsDistance: SnapsDistance) {
+    if (this.snapsDistanceMemo.size >= LanesMain.SNAPS_DISTANCE_MEMO_MAX) {
+      const firstKey = this.snapsDistanceMemo.keys().next().value;
+      if (firstKey) this.snapsDistanceMemo.delete(firstKey);
+    }
+    this.snapsDistanceMemo.set(key, {
+      unrelated: snapsDistance.err instanceof NoCommonSnap,
+      isUpToDate: !!snapsDistance.isUpToDate?.(),
+      commonSnapHash: snapsDistance.commonSnapBeforeDiverge?.hash,
+      snapsOnSourceHashes: (snapsDistance.snapsOnSourceOnly ?? []).map((s) => s.hash),
+      snapsOnTargetHashes: (snapsDistance.snapsOnTargetOnly ?? []).map((s) => s.hash),
+    });
+    this.scheduleSnapsDistanceMemoSave();
+  }
+
+  /**
+   * Reconstruct a duck-typed SnapsDistance from the serialized form for downstream consumers.
+   * Consumers only touch `.err`, `.isUpToDate()`, `.commonSnapBeforeDiverge.hash`,
+   * `.snapsOnSourceOnly.[].hash`, `.snapsOnTargetOnly.[].hash` — so a plain object suffices.
+   */
+  private snapsDistanceFromMemo(s: SerializedSnapsDistance): SnapsDistance {
+    return {
+      err: s.unrelated ? new NoCommonSnap() : undefined,
+      isUpToDate: () => s.isUpToDate,
+      commonSnapBeforeDiverge: s.commonSnapHash ? { hash: s.commonSnapHash } : null,
+      snapsOnSourceOnly: s.snapsOnSourceHashes.map((h) => ({ hash: h })),
+      snapsOnTargetOnly: s.snapsOnTargetHashes.map((h) => ({ hash: h })),
+    } as unknown as SnapsDistance;
+  }
 
   /**
    * return the lane data without the deleted components.
@@ -860,6 +1257,13 @@ please create a new lane instead, which will include all components of this lane
     const targetLaneIds = targetLane?.toBitIds();
     const host = this.componentAspect.getHost();
 
+    const resultMemoKey = this.diffStatusResultMemoKey(sourceLaneId, sourceLane, targetLaneId, targetLane, options);
+    const earlyReturn = this.tryDiffStatusResultMemo(resultMemoKey, sourceLaneId, targetLaneId);
+    if (earlyReturn) {
+      this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
+      return earlyReturn;
+    }
+
     const targetMainHeads =
       !targetLaneId || targetLaneId?.isDefault()
         ? compact(
@@ -921,15 +1325,26 @@ please create a new lane instead, which will include all components of this lane
     this.logger.profile(
       `get snaps distance for source lane: ${sourceLane?.id.name} and target lane: ${targetLane?.id.name} with ${diffProps.length} components`
     );
+    let memoHits = 0;
     await pMap(
       diffProps,
       async ({ componentId, sourceHead, targetHead }) => {
-        const snapsDistance = await this.scope.getSnapsDistanceBetweenTwoSnaps(
-          componentId,
-          sourceHead,
-          targetHead,
-          false
-        );
+        const memoKey = this.snapsDistanceMemoKey(componentId, sourceHead, targetHead);
+        const cached = this.snapsDistanceMemo.get(memoKey);
+        let snapsDistance: SnapsDistance | undefined;
+        if (cached) {
+          memoHits += 1;
+          snapsDistance = this.snapsDistanceFromMemo(cached);
+        } else {
+          const computed = await this.scope.getSnapsDistanceBetweenTwoSnaps(componentId, sourceHead, targetHead, false);
+          if (computed) {
+            // cache success + the deterministic "unrelated" outcome. transient errors stay uncached.
+            if (!computed.err || computed.err instanceof NoCommonSnap) {
+              this.memoStoreSnapsDistance(memoKey, computed);
+            }
+            snapsDistance = computed;
+          }
+        }
         if (snapsDistance) {
           snapDistancesByComponentId.set(componentId.toString(), {
             snapsDistance,
@@ -939,20 +1354,29 @@ please create a new lane instead, which will include all components of this lane
           });
         }
       },
-      {
-        concurrency: concurrentComponentsLimit(),
-      }
+      { concurrency: concurrentComponentsLimit() }
     );
     this.logger.profile(
-      `get snaps distance for source lane: ${sourceLane?.id.name} and target lane: ${targetLane?.id.name} with ${diffProps.length} components`
+      `get snaps distance for source lane: ${sourceLane?.id.name} and target lane: ${targetLane?.id.name} with ${diffProps.length} components (memo hits: ${memoHits}/${diffProps.length})`
     );
 
+    // when `skipUpToDate` is set, drop components whose snaps say the source already includes everything on
+    // the target. they contribute nothing to a target→source review surface but each carries a full
+    // `importWithoutDeps` round trip and a schema-extraction `apiDiff` call.
+    const visibleDiffProps = options?.skipUpToDate
+      ? diffProps.filter(({ componentId }) => {
+          const entry = snapDistancesByComponentId.get(componentId.toString());
+          return !entry || !entry.snapsDistance.isUpToDate();
+        })
+      : diffProps;
+
     const commonSnapsToImport = compact(
-      [...snapDistancesByComponentId.values()].map((s) =>
-        s.snapsDistance.commonSnapBeforeDiverge
+      visibleDiffProps.map(({ componentId }) => {
+        const s = snapDistancesByComponentId.get(componentId.toString());
+        return s?.snapsDistance.commonSnapBeforeDiverge
           ? s.componentId.changeVersion(s.snapsDistance.commonSnapBeforeDiverge.hash)
-          : null
-      )
+          : null;
+      })
     );
 
     const sourceOrTargetLane =
@@ -960,23 +1384,46 @@ please create a new lane instead, which will include all components of this lane
         (targetLaneId?.isDefault() ? null : (targetLane as Lane))) ??
       undefined;
 
-    if (commonSnapsToImport.length > 0 && !options?.skipChanges) {
+    if (commonSnapsToImport.length > 0 && !options?.skipChanges && !options?.deferChanges) {
+      this.logger.profile(`import common snaps for lane diff (${commonSnapsToImport.length} snaps)`);
       await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(commonSnapsToImport), {
         cache: true,
         reason: `get the common snap for lane diff`,
         lane: sourceOrTargetLane,
       });
+      this.logger.profile(`import common snaps for lane diff (${commonSnapsToImport.length} snaps)`);
     }
 
-    const results = await pMapSeries(diffProps, async ({ componentId, sourceHead, targetHead }) =>
-      this.componentDiffStatus(
-        componentId,
-        sourceHead,
-        targetHead,
-        snapDistancesByComponentId.get(componentId.toString())?.snapsDistance,
-        options
-      )
+    this.logger.profile(`componentDiffStatus pMap (${visibleDiffProps.length} components)`);
+    // run in parallel — bounded by `concurrentComponentsLimit()`. previously this was pMapSeries which
+    // serialized 30 schema extractions and dominated the cold call (minutes).
+    const results = await pMap(
+      visibleDiffProps,
+      async ({ componentId, sourceHead, targetHead }) =>
+        this.componentDiffStatus(
+          componentId,
+          sourceHead,
+          targetHead,
+          snapDistancesByComponentId.get(componentId.toString())?.snapsDistance,
+          options
+        ),
+      { concurrency: concurrentComponentsLimit() }
     );
+    this.logger.profile(`componentDiffStatus pMap (${visibleDiffProps.length} components)`);
+
+    // best-effort populate the top-level result memo. eagerly resolve `changes` for any deferred
+    // components so the next cold call can return immediately — does not block this response.
+    if (resultMemoKey) this.populateDiffStatusMemoAsync(resultMemoKey, results);
+
+    // Pre-warm caches the lane-compare UI will hit right after this query returns:
+    //   - `host.getMany([base+compare versioned ids])` populates `ScopeComponentLoader.componentsCache`
+    //      so the UI's 20 per-component `getHost.get` queries (componentFields + componentFieldWithLogs
+    //      for each side of each visible pair) all hit cache instead of racing through cold loads.
+    //   - `componentCompare.compareComponents(pairs)` populates the new compare-result memo so the UI's
+    //      `CompareComponents` query is answered from cache.
+    // Fired *after* we have the answer ready — never blocks the response. Wrapped in catch() so any
+    // background failure stays invisible to the caller.
+    if (visibleDiffProps.length > 0) this.prewarmCompareCaches(host, visibleDiffProps);
 
     this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
 
@@ -1009,9 +1456,14 @@ please create a new lane instead, which will include all components of this lane
 
     const commonSnap = snapsDistance?.commonSnapBeforeDiverge;
 
-    const changes = !options?.skipChanges
-      ? await this.deriveChangeTypes(commonSnap, componentId, sourceHead)
-      : undefined;
+    // when changes are skipped or deferred, return the snap-distance metadata immediately and leave
+    // `changes` unset. callers derive them lazily through `deriveComponentChanges` (used by the GraphQL
+    // `changes` field resolver, which runs the work per-component in parallel only when the client
+    // selects the field — keeps cold p50 under 200 ms even for many components).
+    const changes =
+      options?.skipChanges || options?.deferChanges
+        ? undefined
+        : await this.deriveChangeTypes(commonSnap, componentId, sourceHead);
     const changeType = changes ? changes[0] : undefined;
 
     return {
@@ -1026,7 +1478,45 @@ please create a new lane instead, which will include all components of this lane
         onTarget: snapsDistance?.snapsOnTargetOnly.map((s) => s.hash) ?? [],
         common: snapsDistance?.commonSnapBeforeDiverge?.hash,
       },
+      changesContext: { commonSnap, skipped: options?.skipChanges },
     };
+  }
+
+  /**
+   * Lazily derive the change types for a single component diff status. Used by the GraphQL `changes`
+   * field resolver so the (expensive) derivation only runs when the field is selected. Memoized per
+   * status object via `changesContext.pending`, so selecting both `changes` and `changeType` computes
+   * the value once.
+   */
+  async deriveComponentChanges(status: LaneComponentDiffStatus): Promise<ChangeType[] | undefined> {
+    if (status.changes) return status.changes;
+    const context = status.changesContext;
+    if (!context || context.skipped) return undefined;
+
+    // top-level memo on the final ChangeType[] — short-circuits BEFORE compare()/getAPIDiff() run.
+    // Persisted to disk, keyed on immutable hashes, so a cold server start with a populated cache
+    // answers the entire derivation from a Map.get().
+    const memoKey = this.changeTypesMemoKey(status.componentId, status.sourceHead, context.commonSnap?.hash ?? null);
+    const cached = this.changeTypesMemo.get(memoKey);
+    if (cached) return cached;
+
+    // single-flight concurrent requests for the same (componentId, sourceHead, commonSnap) tuple.
+    let pending = this.changeTypesInflight.get(memoKey);
+    if (!pending) {
+      pending = this.deriveChangesLimit(() =>
+        this.deriveChangeTypes(context.commonSnap, status.componentId, status.sourceHead)
+      )
+        .then((result) => {
+          this.memoStoreChangeTypes(memoKey, result);
+          return result;
+        })
+        .finally(() => {
+          this.changeTypesInflight.delete(memoKey);
+        });
+      this.changeTypesInflight.set(memoKey, pending);
+    }
+    context.pending = pending;
+    return pending;
   }
 
   async componentDiffStatusOld(
@@ -1081,14 +1571,39 @@ please create a new lane instead, which will include all components of this lane
 
     const baseIdStr = componentId.changeVersion(commonSnap.hash).toString();
     const compareIdStr = componentId.changeVersion(sourceHead).toString();
-    const [compare, apiDiff] = await Promise.all([
-      this.componentCompare.compare(baseIdStr, compareIdStr),
-      this.componentCompare.getAPIDiff(baseIdStr, compareIdStr),
-    ]);
-
+    // Run `compare()` first. The public API can only change when source code changes — if no code
+    // diff, skip the (expensive) schema extraction entirely. Cuts cold derivation by an order of
+    // magnitude for components whose changes are config/deps only.
+    const compare = await this.componentCompare.compare(baseIdStr, compareIdStr);
     const hasCodeChanges = compare.code.some((c) => c.status !== 'UNCHANGED');
+
+    let hasApiChanges = false;
+    if (hasCodeChanges) {
+      const apiDiffKey = `${baseIdStr}|${compareIdStr}`;
+      const cached = this.apiDiffMemo.get(apiDiffKey);
+      if (cached !== undefined) {
+        hasApiChanges = cached;
+      } else {
+        // single-flight in-flight requests so concurrent resolvers share one schema-extraction call.
+        let pending = this.apiDiffInflight.get(apiDiffKey);
+        if (!pending) {
+          pending = this.componentCompare
+            .getAPIDiff(baseIdStr, compareIdStr)
+            .then((apiDiff) => {
+              const result = apiDiff?.hasChanges ?? false;
+              this.memoStoreApiDiff(apiDiffKey, result);
+              return result;
+            })
+            .finally(() => {
+              this.apiDiffInflight.delete(apiDiffKey);
+            });
+          this.apiDiffInflight.set(apiDiffKey, pending);
+        }
+        hasApiChanges = await pending;
+      }
+    }
+
     const hasFieldChanges = compare.fields.length > 0;
-    const hasApiChanges = apiDiff?.hasChanges ?? false;
 
     if (!hasFieldChanges && !hasCodeChanges && !hasApiChanges) {
       return [ChangeType.NONE];

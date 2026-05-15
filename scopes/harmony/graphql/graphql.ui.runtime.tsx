@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import React from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { BatchHttpLink } from '@apollo/client/link/batch-http';
-import { InMemoryCache, ApolloClient, ApolloLink, HttpLink, createHttpLink } from '@apollo/client';
+import { InMemoryCache, ApolloClient, ApolloLink, HttpLink } from '@apollo/client';
 import type { DefaultOptions, NormalizedCacheObject, Operation } from '@apollo/client';
 import { WebSocketLink } from '@apollo/client/link/ws';
 import { onError } from '@apollo/client/link/error';
@@ -33,7 +33,11 @@ type ClientOptions = {
 };
 
 export type GraphQLConfig = {
-  enableBatching?: boolean;
+  /**
+   * batching is always wired up. operations are *opt-in*: each Apollo operation that sets
+   * `context: { batch: true }` is coalesced via BatchHttpLink, every other operation goes through
+   * a plain HttpLink unchanged. tune the batching window/cap via the fields below.
+   */
   batchInterval?: number;
   batchMax?: number;
 };
@@ -66,30 +70,13 @@ export class GraphqlUI {
   }
 
   createSsrClient({ serverUrl, headers }: { serverUrl: string; headers: any }) {
-    if (this.config.enableBatching) {
-      return this.createSsrClientBatched({ serverUrl, headers });
-    }
-    const link = ApolloLink.from([
-      onError(logError),
-      createHttpLink({
-        credentials: 'include',
-        uri: serverUrl,
-        headers,
-        fetch: crossFetch,
-      }),
-    ]);
-
-    const client = new ApolloClient({
-      ssrMode: true,
-      link,
-      cache: this.createCache(),
+    const httpLink = new HttpLink({
+      uri: serverUrl,
+      credentials: 'include',
+      headers,
+      fetch: crossFetch,
     });
-
-    return client;
-  }
-
-  private createSsrClientBatched({ serverUrl, headers }: { serverUrl: string; headers: any }) {
-    const batchedHttpLink = new BatchHttpLink({
+    const batchHttpLink = new BatchHttpLink({
       uri: serverUrl,
       credentials: 'include',
       batchInterval: this.config.batchInterval,
@@ -97,19 +84,11 @@ export class GraphqlUI {
       headers,
       fetch: crossFetch,
     });
-
-    const unbatchedHttpLink = new HttpLink({
-      uri: serverUrl,
-      credentials: 'include',
-      headers,
-      fetch: crossFetch,
-    });
-
-    const httpLink = ApolloLink.split(this.isMutation, unbatchedHttpLink, batchedHttpLink);
+    const transport = ApolloLink.split(this.shouldBatch, batchHttpLink, httpLink);
 
     return new ApolloClient({
       ssrMode: true,
-      link: ApolloLink.from([onError(logError), httpLink]),
+      link: ApolloLink.from([onError(logError), transport]),
       cache: this.createCache(),
     });
   }
@@ -123,6 +102,19 @@ export class GraphqlUI {
         // last-written aspect data overwrites all others (e.g. all components show the
         // same env). Disabling normalization stores aspects inline per component.
         Aspect: { keyFields: false },
+        Query: {
+          fields: {
+            // The schema federates `ComponentHost` extensions across aspects (component-compare's
+            // `apiDiff`, scope's `get`/`getMany`, etc.). Different queries select different field
+            // subsets of the same ComponentHost — without a merge policy Apollo replaces the
+            // whole entry and warns about data loss. Field-level merge keeps each query's data
+            // additive on the shared ComponentHost cache entry.
+            getHost: {
+              keyArgs: ['id'],
+              merge: (existing, incoming) => ({ ...existing, ...incoming }),
+            },
+          },
+        },
       },
     });
 
@@ -131,15 +123,14 @@ export class GraphqlUI {
     return cache;
   }
 
-  private readonly isMutation = (op: Operation) => {
+  // operations opt in to batching by setting `context: { batch: true }`. mutations never batch.
+  private readonly shouldBatch = (op: Operation) => {
     const def = getMainDefinition(op.query) as OperationDefinitionNode;
-    return def.kind === 'OperationDefinition' && def.operation === 'mutation';
+    if (def.kind === 'OperationDefinition' && def.operation === 'mutation') return false;
+    return op.getContext().batch === true;
   };
 
   private createLink(uri: string, { subscriptionUri }: { subscriptionUri?: string } = {}) {
-    if (this.config.enableBatching) {
-      return this.createLinkBatched(uri, { subscriptionUri });
-    }
     const httpLink = new HttpLink({ credentials: 'include', uri });
     const batchHttpLink = new BatchHttpLink({
       uri,
@@ -147,48 +138,14 @@ export class GraphqlUI {
       batchInterval: this.config.batchInterval,
       batchMax: this.config.batchMax,
     });
-    // opt-in batching: an operation that sets `context: { batch: true }` is coalesced via
-    // BatchHttpLink; every other operation keeps going through the plain HttpLink unchanged.
-    const httpOrBatchLink = ApolloLink.split(
-      (operation) => operation.getContext().batch === true,
-      batchHttpLink,
-      httpLink
-    );
+    const httpOrBatchLink = ApolloLink.split(this.shouldBatch, batchHttpLink, httpLink);
+
     const subsLink = subscriptionUri
-      ? new WebSocketLink({
-          uri: subscriptionUri,
-          options: { reconnect: true },
-        })
-      : undefined;
-
-    const hybridLink = subsLink ? createSplitLink(httpOrBatchLink, subsLink) : httpOrBatchLink;
-    const errorLogger = onError(logError);
-
-    return ApolloLink.from([errorLogger, hybridLink]);
-  }
-
-  private createLinkBatched(uri: string, { subscriptionUri }: { subscriptionUri?: string } = {}) {
-    const batchedHttpLink = new BatchHttpLink({
-      uri,
-      credentials: 'include',
-      batchInterval: this.config.batchInterval,
-      batchMax: this.config.batchMax,
-    });
-
-    const unbatchedHttpLink = new HttpLink({
-      uri,
-      credentials: 'include',
-    });
-
-    const httpLink = ApolloLink.split(this.isMutation, unbatchedHttpLink, batchedHttpLink);
-
-    const wsLink = subscriptionUri
       ? new WebSocketLink({ uri: subscriptionUri, options: { reconnect: true } })
       : undefined;
+    const hybridLink = subsLink ? createSplitLink(httpOrBatchLink, subsLink) : httpOrBatchLink;
 
-    const transport = wsLink ? createSplitLink(httpLink, wsLink) : httpLink;
-
-    return ApolloLink.from([onError(logError), transport]);
+    return ApolloLink.from([onError(logError), hybridLink]);
   }
 
   getProvider = ({ client, children }: { client: GraphQLClient<any>; children: ReactNode }) => {
@@ -202,7 +159,6 @@ export class GraphqlUI {
   static slots = [];
 
   static defaultConfig: GraphQLConfig = {
-    enableBatching: false,
     batchInterval: 50,
     batchMax: 20,
   };

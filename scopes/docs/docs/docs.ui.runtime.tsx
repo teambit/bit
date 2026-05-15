@@ -13,6 +13,8 @@ import { OverviewCompareSection } from '@teambit/docs.ui.overview-compare-sectio
 import type { UseSandboxPermission } from '@teambit/preview.ui.component-preview';
 import type { APIReferenceUI } from '@teambit/api-reference';
 import { APIReferenceAspect } from '@teambit/api-reference';
+import type { LanesUI } from '@teambit/lanes';
+import { LanesAspect } from '@teambit/lanes';
 import { DocsAspect } from './docs.aspect';
 import { OverviewSection } from './overview.section';
 import type { TitleBadgeSlot, TitleBadge, OverviewOptionsSlot, OverviewOptions } from './overview';
@@ -64,14 +66,19 @@ export class DocsUI {
     this.overviewOptionsSlot.register(options);
   }
 
-  static dependencies = [ComponentAspect, ComponentCompareAspect, APIReferenceAspect];
+  static dependencies = [ComponentAspect, ComponentCompareAspect, APIReferenceAspect, LanesAspect];
 
   static runtime = UIRuntime;
 
   static slots = [Slot.withType<TitleBadge>(), Slot.withType<OverviewOptions>(), Slot.withType<UseSandboxPermission>()];
 
   static async provider(
-    [component, componentCompare, apiRef]: [ComponentUI, ComponentCompareUI, APIReferenceUI],
+    [component, componentCompare, apiRef, lanesUi]: [
+      ComponentUI,
+      ComponentCompareUI,
+      APIReferenceUI,
+      LanesUI | undefined,
+    ],
     config,
     [titleBadgeSlot, overviewOptionsSlot, usePreviewSandboxSlot]: [
       TitleBadgeSlot,
@@ -86,6 +93,19 @@ export class DocsUI {
     component.registerNavigation(section.navigationLink, section.order);
     componentCompare.registerNavigation(compareSection);
     componentCompare.registerRoutes([compareSection.route]);
+    // Register the inline docs tab for lane-compare. `docs.getDocsCompare()` returns
+    // `<OverviewCompare titleBadges={this.titleBadgeSlot} overviewOptions={this.overviewOptionsSlot} />`
+    // — i.e. wired with this aspect's real slots, so any other aspect that registers title badges
+    // or overview options sees those contributions in the lane-compare panel too. The lanesUi dep
+    // is optional so this aspect still works in standalone scope contexts where lanes isn't loaded.
+    if (lanesUi) {
+      lanesUi.registerCompareTab({
+        id: 'inline-docs',
+        order: 3,
+        displayName: 'Docs',
+        element: docs.getDocsCompare(),
+      });
+    }
     docs.registerPreviewSandbox((manager, componentModel) => {
       if (componentModel?.host === 'teambit.scope/scope') {
         manager.add('allow-scripts');

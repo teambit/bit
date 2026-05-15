@@ -33,7 +33,10 @@ export type GraphQLConfig = {
   subscriptionsPortRange: number[];
   subscriptionsPath: string;
   disableCors?: boolean;
-  enableBatching?: boolean;
+  /**
+   * cap on the number of operations in a single batched request body. requests over this size
+   * are rejected with HTTP 413. batching is always accepted on the server; clients opt in.
+   */
   batchMax?: number;
 };
 
@@ -409,7 +412,6 @@ export class GraphqlMain {
     subscriptionsPortRange: [2000, 2100],
     disableCors: false,
     subscriptionsPath: '/subscriptions',
-    enableBatching: false,
     batchMax: 20,
   };
 

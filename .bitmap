@@ -1986,6 +1986,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/hooks/use-core-aspects"
     },
+    "ui/hooks/use-data-query": {
+        "name": "ui/hooks/use-data-query",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.506",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/hooks/use-data-query"
+    },
     "ui/inline-code-compare": {
         "name": "ui/inline-code-compare",
         "scope": "",

@@ -165,6 +165,25 @@ function LaneCompareInline({
     }
     return map;
   }, [laneComponents?.length]);
+  // Build the env-icon lookup from the descriptors we already loaded. Falls back to the explicit
+  // `envIcons` prop if the parent supplies it (e.g. for testing/storybook).
+  //
+  // `AspectList.get(aspectId)` returns the aspect *data* directly (not a `{ data }` wrapper),
+  // so the icon lives at `.icon`. Some envs also surface the icon nested under the env-descriptor
+  // object, so we check both shapes to be defensive.
+  const envIconsMap = useMemo(() => {
+    const map = new Map<string, string>(envIcons ?? []);
+    if (!laneComponentDescriptors) return map;
+    for (const comp of laneComponentDescriptors) {
+      const envAspect = comp.get<any>('teambit.envs/envs');
+      const icon =
+        envAspect?.icon || envAspect?.data?.icon || envAspect?.descriptor?.icon || envAspect?.env?.icon || undefined;
+      if (!icon) continue;
+      const key = comp.id.toStringWithoutVersion();
+      if (!map.has(key)) map.set(key, icon);
+    }
+    return map;
+  }, [laneComponentDescriptors, envIcons]);
 
   const [searchParams] = useSearchParams();
   const [viewMode, setViewModeState] = useState<ViewMode>((searchParams.get('view') as ViewMode) || 'code');
@@ -360,7 +379,7 @@ function LaneCompareInline({
         items: comps.map((c) => ({
           id: c.idStr,
           name: c.name,
-          envIcon: envIcons?.get(c.idStr),
+          envIcon: envIconsMap.get(c.idStr),
           status: c.changeType,
           files:
             viewMode === 'code'
@@ -371,7 +390,7 @@ function LaneCompareInline({
         })),
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [grouped, groupBy, envIcons, fileRegistry?.getVersion(), viewMode]
+    [grouped, groupBy, envIconsMap, fileRegistry?.getVersion(), viewMode]
   );
 
   const apiDiffs: ComponentDiffEntry[] = useMemo(() => {
@@ -483,7 +502,7 @@ function LaneCompareInline({
                       compareVersion={c.compareVersion}
                       baseUrl={c.baseUrl}
                       compareUrl={c.compareUrl}
-                      envIcon={envIcons?.get(c.idStr)}
+                      envIcon={envIconsMap.get(c.idStr)}
                       allTabs={resolvedTabs}
                       accentColor={ACCENT_COLORS[c.changeType] || undefined}
                       host="teambit.scope/scope"

@@ -129,10 +129,10 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
 }
 
 .splitLineNumRemoved {
-  color: var(--diff-removed-num);
+  color: var(--on-surface-negative-bold, #cf222e);
 }
 .splitLineNumAdded {
-  color: var(--diff-added-num);
+  color: var(--success-color, #1a7f37);
 }
 
 .splitCode {
@@ -152,13 +152,13 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
 
 .splitCodeRemoved {
   border-left: 3px solid var(--on-surface-negative-bold, #cf222e);
-  background: var(--diff-removed-bg);
+  background: var(--negative-bg-color, rgba(207, 34, 46, 0.08));
   padding-left: 9px;
 }
 
 .splitCodeAdded {
   border-left: 3px solid var(--success-color, #1a7f37);
-  background: var(--diff-added-bg);
+  background: var(--positive-bg-color, rgba(26, 127, 55, 0.1));
   padding-left: 9px;
 }
 
@@ -185,12 +185,12 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
 
 .diffLineAdded {
   border-left: 3px solid var(--success-color, #1a7f37);
-  background: var(--diff-added-bg);
+  background: var(--positive-bg-color, rgba(26, 127, 55, 0.1));
 }
 
 .diffLineRemoved {
   border-left: 3px solid var(--on-surface-negative-bold, #cf222e);
-  background: var(--diff-removed-bg);
+  background: var(--negative-bg-color, rgba(207, 34, 46, 0.08));
   user-select: none;
 }
 
@@ -232,10 +232,10 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
   color: var(--diff-line-num);
 }
 .lineNumAdded {
-  color: var(--diff-added-num);
+  color: var(--success-color, #1a7f37);
 }
 .lineNumRemoved {
-  color: var(--diff-removed-num);
+  color: var(--on-surface-negative-bold, #cf222e);
 }
 
 .signCell {
