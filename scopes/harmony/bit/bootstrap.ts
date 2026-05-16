@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import semver from 'semver';
 import { EventEmitter } from 'events';
-import 'regenerator-runtime/runtime';
+import 'regenerator-runtime/runtime.js';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { Analytics } from '@teambit/legacy.analytics';
 import { handleUnhandledRejection } from '@teambit/cli';

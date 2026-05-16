@@ -32,6 +32,10 @@ const WORKSPACE_ROOT = resolve(HERE, '..', '..');
 
 const args = new Set(process.argv.slice(2));
 const REVERT = args.has('--revert');
+// `--esm` opts into the (still-experimental) Slice 09 ESM-emission patches.
+// Without it, only the always-on lazy-aspect bootstrap fixes are applied,
+// which keep dev compatible with the current CJS-emitting workspace.
+const ESM = args.has('--esm');
 const explicitDir = [...args].find((a) => a.startsWith('--bit-dir='))?.split('=')[1];
 
 function findBvmBitDir() {
@@ -192,6 +196,43 @@ const ENV_BABEL_FIND_DIST = `const newPlugins = [[require.resolve('@babel/plugin
 const ENV_BABEL_REPLACE_DIST = `// bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy.
 const newPlugins = [...plugins];`;
 
+// ── Patch 3: env preset-env modules:false (ESM emission) ───────────────────
+//
+// Flips the env's `cjs.babel.config.js` to emit ESM instead of CJS by
+// passing `modules: false` to `@babel/preset-env`. Step 1 of the ESM
+// source migration (docs/migration/09-esm-source-migration.md). The
+// `.js`-extension dance is handled post-compile by
+// `fix-bare-esm-imports.mjs`, and package.json `"type": "module"` is
+// stamped by `set-package-type-module.mjs`.
+
+const ENV_PRESET_FIND_SRC = `      targets: {
+        node: 18,
+      },
+    },
+  ],
+]);`;
+
+const ENV_PRESET_REPLACE_SRC = `      targets: {
+        node: 18,
+      },
+      // bvm-patches: emit ESM. Step 1 of slice 09 (ESM source migration).
+      modules: false,
+    },
+  ],
+]);`;
+
+const ENV_PRESET_FIND_DIST = `  targets: {
+    node: 18
+  }
+}]]);`;
+
+const ENV_PRESET_REPLACE_DIST = `  targets: {
+    node: 18
+  },
+  // bvm-patches: emit ESM
+  modules: false
+}]]);`;
+
 function patchCoreAspectEnvCapsules() {
   // Capsule roots vary per workspace hash, so we glob across all of them.
   const capsuleRoot = join(homedir(), 'Library', 'Caches', 'Bit', 'capsules');
@@ -215,6 +256,10 @@ function patchCoreAspectEnvCapsules() {
       const distPath = join(envDir, 'dist', 'config', 'cjs.babel.config.js');
       patchOnce(srcPath, 'bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy', ENV_BABEL_FIND_SRC, ENV_BABEL_REPLACE_SRC);
       patchOnce(distPath, 'bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy', ENV_BABEL_FIND_DIST, ENV_BABEL_REPLACE_DIST);
+      if (ESM) {
+        patchOnce(srcPath, 'bvm-patches: emit ESM. Step 1 of slice 09', ENV_PRESET_FIND_SRC, ENV_PRESET_REPLACE_SRC);
+        patchOnce(distPath, 'bvm-patches: emit ESM', ENV_PRESET_FIND_DIST, ENV_PRESET_REPLACE_DIST);
+      }
       patched++;
     }
   }

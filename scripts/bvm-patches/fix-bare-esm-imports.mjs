@@ -43,9 +43,26 @@ function looksLikeRelative(specifier) {
   return specifier.startsWith('./') || specifier.startsWith('../');
 }
 
+// Only treat a specifier as already-extensioned if the trailing dot segment
+// is a *known module-or-asset* extension. Otherwise dotted basenames like
+// `command-index.generated` (which compile to
+// `command-index.generated.js`) get incorrectly skipped.
+const KNOWN_EXTENSIONS = new Set([
+  'js', 'mjs', 'cjs', 'jsx',
+  'ts', 'tsx', 'mts', 'cts',
+  'json',
+  'css', 'scss', 'sass', 'less',
+  'svg', 'png', 'jpg', 'jpeg', 'gif', 'webp',
+  'woff', 'woff2', 'ttf', 'eot',
+  'mdx', 'md',
+  'node',
+]);
+
 function hasExtension(specifier) {
-  const last = specifier.split('/').pop();
-  return /\.[a-zA-Z0-9]+$/.test(last ?? '');
+  const last = specifier.split('/').pop() ?? '';
+  const m = last.match(/\.([a-zA-Z0-9]+)$/);
+  if (!m) return false;
+  return KNOWN_EXTENSIONS.has(m[1].toLowerCase());
 }
 
 function resolveRelativeTarget(fileDir, specifier) {
@@ -54,7 +71,7 @@ function resolveRelativeTarget(fileDir, specifier) {
   const candidates = [`${baseAbs}.js`, `${baseAbs}.mjs`, `${baseAbs}.cjs`, join(baseAbs, 'index.js')];
   for (const c of candidates) {
     if (existsSync(c)) {
-      if (c.endsWith('index.js')) return `${specifier}/index.js`;
+      if (c.endsWith('/index.js')) return `${specifier}/index.js`;
       const ext = c.slice(c.lastIndexOf('.'));
       return `${specifier}${ext}`;
     }
