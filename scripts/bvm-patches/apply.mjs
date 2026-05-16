@@ -306,6 +306,138 @@ const EXT_PLUGIN_INLINE = `function bvmAddExtensionsBabelPlugin() {
   };
 }`;
 
+// Injects `import { createRequire as ...; const require = createRequire(import.meta.url);`
+// at the top of any compiled module that uses `require(...)` or `require.resolve(...)`.
+// Source files have a fair number of these calls — keeping the syntax means we
+// don't have to rewrite each call site individually.
+const CREATE_REQUIRE_PLUGIN_INLINE = `function bvmCreateRequirePlugin({ types: t }) {
+  return {
+    name: 'bvm-create-require',
+    visitor: {
+      Program: {
+        enter(p, state) {
+          let usesRequire = false;
+          p.traverse({
+            Identifier(np) {
+              if (np.node.name !== 'require') return;
+              // Skip member 'require' (e.g. 'foo.require'), import bindings already
+              // shadowed, and the *injected* binding once we add it.
+              if (np.parent && np.parent.type === 'MemberExpression' && np.parent.property === np.node && !np.parent.computed) return;
+              usesRequire = true;
+              np.stop();
+            },
+          });
+          if (!usesRequire) return;
+          const body = p.node.body;
+          // If a top-level require declaration already exists (from a previous
+          // run or hand-written), skip.
+          for (const s of body) {
+            if (s.type === 'VariableDeclaration') {
+              for (const d of s.declarations) {
+                if (d.id && d.id.type === 'Identifier' && d.id.name === 'require') return;
+              }
+            }
+          }
+          const importDecl = t.importDeclaration(
+            [t.importSpecifier(t.identifier('__bvm_createRequire'), t.identifier('createRequire'))],
+            t.stringLiteral('module'),
+          );
+          const constDecl = t.variableDeclaration('const', [
+            t.variableDeclarator(
+              t.identifier('require'),
+              t.callExpression(t.identifier('__bvm_createRequire'), [
+                t.memberExpression(t.metaProperty(t.identifier('import'), t.identifier('meta')), t.identifier('url')),
+              ]),
+            ),
+          ]);
+          body.unshift(constDecl);
+          body.unshift(importDecl);
+        },
+      },
+    },
+  };
+}`;
+
+// CJS-only third-party packages whose `module.exports` Node's `cjs-module-lexer`
+// can't statically detect, so `import { x } from 'pkg'` fails with
+// "does not provide an export named ...". The plugin rewrites those
+// named imports to a default-import + destructure pattern, which always
+// works for CJS interop.
+const CJS_INTEROP_PLUGIN_INLINE = `function bvmCjsInteropPlugin({ types: t }) {
+  const CJS_PKGS = new Set([
+    'lodash',
+    'fs-extra',
+    'semver',
+    'graceful-fs',
+    'p-map-series',
+    'p-map',
+    'p-filter',
+    'minimatch',
+    'glob',
+    'comment-json',
+    'multimatch',
+    'didyoumean',
+    'open',
+    'pino',
+    'pino-pretty',
+    'chalk',
+    'object-hash',
+    'yargs',
+    'yargs/yargs',
+    'yesno',
+    'yn',
+    'serialize-error',
+    'string-format',
+    'lodash.set',
+    'lodash.get',
+    'lodash.merge',
+    'lodash.unionby',
+    'user-home',
+  ]);
+  function pkgKey(spec) {
+    if (spec.startsWith('@')) return spec.split('/').slice(0, 2).join('/');
+    return spec.split('/')[0];
+  }
+  function safeIdent(spec) {
+    return '_bvm_cjs_' + spec.replace(/[^a-zA-Z0-9]/g, '_');
+  }
+  return {
+    name: 'bvm-cjs-interop',
+    visitor: {
+      ImportDeclaration(p) {
+        const source = p.node.source.value;
+        const key = pkgKey(source);
+        if (!CJS_PKGS.has(key) && !CJS_PKGS.has(source)) return;
+        const specifiers = p.node.specifiers;
+        const named = specifiers.filter((s) => s.type === 'ImportSpecifier');
+        if (named.length === 0) return;
+        const defaultSpec = specifiers.find((s) => s.type === 'ImportDefaultSpecifier');
+        const nsSpec = specifiers.find((s) => s.type === 'ImportNamespaceSpecifier');
+        const defaultLocal = defaultSpec
+          ? defaultSpec.local
+          : t.identifier(safeIdent(source));
+        const newSpecs = [];
+        if (defaultSpec) newSpecs.push(defaultSpec);
+        else newSpecs.push(t.importDefaultSpecifier(defaultLocal));
+        if (nsSpec) newSpecs.push(nsSpec);
+        const newImport = t.importDeclaration(newSpecs, t.stringLiteral(source));
+        const props = named.map((s) =>
+          t.objectProperty(
+            t.identifier(s.imported.name),
+            t.identifier(s.local.name),
+            false,
+            s.imported.name === s.local.name,
+          ),
+        );
+        const destructure = t.variableDeclaration('const', [
+          t.variableDeclarator(t.objectPattern(props), defaultLocal),
+        ]);
+        p.replaceWithMultiple([newImport, destructure]);
+      },
+    },
+  };
+}`;
+
 const ENV_EXT_FIND_SRC = `// bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy.
 // The slice 4/7 + slice 5 work supersedes it; keeping the babel-level
 // lazy hides the impact of the architectural lazy load.
@@ -315,14 +447,18 @@ const ENV_EXT_REPLACE_SRC = `// bvm-patches: dropped @babel/plugin-transform-mod
 // The slice 4/7 + slice 5 work supersedes it; keeping the babel-level
 // lazy hides the impact of the architectural lazy load.
 ${EXT_PLUGIN_INLINE}
-const newPlugins = [bvmAddExtensionsBabelPlugin, ...plugins];`;
+${CJS_INTEROP_PLUGIN_INLINE}
+${CREATE_REQUIRE_PLUGIN_INLINE}
+const newPlugins = [bvmCreateRequirePlugin, bvmCjsInteropPlugin, bvmAddExtensionsBabelPlugin, ...plugins];`;
 
 const ENV_EXT_FIND_DIST = `// bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy.
 const newPlugins = [...plugins];`;
 
 const ENV_EXT_REPLACE_DIST = `// bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy.
 ${EXT_PLUGIN_INLINE}
-const newPlugins = [bvmAddExtensionsBabelPlugin, ...plugins];`;
+${CJS_INTEROP_PLUGIN_INLINE}
+${CREATE_REQUIRE_PLUGIN_INLINE}
+const newPlugins = [bvmCreateRequirePlugin, bvmCjsInteropPlugin, bvmAddExtensionsBabelPlugin, ...plugins];`;
 
 function patchCoreAspectEnvCapsules() {
   // Capsule roots vary per workspace hash, so we glob across all of them.
