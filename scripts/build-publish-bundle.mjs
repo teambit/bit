@@ -31,6 +31,7 @@ import nodeResolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import typescript from '@rollup/plugin-typescript';
+import { transform as esbuildTransform } from 'esbuild';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(HERE, '..');
@@ -43,6 +44,7 @@ const ENTRY_BUDGET_BYTES = 5 * 1024 * 1024; // 5MB
 const args = new Set(process.argv.slice(2));
 const VISUALIZE = args.has('--visualize');
 const SKIP_BUDGET = args.has('--no-budget');
+const MINIFY = !args.has('--no-minify');
 
 // Native bindings and CJS-only third-party deps that must stay external.
 // Rollup cannot inline `.node` files; everything in this list is shipped via
@@ -133,6 +135,15 @@ function isExternal(id) {
   // Rollup loses if it tries to bundle the heavy legacy CJS graph;
   // `require()`-at-runtime gives Node's normal interop semantics and
   // lazy resolve already handles loading per-aspect on demand.
+  //
+  // Attempted "bundle everything @teambit/*" — fails two ways:
+  // (a) cross-chunk lazy `requireXxx()` factories from
+  //     rollup-plugin-commonjs fire before the host chunk finishes
+  //     initialising, e.g. `runtimeEnvironments.Aspect.create is
+  //     undefined` or `requireMinimatch is not a function`;
+  // (b) externalising the non-@teambit transitives sidesteps (a) but
+  //     trips Node resolution because pnpm-installed transitives aren't
+  //     hoisted to a path the bundle can walk to from `dist/bundle/chunks/`.
   if (id.startsWith('@teambit/')) {
     const base = id.split('/').slice(0, 2).join('/');
     if (KEEP_INTERNAL.has(base)) return false;
@@ -245,6 +256,28 @@ function stubUiFilesPlugin() {
   };
 }
 
+// esbuild-based minifier; runs at `renderChunk` so each emitted chunk
+// (entry + dynamic chunks) is minified. We keep the banner intact so
+// `bit.cjs` stays directly executable.
+function minifyPlugin() {
+  return {
+    name: 'minify-esbuild',
+    async renderChunk(code, chunk, options) {
+      const result = await esbuildTransform(code, {
+        minify: true,
+        // Keep `#!/usr/bin/env node` etc. at the top of the entry intact.
+        legalComments: 'inline',
+        // Don't break `class.name` reflection used by some legacy CJS code
+        // (e.g. error names checked by `err.constructor.name === 'ReadConfigError'`).
+        keepNames: true,
+        sourcemap: Boolean(options.sourcemap),
+        target: 'node20',
+      });
+      return { code: result.code, map: result.map };
+    },
+  };
+}
+
 function redirectDirectAspectImports() {
   // `scopes/harmony/bit/manifests.ts` imports each aspect manifest via the
   // compiled-JS subpath `@teambit/<pkg>/dist/<name>.aspect.js` — a perf
@@ -351,6 +384,10 @@ async function build() {
     commonjs({
       transformMixedEsModules: true,
       ignoreDynamicRequires: false,
+      // For CJS modules that look like `module.exports = X`, return X
+      // directly when imported as a default. Avoids the namespace-wrapping
+      // that breaks aspect-style re-exports across chunks.
+      requireReturnsDefault: 'auto',
       // Some Bit deps use `require('foo/' + name)`-style; mark them so the
       // commonjs plugin doesn't try to bundle the (impossible) wildcard.
       dynamicRequireTargets: [],
@@ -368,6 +405,8 @@ async function build() {
       }),
     );
   }
+
+  if (MINIFY) plugins.push(minifyPlugin());
 
   console.log(`[build-publish-bundle] entry: ${relative(REPO_ROOT, ENTRY)}`);
   console.log(`[build-publish-bundle] out:   ${relative(REPO_ROOT, OUT_DIR)}`);
