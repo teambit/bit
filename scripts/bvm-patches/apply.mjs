@@ -36,6 +36,11 @@ const REVERT = args.has('--revert');
 // Without it, only the always-on lazy-aspect bootstrap fixes are applied,
 // which keep dev compatible with the current CJS-emitting workspace.
 const ESM = args.has('--esm');
+// `--lazy-esm` (requires --esm): adds a babel plugin that wraps every
+// top-level import of a known-CJS package in a `createRequire` lazy
+// getter, mimicking `@babel/plugin-transform-modules-commonjs lazy: true`
+// for ESM output.
+const LAZY_ESM = args.has('--lazy-esm');
 const explicitDir = [...args].find((a) => a.startsWith('--bit-dir='))?.split('=')[1];
 
 function findBvmBitDir() {
@@ -582,6 +587,12 @@ const CJS_INTEROP_PLUGIN_INLINE = `function bvmCjsInteropPlugin({ types: t }) {
         if (!CJS_PKGS.has(key) && !CJS_PKGS.has(source)) return;
         const specifiers = p.node.specifiers;
         if (specifiers.length === 0) return;
+        // \`export * as X from 'pkg'\` produces an ExportNamespaceSpecifier
+        // which has only \`.exported\` (no \`.local\`). Skip the whole
+        // statement — Node handles the namespace re-export against a CJS
+        // module via the same default-as-namespace interop as
+        // \`import * as X\`, so leaving it alone is fine.
+        if (specifiers.some((s) => s.type === 'ExportNamespaceSpecifier' || !s.local)) return;
         const defaultLocal = t.identifier(safeIdent(source));
         const importDecl = t.importDeclaration(
           [t.importDefaultSpecifier(defaultLocal)],
@@ -653,6 +664,8 @@ const ENV_EXT_FIND_SRC = `// bvm-patches: dropped @babel/plugin-transform-module
 // lazy hides the impact of the architectural lazy load.
 const newPlugins = [...plugins];`;
 
+const LAZY_PLUGIN_REQUIRE = `const __bvmLazyImportPlugin = require('${WORKSPACE_ROOT}/scripts/bvm-patches/lazy-import-plugin.cjs');`;
+
 const ENV_EXT_REPLACE_SRC = `// bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy.
 // The slice 4/7 + slice 5 work supersedes it; keeping the babel-level
 // lazy hides the impact of the architectural lazy load.
@@ -660,7 +673,8 @@ ${EXT_PLUGIN_INLINE}
 ${CJS_INTEROP_PLUGIN_INLINE}
 ${CREATE_REQUIRE_PLUGIN_INLINE}
 ${DIRNAME_PLUGIN_INLINE}
-const newPlugins = [bvmDirnamePlugin, bvmCreateRequirePlugin, bvmCjsInteropPlugin, bvmAddExtensionsBabelPlugin, ...plugins];`;
+${LAZY_PLUGIN_REQUIRE}
+const newPlugins = [bvmDirnamePlugin, bvmCreateRequirePlugin, bvmCjsInteropPlugin, bvmAddExtensionsBabelPlugin, ${LAZY_ESM ? '__bvmLazyImportPlugin,' : ''} ...plugins];`;
 
 const ENV_EXT_FIND_DIST = `// bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy.
 const newPlugins = [...plugins];`;
@@ -670,7 +684,8 @@ ${EXT_PLUGIN_INLINE}
 ${CJS_INTEROP_PLUGIN_INLINE}
 ${CREATE_REQUIRE_PLUGIN_INLINE}
 ${DIRNAME_PLUGIN_INLINE}
-const newPlugins = [bvmDirnamePlugin, bvmCreateRequirePlugin, bvmCjsInteropPlugin, bvmAddExtensionsBabelPlugin, ...plugins];`;
+${LAZY_PLUGIN_REQUIRE}
+const newPlugins = [bvmDirnamePlugin, bvmCreateRequirePlugin, bvmCjsInteropPlugin, bvmAddExtensionsBabelPlugin, ${LAZY_ESM ? '__bvmLazyImportPlugin,' : ''} ...plugins];`;
 
 function patchCoreAspectEnvCapsules() {
   // Capsule roots vary per workspace hash, so we glob across all of them.
