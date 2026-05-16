@@ -37,7 +37,7 @@ const REPO_ROOT = resolve(HERE, '..');
 
 const ENTRY = join(REPO_ROOT, 'scopes/harmony/bit/app.ts');
 const OUT_DIR = join(REPO_ROOT, 'dist/bundle');
-const ENTRY_FILE = 'bit.mjs';
+const ENTRY_FILE = 'bit.cjs';
 const ENTRY_BUDGET_BYTES = 5 * 1024 * 1024; // 5MB
 
 const args = new Set(process.argv.slice(2));
@@ -80,9 +80,43 @@ const HEAVY_EXTERNALS = new Set([
   '@yarnpkg/plugin-pack',
 ]);
 
+// Legacy-CJS @teambit packages that use the `Object.defineProperty(exports,
+// '<name>', { get: ... })` re-export pattern. `@rollup/plugin-commonjs`
+// hoists the symbols up but doesn't expose them through the namespace
+// object the rest of the bundle references — runtime hits
+// `TypeError: Cannot read properties of undefined (reading 'BitError')`
+// when consumers do `import { BitError } from '@teambit/bit-error'`.
+// Externalising them is fine: they're tiny pure-data packages with no
+// transitive heavy deps, and `require('@teambit/bit-error')` at runtime
+// returns the real CJS namespace with the symbols accessible.
+const CJS_INTEROP_EXTERNALS = new Set([
+  '@teambit/bit-error',
+  '@teambit/legacy.cli.error',
+  // Legacy non-Bit-component packages with CJS-shape exports that
+  // `@rollup/plugin-commonjs` re-wraps awkwardly. Externalising them
+  // makes runtime resolution use Node's require which returns the real
+  // CJS namespace.
+  '@teambit/harmony',
+  // Yargs uses a builder-pattern `default` export + named statics
+  // (`yargs.help`, `yargs.command`...) that the commonjs plugin
+  // mangles. Externalising preserves the real prototype chain.
+  'yargs',
+]);
+
 const NODE_BUILTINS = new Set([
   ...builtinModules,
   ...builtinModules.map((m) => `node:${m}`),
+]);
+
+// Aspects whose main runtime should be inlined into the entry (or one of
+// its chunks). Specifically: the small bootstrap aspects we always need.
+// Everything else under `@teambit/` is externalised — including all the
+// .main.runtime.ts files for individual aspects, which the lazy resolve
+// loads via dynamic `import()` at runtime anyway.
+const KEEP_INTERNAL = new Set([
+  '@teambit/bit',
+  '@teambit/cli',
+  '@teambit/core',
 ]);
 
 function isExternal(id) {
@@ -90,9 +124,19 @@ function isExternal(id) {
   if (id.startsWith('node:')) return true;
   if (NATIVE_EXTERNALS.has(id)) return true;
   if (HEAVY_EXTERNALS.has(id)) return true;
+  if (CJS_INTEROP_EXTERNALS.has(id)) return true;
   // External scoped sub-imports (e.g. `@yarnpkg/cli/lib/foo`).
-  for (const prefix of [...NATIVE_EXTERNALS, ...HEAVY_EXTERNALS]) {
+  for (const prefix of [...NATIVE_EXTERNALS, ...HEAVY_EXTERNALS, ...CJS_INTEROP_EXTERNALS]) {
     if (id.startsWith(`${prefix}/`)) return true;
+  }
+  // Externalise every `@teambit/*` package EXCEPT the bootstrap ones.
+  // Rollup loses if it tries to bundle the heavy legacy CJS graph;
+  // `require()`-at-runtime gives Node's normal interop semantics and
+  // lazy resolve already handles loading per-aspect on demand.
+  if (id.startsWith('@teambit/')) {
+    const base = id.split('/').slice(0, 2).join('/');
+    if (KEEP_INTERNAL.has(base)) return false;
+    return true;
   }
   // Native bindings — platform-suffixed packages and raw .node files. Rollup
   // can't parse the binary; we ship them via direct `dependencies` instead.
@@ -344,10 +388,19 @@ async function build() {
   });
 
   const { output } = await bundle.write({
-    format: 'esm',
+    // CJS output so `require('@teambit/legacy.logger')` and similar
+    // hit Node's normal CJS resolution semantics. ESM output trips over
+    // packages whose `exports.import` points to a non-existent
+    // `dist/esm.mjs`. Once Slice 9 ships ESM source we can switch back
+    // to format: 'esm'.
+    format: 'cjs',
+    // Force dynamic `await import(...)` to compile to require() in
+    // the output so external @teambit packages with broken `exports.import`
+    // entries don't blow up at runtime.
+    dynamicImportInCjs: false,
     dir: OUT_DIR,
     entryFileNames: ENTRY_FILE,
-    chunkFileNames: 'chunks/[name]-[hash].mjs',
+    chunkFileNames: 'chunks/[name]-[hash].cjs',
     sourcemap: true,
     sourcemapExcludeSources: false,
     manualChunks(id) {
