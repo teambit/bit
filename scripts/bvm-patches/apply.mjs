@@ -233,6 +233,97 @@ const ENV_PRESET_REPLACE_DIST = `  targets: {
   modules: false
 }]]);`;
 
+// ── Patch 4: inline babel plugin that adds `.js` extensions ────────────────
+//
+// Step of Slice 09: ESM resolution requires every relative import to carry
+// an explicit `.js` extension. Adding it at compile time via this plugin
+// is cleaner than the post-compile `fix-bare-esm-imports.mjs` sweep —
+// no second pass, no false positives, no race between compile + fix.
+//
+// We inject the plugin source straight into the env's `cjs.babel.config.js`
+// so we don't need a new npm dep or a separate file on disk inside the
+// capsule. Idempotent — re-runs are no-ops because the marker check
+// catches the inserted function definition.
+
+const EXT_PLUGIN_INLINE = `function bvmAddExtensionsBabelPlugin() {
+  // bvm-patches: inline babel plugin — append .js to extension-less
+  // relative imports/exports/requires/dynamic imports. We can't
+  // distinguish file from directory here because bit strips the
+  // package path from the filename passed to babel (we just see
+  // '<workspace>/basename.ts'), so filesystem probing would resolve
+  // wrong. Directory cases (./foo where foo is a dir with index.js)
+  // are repaired by a post-compile sweep that has access to the real
+  // dist tree (\`scripts/bvm-patches/fix-bare-esm-imports.mjs\` and
+  // \`fix-dir-imports.mjs\`).
+  //
+  // Skip-list: only append .js when the trailing dot-segment isn't a
+  // known module-or-asset extension. Otherwise we'd double-extension
+  // 'command-index.generated' → 'command-index.generated.js'.js.
+  const KNOWN_EXTS = new Set([
+    'js','mjs','cjs','jsx','ts','tsx','mts','cts','json',
+    'css','scss','sass','less',
+    'svg','png','jpg','jpeg','gif','webp','woff','woff2','ttf','eot',
+    'mdx','md','node',
+  ]);
+  function hasExt(spec) {
+    const last = spec.split('/').pop() || '';
+    const m = last.match(/\\.([a-zA-Z0-9]+)(?:\\?.*)?$/);
+    return m && KNOWN_EXTS.has(m[1].toLowerCase());
+  }
+  function rewrite(spec) {
+    if (!spec) return null;
+    if (!/^\\.{1,2}\\//.test(spec)) return null;
+    if (hasExt(spec)) return null;
+    return spec + '.js';
+  }
+  return {
+    name: 'bvm-add-extensions',
+    visitor: {
+      ImportDeclaration(p) {
+        const r = rewrite(p.node.source && p.node.source.value);
+        if (r) p.node.source.value = r;
+      },
+      ExportNamedDeclaration(p) {
+        if (!p.node.source) return;
+        const r = rewrite(p.node.source.value);
+        if (r) p.node.source.value = r;
+      },
+      ExportAllDeclaration(p) {
+        const r = rewrite(p.node.source.value);
+        if (r) p.node.source.value = r;
+      },
+      CallExpression(p) {
+        const c = p.node.callee;
+        if (c.type === 'Import' || (c.type === 'Identifier' && c.name === 'require')) {
+          const a = p.node.arguments && p.node.arguments[0];
+          if (a && a.type === 'StringLiteral') {
+            const r = rewrite(a.value);
+            if (r) a.value = r;
+          }
+        }
+      },
+    },
+  };
+}`;
+
+const ENV_EXT_FIND_SRC = `// bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy.
+// The slice 4/7 + slice 5 work supersedes it; keeping the babel-level
+// lazy hides the impact of the architectural lazy load.
+const newPlugins = [...plugins];`;
+
+const ENV_EXT_REPLACE_SRC = `// bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy.
+// The slice 4/7 + slice 5 work supersedes it; keeping the babel-level
+// lazy hides the impact of the architectural lazy load.
+${EXT_PLUGIN_INLINE}
+const newPlugins = [bvmAddExtensionsBabelPlugin, ...plugins];`;
+
+const ENV_EXT_FIND_DIST = `// bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy.
+const newPlugins = [...plugins];`;
+
+const ENV_EXT_REPLACE_DIST = `// bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy.
+${EXT_PLUGIN_INLINE}
+const newPlugins = [bvmAddExtensionsBabelPlugin, ...plugins];`;
+
 function patchCoreAspectEnvCapsules() {
   // Capsule roots vary per workspace hash, so we glob across all of them.
   const capsuleRoot = join(homedir(), 'Library', 'Caches', 'Bit', 'capsules');
@@ -259,6 +350,8 @@ function patchCoreAspectEnvCapsules() {
       if (ESM) {
         patchOnce(srcPath, 'bvm-patches: emit ESM. Step 1 of slice 09', ENV_PRESET_FIND_SRC, ENV_PRESET_REPLACE_SRC);
         patchOnce(distPath, 'bvm-patches: emit ESM', ENV_PRESET_FIND_DIST, ENV_PRESET_REPLACE_DIST);
+        patchOnce(srcPath, 'bvm-patches: inline babel plugin', ENV_EXT_FIND_SRC, ENV_EXT_REPLACE_SRC);
+        patchOnce(distPath, 'bvm-patches: inline babel plugin', ENV_EXT_FIND_DIST, ENV_EXT_REPLACE_DIST);
       }
       patched++;
     }
