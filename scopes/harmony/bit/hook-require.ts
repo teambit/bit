@@ -1,7 +1,12 @@
 import path from 'path';
+import { Module } from 'module';
 
 export function hookRequire() {
-  module.constructor.prototype.require = function (id: string) {
+  // `module` (the implicit CJS variable) is undefined when this file is
+  // loaded from an ESM context (e.g. the rollup ESM bundle). Reach the
+  // Module prototype via the named `module` import so the patch works in
+  // both CJS and ESM output.
+  (Module.prototype as any).require = function (id: string) {
     if (typeof id !== 'string') throw new Error('hookRequire - id must be a string');
     if (!id) throw new Error('hookRequire - missing id');
 

@@ -1,6 +1,8 @@
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import semver from 'semver';
+import { EventEmitter } from 'events';
+import 'regenerator-runtime/runtime';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { Analytics } from '@teambit/legacy.analytics';
 import { handleUnhandledRejection } from '@teambit/cli';
@@ -13,9 +15,7 @@ const SUPPORTED_NODE_VERSIONS = '>=16.0.0 <25.0.0';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
-require('events').EventEmitter.defaultMaxListeners = 100; // set max listeners to a more appropriate numbers
-
-require('regenerator-runtime/runtime');
+EventEmitter.defaultMaxListeners = 100; // set max listeners to a more appropriate numbers
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 process.on('unhandledRejection', async (err: any) => handleUnhandledRejection(err));

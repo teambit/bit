@@ -27,8 +27,8 @@ import type { RuntimeDefinition, Extension, Aspect } from '@teambit/harmony';
 import { Harmony } from '@teambit/harmony';
 import { Harmony as LazyHarmony } from '@teambit/core';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
-import { Config } from '@teambit/harmony/dist/harmony-config';
-import { readConfigFile } from '@teambit/harmony/dist/harmony-config/config-reader';
+import { Config } from '@teambit/harmony/dist/harmony-config/index.js';
+import { readConfigFile } from '@teambit/harmony/dist/harmony-config/config-reader.js';
 import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
 import { loadConsumer } from '@teambit/legacy.consumer';
 import type { WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';

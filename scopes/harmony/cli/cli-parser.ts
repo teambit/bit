@@ -1,5 +1,6 @@
 import didYouMean from 'didyoumean';
-import yargs from 'yargs';
+import yargsFactory from 'yargs';
+import type { Argv } from 'yargs';
 import type { Command } from './command';
 import type { GroupsType } from './command-groups';
 import { compact } from 'lodash';
@@ -16,7 +17,14 @@ import type { CommandRunner } from './command-runner';
 import { YargsExitWorkaround } from './exceptions/yargs-exit-workaround';
 
 export class CLIParser {
-  public parser = yargs;
+  // Constructed lazily inside `parse()` — the modern yargs API requires
+  // calling `yargs(args)` to obtain an instance; all configuration chains
+  // off that instance instead of off the imported function (which is the
+  // pre-yargs-17 singleton pattern that no longer exists in the ESM build).
+  private yargs!: Argv;
+  public get parser(): Argv {
+    return this.yargs;
+  }
   private yargsCommands: YargsAdapter[] = [];
   constructor(
     private commands: Command[],
@@ -28,7 +36,8 @@ export class CLIParser {
     this.throwForNonExistsCommand(args[0]);
     logger.debug(`[+] CLI-INPUT: ${args.join(' ')}`);
     logger.writeCommandHistoryStart();
-    yargs(args);
+    const yargs = ((yargsFactory as any).default ?? yargsFactory)(args) as Argv;
+    this.yargs = yargs;
     yargs.help(false);
     this.configureParser();
     this.commands.forEach((command: Command) => {
@@ -50,7 +59,7 @@ export class CLIParser {
       // .recommendCommands() // don't use it, it brings the global help of yargs, we have a custom one
       .wrap(null);
 
-    await yargs.parse();
+    await (yargs.parse() as unknown as Promise<unknown>);
 
     const currentYargsCommand = this.yargsCommands.find((y) => y.commandRunner);
     if (!currentYargsCommand) {
@@ -64,11 +73,11 @@ export class CLIParser {
 
   private addYargsCommand(yargsCommand: YargsAdapter) {
     this.yargsCommands.push(yargsCommand);
-    yargs.command(yargsCommand);
+    this.yargs.command(yargsCommand);
   }
 
   private setHelpMiddleware() {
-    yargs.middleware((argv) => {
+    this.yargs.middleware((argv) => {
       if (argv._.length === 0 && argv.help) {
         const shouldShowInternalCommands = Boolean(argv.internal);
         // this is the main help page
@@ -78,14 +87,14 @@ export class CLIParser {
       if (argv.help) {
         loader.off(); // stop the "loading bit..." before showing help if needed
         // this is a command help page
-        yargs.showHelp(this.logCommandHelp.bind(this));
+        this.yargs.showHelp(this.logCommandHelp.bind(this));
         process.exit(0);
       }
     }, true);
   }
 
   private handleCommandFailure() {
-    yargs.fail((msg, err) => {
+    this.yargs.fail((msg, err) => {
       loader.stop();
       if (err) {
         throw err;
@@ -94,7 +103,7 @@ export class CLIParser {
       const isHelpFlagEntered = args.includes('--help') || args.includes('-h');
       let msgForDaemon = '';
       try {
-        yargs.showHelp(this.logCommandHelp.bind(this));
+        this.yargs.showHelp(this.logCommandHelp.bind(this));
       } catch (error: any) {
         if (error instanceof YargsExitWorkaround) {
           msgForDaemon = error.helpMsg;
@@ -131,7 +140,7 @@ export class CLIParser {
       'dependencies',
     ];
     // @ts-ignore
-    yargs.completion('completion', async function (current, argv, completionFilter, done) {
+    this.yargs.completion('completion', async function (current, argv, completionFilter, done) {
       if (!current.startsWith('-') && commandsToShowComponentIdsForCompletion.includes(argv._[1])) {
         const consumer = await loadConsumerIfExist();
         done(consumer?.bitmapIdsFromCurrentLane.map((id) => id.toStringWithoutVersion()));
@@ -148,7 +157,7 @@ export class CLIParser {
   }
 
   private configureParser() {
-    yargs.parserConfiguration({
+    this.yargs.parserConfiguration({
       // 'strip-dashed': true, // we can't enable it, otherwise, the completion doesn't work
       'strip-aliased': true,
       'boolean-negation': false,
@@ -158,14 +167,15 @@ export class CLIParser {
 
   private parseCommandWithSubCommands(command: Command) {
     const yarnCommand = this.getYargsCommand(command);
+    const yargsRef = this.yargs;
     const builderFunc = () => {
       command.commands?.forEach((cmd) => {
         const subCommand = this.getYargsCommand(cmd);
         this.addYargsCommand(subCommand);
       });
       // since the "builder" method is overridden, the global flags of the main command are gone, this fixes it.
-      yargs.options(YargsAdapter.getGlobalOptions(command));
-      return yargs;
+      yargsRef.options(YargsAdapter.getGlobalOptions(command));
+      return yargsRef;
     };
     yarnCommand.builder = builderFunc;
     this.addYargsCommand(yarnCommand);
@@ -180,7 +190,7 @@ export class CLIParser {
   }
 
   private configureGlobalFlags() {
-    yargs
+    this.yargs
       .option('help', {
         alias: 'h',
         describe: 'show help',
