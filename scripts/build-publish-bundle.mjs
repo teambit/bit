@@ -38,10 +38,14 @@ const REPO_ROOT = resolve(HERE, '..');
 
 const ENTRY = join(REPO_ROOT, 'scopes/harmony/bit/app.ts');
 const OUT_DIR = join(REPO_ROOT, 'dist/bundle');
-const ENTRY_FILE = 'bit.cjs';
 const ENTRY_BUDGET_BYTES = 5 * 1024 * 1024; // 5MB
 
-const args = new Set(process.argv.slice(2));
+const args0 = new Set(process.argv.slice(2));
+const ESM = args0.has('--esm');
+const ENTRY_FILE = ESM ? 'bit.mjs' : 'bit.cjs';
+const CHUNK_EXT = ESM ? 'mjs' : 'cjs';
+
+const args = args0;
 const VISUALIZE = args.has('--visualize');
 const SKIP_BUDGET = args.has('--no-budget');
 const MINIFY = !args.has('--no-minify');
@@ -427,19 +431,15 @@ async function build() {
   });
 
   const { output } = await bundle.write({
-    // CJS output so `require('@teambit/legacy.logger')` and similar
-    // hit Node's normal CJS resolution semantics. ESM output trips over
-    // packages whose `exports.import` points to a non-existent
-    // `dist/esm.mjs`. Once Slice 9 ships ESM source we can switch back
-    // to format: 'esm'.
-    format: 'cjs',
-    // Force dynamic `await import(...)` to compile to require() in
-    // the output so external @teambit packages with broken `exports.import`
-    // entries don't blow up at runtime.
-    dynamicImportInCjs: false,
+    // ESM output via `--esm`. CJS default for now (some @teambit packages'
+    // `exports.import` points to a non-existent `dist/esm.mjs`).
+    format: ESM ? 'esm' : 'cjs',
+    // CJS-only: force `await import(...)` to compile to require() so external
+    // packages with broken `exports.import` entries don't blow up at runtime.
+    ...(ESM ? {} : { dynamicImportInCjs: false }),
     dir: OUT_DIR,
     entryFileNames: ENTRY_FILE,
-    chunkFileNames: 'chunks/[name]-[hash].cjs',
+    chunkFileNames: `chunks/[name]-[hash].${CHUNK_EXT}`,
     sourcemap: true,
     sourcemapExcludeSources: false,
     manualChunks(id) {
@@ -447,6 +447,15 @@ async function build() {
     },
     // Banner makes the bundle directly executable as `bit`.
     banner: '#!/usr/bin/env node',
+    // For ESM output, `require` isn't a builtin — but a handful of files in
+    // the Bit graph still call it synchronously (e.g.
+    // `cli.main.runtime.ts` requires `@teambit/bit/dist/command-index.generated.js`
+    // inside `registerLazyStubs`, which can't `await import()` because the
+    // caller is sync). Inject a per-chunk `createRequire(import.meta.url)`
+    // shim so those calls keep working without a per-file refactor.
+    intro: ESM
+      ? "import { createRequire as __cr_makeRequire } from 'module'; const require = __cr_makeRequire(import.meta.url);"
+      : '',
     hoistTransitiveImports: false,
   });
 
