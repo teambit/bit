@@ -3,7 +3,7 @@ import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import fs from 'fs-extra';
 import { join } from 'path';
 import type { Compiler } from '@teambit/compiler';
-import { CompilerAspect } from '@teambit/compiler/dist/compiler.aspect.js';
+import { CompilerAspect } from '@teambit/compiler';
 import type { DevFilesMain } from '@teambit/dev-files';
 import { ComponentMap } from '@teambit/component';
 import type { Tester } from './tester';

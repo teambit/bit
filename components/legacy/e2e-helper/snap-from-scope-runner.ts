@@ -10,7 +10,7 @@
  */
 import { loadBit } from '@teambit/bit';
 import type { SnappingMain } from '@teambit/snapping';
-import { SnappingAspect } from '@teambit/snapping/dist/snapping.aspect.js';
+import { SnappingAspect } from '@teambit/snapping';
 
 async function main(): Promise<void> {
   const [, , scopePath, snapDataJson, optionsJson] = process.argv;

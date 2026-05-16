@@ -1,18 +1,20 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { ExpressMain, Route } from '@teambit/express';
-import { ExpressAspect } from '@teambit/express/dist/express.aspect.js';
+import { ExpressAspect } from '@teambit/express';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { ComponentID } from '@teambit/component-id';
 import { flatten, orderBy } from 'lodash';
 import type { LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
+import { LoggerAspect } from '@teambit/logger';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
+import { componentSchema } from './component.graphql';
 import type { RegisteredComponentRoute } from './component.route';
 import { ComponentRoute } from './component.route';
 import { AspectList } from './aspect-list';
@@ -160,10 +162,10 @@ export class ComponentMain {
   static slots = [Slot.withType<ComponentFactory>(), Slot.withType<Route[]>(), Slot.withType<ShowFragment[]>()];
 
   static runtime = MainRuntime;
-  static dependencies = [ExpressAspect, CLIAspect, LoggerAspect];
+  static dependencies = [GraphqlAspect, ExpressAspect, CLIAspect, LoggerAspect];
 
   static async provider(
-    [express, cli, loggerMain]: [ExpressMain, CLIMain, LoggerMain],
+    [graphql, express, cli, loggerMain]: [GraphqlMain, ExpressMain, CLIMain, LoggerMain],
     config,
     [hostSlot, showFragmentSlot]: [ComponentHostSlot, ShowFragmentSlot]
   ) {
@@ -180,8 +182,8 @@ export class ComponentMain {
       new FilesFragment(),
       new ExtensionsFragment(),
     ]);
-    // graphql.register(() => componentSchema(...)) moved to
-    // component-graphql-binder
+    graphql.register(() => componentSchema(componentExtension));
+
     return componentExtension;
   }
 }

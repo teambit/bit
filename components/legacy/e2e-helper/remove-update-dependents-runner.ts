@@ -11,7 +11,7 @@ import { loadBit } from '@teambit/bit';
 import { ComponentID } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
 import type { LanesMain } from '@teambit/lanes';
-import { LanesAspect } from '@teambit/lanes/dist/lanes.aspect.js';
+import { LanesAspect } from '@teambit/lanes';
 
 async function main(): Promise<void> {
   const [, , scopePath, laneIdStr, idsJson] = process.argv;

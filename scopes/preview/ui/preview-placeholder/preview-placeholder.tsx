@@ -1,12 +1,11 @@
 import type { ComponentType, ReactNode } from 'react';
 import React, { useMemo, useEffect, useRef, useState } from 'react';
-import { CompositionsAspect } from '@teambit/compositions/dist/compositions.aspect.js';
-import { ComponentComposition, Composition } from '@teambit/compositions';
+import { CompositionsAspect, ComponentComposition, Composition } from '@teambit/compositions';
 import { H3, H5 } from '@teambit/design.ui.heading';
 import { capitalize } from '@teambit/toolbox.string.capitalize';
 import type { ComponentModel } from '@teambit/component';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
-import { DocsAspect } from '@teambit/docs/dist/docs.aspect.js';
+import { DocsAspect } from '@teambit/docs';
 import styles from './preview-placeholder.module.scss';
 
 // ── BrowserSkeleton ─────────────────────────────────────────────────────────

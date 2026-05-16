@@ -1,5 +1,5 @@
 import type { PubsubPreview } from '@teambit/pubsub';
-import { PubsubAspect } from '@teambit/pubsub/dist/pubsub.aspect.js';
+import { PubsubAspect } from '@teambit/pubsub';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';

@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { ConfigAspect } from '@teambit/config/dist/config.aspect.js';
+import { ConfigAspect } from '@teambit/config';
 import type { ConfigMain } from '@teambit/config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { PathLinuxRelative } from '@teambit/toolbox.path.path';

@@ -1,13 +1,12 @@
 import type { ComponentID } from '@teambit/component-id';
 import semver from 'semver';
 import type { Logger } from '@teambit/logger';
-import { BuilderAspect } from '@teambit/builder/dist/builder.aspect.js';
+import { BuilderAspect } from '@teambit/builder';
 import { isHash } from '@teambit/component-version';
 import type { SerializedDependency, VariantPolicyEntry } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver/dist/dependency-resolver.aspect.js';
-import { VariantPolicy } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
 import type { Lane } from '@teambit/objects';
-import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
+import { EnvsAspect } from '@teambit/envs';
 import type { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { compact, omit, uniqBy } from 'lodash';

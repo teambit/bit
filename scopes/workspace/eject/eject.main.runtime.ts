@@ -1,14 +1,12 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { ComponentID } from '@teambit/component-id';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
+import { LoggerAspect } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
-import { OutsideWorkspaceError } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { InstallMain } from '@teambit/install';
-import { InstallAspect } from '@teambit/install/dist/install.aspect.js';
+import { InstallAspect } from '@teambit/install';
 import { EjectCmd } from './eject-cmd';
 import { EjectAspect } from './eject.aspect';
 import type { EjectOptions, EjectResults } from './components-ejector';

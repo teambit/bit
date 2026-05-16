@@ -4,7 +4,7 @@ import flatten from 'lodash.flatten';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { ComponentUI } from '@teambit/component';
-import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
+import { ComponentAspect } from '@teambit/component';
 import { ComponentCompare } from '@teambit/component.ui.component-compare.component-compare';
 import { UIRuntime } from '@teambit/ui';
 import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';

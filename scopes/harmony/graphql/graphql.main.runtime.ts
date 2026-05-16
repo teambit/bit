@@ -5,7 +5,7 @@ import { MainRuntime } from '@teambit/cli';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
+import { LoggerAspect } from '@teambit/logger';
 import type { Express } from 'express';
 import express from 'express';
 import { graphqlHTTP, type RequestInfo } from 'express-graphql';

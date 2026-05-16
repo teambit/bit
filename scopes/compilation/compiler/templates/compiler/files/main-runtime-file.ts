@@ -2,8 +2,7 @@ import type { ComponentContext } from '@teambit/generator';
 
 export function mainRuntimeFile({ name, namePascalCase }: ComponentContext) {
   return `import { MainRuntime } from '@teambit/cli';
-import { CompilerAspect } from '@teambit/compiler/dist/compiler.aspect.js';
-import { CompilerMain } from '@teambit/compiler';
+import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { ${namePascalCase} } from './${name}.compiler';
 import { ${namePascalCase}Aspect } from './${name}.aspect';
 

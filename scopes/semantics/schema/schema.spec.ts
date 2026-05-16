@@ -6,13 +6,13 @@ import { computeAPIDiff } from '@teambit/semantics.entities.semantic-schema-diff
 import type { APIDiffResult } from '@teambit/semantics.entities.semantic-schema-diff';
 import chaiSubset from 'chai-subset';
 import type { TrackerMain } from '@teambit/tracker';
-import { TrackerAspect } from '@teambit/tracker/dist/tracker.aspect.js';
+import { TrackerAspect } from '@teambit/tracker';
 import { loadAspect, loadManyAspects } from '@teambit/harmony.testing.load-aspect';
 import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { ComponentID } from '@teambit/component-id';
 import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
+import { WorkspaceAspect } from '@teambit/workspace';
 import type { SchemaMain } from './schema.main.runtime';
 import { SchemaAspect } from './schema.aspect';
 

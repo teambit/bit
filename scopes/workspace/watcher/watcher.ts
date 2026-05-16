@@ -16,8 +16,12 @@ import type { FSWatcher } from 'chokidar';
 import chokidar from 'chokidar';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
 import type { Workspace, OnComponentEventResult } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
-import { OnComponentChangeEvent, OnComponentAddEvent, OnComponentRemovedEvent } from '@teambit/workspace';
+import {
+  WorkspaceAspect,
+  OnComponentChangeEvent,
+  OnComponentAddEvent,
+  OnComponentRemovedEvent,
+} from '@teambit/workspace';
 import type { CheckTypes } from './check-types';
 import type { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';

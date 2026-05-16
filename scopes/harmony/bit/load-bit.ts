@@ -11,15 +11,18 @@ process.env.BROWSERSLIST_IGNORE_OLD_DATA = 'true';
 import './hook-require';
 
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { AspectLoaderAspect } from '@teambit/aspect-loader/dist/aspect-loader.aspect.js';
-import { getAspectDir, getAspectDistDir, getCoreAspectPackageName, getCoreAspectName } from '@teambit/aspect-loader';
+import {
+  AspectLoaderAspect,
+  getAspectDir,
+  getAspectDistDir,
+  getCoreAspectPackageName,
+  getCoreAspectName,
+} from '@teambit/aspect-loader';
 import json from 'comment-json';
 import userHome from 'user-home';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { MainRuntime } from '@teambit/cli';
-import { ConfigAspect } from '@teambit/config/dist/config.aspect.js';
-import { ConfigRuntime } from '@teambit/config';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import type { RuntimeDefinition, Extension, Aspect } from '@teambit/harmony';
 import { Harmony } from '@teambit/harmony';
 import { Harmony as LazyHarmony } from '@teambit/core';
@@ -37,7 +40,7 @@ import { LegacyWorkspaceConfig, ComponentOverrides, ComponentConfig } from '@tea
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { satisfies } from 'semver';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
-import { ClearCacheAspect } from '@teambit/clear-cache/dist/clear-cache.aspect.js';
+import { ClearCacheAspect } from '@teambit/clear-cache';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
@@ -51,9 +54,9 @@ import { registerCoreExtensions } from './bit.main.runtime';
 import { assertCommandIndexMatchesLive } from './command-index-assert';
 import type { BitConfig } from './bit.provider';
 import type { EnvsMain } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
+import { EnvsAspect } from '@teambit/envs';
 import type { GeneratorMain } from '@teambit/generator';
-import { GeneratorAspect } from '@teambit/generator/dist/generator.aspect.js';
+import { GeneratorAspect } from '@teambit/generator';
 import { HostInitializerMain } from '@teambit/host-initializer';
 
 async function loadLegacyConfig(config: any) {
@@ -304,35 +307,21 @@ export async function loadBit(path = process.cwd(), additionalAspects?: Aspect[]
   // never again). Without the eager-skip below, those providers force
   // every CLI command to load apollo, react, webpack, etc. — even
   // commands that have nothing to do with the UI server. The skip flag
-  // tells LazyHarmony to deliver `undefined` for these as DI deps; their
+  // tells LazyHarmony to deliver a no-op proxy for these as DI deps; the
   // hosts get loaded only when something explicitly resolves them (in
   // `bit start` / `bit run`, see the entered-command check below).
-  //
-  // Providers that consume one of these MUST guard with `if (graphql) ...`.
-  // The aspect-host's own binder (e.g. `workspace-ui-binder`) is responsible
-  // for the actual registrations under start/UI flows.
-  // Aspects that other providers declare as `static dependencies` but never
-  // really need on the CLI hot path. We hand them out as no-op proxies in
-  // DI; callers like `graphql.register(...)` silently no-op. The aspect
-  // is still resolvable via `harmony.resolve(id)` (which is what the
-  // lazy-dispatch trampoline does for the actual entered command), so
-  // `bit start` / `bit compile` / etc. get the real instance via the
-  // `HEAVY_COMMANDS` opt-out below.
   const HEAVY_HOSTS = [
-    // The original four — they only matter for UI / start / build flows.
     'teambit.harmony/graphql',
     'teambit.ui-foundation/ui',
     'teambit.compilation/bundler',
     'teambit.pipelines/builder',
-    // Heavy aspects pulled in transitively by many providers but only
-    // really needed for their own commands.
     'teambit.compilation/compiler',
     'teambit.defender/tester',
     'teambit.harmony/application',
   ];
   // Commands that need one of the heavy hosts at runtime opt OUT of the
   // lazy skip so DI hands back the real instance. Status / list / install
-  // -- the bench-dominant cases -- stay lazy.
+  // stay lazy.
   const HEAVY_COMMANDS = new Set([
     'start',
     'run',

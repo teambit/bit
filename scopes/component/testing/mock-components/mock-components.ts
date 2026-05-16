@@ -1,15 +1,15 @@
 import type { CompilerMain } from '@teambit/compiler';
-import { CompilerAspect } from '@teambit/compiler/dist/compiler.aspect.js';
+import { CompilerAspect } from '@teambit/compiler';
 import { loadManyAspects } from '@teambit/harmony.testing.load-aspect';
 import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
-import { InstallAspect } from '@teambit/install/dist/install.aspect.js';
+import { WorkspaceAspect } from '@teambit/workspace';
+import { InstallAspect } from '@teambit/install';
 import type { InstallMain } from '@teambit/install';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import path from 'path';
 import type { TrackerMain } from '@teambit/tracker';
-import { TrackerAspect } from '@teambit/tracker/dist/tracker.aspect.js';
+import { TrackerAspect } from '@teambit/tracker';
 import type { ComponentID } from '@teambit/component-id';
 
 type CompDirs = {

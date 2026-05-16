@@ -1,14 +1,14 @@
 import type { Configuration } from 'webpack';
 import webpack from 'webpack';
 import type { PubsubMain } from '@teambit/pubsub';
-import { PubsubAspect } from '@teambit/pubsub/dist/pubsub.aspect.js';
+import { PubsubAspect } from '@teambit/pubsub';
 import type { BundlerContext, BundlerMain, DevServer, DevServerContext, BundlerMode, Target } from '@teambit/bundler';
-import { BundlerAspect } from '@teambit/bundler/dist/bundler.aspect.js';
+import { BundlerAspect } from '@teambit/bundler';
 import { MainRuntime } from '@teambit/cli';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
+import { LoggerAspect } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { merge } from 'webpack-merge';
 // We want to import it to make sure bit recognizes it as a dependency
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

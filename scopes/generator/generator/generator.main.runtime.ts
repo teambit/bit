@@ -1,45 +1,45 @@
 import fs from 'fs-extra';
 import camelCase from 'camelcase';
 import { resolve } from 'path';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
-import { OutsideWorkspaceError } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { EnvDefinition, EnvsMain } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
+import { EnvsAspect } from '@teambit/envs';
 import { ComponentConfig } from '@teambit/legacy.consumer-config';
 import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
-import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files/dist/workspace-config-files.aspect.js';
-import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
-import { ComponentID } from '@teambit/component';
+import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
+import { ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain, Component } from '@teambit/component';
 import { Scope as LegacyScope } from '@teambit/legacy.scope';
 import type { ScopeMain } from '@teambit/scope';
-import { ScopeAspect } from '@teambit/scope/dist/scope.aspect.js';
+import { ScopeAspect } from '@teambit/scope';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { GitMain } from '@teambit/git';
-import { GitAspect } from '@teambit/git/dist/git.aspect.js';
+import { GitAspect } from '@teambit/git';
 import { BitError } from '@teambit/bit-error';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { AspectLoaderAspect } from '@teambit/aspect-loader/dist/aspect-loader.aspect.js';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import type { TrackerMain } from '@teambit/tracker';
-import { TrackerAspect } from '@teambit/tracker/dist/tracker.aspect.js';
+import { TrackerAspect } from '@teambit/tracker';
 import type { NewComponentHelperMain } from '@teambit/new-component-helper';
-import { NewComponentHelperAspect } from '@teambit/new-component-helper/dist/new-component-helper.aspect.js';
+import { NewComponentHelperAspect } from '@teambit/new-component-helper';
 import { compact, uniq } from 'lodash';
 import { isValidScopeName } from '@teambit/legacy-bit-id';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
+import { LoggerAspect } from '@teambit/logger';
 import type { DeprecationMain } from '@teambit/deprecation';
-import { DeprecationAspect } from '@teambit/deprecation/dist/deprecation.aspect.js';
+import { DeprecationAspect } from '@teambit/deprecation';
 import type { ComponentTemplate, GetComponentTemplates, PromptResults } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import type { CreateOptions } from './create.cmd';
 import { CreateCmd } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
+import { generatorSchema } from './generator.graphql';
 import type { GenerateResult, InstallOptions, OnComponentCreateFn } from './component-generator';
 import { ComponentGenerator } from './component-generator';
 import { WorkspaceGenerator } from './workspace-generator';
@@ -692,6 +692,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
   static dependencies = [
     WorkspaceAspect,
     CLIAspect,
+    GraphqlAspect,
     EnvsAspect,
     AspectLoaderAspect,
     NewComponentHelperAspect,
@@ -709,6 +710,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     [
       workspace,
       cli,
+      graphql,
       envs,
       aspectLoader,
       newComponentHelper,
@@ -721,6 +723,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     ]: [
       Workspace,
       CLIMain,
+      GraphqlMain,
       EnvsMain,
       AspectLoaderMain,
       NewComponentHelperMain,
@@ -763,8 +766,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
 
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);
-    // graphql.register(() => generatorSchema(generator)) moved to
-    // generator-graphql-binder
+    graphql.register(() => generatorSchema(generator));
     aspectLoader.registerPlugins([new StarterPlugin(generator)]);
     envs.registerService(new GeneratorService());
 

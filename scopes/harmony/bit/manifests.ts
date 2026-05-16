@@ -1,25 +1,21 @@
 import { AspectAspect } from '@teambit/aspect/dist/aspect.aspect.js';
 import { AspectLoaderAspect } from '@teambit/aspect-loader/dist/aspect-loader.aspect.js';
-import { AspectLoaderGraphqlBinderAspect } from '@teambit/aspect-loader-graphql-binder/dist/aspect-loader-graphql-binder.aspect.js';
 import { BuilderAspect } from '@teambit/builder/dist/builder.aspect.js';
 import { BundlerAspect } from '@teambit/bundler/dist/bundler.aspect.js';
 import { CacheAspect } from '@teambit/cache/dist/cache.aspect.js';
 import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
 import { CompilerAspect } from '@teambit/compiler/dist/compiler.aspect.js';
 import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
-import { ComponentGraphqlBinderAspect } from '@teambit/component-graphql-binder/dist/component-graphql-binder.aspect.js';
 import { CompositionsAspect } from '@teambit/compositions/dist/compositions.aspect.js';
 import { ConfigAspect } from '@teambit/config/dist/config.aspect.js';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver/dist/dependency-resolver.aspect.js';
 import { DeprecationAspect } from '@teambit/deprecation/dist/deprecation.aspect.js';
 import { DocsAspect } from '@teambit/docs/dist/docs.aspect.js';
 import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
-import { EnvsGraphqlBinderAspect } from '@teambit/envs-graphql-binder/dist/envs-graphql-binder.aspect.js';
 import { EnvAspect } from '@teambit/env/dist/env.aspect.js';
 import { ExpressAspect } from '@teambit/express/dist/express.aspect.js';
 import { YarnAspect } from '@teambit/yarn/dist/yarn.aspect.js';
 import { GeneratorAspect } from '@teambit/generator/dist/generator.aspect.js';
-import { GeneratorGraphqlBinderAspect } from '@teambit/generator-graphql-binder/dist/generator-graphql-binder.aspect.js';
 import { HarmonyUiAppAspect } from '@teambit/harmony-ui-app/dist/harmony-ui-app.aspect.js';
 import { GraphAspect } from '@teambit/graph/dist/graph.aspect.js';
 import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
@@ -40,7 +36,6 @@ import { ReactRouterAspect } from '@teambit/react-router/dist/react-router.aspec
 import { SchemaAspect } from '@teambit/schema/dist/schema.aspect.js';
 import { PubsubAspect } from '@teambit/pubsub/dist/pubsub.aspect.js';
 import { ScopeAspect } from '@teambit/scope/dist/scope.aspect.js';
-import { ScopeUiBinderAspect } from '@teambit/scope-ui-binder/dist/scope-ui-binder.aspect.js';
 // import { StencilAspect } from '@teambit/stencil';
 import { TesterAspect } from '@teambit/tester/dist/tester.aspect.js';
 import { MultiTesterAspect } from '@teambit/multi-tester/dist/multi-tester.aspect.js';
@@ -50,10 +45,8 @@ import { UIAspect } from '@teambit/ui/dist/ui.aspect.js';
 import { VariantsAspect } from '@teambit/variants/dist/variants.aspect.js';
 import { WebpackAspect } from '@teambit/webpack/dist/webpack.aspect.js';
 import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
-import { WorkspaceUiBinderAspect } from '@teambit/workspace-ui-binder/dist/workspace-ui-binder.aspect.js';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files/dist/workspace-config-files.aspect.js';
 import { InstallAspect } from '@teambit/install/dist/install.aspect.js';
-import { InstallUiBinderAspect } from '@teambit/install-ui-binder/dist/install-ui-binder.aspect.js';
 import { LinterAspect } from '@teambit/linter/dist/linter.aspect.js';
 import { FormatterAspect } from '@teambit/formatter/dist/formatter.aspect.js';
 import { ValidatorAspect } from '@teambit/validator/dist/validator.aspect.js';
@@ -129,14 +122,11 @@ import { ScriptsAspect } from '@teambit/scripts';
  */
 export const manifestsMap = {
   [AspectLoaderAspect.id]: AspectLoaderAspect,
-  [AspectLoaderGraphqlBinderAspect.id]: AspectLoaderGraphqlBinderAspect,
   [CLIAspect.id]: CLIAspect,
   [DevFilesAspect.id]: DevFilesAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
-  [WorkspaceUiBinderAspect.id]: WorkspaceUiBinderAspect,
   [WorkspaceConfigFilesAspect.id]: WorkspaceConfigFilesAspect,
   [InstallAspect.id]: InstallAspect,
-  [InstallUiBinderAspect.id]: InstallUiBinderAspect,
   [ESLintAspect.id]: ESLintAspect,
   [PrettierAspect.id]: PrettierAspect,
   [CompilerAspect.id]: CompilerAspect,
@@ -144,7 +134,6 @@ export const manifestsMap = {
   [FormatterAspect.id]: FormatterAspect,
   [ValidatorAspect.id]: ValidatorAspect,
   [ComponentAspect.id]: ComponentAspect,
-  [ComponentGraphqlBinderAspect.id]: ComponentGraphqlBinderAspect,
   [MDXAspect.id]: MDXAspect,
   [ReadmeAspect.id]: ReadmeAspect,
   [PreviewAspect.id]: PreviewAspect,
@@ -158,9 +147,7 @@ export const manifestsMap = {
   [MultiCompilerAspect.id]: MultiCompilerAspect,
   [UIAspect.id]: UIAspect,
   [GeneratorAspect.id]: GeneratorAspect,
-  [GeneratorGraphqlBinderAspect.id]: GeneratorGraphqlBinderAspect,
   [EnvsAspect.id]: EnvsAspect,
-  [EnvsGraphqlBinderAspect.id]: EnvsGraphqlBinderAspect,
   [EnvAspect.id]: EnvAspect,
   [GraphAspect.id]: GraphAspect,
   [PubsubAspect.id]: PubsubAspect,
@@ -174,7 +161,6 @@ export const manifestsMap = {
   [WorkerAspect.id]: WorkerAspect,
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,
-  [ScopeUiBinderAspect.id]: ScopeUiBinderAspect,
   [TesterAspect.id]: TesterAspect,
   [MultiTesterAspect.id]: MultiTesterAspect,
   [BuilderAspect.id]: BuilderAspect,

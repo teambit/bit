@@ -1,6 +1,5 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import path from 'path';
 import fs from 'fs-extra';
 import os from 'os';
@@ -34,11 +33,11 @@ import { doctorCommand } from './doctor.commands';
 import { DoctorAspect } from './doctor.aspect';
 import { DoctorCmd } from './doctor-cmd';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
+import { LoggerAspect } from '@teambit/logger';
 import type { GraphqlMain } from '@teambit/graphql';
-import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
+import { GraphqlAspect } from '@teambit/graphql';
 import type { ScopeMain } from '@teambit/scope';
-import { ScopeAspect } from '@teambit/scope/dist/scope.aspect.js';
+import { ScopeAspect } from '@teambit/scope';
 import chalk from 'chalk';
 import { doctorSchema } from './doctor.graphql';
 

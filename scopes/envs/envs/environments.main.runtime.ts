@@ -3,31 +3,33 @@ import pLocate from 'p-locate';
 import { parse } from 'comment-json';
 import type { SourceFile } from '@teambit/component.sources';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { Component, ComponentMain } from '@teambit/component';
-import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
+import { ComponentAspect } from '@teambit/component';
 import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
 import type { IssuesMain } from '@teambit/issues';
-import { IssuesAspect } from '@teambit/issues/dist/issues.aspect.js';
+import { IssuesAspect } from '@teambit/issues';
 import type { EnvJsoncPatterns } from '@teambit/dev-files';
 import pMapSeries from 'p-map-series';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
+import { LoggerAspect } from '@teambit/logger';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import type { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { head, uniq } from 'lodash';
 import type { WorkerMain } from '@teambit/worker';
-import { WorkerAspect } from '@teambit/worker/dist/worker.aspect.js';
+import { WorkerAspect } from '@teambit/worker';
 import { ComponentID } from '@teambit/component-id';
 import type { EnvService } from './services';
 import type { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
+import { environmentsSchema } from './environments.graphql';
 import { EnvRuntime, Runtime } from './runtime';
 import { EnvDefinition } from './env-definition';
 import { EnvServiceList } from './env-service-list';
@@ -1192,10 +1194,11 @@ if needed, use "bit env set" command to align the env id`;
     Slot.withType<EnvJsoncResolverRegistry>(),
   ];
 
-  static dependencies = [LoggerAspect, ComponentAspect, CLIAspect, WorkerAspect, IssuesAspect];
+  static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect, CLIAspect, WorkerAspect, IssuesAspect];
 
   static async provider(
-    [loggerAspect, component, cli, worker, issues]: [
+    [graphql, loggerAspect, component, cli, worker, issues]: [
+      GraphqlMain,
       LoggerMain,
       ComponentMain,
       CLIMain,
@@ -1230,7 +1233,7 @@ if needed, use "bit env set" command to align the env id`;
     const envsCmd = new EnvsCmd(envs, component);
     envsCmd.commands = [new ListEnvsCmd(envs, component), new GetEnvCmd(envs, component)];
     cli.register(envsCmd);
-    // graphql.register(() => environmentsSchema(envs)) moved to envs-graphql-binder
+    graphql.register(() => environmentsSchema(envs));
     return envs;
   }
 }

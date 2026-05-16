@@ -1,14 +1,13 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { Component, ComponentMain } from '@teambit/component';
-import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
+import { ComponentAspect } from '@teambit/component';
 import type { EnvsMain, ExecutionContext } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
+import { EnvsAspect } from '@teambit/envs';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
+import { LoggerAspect } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { FormatterAspect } from './formatter.aspect';
 import { FormatterService } from './formatter.service';
 import { FormatTask } from './format.task';
@@ -16,7 +15,7 @@ import { FormatCmd } from './format.cmd';
 import type { FormatterOptions } from './formatter-context';
 import type { Formatter } from './formatter';
 import type { SnappingMain } from '@teambit/snapping';
-import { SnappingAspect } from '@teambit/snapping/dist/snapping.aspect.js';
+import { SnappingAspect } from '@teambit/snapping';
 import { formatCommand } from './formatter.commands';
 
 export type FormatterConfig = {

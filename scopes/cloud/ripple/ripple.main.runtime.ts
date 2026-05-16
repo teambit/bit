@@ -1,12 +1,9 @@
 import type { RuntimeDefinition } from '@teambit/harmony';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { type CLIMain, MainRuntime } from '@teambit/cli';
-import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
-import { type LoggerMain, type Logger } from '@teambit/logger';
-import { CloudAspect } from '@teambit/cloud/dist/cloud.aspect.js';
-import { type CloudMain } from '@teambit/cloud';
+import { CLIAspect, type CLIMain, MainRuntime } from '@teambit/cli';
+import { LoggerAspect, type LoggerMain, type Logger } from '@teambit/logger';
+import { CloudAspect, type CloudMain } from '@teambit/cloud';
 import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { getCloudDomain } from '@teambit/legacy.constants';
 import { readLastExport, type LastExportData } from '@teambit/export';
 import { stripComponentVersion } from './ripple-utils';

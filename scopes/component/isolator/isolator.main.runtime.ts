@@ -1,21 +1,19 @@
 import rimraf from 'rimraf';
 import { v4 } from 'uuid';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
 import { compact, flatten, isEqual, pick } from 'lodash';
 import { isFeatureEnabled, DISABLE_CAPSULE_OPTIMIZATION } from '@teambit/harmony.modules.feature-toggle';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { AspectLoaderAspect } from '@teambit/aspect-loader/dist/aspect-loader.aspect.js';
-import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
-import { ComponentMap } from '@teambit/component';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import { ComponentMap, ComponentAspect } from '@teambit/component';
 import type { ComponentMain, ComponentFactory, Component } from '@teambit/component';
 import { getComponentPackageVersion, snapToSemver } from '@teambit/component-package-version';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import type { GraphMain } from '@teambit/graph';
-import { GraphAspect } from '@teambit/graph/dist/graph.aspect.js';
+import { GraphAspect } from '@teambit/graph';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type {
@@ -29,15 +27,14 @@ import type {
   PackageManagerInstallOptions,
   NodeLinker,
 } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver/dist/dependency-resolver.aspect.js';
-import { KEY_NAME_BY_LIFECYCLE_TYPE } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, KEY_NAME_BY_LIFECYCLE_TYPE } from '@teambit/dependency-resolver';
 import type { Logger, LoggerMain, LongProcessLogger } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
+import { LoggerAspect } from '@teambit/logger';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import type { Scope, Scope as LegacyScope } from '@teambit/legacy.scope';
 import type { GlobalConfigMain } from '@teambit/global-config';
-import { GlobalConfigAspect } from '@teambit/global-config/dist/global-config.aspect.js';
+import { GlobalConfigAspect } from '@teambit/global-config';
 import { DEPENDENCIES_FIELDS, PACKAGE_JSON, CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR } from '@teambit/legacy.constants';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { AbstractVinyl, ArtifactVinyl } from '@teambit/component.sources';
@@ -68,7 +65,7 @@ import { IsolatorAspect } from './isolator.aspect';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
 import type { ConfigStoreMain } from '@teambit/config-store';
-import { ConfigStoreAspect } from '@teambit/config-store/dist/config-store.aspect.js';
+import { ConfigStoreAspect } from '@teambit/config-store';
 
 export type ListResults = {
   capsules: string[];

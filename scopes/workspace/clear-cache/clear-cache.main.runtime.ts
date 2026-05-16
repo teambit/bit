@@ -1,6 +1,5 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { loadConsumerIfExist } from '@teambit/legacy.consumer';

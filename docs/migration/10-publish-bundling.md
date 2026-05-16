@@ -186,14 +186,15 @@ can ship:
 
 (Updated after the codemod-aspect-imports + dynamic-import work.)
 
-- `scripts/codemod-aspect-imports.mjs` rewrote source imports of `XAspect`
-  to use the `@teambit/<pkg>/dist/<X>.aspect.js` subpath directly. Perf
-  win unbundled (skips heavy barrels) but breaks Rollup's code-split
-  detection (the compiled JS contains `Promise.resolve().then(() => require(...))`
-  which Rollup doesn't recognise as `() => import()`). The
-  `redirectDirectAspectImports()` plugin in `build-publish-bundle.mjs`
-  redirects those subpath imports back to the package barrel so Rollup
-  picks the `source` field (TS entry) and sees the original thunk.
+- `scopes/harmony/bit/manifests.ts` imports each aspect manifest via the
+  compiled-JS subpath `@teambit/<pkg>/dist/<X>.aspect.js` (perf shortcut
+  for unbundled runtime — skips heavy barrels). For the bundle path
+  that breaks Rollup's code-split detection (compiled JS contains
+  `Promise.resolve().then(() => require(...))` which Rollup doesn't
+  recognise as `() => import()`). The `redirectDirectAspectImports()`
+  plugin in `build-publish-bundle.mjs` redirects those subpath imports
+  back to the package barrel so Rollup picks the `source` field (TS
+  entry) and sees the original thunk.
 
 - `scopes/harmony/bit/run-bit.ts` switched its deferred `require()` calls
   for hook-require / autocomplete / server-commander / server-forever /

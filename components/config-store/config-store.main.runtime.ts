@@ -1,6 +1,5 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { compact } from 'lodash';
 import { ConfigStoreAspect } from './config-store.aspect';
 import type { Store } from './config-getter';

@@ -3,25 +3,23 @@ import fs, { pathExists } from 'fs-extra';
 import path from 'path';
 import { getRootComponentDir, linkPkgsToRootComponents } from '@teambit/workspace.root-components';
 import type { CompilerMain } from '@teambit/compiler';
-import { CompilerAspect } from '@teambit/compiler/dist/compiler.aspect.js';
-import { CompilationInitiator } from '@teambit/compiler';
+import { CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import type { CLIMain, CommandList } from '@teambit/cli';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import yesno from 'yesno';
 import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { compact, mapValues, omit, uniq, intersection, groupBy } from 'lodash';
 import semver from 'semver';
 import type { ProjectManifest } from '@pnpm/types';
 import type { GenerateResult, GeneratorMain } from '@teambit/generator';
-import { GeneratorAspect } from '@teambit/generator/dist/generator.aspect.js';
+import { GeneratorAspect } from '@teambit/generator';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import type { ApplicationMain } from '@teambit/application';
-import { ApplicationAspect } from '@teambit/application/dist/application.aspect.js';
+import { ApplicationAspect } from '@teambit/application';
 import type { VariantsMain } from '@teambit/variants';
-import { VariantsAspect } from '@teambit/variants/dist/variants.aspect.js';
+import { VariantsAspect } from '@teambit/variants';
 import type { Component } from '@teambit/component';
 import { ComponentID, ComponentMap } from '@teambit/component';
 import { PackageJsonFile } from '@teambit/component.sources';
@@ -34,9 +32,9 @@ import { type DependenciesGraph } from '@teambit/objects';
 import type { CodemodResult, NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
 import { linkToNodeModulesWithCodemod } from '@teambit/workspace.modules.node-modules-linker';
 import type { EnvJsonc, EnvsMain } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
+import { EnvsAspect } from '@teambit/envs';
 import type { IpcEventsMain } from '@teambit/ipc-events';
-import { IpcEventsAspect } from '@teambit/ipc-events/dist/ipc-events.aspect.js';
+import { IpcEventsAspect } from '@teambit/ipc-events';
 import { IssuesClasses } from '@teambit/component-issues';
 import type {
   EnvPolicyEnvJsoncConfigObject,
@@ -53,18 +51,21 @@ import type {
   WorkspacePolicy,
   UpdatedComponent,
 } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver/dist/dependency-resolver.aspect.js';
-import { ComponentDependency } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, ComponentDependency } from '@teambit/dependency-resolver';
 import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
-import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files/dist/workspace-config-files.aspect.js';
+import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
+import { LoggerAspect } from '@teambit/logger';
 import type { IssuesMain } from '@teambit/issues';
-import { IssuesAspect } from '@teambit/issues/dist/issues.aspect.js';
+import { IssuesAspect } from '@teambit/issues';
 import { snapToSemver } from '@teambit/component-package-version';
 import type { AspectDefinition, AspectLoaderMain } from '@teambit/aspect-loader';
-import { AspectLoaderAspect } from '@teambit/aspect-loader/dist/aspect-loader.aspect.js';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import hash from 'object-hash';
+import type { BundlerMain } from '@teambit/bundler';
+import { BundlerAspect } from '@teambit/bundler';
+import type { UiMain } from '@teambit/ui';
+import { UIAspect } from '@teambit/ui';
 import { EXTERNAL_PM_POSTINSTALL_SCRIPT } from '@teambit/host-initializer';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
@@ -1381,6 +1382,8 @@ export class InstallMain {
     GeneratorAspect,
     WorkspaceConfigFilesAspect,
     AspectLoaderAspect,
+    BundlerAspect,
+    UIAspect,
   ];
 
   static runtime = MainRuntime;
@@ -1400,6 +1403,8 @@ export class InstallMain {
       generator,
       wsConfigFiles,
       aspectLoader,
+      bundler,
+      ui,
     ]: [
       DependencyResolverMain,
       Workspace,
@@ -1414,6 +1419,8 @@ export class InstallMain {
       GeneratorMain,
       WorkspaceConfigFilesMain,
       AspectLoaderMain,
+      BundlerMain,
+      UiMain,
     ],
     _,
     [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot],
@@ -1461,9 +1468,13 @@ export class InstallMain {
       workspace.registerOnComponentChange(installExt.onComponentChange.bind(installExt));
     }
 
-    // registerPostInstall(...) that touches ui.getUIServer() + bundler
-    // moved to install-ui-binder so this provider doesn't drag in those
-    // deps for CLI commands.
+    installExt.registerPostInstall(async () => {
+      if (!ui.getUIServer()) {
+        return;
+      }
+      const components = await workspace.list();
+      await bundler.addNewDevServers(components);
+    });
     cli.register(...commands);
     return installExt;
   }

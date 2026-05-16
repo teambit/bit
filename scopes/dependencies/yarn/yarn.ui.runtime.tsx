@@ -2,7 +2,7 @@ import React from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { Install } from '@teambit/ui-foundation.ui.use-box.menu';
 import type { ComponentUI, ConsumePlugin } from '@teambit/component';
-import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
+import { ComponentAspect } from '@teambit/component';
 import { YarnAspect } from './yarn.aspect';
 
 export class YarnUI {

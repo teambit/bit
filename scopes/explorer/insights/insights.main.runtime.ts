@@ -1,11 +1,10 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { GraphMain } from '@teambit/graph';
-import { GraphAspect } from '@teambit/graph/dist/graph.aspect.js';
+import { GraphAspect } from '@teambit/graph';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { IssuesMain } from '@teambit/issues';
-import { IssuesAspect } from '@teambit/issues/dist/issues.aspect.js';
+import { IssuesAspect } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
 import type { Component } from '@teambit/component';
 import { InsightsAspect } from './insights.aspect';

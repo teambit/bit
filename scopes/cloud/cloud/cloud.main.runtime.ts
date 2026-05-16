@@ -1,8 +1,7 @@
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { MainRuntime, globalFlags } from '@teambit/cli';
+import { CLIAspect, MainRuntime, globalFlags } from '@teambit/cli';
 import { v4 } from 'uuid';
 import chalk from 'chalk';
 import os from 'os';
@@ -14,7 +13,7 @@ import type { CloudUser, CloudUserAPIResponse } from '@teambit/cloud.models.clou
 import { ScopeDescriptor } from '@teambit/scopes.scope-descriptor';
 import { ScopeID } from '@teambit/scopes.scope-id';
 import type { Logger, LoggerMain } from '@teambit/logger';
-import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
+import { LoggerAspect } from '@teambit/logger';
 import {
   getCloudDomain,
   DEFAULT_HUB_DOMAIN,
@@ -32,17 +31,17 @@ import {
   CFG_CLOUD_DOMAIN_KEY,
 } from '@teambit/legacy.constants';
 import type { ScopeMain } from '@teambit/scope';
-import { ScopeAspect } from '@teambit/scope/dist/scope.aspect.js';
+import { ScopeAspect } from '@teambit/scope';
 import { fetchWithAgent as fetch } from '@teambit/scope.network';
 import type { GraphqlMain } from '@teambit/graphql';
-import { GraphqlAspect } from '@teambit/graphql/dist/graphql.aspect.js';
+import { GraphqlAspect } from '@teambit/graphql';
 import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
+import { WorkspaceAspect } from '@teambit/workspace';
 import type { ExpressMain } from '@teambit/express';
-import { ExpressAspect } from '@teambit/express/dist/express.aspect.js';
+import { ExpressAspect } from '@teambit/express';
 import { execSync } from 'child_process';
 import type { UiMain } from '@teambit/ui';
-import { UIAspect } from '@teambit/ui/dist/ui.aspect.js';
+import { UIAspect } from '@teambit/ui';
 import { cloudSchema } from './cloud.graphql';
 import { CloudAspect } from './cloud.aspect';
 import { LoginCmd } from './login.cmd';
@@ -50,7 +49,7 @@ import { LogoutCmd } from './logout.cmd';
 import { WhoamiCmd } from './whoami.cmd';
 import { NpmrcCmd, NpmrcGenerateCmd } from './npmrc.cmd';
 import type { ConfigStoreMain } from '@teambit/config-store';
-import { ConfigStoreAspect } from '@teambit/config-store/dist/config-store.aspect.js';
+import { ConfigStoreAspect } from '@teambit/config-store';
 
 export interface CloudWorkspaceConfig {
   cloudDomain: string;

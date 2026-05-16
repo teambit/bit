@@ -1,5 +1,4 @@
-import { WebpackAspect } from '@teambit/webpack/dist/webpack.aspect.js';
-import { WebpackCompilationDoneEvent, WebpackCompilationStartedEvent } from '@teambit/webpack';
+import { WebpackAspect, WebpackCompilationDoneEvent, WebpackCompilationStartedEvent } from '@teambit/webpack';
 import type { PubsubMain, BitBaseEvent } from '@teambit/pubsub';
 
 export type CompilationResult = {

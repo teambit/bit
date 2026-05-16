@@ -1,10 +1,10 @@
 import type { ApplicationMain } from '@teambit/application';
-import { ApplicationAspect } from '@teambit/application/dist/application.aspect.js';
+import { ApplicationAspect } from '@teambit/application';
 import { MainRuntime } from '@teambit/cli';
 import type { UiMain } from '@teambit/ui';
-import { UIAspect } from '@teambit/ui/dist/ui.aspect.js';
+import { UIAspect } from '@teambit/ui';
 import type { ComponentMain } from '@teambit/component';
-import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
+import { ComponentAspect } from '@teambit/component';
 import type { HarmonyAppOptions } from './harmony-app-options';
 import { HarmonyUiAppAspect } from './harmony-ui-app.aspect';
 // import { HarmonyUIApp } from './ui.application';

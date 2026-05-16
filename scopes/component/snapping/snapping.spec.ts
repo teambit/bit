@@ -10,13 +10,13 @@ import {
   destroyWorkspace,
   setWorkspaceConfig,
 } from '@teambit/workspace.testing.mock-workspace';
-import { IssuesAspect } from '@teambit/issues/dist/issues.aspect.js';
+import { IssuesAspect } from '@teambit/issues';
 import type { ScopeMain } from '@teambit/scope';
-import { ScopeAspect } from '@teambit/scope/dist/scope.aspect.js';
+import { ScopeAspect } from '@teambit/scope';
 import type { ExportMain } from '@teambit/export';
-import { ExportAspect } from '@teambit/export/dist/export.aspect.js';
+import { ExportAspect } from '@teambit/export';
 import type { CompilerMain } from '@teambit/compiler';
-import { CompilerAspect } from '@teambit/compiler/dist/compiler.aspect.js';
+import { CompilerAspect } from '@teambit/compiler';
 import type { ComponentID } from '@teambit/component-id';
 import type { Version } from '@teambit/objects';
 import { Ref } from '@teambit/objects';
@@ -24,7 +24,7 @@ import { mockComponents } from '@teambit/component.testing.mock-components';
 import type { SnapDataPerCompRaw, SnappingMain } from './snapping.main.runtime';
 import { SnappingAspect } from './snapping.aspect';
 import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
+import { WorkspaceAspect } from '@teambit/workspace';
 
 describe('Snapping aspect', function () {
   this.timeout(0);

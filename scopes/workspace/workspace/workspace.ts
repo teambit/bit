@@ -25,10 +25,9 @@ import type {
   VariantPolicyConfigArr,
   WorkspacePolicyEntry,
 } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver/dist/dependency-resolver.aspect.js';
-import { VariantPolicy } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
 import type { EnvsMain, EnvJsonc } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
+import { EnvsAspect } from '@teambit/envs';
 import type { GraphqlMain } from '@teambit/graphql';
 import type { Harmony } from '@teambit/harmony';
 import type { Logger } from '@teambit/logger';
@@ -118,7 +117,7 @@ import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
 import { VERSION_ZERO } from '@teambit/objects';
 import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
 import type { ConfigStoreMain, Store } from '@teambit/config-store';
-import { ConfigStoreAspect } from '@teambit/config-store/dist/config-store.aspect.js';
+import { ConfigStoreAspect } from '@teambit/config-store';
 import type { DependenciesOverridesData } from '@teambit/legacy.consumer-config';
 
 export type EjectConfResult = {
@@ -194,10 +193,6 @@ export class Workspace implements ComponentFactory {
   inInstallAfterPmContext = false;
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
-  // Optionally wired by `workspace-ui-binder` when the GraphQL server is
-  // active. CLI commands don't load graphql, so this stays `undefined` for
-  // most invocations and the `triggerOnComponent*` methods skip publishing.
-  graphql?: GraphqlMain;
   /**
    * Components paths are calculated from the component package names of the workspace
    * They are used in webpack configuration to only track changes from these paths inside `node_modules`
@@ -260,6 +255,8 @@ export class Workspace implements ComponentFactory {
     private onAspectsResolveSlot: OnAspectsResolveSlot,
 
     private onRootAspectAddedSlot: OnRootAspectAddedSlot,
+
+    private graphql: GraphqlMain,
 
     private onBitmapChangeSlot: OnBitmapChangeSlot,
 
@@ -895,7 +892,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     });
 
     // TODO: find way to standardize event names.
-    if (this.graphql) await this.graphql.pubsub.publish(ComponentChanged, { componentChanged: { component } });
+    await this.graphql.pubsub.publish(ComponentChanged, { componentChanged: { component } });
     return results;
   }
 
@@ -913,7 +910,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       if (onAddResult) results.push({ extensionId: extension, results: onAddResult });
     });
 
-    if (this.graphql) await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
+    await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
     return results;
   }
 
@@ -925,9 +922,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       results.push({ extensionId: extension, results: onRemoveResult });
     });
 
-    if (this.graphql) {
-      await this.graphql.pubsub.publish(ComponentRemoved, { componentRemoved: { componentIds: [id.toObject()] } });
-    }
+    await this.graphql.pubsub.publish(ComponentRemoved, { componentRemoved: { componentIds: [id.toObject()] } });
     return results;
   }
 

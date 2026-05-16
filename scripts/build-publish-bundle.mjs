@@ -202,17 +202,15 @@ function stubUiFilesPlugin() {
 }
 
 function redirectDirectAspectImports() {
-  // `scripts/codemod-aspect-imports.mjs` rewrote source imports to use the
-  // compiled-JS subpath `@teambit/<pkg>/dist/<name>.aspect.js`. That's
-  // great for unbundled runtime (avoids the heavy barrel) but breaks the
-  // bundle: the subpath points at babel-compiled JS where
-  // `() => import('./<name>.main.runtime')` has been rewritten to
-  // `() => Promise.resolve().then(() => require(...))`, which Rollup
-  // doesn't recognise as a code-split boundary.
-  //
-  // Redirect those subpath imports back to the package barrel so
-  // nodeResolve picks the `source` field (TS entry) and Rollup sees the
-  // original dynamic-import thunk.
+  // `scopes/harmony/bit/manifests.ts` imports each aspect manifest via the
+  // compiled-JS subpath `@teambit/<pkg>/dist/<name>.aspect.js` — a perf
+  // shortcut for unbundled runtime (skips the heavy barrel index.ts).
+  // For the bundle, that subpath points at babel-compiled JS where
+  // `() => import('./<name>.main.runtime')` has already been rewritten
+  // to `() => Promise.resolve().then(() => require(...))`, which Rollup
+  // doesn't recognise as a dynamic-import boundary. Redirect those
+  // subpath imports back to the package barrel so nodeResolve picks the
+  // `source` field (TS entry) and Rollup sees the original thunk.
   const RE = /^(@teambit\/[\w-]+)\/dist\/[\w-]+\.aspect\.js$/;
   return {
     name: 'redirect-direct-aspect-imports',

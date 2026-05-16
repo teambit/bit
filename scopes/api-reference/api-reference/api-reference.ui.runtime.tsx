@@ -1,7 +1,7 @@
 import React from 'react';
 import { flatten } from 'lodash';
 import type { ComponentUI } from '@teambit/component';
-import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
+import { ComponentAspect } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
 import { APIRefPage } from '@teambit/api-reference.sections.api-reference-page';
 import { APIRefSection } from '@teambit/api-reference.sections.api-reference-section';
@@ -13,12 +13,12 @@ import { APIRefRenderersProvider } from '@teambit/api-reference.hooks.use-api-re
 import type { SchemaNodeConstructor } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaRegistry, Schemas } from '@teambit/semantics.entities.semantic-schema';
 import type { CodeUI } from '@teambit/code';
-import { CodeAspect } from '@teambit/code/dist/code.aspect.js';
+import { CodeAspect } from '@teambit/code';
 import { TaggedExports } from '@teambit/tagged-exports';
 import type { WorkspaceUI } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace/dist/workspace.aspect.js';
+import { WorkspaceAspect } from '@teambit/workspace';
 import type { ComponentCompareUI } from '@teambit/component-compare';
-import { ComponentCompareAspect } from '@teambit/component-compare/dist/component-compare.aspect.js';
+import { ComponentCompareAspect } from '@teambit/component-compare';
 
 import { APIReferenceAspect } from './api-reference.aspect';
 import { APICompareSection } from './api-compare.section';

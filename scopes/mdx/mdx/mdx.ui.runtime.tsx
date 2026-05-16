@@ -1,9 +1,9 @@
 import React from 'react';
 import type { CompositionsUI } from '@teambit/compositions';
-import { CompositionsAspect } from '@teambit/compositions/dist/compositions.aspect.js';
+import { CompositionsAspect } from '@teambit/compositions';
 import { UIRuntime } from '@teambit/ui';
 import type { TesterUI } from '@teambit/tester';
-import { TesterAspect } from '@teambit/tester/dist/tester.aspect.js';
+import { TesterAspect } from '@teambit/tester';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { MDXAspect } from './mdx.aspect';
 

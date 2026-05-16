@@ -1,6 +1,6 @@
 import type { Compiler, Stats } from 'webpack';
 
-import { BundlerAspect } from '@teambit/bundler/dist/bundler.aspect.js';
+import { BundlerAspect } from '@teambit/bundler';
 import {
   DevServerCompilationStartedEvent,
   DevServerCompilationDoneEvent,

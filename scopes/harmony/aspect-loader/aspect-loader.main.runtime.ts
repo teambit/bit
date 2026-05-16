@@ -11,11 +11,13 @@ import { Aspect, Slot } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
 import type { LoggerMain, Logger } from '@teambit/logger';
 import type { Component, FilterAspectsOptions } from '@teambit/component';
-import { LoggerAspect } from '@teambit/logger/dist/logger.aspect.js';
+import { LoggerAspect } from '@teambit/logger';
 import type { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { replaceFileExtToJs } from '@teambit/compilation.modules.babel-compiler';
 import type { EnvsMain } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
+import { EnvsAspect } from '@teambit/envs';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
 import mapSeries from 'p-map-series';
 import { difference, compact, flatten, intersection, uniqBy, some, isEmpty, isObject } from 'lodash';
 import type { AspectDefinitionProps } from './aspect-definition';
@@ -27,6 +29,7 @@ import { isEsmModule } from './is-esm-module';
 import { CannotLoadExtension } from './exceptions';
 import { getAspectDef, getCoreAspectPackageName } from './core-aspects';
 import { Plugins } from './plugins';
+import { aspectLoaderSchema } from './aspect-loader.graphql';
 
 export type PluginDefinitionSlot = SlotRegistry<PluginDefinition[]>;
 
@@ -853,7 +856,7 @@ export class AspectLoaderMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [LoggerAspect, EnvsAspect];
+  static dependencies = [LoggerAspect, EnvsAspect, GraphqlAspect];
   static slots = [
     Slot.withType<OnAspectLoadError>(),
     Slot.withType<OnLoadRequireableExtension>(),
@@ -861,7 +864,7 @@ export class AspectLoaderMain {
   ];
 
   static async provider(
-    [loggerExt, envs]: [LoggerMain, EnvsMain],
+    [loggerExt, envs, graphql]: [LoggerMain, EnvsMain, GraphqlMain],
     config,
     [onAspectLoadErrorSlot, onLoadRequireableExtensionSlot, pluginSlot]: [
       OnAspectLoadErrorSlot,
@@ -880,8 +883,7 @@ export class AspectLoaderMain {
       pluginSlot
     );
 
-    // graphql.register(() => aspectLoaderSchema(aspectLoader)) moved to
-    // aspect-loader-graphql-binder
+    graphql.register(() => aspectLoaderSchema(aspectLoader));
     aspectLoader.registerPlugins([envs.getEnvPlugin()]);
 
     return aspectLoader;

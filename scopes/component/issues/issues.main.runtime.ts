@@ -1,6 +1,5 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { Component } from '@teambit/component';
 import { IssuesClasses, IssuesList } from '@teambit/component-issues';
 import type { SlotRegistry } from '@teambit/harmony';

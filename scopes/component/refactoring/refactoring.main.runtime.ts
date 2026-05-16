@@ -1,19 +1,17 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect } from '@teambit/cli/dist/cli.aspect.js';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { isBinaryFile } from 'isbinaryfile';
 import camelCase from 'camelcase';
 import { compact } from 'lodash';
 import { replacePackageName } from '@teambit/legacy.utils';
 import type { Component, ComponentMain } from '@teambit/component';
-import { ComponentAspect } from '@teambit/component/dist/component.aspect.js';
-import { ComponentID } from '@teambit/component';
+import { ComponentAspect, ComponentID } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 import type { AbstractVinyl } from '@teambit/component.sources';
 import type { PkgMain } from '@teambit/pkg';
-import { PkgAspect } from '@teambit/pkg/dist/pkg.aspect.js';
+import { PkgAspect } from '@teambit/pkg';
 import type { EnvsMain } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs/dist/environments.aspect.js';
+import { EnvsAspect } from '@teambit/envs';
 import type { SourceFileTransformer } from '@teambit/typescript';
 import {
   classNamesTransformer,

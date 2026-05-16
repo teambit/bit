@@ -2,7 +2,7 @@ import React from 'react';
 import { UIRuntime } from '@teambit/ui';
 import type { ComponentModel } from '@teambit/component';
 import type { DocsUI } from '@teambit/docs';
-import { DocsAspect } from '@teambit/docs/dist/docs.aspect.js';
+import { DocsAspect } from '@teambit/docs';
 import { ComponentDeprecated } from '@teambit/component.ui.component-deprecated';
 import { DeprecationAspect } from './deprecation.aspect';
 
