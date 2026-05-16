@@ -292,11 +292,36 @@ export async function loadBit(path = process.cwd(), additionalAspects?: Aspect[]
     // keeps BitAspect manifest-only and resolves aspects on command dispatch.
     aspectsToLoad.push(BitAspect);
   }
+  const entered = process.argv[2];
   if (!loadCLIOnly && isLazy) {
     // Aspects this function and the wider bootstrap consult via
     // `harmony.get(...)` after `loadBit` returns. Resolve them eagerly so
     // the rest of the bootstrap keeps working; everything else stays lazy.
     aspectsToLoad.push(AspectLoaderAspect, EnvsAspect, GeneratorAspect);
+    // Package managers are satellite aspects: their providers self-register
+    // into `dependencyResolver.registerPackageManager(...)`, so without an
+    // explicit resolve nothing pulls them in. For commands that actually
+    // install (or trigger an install — `import`, `tag`, etc.) we need at
+    // least one PM registered before the command's provider runs.
+    const NEEDS_PM_COMMANDS = new Set([
+      'install',
+      'uninstall',
+      'update',
+      'import',
+      'new',
+      'create',
+      'tag',
+      'snap',
+      'build',
+      'compile',
+      'test',
+    ]);
+    if (entered && NEEDS_PM_COMMANDS.has(entered)) {
+      const pnpm = manifestsMap['teambit.dependencies/pnpm'];
+      const yarn = manifestsMap['teambit.dependencies/yarn'];
+      if (pnpm) aspectsToLoad.push(pnpm);
+      if (yarn) aspectsToLoad.push(yarn);
+    }
   }
   if (shouldRunAsDaemon()) {
     logger.isDaemon = true;
@@ -336,7 +361,6 @@ export async function loadBit(path = process.cwd(), additionalAspects?: Aspect[]
     'serve-preview',
     'generate-preview',
   ]);
-  const entered = process.argv[2];
   const wantsHeavyHosts = entered && HEAVY_COMMANDS.has(entered);
   const lazyAspectIds = wantsHeavyHosts ? [] : HEAVY_HOSTS;
   const harmony = isLazy
