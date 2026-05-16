@@ -306,6 +306,79 @@ const EXT_PLUGIN_INLINE = `function bvmAddExtensionsBabelPlugin() {
   };
 }`;
 
+// Injects `import.meta.url`-based shims for `__dirname` / `__filename` when
+// the compiled module references them. ESM doesn't have those globals; in
+// CJS they were free variables. The shim:
+//   import { fileURLToPath as __bvm_furl } from 'url';
+//   import { dirname as __bvm_dn } from 'path';
+//   const __filename = __bvm_furl(import.meta.url);
+//   const __dirname = __bvm_dn(__filename);
+const DIRNAME_PLUGIN_INLINE = `function bvmDirnamePlugin({ types: t }) {
+  return {
+    name: 'bvm-dirname',
+    visitor: {
+      Program: {
+        enter(p) {
+          let usesDirname = false;
+          let usesFilename = false;
+          p.traverse({
+            Identifier(np) {
+              const name = np.node.name;
+              if (name !== '__dirname' && name !== '__filename') return;
+              if (np.parent && np.parent.type === 'MemberExpression' && np.parent.property === np.node && !np.parent.computed) return;
+              if (np.parent && (np.parent.type === 'VariableDeclarator' && np.parent.id === np.node)) return;
+              if (name === '__dirname') usesDirname = true;
+              if (name === '__filename') usesFilename = true;
+            },
+          });
+          if (!usesDirname && !usesFilename) return;
+          // Skip if already declared at top-level (idempotency).
+          for (const s of p.node.body) {
+            if (s.type === 'VariableDeclaration') {
+              for (const d of s.declarations) {
+                if (d.id && d.id.type === 'Identifier' && (d.id.name === '__dirname' || d.id.name === '__filename')) {
+                  return;
+                }
+              }
+            }
+          }
+          const body = p.node.body;
+          const stmts = [];
+          stmts.push(t.importDeclaration(
+            [t.importSpecifier(t.identifier('__bvm_fileURLToPath'), t.identifier('fileURLToPath'))],
+            t.stringLiteral('url'),
+          ));
+          if (usesDirname) {
+            stmts.push(t.importDeclaration(
+              [t.importSpecifier(t.identifier('__bvm_dn'), t.identifier('dirname'))],
+              t.stringLiteral('path'),
+            ));
+          }
+          if (usesFilename || usesDirname) {
+            stmts.push(t.variableDeclaration('const', [
+              t.variableDeclarator(
+                t.identifier('__filename'),
+                t.callExpression(t.identifier('__bvm_fileURLToPath'), [
+                  t.memberExpression(t.metaProperty(t.identifier('import'), t.identifier('meta')), t.identifier('url')),
+                ]),
+              ),
+            ]));
+          }
+          if (usesDirname) {
+            stmts.push(t.variableDeclaration('const', [
+              t.variableDeclarator(
+                t.identifier('__dirname'),
+                t.callExpression(t.identifier('__bvm_dn'), [t.identifier('__filename')]),
+              ),
+            ]));
+          }
+          for (let i = stmts.length - 1; i >= 0; i--) body.unshift(stmts[i]);
+        },
+      },
+    },
+  };
+}`;
+
 // Injects `import { createRequire as ...; const require = createRequire(import.meta.url);`
 // at the top of any compiled module that uses `require(...)` or `require.resolve(...)`.
 // Source files have a fair number of these calls — keeping the syntax means we
@@ -373,7 +446,6 @@ const CJS_INTEROP_PLUGIN_INLINE = `function bvmCjsInteropPlugin({ types: t }) {
     'p-map',
     'p-filter',
     'minimatch',
-    'glob',
     'comment-json',
     'multimatch',
     'didyoumean',
@@ -393,6 +465,101 @@ const CJS_INTEROP_PLUGIN_INLINE = `function bvmCjsInteropPlugin({ types: t }) {
     'lodash.merge',
     'lodash.unionby',
     'user-home',
+    '@apollo/client',
+    '@apollo/server',
+    'graphql',
+    'graphql-tag',
+    'graphql-tools',
+    '@graphql-tools/schema',
+    '@graphql-tools/merge',
+    'react',
+    'react-dom',
+    'react-router-dom',
+    '@yarnpkg/core',
+    '@yarnpkg/cli',
+    '@pnpm/types',
+    '@pnpm/client',
+    '@pnpm/lockfile-types',
+    '@pnpm/lockfile.fs',
+    'enquirer',
+    'inquirer',
+    'prompts',
+    'ora',
+    'cli-table3',
+    'cli-table',
+    'cli-spinners',
+    'is-ci',
+    'tiny-glob',
+    'pretty-bytes',
+    'pretty-ms',
+    'object-treeify',
+    'log-symbols',
+    'find-up',
+    'find-root',
+    'is-relative-url',
+    'parse-package-name',
+    'unique-string',
+    'untildify',
+    'env-paths',
+    'temp-dir',
+    'tempy',
+    'execa',
+    'cross-spawn',
+    'rimraf',
+    'mkdirp',
+    'tar',
+    'tar-stream',
+    'archiver',
+    'unzipper',
+    'follow-redirects',
+    'node-fetch',
+    'serialize-javascript',
+    'detect-libc',
+    'is-arrayish',
+    'arrify',
+    'array-differ',
+    'pretty-error',
+    'humanize-string',
+    'cli-truncate',
+    'wrap-ansi',
+    'word-wrap',
+    'common-tags',
+    'is-text-path',
+    'is-binary-path',
+    'is-glob',
+    'is-extglob',
+    'is-plain-object',
+    'is-relative',
+    'is-absolute',
+    'normalize-path',
+    'micromatch',
+    'date-fns',
+    'date-and-time',
+    'pad-right',
+    'left-pad',
+    'lru-cache',
+    'mem',
+    'mimic-fn',
+    'p-debounce',
+    'p-throttle',
+    'p-limit',
+    'p-queue',
+    'p-retry',
+    'p-timeout',
+    'p-event',
+    'p-defer',
+    'p-cancelable',
+    'pretty-format',
+    'safe-stable-stringify',
+    'fast-glob',
+    'globby',
+    'cosmiconfig',
+    'cosmiconfig-typescript-loader',
+    'parse-json',
+    'json5',
+    'jsonc-parser',
+    'reflect-metadata',
+    'uniqid',
   ]);
   function pkgKey(spec) {
     if (spec.startsWith('@')) return spec.split('/').slice(0, 2).join('/');
@@ -404,21 +571,64 @@ const CJS_INTEROP_PLUGIN_INLINE = `function bvmCjsInteropPlugin({ types: t }) {
   return {
     name: 'bvm-cjs-interop',
     visitor: {
+      ExportNamedDeclaration(p) {
+        // \`export { x } from 'cjsPkg'\` — same issue as \`import\`. Rewrite to:
+        //   import _pkg from 'cjsPkg';
+        //   const { x } = _pkg;
+        //   export { x };
+        if (!p.node.source) return;
+        const source = p.node.source.value;
+        const key = pkgKey(source);
+        if (!CJS_PKGS.has(key) && !CJS_PKGS.has(source)) return;
+        const specifiers = p.node.specifiers;
+        if (specifiers.length === 0) return;
+        const defaultLocal = t.identifier(safeIdent(source));
+        const importDecl = t.importDeclaration(
+          [t.importDefaultSpecifier(defaultLocal)],
+          t.stringLiteral(source),
+        );
+        const props = specifiers.map((s) =>
+          t.objectProperty(
+            t.identifier(s.local.name),
+            t.identifier(s.local.name),
+            false,
+            true,
+          ),
+        );
+        const destructure = t.variableDeclaration('const', [
+          t.variableDeclarator(t.objectPattern(props), defaultLocal),
+        ]);
+        const exportNames = t.exportNamedDeclaration(
+          null,
+          specifiers.map((s) =>
+            t.exportSpecifier(t.identifier(s.local.name), t.identifier(s.exported.name)),
+          ),
+        );
+        p.replaceWithMultiple([importDecl, destructure, exportNames]);
+      },
       ImportDeclaration(p) {
         const source = p.node.source.value;
         const key = pkgKey(source);
         if (!CJS_PKGS.has(key) && !CJS_PKGS.has(source)) return;
         const specifiers = p.node.specifiers;
         const named = specifiers.filter((s) => s.type === 'ImportSpecifier');
+        const nsSpec = specifiers.find((s) => s.type === 'ImportNamespaceSpecifier');
+        // Rewrite \`import * as X from 'cjsPkg'\` to default import — for
+        // CJS modules, the default *is* the namespace object (module.exports),
+        // whereas Node's ESM \`* as\` only sees keys cjs-module-lexer detected.
+        if (nsSpec && named.length === 0) {
+          p.node.specifiers = [t.importDefaultSpecifier(nsSpec.local)];
+          return;
+        }
         if (named.length === 0) return;
         const defaultSpec = specifiers.find((s) => s.type === 'ImportDefaultSpecifier');
-        const nsSpec = specifiers.find((s) => s.type === 'ImportNamespaceSpecifier');
         const defaultLocal = defaultSpec
           ? defaultSpec.local
           : t.identifier(safeIdent(source));
         const newSpecs = [];
         if (defaultSpec) newSpecs.push(defaultSpec);
         else newSpecs.push(t.importDefaultSpecifier(defaultLocal));
+        // Preserve namespace import if present (rare) — emit both: \`import D, * as N from 'pkg';\`
         if (nsSpec) newSpecs.push(nsSpec);
         const newImport = t.importDeclaration(newSpecs, t.stringLiteral(source));
         const props = named.map((s) =>
@@ -449,7 +659,8 @@ const ENV_EXT_REPLACE_SRC = `// bvm-patches: dropped @babel/plugin-transform-mod
 ${EXT_PLUGIN_INLINE}
 ${CJS_INTEROP_PLUGIN_INLINE}
 ${CREATE_REQUIRE_PLUGIN_INLINE}
-const newPlugins = [bvmCreateRequirePlugin, bvmCjsInteropPlugin, bvmAddExtensionsBabelPlugin, ...plugins];`;
+${DIRNAME_PLUGIN_INLINE}
+const newPlugins = [bvmDirnamePlugin, bvmCreateRequirePlugin, bvmCjsInteropPlugin, bvmAddExtensionsBabelPlugin, ...plugins];`;
 
 const ENV_EXT_FIND_DIST = `// bvm-patches: dropped @babel/plugin-transform-modules-commonjs lazy.
 const newPlugins = [...plugins];`;
@@ -458,7 +669,8 @@ const ENV_EXT_REPLACE_DIST = `// bvm-patches: dropped @babel/plugin-transform-mo
 ${EXT_PLUGIN_INLINE}
 ${CJS_INTEROP_PLUGIN_INLINE}
 ${CREATE_REQUIRE_PLUGIN_INLINE}
-const newPlugins = [bvmCreateRequirePlugin, bvmCjsInteropPlugin, bvmAddExtensionsBabelPlugin, ...plugins];`;
+${DIRNAME_PLUGIN_INLINE}
+const newPlugins = [bvmDirnamePlugin, bvmCreateRequirePlugin, bvmCjsInteropPlugin, bvmAddExtensionsBabelPlugin, ...plugins];`;
 
 function patchCoreAspectEnvCapsules() {
   // Capsule roots vary per workspace hash, so we glob across all of them.
