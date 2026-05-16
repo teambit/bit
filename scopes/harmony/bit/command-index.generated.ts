@@ -6,6 +6,8 @@
 export interface CommandIndexEntry {
   /** Command name (first word of `Command.name` — strips the `<arg>` / `[arg]` parts). */
   name: string;
+  /** Full `Command.name` (including positional patterns like `<arg>` / `[arg...]`), only set when it differs from `name`. The lazy stub trampoline uses this so yargs accepts positional arguments. */
+  pattern?: string;
   /** Aspect id that registered the command. */
   aspectId: string;
   alias?: string;
@@ -24,6 +26,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "add",
     "aspectId": "teambit.component/tracker",
+    "pattern": "add [path...]",
     "alias": "a",
     "description": "track existing directory contents as new components in the workspace",
     "group": "component-development"
@@ -31,24 +34,28 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "artifacts",
     "aspectId": "teambit.pipelines/builder",
+    "pattern": "artifacts <component-pattern>",
     "description": "view and download build artifacts",
     "group": "testing"
   },
   {
     "name": "aspect",
     "aspectId": "teambit.harmony/aspect",
+    "pattern": "aspect <sub-command>",
     "description": "manage component aspects and their configurations",
     "group": "component-config",
     "subCommands": [
       {
         "name": "get",
         "aspectId": "teambit.harmony/aspect",
+        "pattern": "get <component-name>",
         "description": "list the aspects set on a component, as well as their configs and data",
         "group": "info-analysis"
       },
       {
         "name": "list",
         "aspectId": "teambit.harmony/aspect",
+        "pattern": "list [pattern]",
         "description": "list all aspects configured on component(s)",
         "group": "info-analysis"
       },
@@ -61,18 +68,21 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "set",
         "aspectId": "teambit.harmony/aspect",
+        "pattern": "set <pattern> <aspect-id> [config]",
         "description": "set components with an aspect to extend their development tools, metadata and (possibly) artifacts",
         "group": "component-config"
       },
       {
         "name": "unset",
         "aspectId": "teambit.harmony/aspect",
+        "pattern": "unset <pattern> <aspect-id>",
         "description": "unset an aspect from component(s).",
         "group": "component-config"
       },
       {
         "name": "update",
         "aspectId": "teambit.harmony/aspect",
+        "pattern": "update <aspect-id> [pattern]",
         "description": "update a version of an aspect for all or specified components",
         "group": "component-config"
       }
@@ -81,12 +91,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "blame",
     "aspectId": "teambit.component/component-log",
+    "pattern": "blame <filepath>",
     "description": "EXPERIMENTAL. show line-by-line authorship and modification history",
     "group": "version-control"
   },
   {
     "name": "build",
     "aspectId": "teambit.pipelines/builder",
+    "pattern": "build [component-pattern]",
     "description": "run build pipeline tasks in isolated environments",
     "group": "component-development"
   },
@@ -99,6 +111,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "create",
         "aspectId": "teambit.workspace/workspace",
+        "pattern": "create [component-id...]",
         "description": "create capsules for components",
         "group": "advanced"
       },
@@ -119,6 +132,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "cat",
     "aspectId": "teambit.component/component",
+    "pattern": "cat <component-id>",
     "description": "print source files or config of a component at a specific version",
     "group": "info-analysis",
     "skipWorkspace": true
@@ -126,6 +140,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "cat-component",
     "aspectId": "teambit.scope/scope",
+    "pattern": "cat-component [id]",
     "alias": "cmp",
     "description": "cat a bit object by component-id",
     "group": "advanced",
@@ -135,6 +150,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "cat-lane",
     "aspectId": "teambit.scope/scope",
+    "pattern": "cat-lane <id>",
     "alias": "cl",
     "description": "cat a bit object by lane-name",
     "group": "advanced",
@@ -145,6 +161,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "cat-lane-history",
     "aspectId": "teambit.lanes/lanes",
+    "pattern": "cat-lane-history <lane-name>",
     "alias": "clh",
     "description": "cat lane-history object by lane-name",
     "group": "advanced",
@@ -153,6 +170,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "cat-object",
     "aspectId": "teambit.scope/scope",
+    "pattern": "cat-object <hash>",
     "description": "cat a bit object by hash",
     "group": "advanced",
     "private": true,
@@ -162,6 +180,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "cat-scope",
     "aspectId": "teambit.scope/scope",
+    "pattern": "cat-scope [scopePath]",
     "description": "cat a scope and show all the contents",
     "group": "advanced",
     "private": true,
@@ -171,6 +190,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "cat-version-history",
     "aspectId": "teambit.scope/version-history",
+    "pattern": "cat-version-history <id>",
     "alias": "cvh",
     "description": "cat version-history object by component-id",
     "group": "advanced",
@@ -180,12 +200,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "check-types",
     "aspectId": "teambit.typescript/typescript",
+    "pattern": "check-types [component-pattern]",
     "description": "validate TypeScript type correctness",
     "group": "testing"
   },
   {
     "name": "checkout",
     "aspectId": "teambit.component/checkout",
+    "pattern": "checkout <to> [component-pattern]",
     "alias": "U",
     "description": "switch between component versions or remove local changes",
     "group": "version-control"
@@ -193,6 +215,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "ci",
     "aspectId": "teambit.git/ci",
+    "pattern": "ci <sub-command>",
     "description": "continuous integration commands for automated workflows",
     "group": "collaborate",
     "subCommands": [
@@ -228,6 +251,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "compile",
     "aspectId": "teambit.compilation/compiler",
+    "pattern": "compile [component-names...]",
     "description": "transpile component source files",
     "group": "component-development"
   },
@@ -255,12 +279,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "del",
         "aspectId": "teambit.harmony/config-store",
+        "pattern": "del <key>",
         "description": "delete given key from global configuration",
         "group": "ungrouped"
       },
       {
         "name": "get",
         "aspectId": "teambit.harmony/config-store",
+        "pattern": "get <key>",
         "description": "get a value from global configuration",
         "group": "ungrouped"
       },
@@ -273,6 +299,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "set",
         "aspectId": "teambit.harmony/config-store",
+        "pattern": "set <key> <val>",
         "description": "set a configuration. default to save it globally",
         "group": "ungrouped",
         "skipWorkspace": true
@@ -282,12 +309,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "create",
     "aspectId": "teambit.generator/generator",
+    "pattern": "create <template-name> <component-names...>",
     "description": "scaffold new component(s) from a template (sources, config, and env)",
     "group": "component-development"
   },
   {
     "name": "delete",
     "aspectId": "teambit.component/remove",
+    "pattern": "delete <component-pattern>",
     "description": "soft-delete components from remote scopes",
     "group": "collaborate",
     "remoteOp": true,
@@ -296,12 +325,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "dependents",
     "aspectId": "teambit.dependencies/dependencies",
+    "pattern": "dependents <component-name>",
     "description": "show components that depend on the specified component",
     "group": "dependencies"
   },
   {
     "name": "deprecate",
     "aspectId": "teambit.component/deprecation",
+    "pattern": "deprecate <component-name>",
     "alias": "d",
     "description": "mark a component as deprecated to discourage its use",
     "group": "collaborate",
@@ -320,12 +351,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "diff",
     "aspectId": "teambit.component/component-compare",
+    "pattern": "diff [component-pattern] [version] [to-version]",
     "description": "compare component changes between versions or against the current workspace",
     "group": "info-analysis"
   },
   {
     "name": "doctor",
     "aspectId": "teambit.harmony/doctor",
+    "pattern": "doctor [diagnosis-name]",
     "description": "diagnose and troubleshoot workspace issues",
     "group": "system",
     "loadAspects": false
@@ -333,6 +366,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "eject",
     "aspectId": "teambit.workspace/eject",
+    "pattern": "eject <component-pattern>",
     "alias": "E",
     "description": "remove component from workspace and install it as npm package",
     "group": "dependencies"
@@ -340,6 +374,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "eject-conf",
     "aspectId": "teambit.workspace/workspace",
+    "pattern": "eject-conf <pattern>",
     "description": "create component.json configuration files for components",
     "group": "component-config"
   },
@@ -353,6 +388,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "get",
         "aspectId": "teambit.envs/envs",
+        "pattern": "get <component-name>",
         "description": "show config information from a component's env",
         "group": "component-config"
       },
@@ -365,24 +401,28 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "replace",
         "aspectId": "teambit.envs/envs",
+        "pattern": "replace <current-env> <new-env>",
         "description": "replace an existing env with another env for all components using the old env",
         "group": "component-config"
       },
       {
         "name": "set",
         "aspectId": "teambit.envs/envs",
+        "pattern": "set <component-pattern> <env>",
         "description": "Assigns one or more components a development environment (env)",
         "group": "component-config"
       },
       {
         "name": "unset",
         "aspectId": "teambit.envs/envs",
+        "pattern": "unset <component-pattern>",
         "description": "un-sets an env from components that were previously set by \"bit env set\" or by a component template",
         "group": "component-config"
       },
       {
         "name": "update",
         "aspectId": "teambit.envs/envs",
+        "pattern": "update [env-id] [pattern]",
         "description": "update a version of an env for all components using that env",
         "group": "component-config"
       }
@@ -391,6 +431,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "export",
     "aspectId": "teambit.scope/export",
+    "pattern": "export [component-patterns...]",
     "alias": "e",
     "description": "upload components to remote scopes",
     "group": "collaborate",
@@ -399,6 +440,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "fetch",
     "aspectId": "teambit.scope/importer",
+    "pattern": "fetch [ids...]",
     "description": "fetch remote objects and store locally",
     "group": "collaborate",
     "private": true
@@ -406,6 +448,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "fork",
     "aspectId": "teambit.component/forking",
+    "pattern": "fork <pattern> [target-component-name]",
     "description": "create a new component by copying from an existing one",
     "group": "collaborate",
     "remoteOp": true,
@@ -414,12 +457,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "format",
     "aspectId": "teambit.defender/formatter",
+    "pattern": "format [component-pattern]",
     "description": "auto-format component source code",
     "group": "testing"
   },
   {
     "name": "generate-preview",
     "aspectId": "teambit.preview/preview",
+    "pattern": "generate-preview [component-pattern]",
     "description": "generate preview bundle for components",
     "group": "run-serve",
     "private": true
@@ -427,12 +472,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "git",
     "aspectId": "teambit.git/git",
+    "pattern": "git <sub-command>",
     "description": "Git utilities for Bit repositories",
     "group": "workspace-tools",
     "subCommands": [
       {
         "name": "merge-bitmaps",
         "aspectId": "teambit.git/git",
+        "pattern": "merge-bitmaps <ancestor> <current> <other>",
         "description": "a special command to merge conflicting bitmap files during git merge",
         "group": "workspace-tools",
         "private": true
@@ -455,6 +502,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "graph",
     "aspectId": "teambit.component/graph",
+    "pattern": "graph [id]",
     "description": "visualize component dependencies as a graph image",
     "group": "info-analysis",
     "remoteOp": true
@@ -462,6 +510,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "import",
     "aspectId": "teambit.scope/importer",
+    "pattern": "import [component-patterns...]",
     "description": "bring components from remote scopes into your workspace",
     "group": "collaborate",
     "remoteOp": true
@@ -469,6 +518,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "init",
     "aspectId": "teambit.harmony/host-initializer",
+    "pattern": "init [path]",
     "description": "initialize a Bit workspace in an existing project",
     "group": "workspace-setup",
     "loadAspects": false,
@@ -477,6 +527,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "insights",
     "aspectId": "teambit.explorer/insights",
+    "pattern": "insights [names...]",
     "description": "Insights on component graph",
     "group": "workspace-tools",
     "private": true
@@ -484,6 +535,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "install",
     "aspectId": "teambit.workspace/install",
+    "pattern": "install [packages...]",
     "alias": "in",
     "description": "install workspace dependencies",
     "group": "dependencies"
@@ -491,27 +543,32 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "link",
     "aspectId": "teambit.workspace/install",
+    "pattern": "link [component-names...]",
     "description": "create links between components and node_modules",
     "group": "dependencies"
   },
   {
     "name": "lint",
     "aspectId": "teambit.defender/linter",
+    "pattern": "lint [component-pattern]",
     "description": "analyze component code for issues and style violations",
     "group": "testing"
   },
   {
     "name": "list",
     "aspectId": "teambit.component/lister",
+    "pattern": "list [remote-scope]",
     "alias": "ls",
     "description": "display components in workspace or remote scope",
     "group": "info-analysis",
+    "loadAspects": false,
     "remoteOp": true,
     "skipWorkspace": true
   },
   {
     "name": "local-only",
     "aspectId": "teambit.workspace/workspace",
+    "pattern": "local-only <sub-command>",
     "description": "manage components that exist only in the workspace",
     "group": "component-config",
     "subCommands": [
@@ -524,12 +581,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "set",
         "aspectId": "teambit.workspace/workspace",
+        "pattern": "set <component-pattern>",
         "description": "set a component as local-only",
         "group": "ungrouped"
       },
       {
         "name": "unset",
         "aspectId": "teambit.workspace/workspace",
+        "pattern": "unset <component-pattern>",
         "description": "remove a component from local-only",
         "group": "ungrouped"
       }
@@ -538,6 +597,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "log",
     "aspectId": "teambit.component/component-log",
+    "pattern": "log <id>",
     "description": "display component version history",
     "group": "version-control",
     "remoteOp": true,
@@ -546,6 +606,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "log-file",
     "aspectId": "teambit.component/component-log",
+    "pattern": "log-file <filepath>",
     "description": "EXPERIMENTAL. display history of changes to a specific file",
     "group": "version-control"
   },
@@ -569,6 +630,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "mcp-server",
     "aspectId": "teambit.mcp/cli-mcp-server",
+    "pattern": "mcp-server [sub-command]",
     "description": "start Model Context Protocol server for AI assistants",
     "group": "advanced",
     "loader": false,
@@ -576,12 +638,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "rules",
         "aspectId": "teambit.mcp/cli-mcp-server",
+        "pattern": "rules [editor]",
         "description": "Write Bit MCP rules/instructions file for VS Code, Cursor, Roo Code, Cline, Claude Code, or print to screen",
         "group": "ungrouped"
       },
       {
         "name": "setup",
         "aspectId": "teambit.mcp/cli-mcp-server",
+        "pattern": "setup [editor]",
         "description": "Setup MCP integration with VS Code, Cursor, Windsurf, Roo Code, Cline, Claude Code, or other editors",
         "group": "ungrouped"
       },
@@ -597,12 +661,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "merge",
     "aspectId": "teambit.component/merging",
+    "pattern": "merge [component-pattern]",
     "description": "merge diverged component history when local and remote have different versions",
     "group": "version-control"
   },
   {
     "name": "mini-status",
     "aspectId": "teambit.component/status",
+    "pattern": "mini-status [component-pattern]",
     "alias": "ms",
     "description": "basic status for fast execution",
     "group": "info-analysis",
@@ -612,6 +678,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "move",
     "aspectId": "teambit.component/mover",
+    "pattern": "move <current-component-dir> <new-component-dir>",
     "alias": "mv",
     "description": "relocate a component to a different directory",
     "group": "component-development"
@@ -619,12 +686,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "new",
     "aspectId": "teambit.generator/generator",
+    "pattern": "new <template-name> <workspace-name>",
     "description": "create a new Bit workspace from a template",
     "group": "workspace-setup"
   },
   {
     "name": "npmrc",
     "aspectId": "teambit.cloud/cloud",
+    "pattern": "npmrc [sub-command]",
     "description": "configure .npmrc file with Bit Cloud registry and authentication settings",
     "group": "auth",
     "skipWorkspace": true,
@@ -640,6 +709,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "pack",
     "aspectId": "teambit.pkg/pkg",
+    "pattern": "pack <componentId> [scopePath]",
     "description": "create tar for npm publish",
     "group": "collaborate",
     "private": true
@@ -647,6 +717,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "pattern",
     "aspectId": "teambit.workspace/workspace",
+    "pattern": "pattern <pattern>",
     "description": "test and validate component patterns",
     "group": "info-analysis",
     "remoteOp": true
@@ -654,6 +725,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "publish",
     "aspectId": "teambit.pkg/pkg",
+    "pattern": "publish <component-pattern>",
     "description": "publish components to npm (npm publish)",
     "group": "collaborate",
     "private": true
@@ -661,18 +733,21 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "recover",
     "aspectId": "teambit.component/remove",
+    "pattern": "recover <component-pattern>",
     "description": "restore soft-deleted components",
     "group": "collaborate"
   },
   {
     "name": "refactor",
     "aspectId": "teambit.component/refactoring",
+    "pattern": "refactor <sub-command>",
     "description": "automatically refactor component source code",
     "group": "workspace-tools",
     "subCommands": [
       {
         "name": "dependency-name",
         "aspectId": "teambit.component/refactoring",
+        "pattern": "dependency-name <old-id> <new-id>",
         "description": "replace the dependency's old package-name with a new one in the code",
         "group": "workspace-tools"
       }
@@ -688,6 +763,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "add",
         "aspectId": "teambit.harmony/global-config",
+        "pattern": "add <url>",
         "description": "add a bare-scope as a remote",
         "group": "ungrouped",
         "loadAspects": false
@@ -695,6 +771,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "del",
         "aspectId": "teambit.harmony/global-config",
+        "pattern": "del <name>",
         "description": "remove a tracked bit remote",
         "group": "ungrouped",
         "loadAspects": false
@@ -711,6 +788,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "remove",
     "aspectId": "teambit.component/remove",
+    "pattern": "remove <component-pattern>",
     "alias": "rm",
     "description": "untrack components from the workspace",
     "group": "component-development",
@@ -720,6 +798,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "rename",
     "aspectId": "teambit.component/renaming",
+    "pattern": "rename <current-name> <new-name>",
     "description": "change a component name",
     "group": "component-development",
     "remoteOp": true,
@@ -728,12 +807,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "reset",
     "aspectId": "teambit.component/snapping",
+    "pattern": "reset [component-pattern]",
     "description": "revert local tags and snaps to previous versions",
     "group": "version-control"
   },
   {
     "name": "resume-export",
     "aspectId": "teambit.scope/export",
+    "pattern": "resume-export <export-id> <remotes...>",
     "description": "EXPERIMENTAL. resume failed export",
     "group": "advanced",
     "private": true,
@@ -742,12 +823,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "revert",
     "aspectId": "teambit.component/checkout",
+    "pattern": "revert <component-pattern> <to>",
     "description": "replace component files with specified version while preserving current version",
     "group": "version-control"
   },
   {
     "name": "ripple",
     "aspectId": "teambit.cloud/ripple",
+    "pattern": "ripple <sub-command>",
     "description": "manage Ripple CI jobs on bit.cloud",
     "group": "collaborate",
     "remoteOp": true,
@@ -756,6 +839,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "errors",
         "aspectId": "teambit.cloud/ripple",
+        "pattern": "errors [job-id]",
         "description": "show build errors for a Ripple CI job (auto-detects current lane, or your last export when on main)",
         "group": "ungrouped",
         "remoteOp": true,
@@ -772,6 +856,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "log",
         "aspectId": "teambit.cloud/ripple",
+        "pattern": "log [job-id]",
         "description": "show job details and component build task summaries (auto-detects current lane, or your last export when on main)",
         "group": "ungrouped",
         "remoteOp": true,
@@ -780,6 +865,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "retry",
         "aspectId": "teambit.cloud/ripple",
+        "pattern": "retry [job-id]",
         "description": "retry a failed Ripple CI job (auto-detects current lane when no job-id given)",
         "group": "ungrouped",
         "remoteOp": true,
@@ -788,6 +874,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "stop",
         "aspectId": "teambit.cloud/ripple",
+        "pattern": "stop [job-id]",
         "description": "stop a running Ripple CI job (auto-detects current lane when no job-id given)",
         "group": "ungrouped",
         "remoteOp": true,
@@ -798,6 +885,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "run",
     "aspectId": "teambit.harmony/application",
+    "pattern": "run [app-name]",
     "alias": "c",
     "description": "start an application component locally",
     "group": "run-serve"
@@ -805,6 +893,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "run-action",
     "aspectId": "teambit.scope/scope",
+    "pattern": "run-action <action-name> <remote> <options>",
     "description": "run an action on a remote",
     "group": "advanced",
     "private": true,
@@ -813,6 +902,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "schema",
     "aspectId": "teambit.semantics/schema",
+    "pattern": "schema <pattern>",
     "alias": "api",
     "description": "display component API schema and type definitions",
     "group": "info-analysis",
@@ -820,6 +910,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "diff",
         "aspectId": "teambit.semantics/schema",
+        "pattern": "diff <component> <base-version> <compare-version>",
         "description": "show API changes between two versions of a component",
         "group": "info-analysis"
       }
@@ -828,36 +919,42 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "scope",
     "aspectId": "teambit.scope/scope",
+    "pattern": "scope <sub-command>",
     "description": "manage component scope names and assignments",
     "group": "component-config",
     "subCommands": [
       {
         "name": "fork",
         "aspectId": "teambit.scope/scope",
+        "pattern": "fork <original-scope> [new-scope] [pattern]",
         "description": "fork all components of the original-scope and refactor the source-code to use the new scope name",
         "group": "component-config"
       },
       {
         "name": "rename",
         "aspectId": "teambit.scope/scope",
+        "pattern": "rename <current-scope-name> <new-scope-name>",
         "description": "rename the scope name for all components with the specified 'current scope name'. if exported, create new components and delete the original ones",
         "group": "component-config"
       },
       {
         "name": "rename-owner",
         "aspectId": "teambit.scope/scope",
+        "pattern": "rename-owner <current-owner-name> <new-owner-name>",
         "description": "Renames the owner part of the scope-name for all components with the specified 'current owner name'",
         "group": "component-config"
       },
       {
         "name": "set",
         "aspectId": "teambit.scope/scope",
+        "pattern": "set <scope-name> [component-pattern]",
         "description": "Sets the scope for specified component/s. If no component is specified, sets the default scope of the workspace",
         "group": "component-config"
       },
       {
         "name": "trust",
         "aspectId": "teambit.scope/scope",
+        "pattern": "trust [action] [pattern]",
         "description": "manage which scopes are trusted to load aspects (envs, etc.) into the workspace's process",
         "group": "component-config",
         "loadAspects": false
@@ -867,12 +964,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "script",
     "aspectId": "teambit.workspace/scripts",
+    "pattern": "script [script-name]",
     "description": "run a script defined by the environment",
     "group": "development"
   },
   {
     "name": "search",
     "aspectId": "teambit.component/lister",
+    "pattern": "search <query...>",
     "description": "search for components by keyword in the local workspace and remote bit cloud",
     "group": "info-analysis",
     "remoteOp": true,
@@ -895,24 +994,28 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "set-peer",
     "aspectId": "teambit.dependencies/dependencies",
+    "pattern": "set-peer <component-id> <range>",
     "description": "configure component to always be installed as peer dependency",
     "group": "dependencies"
   },
   {
     "name": "show",
     "aspectId": "teambit.component/component",
+    "pattern": "show <component-name>",
     "description": "display component metadata, dependencies, and configuration",
     "group": "info-analysis"
   },
   {
     "name": "snap",
     "aspectId": "teambit.component/snapping",
+    "pattern": "snap [component-pattern]",
     "description": "create immutable component snapshots for development versions",
     "group": "version-control"
   },
   {
     "name": "snap-distance",
     "aspectId": "teambit.component/snapping",
+    "pattern": "snap-distance <component-id> [source-snap] [target-snap]",
     "description": "show common-snap and distance between two given snaps or between local and remote snaps",
     "group": "advanced",
     "private": true
@@ -920,6 +1023,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "start",
     "aspectId": "teambit.ui-foundation/ui",
+    "pattern": "start [component-pattern]",
     "alias": "c",
     "description": "launch the Bit development server",
     "group": "run-serve"
@@ -927,6 +1031,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "stash",
     "aspectId": "teambit.component/stash",
+    "pattern": "stash <sub-command>",
     "description": "temporarily save and restore component changes",
     "group": "version-control",
     "subCommands": [
@@ -939,6 +1044,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
       {
         "name": "load",
         "aspectId": "teambit.component/stash",
+        "pattern": "load [stash-id]",
         "alias": "pop",
         "description": "apply the changes according to the stash. if no stash-id provided, it loads the latest stash",
         "group": "version-control"
@@ -962,6 +1068,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "tag",
     "aspectId": "teambit.component/snapping",
+    "pattern": "tag [component-patterns...]",
     "alias": "t",
     "description": "create immutable component snapshots with semantic version tags",
     "group": "version-control",
@@ -976,6 +1083,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "test",
     "aspectId": "teambit.defender/tester",
+    "pattern": "test [component-pattern]",
     "alias": "at",
     "description": "run component tests",
     "group": "testing"
@@ -983,6 +1091,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "ui-build",
     "aspectId": "teambit.ui-foundation/ui",
+    "pattern": "ui-build [type]",
     "alias": "c",
     "description": "build production assets for deployment.",
     "group": "run-serve",
@@ -991,6 +1100,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "undeprecate",
     "aspectId": "teambit.component/deprecation",
+    "pattern": "undeprecate <id>",
     "description": "remove the deprecation status from a component",
     "group": "collaborate",
     "remoteOp": true,
@@ -999,6 +1109,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "uninstall",
     "aspectId": "teambit.workspace/install",
+    "pattern": "uninstall [packages...]",
     "alias": "un",
     "description": "remove dependencies from workspace",
     "group": "dependencies"
@@ -1006,12 +1117,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "unset-peer",
     "aspectId": "teambit.dependencies/dependencies",
+    "pattern": "unset-peer <component-id>",
     "description": "remove always-peer configuration from component",
     "group": "dependencies"
   },
   {
     "name": "unuse",
     "aspectId": "teambit.workspace/workspace",
+    "pattern": "unuse <component-id>",
     "description": "unset aspects in the workspace config (opposite of \"use\" command)",
     "group": "workspace-setup",
     "private": true,
@@ -1020,6 +1133,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "update",
     "aspectId": "teambit.workspace/install",
+    "pattern": "update [package-patterns...]",
     "alias": "up",
     "description": "update workspace dependencies to newer versions",
     "group": "dependencies"
@@ -1027,6 +1141,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "use",
     "aspectId": "teambit.workspace/workspace",
+    "pattern": "use <component-id>",
     "description": "set aspects in the workspace/scope config to make them loadable by the workspace/scope",
     "group": "workspace-setup",
     "private": true,
@@ -1035,6 +1150,7 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "validate",
     "aspectId": "teambit.defender/validator",
+    "pattern": "validate [component-pattern]",
     "description": "run type-checking, linting, and testing in sequence",
     "group": "testing"
   },
@@ -1061,12 +1177,14 @@ export const COMMAND_INDEX: CommandIndexEntry[] = [
   {
     "name": "why",
     "aspectId": "teambit.dependencies/dependencies",
+    "pattern": "why <dependency-name>",
     "description": "find components that use the specified dependency",
     "group": "dependencies"
   },
   {
     "name": "ws-config",
     "aspectId": "teambit.workspace/workspace-config-files",
+    "pattern": "ws-config <sub-command>",
     "alias": "workspace-config",
     "description": "generate IDE configuration files",
     "group": "workspace-tools",

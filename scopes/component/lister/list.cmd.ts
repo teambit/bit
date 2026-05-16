@@ -25,6 +25,7 @@ export class ListCmd implements Command {
   alias = listCommand.alias;
   options = listCommand.options;
   loader = listCommand.loader;
+  loadAspects = listCommand.loadAspects;
   skipWorkspace = listCommand.skipWorkspace;
   remoteOp = listCommand.remoteOp;
 

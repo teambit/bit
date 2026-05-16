@@ -74,15 +74,20 @@ export class CLIMain {
   // The underlying Slot stores one entry per aspect (keyed by harmony.current).
   // `slot.register(value)` overwrites that entry, so two `cli.register` calls from
   // the same provider would drop the first registration. We snapshot the slot
-  // before delegating, then merge any pre-existing commands back in.
+  // before delegating, then merge any pre-existing commands back in — minus any
+  // lazy stubs whose command name now has a real handler.
   private appendToSlot(commands: CommandList): void {
     const before = new Map(this.commandsSlot.map);
     this.commandsSlot.register(commands);
+    const newNames = new Set(commands.map((c) => getCommandId(c.name)));
     for (const [id, post] of this.commandsSlot.map) {
       const prev = before.get(id);
       if (prev === post) continue;
       if (prev && prev.length > 0) {
-        this.commandsSlot.map.set(id, [...prev, ...post]);
+        const filteredPrev = prev.filter(
+          (c: any) => !(isLazyStub(c) && newNames.has(getCommandId(c.name))),
+        );
+        this.commandsSlot.map.set(id, [...filteredPrev, ...post]);
       }
       return;
     }
@@ -233,10 +238,18 @@ export class CLIMain {
     // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
     const { COMMAND_INDEX } = require('@teambit/bit/dist/command-index.generated.js');
     for (const entry of COMMAND_INDEX as Array<any>) {
+      // Some aspects are pulled in as transitive DI deps of the eagerly-loaded
+      // root aspects, so their real commands are already registered before
+      // we get here. Skip — and don't append a stub that would shadow the
+      // real handler in `commandsByAspect` / `commandsSlot.values()`.
+      const existing = this.commandsSlot.map.get(entry.aspectId) || [];
+      const alreadyReal = existing.some(
+        (c: any) => !c.__lazyStub && getCommandId(c.name) === entry.name,
+      );
+      if (alreadyReal) continue;
       const stub = this.makeLazyStub(entry, harmony);
       // Bypass the slot accumulator — we know each stub is from a distinct
       // aspect id, and we want it keyed by that aspect, not by `harmony.current`.
-      const existing = this.commandsSlot.map.get(entry.aspectId) || [];
       this.commandsSlot.map.set(entry.aspectId, [...existing, stub]);
     }
   }
@@ -246,7 +259,13 @@ export class CLIMain {
     const slot = this.commandsSlot;
     const self = this;
     const stub: any = {
-      name: entry.name,
+      // `entry.pattern` preserves the positional-arg syntax (e.g.
+      // `show <component-name>`) that yargs needs. Without it, lazy
+      // commands reject their own arguments as "Unknown argument".
+      name: entry.pattern || entry.name,
+      // Marker so `appendToSlot` can drop the stub once the real
+      // handler is registered. See `isLazyStub`.
+      __lazyStub: true,
       description: entry.description ?? '',
       extendedDescription: '',
       group: entry.group ?? 'ungrouped',
@@ -345,4 +364,8 @@ CLIAspect.addRuntime(CLIMain);
 
 function isFullUrl(url: string) {
   return url.startsWith('http://') || url.startsWith('https://');
+}
+
+function isLazyStub(cmd: unknown): boolean {
+  return Boolean((cmd as any)?.__lazyStub);
 }

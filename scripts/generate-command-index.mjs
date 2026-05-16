@@ -32,6 +32,11 @@ const SLOT_SKIP_DIRS = new Set([
 // While regenerating, the committed file may be stale or empty — don't let
 // the bootstrap assertion fail mid-run.
 process.env.BIT_SKIP_COMMAND_INDEX_ASSERT = '1';
+// Eager mode loads every aspect's provider, so the live slot contains the
+// real Command instances (with their full pattern + descriptor fields like
+// `loadAspects: false`). The lazy path leaves uninvoked aspects as bare
+// stubs, which would drop descriptor metadata from the generated index.
+process.env.BIT_EAGER_LOAD = '1';
 
 const repoRequire = createRequire(join(REPO_ROOT, 'package.json'));
 // Install the require-hook (.scss/.css/etc → {}) BEFORE importing @teambit/bit.
@@ -73,7 +78,10 @@ function commandName(name) {
 function toEntry(aspectId, cmd) {
   // Preserve the field order from the interface in command-index.generated.ts
   // — JS object insertion order is what JSON.stringify emits.
-  const entry = { name: commandName(cmd.name), aspectId };
+  const bare = commandName(cmd.name);
+  const full = String(cmd.name).trim();
+  const entry = { name: bare, aspectId };
+  if (full !== bare) entry.pattern = full;
   if (cmd.alias) entry.alias = String(cmd.alias);
   if (cmd.description) entry.description = String(cmd.description);
   if (cmd.group) entry.group = String(cmd.group);
@@ -103,6 +111,8 @@ function renderCommandIndex(allEntries) {
 export interface CommandIndexEntry {
   /** Command name (first word of \`Command.name\` — strips the \`<arg>\` / \`[arg]\` parts). */
   name: string;
+  /** Full \`Command.name\` (including positional patterns like \`<arg>\` / \`[arg...]\`), only set when it differs from \`name\`. The lazy stub trampoline uses this so yargs accepts positional arguments. */
+  pattern?: string;
   /** Aspect id that registered the command. */
   aspectId: string;
   alias?: string;

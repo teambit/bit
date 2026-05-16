@@ -22,6 +22,11 @@ export const listCommand: CommandDescriptor = {
   remoteOp: true,
   skipWorkspace: true,
   loader: true,
+  // `list` only reads bitmap + scope cache; it doesn't need workspace
+  // aspects resolved per component. Skipping `loadAspects` lets the
+  // `workspace.cli.registerOnStart` hook exit early, which saves a
+  // significant chunk on workspaces with many configured extensions.
+  loadAspects: false,
   options: [
       ['i', 'ids', 'show only component ids, unformatted'],
       ['l', 'local-scope', 'show only components stored in the local scope, including indirect dependencies'],
