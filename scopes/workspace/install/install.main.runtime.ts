@@ -108,6 +108,13 @@ export type WorkspaceInstallOptions = {
   writeConfigFiles?: boolean;
   skipPrune?: boolean;
   dependenciesGraph?: DependenciesGraph;
+  /**
+   * When true, attempt to reconstruct the lockfile from each workspace component's
+   * stored dependency graph before running the package manager. Graphs are fetched for
+   * every component listed in the bitmap, merged, and handed to the package manager the
+   * same way `bit import` does for the components it writes.
+   */
+  restoreFromDependenciesGraph?: boolean;
   allowScripts?: Record<string, boolean>;
 };
 
@@ -392,11 +399,12 @@ export class InstallMain {
       }
     );
 
+    const dependenciesGraph = await this.resolveDependenciesGraph(options, { hasRootComponents });
     const pmInstallOptions: PackageManagerInstallOptions = {
       ...calcManifestsOpts,
       autoInstallPeers: this.dependencyResolver.config.autoInstallPeers,
       dedupePeers: this.dependencyResolver.config.dedupePeers,
-      dependenciesGraph: options?.dependenciesGraph,
+      dependenciesGraph,
       includeOptionalDeps: options?.includeOptionalDeps,
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
       allowScripts: this.dependencyResolver.getAllowedScripts(),
@@ -514,6 +522,39 @@ export class InstallMain {
   private shouldClearCacheOnInstall(): boolean {
     const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
     return nonLoadedEnvs.length > 0;
+  }
+
+  private async resolveDependenciesGraph(
+    options: ModulesInstallOptions | undefined,
+    context: { hasRootComponents: boolean }
+  ): Promise<DependenciesGraph | undefined> {
+    if (options?.dependenciesGraph) return options.dependenciesGraph;
+    if (!options?.restoreFromDependenciesGraph) return undefined;
+    // The package manager only seeds the lockfile from a supplied graph when the workspace
+    // has `rootComponents` enabled (see PnpmPackageManager.install). Without that, --restore
+    // would silently no-op and re-resolve everything from manifest specifiers, so we bail
+    // out explicitly instead of letting the user think the graph was applied.
+    if (!context.hasRootComponents) {
+      this.logger.console(
+        chalk.yellow(
+          '--restore requires "rootComponents: true" in the dependency-resolver config; falling back to a regular install.'
+        )
+      );
+      return undefined;
+    }
+    // --restore is an explicit opt-in, so bypass the DEPS_GRAPH feature toggle that would
+    // otherwise make this return undefined on workspaces that haven't enabled the flag.
+    const graph = await this.workspace.scope.getDependenciesGraphByComponentIds(this.workspace.listIds(), {
+      ignoreFeatureToggle: true,
+    });
+    if (!graph) {
+      this.logger.console(
+        chalk.yellow(
+          '--restore was requested but no workspace component has a stored dependency graph. Falling back to a regular install.'
+        )
+      );
+    }
+    return graph;
   }
 
   /**
