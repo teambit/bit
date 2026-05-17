@@ -243,11 +243,10 @@ export class DoctorMain {
     if (fileName === '.') {
       return this._getDefaultFileName();
     }
-    let finalFileName = fileName;
-    if (getExt(fileName) !== 'tar' && getExt(fileName) !== 'tar.gz') {
-      finalFileName = `${this.getWithoutExt(finalFileName)}.tar`;
+    if (fileName.endsWith('.tar') || fileName.endsWith('.tar.gz')) {
+      return fileName;
     }
-    return finalFileName;
+    return `${this.getWithoutExt(fileName)}.tar`;
   }
 
   private _getDefaultFileName() {
@@ -305,8 +304,11 @@ export class DoctorMain {
       return packExamineResults(pack);
     }
 
+    const doctorResultsRegex = /^doctor-results-\d+\.tar(\.gz)?$/;
     const ignore = (fileName: string) => {
-      if (fileName === '.DS_Store') return true;
+      const baseName = path.basename(fileName);
+      if (baseName === '.DS_Store') return true;
+      if (doctorResultsRegex.test(baseName)) return true;
       if (
         !includeNodeModules &&
         (fileName.startsWith(`node_modules${path.sep}`) || fileName.includes(`${path.sep}node_modules${path.sep}`))
