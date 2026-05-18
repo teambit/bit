@@ -33,6 +33,20 @@ The workspace is defined by `workspace.jsonc`. The owner and default scope are s
 
 ---
 
+## Bit Cloud MCP
+
+This workspace ships with a `.mcp.json` that wires up the **Bit Cloud MCP** server (`https://mcp.bit.cloud/mcp`). When the MCP is connected and authenticated (the agent will prompt for OAuth on first use), it is the fastest way to discover and inspect components that live in remote scopes — prefer it over reading source files or installing packages just to look around.
+
+Key tools to reach for:
+
+- **`read_scopes`** — list scopes and their components for a given `owner` (read from `workspace.jsonc`). Prefer this over broad `search` for discovery.
+- **`read_components`** — structured type signatures, dependencies, and metadata for one or more remote components, in a single call. API references are included by default.
+- **`search`** — keyword search across remote scopes.
+
+When in doubt, ask the MCP before scaffolding anything new. If the MCP is not connected, fall back to the local `bit` CLI commands (`bit list`, `bit show`, `bit schema`).
+
+---
+
 ## Project Orientation
 
 ```bash
@@ -42,14 +56,16 @@ bit status                           # check for pending changes
 bit templates                        # see what generators are available
 ```
 
+When using the Bit Cloud MCP, always pass the `owner` from `workspace.jsonc`. Prefer `read_scopes` over `search` for broader discovery.
+
 ---
 
 ## Understanding Component APIs
 
 When you need to understand how to **use** a component (its props, function signatures, return types), prefer structured API data over reading source files:
 
+- **Remote components:** use `read_components` (Bit Cloud MCP) — returns structured type signatures, dependencies, and metadata in a single call. API references are included by default. As a CLI fallback, run `bit show <owner>.<scope>/<name>`.
 - **Local workspace components:** run `bit schema <component-id>` — returns exported types, function signatures, and class methods.
-- **Remote components:** run `bit show <owner>.<scope>/<name>` to inspect metadata and dependencies.
 
 For understanding implementation details (how something works internally), read the source directly.
 
@@ -92,7 +108,7 @@ bit check-types                      # TypeScript type checker
 bit app list
 ```
 
-Use `bit import` to fetch remote apps and run them locally.
+Use the Bit Cloud MCP to list remote apps in a given scope. Use `bit import` to fetch remote apps and run them locally.
 
 ---
 
@@ -106,16 +122,16 @@ render → identify gap → create ONE component → render again
 
 ### Step-by-step
 
-1. **Look before you create.** Search the workspace and remote scopes first:
+1. **Look before you create.** Search the workspace and the Bit Cloud MCP first:
 
    ```bash
-   bit search <keyword>
-   bit show <owner>.<scope>/<name>
+   bit list                             # what's already local
+   bit show <owner>.<scope>/<name>      # inspect a candidate
    ```
 
-   A component may already exist locally or remotely. Don't duplicate.
+   And via the MCP: `read_scopes` for the workspace `owner` to see existing components, or `search` for keyword discovery. A component may already exist locally or remotely. Don't duplicate.
 
-2. **Identify the entry point.** Depending on what you're building, the entry point could be an app or a feature. List what exists in the scope before creating anything new.
+2. **Identify the entry point.** Depending on what you're building, the entry point could be an app or a feature. Use the MCP (`read_scopes` / `read_components`) to list what exists in the scope before creating anything new.
 
 3. **Create one component.** Scaffold it, wire it in, verify it compiles and renders.
 
@@ -299,6 +315,6 @@ export { User } from './user.js';
 | Pushing to the main lane                                   | Always create a lane, snap, then export                                                                  |
 | Using git to version components                            | Bit manages component versions — use `bit snap` / `bit export`                                           |
 | Guessing a component ID                                    | Check `package.json` under `componentId` or use `bit list`                                               |
-| Creating a component that already exists                   | Always run `bit search` first                                                                            |
+| Creating a component that already exists                   | Always run `bit list` and check the Bit Cloud MCP (`read_scopes` / `search`) first                       |
 | Using `npm install`, `yarn`, or `pnpm`                     | Use `bit install`                                                                                        |
 | Using `tsc` or `npx tsc` to check types                    | Use `bit check-types` or `bit test`                                                                      |
