@@ -833,9 +833,21 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     // build the harmony view + fire slots directly off it. Routing through
     // the unified loader would re-trigger `consumer.loadComponents` for the
     // same id and recurse.
-    const component = legacyComponent
-      ? await this.workspaceLoaderHost.buildAndLoadFromLegacy(legacyComponent)
-      : await this.unifiedLoader.get(componentId, { phase: DEFAULT_PHASE });
+    // Convert the unified loader's `ComponentNotFound` to the legacy
+    // `ComponentNotFound` so callers across the codebase (build-graph-ids,
+    // diff command, status command, etc.) that `instanceof`-check the
+    // legacy class for tolerance branches continue to work.
+    let component: Component;
+    try {
+      component = legacyComponent
+        ? await this.workspaceLoaderHost.buildAndLoadFromLegacy(legacyComponent)
+        : await this.unifiedLoader.get(componentId, { phase: DEFAULT_PHASE });
+    } catch (err: any) {
+      if (err?.name === 'ComponentNotFound' && !(err instanceof LegacyComponentNotFound)) {
+        throw new LegacyComponentNotFound(componentId.toString());
+      }
+      throw err;
+    }
     // When loading a component if it's an env make sure to load it as aspect as well
     // We only want to try load it as aspect if it's the first time we load the component
     const tryLoadAsAspect = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
@@ -1270,14 +1282,16 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   async getMany(
     ids: Array<ComponentID>,
     _loadOpts?: ComponentLoadOptions,
-    throwOnFailure = true
+    _throwOnFailure = true
   ): Promise<Component[]> {
     this.logger.debug(`getMany, started. ${ids.length} components`);
-    const { components } = await this.unifiedLoader.getMany(
-      ids,
-      { phase: DEFAULT_PHASE },
-      { throwOnMissing: throwOnFailure }
-    );
+    // Pre-rewrite WCL.getMany silently dropped missing ids from the result
+    // (it threw only on invalid components, not on missing ones). Callers
+    // like `importAndGetMany` and `resolveEnvIdWithPotentialVersionForConfig`
+    // are written for that semantics — they check `comps[0]` and throw their
+    // own contextual error when it's undefined. The unified loader's
+    // `throwOnMissing` matches this by being `false`.
+    const { components } = await this.unifiedLoader.getMany(ids, { phase: DEFAULT_PHASE }, { throwOnMissing: false });
     this.logger.debug(`getMany, completed. ${components.length} components`);
     return components;
   }
