@@ -134,8 +134,14 @@ export class WorkspaceLoaderHost implements LoaderHost {
    * `getDevFilesForConsumerComp` (dev-files), both of which already hold a
    * mid-load legacy and need the harmony view + slot data without paying for
    * a full unified load (which would re-trigger `consumer.loadComponents` for
-   * the same id and recurse). No cache write — the caller's existing legacy
-   * cache flow is the source of truth.
+   * the same id and recurse).
+   *
+   * Publishes the built component to the unified cache so that subsequent
+   * `workspace.get(id)` calls (e.g. for core aspects whose legacy form is
+   * loaded during bootstrap by the subscriber) hit the cache. Without this,
+   * core aspects appear as ComponentNotFound when callers like
+   * `Workspace.setEnvToComponents` later ask for them — they're not in the
+   * workspace bitmap and not in scope.
    */
   async buildAndLoadFromLegacy(legacy: ConsumerComponentType): Promise<Component> {
     const id = legacy.id;
@@ -156,6 +162,9 @@ export class WorkspaceLoaderHost implements LoaderHost {
       ? new WorkspaceComponent(fromScope.id, fromScope.head, state, fromScope.tags, this.workspace)
       : new WorkspaceComponent(id, null, state, new TagMap(), this.workspace);
     await this.executeLoadSlot(component);
+    if (this.unifiedLoader) {
+      this.unifiedLoader.publish(component.id, 'aspects', component);
+    }
     return component;
   }
 
