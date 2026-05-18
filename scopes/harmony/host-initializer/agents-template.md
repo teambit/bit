@@ -12,15 +12,24 @@ Bit is a composable development platform where every piece of functionality is a
 
 Not all components are UI widgets. In Bit, a "component" can be any of these:
 
-| Type                 | What it is                                                                                                  | Example                              |
-| -------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| **Entity**           | Plain domain object — defines the shape and behavior of a domain model. No React, no side effects.          | `entities/user`, `entities/order`    |
-| **Hook**             | Encapsulates data fetching, mutations, or stateful logic for a domain. Consumed by UI components and pages. | `hooks/use-user`, `hooks/use-orders` |
-| **UI component**     | Reusable visual element, typically stateless or lightly stateful.                                           | `ui/button`, `ui/card`               |
-| **Feature / Aspect** | Self-contained domain slice — owns its entities, hooks, pages, and backend logic.                           | `customers`, `billing`               |
-| **App**              | A standard deployable application — a React frontend, Node.js server, etc.                                  | `my-react-app`, `my-node-server`     |
+| Type                 | What it is                                                                                                                                                                                          | Example                              |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| **Entity**           | Plain domain object — defines the shape and behavior of a domain model. No React, no side effects.                                                                                                  | `entities/user`, `entities/order`    |
+| **Hook**             | Encapsulates data fetching, mutations, or stateful logic for a domain. Consumed by UI components and pages.                                                                                         | `hooks/use-user`, `hooks/use-orders` |
+| **UI component**     | Reusable visual element, typically stateless or lightly stateful.                                                                                                                                   | `ui/button`, `ui/card`               |
+| **Feature / Aspect** | Self-contained domain slice — owns its entities, hooks, pages, and backend logic.                                                                                                                   | `customers`, `billing`               |
+| **App**              | A standard deployable application — a React frontend, Node.js server, etc.                                                                                                                          | `my-react-app`, `my-node-server`     |
+| **Platform**         | The app-level composition that wires aspects together into a running system. Often named `*-platform`. Not a framework concept — just the component responsible for composing aspects into the app. | `my-platform`                        |
+| **Platform aspect**  | A special aspect that exposes the registration API other aspects use to plug in (routes, backend servers, etc.). Lives as its own aspect component, typically named `platform-aspect`.              | `platform-aspect`                    |
 
-Understanding which type you're working with matters because it shapes the dependency chain. A typical app looks like this:
+Understanding which type you're working with matters because it shapes the dependency chain. A typical full chain of a platform looks like:
+
+```
+Platform  →  Feature/Aspect  →  Page  →  Hook  →  Entity
+                                      ↘  UI component
+```
+
+For an app, the blueprint looks like:
 
 ```
 App  →  Page  →  Hook (optional)  →  Entity (optional)
@@ -78,7 +87,7 @@ bit status                           # workspace health + pending changes
 bit start                            # dev server (default port 3000)
 bit run [app_name]                   # run the app
 bit list                             # all locally tracked components (do not pass args)
-bit search <query>                   # search components locally and on remote scopes
+bit search <query>                   # search components locally and on remote scopes (CLI fallback — prefer MCP for remote)
 bit show <owner>.<scope>/<name>      # inspect a specific component
 bit schema <component-id>            # structured API of a local component
 bit import "<owner>.<scope>/**"      # import all components from a remote scope
@@ -86,18 +95,22 @@ bit templates                        # list available generator templates
 bit create <template> <name>         # scaffold a new component
 bit install [pkg1] [pkg2] ...        # install package dependencies
 bit compile                          # manual compile (usually auto — use for troubleshooting)
-bit test                             # run tests
-bit lint                             # run linter
-bit check-types                      # TypeScript type checker
+bit validate                         # lint + type-check + tests (fast build) — preferred check
+bit test                             # run tests only
+bit lint                             # run linter only
+bit check-types                      # TypeScript type checker only
 ```
 
+> **Never run `bit build`** unless absolutely necessary. Always use `bit validate` instead — it's faster and sufficient.
+>
 > **Always use `bit install`** to install packages. Never use `npm install`, `yarn`, or `pnpm` directly — unless the workspace is configured with `externalPackageManager` mode in `workspace.jsonc`, in which case use your configured package manager.
 >
-> **Use Bit for type checking and testing.** Never use `tsc` or `npx tsc` directly. Scope to specific components when useful:
+> **Use Bit for type checking and testing.** Never use `tsc` or `npx tsc` directly. Use `bit validate` for a full check, or scope to specific components:
 >
 > ```bash
 > bit check-types "[component-id1, component-id2]"
 > bit test "[component-id1, component-id2]"
+> bit validate "[component-id1, component-id2]"
 > ```
 
 ---
@@ -131,16 +144,14 @@ render → identify gap → create ONE component → render again
 
    And via the MCP: `read_scopes` for the workspace `owner` to see existing components, or `search` for keyword discovery. A component may already exist locally or remotely. Don't duplicate.
 
-2. **Identify the entry point.** Depending on what you're building, the entry point could be an app or a feature. Use the MCP (`read_scopes` / `read_components`) to list what exists in the scope before creating anything new.
+2. **Identify the entry point.** Depending on what you're building, the entry point could be a platform, app, or feature/aspect. Use the MCP (`read_scopes` / `read_components`) to list what exists in the scope before creating anything new.
 
 3. **Create one component.** Scaffold it, wire it in, verify it compiles and renders.
 
 4. **Validate before moving on:**
 
    ```bash
-   bit status
-   bit check-types
-   bit test
+   bit validate
    ```
 
 5. **Identify the next gap.** Only then decide what the next component should be.
@@ -172,7 +183,7 @@ Bit resolves **local workspace components** over their installed package version
 When modifying any component, import every component in the chain from the top down to your target:
 
 ```
-App  →  Feature/Aspect  →  Page  →  UI component
+Platform  →  App  →  Feature/Aspect  →  Page  →  UI component
 ```
 
 You don't always need the full chain — only the layers in the dependency path of your change. But every layer between the entry point and your target must be local. If any layer in between is still installed as a package (not local), the app will ignore your changes to the layers below it.
@@ -180,7 +191,8 @@ You don't always need the full chain — only the layers in the dependency path 
 **Examples:**
 
 - Changing a UI component used by a feature page → import the feature, the page, and the UI component.
-- Changing a feature's backend logic → import the app and the feature/aspect.
+- Changing a feature's backend logic → import the platform, the app, and the feature/aspect.
+- Changing the platform itself → import the platform only (everything downstream will pick it up once local).
 
 ### Finding the component ID
 
@@ -217,7 +229,7 @@ Git does not manage component versions in a Bit workspace — use Bit for versio
 
 ```bash
 bit lane create <your-lane-name>     # create a new lane
-bit status                           # confirm no pending issues
+bit validate                         # confirm no build errors first
 bit snap --message "describe change" # persist component versions
 bit export                           # push lane to remote
 ```
@@ -306,15 +318,16 @@ export { User } from './user.js';
 
 ## Common Mistakes to Avoid
 
-| Mistake                                                    | Correct approach                                                                                         |
-| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Creating multiple components upfront                       | Create one, validate, then decide what's next                                                            |
-| Modifying an installed (node_modules) component            | Import it with `bit import` first                                                                        |
-| Importing only the target component but not its dependents | Import the full chain top-down: app → feature → page → component                                         |
-| Treating all components as UI widgets                      | Understand the type first — app, feature/aspect, hook, entity, or UI component — it determines the chain |
-| Pushing to the main lane                                   | Always create a lane, snap, then export                                                                  |
-| Using git to version components                            | Bit manages component versions — use `bit snap` / `bit export`                                           |
-| Guessing a component ID                                    | Check `package.json` under `componentId` or use `bit list`                                               |
-| Creating a component that already exists                   | Always run `bit list` and check the Bit Cloud MCP (`read_scopes` / `search`) first                       |
-| Using `npm install`, `yarn`, or `pnpm`                     | Use `bit install`                                                                                        |
-| Using `tsc` or `npx tsc` to check types                    | Use `bit check-types` or `bit test`                                                                      |
+| Mistake                                                    | Correct approach                                                                                                   |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Creating multiple components upfront                       | Create one, validate, then decide what's next                                                                      |
+| Modifying an installed (node_modules) component            | Import it with `bit import` first                                                                                  |
+| Importing only the target component but not its dependents | Import the full chain top-down: platform → app → feature → page → component                                        |
+| Treating all components as UI widgets                      | Understand the type first — platform, app, feature/aspect, hook, entity, or UI component — it determines the chain |
+| Running `bit build`                                        | Use `bit validate` instead — faster and sufficient                                                                 |
+| Pushing to the main lane                                   | Always create a lane, snap, then export                                                                            |
+| Using git to version components                            | Bit manages component versions — use `bit snap` / `bit export`                                                     |
+| Guessing a component ID                                    | Check `package.json` under `componentId` or use `bit list`                                                         |
+| Creating a component that already exists                   | Always run `bit list` and check the Bit Cloud MCP (`read_scopes` / `search`) first                                 |
+| Using `npm install`, `yarn`, or `pnpm`                     | Use `bit install`                                                                                                  |
+| Using `tsc` or `npx tsc` to check types                    | Use `bit validate`, `bit check-types`, or `bit test`                                                               |
