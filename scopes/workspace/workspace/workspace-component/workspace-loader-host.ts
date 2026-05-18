@@ -184,7 +184,6 @@ export class WorkspaceLoaderHost implements LoaderHost {
       // but not slot data.
       if (this.loadingDepth === 1) {
         await this.pass2LoadAspectsInOrder(pass1.workspaceComponents, pass1.scopeComponents, pass1.envIdByCompKey);
-        await this.pass3FireSlotsForTheRest(pass1.workspaceComponents);
         await this.applyPostLoadIssuesAndWarnings(pass1.workspaceComponents);
         for (const c of pass1.workspaceComponents) c.loadedPhase = 'aspects';
         for (const c of pass1.scopeComponents) c.loadedPhase = 'aspects';
@@ -382,31 +381,38 @@ export class WorkspaceLoaderHost implements LoaderHost {
     return compact(results);
   }
 
-  // === Pass 2: SCC-ordered env/aspect load =========================
+  // === Pass 2: SCC-ordered slot fire + aspect registration =========
+  //
+  // Fires `executeLoadSlot` for every workspace component in SCC order
+  // (envs-before-consumers). After all slots have fired, identifies which
+  // components are aspects/envs (now that `envsData.data.type` is populated
+  // by `envs.calcDescriptor`) and registers them via `workspace.loadAspects`.
+  //
+  // The pre-rewrite WCL used a similar two-step: slot-fire per group, then
+  // `loadCompsAsAspects` per group. We collapse to a single `loadAspects`
+  // call at the end because the registration is idempotent and a single
+  // batch is simpler. The env-first slot ordering is preserved via SCC.
 
   private async pass2LoadAspectsInOrder(
     workspaceComponents: Component[],
     scopeComponents: Component[],
     envIdByCompKey: Map<string, string | undefined>
   ): Promise<void> {
-    const all = workspaceComponents.concat(scopeComponents);
-    const candidates = all.filter((c) => this.shouldLoadAsAspect(c));
-    if (!candidates.length) return;
+    if (!workspaceComponents.length && !scopeComponents.length) return;
 
-    const groups = this.sccOrderByEnv(candidates, envIdByCompKey);
+    const groups = this.sccOrderByEnv(workspaceComponents, envIdByCompKey);
 
-    // Fire slots in SCC order; within a group, parallel.
+    // Slot-fire in SCC order; within a group, parallel.
     for (const group of groups) {
-      await Promise.all(
-        group.map(async (comp) => {
-          if (workspaceComponents.includes(comp)) {
-            await this.executeLoadSlot(comp);
-          }
-        })
-      );
+      await Promise.all(group.map((comp) => this.executeLoadSlot(comp)));
     }
 
-    const aspectIds = candidates.map((c) => c.id.toString());
+    // Now that envsData.type is populated, identify aspect-typed components
+    // (workspace + scope) and register them as aspects.
+    const all = workspaceComponents.concat(scopeComponents);
+    const aspectIds = all.filter((c) => this.shouldLoadAsAspect(c)).map((c) => c.id.toString());
+    if (!aspectIds.length) return;
+
     try {
       await this.workspace.loadAspects(aspectIds, true, 'self loading aspects', {
         useScopeAspectsCapsule: true,
@@ -526,19 +532,6 @@ export class WorkspaceLoaderHost implements LoaderHost {
     }
 
     return sccs;
-  }
-
-  // === Pass 3: parallel slot fire for the rest =====================
-
-  private async pass3FireSlotsForTheRest(components: WorkspaceComponent[]): Promise<void> {
-    await pMapPool(
-      components,
-      async (comp) => {
-        if (comp.loadedPhase === 'aspects') return; // pass 2 already did this one
-        await this.executeLoadSlot(comp);
-      },
-      { concurrency: concurrentComponentsLimit() }
-    );
   }
 
   // === executeLoadSlot — lifted from WorkspaceComponentLoader =======
