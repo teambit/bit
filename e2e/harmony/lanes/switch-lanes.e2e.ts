@@ -231,7 +231,7 @@ describe('bit lane command', function () {
       helper.command.export();
 
       helper.scopeHelper.getClonedWorkspace(originalWorkspace);
-      helper.command.switchLocalLane('main');
+      helper.command.switchLocalLane('main', '--skip-fetch');
       helper.command.import();
     });
     it('should not make the component available on main', () => {
