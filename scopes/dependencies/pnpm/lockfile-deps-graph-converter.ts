@@ -356,14 +356,18 @@ export async function convertGraphToLockfile(
             }
           );
         } catch (err) {
-          // A workspace-component package with a missing resolution and a
-          // snap-version that was never published surfaces here as a
-          // registry NoMatchingVersionError. The graph itself is unusable
-          // for this pkgId, but pnpm can re-resolve the dep from the
-          // installing manifest's specifier — so scrub the pkgId from the
-          // generated lockfile and continue. Re-throw for any other failure
-          // (a registry pkg missing means the graph is genuinely broken).
-          if (graph.packages.get(pkgToResolve.pkgId)?.component != null) {
+          // A workspace-component package with a missing resolution whose
+          // snap-version was never published surfaces here as pnpm's
+          // ERR_PNPM_NO_MATCHING_VERSION. The graph itself is unusable for
+          // this pkgId, but pnpm can re-resolve the dep from the installing
+          // manifest's specifier — so scrub the pkgId from the generated
+          // lockfile and continue. Re-throw every other error code (network,
+          // auth, 5xx, even FETCH_404 since some registries return 404 on
+          // auth failures) so real install failures aren't silently masked.
+          if (
+            (err as { code?: string }).code === 'ERR_PNPM_NO_MATCHING_VERSION' &&
+            graph.packages.get(pkgToResolve.pkgId)?.component != null
+          ) {
             failedWorkspaceComponentPkgs.add(pkgToResolve.pkgId);
             return;
           }

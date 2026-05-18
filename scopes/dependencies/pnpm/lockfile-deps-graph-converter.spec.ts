@@ -827,7 +827,9 @@ describe('convertGraphToLockfile on invalid graph', () => {
       },
       rootDir: process.cwd(),
       resolve: () => {
-        throw new Error('ERR_PNPM_NO_MATCHING_VERSION');
+        const err = new Error('No matching version found');
+        (err as Error & { code: string }).code = 'ERR_PNPM_NO_MATCHING_VERSION';
+        throw err;
       },
     });
     expect(Object.keys(lockfile.packages!).sort()).to.eql(['foo@1.0.0']);
@@ -863,6 +865,46 @@ describe('convertGraphToLockfile on invalid graph', () => {
       caught = err as Error;
     }
     expect(caught?.message).to.equal('boom');
+  });
+
+  // Narrowing guardrail: even for a component-flagged pkg, only
+  // ERR_PNPM_NO_MATCHING_VERSION should be swallowed. A network/auth/5xx
+  // failure must propagate so a real outage isn't silently masked as a
+  // graph-recovery success.
+  it('should re-throw non-NoMatchingVersion errors even for component pkgs', async () => {
+    const packages: PackagesMap = new Map([
+      [
+        '@bitdev/react.app-types.vite-react@0.0.0-df1917dc',
+        { component: { scope: 'bitdev.react', name: 'app-types/vite-react' } } as any,
+      ],
+      ['foo@1.0.0', { resolution: { integrity: 'sha512-aaa' } } as any],
+    ]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0', lifecycle: 'runtime' }],
+      },
+      { id: 'foo@1.0.0', neighbours: [{ id: '@bitdev/react.app-types.vite-react@0.0.0-df1917dc' }] },
+      { id: '@bitdev/react.app-types.vite-react@0.0.0-df1917dc', neighbours: [] },
+    ];
+    let caught: Error | undefined;
+    try {
+      await convertGraphToLockfile(new DependenciesGraph(new DependenciesGraph({ packages, edges })), {
+        manifests: {
+          [path.resolve('comps/comp1')]: { dependencies: { foo: '1.0.0' } },
+        },
+        rootDir: process.cwd(),
+        resolve: () => {
+          const err = new Error('Connect ETIMEDOUT');
+          (err as Error & { code: string }).code = 'ERR_PNPM_META_FETCH_FAIL';
+          throw err;
+        },
+      });
+    } catch (err) {
+      caught = err as Error;
+    }
+    expect(caught?.message).to.equal('Connect ETIMEDOUT');
+    expect((caught as Error & { code: string }).code).to.equal('ERR_PNPM_META_FETCH_FAIL');
   });
 
   it('should throw an error if resolution is missing', async () => {
