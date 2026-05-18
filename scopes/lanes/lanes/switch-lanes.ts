@@ -92,9 +92,13 @@ export class LaneSwitcher {
       await this.populatePropsAccordingToDefaultLane();
       this.switchProps.ids = mainIds;
     } else {
-      const useLocal = skipFetch && localLane;
       let laneIds: ComponentID[];
-      if (useLocal) {
+      if (skipFetch) {
+        if (!localLane) {
+          throw new BitError(
+            `unable to switch to lane "${laneId.toString()}" with --skip-fetch: the lane doesn't exist in the local scope. run without --skip-fetch to fetch it from the remote.`
+          );
+        }
         laneIds = this.populatePropsAccordingToLocalLane(localLane);
       } else {
         try {
