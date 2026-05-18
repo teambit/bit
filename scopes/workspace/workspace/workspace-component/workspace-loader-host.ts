@@ -195,20 +195,27 @@ export class WorkspaceLoaderHost implements LoaderHost {
       for (const c of pass1.workspaceComponents) c.loadedPhase = 'aspects';
       for (const c of pass1.scopeComponents) c.loadedPhase = 'aspects';
 
-      // Key by the ORIGINAL input id's `toString()` — partitionIds resolves
-      // workspace ids to their bitmap version, but the unified loader looks up
-      // results by the input id's `toString()` (which may have no version).
-      // Without this mapping, callers like `workspace.getMany(idsWithoutVersions)`
-      // (used by snapping) see every id as missing.
+      // Key the result Map under every plausible string form the caller might
+      // look up:
+      //   1. the resolved id (`c.id.toString()`) — canonical
+      //   2. the original input id from `partitionIds` — workspace ids get
+      //      resolved to their bitmap version, so callers using versionless
+      //      input still find a match
+      //   3. the versionless form of the resolved id — scope-only ids are
+      //      input versionless but `scope.get` returns a versioned component;
+      //      callers (e.g. `Workspace.resolveEnvIdWithPotentialVersionForConfig`)
+      //      look up by the input (versionless) id
       const result = new Map<string, Component>();
-      const setBoth = (c: Component) => {
+      const setAllKeys = (c: Component) => {
         const resolvedKey = c.id.toString();
         result.set(resolvedKey, c);
         const inputKey = inputKeyByResolvedKey.get(resolvedKey);
         if (inputKey && inputKey !== resolvedKey) result.set(inputKey, c);
+        const versionlessKey = c.id.toStringWithoutVersion();
+        if (!result.has(versionlessKey)) result.set(versionlessKey, c);
       };
-      for (const c of pass1.workspaceComponents) setBoth(c);
-      for (const c of pass1.scopeComponents) setBoth(c);
+      for (const c of pass1.workspaceComponents) setAllKeys(c);
+      for (const c of pass1.scopeComponents) setAllKeys(c);
       return result;
     } finally {
       this.loadingDepth -= 1;
