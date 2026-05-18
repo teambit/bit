@@ -64,8 +64,9 @@ export class HostInitializerMain {
     force = false,
     workspaceConfigProps: WorkspaceExtensionProps = {},
     generator?: string,
-    agent?: string
-  ): Promise<{ created: boolean; consumer: Consumer; agentFileWritten?: string }> {
+    agent?: string,
+    options: { skipDefaultMcp?: boolean } = {}
+  ): Promise<{ created: boolean; consumer: Consumer; agentFileWritten?: string; mcpFileWritten?: string }> {
     const consumerInfo = await getWorkspaceInfo(absPath || process.cwd());
     // if "bit init" was running without any flags, the user is probably trying to init a new workspace but wasn't aware
     // that he's already in a workspace.
@@ -119,10 +120,17 @@ export class HostInitializerMain {
     const writtenConsumer = await consumer.write();
     const created = !consumerInfo?.path;
     let agentFileWritten: string | undefined;
+    let mcpFileWritten: string | undefined;
     if (created) {
       agentFileWritten = await HostInitializerMain.writeAgentInstructions(consumerPath, agent);
+      // Keep `.mcp.json` in sync with the agent template, which tells the
+      // agent that the workspace ships a Cloud MCP config. Skipped only when
+      // the caller (interactive init) knows the user explicitly opted out.
+      if (!options.skipDefaultMcp) {
+        mcpFileWritten = await HostInitializerMain.writeDefaultMcpConfig(consumerPath);
+      }
     }
-    return { created, consumer: writtenConsumer, agentFileWritten };
+    return { created, consumer: writtenConsumer, agentFileWritten, mcpFileWritten };
   }
 
   /**
@@ -282,16 +290,12 @@ export class HostInitializerMain {
   }
 
   /**
-   * Check if the directory contains a .git folder
+   * Check whether the directory is inside a Git workspace.
+   * Accepts both `.git` as a directory (standard checkout) and `.git` as a
+   * file (Git worktrees and submodules store a `gitdir:` pointer file there).
    */
   static async hasGitDirectory(projectPath: string): Promise<boolean> {
-    try {
-      const gitPath = path.join(projectPath, '.git');
-      const stat = await fs.stat(gitPath);
-      return stat.isDirectory();
-    } catch {
-      return false;
-    }
+    return fs.pathExists(path.join(projectPath, '.git'));
   }
 
   /**
