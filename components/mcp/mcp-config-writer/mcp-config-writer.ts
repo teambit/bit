@@ -740,17 +740,33 @@ This will automatically include all Bit-specific instructions in your Claude Cod
   }
 
   /**
+   * Pure helper that decides what should be written to a Codex `config.toml`
+   * given its current contents. Returns `null` to signal "no change needed"
+   * (the bit-cloud table is already present). Split out from `setupCloudCodex`
+   * for direct testing without filesystem stubbing.
+   *
+   * Accepts both the bare-key form `[mcp_servers.bit-cloud]` and the
+   * quoted-key form `[mcp_servers."bit-cloud"]`, with optional whitespace
+   * inside the brackets — all valid TOML for the same table.
+   */
+  static buildCodexConfigUpdate(existing: string): string | null {
+    const headerRegex = new RegExp(`^\\[\\s*mcp_servers\\.("?)${this.BIT_CLOUD_SERVER_NAME}\\1\\s*\\]`, 'm');
+    if (headerRegex.test(existing)) return null;
+
+    const block = `[mcp_servers.${this.BIT_CLOUD_SERVER_NAME}]\nurl = "${this.BIT_CLOUD_MCP_URL}"\n`;
+    const separator = !existing ? '' : existing.endsWith('\n') ? '\n' : '\n\n';
+    return existing + separator + block;
+  }
+
+  /**
    * Setup Cloud MCP for Codex (global `~/.codex/config.toml`).
    * Codex uses TOML and has no workspace-local config, so we append the
-   * server block to the global file. If a `[mcp_servers.bit-cloud]` block
-   * already exists we leave the file untouched.
+   * server block to the global file. If the bit-cloud table is already
+   * present we leave the file untouched.
    */
   static async setupCloudCodex(): Promise<void> {
     const codexConfigPath = path.join(homedir(), '.codex', 'config.toml');
     await fs.ensureDir(path.dirname(codexConfigPath));
-
-    const blockHeader = `[mcp_servers.${this.BIT_CLOUD_SERVER_NAME}]`;
-    const block = `${blockHeader}\nurl = "${this.BIT_CLOUD_MCP_URL}"\n`;
 
     let existing = '';
     try {
@@ -759,13 +775,9 @@ This will automatically include all Bit-specific instructions in your Claude Cod
       if (err.code !== 'ENOENT') throw err;
     }
 
-    // Match the header anchored to start-of-line so a substring inside a
-    // comment or unrelated section doesn't suppress the write.
-    const headerRegex = new RegExp(`^\\[mcp_servers\\.${this.BIT_CLOUD_SERVER_NAME}\\]`, 'm');
-    if (headerRegex.test(existing)) return;
-
-    const separator = !existing ? '' : existing.endsWith('\n') ? '\n' : '\n\n';
-    await fs.writeFile(codexConfigPath, existing + separator + block);
+    const updated = this.buildCodexConfigUpdate(existing);
+    if (updated === null) return;
+    await fs.writeFile(codexConfigPath, updated);
   }
 
   /**
