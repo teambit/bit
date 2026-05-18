@@ -2478,7 +2478,15 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
    */
   async setEnvToComponents(envId: ComponentID, componentIds: ComponentID[], verifyEnv = true) {
     const envStrWithPossiblyVersion = await this.resolveEnvIdWithPotentialVersionForConfig(envId);
-    if (verifyEnv) {
+    // Core aspects are bundled with bit and not loadable via workspace.get (they
+    // live in aspect-loader's registry, not in the workspace bitmap or scope).
+    // Pre-rewrite WCL had them populated in its cache by bootstrap-time loads;
+    // the unified loader's cache isn't pre-populated. Since core aspects are
+    // known envs by definition, skip the verify step for them.
+    const isCoreAspect = this.aspectLoader.isCoreAspect(
+      ComponentID.fromString(envStrWithPossiblyVersion).toStringWithoutVersion()
+    );
+    if (verifyEnv && !isCoreAspect) {
       const envComp = await this.get(ComponentID.fromString(envStrWithPossiblyVersion));
       const isEnv = this.envs.isEnv(envComp);
       if (!isEnv) throw new BitError(`the component ${envComp.id.toString()} is not an env`);
