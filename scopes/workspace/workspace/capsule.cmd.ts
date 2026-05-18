@@ -257,7 +257,7 @@ export class CapsuleDeleteCmd implements Command {
 type PruneOpts = {
   olderThan?: number;
   keepWorkspaceCaps?: boolean;
-  orphans?: boolean;
+  noOrphans?: boolean;
   sizeTarget?: number;
   dryRun?: boolean;
   json?: boolean;
@@ -310,8 +310,7 @@ use --dry-run first to preview what would be removed.`;
     return this.isolator.pruneCapsules({
       olderThanDays: opts.olderThan !== undefined ? Number(opts.olderThan) : undefined,
       keepWorkspaceCaps: opts.keepWorkspaceCaps === true,
-      // commander turns `--no-orphans` into `orphans: false`; default `true`.
-      includeOrphans: opts.orphans !== false,
+      includeOrphans: opts.noOrphans !== true,
       sizeTargetGb: opts.sizeTarget !== undefined ? Number(opts.sizeTarget) : undefined,
       dryRun: opts.dryRun === true,
     });

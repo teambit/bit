@@ -1233,7 +1233,9 @@ export class IsolatorMain {
     } catch {
       // missing — first run, fall through and prune
     }
-    // Write the stamp first to claim the slot — even if prune fails, we don't retry within 24h.
+    // Write the stamp first to claim the slot — even if the spawn fails, we don't retry
+    // within 24h. The detached child sees this recent stamp on its own exit and skips its
+    // own auto-prune, so no recursion.
     await fs.outputFile(stampPath, '');
 
     const maxAgeRaw = this.configStore.getConfig(CFG_CAPSULES_MAX_AGE_DAYS);
@@ -1241,22 +1243,54 @@ export class IsolatorMain {
     const maxSizeRaw = this.configStore.getConfig(CFG_CAPSULES_MAX_SIZE_GB);
     const sizeTargetGb = maxSizeRaw !== undefined ? Number(maxSizeRaw) : 10;
 
-    this.logger.debug(`[auto-prune] triggered. olderThanDays=${olderThanDays}, sizeTargetGb=${sizeTargetGb}`);
-    const report = await this.pruneCapsules({
-      olderThanDays,
-      sizeTargetGb,
-      includeOrphans: true,
-    });
     this.logger.debug(
-      `[auto-prune] removed ${report.removed.length} capsule(s), freed ${report.totalRemovedBytes} bytes`
+      `[auto-prune] spawning detached child. olderThanDays=${olderThanDays}, sizeTargetGb=${sizeTargetGb}`
     );
+    this.spawnDetachedAutoPrune(olderThanDays, sizeTargetGb);
   }
 
-  private spawnDetachedSweep(trashRoot: string): void {
+  /**
+   * Fire-and-forget: spawn a detached child running `bit capsule prune`. Using the same
+   * bit binary that's currently running (via process.argv[0] + argv[1]) so we don't depend
+   * on PATH. stdio is ignored so nothing leaks to the user's terminal.
+   *
+   * Recursion guard: the child also runs onBeforeExit → maybeAutoPrune, but it reads the
+   * stamp file that we just wrote and bails out before re-spawning.
+   */
+  private spawnDetachedAutoPrune(olderThanDays: number, sizeTargetGb: number): void {
+    const bitEntry = process.argv[1];
+    if (!bitEntry) {
+      this.logger.debug('[auto-prune] cannot detach: process.argv[1] is empty');
+      return;
+    }
     try {
-      const child = spawn('rm', ['-rf', trashRoot], {
+      const child = spawn(
+        process.execPath,
+        [bitEntry, 'capsule', 'prune', '--older-than', String(olderThanDays), '--size-target', String(sizeTargetGb)],
+        {
+          detached: true,
+          stdio: 'ignore',
+          windowsHide: true,
+        }
+      );
+      child.unref();
+    } catch (err: any) {
+      this.logger.debug(`[auto-prune] failed to spawn detached child: ${err.message}`);
+    }
+  }
+
+  /**
+   * Spawn a detached Node subprocess that recursively removes `trashRoot`. Using
+   * `process.execPath` with an inline `fs.rmSync` keeps this portable across macOS,
+   * Linux, and Windows (where there's no `rm` binary).
+   */
+  private spawnDetachedSweep(trashRoot: string): void {
+    const script = `require('fs').rmSync(${JSON.stringify(trashRoot)}, { recursive: true, force: true })`;
+    try {
+      const child = spawn(process.execPath, ['-e', script], {
         detached: true,
         stdio: 'ignore',
+        windowsHide: true,
       });
       child.unref();
     } catch (err: any) {
