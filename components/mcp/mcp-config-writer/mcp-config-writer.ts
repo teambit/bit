@@ -20,9 +20,18 @@ export interface RulesOptions {
   workspaceDir?: string;
   consumerProject?: boolean;
   forceStandard?: boolean;
-  /** When provided, use this content as the base body instead of the default templates. */
+  /**
+   * When set, this body is written verbatim instead of the default templates,
+   * making `consumerProject` and `forceStandard` (which only steer template
+   * selection inside `getDefaultRulesContent`) irrelevant.
+   */
   content?: string;
 }
+
+/**
+ * AI coding agents the Bit Cloud MCP can be wired up to during interactive init.
+ */
+export type CloudMcpEditor = 'claude-code' | 'codex' | 'cursor' | 'windsurf' | 'copilot';
 
 /**
  * MCP Configuration Writer - A utility component for writing MCP server configurations
@@ -69,25 +78,25 @@ export class McpConfigWriter {
   }
 
   /**
-   * Get display name for an editor
+   * Display names for every editor key the writer knows about — covers both
+   * the legacy CLI-MCP editor set and the Cloud-MCP set.
+   */
+  static readonly EDITOR_DISPLAY_NAMES: Record<string, string> = {
+    vscode: 'VS Code',
+    cursor: 'Cursor',
+    windsurf: 'Windsurf',
+    roo: 'Roo Code',
+    cline: 'Cline',
+    'claude-code': 'Claude Code',
+    codex: 'Codex',
+    copilot: 'GitHub Copilot',
+  };
+
+  /**
+   * Get display name for an editor; falls back to the raw key.
    */
   static getEditorDisplayName(editor: string): string {
-    switch (editor) {
-      case 'vscode':
-        return 'VS Code';
-      case 'cursor':
-        return 'Cursor';
-      case 'windsurf':
-        return 'Windsurf';
-      case 'roo':
-        return 'Roo Code';
-      case 'cline':
-        return 'Cline';
-      case 'claude-code':
-        return 'Claude Code';
-      default:
-        return editor;
-    }
+    return this.EDITOR_DISPLAY_NAMES[editor.toLowerCase()] ?? editor;
   }
 
   /**
@@ -518,20 +527,21 @@ export class McpConfigWriter {
   }
 
   /**
+   * Use the explicit `content` override if provided, otherwise pull from the
+   * default rules template (CLI-MCP rules, picked by consumerProject/forceStandard).
+   */
+  private static async resolveRulesContent(options: RulesOptions): Promise<string> {
+    const { content, consumerProject = false, workspaceDir, forceStandard = false } = options;
+    return content ?? (await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard));
+  }
+
+  /**
    * Write Bit MCP rules file for VS Code
    */
   static async writeVSCodeRules(options: RulesOptions): Promise<string> {
-    const { isGlobal, workspaceDir, consumerProject = false, forceStandard = false, content } = options;
-
-    // Determine prompts file path
-    const promptsPath = this.getVSCodePromptsPath(isGlobal, workspaceDir);
-
-    // Ensure directory exists
+    const promptsPath = this.getVSCodePromptsPath(options.isGlobal, options.workspaceDir);
     await fs.ensureDir(path.dirname(promptsPath));
-
-    // Get base rules content
-    const baseRulesContent =
-      content ?? (await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard));
+    const baseRulesContent = await this.resolveRulesContent(options);
 
     // Add VS Code frontmatter
     const vscodeRulesContent = `---
@@ -548,17 +558,9 @@ ${baseRulesContent}`;
    * Write Bit MCP rules file for Cursor
    */
   static async writeCursorRules(options: RulesOptions): Promise<string> {
-    const { isGlobal, workspaceDir, consumerProject = false, forceStandard = false, content } = options;
-
-    // Determine prompts file path
-    const promptsPath = this.getCursorPromptsPath(isGlobal, workspaceDir);
-
-    // Ensure directory exists
+    const promptsPath = this.getCursorPromptsPath(options.isGlobal, options.workspaceDir);
     await fs.ensureDir(path.dirname(promptsPath));
-
-    // Get base rules content
-    const baseRulesContent =
-      content ?? (await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard));
+    const baseRulesContent = await this.resolveRulesContent(options);
 
     // Add Cursor frontmatter. The auto-apply key is `alwaysApply` (lowercase) —
     // `Always` is not a recognized Cursor frontmatter key, so rules written with
@@ -575,20 +577,12 @@ ${baseRulesContent}`;
   }
 
   /**
-   * Write Bit MCP rules file for Roo Code
+   * Write Bit MCP rules file for Roo Code (no frontmatter required).
    */
   static async writeRooCodeRules(options: RulesOptions): Promise<string> {
-    const { isGlobal, workspaceDir, consumerProject = false, forceStandard = false, content } = options;
-
-    // Determine prompts file path
-    const promptsPath = this.getRooCodePromptsPath(isGlobal, workspaceDir);
-
-    // Ensure directory exists
+    const promptsPath = this.getRooCodePromptsPath(options.isGlobal, options.workspaceDir);
     await fs.ensureDir(path.dirname(promptsPath));
-
-    // Get base rules content - Roo Code doesn't require frontmatter
-    const rulesContent = content ?? (await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard));
-    await fs.writeFile(promptsPath, rulesContent);
+    await fs.writeFile(promptsPath, await this.resolveRulesContent(options));
     return promptsPath;
   }
 
@@ -596,17 +590,9 @@ ${baseRulesContent}`;
    * Write Bit MCP rules file for Cline
    */
   static async writeClineRules(options: RulesOptions): Promise<string> {
-    const { isGlobal, workspaceDir, consumerProject = false, forceStandard = false, content } = options;
-
-    // Determine prompts file path
-    const promptsPath = this.getClinePromptsPath(isGlobal, workspaceDir);
-
-    // Ensure directory exists
+    const promptsPath = this.getClinePromptsPath(options.isGlobal, options.workspaceDir);
     await fs.ensureDir(path.dirname(promptsPath));
-
-    // Get base rules content
-    const baseRulesContent =
-      content ?? (await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard));
+    const baseRulesContent = await this.resolveRulesContent(options);
 
     // Add Cline frontmatter
     const clineRulesContent = `---
@@ -624,17 +610,9 @@ ${baseRulesContent}`;
    * Write Bit MCP rules file for Claude Code
    */
   static async writeClaudeCodeRules(options: RulesOptions): Promise<string> {
-    const { isGlobal, workspaceDir, consumerProject = false, forceStandard = false, content } = options;
-
-    // Determine prompts file path
-    const promptsPath = this.getClaudeCodePromptsPath(isGlobal, workspaceDir);
-
-    // Ensure directory exists
+    const promptsPath = this.getClaudeCodePromptsPath(options.isGlobal, options.workspaceDir);
     await fs.ensureDir(path.dirname(promptsPath));
-
-    // Get base rules content
-    const baseRulesContent =
-      content ?? (await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard));
+    const baseRulesContent = await this.resolveRulesContent(options);
 
     // Add integration instructions at the top (Claude Code doesn't use frontmatter)
     const integrationInstructions = `<!--
@@ -703,84 +681,62 @@ This will automatically include all Bit-specific instructions in your Claude Cod
   /**
    * Cloud MCP editors supported by the interactive init flow.
    */
-  static readonly CLOUD_MCP_EDITORS = ['claude-code', 'codex', 'cursor', 'windsurf', 'copilot'] as const;
+  static readonly CLOUD_MCP_EDITORS: readonly CloudMcpEditor[] = [
+    'claude-code',
+    'codex',
+    'cursor',
+    'windsurf',
+    'copilot',
+  ];
 
   /**
-   * Get display name for a Cloud MCP editor
+   * Per-editor JSON-config recipe for Bit Cloud MCP: where the config file
+   * lives, which top-level key holds the server map, and the shape of the
+   * server entry. Codex is intentionally excluded — it uses TOML, see
+   * `setupCloudCodex`.
    */
-  static getCloudEditorDisplayName(editor: string): string {
-    switch (editor.toLowerCase()) {
-      case 'claude-code':
-        return 'Claude Code';
-      case 'codex':
-        return 'Codex';
-      case 'cursor':
-        return 'Cursor';
-      case 'windsurf':
-        return 'Windsurf';
-      case 'copilot':
-        return 'GitHub Copilot';
-      default:
-        return editor;
+  private static readonly CLOUD_JSON_RECIPES: Record<
+    Exclude<CloudMcpEditor, 'codex'>,
+    {
+      getPath: (workspaceDir?: string) => string;
+      serversKey: 'mcpServers' | 'servers';
+      entry: Record<string, string>;
     }
-  }
+  > = {
+    'claude-code': {
+      getPath: (w) => McpConfigWriter.getClaudeCodeSettingsPath(false, w),
+      serversKey: 'mcpServers',
+      entry: { type: 'http', url: McpConfigWriter.BIT_CLOUD_MCP_URL },
+    },
+    cursor: {
+      getPath: (w) => McpConfigWriter.getCursorSettingsPath(false, w),
+      serversKey: 'mcpServers',
+      entry: { url: McpConfigWriter.BIT_CLOUD_MCP_URL },
+    },
+    windsurf: {
+      getPath: (w) => McpConfigWriter.getWindsurfSettingsPath(false, w),
+      serversKey: 'mcpServers',
+      entry: { serverUrl: McpConfigWriter.BIT_CLOUD_MCP_URL },
+    },
+    copilot: {
+      getPath: (w) => McpConfigWriter.getVSCodeMcpConfigPath(w),
+      serversKey: 'servers',
+      entry: { type: 'http', url: McpConfigWriter.BIT_CLOUD_MCP_URL },
+    },
+  };
 
   /**
-   * Setup Cloud MCP for Claude Code (workspace `.mcp.json`).
+   * Setup Cloud MCP for an editor that uses a JSON config file.
+   * Merges the bit-cloud entry into the existing config (preserving other servers).
    */
-  static async setupCloudClaudeCode(workspaceDir?: string): Promise<void> {
-    const mcpConfigPath = this.getClaudeCodeSettingsPath(false, workspaceDir);
-    await fs.ensureDir(path.dirname(mcpConfigPath));
-    const mcpConfig = await this.readJsonFile(mcpConfigPath);
-    if (!mcpConfig.mcpServers) mcpConfig.mcpServers = {};
-    mcpConfig.mcpServers[this.BIT_CLOUD_SERVER_NAME] = {
-      type: 'http',
-      url: this.BIT_CLOUD_MCP_URL,
-    };
-    await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
-  }
-
-  /**
-   * Setup Cloud MCP for Cursor (workspace `.cursor/mcp.json`).
-   */
-  static async setupCloudCursor(workspaceDir?: string): Promise<void> {
-    const mcpConfigPath = this.getCursorSettingsPath(false, workspaceDir);
-    await fs.ensureDir(path.dirname(mcpConfigPath));
-    const mcpConfig = await this.readJsonFile(mcpConfigPath);
-    if (!mcpConfig.mcpServers) mcpConfig.mcpServers = {};
-    mcpConfig.mcpServers[this.BIT_CLOUD_SERVER_NAME] = {
-      url: this.BIT_CLOUD_MCP_URL,
-    };
-    await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
-  }
-
-  /**
-   * Setup Cloud MCP for Windsurf (workspace `.windsurf/mcp.json`).
-   */
-  static async setupCloudWindsurf(workspaceDir?: string): Promise<void> {
-    const mcpConfigPath = this.getWindsurfSettingsPath(false, workspaceDir);
-    await fs.ensureDir(path.dirname(mcpConfigPath));
-    const mcpConfig = await this.readJsonFile(mcpConfigPath);
-    if (!mcpConfig.mcpServers) mcpConfig.mcpServers = {};
-    mcpConfig.mcpServers[this.BIT_CLOUD_SERVER_NAME] = {
-      serverUrl: this.BIT_CLOUD_MCP_URL,
-    };
-    await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
-  }
-
-  /**
-   * Setup Cloud MCP for GitHub Copilot / VS Code (workspace `.vscode/mcp.json`).
-   */
-  static async setupCloudCopilot(workspaceDir?: string): Promise<void> {
-    const mcpConfigPath = this.getVSCodeMcpConfigPath(workspaceDir);
-    await fs.ensureDir(path.dirname(mcpConfigPath));
-    const mcpConfig = await this.readJsonFile(mcpConfigPath);
-    if (!mcpConfig.servers) mcpConfig.servers = {};
-    mcpConfig.servers[this.BIT_CLOUD_SERVER_NAME] = {
-      type: 'http',
-      url: this.BIT_CLOUD_MCP_URL,
-    };
-    await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
+  private static async setupCloudJson(editor: Exclude<CloudMcpEditor, 'codex'>, workspaceDir?: string): Promise<void> {
+    const recipe = this.CLOUD_JSON_RECIPES[editor];
+    const configPath = recipe.getPath(workspaceDir);
+    await fs.ensureDir(path.dirname(configPath));
+    const cfg = await this.readJsonFile(configPath);
+    if (!cfg[recipe.serversKey]) cfg[recipe.serversKey] = {};
+    cfg[recipe.serversKey][this.BIT_CLOUD_SERVER_NAME] = recipe.entry;
+    await fs.writeFile(configPath, JSON.stringify(cfg, null, 2));
   }
 
   /**
@@ -796,14 +752,20 @@ This will automatically include all Bit-specific instructions in your Claude Cod
     const blockHeader = `[mcp_servers.${this.BIT_CLOUD_SERVER_NAME}]`;
     const block = `${blockHeader}\nurl = "${this.BIT_CLOUD_MCP_URL}"\n`;
 
-    if (await fs.pathExists(codexConfigPath)) {
-      const existing = await fs.readFile(codexConfigPath, 'utf8');
-      if (existing.includes(blockHeader)) return;
-      const separator = existing.endsWith('\n') ? '\n' : '\n\n';
-      await fs.writeFile(codexConfigPath, existing + separator + block);
-    } else {
-      await fs.writeFile(codexConfigPath, block);
+    let existing = '';
+    try {
+      existing = await fs.readFile(codexConfigPath, 'utf8');
+    } catch (err: any) {
+      if (err.code !== 'ENOENT') throw err;
     }
+
+    // Match the header anchored to start-of-line so a substring inside a
+    // comment or unrelated section doesn't suppress the write.
+    const headerRegex = new RegExp(`^\\[mcp_servers\\.${this.BIT_CLOUD_SERVER_NAME}\\]`, 'm');
+    if (headerRegex.test(existing)) return;
+
+    const separator = !existing ? '' : existing.endsWith('\n') ? '\n' : '\n\n';
+    await fs.writeFile(codexConfigPath, existing + separator + block);
   }
 
   /**
@@ -812,17 +774,17 @@ This will automatically include all Bit-specific instructions in your Claude Cod
    * `bit` CLI is required.
    */
   static async setupCloudMcp(editor: string, workspaceDir?: string): Promise<void> {
-    const editorLower = editor.toLowerCase();
-    if (!this.CLOUD_MCP_EDITORS.includes(editorLower as (typeof this.CLOUD_MCP_EDITORS)[number])) {
+    const editorLower = editor.toLowerCase() as CloudMcpEditor;
+    if (!this.CLOUD_MCP_EDITORS.includes(editorLower)) {
       throw new Error(
         `Editor "${editor}" is not supported for Cloud MCP. Supported: ${this.CLOUD_MCP_EDITORS.join(', ')}`
       );
     }
-    if (editorLower === 'claude-code') await this.setupCloudClaudeCode(workspaceDir);
-    else if (editorLower === 'cursor') await this.setupCloudCursor(workspaceDir);
-    else if (editorLower === 'windsurf') await this.setupCloudWindsurf(workspaceDir);
-    else if (editorLower === 'copilot') await this.setupCloudCopilot(workspaceDir);
-    else if (editorLower === 'codex') await this.setupCloudCodex();
+    if (editorLower === 'codex') {
+      await this.setupCloudCodex();
+      return;
+    }
+    await this.setupCloudJson(editorLower, workspaceDir);
   }
 
   /**

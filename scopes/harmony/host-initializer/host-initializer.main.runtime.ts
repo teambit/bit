@@ -135,32 +135,26 @@ export class HostInitializerMain {
   };
 
   /**
-   * Map Cloud MCP editor choices to the `writeRulesFile` editor keys used
-   * by McpConfigWriter. Claude Code is handled separately so we can write
-   * to `.claude/rules/bit.md` (auto-loaded by Claude per its memory docs)
-   * instead of `.claude/bit.md` (which requires a manual @-import).
-   * Editors without a mapping fall back to AGENTS.md.
+   * Read the universal AGENTS.md template that ships with this aspect.
    */
-  static readonly MCP_EDITOR_TO_RULES_EDITOR: Record<string, string> = {
-    cursor: 'cursor',
-    copilot: 'vscode',
-  };
+  private static loadAgentsTemplate(): Promise<string> {
+    return fs.readFile(path.join(__dirname, 'agents-template.md'), 'utf8');
+  }
 
   /**
    * Write Cloud-MCP-compatible agent instructions for the selected editor.
    * Body is the universal AGENTS.md template — not the CLI-MCP rules — so
    * it doesn't reference tools that exist only on the local stdio server.
-   * Codex / Windsurf fall back to writing `AGENTS.md`.
+   * Claude Code targets `.claude/rules/bit.md` (auto-loaded per its memory
+   * docs, no manual @-import needed). Cursor/Copilot reuse the existing
+   * per-editor rules paths with the Cloud content. Codex/Windsurf fall back
+   * to `AGENTS.md`.
    */
   static async writeMcpAgentRules(editor: string, projectPath: string): Promise<string | undefined> {
-    const templatePath = path.join(__dirname, 'agents-template.md');
-    const content = await fs.readFile(templatePath, 'utf8');
-
+    const content = await HostInitializerMain.loadAgentsTemplate();
     const editorLower = editor.toLowerCase();
 
     if (editorLower === 'claude-code') {
-      // `.claude/rules/*.md` is auto-loaded by Claude Code at session start
-      // (https://code.claude.com/docs/en/memory). No frontmatter, no manual @-import.
       const rel = path.join('.claude', 'rules', 'bit.md');
       const abs = path.join(projectPath, rel);
       await fs.ensureDir(path.dirname(abs));
@@ -168,7 +162,10 @@ export class HostInitializerMain {
       return rel;
     }
 
-    const rulesEditor = HostInitializerMain.MCP_EDITOR_TO_RULES_EDITOR[editorLower];
+    // McpConfigWriter rules-file key for the small subset of Cloud editors
+    // whose existing rules paths already auto-load (Cursor via alwaysApply
+    // frontmatter, GitHub Copilot via applyTo).
+    const rulesEditor = { cursor: 'cursor', copilot: 'vscode' }[editorLower];
     if (rulesEditor) {
       const absPath = await McpConfigWriter.writeRulesFile(rulesEditor, {
         isGlobal: false,
@@ -178,7 +175,9 @@ export class HostInitializerMain {
       return path.relative(projectPath, absPath);
     }
 
-    // codex / windsurf — write AGENTS.md (skipGitCheck=true to bypass the interactive-flow guard)
+    // Codex / Windsurf — write AGENTS.md. skipGitCheck=true bypasses the
+    // git-presence guard in writeAgentInstructions, since the interactive
+    // flow only runs in git repos.
     return HostInitializerMain.writeAgentInstructions(projectPath, undefined, true);
   }
 
@@ -224,11 +223,7 @@ export class HostInitializerMain {
       const targetFile = agent ? HostInitializerMain.AGENT_FILE_MAP[agent] : 'AGENTS.md';
       const targetPath = path.join(projectPath, targetFile);
 
-      // Read the shared template content.
-      const templatePath = path.join(__dirname, 'agents-template.md');
-      const content = await fs.readFile(templatePath, 'utf8');
-
-      // Some formats require frontmatter.
+      const content = await HostInitializerMain.loadAgentsTemplate();
       const finalContent = HostInitializerMain.wrapWithFrontmatter(targetFile, content);
 
       await fs.ensureDir(path.dirname(targetPath));
@@ -497,7 +492,7 @@ node_modules
       }
 
       if (interactiveConfig.mcpEditor) {
-        const displayName = McpConfigWriter.getCloudEditorDisplayName(interactiveConfig.mcpEditor);
+        const displayName = McpConfigWriter.getEditorDisplayName(interactiveConfig.mcpEditor);
         initMessage += `\n  Bit Cloud MCP connected to: ${chalk.cyan(displayName)}`;
         const verifyHint = HostInitializerMain.getMcpVerifyHint(interactiveConfig.mcpEditor);
         if (verifyHint) initMessage += formatHint(`\n  ${verifyHint}`);

@@ -6,7 +6,7 @@ import { initScope } from '@teambit/legacy.scope-api';
 import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy.constants';
 import type { WorkspaceExtensionProps } from '@teambit/config';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatSuccessSummary, successSymbol } from '@teambit/cli';
+import { formatSuccessSummary } from '@teambit/cli';
 import { McpConfigWriter } from '@teambit/mcp.mcp-config-writer';
 import type { InteractiveConfig } from './host-initializer.main.runtime';
 import { HostInitializerMain } from './host-initializer.main.runtime';
@@ -109,12 +109,11 @@ supports various reset options to recover from corrupted state or restart from s
     try {
       const interactiveConfig = await HostInitializerMain.runInteractiveMode(projectPath);
 
-      // Connect Bit Cloud MCP for the selected agent and write agent instructions
       if (interactiveConfig.mcpEditor) {
-        const displayName = McpConfigWriter.getCloudEditorDisplayName(interactiveConfig.mcpEditor);
+        const displayName = McpConfigWriter.getEditorDisplayName(interactiveConfig.mcpEditor);
         this.logger.console(chalk.cyan(`\nConnecting Bit Cloud MCP to ${displayName}...`));
         await HostInitializerMain.setupMcpServer(interactiveConfig.mcpEditor, projectPath);
-        this.logger.console(`${successSymbol()} ${chalk.green(`Bit Cloud MCP connected to ${displayName}`)}`);
+        this.logger.console(formatSuccessSummary(`Bit Cloud MCP connected to ${displayName}`));
 
         interactiveConfig.agentFileWritten = await HostInitializerMain.writeMcpAgentRules(
           interactiveConfig.mcpEditor,
