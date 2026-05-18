@@ -955,7 +955,19 @@ if needed, use "bit env set" command to align the env id`;
         isFoundWithoutVersion = true;
         return true;
       }
-      const envComponent = await this.getEnvComponentByEnvId(id);
+      // getEnvComponentByEnvId calls workspace.get which throws
+      // ComponentNotFound when the id can't be resolved (typically in capsule
+      // contexts where the workspace's scope doesn't have it). The predicate
+      // here only needs a yes/no answer — treat a throw as "no" and continue
+      // checking the remaining candidates instead of bubbling up. The throw
+      // used to be swallowed pre-rewrite because WCL.get returned undefined
+      // for missing components; the unified loader throws by design.
+      let envComponent;
+      try {
+        envComponent = await this.getEnvComponentByEnvId(id);
+      } catch {
+        return false;
+      }
       const hasManifest = this.hasEnvManifest(envComponent);
       if (hasManifest) return true;
       const isUsingEnvEnv = this.isUsingEnvEnv(envComponent);
