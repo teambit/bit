@@ -729,7 +729,9 @@ if you just want to get a quick look into this snap, create a new workspace and 
   private async getDepsByDepth(bitIds: ComponentID[], depth: number): Promise<ComponentIdList> {
     const idList = ComponentIdList.fromArray(bitIds);
     await this.scope.scopeImporter.importWithoutDeps(idList, { cache: true, lane: this.remoteLane });
-    const componentsAndVersions = await this.scope.getComponentsAndVersions(idList);
+    // defaultToLatestVersion=true so versionless inputs (e.g. `bit import scope/foo`) resolve
+    // to the fetched head, instead of throwing inside getComponentsAndVersions.
+    const componentsAndVersions = await this.scope.getComponentsAndVersions(idList, true);
 
     // build adjacency from the merged flattenedEdges of all root versions
     const adjacency = new Map<string, ComponentID[]>();
