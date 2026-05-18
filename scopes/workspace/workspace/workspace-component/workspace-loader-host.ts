@@ -178,16 +178,22 @@ export class WorkspaceLoaderHost implements LoaderHost {
       const { workspaceIds, scopeIds, inputKeyByResolvedKey } = await this.partitionIds(ids);
       const pass1 = await this.pass1BuildComponentsNoSlots(workspaceIds, scopeIds);
 
-      // Recursive calls return config-only components without firing slots.
-      // The outer call's pass 2/3 handle the full aspect-loading; inner
-      // callers (typically aspect-resolve flows) need config-level state
-      // but not slot data.
+      // Always fire slots so the returned components have env/dep data
+      // populated. Pre-rewrite WCL did this unconditionally, even for
+      // recursive calls, because the slot-fired data is what downstream
+      // consumers (`workspaceAspectResolver` -> `getEnvId`) rely on.
+      await this.pass2FireSlots(pass1.workspaceComponents, pass1.envIdByCompKey);
+
+      // Only the OUTERMOST call registers components as aspects, computes
+      // post-load issues, and runs other one-shot work. Doing this on
+      // recursive calls would re-enter `workspace.loadAspects` -> back into
+      // this host indefinitely.
       if (this.loadingDepth === 1) {
-        await this.pass2LoadAspectsInOrder(pass1.workspaceComponents, pass1.scopeComponents, pass1.envIdByCompKey);
+        await this.pass2RegisterAspects(pass1.workspaceComponents, pass1.scopeComponents);
         await this.applyPostLoadIssuesAndWarnings(pass1.workspaceComponents);
-        for (const c of pass1.workspaceComponents) c.loadedPhase = 'aspects';
-        for (const c of pass1.scopeComponents) c.loadedPhase = 'aspects';
       }
+      for (const c of pass1.workspaceComponents) c.loadedPhase = 'aspects';
+      for (const c of pass1.scopeComponents) c.loadedPhase = 'aspects';
 
       // Key by the ORIGINAL input id's `toString()` — partitionIds resolves
       // workspace ids to their bitmap version, but the unified loader looks up
@@ -381,34 +387,38 @@ export class WorkspaceLoaderHost implements LoaderHost {
     return compact(results);
   }
 
-  // === Pass 2: SCC-ordered slot fire + aspect registration =========
+  // === Pass 2a: fire slots ==========================================
   //
-  // Fires `executeLoadSlot` for every workspace component in SCC order
-  // (envs-before-consumers). After all slots have fired, identifies which
-  // components are aspects/envs (now that `envsData.data.type` is populated
-  // by `envs.calcDescriptor`) and registers them via `workspace.loadAspects`.
-  //
-  // The pre-rewrite WCL used a similar two-step: slot-fire per group, then
-  // `loadCompsAsAspects` per group. We collapse to a single `loadAspects`
-  // call at the end because the registration is idempotent and a single
-  // batch is simpler. The env-first slot ordering is preserved via SCC.
+  // Fires `executeLoadSlot` for every workspace component in parallel.
+  // Runs on every load call (outer AND recursive) so that components
+  // returned to the caller carry env/dep data — the contract that
+  // downstream callers like `workspaceAspectResolver` -> `getEnvId`
+  // depend on. Pre-rewrite WCL did the same unconditionally.
 
-  private async pass2LoadAspectsInOrder(
+  private async pass2FireSlots(
     workspaceComponents: Component[],
-    scopeComponents: Component[],
     envIdByCompKey: Map<string, string | undefined>
   ): Promise<void> {
-    if (!workspaceComponents.length && !scopeComponents.length) return;
+    if (!workspaceComponents.length) return;
 
+    // SCC order: envs' slots fire before their consumers' slots so that
+    // `calcDescriptor`'s env-self-descriptor work sees the env aspect
+    // already registered. Components whose env isn't in this batch
+    // (e.g. external envs) form their own singleton group and fire freely.
     const groups = this.sccOrderByEnv(workspaceComponents, envIdByCompKey);
-
-    // Slot-fire in SCC order; within a group, parallel.
     for (const group of groups) {
       await Promise.all(group.map((comp) => this.executeLoadSlot(comp)));
     }
+  }
 
-    // Now that envsData.type is populated, identify aspect-typed components
-    // (workspace + scope) and register them as aspects.
+  // === Pass 2b: register aspect-typed components ===================
+  //
+  // Identifies which components are aspects/envs (envsData.data.type
+  // populated by the slot fire above) and registers them via
+  // `workspace.loadAspects`. Only runs on the outermost call —
+  // recursive calls inherit the outer's registration.
+
+  private async pass2RegisterAspects(workspaceComponents: Component[], scopeComponents: Component[]): Promise<void> {
     const all = workspaceComponents.concat(scopeComponents);
     const aspectIds = all.filter((c) => this.shouldLoadAsAspect(c)).map((c) => c.id.toString());
     if (!aspectIds.length) return;
