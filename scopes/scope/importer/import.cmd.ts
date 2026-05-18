@@ -41,6 +41,7 @@ type ImportFlags = {
   saveInLane?: boolean;
   dependencies?: boolean;
   dependenciesHead?: boolean;
+  dependenciesDepth?: string;
   dependents?: boolean;
   dependentsDryRun?: boolean;
   dependentsVia?: string;
@@ -95,6 +96,11 @@ without arguments, fetches all workspace components' latest versions from their 
       'import all dependencies (bit components only) of imported components and write them to the workspace',
     ],
     ['', 'dependencies-head', 'same as --dependencies, except it imports the dependencies with their head version'],
+    [
+      '',
+      'dependencies-depth <n>',
+      'limit how many levels deep to traverse with --dependencies/--dependencies-head (1=direct deps only). default: traverse all levels',
+    ],
     [
       '',
       'dependents',
@@ -260,6 +266,7 @@ without arguments, fetches all workspace components' latest versions from their 
       saveInLane = false,
       dependencies = false,
       dependenciesHead = false,
+      dependenciesDepth,
       dependents = false,
       dependentsDryRun = false,
       silent,
@@ -301,6 +308,16 @@ without arguments, fetches all workspace components' latest versions from their 
     if (owner && ids.length !== 1) {
       throw new BitError('--owner flag requires exactly one argument (the owner name)');
     }
+    let dependenciesDepthNum: number | undefined;
+    if (dependenciesDepth !== undefined) {
+      if (!dependencies && !dependenciesHead) {
+        throw new BitError('"--dependencies-depth" flag requires "--dependencies" or "--dependencies-head"');
+      }
+      dependenciesDepthNum = Number(dependenciesDepth);
+      if (!Number.isInteger(dependenciesDepthNum) || dependenciesDepthNum < 1) {
+        throw new BitError(`"--dependencies-depth" must be a positive integer, got "${dependenciesDepth}"`);
+      }
+    }
     let mergeStrategy;
     if (merge && typeof merge === 'string') {
       const options = Object.keys(MergeOptions);
@@ -327,6 +344,7 @@ without arguments, fetches all workspace components' latest versions from their 
       saveInLane,
       importDependenciesDirectly: dependencies,
       importHeadDependenciesDirectly: dependenciesHead,
+      dependenciesDepth: dependenciesDepthNum,
       importDependents: dependents,
       dependentsVia,
       dependentsAll,

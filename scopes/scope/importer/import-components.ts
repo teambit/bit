@@ -51,6 +51,7 @@ export type ImportOptions = {
   objectsOnly?: boolean;
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages, not as imported
   importHeadDependenciesDirectly?: boolean; // default: false, similar to importDependenciesDirectly, but it checks out to their head
+  dependenciesDepth?: number; // max depth of transitive deps to import (1=direct only); omit for all
   importDependents?: boolean;
   dependentsVia?: string;
   dependentsAll?: boolean;
@@ -707,17 +708,81 @@ if you just want to get a quick look into this snap, create a new workspace and 
   }
 
   private async getFlattenedDepsUnique(bitIds: ComponentID[]): Promise<ComponentID[]> {
-    const remoteComps = await this.scope.scopeImporter.getManyRemoteComponents(bitIds);
-    const versions = remoteComps.getVersions();
-    const getFlattened = (): ComponentIdList => {
-      if (versions.length === 1) return versions[0].flattenedDependencies;
-      const flattenedDeps = versions.map((v) => v.flattenedDependencies).flat();
-      return ComponentIdList.uniqFromArray(flattenedDeps);
-    };
-    const flattened = getFlattened();
+    const flattened = this.options.dependenciesDepth
+      ? await this.getDepsByDepth(bitIds, this.options.dependenciesDepth)
+      : await this.getAllFlattenedDeps(bitIds);
     return this.options.importHeadDependenciesDirectly
       ? this.uniqWithoutVersions(flattened)
       : this.removeMultipleVersionsKeepLatest(flattened);
+  }
+
+  private async getAllFlattenedDeps(bitIds: ComponentID[]): Promise<ComponentIdList> {
+    const remoteComps = await this.scope.scopeImporter.getManyRemoteComponents(bitIds);
+    const versions = remoteComps.getVersions();
+    return ComponentIdList.uniqFromArray(versions.flatMap((v) => [...v.flattenedDependencies]));
+  }
+
+  /**
+   * Single remote fetch; BFS in-process over each root version's `flattenedEdges`
+   * (which captures the full transitive graph rooted at that version).
+   */
+  private async getDepsByDepth(bitIds: ComponentID[], depth: number): Promise<ComponentIdList> {
+    const idList = ComponentIdList.fromArray(bitIds);
+    await this.scope.scopeImporter.importWithoutDeps(idList, { cache: true, lane: this.remoteLane });
+    // defaultToLatestVersion=true so versionless inputs (e.g. `bit import scope/foo`) resolve
+    // to the fetched head, instead of throwing inside getComponentsAndVersions.
+    const componentsAndVersions = await this.scope.getComponentsAndVersions(idList, true);
+
+    // build adjacency from the merged flattenedEdges of all root versions
+    const adjacency = new Map<string, ComponentID[]>();
+    const missingEdges: string[] = [];
+    for (const { component, versionStr, version } of componentsAndVersions) {
+      const edges = await version.getFlattenedEdges(this.scope.objects);
+      if (!edges.length && version.flattenedDependencies.length) {
+        missingEdges.push(`${component.toComponentId().toStringWithoutVersion()}@${versionStr}`);
+        continue;
+      }
+      for (const edge of edges) {
+        const key = edge.source.toString();
+        const targets = adjacency.get(key);
+        if (targets) targets.push(edge.target);
+        else adjacency.set(key, [edge.target]);
+      }
+    }
+    if (missingEdges.length) {
+      throw new BitError(
+        `unable to honor "--dependencies-depth": dependency-graph data (flattenedEdges) is missing for the following component(s):
+${missingEdges.map((id) => `  ${id}`).join('\n')}
+this typically happens for components tagged before bit 0.0.901, or when the remote scope is on an older version.
+re-run without "--dependencies-depth" to import all transitive dependencies, or re-tag the component(s) on a newer bit.`
+      );
+    }
+
+    // BFS up to `depth` levels. roots tracked without version because input may be versionless
+    // while dep references inside the graph carry a specific hash.
+    const rootKeysNoVersion = new Set<string>(bitIds.map((id) => id.toStringWithoutVersion()));
+    const collected = new Map<string, ComponentID>();
+    const visited = new Set<string>();
+    let currentBatch: ComponentID[] = componentsAndVersions.map(({ component, versionStr }) =>
+      component.toComponentId().changeVersion(versionStr)
+    );
+
+    for (let level = 0; level < depth && currentBatch.length; level++) {
+      const nextBatch: ComponentID[] = [];
+      for (const id of currentBatch) {
+        const targets = adjacency.get(id.toString()) || [];
+        for (const target of targets) {
+          const key = target.toString();
+          if (visited.has(key) || rootKeysNoVersion.has(target.toStringWithoutVersion())) continue;
+          visited.add(key);
+          collected.set(key, target);
+          nextBatch.push(target);
+        }
+      }
+      currentBatch = nextBatch;
+    }
+
+    return ComponentIdList.uniqFromArray(Array.from(collected.values()));
   }
 
   private uniqWithoutVersions(flattened: ComponentIdList) {

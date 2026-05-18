@@ -2530,6 +2530,11 @@
       ],
       [
         "",
+        "dependencies-depth <n>",
+        "limit how many levels deep to traverse with --dependencies/--dependencies-head (1=direct deps only). default: traverse all levels"
+      ],
+      [
+        "",
         "dependents",
         "import components found while traversing from the imported components upwards to the workspace components"
       ],
