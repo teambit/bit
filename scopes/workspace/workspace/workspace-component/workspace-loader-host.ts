@@ -604,6 +604,18 @@ export class WorkspaceLoaderHost implements LoaderHost {
     });
 
     component.loadedPhase = 'aspects';
+
+    // Publish the now-fully-loaded component to the unified cache so that any
+    // RECURSIVE `workspace.getMany([id])` later in this same outer load
+    // (typically pass 2's `workspace.loadAspects` -> `WorkspaceAspectsLoader.
+    // resolveAspects` -> `workspaceAspectResolver` -> `getComponentPackagePath`
+    // -> `EnvsMain.getEnvId`) short-circuits on the cache hit instead of
+    // re-entering the host. Without this, the recursive build returns a
+    // config-only component (pass 1 skipped slot-firing under `loadingDepth>1`)
+    // and `getEnvId` throws "no env found for X".
+    if (this.unifiedLoader) {
+      this.unifiedLoader.publish(component.id, 'aspects', component);
+    }
   }
 
   private async upsertExtensionData(component: Component, extension: string, data: any) {
