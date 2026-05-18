@@ -745,12 +745,13 @@ This will automatically include all Bit-specific instructions in your Claude Cod
    * (the bit-cloud table is already present). Split out from `setupCloudCodex`
    * for direct testing without filesystem stubbing.
    *
-   * Accepts both the bare-key form `[mcp_servers.bit-cloud]` and the
-   * quoted-key form `[mcp_servers."bit-cloud"]`, with optional whitespace
-   * inside the brackets — all valid TOML for the same table.
+   * Accepts the bare-key form `[mcp_servers.bit-cloud]`, the basic-string
+   * quoted form `[mcp_servers."bit-cloud"]`, and the literal-string quoted
+   * form `[mcp_servers.'bit-cloud']` — all valid TOML for the same table.
+   * Whitespace inside the brackets is tolerated.
    */
   static buildCodexConfigUpdate(existing: string): string | null {
-    const headerRegex = new RegExp(`^\\[\\s*mcp_servers\\.("?)${this.BIT_CLOUD_SERVER_NAME}\\1\\s*\\]`, 'm');
+    const headerRegex = new RegExp(`^\\[\\s*mcp_servers\\.(["']?)${this.BIT_CLOUD_SERVER_NAME}\\1\\s*\\]`, 'm');
     if (headerRegex.test(existing)) return null;
 
     const block = `[mcp_servers.${this.BIT_CLOUD_SERVER_NAME}]\nurl = "${this.BIT_CLOUD_MCP_URL}"\n`;

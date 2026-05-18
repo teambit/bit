@@ -91,8 +91,13 @@ describe('McpConfigWriter — Cloud MCP setup', () => {
       expect(McpConfigWriter.buildCodexConfigUpdate(existing)).to.be.null;
     });
 
-    it('returns null (no-op) when the quoted-key bit-cloud table is already present', () => {
+    it('returns null (no-op) when the basic-string quoted-key bit-cloud table is already present', () => {
       const existing = `[mcp_servers."bit-cloud"]\nurl = "https://elsewhere"\n`;
+      expect(McpConfigWriter.buildCodexConfigUpdate(existing)).to.be.null;
+    });
+
+    it('returns null (no-op) when the literal-string quoted-key bit-cloud table is already present', () => {
+      const existing = `[mcp_servers.'bit-cloud']\nurl = "https://elsewhere"\n`;
       expect(McpConfigWriter.buildCodexConfigUpdate(existing)).to.be.null;
     });
 

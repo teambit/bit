@@ -65,7 +65,7 @@ export class HostInitializerMain {
     workspaceConfigProps: WorkspaceExtensionProps = {},
     generator?: string,
     agent?: string
-  ): Promise<{ created: boolean; consumer: Consumer; agentFileWritten?: string; mcpFileWritten?: string }> {
+  ): Promise<{ created: boolean; consumer: Consumer; agentFileWritten?: string }> {
     const consumerInfo = await getWorkspaceInfo(absPath || process.cwd());
     // if "bit init" was running without any flags, the user is probably trying to init a new workspace but wasn't aware
     // that he's already in a workspace.
@@ -119,12 +119,10 @@ export class HostInitializerMain {
     const writtenConsumer = await consumer.write();
     const created = !consumerInfo?.path;
     let agentFileWritten: string | undefined;
-    let mcpFileWritten: string | undefined;
     if (created) {
       agentFileWritten = await HostInitializerMain.writeAgentInstructions(consumerPath, agent);
-      mcpFileWritten = await HostInitializerMain.writeDefaultMcpConfig(consumerPath);
     }
-    return { created, consumer: writtenConsumer, agentFileWritten, mcpFileWritten };
+    return { created, consumer: writtenConsumer, agentFileWritten };
   }
 
   /**
@@ -157,10 +155,16 @@ export class HostInitializerMain {
   };
 
   /**
-   * Read the universal AGENTS.md template that ships with this aspect.
+   * Read the AGENTS.md template that ships with this aspect, picking the
+   * Git-integrated variant when the workspace has a `.git` directory.
+   * The Git variant tells the agent to use Git branches and to leave
+   * `bit snap`/`bit export` to CI — the Bit-lanes workflow only applies
+   * to non-Git workspaces.
    */
-  private static loadAgentsTemplate(): Promise<string> {
-    return fs.readFile(path.join(__dirname, 'agents-template.md'), 'utf8');
+  private static async loadAgentsTemplate(projectPath: string): Promise<string> {
+    const isGit = await HostInitializerMain.hasGitDirectory(projectPath);
+    const templateName = isGit ? 'agents-template-git.md' : 'agents-template.md';
+    return fs.readFile(path.join(__dirname, templateName), 'utf8');
   }
 
   /**
@@ -173,7 +177,7 @@ export class HostInitializerMain {
    * to `AGENTS.md`.
    */
   static async writeMcpAgentRules(editor: string, projectPath: string): Promise<string | undefined> {
-    const content = await HostInitializerMain.loadAgentsTemplate();
+    const content = await HostInitializerMain.loadAgentsTemplate(projectPath);
     const editorLower = editor.toLowerCase();
 
     if (editorLower === 'claude-code') {
@@ -245,7 +249,7 @@ export class HostInitializerMain {
       const targetFile = agent ? HostInitializerMain.AGENT_FILE_MAP[agent] : 'AGENTS.md';
       const targetPath = path.join(projectPath, targetFile);
 
-      const content = await HostInitializerMain.loadAgentsTemplate();
+      const content = await HostInitializerMain.loadAgentsTemplate(projectPath);
       const finalContent = HostInitializerMain.wrapWithFrontmatter(targetFile, content);
 
       await fs.ensureDir(path.dirname(targetPath));

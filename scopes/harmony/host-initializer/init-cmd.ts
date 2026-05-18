@@ -178,7 +178,7 @@ supports various reset options to recover from corrupted state or restart from s
     // Resolve agent flag: true means no specific type (use default AGENTS.md), string means a specific tool.
     const agentType = agent === true ? undefined : agent || undefined;
 
-    const { created, agentFileWritten, mcpFileWritten } = await HostInitializerMain.init(
+    const { created, agentFileWritten } = await HostInitializerMain.init(
       path,
       standalone,
       noPackageJson,
@@ -192,6 +192,12 @@ supports various reset options to recover from corrupted state or restart from s
       interactiveConfig?.generator || generator,
       agentType
     );
+
+    // Write a baseline `.mcp.json` for fresh workspaces — except when the
+    // user explicitly opted out of Cloud MCP in interactive mode.
+    const userOptedOutOfMcp = interactiveConfig !== null && !interactiveConfig.mcpEditor;
+    const mcpFileWritten =
+      created && !userOptedOutOfMcp ? await HostInitializerMain.writeDefaultMcpConfig(projectPath) : undefined;
 
     return HostInitializerMain.generateInitMessage(
       created,
