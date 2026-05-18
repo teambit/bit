@@ -509,8 +509,15 @@ export class Workspace implements ComponentFactory {
    */
   async listWithInvalidAtPhase(phase: Phase, _loadOpts?: ComponentLoadOptions) {
     const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
-    const { components, missing } = await this.unifiedLoader.getMany(legacyIds, { phase }, { throwOnMissing: false });
-    return { components, invalidComponents: missing.map((id) => ({ id, err: new Error('not found') })) };
+    const { components } = await this.unifiedLoader.getMany(legacyIds, { phase }, { throwOnMissing: false });
+    // The host detects invalid components in pass 1 (the legacy
+    // `consumer.loadComponents` surfaces them with their underlying error —
+    // e.g. `MainFileRemoved`, `ComponentNotFoundInPath`). The unified loader
+    // doesn't return invalid through `getMany` (its return shape is
+    // `{components, missing}`), so we read them off the host after the call.
+    // Without this, `bit status` and `bit diff` print a generic "Error"
+    // instead of the actual diagnostic.
+    return { components, invalidComponents: this.workspaceLoaderHost.getLastInvalid() };
   }
 
   /**

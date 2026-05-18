@@ -66,6 +66,15 @@ export class WorkspaceLoaderHost implements LoaderHost {
    */
   private loadingDepth = 0;
 
+  /**
+   * Invalid components detected by the most recent OUTER `loadMany` call.
+   * Populated in `pass1` (the legacy `consumer.loadComponents` call surfaces
+   * components whose source files are missing, manifests are malformed, etc.).
+   * Exposed via `getLastInvalid()` so `workspace.listWithInvalidAtPhase` can
+   * report them with their actual errors instead of a generic "not found".
+   */
+  private lastInvalid: InvalidComponent[] = [];
+
   constructor(
     private readonly workspace: Workspace,
     private readonly logger: Logger,
@@ -83,6 +92,20 @@ export class WorkspaceLoaderHost implements LoaderHost {
 
   attachUnifiedLoader(loader: UnifiedComponentLoader): void {
     this.unifiedLoader = loader;
+  }
+
+  /**
+   * Invalid components detected by the most recent OUTER `loadMany` call.
+   * Read this directly after a `workspace.list*` call to report invalid
+   * components with their actual error messages (e.g. "main-file was removed",
+   * "component files were deleted") instead of a generic "not found".
+   *
+   * Race note: if another `loadMany` is in-flight concurrently the array can
+   * be reset mid-read. All current callers (`bit status`, `bit diff`) run
+   * synchronously after their own load, so this is fine in practice.
+   */
+  getLastInvalid(): InvalidComponent[] {
+    return this.lastInvalid;
   }
 
   // === LoaderHost contract: hash inputs ============================
@@ -174,9 +197,11 @@ export class WorkspaceLoaderHost implements LoaderHost {
     if (!ids.length) return new Map();
 
     this.loadingDepth += 1;
+    if (this.loadingDepth === 1) this.lastInvalid = [];
     try {
       const { workspaceIds, scopeIds, inputKeyByResolvedKey } = await this.partitionIds(ids);
       const pass1 = await this.pass1BuildComponentsNoSlots(workspaceIds, scopeIds);
+      if (pass1.invalid.length) this.lastInvalid.push(...pass1.invalid);
 
       // Always fire slots so the returned components have env/dep data
       // populated. Pre-rewrite WCL did this unconditionally, even for
