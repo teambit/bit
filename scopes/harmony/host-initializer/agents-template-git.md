@@ -1,12 +1,14 @@
-# Bit Workspace — AI Agent Instructions
+# Bit Workspace — AI Agent Instructions (Git-Integrated)
 
-This file teaches AI agents how to work correctly inside a **Bit workspace**. Read it fully before touching any code.
+This file teaches AI agents how to work correctly inside a **Git-integrated Bit workspace**. Read it fully before touching any code.
 
 ---
 
 ## What is Bit?
 
 Bit is a composable development platform where every piece of functionality is an independent, versioned, composed **component**. Components live in **scopes** (remote registries of business domains) and are managed through the `bit` CLI.
+
+In this workspace, **Git is the source of truth** for source code and collaboration. Bit's component versioning (`bit snap`, `bit tag`, `bit export`) runs in CI/CD on merge — not locally.
 
 ### Component Types
 
@@ -221,20 +223,27 @@ bit import "<owner>.<scope>/**"
 
 ---
 
-## Saving and Publishing Changes
+## Saving and Publishing Changes (Git-Integrated Workflow)
 
-**Never push directly to the main lane.** Always create a lane and submit a change request.
+**This workspace is Git-integrated.** Git owns version control of source code; Bit's snap/tag/export are handled automatically by CI/CD on merge. Your collaboration unit is the Git branch, not a Bit lane.
 
-Git does not manage component versions in a Bit workspace — use Bit for version control of components.
+**Do not run locally:**
+
+- `bit snap`, `bit tag`, `bit export` — CI/CD handles these on merge.
+- `bit lane create` and `bit lane` management — use Git branches instead.
+
+**Your workflow:**
 
 ```bash
-bit lane create <your-lane-name>     # create a new lane
-bit validate                         # confirm no build errors first
-bit snap --message "describe change" # persist component versions
-bit export                           # push lane to remote
+git checkout -b <branch-name>            # create a feature branch
+# ... edit components ...
+bit validate                             # confirm no build errors
+git add . && git commit -m "describe change"
+git push                                 # push your branch
+# open a PR; CI runs `bit snap` + `bit export` on merge.
 ```
 
-> Always run `bit lane create` first. If you're already on a non-main lane, continue using it — don't create a new one.
+> Focus on development workflows: component creation, modification, testing, and local validation. Leave versioning and publishing to CI.
 
 ---
 
@@ -325,8 +334,8 @@ export { User } from './user.js';
 | Importing only the target component but not its dependents | Import the full chain top-down: platform → app → feature → page → component                                        |
 | Treating all components as UI widgets                      | Understand the type first — platform, app, feature/aspect, hook, entity, or UI component — it determines the chain |
 | Running `bit build`                                        | Use `bit validate` instead — faster and sufficient                                                                 |
-| Pushing to the main lane                                   | Always create a lane, snap, then export                                                                            |
-| Using git to version components                            | Bit manages component versions — use `bit snap` / `bit export`                                                     |
+| Running `bit snap`, `bit tag`, or `bit export` locally     | These are handled by CI/CD on merge — don't run them in the workspace                                              |
+| Creating or managing Bit lanes                             | Use Git branches instead — this workspace is Git-integrated                                                        |
 | Guessing a component ID                                    | Check `package.json` under `componentId` or use `bit list`                                                         |
 | Creating a component that already exists                   | Always run `bit list` and check the Bit Cloud MCP (`read_scopes` / `search`) first                                 |
 | Using `npm install`, `yarn`, or `pnpm`                     | Use `bit install`                                                                                                  |
