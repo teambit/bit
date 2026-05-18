@@ -844,6 +844,14 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     // `ComponentNotFound` so callers across the codebase (build-graph-ids,
     // diff command, status command, etc.) that `instanceof`-check the
     // legacy class for tolerance branches continue to work.
+    //
+    // If the requested id was detected as INVALID in the most recent pass1
+    // (e.g. missing main file, missing component path), the host stashed the
+    // underlying error in `getLastInvalid()`. Pre-rewrite WCL re-threw that
+    // error from `get` directly so callers like `bit tag`'s graph builder
+    // could detect "main file removed" specifically. Mirror that behaviour:
+    // a missing-but-invalid component throws its original diagnostic, while
+    // a missing-and-not-invalid component throws `LegacyComponentNotFound`.
     let component: Component;
     try {
       component = legacyComponent
@@ -851,6 +859,10 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
         : await this.unifiedLoader.get(componentId, { phase: DEFAULT_PHASE });
     } catch (err: any) {
       if (err?.name === 'ComponentNotFound' && !(err instanceof LegacyComponentNotFound)) {
+        const invalid = this.workspaceLoaderHost
+          .getLastInvalid()
+          .find((ic) => ic.id.isEqual(componentId, { ignoreVersion: !componentId.hasVersion() }));
+        if (invalid) throw invalid.err;
         throw new LegacyComponentNotFound(componentId.toString());
       }
       throw err;
