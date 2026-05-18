@@ -41,7 +41,7 @@ import type { WorkspaceExtConfig } from './types';
 import { Workspace } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
-import { CapsuleCmd, CapsuleCreateCmd, CapsuleDeleteCmd, CapsuleListCmd } from './capsule.cmd';
+import { CapsuleCmd, CapsuleCreateCmd, CapsuleDeleteCmd, CapsuleListCmd, CapsulePruneCmd } from './capsule.cmd';
 import { EnvsSetCmd } from './envs-subcommands/envs-set.cmd';
 import { EnvsUnsetCmd } from './envs-subcommands/envs-unset.cmd';
 import { PatternCommand } from './pattern.cmd';
@@ -352,6 +352,7 @@ function getCapsulesCommands(isolator: IsolatorMain, scope: ScopeMain, workspace
     new CapsuleListCmd(isolator, workspace, scope),
     new CapsuleCreateCmd(workspace, scope, isolator),
     new CapsuleDeleteCmd(isolator, scope, workspace),
+    new CapsulePruneCmd(isolator),
   ];
   return capsuleCmd;
 }

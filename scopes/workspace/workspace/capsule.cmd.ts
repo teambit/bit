@@ -1,10 +1,19 @@
 // eslint-disable-next-line max-classes-per-file
 import type { Command, CommandOptions } from '@teambit/cli';
 import { formatItem, formatTitle, formatSuccessSummary, formatHint } from '@teambit/cli';
-import type { CapsuleList, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
+import type { CapsuleList, IsolateComponentsOptions, IsolatorMain, PruneCapsulesReport } from '@teambit/isolator';
 import type { ScopeMain } from '@teambit/scope';
 import chalk from 'chalk';
+import fs from 'fs-extra';
+import path from 'path';
 import type { Workspace } from './workspace';
+
+function formatBytes(bytes: number): string {
+  if (!bytes) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  return `${(bytes / 1024 ** i).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}
 
 type CreateOpts = {
   baseDir?: string;
@@ -135,15 +144,59 @@ To initialize a workspace: bit init`);
     const numOfWsCapsules = listWs ? listWs.capsules.length : listScope.capsules.length;
     const hostType = this.workspace ? 'workspace' : 'scope';
 
+    const allRoots = await this.isolator.listAllCapsuleRoots();
+    const totalSize = allRoots.reduce((sum, r) => sum + r.sizeBytes, 0);
+    const orphanChecks = await Promise.all(
+      allRoots
+        .filter((r) => r.originPath)
+        .map(async (r): Promise<number> => ((await fs.pathExists(r.originPath as string)) ? 0 : 1))
+    );
+    const orphanCount = orphanChecks.reduce((a: number, b: number) => a + b, 0);
+    const staleAspectsAgeMs = 30 * 24 * 60 * 60 * 1000;
+    const cutoff = Date.now() - staleAspectsAgeMs;
+    const staleChecks = await Promise.all(
+      allRoots
+        .filter((r) => r.kind === 'scope-aspects-root')
+        .map((r): Promise<number> => this.countStaleAspectChildren(r.path, cutoff))
+    );
+    const staleAspectCount = staleChecks.reduce((a: number, b: number) => a + b, 0);
+
     const title = formatTitle(`found ${numOfWsCapsules} capsule(s) for ${hostType}: ${hostPath}`);
     const wsLine = listWs ? formatItem(`workspace capsules root-dir: ${workspaceCapsulesRootDir}`) : undefined;
     const scopeAspectLine = formatItem(`scope's aspects capsules root-dir: ${scopeAspectsCapsulesRootDir}`);
-    const scopeLine = formatItem(`scope's capsules root-dir: ${scopeCapsulesRootDir}`);
+    const scopeLine = scopeCapsulesRootDir
+      ? formatItem(`scope's capsules root-dir: ${scopeCapsulesRootDir}`)
+      : undefined;
+    const summaryLine = formatItem(
+      `cache total: ${chalk.bold(formatBytes(totalSize))} across ${allRoots.length} subdir(s) — ` +
+        `${orphanCount} orphan(s), ${staleAspectCount} stale aspect-version(s) (>${30}d)`
+    );
     const suggestLine = formatHint(`use --json to get the list of all capsules`);
-    const lines = [title, wsLine, scopeAspectLine, scopeLine, suggestLine].filter((x) => x).join('\n');
+    const lines = [title, wsLine, scopeAspectLine, scopeLine, summaryLine, suggestLine].filter((x) => x).join('\n');
 
-    // TODO: improve output
     return lines;
+  }
+
+  private async countStaleAspectChildren(rootPath: string, cutoffMs: number): Promise<number> {
+    try {
+      const entries = await fs.readdir(rootPath, { withFileTypes: true });
+      let count = 0;
+      for (const entry of entries) {
+        if (!entry.isDirectory() || entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+        const childPath = path.join(rootPath, entry.name);
+        const markerPath = path.join(childPath, '.bit-capsule-origin.json');
+        try {
+          const stat = await fs.stat(markerPath);
+          if (stat.mtime.getTime() < cutoffMs) count += 1;
+        } catch {
+          const stat = await fs.stat(childPath).catch(() => undefined);
+          if (stat && stat.mtime.getTime() < cutoffMs) count += 1;
+        }
+      }
+      return count;
+    } catch {
+      return 0;
+    }
   }
 
   async json() {
@@ -159,7 +212,9 @@ To initialize a workspace: bit init`);
     const listScope = await this.isolator.list(rootDirs.scopeAspectsCapsulesRootDir);
     const capsules = listWs ? listWs.capsules : [];
     const scopeCapsules = listScope ? listScope.capsules : [];
-    return { ...rootDirs, capsules, scopeCapsules };
+    const allRoots = await this.isolator.listAllCapsuleRoots();
+    const totalSizeBytes = allRoots.reduce((sum, r) => sum + r.sizeBytes, 0);
+    return { ...rootDirs, capsules, scopeCapsules, totalSizeBytes, allRoots };
   }
 
   private getCapsulesRootDirs() {
@@ -196,6 +251,70 @@ export class CapsuleDeleteCmd implements Command {
     const capsuleBaseDir = capsuleBaseDirToDelete();
     const deletedDir = await this.isolator.deleteCapsules(capsuleBaseDir);
     return formatSuccessSummary(`capsules dir has been deleted: ${chalk.bold(deletedDir)}`);
+  }
+}
+
+type PruneOpts = {
+  olderThan?: number;
+  keepWorkspaceCaps?: boolean;
+  orphans?: boolean;
+  sizeTarget?: number;
+  dryRun?: boolean;
+  json?: boolean;
+};
+
+export class CapsulePruneCmd implements Command {
+  name = 'prune';
+  description = 'evict stale capsules from the global cache';
+  extendedDescription = `workspace capsules are deleted unconditionally; aspect-version and scope capsules are deleted when their last-used marker is older than --older-than (default 30 days).
+use --dry-run first to preview what would be removed.`;
+  group = 'advanced';
+  alias = '';
+  options = [
+    ['', 'older-than <days>', 'age threshold in days for aspect-version/scope capsule pruning (default 30)'],
+    ['', 'keep-workspace-caps', 'skip workspace capsule deletion'],
+    ['', 'no-orphans', "don't delete capsules whose origin path no longer exists"],
+    ['', 'size-target <gb>', 'after standard pruning, LRU-evict aspect-versions until total drops below this size'],
+    ['', 'dry-run', 'preview what would be removed without deleting'],
+    ['j', 'json', 'json format'],
+  ] as CommandOptions;
+
+  constructor(private isolator: IsolatorMain) {}
+
+  async report(_args: [], opts: PruneOpts) {
+    const report = await this.runPrune(opts);
+    const header = report.dryRun
+      ? formatTitle(`[dry-run] would remove ${report.removed.length} capsule(s)`)
+      : formatSuccessSummary(`removed ${report.removed.length} capsule(s)`);
+    const sizeLine = formatItem(
+      `cache: ${formatBytes(report.totalSizeBeforeBytes)} → ${formatBytes(report.totalSizeAfterBytes)} ` +
+        `(freed ${formatBytes(report.totalRemovedBytes)})`
+    );
+    const items = report.removed
+      .slice(0, 50)
+      .map((r) =>
+        formatItem(`${chalk.dim(`[${r.kind} · ${r.reason}]`)} ${r.path} ${chalk.dim(`(${formatBytes(r.sizeBytes)})`)}`)
+      );
+    const truncated =
+      report.removed.length > 50
+        ? formatHint(`...and ${report.removed.length - 50} more (use --json to see the full list)`)
+        : undefined;
+    return [header, sizeLine, ...items, truncated].filter(Boolean).join('\n');
+  }
+
+  async json(_args: [], opts: PruneOpts) {
+    return this.runPrune(opts);
+  }
+
+  private async runPrune(opts: PruneOpts): Promise<PruneCapsulesReport> {
+    return this.isolator.pruneCapsules({
+      olderThanDays: opts.olderThan !== undefined ? Number(opts.olderThan) : undefined,
+      keepWorkspaceCaps: opts.keepWorkspaceCaps === true,
+      // commander turns `--no-orphans` into `orphans: false`; default `true`.
+      includeOrphans: opts.orphans !== false,
+      sizeTargetGb: opts.sizeTarget !== undefined ? Number(opts.sizeTarget) : undefined,
+      dryRun: opts.dryRun === true,
+    });
   }
 }
 

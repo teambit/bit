@@ -35,7 +35,14 @@ import { ComponentIdList } from '@teambit/component-id';
 import type { Scope, Scope as LegacyScope } from '@teambit/legacy.scope';
 import type { GlobalConfigMain } from '@teambit/global-config';
 import { GlobalConfigAspect } from '@teambit/global-config';
-import { DEPENDENCIES_FIELDS, PACKAGE_JSON, CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR } from '@teambit/legacy.constants';
+import {
+  DEPENDENCIES_FIELDS,
+  PACKAGE_JSON,
+  CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR,
+  CFG_CAPSULES_MAX_SIZE_GB,
+  CFG_CAPSULES_MAX_AGE_DAYS,
+  CFG_CAPSULES_AUTO_PRUNE,
+} from '@teambit/legacy.constants';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { AbstractVinyl, ArtifactVinyl } from '@teambit/component.sources';
 import {
@@ -57,6 +64,7 @@ import { type DependenciesGraph } from '@teambit/objects';
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
 import path, { basename } from 'path';
+import { spawn } from 'child_process';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import pMap from 'p-map';
 import { Capsule } from './capsule';
@@ -285,6 +293,37 @@ const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
  */
 export const CAPSULE_READY_FILE = '.bit-capsule-ready';
 
+/**
+ * Marker file written into every capsule dir we manage. Its presence tells the prune logic
+ * what kind of dir this is, where it came from, and (via its mtime) when it was last used.
+ */
+export const CAPSULE_ORIGIN_FILE = '.bit-capsule-origin.json';
+export const CAPSULE_TRASH_DIR = '.trash';
+
+export type CapsuleKind = 'workspace' | 'scope-aspects-root' | 'scope-aspect' | 'scope';
+
+export type CapsuleOriginMarker = {
+  originPath: string;
+  createdAt: string;
+  kind: CapsuleKind;
+};
+
+export type PruneCapsulesOptions = {
+  olderThanDays?: number;
+  includeOrphans?: boolean;
+  keepWorkspaceCaps?: boolean;
+  sizeTargetGb?: number;
+  dryRun?: boolean;
+};
+
+export type PruneCapsulesReport = {
+  removed: { path: string; kind: CapsuleKind | 'unmarked'; reason: string; sizeBytes: number }[];
+  totalRemovedBytes: number;
+  totalSizeBeforeBytes: number;
+  totalSizeAfterBytes: number;
+  dryRun: boolean;
+};
+
 export class IsolatorMain {
   static runtime = MainRuntime;
   static dependencies = [
@@ -329,6 +368,8 @@ export class IsolatorMain {
       capsuleTransferSlot,
       configStore
     );
+    isolator.registerAutoPruneHook();
+    isolator.sweepTrashAsync();
     return isolator;
   }
   constructor(
@@ -660,9 +701,15 @@ export class IsolatorMain {
     }
     let capsules = await this.createCapsulesFromComponents(components, capsulesDir, config);
     this.writeRootPackageJson(capsulesDir, this.getCapsuleDirHash(opts.baseDir || ''));
+    const rootKind = this.deriveCapsuleKind(opts);
+    const rootOriginPath = opts.baseDir || '';
+    await this.ensureOriginMarker(capsulesDir, rootKind, rootOriginPath);
     const allCapsuleList = CapsuleList.fromArray(capsules);
     let capsuleList = allCapsuleList;
     if (opts.getExistingAsIs) {
+      if (rootKind === 'scope-aspects-root') {
+        await this.ensureAspectCapsuleMarkers(allCapsuleList, rootOriginPath);
+      }
       longProcessLogger?.end();
 
       return capsuleList;
@@ -675,6 +722,9 @@ export class IsolatorMain {
         );
 
         if (existingCapsules.length === capsuleList.length) {
+          if (rootKind === 'scope-aspects-root') {
+            await this.ensureAspectCapsuleMarkers(existingCapsules, rootOriginPath);
+          }
           longProcessLogger?.end();
           return existingCapsules;
         }
@@ -771,6 +821,9 @@ export class IsolatorMain {
       });
     }
     await this.markCapsulesAsReady(capsuleList);
+    if (rootKind === 'scope-aspects-root') {
+      await this.ensureAspectCapsuleMarkers(allCapsuleList, rootOriginPath);
+    }
     if (longProcessLogger) {
       longProcessLogger.end();
     }
@@ -1113,8 +1166,102 @@ export class IsolatorMain {
 
   async deleteCapsules(rootDir?: string): Promise<string> {
     const dirToDelete = rootDir || this.getRootDirOfAllCapsules();
-    await fs.remove(dirToDelete);
+    await this.scheduleFastDelete(dirToDelete);
     return dirToDelete;
+  }
+
+  /**
+   * Move a capsule dir into a sibling `.trash/<uuid>/` so it disappears from the cache
+   * immediately (same-filesystem rename is O(1)), then kick off a detached `rm -rf` so the
+   * actual byte-by-byte cleanup happens in the background. This avoids the multi-second
+   * stalls users see when deleting capsules with thousands of files.
+   */
+  async scheduleFastDelete(dir: string): Promise<void> {
+    const exists = await fs.pathExists(dir);
+    if (!exists) return;
+    const trashRoot = path.join(this.getRootDirOfAllCapsules(), CAPSULE_TRASH_DIR);
+    await fs.ensureDir(trashRoot);
+    const trashTarget = path.join(trashRoot, `${path.basename(dir)}-${v4()}`);
+    try {
+      await fs.move(dir, trashTarget, { overwrite: true });
+    } catch (err: any) {
+      // Likely cross-device — fall back to a synchronous remove.
+      this.logger.debug(`scheduleFastDelete: rename failed for ${dir}, falling back to fs.remove (${err.message})`);
+      await fs.remove(dir);
+      return;
+    }
+    this.spawnDetachedSweep(trashRoot);
+  }
+
+  /**
+   * Sweep the `.trash` dir in a detached background process. Safe to call multiple times —
+   * `rm -rf` on a non-existent path is a no-op and concurrent sweeps just race to remove
+   * different entries.
+   */
+  sweepTrashAsync(): void {
+    const trashRoot = path.join(this.getRootDirOfAllCapsules(), CAPSULE_TRASH_DIR);
+    this.spawnDetachedSweep(trashRoot);
+  }
+
+  /**
+   * Register a process-exit hook that runs an in-process prune at most once per ~24h.
+   * Gated by the mtime of a stamp file under the capsules root so concurrent Bit
+   * invocations can't all trigger it at once.
+   */
+  registerAutoPruneHook(): void {
+    this.cli.registerOnBeforeExit(async () => {
+      try {
+        await this.maybeAutoPrune();
+      } catch (err: any) {
+        this.logger.debug(`auto-prune skipped due to error: ${err?.message ?? err}`);
+      }
+    });
+  }
+
+  private async maybeAutoPrune(): Promise<void> {
+    const enabled = this.configStore.getConfig(CFG_CAPSULES_AUTO_PRUNE);
+    if (enabled === 'false') return;
+
+    const root = this.getRootDirOfAllCapsules();
+    if (!(await fs.pathExists(root))) return;
+
+    const stampPath = path.join(root, '.last-capsule-prune');
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    try {
+      const stat = await fs.stat(stampPath);
+      if (Date.now() - stat.mtime.getTime() < ONE_DAY_MS) return;
+    } catch {
+      // missing — first run, fall through and prune
+    }
+    // Write the stamp first to claim the slot — even if prune fails, we don't retry within 24h.
+    await fs.outputFile(stampPath, '');
+
+    const maxAgeRaw = this.configStore.getConfig(CFG_CAPSULES_MAX_AGE_DAYS);
+    const olderThanDays = maxAgeRaw !== undefined ? Number(maxAgeRaw) : 30;
+    const maxSizeRaw = this.configStore.getConfig(CFG_CAPSULES_MAX_SIZE_GB);
+    const sizeTargetGb = maxSizeRaw !== undefined ? Number(maxSizeRaw) : 10;
+
+    this.logger.debug(`[auto-prune] triggered. olderThanDays=${olderThanDays}, sizeTargetGb=${sizeTargetGb}`);
+    const report = await this.pruneCapsules({
+      olderThanDays,
+      sizeTargetGb,
+      includeOrphans: true,
+    });
+    this.logger.debug(
+      `[auto-prune] removed ${report.removed.length} capsule(s), freed ${report.totalRemovedBytes} bytes`
+    );
+  }
+
+  private spawnDetachedSweep(trashRoot: string): void {
+    try {
+      const child = spawn('rm', ['-rf', trashRoot], {
+        detached: true,
+        stdio: 'ignore',
+      });
+      child.unref();
+    } catch (err: any) {
+      this.logger.debug(`failed to spawn detached trash sweep: ${err.message}`);
+    }
   }
 
   private writeRootPackageJson(capsulesDir: string, hashDir: string): void {
@@ -1146,6 +1293,315 @@ export class IsolatorMain {
 
   private getRootDirOfAllCapsules(): string {
     return this.globalConfig.getGlobalCapsulesBaseDir();
+  }
+
+  /**
+   * Derive the capsule kind from the isolation context. Aspect resolution sets
+   * `opts.context.aspects = true`; everything else is treated as a workspace/scope cap.
+   */
+  private deriveCapsuleKind(opts: IsolateComponentsOptions): CapsuleKind {
+    if (opts.context?.aspects) return 'scope-aspects-root';
+    return 'workspace';
+  }
+
+  /**
+   * Write the origin marker if missing; otherwise just bump its mtime so it reflects
+   * "last used at". Failures are non-fatal — markers are best-effort metadata.
+   */
+  private async ensureOriginMarker(dir: string, kind: CapsuleKind, originPath: string): Promise<void> {
+    const markerPath = path.join(dir, CAPSULE_ORIGIN_FILE);
+    try {
+      if (await fs.pathExists(markerPath)) {
+        const now = new Date();
+        await fs.utimes(markerPath, now, now);
+        return;
+      }
+      const marker: CapsuleOriginMarker = {
+        originPath,
+        createdAt: new Date().toISOString(),
+        kind,
+      };
+      await fs.outputJson(markerPath, marker);
+    } catch (err: any) {
+      this.logger.debug(`failed to write capsule origin marker at ${markerPath}: ${err.message}`);
+    }
+  }
+
+  private async readOriginMarker(dir: string): Promise<CapsuleOriginMarker | undefined> {
+    try {
+      const raw = await fs.readJson(path.join(dir, CAPSULE_ORIGIN_FILE));
+      if (raw && typeof raw.originPath === 'string' && typeof raw.kind === 'string') return raw as CapsuleOriginMarker;
+    } catch {
+      // missing or malformed — treat as unmarked
+    }
+    return undefined;
+  }
+
+  private async getOriginMarkerMtime(dir: string): Promise<Date | undefined> {
+    try {
+      const stat = await fs.stat(path.join(dir, CAPSULE_ORIGIN_FILE));
+      return stat.mtime;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * Mark all per-component capsule subdirs as scope-aspect kind, originated from the
+   * scope-aspects root. Used right after a scope-aspects isolation.
+   */
+  private async ensureAspectCapsuleMarkers(capsuleList: CapsuleList, rootOriginPath: string): Promise<void> {
+    await Promise.all(
+      capsuleList.map(async (capsule) => {
+        if (!fs.existsSync(capsule.path)) return;
+        await this.ensureOriginMarker(capsule.path, 'scope-aspect', rootOriginPath);
+      })
+    );
+  }
+
+  /**
+   * Walk the global capsules root and return entries with their classification, size, and
+   * last-used time. Used by prune and by `bit capsule list`.
+   */
+  async listAllCapsuleRoots(): Promise<
+    Array<{
+      path: string;
+      kind: CapsuleKind | 'unmarked';
+      originPath?: string;
+      lastUsedMs: number;
+      sizeBytes: number;
+    }>
+  > {
+    const root = this.getRootDirOfAllCapsules();
+    if (!(await fs.pathExists(root))) return [];
+    const entries = await fs.readdir(root, { withFileTypes: true });
+    const subdirs = entries.filter(
+      (e) => e.isDirectory() && e.name !== CAPSULE_TRASH_DIR && e.name !== 'node_modules' && !e.name.startsWith('.')
+    );
+    return Promise.all(
+      subdirs.map(async (entry) => {
+        const subPath = path.join(root, entry.name);
+        const marker = await this.readOriginMarker(subPath);
+        const lastUsed = marker ? await this.getOriginMarkerMtime(subPath) : undefined;
+        const dirStat = await fs.stat(subPath).catch(() => undefined);
+        const sizeBytes = await this.computeDirSize(subPath);
+        return {
+          path: subPath,
+          kind: (marker?.kind ?? 'unmarked') as CapsuleKind | 'unmarked',
+          originPath: marker?.originPath,
+          lastUsedMs: (lastUsed ?? dirStat?.mtime ?? new Date(0)).getTime(),
+          sizeBytes,
+        };
+      })
+    );
+  }
+
+  /**
+   * Sum sizes of all entries under `dir`. Tolerant of symlinks and permission errors —
+   * any failure returns the partial sum so we never throw from the prune path.
+   */
+  async computeDirSize(dir: string): Promise<number> {
+    let total = 0;
+    const walk = async (current: string) => {
+      let entries: fs.Dirent[];
+      try {
+        entries = await fs.readdir(current, { withFileTypes: true });
+      } catch {
+        return;
+      }
+      await Promise.all(
+        entries.map(async (entry) => {
+          const p = path.join(current, entry.name);
+          if (entry.isDirectory()) {
+            await walk(p);
+          } else if (entry.isFile()) {
+            try {
+              const st = await fs.lstat(p);
+              total += st.size;
+            } catch {
+              // ignore
+            }
+          }
+        })
+      );
+    };
+    await walk(dir);
+    return total;
+  }
+
+  async getCapsulesTotalSize(): Promise<number> {
+    const roots = await this.listAllCapsuleRoots();
+    return roots.reduce((sum, r) => sum + r.sizeBytes, 0);
+  }
+
+  /**
+   * Apply the prune rules from the plan:
+   *   - workspace caps: deleted unconditionally (unless keepWorkspaceCaps)
+   *   - scope-aspects-root: never deleted as a whole; per-aspect-version children pruned by age
+   *   - scope caps and unmarked dirs older than threshold: deleted
+   *   - orphans (marker says originPath gone): deleted
+   *   - after the above, if sizeTargetGb given and size still exceeds it, evict oldest-first
+   */
+  async pruneCapsules(opts: PruneCapsulesOptions = {}): Promise<PruneCapsulesReport> {
+    const olderThanDays = opts.olderThanDays ?? 30;
+    const includeOrphans = opts.includeOrphans !== false;
+    const keepWorkspaceCaps = opts.keepWorkspaceCaps === true;
+    const dryRun = opts.dryRun === true;
+    const ageCutoffMs = Date.now() - olderThanDays * 24 * 60 * 60 * 1000;
+
+    const totalSizeBefore = await this.getCapsulesTotalSize();
+    const roots = await this.listAllCapsuleRoots();
+    const removed: PruneCapsulesReport['removed'] = [];
+
+    const removeEntry = async (p: string, kind: CapsuleKind | 'unmarked', reason: string, sizeBytes: number) => {
+      removed.push({ path: p, kind, reason, sizeBytes });
+      if (!dryRun) await this.scheduleFastDelete(p);
+    };
+
+    for (const root of roots) {
+      if (root.kind === 'workspace') {
+        if (keepWorkspaceCaps) continue;
+        await removeEntry(root.path, root.kind, 'workspace-cap', root.sizeBytes);
+        continue;
+      }
+      if (root.kind === 'scope' || root.kind === 'unmarked') {
+        const orphan = includeOrphans && root.originPath && !(await fs.pathExists(root.originPath));
+        const tooOld = root.lastUsedMs < ageCutoffMs;
+        if (orphan) {
+          await removeEntry(root.path, root.kind, 'orphan', root.sizeBytes);
+        } else if (tooOld) {
+          // For unmarked dirs, sniff content first to avoid nuking a legacy scope-aspects root.
+          if (root.kind === 'unmarked' && (await this.looksLikeAspectsRoot(root.path))) {
+            await this.pruneAspectsRootChildren(root.path, ageCutoffMs, includeOrphans, dryRun, removed);
+          } else {
+            await removeEntry(root.path, root.kind, `older-than-${olderThanDays}d`, root.sizeBytes);
+          }
+        }
+        continue;
+      }
+      if (root.kind === 'scope-aspects-root') {
+        await this.pruneAspectsRootChildren(root.path, ageCutoffMs, includeOrphans, dryRun, removed);
+        continue;
+      }
+    }
+
+    if (opts.sizeTargetGb !== undefined) {
+      await this.applySizeTarget(opts.sizeTargetGb, removed, dryRun);
+    }
+
+    const totalRemovedBytes = removed.reduce((sum, r) => sum + r.sizeBytes, 0);
+    const totalSizeAfter = dryRun ? totalSizeBefore : Math.max(0, totalSizeBefore - totalRemovedBytes);
+
+    return {
+      removed,
+      totalRemovedBytes,
+      totalSizeBeforeBytes: totalSizeBefore,
+      totalSizeAfterBytes: totalSizeAfter,
+      dryRun,
+    };
+  }
+
+  /**
+   * Legacy unmarked dirs may still be a scope-aspects root. Heuristic: a child subdir whose
+   * name contains `@` (aspect-version pattern like `teambit.node_node@1.3.4`).
+   */
+  private async looksLikeAspectsRoot(dir: string): Promise<boolean> {
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      return entries.some((e) => e.isDirectory() && e.name.includes('@'));
+    } catch {
+      return false;
+    }
+  }
+
+  private async pruneAspectsRootChildren(
+    rootPath: string,
+    ageCutoffMs: number,
+    includeOrphans: boolean,
+    dryRun: boolean,
+    removed: PruneCapsulesReport['removed']
+  ): Promise<void> {
+    let entries: fs.Dirent[];
+    try {
+      entries = await fs.readdir(rootPath, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+      const childPath = path.join(rootPath, entry.name);
+      const marker = await this.readOriginMarker(childPath);
+      const lastUsed = marker ? await this.getOriginMarkerMtime(childPath) : undefined;
+      const stat = await fs.stat(childPath).catch(() => undefined);
+      const lastUsedMs = (lastUsed ?? stat?.mtime ?? new Date(0)).getTime();
+      const isOrphan = includeOrphans && marker?.originPath && !(await fs.pathExists(marker.originPath));
+      if (isOrphan || lastUsedMs < ageCutoffMs) {
+        const sizeBytes = await this.computeDirSize(childPath);
+        removed.push({
+          path: childPath,
+          kind: 'scope-aspect',
+          reason: isOrphan ? 'orphan' : `aspect-older-than-cutoff`,
+          sizeBytes,
+        });
+        if (!dryRun) await this.scheduleFastDelete(childPath);
+      }
+    }
+  }
+
+  /**
+   * After the standard prune, if total still exceeds the target, keep evicting the
+   * oldest remaining aspect-version subdirs until under the limit.
+   */
+  private async applySizeTarget(
+    sizeTargetGb: number,
+    removed: PruneCapsulesReport['removed'],
+    dryRun: boolean
+  ): Promise<void> {
+    const targetBytes = sizeTargetGb * 1024 * 1024 * 1024;
+    const removedPaths = new Set(removed.map((r) => r.path));
+    // Re-walk what's left to find the oldest aspect-version children.
+    const roots = await this.listAllCapsuleRoots();
+    const aspectChildren: Array<{ path: string; lastUsedMs: number; sizeBytes: number }> = [];
+    for (const root of roots) {
+      if (
+        root.kind !== 'scope-aspects-root' &&
+        !(root.kind === 'unmarked' && (await this.looksLikeAspectsRoot(root.path)))
+      ) {
+        continue;
+      }
+      let entries: fs.Dirent[] = [];
+      try {
+        entries = await fs.readdir(root.path, { withFileTypes: true });
+      } catch {
+        continue;
+      }
+      for (const entry of entries) {
+        if (!entry.isDirectory() || entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+        const childPath = path.join(root.path, entry.name);
+        if (removedPaths.has(childPath)) continue;
+        const marker = await this.readOriginMarker(childPath);
+        const lastUsed = marker ? await this.getOriginMarkerMtime(childPath) : undefined;
+        const stat = await fs.stat(childPath).catch(() => undefined);
+        const lastUsedMs = (lastUsed ?? stat?.mtime ?? new Date(0)).getTime();
+        const sizeBytes = await this.computeDirSize(childPath);
+        aspectChildren.push({ path: childPath, lastUsedMs, sizeBytes });
+      }
+    }
+    aspectChildren.sort((a, b) => a.lastUsedMs - b.lastUsedMs);
+    let remainingBytes =
+      (await this.getCapsulesTotalSize()) - (dryRun ? removed.reduce((s, r) => s + r.sizeBytes, 0) : 0);
+    for (const child of aspectChildren) {
+      if (remainingBytes <= targetBytes) break;
+      removed.push({
+        path: child.path,
+        kind: 'scope-aspect',
+        reason: `size-target-${sizeTargetGb}gb`,
+        sizeBytes: child.sizeBytes,
+      });
+      if (!dryRun) await this.scheduleFastDelete(child.path);
+      remainingBytes -= child.sizeBytes;
+    }
   }
 
   private wereDependenciesInPackageJsonChanged(capsuleWithPackageData: CapsulePackageJsonData): boolean {
