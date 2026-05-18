@@ -1482,6 +1482,7 @@ export class IsolatorMain {
     const keepWorkspaceCaps = opts.keepWorkspaceCaps === true;
     const dryRun = opts.dryRun === true;
     const ageCutoffMs = Date.now() - olderThanDays * 24 * 60 * 60 * 1000;
+    const datedDirName = this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR) || 'dated-capsules';
 
     const totalSizeBefore = await this.getCapsulesTotalSize();
     const roots = await this.listAllCapsuleRoots();
@@ -1493,6 +1494,10 @@ export class IsolatorMain {
     };
 
     for (const root of roots) {
+      if (path.basename(root.path) === datedDirName) {
+        await this.pruneDatedCapsulesChildren(root.path, ageCutoffMs, dryRun, removed);
+        continue;
+      }
       if (root.kind === 'workspace') {
         if (keepWorkspaceCaps) continue;
         await removeEntry(root.path, root.kind, 'workspace-cap', root.sizeBytes);
@@ -1533,6 +1538,41 @@ export class IsolatorMain {
       totalSizeAfterBytes: totalSizeAfter,
       dryRun,
     };
+  }
+
+  /**
+   * The `dated-capsules` dir holds per-date subdirs (`YYYY-M-D`) of in-flight isolation
+   * runs. The on-exit move-to-cache hook normally cleans them up, but killed processes
+   * and failed moves can leave leftovers. The parent's mtime is touched on every new
+   * isolation, so it never ages out as a whole — we have to walk one level deep and
+   * prune individual date subdirs by their own mtime.
+   */
+  private async pruneDatedCapsulesChildren(
+    rootPath: string,
+    ageCutoffMs: number,
+    dryRun: boolean,
+    removed: PruneCapsulesReport['removed']
+  ): Promise<void> {
+    let entries: fs.Dirent[];
+    try {
+      entries = await fs.readdir(rootPath, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory() || entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+      const childPath = path.join(rootPath, entry.name);
+      const stat = await fs.stat(childPath).catch(() => undefined);
+      if (!stat || stat.mtime.getTime() >= ageCutoffMs) continue;
+      const sizeBytes = await this.computeDirSize(childPath);
+      removed.push({
+        path: childPath,
+        kind: 'unmarked',
+        reason: 'dated-capsules-stale',
+        sizeBytes,
+      });
+      if (!dryRun) await this.scheduleFastDelete(childPath);
+    }
   }
 
   /**
