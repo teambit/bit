@@ -459,7 +459,7 @@ describe('LanesAspect', function () {
       // reload harmony, otherwise, the "lanes" aspect has the workspace of harmony2.
       harmony = await loadManyAspects([LanesAspect], workspaceData.workspacePath);
       lanes = harmony.get(LanesAspect.id);
-      await lanes.switchLanes('main', { head: true, skipDependencyInstallation: true });
+      await lanes.switchLanes('main', { skipDependencyInstallation: true });
     });
     after(async () => {
       await destroyWorkspace(workspaceData);

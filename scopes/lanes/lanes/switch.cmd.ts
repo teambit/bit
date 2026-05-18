@@ -24,7 +24,12 @@ export class SwitchCmd implements Command {
     },
   ];
   options = [
-    ['h', 'head', 'switch to the head of the lane/main (fetches the latest changes from the remote)'],
+    ['h', 'head', 'DEPRECATED. this is currently the default behavior'],
+    [
+      '',
+      'skip-fetch',
+      "don't fetch the latest from the remote; switch to the lane/main state already in the local scope",
+    ],
     [
       'r',
       'auto-merge-resolve <merge-strategy>',
@@ -58,6 +63,7 @@ ${COMPONENT_PATTERN_HELP}`,
     [lane]: [string],
     {
       head,
+      skipFetch = false,
       alias,
       autoMergeResolve,
       forceOurs,
@@ -71,6 +77,7 @@ ${COMPONENT_PATTERN_HELP}`,
       branch = false,
     }: {
       head?: boolean;
+      skipFetch?: boolean;
       alias?: string;
       autoMergeResolve?: MergeStrategy;
       forceOurs?: boolean;
@@ -86,7 +93,7 @@ ${COMPONENT_PATTERN_HELP}`,
     }
   ) {
     const switchResult = await this.lanes.switchLanes(lane, {
-      head,
+      skipFetch,
       alias,
       merge: autoMergeResolve,
       forceOurs,
@@ -100,6 +107,9 @@ ${COMPONENT_PATTERN_HELP}`,
 
     if (getAll) {
       this.lanes.logger.warn('the --get-all flag is deprecated and currently the default behavior');
+    }
+    if (head) {
+      this.lanes.logger.warn('the --head flag is deprecated and currently the default behavior');
     }
     if (json) {
       return JSON.stringify({ components, failedComponents }, null, 4);

@@ -334,14 +334,14 @@ describe('bit lane command', function () {
       helper.scopeHelper.getClonedWorkspace(beforeUpdatingMain);
       beforeSwitch = helper.scopeHelper.cloneWorkspace();
     });
-    it('when --head is used, it should switch to the head of main ', () => {
-      helper.command.switchLocalLane('main', '-x --head');
+    it('by default, it should fetch and switch to the head of main', () => {
+      helper.command.switchLocalLane('main', '-x');
       const bitmap = helper.bitMap.read();
       expect(bitmap.comp1.version).to.equal('0.0.2');
     });
-    it('when --head was not used, it should switch to where the main was before', () => {
+    it('when --skip-fetch is used, it should switch to where the main was before', () => {
       helper.scopeHelper.getClonedWorkspace(beforeSwitch);
-      helper.command.switchLocalLane('main', '-x');
+      helper.command.switchLocalLane('main', '-x --skip-fetch');
       const bitmap = helper.bitMap.read();
       expect(bitmap.comp1.version).to.equal('0.0.1');
     });
@@ -368,15 +368,15 @@ describe('bit lane command', function () {
       helper.scopeHelper.getClonedWorkspace(beforeUpdatingLane);
       beforeSwitch = helper.scopeHelper.cloneWorkspace();
     });
-    it('when --head is used, it should switch to the head of the lane ', () => {
-      helper.command.switchLocalLane('dev', '-x --head');
+    it('by default, it should fetch and switch to the head of the lane', () => {
+      helper.command.switchLocalLane('dev', '-x');
       const bitmap = helper.bitMap.read();
       expect(bitmap.comp1.version).to.equal(headSnap);
       expect(bitmap.comp1.version).to.not.equal(firstSnap);
     });
-    it('when --head was not used, it should switch to where the lane was before', () => {
+    it('when --skip-fetch is used, it should switch to where the lane was before', () => {
       helper.scopeHelper.getClonedWorkspace(beforeSwitch);
-      helper.command.switchLocalLane('dev', '-x');
+      helper.command.switchLocalLane('dev', '-x --skip-fetch');
       const bitmap = helper.bitMap.read();
       expect(bitmap.comp1.version).to.not.equal(headSnap);
       expect(bitmap.comp1.version).to.equal(firstSnap);
@@ -414,7 +414,7 @@ describe('bit lane command', function () {
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
       helper.command.export();
 
-      switchOutput = helper.command.switchLocalLane('main', '--head -x');
+      switchOutput = helper.command.switchLocalLane('main', '-x');
     });
     it('should switch the component on the lane only', () => {
       expect(switchOutput).to.have.string('switched 1 components');
