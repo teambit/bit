@@ -65,7 +65,7 @@ export class HostInitializerMain {
     workspaceConfigProps: WorkspaceExtensionProps = {},
     generator?: string,
     agent?: string
-  ): Promise<{ created: boolean; consumer: Consumer; agentFileWritten?: string }> {
+  ): Promise<{ created: boolean; consumer: Consumer; agentFileWritten?: string; mcpFileWritten?: string }> {
     const consumerInfo = await getWorkspaceInfo(absPath || process.cwd());
     // if "bit init" was running without any flags, the user is probably trying to init a new workspace but wasn't aware
     // that he's already in a workspace.
@@ -119,10 +119,32 @@ export class HostInitializerMain {
     const writtenConsumer = await consumer.write();
     const created = !consumerInfo?.path;
     let agentFileWritten: string | undefined;
+    let mcpFileWritten: string | undefined;
     if (created) {
       agentFileWritten = await HostInitializerMain.writeAgentInstructions(consumerPath, agent);
+      mcpFileWritten = await HostInitializerMain.writeDefaultMcpConfig(consumerPath);
     }
-    return { created, consumer: writtenConsumer, agentFileWritten };
+    return { created, consumer: writtenConsumer, agentFileWritten, mcpFileWritten };
+  }
+
+  /**
+   * Write a baseline `.mcp.json` at the workspace root containing the
+   * Bit Cloud MCP server entry. This file is picked up automatically by
+   * Claude Code and Visual Studio 2026; other agents (Cursor, Windsurf,
+   * Copilot, Codex) need their own per-tool config, which the interactive
+   * init flow writes when the user picks one of them.
+   *
+   * Idempotent — `setupCloudMcp` merges into any existing `.mcp.json`,
+   * preserving other server entries.
+   */
+  static async writeDefaultMcpConfig(projectPath: string): Promise<string | undefined> {
+    try {
+      await McpConfigWriter.setupCloudMcp('claude-code', projectPath);
+      return '.mcp.json';
+    } catch {
+      // Never fail init because of MCP file writing.
+      return undefined;
+    }
   }
 
   /**
@@ -465,7 +487,8 @@ node_modules
     resetHard: boolean,
     resetScope: boolean,
     interactiveConfig: InteractiveConfig | null,
-    agentFileWritten?: string
+    agentFileWritten?: string,
+    mcpFileWritten?: string
   ): string {
     let initMessage = formatSuccessSummary('initialized a bit workspace.');
 
@@ -477,6 +500,12 @@ node_modules
     if (agentFileWritten) {
       initMessage += formatHint(
         `\n  Created ${chalk.cyan(agentFileWritten)} — instructions for AI agents working in this workspace`
+      );
+    }
+
+    if (mcpFileWritten) {
+      initMessage += formatHint(
+        `\n  Created ${chalk.cyan(mcpFileWritten)} — Bit Cloud MCP for AI agents (picked up by Claude Code, Visual Studio)`
       );
     }
 
