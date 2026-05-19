@@ -1180,7 +1180,15 @@ export class IsolatorMain {
   async scheduleFastDelete(dir: string): Promise<void> {
     const exists = await fs.pathExists(dir);
     if (!exists) return;
-    const trashRoot = path.join(this.getRootDirOfAllCapsules(), CAPSULE_TRASH_DIR);
+    const globalRoot = this.getRootDirOfAllCapsules();
+    // Edge case: deleting the global root itself. We can't move a dir into its own
+    // child (`.trash/...`), so just do a direct remove. This is rare — only `bit
+    // capsule delete --all` hits it.
+    if (path.resolve(dir) === path.resolve(globalRoot)) {
+      await fs.remove(dir);
+      return;
+    }
+    const trashRoot = path.join(globalRoot, CAPSULE_TRASH_DIR);
     await fs.ensureDir(trashRoot);
     const trashTarget = path.join(trashRoot, `${path.basename(dir)}-${v4()}`);
     try {
@@ -1332,10 +1340,15 @@ export class IsolatorMain {
 
   /**
    * Derive the capsule kind from the isolation context. Aspect resolution sets
-   * `opts.context.aspects = true`; everything else is treated as a workspace/scope cap.
+   * `opts.context.aspects = true`. Otherwise, distinguish bare-scope isolations
+   * (host is ScopeMain) from workspace isolations (host is Workspace) by duck-typing
+   * on `bitMap`, which only Workspace exposes — this avoids a circular dep on the
+   * workspace aspect.
    */
   private deriveCapsuleKind(opts: IsolateComponentsOptions): CapsuleKind {
     if (opts.context?.aspects) return 'scope-aspects-root';
+    const host = opts.host || this.componentAspect.getHost();
+    if (host && !('bitMap' in host)) return 'scope';
     return 'workspace';
   }
 
@@ -1398,7 +1411,7 @@ export class IsolatorMain {
    * Walk the global capsules root and return entries with their classification, size, and
    * last-used time. Used by prune and by `bit capsule list`.
    */
-  async listAllCapsuleRoots(): Promise<
+  async listAllCapsuleRoots(opts: { withSizes?: boolean } = {}): Promise<
     Array<{
       path: string;
       kind: CapsuleKind | 'unmarked';
@@ -1407,6 +1420,7 @@ export class IsolatorMain {
       sizeBytes: number;
     }>
   > {
+    const withSizes = opts.withSizes !== false;
     const root = this.getRootDirOfAllCapsules();
     if (!(await fs.pathExists(root))) return [];
     const entries = await fs.readdir(root, { withFileTypes: true });
@@ -1419,7 +1433,7 @@ export class IsolatorMain {
         const marker = await this.readOriginMarker(subPath);
         const lastUsed = marker ? await this.getOriginMarkerMtime(subPath) : undefined;
         const dirStat = await fs.stat(subPath).catch(() => undefined);
-        const sizeBytes = await this.computeDirSize(subPath);
+        const sizeBytes = withSizes ? await this.computeDirSize(subPath) : 0;
         return {
           path: subPath,
           kind: (marker?.kind ?? 'unmarked') as CapsuleKind | 'unmarked',
@@ -1530,7 +1544,9 @@ export class IsolatorMain {
     }
 
     const totalRemovedBytes = removed.reduce((sum, r) => sum + r.sizeBytes, 0);
-    const totalSizeAfter = dryRun ? totalSizeBefore : Math.max(0, totalSizeBefore - totalRemovedBytes);
+    // For dry-run, report the *projected* post-prune size so the CLI summary stays
+    // internally consistent (cache: X → X − freed). Real prune subtracts the same.
+    const totalSizeAfter = Math.max(0, totalSizeBefore - totalRemovedBytes);
 
     return {
       removed,

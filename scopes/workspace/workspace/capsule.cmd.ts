@@ -3,6 +3,8 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import { formatItem, formatTitle, formatSuccessSummary, formatHint } from '@teambit/cli';
 import type { CapsuleList, IsolateComponentsOptions, IsolatorMain, PruneCapsulesReport } from '@teambit/isolator';
 import type { ScopeMain } from '@teambit/scope';
+import type { ConfigStoreMain } from '@teambit/config-store';
+import { CFG_CAPSULES_MAX_AGE_DAYS } from '@teambit/legacy.constants';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
@@ -122,15 +124,19 @@ export class CapsuleListCmd implements Command {
   description = `list the capsules generated for this workspace`;
   group = 'advanced';
   alias = '';
-  options = [['j', 'json', 'json format']] as CommandOptions;
+  options = [
+    ['j', 'json', 'json format'],
+    ['', 'with-stats', 'include total cache size, orphan count, and stale aspect-version count (walks the full cache)'],
+  ] as CommandOptions;
 
   constructor(
     private isolator: IsolatorMain,
     private workspace: Workspace | undefined,
-    private scope: ScopeMain
+    private scope: ScopeMain,
+    private configStore: ConfigStoreMain
   ) {}
 
-  async report() {
+  async report(_args: [], opts: { withStats?: boolean } = {}) {
     if (!this.workspace && !this.scope) {
       throw new Error(`This command requires a Bit workspace or scope.
 To initialize a workspace: bit init`);
@@ -144,34 +150,41 @@ To initialize a workspace: bit init`);
     const numOfWsCapsules = listWs ? listWs.capsules.length : listScope.capsules.length;
     const hostType = this.workspace ? 'workspace' : 'scope';
 
-    const allRoots = await this.isolator.listAllCapsuleRoots();
-    const totalSize = allRoots.reduce((sum, r) => sum + r.sizeBytes, 0);
-    const orphanChecks = await Promise.all(
-      allRoots
-        .filter((r) => r.originPath)
-        .map(async (r): Promise<number> => ((await fs.pathExists(r.originPath as string)) ? 0 : 1))
-    );
-    const orphanCount = orphanChecks.reduce((a: number, b: number) => a + b, 0);
-    const staleAspectsAgeMs = 30 * 24 * 60 * 60 * 1000;
-    const cutoff = Date.now() - staleAspectsAgeMs;
-    const staleChecks = await Promise.all(
-      allRoots
-        .filter((r) => r.kind === 'scope-aspects-root')
-        .map((r): Promise<number> => this.countStaleAspectChildren(r.path, cutoff))
-    );
-    const staleAspectCount = staleChecks.reduce((a: number, b: number) => a + b, 0);
-
     const title = formatTitle(`found ${numOfWsCapsules} capsule(s) for ${hostType}: ${hostPath}`);
     const wsLine = listWs ? formatItem(`workspace capsules root-dir: ${workspaceCapsulesRootDir}`) : undefined;
     const scopeAspectLine = formatItem(`scope's aspects capsules root-dir: ${scopeAspectsCapsulesRootDir}`);
     const scopeLine = scopeCapsulesRootDir
       ? formatItem(`scope's capsules root-dir: ${scopeCapsulesRootDir}`)
       : undefined;
-    const summaryLine = formatItem(
-      `cache total: ${chalk.bold(formatBytes(totalSize))} across ${allRoots.length} subdir(s) — ` +
-        `${orphanCount} orphan(s), ${staleAspectCount} stale aspect-version(s) (>${30}d)`
-    );
-    const suggestLine = formatHint(`use --json to get the list of all capsules`);
+
+    let summaryLine: string | undefined;
+    let suggestLine: string;
+    if (opts.withStats) {
+      const allRoots = await this.isolator.listAllCapsuleRoots({ withSizes: true });
+      const totalSize = allRoots.reduce((sum, r) => sum + r.sizeBytes, 0);
+      const orphanChecks = await Promise.all(
+        allRoots
+          .filter((r) => r.originPath)
+          .map(async (r): Promise<number> => ((await fs.pathExists(r.originPath as string)) ? 0 : 1))
+      );
+      const orphanCount = orphanChecks.reduce((a: number, b: number) => a + b, 0);
+      const maxAgeRaw = this.configStore.getConfig(CFG_CAPSULES_MAX_AGE_DAYS);
+      const maxAgeDays = maxAgeRaw !== undefined ? Number(maxAgeRaw) : 30;
+      const cutoff = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
+      const staleChecks = await Promise.all(
+        allRoots
+          .filter((r) => r.kind === 'scope-aspects-root')
+          .map((r): Promise<number> => this.countStaleAspectChildren(r.path, cutoff))
+      );
+      const staleAspectCount = staleChecks.reduce((a: number, b: number) => a + b, 0);
+      summaryLine = formatItem(
+        `cache total: ${chalk.bold(formatBytes(totalSize))} across ${allRoots.length} subdir(s) — ` +
+          `${orphanCount} orphan(s), ${staleAspectCount} stale aspect-version(s) (>${maxAgeDays}d)`
+      );
+      suggestLine = formatHint(`use --json to get the list of all capsules`);
+    } else {
+      suggestLine = formatHint(`use --json to get the list of all capsules, or --with-stats for size/orphan summary`);
+    }
     const lines = [title, wsLine, scopeAspectLine, scopeLine, summaryLine, suggestLine].filter((x) => x).join('\n');
 
     return lines;
@@ -199,7 +212,7 @@ To initialize a workspace: bit init`);
     }
   }
 
-  async json() {
+  async json(_args: [], opts: { withStats?: boolean } = {}) {
     if (!this.workspace && !this.scope) {
       throw new Error(`This command requires a Bit workspace or scope.
 To initialize a workspace: bit init`);
@@ -212,7 +225,7 @@ To initialize a workspace: bit init`);
     const listScope = await this.isolator.list(rootDirs.scopeAspectsCapsulesRootDir);
     const capsules = listWs ? listWs.capsules : [];
     const scopeCapsules = listScope ? listScope.capsules : [];
-    const allRoots = await this.isolator.listAllCapsuleRoots();
+    const allRoots = await this.isolator.listAllCapsuleRoots({ withSizes: opts.withStats === true });
     const totalSizeBytes = allRoots.reduce((sum, r) => sum + r.sizeBytes, 0);
     return { ...rootDirs, capsules, scopeCapsules, totalSizeBytes, allRoots };
   }
@@ -331,12 +344,13 @@ ensures components work independently before publishing, similar to how they'll 
   constructor(
     private isolator: IsolatorMain,
     private workspace: Workspace | undefined,
-    private scope: ScopeMain
+    private scope: ScopeMain,
+    private configStore: ConfigStoreMain
   ) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async report(args: [string]) {
-    return new CapsuleListCmd(this.isolator, this.workspace, this.scope).report();
+    return new CapsuleListCmd(this.isolator, this.workspace, this.scope, this.configStore).report([], {});
   }
 }
 
