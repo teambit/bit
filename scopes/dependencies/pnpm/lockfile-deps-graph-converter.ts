@@ -265,6 +265,7 @@ export async function convertGraphToLockfile(
   const graphString = _graph.serialize();
   const graph = DependenciesGraph.deserialize(graphString)!;
   dropOrphanFilePkgs(graph);
+  dropOrphanNeighbours(graph);
   const packages = {};
   const snapshots = {};
   const allEdgeIds = new Set(graph.edges.map(({ id }) => id));
@@ -337,20 +338,42 @@ export async function convertGraphToLockfile(
     }
   }
   const pkgsToResolve = getPkgsToResolve(lockfile, manifests);
+  const failedWorkspaceComponentPkgs = new Set<string>();
   await Promise.all(
     pkgsToResolve.map(async (pkgToResolve) => {
       if (lockfile.packages[pkgToResolve.pkgId].resolution == null) {
-        const { resolution } = await resolve(
-          {
-            alias: pkgToResolve.name,
-            bareSpecifier: pkgToResolve.version,
-          },
-          {
-            lockfileDir: '',
-            projectDir: '',
-            preferredVersions: {},
+        let resolveResult;
+        try {
+          resolveResult = await resolve(
+            {
+              alias: pkgToResolve.name,
+              bareSpecifier: pkgToResolve.version,
+            },
+            {
+              lockfileDir: '',
+              projectDir: '',
+              preferredVersions: {},
+            }
+          );
+        } catch (err) {
+          // A workspace-component package with a missing resolution whose
+          // snap-version was never published surfaces here as pnpm's
+          // ERR_PNPM_NO_MATCHING_VERSION. The graph itself is unusable for
+          // this pkgId, but pnpm can re-resolve the dep from the installing
+          // manifest's specifier — so scrub the pkgId from the generated
+          // lockfile and continue. Re-throw every other error code (network,
+          // auth, 5xx, even FETCH_404 since some registries return 404 on
+          // auth failures) so real install failures aren't silently masked.
+          if (
+            (err as { code?: string }).code === 'ERR_PNPM_NO_MATCHING_VERSION' &&
+            graph.packages.get(pkgToResolve.pkgId)?.component != null
+          ) {
+            failedWorkspaceComponentPkgs.add(pkgToResolve.pkgId);
+            return;
           }
-        );
+          throw err;
+        }
+        const { resolution } = resolveResult;
         if ('integrity' in resolution && resolution.integrity) {
           lockfile.packages[pkgToResolve.pkgId].resolution = {
             integrity: resolution.integrity,
@@ -359,6 +382,9 @@ export async function convertGraphToLockfile(
       }
     })
   );
+  if (failedWorkspaceComponentPkgs.size > 0) {
+    scrubPkgsFromLockfile(lockfile, failedWorkspaceComponentPkgs);
+  }
   // Validate the generated lockfile
   for (const [depPath, pkg] of Object.entries(lockfile.packages)) {
     if (pkg.resolution == null || Object.keys(pkg.resolution).length === 0) {
@@ -468,6 +494,77 @@ function dropOrphanFilePkgs(graph: DependenciesGraph): void {
         neighbours: edge.neighbours.filter((n) => !orphanPkgIds.has(n.id)),
       };
     });
+}
+
+/**
+ * Drop neighbours that reference a pkgId with no edge AND no packages entry.
+ *
+ * Recovers graphs saved by bits older than #10361 (the back-edge fix). Those
+ * older bits, when snapping a component with a circular workspace dep, deleted
+ * the component's own snapshot/package entry but left back-references to it on
+ * other snapshots intact. The orphan neighbour now has no edge (its snapshot
+ * was removed) and no packages entry (its package was removed), so the loop
+ * below would synthesise an empty packages entry and getPkgsToResolve would
+ * ask the registry for a workspace snap-version that was never published —
+ * surfacing as ERR_PNPM_NO_MATCHING_VERSION at install time. Scrubbing the
+ * dangling neighbour here means already-saved broken graphs install cleanly
+ * without requiring the affected component to be re-snapped on a newer client.
+ */
+function dropOrphanNeighbours(graph: DependenciesGraph): void {
+  const edgeIds = new Set(graph.edges.map((edge) => edge.id));
+  const isOrphan = (n: DependencyNeighbour): boolean =>
+    !edgeIds.has(n.id) && !graph.packages.has(dp.removeSuffix(n.id));
+  graph.edges = graph.edges.map((edge) => {
+    if (!edge.neighbours.some(isOrphan)) return edge;
+    return {
+      ...edge,
+      neighbours: edge.neighbours.filter((n) => !isOrphan(n)),
+    };
+  });
+}
+
+/**
+ * Remove the given pkgIds (and everything that references them) from a
+ * lockfile in place. Used when a workspace-component snap-version baked into
+ * the graph turns out to be unpublishable at install time — leaving it in the
+ * lockfile would fail validation and abort the whole install. Stripping it
+ * means pnpm falls back to resolving the dep from the installing manifest's
+ * specifier, which is the same path as a graph-less install for that one dep.
+ */
+function scrubPkgsFromLockfile(lockfile: BitLockfileFile, pkgIds: Set<string>): void {
+  const matches = (depPath: string): boolean => pkgIds.has(dp.removeSuffix(depPath));
+  for (const pkgId of pkgIds) {
+    delete lockfile.packages![pkgId];
+  }
+  for (const depPath of Object.keys(lockfile.snapshots ?? {})) {
+    if (matches(depPath)) {
+      delete lockfile.snapshots![depPath];
+    }
+  }
+  for (const snapshot of Object.values(lockfile.snapshots ?? {})) {
+    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+      const deps = snapshot[depType];
+      if (!deps) continue;
+      for (const [name, ref] of Object.entries(deps)) {
+        if (matches(`${name}@${ref}`)) {
+          delete deps[name];
+        }
+      }
+      if (Object.keys(deps).length === 0) delete snapshot[depType];
+    }
+  }
+  for (const importer of Object.values(lockfile.importers ?? {})) {
+    for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies'] as const) {
+      const deps = importer[depType];
+      if (!deps) continue;
+      for (const [name, { version }] of Object.entries(deps)) {
+        if (version.startsWith('link:') || version.startsWith('file:')) continue;
+        if (matches(`${name}@${version}`)) {
+          delete deps[name];
+        }
+      }
+    }
+  }
 }
 
 function convertGraphPackageToLockfilePackage(pkgAttr: PackageAttributes) {
