@@ -159,4 +159,14 @@
   right: 4px !important;
   left: unset !important;
   z-index: 4;
+  // The shared LoadPreview component hardcodes a near-black background and
+  // a white foreground, which breaks in dark mode. Re-skin it with themeable
+  // surface tokens so it tracks the active theme.
+  background-color: var(--surface01-color) !important;
+  color: var(--on-surface-color) !important;
+  border: 1px solid var(--border-medium-color);
+
+  &:hover {
+    background-color: var(--surface-hover-color) !important;
+  }
 }
