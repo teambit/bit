@@ -37,15 +37,13 @@ export function OrgAvatar({
       {...rest}
     >
       {profileImageWithParams && (
-        <img
-          src={profileImageWithParams}
-          className={classNames(styles.avatarImg, imgClassName)}
-        />
+        <img src={profileImageWithParams} className={classNames(styles.avatarImg, imgClassName)} />
       )}
-      {!profileImage && 
-      <span className={styles.defaultAvatar}>
-        <i className="bitcon-organization" style={{ fontSize: `${fontSize}px`, lineHeight: `${size}px` }} />
-      </span>}
+      {!profileImage && (
+        <span className={styles.defaultAvatar}>
+          <i className="bitcon-organization" style={{ fontSize: `${fontSize}px`, lineHeight: `${size}px` }} />
+        </span>
+      )}
       {children}
     </div>
   );

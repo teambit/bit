@@ -58,6 +58,9 @@ parameters:
   run_set_stable:
     type: boolean
     default: false
+  run_deploy:
+    type: boolean
+    default: false
   release_version:
     type: string
     default: ""
@@ -1230,7 +1233,10 @@ workflows:
 
   # Main build and test workflow
   build_and_test:
-    unless: << pipeline.parameters.run_set_stable >>
+    unless:
+      or:
+        - << pipeline.parameters.run_set_stable >>
+        - << pipeline.parameters.run_deploy >>
     jobs:
       - checkout_code
       - set_ssh_key
@@ -1381,7 +1387,10 @@ workflows:
 
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:
-    unless: << pipeline.parameters.run_set_stable >>
+    unless:
+      or:
+        - << pipeline.parameters.run_set_stable >>
+        - << pipeline.parameters.run_deploy >>
     jobs:
       - harmony_deploy_approval_job:
           <<: *master_only_filter
@@ -1428,6 +1437,47 @@ workflows:
       - server_docker_build_node_22:
           requires:
             - harmony_deploy_approval_job
+            - docker_build_node_22
+
+  # Manual deploy workflow: same jobs as harmony_deploy, without the approval gate.
+  # Trigger from the CircleCI web app (or API) on master with run_deploy=true.
+  # Useful when the latest master commit is `[skip ci]` (e.g. version bumps) and
+  # therefore has no auto-triggered pipeline to approve.
+  harmony_deploy_manual:
+    when: << pipeline.parameters.run_deploy >>
+    jobs:
+      - checkout_code:
+          <<: *master_only_filter
+      - bundle_version_linux:
+          <<: *master_only_filter
+          requires:
+            - checkout_code
+      - bundle_version_macos:
+          <<: *master_only_filter
+          requires:
+            - checkout_code
+      - bundle_version_windows:
+          <<: *master_only_filter
+          requires:
+            - checkout_code
+      - harmony_publish_to_gcloud:
+          <<: *master_only_filter
+          requires:
+            - bundle_version_linux
+            - bundle_version_macos
+            - bundle_version_windows
+            - checkout_code # This is needed to generate index.json
+      - docker_build_node_22:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_build_alpine:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_22:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_22:
+          requires:
             - docker_build_node_22
 
   # ========================================
