@@ -541,9 +541,11 @@ chai.use(chaiFs);
       expect(lockfile.packages).to.have.property('@pnpm.e2e/bar@100.0.0');
     });
   });
-  describe('snap with --no-lock-deps', function () {
-    let withGraphVersion: any;
-    let withoutGraphVersion: any;
+  describe('snap/tag with --no-lock-deps', function () {
+    let snapWithGraph: any;
+    let snapWithoutGraph: any;
+    let tagWithGraph: any;
+    let tagWithoutGraph: any;
     before(async () => {
       const randomStr = generateRandomStr(4);
       const name = `@ci/${randomStr}.{name}`;
@@ -556,9 +558,13 @@ chai.use(chaiFs);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.command.install();
       helper.command.snapAllComponentsWithoutBuild('--skip-tests');
-      withGraphVersion = helper.command.catComponent('comp1@latest');
+      snapWithGraph = helper.command.catComponent('comp1@latest');
       helper.command.snapAllComponentsWithoutBuild('--skip-tests --unmodified --no-lock-deps');
-      withoutGraphVersion = helper.command.catComponent('comp1@latest');
+      snapWithoutGraph = helper.command.catComponent('comp1@latest');
+      helper.command.tagAllWithoutBuild('--skip-tests --unmodified');
+      tagWithGraph = helper.command.catComponent('comp1@latest');
+      helper.command.tagAllWithoutBuild('--skip-tests --unmodified --no-lock-deps');
+      tagWithoutGraph = helper.command.catComponent('comp1@latest');
     });
     after(() => {
       npmCiRegistry.destroy();
@@ -566,10 +572,16 @@ chai.use(chaiFs);
       helper.scopeHelper.destroy();
     });
     it('should attach the dependencies graph to the snap by default', () => {
-      expect(withGraphVersion.dependenciesGraphRef).to.be.a('string');
+      expect(snapWithGraph.dependenciesGraphRef).to.be.a('string');
     });
     it('should not attach the dependencies graph to the snap when --no-lock-deps is set', () => {
-      expect(withoutGraphVersion.dependenciesGraphRef).to.be.undefined;
+      expect(snapWithoutGraph.dependenciesGraphRef).to.be.undefined;
+    });
+    it('should attach the dependencies graph to the tag by default', () => {
+      expect(tagWithGraph.dependenciesGraphRef).to.be.a('string');
+    });
+    it('should not attach the dependencies graph to the tag when --no-lock-deps is set', () => {
+      expect(tagWithoutGraph.dependenciesGraphRef).to.be.undefined;
     });
   });
 });
