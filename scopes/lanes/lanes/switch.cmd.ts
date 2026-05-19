@@ -106,10 +106,10 @@ ${COMPONENT_PATTERN_HELP}`,
     const { components, failedComponents, installationError, compilationError, gitBranchWarning } = switchResult;
 
     if (getAll) {
-      this.lanes.logger.warn('the --get-all flag is deprecated and currently the default behavior');
+      this.lanes.logger.consoleWarning('the --get-all flag is deprecated and currently the default behavior');
     }
     if (head) {
-      this.lanes.logger.warn('the --head flag is deprecated and currently the default behavior');
+      this.lanes.logger.consoleWarning('the --head flag is deprecated and currently the default behavior');
     }
     if (json) {
       return JSON.stringify({ components, failedComponents }, null, 4);
@@ -131,7 +131,8 @@ ${COMPONENT_PATTERN_HELP}`,
     const getSuccessfulOutput = () => {
       const laneSwitched = formatSuccessSummary(`successfully set "${chalk.bold(lane)}" as the active lane`);
       if (!components || !components.length) return `No components have been changed.\n${laneSwitched}`;
-      const title = `successfully switched ${components.length} components to the head of lane ${lane}`;
+      const target = skipFetch ? `local head of lane ${lane}` : `head of lane ${lane}`;
+      const title = `successfully switched ${components.length} components to the ${target}`;
       return [formatSuccessSummary(title), applyVersionReport(components, true, false), laneSwitched]
         .filter(Boolean)
         .join('\n');

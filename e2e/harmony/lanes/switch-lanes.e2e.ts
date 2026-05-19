@@ -382,6 +382,38 @@ describe('bit lane command', function () {
       expect(bitmap.comp1.version).to.equal(firstSnap);
     });
   });
+  describe('switch with --skip-fetch when the lane is not in the local scope', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('should throw a clear error directing the user to drop --skip-fetch', () => {
+      expect(() => helper.command.switchLocalLane(`${helper.scopes.remote}/dev`, '-x --skip-fetch')).to.throw(
+        '--skip-fetch'
+      );
+    });
+  });
+  describe('switch with deprecated --head flag', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.switchLocalLane('dev', '-x --head');
+    });
+    it('should still switch successfully (no-op)', () => {
+      helper.command.expectCurrentLaneToBe('dev');
+    });
+  });
   describe('switch with --force-ours', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
