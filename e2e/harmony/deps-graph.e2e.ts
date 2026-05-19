@@ -553,6 +553,7 @@ chai.use(chaiFs);
       await npmCiRegistry.init();
       helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
       helper.fixtures.populateComponents(1);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.command.install();
       helper.command.snapAllComponentsWithoutBuild('--skip-tests');
       withGraphVersion = helper.command.catComponent('comp1@latest');

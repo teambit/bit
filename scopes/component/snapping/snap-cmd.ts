@@ -66,7 +66,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
     ['', 'ignore-build-errors', 'proceed to snap pipeline even when build pipeline fails'],
     ['', 'loose', 'allow snap --build to succeed even if tasks like tests or lint fail'],
     ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
-    ['', 'no-lock-deps', 'do not publish the components with their dependencies graph'],
+    ['', 'no-lock-deps', 'do not save the dependencies graph in the snap'],
     [
       'i',
       'ignore-issues <issues>',
