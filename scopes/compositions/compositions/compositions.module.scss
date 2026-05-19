@@ -147,6 +147,13 @@
   background: var(--bit-bg-color, #ffffff);
   overflow: hidden;
   min-height: 0;
+  // Never overflow the previewArea: if the inline `height` (or a user-set
+  // resize) ends up taller than the parent allows (e.g. browser zoom shrinks
+  // available space, or there are many controls), `max-height` wins and the
+  // tray stays inside its container so `trayBody`'s `overflow-y: auto` keeps
+  // working instead of the bottom rows getting clipped off-screen.
+  max-height: calc(100% - 80px);
+  box-sizing: border-box;
 }
 
 .controlsTrayCollapsed {
@@ -264,7 +271,8 @@
 }
 
 .trayBody {
-  flex: 1;
+  flex: 1 1 0;
+  min-height: 0; // allow flex child to shrink below content size so overflow-y can engage
   overflow-y: auto;
   overflow-x: hidden;
 }

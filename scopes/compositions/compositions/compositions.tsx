@@ -113,12 +113,19 @@ export function Compositions({
       e.preventDefault();
       const startY = e.clientY;
       const startHeight = trayHeight;
+      // Clamp against the parent container (`.previewArea`) rather than the
+      // viewport: `.controlsTray` lives inside `.previewArea` which sits
+      // below the menubar / topbar, so `window.innerHeight - 120` over-counts
+      // and lets the user drag the tray past where it can actually fit.
+      const parentEl = trayRef.current?.parentElement;
+      const parentHeight = parentEl?.clientHeight ?? window.innerHeight;
+      const maxHeight = Math.max(120, parentHeight - 80);
       setIsDraggingTray(true);
       document.body.style.cursor = 'ns-resize';
       document.body.style.userSelect = 'none';
       const onMove = (ev: MouseEvent) => {
         const delta = startY - ev.clientY;
-        const next = Math.max(120, Math.min(window.innerHeight - 120, startHeight + delta));
+        const next = Math.max(120, Math.min(maxHeight, startHeight + delta));
         setTrayHeight(next);
       };
       const onUp = () => {
@@ -272,7 +279,7 @@ export function Compositions({
 }
 
 type LiveControlsTrayProps = {
-  trayRef: React.RefObject<HTMLDivElement>;
+  trayRef: React.RefObject<HTMLDivElement | null>;
   collapsed: boolean;
   height: number;
   ready: boolean;
