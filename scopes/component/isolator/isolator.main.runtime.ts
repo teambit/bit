@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import rimraf from 'rimraf';
 import { v4 } from 'uuid';
 import type { CLIMain } from '@teambit/cli';
@@ -1495,7 +1496,7 @@ export class IsolatorMain {
 
     for (const root of roots) {
       if (path.basename(root.path) === datedDirName) {
-        await this.pruneDatedCapsulesChildren(root.path, ageCutoffMs, dryRun, removed);
+        await this.pruneDatedCapsulesChildren(root.path, dryRun, removed);
         continue;
       }
       if (root.kind === 'workspace') {
@@ -1542,17 +1543,20 @@ export class IsolatorMain {
 
   /**
    * The `dated-capsules` dir holds per-date subdirs (`YYYY-M-D`) of in-flight isolation
-   * runs. The on-exit move-to-cache hook normally cleans them up, but killed processes
-   * and failed moves can leave leftovers. The parent's mtime is touched on every new
-   * isolation, so it never ages out as a whole — we have to walk one level deep and
-   * prune individual date subdirs by their own mtime.
+   * runs. These are recreated on every isolation, so anything that isn't *today*'s
+   * subdir is leftover from a previous run and safe to delete. Today's subdir is
+   * preserved to avoid racing a concurrent bit process that may still be writing to it.
+   *
+   * The date string here must match what `getCapsulesRootDir` writes for `useDatedDirs`.
    */
   private async pruneDatedCapsulesChildren(
     rootPath: string,
-    ageCutoffMs: number,
     dryRun: boolean,
     removed: PruneCapsulesReport['removed']
   ): Promise<void> {
+    const now = new Date();
+    const month = now.getMonth() < 12 ? now.getMonth() + 1 : 1;
+    const todayDir = `${now.getFullYear()}-${month}-${now.getDate()}`;
     let entries: fs.Dirent[];
     try {
       entries = await fs.readdir(rootPath, { withFileTypes: true });
@@ -1561,14 +1565,13 @@ export class IsolatorMain {
     }
     for (const entry of entries) {
       if (!entry.isDirectory() || entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+      if (entry.name === todayDir) continue;
       const childPath = path.join(rootPath, entry.name);
-      const stat = await fs.stat(childPath).catch(() => undefined);
-      if (!stat || stat.mtime.getTime() >= ageCutoffMs) continue;
       const sizeBytes = await this.computeDirSize(childPath);
       removed.push({
         path: childPath,
         kind: 'unmarked',
-        reason: 'dated-capsules-stale',
+        reason: 'dated-capsules-not-today',
         sizeBytes,
       });
       if (!dryRun) await this.scheduleFastDelete(childPath);
