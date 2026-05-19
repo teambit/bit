@@ -80,13 +80,16 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
     setSidebarOpen(!isMinimal);
   }, [isMinimal]);
 
+  // All hooks must run before any early return — moving useLocation above
+  // the `if (!workspace)` guard keeps the hook order stable across renders.
+  const location = useLocation();
+
   if (!workspace) {
     return <div className={styles.emptyContainer}></div>;
   }
 
   workspaceUI.setComponents(workspace.components);
   const inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
-  const location = useLocation();
   const isOverview = location.pathname === '/' || location.pathname === '';
   const showTopBar = !isMinimal || (isMinimal && !isOverview);
 
