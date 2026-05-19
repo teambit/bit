@@ -49,10 +49,13 @@ export function CodeCompareView({
   fileIconSlot,
   widgets,
 }: CodeCompareViewProps) {
-  const monacoRef = useRef<{
-    editor?: any;
-    monaco?: Monaco;
-  }>();
+  const monacoRef = useRef<
+    | {
+        editor?: any;
+        monaco?: Monaco;
+      }
+    | undefined
+  >(undefined);
   const {
     baseId,
     compareId,

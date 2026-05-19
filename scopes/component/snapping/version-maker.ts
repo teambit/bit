@@ -38,6 +38,7 @@ export type BasicTagSnapParams = {
   build?: boolean;
   ignoreBuildErrors?: boolean;
   rebuildDepsGraph?: boolean;
+  noLockDeps?: boolean;
   detachHead?: boolean;
   overrideHead?: boolean;
   loose?: boolean;
@@ -153,9 +154,12 @@ export class VersionMaker {
       };
     }
 
-    const { rebuildDepsGraph, build, updateDependentsOnLane, setHeadAsParent, detachHead, overrideHead } = this.params;
+    const { rebuildDepsGraph, noLockDeps, build, updateDependentsOnLane, setHeadAsParent, detachHead, overrideHead } =
+      this.params;
     await this.snapping._addFlattenedDependenciesToComponents(this.allComponentsToTag, rebuildDepsGraph);
-    await this._addDependenciesGraphToComponents();
+    if (!noLockDeps) {
+      await this._addDependenciesGraphToComponents();
+    }
     await this.snapping.throwForDepsFromAnotherLane(this.allComponentsToTag);
     if (!build) this.emptyBuilderData();
     this.addBuildStatus(this.allComponentsToTag, BuildStatus.Pending);

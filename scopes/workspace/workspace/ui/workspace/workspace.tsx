@@ -31,7 +31,7 @@ import { ThemeFromUrlSync } from './theme-from-url';
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
   menuSlot: RouteSlot;
-  sidebar: JSX.Element;
+  sidebar: React.JSX.Element;
   workspaceUI: WorkspaceUI;
   onSidebarTogglerChange: (callback: () => void) => void;
 };
