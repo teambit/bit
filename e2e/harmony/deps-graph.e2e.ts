@@ -541,4 +541,34 @@ chai.use(chaiFs);
       expect(lockfile.packages).to.have.property('@pnpm.e2e/bar@100.0.0');
     });
   });
+  describe('snap with --no-lock-deps', function () {
+    let withGraphVersion: any;
+    let withoutGraphVersion: any;
+    before(async () => {
+      const randomStr = generateRandomStr(4);
+      const name = `@ci/${randomStr}.{name}`;
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
+      await npmCiRegistry.init();
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      helper.fixtures.populateComponents(1);
+      helper.command.install();
+      helper.command.snapAllComponentsWithoutBuild('--skip-tests');
+      withGraphVersion = helper.command.catComponent('comp1@latest');
+      helper.command.snapAllComponentsWithoutBuild('--skip-tests --unmodified --no-lock-deps');
+      withoutGraphVersion = helper.command.catComponent('comp1@latest');
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.command.delConfig('registry');
+      helper.scopeHelper.destroy();
+    });
+    it('should attach the dependencies graph to the snap by default', () => {
+      expect(withGraphVersion.dependenciesGraphRef).to.be.a('string');
+    });
+    it('should not attach the dependencies graph to the snap when --no-lock-deps is set', () => {
+      expect(withoutGraphVersion.dependenciesGraphRef).to.be.undefined;
+    });
+  });
 });
