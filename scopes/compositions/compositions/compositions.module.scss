@@ -271,8 +271,12 @@
 }
 
 .trayBody {
-  flex: 1 1 0;
-  min-height: 0; // allow flex child to shrink below content size so overflow-y can engage
+  // `flex-basis: auto` so the body contributes its natural content height to
+  // the tray's intrinsic size — without this, an auto-sized tray collapses to
+  // just the header. `min-height: 0` keeps `overflow-y: auto` working when
+  // the parent's `max-height` clamps the tray.
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
 }

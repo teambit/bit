@@ -103,43 +103,40 @@ export function Compositions({
   // pure derivation rather than an effect.
   const [collapsedCompositions, setCollapsedCompositions] = useState<Set<string>>(() => new Set());
   const [isDraggingTray, setIsDraggingTray] = useState(false);
-  const trayRef = useRef<HTMLDivElement>(null);
-  const [trayHeight, setTrayHeight] = useState(260);
+  const trayRef = useRef<HTMLDivElement | null>(null);
+  // `null` = auto-size to content (default). Becomes a number once the user
+  // drag-resizes — only then do we pin a fixed height.
+  const [trayHeight, setTrayHeight] = useState<number | null>(null);
   const { ready, defs, values, onChange } = useLiveControls();
 
-  const onResizeStripMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (e.button !== 0) return;
-      e.preventDefault();
-      const startY = e.clientY;
-      const startHeight = trayHeight;
-      // Clamp against the parent container (`.previewArea`) rather than the
-      // viewport: `.controlsTray` lives inside `.previewArea` which sits
-      // below the menubar / topbar, so `window.innerHeight - 120` over-counts
-      // and lets the user drag the tray past where it can actually fit.
-      const parentEl = trayRef.current?.parentElement;
-      const parentHeight = parentEl?.clientHeight ?? window.innerHeight;
-      const maxHeight = Math.max(120, parentHeight - 80);
-      setIsDraggingTray(true);
-      document.body.style.cursor = 'ns-resize';
-      document.body.style.userSelect = 'none';
-      const onMove = (ev: MouseEvent) => {
-        const delta = startY - ev.clientY;
-        const next = Math.max(120, Math.min(maxHeight, startHeight + delta));
-        setTrayHeight(next);
-      };
-      const onUp = () => {
-        setIsDraggingTray(false);
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    },
-    [trayHeight]
-  );
+  const onResizeStripMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const startY = e.clientY;
+    // Seed the drag from the tray's current rendered height — handles the
+    // initial auto-sized case (where `trayHeight` is still null).
+    const startHeight = trayRef.current?.offsetHeight ?? 0;
+    const parentEl = trayRef.current?.parentElement;
+    const parentHeight = parentEl?.clientHeight ?? window.innerHeight;
+    const maxHeight = Math.max(120, parentHeight - 80);
+    setIsDraggingTray(true);
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+    const onMove = (ev: MouseEvent) => {
+      const delta = startY - ev.clientY;
+      const next = Math.max(120, Math.min(maxHeight, startHeight + delta));
+      setTrayHeight(next);
+    };
+    const onUp = () => {
+      setIsDraggingTray(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }, []);
 
   // collapse sidebar when empty, reopen when not
   useEffect(() => setSidebarOpenness(showSidebar), [showSidebar]);
@@ -281,7 +278,7 @@ export function Compositions({
 type LiveControlsTrayProps = {
   trayRef: React.RefObject<HTMLDivElement | null>;
   collapsed: boolean;
-  height: number;
+  height: number | null;
   ready: boolean;
   defs: any[];
   values: Record<string, any>;
@@ -301,11 +298,15 @@ function LiveControlsTray({
   onResizeStripMouseDown,
   onToggleExpanded,
 }: LiveControlsTrayProps) {
+  // height = null → let CSS size the tray to its content (with the max-height
+  // clamp doing the upper bound); height = number → user has drag-resized,
+  // pin to that.
+  const trayStyle = collapsed || height === null ? undefined : { height };
   return (
     <div
       ref={trayRef}
       className={classNames(styles.controlsTray, collapsed && styles.controlsTrayCollapsed)}
-      style={collapsed ? undefined : { height }}
+      style={trayStyle}
     >
       {!collapsed && (
         <div
