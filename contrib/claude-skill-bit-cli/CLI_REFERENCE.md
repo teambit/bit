@@ -411,7 +411,7 @@ Flags: --internal
 bring components from remote scopes into your workspace
 
 brings component source files from remote scopes into your workspace and installs their dependencies as packages. supports pattern matching for bulk imports, merge strategies for handling conflicts, and various optimization options. without arguments, fetches all workspace components' latest versions from their remote scopes.
-Flags: --path <path>, --objects, --override, --verbose, --json, --skip-dependency-installation, --skip-write-config-files, --merge [strategy], --dependencies, --dependencies-head, --dependents, --dependents-via <string>, --dependents-all, --silent, --filter-envs <envs>, --save-in-lane, --all-history, --fetch-deps, --write-deps <target>, --track-only, --include-deprecated, --lane-only, --owner
+Flags: --path <path>, --objects, --override, --verbose, --json, --skip-dependency-installation, --skip-write-config-files, --merge [strategy], --dependencies, --dependencies-head, --dependencies-depth <n>, --dependents, --dependents-via <string>, --dependents-all, --silent, --filter-envs <envs>, --save-in-lane, --all-history, --fetch-deps, --write-deps <target>, --track-only, --include-deprecated, --lane-only, --owner
 
 ## bit init [path]
 
@@ -613,7 +613,7 @@ removes stored authentication tokens and signs out of Bit Cloud. clears local cr
 
 start Model Context Protocol server for AI assistants
 
-enables AI assistants and other tools to interact with Bit via the Model Context Protocol. provides a standardized interface for AI agents to execute Bit commands and access component information. allows writing custom instructions and rules to guide AI agents in their interactions with Bit.
+NOTE: this is the legacy local stdio MCP server. The recommended way to connect AI agents to Bit is now the hosted Cloud MCP at https://mcp.bit.cloud/mcp. see setup instructions for each agent at https://bit.cloud/docs/connect. enables AI assistants and other tools to interact with Bit via the Model Context Protocol. provides a standardized interface for AI agents to execute Bit commands and access component information. allows writing custom instructions and rules to guide AI agents in their interactions with Bit.
 Flags: --include-additional <commands>, --bit-bin <binary>, --consumer-project
 
 ## bit mcp-server start

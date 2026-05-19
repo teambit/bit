@@ -2530,6 +2530,11 @@
       ],
       [
         "",
+        "dependencies-depth <n>",
+        "limit how many levels deep to traverse with --dependencies/--dependencies-head (1=direct deps only). default: traverse all levels"
+      ],
+      [
+        "",
         "dependents",
         "import components found while traversing from the imported components upwards to the workspace components"
       ],
@@ -5004,7 +5009,7 @@
       ]
     ],
     "description": "start Model Context Protocol server for AI assistants",
-    "extendedDescription": "enables AI assistants and other tools to interact with Bit via the Model Context Protocol.\nprovides a standardized interface for AI agents to execute Bit commands and access component information.\nallows writing custom instructions and rules to guide AI agents in their interactions with Bit.",
+    "extendedDescription": "NOTE: this is the legacy local stdio MCP server. The recommended way to connect AI agents to Bit is now the hosted Cloud MCP at https://mcp.bit.cloud/mcp.\nsee setup instructions for each agent at https://bit.cloud/docs/connect.\n\nenables AI assistants and other tools to interact with Bit via the Model Context Protocol.\nprovides a standardized interface for AI agents to execute Bit commands and access component information.\nallows writing custom instructions and rules to guide AI agents in their interactions with Bit.",
     "group": "advanced",
     "private": false,
     "commands": [

@@ -7,6 +7,7 @@ import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/leg
 import type { WorkspaceExtensionProps } from '@teambit/config';
 import type { Command, CommandOptions } from '@teambit/cli';
 import { formatSuccessSummary } from '@teambit/cli';
+import { McpConfigWriter } from '@teambit/mcp.mcp-config-writer';
 import type { InteractiveConfig } from './host-initializer.main.runtime';
 import { HostInitializerMain } from './host-initializer.main.runtime';
 import type { Logger } from '@teambit/logger';
@@ -108,11 +109,16 @@ supports various reset options to recover from corrupted state or restart from s
     try {
       const interactiveConfig = await HostInitializerMain.runInteractiveMode(projectPath);
 
-      // Set up MCP server if user selected an editor
       if (interactiveConfig.mcpEditor) {
-        this.logger.console(chalk.cyan(`\n🔧 Setting up MCP server for ${interactiveConfig.mcpEditor}...`));
+        const displayName = McpConfigWriter.getEditorDisplayName(interactiveConfig.mcpEditor);
+        this.logger.console(chalk.cyan(`\nConnecting Bit Cloud MCP to ${displayName}...`));
         await HostInitializerMain.setupMcpServer(interactiveConfig.mcpEditor, projectPath);
-        this.logger.console(chalk.green(`✅ MCP server configured for ${interactiveConfig.mcpEditor}`));
+        this.logger.console(formatSuccessSummary(`Bit Cloud MCP connected to ${displayName}`));
+
+        interactiveConfig.agentFileWritten = await HostInitializerMain.writeMcpAgentRules(
+          interactiveConfig.mcpEditor,
+          projectPath
+        );
       }
 
       return interactiveConfig;
@@ -172,7 +178,13 @@ supports various reset options to recover from corrupted state or restart from s
     // Resolve agent flag: true means no specific type (use default AGENTS.md), string means a specific tool.
     const agentType = agent === true ? undefined : agent || undefined;
 
-    const { created, agentFileWritten } = await HostInitializerMain.init(
+    // Skip the baseline `.mcp.json` only when the user explicitly opted out
+    // of Cloud MCP in interactive mode. All other paths (non-interactive,
+    // skip-interactive, no .git) still write it so it stays consistent with
+    // the agent template that mentions a Cloud MCP config.
+    const userOptedOutOfMcp = interactiveConfig !== null && !interactiveConfig.mcpEditor;
+
+    const { created, agentFileWritten, mcpFileWritten } = await HostInitializerMain.init(
       path,
       standalone,
       noPackageJson,
@@ -184,7 +196,8 @@ supports various reset options to recover from corrupted state or restart from s
       force,
       workspaceExtensionProps,
       interactiveConfig?.generator || generator,
-      agentType
+      agentType,
+      { skipDefaultMcp: userOptedOutOfMcp }
     );
 
     return HostInitializerMain.generateInitMessage(
@@ -193,7 +206,8 @@ supports various reset options to recover from corrupted state or restart from s
       resetHard,
       resetScope,
       interactiveConfig,
-      agentFileWritten
+      interactiveConfig?.agentFileWritten ?? agentFileWritten,
+      mcpFileWritten
     );
   }
 }
