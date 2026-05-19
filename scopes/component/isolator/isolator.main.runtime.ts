@@ -1213,9 +1213,10 @@ export class IsolatorMain {
   }
 
   /**
-   * Register a process-exit hook that runs an in-process prune at most once per ~24h.
-   * Gated by the mtime of a stamp file under the capsules root so concurrent Bit
-   * invocations can't all trigger it at once.
+   * Register a process-exit hook that, at most once per ~24h, spawns a detached
+   * `bit capsule prune` child so the actual work runs out-of-process and never delays
+   * the parent's exit. Gated by the mtime of a stamp file under the capsules root so
+   * concurrent Bit invocations can't all trigger it at once.
    */
   registerAutoPruneHook(): void {
     this.cli.registerOnBeforeExit(async () => {
@@ -1228,8 +1229,10 @@ export class IsolatorMain {
   }
 
   private async maybeAutoPrune(): Promise<void> {
+    // configStore may surface this as either string `'false'` (from `bit config set`)
+    // or boolean `false` (from a hand-edited JSON config) — accept both.
     const enabled = this.configStore.getConfig(CFG_CAPSULES_AUTO_PRUNE);
-    if (enabled === 'false') return;
+    if (enabled === 'false' || (enabled as unknown) === false) return;
 
     const root = this.getRootDirOfAllCapsules();
     if (!(await fs.pathExists(root))) return;
@@ -1570,9 +1573,10 @@ export class IsolatorMain {
     dryRun: boolean,
     removed: PruneCapsulesReport['removed']
   ): Promise<void> {
+    // Must match the date string produced by `getCapsulesRootDir` when `useDatedDirs`
+    // is set (year-month-day, month 1-12, no zero-padding).
     const now = new Date();
-    const month = now.getMonth() < 12 ? now.getMonth() + 1 : 1;
-    const todayDir = `${now.getFullYear()}-${month}-${now.getDate()}`;
+    const todayDir = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
     let entries: fs.Dirent[];
     try {
       entries = await fs.readdir(rootPath, { withFileTypes: true });

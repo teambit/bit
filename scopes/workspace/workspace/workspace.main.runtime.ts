@@ -357,7 +357,7 @@ function getCapsulesCommands(
     new CapsuleListCmd(isolator, workspace, scope, configStore),
     new CapsuleCreateCmd(workspace, scope, isolator),
     new CapsuleDeleteCmd(isolator, scope, workspace),
-    new CapsulePruneCmd(isolator),
+    new CapsulePruneCmd(isolator, configStore),
   ];
   return capsuleCmd;
 }

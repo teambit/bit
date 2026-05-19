@@ -4,7 +4,7 @@ import { formatItem, formatTitle, formatSuccessSummary, formatHint } from '@team
 import type { CapsuleList, IsolateComponentsOptions, IsolatorMain, PruneCapsulesReport } from '@teambit/isolator';
 import type { ScopeMain } from '@teambit/scope';
 import type { ConfigStoreMain } from '@teambit/config-store';
-import { CFG_CAPSULES_MAX_AGE_DAYS } from '@teambit/legacy.constants';
+import { CFG_CAPSULES_MAX_AGE_DAYS, CFG_CAPSULES_MAX_SIZE_GB } from '@teambit/legacy.constants';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
@@ -292,7 +292,10 @@ use --dry-run first to preview what would be removed.`;
     ['j', 'json', 'json format'],
   ] as CommandOptions;
 
-  constructor(private isolator: IsolatorMain) {}
+  constructor(
+    private isolator: IsolatorMain,
+    private configStore: ConfigStoreMain
+  ) {}
 
   async report(_args: [], opts: PruneOpts) {
     const report = await this.runPrune(opts);
@@ -320,11 +323,25 @@ use --dry-run first to preview what would be removed.`;
   }
 
   private async runPrune(opts: PruneOpts): Promise<PruneCapsulesReport> {
+    // CLI flags win; otherwise fall back to user config so manual and auto-prune
+    // behave consistently. Final fallback to defaults happens in `pruneCapsules`.
+    const olderThanFromConfig = this.configStore.getConfig(CFG_CAPSULES_MAX_AGE_DAYS);
+    const sizeTargetFromConfig = this.configStore.getConfig(CFG_CAPSULES_MAX_SIZE_GB);
     return this.isolator.pruneCapsules({
-      olderThanDays: opts.olderThan !== undefined ? Number(opts.olderThan) : undefined,
+      olderThanDays:
+        opts.olderThan !== undefined
+          ? Number(opts.olderThan)
+          : olderThanFromConfig !== undefined
+            ? Number(olderThanFromConfig)
+            : undefined,
       keepWorkspaceCaps: opts.keepWorkspaceCaps === true,
       includeOrphans: opts.noOrphans !== true,
-      sizeTargetGb: opts.sizeTarget !== undefined ? Number(opts.sizeTarget) : undefined,
+      sizeTargetGb:
+        opts.sizeTarget !== undefined
+          ? Number(opts.sizeTarget)
+          : sizeTargetFromConfig !== undefined
+            ? Number(sizeTargetFromConfig)
+            : undefined,
       dryRun: opts.dryRun === true,
     });
   }
