@@ -27,6 +27,7 @@ import { OptionButton } from '@teambit/design.ui.input.option-button';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { Icon } from '@teambit/evangelist.elements.icon';
+import type { UseLiveControlsResult } from '@teambit/compositions.ui.composition-live-controls';
 import { useLiveControls } from '@teambit/compositions.ui.composition-live-controls';
 import type { EmptyStateSlot, CompositionsMenuSlot, UsePreviewSandboxSlot } from './compositions.ui.runtime';
 import type { Composition } from './composition';
@@ -122,13 +123,26 @@ export function Compositions({
     setIsDraggingTray(true);
     document.body.style.cursor = 'ns-resize';
     document.body.style.userSelect = 'none';
+    // Mutate the tray's inline height directly and rAF-throttle, so dragging
+    // doesn't re-render the whole compositions tree (including the iframe)
+    // on every mousemove. State is committed once on mouseup.
+    let pendingHeight = startHeight;
+    let rafScheduled = false;
+    const applyHeight = () => {
+      rafScheduled = false;
+      if (trayRef.current) trayRef.current.style.height = `${pendingHeight}px`;
+    };
     const onMove = (ev: MouseEvent) => {
       const delta = startY - ev.clientY;
-      const next = Math.max(120, Math.min(maxHeight, startHeight + delta));
-      setTrayHeight(next);
+      pendingHeight = Math.max(120, Math.min(maxHeight, startHeight + delta));
+      if (!rafScheduled) {
+        rafScheduled = true;
+        requestAnimationFrame(applyHeight);
+      }
     };
     const onUp = () => {
       setIsDraggingTray(false);
+      setTrayHeight(pendingHeight);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
       document.removeEventListener('mousemove', onMove);
@@ -280,9 +294,9 @@ type LiveControlsTrayProps = {
   collapsed: boolean;
   height: number | null;
   ready: boolean;
-  defs: any[];
-  values: Record<string, any>;
-  onChange: (key: string, value: any) => void;
+  defs: UseLiveControlsResult['defs'];
+  values: UseLiveControlsResult['values'];
+  onChange: UseLiveControlsResult['onChange'];
   onResizeStripMouseDown: (e: React.MouseEvent) => void;
   onToggleExpanded: () => void;
 };

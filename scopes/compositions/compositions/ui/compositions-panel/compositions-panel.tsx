@@ -12,7 +12,7 @@ import type { Composition } from '../../composition';
 export type CompositionsPanelProps = {
   compositions: Composition[];
   onSelectComposition: (composition: Composition) => void;
-  onToggleLiveControls?: (composition: Composition) => void;
+  onToggleLiveControls?: () => void;
   hasLiveControls?: boolean;
   liveControlsActive?: boolean;
   active?: Composition;
@@ -90,6 +90,7 @@ export function CompositionsPanel({
                   >
                     <button
                       type="button"
+                      aria-label={liveControlsActive ? 'Hide live controls' : 'Show live controls'}
                       className={classNames(
                         styles.actionIcon,
                         styles.iconButton,
@@ -98,7 +99,7 @@ export function CompositionsPanel({
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        onToggleLiveControls(composition);
+                        onToggleLiveControls();
                       }}
                     >
                       <Icon of="settings" />
