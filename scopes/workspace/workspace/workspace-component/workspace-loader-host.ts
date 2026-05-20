@@ -463,17 +463,9 @@ export class WorkspaceLoaderHost implements LoaderHost {
   // `workspace.loadAspects`. Only runs on the outermost call —
   // recursive calls inherit the outer's registration.
 
-  private async pass2RegisterAspects(workspaceComponents: Component[], _scopeComponents: Component[]): Promise<void> {
-    // Limit aspect registration to WORKSPACE components only. Scope-only
-    // components (e.g. transitive deps of a `bit use`d workspace aspect, or
-    // an untrusted env hit during `bit import`) shouldn't be auto-loaded as
-    // aspects — they're loaded on-demand via the explicit aspect-loader
-    // paths that respect scope-trust gates and workspace.jsonc configuration.
-    // Pre-rewrite WCL's `loadCompsAsAspects(workspace + scope)` was more
-    // permissive but in practice scope components rarely passed its
-    // `envsData.data.type === 'aspect'` gate unless they were already
-    // configured workspace aspects.
-    const aspectIds = workspaceComponents.filter((c) => this.shouldLoadAsAspect(c)).map((c) => c.id.toString());
+  private async pass2RegisterAspects(workspaceComponents: Component[], scopeComponents: Component[]): Promise<void> {
+    const all = workspaceComponents.concat(scopeComponents);
+    const aspectIds = all.filter((c) => this.shouldLoadAsAspect(c)).map((c) => c.id.toString());
     if (!aspectIds.length) return;
 
     try {
