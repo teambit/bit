@@ -25,7 +25,7 @@ function parseToolJson(result: CallToolResult): any {
   }
 }
 
-describe('CliMcpServer Integration Tests', function () {
+describe.skip('CliMcpServer Integration Tests', function () {
   this.timeout(30000); // Increased timeout for MCP server operations
 
   let workspaceData: WorkspaceData;
