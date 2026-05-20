@@ -6,6 +6,7 @@ import type {
   CompositionsMenuSlot,
   EmptyStateSlot,
   UsePreviewSandboxSlot,
+  UsePreviewPropsSlot,
 } from './compositions.ui.runtime';
 
 type Options = { menuBarWidgetSlot: CompositionsMenuSlot };
@@ -18,7 +19,8 @@ export class CompositionsSection implements Section {
     private compositions: CompositionsUI,
     private options: Options,
     private emptyStateSlot: EmptyStateSlot,
-    private usePreviewSandboxSlot: UsePreviewSandboxSlot
+    private usePreviewSandboxSlot: UsePreviewSandboxSlot,
+    private usePreviewPropsSlot: UsePreviewPropsSlot
   ) {}
 
   navigationLink = {
@@ -33,6 +35,7 @@ export class CompositionsSection implements Section {
         menuBarWidgets={this.options.menuBarWidgetSlot}
         emptyState={this.emptyStateSlot}
         usePreviewSandboxSlot={this.usePreviewSandboxSlot}
+        usePreviewPropsSlot={this.usePreviewPropsSlot}
         enableLiveControls
       />
     ),
