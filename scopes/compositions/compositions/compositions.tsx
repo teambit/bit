@@ -14,7 +14,12 @@ import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/docs.ui.queries.get-docs';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
-import { SandboxPermissionsAggregator, toPreviewUrl } from '@teambit/preview.ui.component-preview';
+import type { PreviewIframeAttrs } from '@teambit/preview.ui.component-preview';
+import {
+  PreviewPropsAggregator,
+  SandboxPermissionsAggregator,
+  toPreviewUrl,
+} from '@teambit/preview.ui.component-preview';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/compositions.ui.compositions-menu-bar';
 import { CompositionContextProvider } from '@teambit/compositions.ui.hooks.use-composition';
@@ -29,7 +34,12 @@ import { Tooltip } from '@teambit/design.ui.tooltip';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import type { UseLiveControlsResult } from '@teambit/compositions.ui.composition-live-controls';
 import { useLiveControls } from '@teambit/compositions.ui.composition-live-controls';
-import type { EmptyStateSlot, CompositionsMenuSlot, UsePreviewSandboxSlot } from './compositions.ui.runtime';
+import type {
+  EmptyStateSlot,
+  CompositionsMenuSlot,
+  UsePreviewSandboxSlot,
+  UsePreviewPropsSlot,
+} from './compositions.ui.runtime';
 import type { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
@@ -49,6 +59,13 @@ export type CompositionsProp = {
   menuBarWidgets?: CompositionsMenuSlot;
   emptyState?: EmptyStateSlot;
   usePreviewSandboxSlot?: UsePreviewSandboxSlot;
+  /**
+   * per-component resolvers for iframe attributes on the composition preview (`allow`,
+   * `referrerPolicy`, ...). Each resolver gets the current `ComponentModel`; results merge
+   * with later registrations winning. Default `allow` (`clipboard-write`) lives on
+   * `ComponentPreview` and applies when no resolver overrides it.
+   */
+  usePreviewPropsSlot?: UsePreviewPropsSlot;
   enableLiveControls?: boolean;
 };
 
@@ -56,6 +73,7 @@ export function Compositions({
   menuBarWidgets,
   emptyState,
   usePreviewSandboxSlot,
+  usePreviewPropsSlot,
   enableLiveControls = true,
 }: CompositionsProp) {
   const component = useContext(ComponentContext);
@@ -76,6 +94,8 @@ export function Compositions({
 
   const properties = useDocs(component.id);
   const previewSandboxHooks = usePreviewSandboxSlot?.values() ?? [];
+  const previewPropsHooks = usePreviewPropsSlot?.values() ?? [];
+  const [previewAttrs, setPreviewAttrs] = useState<PreviewIframeAttrs>({});
   const isMobile = useIsMobile();
   const showSidebar = !isMobile && component.compositions.length > 0;
   const [isSidebarOpen, setSidebarOpenness] = useState(showSidebar);
@@ -204,9 +224,15 @@ export function Compositions({
             onSandboxChange={setSandboxValue}
             component={component}
           />
+          <PreviewPropsAggregator
+            hooks={previewPropsHooks}
+            onPreviewPropsChange={setPreviewAttrs}
+            component={component}
+          />
           <div className={styles.previewArea}>
             {isDraggingTray && <div className={styles.dragOverlay} />}
             <CompositionContent
+              {...previewAttrs}
               className={styles.compositionPanel}
               emptyState={emptyState}
               component={component}
