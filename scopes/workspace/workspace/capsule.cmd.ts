@@ -17,6 +17,17 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024 ** i).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 }
 
+/**
+ * Coerce a CLI/config value to a finite number, or undefined if it's missing,
+ * empty, or unparseable. Guards against `Number('')` (= 0) and `Number('abc')` (= NaN)
+ * silently propagating as bad thresholds and defeating age/size enforcement.
+ */
+function toFiniteNumber(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
 type CreateOpts = {
   baseDir?: string;
   rootBaseDir?: string;
@@ -328,20 +339,10 @@ use --dry-run first to preview what would be removed.`;
     const olderThanFromConfig = this.configStore.getConfig(CFG_CAPSULES_MAX_AGE_DAYS);
     const sizeTargetFromConfig = this.configStore.getConfig(CFG_CAPSULES_MAX_SIZE_GB);
     return this.isolator.pruneCapsules({
-      olderThanDays:
-        opts.olderThan !== undefined
-          ? Number(opts.olderThan)
-          : olderThanFromConfig !== undefined
-            ? Number(olderThanFromConfig)
-            : undefined,
+      olderThanDays: toFiniteNumber(opts.olderThan) ?? toFiniteNumber(olderThanFromConfig),
       keepWorkspaceCaps: opts.keepWorkspaceCaps === true,
       includeOrphans: opts.noOrphans !== true,
-      sizeTargetGb:
-        opts.sizeTarget !== undefined
-          ? Number(opts.sizeTarget)
-          : sizeTargetFromConfig !== undefined
-            ? Number(sizeTargetFromConfig)
-            : undefined,
+      sizeTargetGb: toFiniteNumber(opts.sizeTarget) ?? toFiniteNumber(sizeTargetFromConfig),
       dryRun: opts.dryRun === true,
     });
   }

@@ -325,6 +325,12 @@ export type PruneCapsulesReport = {
   dryRun: boolean;
 };
 
+function toFiniteNumber(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
 export class IsolatorMain {
   static runtime = MainRuntime;
   static dependencies = [
@@ -1250,10 +1256,12 @@ export class IsolatorMain {
     // own auto-prune, so no recursion.
     await fs.outputFile(stampPath, '');
 
+    // Guard against non-numeric or empty config values: a stray string would otherwise
+    // become NaN and silently disable age/size enforcement.
     const maxAgeRaw = this.configStore.getConfig(CFG_CAPSULES_MAX_AGE_DAYS);
-    const olderThanDays = maxAgeRaw !== undefined ? Number(maxAgeRaw) : 30;
+    const olderThanDays = toFiniteNumber(maxAgeRaw) ?? 30;
     const maxSizeRaw = this.configStore.getConfig(CFG_CAPSULES_MAX_SIZE_GB);
-    const sizeTargetGb = maxSizeRaw !== undefined ? Number(maxSizeRaw) : 10;
+    const sizeTargetGb = toFiniteNumber(maxSizeRaw) ?? 10;
 
     this.logger.debug(
       `[auto-prune] spawning detached child. olderThanDays=${olderThanDays}, sizeTargetGb=${sizeTargetGb}`
@@ -1430,8 +1438,12 @@ export class IsolatorMain {
     const subdirs = entries.filter(
       (e) => e.isDirectory() && e.name !== CAPSULE_TRASH_DIR && e.name !== 'node_modules' && !e.name.startsWith('.')
     );
-    return Promise.all(
-      subdirs.map(async (entry) => {
+    // Bounded concurrency: on a multi-GB cache with hundreds of subdirs and tens of
+    // thousands of files per subdir, an unbounded Promise.all of recursive size walks
+    // can hit OS file-descriptor limits (EMFILE) and thrash disk.
+    return pMap(
+      subdirs,
+      async (entry) => {
         const subPath = path.join(root, entry.name);
         const marker = await this.readOriginMarker(subPath);
         const lastUsed = marker ? await this.getOriginMarkerMtime(subPath) : undefined;
@@ -1444,16 +1456,19 @@ export class IsolatorMain {
           lastUsedMs: (lastUsed ?? dirStat?.mtime ?? new Date(0)).getTime(),
           sizeBytes,
         };
-      })
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
   }
 
   /**
    * Sum sizes of all entries under `dir`. Tolerant of symlinks and permission errors —
    * any failure returns the partial sum so we never throw from the prune path.
+   * Uses bounded concurrency to avoid EMFILE on deep trees.
    */
   async computeDirSize(dir: string): Promise<number> {
     let total = 0;
+    const concurrency = concurrentComponentsLimit();
     const walk = async (current: string) => {
       let entries: fs.Dirent[];
       try {
@@ -1461,8 +1476,9 @@ export class IsolatorMain {
       } catch {
         return;
       }
-      await Promise.all(
-        entries.map(async (entry) => {
+      await pMap(
+        entries,
+        async (entry) => {
           const p = path.join(current, entry.name);
           if (entry.isDirectory()) {
             await walk(p);
@@ -1474,7 +1490,8 @@ export class IsolatorMain {
               // ignore
             }
           }
-        })
+        },
+        { concurrency }
       );
     };
     await walk(dir);
