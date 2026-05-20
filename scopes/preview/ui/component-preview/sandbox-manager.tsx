@@ -18,6 +18,21 @@ export type SandboxPermission =
 
 export type UseSandboxPermission = (manager: SandboxManager, component?: ComponentModel) => void;
 
+/** Subset of iframe attributes resolvers are allowed to set on `ComponentPreview`. */
+export type PreviewIframeAttrs = {
+  allow?: string;
+  referrerPolicy?: React.IframeHTMLAttributes<HTMLIFrameElement>['referrerPolicy'];
+};
+
+/**
+ * Per-component hook for iframe-level attributes on `ComponentPreview` (`allow` for
+ * Permissions Policy, `referrerPolicy`, ...). Hooks mutate the shared `PreviewPropsManager`
+ * during render; later registrations win for overlapping keys. Receives the
+ * `ComponentModel` so decisions can be per-component (e.g. grant `fullscreen` only to
+ * components that opt in).
+ */
+export type UsePreviewProps = (manager: PreviewPropsManager, component?: ComponentModel) => void;
+
 export class SandboxManager {
   private permissions: Set<SandboxPermission>;
 
@@ -78,6 +93,65 @@ export function SandboxPermissionsAggregator({
         <SandboxPermissionExecutor
           key={`sanbox-permission-executor-${i}`}
           usePermissionHook={usePermissionHook}
+          manager={managerRef.current}
+          component={component}
+        />
+      ))}
+    </>
+  );
+}
+
+export class PreviewPropsManager {
+  private attrs: PreviewIframeAttrs = {};
+
+  set<K extends keyof PreviewIframeAttrs>(key: K, value: PreviewIframeAttrs[K]) {
+    this.attrs[key] = value;
+    return this;
+  }
+
+  get<K extends keyof PreviewIframeAttrs>(key: K): PreviewIframeAttrs[K] {
+    return this.attrs[key];
+  }
+
+  toAttrs(): PreviewIframeAttrs {
+    return { ...this.attrs };
+  }
+}
+
+export function PreviewPropsExecutor({
+  usePropsHook,
+  manager,
+  component,
+}: {
+  usePropsHook: UsePreviewProps;
+  manager: PreviewPropsManager;
+  component?: ComponentModel;
+}) {
+  usePropsHook(manager, component);
+  return null;
+}
+
+export function PreviewPropsAggregator({
+  hooks,
+  onPreviewPropsChange,
+  component,
+}: {
+  hooks: UsePreviewProps[];
+  onPreviewPropsChange?: (attrs: PreviewIframeAttrs) => void;
+  component?: ComponentModel;
+}) {
+  const managerRef = useRef(new PreviewPropsManager());
+
+  useEffect(() => {
+    onPreviewPropsChange?.(managerRef.current.toAttrs());
+  });
+
+  return (
+    <>
+      {hooks.map((usePropsHook, i) => (
+        <PreviewPropsExecutor
+          key={`preview-props-executor-${i}`}
+          usePropsHook={usePropsHook}
           manager={managerRef.current}
           component={component}
         />

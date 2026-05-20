@@ -12,6 +12,9 @@ import type { Composition } from '../../composition';
 export type CompositionsPanelProps = {
   compositions: Composition[];
   onSelectComposition: (composition: Composition) => void;
+  onToggleLiveControls?: () => void;
+  hasLiveControls?: boolean;
+  liveControlsActive?: boolean;
   active?: Composition;
   url: string;
   isScaling?: boolean;
@@ -24,6 +27,9 @@ export function CompositionsPanel({
   compositions,
   isScaling,
   onSelectComposition: onSelect,
+  onToggleLiveControls,
+  hasLiveControls,
+  liveControlsActive,
   active,
   includesEnvTemplate,
   useNameParam,
@@ -77,6 +83,29 @@ export function CompositionsPanel({
                 <span className={styles.name}>{composition.displayName}</span>
               </a>
               <div className={styles.itemActions}>
+                {hasLiveControls && onToggleLiveControls && composition === active && (
+                  <Tooltip
+                    content={liveControlsActive ? 'Hide live controls' : 'Show live controls'}
+                    placement="bottom"
+                  >
+                    <button
+                      type="button"
+                      aria-label={liveControlsActive ? 'Hide live controls' : 'Show live controls'}
+                      className={classNames(
+                        styles.actionIcon,
+                        styles.iconButton,
+                        liveControlsActive && styles.actionIconActive
+                      )}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onToggleLiveControls();
+                      }}
+                    >
+                      <Icon of="settings" />
+                    </button>
+                  </Tooltip>
+                )}
                 <MenuWidgetIcon
                   className={styles.actionIcon}
                   icon="Code"

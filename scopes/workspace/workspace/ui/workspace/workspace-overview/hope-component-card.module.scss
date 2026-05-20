@@ -34,7 +34,7 @@
   height: 180px;
   position: relative;
   overflow: hidden;
-  background: white;
+  background: var(--surface-color);
   border-bottom: 1px solid var(--border-medium-color);
 }
 
@@ -159,4 +159,11 @@
   right: 4px !important;
   left: unset !important;
   z-index: 4;
+  background-color: var(--surface01-color) !important;
+  color: var(--on-surface-color) !important;
+  border: 1px solid var(--border-medium-color);
+
+  &:hover {
+    background-color: var(--surface-hover-color) !important;
+  }
 }

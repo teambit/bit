@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import React, { useContext, useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import classNames from 'classnames';
 import head from 'lodash.head';
 import queryString from 'query-string';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
@@ -13,7 +14,12 @@ import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/docs.ui.queries.get-docs';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
-import { SandboxPermissionsAggregator, toPreviewUrl } from '@teambit/preview.ui.component-preview';
+import type { PreviewIframeAttrs } from '@teambit/preview.ui.component-preview';
+import {
+  PreviewPropsAggregator,
+  SandboxPermissionsAggregator,
+  toPreviewUrl,
+} from '@teambit/preview.ui.component-preview';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/compositions.ui.compositions-menu-bar';
 import { CompositionContextProvider } from '@teambit/compositions.ui.hooks.use-composition';
@@ -26,8 +32,14 @@ import { OptionButton } from '@teambit/design.ui.input.option-button';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { Icon } from '@teambit/evangelist.elements.icon';
+import type { UseLiveControlsResult } from '@teambit/compositions.ui.composition-live-controls';
 import { useLiveControls } from '@teambit/compositions.ui.composition-live-controls';
-import type { EmptyStateSlot, CompositionsMenuSlot, UsePreviewSandboxSlot } from './compositions.ui.runtime';
+import type {
+  EmptyStateSlot,
+  CompositionsMenuSlot,
+  UsePreviewSandboxSlot,
+  UsePreviewPropsSlot,
+} from './compositions.ui.runtime';
 import type { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
@@ -47,6 +59,13 @@ export type CompositionsProp = {
   menuBarWidgets?: CompositionsMenuSlot;
   emptyState?: EmptyStateSlot;
   usePreviewSandboxSlot?: UsePreviewSandboxSlot;
+  /**
+   * per-component resolvers for iframe attributes on the composition preview (`allow`,
+   * `referrerPolicy`, ...). Each resolver gets the current `ComponentModel`; results merge
+   * with later registrations winning. Default `allow` (`clipboard-write`) lives on
+   * `ComponentPreview` and applies when no resolver overrides it.
+   */
+  usePreviewPropsSlot?: UsePreviewPropsSlot;
   enableLiveControls?: boolean;
 };
 
@@ -54,6 +73,7 @@ export function Compositions({
   menuBarWidgets,
   emptyState,
   usePreviewSandboxSlot,
+  usePreviewPropsSlot,
   enableLiveControls = true,
 }: CompositionsProp) {
   const component = useContext(ComponentContext);
@@ -74,6 +94,8 @@ export function Compositions({
 
   const properties = useDocs(component.id);
   const previewSandboxHooks = usePreviewSandboxSlot?.values() ?? [];
+  const previewPropsHooks = usePreviewPropsSlot?.values() ?? [];
+  const [previewAttrs, setPreviewAttrs] = useState<PreviewIframeAttrs>({});
   const isMobile = useIsMobile();
   const showSidebar = !isMobile && component.compositions.length > 0;
   const [isSidebarOpen, setSidebarOpenness] = useState(showSidebar);
@@ -97,28 +119,50 @@ export function Compositions({
 
   const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);
 
-  const [controlsTrayOpen, setControlsTrayOpen] = useState(false);
+  // Tracks compositions the user has explicitly collapsed. Anything not in
+  // this set defaults to expanded, which gives us "auto-open on load" as a
+  // pure derivation rather than an effect.
+  const [collapsedCompositions, setCollapsedCompositions] = useState<Set<string>>(() => new Set());
   const [isDraggingTray, setIsDraggingTray] = useState(false);
-  const trayRef = useRef<HTMLDivElement>(null);
-  const trayHeightRef = useRef(260);
+  const trayRef = useRef<HTMLDivElement | null>(null);
+  // `null` = auto-size to content (default). Becomes a number once the user
+  // drag-resizes — only then do we pin a fixed height.
+  const [trayHeight, setTrayHeight] = useState<number | null>(null);
   const { ready, defs, values, onChange } = useLiveControls();
 
-  const onTrayDragStart = useCallback((e: React.MouseEvent) => {
+  const onResizeStripMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return;
     e.preventDefault();
     const startY = e.clientY;
-    const startHeight = trayHeightRef.current;
+    // Seed the drag from the tray's current rendered height — handles the
+    // initial auto-sized case (where `trayHeight` is still null).
+    const startHeight = trayRef.current?.offsetHeight ?? 0;
+    const parentEl = trayRef.current?.parentElement;
+    const parentHeight = parentEl?.clientHeight ?? window.innerHeight;
+    const maxHeight = Math.max(120, parentHeight - 80);
     setIsDraggingTray(true);
     document.body.style.cursor = 'ns-resize';
     document.body.style.userSelect = 'none';
+    // Mutate the tray's inline height directly and rAF-throttle, so dragging
+    // doesn't re-render the whole compositions tree (including the iframe)
+    // on every mousemove. State is committed once on mouseup.
+    let pendingHeight = startHeight;
+    let rafScheduled = false;
+    const applyHeight = () => {
+      rafScheduled = false;
+      if (trayRef.current) trayRef.current.style.height = `${pendingHeight}px`;
+    };
     const onMove = (ev: MouseEvent) => {
-      const next = Math.max(120, Math.min(600, startHeight + (startY - ev.clientY)));
-      trayHeightRef.current = next;
-      if (trayRef.current) {
-        trayRef.current.style.maxHeight = `${next}px`;
+      const delta = startY - ev.clientY;
+      pendingHeight = Math.max(120, Math.min(maxHeight, startHeight + delta));
+      if (!rafScheduled) {
+        rafScheduled = true;
+        requestAnimationFrame(applyHeight);
       }
     };
     const onUp = () => {
       setIsDraggingTray(false);
+      setTrayHeight(pendingHeight);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
       document.removeEventListener('mousemove', onMove);
@@ -148,7 +192,21 @@ export function Compositions({
   }, [enableLiveControls]);
 
   const currentCompositionHasControls = ready && defs.length > 0;
-  const showControlsTray = currentCompositionHasControls && controlsTrayOpen;
+  const currentCompositionIdentifier = currentComposition?.identifier;
+  const isTrayCollapsedForCurrent =
+    !!currentCompositionIdentifier && collapsedCompositions.has(currentCompositionIdentifier);
+  const showControlsTray = currentCompositionHasControls;
+  const isTrayCollapsed = showControlsTray && isTrayCollapsedForCurrent;
+
+  const toggleTrayCollapsed = useCallback(() => {
+    if (!currentCompositionIdentifier) return;
+    setCollapsedCompositions((prev) => {
+      const next = new Set(prev);
+      if (next.has(currentCompositionIdentifier)) next.delete(currentCompositionIdentifier);
+      else next.add(currentCompositionIdentifier);
+      return next;
+    });
+  }, [currentCompositionIdentifier]);
 
   return (
     <CompositionContextProvider queryParams={compositionParams} setQueryParams={setCompositionParams}>
@@ -160,25 +218,21 @@ export function Compositions({
                 <OptionButton icon="open-tab" />
               </Link>
             </Tooltip>
-            {currentCompositionHasControls && (
-              <Tooltip content={controlsTrayOpen ? 'Hide controls' : 'Show controls'} placement="bottom">
-                <button
-                  className={`${styles.toolbarButton} ${controlsTrayOpen ? styles.toolbarButtonActive : ''}`}
-                  onClick={() => setControlsTrayOpen((o) => !o)}
-                >
-                  <Icon of="settings" />
-                </button>
-              </Tooltip>
-            )}
           </CompositionsMenuBar>
           <SandboxPermissionsAggregator
             hooks={previewSandboxHooks}
             onSandboxChange={setSandboxValue}
             component={component}
           />
+          <PreviewPropsAggregator
+            hooks={previewPropsHooks}
+            onPreviewPropsChange={setPreviewAttrs}
+            component={component}
+          />
           <div className={styles.previewArea}>
             {isDraggingTray && <div className={styles.dragOverlay} />}
             <CompositionContent
+              {...previewAttrs}
               className={styles.compositionPanel}
               emptyState={emptyState}
               component={component}
@@ -187,28 +241,17 @@ export function Compositions({
               sandbox={sandboxValue}
             />
             {showControlsTray && (
-              <div ref={trayRef} className={styles.controlsTray} style={{ maxHeight: trayHeightRef.current }}>
-                <div className={styles.trayDragHandle} onMouseDown={onTrayDragStart}>
-                  <div className={styles.trayDragBar} />
-                </div>
-                <div className={styles.trayHeader}>
-                  <div className={styles.trayTitleRow}>
-                    <Icon of="settings" className={styles.trayIcon} />
-                    <span className={styles.trayTitle}>Live Controls</span>
-                    {ready && defs.length > 0 && <span className={styles.trayBadge}>{defs.length}</span>}
-                  </div>
-                  <button className={styles.trayClose} onClick={() => setControlsTrayOpen(false)}>
-                    <Icon of="x" />
-                  </button>
-                </div>
-                <div className={styles.trayBody}>
-                  {ready ? (
-                    <LiveControls defs={defs} values={values} onChange={onChange} />
-                  ) : (
-                    <div className={styles.trayEmpty}>No live controls available for this composition</div>
-                  )}
-                </div>
-              </div>
+              <LiveControlsTray
+                trayRef={trayRef}
+                collapsed={isTrayCollapsed}
+                height={trayHeight}
+                ready={ready}
+                defs={defs}
+                values={values}
+                onChange={onChange}
+                onResizeStripMouseDown={onResizeStripMouseDown}
+                onToggleExpanded={toggleTrayCollapsed}
+              />
             )}
           </div>
         </Pane>
@@ -234,6 +277,9 @@ export function Compositions({
                   isScaling={isScaling}
                   useNameParam={useNameParam}
                   includesEnvTemplate={component.preview?.includesEnvTemplate}
+                  hasLiveControls={currentCompositionHasControls}
+                  liveControlsActive={currentCompositionHasControls && !isTrayCollapsedForCurrent}
+                  onToggleLiveControls={toggleTrayCollapsed}
                   onSelectComposition={(composition) => {
                     if (!currentComposition || !location) return;
                     const selectedCompositionFromUrl = params['*'];
@@ -252,9 +298,6 @@ export function Compositions({
                     }
                     const newPath = pathSegments.join('/');
                     navigate(`/${newPath}?${urlParams.toString()}`);
-                    // open the tray only on explicit user selection, so the
-                    // tray stays closed on navigation/tab return.
-                    setControlsTrayOpen(true);
                   }}
                   url={compositionUrl}
                   compositions={component.compositions}
@@ -269,6 +312,89 @@ export function Compositions({
         </Pane>
       </SplitPane>
     </CompositionContextProvider>
+  );
+}
+
+type LiveControlsTrayProps = {
+  trayRef: React.RefObject<HTMLDivElement | null>;
+  collapsed: boolean;
+  height: number | null;
+  ready: boolean;
+  defs: UseLiveControlsResult['defs'];
+  values: UseLiveControlsResult['values'];
+  onChange: UseLiveControlsResult['onChange'];
+  onResizeStripMouseDown: (e: React.MouseEvent) => void;
+  onToggleExpanded: () => void;
+};
+
+function LiveControlsTray({
+  trayRef,
+  collapsed,
+  height,
+  ready,
+  defs,
+  values,
+  onChange,
+  onResizeStripMouseDown,
+  onToggleExpanded,
+}: LiveControlsTrayProps) {
+  // height = null → let CSS size the tray to its content (with the max-height
+  // clamp doing the upper bound); height = number → user has drag-resized,
+  // pin to that.
+  const trayStyle = collapsed || height === null ? undefined : { height };
+  return (
+    <div
+      ref={trayRef}
+      className={classNames(styles.controlsTray, collapsed && styles.controlsTrayCollapsed)}
+      style={trayStyle}
+    >
+      {!collapsed && (
+        <div
+          className={styles.trayResizeStrip}
+          onMouseDown={onResizeStripMouseDown}
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Resize live controls"
+          title="Drag to resize"
+        >
+          <div className={styles.trayDragBar} />
+        </div>
+      )}
+      <div
+        className={styles.trayHeaderInner}
+        onClick={onToggleExpanded}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onToggleExpanded();
+          }
+        }}
+        title={collapsed ? 'Click to expand' : 'Click to collapse'}
+      >
+        <div className={styles.trayTitleRow}>
+          <Icon of="settings" className={styles.trayIcon} />
+          <span className={styles.trayTitle}>Live Controls</span>
+          {ready && defs.length > 0 && <span className={styles.trayBadge}>{defs.length}</span>}
+        </div>
+        <span
+          className={classNames(styles.trayCollapseIcon, collapsed && styles.trayCollapseIconCollapsed)}
+          aria-hidden
+        >
+          <Icon of="right-rounded-corners" />
+        </span>
+      </div>
+      {!collapsed && (
+        <div className={styles.trayBody}>
+          {ready ? (
+            <LiveControls defs={defs} values={values} onChange={onChange} />
+          ) : (
+            <div className={styles.trayEmpty}>No live controls available for this composition</div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
