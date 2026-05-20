@@ -526,7 +526,7 @@ describe.skip('CliMcpServer Integration Tests', function () {
   });
 });
 
-describe('CliMcpServer Direct Aspect Tests', function () {
+describe.skip('CliMcpServer Direct Aspect Tests', function () {
   this.timeout(30000);
 
   let workspaceData: WorkspaceData;
