@@ -4032,7 +4032,12 @@
           [
             "h",
             "head",
-            "switch to the head of the lane/main (fetches the latest changes from the remote)"
+            "DEPRECATED. this is currently the default behavior"
+          ],
+          [
+            "",
+            "skip-fetch",
+            "don't fetch the latest from the remote; switch to the lane/main state already in the local scope"
           ],
           [
             "r",
@@ -4659,7 +4664,12 @@
       [
         "h",
         "head",
-        "switch to the head of the lane/main (fetches the latest changes from the remote)"
+        "DEPRECATED. this is currently the default behavior"
+      ],
+      [
+        "",
+        "skip-fetch",
+        "don't fetch the latest from the remote; switch to the lane/main state already in the local scope"
       ],
       [
         "r",

@@ -104,7 +104,7 @@ export type CreateLaneOptions = {
 };
 
 export type SwitchLaneOptions = {
-  head?: boolean;
+  skipFetch?: boolean;
   alias?: string;
   merge?: MergeStrategy;
   forceOurs?: boolean;
@@ -649,7 +649,7 @@ please create a new lane instead, which will include all components of this lane
       pattern,
       workspaceOnly,
       skipDependencyInstallation = false,
-      head,
+      skipFetch = false,
       branch = false,
     }: SwitchLaneOptions
   ) {
@@ -674,7 +674,7 @@ please create a new lane instead, which will include all components of this lane
       existingOnWorkspaceOnly: workspaceOnly,
       pattern,
       alias,
-      head,
+      skipFetch,
     };
     const checkoutProps = {
       mergeStrategy,

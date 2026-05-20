@@ -16,7 +16,7 @@ export type SwitchProps = {
   ids?: ComponentID[];
   laneBitIds?: ComponentID[]; // only needed for the deprecated onLanesOnly prop. once this prop is removed, this prop can be removed as well.
   pattern?: string;
-  head?: boolean;
+  skipFetch?: boolean;
   existingOnWorkspaceOnly?: boolean;
   remoteLane?: Lane;
   localTrackedLane?: string;
@@ -68,29 +68,49 @@ export class LaneSwitcher {
 
   private async populateSwitchProps() {
     const laneId = await this.consumer.scope.lanes.parseLaneIdFromString(this.switchProps.laneName);
+    const skipFetch = this.switchProps.skipFetch;
 
     const localLane = await this.consumer.scope.loadLane(laneId);
     const getMainIds = async () => {
-      if (this.switchProps.head) {
+      if (!skipFetch) {
         const allIds = this.workspace.listIds();
-        await this.workspace.scope.legacyScope.scopeImporter.importWithoutDeps(allIds, {
-          cache: false,
-          ignoreMissingHead: true,
-        });
-        return this.consumer.getIdsOfDefaultLane();
+        try {
+          await this.workspace.scope.legacyScope.scopeImporter.importWithoutDeps(allIds, {
+            cache: false,
+            ignoreMissingHead: true,
+          });
+        } catch (err: any) {
+          this.logger.consoleWarning(
+            `failed to fetch the latest from the remote, falling back to local state. ${err.message}\nuse --skip-fetch to skip this step.`
+          );
+        }
       }
-      const mainIds = await this.consumer.getIdsOfDefaultLane();
-      return mainIds;
+      return this.consumer.getIdsOfDefaultLane();
     };
     const mainIds = await getMainIds();
     if (laneId.isDefault()) {
       await this.populatePropsAccordingToDefaultLane();
       this.switchProps.ids = mainIds;
     } else {
-      const laneIds =
-        localLane && !this.switchProps.head
-          ? this.populatePropsAccordingToLocalLane(localLane)
-          : await this.populatePropsAccordingToRemoteLane(laneId);
+      let laneIds: ComponentID[];
+      if (skipFetch) {
+        if (!localLane) {
+          throw new BitError(
+            `unable to switch to lane "${laneId.toString()}" with --skip-fetch: the lane doesn't exist in the local scope. run without --skip-fetch to fetch it from the remote.`
+          );
+        }
+        laneIds = this.populatePropsAccordingToLocalLane(localLane);
+      } else {
+        try {
+          laneIds = await this.populatePropsAccordingToRemoteLane(laneId);
+        } catch (err: any) {
+          if (!localLane) throw err;
+          this.logger.consoleWarning(
+            `failed to fetch lane "${laneId.toString()}" from the remote, falling back to local state. ${err.message}\nuse --skip-fetch to skip this step.`
+          );
+          laneIds = this.populatePropsAccordingToLocalLane(localLane);
+        }
+      }
       const idsOnLaneOnly = laneIds.filter((id) => !mainIds.find((i) => i.isEqualWithoutVersion(id)));
       const idsOnMainOnly = mainIds.filter((id) => !laneIds.find((i) => i.isEqualWithoutVersion(id)));
       this.switchProps.ids = [...idsOnMainOnly, ...laneIds];
