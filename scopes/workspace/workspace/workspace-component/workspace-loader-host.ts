@@ -465,15 +465,34 @@ export class WorkspaceLoaderHost implements LoaderHost {
 
   private async pass2RegisterAspects(workspaceComponents: Component[], scopeComponents: Component[]): Promise<void> {
     const all = workspaceComponents.concat(scopeComponents);
-    const aspectIds = all.filter((c) => this.shouldLoadAsAspect(c)).map((c) => c.id.toString());
+    // Skip aspects already configured in `workspace.jsonc`. Those are loaded
+    // by the CLI bootstrap path (`workspace.main.runtime.ts:cli.registerOnStart`)
+    // with the correct `neededFor` context ("teambit.workspace/workspace
+    // (cli.registerOnStart)"), which surface as user-facing warnings via the
+    // status command's loader spinner. If we load them here first, the
+    // bootstrap path sees them as already-attempted (aspect-loader's
+    // `isAspectLoaded` returns true for failed loads too) and skips —
+    // suppressing the warning the user is meant to see.
+    const configuredAspectIds = new Set(this.aspectLoader.getConfiguredAspects());
+    const aspectIds = all
+      .filter((c) => this.shouldLoadAsAspect(c))
+      .map((c) => c.id.toString())
+      .filter((id) => !configuredAspectIds.has(id) && !configuredAspectIds.has(id.split('@')[0]));
     if (!aspectIds.length) return;
 
     try {
       await this.workspace.loadAspects(aspectIds, true, 'self loading aspects', {
         useScopeAspectsCapsule: true,
       } as any);
-    } catch (err: any) {
-      this.logger.warn(`failed loading components as aspects: ${aspectIds.join(', ')}`, err);
+    } catch {
+      // Log message only (no error object). The inner aspect-loader's own
+      // `consoleWarning` / `logger.error` paths already surface the user-facing
+      // diagnostic; passing `err` to `logger.warn` here would dump the entire
+      // stack trace (including the require stack) into stdout at the default
+      // log level, breaking tests like `aspect.e2e: commands without loaders
+      // should not show the entire stacktrace`. Stack is still available at
+      // `--log=error`.
+      this.logger.warn(`failed loading components as aspects: ${aspectIds.join(', ')}`);
     }
   }
 
