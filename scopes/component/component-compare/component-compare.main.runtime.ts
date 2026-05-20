@@ -188,7 +188,14 @@ export class ComponentCompareMain {
   ): Promise<DiffResults[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const components = await this.workspace.getMany(ids);
-    if (!components.length) throw new BitError('failed loading the components');
+    if (!components.length) {
+      // Surface the underlying load error (e.g. `ComponentNotFoundInPath`
+      // when a component's root dir was deleted) by re-asking via `get`,
+      // which throws the actual diagnostic. `getMany` silently drops
+      // missing/invalid components to match pre-rewrite WCL semantics.
+      if (ids.length) await this.workspace.get(ids[0]);
+      throw new BitError('failed loading the components');
+    }
     if (toVersion && !version)
       throw new BitError('error: componentsDiff expects to get version when toVersion is entered');
     const componentsDiffResults = await Promise.all(

@@ -230,14 +230,27 @@ export class WorkspaceLoaderHost implements LoaderHost {
       //      input versionless but `scope.get` returns a versioned component;
       //      callers (e.g. `Workspace.resolveEnvIdWithPotentialVersionForConfig`)
       //      look up by the input (versionless) id
+      //   4. any input id whose VERSIONLESS form matches this component — covers
+      //      out-of-sync flows where `consumer.loadComponents`'s
+      //      `_handleOutOfSyncScenarios` strips the version mid-load (bitmap
+      //      had `X@0.0.1` but scope is empty → component ends up as plain `X`).
+      //      Without this the caller asks for `X@0.0.1` but the Map only has `X`.
       const result = new Map<string, Component>();
       const setAllKeys = (c: Component) => {
         const resolvedKey = c.id.toString();
+        const versionlessKey = c.id.toStringWithoutVersion();
         result.set(resolvedKey, c);
         const inputKey = inputKeyByResolvedKey.get(resolvedKey);
         if (inputKey && inputKey !== resolvedKey) result.set(inputKey, c);
-        const versionlessKey = c.id.toStringWithoutVersion();
         if (!result.has(versionlessKey)) result.set(versionlessKey, c);
+        for (const [resKey, mappedInputKey] of inputKeyByResolvedKey) {
+          const inputVersionless = mappedInputKey.split('@')[0];
+          const resVersionless = resKey.split('@')[0];
+          if (inputVersionless === versionlessKey || resVersionless === versionlessKey) {
+            result.set(mappedInputKey, c);
+            result.set(resKey, c);
+          }
+        }
       };
       for (const c of pass1.workspaceComponents) setAllKeys(c);
       for (const c of pass1.scopeComponents) setAllKeys(c);
