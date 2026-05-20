@@ -245,6 +245,7 @@ export class MergeLanesMain {
       skipDependencyInstallation,
       detachHead,
       loose,
+      shouldSquash,
     });
 
     if (snapshot) await lastMerged?.persistSnapshot(snapshot);
@@ -735,11 +736,10 @@ async function squashOneComp(
         // for detach head, it's ok to have it as diverged. as long as the target is ahead, we want to squash.
         return true;
       }
-      throw new BitError(`unable to squash because ${id.toString()} is diverged in history.
-  consider switching to "${
-    otherLaneId.name
-  }" first, merging "${currentLaneName}", then switching back to "${currentLaneName}" and merging "${otherLaneId.name}"
-  alternatively, use "--no-squash" flag to keep the entire history of "${otherLaneId.name}"`);
+      // diverged + --squash: skip the parent-rewrite path here. the merge snap will be created
+      // by snapForMerge with a single parent (and squashed metadata) because the corresponding
+      // UnmergedComponent entry has `shouldSquash: true`. see snapping.main.runtime.ts.
+      return false;
     }
     if (divergeData.isSourceAhead()) {
       // nothing to do. current is ahead, nothing to merge. (it was probably filtered out already as a "failedComponent")

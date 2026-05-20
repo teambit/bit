@@ -1107,6 +1107,17 @@ another option, in case this dependency is not in main yet is to remove all refe
           version.setUnrelated({ head: unrelated.unrelatedHead, laneId: unrelated.unrelatedLaneId });
           version.addAsOnlyParent(unrelated.headOnCurrentLane);
         }
+      } else if (unmergedComponent.shouldSquash) {
+        // --squash on diverged components: record the dropped lane-b head in squashed metadata
+        // and leave `version.parents` as the single current-lane head. lane-b's history remains
+        // reachable only on its own scope; the merge snap chain stays self-contained on this lane.
+        const currentParent = version.parents[0];
+        const previousParents = currentParent ? [currentParent, unmergedComponent.head] : [unmergedComponent.head];
+        version.setSquashed({ previousParents, laneId: unmergedComponent.laneId }, version.log);
+        this.logger.debug(
+          `sources.addSource, unmerged component "${component.name}". squash-on-diverged: dropping parent ${unmergedComponent.head.hash}`
+        );
+        version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
       } else {
         // this is adding a second parent to the version. the order is important. the first parent is coming from the current-lane.
         version.addParent(unmergedComponent.head);
