@@ -337,7 +337,6 @@ export class CiMain {
     try {
       await this.lanes.switchLanes(laneName, {
         forceOurs: true,
-        head: true,
         workspaceOnly: true,
         skipDependencyInstallation: true,
         ...options,

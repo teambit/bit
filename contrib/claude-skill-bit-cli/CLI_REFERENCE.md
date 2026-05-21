@@ -867,7 +867,7 @@ Flags: --json, --legacy, --remote, --browser, --compare
 create immutable component snapshots for development versions
 
 creates snapshots with hash-based versions for development and testing. snapshots are immutable and exportable. by default snaps only new and modified components. use for development iterations before creating semantic version tags. snapshots maintain component history and enable collaboration without formal releases.
-Flags: --message <message>, --unmodified, --unmerged, --build, --editor [editor], --skip-tests, --skip-tasks <string>, --skip-auto-snap, --disable-snap-pipeline, --ignore-build-errors, --loose, --rebuild-deps-graph, --ignore-issues <issues>, --fail-fast
+Flags: --message <message>, --unmodified, --unmerged, --build, --editor [editor], --skip-tests, --skip-tasks <string>, --skip-auto-snap, --disable-snap-pipeline, --ignore-build-errors, --loose, --rebuild-deps-graph, --no-lock-deps, --ignore-issues <issues>, --fail-fast
 
 ## bit start [component-pattern]
 
@@ -925,7 +925,7 @@ similar to linux "tail -f" command
 create immutable component snapshots with semantic version tags
 
 creates tagged versions using semantic versioning (semver) for component releases. tags are immutable and exportable. by default tags all new and modified components. supports version specification per pattern using "@" (e.g. foo@1.0.0, bar@minor). use for official releases. for development versions, use 'bit snap' instead.
-Flags: --message <message>, --unmodified, --editor [editor], --versions-file <path>, --ver <version>, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --snapped, --unmerged, --skip-tests, --skip-tasks <string>, --skip-auto-tag, --soft, --persist [skip-build], --disable-tag-pipeline, --ignore-build-errors, --rebuild-deps-graph, --increment-by <number>, --ignore-issues <issues>, --ignore-newest-version, --fail-fast, --build, --loose
+Flags: --message <message>, --unmodified, --editor [editor], --versions-file <path>, --ver <version>, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --snapped, --unmerged, --skip-tests, --skip-tasks <string>, --skip-auto-tag, --soft, --persist [skip-build], --disable-tag-pipeline, --ignore-build-errors, --rebuild-deps-graph, --no-lock-deps, --increment-by <number>, --ignore-issues <issues>, --ignore-newest-version, --fail-fast, --build, --loose
 
 ## bit templates
 

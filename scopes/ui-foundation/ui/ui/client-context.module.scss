@@ -2,3 +2,11 @@
   position: fixed;
   z-index: 20;
 }
+
+// Make the global font also apply to elements portaled to <body>
+// (e.g. dropdown menus, user-bar menu, live controls overlays).
+// Without this, portaled content falls back to the browser default
+// (often Times New Roman) since it sits outside the BaseTheme wrapper.
+:global(body) {
+  font-family: 'CircularXX', 'Gill Sans', 'Gill Sans MT', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
