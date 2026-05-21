@@ -317,6 +317,13 @@ export type PruneCapsulesOptions = {
   keepWorkspaceCaps?: boolean;
   sizeTargetGb?: number;
   dryRun?: boolean;
+  /**
+   * Compute byte sizes for every entry being considered. When false, all `sizeBytes`
+   * in the report are 0 and the cache walk skips the expensive recursive `lstat` pass —
+   * deletion (rename-to-trash) is O(1) and runs in milliseconds even on multi-GB caches.
+   * Forced on when `sizeTargetGb` is set because that path needs sizes to enforce.
+   */
+  withSizes?: boolean;
 };
 
 export type PruneCapsulesReport = {
@@ -1527,13 +1534,15 @@ export class IsolatorMain {
     const includeOrphans = opts.includeOrphans !== false;
     const keepWorkspaceCaps = opts.keepWorkspaceCaps === true;
     const dryRun = opts.dryRun === true;
+    // Size accounting requires an expensive recursive lstat across the whole cache. Skip
+    // it by default so the foreground command returns in ms (deletes are O(1) renames);
+    // force on for size-target enforcement and when the caller asks for byte accounting.
+    const computeSizes = opts.withSizes === true || opts.sizeTargetGb !== undefined;
     const ageCutoffMs = Date.now() - olderThanDays * 24 * 60 * 60 * 1000;
     const datedDirName = this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR) || 'dated-capsules';
 
-    // Single cache walk: `roots` already carries `sizeBytes`, so derive the total from
-    // it instead of calling `getCapsulesTotalSize` (which would walk the cache again).
-    const roots = await this.listAllCapsuleRoots({ withSizes: true });
-    const totalSizeBefore = roots.reduce((sum, r) => sum + r.sizeBytes, 0);
+    const roots = await this.listAllCapsuleRoots({ withSizes: computeSizes });
+    const totalSizeBefore = computeSizes ? roots.reduce((sum, r) => sum + r.sizeBytes, 0) : 0;
     const removed: PruneCapsulesReport['removed'] = [];
 
     const removeEntry = async (p: string, kind: CapsuleKind | 'unmarked', reason: string, sizeBytes: number) => {
@@ -1543,7 +1552,7 @@ export class IsolatorMain {
 
     for (const root of roots) {
       if (path.basename(root.path) === datedDirName) {
-        await this.pruneDatedCapsulesChildren(root.path, dryRun, removed);
+        await this.pruneDatedCapsulesChildren(root.path, dryRun, computeSizes, removed);
         continue;
       }
       if (root.kind === 'workspace') {
@@ -1559,7 +1568,7 @@ export class IsolatorMain {
         } else if (tooOld) {
           // For unmarked dirs, sniff content first to avoid nuking a legacy scope-aspects root.
           if (root.kind === 'unmarked' && (await this.looksLikeAspectsRoot(root.path))) {
-            await this.pruneAspectsRootChildren(root.path, ageCutoffMs, includeOrphans, dryRun, removed);
+            await this.pruneAspectsRootChildren(root.path, ageCutoffMs, includeOrphans, dryRun, computeSizes, removed);
           } else {
             await removeEntry(root.path, root.kind, `older-than-${olderThanDays}d`, root.sizeBytes);
           }
@@ -1567,7 +1576,7 @@ export class IsolatorMain {
         continue;
       }
       if (root.kind === 'scope-aspects-root') {
-        await this.pruneAspectsRootChildren(root.path, ageCutoffMs, includeOrphans, dryRun, removed);
+        await this.pruneAspectsRootChildren(root.path, ageCutoffMs, includeOrphans, dryRun, computeSizes, removed);
         continue;
       }
     }
@@ -1601,6 +1610,7 @@ export class IsolatorMain {
   private async pruneDatedCapsulesChildren(
     rootPath: string,
     dryRun: boolean,
+    computeSizes: boolean,
     removed: PruneCapsulesReport['removed']
   ): Promise<void> {
     // Must match the date string produced by `getCapsulesRootDir` when `useDatedDirs`
@@ -1617,7 +1627,7 @@ export class IsolatorMain {
       if (!entry.isDirectory() || entry.name.startsWith('.') || entry.name === 'node_modules') continue;
       if (entry.name === todayDir) continue;
       const childPath = path.join(rootPath, entry.name);
-      const sizeBytes = await this.computeDirSize(childPath);
+      const sizeBytes = computeSizes ? await this.computeDirSize(childPath) : 0;
       removed.push({
         path: childPath,
         kind: 'unmarked',
@@ -1646,6 +1656,7 @@ export class IsolatorMain {
     ageCutoffMs: number,
     includeOrphans: boolean,
     dryRun: boolean,
+    computeSizes: boolean,
     removed: PruneCapsulesReport['removed']
   ): Promise<void> {
     let entries: fs.Dirent[];
@@ -1664,7 +1675,7 @@ export class IsolatorMain {
       const lastUsedMs = (lastUsed ?? stat?.mtime ?? new Date(0)).getTime();
       const isOrphan = includeOrphans && marker?.originPath && !(await fs.pathExists(marker.originPath));
       if (isOrphan || lastUsedMs < ageCutoffMs) {
-        const sizeBytes = await this.computeDirSize(childPath);
+        const sizeBytes = computeSizes ? await this.computeDirSize(childPath) : 0;
         removed.push({
           path: childPath,
           kind: 'scope-aspect',

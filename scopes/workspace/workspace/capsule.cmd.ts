@@ -289,6 +289,7 @@ type PruneOpts = {
   noOrphans?: boolean;
   sizeTarget?: number;
   dryRun?: boolean;
+  withSizes?: boolean;
   json?: boolean;
 };
 
@@ -303,8 +304,17 @@ use --dry-run first to preview what would be removed.`;
     ['', 'older-than <days>', 'age threshold in days for aspect-version/scope capsule pruning (default 30)'],
     ['', 'keep-workspace-caps', 'skip workspace capsule deletion'],
     ['', 'no-orphans', "don't delete capsules whose origin path no longer exists"],
-    ['', 'size-target <gb>', 'after standard pruning, LRU-evict aspect-versions until total drops below this size'],
+    [
+      '',
+      'size-target <gb>',
+      'after standard pruning, LRU-evict aspect-versions until total drops below this size (forces --with-sizes)',
+    ],
     ['', 'dry-run', 'preview what would be removed without deleting'],
+    [
+      '',
+      'with-sizes',
+      'compute byte sizes for the report (walks the full cache; slow on large caches). default: off — sizes shown as 0 but the prune itself is instant.',
+    ],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
 
@@ -318,10 +328,15 @@ use --dry-run first to preview what would be removed.`;
     const header = report.dryRun
       ? formatTitle(`[dry-run] would remove ${report.removed.length} capsule(s)`)
       : formatSuccessSummary(`removed ${report.removed.length} capsule(s)`);
-    const sizeLine = formatItem(
-      `cache: ${formatBytes(report.totalSizeBeforeBytes)} → ${formatBytes(report.totalSizeAfterBytes)} ` +
-        `(freed ${formatBytes(report.totalRemovedBytes)})`
-    );
+    // Only show the byte summary when sizes were actually computed; otherwise it'd say
+    // "0 B → 0 B (freed 0 B)" which is misleading.
+    const sizesComputed = report.totalSizeBeforeBytes > 0 || report.totalRemovedBytes > 0;
+    const sizeLine = sizesComputed
+      ? formatItem(
+          `cache: ${formatBytes(report.totalSizeBeforeBytes)} → ${formatBytes(report.totalSizeAfterBytes)} ` +
+            `(freed ${formatBytes(report.totalRemovedBytes)})`
+        )
+      : formatHint(`re-run with --with-sizes to see byte totals (walks the full cache)`);
     const items = report.removed
       .slice(0, 50)
       .map((r) =>
@@ -349,6 +364,7 @@ use --dry-run first to preview what would be removed.`;
       includeOrphans: opts.noOrphans !== true,
       sizeTargetGb: toFiniteNumber(opts.sizeTarget) ?? toFiniteNumber(sizeTargetFromConfig),
       dryRun: opts.dryRun === true,
+      withSizes: opts.withSizes === true,
     });
   }
 }
