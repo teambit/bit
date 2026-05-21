@@ -361,7 +361,23 @@ export class WorkspaceLoaderHost implements LoaderHost {
         ComponentIdList.fromArray(workspaceIds),
         false,
         {
-          loadExtensions: false,
+          // `loadExtensions: true` because several effects ride on the
+          // `onComponentConfigLoading` subscriber chain that fires inside
+          // `Component.loadFromFileSystem` only when this flag is true:
+          //   - `workspace.componentExtensions` -> `loadComponentsExtensions`
+          //     loads each component's env aspect, registering custom
+          //     dep-detectors BEFORE the same component's `loadDependencies`
+          //     runs (otherwise external envs' custom file-extensions like
+          //     `.custom` aren't parsed -> add-missing-deps misses them).
+          //   - the same chain calls `warnAboutMisconfiguredEnv`, which
+          //     calls `workspace.get(envId)` and re-enters this host for
+          //     the env component, firing the env's `dependencies-loader`.
+          //     That fires the per-component env.jsonc-mtime check that
+          //     clears all dep caches if env.jsonc was edited.
+          // The deferred `loadComponentsExtensions` call at the end of
+          // pass1 is still useful for extensions that didn't fire via the
+          // per-component path (e.g. scope-only components).
+          loadExtensions: true,
           executeLoadSlot: false,
           loadDocs: false,
           loadCompositions: false,
