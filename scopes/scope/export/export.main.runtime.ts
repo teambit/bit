@@ -670,7 +670,19 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       // A stranded pending dir blocks the export queue (`export-validate.waitIfNeeded`) for the
       // next client that arrives, so a subsequent retry (e.g. `bit ci pr` rebasing after a
       // concurrent-push race) gets a "server is busy" error that never resolves.
-      if (!resumeExportId) await removePendingDirs(remotes, clientId);
+      //
+      // Cleanup is best-effort: if it throws (e.g. network blip while talking to the remote),
+      // log a warning and rethrow the *original* persist error, since that's the actual cause
+      // the caller needs to see and act on.
+      if (!resumeExportId) {
+        try {
+          await removePendingDirs(remotes, clientId);
+        } catch (cleanupErr: any) {
+          this.logger.warn(
+            `failed to clean up pending dirs after persist failure: ${cleanupErr?.message || cleanupErr}`
+          );
+        }
+      }
       throw err;
     }
   }

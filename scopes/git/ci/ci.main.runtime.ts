@@ -629,6 +629,14 @@ export class CiMain {
 
     // Replace the remote lane's component heads with our snapped Versions. Anything we
     // didn't snap stays as the remote had it.
+    //
+    // TODO(stale-runner): if two consecutive PR commits trigger two CI runs and the older one
+    // finishes last, it will rebase its (older-content) snap on top of the newer one — the
+    // newer commit's snap stays in history but the lane head regresses to the older content.
+    // The fix needs git-SHA-aware staleness detection (embed `git rev-parse HEAD` in the snap
+    // log on creation, compare against the remote head's stored SHA on rebase, abort if our
+    // commit is an ancestor of theirs). The prior `isStaleCiRun` (removed in #10300 for
+    // SSH-prompt reasons) attempted this via `git fetch`; we'd want a fetch-free variant here.
     const updatedComponents: LaneComponent[] = remoteLane.components.map((c) => {
       const snap = snappedHeads.find((s) => s.id.isEqualWithoutVersion(c.id));
       return snap ? { ...c, head: snap.head } : c;
