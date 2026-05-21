@@ -1,3 +1,5 @@
+import path from 'path';
+import fs from 'fs-extra';
 import { compact, uniq } from 'lodash';
 import mapSeries from 'p-map-series';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
@@ -74,6 +76,14 @@ export class WorkspaceLoaderHost implements LoaderHost {
    * report them with their actual errors instead of a generic "not found".
    */
   private lastInvalid: InvalidComponent[] = [];
+
+  /**
+   * Set once `clearDepsCacheIfEnvJsoncModified` has run in this process.
+   * The check walks the workspace's env.jsonc files and clears the disk-level
+   * dep-cache if any was modified more recently than the oldest cache entry.
+   * Each `bit X` is a fresh process, so once is sufficient.
+   */
+  private envJsoncCheckDone = false;
 
   constructor(
     private readonly workspace: Workspace,
@@ -197,7 +207,10 @@ export class WorkspaceLoaderHost implements LoaderHost {
     if (!ids.length) return new Map();
 
     this.loadingDepth += 1;
-    if (this.loadingDepth === 1) this.lastInvalid = [];
+    if (this.loadingDepth === 1) {
+      this.lastInvalid = [];
+      await this.clearDepsCacheIfEnvJsoncModified();
+    }
     try {
       const { workspaceIds, scopeIds, inputKeyByResolvedKey } = await this.partitionIds(ids);
       const pass1 = await this.pass1BuildComponentsNoSlots(workspaceIds, scopeIds);
@@ -257,6 +270,51 @@ export class WorkspaceLoaderHost implements LoaderHost {
       return result;
     } finally {
       this.loadingDepth -= 1;
+    }
+  }
+
+  // === env.jsonc invalidation =====================================
+
+  /**
+   * Clears the disk-level dep cache if any env.jsonc in the workspace was
+   * modified more recently than the oldest dep-cache entry.
+   *
+   * Why: dependencies-loader has a per-component check that only fires when
+   * the env-owning component itself is loaded through `consumer.loadComponents`.
+   * The new loader's pass1 uses `loadExtensions: false`, which suppresses the
+   * `onComponentConfigLoading` → `warnAboutMisconfiguredEnv` recursion that
+   * pre-rewrite WCL.get used to fire and which, as a side effect, loaded the
+   * env-owning component first and triggered its per-component env.jsonc check.
+   * Without that side-channel, comp1 loads from the stale cache (`lodash:
+   * runtime`) even though the env's env.jsonc has been edited to mark
+   * `*.content.tsx` as dev-files.
+   *
+   * Runs once per process — each `bit X` invocation is a fresh process.
+   */
+  private async clearDepsCacheIfEnvJsoncModified(): Promise<void> {
+    if (this.envJsoncCheckDone) return;
+    this.envJsoncCheckDone = true;
+    try {
+      const fsCache = this.workspace.consumer.componentFsCache;
+      const cacheList = await fsCache.listDependenciesDataCache();
+      const timestamps = Object.values(cacheList).map((entry: any) => entry.time as number);
+      if (!timestamps.length) return;
+      const oldestCache = Math.min(...timestamps);
+      const wsPath = this.workspace.path;
+      const componentMaps = this.workspace.consumer.bitMap.getAllComponents();
+      for (const cm of componentMaps) {
+        if (!cm.rootDir) continue;
+        const envJsoncPath = path.join(wsPath, cm.rootDir, 'env.jsonc');
+        const stat = await fs.stat(envJsoncPath).catch(() => undefined);
+        if (!stat) continue;
+        if (stat.mtimeMs > oldestCache) {
+          this.logger.debug(`env.jsonc at ${cm.rootDir} modified after dep-cache; clearing all dep caches`);
+          await fsCache.deleteAllDependenciesDataCache();
+          return;
+        }
+      }
+    } catch (err: any) {
+      this.logger.debug(`clearDepsCacheIfEnvJsoncModified failed: ${err?.message}`);
     }
   }
 
