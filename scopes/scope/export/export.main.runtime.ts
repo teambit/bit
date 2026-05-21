@@ -33,7 +33,7 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { persistRemotes, validateRemotes, removePendingDirs } from './export-scope-components';
 import { writeLastExport } from './last-export';
-import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref } from '@teambit/objects';
+import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref, Version } from '@teambit/objects';
 import { ObjectList } from '@teambit/objects';
 import { Scope, PersistFailed } from '@teambit/legacy.scope';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
@@ -512,7 +512,47 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
         objectList.addIfNotExist(allObjectsData);
       };
 
-      const refsToExportPerComponent = await getRefsToExportPerComp();
+      const filterOutForeignMainOriginRefs = async (
+        refsPerComp: { modelComponent: ModelComponent; refs: Ref[] }[]
+      ): Promise<{ modelComponent: ModelComponent; refs: Ref[] }[]> => {
+        // when exporting a lane, drop refs that represent main-origin snaps belonging to
+        // components whose home scope is different from the lane's scope. those snaps already
+        // live on the component's home scope; pushing them to the lane scope is duplication
+        // (and the main driver of OOM when a lane is far behind main).
+        if (!lane) return refsPerComp;
+        const filtered = await mapSeries(refsPerComp, async ({ modelComponent, refs }) => {
+          const droppedRefs: string[] = [];
+          const keptRefs: Ref[] = [];
+          for (const ref of refs) {
+            const obj = await ref.load(scope.objects);
+            if (!obj || obj.getType() !== 'Version') {
+              keptRefs.push(ref);
+              continue;
+            }
+            const version = obj as Version;
+            const isLaneOrigin = Boolean(version.origin?.lane);
+            const isLocallyMutated = Boolean(version.squashed) || Boolean(version.unrelated);
+            const originScope = version.origin?.id?.scope;
+            const isForeignComponentScope = Boolean(originScope) && originScope !== remoteNameStr;
+            if (!isLaneOrigin && isForeignComponentScope && !isLocallyMutated) {
+              droppedRefs.push(ref.toString());
+              continue;
+            }
+            keptRefs.push(ref);
+          }
+          if (droppedRefs.length) {
+            this.logger.debug(
+              `export-scope-components, skipping ${droppedRefs.length} main-origin refs for ${modelComponent
+                .id()
+                .toString()} (already on component home scope, not the lane scope)`
+            );
+          }
+          return keptRefs.length ? { modelComponent, refs: keptRefs } : null;
+        });
+        return compact(filtered);
+      };
+
+      const refsToExportPerComponent = await filterOutForeignMainOriginRefs(await getRefsToExportPerComp());
       // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
       await mapSeries(refsToExportPerComponent, processModelComponent);
       if (lane) {

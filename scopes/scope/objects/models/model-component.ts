@@ -562,6 +562,26 @@ export default class Component extends BitObject {
           }
         );
         versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+        // Lean-lane-scope fallback: if the lane is on a different scope from the component's
+        // home scope (e.g. a feature lane for a component that lives on main in another scope),
+        // older main snaps may not be on the lane scope. Re-fetch without lane so the fetcher
+        // routes to the component's home scope and brings in the missing main history.
+        if (
+          lane &&
+          lane.scope !== this.scope &&
+          versionsInfo.some((v) => v.error && errorIsTypeOfMissingObject(v.error))
+        ) {
+          await scope.scopeImporter.importWithoutDeps(
+            ComponentIdList.fromArray([this.toComponentId()]).toVersionLatest(),
+            {
+              cache: false,
+              includeVersionHistory: true,
+              collectParents: true,
+              reason: 'to collect logs from component home scope (lean-lane-scope fallback)',
+            }
+          );
+          versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+        }
       } catch (err) {
         logger.error(`collectLogs failed to import ${this.id()} history`, err);
       }

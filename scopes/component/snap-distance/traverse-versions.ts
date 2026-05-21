@@ -245,12 +245,11 @@ export async function getAllVersionParents({
     const missingParents = allParentsFromObj.filter((parent) => !versionParents.some((v) => v.hash.isEqual(parent)));
     if (missingParents.length) {
       if (missingRefsFromVersionHistory) {
-        // stops the recursion
-        throw new Error(`unable to get the full history of "${modelComponent.id()}".
-the client sent the following snaps: ${versionParentsFromObjects.map((v) => v.hash.toString()).join(', ')}.
-however some of the parents of these snaps are missing from the local scope.
-missing snaps: ${missingParents.map((m) => m.toString()).join(', ')}
-`);
+        // Lean-lane-scope mode: missing parents are expected — they live on each component's
+        // home scope (e.g. main snaps for a lane that's far behind main). The lane scope no
+        // longer pulls them in. Return what we have; consumers will fetch from origin scopes
+        // when they need older history.
+        return versionParents;
       }
       // the VersionObject is not up to date.
       // recursively run this function and try to add these missing parents as heads so then it tries

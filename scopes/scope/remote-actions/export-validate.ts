@@ -7,7 +7,6 @@ import { mergeObjects } from '@teambit/export';
 import type { Action } from './action';
 import { logger } from '@teambit/legacy.logger';
 import type { BitObjectList } from '@teambit/objects';
-import { getAllVersionHashes } from '@teambit/component.snap-distance';
 
 type Options = { clientId: string; isResumingExport: boolean };
 const NUM_OF_RETRIES = 60;
@@ -51,12 +50,15 @@ export class ExportValidate implements Action<Options> {
     const modelComponents = bitObjectList.getComponents();
     const externalComponents = modelComponents.filter((comp) => comp.scope !== this.scope.name);
     if (!externalComponents.length) return;
-    await this.scope.scopeImporter.importMissingVersionHistory(externalComponents);
-    // this will throw in case the history is missing
-    await Promise.all(
-      externalComponents.map((modelComponent) =>
-        getAllVersionHashes({ modelComponent, repo: this.scope.objects, throws: true })
-      )
+    // Lean-lane-scope: do NOT import full version-history into the lane scope. The history
+    // lives on each component's home scope (e.g. main snaps in component-scope, lane-b snaps in
+    // scope-b). Pulling them into the lane scope was the main source of fat-lane-scope OOM when
+    // a lane is far behind main. Consumers walking history will resolve missing parents by
+    // fetching from origin scopes on demand. We also skip the strict getAllVersionHashes check
+    // for the same reason — incomplete history on the lane scope is now expected.
+    logger.debug(
+      `export-validate, skipping importMissingVersionHistory for ${externalComponents.length} external components ` +
+        `(lean lane scope mode — their history stays on origin scopes)`
     );
   }
 
