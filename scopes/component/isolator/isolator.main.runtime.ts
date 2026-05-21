@@ -303,6 +303,8 @@ export const CAPSULE_TRASH_DIR = '.trash';
 
 export type CapsuleKind = 'workspace' | 'scope-aspects-root' | 'scope-aspect' | 'scope';
 
+const VALID_CAPSULE_KINDS: ReadonlySet<string> = new Set(['workspace', 'scope-aspects-root', 'scope-aspect', 'scope']);
+
 export type CapsuleOriginMarker = {
   originPath: string;
   createdAt: string;
@@ -1389,7 +1391,16 @@ export class IsolatorMain {
   private async readOriginMarker(dir: string): Promise<CapsuleOriginMarker | undefined> {
     try {
       const raw = await fs.readJson(path.join(dir, CAPSULE_ORIGIN_FILE));
-      if (raw && typeof raw.originPath === 'string' && typeof raw.kind === 'string') return raw as CapsuleOriginMarker;
+      if (
+        raw &&
+        typeof raw.originPath === 'string' &&
+        // Reject unknown kinds (corrupted markers or values from a future Bit) so they
+        // fall through to the 'unmarked' path in pruneCapsules rather than silently
+        // skipping deletion.
+        VALID_CAPSULE_KINDS.has(raw.kind)
+      ) {
+        return raw as CapsuleOriginMarker;
+      }
     } catch {
       // missing or malformed — treat as unmarked
     }
@@ -1519,8 +1530,10 @@ export class IsolatorMain {
     const ageCutoffMs = Date.now() - olderThanDays * 24 * 60 * 60 * 1000;
     const datedDirName = this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR) || 'dated-capsules';
 
-    const totalSizeBefore = await this.getCapsulesTotalSize();
-    const roots = await this.listAllCapsuleRoots();
+    // Single cache walk: `roots` already carries `sizeBytes`, so derive the total from
+    // it instead of calling `getCapsulesTotalSize` (which would walk the cache again).
+    const roots = await this.listAllCapsuleRoots({ withSizes: true });
+    const totalSizeBefore = roots.reduce((sum, r) => sum + r.sizeBytes, 0);
     const removed: PruneCapsulesReport['removed'] = [];
 
     const removeEntry = async (p: string, kind: CapsuleKind | 'unmarked', reason: string, sizeBytes: number) => {

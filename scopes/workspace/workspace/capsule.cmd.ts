@@ -180,7 +180,7 @@ To initialize a workspace: bit init`);
       );
       const orphanCount = orphanChecks.reduce((a: number, b: number) => a + b, 0);
       const maxAgeRaw = this.configStore.getConfig(CFG_CAPSULES_MAX_AGE_DAYS);
-      const maxAgeDays = maxAgeRaw !== undefined ? Number(maxAgeRaw) : 30;
+      const maxAgeDays = Math.max(0, toFiniteNumber(maxAgeRaw) ?? 30);
       const cutoff = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
       const staleChecks = await Promise.all(
         allRoots
@@ -236,7 +236,12 @@ To initialize a workspace: bit init`);
     const listScope = await this.isolator.list(rootDirs.scopeAspectsCapsulesRootDir);
     const capsules = listWs ? listWs.capsules : [];
     const scopeCapsules = listScope ? listScope.capsules : [];
-    const allRoots = await this.isolator.listAllCapsuleRoots({ withSizes: opts.withStats === true });
+    // `--with-stats` is opt-in because computing it walks the full cache. Without it,
+    // omit the stats fields entirely rather than returning misleading zeros.
+    if (!opts.withStats) {
+      return { ...rootDirs, capsules, scopeCapsules };
+    }
+    const allRoots = await this.isolator.listAllCapsuleRoots({ withSizes: true });
     const totalSizeBytes = allRoots.reduce((sum, r) => sum + r.sizeBytes, 0);
     return { ...rootDirs, capsules, scopeCapsules, totalSizeBytes, allRoots };
   }
