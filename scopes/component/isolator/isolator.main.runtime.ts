@@ -1214,17 +1214,56 @@ export class IsolatorMain {
       await fs.remove(dir);
       return;
     }
-    this.spawnDetachedSweep(trashRoot);
+    // Run through the gated sweepTrashAsync path so we never have more than one sweep
+    // running concurrently — even if many bit processes are moving things to trash.
+    this.sweepTrashAsync();
   }
 
   /**
-   * Sweep the `.trash` dir in a detached background process. Safe to call multiple times —
-   * `rm -rf` on a non-existent path is a no-op and concurrent sweeps just race to remove
-   * different entries.
+   * Sweep the `.trash` dir in a detached background process. Gated by a PID-stamped
+   * lock so we never have more than one sweep running at a time across all concurrent
+   * bit processes — previously we spawned one per `bit` invocation and they piled up
+   * into the thousands, saturating disk I/O.
    */
   sweepTrashAsync(): void {
     const trashRoot = path.join(this.getRootDirOfAllCapsules(), CAPSULE_TRASH_DIR);
-    this.spawnDetachedSweep(trashRoot);
+    // No trash → nothing to do. Cheap synchronous check avoids spawning a process at all.
+    if (!fs.existsSync(trashRoot)) return;
+    const lockPath = path.join(this.getRootDirOfAllCapsules(), '.trash-sweep.lock');
+    if (this.isSweepLockActive(lockPath)) {
+      this.logger.debug(`trash sweep already running (per ${lockPath}), skipping`);
+      return;
+    }
+    try {
+      fs.writeFileSync(lockPath, String(process.pid), { flag: 'w' });
+    } catch (err: any) {
+      this.logger.debug(`failed to write sweep lock at ${lockPath}: ${err.message}`);
+      return;
+    }
+    this.spawnDetachedSweep(trashRoot, lockPath);
+  }
+
+  /**
+   * A sweep lock is "active" if the PID it names is still running. If the PID file
+   * exists but the process is gone (e.g. crashed mid-sweep), we treat it as stale and
+   * allow a new sweep to claim it.
+   */
+  private isSweepLockActive(lockPath: string): boolean {
+    let pidStr: string;
+    try {
+      pidStr = fs.readFileSync(lockPath, 'utf8').trim();
+    } catch {
+      return false;
+    }
+    const pid = Number(pidStr);
+    if (!Number.isFinite(pid) || pid <= 0) return false;
+    try {
+      // Signal 0 = "is this PID alive?" — no actual signal sent.
+      process.kill(pid, 0);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -1313,8 +1352,15 @@ export class IsolatorMain {
    * `process.execPath` with an inline `fs.rmSync` keeps this portable across macOS,
    * Linux, and Windows (where there's no `rm` binary).
    */
-  private spawnDetachedSweep(trashRoot: string): void {
-    const script = `require('fs').rmSync(${JSON.stringify(trashRoot)}, { recursive: true, force: true })`;
+  /**
+   * Spawn one detached Node process to sweep `trashRoot`. When `lockPath` is given,
+   * the child clears the lock on exit so the next bit invocation can claim a fresh
+   * sweep slot.
+   */
+  private spawnDetachedSweep(trashRoot: string, lockPath?: string): void {
+    const script = lockPath
+      ? `try { require('fs').rmSync(${JSON.stringify(trashRoot)}, { recursive: true, force: true }); } finally { try { require('fs').rmSync(${JSON.stringify(lockPath)}, { force: true }); } catch (_) {} }`
+      : `require('fs').rmSync(${JSON.stringify(trashRoot)}, { recursive: true, force: true })`;
     try {
       const child = spawn(process.execPath, ['-e', script], {
         detached: true,
@@ -1324,6 +1370,14 @@ export class IsolatorMain {
       child.unref();
     } catch (err: any) {
       this.logger.debug(`failed to spawn detached trash sweep: ${err.message}`);
+      // Don't leak the lock if the spawn itself failed.
+      if (lockPath) {
+        try {
+          fs.rmSync(lockPath, { force: true });
+        } catch {
+          // ignore
+        }
+      }
     }
   }
 
@@ -1673,13 +1727,20 @@ export class IsolatorMain {
       const lastUsed = marker ? await this.getOriginMarkerMtime(childPath) : undefined;
       const stat = await fs.stat(childPath).catch(() => undefined);
       const lastUsedMs = (lastUsed ?? stat?.mtime ?? new Date(0)).getTime();
-      const isOrphan = includeOrphans && marker?.originPath && !(await fs.pathExists(marker.originPath));
-      if (isOrphan || lastUsedMs < ageCutoffMs) {
+      // IMPORTANT: do not orphan-check scope-aspect children. Their `originPath` is the
+      // *logical* scope-aspects path (e.g. `<scope.path>-aspects`) used only to hash the
+      // capsule root dir name — it doesn't have to exist as a real directory. Treating
+      // a missing originPath as "orphan" here would wrongly delete the per-version
+      // capsules of currently-used aspects on every prune. Age-based pruning (via the
+      // marker mtime, which is touched on every aspect load) is the correct signal.
+      // The `includeOrphans` flag is still honored elsewhere for `workspace`/`scope` kinds.
+      void includeOrphans;
+      if (lastUsedMs < ageCutoffMs) {
         const sizeBytes = computeSizes ? await this.computeDirSize(childPath) : 0;
         removed.push({
           path: childPath,
           kind: 'scope-aspect',
-          reason: isOrphan ? 'orphan' : `aspect-older-than-cutoff`,
+          reason: `aspect-older-than-cutoff`,
           sizeBytes,
         });
         if (!dryRun) await this.scheduleFastDelete(childPath);
