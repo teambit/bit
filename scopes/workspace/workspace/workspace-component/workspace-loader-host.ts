@@ -580,7 +580,14 @@ export class WorkspaceLoaderHost implements LoaderHost {
 
     if (appData?.data?.appName) return true;
     if (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env') return true;
-    if (envsData?.data?.type === 'aspect') return true;
+    // Components of type='aspect' (e.g. created via `bit create bit-aspect`)
+    // are NOT auto-loaded. Pre-rewrite WCL.loadCompsAsAspects gated this on
+    // `loadOpts.aspects`, which the default getMany path left undefined, so
+    // bit-aspects were only loaded when the user opted in via `bit use` (which
+    // adds them to workspace.jsonc → `cli.registerOnStart` loads them). Loading
+    // them eagerly here causes the aspect's provider to run during `bit tag`,
+    // which fires side effects (e.g. the persist hook in
+    // `repository-hooks-aspects.e2e`) and breaks subsequent reads.
     return false;
   }
 
