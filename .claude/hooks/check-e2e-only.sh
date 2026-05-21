@@ -5,7 +5,21 @@
 set -uo pipefail
 
 INPUT=$(cat)
-CMD=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // ""')
+
+# Fail closed if jq is missing or stdin is not parseable as JSON — better to
+# deny noisily than to silently allow because we couldn't read the command.
+if ! command -v jq >/dev/null 2>&1; then
+  cat <<'JSON'
+{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"e2e guard: `jq` is not available on PATH; cannot parse the tool input. Install jq or disable this hook."}}
+JSON
+  exit 0
+fi
+if ! CMD=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // ""' 2>/dev/null); then
+  cat <<'JSON'
+{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"e2e guard: failed to parse hook input as JSON. Refusing to run; investigate the hook setup."}}
+JSON
+  exit 0
+fi
 
 # Strip quoted substrings so that `npm run e2e-test` inside a quoted argument
 # (commit message, echo arg, JSON literal, etc.) is not treated as a real
@@ -20,11 +34,20 @@ if ! printf '%s' "$STRIPPED" | grep -qE '(^|[;&|][[:space:]]*)npm[[:space:]]+run
   exit 0
 fi
 
-# Look at the working tree (staged + unstaged) for newly-added .only markers
-# inside e2e/. Restricting to e2e/ avoids false positives from fixture
-# strings elsewhere (e.g. mocha-tester.e2e.ts embeds an `it.only(...)` as
-# a string fixture).
+# Look for newly-added .only markers under e2e/. Restricting to e2e/ avoids
+# false positives from fixture strings elsewhere (e.g. mocha-tester.e2e.ts
+# embeds an `it.only(...)` as a string fixture).
+#
+# Two sources to check, because `git diff HEAD` only sees tracked files:
+#   1. Tracked changes (staged + unstaged) via `git diff HEAD`.
+#   2. Untracked new files (e.g. a bug-repro test Claude just created but
+#      hasn't `git add`'d yet) via `git ls-files --others --exclude-standard`.
 if git diff HEAD -- 'e2e/' 2>/dev/null | grep -qE '^\+[^+].*(describe|context|it)\.only\b'; then
+  exit 0
+fi
+UNTRACKED=$(git ls-files --others --exclude-standard -- 'e2e/' 2>/dev/null)
+if [ -n "$UNTRACKED" ] && \
+   printf '%s\n' "$UNTRACKED" | xargs -I{} grep -lE '(describe|context|it)\.only\b' -- {} 2>/dev/null | grep -q .; then
   exit 0
 fi
 
