@@ -629,9 +629,32 @@ export class InstallMain {
         }
       });
     }
+    // Honor the workspace scope-trust gate. The plugin path
+    // (`Plugin.require`) does an unguarded `require(path)` of the aspect's
+    // compiled module, which would execute the aspect's top-level code
+    // (including any side effects) before any other safety check fires.
+    // Filter out aspects whose scope isn't on the trust list. Errors from
+    // the guard are swallowed - we just drop the aspect from the reload set.
+    const guard = this.workspace.scope.getAspectLoadGuard();
+    const allowedAspects = guard
+      ? compact(
+          await Promise.all(
+            aspects.map(async (aspectDef) => {
+              const id = aspectDef.component?.id;
+              if (!id) return aspectDef;
+              try {
+                await guard(id);
+                return aspectDef;
+              } catch {
+                return undefined;
+              }
+            })
+          )
+        )
+      : aspects;
     const loadedPlugins = compact(
       await Promise.all(
-        aspects.map((aspectDef) => {
+        allowedAspects.map((aspectDef) => {
           const localPath = aspectDef.aspectPath;
           const component = aspectDef.component;
           if (!component) return undefined;
