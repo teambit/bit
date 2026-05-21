@@ -1,6 +1,10 @@
 import chai, { expect } from 'chai';
+import execa from 'execa';
+import * as fs from 'fs-extra';
+import * as path from 'path';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
+import { Extensions } from '@teambit/legacy.constants';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
 
@@ -104,66 +108,98 @@ describe('ci commands', function () {
   });
 
   /**
-   * This test verifies that `bit ci pr` uses temporary lane names during the snap operation
-   * to avoid race conditions when multiple CI jobs run concurrently on the same branch.
-   *
-   * The race condition problem:
-   * When two CI jobs run `bit ci pr` on the same branch concurrently, with the old approach:
-   * 1. Job1 deletes existing lane, creates new lane, starts long snap (~30+ min)
-   * 2. Job2 checks for lane (not found - Job1 deleted it), creates lane, snaps, exports
-   * 3. Job1 finishes snap, tries to export → FAILS with "lane exists with different hash"
-   *
-   * The fix:
-   * Use a temporary lane name with a random suffix during the snap operation, then rename
-   * to the final name right before export. This minimizes the race window to just the
-   * quick delete-rename-export operations at the end.
-   *
-   * Why we don't test the actual race condition:
-   * The race condition requires precise timing during the long snap operation (30+ min in real CI).
-   * In e2e tests, snap completes nearly instantly, making the race window too small to trigger
-   * reliably. Instead, we verify that the temp lane mechanism is correctly implemented.
+   * Subsequent commits to the same PR branch should re-use the existing remote lane rather than
+   * deleting and recreating it. This preserves the lane's history (cloud UI shows the snap
+   * progression), keeps user-made edits on the lane, and prevents a pile of archived lanes from
+   * accumulating in the cloud UI.
    */
-  describe('bit ci pr uses temp lane names to avoid race conditions', () => {
-    let prOutput: string;
+  describe('bit ci pr reuses the existing remote lane across subsequent PR commits', () => {
+    let firstPrOutput: string;
+    let secondPrOutput: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       setupGitRemote();
       setupComponentsAndInitialCommit();
 
-      // Create a feature branch with changes
-      helper.command.runCmd('git checkout -b feature/temp-lane-test');
-      helper.fs.outputFile('comp1/comp1.js', 'console.log("temp lane test");');
-      helper.command.runCmd('git add comp1/comp1.js');
-      helper.command.runCmd('git commit -m "feat: temp lane test changes"');
+      helper.command.runCmd('git checkout -b feature/reuse-lane-test');
 
-      prOutput = helper.command.runCmd('bit ci pr --message "temp lane test"');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("first commit");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: first commit"');
+      firstPrOutput = helper.command.runCmd('bit ci pr --message "first"');
+
+      helper.fs.outputFile('comp2/comp2.js', 'console.log("second commit");');
+      helper.command.runCmd('git add comp2/comp2.js');
+      helper.command.runCmd('git commit -m "feat: second commit"');
+      secondPrOutput = helper.command.runCmd('bit ci pr --message "second"');
     });
-    it('should create a temporary lane during snap (indicated by random suffix pattern)', () => {
-      // The temp lane name follows pattern: {original-name}-{5-char-random}
-      // e.g., "feature-temp-lane-test-a1b2c"
-      // Strip chalk/ANSI codes before regex matching to avoid false negatives
-      const cleanOutput = removeChalkCharacters(prOutput) as string;
-      expect(cleanOutput).to.match(
-        /Created temporary lane .+\/feature-temp-lane-test-[a-z0-9]{5} \(hash: [a-f0-9]{40}\)/
-      );
+    it('should report that the lane was reused on the second run', () => {
+      const cleanOutput = removeChalkCharacters(secondPrOutput) as string;
+      expect(cleanOutput).to.match(/Lane .+\/feature-reuse-lane-test exists on remote, reusing it/);
     });
-    it('should rename the temp lane to the final name before export', () => {
-      const cleanOutput = removeChalkCharacters(prOutput) as string;
-      expect(cleanOutput).to.match(/Renaming lane from feature-temp-lane-test-[a-z0-9]{5} to feature-temp-lane-test/);
+    it('should not log any temp-lane creation in either run', () => {
+      const cleanFirst = removeChalkCharacters(firstPrOutput) as string;
+      const cleanSecond = removeChalkCharacters(secondPrOutput) as string;
+      expect(cleanFirst).to.not.match(/Created temporary lane/);
+      expect(cleanSecond).to.not.match(/Created temporary lane/);
     });
-    it('should complete successfully', () => {
-      expect(prOutput).to.include('PR command executed successfully');
-    });
-    it('should export the lane with the correct final name', () => {
+    it('should leave exactly one lane on the remote with that name', () => {
       const remoteLanes = helper.command.listRemoteLanesParsed();
-      const lane = remoteLanes.lanes.find((l: any) => l.name === 'feature-temp-lane-test');
-      expect(lane).to.exist;
-      expect(lane.components).to.have.lengthOf(1);
+      const matching = remoteLanes.lanes.filter((l: any) => l.name === 'feature-reuse-lane-test');
+      expect(matching).to.have.lengthOf(1);
     });
-    it('should not leave any temp lanes on the remote', () => {
-      const remoteLanes = helper.command.listRemoteLanesParsed();
-      const tempLanes = remoteLanes.lanes.filter((l: any) => /feature-temp-lane-test-[a-z0-9]{5}/.test(l.name));
-      expect(tempLanes).to.have.lengthOf(0);
+  });
+
+  /**
+   * When a PR is in flight and main moves ahead with a config change (`bit deps set`, `bit env set`,
+   * etc., then `tag` + `export`), the next `bit ci pr` for that PR must merge main into the lane
+   * so the lane builds against current production config. The config lives in Version objects under
+   * `.bit/objects` — not git-tracked — so a git checkout of the PR branch alone won't surface it.
+   */
+  describe('bit ci pr merges main into the lane on subsequent runs (config-change propagation)', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      const defaultBranch = setupComponentsAndInitialCommit();
+
+      // First PR commit + ci pr — lane is created with comp1's original config.
+      helper.command.runCmd('git checkout -b feature/main-merge-test');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("pr commit 1");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: pr commit 1"');
+      helper.command.runCmd('bit ci pr --message "first pr commit"');
+
+      // Main moves ahead: register a fake npm package, set it as a dep on comp1, tag, export, push.
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.npm.addFakeNpmPackage('is-positive', '1.0.0');
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-positive': '1.0.0' } });
+      helper.command.dependenciesSet('comp1', 'is-positive@1.0.0');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "chore: bump comp1 deps on main"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+
+      // Second PR commit + ci pr — the PR branch picks up main's commits via merge, then ci pr
+      // runs and should merge main into the lane (bringing the deps change with it).
+      helper.command.runCmd('git checkout feature/main-merge-test');
+      helper.command.runCmd(`git merge ${defaultBranch}`);
+      helper.fs.outputFile('comp2/comp2.js', 'console.log("pr commit 2");');
+      helper.command.runCmd('git add comp2/comp2.js');
+      helper.command.runCmd('git commit -m "feat: pr commit 2"');
+      helper.command.runCmd('bit ci pr --message "second pr commit"');
+    });
+
+    it("should propagate main's deps-set config change to comp1 on the lane", () => {
+      // Switch to the lane locally and inspect comp1's resolved deps.
+      helper.command.switchLocalLane('feature-main-merge-test');
+      const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+      const dep = showConfig.data.dependencies.find((d: any) => d.id === 'is-positive');
+      expect(
+        dep,
+        `expected 'is-positive' on comp1's deps after merging main, got: ${JSON.stringify(showConfig.data.dependencies, null, 2)}`
+      ).to.exist;
+      expect(dep.version).to.equal('1.0.0');
     });
   });
 
@@ -639,6 +675,121 @@ module.exports = { isPositive };`
       expect(error).to.exist;
       expect(error?.message).to.include('workspace.jsonc conflicts');
       expect(error?.message).to.include('bit checkout head');
+    });
+  });
+
+  /**
+   * Simulates two CI runners racing `bit ci pr --build` on the same PR branch:
+   * a developer pushes commit A, CI runner A starts; before A finishes, the developer
+   * pushes commit B, CI runner B starts. Both runners run concurrently and both push
+   * to the same remote lane.
+   *
+   * We model this with two cloned workspaces sharing the same remote scope and git
+   * remote — each clone is a separate "runner" with its own .bit/objects and .bitmap.
+   * `--build` provides a real time window in which both runners have snapped locally
+   * but neither has exported yet, which is exactly when the remote race happens.
+   *
+   * Uses `populateComponents` for cheap, reliably-compiling components. `--build` still
+   * runs the full pipeline (compile, schema, pkg), giving enough overlap between the two
+   * runners that they reach the export step around the same time.
+   */
+  describe('bit ci pr with concurrent runners on the same PR branch', function () {
+    let runnerAResult: { stdout: string; exitCode: number; failed: boolean };
+    let runnerBResult: { stdout: string; exitCode: number; failed: boolean };
+    let runnerAPath: string;
+    let runnerBPath: string;
+
+    before(async () => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.fs.outputFile('.gitignore', 'node_modules/\n.bit/\n');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "initial commit"');
+      const defaultBranch = helper.command.runCmd('git branch --show-current').trim();
+      helper.command.runCmd(`git push -u origin ${defaultBranch}`);
+
+      helper.command.runCmd('git checkout -b feature/concurrent-ci-pr');
+
+      // First PR commit — runner A will pick this up
+      helper.fs.appendFile('comp1/index.js', '\n// concurrent test - commit A\n');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: concurrent commit A"');
+
+      runnerAPath = helper.scopes.localPath;
+
+      // Clone the workspace to act as runner B. Both clones share the remote scope and
+      // the bare git repo, so this mirrors two CI runners against the same PR.
+      runnerBPath = helper.scopeHelper.cloneWorkspace();
+
+      // Second PR commit on runner B (different file, so the two snaps touch different
+      // components and don't even need a merge-base resolution to coexist on the lane).
+      fs.appendFileSync(path.join(runnerBPath, 'comp2', 'index.js'), '\n// concurrent test - commit B\n');
+      execa.sync('git', ['add', '.'], { cwd: runnerBPath });
+      execa.sync('git', ['commit', '-m', 'feat: concurrent commit B'], { cwd: runnerBPath });
+
+      const bitBin = helper.command.bitBin;
+      const ciPrArgs = ['ci', 'pr', '--build'];
+
+      const procA = execa(bitBin, [...ciPrArgs, '--message', 'commit-A'], {
+        cwd: runnerAPath,
+        reject: false,
+      });
+      const procB = execa(bitBin, [...ciPrArgs, '--message', 'commit-B'], {
+        cwd: runnerBPath,
+        reject: false,
+      });
+
+      const [a, b] = await Promise.all([procA, procB]);
+      runnerAResult = {
+        stdout: `${a.stdout || ''}\n${a.stderr || ''}`,
+        exitCode: a.exitCode ?? -1,
+        failed: a.failed,
+      };
+      runnerBResult = {
+        stdout: `${b.stdout || ''}\n${b.stderr || ''}`,
+        exitCode: b.exitCode ?? -1,
+        failed: b.failed,
+      };
+    });
+
+    it('both runners should complete `bit ci pr` successfully', () => {
+      expect(runnerAResult.exitCode, `runner A output:\n${runnerAResult.stdout}`).to.equal(0);
+      expect(runnerAResult.stdout).to.include('PR command executed successfully');
+      expect(runnerBResult.exitCode, `runner B output:\n${runnerBResult.stdout}`).to.equal(0);
+      expect(runnerBResult.stdout).to.include('PR command executed successfully');
+    });
+
+    it('at least one runner should have hit the conflict and recovered via rebase', () => {
+      const rebasedA = runnerAResult.stdout.includes('Adopting the remote lane and rebasing local snaps');
+      const rebasedB = runnerBResult.stdout.includes('Adopting the remote lane and rebasing local snaps');
+      expect(rebasedA || rebasedB, 'expected one runner to log the rebase recovery path').to.be.true;
+    });
+
+    it('should leave exactly one final-named lane on the remote', () => {
+      const remoteLanes = helper.command.listRemoteLanesParsed();
+      const matching = remoteLanes.lanes.filter((l: any) => l.name === 'feature-concurrent-ci-pr');
+      expect(matching).to.have.lengthOf(1);
+    });
+
+    it('should preserve snaps from BOTH runners chained on the lane', () => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('feature-concurrent-ci-pr', '-x');
+
+      const comp1Log = helper.command.logParsed(`${helper.scopes.remote}/comp1`);
+      const comp2Log = helper.command.logParsed(`${helper.scopes.remote}/comp2`);
+
+      const comp1HasA = comp1Log.some((entry: any) => entry.message?.includes('commit-A'));
+      const comp1HasB = comp1Log.some((entry: any) => entry.message?.includes('commit-B'));
+      const comp2HasB = comp2Log.some((entry: any) => entry.message?.includes('commit-B'));
+      expect(comp1HasA, `expected commit-A snap on comp1, got: ${JSON.stringify(comp1Log, null, 2)}`).to.be.true;
+      expect(comp1HasB, `expected commit-B snap on comp1, got: ${JSON.stringify(comp1Log, null, 2)}`).to.be.true;
+      expect(comp2HasB, `expected commit-B snap on comp2, got: ${JSON.stringify(comp2Log, null, 2)}`).to.be.true;
     });
   });
 });

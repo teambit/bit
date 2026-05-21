@@ -661,7 +661,18 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
     const clientId = resumeExportId || Date.now().toString();
     await this.pushRemotesPendingDir(clientId, manyObjectsPerRemote, resumeExportId);
     await validateRemotes(remotes, clientId, Boolean(resumeExportId));
-    await persistRemotes(manyObjectsPerRemote, clientId);
+    try {
+      await persistRemotes(manyObjectsPerRemote, clientId);
+    } catch (err) {
+      // `validateRemotes` cleans up pending dirs on its own failure, and `pushRemotesPendingDir`
+      // does the same. `persistRemotes` does not — its retry loop swallows individual attempts'
+      // errors and only throws once they all fail, by which point the pending dir is stranded.
+      // A stranded pending dir blocks the export queue (`export-validate.waitIfNeeded`) for the
+      // next client that arrives, so a subsequent retry (e.g. `bit ci pr` rebasing after a
+      // concurrent-push race) gets a "server is busy" error that never resolves.
+      if (!resumeExportId) await removePendingDirs(remotes, clientId);
+      throw err;
+    }
   }
 
   private async pushRemotesPendingDir(

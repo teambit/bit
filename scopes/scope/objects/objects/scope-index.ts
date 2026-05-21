@@ -124,6 +124,30 @@ export class ScopeIndex {
     const added = bitObjects.map((bitObject) => this.addOne(bitObject));
     return added.some((oneAdded) => oneAdded); // return true if one of the objects was added
   }
+  /**
+   * Read-only counterpart to the LaneId-uniqueness check in `addOne`. Callers should run this
+   * before any disk writes when adding lanes, so a conflicting concurrent push fails *before*
+   * the version/lane/version-history files land on disk. Otherwise the would-be-rejected push
+   * leaves stale objects behind that the subsequent retry can't easily clean up (the export
+   * transfer step skips re-sending hashes the remote already has).
+   */
+  validateLaneIdUniqueness(bitObjects: BitObject[]): void {
+    for (const bitObject of bitObjects) {
+      if (!(bitObject instanceof Lane)) continue;
+      const hash = bitObject.hash().toString();
+      const foundByHash = this.find(hash) as LaneItem | undefined;
+      if (foundByHash) continue; // same hash → either no-op or rename, both safe
+      const sameLaneId = this.index.lanes.find((li) => li.toLaneId().isEqual(bitObject.toLaneId()));
+      if (sameLaneId) {
+        throw new Error(
+          `unable to add lane "${bitObject.toLaneId().toString()}" to the scope index. ` +
+            `a lane with the same id already exists with a different hash ` +
+            `(existing hash: ${sameLaneId.hash}, incoming hash: ${hash}). ` +
+            `this typically indicates a concurrent push race — retry the operation.`
+        );
+      }
+    }
+  }
   addOne(bitObject: BitObject): boolean {
     if (!(bitObject instanceof ModelComponent) && !(bitObject instanceof Symlink) && !(bitObject instanceof Lane))
       return false;
@@ -135,6 +159,22 @@ export class ScopeIndex {
         if ((found as LaneItem).toLaneId().isEqual(bitObject.toLaneId())) return false;
         found.id = bitObject.toLaneId();
       } else {
+        // Lane object hashes are random (sha1 of a v4 UUID), so concurrent
+        // `bit ci pr` runs that both create a fresh lane for the same PR each end up with a
+        // unique hash for the same LaneId. Without this check, both lanes get indexed under
+        // the same LaneId, and the subsequent `loadLane(id)` lookup picks one non-deterministically —
+        // orphaning the other runner's snaps. The check at sources.mergeLane:621 ("lane with
+        // same id but different hash") is in-memory and gets bypassed when neither runner
+        // has persisted yet at check time; this is the last gate before disk.
+        const sameLaneId = this.index.lanes.find((li) => li.toLaneId().isEqual(bitObject.toLaneId()));
+        if (sameLaneId) {
+          throw new Error(
+            `unable to add lane "${bitObject.toLaneId().toString()}" to the scope index. ` +
+              `a lane with the same id already exists with a different hash ` +
+              `(existing hash: ${sameLaneId.hash}, incoming hash: ${hash}). ` +
+              `this typically indicates a concurrent push race — retry the operation.`
+          );
+        }
         const laneItem = new LaneItem(bitObject.toLaneId(), hash);
         this.index.lanes.push(laneItem);
       }

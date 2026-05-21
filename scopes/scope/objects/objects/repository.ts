@@ -663,6 +663,21 @@ export default class Repository {
   async writeObjectsToTheFS(objects: BitObject[]): Promise<void> {
     const count = objects.length;
     if (!count) return;
+
+    // When writing lanes, reload the scope-index from disk and validate LaneId uniqueness
+    // *before* touching the filesystem. Our in-memory copy may be stale relative to a
+    // concurrent process (e.g. a parallel `bit ci pr` on the same PR branch) that already
+    // persisted its own lane. Without this reload, the in-memory check doesn't see the
+    // other process's entry and would silently accept our conflicting one. Doing the check
+    // before file writes also means a rejected push leaves no stale Version/lane files on
+    // the remote — important because the export transfer step skips re-sending hashes the
+    // remote already has, so a retry with the same hash but updated content would be lost.
+    const hasLanes = objects.some((obj) => obj instanceof Lane);
+    if (hasLanes) {
+      await this.reloadScopeIndexIfNeed(true);
+      this.scopeIndex.validateLaneIdUniqueness(objects);
+    }
+
     logger.trace(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
     const concurrency = concurrentIOLimit();
     await pMapPool(objects, (obj) => this._writeOne(obj), {

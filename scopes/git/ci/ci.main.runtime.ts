@@ -11,6 +11,7 @@ import type { SnapResults, SnappingMain } from '@teambit/snapping';
 import { ExportAspect, type ExportMain } from '@teambit/export';
 import { ImporterAspect, type ImporterMain } from '@teambit/importer';
 import { CheckoutAspect, checkoutOutput, type CheckoutMain } from '@teambit/checkout';
+import { MergeLanesAspect, type MergeLanesMain } from '@teambit/merge-lanes';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import execa from 'execa';
 import chalk from 'chalk';
@@ -22,19 +23,15 @@ import { CiPrCmd } from './commands/pr.cmd';
 import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
 import { ComponentIdList } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { isEqual } from 'lodash';
 import type { Version, LaneComponent } from '@teambit/objects';
+import { Ref } from '@teambit/objects';
+import type { LaneId } from '@teambit/lane-id';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { SourceBranchDetector } from './source-branch-detector';
-import { generateRandomStr } from '@teambit/toolbox.string.random';
 
-/**
- * Sentinel substring emitted by the hub when a lane push is rejected because a lane with the same
- * id already exists with a different hash. Thrown as `BitError` from
- * `components/legacy/scope/repositories/sources.ts` and wrapped in `UnexpectedNetworkError` across
- * the wire, so we match on the message text rather than an error class.
- */
 const LANE_HASH_MISMATCH_MARKER = 'a lane with the same id already exists with a different hash';
-
 export interface CiWorkspaceConfig {
   /**
    * Path to a custom script that generates commit messages for `bit ci merge` operations.
@@ -110,6 +107,7 @@ export class CiMain {
     ExportAspect,
     ImporterAspect,
     CheckoutAspect,
+    MergeLanesAspect,
   ];
 
   static slots: any = [];
@@ -131,13 +129,15 @@ export class CiMain {
 
     private checkout: CheckoutMain,
 
+    private mergeLanes: MergeLanesMain,
+
     private logger: Logger,
 
     private config: CiWorkspaceConfig
   ) {}
 
   static async provider(
-    [cli, workspace, loggerAspect, builder, status, lanes, snapping, exporter, importer, checkout]: [
+    [cli, workspace, loggerAspect, builder, status, lanes, snapping, exporter, importer, checkout, mergeLanes]: [
       CLIMain,
       Workspace,
       LoggerMain,
@@ -148,11 +148,24 @@ export class CiMain {
       ExportMain,
       ImporterMain,
       CheckoutMain,
+      MergeLanesMain,
     ],
     config: CiWorkspaceConfig
   ) {
     const logger = loggerAspect.createLogger(CiAspect.id);
-    const ci = new CiMain(workspace, builder, status, lanes, snapping, exporter, importer, checkout, logger, config);
+    const ci = new CiMain(
+      workspace,
+      builder,
+      status,
+      lanes,
+      snapping,
+      exporter,
+      importer,
+      checkout,
+      mergeLanes,
+      logger,
+      config
+    );
     const ciCmd = new CiCmd(workspace, logger);
     ciCmd.commands = [
       new CiVerifyCmd(workspace, logger, ci),
@@ -338,6 +351,36 @@ export class CiMain {
     }
   }
 
+  /**
+   * Merge `main` (the default lane) into the given lane. Brings forward any changes that landed
+   * on main since the lane was forked — particularly config changes (env, deps, etc.) that live
+   * in Version objects under `.bit/objects` and are NOT visible via the workspace's git checkout.
+   *
+   * Skips silently if main is at or behind the lane's fork point (nothing to merge).
+   */
+  private async mergeMainIntoLane(laneId: LaneId) {
+    const mainLaneId = this.lanes.getDefaultLaneId();
+    this.logger.console(chalk.blue(`Merging ${mainLaneId.toString()} into ${laneId.toString()}`));
+    try {
+      const result = await this.mergeLanes.mergeLane(mainLaneId, laneId, {
+        mergeStrategy: 'theirs' as MergeStrategy,
+        skipDependencyInstallation: true,
+        skipFetch: false,
+        excludeNonLaneComps: true,
+        // Don't auto-snap: any lane heads main moved forward become the lane's heads directly,
+        // and our subsequent `snap` will create one merge snap that combines the merged state
+        // with this PR commit's changes.
+        noAutoSnap: true,
+      });
+      this.logger.console(chalk.green(`Merged ${result.mergedSuccessfullyIds.length} component(s) from main`));
+    } catch (e: any) {
+      // Surface the merge error rather than silently continuing — if main had config changes
+      // that we can't bring in, the PR build won't reflect production config, and that's
+      // exactly the bug we're trying to prevent.
+      throw new Error(`Failed to merge main into ${laneId.toString()}: ${e?.message || e}`);
+    }
+  }
+
   async verifyWorkspaceStatus() {
     await this.verifyWorkspaceStatusInternal();
 
@@ -388,28 +431,40 @@ export class CiMain {
 
     this.logger.console('🔄 Lane Management');
 
-    // Use unique temp lane name to avoid race conditions when multiple CI jobs run concurrently
-    const tempLaneName = `${laneId.name}-${generateRandomStr(5)}`;
+    // Query the remote (by name, to avoid fetching all lanes) so we know whether to reuse or create
+    const existingLanes = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name }).catch((e) => {
+      if (e.toString().includes('was not found')) return [];
+      throw new Error(`Failed to check lane ${laneId.toString()}: ${e.toString()}`);
+    });
+    const laneExists = existingLanes.length > 0;
 
     let foundErr: Error | undefined;
-    let renamedToFinalName = false;
     try {
-      const createLaneResult = await this.lanes.createLane(tempLaneName, {
-        scope: laneId.scope,
-        forkLaneNewScope: true,
-      });
-      this.logger.console(
-        chalk.blue(`Created temporary lane ${laneId.scope}/${tempLaneName} (hash: ${createLaneResult.hash})`)
-      );
+      if (laneExists) {
+        // Reuse the existing remote lane so that the lane history, lane-based UI edits, and
+        // lane-history feature on Bit Cloud all survive across subsequent commits to the same PR.
+        // switchToLane fetches the latest lane head from remote.
+        this.logger.console(chalk.blue(`Lane ${laneId.toString()} exists on remote, reusing it`));
+        await this.switchToLane(laneId.toString());
+        // Merge main into the lane so that any config changes that landed on main since the lane
+        // was created are reflected on the lane. Without this, subsequent PR commits would build
+        // against the stale config captured at fork time — e.g. `bit deps set` / `bit env set`
+        // changes that landed on main aren't tracked by git (they live in Version objects under
+        // `.bit/objects`), so the workspace's git checkout alone can't surface them.
+        await this.mergeMainIntoLane(laneId);
+      } else {
+        this.logger.console(chalk.blue(`Creating lane ${laneId.toString()}`));
+        const createLaneResult = await this.lanes.createLane(laneId.name, {
+          scope: laneId.scope,
+          forkLaneNewScope: true,
+        });
+        this.logger.console(chalk.blue(`Created lane ${laneId.toString()} (hash: ${createLaneResult.hash})`));
+      }
 
       const currentLane = await this.lanes.getCurrentLane();
-
       this.logger.console(chalk.blue(`Current lane: ${currentLane?.name ?? 'main'}`));
-
-      if (currentLane?.name !== tempLaneName) {
-        throw new Error(
-          `Expected to be on lane ${tempLaneName} after creation, but current lane is ${currentLane?.name ?? 'main'}`
-        );
+      if (currentLane?.name !== laneId.name) {
+        throw new Error(`Expected to be on lane ${laneId.name}, but current lane is ${currentLane?.name ?? 'main'}`);
       }
 
       this.logger.console('📦 Snapping Components');
@@ -420,10 +475,7 @@ export class CiMain {
       });
 
       if (!results) {
-        // No changes to snap - switch back to main and remove the temp lane we created
-        this.logger.console(chalk.yellow('No changes detected, removing temporary lane'));
-        await this.switchToLane(originalLane?.name ?? 'main');
-        await this.lanes.removeLanes([tempLaneName], { remote: false, force: true });
+        this.logger.console(chalk.yellow('No changes detected, nothing to snap'));
         return 'No changes detected, nothing to snap';
       }
 
@@ -433,63 +485,13 @@ export class CiMain {
       this.logger.console(snapOutput);
 
       if (dryRun) {
-        this.logger.console(chalk.yellow('🏃 Dry-run mode: skipping export, lane deletion, and rename'));
+        this.logger.console(chalk.yellow('🏃 Dry-run mode: skipping export'));
         this.logger.console(chalk.green(`Snapped ${snappedComponents.length} component(s) successfully`));
-        this.logger.console(
-          chalk.blue(
-            `Temporary lane "${laneId.scope}/${tempLaneName}" kept for debugging. Remove it with: bit lane remove ${laneId.scope}/${tempLaneName}`
-          )
-        );
         return snapOutput;
       }
 
-      // Finalize atomically: delete existing lane, rename temp lane, export
-      this.logger.console('🔄 Finalizing Lane');
-
-      // Check if original lane exists on remote and delete it (query by name to avoid fetching all lanes)
-      const existingLanes = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name }).catch((e) => {
-        // Lane not found is expected on first run - just means nothing to delete
-        if (e.toString().includes('was not found')) {
-          return [];
-        }
-        throw new Error(`Failed to check lane ${laneId.toString()}: ${e.toString()}`);
-      });
-
-      if (existingLanes.length) {
-        this.logger.console(chalk.blue(`Deleting existing remote lane ${laneId.toString()}`));
-        const archiveResult = await this.archiveLane(laneId.toString(), true); // throwOnError: delete must succeed before export
-        if (archiveResult === 'not-found') {
-          // `getLanes` just reported the lane exists, but the delete API says "not found". Re-query
-          // to confirm. If the lane still shows up, something is off on the remote (delete can't
-          // see what list/export can), and retrying will never converge.
-          let stillExists;
-          try {
-            stillExists = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name });
-          } catch (verifyErr: any) {
-            throw new Error(
-              `failed to verify whether remote lane ${laneId.toString()} still exists after delete returned "not found": ${verifyErr?.message || verifyErr}`
-            );
-          }
-          if (stillExists.length) {
-            throw new Error(
-              `unable to delete remote lane ${laneId.toString()}: the remote reports the lane as "not found" from ` +
-                `the delete API but still lists it from the query API. maybe this is a remote issue on bit.cloud. ` +
-                `please contact support or manually delete the lane on bit.cloud before re-running CI.`
-            );
-          }
-        }
-      }
-
-      // Rename temp lane to original name
-      this.logger.console(chalk.blue(`Renaming lane from ${tempLaneName} to ${laneId.name}`));
-      await this.lanes.rename(laneId.name, tempLaneName);
-      renamedToFinalName = true;
-
-      // Export with the correct name. Retry on hash-mismatch, which indicates a concurrent CI job
-      // pushed the same lane id between our pre-export delete and our merge on the hub.
       this.logger.console(chalk.blue(`Exporting ${snappedComponents.length} components`));
-      const exportResults = await this.exportWithRetryOnLaneHashMismatch(laneId.toString());
-      this.logger.console(chalk.green(`Exported ${exportResults.componentsIds.length} components`));
+      await this.exportWithAdoptOnConflict(laneId, snappedComponents);
     } catch (e: any) {
       foundErr = e;
       throw e;
@@ -497,7 +499,6 @@ export class CiMain {
       if (foundErr) {
         this.logger.console(chalk.red(`Found error: ${foundErr.message}`));
       }
-      // Always switch back to the original lane
       this.logger.console('🔄 Cleanup');
       const targetLane = originalLane?.name ?? 'main';
       this.logger.console(chalk.blue(`Switching back to ${targetLane}`));
@@ -509,22 +510,145 @@ export class CiMain {
         this.logger.console(chalk.yellow('Already on main, checking out to head'));
         await this.lanes.checkout.checkout({ head: true, skipNpmInstall: true });
       }
+    }
+  }
 
-      // Clean up orphaned temporary lane on error. Skip if the rename to the final name already
-      // happened - in that case the temp name no longer exists locally, and the lane under the
-      // final name may have been partially exported; leave it alone rather than wipe evidence.
-      if (foundErr && !renamedToFinalName) {
-        const tempLaneFullName = `${laneId.scope}/${tempLaneName}`;
-        this.logger.console(chalk.blue(`Cleaning up temporary lane ${tempLaneFullName}`));
-        try {
-          await this.lanes.removeLanes([tempLaneFullName], { remote: false, force: true });
-          this.logger.console(chalk.green(`Removed temporary lane ${tempLaneFullName}`));
-        } catch (cleanupErr: any) {
-          // Ignore cleanup errors to avoid masking the original error
-          this.logger.console(chalk.yellow(`Failed to clean up temporary lane: ${cleanupErr?.message || cleanupErr}`));
-        }
+  /**
+   * Export with a recovery path for the "lane hash mismatch" error caused by a concurrent CI run
+   * on the same PR branch. Both runners fork from main with `Lane.create`, which mints a random
+   * `sha1(v4())` hash per lane object — so even though the LaneId matches, the lane objects
+   * differ. The hub's `sources.mergeLane` rejects the second push.
+   *
+   * Recovery: adopt-the-winner. The remote lane object (whoever pushed first) becomes
+   * canonical. We drop our local lane object, fetch the remote, rebase our snapped Version
+   * objects so each one's parent points to the remote head for that component, then swap
+   * those rebased Versions in as the new lane heads and re-export. Build artifacts are
+   * preserved — only the parent pointers on the Version objects change. Result: both
+   * runners' snaps end up chained on a single lane object.
+   */
+  private async exportWithAdoptOnConflict(laneId: LaneId, snappedComponents: ConsumerComponent[]) {
+    try {
+      const exportResults = await this.exporter.export();
+      this.logger.console(chalk.green(`Exported ${exportResults.componentsIds.length} components`));
+      return;
+    } catch (e: any) {
+      const msg = e?.message || e?.toString() || '';
+      if (!msg.includes(LANE_HASH_MISMATCH_MARKER)) throw e;
+      this.logger.console(
+        chalk.yellow(
+          `Lane hash mismatch on "${laneId.toString()}" — likely a concurrent CI push. Adopting the remote lane and rebasing local snaps onto its heads.`
+        )
+      );
+    }
+
+    const snappedHeads = snappedComponents.map((c) => ({
+      id: c.id,
+      head: Ref.from(c.version as string),
+    }));
+
+    await this.rebaseOntoRemoteLane(laneId, snappedHeads);
+
+    this.logger.console(chalk.blue('Retrying export with rebased snaps'));
+    const exportResults = await this.exportWithBusyRetry();
+    this.logger.console(chalk.green(`Exported ${exportResults.componentsIds.length} components after rebase`));
+  }
+
+  /**
+   * Wrap `exporter.export()` with retry on the "server is busy" error. The retried export's
+   * pending-dir lands behind whichever concurrent client is still in the remote's queue (we
+   * arrived second by definition — we're the loser of the original race). The 60s wait inside
+   * `export-validate.waitIfNeeded` covers the common case, but on slow CI hosts or large pushes
+   * we sometimes time out before the other client finishes its persist. A short sleep + retry
+   * here just gives the queue room to drain.
+   */
+  private async exportWithBusyRetry(maxAttempts = 3) {
+    const isBusyErr = (err: any) => (err?.message || err?.toString() || '').includes('server is busy by other exports');
+    let lastErr: any;
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        return await this.exporter.export();
+      } catch (e: any) {
+        lastErr = e;
+        if (!isBusyErr(e)) throw e;
+        this.logger.console(
+          chalk.yellow(
+            `Export attempt ${attempt}/${maxAttempts} blocked by a busy remote queue. Waiting before retrying.`
+          )
+        );
+        await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
       }
     }
+    throw lastErr;
+  }
+
+  private async rebaseOntoRemoteLane(laneId: LaneId, snappedHeads: Array<{ id: ComponentID; head: Ref }>) {
+    const legacyScope = this.workspace.scope.legacyScope;
+    const repo = legacyScope.objects;
+
+    // Drop our local lane object so the fetch can bring in the remote one without tripping the
+    // "different hash" guard in sources.mergeLane. The Version objects we snapped stay in the
+    // scope — only the lane pointer is removed.
+    this.logger.console(chalk.blue(`Removing local lane ${laneId.toString()} to make room for the remote one`));
+    await this.lanes.removeLanes([laneId.toString()], { remote: false, force: true });
+
+    // Fetch the remote (winning) lane and the Version objects it points at, so we can read
+    // the canonical heads we need to rebase onto.
+    this.logger.console(chalk.blue(`Fetching remote lane ${laneId.toString()}`));
+    const remoteLane = await this.lanes.fetchLaneWithItsComponents(laneId);
+
+    // Rewrite each snapped Version's parent to point at the remote head for that component.
+    // Bit's Version objects aren't content-addressed — `_hash` is set once and not derived
+    // from content — so we can mutate `parents` in place. The hash stays the same, so the
+    // build artifacts referenced from the Version remain valid and the lane's component head
+    // doesn't need to be re-pointed. The remote receives the updated Version because our
+    // first failed export attempt was rejected *before* writing any files to disk
+    // (see `writeObjectsToTheFS` — the LaneId-uniqueness check runs first), so the remote
+    // doesn't yet have this hash and won't dedupe-skip it during transfer.
+    for (const snap of snappedHeads) {
+      const remoteComp = remoteLane.components.find((c) => c.id.isEqualWithoutVersion(snap.id));
+      if (!remoteComp) continue; // component is only on our lane, not on the remote — no rebase target
+      const remoteHead = remoteComp.head;
+      if (snap.head.isEqual(remoteHead)) continue;
+
+      const version = (await repo.load(snap.head)) as Version | undefined;
+      if (!version) {
+        throw new Error(
+          `rebaseOntoRemoteLane: unable to load Version object for ${snap.id.toString()} hash ${snap.head.toString()}`
+        );
+      }
+      if (version.parents.some((p) => p.isEqual(remoteHead))) continue; // already chains correctly
+
+      const beforeParents = version.parents.map((p) => p.toString().slice(0, 9)).join(',');
+      this.logger.console(
+        chalk.blue(
+          `Rebasing ${snap.id.toString()}@${snap.head.toString().slice(0, 9)}: parents [${beforeParents}] → [${remoteHead.toString().slice(0, 9)}]`
+        )
+      );
+      version.parents = [remoteHead];
+      repo.add(version);
+    }
+
+    // Replace the remote lane's component heads with our snapped Versions. Anything we
+    // didn't snap stays as the remote had it.
+    const updatedComponents: LaneComponent[] = remoteLane.components.map((c) => {
+      const snap = snappedHeads.find((s) => s.id.isEqualWithoutVersion(c.id));
+      return snap ? { ...c, head: snap.head } : c;
+    });
+    // Pick up any components we snapped that aren't on the remote lane yet (newly added on this PR).
+    for (const snap of snappedHeads) {
+      if (!updatedComponents.some((c) => c.id.isEqualWithoutVersion(snap.id))) {
+        updatedComponents.push({ id: snap.id, head: snap.head });
+      }
+    }
+    remoteLane.setLaneComponents(updatedComponents);
+    remoteLane.hasChanged = true;
+    await legacyScope.lanes.saveLane(remoteLane, { saveLaneHistory: false });
+
+    await repo.persist();
+
+    // Make sure the workspace's current-lane pointer points at the lane we just adopted.
+    this.workspace.consumer.setCurrentLane(laneId, true);
+    await this.workspace.bitMap.write();
   }
 
   async mergePr({
@@ -887,46 +1011,6 @@ export class CiMain {
         chalk.yellow(`Error during lane cleanup for source branch '${sourceBranchName}': ${e.message}`)
       );
     }
-  }
-
-  /**
-   * Export with retry on lane hash-mismatch, caused by a concurrent `bit ci pr` run pushing the
-   * same lane id between our pre-export delete and the hub's merge (the export takes 1-2 minutes,
-   * plenty of time to race). Before each retry we skip if the PR branch has advanced past our
-   * commit - in that case a newer run will publish the correct lane, and retrying with our older
-   * snaps would regress the PR preview.
-   */
-  private async exportWithRetryOnLaneHashMismatch(laneIdStr: string, maxAttempts = 3) {
-    const isHashMismatchErr = (err: any) => (err?.message || err?.toString() || '').includes(LANE_HASH_MISMATCH_MARKER);
-
-    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-      try {
-        return await this.exporter.export();
-      } catch (e: any) {
-        if (!isHashMismatchErr(e) || attempt === maxAttempts) throw e;
-        this.logger.console(
-          chalk.yellow(
-            `Export attempt ${attempt}/${maxAttempts} failed with lane hash mismatch on "${laneIdStr}" (likely a concurrent CI push). Deleting remote lane and retrying.`
-          )
-        );
-        try {
-          await this.archiveLane(laneIdStr, true);
-        } catch (archiveErr: any) {
-          // Preserve the original export error - rethrowing the archive error would hide the real
-          // reason the push was rejected.
-          this.logger.console(
-            chalk.yellow(
-              `Failed to delete remote lane "${laneIdStr}" while recovering from hash mismatch: ${archiveErr?.message || archiveErr}. Rethrowing the original export error.`
-            )
-          );
-          if (e && typeof e === 'object' && (e as any).cause == null) {
-            (e as any).cause = archiveErr;
-          }
-          throw e;
-        }
-      }
-    }
-    throw new Error(`exportWithRetryOnLaneHashMismatch: exhausted ${maxAttempts} attempts for lane ${laneIdStr}`);
   }
 
   /**
