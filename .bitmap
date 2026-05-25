@@ -1909,7 +1909,7 @@
     "ui/highlighter-provider": {
         "name": "ui/highlighter-provider",
         "scope": "teambit.react",
-        "version": "0.0.223",
+        "version": "0.0.224",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/highlighter-provider"
     },
