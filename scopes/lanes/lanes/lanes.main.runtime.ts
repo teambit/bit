@@ -590,12 +590,12 @@ please create a new lane instead, which will include all components of this lane
    * save the objects and the lane to the local scope.
    * this method doesn't change anything in the workspace.
    */
-  async fetchLaneWithItsComponents(laneId: LaneId, includeUpdateDependents = false): Promise<Lane> {
+  async fetchLaneWithItsComponents(laneId: LaneId): Promise<Lane> {
     this.logger.debug(`fetching lane ${laneId.toString()}`);
     const lane = await this.importer.importLaneObject(laneId);
     if (!lane) throw new Error(`unable to import lane ${laneId.toString()} from the remote`);
 
-    await this.importer.fetchLaneComponents(lane, includeUpdateDependents);
+    await this.importer.fetchLaneComponents(lane);
     this.logger.debug(`fetching lane ${laneId.toString()} done, fetched ${lane.components.length} components`);
     return lane;
   }
