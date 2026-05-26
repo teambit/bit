@@ -125,6 +125,7 @@ export class ApiServerMain {
     });
 
     const port = options.port || (await this.getRandomPort());
+    const { bindHost, isOverride } = resolveBindHost();
 
     // Generate a per-server auth token and persist it to a 0600 file before
     // any HTTP request can be handled. Clients (e.g. the bit-vscode extension)
@@ -140,7 +141,7 @@ export class ApiServerMain {
     // The host-check middleware runs first to reject DNS-rebinding attacks
     // (where a malicious page resolves attacker.example to 127.0.0.1).
     const app = expressFactory();
-    app.use(this.createHostCheckMiddleware());
+    app.use(this.createHostCheckMiddleware({ loopbackOnly: !isOverride }));
     app.use(
       cors({
         origin(origin, callback) {
@@ -222,12 +223,7 @@ export class ApiServerMain {
       })
     );
 
-    // Bind to loopback by default — never accept connections from the LAN.
-    // Clients are expected to use 127.0.0.1 (or localhost, which resolves to
-    // it). Hosted environments (e.g. cloud workspaces) that route traffic
-    // through a non-loopback IP can override with BIT_SERVER_HOST.
-    const bindHost = getBindHost();
-    if (bindHost !== '127.0.0.1') {
+    if (isOverride) {
       this.logger.debug(
         `api-server: binding to ${bindHost} (from BIT_SERVER_HOST), loopback Host-header check disabled`
       );
@@ -300,8 +296,7 @@ export class ApiServerMain {
    * the bearer token is the only line of defense — which is appropriate
    * because the operator explicitly opted in to non-loopback bind.
    */
-  private createHostCheckMiddleware(): Middleware {
-    const loopbackOnly = !process.env.BIT_SERVER_HOST;
+  private createHostCheckMiddleware({ loopbackOnly }: { loopbackOnly: boolean }): Middleware {
     const allowed = new Set(['localhost', '127.0.0.1', '::1']);
     return (req: Request, res: Response, next: NextFunction) => {
       if (!loopbackOnly) return next();
@@ -574,14 +569,16 @@ export class ApiServerMain {
 ApiServerAspect.addRuntime(ApiServerMain);
 
 /**
- * Address the api-server should bind to. Defaults to `127.0.0.1` (loopback
- * only). Hosted environments where bit-server runs behind a router/proxy on
- * a different interface (e.g. cloud workspaces) can set `BIT_SERVER_HOST` to
- * an explicit IP or `0.0.0.0`. Empty/whitespace values are ignored.
+ * Resolve the api-server bind host from `BIT_SERVER_HOST`, falling back to
+ * loopback. `isOverride` is the single source of truth for "did the operator
+ * opt out of loopback-only mode?" — used both to choose the bind address and
+ * to disable the loopback Host-header check. Whitespace-only env values are
+ * treated as unset to avoid silently weakening security via a misconfigured
+ * shell.
  */
-function getBindHost(): string {
-  const fromEnv = process.env.BIT_SERVER_HOST?.trim();
-  return fromEnv || '127.0.0.1';
+function resolveBindHost(): { bindHost: string; isOverride: boolean } {
+  const override = process.env.BIT_SERVER_HOST?.trim();
+  return { bindHost: override || '127.0.0.1', isOverride: !!override };
 }
 
 /**
