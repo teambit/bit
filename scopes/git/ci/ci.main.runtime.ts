@@ -346,7 +346,12 @@ export class CiMain {
         this.logger.console(chalk.yellow(`Lane ${laneName} already checked out, skipping checkout`));
         return true;
       }
+      // Rethrow real switch failures. Swallowing them here lets the caller continue (e.g. into
+      // mergeMainIntoLane + snap) against the wrong lane, surfacing only later as a confusing
+      // "Expected to be on lane X". The cleanup path that must not fail on a switch error wraps
+      // this call in its own try/catch.
       this.logger.console(chalk.red(`Failed switching to ${laneName}: ${e.toString()}`));
+      throw e;
     }
   }
 
@@ -510,11 +515,19 @@ export class CiMain {
       this.logger.console(chalk.blue(`Switching back to ${targetLane}`));
 
       const currentLane = await this.lanes.getCurrentLane();
-      if (currentLane) {
-        await this.switchToLane(targetLane);
-      } else {
-        this.logger.console(chalk.yellow('Already on main, checking out to head'));
-        await this.lanes.checkout.checkout({ head: true, skipNpmInstall: true });
+      try {
+        if (currentLane) {
+          await this.switchToLane(targetLane);
+        } else {
+          this.logger.console(chalk.yellow('Already on main, checking out to head'));
+          await this.lanes.checkout.checkout({ head: true, skipNpmInstall: true });
+        }
+      } catch (cleanupErr: any) {
+        // Best-effort cleanup: never let a failure switching back mask the real error (foundErr)
+        // this finally may be unwinding from. Switch-back failures are logged, not thrown.
+        this.logger.console(
+          chalk.yellow(`Failed to switch back to ${targetLane} during cleanup: ${cleanupErr?.message || cleanupErr}`)
+        );
       }
     }
   }
@@ -591,16 +604,22 @@ export class CiMain {
     const legacyScope = this.workspace.scope.legacyScope;
     const repo = legacyScope.objects;
 
-    // Drop our local lane object so the fetch can bring in the remote one without tripping the
-    // "different hash" guard in sources.mergeLane. The Version objects we snapped stay in the
-    // scope — only the lane pointer is removed.
-    this.logger.console(chalk.blue(`Removing local lane ${laneId.toString()} to make room for the remote one`));
-    await this.lanes.removeLanes([laneId.toString()], { remote: false, force: true });
-
-    // Fetch the remote (winning) lane and the Version objects it points at, so we can read
-    // the canonical heads we need to rebase onto.
+    // Fetch the remote (winning) lane and the Version objects it points at FIRST, before any
+    // destructive local change. The fetch is the only step here that can fail on the network;
+    // doing it before removing our local lane means a failure leaves the workspace on its
+    // still-valid local lane rather than pointing at a lane object we already deleted (which
+    // would strand the just-snapped Versions until the next CI run repairs it).
+    // `importLaneObject` returns the remote lane even while our local lane still exists — it just
+    // skips auto-persisting it, which is fine because we persist it explicitly via saveLane below.
     this.logger.console(chalk.blue(`Fetching remote lane ${laneId.toString()}`));
     const remoteLane = await this.lanes.fetchLaneWithItsComponents(laneId);
+
+    // Now drop our local lane object so the explicit saveLane below can persist the remote
+    // (winning) one without tripping the "different hash" guard in writeObjectsToTheFS /
+    // sources.mergeLane. The Version objects we snapped stay in the scope — only the lane pointer
+    // is removed.
+    this.logger.console(chalk.blue(`Removing local lane ${laneId.toString()} to adopt the remote one`));
+    await this.lanes.removeLanes([laneId.toString()], { remote: false, force: true });
 
     // Rewrite each snapped Version's parent to point at the remote head for that component.
     // Bit's Version objects aren't content-addressed — `_hash` is set once and not derived
@@ -625,13 +644,29 @@ export class CiMain {
       if (version.parents.some((p) => p.isEqual(remoteHead))) continue; // already chains correctly
 
       const beforeParents = version.parents.map((p) => p.toString().slice(0, 9)).join(',');
+      // Re-point only the lane-lineage parent (the first parent — the predecessor snap on the
+      // lane) to the remote head, preserving any additional parents. A snap produced after
+      // `mergeMainIntoLane` is a merge snap whose second parent links to main's merged head;
+      // overwriting the whole array with `[remoteHead]` would silently drop that merge edge and
+      // corrupt the lane's ancestry.
+      version.parents = [remoteHead, ...version.parents.slice(1)];
+      const afterParents = version.parents.map((p) => p.toString().slice(0, 9)).join(',');
       this.logger.console(
         chalk.blue(
-          `Rebasing ${snap.id.toString()}@${snap.head.toString().slice(0, 9)}: parents [${beforeParents}] → [${remoteHead.toString().slice(0, 9)}]`
+          `Rebasing ${snap.id.toString()}@${snap.head.toString().slice(0, 9)}: parents [${beforeParents}] → [${afterParents}]`
         )
       );
-      version.parents = [remoteHead];
       repo.add(version);
+
+      // Keep the local VersionHistory in sync with the rewritten parents. The first (failed)
+      // export already traversed and wrote VersionHistory with this version's *original* parent;
+      // without this update the re-export's diverge computation reads that stale history, never
+      // sees the remote head as an ancestor, and can send the wrong version set or throw a
+      // spurious "no common snap" error. `updateRebasedVersionHistory` only touches the entry if
+      // this version already exists in the history (it does, from that first traversal).
+      const modelComponent = await legacyScope.getModelComponent(snap.id);
+      const versionHistory = await modelComponent.updateRebasedVersionHistory(repo, [version]);
+      if (versionHistory) repo.add(versionHistory);
     }
 
     // Replace the remote lane's component heads with our snapped Versions. Anything we
