@@ -116,7 +116,11 @@ export class ServerCommander {
     if (process.argv.includes(CMD_SERVER_TOKEN)) return this.printServerTokenAndExit();
     printBitVersionIfAsked();
     const port = await this.getExistingUsedPort();
-    const url = `http://127.0.0.1:${port}/api`;
+    // Mirror the api-server's bind host. Defaults to loopback; hosted
+    // environments override via BIT_SERVER_HOST so the CLI dials the same
+    // interface bit-server is listening on.
+    const host = process.env.BIT_SERVER_HOST?.trim() || '127.0.0.1';
+    const url = `http://${host}:${port}/api`;
     const shouldUsePTY = process.env.BIT_CLI_SERVER_PTY === 'true';
 
     if (shouldUsePTY) {

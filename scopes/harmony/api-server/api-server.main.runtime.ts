@@ -222,9 +222,17 @@ export class ApiServerMain {
       })
     );
 
-    // Bind to loopback only — never accept connections from the LAN. Clients
-    // are expected to use 127.0.0.1 (or localhost, which resolves to it).
-    const server = await app.listen(port, '127.0.0.1');
+    // Bind to loopback by default — never accept connections from the LAN.
+    // Clients are expected to use 127.0.0.1 (or localhost, which resolves to
+    // it). Hosted environments (e.g. cloud workspaces) that route traffic
+    // through a non-loopback IP can override with BIT_SERVER_HOST.
+    const bindHost = getBindHost();
+    if (bindHost !== '127.0.0.1') {
+      this.logger.debug(
+        `api-server: binding to ${bindHost} (from BIT_SERVER_HOST), loopback Host-header check disabled`
+      );
+    }
+    const server = await app.listen(port, bindHost);
 
     return new Promise((resolve, reject) => {
       server.on('error', (err) => {
@@ -285,10 +293,18 @@ export class ApiServerMain {
    * The server already listens on 127.0.0.1 only, so any request reaching us
    * arrived via loopback. The remaining concern is the *named* origin the
    * browser thinks it's talking to.
+   *
+   * Disabled when `BIT_SERVER_HOST` is set, since by definition the server
+   * is then reachable via a non-loopback address whose Host header we can't
+   * enumerate ahead of time (e.g. a cloud-workspace hostname). In that mode
+   * the bearer token is the only line of defense — which is appropriate
+   * because the operator explicitly opted in to non-loopback bind.
    */
   private createHostCheckMiddleware(): Middleware {
+    const loopbackOnly = !process.env.BIT_SERVER_HOST;
     const allowed = new Set(['localhost', '127.0.0.1', '::1']);
     return (req: Request, res: Response, next: NextFunction) => {
+      if (!loopbackOnly) return next();
       const hostHeader = req.headers.host || '';
       // Parse hostname from "host:port". IPv6 may be bracketed: "[::1]:1234"
       // → "::1"; IPv4 / hostname is plain: "127.0.0.1:1234" → "127.0.0.1".
@@ -556,6 +572,17 @@ export class ApiServerMain {
 }
 
 ApiServerAspect.addRuntime(ApiServerMain);
+
+/**
+ * Address the api-server should bind to. Defaults to `127.0.0.1` (loopback
+ * only). Hosted environments where bit-server runs behind a router/proxy on
+ * a different interface (e.g. cloud workspaces) can set `BIT_SERVER_HOST` to
+ * an explicit IP or `0.0.0.0`. Empty/whitespace values are ignored.
+ */
+function getBindHost(): string {
+  const fromEnv = process.env.BIT_SERVER_HOST?.trim();
+  return fromEnv || '127.0.0.1';
+}
 
 /**
  * Extract the token from an `Authorization: Bearer <token>` header.
