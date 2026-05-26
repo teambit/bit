@@ -116,7 +116,7 @@ export class ServerCommander {
     if (process.argv.includes(CMD_SERVER_TOKEN)) return this.printServerTokenAndExit();
     printBitVersionIfAsked();
     const port = await this.getExistingUsedPort();
-    const url = `http://127.0.0.1:${port}/api`;
+    const url = `http://${resolveDialHost()}:${port}/api`;
     const shouldUsePTY = process.env.BIT_CLI_SERVER_PTY === 'true';
 
     if (shouldUsePTY) {
@@ -423,6 +423,26 @@ export function shouldUseBitServer() {
     process.argv.length > 2 && // if it has no args, it shows the help
     !commandsToSkip.includes(process.argv[2])
   );
+}
+
+/**
+ * Address the CLI uses to dial the local bit-server. Mirrors the api-server's
+ * bind host (`BIT_SERVER_HOST`) so the same env var works for both sides in
+ * hosted environments. Two host values need translating: `0.0.0.0` / `::`
+ * are bind-only wildcards — not valid as destinations — so dial loopback
+ * instead. Raw IPv6 addresses get bracketed for URL safety.
+ */
+function resolveDialHost(): string {
+  const override = process.env.BIT_SERVER_HOST?.trim();
+  if (!override) return '127.0.0.1';
+  if (override === '0.0.0.0') return '127.0.0.1';
+  if (override === '::') return '[::1]';
+  // Bracket any literal IPv6 (contains ':' but isn't an IPv4 with port —
+  // detected by 2+ colons).
+  if (override.includes(':') && override.split(':').length > 2 && !override.startsWith('[')) {
+    return `[${override}]`;
+  }
+  return override;
 }
 
 /**

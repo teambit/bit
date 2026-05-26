@@ -314,7 +314,7 @@
         "@teambit/react.instructions.react.adding-tests": "0.0.6",
         "@teambit/react.jest.react-jest": "^1.0.38",
         "@teambit/react.rendering.ssr": "^1.0.4",
-        "@teambit/react.ui.component-highlighter": "0.2.6",
+        "@teambit/react.ui.component-highlighter": "0.2.7",
         "@teambit/react.ui.highlighter.component-metadata.bit-component-meta": "0.0.43",
         "@teambit/react.webpack.react-webpack": "^1.0.56",
         "@teambit/scope.content.scope-overview": "1.96.8",

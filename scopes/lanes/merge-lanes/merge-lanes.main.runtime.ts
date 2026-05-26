@@ -334,7 +334,10 @@ export class MergeLanesMain {
       const shouldFetch = !lane || (!skipFetch && !lane.isNew);
       if (shouldFetch) {
         // don't assign `lane` to the result of this command. otherwise, if you have local snaps, it'll ignore them and use the remote-lane.
-        const otherLane = await this.lanes.fetchLaneWithItsComponents(otherLaneId, shouldIncludeUpdateDependents);
+        // note: fetching always includes the lane's hidden updateDependents (and routes them to the
+        // lane's scope); `shouldIncludeUpdateDependents` still governs whether they take part in the
+        // merge itself, via `idsToMerge` below.
+        const otherLane = await this.lanes.fetchLaneWithItsComponents(otherLaneId);
         laneToFetchArtifactsFrom = otherLane;
         lane = await legacyScope.loadLane(otherLaneId);
       }
