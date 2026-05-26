@@ -290,11 +290,13 @@ export class ApiServerMain {
    * arrived via loopback. The remaining concern is the *named* origin the
    * browser thinks it's talking to.
    *
-   * Disabled when `BIT_SERVER_HOST` is set, since by definition the server
-   * is then reachable via a non-loopback address whose Host header we can't
-   * enumerate ahead of time (e.g. a cloud-workspace hostname). In that mode
-   * the bearer token is the only line of defense — which is appropriate
-   * because the operator explicitly opted in to non-loopback bind.
+   * Disabled when `BIT_SERVER_HOST` resolves to a non-loopback address,
+   * since by definition the server is then reachable via a hostname we
+   * can't enumerate ahead of time (e.g. a cloud-workspace hostname). In
+   * that mode the bearer token is the primary line of defense; the
+   * unauthenticated exemptions (`OPTIONS` preflight and `/api/_health`)
+   * become reachable from the network — `/api/_health` is a tiny "ok"
+   * liveness probe and intentionally exposed.
    */
   private createHostCheckMiddleware({ loopbackOnly }: { loopbackOnly: boolean }): Middleware {
     const allowed = new Set(['localhost', '127.0.0.1', '::1']);
@@ -568,17 +570,20 @@ export class ApiServerMain {
 
 ApiServerAspect.addRuntime(ApiServerMain);
 
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
+
 /**
  * Resolve the api-server bind host from `BIT_SERVER_HOST`, falling back to
- * loopback. `isOverride` is the single source of truth for "did the operator
- * opt out of loopback-only mode?" — used both to choose the bind address and
- * to disable the loopback Host-header check. Whitespace-only env values are
- * treated as unset to avoid silently weakening security via a misconfigured
- * shell.
+ * loopback. `isOverride` is the single source of truth for "is the server
+ * reachable from outside loopback?" — used both to choose the bind address
+ * and to disable the loopback Host-header check. Derived from the *resolved*
+ * host (not env presence) so `BIT_SERVER_HOST=127.0.0.1` and whitespace-only
+ * values don't silently weaken the DNS-rebinding mitigation.
  */
 function resolveBindHost(): { bindHost: string; isOverride: boolean } {
   const override = process.env.BIT_SERVER_HOST?.trim();
-  return { bindHost: override || '127.0.0.1', isOverride: !!override };
+  const bindHost = override || '127.0.0.1';
+  return { bindHost, isOverride: !LOOPBACK_HOSTS.has(bindHost.toLowerCase()) };
 }
 
 /**
