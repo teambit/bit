@@ -16,8 +16,11 @@ const WAIT_BEFORE_RETRY_IN_MS = 1000;
  * do not save the exported objects. just make sure the objects can be merged and there are no conflicts.
  * once done, clear the objects from the memory so then they won't be used by mistake later on.
  * this also makes sure that non-external dependencies are not missing.
- * also, in case the lane is exported and there are non-local components coming from the lane, it imports them from
- * their original scopes and throw if they're missing from there.
+ *
+ * For lane exports with external components (components whose home scope differs from the lane
+ * scope), the lane scope is kept lean — we do NOT pre-fetch full version history from the
+ * components' home scopes. Consumers walking history will resolve missing parents from origin
+ * scopes on demand. See `logExternalsForLeanLaneScope` below.
  */
 export class ExportValidate implements Action<Options> {
   scope: Scope;
@@ -32,7 +35,7 @@ export class ExportValidate implements Action<Options> {
     }
     const objectList = await scope.readObjectsFromPendingDir(options.clientId);
     const bitObjectList = await objectList.toBitObjects();
-    await this.importAndThrowForMissingHistoryOnLane(bitObjectList);
+    this.logExternalsForLeanLaneScope(bitObjectList);
     await this.waitIfNeeded();
     try {
       logger.profile('export-validate.mergeObjects');
@@ -46,19 +49,26 @@ export class ExportValidate implements Action<Options> {
     scope.objects.clearObjectsFromCache();
   }
 
-  private async importAndThrowForMissingHistoryOnLane(bitObjectList: BitObjectList) {
+  /**
+   * Previously this method imported missing version-history for external components (lane
+   * components whose home scope differs from the lane scope) and threw when history was
+   * missing from their origin scopes. That behavior was the main driver of fat-lane-scope
+   * OOM during exports of lanes that were far behind main with many components.
+   *
+   * Lean-lane-scope: we no longer pre-import. The lane scope keeps only what the client
+   * actually sent (lane snaps + merge snap). Consumers walking older history will resolve
+   * missing parents by fetching from origin scopes on demand
+   * (see `Component.collectLogs` and `ScopeComponentsImporter.importMissingHistoryOne`).
+   * If a caller explicitly wants to gather full history on the lane scope, they can still
+   * invoke the `FetchMissingHistory` action directly.
+   */
+  private logExternalsForLeanLaneScope(bitObjectList: BitObjectList) {
     const modelComponents = bitObjectList.getComponents();
     const externalComponents = modelComponents.filter((comp) => comp.scope !== this.scope.name);
     if (!externalComponents.length) return;
-    // Lean-lane-scope: do NOT import full version-history into the lane scope. The history
-    // lives on each component's home scope (e.g. main snaps in component-scope, lane-b snaps in
-    // scope-b). Pulling them into the lane scope was the main source of fat-lane-scope OOM when
-    // a lane is far behind main. Consumers walking history will resolve missing parents by
-    // fetching from origin scopes on demand. We also skip the strict getAllVersionHashes check
-    // for the same reason — incomplete history on the lane scope is now expected.
     logger.debug(
-      `export-validate, skipping importMissingVersionHistory for ${externalComponents.length} external components ` +
-        `(lean lane scope mode — their history stays on origin scopes)`
+      `export-validate, lean-lane-scope: skipping pre-fetch of full version-history for ` +
+        `${externalComponents.length} external components — their history stays on origin scopes`
     );
   }
 

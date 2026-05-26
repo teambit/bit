@@ -532,8 +532,11 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
             const version = obj as Version;
             const isLaneOrigin = Boolean(version.origin?.lane);
             const isLocallyMutated = Boolean(version.squashed) || Boolean(version.unrelated);
-            const originScope = version.origin?.id?.scope;
-            const isForeignComponentScope = Boolean(originScope) && originScope !== remoteNameStr;
+            // Older Version objects (pre-0.2.22) may not have `origin.id.scope` populated. Fall
+            // back to the component's home scope (modelComponent.scope) — the snap belongs there
+            // so it's safe to treat as foreign when it differs from the destination lane scope.
+            const componentHomeScope = version.origin?.id?.scope || modelComponent.scope;
+            const isForeignComponentScope = Boolean(componentHomeScope) && componentHomeScope !== remoteNameStr;
             if (!isLaneOrigin && isForeignComponentScope && !isLocallyMutated) {
               droppedRefs.push(ref.toString());
               continue;

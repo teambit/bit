@@ -337,7 +337,16 @@ export class ScopeComponentsImporter {
   private async importMissingHistoryOne(id: ComponentID) {
     const modelComponent = await this.scope.getModelComponent(id);
     if (!modelComponent.head) return null; // doesn't exist on the remote.
-    const verHistory = await modelComponent.getAndPopulateVersionHistory(this.scope.objects, modelComponent.head);
+    let verHistory: VersionHistory;
+    try {
+      verHistory = await modelComponent.getAndPopulateVersionHistory(this.scope.objects, modelComponent.head);
+    } catch (err) {
+      // Lean-lane-scope: the head Version object may be missing locally because lane export
+      // no longer pre-pulls main history into the lane scope. Signal "needs fetching" so the
+      // caller imports it from the component's home scope.
+      if (err instanceof HeadNotFound || err instanceof ParentNotFound) return id;
+      throw err;
+    }
     const { found, missing } = verHistory.getAllHashesFrom(modelComponent.head);
     if (missing?.length) {
       return id;
