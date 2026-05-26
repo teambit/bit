@@ -203,6 +203,57 @@ describe('ci commands', function () {
     });
   });
 
+  /**
+   * When main and the PR lane both modify the same component, the bit-level lane→main merge
+   * must keep the PR's version. File-level conflicts are the user's to resolve in git; once
+   * resolved, the workspace already reflects the PR author's intent — bit shouldn't silently
+   * override it with main's content.
+   */
+  describe("bit ci pr keeps the PR's content when main and lane both modified the same component", () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      const defaultBranch = setupComponentsAndInitialCommit();
+
+      // 1. PR branch: write comp1 with PR's content, snap it onto the lane via ci pr.
+      helper.command.runCmd('git checkout -b feature/conflict-resolution-test');
+      helper.fs.outputFile('comp1/index.js', "module.exports = () => 'PR-VERSION';");
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: PR changes comp1"');
+      helper.command.runCmd('bit ci pr --message "first pr commit"');
+
+      // 2. On main: independently write comp1 with a different value, tag, export, commit, push.
+      //    Now main's bit-objects have a comp1 tag whose content disagrees with the PR snap's.
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.fs.outputFile('comp1/index.js', "module.exports = () => 'MAIN-VERSION';");
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "fix: main changes comp1 too"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+
+      // 3. Back to PR branch, simulate the user git-merging main with `-X ours`: the workspace
+      //    keeps the PR's content for the conflicted file. (This step models user-resolved
+      //    git conflicts — by the time ci pr runs, the workspace is consistent.)
+      helper.command.runCmd('git checkout feature/conflict-resolution-test');
+      helper.command.runCmd(`git merge ${defaultBranch} -X ours --no-edit`);
+
+      // 4. Make an unrelated PR change + commit, then run ci pr — this triggers
+      //    mergeMainIntoLane, which must use 'ours' to preserve the PR's comp1 content.
+      helper.fs.outputFile('comp2/index.js', "module.exports = () => 'pr-comp2';");
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: more pr changes"');
+      helper.command.runCmd('bit ci pr --message "second pr commit"');
+    });
+
+    it("lane's comp1 should still have the PR's version, not main's", () => {
+      helper.command.switchLocalLane('feature-conflict-resolution-test');
+      const comp1Content = helper.fs.readFile('comp1/index.js');
+      expect(comp1Content, `expected PR's content on comp1, got: ${comp1Content}`).to.include('PR-VERSION');
+      expect(comp1Content).to.not.include('MAIN-VERSION');
+    });
+  });
+
   describe('bit ci merge workflow', () => {
     let mergeOutput: string;
     before(() => {

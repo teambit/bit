@@ -362,7 +362,14 @@ export class CiMain {
     this.logger.console(chalk.blue(`Merging ${mainLaneId.toString()} into ${laneId.toString()}`));
     try {
       const result = await this.mergeLanes.mergeLane(mainLaneId, laneId, {
-        mergeStrategy: 'theirs' as MergeStrategy,
+        // 'ours' = keep the lane's (PR's) content on a bit-level component conflict. File-level
+        // conflicts between main and the PR branch are a separate concern that the user resolves
+        // through git itself; by the time we reach this merge, the workspace already reflects
+        // whatever the user chose. If a bit component still appears conflicted at this stage
+        // (e.g. the user resolved the git conflict but main also touched the same component on
+        // the bit-objects side via deps/env set), we err on the side of the PR's content — the
+        // PR author's changes shouldn't be silently overridden by main.
+        mergeStrategy: 'ours' as MergeStrategy,
         skipDependencyInstallation: true,
         skipFetch: false,
         excludeNonLaneComps: true,
