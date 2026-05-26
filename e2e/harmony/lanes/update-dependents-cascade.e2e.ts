@@ -1107,7 +1107,7 @@ describe('local snap cascades updateDependents on the lane', function () {
   });
 
   // ---------------------------------------------------------------------------------------------
-  // Scenario 15: importing a lane whose hidden updateDependent originates from a DIFFERENT scope
+  // Scenario 20: importing a lane whose hidden updateDependent originates from a DIFFERENT scope
   // than the lane. The cascade snap of that updateDependent lives in the lane's scope (where the
   // bare-scope producer pushed it), NOT on the component's origin-scope main. The fetcher's
   // `groupByLanes` routing must therefore send updateDependents to the lane's scope — otherwise it
@@ -1115,10 +1115,13 @@ describe('local snap cascades updateDependents on the lane', function () {
   // "component <updateDependent> was not found". Single-scope scenarios above can't catch this
   // because lane.scope === the component's origin scope, so the misroute resolves to the same place.
   // ---------------------------------------------------------------------------------------------
-  describe('scenario 15: import a lane with a cross-scope updateDependent', () => {
+  describe('scenario 20: import a lane with a cross-scope updateDependent', () => {
     let anotherRemote: string;
     let anotherRemotePath: string;
     let comp2InUpdDep: string;
+    // the whole flow (incl. the fresh-workspace import) runs in `before` so any one `it` can be
+    // run in isolation with `.only`. Without the fix the import throws ComponentNotFound for the
+    // cross-scope updateDependent, failing this hook and surfacing the regression for every `it`.
     before(async () => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       const newScope = helper.scopeHelper.getNewBareScope();
@@ -1152,23 +1155,22 @@ describe('local snap cascades updateDependents on the lane', function () {
         { lane: `${helper.scopes.remote}/dev`, updateDependents: true, push: true }
       );
       const lane = helper.command.catLane('dev', helper.scopes.remotePath);
-      comp2InUpdDep = lane.updateDependents[0];
-      expect(comp2InUpdDep, 'precondition: comp2 must be seeded as an updateDependent').to.include(
-        `${anotherRemote}/comp2`
-      );
-    });
+      comp2InUpdDep = lane.updateDependents[0] || '';
 
-    it('importing the lane should not throw "component not found" for the cross-scope updateDependent', () => {
+      // fresh workspace: import the lane. This is the line that regressed.
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
       helper.scopeHelper.addRemoteScope(anotherRemotePath);
-      expect(() => helper.command.importLane('dev', '-x')).to.not.throw();
+      helper.command.importLane('dev', '-x');
     });
 
-    it('the cross-scope updateDependent`s cascade snap is fetched into the local scope', () => {
+    it('seeds comp2 from the other scope as a hidden updateDependent (precondition)', () => {
+      expect(comp2InUpdDep).to.include(`${anotherRemote}/comp2`);
+    });
+
+    it('the cross-scope updateDependent`s lane-only cascade snap is fetched into the local scope', () => {
       const hash = comp2InUpdDep.split('@')[1];
-      const obj = helper.command.catObject(hash);
-      expect(obj).to.be.a('string').and.not.empty;
+      expect(() => helper.command.catObject(hash)).to.not.throw();
     });
 
     it('the updateDependent stays hidden — only comp3 is in the workspace bitmap', () => {
