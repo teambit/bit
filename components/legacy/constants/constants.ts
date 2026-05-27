@@ -545,6 +545,7 @@ export enum Extensions {
   renaming = 'teambit.component/renaming',
   lanes = 'teambit.lanes/lanes',
   remove = 'teambit.component/remove',
+  internalize = 'teambit.component/internalize',
   workspace = 'teambit.workspace/workspace',
   typescript = 'teambit.typescript/typescript',
   aspect = 'teambit.harmony/aspect',

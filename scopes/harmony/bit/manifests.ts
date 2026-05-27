@@ -10,6 +10,7 @@ import { CompositionsAspect } from '@teambit/compositions';
 import { ConfigAspect } from '@teambit/config';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { DeprecationAspect } from '@teambit/deprecation';
+import { InternalizeAspect } from '@teambit/internalize';
 import { DocsAspect } from '@teambit/docs';
 import { EnvsAspect } from '@teambit/envs';
 import { EnvAspect } from '@teambit/env';
@@ -162,6 +163,7 @@ export const manifestsMap = {
   [BuilderAspect.id]: BuilderAspect,
   [VariantsAspect.id]: VariantsAspect,
   [DeprecationAspect.id]: DeprecationAspect,
+  [InternalizeAspect.id]: InternalizeAspect,
   [ExpressAspect.id]: ExpressAspect,
   [AspectAspect.id]: AspectAspect,
   [WebpackAspect.id]: WebpackAspect,
