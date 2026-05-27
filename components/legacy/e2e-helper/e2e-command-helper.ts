@@ -329,6 +329,15 @@ export default class CommandHelper {
   undeprecateComponent(id: string, flags = '') {
     return this.runCmd(`bit undeprecate ${id} ${flags}`);
   }
+  internalizeComponents(pattern: string, flags = '') {
+    return this.runCmd(`bit internalize "${pattern}" ${flags}`);
+  }
+  uninternalizeComponents(pattern: string, flags = '') {
+    return this.runCmd(`bit internalize "${pattern}" --revert ${flags}`);
+  }
+  internalizeListParsed(): string[] {
+    return JSON.parse(this.runCmd('bit internalize --list --json'));
+  }
   fork(sourceId: string, values = '') {
     return this.runCmd(`bit fork ${sourceId} ${values}`);
   }
