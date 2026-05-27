@@ -204,6 +204,63 @@ describe('ci commands', function () {
   });
 
   /**
+   * Mirror of the test above, but the PR branch is NOT brought up to date with main (no
+   * `git merge <default>`). When the PR is behind, `bit ci pr --keep-lane` must SKIP merging main
+   * into the lane — pulling main's newer bit state into a lane whose git checkout still reflects
+   * the older fork point would desync the lane from the source. The merge happens later, once the
+   * author merges the default branch into their PR.
+   */
+  describe('bit ci pr does NOT merge main into the lane when the PR branch is behind', () => {
+    let secondPrOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      const defaultBranch = setupComponentsAndInitialCommit();
+
+      // First PR commit + ci pr — lane is created with comp1's original config.
+      helper.command.runCmd('git checkout -b feature/behind-main-test');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("pr commit 1");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: pr commit 1"');
+      helper.command.runCmd('bit ci pr --keep-lane --message "first pr commit"');
+
+      // Main moves ahead with a deps-set config change, exported + pushed.
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.npm.addFakeNpmPackage('is-positive', '1.0.0');
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-positive': '1.0.0' } });
+      helper.command.dependenciesSet('comp1', 'is-positive@1.0.0');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "chore: bump comp1 deps on main"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+
+      // Second PR commit + ci pr — crucially WITHOUT merging the default branch into the PR, so
+      // the PR branch is behind. ci pr should detect this and skip the main→lane merge.
+      helper.command.runCmd('git checkout feature/behind-main-test');
+      helper.fs.outputFile('comp2/comp2.js', 'console.log("pr commit 2");');
+      helper.command.runCmd('git add comp2/comp2.js');
+      helper.command.runCmd('git commit -m "feat: pr commit 2"');
+      secondPrOutput = helper.command.runCmd('bit ci pr --keep-lane --message "second pr commit"');
+    });
+
+    it('should report that it skipped merging main because the PR branch is behind', () => {
+      const cleanOutput = removeChalkCharacters(secondPrOutput) as string;
+      expect(cleanOutput).to.include('PR branch is behind the default branch');
+    });
+
+    it("should NOT propagate main's deps-set change to comp1 on the lane", () => {
+      helper.command.switchLocalLane('feature-behind-main-test');
+      const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+      const dep = showConfig.data.dependencies.find((d: any) => d.id === 'is-positive');
+      expect(
+        dep,
+        `expected 'is-positive' to be absent on a behind PR, got: ${JSON.stringify(showConfig.data.dependencies, null, 2)}`
+      ).to.not.exist;
+    });
+  });
+
+  /**
    * When main and the PR lane both modify the same component, the bit-level lane→main merge
    * must keep the PR's version. File-level conflicts are the user's to resolve in git; once
    * resolved, the workspace already reflects the PR author's intent — bit shouldn't silently

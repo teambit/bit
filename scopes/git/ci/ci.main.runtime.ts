@@ -390,6 +390,45 @@ export class CiMain {
     }
   }
 
+  /**
+   * Best-effort, fetch-free check for whether the current (PR) branch is *behind* the default
+   * branch — i.e. the default branch has commits the PR branch doesn't contain.
+   *
+   * We intentionally do NOT `git fetch` here (a fetch in CI can hang on an interactive SSH
+   * host-key prompt — that's why `isStaleCiRun` was removed in #10300). We compare against
+   * whatever `origin/<default>` ref the checkout already has, which reflects the state the default
+   * branch was in when this CI run started — exactly the reference point we care about.
+   *
+   * Returns true only when we can *confirm* the branch is behind. If the ref can't be resolved or
+   * anything else goes wrong, returns false (treat as "not behind" / proceed) so we never silently
+   * disable the main→lane config propagation.
+   */
+  private async isBranchBehindDefaultBranch(): Promise<boolean> {
+    try {
+      const defaultBranch = await this.getDefaultBranchName();
+      const defaultRefSha = (await git.revparse([`refs/remotes/origin/${defaultBranch}`])).trim();
+      const headSha = (await git.revparse(['HEAD'])).trim();
+      if (defaultRefSha === headSha) return false; // identical → up to date
+      try {
+        // `merge-base --is-ancestor A B` exits 0 iff A is an ancestor of B. When origin/<default>
+        // is an ancestor of HEAD, the PR already contains it → not behind.
+        await git.raw(['merge-base', '--is-ancestor', defaultRefSha, headSha]);
+        return false;
+      } catch {
+        // non-zero exit → origin/<default> is not contained in HEAD → the PR is behind.
+        return true;
+      }
+    } catch (err: any) {
+      this.logger.console(
+        chalk.yellow(
+          `Could not determine whether the PR branch is up to date with the default branch ` +
+            `(proceeding as if up to date): ${err?.message || err}`
+        )
+      );
+      return false;
+    }
+  }
+
   async verifyWorkspaceStatus() {
     await this.verifyWorkspaceStatusInternal();
 
@@ -500,7 +539,22 @@ export class CiMain {
         // against the stale config captured at fork time — e.g. `bit deps set` / `bit env set`
         // changes that landed on main aren't tracked by git (they live in Version objects under
         // `.bit/objects`), so the workspace's git checkout alone can't surface them.
-        await this.mergeMainIntoLane(laneId);
+        //
+        // BUT only merge when the PR branch is actually up to date with the default branch. If the
+        // PR is behind (hasn't pulled main's latest), its git checkout still reflects the older
+        // fork point, so pulling main's newer bit state into the lane would desync the lane from
+        // the source. In that case the author merges the default branch into their PR in git, and
+        // the next `bit ci pr` propagates it here.
+        if (await this.isBranchBehindDefaultBranch()) {
+          this.logger.console(
+            chalk.yellow(
+              `PR branch is behind the default branch — skipping merge from main. ` +
+                `Merge or rebase the default branch into your PR to pick up main's latest config.`
+            )
+          );
+        } else {
+          await this.mergeMainIntoLane(laneId);
+        }
       } else {
         this.logger.console(chalk.blue(`Creating lane ${laneId.toString()}`));
         const createLaneResult = await this.lanes.createLane(laneId.name, {
