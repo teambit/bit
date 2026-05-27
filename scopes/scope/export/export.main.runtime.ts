@@ -516,6 +516,10 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       // components whose home scope differs from the lane's scope. those snaps already live
       // on the component's home scope; pushing them to the lane scope is duplication and the
       // main driver of OOM when a lane is far behind main.
+      // Safety assumption: a foreign main-origin snap is on its home scope. Bit's CLI refuses
+      // to switch to a lane while there are un-exported staged components on main, so the
+      // "local-only main snap merged into a lane" scenario isn't reachable through normal
+      // workflows.
       const filterOutForeignMainOriginRefs = async (
         refsPerComp: { modelComponent: ModelComponent; refs: Ref[] }[]
       ): Promise<{ modelComponent: ModelComponent; refs: Ref[] }[]> => {
