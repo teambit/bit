@@ -126,12 +126,12 @@ describe('ci commands', function () {
       helper.fs.outputFile('comp1/comp1.js', 'console.log("first commit");');
       helper.command.runCmd('git add comp1/comp1.js');
       helper.command.runCmd('git commit -m "feat: first commit"');
-      firstPrOutput = helper.command.runCmd('bit ci pr --message "first"');
+      firstPrOutput = helper.command.runCmd('bit ci pr --keep-lane --message "first"');
 
       helper.fs.outputFile('comp2/comp2.js', 'console.log("second commit");');
       helper.command.runCmd('git add comp2/comp2.js');
       helper.command.runCmd('git commit -m "feat: second commit"');
-      secondPrOutput = helper.command.runCmd('bit ci pr --message "second"');
+      secondPrOutput = helper.command.runCmd('bit ci pr --keep-lane --message "second"');
     });
     it('should report that the lane was reused on the second run', () => {
       const cleanOutput = removeChalkCharacters(secondPrOutput) as string;
@@ -167,7 +167,7 @@ describe('ci commands', function () {
       helper.fs.outputFile('comp1/comp1.js', 'console.log("pr commit 1");');
       helper.command.runCmd('git add comp1/comp1.js');
       helper.command.runCmd('git commit -m "feat: pr commit 1"');
-      helper.command.runCmd('bit ci pr --message "first pr commit"');
+      helper.command.runCmd('bit ci pr --keep-lane --message "first pr commit"');
 
       // Main moves ahead: register a fake npm package, set it as a dep on comp1, tag, export, push.
       helper.command.runCmd(`git checkout ${defaultBranch}`);
@@ -187,7 +187,7 @@ describe('ci commands', function () {
       helper.fs.outputFile('comp2/comp2.js', 'console.log("pr commit 2");');
       helper.command.runCmd('git add comp2/comp2.js');
       helper.command.runCmd('git commit -m "feat: pr commit 2"');
-      helper.command.runCmd('bit ci pr --message "second pr commit"');
+      helper.command.runCmd('bit ci pr --keep-lane --message "second pr commit"');
     });
 
     it("should propagate main's deps-set config change to comp1 on the lane", () => {
@@ -220,7 +220,7 @@ describe('ci commands', function () {
       helper.fs.outputFile('comp1/index.js', "module.exports = () => 'PR-VERSION';");
       helper.command.runCmd('git add .');
       helper.command.runCmd('git commit -m "feat: PR changes comp1"');
-      helper.command.runCmd('bit ci pr --message "first pr commit"');
+      helper.command.runCmd('bit ci pr --keep-lane --message "first pr commit"');
 
       // 2. On main: independently write comp1 with a different value, tag, export, commit, push.
       //    Now main's bit-objects have a comp1 tag whose content disagrees with the PR snap's.
@@ -243,7 +243,7 @@ describe('ci commands', function () {
       helper.fs.outputFile('comp2/index.js', "module.exports = () => 'pr-comp2';");
       helper.command.runCmd('git add .');
       helper.command.runCmd('git commit -m "feat: more pr changes"');
-      helper.command.runCmd('bit ci pr --message "second pr commit"');
+      helper.command.runCmd('bit ci pr --keep-lane --message "second pr commit"');
     });
 
     it("lane's comp1 should still have the PR's version, not main's", () => {
@@ -784,7 +784,7 @@ module.exports = { isPositive };`
       execa.sync('git', ['commit', '-m', 'feat: concurrent commit B'], { cwd: runnerBPath });
 
       const bitBin = helper.command.bitBin;
-      const ciPrArgs = ['ci', 'pr', '--build'];
+      const ciPrArgs = ['ci', 'pr', '--build', '--keep-lane'];
 
       const procA = execa(bitBin, [...ciPrArgs, '--message', 'commit-A'], {
         cwd: runnerAPath,
