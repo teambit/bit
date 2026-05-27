@@ -1,3 +1,40 @@
+/**
+ * WorkspaceComponentLoader — loads components from the workspace.
+ *
+ * Public surface:
+ *   getMany(ids)        — load many components, with batching and shared phases
+ *   get(id)             — load one component
+ *   getIfExist(id)      — load one, return undefined on not-found
+ *   getInvalid(ids)     — return components that fail to load
+ *   clearCache(),
+ *   clearComponentCache(id)
+ *
+ * Internal call shape (getMany):
+ *
+ *   getMany
+ *    ├─ getFromCache (per id)                      [componentsCache]
+ *    └─ getAndLoadSlotOrdered (for cache misses)   [creates a LoadScratch]
+ *        ├─ groupAndUpdateIds → classifyIds         [discovery.ts, pure]
+ *        ├─ buildLoadGroups (uses scratch)
+ *        │   ├─ populateScopeAndExtensionsCache    [warms scratch]
+ *        │   └─ buildLoadPlanGroups                 [load-plan.ts, pure]
+ *        │       ├─ groupEnvsByDepLayer             [env-dag-sort.ts, pure]
+ *        │       └─ groupExtsByDepLayer             [dep-dag-sort.ts, pure]
+ *        └─ getAndLoadSlot (per group, in order — passes scratch through)
+ *            ├─ getComponentsWithoutLoadExtensions
+ *            │   └─ consumer.loadComponents → get → loadOne
+ *            ├─ loadComponentsExtensions           [optional]
+ *            ├─ executeLoadSlot                    [onComponentLoad subscribers]
+ *            └─ loadCompsAsAspects                 [register as Harmony aspects]
+ *
+ * State: `componentsCache` is the only instance-lifetime cache (the actual
+ * output cache). Per-operation scratch state lives in a `LoadScratch` value
+ * created at the top of getAndLoadSlotOrdered and threaded down to loadOne.
+ *
+ * Caching invariants: see D-002 in docs/rfcs/component-loading-rewrite/DECISIONS.md.
+ * Recursion / load-order: see D-001 in the same file.
+ */
+
 import pMap from 'p-map';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
@@ -7,7 +44,7 @@ import { ComponentFS, Config, State, TagMap } from '@teambit/component';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import mapSeries from 'p-map-series';
-import { compact, fromPairs, groupBy, pick, uniq, uniqBy } from 'lodash';
+import { compact, fromPairs, pick, uniq, uniqBy } from 'lodash';
 import type { ComponentLoadOptions as LegacyComponentLoadOptions } from '@teambit/legacy.consumer-component';
 import { ComponentNotFoundInPath, ConsumerComponent, Dependencies } from '@teambit/legacy.consumer-component';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
@@ -25,6 +62,10 @@ import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import type { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 import { MergeConfigConflict } from '../exceptions/merge-config-conflict';
+import { buildLoadPlanGroups } from './load-plan';
+import type { LoadPlanInput } from './load-plan';
+import { classifyIds } from './discovery';
+import type { DiscoveredIds } from './discovery';
 
 type GetManyRes = {
   components: Component[];
@@ -58,6 +99,23 @@ type WorkspaceScopeIdsMap = {
   workspaceIds: Map<string, ComponentID>;
 };
 
+/**
+ * Per-operation scratch state shared between the discovery, plan-building, and
+ * load phases of one top-level load. Lives only as long as one `getMany` call;
+ * goes away when the operation ends. (Previously two of these were instance
+ * fields and accumulated across calls — see D-002.)
+ */
+type LoadScratch = {
+  /** id.toString() → scope-only Component (used by loadOne to populate `head`/`tags`). */
+  scope: Map<string, Component>;
+  /** id.toString() → pre-resolved extensions list, errors, envId. */
+  extensions: Map<string, { extensions: ExtensionDataList; errors: Error[] | undefined; envId: string | undefined }>;
+};
+
+function emptyScratch(): LoadScratch {
+  return { scope: new Map(), extensions: new Map() };
+}
+
 export type LoadCompAsAspectsOptions = {
   /**
    * In case the component we are loading is app, whether to load it as app (in a scope aspects capsule)
@@ -87,22 +145,19 @@ export type LoadCompAsAspectsOptions = {
 };
 
 export class WorkspaceComponentLoader {
-  private componentsCache: InMemoryCache<Component>; // cache loaded components
-  /**
-   * Cache components that loaded from scope (especially for get many for perf improvements)
-   */
-  private scopeComponentsCache: InMemoryCache<Component>;
-  /**
-   * Cache extension list for components. used by get many for perf improvements.
-   * And to make sure we load extensions first.
-   */
-  private componentsExtensionsCache: InMemoryCache<{
-    extensions: ExtensionDataList;
-    errors: Error[] | undefined;
-    envId: string | undefined;
-  }>;
-
-  private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
+  // The only cache the loader holds across calls is `componentsCache` — final
+  // loaded Component objects, keyed by `${id}:${json(load-opts)}`, looked up
+  // via the "exact-match-or-fully-loaded" rule (see getFromCache + D-002).
+  //
+  // Per-operation scratch state (the scope-only Component map and the
+  // merged-extensions map) lives in a `LoadScratch` value passed through the
+  // load pipeline — not on this instance.
+  //
+  // Aspect-load retry suppression is delegated to AspectLoaderMain — its
+  // `isAspectLoaded(id)` returns true for both successfully-loaded and
+  // previously-failed aspects (`failedAspects` registry), so we don't need a
+  // local memoization flag of our own.
+  private componentsCache: InMemoryCache<Component>;
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -111,9 +166,6 @@ export class WorkspaceComponentLoader {
     private aspectLoader: AspectLoaderMain
   ) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-    this.scopeComponentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-    this.componentsExtensionsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-    this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<GetManyRes> {
@@ -159,7 +211,11 @@ export class WorkspaceComponentLoader {
       return comp.id.toString();
     });
 
-    // this.logger.clearStatusLine();
+    // Save under the "fully loaded" key even though loadOptsWithDefaults may have
+    // had loadExtensions/executeLoadSlot set to false. By this point in getMany
+    // the slot has fired (executeLoadSlot runs unconditionally inside getAndLoadSlot)
+    // and extensions were loaded when requested, so the post-load shape is
+    // fully-loaded. See D-002 for why the key tracks post-load state.
     components.forEach((comp) => {
       this.saveInCache(comp, { loadExtensions: true, executeLoadSlot: true });
     });
@@ -180,9 +236,11 @@ export class WorkspaceComponentLoader {
   ): Promise<GetManyRes> {
     if (!ids?.length) return { components: [], invalidComponents: [] };
 
+    // One scratch for this whole top-level operation; goes away when we return.
+    const scratch = emptyScratch();
     const workspaceScopeIdsMap: WorkspaceScopeIdsMap = await this.groupAndUpdateIds(ids);
     this.logger.profileTrace('buildLoadGroups');
-    const groupsToHandle = await this.buildLoadGroups(workspaceScopeIdsMap);
+    const groupsToHandle = await this.buildLoadGroups(workspaceScopeIdsMap, scratch);
     this.logger.profileTrace('buildLoadGroups');
     // prefix your command with "BIT_LOG=*" to see the detailed groups
     if (process.env.BIT_LOG) {
@@ -196,7 +254,12 @@ export class WorkspaceComponentLoader {
         if (!workspaceIds.length && !scopeIds.length) {
           throw new Error('getAndLoadSlotOrdered - group has no ids to load');
         }
-        const res = await this.getAndLoadSlot(workspaceIds, scopeIds, { ...loadOpts, core, seeders, aspects, envs });
+        const res = await this.getAndLoadSlot(
+          workspaceIds,
+          scopeIds,
+          { ...loadOpts, core, seeders, aspects, envs },
+          scratch
+        );
         this.logger.profileTrace(groupDesc);
         // We don't want to return components that were not asked originally (we do want to load them)
         if (!group.seeders) return undefined;
@@ -215,187 +278,81 @@ export class WorkspaceComponentLoader {
     return finalRes;
   }
 
-  private async buildLoadGroups(workspaceScopeIdsMap: WorkspaceScopeIdsMap): Promise<Array<LoadGroup>> {
+  private async buildLoadGroups(
+    workspaceScopeIdsMap: WorkspaceScopeIdsMap,
+    scratch: LoadScratch
+  ): Promise<Array<LoadGroup>> {
     const wsIds = Array.from(workspaceScopeIdsMap.workspaceIds.values());
     const scopeIds = Array.from(workspaceScopeIdsMap.scopeIds.values());
+
+    // Phase 1 (side-effecting): warm scratch state for everything that needs to
+    // factor into the plan. This is iterative — we have to populate non-core-envs first
+    // to discover what extension components they reference, then populate those too.
     const allIds = [...wsIds, ...scopeIds];
-    const groupedByIsCoreEnvs = groupBy(allIds, (id) => {
-      return this.envs.isCoreEnv(id.toStringWithoutVersion());
-    });
-    const nonCoreEnvs = groupedByIsCoreEnvs.false || [];
-    await this.populateScopeAndExtensionsCache(nonCoreEnvs, workspaceScopeIdsMap);
-    const allExtIds: Map<string, ComponentID> = new Map();
-    nonCoreEnvs.forEach((id) => {
-      const idStr = id.toString();
-      const fromCache = this.componentsExtensionsCache.get(idStr);
-      if (!fromCache || !fromCache.extensions) {
-        return;
-      }
-      fromCache.extensions.forEach((ext) => {
+    const nonCoreEnvs = allIds.filter((id) => !this.envs.isCoreEnv(id.toStringWithoutVersion()));
+    await this.populateScopeAndExtensionsCache(nonCoreEnvs, workspaceScopeIdsMap, scratch);
+
+    const allExtIds = new Map<string, ComponentID>();
+    for (const id of nonCoreEnvs) {
+      const fromScratch = scratch.extensions.get(id.toString());
+      if (!fromScratch?.extensions) continue;
+      for (const ext of fromScratch.extensions) {
         if (!allExtIds.has(ext.stringId) && ext.newExtensionId) {
           allExtIds.set(ext.stringId, ext.newExtensionId);
         }
-      });
-    });
-    const allExtCompIds = Array.from(allExtIds.values());
-    await this.populateScopeAndExtensionsCache(allExtCompIds || [], workspaceScopeIdsMap);
-
-    // const allExtIdsStr = allExtCompIds.map((id) => id.toString());
-
-    const envsIdsOfWsComps = new Set<string>();
-    wsIds.forEach((id) => {
-      const idStr = id.toString();
-      const fromCache = this.componentsExtensionsCache.get(idStr);
-      if (!fromCache || !fromCache.envId) {
-        return;
-      }
-      const envId = fromCache.envId;
-      if (envId) {
-        envsIdsOfWsComps.add(envId);
-      }
-    });
-
-    const groupedByIsEnvOfWsComps = groupBy(allExtCompIds, (id) => {
-      const idStr = id.toString();
-      const withoutVersion = idStr.split('@')[0];
-      return envsIdsOfWsComps.has(idStr) || envsIdsOfWsComps.has(withoutVersion);
-    });
-    const notEnvOfWsCompsStrs = (groupedByIsEnvOfWsComps.false || []).map((id) => id.toString());
-
-    const groupedByIsExtOfAnother = groupBy(nonCoreEnvs, (id) => {
-      return notEnvOfWsCompsStrs.includes(id.toString());
-    });
-    const extIdsFromTheList = (groupedByIsExtOfAnother.true || []).map((id) => id.toString());
-    const extsNotFromTheList: ComponentID[] = [];
-    for (const [, id] of allExtIds.entries()) {
-      if (!extIdsFromTheList.includes(id.toString())) {
-        extsNotFromTheList.push(id);
       }
     }
+    await this.populateScopeAndExtensionsCache(Array.from(allExtIds.values()), workspaceScopeIdsMap, scratch);
 
-    await this.groupAndUpdateIds(extsNotFromTheList, workspaceScopeIdsMap);
+    // Phase 2 (pure): build the canonical group structure using scratch state.
+    const planInput: LoadPlanInput = {
+      workspaceIds: wsIds,
+      scopeIds,
+      isCoreEnv: (id) => this.envs.isCoreEnv(id.toStringWithoutVersion()),
+      extensionsOf: (id) => {
+        const fromScratch = scratch.extensions.get(id.toString());
+        if (!fromScratch?.extensions) return [];
+        return Array.from(fromScratch.extensions).map((ext) => ({
+          stringId: ext.stringId,
+          newExtensionId: ext.newExtensionId,
+        }));
+      },
+      envIdOf: (id) => scratch.extensions.get(id.toString())?.envId,
+    };
+    const { groups: rawGroups, extraExtensionIds } = buildLoadPlanGroups(planInput);
 
-    const layeredExtFromTheList = this.regroupExtIdsFromTheList(groupedByIsExtOfAnother.true);
-    const layeredExtGroups = layeredExtFromTheList.map((ids) => {
-      return {
-        ids,
-        core: false,
-        aspects: true,
-        seeders: true,
-        envs: false,
-      };
-    });
-
-    const layeredEnvsFromTheList = this.regroupEnvsIdsFromTheList(groupedByIsEnvOfWsComps.true, envsIdsOfWsComps);
-    const layeredEnvsGroups = layeredEnvsFromTheList.map((ids) => {
-      return {
-        ids,
-        core: false,
-        aspects: true,
-        seeders: true,
-        envs: true,
-      };
-    });
-
-    const groupsToHandle = [
-      // Always load first core envs
-      { ids: groupedByIsCoreEnvs.true || [], core: true, aspects: true, seeders: true, envs: true },
-      // { ids: groupedByIsEnvOfWsComps.true || [], core: false, aspects: true, seeders: false, envs: true },
-      ...layeredEnvsGroups,
-      { ids: extsNotFromTheList || [], core: false, aspects: true, seeders: false, envs: false },
-      ...layeredExtGroups,
-      { ids: groupedByIsExtOfAnother.false || [], core: false, aspects: false, seeders: true, envs: false },
-    ];
-
-    // This is a special use case mostly for the bit core repo
-    const envsOfCoreAspectEnv = ['teambit.harmony/envs/core-aspect-env', 'teambit.harmony/envs/core-aspect-env-jest'];
-    const coreAspectEnvGroup = { ids: [], core: true, aspects: true, seeders: true, envs: true };
-    layeredEnvsGroups.forEach((group) => {
-      const filteredIds = group.ids.filter((id) => envsOfCoreAspectEnv.includes(id.toStringWithoutVersion()));
-      if (filteredIds.length) {
-        // @ts-ignore
-        coreAspectEnvGroup.ids.push(...filteredIds);
+    // Phase 3 (side-effecting): register extension comp ids that weren't in the input,
+    // then split each group's ids by ws/scope using the up-to-date map.
+    await this.groupAndUpdateIds(extraExtensionIds, workspaceScopeIdsMap);
+    return rawGroups.map((group) => {
+      const wsIdsInGroup: ComponentID[] = [];
+      const scopeIdsInGroup: ComponentID[] = [];
+      for (const id of group.ids) {
+        if (workspaceScopeIdsMap.workspaceIds.has(id.toString())) wsIdsInGroup.push(id);
+        else scopeIdsInGroup.push(id);
       }
-    });
-    if (coreAspectEnvGroup.ids.length) {
-      // enter first in the list
-      groupsToHandle.unshift(coreAspectEnvGroup);
-    }
-    // END of bit repo special use case
-
-    const groupsByWsScope = groupsToHandle.map((group) => {
-      if (!group.ids?.length) return undefined;
-      const groupedByWsScope = groupBy(group.ids, (id) => {
-        return workspaceScopeIdsMap.workspaceIds.has(id.toString());
-      });
       return {
-        workspaceIds: groupedByWsScope.true || [],
-        scopeIds: groupedByWsScope.false || [],
+        workspaceIds: wsIdsInGroup,
+        scopeIds: scopeIdsInGroup,
         core: group.core,
         aspects: group.aspects,
         seeders: group.seeders,
         envs: group.envs,
       };
     });
-    return compact(groupsByWsScope);
-  }
-
-  /**
-   * This function will get a list of envs ids and will regroup them into two groups:
-   * 1. envs that are envs of envs from the group
-   * 2. other envs (envs which are just envs of regular components of the workspace)
-   * For Example:
-   * envsIds: [ReactEnv, NodeEnv, BitEnv]
-   * The env of ReactEnv and NodeEnv is BitEnv
-   * The result will be:
-   * [ [BitEnv], [ReactEnv, NodeEnv] ]
-   *
-   * At the moment this function is not recursive, in the future we might want to make it recursive
-   * @param envIds
-   * @param envsIdsOfWsComps
-   * @returns
-   */
-  private regroupEnvsIdsFromTheList(envIds: ComponentID[] = [], envsIdsOfWsComps: Set<string>): Array<ComponentID[]> {
-    const envsOfEnvs = new Set<string>();
-    envIds.forEach((envId) => {
-      const idStr = envId.toString();
-      const fromCache = this.componentsExtensionsCache.get(idStr);
-      if (!fromCache || !fromCache.extensions) {
-        return;
-      }
-      const envOfEnvId = fromCache.envId;
-      if (envOfEnvId && !envsIdsOfWsComps.has(idStr)) {
-        envsOfEnvs.add(envOfEnvId);
-      }
-    });
-    const existingEnvsOfEnvs = envIds.filter(
-      (id) => envsOfEnvs.has(id.toString()) || envsOfEnvs.has(id.toStringWithoutVersion())
-    );
-    const notExistingEnvsOfEnvs = envIds.filter(
-      (id) => !envsOfEnvs.has(id.toString()) && !envsOfEnvs.has(id.toStringWithoutVersion())
-    );
-    return [existingEnvsOfEnvs, notExistingEnvsOfEnvs];
-  }
-
-  private regroupExtIdsFromTheList(ids: ComponentID[]): Array<ComponentID[]> {
-    // TODO: implement this function
-    // this should handle a case when you have:
-    // compA that has extA and that extA has extB
-    // in that case we now get the following group:
-    // ids: [extA, extB]
-    // while we need extB to be in a different group before extA
-    return [ids];
   }
 
   private async getAndLoadSlot(
     workspaceIds: ComponentID[],
     scopeIds: ComponentID[],
-    loadOpts: GetAndLoadSlotOpts
+    loadOpts: GetAndLoadSlotOpts,
+    scratch: LoadScratch
   ): Promise<GetManyRes> {
     const { workspaceComponents, scopeComponents, invalidComponents } = await this.getComponentsWithoutLoadExtensions(
       workspaceIds,
       scopeIds,
-      loadOpts
+      loadOpts,
+      scratch
     );
 
     // If we are here it means we are on workspace, in that case we don't want to load
@@ -452,33 +409,29 @@ export class WorkspaceComponentLoader {
     components: Component[],
     opts: LoadCompAsAspectsOptions = { loadApps: true, loadEnvs: true, loadAspects: true }
   ): Promise<void> {
+    // Skip components we shouldn't load as aspects, plus those that are
+    // already loaded or previously failed (both reported via
+    // `aspectLoader.isAspectLoaded`, which returns true for failures so we
+    // don't retry). For everything else, decide whether the component qualifies
+    // as an app, env, or aspect based on its registered data.
     const aspectIds: string[] = [];
-    components.forEach((component) => {
-      const firstTimeToLoad = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
-      const excluded = opts.idsToNotLoadAsAspects?.includes(component.id.toString());
-      const isCore = this.aspectLoader.isCoreAspect(component.id.toStringWithoutVersion());
-      const alreadyLoaded = this.aspectLoader.isAspectLoaded(component.id.toString());
-      const skipLoading = excluded || isCore || alreadyLoaded || !firstTimeToLoad;
-
-      if (skipLoading) {
-        return;
-      }
+    for (const component of components) {
       const idStr = component.id.toString();
+      if (
+        opts.idsToNotLoadAsAspects?.includes(idStr) ||
+        this.aspectLoader.isCoreAspect(component.id.toStringWithoutVersion()) ||
+        this.aspectLoader.isAspectLoaded(idStr)
+      ) {
+        continue;
+      }
       const appData = component.state.aspects.get('teambit.harmony/application');
-      if (opts.loadApps && appData?.data?.appName) {
-        aspectIds.push(idStr);
-        this.componentLoadedSelfAsAspects.set(idStr, true);
-      }
       const envsData = component.state.aspects.get(EnvsAspect.id);
-      if (opts.loadEnvs && (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env')) {
-        aspectIds.push(idStr);
-        this.componentLoadedSelfAsAspects.set(idStr, true);
-      }
-      if (opts.loadAspects && envsData?.data?.type === 'aspect') {
-        aspectIds.push(idStr);
-        this.componentLoadedSelfAsAspects.set(idStr, true);
-      }
-    });
+      const isApp = opts.loadApps && appData?.data?.appName;
+      const isEnv =
+        opts.loadEnvs && (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env');
+      const isAspect = opts.loadAspects && envsData?.data?.type === 'aspect';
+      if (isApp || isEnv || isAspect) aspectIds.push(idStr);
+    }
     if (!aspectIds.length) return;
 
     try {
@@ -489,35 +442,33 @@ export class WorkspaceComponentLoader {
     }
   }
 
-  private async populateScopeAndExtensionsCache(ids: ComponentID[], workspaceScopeIdsMap: WorkspaceScopeIdsMap) {
+  private async populateScopeAndExtensionsCache(
+    ids: ComponentID[],
+    workspaceScopeIdsMap: WorkspaceScopeIdsMap,
+    scratch: LoadScratch
+  ) {
     return mapSeries(ids, async (id) => {
       const idStr = id.toString();
-      let componentFromScope;
-      if (!this.scopeComponentsCache.has(idStr)) {
+      let componentFromScope = scratch.scope.get(idStr);
+      if (!componentFromScope) {
         try {
           // Do not import automatically if it's missing, it will throw an error later
           componentFromScope = await this.workspace.scope.get(id, undefined, false);
-          if (componentFromScope) {
-            this.scopeComponentsCache.set(idStr, componentFromScope);
-          }
-          // This is fine here, as it will be handled later in the process
+          if (componentFromScope) scratch.scope.set(idStr, componentFromScope);
         } catch (err: any) {
           const wsAspectLoader = this.workspace.getWorkspaceAspectsLoader();
           wsAspectLoader.throwWsJsoncAspectNotFoundError(err);
           this.logger.warn(`populateScopeAndExtensionsCache - failed loading component ${idStr} from scope`, err);
         }
       }
-      if (!this.componentsExtensionsCache.has(idStr) && workspaceScopeIdsMap.workspaceIds.has(idStr)) {
-        componentFromScope = componentFromScope || this.scopeComponentsCache.get(idStr);
+      if (!scratch.extensions.has(idStr) && workspaceScopeIdsMap.workspaceIds.has(idStr)) {
         const { extensions, errors, envId } = await this.workspace.componentExtensions(
           id,
           componentFromScope,
           undefined,
-          {
-            loadExtensions: false,
-          }
+          { loadExtensions: false }
         );
-        this.componentsExtensionsCache.set(idStr, { extensions, errors, envId });
+        scratch.extensions.set(idStr, { extensions, errors, envId });
       }
     });
   }
@@ -531,25 +482,19 @@ export class WorkspaceComponentLoader {
     ids: ComponentID[],
     existingGroups?: WorkspaceScopeIdsMap
   ): Promise<WorkspaceScopeIdsMap> {
-    const result: WorkspaceScopeIdsMap = existingGroups || {
-      scopeIds: new Map(),
-      workspaceIds: new Map(),
-    };
-
-    await Promise.all(
-      ids.map(async (componentId) => {
-        const inWs = await this.isInWsIncludeDeleted(componentId);
-
-        if (!inWs) {
-          result.scopeIds.set(componentId.toString(), componentId);
-          return undefined;
-        }
-        const resolvedVersions = this.resolveVersion(componentId);
-        result.workspaceIds.set(resolvedVersions.toString(), resolvedVersions);
-        return undefined;
-      })
+    // Fetch the workspace's id surface once. Under V1 each call into
+    // isInWsIncludeDeleted re-fetched locallyDeletedIds() per component; the result
+    // is identical for every call within one invocation, so caching here is a behavior-
+    // preserving optimization (and makes the inner classifier pure/synchronous).
+    const knownWorkspaceIds = this.workspace.listIds().concat(await this.workspace.locallyDeletedIds());
+    return classifyIds(
+      ids,
+      {
+        knownWorkspaceIds,
+        resolveWorkspaceVersion: (id) => this.resolveVersion(id),
+      },
+      existingGroups as DiscoveredIds | undefined
     );
-    return result;
   }
 
   private async isInWsIncludeDeleted(componentId: ComponentID): Promise<boolean> {
@@ -563,7 +508,8 @@ export class WorkspaceComponentLoader {
   private async getComponentsWithoutLoadExtensions(
     workspaceIds: ComponentID[],
     scopeIds: ComponentID[],
-    loadOpts: GetAndLoadSlotOpts
+    loadOpts: GetAndLoadSlotOpts,
+    scratch: LoadScratch
   ) {
     const invalidComponents: InvalidComponent[] = [];
     const errors: { id: ComponentID; err: Error }[] = [];
@@ -609,23 +555,25 @@ export class WorkspaceComponentLoader {
     });
 
     const getWithCatch = (id, legacyComponent) => {
-      return this.get(id, legacyComponent, undefined, undefined, loadOptsWithDefaults).catch((err) => {
-        if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
-          invalidComponents.push({
-            id,
-            err,
-          });
-          return undefined;
+      return this.get(id, legacyComponent, undefined, undefined, loadOptsWithDefaults, undefined, scratch).catch(
+        (err) => {
+          if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
+            invalidComponents.push({
+              id,
+              err,
+            });
+            return undefined;
+          }
+          if (this.isComponentNotExistsError(err) || err instanceof ComponentNotFoundInPath) {
+            errors.push({
+              id,
+              err,
+            });
+            return undefined;
+          }
+          throw err;
         }
-        if (this.isComponentNotExistsError(err) || err instanceof ComponentNotFoundInPath) {
-          errors.push({
-            id,
-            err,
-          });
-          return undefined;
-        }
-        throw err;
-      });
+      );
     };
 
     // await this.getConsumerComponent(id, loadOpts)
@@ -707,7 +655,10 @@ export class WorkspaceComponentLoader {
     useCache = true,
     storeInCache = true,
     loadOpts?: ComponentLoadOptions,
-    getOpts: ComponentGetOneOptions = { resolveIdVersion: true }
+    getOpts: ComponentGetOneOptions = { resolveIdVersion: true },
+    // Internal: per-operation scratch state. External callers should leave this
+    // undefined; loadOne will fall back to direct workspace lookups.
+    scratch?: LoadScratch
   ): Promise<Component> {
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
       { loadExtensions: true, executeLoadSlot: true },
@@ -726,7 +677,7 @@ export class WorkspaceComponentLoader {
 
     // in case of out-of-sync, the id may changed during the load process
     const updatedId = consumerComponent ? consumerComponent.id : id;
-    const component = await this.loadOne(updatedId, consumerComponent, loadOptsWithDefaults);
+    const component = await this.loadOne(updatedId, consumerComponent, loadOptsWithDefaults, scratch);
     if (storeInCache) {
       this.addMultipleEnvsIssueIfNeeded(component); // it's in storeInCache block, otherwise, it wasn't fully loaded
       this.saveInCache(component, loadOptsWithDefaults);
@@ -765,42 +716,31 @@ export class WorkspaceComponentLoader {
 
   clearCache() {
     this.componentsCache.deleteAll();
-    this.scopeComponentsCache.deleteAll();
-    this.componentsExtensionsCache.deleteAll();
-    this.componentLoadedSelfAsAspects.deleteAll();
   }
 
   clearComponentCache(id: ComponentID) {
     const idStr = id.toString();
-    const cachesToClear = [
-      this.componentsCache,
-      this.scopeComponentsCache,
-      this.componentsExtensionsCache,
-      this.componentLoadedSelfAsAspects,
-    ];
-    cachesToClear.forEach((cache) => {
-      for (const cacheKey of cache.keys()) {
-        if (cacheKey === idStr || cacheKey.startsWith(`${idStr}:`)) {
-          cache.delete(cacheKey);
-        }
+    for (const cacheKey of this.componentsCache.keys()) {
+      if (cacheKey === idStr || cacheKey.startsWith(`${idStr}:`)) {
+        this.componentsCache.delete(cacheKey);
       }
-    });
+    }
   }
 
-  private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent, loadOpts?: ComponentLoadOptions) {
+  private async loadOne(
+    id: ComponentID,
+    consumerComponent?: ConsumerComponent,
+    loadOpts?: ComponentLoadOptions,
+    scratch?: LoadScratch
+  ) {
     const idStr = id.toString();
-    const componentFromScope = this.scopeComponentsCache.has(idStr)
-      ? this.scopeComponentsCache.get(idStr)
-      : await this.workspace.scope.get(id);
+    const componentFromScope = scratch?.scope.get(idStr) ?? (await this.workspace.scope.get(id));
     if (!consumerComponent) {
       if (!componentFromScope) throw new MissingBitMapComponent(id.toString());
       return componentFromScope;
     }
-    const extErrorsFromCache = this.componentsExtensionsCache.has(idStr)
-      ? this.componentsExtensionsCache.get(idStr)
-      : undefined;
     const { extensions, errors } =
-      extErrorsFromCache ||
+      scratch?.extensions.get(idStr) ??
       (await this.workspace.componentExtensions(id, componentFromScope, undefined, {
         loadExtensions: loadOpts?.loadExtensions,
       }));
@@ -843,28 +783,36 @@ export class WorkspaceComponentLoader {
     return this.executeLoadSlot(newComponent, loadOpts);
   }
 
+  /**
+   * Cache the loaded Component under a key derived from `loadOpts`. Callers
+   * typically pass `{ loadExtensions: true, executeLoadSlot: true }` even when
+   * the *initial* load options had those false — by the time the loader
+   * reaches save, the slot has fired and (when applicable) extensions have
+   * been registered, so the post-load state is "fully loaded". See D-002.
+   */
   private saveInCache(component: Component, loadOpts?: ComponentLoadOptions): void {
     const cacheKey = createComponentCacheKey(component.id, loadOpts);
     this.componentsCache.set(cacheKey, component);
   }
 
   /**
-   * make sure that not only the id-str match, but also the legacy-id.
-   * this is needed because the ComponentID.toString() is the same whether or not the legacy-id has
-   * scope-name, as it includes the defaultScope if the scope is empty.
-   * as a result, when out-of-sync is happening and the id is changed to include scope-name in the
-   * legacy-id, the component is the cache has the old id.
+   * Lookup follows the "exact-match-or-fully-loaded" rule (D-002): try the
+   * caller's exact load-opts shape first; on miss, fall back to the
+   * `{ loadExtensions: true, executeLoadSlot: true }` shape that getMany /
+   * get use when saving. A fully-loaded Component is a superset of any
+   * less-loaded one, so the caller gets at least what it asked for.
+   *
+   * Also enforces an id-equality check (not just a string match) — when a
+   * component was loaded out-of-sync the canonical id-string is the same
+   * but the legacy id may have a different scope. We don't want to return
+   * the stale cached version in that case.
    */
   private getFromCache(componentId: ComponentID, loadOpts?: ComponentLoadOptions): Component | undefined {
     const bitIdWithVersion: ComponentID = this.resolveVersion(componentId);
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
     const cacheKey = createComponentCacheKey(id, loadOpts);
-    // If we try to look for the cache without load extensions/ without execute load slot
-    // but there is an entry after the load, we want to use it as well.
-    // as we want the component, so if we already loaded it with everything, it's fine.
-    // this sometime relevant for cases with tiny cache size (during tag)
-    const cacheKeyWithTrueLoadOpts = createComponentCacheKey(id, { loadExtensions: true, executeLoadSlot: true });
-    const fromCache = this.componentsCache.get(cacheKey) || this.componentsCache.get(cacheKeyWithTrueLoadOpts);
+    const cacheKeyForFullyLoaded = createComponentCacheKey(id, { loadExtensions: true, executeLoadSlot: true });
+    const fromCache = this.componentsCache.get(cacheKey) || this.componentsCache.get(cacheKeyForFullyLoaded);
     if (fromCache && fromCache.id.isEqual(id)) {
       return fromCache;
     }
@@ -987,6 +935,21 @@ export class WorkspaceComponentLoader {
   }
 }
 
+/**
+ * Cache key composition for `componentsCache`. Includes only the four flags
+ * that genuinely produce a different Component:
+ *
+ *   - loadExtensions: false → external aspects aren't registered with Harmony
+ *   - executeLoadSlot: false → onComponentLoad slots don't fire, so state.aspects
+ *                              doesn't accumulate post-slot upserts
+ *   - loadDocs: false → docs aspect's slot subscriber early-returns
+ *                       (docs.main.runtime.ts:220), data is empty
+ *   - loadCompositions: false → compositions aspect's slot subscriber
+ *                               early-returns (compositions.main.runtime.ts:141)
+ *
+ * Other ComponentLoadOptions (storeInCache, originatedFromHarmony, etc.) don't
+ * change the Component value and would split the cache without value if included.
+ */
 function createComponentCacheKey(id: ComponentID, loadOpts?: ComponentLoadOptions): string {
   const relevantOpts = pick(loadOpts, ['loadExtensions', 'executeLoadSlot', 'loadDocs', 'loadCompositions']);
   return `${id.toString()}:${JSON.stringify(sortKeys(relevantOpts ?? {}))}`;

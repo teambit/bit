@@ -112,6 +112,7 @@ import { CompFiles } from './workspace-component/comp-files';
 import { Filter } from './filter';
 import type { ComponentStatusLegacy, ComponentStatusResult } from './workspace-component/component-status-loader';
 import { ComponentStatusLoader } from './workspace-component/component-status-loader';
+import { LoaderDiffHarness, loaderDiffSampleEvery } from './workspace-component/loader-diff';
 import execa from 'execa';
 import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
 import { VERSION_ZERO } from '@teambit/objects';
@@ -265,7 +266,20 @@ export class Workspace implements ComponentFactory {
     private configStore: ConfigStoreMain
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-    this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
+    const primaryLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
+    const sampleEvery = loaderDiffSampleEvery();
+    if (sampleEvery) {
+      this.componentLoader = new LoaderDiffHarness(
+        primaryLoader,
+        () => new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader),
+        logger,
+        // BIT_LOADER_DIFF_OUT is an internal escape hatch for e2e tests that
+        // need an isolated log path. Users should not need to set it.
+        { sampleEvery, outputPath: process.env.BIT_LOADER_DIFF_OUT }
+      ) as unknown as WorkspaceComponentLoader;
+    } else {
+      this.componentLoader = primaryLoader;
+    }
     this.validateConfig();
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
