@@ -231,7 +231,7 @@ describe('bit lane command', function () {
       helper.command.export();
 
       helper.scopeHelper.getClonedWorkspace(originalWorkspace);
-      helper.command.switchLocalLane('main');
+      helper.command.switchLocalLane('main', '--skip-fetch');
       helper.command.import();
     });
     it('should not make the component available on main', () => {
@@ -334,14 +334,14 @@ describe('bit lane command', function () {
       helper.scopeHelper.getClonedWorkspace(beforeUpdatingMain);
       beforeSwitch = helper.scopeHelper.cloneWorkspace();
     });
-    it('when --head is used, it should switch to the head of main ', () => {
-      helper.command.switchLocalLane('main', '-x --head');
+    it('by default, it should fetch and switch to the head of main', () => {
+      helper.command.switchLocalLane('main', '-x');
       const bitmap = helper.bitMap.read();
       expect(bitmap.comp1.version).to.equal('0.0.2');
     });
-    it('when --head was not used, it should switch to where the main was before', () => {
+    it('when --skip-fetch is used, it should switch to where the main was before', () => {
       helper.scopeHelper.getClonedWorkspace(beforeSwitch);
-      helper.command.switchLocalLane('main', '-x');
+      helper.command.switchLocalLane('main', '-x --skip-fetch');
       const bitmap = helper.bitMap.read();
       expect(bitmap.comp1.version).to.equal('0.0.1');
     });
@@ -368,18 +368,50 @@ describe('bit lane command', function () {
       helper.scopeHelper.getClonedWorkspace(beforeUpdatingLane);
       beforeSwitch = helper.scopeHelper.cloneWorkspace();
     });
-    it('when --head is used, it should switch to the head of the lane ', () => {
-      helper.command.switchLocalLane('dev', '-x --head');
+    it('by default, it should fetch and switch to the head of the lane', () => {
+      helper.command.switchLocalLane('dev', '-x');
       const bitmap = helper.bitMap.read();
       expect(bitmap.comp1.version).to.equal(headSnap);
       expect(bitmap.comp1.version).to.not.equal(firstSnap);
     });
-    it('when --head was not used, it should switch to where the lane was before', () => {
+    it('when --skip-fetch is used, it should switch to where the lane was before', () => {
       helper.scopeHelper.getClonedWorkspace(beforeSwitch);
-      helper.command.switchLocalLane('dev', '-x');
+      helper.command.switchLocalLane('dev', '-x --skip-fetch');
       const bitmap = helper.bitMap.read();
       expect(bitmap.comp1.version).to.not.equal(headSnap);
       expect(bitmap.comp1.version).to.equal(firstSnap);
+    });
+  });
+  describe('switch with --skip-fetch when the lane is not in the local scope', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('should throw a clear error directing the user to drop --skip-fetch', () => {
+      expect(() => helper.command.switchLocalLane(`${helper.scopes.remote}/dev`, '-x --skip-fetch')).to.throw(
+        '--skip-fetch'
+      );
+    });
+  });
+  describe('switch with deprecated --head flag', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.switchLocalLane('dev', '-x --head');
+    });
+    it('should still switch successfully (no-op)', () => {
+      helper.command.expectCurrentLaneToBe('dev');
     });
   });
   describe('switch with --force-ours', () => {
@@ -414,7 +446,7 @@ describe('bit lane command', function () {
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
       helper.command.export();
 
-      switchOutput = helper.command.switchLocalLane('main', '--head -x');
+      switchOutput = helper.command.switchLocalLane('main', '-x');
     });
     it('should switch the component on the lane only', () => {
       expect(switchOutput).to.have.string('switched 1 components');
