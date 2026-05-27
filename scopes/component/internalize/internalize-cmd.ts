@@ -21,7 +21,11 @@ use --revert to remove the internal mark, or --list to show the components curre
   options = [
     ['r', 'revert', 'remove the internal mark from the matching components'],
     ['l', 'list', 'list the components currently marked as internal'],
-    ['j', 'json', 'return the list of internal components in json format (use with --list)'],
+    [
+      'j',
+      'json',
+      'return the output as json (the internal components with --list, otherwise the affected component-ids)',
+    ],
   ] as CommandOptions;
   loader = true;
   remoteOp = true;
