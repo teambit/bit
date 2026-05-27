@@ -204,6 +204,53 @@ describe('ci commands', function () {
   });
 
   /**
+   * Same as the deps-set propagation test, but for an `bit env set` on main. Env config has its own
+   * strategy in the config merger, so it's worth covering explicitly: a long-running PR's lane must
+   * pick up an env that another PR changed (and tagged into objects) on main.
+   */
+  describe('bit ci pr propagates an env-set on main to the lane on subsequent runs', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      const defaultBranch = setupComponentsAndInitialCommit();
+
+      // First PR commit + ci pr — lane is created with comp1's original (default) env.
+      helper.command.runCmd('git checkout -b feature/main-env-test');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("pr commit 1");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: pr commit 1"');
+      helper.command.runCmd('bit ci pr --keep-lane --message "first pr commit"');
+
+      // Main moves ahead: change comp1's env, tag, export, push.
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.setEnv('comp1', 'teambit.harmony/aspect');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "chore: change comp1 env on main"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+
+      // Second PR commit + ci pr — PR picks up main's commits via git merge, then ci pr should
+      // sync the env change from main onto the lane.
+      helper.command.runCmd('git checkout feature/main-env-test');
+      helper.command.runCmd(`git merge ${defaultBranch}`);
+      helper.fs.outputFile('comp2/comp2.js', 'console.log("pr commit 2");');
+      helper.command.runCmd('git add comp2/comp2.js');
+      helper.command.runCmd('git commit -m "feat: pr commit 2"');
+      helper.command.runCmd('bit ci pr --keep-lane --message "second pr commit"');
+    });
+
+    it("should propagate main's env-set change to comp1 on the lane", () => {
+      helper.command.switchLocalLane('feature-main-env-test');
+      const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
+      expect(
+        envData.config.env,
+        `expected comp1's env to be updated from main, got: ${JSON.stringify(envData.config)}`
+      ).to.equal('teambit.harmony/aspect');
+    });
+  });
+
+  /**
    * Mirror of the test above, but the PR branch is NOT brought up to date with main (no
    * `git merge <default>`). When the PR is behind, `bit ci pr --keep-lane` must SKIP merging main
    * into the lane — pulling main's newer bit state into a lane whose git checkout still reflects
