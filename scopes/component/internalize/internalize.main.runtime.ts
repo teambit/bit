@@ -103,7 +103,9 @@ export class InternalizeMain {
     );
     if (changed.length) {
       const action = internal ? 'internalize' : 'uninternalize';
-      await this.workspace.bitMap.write(`${action} ${changed.map((id) => id.toString()).join(', ')}`);
+      const reason =
+        changed.length === 1 ? `${action} ${changed[0].toString()}` : `${action} ${changed.length} components`;
+      await this.workspace.bitMap.write(reason);
     }
     return changed;
   }
