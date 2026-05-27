@@ -1,4 +1,5 @@
 import type { ComponentModel } from '@teambit/component';
+import type { ReactNode } from 'react';
 import React, { useRef, useEffect } from 'react';
 
 export type SandboxPermission =
@@ -131,31 +132,61 @@ export function PreviewPropsExecutor({
   return null;
 }
 
+function shallowEqualAttrs(a: PreviewIframeAttrs, b: PreviewIframeAttrs): boolean {
+  const aKeys = Object.keys(a) as Array<keyof PreviewIframeAttrs>;
+  const bKeys = Object.keys(b) as Array<keyof PreviewIframeAttrs>;
+  if (aKeys.length !== bKeys.length) return false;
+  return aKeys.every((k) => a[k] === b[k]);
+}
+
+/**
+ * Runs registered `UsePreviewProps` hooks against a shared `PreviewPropsManager` and
+ * passes the resulting iframe attrs to `children` as a render prop. Computation happens
+ * synchronously within the render pass (executors are sibling children that mutate the
+ * manager before the consumer reads it), so there is no state hop and no chance of the
+ * effect-driven re-render loop that the previous implementation triggered. The attrs
+ * reference is stabilized via shallow-equal — unrelated parent re-renders keep the same
+ * identity, so `{...attrs}` spreads only invalidate downstream when content really changes.
+ */
 export function PreviewPropsAggregator({
   hooks,
-  onPreviewPropsChange,
   component,
+  children,
 }: {
   hooks: UsePreviewProps[];
-  onPreviewPropsChange?: (attrs: PreviewIframeAttrs) => void;
   component?: ComponentModel;
+  children: (attrs: PreviewIframeAttrs) => ReactNode;
 }) {
-  const managerRef = useRef(new PreviewPropsManager());
-
-  useEffect(() => {
-    onPreviewPropsChange?.(managerRef.current.toAttrs());
-  });
-
+  // Fresh manager per render so a hook that stops setting a key doesn't leak the
+  // previous render's value. Executors below mutate this manager in source order
+  // before PreviewPropsConsumer reads it.
+  const manager = new PreviewPropsManager();
   return (
     <>
       {hooks.map((usePropsHook, i) => (
         <PreviewPropsExecutor
           key={`preview-props-executor-${i}`}
           usePropsHook={usePropsHook}
-          manager={managerRef.current}
+          manager={manager}
           component={component}
         />
       ))}
+      <PreviewPropsConsumer manager={manager}>{children}</PreviewPropsConsumer>
     </>
   );
+}
+
+function PreviewPropsConsumer({
+  manager,
+  children,
+}: {
+  manager: PreviewPropsManager;
+  children: (attrs: PreviewIframeAttrs) => ReactNode;
+}) {
+  const next = manager.toAttrs();
+  const stableRef = useRef<PreviewIframeAttrs>(next);
+  if (!shallowEqualAttrs(stableRef.current, next)) {
+    stableRef.current = next;
+  }
+  return <>{children(stableRef.current)}</>;
 }

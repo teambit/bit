@@ -125,6 +125,7 @@ export class ApiServerMain {
     });
 
     const port = options.port || (await this.getRandomPort());
+    const { bindHost, isOverride } = resolveBindHost();
 
     // Generate a per-server auth token and persist it to a 0600 file before
     // any HTTP request can be handled. Clients (e.g. the bit-vscode extension)
@@ -140,7 +141,7 @@ export class ApiServerMain {
     // The host-check middleware runs first to reject DNS-rebinding attacks
     // (where a malicious page resolves attacker.example to 127.0.0.1).
     const app = expressFactory();
-    app.use(this.createHostCheckMiddleware());
+    app.use(this.createHostCheckMiddleware({ loopbackOnly: !isOverride }));
     app.use(
       cors({
         origin(origin, callback) {
@@ -222,9 +223,12 @@ export class ApiServerMain {
       })
     );
 
-    // Bind to loopback only — never accept connections from the LAN. Clients
-    // are expected to use 127.0.0.1 (or localhost, which resolves to it).
-    const server = await app.listen(port, '127.0.0.1');
+    if (isOverride) {
+      this.logger.debug(
+        `api-server: binding to ${bindHost} (from BIT_SERVER_HOST), loopback Host-header check disabled`
+      );
+    }
+    const server = await app.listen(port, bindHost);
 
     return new Promise((resolve, reject) => {
       server.on('error', (err) => {
@@ -285,10 +289,19 @@ export class ApiServerMain {
    * The server already listens on 127.0.0.1 only, so any request reaching us
    * arrived via loopback. The remaining concern is the *named* origin the
    * browser thinks it's talking to.
+   *
+   * Disabled when `BIT_SERVER_HOST` resolves to a non-loopback address,
+   * since by definition the server is then reachable via a hostname we
+   * can't enumerate ahead of time (e.g. a cloud-workspace hostname). In
+   * that mode the bearer token is the primary line of defense; the
+   * unauthenticated exemptions (`OPTIONS` preflight and `/api/_health`)
+   * become reachable from the network — `/api/_health` is a tiny "ok"
+   * liveness probe and intentionally exposed.
    */
-  private createHostCheckMiddleware(): Middleware {
+  private createHostCheckMiddleware({ loopbackOnly }: { loopbackOnly: boolean }): Middleware {
     const allowed = new Set(['localhost', '127.0.0.1', '::1']);
     return (req: Request, res: Response, next: NextFunction) => {
+      if (!loopbackOnly) return next();
       const hostHeader = req.headers.host || '';
       // Parse hostname from "host:port". IPv6 may be bracketed: "[::1]:1234"
       // → "::1"; IPv4 / hostname is plain: "127.0.0.1:1234" → "127.0.0.1".
@@ -556,6 +569,22 @@ export class ApiServerMain {
 }
 
 ApiServerAspect.addRuntime(ApiServerMain);
+
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
+
+/**
+ * Resolve the api-server bind host from `BIT_SERVER_HOST`, falling back to
+ * loopback. `isOverride` is the single source of truth for "is the server
+ * reachable from outside loopback?" — used both to choose the bind address
+ * and to disable the loopback Host-header check. Derived from the *resolved*
+ * host (not env presence) so `BIT_SERVER_HOST=127.0.0.1` and whitespace-only
+ * values don't silently weaken the DNS-rebinding mitigation.
+ */
+function resolveBindHost(): { bindHost: string; isOverride: boolean } {
+  const override = process.env.BIT_SERVER_HOST?.trim();
+  const bindHost = override || '127.0.0.1';
+  return { bindHost, isOverride: !LOOPBACK_HOSTS.has(bindHost.toLowerCase()) };
+}
 
 /**
  * Extract the token from an `Authorization: Bearer <token>` header.
