@@ -33,8 +33,8 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { persistRemotes, validateRemotes, removePendingDirs } from './export-scope-components';
 import { writeLastExport } from './last-export';
-import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref, Version } from '@teambit/objects';
-import { ObjectList } from '@teambit/objects';
+import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref } from '@teambit/objects';
+import { ObjectList, Version } from '@teambit/objects';
 import { Scope, PersistFailed } from '@teambit/legacy.scope';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
 import { ExportAspect } from './export.aspect';
@@ -512,40 +512,37 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
         objectList.addIfNotExist(allObjectsData);
       };
 
+      // when exporting a lane, drop refs that represent main-origin snaps belonging to
+      // components whose home scope differs from the lane's scope. those snaps already live
+      // on the component's home scope; pushing them to the lane scope is duplication and the
+      // main driver of OOM when a lane is far behind main.
       const filterOutForeignMainOriginRefs = async (
         refsPerComp: { modelComponent: ModelComponent; refs: Ref[] }[]
       ): Promise<{ modelComponent: ModelComponent; refs: Ref[] }[]> => {
-        // when exporting a lane, drop refs that represent main-origin snaps belonging to
-        // components whose home scope is different from the lane's scope. those snaps already
-        // live on the component's home scope; pushing them to the lane scope is duplication
-        // (and the main driver of OOM when a lane is far behind main).
         if (!lane) return refsPerComp;
         const filtered = await mapSeries(refsPerComp, async ({ modelComponent, refs }) => {
-          const droppedRefs: string[] = [];
+          // common case: component's home scope is the lane scope — keep every ref without
+          // touching disk to load Version objects.
+          if (modelComponent.scope === remoteNameStr) return { modelComponent, refs };
+          let droppedCount = 0;
           const keptRefs: Ref[] = [];
           for (const ref of refs) {
             const obj = await ref.load(scope.objects);
-            if (!obj || obj.getType() !== 'Version') {
+            if (!(obj instanceof Version)) {
               keptRefs.push(ref);
               continue;
             }
-            const version = obj as Version;
-            const isLaneOrigin = Boolean(version.origin?.lane);
-            const isLocallyMutated = Boolean(version.squashed) || Boolean(version.unrelated);
-            // Older Version objects (pre-0.2.22) may not have `origin.id.scope` populated. Fall
-            // back to the component's home scope (modelComponent.scope) — the snap belongs there
-            // so it's safe to treat as foreign when it differs from the destination lane scope.
-            const componentHomeScope = version.origin?.id?.scope || modelComponent.scope;
-            const isForeignComponentScope = Boolean(componentHomeScope) && componentHomeScope !== remoteNameStr;
-            if (!isLaneOrigin && isForeignComponentScope && !isLocallyMutated) {
-              droppedRefs.push(ref.toString());
+            const isLaneOrigin = Boolean(obj.originLaneId);
+            const isLocallyMutated = Boolean(obj.squashed) || Boolean(obj.unrelated);
+            if (!isLaneOrigin && !isLocallyMutated) {
+              droppedCount += 1;
               continue;
             }
             keptRefs.push(ref);
           }
-          if (droppedRefs.length) {
+          if (droppedCount) {
             this.logger.debug(
-              `export-scope-components, skipping ${droppedRefs.length} main-origin refs for ${modelComponent
+              `export-scope-components, skipping ${droppedCount} main-origin refs for ${modelComponent
                 .id()
                 .toString()} (already on component home scope, not the lane scope)`
             );

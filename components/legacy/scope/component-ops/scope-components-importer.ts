@@ -340,11 +340,11 @@ export class ScopeComponentsImporter {
     let verHistory: VersionHistory;
     try {
       verHistory = await modelComponent.getAndPopulateVersionHistory(this.scope.objects, modelComponent.head);
-    } catch (err) {
-      // Lean-lane-scope: the head Version object may be missing locally because lane export
-      // no longer pre-pulls main history into the lane scope. Signal "needs fetching" so the
-      // caller imports it from the component's home scope.
-      if (err instanceof HeadNotFound || err instanceof ParentNotFound) return id;
+    } catch (err: any) {
+      // Lean-lane-scope: the head/parent Version object may be missing locally because lane
+      // export no longer pre-pulls main history into the lane scope. Signal "needs fetching"
+      // so the caller imports it from the component's home scope.
+      if (errorIsTypeOfMissingObject(err)) return id;
       throw err;
     }
     const { found, missing } = verHistory.getAllHashesFrom(modelComponent.head);
