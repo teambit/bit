@@ -881,10 +881,16 @@ export class CiMain {
       );
     }
 
-    const snappedHeads = snappedComponents.map((c) => ({
-      id: c.id,
-      head: Ref.from(c.version as string),
-    }));
+    const snappedHeads = snappedComponents.map((c) => {
+      // A just-snapped component always has a version; guard defensively so a missing one fails
+      // with a clear message instead of `Ref.from(undefined)`'s opaque "hash argument is empty".
+      if (!c.version) {
+        throw new Error(
+          `unable to recover from the lane-hash mismatch: snapped component "${c.id.toString()}" has no version to rebase onto the remote lane`
+        );
+      }
+      return { id: c.id, head: Ref.from(c.version) };
+    });
 
     await this.rebaseOntoRemoteLane(laneId, snappedHeads);
 
