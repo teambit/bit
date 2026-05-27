@@ -158,7 +158,8 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     const potentialPluginsIndexes = compact(
       manifests.map((manifest, index) => {
-        if (this.aspectLoader.isValidAspect(manifest)) return undefined;
+        const isValid = this.aspectLoader.isValidAspect(manifest);
+        if (isValid) return undefined;
         return index;
       })
     );

@@ -90,7 +90,9 @@ chai.use(chaiFs);
       helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
       // The installation below would fail if we didn't explicitly disallow
       // @pnpm.e2e/failing-postinstall in allowScripts.
-      helper.command.install('@pnpm.e2e/failing-postinstall @pnpm.e2e/pre-and-postinstall-scripts-example --disallow-scripts=@pnpm.e2e/failing-postinstall --allow-scripts=@pnpm.e2e/pre-and-postinstall-scripts-example');
+      helper.command.install(
+        '@pnpm.e2e/failing-postinstall @pnpm.e2e/pre-and-postinstall-scripts-example --disallow-scripts=@pnpm.e2e/failing-postinstall --allow-scripts=@pnpm.e2e/pre-and-postinstall-scripts-example'
+      );
       workspaceJsonc = helper.workspaceJsonc.read();
     });
     after(() => {
@@ -136,14 +138,19 @@ chai.use(chaiFs);
       });
       // The installation below would fail if we didn't explicitly disallow
       // @pnpm.e2e/failing-postinstall in allowScripts.
-      helper.command.install('@pnpm.e2e/failing-postinstall @pnpm.e2e/pre-and-postinstall-scripts-example', undefined, undefined, {
-        envVariables: {
-          BIT_ALLOW_SCRIPTS: JSON.stringify({
-            '@pnpm.e2e/failing-postinstall': false,
-            '@pnpm.e2e/pre-and-postinstall-scripts-example': true,
-          }),
-        },
-      });
+      helper.command.install(
+        '@pnpm.e2e/failing-postinstall @pnpm.e2e/pre-and-postinstall-scripts-example',
+        undefined,
+        undefined,
+        {
+          envVariables: {
+            BIT_ALLOW_SCRIPTS: JSON.stringify({
+              '@pnpm.e2e/failing-postinstall': false,
+              '@pnpm.e2e/pre-and-postinstall-scripts-example': true,
+            }),
+          },
+        }
+      );
       workspaceJsonc = helper.workspaceJsonc.read();
     });
     after(() => {
