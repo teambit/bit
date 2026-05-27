@@ -6,7 +6,11 @@ import { CLIAspect, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
 import { compact, flatten, isEqual, pick } from 'lodash';
-import { isFeatureEnabled, DISABLE_CAPSULE_OPTIMIZATION } from '@teambit/harmony.modules.feature-toggle';
+import {
+  isFeatureEnabled,
+  DISABLE_CAPSULE_OPTIMIZATION,
+  CAPSULE_AUTO_PRUNE,
+} from '@teambit/harmony.modules.feature-toggle';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { ComponentMap, ComponentAspect } from '@teambit/component';
@@ -1275,7 +1279,8 @@ export class IsolatorMain {
    * Register a process-exit hook that, at most once per ~24h, spawns a detached
    * `bit capsule prune` child so the actual work runs out-of-process and never delays
    * the parent's exit. Gated by the mtime of a stamp file under the capsules root so
-   * concurrent Bit invocations can't all trigger it at once.
+   * concurrent Bit invocations can't all trigger it at once, and behind the
+   * `capsule-auto-prune` feature flag while the behavior is being validated.
    */
   registerAutoPruneHook(): void {
     this.cli.registerOnBeforeExit(async () => {
@@ -1288,8 +1293,15 @@ export class IsolatorMain {
   }
 
   private async maybeAutoPrune(): Promise<void> {
+    // Experimental: the automatic prune only runs for users who opt in via the feature flag
+    // (`BIT_FEATURES=capsule-auto-prune` or `bit config set features=capsule-auto-prune`).
+    // Until it's promoted to GA, the default behavior is unchanged — capsules are never
+    // auto-deleted. The manual `bit capsule prune` command is always available regardless.
+    if (!isFeatureEnabled(CAPSULE_AUTO_PRUNE)) return;
+
     // configStore may surface this as either string `'false'` (from `bit config set`)
-    // or boolean `false` (from a hand-edited JSON config) — accept both.
+    // or boolean `false` (from a hand-edited JSON config) — accept both. This is a
+    // secondary escape hatch for once the feature is GA and the flag is removed.
     const enabled = this.configStore.getConfig(CFG_CAPSULES_AUTO_PRUNE);
     if (enabled === 'false' || (enabled as unknown) === false) return;
 
