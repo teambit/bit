@@ -2100,7 +2100,13 @@
         "scope": "teambit.documenter",
         "version": "4.1.14",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/table-row"
+        "rootDir": "components/ui/table-row",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "ui/test-compare": {
         "name": "ui/test-compare",
