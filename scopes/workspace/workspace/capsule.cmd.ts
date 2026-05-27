@@ -341,7 +341,11 @@ use --dry-run first to preview what would be removed.`;
     const items = report.removed
       .slice(0, 50)
       .map((r) =>
-        formatItem(`${chalk.dim(`[${r.kind} · ${r.reason}]`)} ${r.path} ${chalk.dim(`(${formatBytes(r.sizeBytes)})`)}`)
+        formatItem(
+          `${chalk.dim(`[${r.kind} · ${r.reason}]`)} ${r.path}` +
+            (r.originPath ? ` ${chalk.dim(`← ${r.originPath}`)}` : '') +
+            ` ${chalk.dim(`(${formatBytes(r.sizeBytes)})`)}`
+        )
       );
     const truncated =
       report.removed.length > 50

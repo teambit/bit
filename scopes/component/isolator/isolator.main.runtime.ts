@@ -327,7 +327,8 @@ export type PruneCapsulesOptions = {
 };
 
 export type PruneCapsulesReport = {
-  removed: { path: string; kind: CapsuleKind | 'unmarked'; reason: string; sizeBytes: number }[];
+  /** `originPath` is the workspace/scope a capsule was created for (from its marker), when known. */
+  removed: { path: string; kind: CapsuleKind | 'unmarked'; reason: string; sizeBytes: number; originPath?: string }[];
   totalRemovedBytes: number;
   totalSizeBeforeBytes: number;
   totalSizeAfterBytes: number;
@@ -1182,6 +1183,10 @@ export class IsolatorMain {
 
   async deleteCapsules(rootDir?: string): Promise<string> {
     const dirToDelete = rootDir || this.getRootDirOfAllCapsules();
+    const marker = await this.readOriginMarker(dirToDelete);
+    this.logger.debug(
+      `[capsule-delete] removing ${dirToDelete}` + (marker?.originPath ? ` origin=${marker.originPath}` : '')
+    );
     await this.scheduleFastDelete(dirToDelete);
     return dirToDelete;
   }
@@ -1626,8 +1631,13 @@ export class IsolatorMain {
     const totalSizeBefore = computeSizes ? roots.reduce((sum, r) => sum + r.sizeBytes, 0) : 0;
     const removed: PruneCapsulesReport['removed'] = [];
 
-    const removeEntry = (p: string, kind: CapsuleKind | 'unmarked', reason: string, sizeBytes: number) =>
-      this.recordRemoval(removed, { path: p, kind, reason, sizeBytes }, dryRun);
+    const removeEntry = (
+      p: string,
+      kind: CapsuleKind | 'unmarked',
+      reason: string,
+      sizeBytes: number,
+      originPath?: string
+    ) => this.recordRemoval(removed, { path: p, kind, reason, sizeBytes, originPath }, dryRun);
 
     for (const root of roots) {
       if (path.basename(root.path) === datedDirName) {
@@ -1636,20 +1646,20 @@ export class IsolatorMain {
       }
       if (root.kind === 'workspace') {
         if (keepWorkspaceCaps) continue;
-        await removeEntry(root.path, root.kind, 'workspace-cap', root.sizeBytes);
+        await removeEntry(root.path, root.kind, 'workspace-cap', root.sizeBytes, root.originPath);
         continue;
       }
       if (root.kind === 'scope' || root.kind === 'unmarked') {
         const orphan = includeOrphans && root.originPath && !(await fs.pathExists(root.originPath));
         const tooOld = root.lastUsedMs < ageCutoffMs;
         if (orphan) {
-          await removeEntry(root.path, root.kind, 'orphan', root.sizeBytes);
+          await removeEntry(root.path, root.kind, 'orphan', root.sizeBytes, root.originPath);
         } else if (tooOld) {
           // For unmarked dirs, sniff content first to avoid nuking a legacy scope-aspects root.
           if (root.kind === 'unmarked' && (await this.looksLikeAspectsRoot(root.path))) {
             await this.pruneAspectsRootChildren(root.path, ageCutoffMs, dryRun, computeSizes, removed);
           } else {
-            await removeEntry(root.path, root.kind, `older-than-${olderThanDays}d`, root.sizeBytes);
+            await removeEntry(root.path, root.kind, `older-than-${olderThanDays}d`, root.sizeBytes, root.originPath);
           }
         }
         continue;
@@ -1689,6 +1699,10 @@ export class IsolatorMain {
     dryRun: boolean
   ): Promise<void> {
     removed.push(entry);
+    this.logger.debug(
+      `[capsule-prune] ${dryRun ? 'would remove' : 'removing'} [${entry.kind} · ${entry.reason}] ${entry.path}` +
+        (entry.originPath ? ` origin=${entry.originPath}` : '')
+    );
     if (!dryRun) await this.scheduleFastDelete(entry.path);
   }
 
@@ -1777,7 +1791,13 @@ export class IsolatorMain {
         const sizeBytes = computeSizes ? await this.computeDirSize(childPath) : 0;
         await this.recordRemoval(
           removed,
-          { path: childPath, kind: 'scope-aspect', reason: 'aspect-older-than-cutoff', sizeBytes },
+          {
+            path: childPath,
+            kind: 'scope-aspect',
+            reason: 'aspect-older-than-cutoff',
+            sizeBytes,
+            originPath: marker?.originPath,
+          },
           dryRun
         );
       }
@@ -1799,7 +1819,7 @@ export class IsolatorMain {
     // oldest aspect-version children to evict.
     const roots = await this.listAllCapsuleRoots();
     const totalBytes = roots.reduce((sum, r) => sum + r.sizeBytes, 0);
-    const aspectChildren: Array<{ path: string; lastUsedMs: number; sizeBytes: number }> = [];
+    const aspectChildren: Array<{ path: string; lastUsedMs: number; sizeBytes: number; originPath?: string }> = [];
     for (const root of roots) {
       if (
         root.kind !== 'scope-aspects-root' &&
@@ -1822,7 +1842,7 @@ export class IsolatorMain {
         const stat = await fs.stat(childPath).catch(() => undefined);
         const lastUsedMs = (lastUsed ?? stat?.mtime ?? new Date(0)).getTime();
         const sizeBytes = await this.computeDirSize(childPath);
-        aspectChildren.push({ path: childPath, lastUsedMs, sizeBytes });
+        aspectChildren.push({ path: childPath, lastUsedMs, sizeBytes, originPath: marker?.originPath });
       }
     }
     aspectChildren.sort((a, b) => a.lastUsedMs - b.lastUsedMs);
@@ -1833,7 +1853,13 @@ export class IsolatorMain {
       if (remainingBytes <= targetBytes) break;
       await this.recordRemoval(
         removed,
-        { path: child.path, kind: 'scope-aspect', reason: `size-target-${sizeTargetGb}gb`, sizeBytes: child.sizeBytes },
+        {
+          path: child.path,
+          kind: 'scope-aspect',
+          reason: `size-target-${sizeTargetGb}gb`,
+          sizeBytes: child.sizeBytes,
+          originPath: child.originPath,
+        },
         dryRun
       );
       remainingBytes -= child.sizeBytes;
