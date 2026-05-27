@@ -135,7 +135,10 @@ export class ScopeIndex {
     for (const bitObject of bitObjects) {
       if (!(bitObject instanceof Lane)) continue;
       const hash = bitObject.hash().toString();
-      const foundByHash = this.find(hash) as LaneItem | undefined;
+      // Look up specifically among lanes. `find()` spans all index types, so a (rare) hash
+      // collision with a ComponentItem/Symlink would make the `toLaneId()` call in the error
+      // message below throw and mask the real LaneId-collision error.
+      const foundByHash = this.index.lanes.find((li) => li.hash === hash);
       // Find any *other* entry that already uses this LaneId — exclude the same-hash entry
       // (that's either a no-op or a legitimate rename of the lane we're saving). A different
       // entry with the same LaneId and a different hash means two distinct lane objects would

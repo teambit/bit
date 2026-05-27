@@ -412,6 +412,11 @@ export class CiMain {
         // as-is, so a leftover '-' would land in the policy.
         this.filterDeletedDependenciesFromConfig(mergedConfig);
 
+        // Upsert: addEntry throws if an entry for this component already exists. A prior
+        // --keep-lane run that crashed mid-snap (or otherwise left unmerged.json entries behind)
+        // would otherwise make every later run throw here, skip the component, and keep serving
+        // stale config. Remove any existing entry first so repeated runs converge on main's latest.
+        legacyScope.objects.unmergedComponents.removeComponent(laneComp.id);
         legacyScope.objects.unmergedComponents.addEntry({
           id: { scope: laneComp.id.scope, name: laneComp.id.fullName },
           head: mainHead,
