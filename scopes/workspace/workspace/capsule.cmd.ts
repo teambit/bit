@@ -2,6 +2,7 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import { formatItem, formatTitle, formatSuccessSummary, formatHint } from '@teambit/cli';
 import type { CapsuleList, IsolateComponentsOptions, IsolatorMain, PruneCapsulesReport } from '@teambit/isolator';
+import { CAPSULE_ORIGIN_FILE } from '@teambit/isolator';
 import type { ScopeMain } from '@teambit/scope';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { CFG_CAPSULES_MAX_AGE_DAYS, CFG_CAPSULES_MAX_SIZE_GB } from '@teambit/legacy.constants';
@@ -208,7 +209,7 @@ To initialize a workspace: bit init`);
       for (const entry of entries) {
         if (!entry.isDirectory() || entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
         const childPath = path.join(rootPath, entry.name);
-        const markerPath = path.join(childPath, '.bit-capsule-origin.json');
+        const markerPath = path.join(childPath, CAPSULE_ORIGIN_FILE);
         try {
           const stat = await fs.stat(markerPath);
           if (stat.mtime.getTime() < cutoffMs) count += 1;

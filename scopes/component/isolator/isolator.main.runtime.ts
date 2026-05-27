@@ -1293,28 +1293,59 @@ export class IsolatorMain {
 
     const stampPath = path.join(root, '.last-capsule-prune');
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const isStampFresh = async (): Promise<boolean> => {
+      try {
+        const stat = await fs.stat(stampPath);
+        return Date.now() - stat.mtime.getTime() < ONE_DAY_MS;
+      } catch {
+        return false; // missing — needs a prune
+      }
+    };
+    // Fast path: stamp is recent, nothing to do (no contention here).
+    if (await isStampFresh()) return;
+
+    // Atomic claim: only one process across all concurrent bit invocations may win the
+    // daily slot. `wx` is O_CREAT|O_EXCL — it throws if the lock already exists, so the
+    // check-and-write below can't race. The lock is held only for the few ms it takes to
+    // re-check the stamp and spawn the detached child, then removed in `finally`.
+    const claimPath = `${stampPath}.claim`;
+    let claimed = false;
     try {
-      const stat = await fs.stat(stampPath);
-      if (Date.now() - stat.mtime.getTime() < ONE_DAY_MS) return;
+      await fs.close(await fs.open(claimPath, 'wx'));
+      claimed = true;
     } catch {
-      // missing — first run, fall through and prune
+      // Another process is mid-claim, or a previous run leaked the lock. If it's stale
+      // (older than the daily window), reclaim it; otherwise yield.
+      try {
+        const claimStat = await fs.stat(claimPath);
+        if (Date.now() - claimStat.mtime.getTime() < ONE_DAY_MS) return;
+      } catch {
+        return;
+      }
     }
-    // Write the stamp first to claim the slot — even if the spawn fails, we don't retry
-    // within 24h. The detached child sees this recent stamp on its own exit and skips its
-    // own auto-prune, so no recursion.
-    await fs.outputFile(stampPath, '');
+    try {
+      // Re-check under the lock: a process that just held it may have refreshed the stamp.
+      if (await isStampFresh()) return;
+      await fs.outputFile(stampPath, '');
 
-    // Guard against non-numeric or empty config values: a stray string would otherwise
-    // become NaN and silently disable age/size enforcement.
-    const maxAgeRaw = this.configStore.getConfig(CFG_CAPSULES_MAX_AGE_DAYS);
-    const olderThanDays = toFiniteNumber(maxAgeRaw) ?? 30;
-    const maxSizeRaw = this.configStore.getConfig(CFG_CAPSULES_MAX_SIZE_GB);
-    const sizeTargetGb = toFiniteNumber(maxSizeRaw) ?? 10;
+      // Guard against non-numeric/empty config (NaN) and negative values (which would
+      // invert the age cutoff / size target and wipe the whole cache).
+      const olderThanDays = Math.max(0, toFiniteNumber(this.configStore.getConfig(CFG_CAPSULES_MAX_AGE_DAYS)) ?? 30);
+      const sizeTargetGb = Math.max(0, toFiniteNumber(this.configStore.getConfig(CFG_CAPSULES_MAX_SIZE_GB)) ?? 10);
 
-    this.logger.debug(
-      `[auto-prune] spawning detached child. olderThanDays=${olderThanDays}, sizeTargetGb=${sizeTargetGb}`
-    );
-    this.spawnDetachedAutoPrune(olderThanDays, sizeTargetGb);
+      this.logger.debug(
+        `[auto-prune] spawning detached child. olderThanDays=${olderThanDays}, sizeTargetGb=${sizeTargetGb}`
+      );
+      this.spawnDetachedAutoPrune(olderThanDays, sizeTargetGb);
+    } finally {
+      if (claimed) {
+        try {
+          await fs.remove(claimPath);
+        } catch {
+          // ignore — a stale claim lock is reclaimed by the age check above
+        }
+      }
+    }
   }
 
   /**
@@ -1370,10 +1401,11 @@ export class IsolatorMain {
       child.unref();
     } catch (err: any) {
       this.logger.debug(`failed to spawn detached trash sweep: ${err.message}`);
-      // Don't leak the lock if the spawn itself failed.
+      // Don't leak the lock if the spawn itself failed. Use fs-extra's removeSync
+      // (rmSync isn't in the @types/fs-extra version pinned by this component).
       if (lockPath) {
         try {
-          fs.rmSync(lockPath, { force: true });
+          fs.removeSync(lockPath);
         } catch {
           // ignore
         }
@@ -1584,14 +1616,18 @@ export class IsolatorMain {
    *   - after the above, if sizeTargetGb given and size still exceeds it, evict oldest-first
    */
   async pruneCapsules(opts: PruneCapsulesOptions = {}): Promise<PruneCapsulesReport> {
-    const olderThanDays = opts.olderThanDays ?? 30;
+    // Clamp to >= 0: a negative age would put the cutoff in the future (everything looks
+    // "too old" → whole cache deleted); a negative size target would force evicting
+    // everything. Both are almost certainly user error, so floor them at 0.
+    const olderThanDays = Math.max(0, opts.olderThanDays ?? 30);
+    const sizeTargetGb = opts.sizeTargetGb === undefined ? undefined : Math.max(0, opts.sizeTargetGb);
     const includeOrphans = opts.includeOrphans !== false;
     const keepWorkspaceCaps = opts.keepWorkspaceCaps === true;
     const dryRun = opts.dryRun === true;
     // Size accounting requires an expensive recursive lstat across the whole cache. Skip
     // it by default so the foreground command returns in ms (deletes are O(1) renames);
     // force on for size-target enforcement and when the caller asks for byte accounting.
-    const computeSizes = opts.withSizes === true || opts.sizeTargetGb !== undefined;
+    const computeSizes = opts.withSizes === true || sizeTargetGb !== undefined;
     const ageCutoffMs = Date.now() - olderThanDays * 24 * 60 * 60 * 1000;
     const datedDirName = this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR) || 'dated-capsules';
 
@@ -1635,8 +1671,8 @@ export class IsolatorMain {
       }
     }
 
-    if (opts.sizeTargetGb !== undefined) {
-      await this.applySizeTarget(opts.sizeTargetGb, removed, dryRun);
+    if (sizeTargetGb !== undefined) {
+      await this.applySizeTarget(sizeTargetGb, removed, dryRun);
     }
 
     const totalRemovedBytes = removed.reduce((sum, r) => sum + r.sizeBytes, 0);
