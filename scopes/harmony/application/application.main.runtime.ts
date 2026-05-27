@@ -26,6 +26,7 @@ import type { DeploymentProvider } from './deployment-provider';
 import { AppNotFound } from './exceptions';
 import { ApplicationAspect } from './application.aspect';
 import { AppsBuildTask } from './build-application.task';
+import { PlatformAppsBuildTask } from './build-platform-application.task';
 import { RunCmd } from './run.cmd';
 import { AppService } from './application.service';
 import { AppCmd, AppListCmd } from './app.cmd';
@@ -533,7 +534,7 @@ export class ApplicationMain {
     const appCmd = new AppCmd(application);
     appCmd.commands = [new AppListCmd(application), new RunCmd(application, logger)];
     aspectLoader.registerPlugins([new AppPlugin(appSlot)]);
-    builder.registerBuildTasks([new AppsBuildTask(application)]);
+    builder.registerBuildTasks([new AppsBuildTask(application), new PlatformAppsBuildTask(application)]);
     builder.registerSnapTasks([new DeployTask(application, builder)]);
     builder.registerTagTasks([new DeployTask(application, builder)]);
     envs.registerService(appService);
