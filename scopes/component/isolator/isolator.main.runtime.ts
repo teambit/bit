@@ -1379,14 +1379,10 @@ export class IsolatorMain {
   }
 
   /**
-   * Spawn a detached Node subprocess that recursively removes `trashRoot`. Using
+   * Spawn one detached Node process that recursively removes `trashRoot`. Using
    * `process.execPath` with an inline `fs.rmSync` keeps this portable across macOS,
-   * Linux, and Windows (where there's no `rm` binary).
-   */
-  /**
-   * Spawn one detached Node process to sweep `trashRoot`. When `lockPath` is given,
-   * the child clears the lock on exit so the next bit invocation can claim a fresh
-   * sweep slot.
+   * Linux, and Windows (where there's no `rm` binary). When `lockPath` is given, the
+   * child clears the lock on exit so the next bit invocation can claim a fresh sweep slot.
    */
   private spawnDetachedSweep(trashRoot: string, lockPath?: string): void {
     const script = lockPath
@@ -1602,11 +1598,6 @@ export class IsolatorMain {
     return total;
   }
 
-  async getCapsulesTotalSize(): Promise<number> {
-    const roots = await this.listAllCapsuleRoots();
-    return roots.reduce((sum, r) => sum + r.sizeBytes, 0);
-  }
-
   /**
    * Apply the prune rules from the plan:
    *   - workspace caps: deleted unconditionally (unless keepWorkspaceCaps)
@@ -1635,10 +1626,8 @@ export class IsolatorMain {
     const totalSizeBefore = computeSizes ? roots.reduce((sum, r) => sum + r.sizeBytes, 0) : 0;
     const removed: PruneCapsulesReport['removed'] = [];
 
-    const removeEntry = async (p: string, kind: CapsuleKind | 'unmarked', reason: string, sizeBytes: number) => {
-      removed.push({ path: p, kind, reason, sizeBytes });
-      if (!dryRun) await this.scheduleFastDelete(p);
-    };
+    const removeEntry = (p: string, kind: CapsuleKind | 'unmarked', reason: string, sizeBytes: number) =>
+      this.recordRemoval(removed, { path: p, kind, reason, sizeBytes }, dryRun);
 
     for (const root of roots) {
       if (path.basename(root.path) === datedDirName) {
@@ -1658,7 +1647,7 @@ export class IsolatorMain {
         } else if (tooOld) {
           // For unmarked dirs, sniff content first to avoid nuking a legacy scope-aspects root.
           if (root.kind === 'unmarked' && (await this.looksLikeAspectsRoot(root.path))) {
-            await this.pruneAspectsRootChildren(root.path, ageCutoffMs, includeOrphans, dryRun, computeSizes, removed);
+            await this.pruneAspectsRootChildren(root.path, ageCutoffMs, dryRun, computeSizes, removed);
           } else {
             await removeEntry(root.path, root.kind, `older-than-${olderThanDays}d`, root.sizeBytes);
           }
@@ -1666,7 +1655,7 @@ export class IsolatorMain {
         continue;
       }
       if (root.kind === 'scope-aspects-root') {
-        await this.pruneAspectsRootChildren(root.path, ageCutoffMs, includeOrphans, dryRun, computeSizes, removed);
+        await this.pruneAspectsRootChildren(root.path, ageCutoffMs, dryRun, computeSizes, removed);
         continue;
       }
     }
@@ -1687,6 +1676,20 @@ export class IsolatorMain {
       totalSizeAfterBytes: totalSizeAfter,
       dryRun,
     };
+  }
+
+  /**
+   * Record a removal in the prune report and, unless this is a dry run, actually delete it
+   * (fast rename-to-trash). Keeps the "report and delete are gated by the same dryRun flag"
+   * invariant in one place so the per-kind prune helpers can't drift apart.
+   */
+  private async recordRemoval(
+    removed: PruneCapsulesReport['removed'],
+    entry: PruneCapsulesReport['removed'][number],
+    dryRun: boolean
+  ): Promise<void> {
+    removed.push(entry);
+    if (!dryRun) await this.scheduleFastDelete(entry.path);
   }
 
   /**
@@ -1718,13 +1721,11 @@ export class IsolatorMain {
       if (entry.name === todayDir) continue;
       const childPath = path.join(rootPath, entry.name);
       const sizeBytes = computeSizes ? await this.computeDirSize(childPath) : 0;
-      removed.push({
-        path: childPath,
-        kind: 'unmarked',
-        reason: 'dated-capsules-not-today',
-        sizeBytes,
-      });
-      if (!dryRun) await this.scheduleFastDelete(childPath);
+      await this.recordRemoval(
+        removed,
+        { path: childPath, kind: 'unmarked', reason: 'dated-capsules-not-today', sizeBytes },
+        dryRun
+      );
     }
   }
 
@@ -1741,10 +1742,19 @@ export class IsolatorMain {
     }
   }
 
+  /**
+   * Prune per-aspect-version children of a scope-aspects root purely by age (marker mtime,
+   * which is touched on every aspect load).
+   *
+   * Note there's deliberately no orphan check here: a scope-aspect child's `originPath` is
+   * the *logical* scope-aspects path (e.g. `<scope.path>-aspects`) used only to hash the
+   * capsule root dir name — it need not exist as a real directory, so treating a missing
+   * `originPath` as "orphan" would wrongly delete capsules of currently-used aspects.
+   * Orphan pruning is still honored elsewhere for `workspace`/`scope` kinds.
+   */
   private async pruneAspectsRootChildren(
     rootPath: string,
     ageCutoffMs: number,
-    includeOrphans: boolean,
     dryRun: boolean,
     computeSizes: boolean,
     removed: PruneCapsulesReport['removed']
@@ -1763,23 +1773,13 @@ export class IsolatorMain {
       const lastUsed = marker ? await this.getOriginMarkerMtime(childPath) : undefined;
       const stat = await fs.stat(childPath).catch(() => undefined);
       const lastUsedMs = (lastUsed ?? stat?.mtime ?? new Date(0)).getTime();
-      // IMPORTANT: do not orphan-check scope-aspect children. Their `originPath` is the
-      // *logical* scope-aspects path (e.g. `<scope.path>-aspects`) used only to hash the
-      // capsule root dir name — it doesn't have to exist as a real directory. Treating
-      // a missing originPath as "orphan" here would wrongly delete the per-version
-      // capsules of currently-used aspects on every prune. Age-based pruning (via the
-      // marker mtime, which is touched on every aspect load) is the correct signal.
-      // The `includeOrphans` flag is still honored elsewhere for `workspace`/`scope` kinds.
-      void includeOrphans;
       if (lastUsedMs < ageCutoffMs) {
         const sizeBytes = computeSizes ? await this.computeDirSize(childPath) : 0;
-        removed.push({
-          path: childPath,
-          kind: 'scope-aspect',
-          reason: `aspect-older-than-cutoff`,
-          sizeBytes,
-        });
-        if (!dryRun) await this.scheduleFastDelete(childPath);
+        await this.recordRemoval(
+          removed,
+          { path: childPath, kind: 'scope-aspect', reason: 'aspect-older-than-cutoff', sizeBytes },
+          dryRun
+        );
       }
     }
   }
@@ -1795,8 +1795,10 @@ export class IsolatorMain {
   ): Promise<void> {
     const targetBytes = sizeTargetGb * 1024 * 1024 * 1024;
     const removedPaths = new Set(removed.map((r) => r.path));
-    // Re-walk what's left to find the oldest aspect-version children.
+    // Re-walk what's left (one pass, with sizes) to find both the current total and the
+    // oldest aspect-version children to evict.
     const roots = await this.listAllCapsuleRoots();
+    const totalBytes = roots.reduce((sum, r) => sum + r.sizeBytes, 0);
     const aspectChildren: Array<{ path: string; lastUsedMs: number; sizeBytes: number }> = [];
     for (const root of roots) {
       if (
@@ -1824,17 +1826,16 @@ export class IsolatorMain {
       }
     }
     aspectChildren.sort((a, b) => a.lastUsedMs - b.lastUsedMs);
-    let remainingBytes =
-      (await this.getCapsulesTotalSize()) - (dryRun ? removed.reduce((s, r) => s + r.sizeBytes, 0) : 0);
+    // In dry-run the standard-prune entries are still on disk (counted in totalBytes), so
+    // subtract them; in a real run they were already moved to trash and excluded from the walk.
+    let remainingBytes = totalBytes - (dryRun ? removed.reduce((s, r) => s + r.sizeBytes, 0) : 0);
     for (const child of aspectChildren) {
       if (remainingBytes <= targetBytes) break;
-      removed.push({
-        path: child.path,
-        kind: 'scope-aspect',
-        reason: `size-target-${sizeTargetGb}gb`,
-        sizeBytes: child.sizeBytes,
-      });
-      if (!dryRun) await this.scheduleFastDelete(child.path);
+      await this.recordRemoval(
+        removed,
+        { path: child.path, kind: 'scope-aspect', reason: `size-target-${sizeTargetGb}gb`, sizeBytes: child.sizeBytes },
+        dryRun
+      );
       remainingBytes -= child.sizeBytes;
     }
   }
