@@ -11,8 +11,10 @@ import type { SnapResults, SnappingMain } from '@teambit/snapping';
 import { ExportAspect, type ExportMain } from '@teambit/export';
 import { ImporterAspect, type ImporterMain } from '@teambit/importer';
 import { CheckoutAspect, checkoutOutput, type CheckoutMain } from '@teambit/checkout';
-import { MergeLanesAspect, type MergeLanesMain } from '@teambit/merge-lanes';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
+import { getDivergeData } from '@teambit/component.snap-distance';
+import { ComponentConfigMerger } from '@teambit/config-merger';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import execa from 'execa';
 import chalk from 'chalk';
 import type { ReleaseType } from 'semver';
@@ -108,7 +110,6 @@ export class CiMain {
     ExportAspect,
     ImporterAspect,
     CheckoutAspect,
-    MergeLanesAspect,
   ];
 
   static slots: any = [];
@@ -130,15 +131,13 @@ export class CiMain {
 
     private checkout: CheckoutMain,
 
-    private mergeLanes: MergeLanesMain,
-
     private logger: Logger,
 
     private config: CiWorkspaceConfig
   ) {}
 
   static async provider(
-    [cli, workspace, loggerAspect, builder, status, lanes, snapping, exporter, importer, checkout, mergeLanes]: [
+    [cli, workspace, loggerAspect, builder, status, lanes, snapping, exporter, importer, checkout]: [
       CLIMain,
       Workspace,
       LoggerMain,
@@ -149,24 +148,11 @@ export class CiMain {
       ExportMain,
       ImporterMain,
       CheckoutMain,
-      MergeLanesMain,
     ],
     config: CiWorkspaceConfig
   ) {
     const logger = loggerAspect.createLogger(CiAspect.id);
-    const ci = new CiMain(
-      workspace,
-      builder,
-      status,
-      lanes,
-      snapping,
-      exporter,
-      importer,
-      checkout,
-      mergeLanes,
-      logger,
-      config
-    );
+    const ci = new CiMain(workspace, builder, status, lanes, snapping, exporter, importer, checkout, logger, config);
     const ciCmd = new CiCmd(workspace, logger);
     ciCmd.commands = [
       new CiVerifyCmd(workspace, logger, ci),
@@ -352,42 +338,128 @@ export class CiMain {
   }
 
   /**
-   * Merge `main` (the default lane) into the given lane. Brings forward any changes that landed
-   * on main since the lane was forked — particularly config changes (env, deps, etc.) that live
-   * in Version objects under `.bit/objects` and are NOT visible via the workspace's git checkout.
+   * Sync *config-only* changes from main onto the lane — without a full `bit lane merge`.
    *
-   * Always runs the merge (and logs it). When main is at or behind the lane's fork point there's
-   * nothing to bring forward, so it merges 0 components — a harmless no-op, logged as "Merged 0
-   * component(s) from main".
+   * In this workflow git is the source of truth for files: the PR author merges the default branch
+   * into their PR branch, so source changes arrive via git. The one thing git can't carry is
+   * config that's already been *tagged into objects* on main — e.g. another PR ran `bit env set` /
+   * `bit deps set`; those records lived in `.bitmap`, rode git into main, and `bit ci merge` baked
+   * them into the component's Version (clearing them from `.bitmap`). A long-running PR's lane
+   * would otherwise miss them.
+   *
+   * A full lane merge is the wrong tool here: it does a 3-way *file* merge and refuses to run while
+   * the workspace has modified components — but in `bit ci pr` the workspace is always dirty (the
+   * PR's changes, not yet snapped). So instead we do a per-component 3-way merge of the aspect
+   * *config only* (base = common ancestor, ours = lane, theirs = main), keeping the PR's config on
+   * conflict, and stash the result on an `unmergedComponents` entry's `mergedConfig`. The
+   * subsequent `snap` reads it (via the aspects-merger on component load) and bakes main's config
+   * into the new snap, while the snap's files still come from the workspace (git). No file
+   * checkout, so no clean-workspace requirement.
    */
-  private async mergeMainIntoLane(laneId: LaneId) {
+  private async syncConfigFromMain(laneId: LaneId) {
+    const legacyScope = this.workspace.scope.legacyScope;
+    const repo = legacyScope.objects;
     const mainLaneId = this.lanes.getDefaultLaneId();
-    this.logger.console(chalk.blue(`Merging ${mainLaneId.toString()} into ${laneId.toString()}`));
-    try {
-      const result = await this.mergeLanes.mergeLane(mainLaneId, laneId, {
-        // 'ours' = keep the lane's (PR's) content on a bit-level component conflict. File-level
-        // conflicts between main and the PR branch are a separate concern that the user resolves
-        // through git itself; by the time we reach this merge, the workspace already reflects
-        // whatever the user chose. If a bit component still appears conflicted at this stage
-        // (e.g. the user resolved the git conflict but main also touched the same component on
-        // the bit-objects side via deps/env set), we err on the side of the PR's content — the
-        // PR author's changes shouldn't be silently overridden by main.
-        mergeStrategy: 'ours' as MergeStrategy,
-        skipDependencyInstallation: true,
-        skipFetch: false,
-        excludeNonLaneComps: true,
-        // Don't auto-snap: any lane heads main moved forward become the lane's heads directly,
-        // and our subsequent `snap` will create one merge snap that combines the merged state
-        // with this PR commit's changes.
-        noAutoSnap: true,
-      });
-      this.logger.console(chalk.green(`Merged ${result.mergedSuccessfullyIds.length} component(s) from main`));
-    } catch (e: any) {
-      // Surface the merge error rather than silently continuing — if main had config changes
-      // that we can't bring in, the PR build won't reflect production config, and that's
-      // exactly the bug we're trying to prevent.
-      throw new Error(`Failed to merge main into ${laneId.toString()}: ${e?.message || e}`);
+    const currentLane = await this.lanes.getCurrentLane();
+    if (!currentLane) return;
+    const workspaceIds = this.workspace.listIds();
+
+    this.logger.console(chalk.blue(`Syncing config changes from ${mainLaneId.toString()} into ${laneId.toString()}`));
+
+    const syncedIds: ComponentID[] = [];
+    for (const laneComp of currentLane.components) {
+      try {
+        const modelComponent = await legacyScope.getModelComponent(laneComp.id);
+        const mainHead = modelComponent.head; // the component's head on main
+        if (!mainHead) continue; // component isn't on main — nothing to sync from there
+        const laneHead = laneComp.head;
+        if (mainHead.isEqual(laneHead)) continue; // lane already points at main's head
+
+        const divergeData = await getDivergeData({
+          repo,
+          modelComponent,
+          sourceHead: laneHead,
+          targetHead: mainHead,
+          throws: false,
+        });
+        // Only sync when main has snaps the lane doesn't (target ahead, or diverged). If the lane
+        // is ahead-only / equal there's nothing on main to bring in.
+        if (!divergeData.isTargetAhead() && !divergeData.isDiverged()) continue;
+
+        const currentVersion = await modelComponent.loadVersion(laneHead.toString(), repo);
+        const otherVersion = await modelComponent.loadVersion(mainHead.toString(), repo);
+        // base = common ancestor. When the lane is strictly behind main (no divergence) the common
+        // ancestor IS the lane head, so the lane's own aspects serve as the base.
+        const baseSnap = divergeData.commonSnapBeforeDiverge;
+        const baseVersion = baseSnap ? await modelComponent.loadVersion(baseSnap.toString(), repo) : currentVersion;
+
+        const configMerger = new ComponentConfigMerger(
+          laneComp.id.toStringWithoutVersion(),
+          workspaceIds,
+          undefined, // merging from main (the default lane) — there's no Lane object for it
+          currentVersion.extensions,
+          baseVersion.extensions,
+          otherVersion.extensions,
+          laneId.toString(),
+          mainLaneId.toString(),
+          this.logger,
+          'ours' as MergeStrategy // keep the PR's config on a genuine conflict
+        );
+        const mergedConfig = configMerger.merge().getSuccessfullyMergedConfig();
+        if (!mergedConfig || !Object.keys(mergedConfig).length) continue;
+
+        // Strip dependency deletion markers (version: '-'); the aspects-merger applies mergedConfig
+        // as-is, so a leftover '-' would land in the policy.
+        this.filterDeletedDependenciesFromConfig(mergedConfig);
+
+        legacyScope.objects.unmergedComponents.addEntry({
+          id: { scope: laneComp.id.scope, name: laneComp.id.fullName },
+          head: mainHead,
+          laneId: mainLaneId,
+          mergedConfig,
+        });
+        syncedIds.push(laneComp.id);
+        this.logger.console(
+          chalk.blue(
+            `  ${laneComp.id.toStringWithoutVersion()}: applying main's config (${Object.keys(mergedConfig).join(', ')})`
+          )
+        );
+      } catch (e: any) {
+        // Best-effort per component: one component's config-merge quirk shouldn't abort the whole
+        // `bit ci pr`. Log and move on — the build just won't reflect that component's main-side
+        // config this run.
+        this.logger.console(
+          chalk.yellow(`  ${laneComp.id.toStringWithoutVersion()}: skipping config sync from main (${e?.message || e})`)
+        );
+      }
     }
+
+    if (!syncedIds.length) {
+      this.logger.console(chalk.blue('No config changes from main to sync'));
+      return;
+    }
+    await legacyScope.objects.unmergedComponents.write();
+    // The components were already loaded (and their aspects cached) earlier in this run, before the
+    // unmergedComponents entries existed. Clear the cache so the upcoming `snap` reloads them and
+    // the aspects-merger folds in the synced `mergedConfig`.
+    this.workspace.clearAllComponentsCache();
+    this.logger.console(chalk.green(`Synced config from main for ${syncedIds.length} component(s)`));
+  }
+
+  /**
+   * Copied from `merging.main.runtime` (`filterDeletedDependenciesFromConfig`): the config merge
+   * can emit deletion markers (`version: '-'`) for deps removed on main. The aspects-merger applies
+   * `mergedConfig` verbatim, so strip those here to avoid writing a policy entry with version '-'.
+   */
+  private filterDeletedDependenciesFromConfig(mergeConfig?: Record<string, any>): void {
+    const policy: Record<string, Array<{ version?: string }>> | undefined =
+      mergeConfig?.[DependencyResolverAspect.id]?.policy;
+    if (!policy) return;
+    Object.keys(policy).forEach((depType) => {
+      const filtered = policy[depType].filter((dep) => dep.version !== '-');
+      if (filtered.length === 0) delete policy[depType];
+      else policy[depType] = filtered;
+    });
   }
 
   /**
@@ -527,33 +599,32 @@ export class CiMain {
         await this.switchToLane(laneId.toString());
         // Verify the switch actually landed us on the lane before doing any lane work.
         // switchToLane logs-and-swallows switch failures, so without this guard a failed switch
-        // would let mergeMainIntoLane and snap run against the wrong lane.
+        // would let syncConfigFromMain and snap run against the wrong lane.
         const switchedLane = await this.lanes.getCurrentLane();
         if (switchedLane?.name !== laneId.name) {
           throw new Error(
             `Expected to be on lane ${laneId.name} after switching, but current lane is ${switchedLane?.name ?? 'main'}`
           );
         }
-        // Merge main into the lane so that any config changes that landed on main since the lane
-        // was created are reflected on the lane. Without this, subsequent PR commits would build
-        // against the stale config captured at fork time — e.g. `bit deps set` / `bit env set`
-        // changes that landed on main aren't tracked by git (they live in Version objects under
-        // `.bit/objects`), so the workspace's git checkout alone can't surface them.
+        // Sync config-only changes from main onto the lane, so config that was tagged into objects
+        // on main since the lane forked (e.g. `bit deps set` / `bit env set` from another PR, not
+        // visible via the workspace's git checkout) is reflected on the lane. Source files are
+        // git's job — see syncConfigFromMain.
         //
-        // BUT only merge when the PR branch is actually up to date with the default branch. If the
-        // PR is behind (hasn't pulled main's latest), its git checkout still reflects the older
-        // fork point, so pulling main's newer bit state into the lane would desync the lane from
-        // the source. In that case the author merges the default branch into their PR in git, and
-        // the next `bit ci pr` propagates it here.
+        // BUT only when the PR branch is actually up to date with the default branch. If the PR is
+        // behind (hasn't pulled main's latest), its git checkout still reflects the older fork
+        // point, so pulling main's newer config onto the lane would desync the lane from the
+        // source. The author merges the default branch into their PR in git; the next `bit ci pr`
+        // then propagates it here.
         if (await this.isBranchBehindDefaultBranch()) {
           this.logger.console(
             chalk.yellow(
-              `PR branch is behind the default branch — skipping merge from main. ` +
+              `PR branch is behind the default branch — skipping config sync from main. ` +
                 `Merge or rebase the default branch into your PR to pick up main's latest config.`
             )
           );
         } else {
-          await this.mergeMainIntoLane(laneId);
+          await this.syncConfigFromMain(laneId);
         }
       } else {
         this.logger.console(chalk.blue(`Creating lane ${laneId.toString()}`));
@@ -889,9 +960,9 @@ export class CiMain {
       const beforeParents = version.parents.map((p) => p.toString().slice(0, 9)).join(',');
       // Re-point only the lane-lineage parent (the first parent — the predecessor snap on the
       // lane) to the remote head, preserving any additional parents. A snap produced after
-      // `mergeMainIntoLane` is a merge snap whose second parent links to main's merged head;
-      // overwriting the whole array with `[remoteHead]` would silently drop that merge edge and
-      // corrupt the lane's ancestry.
+      // `syncConfigFromMain` is a merge snap whose second parent links to main's head; overwriting
+      // the whole array with `[remoteHead]` would silently drop that merge edge and corrupt the
+      // lane's ancestry.
       version.parents = [remoteHead, ...version.parents.slice(1)];
       const afterParents = version.parents.map((p) => p.toString().slice(0, 9)).join(',');
       this.logger.console(
