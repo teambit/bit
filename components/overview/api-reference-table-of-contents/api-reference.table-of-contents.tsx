@@ -1,8 +1,7 @@
 import type { HTMLAttributes } from 'react';
 import React from 'react';
 import classNames from 'classnames';
-import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
-import type { APINode, APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
+import type { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 import { sortAPINodes } from '@teambit/api-reference.utils.sort-api-nodes';
 import { Link as BaseLink } from '@teambit/base-react.navigation.link';
 
@@ -48,7 +47,7 @@ export function APIReferenceTableOfContents({ apiModel, className }: APIReferenc
   );
 }
 
-function sortGroupedAPINodes(a: [string, APINode<SchemaNode>[]], b: [string, APINode<SchemaNode>[]]) {
+function sortGroupedAPINodes(a: [string, unknown], b: [string, unknown]) {
   const [aType] = a;
   const [bType] = b;
   return aType.localeCompare(bType);

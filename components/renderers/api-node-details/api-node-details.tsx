@@ -45,18 +45,18 @@ export function APINodeDetails({
   const navigate = useNavigate();
   const Editor = useCodeEditor();
 
-  const signatureEditorRef = useRef<any>();
-  const signatureMonacoRef = useRef<any>();
+  const signatureEditorRef = useRef<any>(null);
+  const signatureMonacoRef = useRef<any>(null);
 
-  const exampleEditorRef = useRef<any>();
-  const exampleMonacoRef = useRef<any>();
+  const exampleEditorRef = useRef<any>(null);
+  const exampleMonacoRef = useRef<any>(null);
 
   const routeToAPICmdId = useRef<string | null>(null);
   const apiUrlToRoute = useRef<string | null>(null);
 
-  const hoverProviderDispose = useRef<any>();
+  const hoverProviderDispose = useRef<any>(null);
 
-  const rootRef = useRef() as React.MutableRefObject<HTMLDivElement>;
+  const rootRef = useRef<HTMLDivElement | null>(null) as React.MutableRefObject<HTMLDivElement>;
   const apiRef = useRef<HTMLDivElement | null>(null);
 
   const signatureContainerRef = useRef<HTMLDivElement | null>(null);

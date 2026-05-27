@@ -149,7 +149,7 @@ export function TypeRefName({
   name: string;
   url?: string;
   external?: boolean;
-  children?: React.ReactChild;
+  children?: React.ReactNode;
   internal?: boolean;
   exported?: boolean;
   packageName?: string;

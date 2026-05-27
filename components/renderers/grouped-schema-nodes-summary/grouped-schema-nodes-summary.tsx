@@ -94,7 +94,7 @@ export function GroupedSchemaNodesSummary({
   return (
     <div {...rest} className={classnames(styles.groupNodesContainer, className)}>
       {groupedNodes.map(([type, groupedMembersByType], index) => {
-        const skip = skipNode && type && skipNode(type, groupedMembersByType);
+        const skip = skipNode && type && skipNode(type, groupedMembersByType as any);
         const skipRenderingTable = type === 'methods' || type === 'constructors' || type === 'setters';
         const typeId = type && encodeURIComponent(type);
         const _headings = (type && headings[type]) || headings.default;
@@ -116,7 +116,7 @@ export function GroupedSchemaNodesSummary({
                   headings={_headings}
                 />
                 {groupedMembersByType.map((member) => {
-                  return renderTable(type ?? '', member, _headings);
+                  return renderTable(type ?? '', member as any, _headings);
                 })}
               </div>
             )}
@@ -132,7 +132,7 @@ export function GroupedSchemaNodesSummary({
                 return (
                   <FunctionNodeSummary
                     key={`${member.__schema}-${member.name}`}
-                    node={member}
+                    node={member as any}
                     apiNodeRendererProps={apiNodeRendererProps}
                     groupElementClassName={typeId}
                     headings={_headings}
