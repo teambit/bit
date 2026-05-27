@@ -673,16 +673,23 @@ export class CiMain {
       if (foundErr) {
         this.logger.console(chalk.red(`Found error: ${foundErr.message}`));
       }
-      this.logger.console('🔄 Cleanup');
-      const targetLane = originalLane?.name ?? 'main';
-      this.logger.console(chalk.blue(`Switching back to ${targetLane}`));
+      // Best-effort cleanup: switch back to the original lane/main. Wrap it so a cleanup
+      // failure (failed switch/checkout) only warns instead of throwing out of `finally` and
+      // masking the real error from snap/export above (also avoids no-unsafe-finally).
+      try {
+        this.logger.console('🔄 Cleanup');
+        const targetLane = originalLane?.name ?? 'main';
+        this.logger.console(chalk.blue(`Switching back to ${targetLane}`));
 
-      const currentLane = await this.lanes.getCurrentLane();
-      if (currentLane) {
-        await this.switchToLane(targetLane);
-      } else {
-        this.logger.console(chalk.yellow('Already on main, checking out to head'));
-        await this.lanes.checkout.checkout({ head: true, skipNpmInstall: true });
+        const currentLane = await this.lanes.getCurrentLane();
+        if (currentLane) {
+          await this.switchToLane(targetLane);
+        } else {
+          this.logger.console(chalk.yellow('Already on main, checking out to head'));
+          await this.lanes.checkout.checkout({ head: true, skipNpmInstall: true });
+        }
+      } catch (cleanupErr: any) {
+        this.logger.consoleWarning(`Cleanup after PR snap failed: ${cleanupErr.message}`);
       }
     }
   }

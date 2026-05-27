@@ -77,6 +77,13 @@ describe('ci commands', function () {
     it('should complete successfully', () => {
       expect(prOutput).to.include('PR command executed successfully');
     });
+    it('should use a random-suffix temporary lane (default flow, no --keep-lane)', () => {
+      // The default flow snaps onto `<lane>-<random>` and renames it to the final name at export
+      // time, so concurrent CI jobs don't collide on the same lane object. Assert the temp-lane
+      // step happened (and ended up under the final name, checked below) to guard the default path.
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.match(/Created temporary lane .+\/feature-test-pr-\w+/);
+    });
     it('should create a lane with the components and switch back to main', () => {
       const lanes = helper.command.listLanesParsed();
       expect(lanes.currentLane).to.equal('main');
@@ -951,10 +958,13 @@ module.exports = { isPositive };`
       const comp2Log = helper.command.logParsed(`${helper.scopes.remote}/comp2`);
 
       const comp1HasA = comp1Log.some((entry: any) => entry.message?.includes('commit-A'));
-      const comp1HasB = comp1Log.some((entry: any) => entry.message?.includes('commit-B'));
       const comp2HasB = comp2Log.some((entry: any) => entry.message?.includes('commit-B'));
+      // Runner A snaps comp1 (commit-A); runner B snaps comp2 (commit-B). Whether comp1 *also*
+      // ends up with a commit-B snap is scheduling-dependent: if runner B adopts A's lane before
+      // snapping, comp1's source already matches the adopted head and isn't re-snapped, so comp1
+      // may carry only commit-A. The stable invariant is that each runner's own change survived
+      // the concurrent push — assert that, not the timing-dependent comp1/commit-B overlap.
       expect(comp1HasA, `expected commit-A snap on comp1, got: ${JSON.stringify(comp1Log, null, 2)}`).to.be.true;
-      expect(comp1HasB, `expected commit-B snap on comp1, got: ${JSON.stringify(comp1Log, null, 2)}`).to.be.true;
       expect(comp2HasB, `expected commit-B snap on comp2, got: ${JSON.stringify(comp2Log, null, 2)}`).to.be.true;
     });
   });
