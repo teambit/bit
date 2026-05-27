@@ -30,6 +30,7 @@ import { SchemaAspect } from './schema.aspect';
 import type { SchemaExtractor } from './schema-extractor';
 import { SchemaCommand } from './schema.cmd';
 import { SchemaDiffCommand } from './schema-diff.cmd';
+import type { LaneDiffHandler } from './schema-diff.cmd';
 import { schemaSchema } from './schema.graphql';
 import { SchemaTask, SCHEMA_TASK_NAME } from './schema.task';
 import { SchemaService } from './schema.service';
@@ -257,6 +258,13 @@ export class SchemaMain {
     return component.state.aspects.get(SchemaAspect.id)?.data;
   }
 
+  private schemaDiffCommand?: SchemaDiffCommand;
+
+  registerLaneDiffHandler(handler: LaneDiffHandler): void {
+    if (!this.schemaDiffCommand) throw new Error('schema diff command not initialized');
+    this.schemaDiffCommand.laneDiffHandler = handler;
+  }
+
   /**
    * Register custom impact rules for API diff assessment.
    * Custom rules take priority over default rules.
@@ -330,8 +338,10 @@ export class SchemaMain {
     const schema = new SchemaMain(parserSlot, impactRuleSlot, envs, config, builder, workspace, logger, impactAssessor);
     const schemaTask = new SchemaTask(SchemaAspect.id, schema, logger);
     builder.registerBuildTasks([schemaTask]);
+    const schemaDiffCmd = new SchemaDiffCommand(schema, component, logger);
+    schema.schemaDiffCommand = schemaDiffCmd;
     const schemaCmd = new SchemaCommand(schema, component, logger);
-    schemaCmd.commands = [new SchemaDiffCommand(schema, component, logger)];
+    schemaCmd.commands = [schemaDiffCmd];
     cli.register(schemaCmd);
     graphql.register(() => schemaSchema(schema));
     envs.registerService(new SchemaService());
