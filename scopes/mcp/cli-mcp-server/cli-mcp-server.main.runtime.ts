@@ -122,7 +122,7 @@ export class CliMcpServerMain {
           if (startedPort) this.serverPort = startedPort;
         }
         if (this.serverPort) {
-          this.serverUrl = `http://127.0.0.1:${this.serverPort}/api`;
+          this.serverUrl = this.buildServerUrl(this.serverPort);
           // bit-server 1.13.166+ requires a bearer token; older versions don't
           // write the token file and getBitServerToken returns undefined.
           this.serverToken = this.getBitServerToken(cwd);
@@ -163,6 +163,24 @@ export class CliMcpServerMain {
       this.logger.error(`[MCP-DEBUG] error getting existing port from bit server at ${cwd}. err: ${err.message}`);
       return undefined;
     }
+  }
+
+  /**
+   * Build the URL used to dial the local bit-server. Mirrors the api-server's
+   * bind host: `BIT_SERVER_HOST` lets hosted environments (e.g. cloud
+   * workspaces) reach bit-server on a non-loopback interface. `0.0.0.0` /
+   * `::` are bind-only wildcards (not valid destinations) so dial loopback
+   * instead; raw IPv6 addresses get bracketed for URL safety.
+   */
+  private buildServerUrl(port: number): string {
+    const override = process.env.BIT_SERVER_HOST?.trim();
+    let host: string;
+    if (!override || override === '0.0.0.0') host = '127.0.0.1';
+    else if (override === '::') host = '[::1]';
+    else if (override.includes(':') && override.split(':').length > 2 && !override.startsWith('['))
+      host = `[${override}]`;
+    else host = override;
+    return `http://${host}:${port}/api`;
   }
 
   /**
@@ -226,7 +244,7 @@ export class CliMcpServerMain {
                 const port = parseInt(portMatch[1], 10);
                 this.logger.debug(`[MCP-DEBUG] bit-server started on port ${port}`);
                 this.serverPort = port;
-                this.serverUrl = `http://127.0.0.1:${port}/api`;
+                this.serverUrl = this.buildServerUrl(port);
                 resolve(port);
               }
             }

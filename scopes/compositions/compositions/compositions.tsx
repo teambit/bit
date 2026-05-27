@@ -14,7 +14,6 @@ import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/docs.ui.queries.get-docs';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
-import type { PreviewIframeAttrs } from '@teambit/preview.ui.component-preview';
 import {
   PreviewPropsAggregator,
   SandboxPermissionsAggregator,
@@ -95,7 +94,6 @@ export function Compositions({
   const properties = useDocs(component.id);
   const previewSandboxHooks = usePreviewSandboxSlot?.values() ?? [];
   const previewPropsHooks = usePreviewPropsSlot?.values() ?? [];
-  const [previewAttrs, setPreviewAttrs] = useState<PreviewIframeAttrs>({});
   const isMobile = useIsMobile();
   const showSidebar = !isMobile && component.compositions.length > 0;
   const [isSidebarOpen, setSidebarOpenness] = useState(showSidebar);
@@ -224,22 +222,21 @@ export function Compositions({
             onSandboxChange={setSandboxValue}
             component={component}
           />
-          <PreviewPropsAggregator
-            hooks={previewPropsHooks}
-            onPreviewPropsChange={setPreviewAttrs}
-            component={component}
-          />
           <div className={styles.previewArea}>
             {isDraggingTray && <div className={styles.dragOverlay} />}
-            <CompositionContent
-              {...previewAttrs}
-              className={styles.compositionPanel}
-              emptyState={emptyState}
-              component={component}
-              selected={currentComposition}
-              queryParams={queryParams}
-              sandbox={sandboxValue}
-            />
+            <PreviewPropsAggregator hooks={previewPropsHooks} component={component}>
+              {(previewAttrs) => (
+                <CompositionContent
+                  {...previewAttrs}
+                  className={styles.compositionPanel}
+                  emptyState={emptyState}
+                  component={component}
+                  selected={currentComposition}
+                  queryParams={queryParams}
+                  sandbox={sandboxValue}
+                />
+              )}
+            </PreviewPropsAggregator>
             {showControlsTray && (
               <LiveControlsTray
                 trayRef={trayRef}
