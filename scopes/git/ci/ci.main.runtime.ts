@@ -481,15 +481,14 @@ export class CiMain {
       const defaultRefSha = (await git.revparse([`refs/remotes/origin/${defaultBranch}`])).trim();
       const headSha = (await git.revparse(['HEAD'])).trim();
       if (defaultRefSha === headSha) return false; // identical → up to date
-      try {
-        // `merge-base --is-ancestor A B` exits 0 iff A is an ancestor of B. When origin/<default>
-        // is an ancestor of HEAD, the PR already contains it → not behind.
-        await git.raw(['merge-base', '--is-ancestor', defaultRefSha, headSha]);
-        return false;
-      } catch {
-        // non-zero exit → origin/<default> is not contained in HEAD → the PR is behind.
-        return true;
-      }
+      // We deliberately do NOT use `merge-base --is-ancestor`: it reports the answer via exit code
+      // (0 = ancestor, 1 = not), but simple-git's `raw` resolves rather than rejects on exit code
+      // 1, so the "not an ancestor" case was silently read as "is an ancestor" — the behind check
+      // never fired. Instead compute the merge-base and compare: `merge-base(A, B) === A` iff A is
+      // an ancestor of B. When origin/<default> is an ancestor of HEAD the PR already contains it
+      // (not behind); otherwise the default branch has commits HEAD doesn't (behind).
+      const mergeBase = (await git.raw(['merge-base', defaultRefSha, headSha])).trim();
+      return mergeBase !== defaultRefSha;
     } catch (err: any) {
       this.logger.console(
         chalk.yellow(
@@ -931,22 +930,26 @@ export class CiMain {
     const legacyScope = this.workspace.scope.legacyScope;
     const repo = legacyScope.objects;
 
-    // Fetch the remote (winning) lane and the Version objects it points at FIRST, before any
-    // destructive local change. The fetch is the only step here that can fail on the network;
-    // doing it before removing our local lane means a failure leaves the workspace on its
-    // still-valid local lane rather than pointing at a lane object we already deleted (which
-    // would strand the just-snapped Versions until the next CI run repairs it).
-    // `importLaneObject` returns the remote lane even while our local lane still exists — it just
-    // skips auto-persisting it, which is fine because we persist it explicitly via saveLane below.
+    // Our local lane object (the one we just snapped onto) shares the LaneId with the remote
+    // (winning) lane but has a different, randomly-minted hash. Fetching the remote lane writes it
+    // into our scope via `sources.mergeLane`, which rejects a same-id/different-hash lane ("a lane
+    // with the same id already exists with a different hash") — so we must drop our local lane
+    // object BEFORE the fetch, not after. We can't use `lanes.removeLanes` (it refuses to remove
+    // the currently-checked-out lane), so we trash the lane object directly; that also removes it
+    // from the scope index, so `loadLane` (the guard's lookup) no longer finds it. Only the lane
+    // pointer is trashed — the Version objects we snapped stay in the scope for the rebase below,
+    // and the fetch immediately re-persists a same-id lane object, satisfying the current-lane
+    // workspace pointer again.
+    const localLane = await legacyScope.loadLane(laneId);
+    if (localLane) {
+      this.logger.console(chalk.blue(`Dropping local lane object ${laneId.toString()} to adopt the remote one`));
+      await repo.moveObjectsToTrash([localLane.hash()]);
+    }
+
+    // Fetch the remote (winning) lane and the Version objects it points at. With our local lane
+    // object gone, `mergeLane` sees no conflicting same-id lane and persists the remote one.
     this.logger.console(chalk.blue(`Fetching remote lane ${laneId.toString()}`));
     const remoteLane = await this.lanes.fetchLaneWithItsComponents(laneId);
-
-    // Now drop our local lane object so the explicit saveLane below can persist the remote
-    // (winning) one without tripping the "different hash" guard in writeObjectsToTheFS /
-    // sources.mergeLane. The Version objects we snapped stay in the scope — only the lane pointer
-    // is removed.
-    this.logger.console(chalk.blue(`Removing local lane ${laneId.toString()} to adopt the remote one`));
-    await this.lanes.removeLanes([laneId.toString()], { remote: false, force: true });
 
     // Rewrite each snapped Version's parent to point at the remote head for that component.
     // Bit's Version objects aren't content-addressed — `_hash` is set once and not derived
