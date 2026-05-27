@@ -147,7 +147,7 @@ export class ScopeIndex {
             `a lane with the same id already exists with a different hash ` +
             `(existing hash: ${sameLaneId.hash}, incoming hash: ${hash}` +
             (foundByHash ? `, this is a rename from "${foundByHash.toLaneId().toString()}"` : '') +
-            `). this typically indicates a concurrent push race — retry the operation.`
+            `). This typically indicates a concurrent push race — retry the operation.`
         );
       }
     }
@@ -169,7 +169,7 @@ export class ScopeIndex {
           `unable to add lane "${bitObject.toLaneId().toString()}" to the scope index. ` +
             `a lane with the same id already exists with a different hash ` +
             `(existing hash: ${sameLaneId.hash}, incoming hash: ${hash}). ` +
-            `this typically indicates a concurrent push race — retry the operation.`
+            `This typically indicates a concurrent push race — retry the operation.`
         );
       }
       if (found) {

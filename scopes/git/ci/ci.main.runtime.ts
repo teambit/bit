@@ -356,7 +356,9 @@ export class CiMain {
    * on main since the lane was forked — particularly config changes (env, deps, etc.) that live
    * in Version objects under `.bit/objects` and are NOT visible via the workspace's git checkout.
    *
-   * Skips silently if main is at or behind the lane's fork point (nothing to merge).
+   * Always runs the merge (and logs it). When main is at or behind the lane's fork point there's
+   * nothing to bring forward, so it merges 0 components — a harmless no-op, logged as "Merged 0
+   * component(s) from main".
    */
   private async mergeMainIntoLane(laneId: LaneId) {
     const mainLaneId = this.lanes.getDefaultLaneId();

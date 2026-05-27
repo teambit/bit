@@ -678,7 +678,7 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
         try {
           await removePendingDirs(remotes, clientId);
         } catch (cleanupErr: any) {
-          this.logger.warn(
+          this.logger.consoleWarning(
             `failed to clean up pending dirs after persist failure: ${cleanupErr?.message || cleanupErr}`
           );
         }
