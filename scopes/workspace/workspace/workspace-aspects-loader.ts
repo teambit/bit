@@ -49,6 +49,22 @@ export type AspectPackage = { packageName: string; version: string };
 export class WorkspaceAspectsLoader {
   private consumer: Consumer;
   private resolvedInstalledAspects: Map<string, string | null>;
+  /**
+   * In-flight `loadAspects` promises, keyed by aspect id. Lets concurrent
+   * callers asking for the same aspect await the existing load instead of
+   * each one kicking off a fresh capsule-build / isolation cycle.
+   *
+   * Why this matters: pass1's `consumer.loadComponents` (with
+   * `loadExtensions: true`) fires the `onComponentConfigLoading` subscriber
+   * for every component in parallel; each subscriber calls
+   * `loadComponentsExtensions` -> `loadAspects` for that component's env.
+   * Without dedup, N components sharing one env trigger N parallel
+   * `isolator.isolateComponents` calls for the same aspect, each emitting a
+   * "resolved aspect(s)" line and re-doing capsule setup.
+   * `aspectLoader.isAspectLoaded` only flips true after the load finishes,
+   * so the per-call filter doesn't catch this race.
+   */
+  private inFlightAspects: Map<string, Promise<string[]>> = new Map();
 
   constructor(
     private workspace: Workspace,
@@ -76,6 +92,58 @@ export class WorkspaceAspectsLoader {
    */
   async loadAspects(
     ids: string[] = [],
+    throwOnError?: boolean,
+    neededFor?: string,
+    opts: WorkspaceLoadAspectsOptions = {}
+  ): Promise<string[]> {
+    // In-flight dedup: if any of `ids` are already being loaded by a
+    // concurrent caller, await their promises instead of starting fresh
+    // loads. Disabled when `forceLoad` is requested.
+    if (!opts.forceLoad) {
+      const existingPromises: Array<Promise<string[]>> = [];
+      const newIds: string[] = [];
+      const newIdsSet = new Set<string>();
+      for (const id of ids) {
+        const existing = this.inFlightAspects.get(id);
+        if (existing) {
+          if (!existingPromises.includes(existing)) existingPromises.push(existing);
+        } else if (!newIdsSet.has(id)) {
+          newIds.push(id);
+          newIdsSet.add(id);
+        }
+      }
+      if (!newIds.length && existingPromises.length) {
+        const results = await Promise.all(existingPromises);
+        return results.flat();
+      }
+      if (newIds.length && existingPromises.length) {
+        const newLoadPromise = this.loadAspectsInner(newIds, throwOnError, neededFor, opts);
+        for (const id of newIds) this.inFlightAspects.set(id, newLoadPromise);
+        const cleanup = () => {
+          for (const id of newIds) {
+            if (this.inFlightAspects.get(id) === newLoadPromise) this.inFlightAspects.delete(id);
+          }
+        };
+        newLoadPromise.then(cleanup, cleanup);
+        const all = await Promise.all([newLoadPromise, ...existingPromises]);
+        return all.flat();
+      }
+      // newIds.length > 0 && !existingPromises.length — fall through to register & run
+      const newLoadPromise = this.loadAspectsInner(newIds, throwOnError, neededFor, opts);
+      for (const id of newIds) this.inFlightAspects.set(id, newLoadPromise);
+      const cleanup = () => {
+        for (const id of newIds) {
+          if (this.inFlightAspects.get(id) === newLoadPromise) this.inFlightAspects.delete(id);
+        }
+      };
+      newLoadPromise.then(cleanup, cleanup);
+      return newLoadPromise;
+    }
+    return this.loadAspectsInner(ids, throwOnError, neededFor, opts);
+  }
+
+  private async loadAspectsInner(
+    ids: string[],
     throwOnError?: boolean,
     neededFor?: string,
     opts: WorkspaceLoadAspectsOptions = {}

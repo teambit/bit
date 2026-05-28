@@ -313,7 +313,7 @@ export function Compositions({
 }
 
 type LiveControlsTrayProps = {
-  trayRef: React.RefObject<HTMLDivElement | null>;
+  trayRef: React.RefObject<HTMLDivElement>;
   collapsed: boolean;
   height: number | null;
   ready: boolean;
