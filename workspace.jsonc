@@ -56,7 +56,7 @@
         "@pnpm/cli.default-reporter": "1100.2.3",
         "@pnpm/colorize-semver-diff": "1.0.1",
         "@pnpm/config.parse-overrides": "1100.0.1",
-        "@pnpm/config.reader": "1101.4.1",
+        "@pnpm/config.reader": "1101.3.1",
         "@pnpm/deps.inspection.list": "1100.0.14",
         "@pnpm/deps.inspection.tree-builder": "1100.0.12",
         "@pnpm/deps.path": "1100.0.5",
@@ -710,8 +710,9 @@
       "uri-js": "npm:uri-js-replace",
       "encoding": "-",
       // bit.cloud's registry mirror only has @pnpm/config.env-replace up to 3.0.2.
-      // Pin to a version that exists there; downgrade is safe for env interpolation logic.
-      "@pnpm/config.env-replace": "3.0.2"
+      // Newer @pnpm/config.reader (1101.3.2+) requires env-replace ^4.1.0, which is missing.
+      // Force config.reader to the last version using env-replace 3.x so install can succeed.
+      "@pnpm/config.reader": "1101.3.1"
     },
     "nodeVersion": "22.22.0",
     "engineStrict": true,
