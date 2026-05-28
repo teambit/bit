@@ -661,30 +661,14 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
     const clientId = resumeExportId || Date.now().toString();
     await this.pushRemotesPendingDir(clientId, manyObjectsPerRemote, resumeExportId);
     await validateRemotes(remotes, clientId, Boolean(resumeExportId));
-    try {
-      await persistRemotes(manyObjectsPerRemote, clientId);
-    } catch (err) {
-      // `validateRemotes` cleans up pending dirs on its own failure, and `pushRemotesPendingDir`
-      // does the same. `persistRemotes` does not — its retry loop swallows individual attempts'
-      // errors and only throws once they all fail, by which point the pending dir is stranded.
-      // A stranded pending dir blocks the export queue (`export-validate.waitIfNeeded`) for the
-      // next client that arrives, so a subsequent retry (e.g. `bit ci pr` rebasing after a
-      // concurrent-push race) gets a "server is busy" error that never resolves.
-      //
-      // Cleanup is best-effort: if it throws (e.g. network blip while talking to the remote),
-      // log a warning and rethrow the *original* persist error, since that's the actual cause
-      // the caller needs to see and act on.
-      if (!resumeExportId) {
-        try {
-          await removePendingDirs(remotes, clientId);
-        } catch (cleanupErr: any) {
-          this.logger.consoleWarning(
-            `failed to clean up pending dirs after persist failure: ${cleanupErr?.message || cleanupErr}`
-          );
-        }
-      }
-      throw err;
-    }
+    // Intentionally no cleanup on `persistRemotes` failure: pending dirs are the substrate for
+    // `bit export --resume <clientId>` AND act as a cross-client lock via `export-validate`'s
+    // waitIfNeeded queue (sorted by clientId). In a multi-scope persist with a partial-success
+    // failure (scopeA persisted, scopeB exhausted retries), removing the pending dirs would let
+    // another client race in against an inconsistent partial-commit state and would also strand
+    // the original user with no objects to resume from. Leave them in place; the user's recovery
+    // is `--resume` (or, on the server side, an explicit pending-dir cleanup tool).
+    await persistRemotes(manyObjectsPerRemote, clientId);
   }
 
   private async pushRemotesPendingDir(
