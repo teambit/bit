@@ -4,8 +4,9 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
-import { Extensions } from '@teambit/legacy.constants';
+import { Extensions, IS_WINDOWS } from '@teambit/legacy.constants';
 import chaiFs from 'chai-fs';
+import { HttpHelper } from '../http-helper';
 chai.use(chaiFs);
 
 describe('ci commands', function () {
@@ -854,16 +855,30 @@ module.exports = { isPositive };`
    * Uses `populateComponents` for cheap, reliably-compiling components. `--build` still
    * runs the full pipeline (compile, schema, pkg), giving enough overlap between the two
    * runners that they reach the export step around the same time.
+   *
+   * The remote is served via HTTP (`bit start`) rather than file://, so the long-running
+   * scope server keeps its in-memory scope-index fresh via `watchSystemFiles` while two
+   * concurrent runners push — i.e. the production setup. Without that, the loser's
+   * `ExportValidate` runs against a scope object cached *before* `waitIfNeeded`, missing
+   * the winner's just-persisted lane and silently overwriting it on persist.
    */
-  describe('bit ci pr with concurrent runners on the same PR branch', function () {
+  (IS_WINDOWS ? describe.skip : describe)('bit ci pr with concurrent runners on the same PR branch', function () {
     let runnerAResult: { stdout: string; exitCode: number; failed: boolean };
     let runnerBResult: { stdout: string; exitCode: number; failed: boolean };
     let runnerAPath: string;
     let runnerBPath: string;
+    let httpHelper: HttpHelper;
 
     before(async () => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       setupGitRemote();
+
+      // Start the long-running HTTP scope server BEFORE the initial export so all exports
+      // (initial + concurrent) hit the watcher-backed server. The fs:// remote registered by
+      // setWorkspaceWithRemoteScope is replaced (same scope name) by the http:// one.
+      httpHelper = new HttpHelper(helper);
+      await httpHelper.start();
+      helper.scopeHelper.addRemoteHttpScope();
 
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
@@ -945,13 +960,14 @@ module.exports = { isPositive };`
 
     it('should leave exactly one final-named lane on the remote', () => {
       const remoteLanes = helper.command.listRemoteLanesParsed();
-      const matching = remoteLanes.lanes.filter((l: any) => l.name === 'feature-concurrent-ci-pr');
+      // Lane shape differs between transports: file:// flattens to `l.name`, http:// keeps `l.id.name`.
+      const matching = remoteLanes.lanes.filter((l: any) => (l.id?.name ?? l.name) === 'feature-concurrent-ci-pr');
       expect(matching).to.have.lengthOf(1);
     });
 
     it('should preserve snaps from BOTH runners chained on the lane', () => {
       helper.scopeHelper.reInitWorkspace();
-      helper.scopeHelper.addRemoteScope();
+      helper.scopeHelper.addRemoteHttpScope();
       helper.command.importLane('feature-concurrent-ci-pr', '-x');
 
       const comp1Log = helper.command.logParsed(`${helper.scopes.remote}/comp1`);
@@ -966,6 +982,10 @@ module.exports = { isPositive };`
       // the concurrent push — assert that, not the timing-dependent comp1/commit-B overlap.
       expect(comp1HasA, `expected commit-A snap on comp1, got: ${JSON.stringify(comp1Log, null, 2)}`).to.be.true;
       expect(comp2HasB, `expected commit-B snap on comp2, got: ${JSON.stringify(comp2Log, null, 2)}`).to.be.true;
+    });
+
+    after(() => {
+      httpHelper.killHttp();
     });
   });
 });
