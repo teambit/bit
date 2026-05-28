@@ -160,6 +160,9 @@ describe('lane export skips main history objects', function () {
     let laneSnapOnL: string;
     let mergeSnapOnL: string;
     let snapOnFork: string;
+    let mainSnapPre1: string;
+    let mainSnapPre2: string;
+    let mainSnapPost: string;
 
     before(() => {
       // scope-C: components' home scope (default remote)
@@ -186,7 +189,9 @@ describe('lane export skips main history objects', function () {
       // build main history on scope-C
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
+      mainSnapPre1 = helper.command.getHead('comp1');
       helper.command.tagAllWithoutBuild('--unmodified');
+      mainSnapPre2 = helper.command.getHead('comp1');
       helper.command.export();
 
       // create the original lane on scope-L
@@ -199,6 +204,7 @@ describe('lane export skips main history objects', function () {
       const laneWs = helper.scopeHelper.cloneWorkspace();
       helper.command.switchLocalLane('main');
       helper.command.tagAllWithoutBuild('--unmodified');
+      mainSnapPost = helper.command.getHead('comp1');
       helper.command.export();
       helper.scopeHelper.getClonedWorkspace(laneWs);
       helper.command.import();
@@ -216,12 +222,20 @@ describe('lane export skips main history objects', function () {
         helper.command.export('--fork-lane-new-scope');
       });
 
-      it('scope-F should NOT have the main-origin snaps (still lean after fork)', () => {
-        // confirm fork didn't pull main history along
+      it('scope-F should hold the forked lane snap and the merge snap', () => {
+        expect(() => helper.command.catObject(snapOnFork, false, scopeFPath)).to.not.throw();
+        expect(() => helper.command.catObject(mergeSnapOnL, false, scopeFPath)).to.not.throw();
+      });
+
+      it('scope-F should NOT contain any main-origin snaps (fork stays lean)', () => {
+        expect(() => helper.command.catObject(mainSnapPre1, false, scopeFPath)).to.throw();
+        expect(() => helper.command.catObject(mainSnapPre2, false, scopeFPath)).to.throw();
+        expect(() => helper.command.catObject(mainSnapPost, false, scopeFPath)).to.throw();
         const vh = helper.command.catVersionHistory(`${scopeC}/comp1`, scopeFPath);
         const hashes = (vh.versions as Array<{ hash: string }>).map((v) => v.hash);
-        expect(hashes).to.include(snapOnFork);
-        expect(hashes).to.include(mergeSnapOnL);
+        expect(hashes).to.not.include(mainSnapPre1);
+        expect(hashes).to.not.include(mainSnapPre2);
+        expect(hashes).to.not.include(mainSnapPost);
       });
 
       it('a fresh consumer can import the forked lane without errors', () => {
