@@ -403,13 +403,14 @@ Runs lint, build, and status checks to catch dependency drift or broken builds e
 **Description**: Exports a feature lane to Bit Cloud when a Pull Request is opened or updated.  
 Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. Cleans up by switching back to main. Use in pull-request CI pipelines after tests and before deploy.
 
-| **Option**            | **Option alias** | **Description**                                                                         |
-| --------------------- | :--------------: | --------------------------------------------------------------------------------------- |
-| `--message <message>` |       `-m`       | If set, set it as the snap message, if not, try and grab from git-commit-message        |
-| `--lane <lane>`       |       `-l`       | If set, use as the lane name, if not available, grab from git-branch name               |
-| `--build`             |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI           |
-| `--strict`            |       `-s`       | Set to true to fail on warnings as well as errors, false (default) only fails on errors |
-| `--dry-run`           |       `-d`       | Run the full pipeline but skip exporting to remote (build runs only if --build is set)  |
+| **Option**            | **Option alias** | **Description**                                                                                                                |
+| --------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------------------ |
+| `--message <message>` |       `-m`       | If set, set it as the snap message, if not, try and grab from git-commit-message                                               |
+| `--lane <lane>`       |       `-l`       | If set, use as the lane name, if not available, grab from git-branch name                                                      |
+| `--build`             |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI                                                  |
+| `--strict`            |       `-s`       | Set to true to fail on warnings as well as errors, false (default) only fails on errors                                        |
+| `--dry-run`           |       `-d`       | Run the full pipeline but skip exporting to remote (build runs only if --build is set)                                         |
+| `--keep-lane`         |                  | Reuse the same remote lane across PR commits (preserves lane history and cloud UI edits) instead of recreating it on every run |
 
 ### ci merge
 
