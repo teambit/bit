@@ -758,6 +758,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/graph"
     },
+    "graph/tree/collapsable-tree-node": {
+        "name": "graph/tree/collapsable-tree-node",
+        "scope": "teambit.base-ui",
+        "version": "0.0.10",
+        "mainFile": "index.ts",
+        "rootDir": "components/graph/tree/collapsable-tree-node"
+    },
     "graphql": {
         "name": "graphql",
         "scope": "teambit.harmony",
@@ -1297,6 +1304,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/objects"
     },
+    "overview/api-reference-table-of-contents": {
+        "name": "overview/api-reference-table-of-contents",
+        "scope": "teambit.api-reference",
+        "version": "0.0.39",
+        "mainFile": "index.ts",
+        "rootDir": "components/overview/api-reference-table-of-contents"
+    },
     "overview/renderers/grouped-schema-nodes-overview-summary": {
         "name": "overview/renderers/grouped-schema-nodes-overview-summary",
         "scope": "teambit.api-reference",
@@ -1465,6 +1479,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/renaming"
     },
+    "renderers/api-node-details": {
+        "name": "renderers/api-node-details",
+        "scope": "teambit.api-reference",
+        "version": "0.0.82",
+        "mainFile": "index.ts",
+        "rootDir": "components/renderers/api-node-details"
+    },
+    "renderers/class": {
+        "name": "renderers/class",
+        "scope": "teambit.api-reference",
+        "version": "0.0.84",
+        "mainFile": "index.ts",
+        "rootDir": "components/renderers/class"
+    },
     "renderers/default-node-renderers": {
         "name": "renderers/default-node-renderers",
         "scope": "teambit.api-reference",
@@ -1472,12 +1500,54 @@
         "mainFile": "index.ts",
         "rootDir": "components/renderers/default-node-renderers"
     },
+    "renderers/function": {
+        "name": "renderers/function",
+        "scope": "teambit.api-reference",
+        "version": "0.0.86",
+        "mainFile": "index.ts",
+        "rootDir": "components/renderers/function"
+    },
+    "renderers/grouped-schema-nodes-summary": {
+        "name": "renderers/grouped-schema-nodes-summary",
+        "scope": "teambit.api-reference",
+        "version": "0.0.80",
+        "mainFile": "index.ts",
+        "rootDir": "components/renderers/grouped-schema-nodes-summary"
+    },
+    "renderers/inference-type": {
+        "name": "renderers/inference-type",
+        "scope": "teambit.api-reference",
+        "version": "0.0.64",
+        "mainFile": "index.ts",
+        "rootDir": "components/renderers/inference-type"
+    },
+    "renderers/parameter": {
+        "name": "renderers/parameter",
+        "scope": "teambit.api-reference",
+        "version": "0.0.67",
+        "mainFile": "index.ts",
+        "rootDir": "components/renderers/parameter"
+    },
+    "renderers/schema-node-member-summary": {
+        "name": "renderers/schema-node-member-summary",
+        "scope": "teambit.api-reference",
+        "version": "0.0.78",
+        "mainFile": "index.ts",
+        "rootDir": "components/renderers/schema-node-member-summary"
+    },
     "renderers/tuple-type": {
         "name": "renderers/tuple-type",
         "scope": "teambit.api-reference",
         "version": "0.0.24",
         "mainFile": "index.ts",
         "rootDir": "components/renderers/tuple-type"
+    },
+    "renderers/type-ref": {
+        "name": "renderers/type-ref",
+        "scope": "teambit.api-reference",
+        "version": "0.0.99",
+        "mainFile": "index.ts",
+        "rootDir": "components/renderers/type-ref"
     },
     "ripple": {
         "name": "ripple",
@@ -2024,6 +2094,19 @@
         "version": "0.0.934",
         "mainFile": "index.ts",
         "rootDir": "components/ui/side-bar"
+    },
+    "ui/table-row": {
+        "name": "ui/table-row",
+        "scope": "teambit.documenter",
+        "version": "4.1.14",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/table-row",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "ui/test-compare": {
         "name": "ui/test-compare",

@@ -1,0 +1,37 @@
+.inferenceWrapper {
+  position: relative;
+
+  > pre {
+    // override syntax highlighter inline styles so the type box is theme-aware
+    background: var(--surface01-color, #f1f2f4) !important;
+    color: var(--bit-accent-text, #6c5ce7) !important;
+
+    > code {
+      // override syntax highlighter code font size + force inherit so default text follows the theme
+      font-size: var(--bit-p-xxs, 12px) !important;
+      background: transparent !important;
+      color: inherit !important;
+    }
+  }
+}
+
+.isSpread {
+  > span {
+    font-style: italic;
+  }
+}
+
+.syntaxTooltip {
+  background-color: var(--surface01-color, rgb(241, 242, 244));
+}
+
+.infoIcon {
+  font-style: normal;
+  padding-left: 4px;
+}
+
+.infoIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
