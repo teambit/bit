@@ -4904,6 +4904,11 @@
             "d",
             "dry-run",
             "Run the full pipeline but skip exporting to remote (build runs only if --build is set)"
+          ],
+          [
+            "",
+            "keep-lane",
+            "Reuse the same remote lane across PR commits (preserves lane history and cloud UI edits) instead of recreating it on every run"
           ]
         ],
         "description": "Exports a feature lane to Bit Cloud when a Pull Request is opened or updated.",
