@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
+import { useComponentCompare, InlineCompareEmpty } from '@teambit/component.ui.component-compare.context';
 import { useDiffMode } from '@teambit/component.ui.component-compare.component-compare';
 import {
   DiffFileRenderer,
@@ -81,7 +81,7 @@ export function InlineTestsCompare({ diffMode: diffModeProp }: InlineTestsCompar
   }
 
   if (testDiffs.length === 0) {
-    return null;
+    return <InlineCompareEmpty message="No test changes" />;
   }
 
   return (

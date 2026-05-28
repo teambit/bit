@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { useQuery } from '@apollo/client';
 import type {
   OperationVariables,
@@ -12,7 +12,7 @@ import type {
 
 import { NotificationContext } from '@teambit/ui-foundation.ui.notifications.notification-context';
 
-export type DataQueryResult<TData = any, TVariables = OperationVariables> = Omit<
+export type DataQueryResult<TData = any, TVariables extends OperationVariables = OperationVariables> = Omit<
   QueryResult<TData, TVariables>,
   'data' | 'previousData' | 'fetchMore' | 'refetch'
 > & {
@@ -27,7 +27,7 @@ export type DataQueryResult<TData = any, TVariables = OperationVariables> = Omit
 // re-render of the entire children subtree. That coupling was removed: each query's loading state now
 // stays local to its calling component. The global loader ribbon should subscribe to its own signal
 // (e.g. an Apollo link or dedicated hook) instead of inlining itself into every query.
-export function useDataQuery<TData = any, TVariables = OperationVariables>(
+export function useDataQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(
   query: DocumentNode,
   options?: QueryHookOptions<TData, TVariables>
 ): DataQueryResult {
@@ -35,9 +35,14 @@ export function useDataQuery<TData = any, TVariables = OperationVariables>(
   const notifications = useContext(NotificationContext);
   const { error } = res;
 
-  if (error) {
-    notifications.error(apolloErrorToString(error));
-  }
+  // Showing a notification mutates the NotificationContext provider's state. Doing it inline during
+  // render triggers React's "Cannot update a component while rendering a different component" warning
+  // (and an extra render) for every erroring query, so it must run as a post-render effect instead.
+  useEffect(() => {
+    if (error) {
+      notifications.error(apolloErrorToString(error));
+    }
+  }, [error]);
 
   return res as DataQueryResult;
 }

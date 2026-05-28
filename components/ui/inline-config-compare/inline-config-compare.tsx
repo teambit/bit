@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { gql } from '@apollo/client';
-import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
+import { useComponentCompare, InlineCompareEmpty } from '@teambit/component.ui.component-compare.context';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { useDiffMode } from '@teambit/component.ui.component-compare.component-compare';
 import {
@@ -130,7 +130,7 @@ export function InlineConfigCompare({ diffMode: diffModeProp }: InlineConfigComp
   }
 
   if (aspectDiffs.length === 0) {
-    return null;
+    return <InlineCompareEmpty message="No configuration changes" />;
   }
 
   return (

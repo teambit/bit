@@ -519,3 +519,11 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
 .fullScreenIcon {
   display: none;
 }
+
+.emptyState {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 240px;
+  align-items: center;
+  justify-content: center;
+}

@@ -23,12 +23,12 @@ type SelectOption = { value: string; payload: string };
 export type CompareToolbarProps = {
   viewMode: string;
   onViewModeChange: (mode: string) => void;
-  groupBy: string;
-  onGroupByChange: (groupBy: string) => void;
+  groupBy?: string;
+  onGroupByChange?: (groupBy: string) => void;
   diffMode: DiffMode;
   onDiffModeChange: (mode: DiffMode) => void;
   viewModes: CompareViewMode[];
-  groupByOptions: CompareGroupByOption[];
+  groupByOptions?: CompareGroupByOption[];
   counts: Record<string, number>;
   loading?: boolean;
   componentOptions?: SelectOption[];
@@ -78,10 +78,13 @@ export function CompareToolbar({
     }))
     .filter((vm) => vm.count > 0);
 
-  const groupByIndex = Math.max(
-    0,
-    groupByOptions.findIndex((g) => g.value === groupBy)
-  );
+  const hasGroupBy = !!(groupByOptions && groupByOptions.length > 0 && onGroupByChange);
+  const groupByIndex = hasGroupBy
+    ? Math.max(
+        0,
+        (groupByOptions as CompareGroupByOption[]).findIndex((g) => g.value === groupBy)
+      )
+    : 0;
   const viewModeIndex = viewModes.findIndex((v) => v.value === viewMode);
 
   return (
@@ -126,21 +129,25 @@ export function CompareToolbar({
           className={styles.viewModeToggle}
         />
 
-        <div className={styles.toolbarSeparator} />
+        {hasGroupBy && (
+          <>
+            <div className={styles.toolbarSeparator} />
 
-        <ToggleButton
-          onOptionSelect={(idx) => onGroupByChange(groupByOptions[idx].value)}
-          defaultIndex={groupByIndex >= 0 ? groupByIndex : 0}
-          options={groupByOptions.map((g) => ({
-            value: g.value,
-            element: (
-              <Tooltip content={`Group by ${g.label}`}>
-                <span>{g.label}</span>
-              </Tooltip>
-            ),
-          }))}
-          className={styles.groupByToggle}
-        />
+            <ToggleButton
+              onOptionSelect={(idx) => onGroupByChange!((groupByOptions as CompareGroupByOption[])[idx].value)}
+              defaultIndex={groupByIndex >= 0 ? groupByIndex : 0}
+              options={(groupByOptions as CompareGroupByOption[]).map((g) => ({
+                value: g.value,
+                element: (
+                  <Tooltip content={`Group by ${g.label}`}>
+                    <span>{g.label}</span>
+                  </Tooltip>
+                ),
+              }))}
+              className={styles.groupByToggle}
+            />
+          </>
+        )}
 
         {(viewMode === 'code' || viewMode === 'config' || viewMode === 'tests') && (
           <>

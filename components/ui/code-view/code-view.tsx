@@ -124,7 +124,8 @@ export function CodeView({
     componentId,
     currentFile,
     !!currentFileContent,
-    host
+    host,
+    true
   );
   const loading = loadingFromProps || loadingFileContent;
   const location = useLocation();

@@ -49,6 +49,16 @@ function LaneOverviewBody({ currentLane, host: _host, routeSlot, overviewSlot }:
   const { loading, components, componentDescriptors } = useLaneComponents(currentLane.id);
   const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
+  // The lane overview is rendered under an `<Route index>` in `lanes.ui.runtime`, which has no
+  // trailing wildcard. React Router warns when a descendant `<Routes>` mounts under such a
+  // parent. Mount SlotRouter only when there are actual registrations — in this repo there are
+  // none today, so skipping the empty case is safe and silences the warning.
+  const hasRoutes = useMemo(() => {
+    if (!routeSlot) return false;
+    const all = flatten(Array.from(routeSlot.values()));
+    return all.length > 0;
+  }, [routeSlot]);
+
   if (loading) return null;
 
   const getHref = (component: ComponentModel) => LanesModel.getLaneComponentUrl(component.id, currentLane.id);
@@ -62,7 +72,7 @@ function LaneOverviewBody({ currentLane, host: _host, routeSlot, overviewSlot }:
       header={<LaneOverviewHeader laneId={currentLane.id} componentCount={currentLane.components.length} />}
       footer={
         <>
-          {routeSlot && <SlotRouter slot={routeSlot} />}
+          {hasRoutes && routeSlot && <SlotRouter slot={routeSlot} />}
           {overviewItems.map((Item, index) => (
             <Item key={index} />
           ))}

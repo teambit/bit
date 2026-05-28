@@ -556,9 +556,9 @@ export class LanesMain {
    * Consumers only touch `.err`, `.isUpToDate()`, `.commonSnapBeforeDiverge.hash`,
    * `.snapsOnSourceOnly.[].hash`, `.snapsOnTargetOnly.[].hash` — so a plain object suffices.
    */
-  private snapsDistanceFromMemo(s: SerializedSnapsDistance): SnapsDistance {
+  private snapsDistanceFromMemo(s: SerializedSnapsDistance, componentIdStr: string): SnapsDistance {
     return {
-      err: s.unrelated ? new NoCommonSnap() : undefined,
+      err: s.unrelated ? new NoCommonSnap(componentIdStr) : undefined,
       isUpToDate: () => s.isUpToDate,
       commonSnapBeforeDiverge: s.commonSnapHash ? { hash: s.commonSnapHash } : null,
       snapsOnSourceOnly: s.snapsOnSourceHashes.map((h) => ({ hash: h })),
@@ -1334,7 +1334,7 @@ please create a new lane instead, which will include all components of this lane
         let snapsDistance: SnapsDistance | undefined;
         if (cached) {
           memoHits += 1;
-          snapsDistance = this.snapsDistanceFromMemo(cached);
+          snapsDistance = this.snapsDistanceFromMemo(cached, componentId.toString());
         } else {
           const computed = await this.scope.getSnapsDistanceBetweenTwoSnaps(componentId, sourceHead, targetHead, false);
           if (computed) {

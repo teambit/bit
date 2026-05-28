@@ -23,6 +23,7 @@ import type {
   CompareSidebarGroup,
   ComponentComparePair,
 } from '@teambit/component.ui.component-compare.component-compare';
+import { InlineCompareEmpty } from '@teambit/component.ui.component-compare.context';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
 import { ApiDiffFullView } from '@teambit/semantics.ui.api-diff-view';
@@ -403,6 +404,22 @@ function LaneCompareInline({
     return result;
   }, [laneComponentDiffByCompId]);
 
+  // Distinguish "the lanes are identical / nothing changed" from "your filters hid everything",
+  // so an empty comparison no longer reads as a blank pane.
+  const emptyState = useMemo(() => {
+    if (allComponents.length === 0) {
+      return { message: 'No changes between these lanes', hint: 'Both lanes point to the same components.' };
+    }
+    if (selectedSearchComponents.length > 0) {
+      return {
+        message: 'No components match the current filters',
+        hint: 'Clear the search to see all changed components.',
+      };
+    }
+    const label = compareViewModes.find((v) => v.id === viewMode)?.displayName?.toLowerCase() || viewMode;
+    return { message: `No ${label} changes in this comparison`, hint: 'Try a different view above.' };
+  }, [allComponents.length, selectedSearchComponents.length, viewMode, compareViewModes]);
+
   const isFullPaneView = viewMode === 'api';
 
   useEffect(() => {
@@ -511,7 +528,9 @@ function LaneCompareInline({
                 </div>
               ))}
               {filteredComponents.length === 0 && (
-                <div className={styles.emptyState}>No components match the current filters</div>
+                <div className={styles.emptyState}>
+                  <InlineCompareEmpty message={emptyState.message} hint={emptyState.hint} />
+                </div>
               )}
             </div>
           </DiffModeProvider>

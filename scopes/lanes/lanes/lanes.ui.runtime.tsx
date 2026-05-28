@@ -15,12 +15,7 @@ import type { WorkspaceUI } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { ComponentUI } from '@teambit/component';
 import { ComponentAspect, useIdFromLocation, ComponentID } from '@teambit/component';
-import { InlineCodeCompare } from '@teambit/code.ui.inline-code-compare';
 import type { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
-import { InlinePreviewCompare } from '@teambit/preview.ui.inline-preview-compare';
-import { InlineDepsCompare } from '@teambit/review.ui.inline-deps-compare';
-import { InlineTestsCompare } from '@teambit/review.ui.inline-tests-compare';
-import { InlineConfigCompare } from '@teambit/review.ui.inline-config-compare';
 import { flatten } from 'lodash';
 import type { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import type { LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.lane-overview';
@@ -58,26 +53,9 @@ export type LaneProviderIgnoreSlot = SlotRegistry<IgnoreDerivingFromUrl>;
  * gives a single stable reference that survives any number of parent renders.
  */
 /**
- * Fallback compare-tab list. Each tab here should ideally be registered by its *owning* aspect
- * via `LanesUI.registerCompareTab(...)` so that lanes itself doesn't have to import the inline
- * components. We keep these as fallbacks for tabs whose owners don't yet have a UI runtime in
- * this repo (preview, review). The docs tab is intentionally absent — it's registered by the
- * docs aspect with its real `titleBadges` / `overviewOptions` slots.
- *
- * TODO: move each entry below to its respective aspect (code, preview, review) and delete this.
- */
-const FALLBACK_COMPARE_TABS: TabItem[] = [
-  { id: 'inline-code', order: 1, displayName: 'Code', element: React.createElement(InlineCodeCompare) },
-  { id: 'inline-preview', order: 2, displayName: 'Preview', element: React.createElement(InlinePreviewCompare) },
-  { id: 'inline-deps', order: 4, displayName: 'Dependencies', element: React.createElement(InlineDepsCompare) },
-  { id: 'inline-tests', order: 5, displayName: 'Tests', element: React.createElement(InlineTestsCompare) },
-  { id: 'inline-config', order: 6, displayName: 'Configuration', element: React.createElement(InlineConfigCompare) },
-];
-
-/**
- * Slot signature for `LanesUI.registerCompareTab`. Aspects can register either a single tab or
- * an array. The registrar carries a stable reference per registration so the resolved tab list
- * stays stable across renders.
+ * Slot signature for `LanesUI.registerCompareTab`. Kept for back-compat — the canonical inline
+ * compare-tab list is now owned by `ComponentCompareUI` (so single-component compare and
+ * lane-compare share one source). Tabs registered here are merged on top of that list.
  */
 export type LaneCompareTabSlot = SlotRegistry<TabItem | TabItem[]>;
 
@@ -401,21 +379,28 @@ export class LanesUI {
   }
 
   // memoize the resolved tab list — same identity across renders unless a new registration lands.
+  // The base list is owned by component-compare (so the single-component compare page and
+  // lane-compare share one source). We additionally merge in anything registered on this aspect's
+  // legacy `compareTabSlot` for back-compat.
   private _resolvedCompareTabs?: TabItem[];
-  private _resolvedCompareTabsKey?: number;
+  private _resolvedCompareTabsKey?: string;
   private resolveCompareTabs(): TabItem[] {
+    const fromComponentCompare = this.componentCompareUI.resolveCompareTabs();
     const slotEntries = this.compareTabSlot.toArray();
-    if (this._resolvedCompareTabs && this._resolvedCompareTabsKey === slotEntries.length) {
+    const cacheKey = `${fromComponentCompare.length}:${slotEntries.length}`;
+    if (this._resolvedCompareTabs && this._resolvedCompareTabsKey === cacheKey) {
       return this._resolvedCompareTabs;
     }
-    const registered = flatten(slotEntries.map(([, value]) => value).filter(Boolean) as Array<TabItem | TabItem[]>);
-    const registeredIds = new Set(registered.map((t) => t.id));
-    // registered tabs take precedence; fallbacks fill any id the slot didn't provide.
-    const merged = [...registered, ...FALLBACK_COMPARE_TABS.filter((t) => !registeredIds.has(t.id))].sort(
+    const localRegistered = flatten(
+      slotEntries.map(([, value]) => value).filter(Boolean) as Array<TabItem | TabItem[]>
+    );
+    const localIds = new Set(localRegistered.map((t) => t.id));
+    // local registrations take precedence over the component-compare list.
+    const merged = [...localRegistered, ...fromComponentCompare.filter((t) => !localIds.has(t.id))].sort(
       (a, b) => (a.order ?? 0) - (b.order ?? 0)
     );
     this._resolvedCompareTabs = merged;
-    this._resolvedCompareTabsKey = slotEntries.length;
+    this._resolvedCompareTabsKey = cacheKey;
     return merged;
   }
 

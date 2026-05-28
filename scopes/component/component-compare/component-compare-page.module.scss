@@ -1,0 +1,57 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background: var(--surface-base-color, #fff);
+}
+
+.versionPickerRow {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-color, #e6e8eb);
+}
+
+.blankState {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diffPane {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  // No padding/gap on the scroll container itself: the sticky component header (top:
+  // `--group-header-height`) and diff-file headers (top: `--group-header-height` +
+  // `--component-header-height`) are measured from the scrollport edge, so any padding here
+  // offsets them and they stop stacking flush. Inner cards/headers carry their own padding
+  // (mirrors lane-compare's padding-less `.diffPane`).
+  display: flex;
+  flex-direction: column;
+
+  // Tab visibility driven by `data-view-mode` on the pane. All `DeferredTab` siblings are mounted
+  // simultaneously so their internal query state survives mode switches; CSS hides the non-active
+  // tabs. Mirror of lane-compare's panel selectors so the same inline-* tabs work in both pages.
+  &[data-view-mode='code'] [data-tab-id]:not([data-tab-id='inline-code']) {
+    display: none;
+  }
+  &[data-view-mode='preview'] [data-tab-id]:not([data-tab-id='inline-preview']) {
+    display: none;
+  }
+  &[data-view-mode='dependencies'] [data-tab-id]:not([data-tab-id='inline-deps']) {
+    display: none;
+  }
+  &[data-view-mode='tests'] [data-tab-id]:not([data-tab-id='inline-tests']) {
+    display: none;
+  }
+  &[data-view-mode='config'] [data-tab-id]:not([data-tab-id='inline-config']) {
+    display: none;
+  }
+  &[data-view-mode='docs'] [data-tab-id]:not([data-tab-id='inline-docs']) {
+    display: none;
+  }
+}

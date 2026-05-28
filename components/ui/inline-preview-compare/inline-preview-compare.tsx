@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
+import { useComponentCompare, InlineCompareEmpty } from '@teambit/component.ui.component-compare.context';
 import { PreviewCompareRenderer } from '@teambit/preview.ui.preview-compare';
 import { CompositionCompare } from '@teambit/compositions.ui.composition-compare';
 
@@ -58,7 +58,7 @@ export function InlinePreviewCompare({ minHeight: _minHeight = 200 }: InlinePrev
     (componentCompare.compare?.model?.compositions?.length || 0) > 0;
 
   if (!hasCompositions) {
-    return null;
+    return <InlineCompareEmpty message="No compositions to preview" />;
   }
 
   return (

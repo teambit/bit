@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
+import { useComponentCompare, InlineCompareEmpty } from '@teambit/component.ui.component-compare.context';
 import { useDiffMode } from '@teambit/component.ui.component-compare.component-compare';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import {
@@ -110,7 +110,7 @@ export function InlineCodeCompare({ diffMode: diffModeProp }: InlineCodeCompareP
   }
 
   if (fileDiffs.length === 0 && newFiles.length === 0) {
-    return null;
+    return <InlineCompareEmpty message="No code changes" />;
   }
 
   return (
