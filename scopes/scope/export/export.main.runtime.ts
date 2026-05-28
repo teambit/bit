@@ -661,6 +661,13 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
     const clientId = resumeExportId || Date.now().toString();
     await this.pushRemotesPendingDir(clientId, manyObjectsPerRemote, resumeExportId);
     await validateRemotes(remotes, clientId, Boolean(resumeExportId));
+    // Intentionally no cleanup on `persistRemotes` failure: pending dirs are the substrate for
+    // `bit export --resume <clientId>` AND act as a cross-client lock via `export-validate`'s
+    // waitIfNeeded queue (sorted by clientId). In a multi-scope persist with a partial-success
+    // failure (scopeA persisted, scopeB exhausted retries), removing the pending dirs would let
+    // another client race in against an inconsistent partial-commit state and would also strand
+    // the original user with no objects to resume from. Leave them in place; the user's recovery
+    // is `--resume` (or, on the server side, an explicit pending-dir cleanup tool).
     await persistRemotes(manyObjectsPerRemote, clientId);
   }
 
