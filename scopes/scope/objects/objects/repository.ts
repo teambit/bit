@@ -664,17 +664,16 @@ export default class Repository {
     const count = objects.length;
     if (!count) return;
 
-    // When writing lanes, reload the scope-index from disk and validate LaneId uniqueness
-    // *before* touching the filesystem. Our in-memory copy may be stale relative to a
-    // concurrent process (e.g. a parallel `bit ci pr` on the same PR branch) that already
-    // persisted its own lane. Without this reload, the in-memory check doesn't see the
-    // other process's entry and would silently accept our conflicting one. Doing the check
-    // before file writes also means a rejected push leaves no stale Version/lane files on
-    // the remote — important because the export transfer step skips re-sending hashes the
-    // remote already has, so a retry with the same hash but updated content would be lost.
+    // When writing lanes, validate LaneId uniqueness *before* touching the filesystem so a
+    // rejected concurrent push leaves no stale Version/lane files on disk (the export transfer
+    // step skips re-sending hashes the remote already has, so orphans are awkward to clean up
+    // later). The in-memory `scopeIndex` is fresh enough for this check without an explicit
+    // reload: the remote-action entry point (`scope-api/lib/action.ts`) calls `loadScope` per
+    // request, and on a long-running server the cached scope is kept in sync with disk by the
+    // Scope-aspect file watcher (`watchSystemFiles`). The defense-in-depth check in `addOne`
+    // still catches anything that slips through.
     const hasLanes = objects.some((obj) => obj instanceof Lane);
     if (hasLanes) {
-      await this.reloadScopeIndexIfNeed(true);
       this.scopeIndex.validateLaneIdUniqueness(objects);
     }
 
