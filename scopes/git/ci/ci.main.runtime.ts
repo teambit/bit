@@ -34,7 +34,17 @@ import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { SourceBranchDetector } from './source-branch-detector';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 
+// Two distinct conflicts can surface from the remote on a concurrent `bit ci pr` race.
+// LANE_HASH_MISMATCH fires when both runners called `Lane.create` (the lane didn't exist on
+// the remote yet), so they each minted a random `sha1(v4())` hash — `sources.mergeLane` then
+// rejects the second push's lane object on hash mismatch.
+// COMPONENT_DIVERGENCE fires when the lane already exists (both runners `switchToLane`'d
+// and got the same lane hash) but they both snapped the SAME component with DIFFERENT
+// content — `mergeLane`'s per-component diverge check collects a `ComponentNeedsUpdate`
+// and throws `MergeConflictOnRemote("merge error occurred when exporting the component(s)…")`.
+// Both recover through the same adopt-and-rebase path in `rebaseOntoRemoteLane`.
 const LANE_HASH_MISMATCH_MARKER = 'a lane with the same id already exists with a different hash';
+const COMPONENT_DIVERGENCE_MARKER = 'merge error occurred when exporting';
 export interface CiWorkspaceConfig {
   /**
    * Path to a custom script that generates commit messages for `bit ci merge` operations.
@@ -858,17 +868,19 @@ export class CiMain {
   }
 
   /**
-   * Export with a recovery path for the "lane hash mismatch" error caused by a concurrent CI run
-   * on the same PR branch. Both runners fork from main with `Lane.create`, which mints a random
-   * `sha1(v4())` hash per lane object — so even though the LaneId matches, the lane objects
-   * differ. The hub's `sources.mergeLane` rejects the second push.
+   * Export with a recovery path for the two concurrent-CI conflicts that can surface from the
+   * remote (see the marker constants at the top of the file): lane-hash mismatch (both runners
+   * created fresh lane objects when the lane didn't yet exist on the remote) and per-component
+   * divergence (both reused the existing lane but snapped the same component with different
+   * content).
    *
-   * Recovery: adopt-the-winner. The remote lane object (whoever pushed first) becomes
-   * canonical. We drop our local lane object, fetch the remote, rebase our snapped Version
-   * objects so each one's parent points to the remote head for that component, then swap
-   * those rebased Versions in as the new lane heads and re-export. Build artifacts are
-   * preserved — only the parent pointers on the Version objects change. Result: both
-   * runners' snaps end up chained on a single lane object.
+   * Recovery: adopt-the-winner. The remote lane (whoever pushed first) becomes canonical. We
+   * drop our local lane object, fetch the remote, rebase our snapped Version objects so each
+   * one's parent points to the remote head for that component, then swap those rebased Versions
+   * in as the new lane heads and re-export. Build artifacts are preserved — only the parent
+   * pointers on the Version objects change. Result: both runners' snaps end up chained on a
+   * single lane object (last-writer-wins on content for any contested component, with the
+   * winner's snap preserved in history as the parent).
    */
   private async exportWithAdoptOnConflict(laneId: LaneId, snappedComponents: ConsumerComponent[]) {
     try {
@@ -877,10 +889,13 @@ export class CiMain {
       return;
     } catch (e: any) {
       const msg = e?.message || e?.toString() || '';
-      if (!msg.includes(LANE_HASH_MISMATCH_MARKER)) throw e;
+      const isLaneHashMismatch = msg.includes(LANE_HASH_MISMATCH_MARKER);
+      const isComponentDivergence = msg.includes(COMPONENT_DIVERGENCE_MARKER);
+      if (!isLaneHashMismatch && !isComponentDivergence) throw e;
+      const cause = isLaneHashMismatch ? 'Lane hash mismatch' : 'Per-component divergence';
       this.logger.console(
         chalk.yellow(
-          `Lane hash mismatch on "${laneId.toString()}" — likely a concurrent CI push. Adopting the remote lane and rebasing local snaps onto its heads.`
+          `${cause} on "${laneId.toString()}" — likely a concurrent CI push. Adopting the remote lane and rebasing local snaps onto its heads.`
         )
       );
     }

@@ -1220,4 +1220,150 @@ module.exports = { isPositive };`
       });
     }
   );
+
+  /**
+   * The hardest concurrent-lane scenario: the lane is already on the remote AND both runners snap
+   * the SAME component with DIFFERENT content. The lane-hash mismatch path doesn't fire (both
+   * fetched the same lane), so the conflict surfaces inside `sources.mergeLane`'s per-component
+   * diverge check, which on export collects a `ComponentNeedsUpdate` and throws
+   * `MergeConflictOnRemote` ("merge error occurred when exporting the component(s)…"). The loser's
+   * `exportWithAdoptOnConflict` must recognize that marker too and route through the same rebase
+   * recovery: re-point the loser's snap's first parent to the winner's head, then re-export — so
+   * the lane ends up with the loser's snap as the new head and the winner's snap preserved in
+   * history (last-writer-wins on content, both snaps preserved on the lane).
+   */
+  (IS_WINDOWS ? describe.skip : describe)(
+    'bit ci pr with concurrent runners snapping the SAME component on an existing remote lane',
+    function () {
+      let runnerAResult: { stdout: string; exitCode: number; failed: boolean };
+      let runnerBResult: { stdout: string; exitCode: number; failed: boolean };
+      let runnerAPath: string;
+      let runnerBPath: string;
+      let httpHelper: HttpHelper;
+
+      before(async () => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        setupGitRemote();
+
+        httpHelper = new HttpHelper(helper);
+        await httpHelper.start();
+        helper.scopeHelper.addRemoteHttpScope();
+
+        // Independent components — we want only the deliberate same-component overlap, not
+        // an auto-tag cascade from a dep chain.
+        helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";');
+        helper.fs.outputFile('comp2/index.js', 'module.exports = () => "comp2";');
+        helper.command.addComponent('comp1');
+        helper.command.addComponent('comp2');
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+
+        helper.fs.outputFile('.gitignore', 'node_modules/\n.bit/\n');
+        helper.command.runCmd('git add .');
+        helper.command.runCmd('git commit -m "initial commit"');
+        const defaultBranch = helper.command.runCmd('git branch --show-current').trim();
+        helper.command.runCmd(`git push -u origin ${defaultBranch}`);
+
+        helper.command.runCmd('git checkout -b feature/concurrent-same-component');
+
+        // First ci pr creates the lane on the remote (touch comp2 so the lane has SOMETHING that
+        // isn't the contested component; both runners will then race on comp1 specifically).
+        helper.fs.outputFile('comp2/index.js', 'module.exports = () => "comp2 - initial pr commit";');
+        helper.command.runCmd('git add .');
+        helper.command.runCmd('git commit -m "feat: initial pr commit"');
+        helper.command.runCmd('bit ci pr --build --keep-lane --message "initial"');
+
+        runnerAPath = helper.scopes.localPath;
+        runnerBPath = helper.scopeHelper.cloneWorkspace();
+
+        // BOTH runners modify the SAME component (comp1) with DIFFERENT content — this is what
+        // produces the per-component divergence on export.
+        fs.writeFileSync(
+          path.join(runnerAPath, 'comp1', 'index.js'),
+          'module.exports = () => "comp1 - same-component commit A";'
+        );
+        execa.sync('git', ['add', '.'], { cwd: runnerAPath });
+        execa.sync('git', ['commit', '-m', 'feat: same-component commit A'], { cwd: runnerAPath });
+
+        fs.writeFileSync(
+          path.join(runnerBPath, 'comp1', 'index.js'),
+          'module.exports = () => "comp1 - same-component commit B";'
+        );
+        execa.sync('git', ['add', '.'], { cwd: runnerBPath });
+        execa.sync('git', ['commit', '-m', 'feat: same-component commit B'], { cwd: runnerBPath });
+
+        const bitBin = helper.command.bitBin;
+        const ciPrArgs = ['ci', 'pr', '--build', '--keep-lane'];
+
+        const procA = execa(bitBin, [...ciPrArgs, '--message', 'same-A'], {
+          cwd: runnerAPath,
+          reject: false,
+        });
+        const procB = execa(bitBin, [...ciPrArgs, '--message', 'same-B'], {
+          cwd: runnerBPath,
+          reject: false,
+        });
+
+        const [a, b] = await Promise.all([procA, procB]);
+        runnerAResult = {
+          stdout: `${a.stdout || ''}\n${a.stderr || ''}`,
+          exitCode: a.exitCode ?? -1,
+          failed: a.failed,
+        };
+        runnerBResult = {
+          stdout: `${b.stdout || ''}\n${b.stderr || ''}`,
+          exitCode: b.exitCode ?? -1,
+          failed: b.failed,
+        };
+      });
+
+      it('both runners should complete `bit ci pr` successfully', () => {
+        expect(runnerAResult.exitCode, `runner A output:\n${runnerAResult.stdout}`).to.equal(0);
+        expect(runnerAResult.stdout).to.include('PR command executed successfully');
+        expect(runnerBResult.exitCode, `runner B output:\n${runnerBResult.stdout}`).to.equal(0);
+        expect(runnerBResult.stdout).to.include('PR command executed successfully');
+      });
+
+      it("the loser should rebase its snap onto the winner's head", () => {
+        // The winner exports cleanly; the loser's first export hits the per-component divergence,
+        // catches the `merge error occurred when exporting` marker, rebases, and re-exports.
+        const rebasedA = runnerAResult.stdout.includes('Adopting the remote lane and rebasing local snaps');
+        const rebasedB = runnerBResult.stdout.includes('Adopting the remote lane and rebasing local snaps');
+        expect(
+          rebasedA || rebasedB,
+          `expected the per-component divergence to be handled via rebase.\nrunner A:\n${runnerAResult.stdout}\nrunner B:\n${runnerBResult.stdout}`
+        ).to.be.true;
+      });
+
+      describe('after the race, the lane on the remote is healthy', () => {
+        before(() => {
+          helper.scopeHelper.reInitWorkspace();
+          helper.scopeHelper.addRemoteHttpScope();
+          helper.command.importLane('feature-concurrent-same-component', '-x');
+        });
+
+        it('should preserve BOTH conflicting snaps of comp1 (winner in history, loser as head)', () => {
+          const comp1Log = helper.command.logParsed(`${helper.scopes.remote}/comp1`);
+          const hasA = comp1Log.some((entry: any) => entry.message?.includes('same-A'));
+          const hasB = comp1Log.some((entry: any) => entry.message?.includes('same-B'));
+          expect(hasA, `expected runner A's snap on comp1, got: ${JSON.stringify(comp1Log, null, 2)}`).to.be.true;
+          expect(hasB, `expected runner B's snap on comp1, got: ${JSON.stringify(comp1Log, null, 2)}`).to.be.true;
+        });
+
+        it('should have a well-formed VersionHistory chain for comp1', () => {
+          const comp1History = helper.command.catVersionHistory(`${helper.scopes.remote}/comp1`);
+          // 0.0.1 tag + at least both lane snaps (winner + loser-rebased-onto-winner).
+          expect(comp1History.versions.length).to.be.at.least(3);
+          comp1History.versions.forEach((v: any) => {
+            expect(v).to.have.property('hash');
+            expect(v.parents).to.be.an('array');
+          });
+        });
+      });
+
+      after(() => {
+        httpHelper.killHttp();
+      });
+    }
+  );
 });
