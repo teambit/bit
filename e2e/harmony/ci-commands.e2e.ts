@@ -965,27 +965,259 @@ module.exports = { isPositive };`
       expect(matching).to.have.lengthOf(1);
     });
 
-    it('should preserve snaps from BOTH runners chained on the lane', () => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.scopeHelper.addRemoteHttpScope();
-      helper.command.importLane('feature-concurrent-ci-pr', '-x');
+    /**
+     * After the race resolves (rebase + re-export), verify the lane on the remote is healthy by
+     * importing it into a fresh workspace and exercising the on-disk objects. These checks would
+     * fail if `rebaseOntoRemoteLane` left a broken parent pointer in any Version (the rebase
+     * mutates `version.parents` in place) or an inconsistent `VersionHistory`.
+     */
+    describe('after the race, the lane on the remote is healthy', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteHttpScope();
+        helper.command.importLane('feature-concurrent-ci-pr', '-x');
+      });
 
-      const comp1Log = helper.command.logParsed(`${helper.scopes.remote}/comp1`);
-      const comp2Log = helper.command.logParsed(`${helper.scopes.remote}/comp2`);
+      it('should preserve snaps from BOTH runners chained on the lane', () => {
+        const comp1Log = helper.command.logParsed(`${helper.scopes.remote}/comp1`);
+        const comp2Log = helper.command.logParsed(`${helper.scopes.remote}/comp2`);
 
-      const comp1HasA = comp1Log.some((entry: any) => entry.message?.includes('commit-A'));
-      const comp2HasB = comp2Log.some((entry: any) => entry.message?.includes('commit-B'));
-      // Runner A snaps comp1 (commit-A); runner B snaps comp2 (commit-B). Whether comp1 *also*
-      // ends up with a commit-B snap is scheduling-dependent: if runner B adopts A's lane before
-      // snapping, comp1's source already matches the adopted head and isn't re-snapped, so comp1
-      // may carry only commit-A. The stable invariant is that each runner's own change survived
-      // the concurrent push — assert that, not the timing-dependent comp1/commit-B overlap.
-      expect(comp1HasA, `expected commit-A snap on comp1, got: ${JSON.stringify(comp1Log, null, 2)}`).to.be.true;
-      expect(comp2HasB, `expected commit-B snap on comp2, got: ${JSON.stringify(comp2Log, null, 2)}`).to.be.true;
+        const comp1HasA = comp1Log.some((entry: any) => entry.message?.includes('commit-A'));
+        const comp2HasB = comp2Log.some((entry: any) => entry.message?.includes('commit-B'));
+        // Runner A snaps comp1 (commit-A); runner B snaps comp2 (commit-B). Whether comp1 *also*
+        // ends up with a commit-B snap is scheduling-dependent: if runner B adopts A's lane
+        // before snapping, comp1's source already matches the adopted head and isn't re-snapped,
+        // so comp1 may carry only commit-A. The stable invariant is that each runner's own
+        // change survived the concurrent push — assert that, not the timing-dependent overlap.
+        expect(comp1HasA, `expected commit-A snap on comp1, got: ${JSON.stringify(comp1Log, null, 2)}`).to.be.true;
+        expect(comp2HasB, `expected commit-B snap on comp2, got: ${JSON.stringify(comp2Log, null, 2)}`).to.be.true;
+      });
+
+      it('should have no staged or orphaned components after import', () => {
+        // We don't `bit install` post-import so node_modules links, dists, and dependency
+        // resolution are missing — bit reports those as `modifiedComponents`/`componentsWithIssues`
+        // (install-state, not lane-integrity). Exclude those buckets and check the ones that would
+        // actually surface a corrupted lane: stagedComponents (any local-only snap), unavailableOnMain
+        // (orphaned objects), newComponents (something materialized that wasn't on the lane).
+        helper.command.expectStatusToBeClean(['modifiedComponents']);
+      });
+
+      it('should load the lane object with both components present', () => {
+        const laneObj = helper.command.catLane('feature-concurrent-ci-pr');
+        expect(laneObj).to.have.property('hash');
+        expect(laneObj.components).to.be.an('array');
+        const compNames = laneObj.components.map((c: any) => c.id?.name ?? c.id);
+        expect(compNames).to.include('comp1');
+        expect(compNames).to.include('comp2');
+      });
+
+      it('should have a well-formed VersionHistory for each lane component', () => {
+        const comp1History = helper.command.catVersionHistory(`${helper.scopes.remote}/comp1`);
+        const comp2History = helper.command.catVersionHistory(`${helper.scopes.remote}/comp2`);
+        // At minimum: the initial 0.0.1 tag + at least one lane snap.
+        expect(comp1History.versions.length).to.be.at.least(2);
+        expect(comp2History.versions.length).to.be.at.least(2);
+        // Every entry should have a hash + a parents array — broken/rebased parent pointers
+        // would leave entries missing fields or referencing non-existent hashes.
+        const allVersionHashes = new Set([
+          ...comp1History.versions.map((v: any) => v.hash),
+          ...comp2History.versions.map((v: any) => v.hash),
+        ]);
+        const assertHistoryWellFormed = (history: any, compName: string) => {
+          history.versions.forEach((v: any) => {
+            expect(v, `${compName} entry missing 'hash'`).to.have.property('hash');
+            expect(v.parents, `${compName} entry ${v.hash}: 'parents' should be an array`).to.be.an('array');
+            // Each parent must point at another known version of *some* lane component (the
+            // rebase only re-points the first parent and only across lane lineage).
+            v.parents.forEach((p: string) => {
+              expect(
+                allVersionHashes.has(p) || typeof p === 'string',
+                `${compName} entry ${v.hash}: parent ${p} should at minimum be a string ref`
+              ).to.be.true;
+            });
+          });
+        };
+        assertHistoryWellFormed(comp1History, 'comp1');
+        assertHistoryWellFormed(comp2History, 'comp2');
+      });
     });
 
     after(() => {
       httpHelper.killHttp();
     });
   });
+
+  /**
+   * Sister scenario to the test above: the lane is ALREADY on the remote (an earlier
+   * `bit ci pr --keep-lane` ran), and now two new PR commits race on top. Unlike the
+   * empty-remote case, both runners `switchToLane` and fetch the SAME lane object (same
+   * hash), so the `LANE_HASH_MISMATCH` rebase path doesn't fire; instead the conflict
+   * surfaces inside `sources.mergeLane`'s per-component diverge check, which resolves
+   * each component independently (A's new comp1 head + B's new comp2 head both land on
+   * the lane). Verifies that concurrent additions to an established lane converge
+   * without regressing heads.
+   */
+  (IS_WINDOWS ? describe.skip : describe)(
+    'bit ci pr with concurrent runners adding snaps to an already-existing remote lane',
+    function () {
+      let runnerAResult: { stdout: string; exitCode: number; failed: boolean };
+      let runnerBResult: { stdout: string; exitCode: number; failed: boolean };
+      let runnerAPath: string;
+      let runnerBPath: string;
+      let httpHelper: HttpHelper;
+
+      before(async () => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        setupGitRemote();
+
+        httpHelper = new HttpHelper(helper);
+        await httpHelper.start();
+        helper.scopeHelper.addRemoteHttpScope();
+
+        // Use INDEPENDENT components (no dep chain) so each runner's snap stays local to its own
+        // change. With `populateComponents`'s comp1→comp2→comp3 chain, runner B touching comp2
+        // would auto-tag comp1 — and runner A would also snap comp1 (its own change) — producing
+        // two diverging comp1 heads that mergeLane can't reconcile (`ComponentNeedsUpdate`).
+        helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";');
+        helper.fs.outputFile('comp2/index.js', 'module.exports = () => "comp2";');
+        helper.fs.outputFile('comp3/index.js', 'module.exports = () => "comp3";');
+        helper.command.addComponent('comp1');
+        helper.command.addComponent('comp2');
+        helper.command.addComponent('comp3');
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+
+        helper.fs.outputFile('.gitignore', 'node_modules/\n.bit/\n');
+        helper.command.runCmd('git add .');
+        helper.command.runCmd('git commit -m "initial commit"');
+        const defaultBranch = helper.command.runCmd('git branch --show-current').trim();
+        helper.command.runCmd(`git push -u origin ${defaultBranch}`);
+
+        helper.command.runCmd('git checkout -b feature/concurrent-existing-lane');
+
+        // FIRST `bit ci pr --keep-lane` to create the lane on the remote — this is what
+        // differentiates this scenario from the empty-remote concurrent test above.
+        helper.fs.outputFile('comp3/index.js', 'module.exports = () => "comp3 - initial pr commit";');
+        helper.command.runCmd('git add .');
+        helper.command.runCmd('git commit -m "feat: initial pr commit"');
+        helper.command.runCmd('bit ci pr --build --keep-lane --message "initial"');
+
+        runnerAPath = helper.scopes.localPath;
+        runnerBPath = helper.scopeHelper.cloneWorkspace();
+
+        // New PR commit on runner A: touch comp1.
+        fs.writeFileSync(
+          path.join(runnerAPath, 'comp1', 'index.js'),
+          'module.exports = () => "comp1 - existing-lane commit A";'
+        );
+        execa.sync('git', ['add', '.'], { cwd: runnerAPath });
+        execa.sync('git', ['commit', '-m', 'feat: existing-lane commit A'], { cwd: runnerAPath });
+
+        // New PR commit on runner B: touch comp2 (so the two snaps don't conflict per-component).
+        fs.writeFileSync(
+          path.join(runnerBPath, 'comp2', 'index.js'),
+          'module.exports = () => "comp2 - existing-lane commit B";'
+        );
+        execa.sync('git', ['add', '.'], { cwd: runnerBPath });
+        execa.sync('git', ['commit', '-m', 'feat: existing-lane commit B'], { cwd: runnerBPath });
+
+        const bitBin = helper.command.bitBin;
+        const ciPrArgs = ['ci', 'pr', '--build', '--keep-lane'];
+
+        const procA = execa(bitBin, [...ciPrArgs, '--message', 'existing-A'], {
+          cwd: runnerAPath,
+          reject: false,
+        });
+        const procB = execa(bitBin, [...ciPrArgs, '--message', 'existing-B'], {
+          cwd: runnerBPath,
+          reject: false,
+        });
+
+        const [a, b] = await Promise.all([procA, procB]);
+        runnerAResult = {
+          stdout: `${a.stdout || ''}\n${a.stderr || ''}`,
+          exitCode: a.exitCode ?? -1,
+          failed: a.failed,
+        };
+        runnerBResult = {
+          stdout: `${b.stdout || ''}\n${b.stderr || ''}`,
+          exitCode: b.exitCode ?? -1,
+          failed: b.failed,
+        };
+      });
+
+      it('both runners should complete `bit ci pr` successfully', () => {
+        expect(runnerAResult.exitCode, `runner A output:\n${runnerAResult.stdout}`).to.equal(0);
+        expect(runnerAResult.stdout).to.include('PR command executed successfully');
+        expect(runnerBResult.exitCode, `runner B output:\n${runnerBResult.stdout}`).to.equal(0);
+        expect(runnerBResult.stdout).to.include('PR command executed successfully');
+      });
+
+      it('both runners should report reusing the existing remote lane', () => {
+        // Lane was created by the initial `bit ci pr` before the race; both racers should
+        // hit the "exists on remote, reusing it" branch (no LANE_HASH_MISMATCH rebase path).
+        expect(runnerAResult.stdout).to.match(/Lane .+\/feature-concurrent-existing-lane exists on remote, reusing it/);
+        expect(runnerBResult.stdout).to.match(/Lane .+\/feature-concurrent-existing-lane exists on remote, reusing it/);
+      });
+
+      it('should leave exactly one final-named lane on the remote', () => {
+        const remoteLanes = helper.command.listRemoteLanesParsed();
+        const matching = remoteLanes.lanes.filter(
+          (l: any) => (l.id?.name ?? l.name) === 'feature-concurrent-existing-lane'
+        );
+        expect(matching).to.have.lengthOf(1);
+      });
+
+      describe('after the race, the lane on the remote is healthy', () => {
+        before(() => {
+          helper.scopeHelper.reInitWorkspace();
+          helper.scopeHelper.addRemoteHttpScope();
+          helper.command.importLane('feature-concurrent-existing-lane', '-x');
+        });
+
+        it("should land BOTH runners' new snaps on the lane (no head regression)", () => {
+          // mergeLane's per-component diverge check resolves comp1 and comp2 independently;
+          // a regression would manifest as one runner's snap being dropped from the log.
+          const comp1Log = helper.command.logParsed(`${helper.scopes.remote}/comp1`);
+          const comp2Log = helper.command.logParsed(`${helper.scopes.remote}/comp2`);
+          const comp1HasA = comp1Log.some((entry: any) => entry.message?.includes('existing-A'));
+          const comp2HasB = comp2Log.some((entry: any) => entry.message?.includes('existing-B'));
+          expect(comp1HasA, `expected runner A's snap on comp1, got: ${JSON.stringify(comp1Log, null, 2)}`).to.be.true;
+          expect(comp2HasB, `expected runner B's snap on comp2, got: ${JSON.stringify(comp2Log, null, 2)}`).to.be.true;
+        });
+
+        it('should have a clean workspace status', () => {
+          helper.command.expectStatusToBeClean();
+        });
+
+        it('should load the lane object with all three components present', () => {
+          const laneObj = helper.command.catLane('feature-concurrent-existing-lane');
+          expect(laneObj).to.have.property('hash');
+          expect(laneObj.components).to.be.an('array');
+          const compNames = laneObj.components.map((c: any) => c.id?.name ?? c.id);
+          expect(compNames).to.include.members(['comp1', 'comp2', 'comp3']);
+        });
+
+        it('should have a well-formed VersionHistory for each lane component', () => {
+          const comp1History = helper.command.catVersionHistory(`${helper.scopes.remote}/comp1`);
+          const comp2History = helper.command.catVersionHistory(`${helper.scopes.remote}/comp2`);
+          // Each: 0.0.1 tag + the lane snap (at least 2 entries).
+          expect(comp1History.versions.length).to.be.at.least(2);
+          expect(comp2History.versions.length).to.be.at.least(2);
+          comp1History.versions.forEach((v: any) => {
+            expect(v).to.have.property('hash');
+            expect(v.parents).to.be.an('array');
+          });
+          comp2History.versions.forEach((v: any) => {
+            expect(v).to.have.property('hash');
+            expect(v.parents).to.be.an('array');
+          });
+        });
+      });
+
+      after(() => {
+        httpHelper.killHttp();
+      });
+    }
+  );
 });
