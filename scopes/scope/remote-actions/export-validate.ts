@@ -6,7 +6,6 @@ import { PENDING_OBJECTS_DIR } from '@teambit/legacy.constants';
 import { mergeObjects } from '@teambit/export';
 import type { Action } from './action';
 import { logger } from '@teambit/legacy.logger';
-import type { BitObjectList } from '@teambit/objects';
 
 type Options = { clientId: string; isResumingExport: boolean };
 const NUM_OF_RETRIES = 60;
@@ -17,10 +16,13 @@ const WAIT_BEFORE_RETRY_IN_MS = 1000;
  * once done, clear the objects from the memory so then they won't be used by mistake later on.
  * this also makes sure that non-external dependencies are not missing.
  *
- * For lane exports with external components (components whose home scope differs from the lane
- * scope), the lane scope is kept lean — we do NOT pre-fetch full version history from the
- * components' home scopes. Consumers walking history will resolve missing parents from origin
- * scopes on demand. See `logExternalsForLeanLaneScope` below.
+ * Lean-lane-scope: for lane exports with external components (components whose home scope
+ * differs from the lane scope), we no longer pre-fetch full version history from the
+ * components' home scopes. The lane scope keeps only what the client actually sent (lane
+ * snaps + merge snap). Consumers walking older history resolve missing parents from origin
+ * scopes on demand (see `Component.collectLogs` and
+ * `ScopeComponentsImporter.importMissingHistoryOne`). If a caller explicitly wants to gather
+ * full history on the lane scope, they can still invoke the `FetchMissingHistory` action.
  */
 export class ExportValidate implements Action<Options> {
   scope: Scope;
@@ -35,7 +37,6 @@ export class ExportValidate implements Action<Options> {
     }
     const objectList = await scope.readObjectsFromPendingDir(options.clientId);
     const bitObjectList = await objectList.toBitObjects();
-    this.logExternalsForLeanLaneScope(bitObjectList);
     await this.waitIfNeeded();
     try {
       logger.profile('export-validate.mergeObjects');
@@ -47,29 +48,6 @@ export class ExportValidate implements Action<Options> {
       throw err;
     }
     scope.objects.clearObjectsFromCache();
-  }
-
-  /**
-   * Previously this method imported missing version-history for external components (lane
-   * components whose home scope differs from the lane scope) and threw when history was
-   * missing from their origin scopes. That behavior was the main driver of fat-lane-scope
-   * OOM during exports of lanes that were far behind main with many components.
-   *
-   * Lean-lane-scope: we no longer pre-import. The lane scope keeps only what the client
-   * actually sent (lane snaps + merge snap). Consumers walking older history will resolve
-   * missing parents by fetching from origin scopes on demand
-   * (see `Component.collectLogs` and `ScopeComponentsImporter.importMissingHistoryOne`).
-   * If a caller explicitly wants to gather full history on the lane scope, they can still
-   * invoke the `FetchMissingHistory` action directly.
-   */
-  private logExternalsForLeanLaneScope(bitObjectList: BitObjectList) {
-    const modelComponents = bitObjectList.getComponents();
-    const externalComponents = modelComponents.filter((comp) => comp.scope !== this.scope.name);
-    if (!externalComponents.length) return;
-    logger.debug(
-      `export-validate, lean-lane-scope: skipping pre-fetch of full version-history for ` +
-        `${externalComponents.length} external components — their history stays on origin scopes`
-    );
   }
 
   private async waitIfNeeded() {

@@ -128,6 +128,222 @@ describe('lane export skips main history objects', function () {
         expect(hashes).to.include(mainSnap2);
         expect(hashes).to.include(mainSnap1);
       });
+
+      it('VersionHistory on the component home scope should contain the full main chain', () => {
+        const vh = helper.command.catVersionHistory(`${helper.scopes.remote}/comp1`, helper.scopes.remotePath);
+        const hashes = (vh.versions as Array<{ hash: string }>).map((v) => v.hash);
+        expect(hashes).to.include(mainSnap1);
+        expect(hashes).to.include(mainSnap2);
+        expect(hashes).to.include(mainSnap3);
+        expect(hashes).to.include(mainSnap4);
+      });
+
+      it('VersionHistory on the lane scope should NOT include pre-lane main snaps (lean)', () => {
+        const vh = helper.command.catVersionHistory(`${helper.scopes.remote}/comp1`, laneScopePath);
+        const hashes = (vh.versions as Array<{ hash: string }>).map((v) => v.hash);
+        expect(hashes).to.include(mergeSnap);
+        expect(hashes).to.include(laneSnap);
+        expect(hashes).to.not.include(mainSnap1);
+        expect(hashes).to.not.include(mainSnap2);
+        expect(hashes).to.not.include(mainSnap3);
+      });
+    });
+  });
+
+  describe('fork a lean lane to a third scope, then re-import in a fresh workspace', () => {
+    let scopeC: string;
+    let scopeCPath: string;
+    let scopeL: string;
+    let scopeLPath: string;
+    let scopeF: string;
+    let scopeFPath: string;
+    let laneSnapOnL: string;
+    let mergeSnapOnL: string;
+    let snapOnFork: string;
+
+    before(() => {
+      // scope-C: components' home scope (default remote)
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      scopeC = helper.scopes.remote;
+      scopeCPath = helper.scopes.remotePath;
+      // scope-L: original lane scope
+      const scopeLNew = helper.scopeHelper.getNewBareScope('-lane');
+      scopeL = scopeLNew.scopeName;
+      scopeLPath = scopeLNew.scopePath;
+      // scope-F: the forked lane's destination scope
+      const scopeFNew = helper.scopeHelper.getNewBareScope('-fork');
+      scopeF = scopeFNew.scopeName;
+      scopeFPath = scopeFNew.scopePath;
+      // wire the scopes to know each other so cross-scope fetches resolve
+      [scopeLPath, scopeFPath].forEach((p) => {
+        helper.scopeHelper.addRemoteScope(p);
+        helper.scopeHelper.addRemoteScope(p, scopeCPath);
+        helper.scopeHelper.addRemoteScope(scopeCPath, p);
+      });
+      helper.scopeHelper.addRemoteScope(scopeLPath, scopeFPath);
+      helper.scopeHelper.addRemoteScope(scopeFPath, scopeLPath);
+
+      // build main history on scope-C
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+
+      // create the original lane on scope-L
+      helper.command.createLane('original', `--scope ${scopeL}`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      laneSnapOnL = helper.command.getHeadOfLane('original', 'comp1');
+      helper.command.export();
+
+      // main advances on scope-C and gets merged into the lane
+      const laneWs = helper.scopeHelper.cloneWorkspace();
+      helper.command.switchLocalLane('main');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.scopeHelper.getClonedWorkspace(laneWs);
+      helper.command.import();
+      helper.command.mergeLane('main', '--auto-merge-resolve theirs');
+      mergeSnapOnL = helper.command.getHeadOfLane('original', 'comp1');
+      helper.command.export();
+    });
+
+    describe('fork the lane to scope-F and snap further', () => {
+      before(() => {
+        // fork "original" (in scope-L) into "forked" (in scope-F)
+        helper.command.createLane('forked', `--scope ${scopeF} --fork-lane-new-scope`);
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        snapOnFork = helper.command.getHeadOfLane('forked', 'comp1');
+        helper.command.export('--fork-lane-new-scope');
+      });
+
+      it('scope-F should NOT have the main-origin snaps (still lean after fork)', () => {
+        // confirm fork didn't pull main history along
+        const vh = helper.command.catVersionHistory(`${scopeC}/comp1`, scopeFPath);
+        const hashes = (vh.versions as Array<{ hash: string }>).map((v) => v.hash);
+        expect(hashes).to.include(snapOnFork);
+        expect(hashes).to.include(mergeSnapOnL);
+      });
+
+      it('a fresh consumer can import the forked lane without errors', () => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.scopeHelper.addRemoteScope(scopeLPath);
+        helper.scopeHelper.addRemoteScope(scopeFPath);
+        expect(() => helper.command.runCmd(`bit lane import ${scopeF}/forked -x`)).to.not.throw();
+      });
+
+      it('bit status and bit log should work in the fresh consumer of the forked lane', () => {
+        expect(() => helper.command.status()).to.not.throw();
+        let log;
+        expect(() => {
+          log = helper.command.logParsed('comp1');
+        }).to.not.throw();
+        const hashes = log.map((l: any) => l.hash);
+        expect(hashes).to.include(snapOnFork);
+        expect(hashes).to.include(mergeSnapOnL);
+        expect(hashes).to.include(laneSnapOnL);
+      });
+    });
+  });
+
+  describe('lane with multiple components and deep main history merged repeatedly', () => {
+    // exercises the OOM-prone scenario at smaller scale: many main snaps, multiple merges of main into lane.
+    let laneScope: string;
+    let laneScopePath: string;
+    let firstMergeSnap: string;
+    let secondMergeSnap: string;
+    let mainHeadBeforeFirstMerge: string;
+    let mainHeadBeforeSecondMerge: string;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const newScope = helper.scopeHelper.getNewBareScope();
+      laneScope = newScope.scopeName;
+      laneScopePath = newScope.scopePath;
+      helper.scopeHelper.addRemoteScope(laneScopePath);
+      helper.scopeHelper.addRemoteScope(laneScopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, laneScopePath);
+
+      // 3 components, deep main chain
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      for (let i = 0; i < 4; i += 1) helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+
+      // lane is created off this point
+      helper.command.createLane('dev', `--scope ${laneScope}`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      const laneWs = helper.scopeHelper.cloneWorkspace();
+
+      // main advances and lane merges main in (first merge)
+      helper.command.switchLocalLane('main');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      mainHeadBeforeFirstMerge = helper.command.getHead('comp1');
+      helper.command.export();
+      helper.scopeHelper.getClonedWorkspace(laneWs);
+      helper.command.import();
+      helper.command.mergeLane('main', '--auto-merge-resolve theirs');
+      firstMergeSnap = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.export();
+
+      // main advances again, second merge into the lane
+      const laneWs2 = helper.scopeHelper.cloneWorkspace();
+      helper.command.switchLocalLane('main');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      mainHeadBeforeSecondMerge = helper.command.getHead('comp1');
+      helper.command.export();
+      helper.scopeHelper.getClonedWorkspace(laneWs2);
+      helper.command.import();
+      helper.command.mergeLane('main', '--auto-merge-resolve theirs');
+      secondMergeSnap = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.export();
+    });
+
+    it('lane scope holds both merge snaps but no main-origin snaps for any component', () => {
+      expect(() => helper.command.catObject(firstMergeSnap, false, laneScopePath)).to.not.throw();
+      expect(() => helper.command.catObject(secondMergeSnap, false, laneScopePath)).to.not.throw();
+      expect(() => helper.command.catObject(mainHeadBeforeFirstMerge, false, laneScopePath)).to.throw();
+      expect(() => helper.command.catObject(mainHeadBeforeSecondMerge, false, laneScopePath)).to.throw();
+    });
+
+    it('the component home scope retains all main snaps for all components', () => {
+      ['comp1', 'comp2', 'comp3'].forEach((c) => {
+        const vh = helper.command.catVersionHistory(`${helper.scopes.remote}/${c}`, helper.scopes.remotePath);
+        const hashes = (vh.versions as Array<{ hash: string }>).map((v) => v.hash);
+        // 1 initial + 4 unmodified + 2 (first round) + 2 (second round) = 9 main snaps
+        expect(hashes.length).to.be.at.least(9);
+      });
+    });
+
+    describe('fresh consumer imports the multi-merge lane', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.scopeHelper.addRemoteScope(laneScopePath);
+        helper.command.runCmd(`bit lane import ${laneScope}/dev -x`);
+      });
+
+      it('bit status should not throw for any component', () => {
+        expect(() => helper.command.status()).to.not.throw();
+      });
+
+      it('bit log should reach both merge snaps and their main history for every component', () => {
+        ['comp1', 'comp2', 'comp3'].forEach((c) => {
+          const log = helper.command.logParsed(c);
+          // 1 initial + 4 unmodified main + 1 lane + 2 main + 1 merge + 2 main + 1 merge = 12 snaps reachable
+          expect(log.length).to.be.at.least(8);
+        });
+      });
+
+      it('comp1 log should contain both merge snaps explicitly (sanity for the lane head)', () => {
+        const log = helper.command.logParsed('comp1');
+        const hashes = log.map((l: any) => l.hash);
+        expect(hashes).to.include(firstMergeSnap);
+        expect(hashes).to.include(secondMergeSnap);
+      });
     });
   });
 
