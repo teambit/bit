@@ -663,20 +663,6 @@ export default class Repository {
   async writeObjectsToTheFS(objects: BitObject[]): Promise<void> {
     const count = objects.length;
     if (!count) return;
-
-    // When writing lanes, validate LaneId uniqueness *before* touching the filesystem so a
-    // rejected concurrent push leaves no stale Version/lane files on disk (the export transfer
-    // step skips re-sending hashes the remote already has, so orphans are awkward to clean up
-    // later). The in-memory `scopeIndex` is fresh enough for this check without an explicit
-    // reload: the remote-action entry point (`scope-api/lib/action.ts`) calls `loadScope` per
-    // request, and on a long-running server the cached scope is kept in sync with disk by the
-    // Scope-aspect file watcher (`watchSystemFiles`). The defense-in-depth check in `addOne`
-    // still catches anything that slips through.
-    const hasLanes = objects.some((obj) => obj instanceof Lane);
-    if (hasLanes) {
-      this.scopeIndex.validateLaneIdUniqueness(objects);
-    }
-
     logger.trace(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
     const concurrency = concurrentIOLimit();
     await pMapPool(objects, (obj) => this._writeOne(obj), {

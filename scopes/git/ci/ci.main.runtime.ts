@@ -961,9 +961,10 @@ export class CiMain {
     // from content — so we can mutate `parents` in place. The hash stays the same, so the
     // build artifacts referenced from the Version remain valid and the lane's component head
     // doesn't need to be re-pointed. The remote receives the updated Version because our
-    // first failed export attempt was rejected *before* writing any files to disk
-    // (see `writeObjectsToTheFS` — the LaneId-uniqueness check runs first), so the remote
-    // doesn't yet have this hash and won't dedupe-skip it during transfer.
+    // first failed export attempt was rejected during the export-validate step (via
+    // `sources.mergeLane`'s same-id/different-hash guard) — *before* `ExportPersist` writes any
+    // files to disk — so the remote doesn't yet have this hash and won't dedupe-skip it during
+    // transfer.
     for (const snap of snappedHeads) {
       const remoteComp = remoteLane.components.find((c) => c.id.isEqualWithoutVersion(snap.id));
       if (!remoteComp) continue; // component is only on our lane, not on the remote — no rebase target

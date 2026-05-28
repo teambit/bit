@@ -124,37 +124,6 @@ export class ScopeIndex {
     const added = bitObjects.map((bitObject) => this.addOne(bitObject));
     return added.some((oneAdded) => oneAdded); // return true if one of the objects was added
   }
-  /**
-   * Read-only counterpart to the LaneId-uniqueness check in `addOne`. Callers should run this
-   * before any disk writes when adding lanes, so a conflicting concurrent push fails *before*
-   * the version/lane/version-history files land on disk. Otherwise the would-be-rejected push
-   * leaves stale objects behind that the subsequent retry can't easily clean up (the export
-   * transfer step skips re-sending hashes the remote already has).
-   */
-  validateLaneIdUniqueness(bitObjects: BitObject[]): void {
-    for (const bitObject of bitObjects) {
-      if (!(bitObject instanceof Lane)) continue;
-      const hash = bitObject.hash().toString();
-      // Look up specifically among lanes. `find()` spans all index types, so a (rare) hash
-      // collision with a ComponentItem/Symlink would make the `toLaneId()` call in the error
-      // message below throw and mask the real LaneId-collision error.
-      const foundByHash = this.index.lanes.find((li) => li.hash === hash);
-      // Find any *other* entry that already uses this LaneId — exclude the same-hash entry
-      // (that's either a no-op or a legitimate rename of the lane we're saving). A different
-      // entry with the same LaneId and a different hash means two distinct lane objects would
-      // share an id, which the rest of the system can't resolve unambiguously.
-      const sameLaneId = this.index.lanes.find((li) => li.toLaneId().isEqual(bitObject.toLaneId()) && li.hash !== hash);
-      if (sameLaneId) {
-        throw new Error(
-          `unable to add lane "${bitObject.toLaneId().toString()}" to the scope index. ` +
-            `a lane with the same id already exists with a different hash ` +
-            `(existing hash: ${sameLaneId.hash}, incoming hash: ${hash}` +
-            (foundByHash ? `, this is a rename from "${foundByHash.toLaneId().toString()}"` : '') +
-            `). This typically indicates a concurrent push race — retry the operation.`
-        );
-      }
-    }
-  }
   addOne(bitObject: BitObject): boolean {
     if (!(bitObject instanceof ModelComponent) && !(bitObject instanceof Symlink) && !(bitObject instanceof Lane))
       return false;
@@ -162,26 +131,10 @@ export class ScopeIndex {
 
     if (bitObject instanceof Lane) {
       const found = this.find(hash) as LaneItem | undefined;
-      // Defense in depth (primary check is `validateLaneIdUniqueness`, called before any disk
-      // writes): reject any other index entry that already uses this LaneId under a different
-      // hash. Covers both the rename case (same hash, new LaneId already taken) and the new-lane
-      // case (no entry with this hash, LaneId already taken by another lane).
-      const sameLaneId = this.index.lanes.find((li) => li.toLaneId().isEqual(bitObject.toLaneId()) && li.hash !== hash);
-      if (sameLaneId) {
-        throw new Error(
-          `unable to add lane "${bitObject.toLaneId().toString()}" to the scope index. ` +
-            `a lane with the same id already exists with a different hash ` +
-            `(existing hash: ${sameLaneId.hash}, incoming hash: ${hash}). ` +
-            `This typically indicates a concurrent push race — retry the operation.`
-        );
-      }
       if (found) {
         if ((found as LaneItem).toLaneId().isEqual(bitObject.toLaneId())) return false;
         found.id = bitObject.toLaneId();
       } else {
-        // Lane object hashes are random (sha1 of a v4 UUID), so concurrent `bit ci pr` runs
-        // that both create a fresh lane for the same PR each end up with a unique hash for
-        // the same LaneId. The check above rejects that case; here we just add the new entry.
         const laneItem = new LaneItem(bitObject.toLaneId(), hash);
         this.index.lanes.push(laneItem);
       }
