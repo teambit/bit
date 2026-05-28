@@ -476,7 +476,10 @@ export class LaneHistoryCmd implements Command {
       const { historyItem } = data;
       const date = this.getDateString(historyItem.log.date);
       const message = historyItem.log.message;
-      return `${id} ${date} ${historyItem.log.username} ${message}\n\n${historyItem.components.join('\n')}`;
+      const updateDependentsBlock = historyItem.updateDependents?.length
+        ? `\n\nupdateDependents:\n${historyItem.updateDependents.join('\n')}`
+        : '';
+      return `${id} ${date} ${historyItem.log.username} ${message}\n\n${historyItem.components.join('\n')}${updateDependentsBlock}`;
     }
 
     const { history, sortedIds } = data;
@@ -500,6 +503,7 @@ export class LaneHistoryCmd implements Command {
         username: historyItem.log.username,
         message: historyItem.log.message,
         components: historyItem.components,
+        ...(historyItem.updateDependents?.length && { updateDependents: historyItem.updateDependents }),
       };
     }
 
@@ -512,6 +516,7 @@ export class LaneHistoryCmd implements Command {
         username: item.log.username,
         message: item.log.message,
         components: item.components,
+        ...(item.updateDependents?.length && { updateDependents: item.updateDependents }),
       };
     });
   }
@@ -667,7 +672,10 @@ export class LaneRemoveCompCmd implements Command {
 
 export class LaneImportCmd implements Command {
   name = 'import <lane>';
-  description = `import a remote lane to your workspace and switch to that lane`;
+  description = `import a remote lane to your workspace`;
+  extendedDescription = `when on the default lane, the workspace is switched to the imported lane.
+when already on the same lane, only the latest objects are fetched from the remote — run "bit checkout head" to update the workspace.
+when on a different lane, the lane is fetched locally without switching to avoid disrupting your work — run \`bit switch <lane>\` to switch.`;
   arguments = [{ name: 'lane', description: 'the remote lane name' }];
   alias = '';
   options = [
@@ -688,7 +696,10 @@ export class LaneImportCmd implements Command {
   ] as CommandOptions;
   loader = true;
 
-  constructor(private switchCmd: SwitchCmd) {}
+  constructor(
+    private switchCmd: SwitchCmd,
+    private lanes: LanesMain
+  ) {}
 
   async report(
     [lane]: [string],
@@ -711,14 +722,39 @@ export class LaneImportCmd implements Command {
     if (forceOurs && forceTheirs) {
       throw new BitError('please use either --force-ours or --force-theirs, not both');
     }
-    return this.switchCmd.report([lane], {
-      skipDependencyInstallation,
-      pattern,
-      branch,
-      autoMergeResolve,
-      forceOurs,
-      forceTheirs,
-    });
+
+    const currentLaneId = this.lanes.getCurrentLaneId();
+    // when on the default lane (or outside a workspace), keep the original behavior: switch to the imported lane.
+    if (!currentLaneId || currentLaneId.isDefault()) {
+      return this.switchCmd.report([lane], {
+        skipDependencyInstallation,
+        pattern,
+        branch,
+        autoMergeResolve,
+        forceOurs,
+        forceTheirs,
+      });
+    }
+
+    // already on a (non-default) lane: do not auto-switch, only fetch the lane locally.
+    const targetLaneId = await this.lanes.parseLaneId(lane);
+    await this.lanes.fetchLaneWithItsComponents(targetLaneId);
+
+    if (currentLaneId.isEqual(targetLaneId)) {
+      return joinSections([
+        formatSuccessSummary(
+          `you are already on lane "${chalk.bold(targetLaneId.toString())}". the lane has been fetched from the remote, but your workspace files were ${chalk.bold('not')} updated.`
+        ),
+        `${chalk.yellow('to update your workspace files to the latest')}, run "${chalk.bold('bit checkout head')}".`,
+      ]);
+    }
+
+    return joinSections([
+      formatSuccessSummary(`imported lane "${chalk.bold(targetLaneId.toString())}" locally`),
+      formatHint(
+        `you are still on lane "${currentLaneId.toString()}". to switch to the imported lane, run "bit switch ${targetLaneId.toString()}"`
+      ),
+    ]);
   }
 }
 

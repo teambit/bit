@@ -9,6 +9,7 @@ import { ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
 import minimatch from 'minimatch';
 import { ArtifactFiles } from '@teambit/component.sources';
+import { isValidPath } from '@teambit/legacy.utils';
 import type { BuilderMain } from '../builder.main.runtime';
 import type { ArtifactsOpts } from './artifacts.cmd';
 import { ArtifactList } from './artifact-list';
@@ -37,6 +38,8 @@ type ArtifactListPerId = {
 };
 
 export class ArtifactExtractor {
+  savedFilesCount = 0;
+
   constructor(
     private componentMain: ComponentMain,
     private builder: BuilderMain,
@@ -48,8 +51,16 @@ export class ArtifactExtractor {
     const host = this.componentMain.getHost();
     const ids = await host.idsByPattern(this.pattern);
     const scope = this.componentMain.getHost(ScopeAspect.id) as ScopeMain;
-    // import in case the components are with build status "pending"
-    await scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(ids), { reason: 'artifact' });
+    // re-import the version objects so we pick up any builder data added by the remote build
+    // pipeline after the local snap was created (the local Version may have been stored with
+    // empty BuilderAspect data — the Version hash excludes extension data, so it isn't replaced
+    // on a normal cached import). passing the current lane routes the fetch to the lane's scope
+    // where snaps actually live, and the lane-aware fetcher writes back any updated Version.
+    const currentLane = await scope.legacyScope.getCurrentLaneObject();
+    await scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(ids), {
+      lane: currentLane,
+      reason: 'to refresh build artifacts',
+    });
     const components = await host.getMany(ids);
     const artifactListPerId: ArtifactListPerId[] = components.map((component) => {
       return {
@@ -58,7 +69,7 @@ export class ArtifactExtractor {
       };
     });
     this.filterByOptions(artifactListPerId);
-    await this.saveFilesInFileSystemIfAsked(artifactListPerId);
+    this.savedFilesCount = await this.saveFilesInFileSystemIfAsked(artifactListPerId);
 
     return this.artifactsObjectsToExtractorResults(artifactListPerId);
   }
@@ -73,20 +84,30 @@ export class ArtifactExtractor {
     });
   }
 
-  private async saveFilesInFileSystemIfAsked(artifactListPerId: ArtifactListPerId[]) {
+  private async saveFilesInFileSystemIfAsked(artifactListPerId: ArtifactListPerId[]): Promise<number> {
     const outDir = this.options.outDir;
     if (!outDir) {
-      return;
+      return 0;
     }
     const scope = this.componentMain.getHost(ScopeAspect.id) as ScopeMain;
+    let totalSaved = 0;
     // @todo: optimize this to first import all missing hashes.
     await pMapSeries(artifactListPerId, async ({ id, artifacts }) => {
       const vinyls = await artifacts.getVinylsAndImportIfMissing(id, scope.legacyScope);
       // make sure the component-dir is just one dir. without this, every slash in the component-id will create a new dir.
       const idAsFilename = filenamify(id.toStringWithoutVersion(), { replacement: '_' });
       const compPath = path.join(outDir, idAsFilename);
-      await Promise.all(vinyls.map((vinyl) => fs.outputFile(path.join(compPath, vinyl.path), vinyl.contents)));
+      await Promise.all(
+        vinyls.map((vinyl) => {
+          if (!isValidPath(vinyl.path)) {
+            throw new Error(`refusing to write artifact "${vinyl.path}" for ${id.toString()}: unsafe path`);
+          }
+          return fs.outputFile(path.join(compPath, vinyl.path), vinyl.contents);
+        })
+      );
+      totalSaved += vinyls.length;
     });
+    return totalSaved;
   }
 
   private artifactsObjectsToExtractorResults(artifactListPerId: ArtifactListPerId[]): ExtractorResult[] {

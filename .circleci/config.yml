@@ -51,6 +51,29 @@ master_only_filter: &master_only_filter
       only: master
 
 # ========================================
+# PIPELINE PARAMETERS
+# ========================================
+
+parameters:
+  run_set_stable:
+    type: boolean
+    default: false
+  run_deploy:
+    type: boolean
+    default: false
+  release_version:
+    type: string
+    default: ""
+  release_stable:
+    type: enum
+    enum: ["true", "false"]
+    default: "true"
+  release_test_mode:
+    type: enum
+    enum: ["true", "false"]
+    default: "false"
+
+# ========================================
 # ORBS
 # ========================================
 
@@ -370,7 +393,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.1.4-v1
+          key: core-aspect-env-v0.1.5-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -453,7 +476,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.1.4-v1
+          key: core-aspect-env-v0.1.5-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -559,7 +582,7 @@ jobs:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.1.4-v1
+          key: core-aspect-env-v0.1.5-v1
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a107
       # - run: cd bit && bbit compile
@@ -609,7 +632,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.1.4-v1
+          key: core-aspect-env-v0.1.5-v1
       - run:
           name: 'check circular dependencies'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
@@ -970,6 +993,35 @@ jobs:
       - store_artifacts:
           path: bit/index.json
 
+  set_release_stable_flag:
+    docker:
+      - image: bitcli/node-gcloud-sdk
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: Configure gcloud auth
+          command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
+      - run:
+          name: Update stable flag in index.json
+          environment:
+            RELEASE_VERSION: "<< pipeline.parameters.release_version >>"
+            RELEASE_STABLE: "<< pipeline.parameters.release_stable >>"
+            RELEASE_TEST_MODE: "<< pipeline.parameters.release_test_mode >>"
+          command: node scripts/update-bit-stable-flag.js
+      - run:
+          name: Upload index.json
+          command: |
+            if [ "<< pipeline.parameters.release_test_mode >>" = "true" ]; then
+              TARGET="index-test.json"
+            else
+              TARGET="index.json"
+            fi
+            gsutil cp index.json "gs://bvm.bit.dev/bit/$TARGET"
+            gsutil setmeta -h "Cache-Control:no-cache" "gs://bvm.bit.dev/bit/$TARGET"
+      - store_artifacts:
+          path: index.json
+
   # ========== Docker Jobs ==========
   docker_build_node_22:
     machine:
@@ -1172,8 +1224,19 @@ jobs:
 # ========================================
 
 workflows:
+  # Manual workflow: flip a published version's stable flag in index.json.
+  # Trigger from the CircleCI web app with run_set_stable=true, release_version=<version>, release_stable=<true|false>.
+  set_release_stable_flag:
+    when: << pipeline.parameters.run_set_stable >>
+    jobs:
+      - set_release_stable_flag
+
   # Main build and test workflow
   build_and_test:
+    unless:
+      or:
+        - << pipeline.parameters.run_set_stable >>
+        - << pipeline.parameters.run_deploy >>
     jobs:
       - checkout_code
       - set_ssh_key
@@ -1324,6 +1387,10 @@ workflows:
 
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:
+    unless:
+      or:
+        - << pipeline.parameters.run_set_stable >>
+        - << pipeline.parameters.run_deploy >>
     jobs:
       - harmony_deploy_approval_job:
           <<: *master_only_filter
@@ -1370,6 +1437,47 @@ workflows:
       - server_docker_build_node_22:
           requires:
             - harmony_deploy_approval_job
+            - docker_build_node_22
+
+  # Manual deploy workflow: same jobs as harmony_deploy, without the approval gate.
+  # Trigger from the CircleCI web app (or API) on master with run_deploy=true.
+  # Useful when the latest master commit is `[skip ci]` (e.g. version bumps) and
+  # therefore has no auto-triggered pipeline to approve.
+  harmony_deploy_manual:
+    when: << pipeline.parameters.run_deploy >>
+    jobs:
+      - checkout_code:
+          <<: *master_only_filter
+      - bundle_version_linux:
+          <<: *master_only_filter
+          requires:
+            - checkout_code
+      - bundle_version_macos:
+          <<: *master_only_filter
+          requires:
+            - checkout_code
+      - bundle_version_windows:
+          <<: *master_only_filter
+          requires:
+            - checkout_code
+      - harmony_publish_to_gcloud:
+          <<: *master_only_filter
+          requires:
+            - bundle_version_linux
+            - bundle_version_macos
+            - bundle_version_windows
+            - checkout_code # This is needed to generate index.json
+      - docker_build_node_22:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_build_alpine:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_22:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_22:
+          requires:
             - docker_build_node_22
 
   # ========================================

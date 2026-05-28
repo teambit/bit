@@ -93,6 +93,14 @@ export class MergeLanesMain {
     }
     const currentLaneId = this.workspace.consumer.getCurrentLaneId();
     const otherLaneId = await this.workspace.consumer.getParsedLaneId(laneName);
+    // Hidden lane updateDependents must participate in every merge — otherwise main→lane refresh
+    // (`bit lane merge main`) leaves the lane's cascaded entries stuck on their old main-head
+    // base, and lane→main merge would push a partially-consistent lane state. The bare-scope
+    // counterpart (`bit _merge-lane`, used by Ripple / the UI's "update lane" button) already
+    // sets this; the workspace path was the missing leg.
+    if (options.shouldIncludeUpdateDependents === undefined) {
+      options.shouldIncludeUpdateDependents = true;
+    }
     return this.mergeLane(otherLaneId, currentLaneId, options);
   }
 
@@ -312,7 +320,10 @@ export class MergeLanesMain {
     const isDefaultLane = otherLaneId.isDefault();
     if (isDefaultLane) {
       if (!skipFetch) {
-        const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps);
+        // pass `shouldIncludeUpdateDependents` so the prefetch covers main objects for the
+        // lane's hidden entries too — the per-component merge engine needs main-side Version
+        // objects locally to compute divergence against the hidden cascade snaps.
+        const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps, shouldIncludeUpdateDependents);
         const compIdList = ComponentIdList.fromArray(ids).toVersionLatest();
         await this.importer.importObjectsFromMainIfExist(compIdList);
       }
@@ -323,7 +334,10 @@ export class MergeLanesMain {
       const shouldFetch = !lane || (!skipFetch && !lane.isNew);
       if (shouldFetch) {
         // don't assign `lane` to the result of this command. otherwise, if you have local snaps, it'll ignore them and use the remote-lane.
-        const otherLane = await this.lanes.fetchLaneWithItsComponents(otherLaneId, shouldIncludeUpdateDependents);
+        // note: fetching always includes the lane's hidden updateDependents (and routes them to the
+        // lane's scope); `shouldIncludeUpdateDependents` still governs whether they take part in the
+        // merge itself, via `idsToMerge` below.
+        const otherLane = await this.lanes.fetchLaneWithItsComponents(otherLaneId);
         laneToFetchArtifactsFrom = otherLane;
         lane = await legacyScope.loadLane(otherLaneId);
       }

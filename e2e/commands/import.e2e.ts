@@ -451,6 +451,119 @@ describe('bit import', function () {
       });
     });
   });
+  describe('import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4)', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(4);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      // create a second tag for comp2 (and comp1, auto-tagged as a dependent), so comp1@0.0.1
+      // still references comp2@0.0.1 while head of comp2 is 0.0.2. lets us assert that
+      // --dependencies-head actually picks the head. preserve the comp3 require so the chain stays intact.
+      helper.fs.outputFile(
+        'comp2/index.js',
+        `const comp3 = require('@${helper.scopes.remote}/comp3');\nmodule.exports = () => 'comp2-v2 and ' + comp3();`
+      );
+      helper.command.tagWithoutBuild('comp2');
+      helper.command.export();
+    });
+    describe('--dependencies-depth 1', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('comp1@0.0.1', '--dependencies --dependencies-depth 1');
+      });
+      it('should import only the direct dep at the version comp1 references (comp2@0.0.1)', () => {
+        helper.bitMap.expectToHaveId('comp1', '0.0.1');
+        helper.bitMap.expectToHaveId('comp2', '0.0.1');
+        helper.bitMap.expectNotToHaveId('comp3');
+        helper.bitMap.expectNotToHaveId('comp4');
+      });
+    });
+    describe('--dependencies-depth 2', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('comp1@0.0.1', '--dependencies --dependencies-depth 2');
+      });
+      it('should import direct deps and their direct deps (comp2, comp3) but not deeper', () => {
+        helper.bitMap.expectToHaveId('comp1', '0.0.1');
+        helper.bitMap.expectToHaveId('comp2', '0.0.1');
+        helper.bitMap.expectToHaveId('comp3', '0.0.1');
+        helper.bitMap.expectNotToHaveId('comp4');
+      });
+    });
+    describe('--dependencies-depth with versionless input', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('comp1', '--dependencies --dependencies-depth 1');
+      });
+      it('should resolve the root to head (comp1@0.0.2) and import its direct dep at the referenced version (comp2@0.0.2)', () => {
+        helper.bitMap.expectToHaveId('comp1', '0.0.2');
+        helper.bitMap.expectToHaveId('comp2', '0.0.2');
+        helper.bitMap.expectNotToHaveId('comp3');
+        helper.bitMap.expectNotToHaveId('comp4');
+      });
+    });
+    describe('--dependencies-head --dependencies-depth 1', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('comp1@0.0.1', '--dependencies-head --dependencies-depth 1');
+      });
+      it('should import the direct dep at head (comp2@0.0.2), not the version comp1@0.0.1 references', () => {
+        helper.bitMap.expectToHaveId('comp1', '0.0.1');
+        helper.bitMap.expectToHaveId('comp2', '0.0.2');
+        helper.bitMap.expectNotToHaveId('comp3');
+        helper.bitMap.expectNotToHaveId('comp4');
+      });
+    });
+    describe('--dependencies without depth', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('comp1@0.0.1', '--dependencies');
+      });
+      it('should import all transitive dependencies', () => {
+        helper.bitMap.expectToHaveId('comp1', '0.0.1');
+        helper.bitMap.expectToHaveId('comp2', '0.0.1');
+        helper.bitMap.expectToHaveId('comp3', '0.0.1');
+        helper.bitMap.expectToHaveId('comp4', '0.0.1');
+      });
+    });
+    describe('validation errors', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+      });
+      it('should error when --dependencies-depth is used without --dependencies/--dependencies-head', () => {
+        const output = helper.general.runWithTryCatch(
+          `bit import ${helper.scopes.remote}/comp1 --dependencies-depth 1`
+        );
+        expect(output).to.have.string('--dependencies-depth');
+        expect(output).to.have.string('--dependencies');
+      });
+      it('should error when --dependencies-depth is zero', () => {
+        const output = helper.general.runWithTryCatch(
+          `bit import ${helper.scopes.remote}/comp1 --dependencies --dependencies-depth 0`
+        );
+        expect(output).to.have.string('positive integer');
+      });
+      it('should error when --dependencies-depth is a non-integer', () => {
+        const output = helper.general.runWithTryCatch(
+          `bit import ${helper.scopes.remote}/comp1 --dependencies --dependencies-depth abc`
+        );
+        expect(output).to.have.string('positive integer');
+      });
+      it('should error when --dependencies-depth is a fractional number', () => {
+        const output = helper.general.runWithTryCatch(
+          `bit import ${helper.scopes.remote}/comp1 --dependencies --dependencies-depth 1.5`
+        );
+        expect(output).to.have.string('positive integer');
+      });
+    });
+  });
   describe('external package manager mode', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();

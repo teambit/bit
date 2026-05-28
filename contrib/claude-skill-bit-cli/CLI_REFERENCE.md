@@ -411,7 +411,7 @@ Flags: --internal
 bring components from remote scopes into your workspace
 
 brings component source files from remote scopes into your workspace and installs their dependencies as packages. supports pattern matching for bulk imports, merge strategies for handling conflicts, and various optimization options. without arguments, fetches all workspace components' latest versions from their remote scopes.
-Flags: --path <path>, --objects, --override, --verbose, --json, --skip-dependency-installation, --skip-write-config-files, --merge [strategy], --dependencies, --dependencies-head, --dependents, --dependents-via <string>, --dependents-all, --silent, --filter-envs <envs>, --save-in-lane, --all-history, --fetch-deps, --write-deps <target>, --track-only, --include-deprecated, --lane-only, --owner
+Flags: --path <path>, --objects, --override, --verbose, --json, --skip-dependency-installation, --skip-write-config-files, --merge [strategy], --dependencies, --dependencies-head, --dependencies-depth <n>, --dependents, --dependents-via <string>, --dependents-all, --silent, --filter-envs <envs>, --save-in-lane, --all-history, --fetch-deps, --write-deps <target>, --track-only, --include-deprecated, --lane-only, --owner
 
 ## bit init [path]
 
@@ -482,7 +482,9 @@ DEPRECATED (only use it if you have used add-readme and want to undo it). remove
 
 ## bit lane import <lane>
 
-import a remote lane to your workspace and switch to that lane
+import a remote lane to your workspace
+
+when on the default lane, the workspace is switched to the imported lane. when already on the same lane, only the latest objects are fetched from the remote — run "bit checkout head" to update the workspace. when on a different lane, the lane is fetched locally without switching to avoid disrupting your work — run `bit switch <lane>` to switch.
 Flags: --skip-dependency-installation, --pattern <component-pattern>, --branch, --auto-merge-resolve <merge-strategy>, --force-ours, --force-theirs
 
 ## bit lane remove-comp <component-pattern>
@@ -611,7 +613,7 @@ removes stored authentication tokens and signs out of Bit Cloud. clears local cr
 
 start Model Context Protocol server for AI assistants
 
-enables AI assistants and other tools to interact with Bit via the Model Context Protocol. provides a standardized interface for AI agents to execute Bit commands and access component information. allows writing custom instructions and rules to guide AI agents in their interactions with Bit.
+NOTE: this is the legacy local stdio MCP server. The recommended way to connect AI agents to Bit is now the hosted Cloud MCP at https://mcp.bit.cloud/mcp. see setup instructions for each agent at https://bit.cloud/docs/connect. enables AI assistants and other tools to interact with Bit via the Model Context Protocol. provides a standardized interface for AI agents to execute Bit commands and access component information. allows writing custom instructions and rules to guide AI agents in their interactions with Bit.
 Flags: --include-additional <commands>, --bit-bin <binary>, --consumer-project
 
 ## bit mcp-server start
@@ -808,6 +810,12 @@ Sets the scope for specified component/s. If no component is specified, sets the
 
 default scopes for components are set in the bitmap file. the default scope for a workspace is set in the workspace.jsonc. a component is set with a scope (as oppose to default scope) only once it is versioned.' you can use a `<pattern>` for multiple component ids, such as `bit scope set scope-name "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
 
+## bit scope trust [action] [pattern]
+
+manage which scopes are trusted to load aspects (envs, etc.) into the workspace's process
+
+scope-trust is opt-in. when off (the default), aspects from any scope load without a check. when on, aspects from a scope outside the trust list trigger a prompt (interactive shells) or an error (non-interactive). bit scope trust # same as "list" bit scope trust list # show status; if on, print the effective trust list bit scope trust enable # turn on (writes "trustedScopes": [] to workspace.jsonc) bit scope trust disable # turn off (removes "trustedScopes" from workspace.jsonc) bit scope trust add PATTERN # add a pattern (auto-enables if needed) bit scope trust remove PATTERN # remove a pattern (does NOT disable when list is empty) once on, the effective trust set is: builtin scopes (teambit._, bitdev._, and a few others — run "bit scope trust list" to see) + the owner of defaultScope + entries listed under "trustedScopes". patterns are exact ("acme.frontend") or owner wildcard ("acme.\*").
+
 ## bit scope rename <current-scope-name> <new-scope-name>
 
 rename the scope name for all components with the specified 'current scope name'. if exported, create new components and delete the original ones
@@ -859,7 +867,7 @@ Flags: --json, --legacy, --remote, --browser, --compare
 create immutable component snapshots for development versions
 
 creates snapshots with hash-based versions for development and testing. snapshots are immutable and exportable. by default snaps only new and modified components. use for development iterations before creating semantic version tags. snapshots maintain component history and enable collaboration without formal releases.
-Flags: --message <message>, --unmodified, --unmerged, --build, --editor [editor], --skip-tests, --skip-tasks <string>, --skip-auto-snap, --disable-snap-pipeline, --ignore-build-errors, --loose, --rebuild-deps-graph, --ignore-issues <issues>, --fail-fast
+Flags: --message <message>, --unmodified, --unmerged, --build, --editor [editor], --skip-tests, --skip-tasks <string>, --skip-auto-snap, --disable-snap-pipeline, --ignore-build-errors, --loose, --rebuild-deps-graph, --no-lock-deps, --ignore-issues <issues>, --fail-fast
 
 ## bit start [component-pattern]
 
@@ -917,7 +925,7 @@ similar to linux "tail -f" command
 create immutable component snapshots with semantic version tags
 
 creates tagged versions using semantic versioning (semver) for component releases. tags are immutable and exportable. by default tags all new and modified components. supports version specification per pattern using "@" (e.g. foo@1.0.0, bar@minor). use for official releases. for development versions, use 'bit snap' instead.
-Flags: --message <message>, --unmodified, --editor [editor], --versions-file <path>, --ver <version>, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --snapped, --unmerged, --skip-tests, --skip-tasks <string>, --skip-auto-tag, --soft, --persist [skip-build], --disable-tag-pipeline, --ignore-build-errors, --rebuild-deps-graph, --increment-by <number>, --ignore-issues <issues>, --ignore-newest-version, --fail-fast, --build, --loose
+Flags: --message <message>, --unmodified, --editor [editor], --versions-file <path>, --ver <version>, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --snapped, --unmerged, --skip-tests, --skip-tasks <string>, --skip-auto-tag, --soft, --persist [skip-build], --disable-tag-pipeline, --ignore-build-errors, --rebuild-deps-graph, --no-lock-deps, --increment-by <number>, --ignore-issues <issues>, --ignore-newest-version, --fail-fast, --build, --loose
 
 ## bit templates
 

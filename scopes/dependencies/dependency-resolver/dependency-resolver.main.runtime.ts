@@ -494,13 +494,14 @@ export class DependencyResolverMain {
     };
     const resolveEnvPeersFromRoot = context?.inCapsule ? false : (this.config.resolveEnvPeersFromRoot ?? true);
     const forceEnvPeersToRoot = this.config.forceEnvPeersToRoot ?? false;
-    const workspaceManifestFactory = new WorkspaceManifestFactory(this,
+    const workspaceManifestFactory = new WorkspaceManifestFactory(
+      this,
       this.aspectLoader,
       this.logger,
       resolveEnvPeersFromRoot,
       forceEnvPeersToRoot
     );
-    
+
     const res = await workspaceManifestFactory.createFromComponents(
       name,
       version,
@@ -1676,7 +1677,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       rootDir: string;
       forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible';
     },
-    pkgs: Array<{ name: string; currentRange: string; source: CurrentPkgSource; } & T>
+    pkgs: Array<{ name: string; currentRange: string; source: CurrentPkgSource } & T>
   ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
     this.logger.setStatusLine('checking the latest versions of dependencies');
     const resolver = await this.getVersionResolver();

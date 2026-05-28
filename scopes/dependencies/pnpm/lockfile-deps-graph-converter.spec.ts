@@ -331,6 +331,133 @@ describe('convertLockfileToGraph simple case', () => {
   });
 });
 
+describe('convertLockfileToGraph with a circular workspace dependency back to the component being processed', () => {
+  // Reproduces the "No matching version found for <workspace-comp>@0.0.0-<hash>"
+  // failure: comp1 (the component being processed) is removed from snapshots
+  // and packages, but a circular workspace dep (comp2 depends back on comp1)
+  // leaves an edge whose neighbour references comp1@<version> with no
+  // corresponding packages entry. When the graph is later converted back to a
+  // lockfile, convertGraphToLockfile materialises that dangling neighbour as
+  // an empty packages entry and getPkgsToResolve treats it as a missing
+  // package, asking the registry for a snap-version that was never published.
+  it('should drop edges that reference the component being processed', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        '.': {},
+        'node_modules/.bit_roots/env': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+        'comps/comp1': {
+          dependencies: {
+            comp2: { version: 'file:comps/comp2', specifier: '*' },
+          },
+        },
+        'comps/comp2': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'comp1@file:comps/comp1': {
+          dependencies: {
+            comp2: 'file:comps/comp2',
+          },
+        },
+        'comp2@file:comps/comp2': {
+          dependencies: {
+            comp1: 'file:comps/comp1',
+          },
+        },
+      },
+      packages: {
+        'comp1@file:comps/comp1': {
+          resolution: { directory: 'comps/comp1', type: 'directory' },
+        },
+        'comp2@file:comps/comp2': {
+          resolution: { directory: 'comps/comp2', type: 'directory' },
+        },
+      },
+    };
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([
+        ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+        ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+      ]),
+    });
+    // The graph must never reference comp1 — it is the component being
+    // snapped, so it does not belong in its own deps graph.
+    const referencingComp1 = graph.edges.filter((edge) => edge.neighbours.some((n) => n.id === 'comp1@1.0.0'));
+    expect(referencingComp1).to.eql([]);
+    expect(graph.packages.has('comp1@1.0.0')).to.equal(false);
+  });
+
+  // Same bug, but the cycle closes through an intermediate workspace
+  // component (comp1 → comp2 → comp3 → comp1). The back-edge in the
+  // lockfile lives on comp3's snapshot, not comp2's. Scrubbing only
+  // direct dependents of comp1 would miss it; the fix iterates every
+  // remaining snapshot so chain-length doesn't matter.
+  it('should drop edges that reference the component via a multi-hop chain', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        '.': {},
+        'node_modules/.bit_roots/env': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+        'comps/comp1': {
+          dependencies: {
+            comp2: { version: 'file:comps/comp2', specifier: '*' },
+          },
+        },
+        'comps/comp2': {
+          dependencies: {
+            comp3: { version: 'file:comps/comp3', specifier: '*' },
+          },
+        },
+        'comps/comp3': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'comp1@file:comps/comp1': { dependencies: { comp2: 'file:comps/comp2' } },
+        'comp2@file:comps/comp2': { dependencies: { comp3: 'file:comps/comp3' } },
+        'comp3@file:comps/comp3': { dependencies: { comp1: 'file:comps/comp1' } },
+      },
+      packages: {
+        'comp1@file:comps/comp1': { resolution: { directory: 'comps/comp1', type: 'directory' } },
+        'comp2@file:comps/comp2': { resolution: { directory: 'comps/comp2', type: 'directory' } },
+        'comp3@file:comps/comp3': { resolution: { directory: 'comps/comp3', type: 'directory' } },
+      },
+    };
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([
+        ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+        ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+        ['comp3', ComponentID.fromString('my-scope/comp3@1.0.0')],
+      ]),
+    });
+    const referencingComp1 = graph.edges.filter((edge) => edge.neighbours.some((n) => n.id === 'comp1@1.0.0'));
+    expect(referencingComp1).to.eql([]);
+    expect(graph.packages.has('comp1@1.0.0')).to.equal(false);
+  });
+});
+
 describe('convertLockfileToGraph with directory packages missing from componentIdByPkgName', () => {
   it('should not persist orphan @file: pkgIds in the produced graph', () => {
     // Reproduces how the broken graphs end up in the model: a directory-type
@@ -557,10 +684,7 @@ describe('convertGraphToLockfile on invalid graph', () => {
   // version to recover. Dropping it is the only safe outcome.
   it('should drop orphan @file: packages when generating a lockfile', async () => {
     const packages: PackagesMap = new Map([
-      [
-        '@teambit/dot-launch.apps.whats-new-app@file:dot-launch/apps/whats-new-app',
-        {} as any,
-      ],
+      ['@teambit/dot-launch.apps.whats-new-app@file:dot-launch/apps/whats-new-app', {} as any],
       ['foo@1.0.0', { resolution: { integrity: 'sha512-aaa' } } as any],
     ]);
     const edges: DependencyEdge[] = [
@@ -607,6 +731,192 @@ describe('convertGraphToLockfile on invalid graph', () => {
     expect(lockfile.snapshots!['foo@1.0.0']).to.eql({});
   });
 
+  // Saved by bits older than #10361: when a workspace component with a
+  // circular dep was snapped, the component's own snapshot/package was
+  // deleted but back-references on other snapshots survived. The neighbour
+  // now points at a snap-version pkgId that exists nowhere else in the
+  // graph. Without the scrub, convertGraphToLockfile would materialise an
+  // empty packages entry and getPkgsToResolve would ask the registry for
+  // that unpublished snap version (surfacing as ERR_PNPM_NO_MATCHING_VERSION
+  // on ripple at install time).
+  it('should drop orphan neighbours that have no edge and no packages entry', async () => {
+    const packages: PackagesMap = new Map([['foo@1.0.0', { resolution: { integrity: 'sha512-aaa' } } as any]]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0', lifecycle: 'runtime' }],
+      },
+      {
+        id: 'foo@1.0.0',
+        neighbours: [
+          {
+            id: '@bitdev/react.app-types.vite-react@0.0.0-df1917dc0fcd7c894001404a162a48aca0219d43',
+            optional: false,
+          },
+        ],
+      },
+    ];
+    const graph = new DependenciesGraph({ packages, edges });
+    let resolverCalled = false;
+    const lockfile = await convertGraphToLockfile(new DependenciesGraph(graph), {
+      manifests: {
+        [path.resolve('comps/comp1')]: {
+          dependencies: { foo: '1.0.0' },
+        },
+      },
+      rootDir: process.cwd(),
+      resolve: () => {
+        resolverCalled = true;
+        return { resolution: { integrity: '0000' } } as any;
+      },
+    });
+    expect(resolverCalled).to.equal(false);
+    expect(Object.keys(lockfile.packages!)).to.eql(['foo@1.0.0']);
+    expect(lockfile.snapshots!['foo@1.0.0']).to.eql({});
+  });
+
+  it('should leave legitimate neighbours intact when scrubbing orphans', async () => {
+    const packages: PackagesMap = new Map([
+      ['foo@1.0.0', { resolution: { integrity: 'sha512-aaa' } } as any],
+      ['bar@2.0.0', { resolution: { integrity: 'sha512-bbb' } } as any],
+    ]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0', lifecycle: 'runtime' }],
+      },
+      {
+        id: 'foo@1.0.0',
+        neighbours: [
+          { id: 'bar@2.0.0', optional: false },
+          { id: 'orphan-pkg@0.0.0-deadbeef', optional: false },
+        ],
+      },
+    ];
+    const lockfile = await convertGraphToLockfile(new DependenciesGraph(new DependenciesGraph({ packages, edges })), {
+      manifests: {
+        [path.resolve('comps/comp1')]: { dependencies: { foo: '1.0.0' } },
+      },
+      rootDir: process.cwd(),
+      resolve: () => ({ resolution: { integrity: '0000' } }) as any,
+    });
+    expect(lockfile.snapshots!['foo@1.0.0']).to.eql({ dependencies: { bar: '2.0.0' } });
+    expect(Object.keys(lockfile.packages!).sort()).to.eql(['bar@2.0.0', 'foo@1.0.0']);
+  });
+
+  // Saved by bits older than #10361: even when the workspace-component's snap
+  // entry survives in the graph (with no resolution, since the directory type
+  // was stripped at snap time), the registry lookup at install time fails
+  // because that snap-version was never published. Scrub the package, its
+  // snapshots and every reference to it so pnpm can re-resolve the dep from
+  // the installing manifest's specifier instead of aborting the install.
+  it('should drop workspace-component pkgs that fail to resolve from the registry', async () => {
+    const packages: PackagesMap = new Map([
+      [
+        '@bitdev/react.app-types.vite-react@0.0.0-df1917dc',
+        { component: { scope: 'bitdev.react', name: 'app-types/vite-react' } } as any,
+      ],
+      ['foo@1.0.0', { resolution: { integrity: 'sha512-aaa' } } as any],
+    ]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0', lifecycle: 'runtime' }],
+      },
+      {
+        id: 'foo@1.0.0',
+        neighbours: [{ id: '@bitdev/react.app-types.vite-react@0.0.0-df1917dc', optional: false }],
+      },
+      {
+        id: '@bitdev/react.app-types.vite-react@0.0.0-df1917dc',
+        neighbours: [],
+      },
+    ];
+    const lockfile = await convertGraphToLockfile(new DependenciesGraph(new DependenciesGraph({ packages, edges })), {
+      manifests: {
+        [path.resolve('comps/comp1')]: { dependencies: { foo: '1.0.0' } },
+      },
+      rootDir: process.cwd(),
+      resolve: () => {
+        const err = new Error('No matching version found');
+        (err as Error & { code: string }).code = 'ERR_PNPM_NO_MATCHING_VERSION';
+        throw err;
+      },
+    });
+    expect(Object.keys(lockfile.packages!).sort()).to.eql(['foo@1.0.0']);
+    expect(Object.keys(lockfile.snapshots!).sort()).to.eql(['foo@1.0.0']);
+    expect(lockfile.snapshots!['foo@1.0.0']).to.eql({});
+  });
+
+  // When the resolve failure is for a regular registry package (no component
+  // attribute), we still want to surface the error rather than silently drop
+  // it — that path means the graph itself is genuinely broken, not just
+  // referencing an unpublished workspace snap.
+  it('should re-throw resolver errors for non-component pkgs', async () => {
+    const packages: PackagesMap = new Map([['foo@1.0.0', {} as any]]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0', lifecycle: 'runtime' }],
+      },
+      { id: 'foo@1.0.0', neighbours: [] },
+    ];
+    let caught: Error | undefined;
+    try {
+      await convertGraphToLockfile(new DependenciesGraph(new DependenciesGraph({ packages, edges })), {
+        manifests: {
+          [path.resolve('comps/comp1')]: { dependencies: { foo: '1.0.0' } },
+        },
+        rootDir: process.cwd(),
+        resolve: () => {
+          throw new Error('boom');
+        },
+      });
+    } catch (err) {
+      caught = err as Error;
+    }
+    expect(caught?.message).to.equal('boom');
+  });
+
+  // Narrowing guardrail: even for a component-flagged pkg, only
+  // ERR_PNPM_NO_MATCHING_VERSION should be swallowed. A network/auth/5xx
+  // failure must propagate so a real outage isn't silently masked as a
+  // graph-recovery success.
+  it('should re-throw non-NoMatchingVersion errors even for component pkgs', async () => {
+    const packages: PackagesMap = new Map([
+      [
+        '@bitdev/react.app-types.vite-react@0.0.0-df1917dc',
+        { component: { scope: 'bitdev.react', name: 'app-types/vite-react' } } as any,
+      ],
+      ['foo@1.0.0', { resolution: { integrity: 'sha512-aaa' } } as any],
+    ]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0', lifecycle: 'runtime' }],
+      },
+      { id: 'foo@1.0.0', neighbours: [{ id: '@bitdev/react.app-types.vite-react@0.0.0-df1917dc' }] },
+      { id: '@bitdev/react.app-types.vite-react@0.0.0-df1917dc', neighbours: [] },
+    ];
+    let caught: Error | undefined;
+    try {
+      await convertGraphToLockfile(new DependenciesGraph(new DependenciesGraph({ packages, edges })), {
+        manifests: {
+          [path.resolve('comps/comp1')]: { dependencies: { foo: '1.0.0' } },
+        },
+        rootDir: process.cwd(),
+        resolve: () => {
+          const err = new Error('Connect ETIMEDOUT');
+          (err as Error & { code: string }).code = 'ERR_PNPM_META_FETCH_FAIL';
+          throw err;
+        },
+      });
+    } catch (err) {
+      caught = err as Error;
+    }
+    expect(caught?.message).to.equal('Connect ETIMEDOUT');
+    expect((caught as Error & { code: string }).code).to.equal('ERR_PNPM_META_FETCH_FAIL');
+  });
 
   it('should throw an error if resolution is missing', async () => {
     const packages: PackagesMap = new Map([['foo@1.0.0', {} as any]]);

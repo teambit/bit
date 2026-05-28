@@ -658,6 +658,23 @@
         ]
       },
       {
+        "name": "trust [action] [pattern]",
+        "options": [],
+        "description": "manage which scopes are trusted to load aspects (envs, etc.) into the workspace's process",
+        "extendedDescription": "scope-trust is opt-in. when off (the default), aspects from any scope load without a check. when on, aspects from a scope outside the trust list trigger a prompt (interactive shells) or an error (non-interactive).\n\n  bit scope trust                    # same as \"list\"\n  bit scope trust list               # show status; if on, print the effective trust list\n  bit scope trust enable             # turn on (writes \"trustedScopes\": [] to workspace.jsonc)\n  bit scope trust disable            # turn off (removes \"trustedScopes\" from workspace.jsonc)\n  bit scope trust add PATTERN        # add a pattern (auto-enables if needed)\n  bit scope trust remove PATTERN     # remove a pattern (does NOT disable when list is empty)\n\nonce on, the effective trust set is: builtin scopes (teambit.*, bitdev.*, and a few others — run \"bit scope trust list\" to see) + the owner of defaultScope + entries listed under \"trustedScopes\". patterns are exact (\"acme.frontend\") or owner wildcard (\"acme.*\").",
+        "group": "component-config",
+        "arguments": [
+          {
+            "name": "action",
+            "description": "one of: list, enable, disable, add, remove. defaults to \"list\"."
+          },
+          {
+            "name": "pattern",
+            "description": "scope pattern (required for \"add\" and \"remove\")"
+          }
+        ]
+      },
+      {
         "name": "rename <current-scope-name> <new-scope-name>",
         "options": [
           [
@@ -2513,6 +2530,11 @@
       ],
       [
         "",
+        "dependencies-depth <n>",
+        "limit how many levels deep to traverse with --dependencies/--dependencies-head (1=direct deps only). default: traverse all levels"
+      ],
+      [
+        "",
         "dependents",
         "import components found while traversing from the imported components upwards to the workspace components"
       ],
@@ -3426,6 +3448,11 @@
       ],
       [
         "",
+        "no-lock-deps",
+        "do not save the dependencies graph in the tag"
+      ],
+      [
+        "",
         "increment-by <number>",
         "(default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3."
       ],
@@ -3541,6 +3568,11 @@
         "",
         "rebuild-deps-graph",
         "do not reuse the saved dependencies graph, instead build it from scratch"
+      ],
+      [
+        "",
+        "no-lock-deps",
+        "do not save the dependencies graph in the snap"
       ],
       [
         "i",
@@ -4000,7 +4032,12 @@
           [
             "h",
             "head",
-            "switch to the head of the lane/main (fetches the latest changes from the remote)"
+            "DEPRECATED. this is currently the default behavior"
+          ],
+          [
+            "",
+            "skip-fetch",
+            "don't fetch the latest from the remote; switch to the lane/main state already in the local scope"
           ],
           [
             "r",
@@ -4269,8 +4306,8 @@
             "do not merge, just overwrite with incoming files"
           ]
         ],
-        "description": "import a remote lane to your workspace and switch to that lane",
-        "extendedDescription": "",
+        "description": "import a remote lane to your workspace",
+        "extendedDescription": "when on the default lane, the workspace is switched to the imported lane.\nwhen already on the same lane, only the latest objects are fetched from the remote — run \"bit checkout head\" to update the workspace.\nwhen on a different lane, the lane is fetched locally without switching to avoid disrupting your work — run `bit switch <lane>` to switch.",
         "group": "ungrouped",
         "private": false,
         "arguments": [
@@ -4627,7 +4664,12 @@
       [
         "h",
         "head",
-        "switch to the head of the lane/main (fetches the latest changes from the remote)"
+        "DEPRECATED. this is currently the default behavior"
+      ],
+      [
+        "",
+        "skip-fetch",
+        "don't fetch the latest from the remote; switch to the lane/main state already in the local scope"
       ],
       [
         "r",
@@ -4987,7 +5029,7 @@
       ]
     ],
     "description": "start Model Context Protocol server for AI assistants",
-    "extendedDescription": "enables AI assistants and other tools to interact with Bit via the Model Context Protocol.\nprovides a standardized interface for AI agents to execute Bit commands and access component information.\nallows writing custom instructions and rules to guide AI agents in their interactions with Bit.",
+    "extendedDescription": "NOTE: this is the legacy local stdio MCP server. The recommended way to connect AI agents to Bit is now the hosted Cloud MCP at https://mcp.bit.cloud/mcp.\nsee setup instructions for each agent at https://bit.cloud/docs/connect.\n\nenables AI assistants and other tools to interact with Bit via the Model Context Protocol.\nprovides a standardized interface for AI agents to execute Bit commands and access component information.\nallows writing custom instructions and rules to guide AI agents in their interactions with Bit.",
     "group": "advanced",
     "private": false,
     "commands": [
