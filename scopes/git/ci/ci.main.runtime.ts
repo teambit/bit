@@ -668,16 +668,37 @@ export class CiMain {
                 `Deleting it and creating a fresh lane to recover.`
             )
           );
-          await this.lanes.removeLanes([laneId.toString()], { remote: true, force: true }).catch((e) => {
-            const msg = e?.toString() ?? '';
-            // Tolerate the race where another concurrent recovery deleted the lane first — the
-            // desired post-condition (lane gone from remote) is already met.
-            if (msg.includes('was not found') || msg.includes('not found')) {
-              this.logger.console(chalk.blue(`Remote lane ${laneId.toString()} was already gone — proceeding`));
-              return;
-            }
-            throw new Error(`Failed to delete stale remote lane ${laneId.toString()}: ${msg || e}`);
-          });
+          // Re-check the remote lane's hash immediately before deleting. The central-hub delete
+          // API is name-based — there's no compare-and-swap — so two CI jobs racing the same
+          // recovery could otherwise have job B delete job A's freshly-recreated lane. By
+          // re-fetching here we shrink the TOCTOU window to milliseconds: if A's recreate landed
+          // before our re-fetch, the hash changed and we skip the delete entirely. The downstream
+          // export then hits the lane-hash mismatch and lands in `exportWithAdoptOnConflict`,
+          // which rebases our snaps onto the winner's lane — no destroyed history.
+          const staleHash = existingLanes[0]?.hash;
+          const recheck = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name }).catch(() => []);
+          const currentRemoteHash = recheck[0]?.hash;
+          const remoteChanged = staleHash && currentRemoteHash && currentRemoteHash !== staleHash;
+          if (remoteChanged) {
+            this.logger.console(
+              chalk.blue(
+                `Remote lane ${laneId.toString()} changed since we first checked (hash ` +
+                  `${staleHash.slice(0, 9)} → ${currentRemoteHash.slice(0, 9)}) — another concurrent ` +
+                  `recovery already recreated it. Skipping the delete; export will adopt-on-conflict.`
+              )
+            );
+          } else {
+            await this.lanes.removeLanes([laneId.toString()], { remote: true, force: true }).catch((e) => {
+              const msg = e?.toString() ?? '';
+              // Tolerate the race where another concurrent recovery deleted the lane first — the
+              // desired post-condition (lane gone from remote) is already met.
+              if (msg.includes('was not found') || msg.includes('not found')) {
+                this.logger.console(chalk.blue(`Remote lane ${laneId.toString()} was already gone — proceeding`));
+                return;
+              }
+              throw new Error(`Failed to delete stale remote lane ${laneId.toString()}: ${msg || e}`);
+            });
+          }
           // switchToLane fetched the remote lane and persisted it into the local scope's lane
           // index (via `importLaneObject` → `legacyScope.lanes.saveLane`) BEFORE the underlying
           // merge failed. Without dropping that local copy here, the upcoming `createLane` would
@@ -693,8 +714,17 @@ export class CiMain {
           // from `consumer.getCurrentLaneObject()` regardless of `forkLaneNewScope` (which only
           // suppresses the cross-scope guard) — if `originalLane` is non-default (a developer
           // running `bit ci pr` from a lane), without this reset the "fresh" lane would silently
-          // inherit `originalLane`'s components.
-          await this.switchToLane('main');
+          // inherit `originalLane`'s components. Check the return value: a silent failure here
+          // would defeat the whole point of the reset.
+          const resetErr = await this.switchToLane('main');
+          const afterReset = await this.lanes.getCurrentLane();
+          if (resetErr || afterReset) {
+            throw new Error(
+              `Failed to reset to main before recreating ${laneId.toString()}: ` +
+                `${resetErr?.toString() ?? `(still on lane "${afterReset?.name}")`}. ` +
+                `Aborting to avoid silently forking the recreated lane from the wrong source.`
+            );
+          }
           const createLaneResult = await this.lanes.createLane(laneId.name, {
             scope: laneId.scope,
             forkLaneNewScope: true,
