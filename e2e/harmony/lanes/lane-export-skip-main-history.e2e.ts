@@ -267,16 +267,26 @@ describe('lane export skips main history objects', function () {
   describe('fresh consumer of a lean lane: create new lane + change-scope', () => {
     let scopeL: string;
     let scopeLPath: string;
+    let scopeF: string;
+    let scopeFPath: string;
 
     before(() => {
-      // scope-C (default remote) = component home scope; scope-L = lane scope (lean).
+      // scope-C (default remote) = component home scope; scope-L = lane scope (lean);
+      // scope-F = the fork target scope (where the new forked lane gets pushed).
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      const newScope = helper.scopeHelper.getNewBareScope('-lean-lane');
-      scopeL = newScope.scopeName;
-      scopeLPath = newScope.scopePath;
-      helper.scopeHelper.addRemoteScope(scopeLPath);
-      helper.scopeHelper.addRemoteScope(scopeLPath, helper.scopes.remotePath);
-      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopeLPath);
+      const lNew = helper.scopeHelper.getNewBareScope('-lean-lane');
+      scopeL = lNew.scopeName;
+      scopeLPath = lNew.scopePath;
+      const fNew = helper.scopeHelper.getNewBareScope('-fork-target');
+      scopeF = fNew.scopeName;
+      scopeFPath = fNew.scopePath;
+      [scopeLPath, scopeFPath].forEach((p) => {
+        helper.scopeHelper.addRemoteScope(p);
+        helper.scopeHelper.addRemoteScope(p, helper.scopes.remotePath);
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, p);
+      });
+      helper.scopeHelper.addRemoteScope(scopeLPath, scopeFPath);
+      helper.scopeHelper.addRemoteScope(scopeFPath, scopeLPath);
 
       // build main history on scope-C, then advance main further so the lane never sees the latest main-head.
       helper.fixtures.populateComponents(1);
@@ -289,13 +299,14 @@ describe('lane export skips main history objects', function () {
       helper.command.tagAllWithoutBuild('--unmodified');
       helper.command.export();
 
-      // fresh consumer: import the lean lane, then create a forked lane and change its scope.
+      // fresh consumer: import the lean lane, then create a forked lane and change its scope to scopeF.
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.scopeHelper.addRemoteScope(scopeLPath);
+      helper.scopeHelper.addRemoteScope(scopeFPath);
       helper.command.runCmd(`bit lane import ${scopeL}/lane-a -x`);
       helper.command.createLane('forked-lane');
-      helper.command.changeLaneScope('another-scope');
+      helper.command.changeLaneScope(scopeF);
     });
 
     it('bit status should not throw', () => {
@@ -308,6 +319,15 @@ describe('lane export skips main history objects', function () {
       // history of every component show up as staged.)
       const status = helper.command.statusJson();
       expect(status.stagedComponents).to.have.lengthOf(0);
+    });
+
+    it('bit export --fork-lane-new-scope should succeed without --all and without VersionNotFoundOnFS', () => {
+      // The user's flow: after the clean-status fix, plain `bit export --fork-lane-new-scope`
+      // used to bail with "no changes — use --all". With --all it would try to read every
+      // Version object including foreign main-history that the lean lane never pulled, and
+      // crash with VersionNotFoundOnFS. Verify both: includeNonStaged is implied so something
+      // gets exported, and the filter skips refs whose Version object is missing on disk.
+      expect(() => helper.command.export('--fork-lane-new-scope')).to.not.throw();
     });
   });
 

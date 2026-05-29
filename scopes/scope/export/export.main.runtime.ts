@@ -180,9 +180,14 @@ export class ExportMain {
   }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer: Consumer = this.workspace.consumer;
+    // For a cross-scope fork, the divergence-based status is correctly clean (only true local
+    // snaps are staged), so the regular "what's staged" list is empty. But the user's intent
+    // with --fork-lane-new-scope is to push the lane's content to the new scope — include all
+    // lane components, not just staged ones. (The export below also force-enables allVersions
+    // for the same reason.)
     const { idsToExport, missingScope, laneObject } = await this.getComponentsToExport(
       ids,
-      includeNonStaged || headOnly
+      includeNonStaged || headOnly || params.forkLaneNewScope
     );
 
     if (!idsToExport.length && !laneObject) {
@@ -536,9 +541,19 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
           // touching disk to load Version objects.
           if (modelComponent.scope === remoteNameStr) return { modelComponent, refs };
           let droppedCount = 0;
+          let missingCount = 0;
           const keptRefs: Ref[] = [];
           for (const ref of refs) {
             const obj = await ref.load(scope.objects);
+            if (!obj) {
+              // Version object isn't on disk locally. Expected for foreign main-history refs
+              // after a lean-lane import (main history doesn't live on the lane scope, and the
+              // lane import didn't pull it). It's safe to drop — consumers of the destination
+              // scope can resolve it from the component's home scope on demand. Without this
+              // skip, `processModelComponent` would fail with VersionNotFoundOnFS.
+              missingCount += 1;
+              continue;
+            }
             if (!(obj instanceof Version)) {
               keptRefs.push(ref);
               continue;
@@ -551,11 +566,11 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
             }
             keptRefs.push(ref);
           }
-          if (droppedCount) {
+          if (droppedCount || missingCount) {
             this.logger.debug(
-              `export-scope-components, skipping ${droppedCount} main-origin refs for ${modelComponent
+              `export-scope-components, for ${modelComponent
                 .id()
-                .toString()} (already on component home scope, not the lane scope)`
+                .toString()}: skipping ${droppedCount} main-origin refs (live on component home scope) and ${missingCount} refs whose Version is not on local disk (live on component home scope or original lane scope)`
             );
           }
           return keptRefs.length ? { modelComponent, refs: keptRefs } : null;
