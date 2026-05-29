@@ -379,11 +379,22 @@ export class LanesMain {
     sourceLane: any,
     targetLaneId: LaneId | undefined,
     targetLane: any,
-    options?: LaneDiffStatusOptions
+    options?: LaneDiffStatusOptions,
+    targetMainHeads?: Array<{ toString(): string }>
   ): string {
     const sourceHeadHash = sourceLane?.hash?.toString?.() ?? sourceLane?.hash ?? '';
     if (!sourceHeadHash) return '';
-    const targetHeadHash = targetLane?.hash?.toString?.() ?? targetLane?.hash ?? (targetLaneId ? '' : 'default');
+    // A lane target has a single head hash to key on. The main target has none, so fingerprint the
+    // resolved per-component main heads instead — otherwise the key never changes when main advances
+    // and a stale "up to date" result is served. No resolvable main heads ⇒ skip the result memo.
+    let targetHeadHash: string;
+    if (targetLane) {
+      targetHeadHash = targetLane.hash?.toString?.() ?? targetLane.hash ?? '';
+    } else {
+      const heads = (targetMainHeads || []).map((id) => id.toString()).sort();
+      if (!heads.length) return '';
+      targetHeadHash = heads.join(',');
+    }
     const optionsKey = `${options?.skipChanges ? '1' : '0'}${options?.skipUpToDate ? '1' : '0'}`;
     return `${sourceLaneId.toString()}@${sourceHeadHash}|${targetLaneId?.toString() ?? 'default'}@${targetHeadHash}|${optionsKey}`;
   }
@@ -1257,13 +1268,10 @@ please create a new lane instead, which will include all components of this lane
     const targetLaneIds = targetLane?.toBitIds();
     const host = this.componentAspect.getHost();
 
-    const resultMemoKey = this.diffStatusResultMemoKey(sourceLaneId, sourceLane, targetLaneId, targetLane, options);
-    const earlyReturn = this.tryDiffStatusResultMemo(resultMemoKey, sourceLaneId, targetLaneId);
-    if (earlyReturn) {
-      this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
-      return earlyReturn;
-    }
-
+    // Resolve the main-side heads up-front: they feed BOTH the memo key (so the cache invalidates
+    // when main advances) and the diff computation below. The target=main case has no single lane
+    // hash, so without this the key was constant ('default') and stale results were served when main
+    // moved ahead (lanes.spec "not up to date when main is ahead").
     const targetMainHeads =
       !targetLaneId || targetLaneId?.isDefault()
         ? compact(
@@ -1276,6 +1284,20 @@ please create a new lane instead, which will include all components of this lane
             )
           )
         : [];
+
+    const resultMemoKey = this.diffStatusResultMemoKey(
+      sourceLaneId,
+      sourceLane,
+      targetLaneId,
+      targetLane,
+      options,
+      targetMainHeads
+    );
+    const earlyReturn = this.tryDiffStatusResultMemo(resultMemoKey, sourceLaneId, targetLaneId);
+    if (earlyReturn) {
+      this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
+      return earlyReturn;
+    }
 
     await this.importer.importObjectsFromMainIfExist(targetMainHeads, { cache: true });
 
