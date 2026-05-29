@@ -2097,6 +2097,14 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/preserve-workspace-mode"
     },
+    "ui/preview-compare": {
+        "name": "ui/preview-compare",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.preview",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/preview-compare"
+    },
     "ui/preview-placeholder": {
         "name": "ui/preview-placeholder",
         "scope": "teambit.preview",
