@@ -329,7 +329,13 @@ export class CiMain {
     return { status };
   }
 
-  private async switchToLane(laneName: string, options: SwitchLaneOptions = {}) {
+  /**
+   * Returns the caught Error on failure, or undefined on success (including the "already checked
+   * out" no-op case). Callers that need to react to a specific failure mode (e.g. stale lane) can
+   * inspect the returned error; existing callers ignore it and rely on a follow-up
+   * `getCurrentLane()` check.
+   */
+  private async switchToLane(laneName: string, options: SwitchLaneOptions = {}): Promise<Error | undefined> {
     this.logger.console(chalk.blue(`Switching to ${laneName}`));
     try {
       await this.lanes.switchLanes(laneName, {
@@ -339,12 +345,14 @@ export class CiMain {
         ...options,
       });
     } catch (e: any) {
-      if (e.toString().includes('already checked out')) {
+      if (e?.toString().includes('already checked out')) {
         this.logger.console(chalk.yellow(`Lane ${laneName} already checked out, skipping checkout`));
-        return true;
+        return undefined;
       }
-      this.logger.console(chalk.red(`Failed switching to ${laneName}: ${e.toString()}`));
+      this.logger.console(chalk.red(`Failed switching to ${laneName}: ${e?.toString() ?? e}`));
+      return e;
     }
+    return undefined;
   }
 
   /**
@@ -610,35 +618,118 @@ export class CiMain {
         // lane-history feature on Bit Cloud all survive across subsequent commits to the same PR.
         // switchToLane fetches the latest lane head from remote.
         this.logger.console(chalk.blue(`Lane ${laneId.toString()} exists on remote, reusing it`));
-        await this.switchToLane(laneId.toString());
-        // Verify the switch actually landed us on the lane before doing any lane work.
-        // switchToLane logs-and-swallows switch failures, so without this guard a failed switch
-        // would let syncConfigFromMain and snap run against the wrong lane.
+        const switchErr = await this.switchToLane(laneId.toString());
+        // switchToLane returns the caught error (undefined on success). Combine with a
+        // current-lane-state probe — comparing BOTH name AND scope, so a same-named lane in a
+        // different scope can't masquerade as a successful switch.
         const switchedLane = await this.lanes.getCurrentLane();
-        if (switchedLane?.name !== laneId.name) {
-          throw new Error(
-            `Expected to be on lane ${laneId.name} after switching, but current lane is ${switchedLane?.name ?? 'main'}`
-          );
-        }
-        // Sync config-only changes from main onto the lane, so config that was tagged into objects
-        // on main since the lane forked (e.g. `bit deps set` / `bit env set` from another PR, not
-        // visible via the workspace's git checkout) is reflected on the lane. Source files are
-        // git's job — see syncConfigFromMain.
-        //
-        // BUT only when the PR branch is actually up to date with the default branch. If the PR is
-        // behind (hasn't pulled main's latest), its git checkout still reflects the older fork
-        // point, so pulling main's newer config onto the lane would desync the lane from the
-        // source. The author merges the default branch into their PR in git; the next `bit ci pr`
-        // then propagates it here.
-        if (await this.isBranchBehindDefaultBranch()) {
+        const landedOnLane = switchedLane?.name === laneId.name && switchedLane?.scope === laneId.scope;
+        if (landedOnLane) {
+          // Sync config-only changes from main onto the lane, so config that was tagged into
+          // objects on main since the lane forked (e.g. `bit deps set` / `bit env set` from
+          // another PR, not visible via the workspace's git checkout) is reflected on the lane.
+          // Source files are git's job — see syncConfigFromMain.
+          //
+          // BUT only when the PR branch is actually up to date with the default branch. If the PR
+          // is behind (hasn't pulled main's latest), its git checkout still reflects the older
+          // fork point, so pulling main's newer config onto the lane would desync the lane from
+          // the source. The author merges the default branch into their PR in git; the next
+          // `bit ci pr` then propagates it here.
+          if (await this.isBranchBehindDefaultBranch()) {
+            this.logger.console(
+              chalk.yellow(
+                `PR branch is behind the default branch — skipping config sync from main. ` +
+                  `Merge or rebase the default branch into your PR to pick up main's latest config.`
+              )
+            );
+          } else {
+            await this.syncConfigFromMain(laneId);
+          }
+        } else {
+          // Switch failed even though the remote lane exists. The destructive recovery below
+          // (delete the remote lane + recreate fresh) is safe only when the failure is the
+          // specific "stale lane" pattern — the lane references a ModelComponent the PR has
+          // since removed/renamed (`unable to merge lane …, the component … was not found`).
+          // For any other failure (transient network blip during fetch, auth error, lane locked
+          // by Cloud UI, etc.) destroying lane history would be the wrong response, so we
+          // rethrow and let the caller report the real cause.
+          const errMsg = switchErr?.toString() ?? '';
+          const isStaleLane = errMsg.includes('unable to merge lane');
+          if (!isStaleLane) {
+            throw new Error(
+              `Failed to switch to remote lane ${laneId.toString()}: ${errMsg || '(no error captured)'}. ` +
+                `Refusing destructive recovery for this failure class — the error doesn't match the ` +
+                `stale-lane marker, so deleting the lane could destroy real history. Investigate or retry.`
+            );
+          }
           this.logger.console(
             chalk.yellow(
-              `PR branch is behind the default branch — skipping config sync from main. ` +
-                `Merge or rebase the default branch into your PR to pick up main's latest config.`
+              `Stale remote lane ${laneId.toString()} — switching failed. ` +
+                `Deleting it and creating a fresh lane to recover.`
             )
           );
-        } else {
-          await this.syncConfigFromMain(laneId);
+          // Re-check the remote lane's hash immediately before deleting. The central-hub delete
+          // API is name-based — there's no compare-and-swap — so two CI jobs racing the same
+          // recovery could otherwise have job B delete job A's freshly-recreated lane. By
+          // re-fetching here we shrink the TOCTOU window to milliseconds: if A's recreate landed
+          // before our re-fetch, the hash changed and we skip the delete entirely. The downstream
+          // export then hits the lane-hash mismatch and lands in `exportWithAdoptOnConflict`,
+          // which rebases our snaps onto the winner's lane — no destroyed history.
+          const staleHash = existingLanes[0]?.hash;
+          const recheck = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name }).catch(() => []);
+          const currentRemoteHash = recheck[0]?.hash;
+          const remoteChanged = staleHash && currentRemoteHash && currentRemoteHash !== staleHash;
+          if (remoteChanged) {
+            this.logger.console(
+              chalk.blue(
+                `Remote lane ${laneId.toString()} changed since we first checked (hash ` +
+                  `${staleHash.slice(0, 9)} → ${currentRemoteHash.slice(0, 9)}) — another concurrent ` +
+                  `recovery already recreated it. Skipping the delete; export will adopt-on-conflict.`
+              )
+            );
+          } else {
+            await this.lanes.removeLanes([laneId.toString()], { remote: true, force: true }).catch((e) => {
+              const msg = e?.toString() ?? '';
+              // Tolerate the race where another concurrent recovery deleted the lane first — the
+              // desired post-condition (lane gone from remote) is already met.
+              if (msg.includes('was not found') || msg.includes('not found')) {
+                this.logger.console(chalk.blue(`Remote lane ${laneId.toString()} was already gone — proceeding`));
+                return;
+              }
+              throw new Error(`Failed to delete stale remote lane ${laneId.toString()}: ${msg || e}`);
+            });
+          }
+          // switchToLane fetched the remote lane and persisted it into the local scope's lane
+          // index (via `importLaneObject` → `legacyScope.lanes.saveLane`) BEFORE the underlying
+          // merge failed. Without dropping that local copy here, the upcoming `createLane` would
+          // hit the "lane … already exists" guard in create-lane.ts. Same trash-the-local-object
+          // pattern as `rebaseOntoRemoteLane`.
+          const legacyScope = this.workspace.scope.legacyScope;
+          const localLane = await legacyScope.loadLane(laneId);
+          if (localLane) {
+            await legacyScope.objects.moveObjectsToTrash([localLane.hash()]);
+          }
+          // Reset the workspace's current-lane pointer to main before createLane, so the new lane
+          // is forked from main with an empty component list. `createLane` populates new lanes
+          // from `consumer.getCurrentLaneObject()` regardless of `forkLaneNewScope` (which only
+          // suppresses the cross-scope guard) — if `originalLane` is non-default (a developer
+          // running `bit ci pr` from a lane), without this reset the "fresh" lane would silently
+          // inherit `originalLane`'s components. Check the return value: a silent failure here
+          // would defeat the whole point of the reset.
+          const resetErr = await this.switchToLane('main');
+          const afterReset = await this.lanes.getCurrentLane();
+          if (resetErr || afterReset) {
+            throw new Error(
+              `Failed to reset to main before recreating ${laneId.toString()}: ` +
+                `${resetErr?.toString() ?? `(still on lane "${afterReset?.name}")`}. ` +
+                `Aborting to avoid silently forking the recreated lane from the wrong source.`
+            );
+          }
+          const createLaneResult = await this.lanes.createLane(laneId.name, {
+            scope: laneId.scope,
+            forkLaneNewScope: true,
+          });
+          this.logger.console(chalk.blue(`Recreated lane ${laneId.toString()} (hash: ${createLaneResult.hash})`));
         }
       } else {
         this.logger.console(chalk.blue(`Creating lane ${laneId.toString()}`));
