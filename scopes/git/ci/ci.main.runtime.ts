@@ -611,34 +611,55 @@ export class CiMain {
         // switchToLane fetches the latest lane head from remote.
         this.logger.console(chalk.blue(`Lane ${laneId.toString()} exists on remote, reusing it`));
         await this.switchToLane(laneId.toString());
-        // Verify the switch actually landed us on the lane before doing any lane work.
-        // switchToLane logs-and-swallows switch failures, so without this guard a failed switch
-        // would let syncConfigFromMain and snap run against the wrong lane.
+        // switchToLane logs-and-swallows switch failures, so we have to look at the resulting
+        // current-lane state to know whether the switch actually landed.
         const switchedLane = await this.lanes.getCurrentLane();
-        if (switchedLane?.name !== laneId.name) {
-          throw new Error(
-            `Expected to be on lane ${laneId.name} after switching, but current lane is ${switchedLane?.name ?? 'main'}`
-          );
-        }
-        // Sync config-only changes from main onto the lane, so config that was tagged into objects
-        // on main since the lane forked (e.g. `bit deps set` / `bit env set` from another PR, not
-        // visible via the workspace's git checkout) is reflected on the lane. Source files are
-        // git's job — see syncConfigFromMain.
-        //
-        // BUT only when the PR branch is actually up to date with the default branch. If the PR is
-        // behind (hasn't pulled main's latest), its git checkout still reflects the older fork
-        // point, so pulling main's newer config onto the lane would desync the lane from the
-        // source. The author merges the default branch into their PR in git; the next `bit ci pr`
-        // then propagates it here.
-        if (await this.isBranchBehindDefaultBranch()) {
+        if (switchedLane?.name === laneId.name) {
+          // Sync config-only changes from main onto the lane, so config that was tagged into
+          // objects on main since the lane forked (e.g. `bit deps set` / `bit env set` from
+          // another PR, not visible via the workspace's git checkout) is reflected on the lane.
+          // Source files are git's job — see syncConfigFromMain.
+          //
+          // BUT only when the PR branch is actually up to date with the default branch. If the PR
+          // is behind (hasn't pulled main's latest), its git checkout still reflects the older
+          // fork point, so pulling main's newer config onto the lane would desync the lane from
+          // the source. The author merges the default branch into their PR in git; the next
+          // `bit ci pr` then propagates it here.
+          if (await this.isBranchBehindDefaultBranch()) {
+            this.logger.console(
+              chalk.yellow(
+                `PR branch is behind the default branch — skipping config sync from main. ` +
+                  `Merge or rebase the default branch into your PR to pick up main's latest config.`
+              )
+            );
+          } else {
+            await this.syncConfigFromMain(laneId);
+          }
+        } else {
+          // Switch failed even though the remote lane exists — typically the stored lane is stale
+          // relative to the current PR: it references a ModelComponent that the PR has since
+          // removed/renamed (`unable to merge lane …, the component … was not found`), or it was
+          // produced by an earlier shape of the PR that no longer matches. The red `Failed
+          // switching to …` line above (logged by `switchToLane`) carries the underlying error.
+          //
+          // We can't reuse a lane we can't switch to, so fall back to the create path: delete the
+          // stale remote lane and start a fresh one. The lane's prior history is lost, but that's
+          // strictly better than failing every subsequent `bit ci pr` run on this branch — once
+          // the fresh lane is in place, the next run will preserve history again.
           this.logger.console(
             chalk.yellow(
-              `PR branch is behind the default branch — skipping config sync from main. ` +
-                `Merge or rebase the default branch into your PR to pick up main's latest config.`
+              `Stale remote lane ${laneId.toString()} — switching failed. ` +
+                `Deleting it and creating a fresh lane to recover.`
             )
           );
-        } else {
-          await this.syncConfigFromMain(laneId);
+          await this.lanes.removeLanes([laneId.toString()], { remote: true, force: true }).catch((e) => {
+            throw new Error(`Failed to delete stale remote lane ${laneId.toString()}: ${e.toString()}`);
+          });
+          const createLaneResult = await this.lanes.createLane(laneId.name, {
+            scope: laneId.scope,
+            forkLaneNewScope: true,
+          });
+          this.logger.console(chalk.blue(`Recreated lane ${laneId.toString()} (hash: ${createLaneResult.hash})`));
         }
       } else {
         this.logger.console(chalk.blue(`Creating lane ${laneId.toString()}`));
