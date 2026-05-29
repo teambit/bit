@@ -82,5 +82,6 @@ releases-docs/temp-files/
 
 # Local-only planning / spec / analysis docs — not shipped with the repo.
 # Lives on individual contributors' machines for session context; not part of the project.
-docs/
+# Anchored to repo root so it doesn't also match `scopes/docs/docs` (the docs aspect).
+/docs/
 

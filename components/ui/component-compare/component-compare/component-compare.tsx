@@ -607,6 +607,25 @@ export type InlineComponentCompareProps = {
   className?: string;
   host?: string;
   previewUrl?: string;
+  /**
+   * Provide the base/compare model+descriptor directly instead of letting the inner context re-fetch
+   * them by id. Needed for the single-component compare page: in workspace local-changes mode
+   * `compareId` is deliberately set equal to `baseId` (to trigger the server's local diff for the
+   * bulk code query), so re-fetching by id would load the same snap for both sides — making deps/
+   * config/preview identical. The page already holds the correct pair (base = the scope's published
+   * snap, compare = the live workspace component), so it passes them through here. `compareId` is
+   * still used as-is to key the bulk code/aspect/test data. Lane-compare omits these and re-fetches.
+   */
+  baseOverride?: { model?: any; descriptor?: any; hasLocalChanges?: boolean };
+  compareOverride?: { model?: any; descriptor?: any; hasLocalChanges?: boolean };
+  /**
+   * Extra `data-*` attributes stamped on the panel root. Lane-compare uses these (`data-has-code`,
+   * `data-has-deps`, …) to drive per-view-mode visibility purely in CSS, so switching modes never
+   * remounts panels — it only flips the `[data-view-mode]` attribute on the pane. The object MUST be
+   * referentially stable across view-mode changes (derive it from view-mode-independent data) or it
+   * defeats React.memo and reintroduces the re-render storm this whole design avoids.
+   */
+  dataAttributes?: Record<string, string>;
 };
 
 /**
@@ -634,6 +653,9 @@ const InlineComponentCompareInner = forwardRef<HTMLDivElement, InlineComponentCo
       children,
       className,
       host = 'teambit.scope/scope',
+      baseOverride,
+      compareOverride,
+      dataAttributes,
     },
     ref
   ) {
@@ -673,6 +695,7 @@ const InlineComponentCompareInner = forwardRef<HTMLDivElement, InlineComponentCo
         className={`${styles.componentCompare} ${className || ''}`}
         data-component-id={compareId.split('@')[0]}
         style={headerStyle}
+        {...dataAttributes}
       >
         <ComponentCompareHeader
           name={name}
@@ -689,7 +712,13 @@ const InlineComponentCompareInner = forwardRef<HTMLDivElement, InlineComponentCo
         {!hasBeenVisible && <InlineSkeleton lines={1} />}
 
         {hasBeenVisible && (
-          <InlineContextProvider baseId={baseId} compareId={compareId} host={host}>
+          <InlineContextProvider
+            baseId={baseId}
+            compareId={compareId}
+            host={host}
+            baseOverride={baseOverride}
+            compareOverride={compareOverride}
+          >
             {allTabs
               ? allTabs.map((tab) => (
                   <DeferredTab key={tab.id} tabId={tab.id}>
@@ -723,23 +752,38 @@ function InlineContextProvider({
   baseId,
   compareId,
   host = 'teambit.scope/scope',
+  baseOverride,
+  compareOverride,
   children,
 }: {
   baseId?: string;
   compareId?: string;
   host?: string;
+  baseOverride?: { model?: any; descriptor?: any; hasLocalChanges?: boolean };
+  compareOverride?: { model?: any; descriptor?: any; hasLocalChanges?: boolean };
   children: ReactNode;
 }) {
   const isNew = !baseId && !!compareId;
 
-  const { component: baseModel, componentDescriptor: baseDescriptor } = useComponent(host, baseId, {
-    skip: !baseId,
+  // When the caller supplies the model/descriptor (single-component page), use it and skip the fetch
+  // — re-fetching by id would be redundant and, in local-changes mode (compareId === baseId), wrong.
+  const { component: fetchedBaseModel, componentDescriptor: fetchedBaseDescriptor } = useComponent(host, baseId, {
+    skip: !baseId || !!baseOverride,
     context: { batch: true },
   });
-  const { component: compareModel, componentDescriptor: compareDescriptor } = useComponent(host, compareId, {
-    skip: !compareId,
-    context: { batch: true },
-  });
+  const { component: fetchedCompareModel, componentDescriptor: fetchedCompareDescriptor } = useComponent(
+    host,
+    compareId,
+    {
+      skip: !compareId || !!compareOverride,
+      context: { batch: true },
+    }
+  );
+
+  const baseModel = baseOverride?.model ?? fetchedBaseModel;
+  const baseDescriptor = baseOverride?.descriptor ?? fetchedBaseDescriptor;
+  const compareModel = compareOverride?.model ?? fetchedCompareModel;
+  const compareDescriptor = compareOverride?.descriptor ?? fetchedCompareDescriptor;
 
   const hasBase = !baseId || !!baseModel;
   const hasCompare = !compareId || !!compareModel;
@@ -792,7 +836,9 @@ function InlineContextProvider({
 
   const contextValue = {
     base: baseModel ? { model: baseModel, descriptor: baseDescriptor } : undefined,
-    compare: compareModel ? { model: compareModel, descriptor: compareDescriptor } : undefined,
+    compare: compareModel
+      ? { model: compareModel, descriptor: compareDescriptor, hasLocalChanges: compareOverride?.hasLocalChanges }
+      : undefined,
     loading: compCompareLoading,
     logsByVersion: new Map(),
     fileCompareDataByName,

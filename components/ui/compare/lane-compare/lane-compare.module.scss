@@ -273,6 +273,30 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
   &[data-view-mode='docs'] [data-tab-id]:not([data-tab-id='inline-docs']) {
     display: none;
   }
+
+  // Per-panel visibility driven by `data-view-mode` on the pane. Every component panel is mounted
+  // regardless of the active view (the set is filtered by search only) so that switching modes never
+  // remounts panels — it's just this attribute flip. CSS then hides panels that have no changes for
+  // the active view, using the stable `data-has-*` attributes stamped in lane-compare.tsx. `docs`,
+  // `tests` and `api` show every panel, so they get no hide rule here.
+  &[data-view-mode='code'] [data-component-id]:not([data-has-code]) {
+    display: none;
+  }
+  &[data-view-mode='preview'] [data-component-id]:not([data-has-preview]) {
+    display: none;
+  }
+  &[data-view-mode='dependencies'] [data-component-id]:not([data-has-deps]) {
+    display: none;
+  }
+  &[data-view-mode='config'] [data-component-id]:not([data-has-config]) {
+    display: none;
+  }
+}
+
+// A group with no panels visible in the active view. Hidden via a class (not removed from the tree)
+// so its panels stay mounted and a later view switch is still a pure CSS flip.
+.groupHidden {
+  display: none;
 }
 
 // --- Loading ---
@@ -320,6 +344,19 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
 
   &:not(:first-child) {
     margin-top: 8px;
+  }
+
+  // Containment for each component panel. A view-mode switch toggles `display` on heavy tab subtrees
+  // (code diffs, dependency tables) inside every panel; without containment a single layout read —
+  // e.g. the toolbar's toggle indicator measuring its own `offsetLeft` right after the switch — forces
+  // the browser to synchronously re-lay-out the ENTIRE pane in one pass (the ~1.2s "forced reflow"
+  // seen in the profiler). `content-visibility: auto` skips layout/paint for panels not near the
+  // viewport and makes each panel a containment boundary, so the reflow only touches what's on screen.
+  // `contain-intrinsic-size: auto <h>` keeps the scrollbar stable by remembering each panel's last
+  // rendered height (falling back to the estimate before first render).
+  [data-component-id] {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 320px;
   }
 }
 

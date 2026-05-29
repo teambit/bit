@@ -30,6 +30,12 @@ export type CompareToolbarProps = {
   viewModes: CompareViewMode[];
   groupByOptions?: CompareGroupByOption[];
   counts: Record<string, number>;
+  /**
+   * Show the per-view-mode count badge. Counts always drive visibility (a mode with count 0 is
+   * hidden); this only controls the badge. Off for single-component compare, where a count would
+   * only ever be "1 component" and reads as meaningless.
+   */
+  showCounts?: boolean;
   loading?: boolean;
   componentOptions?: SelectOption[];
   selectedComponents?: SelectOption[];
@@ -59,6 +65,7 @@ export function CompareToolbar({
   diffMode,
   onDiffModeChange,
   counts,
+  showCounts = true,
   loading,
   viewModes: registeredViewModes,
   groupByOptions,
@@ -118,11 +125,12 @@ export function CompareToolbar({
               <div className={styles.toolbarOption}>
                 {vm.icon && <Icon of={vm.icon} />}
                 <span>{vm.label}</span>
-                {loading ? (
-                  <span className={styles.toolbarBadgeSkeleton} />
-                ) : (
-                  <span className={styles.toolbarBadge}>{vm.count}</span>
-                )}
+                {showCounts &&
+                  (loading ? (
+                    <span className={styles.toolbarBadgeSkeleton} />
+                  ) : (
+                    <span className={styles.toolbarBadge}>{vm.count}</span>
+                  ))}
               </div>
             ),
           }))}

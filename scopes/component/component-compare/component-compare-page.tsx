@@ -25,6 +25,7 @@ import {
   useCompareData,
 } from '@teambit/component.ui.component-compare.component-compare';
 import type { CompareViewMode, ComponentComparePair } from '@teambit/component.ui.component-compare.component-compare';
+import { computeDepsDiff } from '@teambit/dependencies.ui.deps-diff-table';
 
 import styles from './component-compare-page.module.scss';
 
@@ -96,11 +97,20 @@ export function ComponentComparePage({ host: hostFromProps, tabs, className, ...
     [baseVersion, lastVersionInfo?.tag, lastVersionInfo?.hash, component.id.toString()]
   );
 
-  const { component: base, componentDescriptor: baseComponentDescriptor } = useComponent(
-    'teambit.scope/scope',
-    baseId?.toString(),
-    { skip: !baseId || isNew }
-  );
+  const {
+    component: base,
+    componentDescriptor: baseComponentDescriptor,
+    loading: baseLoading,
+    error: baseError,
+  } = useComponent('teambit.scope/scope', baseId?.toString(), { skip: !baseId || isNew });
+
+  // The base model is fetched asynchronously. Until it resolves we must report `loading: true` —
+  // otherwise consumers (the toolbar counts, the dependency diff, etc.) observe `base === undefined`
+  // with `loading === false` and wrongly treat the component as new (no base + has compare),
+  // deriving bogus "everything changed" data before the comparison is actually stable. We treat the
+  // base as loading until the model is present (not just until Apollo's flag flips), which also
+  // covers the skip→fetch transition where the flag is briefly false with no model yet.
+  const baseModelLoading = !isNew && !!baseId && !baseError && (!!baseLoading || !base);
 
   // For the bulk compare pair we need `baseId === compareId` to trigger the server's
   // local-changes branch in workspace mode. For non-local (explicit version param), they
@@ -134,7 +144,10 @@ export function ComponentComparePage({ host: hostFromProps, tabs, className, ...
         model: base,
         descriptor: baseComponentDescriptor,
       },
-      loading: false,
+      // `!component.logs` ⇒ the compare component's version history hasn't loaded yet, so `isNew`
+      // (derived from it) is not yet known. Stay in loading until it resolves — otherwise we briefly
+      // treat the component as new (no base) and render the wrong toolbar before the base/diff load.
+      loading: !component.logs || baseModelLoading,
       logsByVersion,
       isFullScreen: true,
       hidden: false,
@@ -146,6 +159,7 @@ export function ComponentComparePage({ host: hostFromProps, tabs, className, ...
       baseComponentDescriptor,
       compareHasLocalChanges,
       logsByVersion,
+      baseModelLoading,
     ]
   );
 
@@ -270,64 +284,80 @@ function CompareView({
   const data = compareData?.getData(compareId);
   const dataLoading = compareData?.loading ?? false;
 
-  // Compositions live on the component model (not the bulk diff), so preview availability is known
-  // without waiting for the compare query. Show preview if either side has any composition.
-  const compositionsCount = Math.max(
-    componentCompare?.compare?.model?.compositions?.length || 0,
-    componentCompare?.base?.model?.compositions?.length || 0
-  );
+  // Single stability gate. `componentCompare.loading` is true while the base/compare *models* are
+  // still being fetched; `dataLoading` is true while the bulk code/aspect/test diff is in flight.
+  // We must not derive any per-view counts until BOTH are settled — otherwise a half-loaded state
+  // (base model not yet present) reads as "no base → new → everything changed".
+  const loading = (componentCompare?.loading ?? false) || dataLoading;
 
+  // All per-view derivation happens here, and ONLY in the stable branch. While anything is loading we
+  // render a skeleton (below) instead of the toolbar, so we compute nothing — no counting, and most
+  // importantly no dependency diff against half-loaded or absent data.
   const counts = useMemo(() => {
-    // `data` is undefined while the bulk compare query loads and null if the pair failed; for the
-    // new-component path there is no pair at all (compositions/code come from `useCode`). While
-    // loading we keep data-driven views visible (1) to avoid the toolbar flickering; once loaded,
-    // the real count of 0 hides an empty view.
-    const dataCount = (real: number | undefined, newDefault: number) => {
-      if (isNew) return newDefault;
-      if (real === undefined) return dataLoading ? 1 : 0;
-      return real;
-    };
-    const changedCode = data ? (data.code || []).filter((f) => f.status && f.status !== 'UNCHANGED').length : undefined;
-    const changedAspects = data ? (data.aspects || []).length : undefined;
-    const changedTests = data
-      ? (data.tests || []).filter((f) => f.status && f.status !== 'UNCHANGED').length
-      : undefined;
-
     const acc: Record<string, number> = {};
+    if (loading) return acc;
+
+    // Dependency changes come from the dependency-resolver aspect on each descriptor (the same source
+    // InlineDepsCompare diffs) — there is no precomputed deps diff in the bulk gql result.
+    const getDeps = (descriptor: any): any[] => {
+      const aspect = descriptor?.get?.('teambit.dependencies/dependency-resolver');
+      return aspect?.data?.dependencies || aspect?.dependencies || [];
+    };
+    const depChanges = computeDepsDiff(
+      isNew ? [] : getDeps(componentCompare?.base?.descriptor),
+      getDeps(componentCompare?.compare?.descriptor)
+    ).filter((e) => e.status !== 'unchanged').length;
+
+    // Compositions live on the component model (not the bulk diff). Show preview if either side has any.
+    const compositionsCount = Math.max(
+      componentCompare?.compare?.model?.compositions?.length || 0,
+      componentCompare?.base?.model?.compositions?.length || 0
+    );
+
+    const changedCode = data ? (data.code || []).filter((f) => f.status && f.status !== 'UNCHANGED').length : 0;
+    const changedAspects = data ? (data.aspects || []).length : 0;
+    const changedTests = data ? (data.tests || []).filter((f) => f.status && f.status !== 'UNCHANGED').length : 0;
+
     for (const id of registeredModeIds) {
       switch (id) {
         case 'code':
-          acc.code = dataCount(changedCode, 1);
+          acc.code = isNew ? 1 : changedCode;
           break;
         case 'config':
-          acc.config = dataCount(changedAspects, 1);
+          acc.config = isNew ? 1 : changedAspects;
           break;
         case 'tests':
-          acc.tests = dataCount(changedTests, 0);
+          acc.tests = isNew ? 0 : changedTests;
           break;
         case 'preview':
           acc.preview = compositionsCount;
           break;
         case 'dependencies':
-          // the dependencies view renders the full dependency table (incl. unchanged), so it always
-          // has something to show — keep it available.
-          acc.dependencies = 1;
+          acc.dependencies = depChanges;
           break;
         default:
           acc[id] = 1;
       }
     }
     return acc;
-  }, [registeredModeIds, isNew, dataLoading, data, compositionsCount]);
+  }, [loading, registeredModeIds, isNew, data, componentCompare]);
 
   // If the active view has no content, fall back to the first view that does.
   useEffect(() => {
+    if (loading) return;
     if ((counts[viewMode] ?? 0) === 0) {
       const first = COMPARE_VIEW_MODES.find((v) => (counts[v.id] ?? 0) > 0);
       if (first) setViewModeState(first.id as ViewMode);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [counts, viewMode]);
+  }, [counts, viewMode, loading]);
+
+  // Render a skeleton until base, compare and the bulk diff are all loaded. We must not render the
+  // toolbar early: its visible view modes are derived from the counts, so a half-loaded state would
+  // show the wrong set (e.g. 5 modes) and then visibly collapse (to 2) once data arrives.
+  if (loading) {
+    return <CompareViewSkeleton />;
+  }
 
   return (
     <DiffModeProvider mode={diffMode}>
@@ -338,7 +368,8 @@ function CompareView({
         onDiffModeChange={setDiffMode}
         viewModes={COMPARE_VIEW_MODES}
         counts={counts}
-        loading={dataLoading}
+        showCounts={false}
+        loading={loading}
       />
 
       <div className={styles.diffPane} data-view-mode={viewMode}>
@@ -350,9 +381,35 @@ function CompareView({
           compareVersion={compareVersionShort}
           allTabs={resolvedTabs}
           host={host}
+          // Hand the inner context our already-resolved pair: base = the scope's published snap,
+          // compare = the live workspace component (with local changes). Without this the inner
+          // context re-fetches by id and, in local-changes mode (compareId === baseId), would load
+          // the same snap for both sides — making the deps/config/preview tabs show base vs base.
+          baseOverride={componentCompare?.base as { model?: any; descriptor?: any } | undefined}
+          compareOverride={componentCompare?.compare as { model?: any; descriptor?: any } | undefined}
         />
       </div>
     </DiffModeProvider>
+  );
+}
+
+function CompareViewSkeleton() {
+  return (
+    <>
+      <div className={styles.toolbarSkeleton}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <span key={i} className={styles.skelPill} />
+        ))}
+      </div>
+      <div className={styles.diffPane}>
+        <div className={styles.bodySkeleton}>
+          <div className={styles.skelHeader} />
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className={styles.skelLine} style={{ width: `${45 + ((i * 7) % 45)}%` }} />
+          ))}
+        </div>
+      </div>
+    </>
   );
 }
 

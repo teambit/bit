@@ -1858,6 +1858,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-filters/show-main-filter"
     },
+    "ui/component-meta": {
+        "name": "ui/component-meta",
+        "scope": "teambit.component",
+        "version": "0.0.368",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-meta"
+    },
     "ui/component-preview": {
         "name": "ui/component-preview",
         "scope": "teambit.preview",

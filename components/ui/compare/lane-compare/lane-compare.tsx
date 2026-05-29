@@ -288,50 +288,100 @@ function LaneCompareInline({
     [allComponents]
   );
 
-  // Filter
-  const filteredComponents = useMemo(() => {
-    let result = allComponents;
-    if (selectedSearchComponents.length > 0) {
-      const selectedIds = new Set(selectedSearchComponents.map((c) => c.payload));
-      result = result.filter((c) => selectedIds.has(c.idStr));
-    }
-    if (viewMode === 'code') {
-      result = result.filter(
-        (c) =>
-          c.changes.some((ch) => ch === ChangeType.SOURCE_CODE || ch === ChangeType.NEW) ||
-          c.changeType === ChangeType.NEW
-      );
-    } else if (viewMode === 'preview') {
-      result = result.filter((c) => compositionsMap.get(c.idStr) !== false);
-    } else if (viewMode === 'dependencies') {
-      result = result.filter((c) => c.changes.some((ch) => ch === ChangeType.DEPENDENCY));
-    } else if (viewMode === 'config') {
-      result = result.filter((c) => c.changes.some((ch) => ch === ChangeType.ASPECTS));
-    }
-    return result;
-  }, [allComponents, viewMode, selectedSearchComponents, compositionsMap]);
+  // Search filter only — deliberately view-mode-independent. The diff pane renders this full set so
+  // that switching view modes never mounts/unmounts panels (which was the 2-4s freeze); per-view
+  // visibility is then driven entirely by CSS via the `data-has-*` attributes below.
+  const searchFilteredComponents = useMemo(() => {
+    if (selectedSearchComponents.length === 0) return allComponents;
+    const selectedIds = new Set(selectedSearchComponents.map((c) => c.payload));
+    return allComponents.filter((c) => selectedIds.has(c.idStr));
+  }, [allComponents, selectedSearchComponents]);
 
-  // Group
-  const grouped = useMemo(() => {
-    const groups = new Map<string, typeof filteredComponents>();
-    for (const comp of filteredComponents) {
-      const key =
-        groupBy === 'status'
-          ? comp.changeType || 'unknown'
-          : groupBy === 'namespace'
-            ? comp.namespace || 'root'
-            : groupBy === 'scope'
-              ? comp.scope
-              : 'all';
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(comp);
+  const matchesView = useCallback(
+    (c: (typeof allComponents)[number], mode: ViewMode) => {
+      switch (mode) {
+        case 'code':
+          return (
+            c.changes.some((ch) => ch === ChangeType.SOURCE_CODE || ch === ChangeType.NEW) ||
+            c.changeType === ChangeType.NEW
+          );
+        case 'preview':
+          return compositionsMap.get(c.idStr) !== false;
+        case 'dependencies':
+          return c.changes.some((ch) => ch === ChangeType.DEPENDENCY);
+        case 'config':
+          return c.changes.some((ch) => ch === ChangeType.ASPECTS);
+        default:
+          // docs / tests / api show every component.
+          return true;
+      }
+    },
+    [compositionsMap]
+  );
+
+  // View-mode-filtered set. Cheap (no heavy mounting) — used for the sidebar, the empty-state check,
+  // and the per-group visible counts. NOT used to mount the diff pane panels.
+  const filteredComponents = useMemo(
+    () => searchFilteredComponents.filter((c) => matchesView(c, viewMode)),
+    [searchFilteredComponents, viewMode, matchesView]
+  );
+
+  // Stable `data-has-*` attributes per component, derived only from view-mode-independent data so the
+  // object refs survive view-mode switches and keep `InlineComponentCompare`'s React.memo intact. CSS
+  // (in lane-compare.module.scss, scoped by `[data-view-mode]`) hides panels lacking the active flag.
+  const componentDataAttrs = useMemo(() => {
+    const map = new Map<string, Record<string, string>>();
+    for (const c of allComponents) {
+      const attrs: Record<string, string> = {};
+      if (
+        c.changes.some((ch) => ch === ChangeType.SOURCE_CODE || ch === ChangeType.NEW) ||
+        c.changeType === ChangeType.NEW
+      )
+        attrs['data-has-code'] = '';
+      if (compositionsMap.get(c.idStr) !== false) attrs['data-has-preview'] = '';
+      if (c.changes.some((ch) => ch === ChangeType.DEPENDENCY)) attrs['data-has-deps'] = '';
+      if (c.changes.some((ch) => ch === ChangeType.ASPECTS)) attrs['data-has-config'] = '';
+      map.set(c.idStr, attrs);
     }
-    return [...groups.entries()].sort(([a], [b]) =>
-      groupBy === 'status'
-        ? ChangeTypeGroupOrder.indexOf(a as ChangeType) - ChangeTypeGroupOrder.indexOf(b as ChangeType)
-        : a.localeCompare(b)
-    );
-  }, [filteredComponents, groupBy]);
+    return map;
+  }, [allComponents, compositionsMap]);
+
+  // Group helper (view-mode-independent grouping: by scope/namespace/status).
+  const groupComponents = useCallback(
+    (comps: typeof allComponents) => {
+      const groups = new Map<string, typeof allComponents>();
+      for (const comp of comps) {
+        const key =
+          groupBy === 'status'
+            ? comp.changeType || 'unknown'
+            : groupBy === 'namespace'
+              ? comp.namespace || 'root'
+              : groupBy === 'scope'
+                ? comp.scope
+                : 'all';
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key)!.push(comp);
+      }
+      return [...groups.entries()].sort(([a], [b]) =>
+        groupBy === 'status'
+          ? ChangeTypeGroupOrder.indexOf(a as ChangeType) - ChangeTypeGroupOrder.indexOf(b as ChangeType)
+          : a.localeCompare(b)
+      );
+    },
+    [groupBy]
+  );
+
+  // Sidebar grouping uses the view-filtered set (so the sidebar reflects the active view).
+  const grouped = useMemo(() => groupComponents(filteredComponents), [groupComponents, filteredComponents]);
+
+  // Pane grouping uses the search-only set — stable across view-mode switches, so panels never remount.
+  const paneGrouped = useMemo(
+    () => groupComponents(searchFilteredComponents),
+    [groupComponents, searchFilteredComponents]
+  );
+
+  // idStrs visible in the active view — drives per-group visible counts and empty-group hiding.
+  const visibleIds = useMemo(() => new Set(filteredComponents.map((c) => c.idStr)), [filteredComponents]);
 
   // Counts
   const counts = useMemo(() => {
@@ -499,34 +549,44 @@ function LaneCompareInline({
               data-view-mode={viewMode}
               style={isFullPaneView ? { display: 'none' } : undefined}
             >
-              {grouped.map(([key, comps]) => (
-                <div key={key} className={styles.laneCompareGroup}>
-                  {groupBy !== 'none' && (
-                    <div className={styles.laneCompareGroupHeader}>
-                      <span className={styles.laneCompareGroupLabel}>
-                        {groupBy === 'status' ? displayChangeType(key as ChangeType) : key}
-                      </span>
-                      <span className={styles.laneCompareGroupCount}>{comps.length}</span>
-                    </div>
-                  )}
-                  {comps.map((c) => (
-                    <InlineComponentCompare
-                      key={c.idStr}
-                      name={c.name}
-                      baseId={c.baseId}
-                      compareId={c.compareId}
-                      baseVersion={c.baseVersion}
-                      compareVersion={c.compareVersion}
-                      baseUrl={c.baseUrl}
-                      compareUrl={c.compareUrl}
-                      envIcon={envIconsMap.get(c.idStr)}
-                      allTabs={resolvedTabs}
-                      accentColor={ACCENT_COLORS[c.changeType] || undefined}
-                      host="teambit.scope/scope"
-                    />
-                  ))}
-                </div>
-              ))}
+              {paneGrouped.map(([key, comps]) => {
+                // Count/hide use the active view's visible set; the panels themselves are always
+                // mounted (CSS hides the non-matching ones). An all-hidden group collapses via the
+                // `groupHidden` class — a parent attribute flip that keeps its children mounted.
+                const visibleCount = comps.reduce((n, c) => n + (visibleIds.has(c.idStr) ? 1 : 0), 0);
+                return (
+                  <div
+                    key={key}
+                    className={classnames(styles.laneCompareGroup, visibleCount === 0 && styles.groupHidden)}
+                  >
+                    {groupBy !== 'none' && (
+                      <div className={styles.laneCompareGroupHeader}>
+                        <span className={styles.laneCompareGroupLabel}>
+                          {groupBy === 'status' ? displayChangeType(key as ChangeType) : key}
+                        </span>
+                        <span className={styles.laneCompareGroupCount}>{visibleCount}</span>
+                      </div>
+                    )}
+                    {comps.map((c) => (
+                      <InlineComponentCompare
+                        key={c.idStr}
+                        name={c.name}
+                        baseId={c.baseId}
+                        compareId={c.compareId}
+                        baseVersion={c.baseVersion}
+                        compareVersion={c.compareVersion}
+                        baseUrl={c.baseUrl}
+                        compareUrl={c.compareUrl}
+                        envIcon={envIconsMap.get(c.idStr)}
+                        allTabs={resolvedTabs}
+                        accentColor={ACCENT_COLORS[c.changeType] || undefined}
+                        host="teambit.scope/scope"
+                        dataAttributes={componentDataAttrs.get(c.idStr)}
+                      />
+                    ))}
+                  </div>
+                );
+              })}
               {filteredComponents.length === 0 && (
                 <div className={styles.emptyState}>
                   <InlineCompareEmpty message={emptyState.message} hint={emptyState.hint} />

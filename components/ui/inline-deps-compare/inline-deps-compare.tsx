@@ -48,9 +48,15 @@ export function InlineDepsCompare(_props: InlineDepsCompareProps) {
     return {
       entries: entriesWithUrls,
       baseLabel: shortenVersion(base.model.id.version) || 'Base',
-      compareLabel: shortenVersion(compare.model.id.version) || 'Compare',
+      compareLabel: (compare as any).hasLocalChanges
+        ? 'workspace'
+        : shortenVersion(compare.model.id.version) || 'Compare',
     };
-  }, [componentCompare?.base?.model?.id?.toString(), componentCompare?.compare?.model?.id?.toString()]);
+  }, [
+    componentCompare?.base?.model?.id?.toString(),
+    componentCompare?.compare?.model?.id?.toString(),
+    (componentCompare?.compare as any)?.hasLocalChanges,
+  ]);
 
   if (!componentCompare || componentCompare.loading) {
     return (
