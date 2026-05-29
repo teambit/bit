@@ -366,9 +366,15 @@ export default class Component extends BitObject {
 
     const calculateRemote = async () => {
       if (this.laneHeadRemote) return this.laneHeadRemote;
-      if (lane.isNew && lane.forkedFrom && lane.forkedFrom.scope === lane.scope) {
-        // the last check is to make sure that if this lane will be exported to a different scope than the original
-        // lane, all snaps of the original lane will be considered as local and will be exported later on.
+      if (lane.isNew && lane.forkedFrom) {
+        if (lane.forkedFrom.scope !== lane.scope) {
+          // this lane was forked and will be exported to a different scope than the original lane (e.g. after
+          // "bit lane change-scope"). all snaps of the original lane must be re-exported to the new scope, so there
+          // is no remote baseline to compare against - returning null makes the divergence treat all local snaps as
+          // staged. (without this, the fallback below compares against the main-head, which can throw
+          // TargetHeadNotFound when that main Version object isn't present locally - e.g. after "bit lane import".)
+          return null;
+        }
         const headFromFork = await repo.remoteLanes.getRef(lane.forkedFrom, this.toComponentId());
         if (headFromFork) return headFromFork;
       }
