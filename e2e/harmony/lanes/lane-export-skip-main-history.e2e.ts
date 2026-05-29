@@ -260,6 +260,57 @@ describe('lane export skips main history objects', function () {
     });
   });
 
+  // regression: importing a lean lane, then `bit lane create` + `bit lane change-scope` used to crash
+  // `bit status` with `TargetHeadNotFound` because divergence fell back to the component's main-head
+  // (not present on the lean lane scope). The fix in `calculateRemote` uses the forked-from lane's
+  // head as the baseline for cross-scope forks instead.
+  describe('fresh consumer of a lean lane: create new lane + change-scope', () => {
+    let scopeL: string;
+    let scopeLPath: string;
+
+    before(() => {
+      // scope-C (default remote) = component home scope; scope-L = lane scope (lean).
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const newScope = helper.scopeHelper.getNewBareScope('-lean-lane');
+      scopeL = newScope.scopeName;
+      scopeLPath = newScope.scopePath;
+      helper.scopeHelper.addRemoteScope(scopeLPath);
+      helper.scopeHelper.addRemoteScope(scopeLPath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopeLPath);
+
+      // build main history on scope-C, then advance main further so the lane never sees the latest main-head.
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-a', `--scope ${scopeL}`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+
+      // fresh consumer: import the lean lane, then create a forked lane and change its scope.
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.scopeHelper.addRemoteScope(scopeLPath);
+      helper.command.runCmd(`bit lane import ${scopeL}/lane-a -x`);
+      helper.command.createLane('forked-lane');
+      helper.command.changeLaneScope('another-scope');
+    });
+
+    it('bit status should not throw', () => {
+      expect(() => helper.command.status()).to.not.throw();
+    });
+
+    it('bit status should NOT report the entire history as staged — only true local snaps', () => {
+      // The consumer hasn't snapped on the forked lane, so there should be nothing staged.
+      // (Before the fix, calculateRemote returned null on cross-scope forks, making the full
+      // history of every component show up as staged.)
+      const status = helper.command.statusJson();
+      expect(status.stagedComponents).to.have.lengthOf(0);
+    });
+  });
+
   describe('lane with multiple components and deep main history merged repeatedly', () => {
     // exercises the OOM-prone scenario at smaller scale: many main snaps, multiple merges of main into lane.
     let laneScope: string;

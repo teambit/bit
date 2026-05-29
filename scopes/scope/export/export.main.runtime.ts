@@ -227,15 +227,22 @@ otherwise, re-run the export with "--fork-lane-new-scope" flag.
 if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
     }
     const isOnMain = consumer.isOnMain();
+    // For cross-scope forks (`--fork-lane-new-scope`), the new scope starts empty and needs the
+    // full lane history. Divergence-based localHashes only captures snaps after the forkedFrom
+    // baseline, so we force `allVersions` here. The lean-lane ref filter still drops main-origin
+    // refs of foreign components (those live on the component's home scope), so this doesn't
+    // re-introduce the OOM driver — only true lane-origin snaps get pushed to the new scope.
+    const allVersions = params.allVersions || Boolean(params.forkLaneNewScope && laneObject?.isNew);
     const { exported, updatedLocally, newIdsOnRemote, rippleJobs } = await this.pushToScopes({
       ...params,
+      allVersions,
       exportHeadsOnly: headOnly,
       scope: consumer.scope,
       ids: idsToExport,
       laneObject,
       originDirectly,
       isOnMain,
-      filterOutExistingVersions: Boolean(!params.allVersions && laneObject),
+      filterOutExistingVersions: Boolean(!allVersions && laneObject),
     });
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const removedIds = await this.getRemovedStagedBitIds();

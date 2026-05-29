@@ -366,11 +366,21 @@ export default class Component extends BitObject {
 
     const calculateRemote = async () => {
       if (this.laneHeadRemote) return this.laneHeadRemote;
-      if (lane.isNew && lane.forkedFrom && lane.forkedFrom.scope === lane.scope) {
-        // the last check is to make sure that if this lane will be exported to a different scope than the original
-        // lane, all snaps of the original lane will be considered as local and will be exported later on.
+      if (lane.isNew && lane.forkedFrom) {
+        // For any forked lane — same-scope or cross-scope (e.g. after `bit lane change-scope`) — use
+        // the forked-from lane's head as the divergence baseline. The consumer has that ref locally
+        // from when they ran `bit lane import` on the original lane. This is correct for both:
+        //  - same-scope forks: identical to the previous behavior.
+        //  - cross-scope forks: previously fell through to `this.remoteHead || this.head`, which can
+        //    crash with `TargetHeadNotFound` when the component's main-head Version isn't local
+        //    (common after a lean-lane import since main history doesn't live on the lane scope).
+        //    Returning the fork's head instead reports only true local snaps as staged — not the
+        //    entire history — which also keeps `bit reset` from over-removing.
         const headFromFork = await repo.remoteLanes.getRef(lane.forkedFrom, this.toComponentId());
         if (headFromFork) return headFromFork;
+        // Forked lane but we don't have the fork's ref. Return null rather than falling through to
+        // main-head, which may be missing locally and would either crash or over-report.
+        return null;
       }
       // if no remote-ref was found, because it's checked out to a lane, it's safe to assume that
       // this.head should be on the original-remote. hence, FetchMissingHistory will retrieve it on lane-remote
