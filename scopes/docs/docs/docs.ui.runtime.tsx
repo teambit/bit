@@ -13,8 +13,6 @@ import { OverviewCompareSection } from '@teambit/docs.ui.overview-compare-sectio
 import type { UsePreviewProps, UseSandboxPermission } from '@teambit/preview.ui.component-preview';
 import type { APIReferenceUI } from '@teambit/api-reference';
 import { APIReferenceAspect } from '@teambit/api-reference';
-import type { LanesUI } from '@teambit/lanes';
-import { LanesAspect } from '@teambit/lanes';
 import { DocsAspect } from './docs.aspect';
 import { OverviewSection } from './overview.section';
 import type { TitleBadgeSlot, TitleBadge, OverviewOptionsSlot, OverviewOptions } from './overview';
@@ -77,7 +75,7 @@ export class DocsUI {
     this.overviewOptionsSlot.register(options);
   }
 
-  static dependencies = [ComponentAspect, ComponentCompareAspect, APIReferenceAspect, LanesAspect];
+  static dependencies = [ComponentAspect, ComponentCompareAspect, APIReferenceAspect];
 
   static runtime = UIRuntime;
 
@@ -89,12 +87,7 @@ export class DocsUI {
   ];
 
   static async provider(
-    [component, componentCompare, apiRef, _lanesUi]: [
-      ComponentUI,
-      ComponentCompareUI,
-      APIReferenceUI,
-      LanesUI | undefined,
-    ],
+    [component, componentCompare, apiRef]: [ComponentUI, ComponentCompareUI, APIReferenceUI],
     config: {},
     [titleBadgeSlot, overviewOptionsSlot, usePreviewSandboxSlot, usePreviewPropsSlot]: [
       TitleBadgeSlot,
