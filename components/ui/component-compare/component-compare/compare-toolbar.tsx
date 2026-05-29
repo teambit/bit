@@ -107,7 +107,7 @@ export function CompareToolbar({
             placeholder={searchPlaceholder}
             options={componentOptions}
             activeOptions={selectedComponents || []}
-            onChange={(value) => onSelectedComponentsChange(value || [])}
+            onChange={(value) => onSelectedComponentsChange((value || []) as SelectOption[])}
             className={styles.componentSearchSelect}
           />
         </div>

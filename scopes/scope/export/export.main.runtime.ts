@@ -317,6 +317,22 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
 
     const idsGroupedByScope = groupByScopeName(ids);
 
+    const resolveRemote = async (scopeName: string): Promise<Remote> => {
+      try {
+        return await scopeRemotes.resolve(scopeName);
+      } catch (err) {
+        if (err instanceof ScopeNotFoundOrDenied && Http.getToken()) {
+          const bitError = new BitError(
+            `unable to export to the remote scope "${scopeName}". the scope may not exist, or you don't have access to it.
+if the scope name is wrong and you've already snapped/tagged, run "bit reset" to undo, then run "bit scope rename ${scopeName} <new-scope>" and snap/tag again`
+          );
+          (bitError as Error).cause = err;
+          throw bitError;
+        }
+        throw err;
+      }
+    };
+
     /**
      * when a component is exported for the first time, and the lane-scope is not the same as the component-scope, it's
      * important to validate that there is no such component in the original scope. otherwise, later, it'll be impossible
@@ -412,7 +428,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       lane?: Lane
     ): Promise<ObjectsPerRemoteExtended> => {
       bitIds.throwForDuplicationIgnoreVersion();
-      const remote: Remote = await scopeRemotes.resolve(remoteNameStr);
+      const remote: Remote = await resolveRemote(remoteNameStr);
       const idsToChangeLocally = ComponentIdList.fromArray(bitIds.filter((id) => !scope.isExported(id)));
       const componentsAndObjects: ModelComponentAndObjects[] = [];
       const objectList = new ObjectList();
@@ -645,6 +661,13 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const clientId = resumeExportId || Date.now().toString();
     await this.pushRemotesPendingDir(clientId, manyObjectsPerRemote, resumeExportId);
     await validateRemotes(remotes, clientId, Boolean(resumeExportId));
+    // Intentionally no cleanup on `persistRemotes` failure: pending dirs are the substrate for
+    // `bit export --resume <clientId>` AND act as a cross-client lock via `export-validate`'s
+    // waitIfNeeded queue (sorted by clientId). In a multi-scope persist with a partial-success
+    // failure (scopeA persisted, scopeB exhausted retries), removing the pending dirs would let
+    // another client race in against an inconsistent partial-commit state and would also strand
+    // the original user with no objects to resume from. Leave them in place; the user's recovery
+    // is `--resume` (or, on the server side, an explicit pending-dir cleanup tool).
     await persistRemotes(manyObjectsPerRemote, clientId);
   }
 

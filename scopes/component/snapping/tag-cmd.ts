@@ -62,6 +62,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
   ['', 'disable-tag-pipeline', 'skip the tag pipeline to avoid publishing the components'],
   ['', 'ignore-build-errors', 'proceed to tag pipeline even when build pipeline fails'],
   ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
+  ['', 'no-lock-deps', 'do not save the dependencies graph in the tag'],
   [
     '',
     'increment-by <number>',
@@ -154,6 +155,7 @@ use for official releases. for development versions, use 'bit snap' instead.`;
       disableTagPipeline = false,
       ignoreBuildErrors = false,
       rebuildDepsGraph,
+      noLockDeps = false,
       failFast = false,
       incrementBy = 1,
       detachHead,
@@ -207,6 +209,7 @@ To undo local tag use the "bit reset" command.`
       disableTagAndSnapPipelines,
       ignoreBuildErrors,
       rebuildDepsGraph,
+      noLockDeps,
       incrementBy,
       version: ver,
       failFast,

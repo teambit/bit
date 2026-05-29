@@ -6,6 +6,7 @@ description: 'Utilities for parsing and stringifying JSONC files while preservin
 # JSONC Utils
 
 Utilities for working with JSONC (JSON with Comments) files while preserving their original formatting, including:
+
 - **Indentation style** (2 spaces, 4 spaces, tabs)
 - **Newline characters** (LF, CRLF)
 - **Comments**
@@ -32,7 +33,7 @@ const originalContent = `{
 }`;
 
 const updatedContent = updateJsoncPreservingFormatting(originalContent, (data) => {
-  data.version = "2.0.0";
+  data.version = '2.0.0';
   return data;
 });
 
@@ -54,11 +55,7 @@ When updating component environment configurations, preserve the original format
 import fs from 'fs-extra';
 import { updateJsoncPreservingFormatting } from '@teambit/toolbox.json.jsonc-utils';
 
-async function updateEnvDependency(
-  envJsoncPath: string,
-  pkgName: string,
-  newVersion: string
-) {
+async function updateEnvDependency(envJsoncPath: string, pkgName: string, newVersion: string) {
   const content = await fs.readFile(envJsoncPath, 'utf-8');
 
   const updated = updateJsoncPreservingFormatting(content, (envJsonc) => {

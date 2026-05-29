@@ -11,7 +11,7 @@ describe('scope url', () => {
     expect(result).to.equal(`${baseUrl}/teambit/base-ui`);
   });
 
-  it('should convert to url', () => {
+  it('should convert to url for single-part scope', () => {
     const id = 'ioncannon';
 
     const result = ScopeUrl.toUrl(id);
@@ -20,7 +20,7 @@ describe('scope url', () => {
   });
 });
 
-describe('scope url', () => {
+describe('scope pathname', () => {
   it('should convert to toPathname', () => {
     const id = 'teambit.base-ui';
 

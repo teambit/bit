@@ -76,6 +76,8 @@ package-lock.json
 # Claude Code files
 .claude/*
 !.claude/skills/
+!.claude/settings.json
+!.claude/hooks/
 
 # Release notes temp files (for review only)
 releases-docs/temp-files/

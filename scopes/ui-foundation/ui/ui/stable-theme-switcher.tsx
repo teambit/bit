@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { BaseTheme } from '@teambit/design.themes.base-theme';
+import { BaseTheme, baseThemeDefaults } from '@teambit/design.themes.base-theme';
 import type { BaseThemeSchema } from '@teambit/design.themes.base-theme';
 import { darkThemeValues, DarkTheme } from '@teambit/design.themes.dark-theme';
 import { ThemePickerContext } from '@teambit/base-react.themes.theme-switcher';
@@ -32,11 +32,24 @@ export type StableThemeSwitcherProps = {
  * Instead, it renders a single stable <BaseTheme> and only changes the CSS variable
  * overrides, preventing the entire React tree from unmounting and remounting.
  */
+function readPreflashTheme(): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const fromAttr = document.documentElement.dataset.theme;
+  if (fromAttr) return fromAttr;
+  try {
+    const fromSession = sessionStorage.getItem('workspace-theme');
+    if (fromSession) return fromSession;
+  } catch {
+    /* ignore */
+  }
+  return undefined;
+}
+
 export function StableThemeSwitcher({ children, defaultTheme }: StableThemeSwitcherProps) {
-  const getInitialTheme = useCallback(
-    () => (defaultTheme && themes.find((t) => t.themeName === defaultTheme)) || themes[0],
-    [defaultTheme]
-  );
+  const getInitialTheme = useCallback(() => {
+    const requested = defaultTheme ?? readPreflashTheme();
+    return (requested && themes.find((t) => t.themeName === requested)) || themes[0];
+  }, [defaultTheme]);
 
   const [theme, setThemeState] = useState<ThemeOption>(getInitialTheme);
 
@@ -62,8 +75,22 @@ export function StableThemeSwitcher({ children, defaultTheme }: StableThemeSwitc
 
   const overrides = themeOverridesMap[theme.themeName || 'light'];
 
+  // BaseTheme sets CSS variables on its wrapping <div>, so portaled DOM
+  // (menus, dropdowns rendered into document.body) can't resolve them and
+  // falls back to the hardcoded light defaults baked into each component.
+  // Mirror the merged tokens onto :root via a <style> tag so portaled
+  // content tracks the active theme.
+  const rootThemeCss = useMemo(() => {
+    const merged = { ...baseThemeDefaults, ...overrides } as Record<string, unknown>;
+    const decls = Object.entries(merged)
+      .map(([key, value]) => `--${key.replace(/[A-Z]/g, '-$&').toLowerCase()}: ${String(value)};`)
+      .join('');
+    return `:root{${decls}}`;
+  }, [overrides]);
+
   return (
     <ThemePickerContext.Provider value={picker}>
+      <style>{rootThemeCss}</style>
       <BaseTheme overrides={overrides}>{children}</BaseTheme>
     </ThemePickerContext.Provider>
   );

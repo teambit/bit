@@ -77,7 +77,7 @@ function joinPaths(base: string, relative: string) {
   return newPath.startsWith('/') ? newPath : `/${newPath}`;
 }
 
-function useInViewport(ref: React.RefObject<HTMLElement>) {
+function useInViewport(ref: React.RefObject<HTMLElement | null>) {
   const [isInViewport, setIsInViewport] = React.useState(false);
 
   React.useEffect(() => {

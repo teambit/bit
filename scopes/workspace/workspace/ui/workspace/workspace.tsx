@@ -31,7 +31,7 @@ import { ThemeFromUrlSync } from './theme-from-url';
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
   menuSlot: RouteSlot;
-  sidebar: JSX.Element;
+  sidebar: React.JSX.Element;
   workspaceUI: WorkspaceUI;
   onSidebarTogglerChange: (callback: () => void) => void;
 };
@@ -80,8 +80,8 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
     setSidebarOpen(!isMinimal);
   }, [isMinimal]);
 
-  const inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
   const location = useLocation();
+  const inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
   const isOverview = location.pathname === '/' || location.pathname === '';
   const showTopBar = !isMinimal || (isMinimal && !isOverview);
   if (!workspace) {

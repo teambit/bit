@@ -72,7 +72,7 @@ class ComponentRegistry {
 const FileRegistryContext = createContext<ComponentRegistry | undefined>(undefined);
 
 export function FileRegistryProvider({ children }: { children: ReactNode }) {
-  const storeRef = useRef<ComponentRegistry>();
+  const storeRef = useRef<ComponentRegistry | undefined>(undefined);
   if (!storeRef.current) storeRef.current = new ComponentRegistry();
   return <FileRegistryContext.Provider value={storeRef.current}>{children}</FileRegistryContext.Provider>;
 }
