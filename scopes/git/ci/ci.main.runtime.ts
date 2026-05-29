@@ -653,8 +653,18 @@ export class CiMain {
             )
           );
           await this.lanes.removeLanes([laneId.toString()], { remote: true, force: true }).catch((e) => {
-            throw new Error(`Failed to delete stale remote lane ${laneId.toString()}: ${e.toString()}`);
+            throw new Error(`Failed to delete stale remote lane ${laneId.toString()}: ${e?.toString() ?? e}`);
           });
+          // switchToLane fetched the remote lane and persisted it into the local scope's lane
+          // index (via `importLaneObject` → `legacyScope.lanes.saveLane`) BEFORE the underlying
+          // merge failed. Without dropping that local copy here, the upcoming `createLane` would
+          // hit the "lane … already exists" guard in create-lane.ts and the recovery would crash
+          // on the very next line. Same trash-the-local-object pattern as `rebaseOntoRemoteLane`.
+          const legacyScope = this.workspace.scope.legacyScope;
+          const localLane = await legacyScope.loadLane(laneId);
+          if (localLane) {
+            await legacyScope.objects.moveObjectsToTrash([localLane.hash()]);
+          }
           const createLaneResult = await this.lanes.createLane(laneId.name, {
             scope: laneId.scope,
             forkLaneNewScope: true,
