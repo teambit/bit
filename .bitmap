@@ -856,6 +856,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/install"
     },
+    "internalize": {
+        "name": "internalize",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/internalize",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@0.1.5": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
+    },
     "ipc-events": {
         "name": "ipc-events",
         "scope": "teambit.harmony",

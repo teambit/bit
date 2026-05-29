@@ -43,6 +43,7 @@
   "teambit.pipelines/builder",
   "teambit.workspace/variants",
   "teambit.component/deprecation",
+  "teambit.component/internalize",
   "teambit.harmony/express",
   "teambit.harmony/aspect",
   "teambit.webpack/webpack",

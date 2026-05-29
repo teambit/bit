@@ -1021,6 +1021,28 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return false;
   }
 
+  /**
+   * whether the head is marked as internal. internal components are still versioned and exported,
+   * but are hidden by default in the UI (workspace, scope and Bit Cloud).
+   */
+  async isInternal(repo: Repository): Promise<boolean | null> {
+    const head = this.getHeadRegardlessOfLane();
+    if (!head) {
+      // it's new. the workspace should have the answer.
+      return false;
+    }
+    const headVersion = (await repo.load(head)) as Version;
+    if (!headVersion) {
+      // the head Version doesn't exist locally, there is no way to know whether it's internal
+      return null;
+    }
+    const internalizeAspect = headVersion.extensions.findCoreExtension(Extensions.internalize);
+    if (!internalizeAspect) {
+      return false;
+    }
+    return Boolean(internalizeAspect.config.internal);
+  }
+
   async isRemoved(repo: Repository, specificVersion?: string): Promise<boolean | null> {
     const getHead = () => {
       if (!this.laneHeadLocal) return this.getHead();
