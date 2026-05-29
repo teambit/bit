@@ -229,22 +229,15 @@ otherwise, re-run the export with "--fork-lane-new-scope" flag.
 if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
     }
     const isOnMain = consumer.isOnMain();
-    // For cross-scope forks (`--fork-lane-new-scope`), the new scope starts empty and needs the
-    // full lane history. Divergence-based localHashes only captures snaps after the forkedFrom
-    // baseline, so we force `allVersions` here. The lean-lane ref filter still drops main-origin
-    // refs of foreign components (those live on the component's home scope), so this doesn't
-    // re-introduce the OOM driver — only true lane-origin snaps get pushed to the new scope.
-    const allVersions = params.allVersions || Boolean(params.forkLaneNewScope && laneObject?.isNew);
     const { exported, updatedLocally, newIdsOnRemote, rippleJobs } = await this.pushToScopes({
       ...params,
-      allVersions,
       exportHeadsOnly: headOnly,
       scope: consumer.scope,
       ids: idsToExport,
       laneObject,
       originDirectly,
       isOnMain,
-      filterOutExistingVersions: Boolean(!allVersions && laneObject),
+      filterOutExistingVersions: Boolean(!params.allVersions && laneObject),
     });
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const removedIds = await this.getRemovedStagedBitIds();
@@ -416,6 +409,15 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       // missed and the export silently sends 0 versions, triggering a remote merge error.
       if (laneObject) await modelComponent.populateLocalAndRemoteHeads(scope.objects, laneObject);
       const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects, fromWorkspace);
+      if (laneObject) {
+        // Ensure the lane's recorded head for this component is always part of the export refs.
+        // Without this, a fresh cross-scope fork (lane head == forkedFrom baseline → divergence
+        // returns []) would push nothing and the lane scope would reference an unresolvable hash.
+        const laneHead = laneObject.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId());
+        if (laneHead && !localTagsOrHashes.find((r) => r.isEqual(laneHead))) {
+          localTagsOrHashes.push(laneHead);
+        }
+      }
       if (!allVersions) {
         return localTagsOrHashes;
       }
@@ -537,9 +539,17 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
           // common case: component's home scope is the lane scope — keep every ref without
           // touching disk to load Version objects.
           if (modelComponent.scope === remoteNameStr) return { modelComponent, refs };
+          // The lane's recorded head for this component must always be on the lane scope —
+          // otherwise the lane references a hash the lane scope can't resolve. Keep it
+          // regardless of origin (the OOM concern is the deep ancestor chain, not the head).
+          const laneHead = lane.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId());
           let skippedCount = 0;
           const keptRefs: Ref[] = [];
           for (const ref of refs) {
+            if (laneHead && ref.isEqual(laneHead)) {
+              keptRefs.push(ref);
+              continue;
+            }
             const obj = await ref.load(scope.objects);
             // Drop main-origin Version refs (they live on the home scope) and refs whose Version
             // object isn't on local disk (expected after a lean-lane import; the destination
