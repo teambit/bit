@@ -329,7 +329,13 @@ export class CiMain {
     return { status };
   }
 
-  private async switchToLane(laneName: string, options: SwitchLaneOptions = {}) {
+  /**
+   * Returns the caught Error on failure, or undefined on success (including the "already checked
+   * out" no-op case). Callers that need to react to a specific failure mode (e.g. stale lane) can
+   * inspect the returned error; existing callers ignore it and rely on a follow-up
+   * `getCurrentLane()` check.
+   */
+  private async switchToLane(laneName: string, options: SwitchLaneOptions = {}): Promise<Error | undefined> {
     this.logger.console(chalk.blue(`Switching to ${laneName}`));
     try {
       await this.lanes.switchLanes(laneName, {
@@ -339,12 +345,14 @@ export class CiMain {
         ...options,
       });
     } catch (e: any) {
-      if (e.toString().includes('already checked out')) {
+      if (e?.toString().includes('already checked out')) {
         this.logger.console(chalk.yellow(`Lane ${laneName} already checked out, skipping checkout`));
-        return true;
+        return undefined;
       }
-      this.logger.console(chalk.red(`Failed switching to ${laneName}: ${e.toString()}`));
+      this.logger.console(chalk.red(`Failed switching to ${laneName}: ${e?.toString() ?? e}`));
+      return e;
     }
+    return undefined;
   }
 
   /**
@@ -610,11 +618,13 @@ export class CiMain {
         // lane-history feature on Bit Cloud all survive across subsequent commits to the same PR.
         // switchToLane fetches the latest lane head from remote.
         this.logger.console(chalk.blue(`Lane ${laneId.toString()} exists on remote, reusing it`));
-        await this.switchToLane(laneId.toString());
-        // switchToLane logs-and-swallows switch failures, so we have to look at the resulting
-        // current-lane state to know whether the switch actually landed.
+        const switchErr = await this.switchToLane(laneId.toString());
+        // switchToLane returns the caught error (undefined on success). Combine with a
+        // current-lane-state probe — comparing BOTH name AND scope, so a same-named lane in a
+        // different scope can't masquerade as a successful switch.
         const switchedLane = await this.lanes.getCurrentLane();
-        if (switchedLane?.name === laneId.name) {
+        const landedOnLane = switchedLane?.name === laneId.name && switchedLane?.scope === laneId.scope;
+        if (landedOnLane) {
           // Sync config-only changes from main onto the lane, so config that was tagged into
           // objects on main since the lane forked (e.g. `bit deps set` / `bit env set` from
           // another PR, not visible via the workspace's git checkout) is reflected on the lane.
@@ -636,16 +646,22 @@ export class CiMain {
             await this.syncConfigFromMain(laneId);
           }
         } else {
-          // Switch failed even though the remote lane exists — typically the stored lane is stale
-          // relative to the current PR: it references a ModelComponent that the PR has since
-          // removed/renamed (`unable to merge lane …, the component … was not found`), or it was
-          // produced by an earlier shape of the PR that no longer matches. The red `Failed
-          // switching to …` line above (logged by `switchToLane`) carries the underlying error.
-          //
-          // We can't reuse a lane we can't switch to, so fall back to the create path: delete the
-          // stale remote lane and start a fresh one. The lane's prior history is lost, but that's
-          // strictly better than failing every subsequent `bit ci pr` run on this branch — once
-          // the fresh lane is in place, the next run will preserve history again.
+          // Switch failed even though the remote lane exists. The destructive recovery below
+          // (delete the remote lane + recreate fresh) is safe only when the failure is the
+          // specific "stale lane" pattern — the lane references a ModelComponent the PR has
+          // since removed/renamed (`unable to merge lane …, the component … was not found`).
+          // For any other failure (transient network blip during fetch, auth error, lane locked
+          // by Cloud UI, etc.) destroying lane history would be the wrong response, so we
+          // rethrow and let the caller report the real cause.
+          const errMsg = switchErr?.toString() ?? '';
+          const isStaleLane = errMsg.includes('unable to merge lane');
+          if (!isStaleLane) {
+            throw new Error(
+              `Failed to switch to remote lane ${laneId.toString()}: ${errMsg || '(no error captured)'}. ` +
+                `Refusing destructive recovery for this failure class — the error doesn't match the ` +
+                `stale-lane marker, so deleting the lane could destroy real history. Investigate or retry.`
+            );
+          }
           this.logger.console(
             chalk.yellow(
               `Stale remote lane ${laneId.toString()} — switching failed. ` +
@@ -653,18 +669,32 @@ export class CiMain {
             )
           );
           await this.lanes.removeLanes([laneId.toString()], { remote: true, force: true }).catch((e) => {
-            throw new Error(`Failed to delete stale remote lane ${laneId.toString()}: ${e?.toString() ?? e}`);
+            const msg = e?.toString() ?? '';
+            // Tolerate the race where another concurrent recovery deleted the lane first — the
+            // desired post-condition (lane gone from remote) is already met.
+            if (msg.includes('was not found') || msg.includes('not found')) {
+              this.logger.console(chalk.blue(`Remote lane ${laneId.toString()} was already gone — proceeding`));
+              return;
+            }
+            throw new Error(`Failed to delete stale remote lane ${laneId.toString()}: ${msg || e}`);
           });
           // switchToLane fetched the remote lane and persisted it into the local scope's lane
           // index (via `importLaneObject` → `legacyScope.lanes.saveLane`) BEFORE the underlying
           // merge failed. Without dropping that local copy here, the upcoming `createLane` would
-          // hit the "lane … already exists" guard in create-lane.ts and the recovery would crash
-          // on the very next line. Same trash-the-local-object pattern as `rebaseOntoRemoteLane`.
+          // hit the "lane … already exists" guard in create-lane.ts. Same trash-the-local-object
+          // pattern as `rebaseOntoRemoteLane`.
           const legacyScope = this.workspace.scope.legacyScope;
           const localLane = await legacyScope.loadLane(laneId);
           if (localLane) {
             await legacyScope.objects.moveObjectsToTrash([localLane.hash()]);
           }
+          // Reset the workspace's current-lane pointer to main before createLane, so the new lane
+          // is forked from main with an empty component list. `createLane` populates new lanes
+          // from `consumer.getCurrentLaneObject()` regardless of `forkLaneNewScope` (which only
+          // suppresses the cross-scope guard) — if `originalLane` is non-default (a developer
+          // running `bit ci pr` from a lane), without this reset the "fresh" lane would silently
+          // inherit `originalLane`'s components.
+          await this.switchToLane('main');
           const createLaneResult = await this.lanes.createLane(laneId.name, {
             scope: laneId.scope,
             forkLaneNewScope: true,
