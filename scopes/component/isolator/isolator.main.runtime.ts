@@ -62,7 +62,7 @@ import {
 } from '@teambit/component.sources';
 import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
-import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { concurrentComponentsLimit, concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { type DependenciesGraph } from '@teambit/objects';
 
@@ -304,6 +304,8 @@ export const CAPSULE_READY_FILE = '.bit-capsule-ready';
  */
 export const CAPSULE_ORIGIN_FILE = '.bit-capsule-origin.json';
 export const CAPSULE_TRASH_DIR = '.trash';
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export type CapsuleKind = 'workspace' | 'scope-aspects-root' | 'scope-aspect' | 'scope';
 
@@ -1161,9 +1163,7 @@ export class IsolatorMain {
     };
     const capsulesRootBaseDir = getCapsuleDirOptsWithDefaults.rootBaseDir || this.getRootDirOfAllCapsules();
     if (getCapsuleDirOptsWithDefaults.useDatedDirs) {
-      const date = new Date();
-      const month = date.getMonth() < 12 ? date.getMonth() + 1 : 1;
-      const dateDir = `${date.getFullYear()}-${month}-${date.getDate()}`;
+      const dateDir = this.getDatedCapsuleDirName();
       const defaultDatedBaseDir = 'dated-capsules';
       const datedBaseDir = this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR) || defaultDatedBaseDir;
       let hashDir;
@@ -1309,7 +1309,6 @@ export class IsolatorMain {
     if (!(await fs.pathExists(root))) return;
 
     const stampPath = path.join(root, '.last-capsule-prune');
-    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
     const isStampFresh = async (): Promise<boolean> => {
       try {
         const stat = await fs.stat(stampPath);
@@ -1332,10 +1331,15 @@ export class IsolatorMain {
       claimed = true;
     } catch {
       // Another process is mid-claim, or a previous run leaked the lock. If it's stale
-      // (older than the daily window), reclaim it; otherwise yield.
+      // (older than the daily window), reclaim it by removing + re-opening with O_EXCL —
+      // if two processes race the reclaim, only one's `wx` open succeeds and the other
+      // yields. Otherwise yield.
       try {
         const claimStat = await fs.stat(claimPath);
         if (Date.now() - claimStat.mtime.getTime() < ONE_DAY_MS) return;
+        await fs.remove(claimPath);
+        await fs.close(await fs.open(claimPath, 'wx'));
+        claimed = true;
       } catch {
         return;
       }
@@ -1494,6 +1498,38 @@ export class IsolatorMain {
     }
   }
 
+  /**
+   * Single source of truth for the dated-capsules date-dir name (`YYYY-M-D`, no zero-pad).
+   * Used by `getCapsulesRootDir` when writing and `pruneDatedCapsulesChildren` when reading,
+   * so the two can never drift.
+   */
+  private getDatedCapsuleDirName(date: Date = new Date()): string {
+    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  }
+
+  /**
+   * Standard filter for "real" capsule subdirs we may walk or prune. Skips files, the trash
+   * dir (dot-prefixed), `node_modules`, and any other hidden/internal dir.
+   */
+  private isPrunableSubdir(entry: fs.Dirent): boolean {
+    return entry.isDirectory() && entry.name !== 'node_modules' && !entry.name.startsWith('.');
+  }
+
+  /**
+   * Combined marker read + last-used resolution for a capsule dir: one `readJson`, one
+   * fallback `stat`. Replaces the three-syscall (`readMarker` + `getOriginMarkerMtime` +
+   * dir `stat`) idiom that was copy-pasted across the prune walks.
+   */
+  private async readMarkerInfo(dir: string): Promise<{ marker?: CapsuleOriginMarker; lastUsedMs: number }> {
+    const marker = await this.readOriginMarker(dir);
+    if (marker) {
+      const mtime = await this.getOriginMarkerMtime(dir);
+      if (mtime) return { marker, lastUsedMs: mtime.getTime() };
+    }
+    const stat = await fs.stat(dir).catch(() => undefined);
+    return { marker, lastUsedMs: (stat?.mtime ?? new Date(0)).getTime() };
+  }
+
   private async readOriginMarker(dir: string): Promise<CapsuleOriginMarker | undefined> {
     try {
       const raw = await fs.readJson(path.join(dir, CAPSULE_ORIGIN_FILE));
@@ -1552,9 +1588,7 @@ export class IsolatorMain {
     const root = this.getRootDirOfAllCapsules();
     if (!(await fs.pathExists(root))) return [];
     const entries = await fs.readdir(root, { withFileTypes: true });
-    const subdirs = entries.filter(
-      (e) => e.isDirectory() && e.name !== CAPSULE_TRASH_DIR && e.name !== 'node_modules' && !e.name.startsWith('.')
-    );
+    const subdirs = entries.filter((e) => this.isPrunableSubdir(e));
     // Bounded concurrency: on a multi-GB cache with hundreds of subdirs and tens of
     // thousands of files per subdir, an unbounded Promise.all of recursive size walks
     // can hit OS file-descriptor limits (EMFILE) and thrash disk.
@@ -1562,19 +1596,17 @@ export class IsolatorMain {
       subdirs,
       async (entry) => {
         const subPath = path.join(root, entry.name);
-        const marker = await this.readOriginMarker(subPath);
-        const lastUsed = marker ? await this.getOriginMarkerMtime(subPath) : undefined;
-        const dirStat = await fs.stat(subPath).catch(() => undefined);
+        const { marker, lastUsedMs } = await this.readMarkerInfo(subPath);
         const sizeBytes = withSizes ? await this.computeDirSize(subPath) : 0;
         return {
           path: subPath,
           kind: (marker?.kind ?? 'unmarked') as CapsuleKind | 'unmarked',
           originPath: marker?.originPath,
-          lastUsedMs: (lastUsed ?? dirStat?.mtime ?? new Date(0)).getTime(),
+          lastUsedMs,
           sizeBytes,
         };
       },
-      { concurrency: concurrentComponentsLimit() }
+      { concurrency: concurrentIOLimit() }
     );
   }
 
@@ -1585,7 +1617,7 @@ export class IsolatorMain {
    */
   async computeDirSize(dir: string): Promise<number> {
     let total = 0;
-    const concurrency = concurrentComponentsLimit();
+    const concurrency = concurrentIOLimit();
     const walk = async (current: string) => {
       let entries: fs.Dirent[];
       try {
@@ -1636,7 +1668,7 @@ export class IsolatorMain {
     // it by default so the foreground command returns in ms (deletes are O(1) renames);
     // force on for size-target enforcement and when the caller asks for byte accounting.
     const computeSizes = opts.withSizes === true || sizeTargetGb !== undefined;
-    const ageCutoffMs = Date.now() - olderThanDays * 24 * 60 * 60 * 1000;
+    const ageCutoffMs = Date.now() - olderThanDays * ONE_DAY_MS;
     const datedDirName = this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR) || 'dated-capsules';
 
     const roots = await this.listAllCapsuleRoots({ withSizes: computeSizes });
@@ -1723,8 +1755,6 @@ export class IsolatorMain {
    * runs. These are recreated on every isolation, so anything that isn't *today*'s
    * subdir is leftover from a previous run and safe to delete. Today's subdir is
    * preserved to avoid racing a concurrent bit process that may still be writing to it.
-   *
-   * The date string here must match what `getCapsulesRootDir` writes for `useDatedDirs`.
    */
   private async pruneDatedCapsulesChildren(
     rootPath: string,
@@ -1732,10 +1762,7 @@ export class IsolatorMain {
     computeSizes: boolean,
     removed: PruneCapsulesReport['removed']
   ): Promise<void> {
-    // Must match the date string produced by `getCapsulesRootDir` when `useDatedDirs`
-    // is set (year-month-day, month 1-12, no zero-padding).
-    const now = new Date();
-    const todayDir = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+    const todayDir = this.getDatedCapsuleDirName();
     let entries: fs.Dirent[];
     try {
       entries = await fs.readdir(rootPath, { withFileTypes: true });
@@ -1743,7 +1770,7 @@ export class IsolatorMain {
       return;
     }
     for (const entry of entries) {
-      if (!entry.isDirectory() || entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+      if (!this.isPrunableSubdir(entry)) continue;
       if (entry.name === todayDir) continue;
       const childPath = path.join(rootPath, entry.name);
       const sizeBytes = computeSizes ? await this.computeDirSize(childPath) : 0;
@@ -1792,13 +1819,9 @@ export class IsolatorMain {
       return;
     }
     for (const entry of entries) {
-      if (!entry.isDirectory()) continue;
-      if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+      if (!this.isPrunableSubdir(entry)) continue;
       const childPath = path.join(rootPath, entry.name);
-      const marker = await this.readOriginMarker(childPath);
-      const lastUsed = marker ? await this.getOriginMarkerMtime(childPath) : undefined;
-      const stat = await fs.stat(childPath).catch(() => undefined);
-      const lastUsedMs = (lastUsed ?? stat?.mtime ?? new Date(0)).getTime();
+      const { marker, lastUsedMs } = await this.readMarkerInfo(childPath);
       if (lastUsedMs < ageCutoffMs) {
         const sizeBytes = computeSizes ? await this.computeDirSize(childPath) : 0;
         await this.recordRemoval(
@@ -1846,13 +1869,10 @@ export class IsolatorMain {
         continue;
       }
       for (const entry of entries) {
-        if (!entry.isDirectory() || entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+        if (!this.isPrunableSubdir(entry)) continue;
         const childPath = path.join(root.path, entry.name);
         if (removedPaths.has(childPath)) continue;
-        const marker = await this.readOriginMarker(childPath);
-        const lastUsed = marker ? await this.getOriginMarkerMtime(childPath) : undefined;
-        const stat = await fs.stat(childPath).catch(() => undefined);
-        const lastUsedMs = (lastUsed ?? stat?.mtime ?? new Date(0)).getTime();
+        const { marker, lastUsedMs } = await this.readMarkerInfo(childPath);
         const sizeBytes = await this.computeDirSize(childPath);
         aspectChildren.push({ path: childPath, lastUsedMs, sizeBytes, originPath: marker?.originPath });
       }
