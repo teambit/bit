@@ -322,11 +322,8 @@ describe('lane export skips main history objects', function () {
     });
 
     it('bit export --fork-lane-new-scope should succeed without --all and without VersionNotFoundOnFS', () => {
-      // The user's flow: after the clean-status fix, plain `bit export --fork-lane-new-scope`
-      // used to bail with "no changes — use --all". With --all it would try to read every
-      // Version object including foreign main-history that the lean lane never pulled, and
-      // crash with VersionNotFoundOnFS. Verify both: includeNonStaged is implied so something
-      // gets exported, and the filter skips refs whose Version object is missing on disk.
+      // Regression: plain --fork-lane-new-scope used to bail "no changes — use --all", and --all
+      // then crashed with VersionNotFoundOnFS on un-pulled main history.
       expect(() => helper.command.export('--fork-lane-new-scope')).to.not.throw();
     });
   });

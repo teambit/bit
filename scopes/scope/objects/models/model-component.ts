@@ -378,9 +378,15 @@ export default class Component extends BitObject {
         //    entire history — which also keeps `bit reset` from over-removing.
         const headFromFork = await repo.remoteLanes.getRef(lane.forkedFrom, this.toComponentId());
         if (headFromFork) return headFromFork;
-        // Forked lane but we don't have the fork's ref. Return null rather than falling through to
-        // main-head, which may be missing locally and would either crash or over-report.
-        return null;
+        if (lane.forkedFrom.scope !== lane.scope) {
+          // Cross-scope fork and the forked-from ref isn't local. Returning null over-reports
+          // the lane history as staged (divergence has no baseline), but falling through to
+          // `this.remoteHead || this.head` would crash with TargetHeadNotFound when the main-
+          // head Version is missing locally. The user can recover by running `bit lane fetch`
+          // on the forked-from lane to populate the ref.
+          return null;
+        }
+        // Same-scope fork without a fork ref — fall through to the standard fallback below.
       }
       // if no remote-ref was found, because it's checked out to a lane, it's safe to assume that
       // this.head should be on the original-remote. hence, FetchMissingHistory will retrieve it on lane-remote
