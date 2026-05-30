@@ -1,13 +1,11 @@
 /* eslint-disable react/destructuring-assignment */
 /* eslint-disable react/require-default-props */
+/* eslint-disable @typescript-eslint/no-use-before-define */ // hoisted function components used before their definition
 import type { HTMLAttributes, ReactNode } from 'react';
 import React, { useContext, useEffect, useMemo, useRef, useState, forwardRef } from 'react';
 import classnames from 'classnames';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { ComponentID as ComponentIdValue } from '@teambit/component-id';
-import { useFileRegistryRegister, useAspectRegistryRegister } from './file-registry';
-import { useCompareData } from './compare-data-context';
-import type { ComponentComparePair, CompareComponentData } from './compare-data-context';
 import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentID, NavPlugin } from '@teambit/component';
 import { CollapsibleMenuNav, ComponentContext, ComponentDescriptorContext, useComponent } from '@teambit/component';
@@ -34,6 +32,9 @@ import { BlockSkeleton, WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
+import type { ComponentComparePair, CompareComponentData } from './compare-data-context';
+import { useCompareData } from './compare-data-context';
+import { useFileRegistryRegister, useAspectRegistryRegister } from './file-registry';
 
 import styles from './component-compare.module.scss';
 
@@ -666,6 +667,7 @@ const InlineComponentCompareInner = forwardRef<HTMLDivElement, InlineComponentCo
       (node: HTMLDivElement | null) => {
         (sectionRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
         if (typeof ref === 'function') ref(node);
+        // eslint-disable-next-line no-param-reassign
         else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
       },
       [ref]
@@ -673,7 +675,7 @@ const InlineComponentCompareInner = forwardRef<HTMLDivElement, InlineComponentCo
 
     useEffect(() => {
       const el = sectionRef.current;
-      if (!el) return;
+      if (!el) return undefined;
       const observer = new IntersectionObserver(
         ([entry]) => {
           if (entry.isIntersecting) {
@@ -920,7 +922,7 @@ export function ComponentCompareHeader({
             ) : (
               <span className={styles.versionHash}>{baseVersion}</span>
             ))}
-          {baseVersion && compareVersion && <span className={styles.versionArrow}>{'→'}</span>}
+          {baseVersion && compareVersion && <span className={styles.versionArrow}>→</span>}
           {compareVersion &&
             (compareUrl ? (
               <a className={styles.versionHash} href={compareUrl} target="_blank" rel="noopener noreferrer">

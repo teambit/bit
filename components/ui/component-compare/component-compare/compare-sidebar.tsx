@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */ // hoisted helper/components used before their definition
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@teambit/design.elements.icon';
 import type { FileInfo } from './file-registry';
@@ -146,9 +147,19 @@ function SidebarComponentItem({ item, isSelected, selectedFile, onSelect, defaul
         {hasFiles ? (
           <span
             className={`${styles.fileChevron} ${expanded ? '' : styles.chevronCollapsed}`}
+            role="button"
+            tabIndex={0}
+            aria-label={expanded ? 'Collapse files' : 'Expand files'}
             onClick={(e) => {
               e.stopPropagation();
               setExpanded(!expanded);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                setExpanded(!expanded);
+              }
             }}
           >
             <Icon of="fat-arrow-down" className={styles.chevronIcon} />

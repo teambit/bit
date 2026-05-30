@@ -7,8 +7,11 @@ type Listener = () => void;
 
 class ComponentRegistry {
   private files = new Map<string, FileInfo[]>();
+
   private aspectFiles = new Map<string, FileInfo[]>();
+
   private compositions = new Map<string, boolean>();
+
   private listeners = new Set<Listener>();
 
   register(componentId: string, files: FileInfo[]) {
@@ -55,10 +58,11 @@ class ComponentRegistry {
   }
 
   private version = 0;
+
   private pendingNotify = false;
 
   private notify() {
-    this.version++;
+    this.version += 1;
     if (!this.pendingNotify) {
       this.pendingNotify = true;
       queueMicrotask(() => {
@@ -82,7 +86,7 @@ export function useFileRegistry() {
   const [, forceRender] = useState(0);
 
   useEffect(() => {
-    if (!store) return;
+    if (!store) return undefined;
     return store.subscribe(() => forceRender((v) => v + 1));
   }, [store]);
 

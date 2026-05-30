@@ -115,16 +115,6 @@ const ACCENT_COLORS: Record<string, string> = {
   [ChangeType.DEPENDENCY]: 'var(--warning-color, #d6a022)',
 };
 
-function _getChangeTags(changes: ChangeType[], changeType?: ChangeType) {
-  const tags: Array<{ label: string; color: string }> = [];
-  if (changes.includes(ChangeType.SOURCE_CODE) || changes.includes(ChangeType.NEW) || changeType === ChangeType.NEW)
-    tags.push({ label: 'Code', color: 'var(--bit-accent-color, #6c5ce7)' });
-  if (changes.includes(ChangeType.DEPENDENCY))
-    tags.push({ label: 'Dependencies', color: 'var(--warning-color, #d6a022)' });
-  if (changeType === ChangeType.NEW) tags.push({ label: 'New', color: 'var(--positive-color, #37b26c)' });
-  return tags;
-}
-
 // ── Main Component ──────────────────────────────────────────────────────────
 
 function LaneCompareInline({
@@ -142,12 +132,8 @@ function LaneCompareInline({
   envIcons,
   ...rest
 }: LaneCompareProps) {
-  const {
-    loadingLaneDiff,
-    componentsToDiff,
-    laneComponentDiffByCompId,
-    groupBy: _contextGroupBy,
-  } = useLaneCompareContext() as LaneCompareContextModel;
+  const { loadingLaneDiff, componentsToDiff, laneComponentDiffByCompId } =
+    useLaneCompareContext() as LaneCompareContextModel;
 
   const resolvedTabs = useMemo(() => {
     if (!_tabs) return [];
@@ -159,11 +145,11 @@ function LaneCompareInline({
   const compositionsMap = useMemo(() => {
     const map = new Map<string, boolean>();
     if (!laneComponentDescriptors) return map;
-    for (const comp of laneComponentDescriptors) {
+    laneComponentDescriptors.forEach((comp) => {
       const aspect = comp.get<any>('teambit.compositions/compositions');
       const compositions = aspect?.data?.compositions;
       map.set(comp.id.toStringWithoutVersion(), Array.isArray(compositions) && compositions.length > 0);
-    }
+    });
     return map;
   }, [laneComponents?.length]);
   // Build the env-icon lookup from the descriptors we already loaded. Falls back to the explicit
@@ -175,14 +161,14 @@ function LaneCompareInline({
   const envIconsMap = useMemo(() => {
     const map = new Map<string, string>(envIcons ?? []);
     if (!laneComponentDescriptors) return map;
-    for (const comp of laneComponentDescriptors) {
+    laneComponentDescriptors.forEach((comp) => {
       const envAspect = comp.get<any>('teambit.envs/envs');
       const icon =
         envAspect?.icon || envAspect?.data?.icon || envAspect?.descriptor?.icon || envAspect?.env?.icon || undefined;
-      if (!icon) continue;
+      if (!icon) return;
       const key = comp.id.toStringWithoutVersion();
       if (!map.has(key)) map.set(key, icon);
-    }
+    });
     return map;
   }, [laneComponentDescriptors, envIcons]);
 
@@ -198,7 +184,8 @@ function LaneCompareInline({
 
   const syncUrl = useCallback((key: string, value: string | undefined) => {
     const url = new URL(window.location.href);
-    value ? url.searchParams.set(key, value) : url.searchParams.delete(key);
+    if (value) url.searchParams.set(key, value);
+    else url.searchParams.delete(key);
     window.history.replaceState(null, '', url.toString());
   }, []);
 
@@ -331,7 +318,7 @@ function LaneCompareInline({
   // (in lane-compare.module.scss, scoped by `[data-view-mode]`) hides panels lacking the active flag.
   const componentDataAttrs = useMemo(() => {
     const map = new Map<string, Record<string, string>>();
-    for (const c of allComponents) {
+    allComponents.forEach((c) => {
       const attrs: Record<string, string> = {};
       if (
         c.changes.some((ch) => ch === ChangeType.SOURCE_CODE || ch === ChangeType.NEW) ||
@@ -342,26 +329,25 @@ function LaneCompareInline({
       if (c.changes.some((ch) => ch === ChangeType.DEPENDENCY)) attrs['data-has-deps'] = '';
       if (c.changes.some((ch) => ch === ChangeType.ASPECTS)) attrs['data-has-config'] = '';
       map.set(c.idStr, attrs);
-    }
+    });
     return map;
   }, [allComponents, compositionsMap]);
 
   // Group helper (view-mode-independent grouping: by scope/namespace/status).
   const groupComponents = useCallback(
     (comps: typeof allComponents) => {
+      const keyOf = (comp: (typeof allComponents)[number]): string => {
+        if (groupBy === 'status') return comp.changeType || 'unknown';
+        if (groupBy === 'namespace') return comp.namespace || 'root';
+        if (groupBy === 'scope') return comp.scope;
+        return 'all';
+      };
       const groups = new Map<string, typeof allComponents>();
-      for (const comp of comps) {
-        const key =
-          groupBy === 'status'
-            ? comp.changeType || 'unknown'
-            : groupBy === 'namespace'
-              ? comp.namespace || 'root'
-              : groupBy === 'scope'
-                ? comp.scope
-                : 'all';
+      comps.forEach((comp) => {
+        const key = keyOf(comp);
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key)!.push(comp);
-      }
+      });
       return [...groups.entries()].sort(([a], [b]) =>
         groupBy === 'status'
           ? ChangeTypeGroupOrder.indexOf(a as ChangeType) - ChangeTypeGroupOrder.indexOf(b as ChangeType)
@@ -422,27 +408,25 @@ function LaneCompareInline({
     return options;
   }, [viewMode]);
 
-  const sidebarGroups: CompareSidebarGroup[] = useMemo(
-    () =>
-      grouped.map(([key, comps]) => ({
-        key,
-        label: groupBy === 'status' ? displayChangeType(key as ChangeType) : key,
-        items: comps.map((c) => ({
-          id: c.idStr,
-          name: c.name,
-          envIcon: envIconsMap.get(c.idStr),
-          status: c.changeType,
-          files:
-            viewMode === 'code'
-              ? fileRegistry?.getFiles(c.idStr)
-              : viewMode === 'config'
-                ? fileRegistry?.getAspectFiles(c.idStr)
-                : undefined,
-        })),
+  const sidebarGroups: CompareSidebarGroup[] = useMemo(() => {
+    const filesFor = (idStr: string) => {
+      if (viewMode === 'code') return fileRegistry?.getFiles(idStr);
+      if (viewMode === 'config') return fileRegistry?.getAspectFiles(idStr);
+      return undefined;
+    };
+    return grouped.map(([key, comps]) => ({
+      key,
+      label: groupBy === 'status' ? displayChangeType(key as ChangeType) : key,
+      items: comps.map((c) => ({
+        id: c.idStr,
+        name: c.name,
+        envIcon: envIconsMap.get(c.idStr),
+        status: c.changeType,
+        files: filesFor(c.idStr),
       })),
+    }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [grouped, groupBy, envIconsMap, fileRegistry?.getVersion(), viewMode]
-  );
+  }, [grouped, groupBy, envIconsMap, fileRegistry?.getVersion(), viewMode]);
 
   const apiDiffs: ComponentDiffEntry[] = useMemo(() => {
     const result: ComponentDiffEntry[] = [];
