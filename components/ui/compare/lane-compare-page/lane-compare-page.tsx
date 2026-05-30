@@ -53,7 +53,7 @@ export function LaneComparePage({
   useEffect(() => {
     const collapser = document.querySelector('[class*="collapser"]') as HTMLElement;
     const splitPane = document.querySelector('[class*="splitPane"]') as HTMLElement;
-    if (!collapser || !splitPane) return;
+    if (!collapser || !splitPane) return undefined;
 
     const firstPane = splitPane.firstElementChild as HTMLElement;
     const wasOpen = firstPane && firstPane.offsetWidth > 50;
