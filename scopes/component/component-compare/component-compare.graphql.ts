@@ -21,20 +21,39 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
       type ComponentCompareResult {
         # unique id for graphql - baseId + compareId
         id: String!
+        baseId: String!
+        compareId: String!
         code(fileName: String): [FileCompareResult!]!
         aspects(aspectName: String): [FieldCompareResult!]!
         tests(fileName: String): [FileCompareResult!]
         api: APIDiffResult
       }
 
+      input ComponentComparePair {
+        baseId: String!
+        compareId: String!
+      }
+
       extend type ComponentHost {
         compareComponent(baseId: String!, compareId: String!): ComponentCompareResult
+        # bulk compare a paginated slice of pairs; an element is null if that pair failed to compare
+        compareComponents(pairs: [ComponentComparePair!]!, offset: Int, limit: Int): [ComponentCompareResult]!
       }
     `,
     resolvers: {
       ComponentHost: {
         compareComponent: async (_, { baseId, compareId }: { baseId: string; compareId: string }) => {
           return componentCompareMain.compare(baseId, compareId);
+        },
+        compareComponents: async (
+          _,
+          {
+            pairs,
+            offset,
+            limit,
+          }: { pairs: Array<{ baseId: string; compareId: string }>; offset?: number; limit?: number }
+        ) => {
+          return componentCompareMain.compareComponents(pairs, { offset, limit });
         },
       },
       ComponentCompareResult: {

@@ -1,0 +1,407 @@
+$border-color: var(--border-medium-color, #e8ecf0);
+$surface-color: var(--surface-color, #fff);
+$bg-color: var(--background-color, #fdfdff);
+$accent-color: var(--bit-accent-color, #6c5ce7);
+$text-primary: var(--on-surface-color, #1a1a2e);
+$text-secondary: var(--on-surface-medium-color, #707279);
+$text-muted: var(--on-background-medium-color, #a0aec0);
+
+.sidebar {
+  width: 280px;
+  min-width: 280px;
+  border-right: 1px solid $border-color;
+  background: $bg-color;
+  overflow-y: auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.25);
+    }
+  }
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid $border-color;
+  flex-shrink: 0;
+}
+
+.sidebarTitle {
+  font-size: 12px;
+}
+
+.clearSelectionLink {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  color: $accent-color;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: inherit;
+  margin-left: auto;
+  opacity: 0.8;
+
+  &:hover {
+    opacity: 1;
+    text-decoration: underline;
+  }
+}
+
+.sidebarContent {
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.25);
+    }
+  }
+}
+
+.sidebarLoading {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sidebarSkeleton {
+  padding: 4px 0;
+}
+
+.skeleton {
+  height: 14px;
+  background: linear-gradient(
+    90deg,
+    var(--surface-neutral-color, #f0f2f5) 25%,
+    $border-color 50%,
+    var(--surface-neutral-color, #f0f2f5) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.sidebarGroup {
+  border-bottom: 1px solid $border-color;
+}
+
+.sidebarGroupHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-primary;
+  text-align: left;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.02);
+  }
+}
+
+.chevron {
+  font-size: 10px;
+  transition: transform 0.15s ease;
+}
+
+.chevronCollapsed {
+  transform: rotate(-90deg);
+}
+
+.groupLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.groupCount {
+  font-weight: 400;
+  color: $text-muted;
+  font-size: 13px;
+}
+
+.sidebarItems {
+  padding: 6px 0;
+}
+
+// --- Component item with file tree ---
+
+.componentItemWrapper {
+  & + & {
+    margin-top: 2px;
+  }
+}
+
+.sidebarItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px 8px 16px;
+  background: transparent;
+  border: none;
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  color: $text-primary;
+  text-align: left;
+  transition:
+    background 0.1s ease,
+    border-color 0.1s ease;
+  border-radius: 0;
+  line-height: 1.4;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.02);
+  }
+
+  &.sidebarItemSelected {
+    border-left-color: $accent-color;
+    background: rgba(108, 92, 231, 0.05);
+    color: $accent-color;
+    font-weight: 500;
+  }
+}
+
+.fileChevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+
+  &.chevronCollapsed {
+    transform: rotate(-90deg);
+  }
+}
+
+.chevronIcon {
+  font-size: 9px;
+  color: $text-muted;
+}
+
+.fileChevronPlaceholder {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.envIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+
+.envIconPlaceholder {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.componentName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// --- Component status ---
+
+.componentStatus {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: $text-muted;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.componentStatusNEW {
+  color: var(--positive-color, #37b26c);
+  background: rgba(55, 178, 108, 0.1);
+}
+
+.componentStatusSOURCE_CODE {
+  color: var(--warning-color, #d6a022);
+  background: rgba(214, 160, 34, 0.08);
+}
+
+.componentStatusDEPENDENCY {
+  color: var(--warning-color, #d6a022);
+  background: rgba(214, 160, 34, 0.08);
+}
+
+.componentStatusASPECTS {
+  color: var(--warning-color, #d6a022);
+  background: rgba(214, 160, 34, 0.08);
+}
+
+.fileCount {
+  font-size: 10px;
+  color: $text-muted;
+  font-weight: 500;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 0 5px;
+  border-radius: 8px;
+  margin-left: auto;
+}
+
+// --- File tree ---
+
+.fileTree {
+  padding: 4px 0 8px 0;
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 16px 5px 52px;
+  background: transparent;
+  border: none;
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 12px;
+  color: $text-secondary;
+  text-align: left;
+  line-height: 1.5;
+  transition: background 0.1s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.02);
+    color: $text-primary;
+  }
+
+  &.fileItemSelected {
+    border-left-color: $accent-color;
+    background: rgba(108, 92, 231, 0.05);
+    color: $accent-color;
+  }
+}
+
+.fileStatus {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: $text-muted;
+}
+
+.fileStatusNEW {
+  background: var(--positive-color, #37b26c);
+}
+
+.fileStatusMODIFIED {
+  background: var(--warning-color, #d6a022);
+}
+
+.fileStatusDELETED {
+  background: var(--negative-color, #e5534b);
+}
+
+.fileName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// --- File status labels ---
+
+.fileStatusLabel {
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  color: $text-muted;
+}
+
+.fileStatusLabelNEW {
+  color: var(--positive-color, #37b26c);
+  background: rgba(55, 178, 108, 0.1);
+}
+
+.fileStatusLabelMODIFIED {
+  color: var(--warning-color, #d6a022);
+  background: rgba(214, 160, 34, 0.08);
+}
+
+.fileStatusLabelDELETED {
+  color: var(--negative-color, #e5534b);
+  background: rgba(229, 83, 75, 0.08);
+}

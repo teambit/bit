@@ -7,13 +7,13 @@ export { UseComponentType, Filters };
 
 export function useComponent(host: string, id?: string, options?: UseComponentOptions): ComponentQueryResult {
   const query = useQuery();
-  const { version, logFilters, customUseComponent, skip } = options || {};
+  const { version, logFilters, customUseComponent, skip, context } = options || {};
   const componentVersion = (version || query.get('version')) ?? undefined;
 
   const componentIdStr = id && withVersion(id, componentVersion);
   const targetUseComponent = customUseComponent || useComponentQuery;
 
-  return targetUseComponent(componentIdStr || '', host, logFilters, skip || !id);
+  return targetUseComponent(componentIdStr || '', host, logFilters, skip || !id, context);
 }
 
 function withVersion(id: string, version?: string) {

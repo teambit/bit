@@ -1,0 +1,566 @@
+$border-color: var(--border-medium-color, #e8ecf0);
+$surface-color: var(--surface-color, #fff);
+$accent-color: var(--bit-accent-color, #6c5ce7);
+$text-primary: var(--on-surface-color, #1a1a2e);
+$text-secondary: var(--on-surface-medium-color, #707279);
+$text-muted: var(--on-background-medium-color, #a0aec0);
+
+.rootLaneCompare {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+// --- Toolbar ---
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid $border-color;
+  background: $surface-color;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  width: 200px;
+  padding: 5px 10px;
+  border: 1px solid $border-color;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  color: $text-primary;
+  background: $surface-color;
+  transition: border-color 0.15s ease;
+
+  &:focus {
+    border-color: $accent-color;
+  }
+
+  &::placeholder {
+    color: $text-muted;
+  }
+}
+
+.toolbarGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbarLabel {
+  font-size: 11px;
+  color: $text-muted;
+  margin-right: 2px;
+}
+
+.toolbarBtn {
+  padding: 4px 10px;
+  border: 1px solid $border-color;
+  border-radius: 6px;
+  background: $surface-color;
+  font-size: 11px;
+  font-family: inherit;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.02);
+  }
+}
+
+.toolbarBtnActive {
+  background: rgba(108, 92, 231, 0.12);
+  color: $accent-color;
+  border-color: $accent-color;
+  font-weight: 600;
+
+  .toolbarBadge {
+    background: rgba(108, 92, 231, 0.15);
+    color: $accent-color;
+  }
+}
+
+.toolbarCount {
+  margin-left: auto;
+  font-size: 11px;
+  color: $text-muted;
+}
+
+.toolbarSeparator {
+  width: 1px;
+  height: 20px;
+  background: $border-color;
+  flex-shrink: 0;
+}
+
+.toolbarBadge {
+  font-size: 10px;
+  font-weight: 600;
+  color: $text-muted;
+  background: rgba(0, 0, 0, 0.06);
+  padding: 0 5px;
+  border-radius: 8px;
+  margin-left: 2px;
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $text-muted;
+  border-bottom: 1px solid $border-color;
+}
+
+.sidebarCount {
+  background: rgba(108, 92, 231, 0.08);
+  color: $accent-color;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+.changeTagNew {
+  color: var(--positive-color, #37b26c);
+  background: rgba(55, 178, 108, 0.08);
+}
+
+// --- Layout ---
+
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  border-right: 1px solid $border-color;
+  background: var(--background-color, #fdfdff);
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.sidebarGroupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid $border-color;
+  margin-top: 4px;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+.sidebarGroupCount {
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 0 5px;
+  border-radius: 8px;
+}
+
+.sidebarItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 12px 7px 16px;
+  border: none;
+  border-left: 2px solid transparent;
+  background: transparent;
+  font-size: 12.5px;
+  font-family: inherit;
+  color: $text-primary;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.1s ease,
+    border-color 0.1s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.02);
+  }
+}
+
+.sidebarItemActive {
+  border-left-color: $accent-color;
+  background: rgba(108, 92, 231, 0.05);
+  color: $accent-color;
+  font-weight: 500;
+}
+
+.sidebarEnvIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+
+.sidebarEnvPlaceholder {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.diffPane {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--background-color, #f9fafb);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  // Tab visibility driven by `data-view-mode` on the pane. All `DeferredTab` siblings are mounted
+  // simultaneously to preserve their internal query/state caches across mode switches; CSS hides
+  // the ones that don't match the active view. Without this every tab stacked on top of each other,
+  // which is what made code show aspect data, config show code, and so on.
+  &[data-view-mode='code'] [data-tab-id]:not([data-tab-id='inline-code']) {
+    display: none;
+  }
+  &[data-view-mode='preview'] [data-tab-id]:not([data-tab-id='inline-preview']) {
+    display: none;
+  }
+  &[data-view-mode='dependencies'] [data-tab-id]:not([data-tab-id='inline-deps']) {
+    display: none;
+  }
+  &[data-view-mode='tests'] [data-tab-id]:not([data-tab-id='inline-tests']) {
+    display: none;
+  }
+  &[data-view-mode='config'] [data-tab-id]:not([data-tab-id='inline-config']) {
+    display: none;
+  }
+  &[data-view-mode='docs'] [data-tab-id]:not([data-tab-id='inline-docs']) {
+    display: none;
+  }
+
+  // Per-panel visibility driven by `data-view-mode` on the pane. Every component panel is mounted
+  // regardless of the active view (the set is filtered by search only) so that switching modes never
+  // remounts panels — it's just this attribute flip. CSS then hides panels that have no changes for
+  // the active view, using the stable `data-has-*` attributes stamped in lane-compare.tsx. `docs`,
+  // `tests` and `api` show every panel, so they get no hide rule here.
+  &[data-view-mode='code'] [data-component-id]:not([data-has-code]) {
+    display: none;
+  }
+  &[data-view-mode='preview'] [data-component-id]:not([data-has-preview]) {
+    display: none;
+  }
+  &[data-view-mode='dependencies'] [data-component-id]:not([data-has-deps]) {
+    display: none;
+  }
+  &[data-view-mode='config'] [data-component-id]:not([data-has-config]) {
+    display: none;
+  }
+}
+
+// A group with no panels visible in the active view. Hidden via a class (not removed from the tree)
+// so its panels stay mounted and a later view switch is still a pure CSS flip.
+.groupHidden {
+  display: none;
+}
+
+// --- Loading ---
+
+.laneCompareLoading {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.laneCompareSkeleton {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonBar {
+  height: 12px;
+  background: linear-gradient(
+    90deg,
+    var(--surface-neutral-color, #f0f2f5) 25%,
+    $border-color 50%,
+    var(--surface-neutral-color, #f0f2f5) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// --- Groups ---
+
+.laneCompareGroup {
+  --group-header-height: 42px;
+
+  &:not(:first-child) {
+    margin-top: 8px;
+  }
+
+  // Containment for each component panel. A view-mode switch toggles `display` on heavy tab subtrees
+  // (code diffs, dependency tables) inside every panel; without containment a single layout read —
+  // e.g. the toolbar's toggle indicator measuring its own `offsetLeft` right after the switch — forces
+  // the browser to synchronously re-lay-out the ENTIRE pane in one pass (the ~1.2s "forced reflow"
+  // seen in the profiler). `content-visibility: auto` skips layout/paint for panels not near the
+  // viewport and makes each panel a containment boundary, so the reflow only touches what's on screen.
+  // `contain-intrinsic-size: auto <h>` keeps the scrollbar stable by remembering each panel's last
+  // rendered height (falling back to the estimate before first render).
+  [data-component-id] {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 320px;
+  }
+}
+
+.laneCompareGroupHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $text-muted;
+  background: var(--background-color, #f9fafb);
+  border-bottom: 1px solid $border-color;
+  position: sticky;
+  top: 0;
+  z-index: 4;
+}
+
+.laneCompareGroupLabel {
+  flex: 1;
+}
+
+.laneCompareGroupCount {
+  font-weight: 500;
+  color: $text-muted;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+// --- Component Section ---
+
+.inlineComponentSection {
+  background: $surface-color;
+  margin-bottom: 2px;
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.inlineComponentHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 16px;
+  background: $surface-color;
+  border-bottom: 1px solid $border-color;
+  border-left: 3px solid $accent-color;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.inlineComponentHeaderSelected {
+  background: rgba(108, 92, 231, 0.03);
+}
+
+.componentEnvIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.inlineComponentName {
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-primary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inlineComponentMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.inlineChangeTags {
+  display: flex;
+  gap: 4px;
+}
+
+.changeTag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.changeTagCode {
+  color: $accent-color;
+  background: rgba(108, 92, 231, 0.08);
+}
+
+.changeTagDeps {
+  color: var(--warning-color, #d6a022);
+  background: rgba(214, 160, 34, 0.08);
+}
+
+.inlineComponentVersions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.inlineVersionHash {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--surface-neutral-color, #f6f8fa);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: $text-secondary;
+}
+
+.inlineVersionArrow {
+  color: $text-muted;
+  font-size: 10px;
+  opacity: 0.5;
+}
+
+.inlineComponentEmpty {
+  padding: 16px;
+  text-align: center;
+  color: $text-muted;
+  font-size: 12px;
+  font-style: italic;
+}
+
+// --- Sections ---
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  padding: 6px 16px;
+  background: var(--surface-neutral-color, #f8f9fb);
+  border-bottom: 1px solid $border-color;
+}
+
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $text-muted;
+}
+
+.newComponentBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(55, 178, 108, 0.04);
+  border-bottom: 1px solid rgba(55, 178, 108, 0.1);
+}
+
+.newComponentLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--positive-color, #37b26c);
+  background: rgba(55, 178, 108, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.newComponentNote {
+  font-size: 11px;
+  color: $text-muted;
+  font-style: italic;
+}
+
+.depsSection {
+  border-bottom: 1px solid $border-color;
+}
+
+// --- Legacy compat ---
+.componentCompareContainer {
+  height: auto;
+}
+.componentComparePanel {
+  border-bottom: none;
+}
+.groupedComponentCompareContainer {
+  padding: 0;
+}
+.changeTypeTitle {
+  padding: 16px 0;
+}
+.fullScreenIcon {
+  display: none;
+}
+
+.emptyState {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 240px;
+  align-items: center;
+  justify-content: center;
+}

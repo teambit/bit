@@ -1,0 +1,373 @@
+$code-font: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+$border-color: var(--border-medium-color, #e8ecf0);
+$surface-color: var(--surface-color, #fff);
+$accent-color: var(--bit-accent-color, #6c5ce7);
+$text-primary: var(--on-surface-color, #1a1a2e);
+$text-secondary: var(--on-surface-medium-color, #707279);
+$text-muted: var(--on-background-medium-color, #a0aec0);
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.fullView {
+  padding: 20px;
+  max-width: 900px;
+}
+
+.summaryBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: $surface-color;
+  border: 1px solid $border-color;
+}
+
+.summaryTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.summaryHeading {
+  font-size: 15px;
+  font-weight: 700;
+  color: $text-primary;
+}
+
+.summaryLoading {
+  font-size: 12px;
+  color: $accent-color;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.summaryStats {
+  display: flex;
+  gap: 16px;
+}
+
+.summaryStat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: $text-secondary;
+}
+
+.summaryDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.card {
+  margin-bottom: 12px;
+  border-radius: 12px;
+  border: 1px solid $border-color;
+  background: $surface-color;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  }
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-left: 3px solid var(--scope-accent, $accent-color);
+  border-bottom: 1px solid $border-color;
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cardName {
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.cardLoading {
+  font-size: 12px;
+  color: $text-muted;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.cardUnavailable {
+  font-size: 11px;
+  color: $text-muted;
+  font-style: italic;
+}
+
+.cardStats {
+  display: flex;
+  gap: 12px;
+}
+
+.statAdded {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--success-color, #1a7f37);
+}
+
+.statRemoved {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--on-surface-negative-bold, #cf222e);
+}
+
+.statModified {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--warning-color, #d6a022);
+}
+
+.statBreaking {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--on-surface-negative-bold, #cf222e);
+  background: rgba(207, 34, 46, 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.cardBody {
+  padding: 4px 0;
+}
+
+.changeSection {
+  &:not(:last-child) {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  }
+}
+
+.changeSectionLabel {
+  padding: 8px 18px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $text-muted;
+}
+
+.changeRow {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.changeRowHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.1s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.015);
+  }
+}
+
+.statusIndicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-family: $code-font;
+}
+
+.exportName {
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-primary;
+  font-family: $code-font;
+}
+
+.schemaType {
+  font-size: 11px;
+  color: $text-muted;
+  background: rgba(0, 0, 0, 0.03);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.changeCount {
+  font-size: 11px;
+  color: $text-muted;
+  margin-left: auto;
+}
+
+.expandIcon {
+  font-size: 14px;
+  color: $text-muted;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+
+  &.expandIconOpen {
+    transform: rotate(90deg);
+  }
+}
+
+.changeDetails {
+  padding: 0 18px 12px 46px;
+}
+
+.signature {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.signatureLabel {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $text-muted;
+  width: 52px;
+  flex-shrink: 0;
+  padding-top: 3px;
+}
+
+.signatureCode {
+  font-size: 12px;
+  font-family: $code-font;
+  color: $text-primary;
+  line-height: 1.6;
+  word-break: break-all;
+  background: var(--surface-neutral-color, #f6f8fa);
+  padding: 4px 8px;
+  border-radius: 6px;
+  flex: 1;
+}
+
+.detailList {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detailRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.impactDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.detailDescription {
+  color: $text-secondary;
+  flex: 1;
+}
+
+.detailDiff {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: $code-font;
+  font-size: 11px;
+}
+
+.detailFrom {
+  color: var(--on-surface-negative-bold, #cf222e);
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.detailArrow {
+  color: $text-muted;
+  font-size: 10px;
+}
+
+.detailTo {
+  color: var(--success-color, #1a7f37);
+  font-weight: 500;
+}
+
+.impactBadge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+}
+
+.impactBadgeSmall {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.emptyIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(26, 127, 55, 0.08);
+  color: var(--success-color, #1a7f37);
+  font-size: 22px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.emptyTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: $text-primary;
+  margin-bottom: 4px;
+}
+
+.emptySubtitle {
+  font-size: 13px;
+  color: $text-muted;
+}

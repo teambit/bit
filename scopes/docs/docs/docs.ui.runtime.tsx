@@ -110,6 +110,17 @@ export class DocsUI {
     component.registerNavigation(section.navigationLink, section.order);
     componentCompare.registerNavigation(compareSection);
     componentCompare.registerRoutes([compareSection.route]);
+    // Register the inline docs tab on component-compare (canonical owner; shared by the single
+    // component-compare page and lane-compare). `docs.getDocsCompare()` returns
+    // `<OverviewCompare titleBadges={this.titleBadgeSlot} overviewOptions={this.overviewOptionsSlot} />`,
+    // so any other aspect that registers title badges or overview options sees those contributions
+    // in the inline-docs panel too.
+    componentCompare.registerCompareTab({
+      id: 'inline-docs',
+      order: 3,
+      displayName: 'Docs',
+      element: docs.getDocsCompare(),
+    });
     docs.registerPreviewSandbox((manager, componentModel) => {
       if (componentModel?.host === 'teambit.scope/scope') {
         manager.add('allow-scripts');

@@ -25,12 +25,18 @@ import type { Component, ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import type { SchemaMain } from '@teambit/schema';
 import { SchemaAspect } from '@teambit/schema';
+import { CACHE_ROOT } from '@teambit/legacy.constants';
+import fs from 'fs-extra';
+import path from 'path';
 
 import { componentCompareSchema } from './component-compare.graphql';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { DiffCmd } from './diff-cmd';
 import type { ImporterMain } from '@teambit/importer';
 import { ImporterAspect } from '@teambit/importer';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { compareComponentPairs } from './compare-component-pairs';
+import type { ComponentComparePair } from './compare-component-pairs';
 
 export type ComponentCompareResult = {
   id: string;
@@ -57,9 +63,125 @@ export class ComponentCompareMain {
     private importer: ImporterMain,
     private schema: SchemaMain,
     private workspace?: Workspace
-  ) {}
+  ) {
+    this.loadCompareMemoFromDisk();
+    this.loadApiDiffMemoFromDisk();
+  }
+
+  /**
+   * Memoize `compare()` per immutable `(baseId, compareId)` pair. Each result can be ~220 KB (full
+   * file diffs + aspects + tests) but the value is deterministic on the underlying snap hashes, so
+   * it's safe to cache for the process lifetime AND across restarts. Bounded LRU + debounced save.
+   *
+   * Combined with the single-flight map, this collapses the N-parallel-pair cost of
+   * `compareComponents` to one compute per unique pair across the whole server lifetime.
+   */
+  private compareMemo = new Map<string, ComponentCompareResult>();
+  private compareInflight = new Map<string, Promise<ComponentCompareResult>>();
+  private compareMemoDirty = false;
+  private compareMemoSaveTimer: NodeJS.Timeout | undefined;
+  private static COMPARE_MEMO_MAX = 200;
+  private static COMPARE_MEMO_FILE = path.join(CACHE_ROOT, 'component-compare-results.json');
+
+  /** API-diff memo: full result object so the graphql `apiDiff` resolver hits it too. */
+  private apiDiffMemo = new Map<string, Record<string, any> | null>();
+  private apiDiffInflight = new Map<string, Promise<Record<string, any> | null>>();
+  private apiDiffMemoDirty = false;
+  private apiDiffMemoSaveTimer: NodeJS.Timeout | undefined;
+  private static API_DIFF_MEMO_MAX = 500;
+  private static API_DIFF_MEMO_FILE = path.join(CACHE_ROOT, 'component-compare-api-diff.json');
+
+  private async loadCompareMemoFromDisk() {
+    try {
+      const raw = await fs.readFile(ComponentCompareMain.COMPARE_MEMO_FILE, 'utf8');
+      const parsed = JSON.parse(raw) as Record<string, ComponentCompareResult>;
+      for (const [k, v] of Object.entries(parsed)) this.compareMemo.set(k, v);
+      this.logger?.debug(`[component-compare memo] loaded ${this.compareMemo.size} compare entries`);
+    } catch {
+      // first run / corrupted file.
+    }
+  }
+
+  private scheduleCompareMemoSave() {
+    this.compareMemoDirty = true;
+    if (this.compareMemoSaveTimer) return;
+    this.compareMemoSaveTimer = setTimeout(() => {
+      this.compareMemoSaveTimer = undefined;
+      if (!this.compareMemoDirty) return;
+      this.compareMemoDirty = false;
+      const serialized: Record<string, ComponentCompareResult> = {};
+      for (const [k, v] of this.compareMemo) serialized[k] = v;
+      fs.outputFile(ComponentCompareMain.COMPARE_MEMO_FILE, JSON.stringify(serialized)).catch(() => {});
+    }, 1000);
+  }
+
+  private memoStoreCompare(key: string, result: ComponentCompareResult) {
+    if (this.compareMemo.size >= ComponentCompareMain.COMPARE_MEMO_MAX) {
+      const firstKey = this.compareMemo.keys().next().value;
+      if (firstKey) this.compareMemo.delete(firstKey);
+    }
+    this.compareMemo.set(key, result);
+    this.scheduleCompareMemoSave();
+  }
+
+  private async loadApiDiffMemoFromDisk() {
+    try {
+      const raw = await fs.readFile(ComponentCompareMain.API_DIFF_MEMO_FILE, 'utf8');
+      const parsed = JSON.parse(raw) as Record<string, Record<string, any> | null>;
+      for (const [k, v] of Object.entries(parsed)) this.apiDiffMemo.set(k, v);
+      this.logger?.debug(`[component-compare memo] loaded ${this.apiDiffMemo.size} api-diff entries`);
+    } catch {
+      // first run / corrupted file.
+    }
+  }
+
+  private scheduleApiDiffMemoSave() {
+    this.apiDiffMemoDirty = true;
+    if (this.apiDiffMemoSaveTimer) return;
+    this.apiDiffMemoSaveTimer = setTimeout(() => {
+      this.apiDiffMemoSaveTimer = undefined;
+      if (!this.apiDiffMemoDirty) return;
+      this.apiDiffMemoDirty = false;
+      const serialized: Record<string, Record<string, any> | null> = {};
+      for (const [k, v] of this.apiDiffMemo) serialized[k] = v;
+      fs.outputFile(ComponentCompareMain.API_DIFF_MEMO_FILE, JSON.stringify(serialized)).catch(() => {});
+    }, 1000);
+  }
+
+  private memoStoreApiDiff(key: string, result: Record<string, any> | null) {
+    if (this.apiDiffMemo.size >= ComponentCompareMain.API_DIFF_MEMO_MAX) {
+      const firstKey = this.apiDiffMemo.keys().next().value;
+      if (firstKey) this.apiDiffMemo.delete(firstKey);
+    }
+    this.apiDiffMemo.set(key, result);
+    this.scheduleApiDiffMemoSave();
+  }
 
   async compare(baseIdStr: string, compareIdStr: string): Promise<ComponentCompareResult> {
+    const memoKey = `${baseIdStr}|${compareIdStr}`;
+    const cached = this.compareMemo.get(memoKey);
+    if (cached) return cached;
+
+    // single-flight: concurrent calls for the same pair share one computation. With the lane
+    // compare UI firing CompareComponents (a single op with many pairs) in parallel with the lane
+    // diff status (which derives change types through this same `compare()`), without dedupe each
+    // pair is computed twice on cold paths.
+    const pending = this.compareInflight.get(memoKey);
+    if (pending) return pending;
+    const promise = this.computeCompare(baseIdStr, compareIdStr)
+      .then((result) => {
+        this.memoStoreCompare(memoKey, result);
+        return result;
+      })
+      .finally(() => {
+        this.compareInflight.delete(memoKey);
+      });
+    this.compareInflight.set(memoKey, promise);
+    return promise;
+  }
+
+  /** The original `compare()` body — moved here so the public method can wrap with memo + single-flight. */
+  private async computeCompare(baseIdStr: string, compareIdStr: string): Promise<ComponentCompareResult> {
     const host = this.componentAspect.getHost();
     const [baseCompId, compareCompId] = await host.resolveMultipleComponentIds([baseIdStr, compareIdStr]);
     const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(compareCompId);
@@ -115,7 +237,51 @@ export class ComponentCompareMain {
     };
   }
 
+  /**
+   * compare a paginated slice of component pairs in one call.
+   * a pair that fails to compare (e.g. a component without versions) becomes `null` in the
+   * returned array rather than failing the whole batch. the array is aligned to the requested
+   * slice (`pairs[offset .. offset + limit]`).
+   */
+  async compareComponents(
+    pairs: ComponentComparePair[],
+    options?: { offset?: number; limit?: number }
+  ): Promise<Array<ComponentCompareResult | null>> {
+    return compareComponentPairs(pairs, (baseId, compareId) => this.compare(baseId, compareId), {
+      offset: options?.offset,
+      limit: options?.limit,
+      concurrency: concurrentComponentsLimit(),
+      onError: (pair, err) => {
+        this.logger.warn(`compareComponents: failed to compare ${pair.baseId} <> ${pair.compareId}`, err);
+      },
+    });
+  }
+
   async getAPIDiff(baseIdStr: string, compareIdStr: string): Promise<Record<string, any> | null> {
+    const memoKey = `${baseIdStr}|${compareIdStr}`;
+    if (this.apiDiffMemo.has(memoKey)) {
+      return this.apiDiffMemo.get(memoKey) ?? null;
+    }
+    const pending = this.apiDiffInflight.get(memoKey);
+    if (pending) return pending;
+
+    const promise = this.computeAPIDiff(baseIdStr, compareIdStr)
+      .then((result) => {
+        // Avoid poisoning the cache with `null` from a transient failure. `null` here can mean
+        // "components couldn't be loaded right now" (e.g. snap not yet imported) — caching it
+        // permanently would lock the resolver to a wrong answer for these immutable ids until
+        // the disk file is deleted. Re-fetch on the next call instead.
+        if (result !== null) this.memoStoreApiDiff(memoKey, result);
+        return result;
+      })
+      .finally(() => {
+        this.apiDiffInflight.delete(memoKey);
+      });
+    this.apiDiffInflight.set(memoKey, promise);
+    return promise;
+  }
+
+  private async computeAPIDiff(baseIdStr: string, compareIdStr: string): Promise<Record<string, any> | null> {
     const host = this.componentAspect.getHost();
     const [baseCompId, compareCompId] = await host.resolveMultipleComponentIds([baseIdStr, compareIdStr]);
     await this.importer.importObjectsFromMainIfExist([baseCompId, compareCompId], { cache: true });

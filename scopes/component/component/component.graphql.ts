@@ -9,6 +9,20 @@ import type { Component } from './component';
 import type { ComponentFactory } from './component-factory';
 import type { ComponentMain } from './component.main.runtime';
 
+/**
+ * Per-Component-instance caches for resolver field outputs. Each batched lane-compare request fans
+ * out to ~10–20 `Component` ops that all eventually call `host.get()` for the same versioned id —
+ * which returns the same `Component` instance (via `ScopeComponentLoader.componentsCache`). Without
+ * these WeakMaps, every op re-runs the same `aspects.filter(include).serialize()`,
+ * `tags.toArray().map(toObject)`, `headTag.toObject()` etc.
+ *
+ * WeakMaps so entries disappear when the underlying `Component` is evicted from scope cache.
+ */
+const aspectsResolverCache = new WeakMap<Component, Map<string, any>>();
+const tagsResolverCache = new WeakMap<Component, any>();
+const headTagResolverCache = new WeakMap<Component, any>();
+const fsResolverCache = new WeakMap<Component, string[]>();
+
 export function componentSchema(componentExtension: ComponentMain): Schema {
   return {
     typeDefs: gql`
@@ -151,6 +165,10 @@ export function componentSchema(componentExtension: ComponentMain): Schema {
         # load a component.
         get(id: String!, withState: Boolean): Component
 
+        # load multiple components in a single op. items are aligned to the input order;
+        # an id that fails to resolve becomes null in its slot rather than failing the call.
+        getMany(ids: [String!]!, withState: Boolean): [Component]!
+
         # list components
         list(offset: Int, limit: Int): [Component]!
 
@@ -171,7 +189,11 @@ export function componentSchema(componentExtension: ComponentMain): Schema {
         id: (component: Component): ComponentIdObj => component.id.toObject(),
         displayName: (component: Component) => component.displayName,
         fs: (component: Component) => {
-          return component.state.filesystem.files.map((file) => file.relative);
+          const cached = fsResolverCache.get(component);
+          if (cached) return cached;
+          const result = component.state.filesystem.files.map((file) => file.relative);
+          fsResolverCache.set(component, result);
+          return result;
         },
         log: async (component: Component) => {
           const snap = await component.loadSnap(component.id.version);
@@ -194,14 +216,34 @@ export function componentSchema(componentExtension: ComponentMain): Schema {
         mainFile: (component: Component) => {
           return component.state._consumer.mainFile;
         },
-        headTag: (component: Component) => component.headTag?.toObject(),
+        headTag: (component: Component) => {
+          if (headTagResolverCache.has(component)) return headTagResolverCache.get(component);
+          const result = component.headTag?.toObject();
+          headTagResolverCache.set(component, result);
+          return result;
+        },
         latest: (component: Component) => component.latest,
         tags: (component) => {
+          const cached = tagsResolverCache.get(component);
+          if (cached) return cached;
           // graphql doesn't support map types
-          return component.tags.toArray().map((tag) => tag.toObject());
+          const result = component.tags.toArray().map((tag) => tag.toObject());
+          tagsResolverCache.set(component, result);
+          return result;
         },
         aspects: (component: Component, { include }: { include?: string[] }) => {
-          return component.state.aspects.filter(include).serialize();
+          let perComponent = aspectsResolverCache.get(component);
+          if (!perComponent) {
+            perComponent = new Map();
+            aspectsResolverCache.set(component, perComponent);
+          }
+          // sort the include list so callers that pass the same set in different order still hit cache.
+          const cacheKey = include ? [...include].sort().join('|') : '__all__';
+          const cached = perComponent.get(cacheKey);
+          if (cached) return cached;
+          const result = component.state.aspects.filter(include).serialize();
+          perComponent.set(cacheKey, result);
+          return result;
         },
         // Here only to not break old queries
         elementsUrl: () => undefined,
@@ -233,6 +275,21 @@ export function componentSchema(componentExtension: ComponentMain): Schema {
           } catch {
             return null;
           }
+        },
+        getMany: async (host: ComponentFactory, { ids }: { ids: string[] }) => {
+          // run resolves+loads in parallel — `host.getMany` uses `mapSeries` under the hood, which
+          // serializes the work and defeats the whole point of bulk. each entry is independent and
+          // the underlying ScopeComponentLoader has its own per-id cache, so concurrency is safe.
+          return Promise.all(
+            ids.map(async (id) => {
+              try {
+                const componentId = await host.resolveComponentId(id);
+                return await host.get(componentId);
+              } catch {
+                return null;
+              }
+            })
+          );
         },
         snaps: async (host: ComponentFactory, { id }: { id: string }): Promise<ComponentLog[]> => {
           const componentId = await host.resolveComponentId(id);

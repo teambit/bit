@@ -1,0 +1,77 @@
+$border-color: var(--border-medium-color, #e8ecf0);
+$surface-color: var(--surface-color, #fff);
+
+.previewCompare {
+  border-bottom: 1px solid $border-color;
+  min-height: 200px;
+}
+
+.browserSkeletonSplit {
+  display: flex;
+  gap: 1px;
+  background: $border-color;
+  min-height: 200px;
+}
+
+.browserSkeleton {
+  flex: 1;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: $surface-color;
+}
+
+.browserToolbar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border-bottom: 1px solid currentColor;
+  opacity: 0.08;
+  flex-shrink: 0;
+}
+
+.browserDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.browserUrlBar {
+  flex: 1;
+  height: 14px;
+  margin-left: 8px;
+  border-radius: 10px;
+  background: currentColor;
+}
+
+.browserBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 14px;
+  opacity: 0.06;
+
+  > * {
+    height: 10px;
+    border-radius: 6px;
+    background: currentColor;
+  }
+}
+
+.browserLine1 {
+  width: 55%;
+}
+.browserLine2 {
+  width: 75%;
+}
+.browserLine3 {
+  width: 40%;
+}
+.browserLine4 {
+  width: 65%;
+}
