@@ -64,6 +64,7 @@ Subcommands: list, show, create, remove, change-scope, alias, rename, remove-rea
 ci <sub-command> - continuous integration commands for automated workflows
 Subcommands: verify, pr, merge
 fork <pattern> [target-component-name] - create a new component by copying from an existing one
+internalize [component-pattern] - mark components as internal to hide them by default in the UI
 
 Run & Serve
 start [component-pattern] - launch the Bit development server
