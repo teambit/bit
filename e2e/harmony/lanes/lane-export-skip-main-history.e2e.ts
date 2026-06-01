@@ -4,6 +4,18 @@ import chaiFs from 'chai-fs';
 
 chai.use(chaiFs);
 
+function danglingParentsIn(vh: Record<string, any>): string[] {
+  const versions = vh.versions as Array<{ hash: string; parents: string[] }>;
+  const hashes = new Set(versions.map((v) => v.hash));
+  const dangling: string[] = [];
+  for (const v of versions) {
+    for (const p of v.parents) {
+      if (!hashes.has(p)) dangling.push(`${v.hash.slice(0, 8)} -> ${p.slice(0, 8)}`);
+    }
+  }
+  return dangling;
+}
+
 describe('lane export skips main history objects', function () {
   this.timeout(0);
   let helper: Helper;
@@ -308,15 +320,7 @@ describe('lane export skips main history objects', function () {
           // truncated: it has `snapOnFork → [mergeSnapOnL]` but no entry for mergeSnapOnL.
           // The home-scope healing fetches main-origin VH from scope-C, but mergeSnapOnL is a
           // lane-origin snap living on scope-L — out of reach.
-          const vh = helper.command.catVersionHistory(`${scopeC}/comp1`);
-          const versions = vh.versions as Array<{ hash: string; parents: string[] }>;
-          const hashes = new Set(versions.map((v) => v.hash));
-          const dangling: string[] = [];
-          for (const v of versions) {
-            for (const p of v.parents) {
-              if (!hashes.has(p)) dangling.push(`${v.hash.slice(0, 8)} -> ${p.slice(0, 8)}`);
-            }
-          }
+          const dangling = danglingParentsIn(helper.command.catVersionHistory(`${scopeC}/comp1`));
           expect(dangling, `dangling parent refs in consumer VH:\n${dangling.join('\n')}`).to.have.lengthOf(0);
         });
       });
@@ -629,15 +633,7 @@ describe('lane export skips main history objects', function () {
     });
 
     it('scope-C VersionHistory should be a closed graph despite the local-fork chain', () => {
-      const vh = helper.command.catVersionHistory(`${helper.scopes.remote}/comp1`, scopeCPath);
-      const versions = vh.versions as Array<{ hash: string; parents: string[] }>;
-      const hashes = new Set(versions.map((v) => v.hash));
-      const dangling: string[] = [];
-      for (const v of versions) {
-        for (const p of v.parents) {
-          if (!hashes.has(p)) dangling.push(`${v.hash.slice(0, 8)} -> ${p.slice(0, 8)}`);
-        }
-      }
+      const dangling = danglingParentsIn(helper.command.catVersionHistory(`${helper.scopes.remote}/comp1`, scopeCPath));
       expect(dangling, `dangling parent refs in scope-C VH:\n${dangling.join('\n')}`).to.have.lengthOf(0);
     });
   });
