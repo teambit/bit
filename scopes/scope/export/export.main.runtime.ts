@@ -570,6 +570,10 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
             // component's home scope for older Version objects that lack `origin.id.scope`.
             const originScope = obj.originId?.scope || modelComponent.scope;
             const isForeignToDestination = originScope !== remoteNameStr;
+            // Release the parsed Version from the repo cache — we only needed its metadata for
+            // the keep/drop decision. processModelComponent re-reads kept refs via `loadManyRaw`,
+            // so leaving them cached just inflates memory on deep histories.
+            scope.objects.removeFromCache(ref);
             if (!isLaneOrigin && !isLocallyMutated && isForeignToDestination) {
               skippedCount += 1;
               continue;

@@ -285,17 +285,14 @@ describe('lane export skips main history objects', function () {
       });
 
       describe('traversal-dependent commands on a fresh consumer of the forked lane', () => {
-        // The forked lane head (snapOnFork) has a parent (mergeSnapOnL) that is a *lane-origin*
-        // snap on scope-L. scope-F doesn't have its Version object (lean fork). The consumer
-        // imports from scope-F and inherits a VersionHistory that references mergeSnapOnL as a
-        // parent without the underlying Version object — a dangling parent ref.
-        //
-        // The post-import healing (`importMissingHistory`) only retries the component's home
-        // scope (scope-C) for missing parents. scope-C doesn't have mergeSnapOnL either, since
-        // it's lane-origin. So the consumer's local VH stays truncated at snapOnFork.
-        //
-        // These tests exercise commands that walk the VH past the head — they should succeed
-        // but today they break.
+        // Regression coverage. Before the export-time VH fetch from the forked-from lane's
+        // scope (added in this PR), scope-F's VH for the foreign component referenced
+        // mergeSnapOnL as a parent without an underlying entry — a dangling ref. The
+        // post-import healing (`importMissingHistory`) only retried the component's home
+        // scope (scope-C), which didn't have mergeSnapOnL either (lane-origin snap living on
+        // scope-L), so the consumer's VH stayed truncated and traversal-dependent commands
+        // broke. The export-validate fetch now closes the chain on scope-F, so these commands
+        // succeed.
         before(() => {
           helper.scopeHelper.reInitWorkspace();
           helper.scopeHelper.addRemoteScope();
@@ -316,10 +313,9 @@ describe('lane export skips main history objects', function () {
 
         it('consumer VersionHistory should be a closed graph (no dangling parent refs)', () => {
           // After `bit lane import`, the consumer's local VH for the foreign component must
-          // include an entry for every parent reachable from the lane head. Today the VH is
-          // truncated: it has `snapOnFork → [mergeSnapOnL]` but no entry for mergeSnapOnL.
-          // The home-scope healing fetches main-origin VH from scope-C, but mergeSnapOnL is a
-          // lane-origin snap living on scope-L — out of reach.
+          // include an entry for every parent reachable from the lane head. (Before the fix
+          // it was truncated at snapOnFork; mergeSnapOnL was a dangling ref because the
+          // home-scope healing couldn't fetch it from scope-L.)
           const dangling = danglingParentsIn(helper.command.catVersionHistory(`${scopeC}/comp1`));
           expect(dangling, `dangling parent refs in consumer VH:\n${dangling.join('\n')}`).to.have.lengthOf(0);
         });
