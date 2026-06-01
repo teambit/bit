@@ -7,7 +7,6 @@ import { mergeObjects } from '@teambit/export';
 import type { Action } from './action';
 import { logger } from '@teambit/legacy.logger';
 import type { BitObjectList, Lane, ModelComponent, Version } from '@teambit/objects';
-import { Ref } from '@teambit/objects';
 import { ComponentIdList } from '@teambit/component-id';
 import type { LaneId } from '@teambit/lane-id';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
@@ -60,19 +59,19 @@ export class ExportValidate implements Action<Options> {
    * VersionHistory graph for each one. The fetch is VH-only (no `collectParents`), so it
    * doesn't pull the full Version chain — that's what makes this safe with lean lane scopes.
    *
-   * Source of the VH fetch:
-   *  - Normal lane export: each external component's home scope. The home scope owns the full
-   *    main-origin VH chain.
-   *  - Fork export (incoming lane has `forkedFrom` pointing to a different scope): the
-   *    forkedFrom lane's scope. By the recursive invariant maintained by this same method on
-   *    every lane export, the forkedFrom scope's VH is already closed — including any
-   *    lane-origin link snaps (e.g. a merge snap from main into the original lane) that the
-   *    home scope wouldn't have. One fetch from the forkedFrom scope covers both main-origin
-   *    and lane-origin gaps.
+   * Two-step:
+   *  1. Pre-check closure (existing VH + incoming Versions). On subsequent exports the previous
+   *     fetch already closed the chain — new snaps just extend it, so this step skips the
+   *     network round-trip entirely.
+   *  2. For components that still have gaps, fetch missing VH:
+   *     - Fork export (lane has `forkedFrom` pointing to a different scope): from the
+   *       forkedFrom lane's scope. By the recursive invariant, that scope's VH is already
+   *       closed — one fetch covers both main-origin gaps and lane-origin link snaps the home
+   *       scope wouldn't have.
+   *     - Otherwise: from each external component's home scope.
    *
-   * After the fetch, verify the VH for each pushed head is closed (every transitive parent
-   * has a VH entry). If not, fail the export with a clear error rather than persisting a
-   * broken VH — silent incompleteness later manifests as "no common snap" on merge-lane and
+   * After the fetch, re-verify closure. If anything is still missing, fail the export with a
+   * clear error — silent incompleteness later manifests as "no common snap" on merge-lane and
    * truncated `bit log`.
    */
   private async importAndThrowForMissingHistoryOnLane(bitObjectList: BitObjectList) {
@@ -81,19 +80,88 @@ export class ExportValidate implements Action<Options> {
     if (!externalComponents.length) return;
 
     const incomingLane = bitObjectList.getLanes()[0];
+    const incomingVersions = bitObjectList.getVersions();
+
+    const incomplete = (
+      await pMapPool(
+        externalComponents,
+        async (modelComponent) => {
+          const missing = await this.findMissingFromVH(modelComponent, incomingLane, incomingVersions);
+          return missing.length ? modelComponent : null;
+        },
+        { concurrency: concurrentComponentsLimit() }
+      )
+    ).filter((c): c is ModelComponent => c !== null);
+
+    if (!incomplete.length) return;
+
     const forkedFrom = incomingLane?.forkedFrom;
     if (forkedFrom && forkedFrom.scope !== this.scope.name) {
-      await this.fetchVersionHistoryFromForkedFromScope(externalComponents, forkedFrom);
+      await this.fetchVersionHistoryFromForkedFromScope(incomplete, forkedFrom);
     } else {
-      await this.scope.scopeImporter.importMissingVersionHistory(externalComponents);
+      await this.scope.scopeImporter.importMissingVersionHistory(incomplete);
     }
 
-    const incomingVersions = bitObjectList.getVersions();
     await pMapPool(
-      externalComponents,
+      incomplete,
       (modelComponent) => this.assertVersionHistoryClosed(modelComponent, incomingLane, incomingVersions),
       { concurrency: concurrentComponentsLimit() }
     );
+  }
+
+  /**
+   * Returns the dangling parent refs for `modelComponent` once the incoming Versions are
+   * notionally merged into the on-disk VH. Empty array = closed graph.
+   *
+   * Important: we build a separate hash→parents map instead of calling
+   * `addFromVersionsObjects` on the loaded VH. The loaded VH may be the cached instance, and
+   * mutating it could leak the pre-merge state to disk via the fetch's `mergeVersionHistory`
+   * path if validation later fails.
+   */
+  private async findMissingFromVH(
+    modelComponent: ModelComponent,
+    incomingLane: Lane | undefined,
+    incomingVersions: Version[]
+  ): Promise<string[]> {
+    const versionHistory = await modelComponent.getVersionHistory(this.scope.objects);
+    const versionsForThisComp = incomingVersions.filter(
+      (v) => v.origin?.id?.name === modelComponent.name && v.origin?.id?.scope === modelComponent.scope
+    );
+    const parentsByHash = new Map<string, string[]>();
+    for (const v of versionHistory.versions) {
+      parentsByHash.set(
+        v.hash.toString(),
+        v.parents.map((p) => p.toString())
+      );
+    }
+    for (const v of versionsForThisComp) {
+      parentsByHash.set(
+        v.hash().toString(),
+        v.parents.map((p) => p.toString())
+      );
+    }
+    const heads = new Set<string>();
+    const laneHead = incomingLane?.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId());
+    if (laneHead) heads.add(laneHead.toString());
+    if (modelComponent.head) heads.add(modelComponent.head.toString());
+
+    const visited = new Set<string>();
+    const missing: string[] = [];
+    for (const headStr of heads) {
+      const stack = [headStr];
+      while (stack.length) {
+        const hash = stack.pop()!;
+        if (visited.has(hash)) continue;
+        visited.add(hash);
+        const parents = parentsByHash.get(hash);
+        if (!parents) {
+          missing.push(hash);
+          continue;
+        }
+        for (const p of parents) if (!visited.has(p)) stack.push(p);
+      }
+    }
+    return missing;
   }
 
   private async assertVersionHistoryClosed(
@@ -101,34 +169,17 @@ export class ExportValidate implements Action<Options> {
     incomingLane: Lane | undefined,
     incomingVersions: Version[]
   ) {
-    const versionHistory = await modelComponent.getVersionHistory(this.scope.objects);
-    // ExportPersist will call addFromVersionsObjects to fold the just-pushed Versions into the
-    // VH. Mirror that here so the closure check sees the post-merge state — otherwise the head
-    // itself reads as dangling because its entry hasn't been written yet.
-    const versionsForThisComp = incomingVersions.filter(
-      (v) => v.origin?.id?.name === modelComponent.name && v.origin?.id?.scope === modelComponent.scope
-    );
-    if (versionsForThisComp.length) {
-      versionHistory.addFromVersionsObjects(versionsForThisComp);
-    }
-    const heads = new Set<string>();
-    const laneHead = incomingLane?.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId());
-    if (laneHead) heads.add(laneHead.toString());
-    if (modelComponent.head) heads.add(modelComponent.head.toString());
-    for (const headStr of heads) {
-      const head = Ref.from(headStr);
-      const { missing } = versionHistory.getAllHashesFrom(head);
-      if (missing && missing.length) {
-        throw new Error(
-          `export-validate: VersionHistory for ${modelComponent.id()} on scope "${this.scope.name}" is ` +
-            `incomplete — walk from ${headStr.slice(0, 9)} has ${missing.length} dangling parent ref(s): ` +
-            `${missing
-              .slice(0, 5)
-              .map((m) => m.slice(0, 9))
-              .join(', ')}${missing.length > 5 ? ', …' : ''}. ` +
-            `Ensure the component's home scope and the forked-from lane scope are reachable.`
-        );
-      }
+    const missing = await this.findMissingFromVH(modelComponent, incomingLane, incomingVersions);
+    if (missing.length) {
+      throw new Error(
+        `export-validate: VersionHistory for ${modelComponent.id()} on scope "${this.scope.name}" is ` +
+          `incomplete — ${missing.length} dangling parent ref(s): ` +
+          `${missing
+            .slice(0, 5)
+            .map((m) => m.slice(0, 9))
+            .join(', ')}${missing.length > 5 ? ', …' : ''}. ` +
+          `Ensure the component's home scope and the forked-from lane scope are reachable.`
+      );
     }
   }
 
