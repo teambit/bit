@@ -113,10 +113,15 @@ export class ExportValidate implements Action<Options> {
    * Returns the dangling parent refs for `modelComponent` once the incoming Versions are
    * notionally merged into the on-disk VH. Empty array = closed graph.
    *
-   * Important: we build a separate hash→parents map instead of calling
-   * `addFromVersionsObjects` on the loaded VH. The loaded VH may be the cached instance, and
-   * mutating it could leak the pre-merge state to disk via the fetch's `mergeVersionHistory`
-   * path if validation later fails.
+   * Only walks `parents` — not `squashed` / `unrelated`. Those are auxiliary metadata that
+   * legitimately point at refs which may not exist anywhere in the system (e.g. after a
+   * cross-scope squash-merge into main, the `squashed.previousParents` reference lane snaps
+   * that main never received and never will). This matches `getAllHashesFrom`, the canonical
+   * VH closure walker, and avoids false-positive "incomplete" errors on legitimate state.
+   *
+   * We build a separate hash→parents map instead of calling `addFromVersionsObjects` on the
+   * loaded VH. The loaded VH may be the cached instance; mutating it could leak the pre-merge
+   * state to disk via the fetch's `mergeVersionHistory` path if validation later fails.
    */
   private async findMissingFromVH(
     modelComponent: ModelComponent,

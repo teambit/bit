@@ -235,15 +235,19 @@ describe('lane export skips main history objects', function () {
         expect(() => helper.command.catObject(snapOnFork, false, scopeFPath)).to.not.throw();
       });
 
-      it('scope-F should NOT contain any main-origin snaps (fork stays lean)', () => {
+      it('scope-F stays lean: no main-origin Version objects, but VH is a closed graph', () => {
+        // Lean = no main-origin Version OBJECTS on the fork scope (the byte savings).
         expect(() => helper.command.catObject(mainSnapPre1, false, scopeFPath)).to.throw();
         expect(() => helper.command.catObject(mainSnapPre2, false, scopeFPath)).to.throw();
         expect(() => helper.command.catObject(mainSnapPost, false, scopeFPath)).to.throw();
+        // VH metadata IS expected to be complete on scope-F (so divergence/merge-lane work on
+        // consumers). importAndThrowForMissingHistoryOnLane fetches VH from the forked-from
+        // lane's scope (scope-L) which by invariant already has the closed chain.
         const vh = helper.command.catVersionHistory(`${scopeC}/comp1`, scopeFPath);
         const hashes = (vh.versions as Array<{ hash: string }>).map((v) => v.hash);
-        expect(hashes).to.not.include(mainSnapPre1);
-        expect(hashes).to.not.include(mainSnapPre2);
-        expect(hashes).to.not.include(mainSnapPost);
+        expect(hashes).to.include(mainSnapPre1);
+        expect(hashes).to.include(mainSnapPre2);
+        expect(hashes).to.include(mainSnapPost);
       });
 
       it('a fresh consumer can import the forked lane without errors', () => {
