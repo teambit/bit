@@ -1,13 +1,13 @@
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
-import { initDefaultReporter } from '@pnpm/default-reporter';
+import { initDefaultReporter } from '@pnpm/cli.default-reporter';
 import { streamParser } from '@pnpm/logger';
-import type { StoreController, WantedDependency } from '@pnpm/package-store';
+import type { StoreController, WantedDependency } from '@pnpm/store.controller';
 import { TRUSTED_PACKAGE_NAMES } from '@pnpm/plugin-trusted-deps';
-import { rebuild } from '@pnpm/plugin-commands-rebuild';
-import type { CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
-import { createOrConnectStoreController } from '@pnpm/store-connection-manager';
-import { sortPackages } from '@pnpm/sort-packages';
+import { rebuild } from '@pnpm/building.commands';
+import type { CreateStoreControllerOptions } from '@pnpm/store.connection-manager';
+import { createStoreController as pnpmCreateStoreController } from '@pnpm/store.connection-manager';
+import { sortProjects } from '@pnpm/workspace.projects-sorter';
 import type {
   PackageManifest,
   ProjectManifest,
@@ -25,13 +25,14 @@ import type {
 } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
-import type { MutatedProject, InstallOptions, PeerDependencyIssuesByProjects, ProjectOptions } from '@pnpm/core';
-import { mutateModules } from '@pnpm/core';
-import * as pnpm from '@pnpm/core';
-import type { ClientOptions } from '@pnpm/client';
-import { createClient } from '@pnpm/client';
+import type { MutatedProject, InstallOptions, PeerDependencyIssuesByProjects, ProjectOptions } from '@pnpm/installing.deps-installer';
+import { mutateModules } from '@pnpm/installing.deps-installer';
+import * as pnpm from '@pnpm/installing.deps-installer';
+import { getDefaultCreds, getNetworkConfigs } from '@pnpm/config.reader';
+import type { ClientOptions } from '@pnpm/installing.client';
+import { createResolver } from '@pnpm/installing.client';
 import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
-import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
+import { createProjectsGraph } from '@pnpm/workspace.projects-graph';
 import { readWantedLockfile, writeWantedLockfile } from '@pnpm/lockfile.fs';
 import { type LockfileFile, type LockfileObject } from '@pnpm/lockfile.types';
 import type { Logger } from '@teambit/logger';
@@ -50,6 +51,13 @@ const UNTRUSTED_PACKAGE_NAMES = ['es5-ext', 'less', 'protobufjs', 'ssh', 'core-j
 const installsRunning: Record<string, Promise<any>> = {};
 const cafsLocker = new Map<string, number>();
 
+function buildConfigByUri(authConfig: Record<string, unknown>): Record<string, any> {
+  const { configByUri } = getNetworkConfigs(authConfig);
+  const defaultCreds = getDefaultCreds(authConfig);
+  if (!defaultCreds) return configByUri ?? {};
+  return { ...configByUri, '': { creds: defaultCreds } };
+}
+
 async function createStoreController(
   options: {
     rootDir: string;
@@ -66,7 +74,7 @@ async function createStoreController(
     cacheDir: options.cacheDir,
     cafsLocker,
     storeDir: options.storeDir,
-    rawConfig: authConfig,
+    configByUri: buildConfigByUri(authConfig),
     verifyStoreIntegrity: true,
     httpProxy: options.proxyConfig?.httpProxy,
     httpsProxy: options.proxyConfig?.httpsProxy,
@@ -93,7 +101,7 @@ async function createStoreController(
     fetchWarnTimeoutMs: options.networkConfig.fetchWarnTimeoutMs,
     fetchMinSpeedKiBps: options.networkConfig.fetchMinSpeedKiBps,
   };
-  return createOrConnectStoreController(opts);
+  return pnpmCreateStoreController(opts);
 }
 
 export async function generateResolverAndFetcher({
@@ -113,8 +121,9 @@ export async function generateResolverAndFetcher({
   const authConfig = getAuthConfig(registries);
   proxyConfig ??= {};
   networkConfig ??= {};
-  const opts: ClientOptions = {
-    authConfig: Object.assign({}, pnpmConfig.config.rawConfig, authConfig),
+  const mergedAuthConfig = Object.assign({}, pnpmConfig.config.authConfig, authConfig);
+  const opts: Omit<ClientOptions, 'storeIndex'> = {
+    configByUri: buildConfigByUri(mergedAuthConfig),
     cacheDir,
     httpProxy: proxyConfig?.httpProxy,
     httpsProxy: proxyConfig?.httpsProxy,
@@ -125,7 +134,6 @@ export async function generateResolverAndFetcher({
     noProxy: proxyConfig?.noProxy,
     strictSsl: networkConfig.strictSSL,
     timeout: networkConfig.fetchTimeout,
-    rawConfig: pnpmConfig.config.rawConfig,
     userAgent: networkConfig.userAgent,
     retry: {
       factor: networkConfig.fetchRetryFactor,
@@ -138,8 +146,8 @@ export async function generateResolverAndFetcher({
     fetchWarnTimeoutMs: networkConfig?.fetchWarnTimeoutMs,
     fetchMinSpeedKiBps: networkConfig?.fetchMinSpeedKiBps,
   };
-  const result = createClient(opts);
-  return result;
+  const { resolve } = createResolver(opts);
+  return { resolve };
 }
 
 export async function getPeerDependencyIssues(
@@ -171,6 +179,7 @@ export async function getPeerDependencyIssues(
     excludeLinksFromLockfile: true,
     storeController: storeController.ctrl,
     storeDir: storeController.dir,
+    globalVirtualStoreDir: storeController.dir,
     overrides: opts.overrides,
     peersSuffixMaxLength: 1000,
     registries: opts.registries.toMap(),
@@ -214,6 +223,7 @@ export async function install(
     forcedHarmonyVersion?: string;
     allowScripts?: Record<string, boolean | 'warn'>;
     dangerouslyAllowAllScripts?: boolean;
+    neverBuiltDependencies?: string[];
   } & Pick<
     InstallOptions,
     | 'autoInstallPeers'
@@ -226,7 +236,6 @@ export async function install(
     | 'excludeLinksFromLockfile'
     | 'minimumReleaseAge'
     | 'minimumReleaseAgeExclude'
-    | 'neverBuiltDependencies'
     | 'ignorePackageManifest'
     | 'hoistWorkspacePackages'
     | 'returnListOfDepsRequiringBuild'
@@ -264,7 +273,6 @@ export async function install(
   const { allProjects, packagesToBuild } = groupPkgs(manifestsByPaths, {
     update: options?.updateAll,
   });
-  const authConfig = getAuthConfig(registries);
   const storeController = await createStoreController({
     rootDir,
     storeDir,
@@ -297,7 +305,6 @@ export async function install(
     modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.
     registries: registries.toMap(),
     resolutionMode: 'highest',
-    rawConfig: authConfig,
     hooks: { readPackage },
     externalDependencies,
     strictPeerDependencies: false,
@@ -315,8 +322,8 @@ export async function install(
     injectWorkspacePackages: true,
     ...resolveScriptPolicies({
       allowScripts: options.allowScripts,
-      neverBuiltDependencies: options.neverBuiltDependencies,
       dangerouslyAllowAllScripts: options.dangerouslyAllowAllScripts,
+      neverBuiltDependencies: options.neverBuiltDependencies,
     }),
     returnListOfDepsRequiringBuild: true,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
@@ -392,56 +399,48 @@ export async function install(
 
 type ScriptPolicyConfig = {
   allowScripts?: Record<string, boolean | 'warn'>;
-  neverBuiltDependencies?: string[];
   dangerouslyAllowAllScripts?: boolean;
+  neverBuiltDependencies?: string[];
 };
 
 function resolveScriptPolicies({
   allowScripts,
-  neverBuiltDependencies,
   dangerouslyAllowAllScripts,
-}: ScriptPolicyConfig) {
-  let resolvedNeverBuilt = neverBuiltDependencies;
-  let onlyBuiltDependencies: string[] | undefined;
-  let ignoredBuiltDependencies: string[] | undefined;
+  neverBuiltDependencies,
+}: ScriptPolicyConfig): { allowBuilds: Record<string, boolean | string>; dangerouslyAllowAllBuilds?: boolean } {
+  const allowBuilds: Record<string, boolean | string> = {};
   if (dangerouslyAllowAllScripts) {
-    if (resolvedNeverBuilt == null) {
-      // If neverBuiltDependencies is not explicitly set, use a default list
-      // we tell pnpm to allow all scripts to be executed, except the packages listed below.
-      resolvedNeverBuilt = ['core-js'];
+    // pnpm v11's createAllowBuildFunction ignores allowBuilds when dangerouslyAllowAllBuilds is
+    // set, so emit allowBuilds with just the deny entries whenever a deny list exists.
+    if (!neverBuiltDependencies?.length) {
+      allowBuilds['core-js'] = false;
+      return { dangerouslyAllowAllBuilds: true, allowBuilds };
     }
-  } else {
-    onlyBuiltDependencies = [];
-    ignoredBuiltDependencies = [];
-    for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts ?? {})) {
-      switch (allowedScript) {
-        case true:
-          onlyBuiltDependencies.push(packageDescriptor);
-          break;
-        case false:
-          ignoredBuiltDependencies.push(packageDescriptor);
-          break;
-        default:
-          // Ignore any non-boolean values. String values are placeholders that the user
-          // should replace with booleans.
-          // pnpm will print a warning about these during installation.
-          break;
-      }
+    for (const pkg of neverBuiltDependencies) {
+      allowBuilds[pkg] = false;
     }
-    for (const trustedPkgName of TRUSTED_PACKAGE_NAMES) {
-      if (allowScripts?.[trustedPkgName] == null) {
-        onlyBuiltDependencies.push(trustedPkgName);
-      }
+    return { allowBuilds };
+  }
+  for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts ?? {})) {
+    if (allowedScript === true || allowedScript === false) {
+      allowBuilds[packageDescriptor] = allowedScript;
     }
-    // Add untrusted packages to ignoredBuiltDependencies unless the user explicitly allows them
-    for (const untrustedPkgName of UNTRUSTED_PACKAGE_NAMES) {
-      if (allowScripts?.[untrustedPkgName] !== true) {
-        ignoredBuiltDependencies.push(untrustedPkgName);
-      }
+    // String values (e.g. 'warn') are placeholders — ignore them; pnpm warns about these.
+  }
+  for (const trustedPkgName of TRUSTED_PACKAGE_NAMES) {
+    if (allowScripts?.[trustedPkgName] == null) {
+      allowBuilds[trustedPkgName] = true;
     }
   }
-
-  return { neverBuiltDependencies: resolvedNeverBuilt, onlyBuiltDependencies, ignoredBuiltDependencies };
+  for (const untrustedPkgName of UNTRUSTED_PACKAGE_NAMES) {
+    if (allowScripts?.[untrustedPkgName] !== true) {
+      allowBuilds[untrustedPkgName] = false;
+    }
+  }
+  for (const pkg of neverBuiltDependencies ?? []) {
+    allowBuilds[pkg] = false;
+  }
+  return { allowBuilds };
 }
 
 function initReporter(opts?: ReportOptions) {
@@ -588,8 +587,8 @@ function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>, opts: { up
     rootDir: rootDir as ProjectRootDir,
     manifest,
   }));
-  const { graph } = createPkgGraph(pkgs);
-  const chunks = sortPackages(graph as any);
+  const { graph } = createProjectsGraph(pkgs);
+  const chunks = sortProjects(graph as any);
 
   // This will create local link by pnpm to a component exists in the ws.
   // it will later deleted by the link process
@@ -602,7 +601,7 @@ function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>, opts: { up
   // with this we will have a link to the local B by pnpm so it will install B@1.0.0 inside A
   // then when overriding the link, A will still works
   // This is the rational behind not deleting this completely, but need further check that it really works
-  const packagesToBuild: MutatedProject[] = []; // @pnpm/core will use this to install the packages
+  const packagesToBuild: MutatedProject[] = []; // @pnpm/installing.deps-installer will use this to install the packages
   const allProjects: ProjectOptions[] = [];
 
   chunks.forEach((dirs, buildIndex) => {

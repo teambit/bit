@@ -1,8 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
-import type { Modules } from '@pnpm/modules-yaml';
-import { readModulesManifest } from '@pnpm/modules-yaml';
+import type { Modules } from '@pnpm/installing.modules-yaml';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import rimraf from 'rimraf';
 import { Extensions } from '@teambit/legacy.constants';
@@ -12,6 +11,11 @@ import assertArrays from 'chai-arrays';
 chai.use(chaiFs);
 
 chai.use(assertArrays);
+
+async function readModulesManifest(modulesDir: string): Promise<Modules | null> {
+  const m = await import('@pnpm/installing.modules-yaml');
+  return m.readModulesManifest(modulesDir);
+}
 
 describe('dependency-resolver extension', function () {
   let helper: Helper;

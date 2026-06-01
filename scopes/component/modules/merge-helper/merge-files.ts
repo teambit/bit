@@ -81,6 +81,5 @@ export async function mergeFiles({
 ${chalk.bold('command:')} ${err.command}
 ${chalk.bold('message:')} ${err.message}
 ${chalk.bold('original error:')} ${err.stderr}`);
-    throw err;
   }
 }
