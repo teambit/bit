@@ -716,7 +716,11 @@
       // bit.cloud's registry mirror only has @pnpm/config.env-replace up to 3.0.2.
       // Newer @pnpm/config.reader (1101.3.2+) requires env-replace ^4.1.0, which is missing.
       // Force config.reader to the last version using env-replace 3.x so install can succeed.
-      "@pnpm/config.reader": "1101.3.1"
+      "@pnpm/config.reader": "1101.3.1",
+      // promise-share 2.0.0 is "type": "module" with no "exports"/"main" field, which
+      // triggers a DEP0151 deprecation warning when @pnpm/installing.* import it as ESM.
+      // 2.0.1 adds the "exports" field.
+      "promise-share": "2.0.1"
     },
     "nodeVersion": "22.22.0",
     "engineStrict": true,
