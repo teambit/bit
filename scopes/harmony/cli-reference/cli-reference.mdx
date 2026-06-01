@@ -1252,6 +1252,27 @@ automatically imports components, compiles components, links to node_modules, an
 
 ---
 
+## internalize
+
+**Description**: mark components as internal to hide them by default in the UI  
+marks components as internal locally, then after snap/tag and export they become internal in the remote scope.  
+unlike "bit local-only", internal components are still versioned and exported - they are only hidden by default in the UI (workspace, scope and Bit Cloud).  
+use --revert to remove the internal mark, or --list to show the components currently marked as internal.
+
+`bit internalize [component-pattern]`
+
+| **Arg**             |                                                                                                                                                                                                                             **Description**                                                                                                                                                                                                                              |
+| ------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| `component-pattern` | component name, component id, component pattern, or relative directory path. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
+
+| **Option** | **Option alias** | **Description**                                                                                       |
+| ---------- | :--------------: | ----------------------------------------------------------------------------------------------------- |
+| `--revert` |       `-r`       | remove the internal mark from the matching components                                                 |
+| `--list`   |       `-l`       | list the components currently marked as internal                                                      |
+| `--json`   |       `-j`       | return the output as json (the internal components with --list, otherwise the affected component-ids) |
+
+---
+
 ## lane
 
 **Alias**: `l`  
@@ -1991,7 +2012,7 @@ to exclude, use '!'. e.g. 'ui/**, !ui/button'
 the matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch).
 
 to filter by a state or attribute, prefix the pattern with "$". e.g. '$deprecated', '$modified'.  
-list of supported states: [new, modified, deprecated, deleted, snappedOnMain, softTagged, codeModified, localOnly].  
+list of supported states: [new, modified, deprecated, deleted, internal, snappedOnMain, softTagged, codeModified, localOnly].  
 to filter by multi-params state/attribute, separate the params with ":", e.g. '$env:teambit.react/react'.  
 list of supported multi-params states: [env].  
 to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/\*\* AND $env:teambit.react/react'.
