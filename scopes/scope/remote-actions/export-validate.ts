@@ -6,6 +6,12 @@ import { PENDING_OBJECTS_DIR } from '@teambit/legacy.constants';
 import { mergeObjects } from '@teambit/export';
 import type { Action } from './action';
 import { logger } from '@teambit/legacy.logger';
+import type { BitObjectList, Lane, ModelComponent, Version } from '@teambit/objects';
+import { Ref } from '@teambit/objects';
+import { ComponentIdList } from '@teambit/component-id';
+import type { LaneId } from '@teambit/lane-id';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 
 type Options = { clientId: string; isResumingExport: boolean };
 const NUM_OF_RETRIES = 60;
@@ -16,13 +22,11 @@ const WAIT_BEFORE_RETRY_IN_MS = 1000;
  * once done, clear the objects from the memory so then they won't be used by mistake later on.
  * this also makes sure that non-external dependencies are not missing.
  *
- * Lean-lane-scope: for lane exports with external components (components whose home scope
- * differs from the lane scope), we no longer pre-fetch full version history from the
- * components' home scopes. The lane scope keeps only what the client actually sent (lane
- * snaps + merge snap). Consumers walking older history resolve missing parents from origin
- * scopes on demand (see `Component.collectLogs` and
- * `ScopeComponentsImporter.importMissingHistoryOne`). If a caller explicitly wants to gather
- * full history on the lane scope, they can still invoke the `FetchMissingHistory` action.
+ * Lean-lane-scope: lane exports no longer pre-pull full Version chains for external components
+ * (components whose home scope differs from the lane scope) — that was the OOM driver when a
+ * lane was far behind main. We still pull the VersionHistory object (small) so the lane scope
+ * always has a closed graph; the actual Version content lives on origin scopes and consumers
+ * resolve it on demand. See `importAndThrowForMissingHistoryOnLane` below.
  */
 export class ExportValidate implements Action<Options> {
   scope: Scope;
@@ -37,6 +41,7 @@ export class ExportValidate implements Action<Options> {
     }
     const objectList = await scope.readObjectsFromPendingDir(options.clientId);
     const bitObjectList = await objectList.toBitObjects();
+    await this.importAndThrowForMissingHistoryOnLane(bitObjectList);
     await this.waitIfNeeded();
     try {
       logger.profile('export-validate.mergeObjects');
@@ -48,6 +53,100 @@ export class ExportValidate implements Action<Options> {
       throw err;
     }
     scope.objects.clearObjectsFromCache();
+  }
+
+  /**
+   * For lane exports with external components, ensure the destination scope holds a complete
+   * VersionHistory graph for each one. The fetch is VH-only (no `collectParents`), so it
+   * doesn't pull the full Version chain — that's what makes this safe with lean lane scopes.
+   *
+   * Source of the VH fetch:
+   *  - Normal lane export: each external component's home scope. The home scope owns the full
+   *    main-origin VH chain.
+   *  - Fork export (incoming lane has `forkedFrom` pointing to a different scope): the
+   *    forkedFrom lane's scope. By the recursive invariant maintained by this same method on
+   *    every lane export, the forkedFrom scope's VH is already closed — including any
+   *    lane-origin link snaps (e.g. a merge snap from main into the original lane) that the
+   *    home scope wouldn't have. One fetch from the forkedFrom scope covers both main-origin
+   *    and lane-origin gaps.
+   *
+   * After the fetch, verify the VH for each pushed head is closed (every transitive parent
+   * has a VH entry). If not, fail the export with a clear error rather than persisting a
+   * broken VH — silent incompleteness later manifests as "no common snap" on merge-lane and
+   * truncated `bit log`.
+   */
+  private async importAndThrowForMissingHistoryOnLane(bitObjectList: BitObjectList) {
+    const modelComponents = bitObjectList.getComponents();
+    const externalComponents = modelComponents.filter((comp) => comp.scope !== this.scope.name);
+    if (!externalComponents.length) return;
+
+    const incomingLane = bitObjectList.getLanes()[0];
+    const forkedFrom = incomingLane?.forkedFrom;
+    if (forkedFrom && forkedFrom.scope !== this.scope.name) {
+      await this.fetchVersionHistoryFromForkedFromScope(externalComponents, forkedFrom);
+    } else {
+      await this.scope.scopeImporter.importMissingVersionHistory(externalComponents);
+    }
+
+    const incomingVersions = bitObjectList.getVersions();
+    await pMapPool(
+      externalComponents,
+      (modelComponent) => this.assertVersionHistoryClosed(modelComponent, incomingLane, incomingVersions),
+      { concurrency: concurrentComponentsLimit() }
+    );
+  }
+
+  private async assertVersionHistoryClosed(
+    modelComponent: ModelComponent,
+    incomingLane: Lane | undefined,
+    incomingVersions: Version[]
+  ) {
+    const versionHistory = await modelComponent.getVersionHistory(this.scope.objects);
+    // ExportPersist will call addFromVersionsObjects to fold the just-pushed Versions into the
+    // VH. Mirror that here so the closure check sees the post-merge state — otherwise the head
+    // itself reads as dangling because its entry hasn't been written yet.
+    const versionsForThisComp = incomingVersions.filter(
+      (v) => v.origin?.id?.name === modelComponent.name && v.origin?.id?.scope === modelComponent.scope
+    );
+    if (versionsForThisComp.length) {
+      versionHistory.addFromVersionsObjects(versionsForThisComp);
+    }
+    const heads = new Set<string>();
+    const laneHead = incomingLane?.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId());
+    if (laneHead) heads.add(laneHead.toString());
+    if (modelComponent.head) heads.add(modelComponent.head.toString());
+    for (const headStr of heads) {
+      const head = Ref.from(headStr);
+      const { missing } = versionHistory.getAllHashesFrom(head);
+      if (missing && missing.length) {
+        throw new Error(
+          `export-validate: VersionHistory for ${modelComponent.id()} on scope "${this.scope.name}" is ` +
+            `incomplete — walk from ${headStr.slice(0, 9)} has ${missing.length} dangling parent ref(s): ` +
+            `${missing
+              .slice(0, 5)
+              .map((m) => m.slice(0, 9))
+              .join(', ')}${missing.length > 5 ? ', …' : ''}. ` +
+            `Ensure the component's home scope and the forked-from lane scope are reachable.`
+        );
+      }
+    }
+  }
+
+  private async fetchVersionHistoryFromForkedFromScope(externalComponents: ModelComponent[], forkedFromLaneId: LaneId) {
+    const lanes = await this.scope.scopeImporter.importLanes([forkedFromLaneId]);
+    const forkedFromLane = lanes[0];
+    if (!forkedFromLane) {
+      throw new Error(
+        `export-validate: unable to fetch the forked-from lane "${forkedFromLaneId.toString()}" from its scope`
+      );
+    }
+    const externalIds = ComponentIdList.fromArray(externalComponents.map((c) => c.toComponentId())).toVersionLatest();
+    await this.scope.scopeImporter.importWithoutDeps(externalIds, {
+      cache: false,
+      includeVersionHistory: true,
+      lane: forkedFromLane,
+      reason: `fetching version-history from forked-from lane ${forkedFromLaneId.toString()}`,
+    });
   }
 
   private async waitIfNeeded() {

@@ -75,14 +75,21 @@ describe('lane export skips main history objects', function () {
         expect(() => helper.command.catObject(laneSnap, false, laneScopePath)).to.not.throw();
       });
 
-      it('should NOT contain main snaps that the lane was based on', () => {
+      it('should NOT contain pre-lane main Version objects (the lean part stays lean)', () => {
+        // mainSnap1, mainSnap2 are older main snaps. Nothing pulls them — the import-time VH
+        // fetch grabs only the home-scope head Version (one Version per export, not the chain).
         expect(() => helper.command.catObject(mainSnap1, false, laneScopePath)).to.throw();
         expect(() => helper.command.catObject(mainSnap2, false, laneScopePath)).to.throw();
-        expect(() => helper.command.catObject(mainSnap3, false, laneScopePath)).to.throw();
       });
 
-      it('should NOT contain the new main snap that got merged in', () => {
-        expect(() => helper.command.catObject(mainSnap4, false, laneScopePath)).to.throw();
+      it('SHOULD contain the home-scope head Versions at each export point (one per export)', () => {
+        // VH-completeness invariant: importMissingVersionHistory pulls VH + the latest head
+        // Version from each component's home scope. That's ONE Version per component per
+        // export — not the OOM chain.
+        //   - mainSnap3 was the home-scope head at the first lane export (laneSnap).
+        //   - mainSnap4 was the home-scope head at the second lane export (mergeSnap).
+        expect(() => helper.command.catObject(mainSnap3, false, laneScopePath)).to.not.throw();
+        expect(() => helper.command.catObject(mainSnap4, false, laneScopePath)).to.not.throw();
       });
     });
 
@@ -138,14 +145,18 @@ describe('lane export skips main history objects', function () {
         expect(hashes).to.include(mainSnap4);
       });
 
-      it('VersionHistory on the lane scope should NOT include pre-lane main snaps (lean)', () => {
+      it('VersionHistory on the lane scope is a closed graph (covers main + lane snaps)', () => {
+        // Lean-lane-scope invariant: after every export the destination scope's VH is closed.
+        // Version OBJECTS for older main snaps still stay on the home scope — the saving is in
+        // Version bytes, not VH bytes (VH is metadata; ~50 bytes/entry).
         const vh = helper.command.catVersionHistory(`${helper.scopes.remote}/comp1`, laneScopePath);
         const hashes = (vh.versions as Array<{ hash: string }>).map((v) => v.hash);
         expect(hashes).to.include(mergeSnap);
         expect(hashes).to.include(laneSnap);
-        expect(hashes).to.not.include(mainSnap1);
-        expect(hashes).to.not.include(mainSnap2);
-        expect(hashes).to.not.include(mainSnap3);
+        expect(hashes).to.include(mainSnap1);
+        expect(hashes).to.include(mainSnap2);
+        expect(hashes).to.include(mainSnap3);
+        expect(hashes).to.include(mainSnap4);
       });
     });
   });
@@ -255,6 +266,55 @@ describe('lane export skips main history objects', function () {
         // component home scope, so it can't reach them here. Surfacing those would require the
         // consumer to also fetch from the original lane scope — separate from this PR's lean fix.
         expect(hashes).to.include(snapOnFork);
+      });
+
+      describe('traversal-dependent commands on a fresh consumer of the forked lane', () => {
+        // The forked lane head (snapOnFork) has a parent (mergeSnapOnL) that is a *lane-origin*
+        // snap on scope-L. scope-F doesn't have its Version object (lean fork). The consumer
+        // imports from scope-F and inherits a VersionHistory that references mergeSnapOnL as a
+        // parent without the underlying Version object — a dangling parent ref.
+        //
+        // The post-import healing (`importMissingHistory`) only retries the component's home
+        // scope (scope-C) for missing parents. scope-C doesn't have mergeSnapOnL either, since
+        // it's lane-origin. So the consumer's local VH stays truncated at snapOnFork.
+        //
+        // These tests exercise commands that walk the VH past the head — they should succeed
+        // but today they break.
+        before(() => {
+          helper.scopeHelper.reInitWorkspace();
+          helper.scopeHelper.addRemoteScope();
+          helper.scopeHelper.addRemoteScope(scopeLPath);
+          helper.scopeHelper.addRemoteScope(scopeFPath);
+          helper.command.runCmd(`bit lane import ${scopeF}/forked -x`);
+        });
+
+        it('bit lane merge main should succeed (traversal finds the common ancestor)', () => {
+          // Regression: before the export-time VH fetch was in place, the common ancestor
+          // walk truncated at snapOnFork (parent mergeSnapOnL was missing locally) and the
+          // merge failed with "no common snap" / "histories not related". With the fix, the
+          // VH is closed and the merge finds the correct common ancestor.
+          expect(() =>
+            helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs --ignore-config-changes -x')
+          ).to.not.throw();
+        });
+
+        it('consumer VersionHistory should be a closed graph (no dangling parent refs)', () => {
+          // After `bit lane import`, the consumer's local VH for the foreign component must
+          // include an entry for every parent reachable from the lane head. Today the VH is
+          // truncated: it has `snapOnFork → [mergeSnapOnL]` but no entry for mergeSnapOnL.
+          // The home-scope healing fetches main-origin VH from scope-C, but mergeSnapOnL is a
+          // lane-origin snap living on scope-L — out of reach.
+          const vh = helper.command.catVersionHistory(`${scopeC}/comp1`);
+          const versions = vh.versions as Array<{ hash: string; parents: string[] }>;
+          const hashes = new Set(versions.map((v) => v.hash));
+          const dangling: string[] = [];
+          for (const v of versions) {
+            for (const p of v.parents) {
+              if (!hashes.has(p)) dangling.push(`${v.hash.slice(0, 8)} -> ${p.slice(0, 8)}`);
+            }
+          }
+          expect(dangling, `dangling parent refs in consumer VH:\n${dangling.join('\n')}`).to.have.lengthOf(0);
+        });
       });
     });
   });
@@ -383,11 +443,14 @@ describe('lane export skips main history objects', function () {
       helper.command.export();
     });
 
-    it('lane scope holds both merge snaps but no main-origin snaps for any component', () => {
+    it('lane scope holds both merge snaps plus the home-scope head at each export point', () => {
+      // Lean-lane-scope invariant: lane snaps + one main-origin Version per export (the
+      // home-scope head at that export's moment). The deep main chain stays on scope-C.
       expect(() => helper.command.catObject(firstMergeSnap, false, laneScopePath)).to.not.throw();
       expect(() => helper.command.catObject(secondMergeSnap, false, laneScopePath)).to.not.throw();
-      expect(() => helper.command.catObject(mainHeadBeforeFirstMerge, false, laneScopePath)).to.throw();
-      expect(() => helper.command.catObject(mainHeadBeforeSecondMerge, false, laneScopePath)).to.throw();
+      // these two were the home-scope heads at the first/second exports — pulled along with VH.
+      expect(() => helper.command.catObject(mainHeadBeforeFirstMerge, false, laneScopePath)).to.not.throw();
+      expect(() => helper.command.catObject(mainHeadBeforeSecondMerge, false, laneScopePath)).to.not.throw();
     });
 
     it('the component home scope retains all main snaps for all components', () => {
@@ -495,6 +558,83 @@ describe('lane export skips main history objects', function () {
 
     it('bit log should work without errors', () => {
       expect(() => helper.command.logParsed('comp1')).to.not.throw();
+    });
+  });
+
+  // Edge case: chained local forks. lane-a exported to scope-A; lane-b forked locally from
+  // lane-a (never exported); lane-c forked locally from lane-b (also local) and then exported.
+  // Important: `getLaneOrigin` (scopes/lanes/modules/create-lane/create-lane.ts:88) walks the
+  // local fork chain at lane-creation time and sets the new lane's forkedFrom to the nearest
+  // EXPORTED ancestor — so lane-c.forkedFrom is lane-a, not lane-b. This keeps the server-side
+  // forkedFrom fetch resolvable. The test exists to guard that invariant.
+  describe('chained local forks: lane-a (exported) → lane-b (local) → lane-c (exported)', () => {
+    let scopeA: string;
+    let scopeAPath: string;
+    let scopeC: string;
+    let scopeCPath: string;
+    let snapOnLaneC: string;
+
+    before(() => {
+      // home scope for components
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      // scope-A: where lane-a lives.
+      const aNew = helper.scopeHelper.getNewBareScope('-lane-a');
+      scopeA = aNew.scopeName;
+      scopeAPath = aNew.scopePath;
+      // scope-C: where lane-c will be exported.
+      const cNew = helper.scopeHelper.getNewBareScope('-lane-c');
+      scopeC = cNew.scopeName;
+      scopeCPath = cNew.scopePath;
+      [scopeAPath, scopeCPath].forEach((p) => {
+        helper.scopeHelper.addRemoteScope(p);
+        helper.scopeHelper.addRemoteScope(p, helper.scopes.remotePath);
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, p);
+      });
+      helper.scopeHelper.addRemoteScope(scopeAPath, scopeCPath);
+      helper.scopeHelper.addRemoteScope(scopeCPath, scopeAPath);
+
+      // main snap on home scope
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // lane-a on scope-A — exported
+      helper.command.createLane('lane-a', `--scope ${scopeA}`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      // lane-b: local fork of lane-a. NOT exported.
+      helper.command.createLane('lane-b');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+
+      // lane-c: local fork of lane-b, exported to scope-C with --fork-lane-new-scope.
+      helper.command.createLane('lane-c', `--scope ${scopeC} --fork-lane-new-scope`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      snapOnLaneC = helper.command.getHeadOfLane('lane-c', 'comp1');
+    });
+
+    it('exporting lane-c should succeed even though its forkedFrom (lane-b) never reached a remote', () => {
+      // The server's importAndThrowForMissingHistoryOnLane sees lane-c.forkedFrom = lane-b.
+      // It tries to fetch lane-b from lane-b's scope — but lane-b doesn't exist there. The
+      // export needs to handle this gracefully (walk the chain or fall back), not crash.
+      expect(() => helper.command.export('--fork-lane-new-scope')).to.not.throw();
+    });
+
+    it('scope-C should contain the lane-c head Version', () => {
+      expect(() => helper.command.catObject(snapOnLaneC, false, scopeCPath)).to.not.throw();
+    });
+
+    it('scope-C VersionHistory should be a closed graph despite the local-fork chain', () => {
+      const vh = helper.command.catVersionHistory(`${helper.scopes.remote}/comp1`, scopeCPath);
+      const versions = vh.versions as Array<{ hash: string; parents: string[] }>;
+      const hashes = new Set(versions.map((v) => v.hash));
+      const dangling: string[] = [];
+      for (const v of versions) {
+        for (const p of v.parents) {
+          if (!hashes.has(p)) dangling.push(`${v.hash.slice(0, 8)} -> ${p.slice(0, 8)}`);
+        }
+      }
+      expect(dangling, `dangling parent refs in scope-C VH:\n${dangling.join('\n')}`).to.have.lengthOf(0);
     });
   });
 });
