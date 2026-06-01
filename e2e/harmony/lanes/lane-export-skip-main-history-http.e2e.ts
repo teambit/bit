@@ -9,23 +9,43 @@ import { Helper } from '@teambit/legacy.e2e-helper';
 chai.use(chaiFs);
 
 const HTTP_READY_MSG = 'UI server of teambit.scope/scope is listening to port';
+const HTTP_READY_TIMEOUT_MS = 120_000; // 2 min — mirrors e2e/http-helper.ts
 
 /**
  * Spawn `bit start` in an arbitrary scope path on a chosen port. Yields a process handle
  * and a kill function. We can't reuse e2e/http-helper because it hardcodes the default
  * remote scope path and port 3000.
+ *
+ * Rejects with a clear error if the ready message doesn't appear within
+ * HTTP_READY_TIMEOUT_MS — without this, a regression in the server's startup log would
+ * hang the suite indefinitely (`this.timeout(0)` is set on the describe).
  */
 function startBitServerInScope(bitBin: string, cwd: string, port: number): Promise<ChildProcess> {
   return new Promise((resolve, reject) => {
     const proc = childProcess.spawn(bitBin, ['start', '--port', String(port), '--verbose', '--log'], { cwd });
     let stderrData = '';
+    const timer = setTimeout(() => {
+      proc.kill('SIGINT');
+      reject(
+        new Error(
+          `bit start did not print the ready message within ${HTTP_READY_TIMEOUT_MS}ms.\n` +
+            `expected: "${HTTP_READY_MSG}"\nstderr so far:\n${stderrData}`
+        )
+      );
+    }, HTTP_READY_TIMEOUT_MS);
     proc.stdout?.on('data', (data) => {
-      if (data.toString().includes(HTTP_READY_MSG)) resolve(proc);
+      if (data.toString().includes(HTTP_READY_MSG)) {
+        clearTimeout(timer);
+        resolve(proc);
+      }
     });
     proc.stderr?.on('data', (data) => {
       stderrData += data.toString();
     });
-    proc.on('close', (code) => reject(new Error(`bit start exited with code ${code}\n${stderrData}`)));
+    proc.on('close', (code) => {
+      clearTimeout(timer);
+      reject(new Error(`bit start exited with code ${code}\n${stderrData}`));
+    });
   });
 }
 

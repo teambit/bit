@@ -80,13 +80,25 @@ export class ExportValidate implements Action<Options> {
     if (!externalComponents.length) return;
 
     const incomingLane = bitObjectList.getLanes()[0];
-    const incomingVersions = bitObjectList.getVersions();
+
+    // Pre-index incoming Versions by (scope, name) so each component's lookup is O(1).
+    // Without this, the per-component filter would be O(#externals × #incomingVersions).
+    const versionsByComponent = new Map<string, Version[]>();
+    for (const v of bitObjectList.getVersions()) {
+      const id = v.origin?.id;
+      if (!id) continue;
+      const key = `${id.scope}/${id.name}`;
+      const bucket = versionsByComponent.get(key);
+      if (bucket) bucket.push(v);
+      else versionsByComponent.set(key, [v]);
+    }
+    const versionsFor = (mc: ModelComponent): Version[] => versionsByComponent.get(`${mc.scope}/${mc.name}`) || [];
 
     const incomplete = (
       await pMapPool(
         externalComponents,
         async (modelComponent) => {
-          const missing = await this.findMissingFromVH(modelComponent, incomingLane, incomingVersions);
+          const missing = await this.findMissingFromVH(modelComponent, incomingLane, versionsFor(modelComponent));
           return missing.length ? modelComponent : null;
         },
         { concurrency: concurrentComponentsLimit() }
@@ -104,7 +116,7 @@ export class ExportValidate implements Action<Options> {
 
     await pMapPool(
       incomplete,
-      (modelComponent) => this.assertVersionHistoryClosed(modelComponent, incomingLane, incomingVersions),
+      (modelComponent) => this.assertVersionHistoryClosed(modelComponent, incomingLane, versionsFor(modelComponent)),
       { concurrency: concurrentComponentsLimit() }
     );
   }
@@ -126,12 +138,9 @@ export class ExportValidate implements Action<Options> {
   private async findMissingFromVH(
     modelComponent: ModelComponent,
     incomingLane: Lane | undefined,
-    incomingVersions: Version[]
+    versionsForThisComp: Version[]
   ): Promise<string[]> {
     const versionHistory = await modelComponent.getVersionHistory(this.scope.objects);
-    const versionsForThisComp = incomingVersions.filter(
-      (v) => v.origin?.id?.name === modelComponent.name && v.origin?.id?.scope === modelComponent.scope
-    );
     const parentsByHash = new Map<string, string[]>();
     for (const v of versionHistory.versions) {
       parentsByHash.set(
@@ -172,9 +181,9 @@ export class ExportValidate implements Action<Options> {
   private async assertVersionHistoryClosed(
     modelComponent: ModelComponent,
     incomingLane: Lane | undefined,
-    incomingVersions: Version[]
+    versionsForThisComp: Version[]
   ) {
-    const missing = await this.findMissingFromVH(modelComponent, incomingLane, incomingVersions);
+    const missing = await this.findMissingFromVH(modelComponent, incomingLane, versionsForThisComp);
     if (missing.length) {
       throw new Error(
         `export-validate: VersionHistory for ${modelComponent.id()} on scope "${this.scope.name}" is ` +
