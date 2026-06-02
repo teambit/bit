@@ -148,6 +148,14 @@ describe('lane export skips main history objects', function () {
         expect(hashes).to.include(mainSnap1);
       });
 
+      it('bit lane diff <lean-lane> main should not throw on a fresh consumer', () => {
+        // lane-diff resolves both heads and walks ancestry to summarize "what's different".
+        // On a lean lane consumer, main-origin parents below the lane snap aren't on disk
+        // locally. The walk should fall back to fetching from the home scope rather than
+        // crash with ParentNotFound.
+        expect(() => helper.command.diffLane(`${laneScope}/dev main`)).to.not.throw();
+      });
+
       it('bit checkout HEAD~N to a main-only ancestor should not crash on a lean lane consumer', () => {
         // `getRefOfAncestor` walks VH (closed locally, so the walk succeeds) and returns the
         // hash N generations back. checkout then needs to LOAD that Version object from disk.
@@ -872,6 +880,80 @@ describe('lane export skips main history objects', function () {
           helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs --ignore-config-changes -x')
         ).to.not.throw();
       });
+    });
+  });
+
+  // Operational risk: a lane's forkedFrom pointer can outlive the upstream lane (delete /
+  // rename / scope offline). The strict pre-fetch must NOT hard-block exports in that case;
+  // it should degrade to a home-scope fetch and only fail if the closure check actually
+  // can't be satisfied. This test simulates the upstream-deleted case.
+  describe('forked-from lane deleted upstream — export degrades to home-scope fetch', () => {
+    let scopeC: string;
+    let scopeCPath: string;
+    let scopeL: string;
+    let scopeLPath: string;
+    let scopeM: string;
+    let scopeMPath: string;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      scopeC = helper.scopes.remote;
+      scopeCPath = helper.scopes.remotePath;
+      const lNew = helper.scopeHelper.getNewBareScope('-lane-l');
+      scopeL = lNew.scopeName;
+      scopeLPath = lNew.scopePath;
+      const mNew = helper.scopeHelper.getNewBareScope('-lane-m');
+      scopeM = mNew.scopeName;
+      scopeMPath = mNew.scopePath;
+      [scopeLPath, scopeMPath].forEach((p) => {
+        helper.scopeHelper.addRemoteScope(p);
+        helper.scopeHelper.addRemoteScope(p, scopeCPath);
+        helper.scopeHelper.addRemoteScope(scopeCPath, p);
+      });
+      helper.scopeHelper.addRemoteScope(scopeLPath, scopeMPath);
+      helper.scopeHelper.addRemoteScope(scopeMPath, scopeLPath);
+
+      // comp1 on home scope
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // lane-A on scope-L, exported
+      helper.command.createLane('lane-a', `--scope ${scopeL}`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      // lane-B forked to scope-M, exported (lane-B.forkedFrom = scope-L/lane-a)
+      helper.command.createLane('lane-b', `--scope ${scopeM} --fork-lane-new-scope`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export('--fork-lane-new-scope');
+
+      // Delete lane-A from scope-L. lane-B's forkedFrom pointer is now dangling upstream.
+      helper.command.runCmd(`bit lane remove ${scopeL}/lane-a --remote --silent --force`);
+
+      // Add comp2 on main and export. comp2 has no on-disk VH on scope-M yet.
+      helper.command.switchLocalLane('main');
+      helper.fs.outputFile('comp2/index.js', 'console.log("comp2");');
+      helper.command.addComponent('comp2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // Back on lane-B: snap comp2 to introduce it into the lane. New external component on
+      // scope-M → empty on-disk VH → closure check will see the incoming snap with a dangling
+      // parent (the main-snap) and trigger the strict-fetch path. That fetch routes to
+      // lane-B.forkedFrom (lane-A on scope-L), which is now gone; with the fallback the
+      // home-scope fetch covers the main-snap and closure is satisfied.
+      helper.command.switchLocalLane('lane-b');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+
+    it('exporting lane-B should not fail even though the forked-from lane was deleted upstream', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+
+    it("scope-M's VersionHistory for comp2 should be closed (home-scope fetch satisfied closure)", () => {
+      const dangling = danglingParentsIn(helper.command.catVersionHistory(`${scopeC}/comp2`, scopeMPath));
+      expect(dangling, `dangling parent refs in scope-M VH for comp2:\n${dangling.join('\n')}`).to.have.lengthOf(0);
     });
   });
 });

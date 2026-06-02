@@ -69,7 +69,8 @@ export class ExportValidate implements Action<Options> {
    *     - Fork export (lane has `forkedFrom` pointing to a different scope): from the
    *       forkedFrom lane's scope. By the recursive invariant, that scope's VH is already
    *       closed — one fetch covers both main-origin gaps and lane-origin link snaps the home
-   *       scope wouldn't have.
+   *       scope wouldn't have. If the forked-from scope is unreachable or the lane has been
+   *       deleted there, we degrade to the home-scope fetch rather than blocking the export.
    *     - Otherwise: from each external component's home scope.
    *
    * After the fetch, re-verify closure. If anything is still missing, fail the export with a
@@ -110,9 +111,25 @@ export class ExportValidate implements Action<Options> {
     if (!incomplete.length) return;
 
     const forkedFrom = incomingLane?.forkedFrom;
-    if (forkedFrom && forkedFrom.scope !== this.scope.name) {
-      await this.fetchVersionHistoryFromForkedFromScope(incomplete, forkedFrom);
-    } else {
+    const forkedFromIsRemote = Boolean(forkedFrom && forkedFrom.scope !== this.scope.name);
+    let forkedFromFetched = false;
+    if (forkedFromIsRemote) {
+      // The forked-from fetch is best-effort — if the upstream lane was deleted, renamed, or
+      // its scope is unreachable, we don't want to block an otherwise-valid export. Fall back
+      // to the home-scope fetch and let the post-fetch closure check decide. If lane-origin
+      // parents are still missing after the fallback, the final assert will throw with a
+      // diagnostic that names the dangling refs.
+      try {
+        await this.fetchVersionHistoryFromForkedFromScope(incomplete, forkedFrom as LaneId);
+        forkedFromFetched = true;
+      } catch (err: any) {
+        logger.warn(
+          `export-validate: forked-from VH fetch from "${forkedFrom?.toString()}" failed (${err.message}). ` +
+            `Falling back to home-scope fetch. Lane-origin parents not present on the home scope will not be recovered.`
+        );
+      }
+    }
+    if (!forkedFromFetched) {
       await this.scope.scopeImporter.importMissingVersionHistory(incomplete);
     }
 
