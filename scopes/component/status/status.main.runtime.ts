@@ -117,7 +117,12 @@ export class StatusMain {
     const stagedComponentsWithVersions = await pMapSeries(stagedComponents, async (stagedComp) => {
       const id = stagedComp.toComponentId();
       const fromWorkspace = this.workspace.getIdIfExist(id);
-      const versions = await stagedComp.getLocalTagsOrHashes(consumer.scope.objects, fromWorkspace);
+      // On a lane, use the lane-aware variant so main-origin snaps that were merged in (and
+      // that `bit export` would drop via `filterOutForeignMainOriginRefs`) don't appear as
+      // staged — keeping `bit status` and `bit export` consistent on lean-lane scopes.
+      const versions = laneObj
+        ? await stagedComp.getLocalTagsOrHashesOnLane(consumer.scope.objects, laneObj, fromWorkspace)
+        : await stagedComp.getLocalTagsOrHashes(consumer.scope.objects, fromWorkspace);
       return {
         id,
         versions,

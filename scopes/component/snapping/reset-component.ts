@@ -39,7 +39,12 @@ export async function removeLocalVersion(
   // the empty main one — otherwise a hidden cascade entry (no bitmap row, no main-side state)
   // would treat the entire local history as "local" and wipe the seeded base on reset.
   if (lane) await component.populateLocalAndRemoteHeads(consumer.scope.objects, lane);
-  const localVersions = await component.getLocalHashes(consumer.scope.objects, fromBitmap);
+  // On a lane, use the lean-aware variant so reset only removes lane-origin snaps. Without
+  // this, a merged-in main tag (e.g. 0.0.2) would be wiped from the component's versions map
+  // even though it still lives on the component's home scope — silent data loss for the user.
+  const localVersions = lane
+    ? await component.getLocalHashesOnLane(consumer.scope.objects, lane, fromBitmap)
+    : await component.getLocalHashes(consumer.scope.objects, fromBitmap);
   if (!localVersions.length) throw new BitError(`unable to untag ${idStr}, the component is not staged`);
   const headRef = component.getHeadRegardlessOfLane();
   if (!headRef) {

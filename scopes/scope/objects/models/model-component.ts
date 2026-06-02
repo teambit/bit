@@ -42,7 +42,7 @@ import { BitObject, Ref } from '../objects';
 import type Lane from './lane';
 import ScopeMeta from './scopeMeta';
 import type Source from './source';
-import type Version from './version';
+import Version from './version';
 import type { VersionParents } from './version-history';
 import VersionHistory from './version-history';
 import type { ObjectItem } from '../objects/object-list';
@@ -1310,6 +1310,54 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
 
     if (!localHashes.length) return [];
     return localHashes.reverse(); // reverse to get the older first
+  }
+
+  /**
+   * Raw divergence (`getLocalHashes`) plus the lean-lane filter: drops refs whose Version is
+   * main-origin and foreign to the lane's scope. These refs already live on the component's
+   * home scope and won't be pushed by `bit export` — so callers that want "what's actually
+   * local on this lane" (status, export, reset) should use this rather than the raw divergence.
+   *
+   * For same-scope lanes (component.scope === lane.scope) there's nothing foreign to filter
+   * out, so this returns the raw divergence unchanged.
+   *
+   * Note: the lane's recorded head for this component is always kept, even if it's main-origin —
+   * the lane object references it and the destination scope must be able to resolve the hash.
+   */
+  async getLocalHashesOnLane(repo: Repository, lane: Lane, workspaceId?: ComponentID): Promise<Ref[]> {
+    const localHashes = await this.getLocalHashes(repo, workspaceId);
+    if (!localHashes.length || this.scope === lane.scope) return localHashes;
+
+    const laneHead = lane.getCompHeadIncludeUpdateDependents(this.toComponentId());
+    const keptRefs: Ref[] = [];
+    for (const ref of localHashes) {
+      if (laneHead && ref.isEqual(laneHead)) {
+        keptRefs.push(ref);
+        continue;
+      }
+      const obj = await ref.load(repo);
+      // Release the parsed Version from the repo cache — we only need its metadata to make
+      // the keep/drop decision. Mirrors filterOutForeignMainOriginRefs in export.main.runtime.
+      repo.removeFromCache(ref);
+      if (!obj) continue;
+      if (!(obj instanceof Version)) {
+        keptRefs.push(ref);
+        continue;
+      }
+      const isLaneOrigin = Boolean(obj.originLaneId);
+      const isLocallyMutated = Boolean(obj.squashed) || Boolean(obj.unrelated);
+      const originScope = obj.originId?.scope || this.scope;
+      const isForeignToDestination = originScope !== lane.scope;
+      if (!isLaneOrigin && !isLocallyMutated && isForeignToDestination) continue;
+      keptRefs.push(ref);
+    }
+    return keptRefs;
+  }
+
+  async getLocalTagsOrHashesOnLane(repo: Repository, lane: Lane, workspaceId?: ComponentID): Promise<string[]> {
+    const localHashes = await this.getLocalHashesOnLane(repo, lane, workspaceId);
+    if (!localHashes.length) return [];
+    return this.switchHashesWithTagsIfExist(localHashes).reverse();
   }
 
   /**

@@ -633,4 +633,108 @@ describe('lane export skips main history objects', function () {
       expect(dangling, `dangling parent refs in scope-C VH:\n${dangling.join('\n')}`).to.have.lengthOf(0);
     });
   });
+
+  // Consistency: bit status's staged list should match what bit export will actually push.
+  // After merging main into a lane (lean lane scope), divergence returns the lane snap plus the
+  // main snap(s) merged in. bit export drops the main-origin foreign refs (filterOutForeignMainOriginRefs);
+  // bit status currently shows them. The two disagree — fixed by sharing the lean filter.
+  describe('bit status staged list should agree with bit export on a lane far behind main', () => {
+    let laneScope: string;
+    let laneScopePath: string;
+    let mergeSnap: string;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const newScope = helper.scopeHelper.getNewBareScope('-lane-staged');
+      laneScope = newScope.scopeName;
+      laneScopePath = newScope.scopePath;
+      helper.scopeHelper.addRemoteScope(laneScopePath);
+      helper.scopeHelper.addRemoteScope(laneScopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, laneScopePath);
+
+      // main snap on scope-C (0.0.1)
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // lane on scope-L, first export
+      helper.command.createLane('dev', `--scope ${laneScope}`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      // main advances on scope-C (0.0.2)
+      const laneWs = helper.scopeHelper.cloneWorkspace();
+      helper.command.switchLocalLane('main');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+
+      // back on the lane, merge main in — produces mergeSnap. don't export yet; we want to
+      // observe bit status BEFORE the push.
+      helper.scopeHelper.getClonedWorkspace(laneWs);
+      helper.command.import();
+      helper.command.mergeLane('main', '--auto-merge-resolve theirs');
+      mergeSnap = helper.command.getHeadOfLane('dev', 'comp1');
+    });
+
+    it('bit status staged versions should match what bit export will push (lane-origin only)', () => {
+      // Divergence returns [mergeSnap, mainSnapPost] ahead of the lane's remote head — the
+      // staged versions are reported in tag-or-hash form, so mainSnapPost shows up as "0.0.2".
+      // bit export's filterOutForeignMainOriginRefs drops the main-origin entries; only
+      // mergeSnap actually pushes. bit status currently shows both — confusing for users who
+      // expect "staged" to mean "what will be pushed".
+      const status = helper.command.statusJson();
+      const comp1Staged = status.stagedComponents.find((c: { id: string }) => c.id.endsWith('/comp1'));
+      expect(comp1Staged, `comp1 should be in stagedComponents; got: ${JSON.stringify(status.stagedComponents)}`).to
+        .exist;
+      expect(comp1Staged.versions).to.eql([mergeSnap]);
+    });
+  });
+
+  // Same root cause as the bit-status discrepancy, different command. bit reset reads its
+  // "what to un-snap" list from getLocalHashes (raw divergence), which on a lane that merged
+  // main returns lane-origin snaps PLUS the merged-in main snaps. Resetting removes ALL of
+  // them — including the main tag (e.g. 0.0.2) that's already exported on scope-C. After
+  // reset, the workspace forgets about a tag that still exists upstream.
+  describe('bit reset should not remove main-origin versions merged into a lane', () => {
+    let laneScope: string;
+    let laneScopePath: string;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const newScope = helper.scopeHelper.getNewBareScope('-lane-reset');
+      laneScope = newScope.scopeName;
+      laneScopePath = newScope.scopePath;
+      helper.scopeHelper.addRemoteScope(laneScopePath);
+      helper.scopeHelper.addRemoteScope(laneScopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, laneScopePath);
+
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild(); // 0.0.1
+      helper.command.export();
+
+      helper.command.createLane('dev', `--scope ${laneScope}`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      const laneWs = helper.scopeHelper.cloneWorkspace();
+      helper.command.switchLocalLane('main');
+      helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.2 — only on main
+      helper.command.export();
+
+      helper.scopeHelper.getClonedWorkspace(laneWs);
+      helper.command.import();
+      helper.command.mergeLane('main', '--auto-merge-resolve theirs');
+    });
+
+    it('bit reset should leave the merged-in main tag (0.0.2) intact in the component versions', () => {
+      // Pre-fix: bit reset's localVersions = [mergeSnap, 0.0.2]. Resetting removes both →
+      // workspace loses knowledge of 0.0.2 even though it's exported on main (scope-C).
+      // After the fix, reset should only remove the lane-origin mergeSnap.
+      helper.command.resetAll();
+      const comp1 = helper.command.catComponent('comp1');
+      const knownTags = Object.keys(comp1.versions || {});
+      expect(knownTags, `comp1.versions after reset: ${JSON.stringify(knownTags)}`).to.include('0.0.2');
+      expect(knownTags).to.include('0.0.1');
+    });
+  });
 });

@@ -34,7 +34,7 @@ import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { persistRemotes, validateRemotes, removePendingDirs } from './export-scope-components';
 import { writeLastExport } from './last-export';
 import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref } from '@teambit/objects';
-import { ObjectList, Version } from '@teambit/objects';
+import { ObjectList } from '@teambit/objects';
 import { Scope, PersistFailed } from '@teambit/legacy.scope';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
 import { ExportAspect } from './export.aspect';
@@ -408,7 +408,9 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       // hidden updateDependents have no bitmap row, so without this their cascade snap is
       // missed and the export silently sends 0 versions, triggering a remote merge error.
       if (laneObject) await modelComponent.populateLocalAndRemoteHeads(scope.objects, laneObject);
-      const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects, fromWorkspace);
+      const localTagsOrHashes = laneObject
+        ? await modelComponent.getLocalHashesOnLane(scope.objects, laneObject, fromWorkspace)
+        : await modelComponent.getLocalHashes(scope.objects, fromWorkspace);
       if (laneObject) {
         // Ensure the lane's recorded head for this component is always part of the export refs.
         // Without this, a fresh cross-scope fork (lane head == forkedFrom baseline → divergence
@@ -523,76 +525,10 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
         objectList.addIfNotExist(allObjectsData);
       };
 
-      // when exporting a lane, drop refs that represent main-origin snaps belonging to
-      // components whose home scope differs from the lane's scope. those snaps already live
-      // on the component's home scope; pushing them to the lane scope is duplication and the
-      // main driver of OOM when a lane is far behind main.
-      // Safety assumption: a foreign main-origin snap is on its home scope. Bit's CLI refuses
-      // to switch to a lane while there are un-exported staged components on main, so the
-      // "local-only main snap merged into a lane" scenario isn't reachable through normal
-      // workflows.
-      const filterOutForeignMainOriginRefs = async (
-        refsPerComp: { modelComponent: ModelComponent; refs: Ref[] }[]
-      ): Promise<{ modelComponent: ModelComponent; refs: Ref[] }[]> => {
-        if (!lane) return refsPerComp;
-        const filtered = await mapSeries(refsPerComp, async ({ modelComponent, refs }) => {
-          // common case: component's home scope is the lane scope — keep every ref without
-          // touching disk to load Version objects.
-          if (modelComponent.scope === remoteNameStr) return { modelComponent, refs };
-          // The lane's recorded head for this component must always be on the lane scope —
-          // otherwise the lane references a hash the lane scope can't resolve. Keep it
-          // regardless of origin (the OOM concern is the deep ancestor chain, not the head).
-          const laneHead = lane.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId());
-          let skippedCount = 0;
-          const keptRefs: Ref[] = [];
-          for (const ref of refs) {
-            if (laneHead && ref.isEqual(laneHead)) {
-              keptRefs.push(ref);
-              continue;
-            }
-            const obj = await ref.load(scope.objects);
-            // Drop main-origin Version refs (they live on the home scope) and refs whose Version
-            // object isn't on local disk (expected after a lean-lane import; the destination
-            // scope's consumers will resolve them from the home scope on demand).
-            if (!obj) {
-              skippedCount += 1;
-              continue;
-            }
-            if (!(obj instanceof Version)) {
-              keptRefs.push(ref);
-              continue;
-            }
-            const isLaneOrigin = Boolean(obj.originLaneId);
-            const isLocallyMutated = Boolean(obj.squashed) || Boolean(obj.unrelated);
-            // Only drop when the ref's own origin scope is foreign — rare but possible (e.g. a
-            // component that historically lived on another scope before being moved). If the
-            // ref's origin scope IS the destination lane scope, keep it. Fall back to the
-            // component's home scope for older Version objects that lack `origin.id.scope`.
-            const originScope = obj.originId?.scope || modelComponent.scope;
-            const isForeignToDestination = originScope !== remoteNameStr;
-            // Release the parsed Version from the repo cache — we only needed its metadata for
-            // the keep/drop decision. processModelComponent re-reads kept refs via `loadManyRaw`,
-            // so leaving them cached just inflates memory on deep histories.
-            scope.objects.removeFromCache(ref);
-            if (!isLaneOrigin && !isLocallyMutated && isForeignToDestination) {
-              skippedCount += 1;
-              continue;
-            }
-            keptRefs.push(ref);
-          }
-          if (skippedCount) {
-            this.logger.debug(
-              `export-scope-components, skipping ${skippedCount} foreign main-origin refs for ${modelComponent
-                .id()
-                .toString()} (live on component home scope, not the lane scope)`
-            );
-          }
-          return keptRefs.length ? { modelComponent, refs: keptRefs } : null;
-        });
-        return compact(filtered);
-      };
-
-      const refsToExportPerComponent = await filterOutForeignMainOriginRefs(await getRefsToExportPerComp());
+      // The lean-lane filter (drop main-origin refs belonging to foreign components) is now
+      // applied inside `getVersionsToExport` via `ModelComponent.getLocalHashesOnLane`, so
+      // refsPerComp is already filtered. We just drop empty entries.
+      const refsToExportPerComponent = (await getRefsToExportPerComp()).filter(({ refs }) => refs.length > 0);
       // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
       await mapSeries(refsToExportPerComponent, processModelComponent);
       if (lane) {
