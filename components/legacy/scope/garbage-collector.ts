@@ -106,12 +106,13 @@ export async function collectGarbage(thisScope: Scope, opts: GarbageCollectorOpt
   await pMapSeries(componentInsideLanesUniq, async (comp) => {
     const modelComp = await thisScope.getModelComponentIfExist(comp.changeVersion(undefined));
     if (!modelComp) return;
-    // Lean-lane caveat: on a lane scope where this component is foreign, the walk from
-    // comp.version may hit main-origin parents whose Version objects no longer live here.
-    // `processComponent` calls `getAllVersionsInfo` with throws=true by default, so a gc run
-    // against a lean lane scope would currently bail. Acceptable today because gc has no CLI
-    // surface; revisit if/when it becomes user-invocable.
-    await processComponent(modelComp, Ref.from(comp.version), false, true);
+    // Lean-lane: foreign-scope components on a lane don't carry their full main history on
+    // this scope (the home scope does). Tolerate missing parent Version objects when walking
+    // — VH closure plus the invariant "lane-origin snaps live on the lane scope" is what
+    // keeps gc correct here. We can't reliably classify a missing parent as lane-origin vs
+    // main-origin from VH alone, so we accept the small risk of under-protecting an
+    // incorrectly-missing lane-origin snap rather than crash on the expected lean case.
+    await processComponent(modelComp, Ref.from(comp.version), false, true, true);
   });
 
   logger.console(`[*] completed processing lanes. total ${refsWhiteList.size} refs in the white list`);
@@ -272,7 +273,8 @@ export async function collectGarbage(thisScope: Scope, opts: GarbageCollectorOpt
     comp: ModelComponent,
     startFrom?: Ref,
     shouldSearchInOtherLanes?: boolean,
-    originLane?: boolean
+    originLane?: boolean,
+    tolerateMissingHistory?: boolean
   ) {
     const compId = comp.toComponentId();
     if (verbose) logger.console(`** processing ${compId.toString()} **`);
@@ -288,9 +290,19 @@ export async function collectGarbage(thisScope: Scope, opts: GarbageCollectorOpt
         modelComponent: comp,
         repo,
         startFrom,
+        throws: !tolerateMissingHistory,
       });
       allVersionInfo.map((v) => stopAt.push(v.ref));
       allVersionInfo.map((v) => v.version && versionObjects.push(v.version));
+      if (tolerateMissingHistory) {
+        const skipped = allVersionInfo.filter((v) => v.error && !v.version).map((v) => v.ref.toString());
+        if (skipped.length) {
+          logger.debug(
+            `gc.processComponent: ${compId.toString()} — skipped ${skipped.length} parent Version(s) missing on this scope ` +
+              `(expected on lean lane scopes for main-origin history). First: ${skipped[0].slice(0, 9)}.`
+          );
+        }
+      }
     }
     if (shouldSearchInOtherLanes) {
       const headsFromOtherLanes = compact(lanes.map((lane) => lane.getCompHeadIncludeUpdateDependents(compId)));
