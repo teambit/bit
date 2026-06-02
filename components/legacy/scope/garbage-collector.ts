@@ -106,6 +106,11 @@ export async function collectGarbage(thisScope: Scope, opts: GarbageCollectorOpt
   await pMapSeries(componentInsideLanesUniq, async (comp) => {
     const modelComp = await thisScope.getModelComponentIfExist(comp.changeVersion(undefined));
     if (!modelComp) return;
+    // Lean-lane caveat: on a lane scope where this component is foreign, the walk from
+    // comp.version may hit main-origin parents whose Version objects no longer live here.
+    // `processComponent` calls `getAllVersionsInfo` with throws=true by default, so a gc run
+    // against a lean lane scope would currently bail. Acceptable today because gc has no CLI
+    // surface; revisit if/when it becomes user-invocable.
     await processComponent(modelComp, Ref.from(comp.version), false, true);
   });
 

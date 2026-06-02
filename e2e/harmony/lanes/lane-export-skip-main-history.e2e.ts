@@ -148,6 +148,24 @@ describe('lane export skips main history objects', function () {
         expect(hashes).to.include(mainSnap1);
       });
 
+      it('bit checkout HEAD~N to a main-only ancestor should not crash on a lean lane consumer', () => {
+        // `getRefOfAncestor` walks VH (closed locally, so the walk succeeds) and returns the
+        // hash N generations back. checkout then needs to LOAD that Version object from disk.
+        // For a lean lane consumer, deep main ancestors are NOT on disk locally — the lane
+        // scope never had them, and lane-import doesn't pull main history pre-emptively. We
+        // expect bit checkout to either succeed (by fetching the missing Version on demand)
+        // or fail with a helpful, non-crash error pointing at `bit import`.
+        let stderr = '';
+        try {
+          helper.command.runCmd('bit checkout head~3 comp1');
+        } catch (err: any) {
+          stderr = String(err.stderr || err.message || '');
+        }
+        expect(stderr, `bit checkout head~3 output: ${stderr}`).to.not.match(
+          /Version.*not.*loaded|TypeError|Cannot read/i
+        );
+      });
+
       it('VersionHistory on the component home scope should contain the full main chain', () => {
         const vh = helper.command.catVersionHistory(`${helper.scopes.remote}/comp1`, helper.scopes.remotePath);
         const hashes = (vh.versions as Array<{ hash: string }>).map((v) => v.hash);
@@ -735,6 +753,125 @@ describe('lane export skips main history objects', function () {
       const knownTags = Object.keys(comp1.versions || {});
       expect(knownTags, `comp1.versions after reset: ${JSON.stringify(knownTags)}`).to.include('0.0.2');
       expect(knownTags).to.include('0.0.1');
+    });
+  });
+
+  // Stress test: three cross-scope chained lane forks. comp1 lives on scope-C; lane-A is on
+  // scope-L; lane-B forks lane-A onto scope-M; lane-C forks lane-B onto scope-N. Each export
+  // depends on `importAndThrowForMissingHistoryOnLane` walking back to the previous lane's
+  // scope for VH. The wrong-scope-refetch failure mode I'm specifically probing: when the
+  // closure on scope-N references a lane-A-origin snap, the standard `importMissingHistory`
+  // refetch routes to comp1's HOME scope (scope-C) which does NOT have lane-A snaps. If the
+  // strict pre-fetch at export time didn't already pull them via the forkedFrom chain, the
+  // closure breaks. (This is uncovered by the same-scope chained-forks test above.)
+  describe('cross-scope chained lane forks: lane-A on scope-L → lane-B on scope-M → lane-C on scope-N', () => {
+    let scopeC: string;
+    let scopeCPath: string;
+    let scopeL: string;
+    let scopeLPath: string;
+    let scopeM: string;
+    let scopeMPath: string;
+    let scopeN: string;
+    let scopeNPath: string;
+    let laneASnap: string;
+    let laneBSnap: string;
+    let laneCSnap: string;
+
+    before(() => {
+      // scope-C: comp1's home
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      scopeC = helper.scopes.remote;
+      scopeCPath = helper.scopes.remotePath;
+      // scope-L / scope-M / scope-N: the three lane scopes in the fork chain
+      const lNew = helper.scopeHelper.getNewBareScope('-lane-l');
+      scopeL = lNew.scopeName;
+      scopeLPath = lNew.scopePath;
+      const mNew = helper.scopeHelper.getNewBareScope('-lane-m');
+      scopeM = mNew.scopeName;
+      scopeMPath = mNew.scopePath;
+      const nNew = helper.scopeHelper.getNewBareScope('-lane-n');
+      scopeN = nNew.scopeName;
+      scopeNPath = nNew.scopePath;
+      // wire every scope to know every other (full mesh — needed for the strict pre-fetch
+      // to walk lane-C.forkedFrom → lane-B → lane-A)
+      [scopeLPath, scopeMPath, scopeNPath].forEach((p) => {
+        helper.scopeHelper.addRemoteScope(p);
+        helper.scopeHelper.addRemoteScope(p, scopeCPath);
+        helper.scopeHelper.addRemoteScope(scopeCPath, p);
+      });
+      [
+        [scopeLPath, scopeMPath],
+        [scopeLPath, scopeNPath],
+        [scopeMPath, scopeLPath],
+        [scopeMPath, scopeNPath],
+        [scopeNPath, scopeLPath],
+        [scopeNPath, scopeMPath],
+      ].forEach(([a, b]) => helper.scopeHelper.addRemoteScope(a, b));
+
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // lane-A on scope-L — forks from main, exported
+      helper.command.createLane('lane-a', `--scope ${scopeL}`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      laneASnap = helper.command.getHeadOfLane('lane-a', 'comp1');
+      helper.command.export();
+
+      // lane-B on scope-M — forks from lane-A (cross-scope), exported
+      helper.command.createLane('lane-b', `--scope ${scopeM} --fork-lane-new-scope`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      laneBSnap = helper.command.getHeadOfLane('lane-b', 'comp1');
+      helper.command.export('--fork-lane-new-scope');
+
+      // lane-C on scope-N — forks from lane-B (cross-scope again), exported
+      helper.command.createLane('lane-c', `--scope ${scopeN} --fork-lane-new-scope`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      laneCSnap = helper.command.getHeadOfLane('lane-c', 'comp1');
+      helper.command.export('--fork-lane-new-scope');
+    });
+
+    it('scope-N should hold the lane-C head Version', () => {
+      expect(() => helper.command.catObject(laneCSnap, false, scopeNPath)).to.not.throw();
+    });
+
+    it('scope-N VersionHistory should be a closed graph across the cross-scope chain', () => {
+      // The strict pre-fetch must walk lane-C.forkedFrom (lane-B on scope-M), which in turn
+      // walks lane-B.forkedFrom (lane-A on scope-L), so that lane-A snaps land on scope-N's
+      // VH. If the walk only goes one hop, scope-N would have a dangling parent at laneBSnap
+      // → laneASnap (the lane-A snap is on scope-L, not scope-C, so the home-scope refetch
+      // can't recover it).
+      const dangling = danglingParentsIn(helper.command.catVersionHistory(`${scopeC}/comp1`, scopeNPath));
+      expect(dangling, `dangling parent refs in scope-N VH:\n${dangling.join('\n')}`).to.have.lengthOf(0);
+    });
+
+    it("scope-N's VH should include lane-A's snap (the deepest ancestor in the fork chain)", () => {
+      const vh = helper.command.catVersionHistory(`${scopeC}/comp1`, scopeNPath);
+      const hashes = (vh.versions as Array<{ hash: string }>).map((v) => v.hash);
+      expect(hashes).to.include(laneCSnap);
+      expect(hashes).to.include(laneBSnap);
+      expect(hashes).to.include(laneASnap);
+    });
+
+    describe('fresh consumer of lane-C', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.scopeHelper.addRemoteScope(scopeLPath);
+        helper.scopeHelper.addRemoteScope(scopeMPath);
+        helper.scopeHelper.addRemoteScope(scopeNPath);
+        helper.command.runCmd(`bit lane import ${scopeN}/lane-c -x`);
+      });
+
+      it('bit status should not throw', () => {
+        expect(() => helper.command.status()).to.not.throw();
+      });
+
+      it('bit lane merge main should find the common ancestor across the three-fork chain', () => {
+        expect(() =>
+          helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs --ignore-config-changes -x')
+        ).to.not.throw();
+      });
     });
   });
 });

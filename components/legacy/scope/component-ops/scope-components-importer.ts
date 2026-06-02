@@ -327,6 +327,18 @@ export class ScopeComponentsImporter {
       includeVersionHistory: true,
       reason: 'for missing history from main to the scope-lane',
     });
+    // Verify the refetch actually closed the gap. The refetch routes to the COMPONENT'S home
+    // scope; if the missing parent originated on a foreign lane scope (chained cross-scope
+    // forks), the home scope won't have it and the gap persists silently. Surface that case
+    // in the log so we can spot it instead of leaving a quietly-broken scope.
+    const stillMissing = compact(await mapSeries(missingHistory, (id) => this.importMissingHistoryOne(id)));
+    if (stillMissing.length) {
+      logger.warn(
+        `importMissingHistory: ${stillMissing.length}/${missingHistory.length} component(s) still have missing history ` +
+          `after refetch from home scope. Likely a chained cross-scope lane fork — the missing parent lives on a ` +
+          `foreign lane scope, not the component's home scope. Components: ${stillMissing.map((id) => id.toString()).join(', ')}`
+      );
+    }
   }
 
   /**
