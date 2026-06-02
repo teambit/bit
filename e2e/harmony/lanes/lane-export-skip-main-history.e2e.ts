@@ -617,10 +617,10 @@ describe('lane export skips main history objects', function () {
       snapOnLaneC = helper.command.getHeadOfLane('lane-c', 'comp1');
     });
 
-    it('exporting lane-c should succeed even though its forkedFrom (lane-b) never reached a remote', () => {
-      // The server's importAndThrowForMissingHistoryOnLane sees lane-c.forkedFrom = lane-b.
-      // It tries to fetch lane-b from lane-b's scope — but lane-b doesn't exist there. The
-      // export needs to handle this gracefully (walk the chain or fall back), not crash.
+    it('exporting lane-c should succeed because forkedFrom is resolved to the nearest exported ancestor', () => {
+      // `getLaneOrigin` (see the describe-level comment) sets lane-c.forkedFrom to lane-a (the
+      // nearest exported ancestor) at lane-creation time, not lane-b. So the server-side
+      // import-and-throw on the export reaches a resolvable forked-from lane and succeeds.
       expect(() => helper.command.export('--fork-lane-new-scope')).to.not.throw();
     });
 

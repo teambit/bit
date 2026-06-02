@@ -180,8 +180,9 @@ export class ExportMain {
   }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer: Consumer = this.workspace.consumer;
-    // fork-lane-new-scope: status reports clean (only true local), but the intent is to push
-    // the whole lane's content. Pair with the allVersions override below.
+    // fork-lane-new-scope: a freshly-forked lane with no local snaps still needs to export the
+    // existing lane content under the new scope. Force `includeNonStaged` so the export picks
+    // up the staged components even when the "no changes" guard would otherwise short-circuit.
     const { idsToExport, missingScope, laneObject } = await this.getComponentsToExport(
       ids,
       includeNonStaged || headOnly || params.forkLaneNewScope

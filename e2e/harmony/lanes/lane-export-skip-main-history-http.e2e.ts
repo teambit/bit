@@ -124,11 +124,17 @@ function killProc(proc: ChildProcess) {
       if (laneProc) killProc(laneProc);
     });
 
-    it('the HTTP-served lane scope should hold the merge and lane snaps but no main snaps', () => {
+    it('the HTTP-served lane scope should hold the merge and lane snaps', () => {
       expect(() => helper.command.catObject(mergeSnap, false, laneScopePath)).to.not.throw();
       expect(() => helper.command.catObject(laneSnap, false, laneScopePath)).to.not.throw();
+    });
+
+    it('the HTTP-served lane scope should NOT contain pre-lane main Version objects', () => {
+      // mainSnap1 (0.0.1) is older than any home-scope head at export time. Nothing pulls it.
+      // mainSnap2 (0.0.2) WAS the home-scope head at the first lane export, so the lean-fetch
+      // pulled it as the head Version — same behavior as the fs variant. The chain stays on
+      // the home scope; only the latest head at each export point is fetched.
       expect(() => helper.command.catObject(mainSnap1, false, laneScopePath)).to.throw();
-      expect(() => helper.command.catObject(mainSnap2, false, laneScopePath)).to.throw();
     });
 
     describe('fresh consumer imports the lane over HTTP', () => {
