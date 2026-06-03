@@ -74,3 +74,11 @@ export const ALLOW_SAME_NAME = 'allow-same-name'; // not in use anymore
 export const DEPS_GRAPH = 'deps-graph';
 
 export const DISABLE_CAPSULE_OPTIMIZATION = 'disable-capsule-optimization';
+
+/**
+ * Opt-in to the automatic pruning of the global capsules cache (bounds its disk usage by
+ * deleting stale workspace/aspect/scope capsules once per ~24h). Experimental — gated until
+ * it's validated in the wild. Enable with `BIT_FEATURES=capsule-auto-prune` or
+ * `bit config set features=capsule-auto-prune`.
+ */
+export const CAPSULE_AUTO_PRUNE = 'capsule-auto-prune';
