@@ -63,7 +63,7 @@ export class ExportValidate implements Action<Options> {
    *    lane's scope. That scope's VH includes the lane-origin link snaps the home scope
    *    wouldn't have. If the forked-from scope is unreachable or the lane has been deleted
    *    there, we degrade to the home-scope fetch rather than blocking the export.
-   *  - Otherwise: from each external component's home scope (master's path).
+   *  - Otherwise: from each external component's home scope.
    *
    * After the fetch, `getAllVersionHashes(throws: true)` walks each component's VH from
    * `modelComponent.head` and throws if any parent is missing.
