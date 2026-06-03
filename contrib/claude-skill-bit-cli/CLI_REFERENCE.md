@@ -427,6 +427,13 @@ install workspace dependencies
 installs workspace dependencies and prepares the workspace for development. when packages are specified, adds them to workspace.jsonc policy and installs. when no packages specified, installs existing dependencies. automatically imports components, compiles components, links to node_modules, and writes config files.
 Flags: --type [lifecycleType], --update, --save-prefix [savePrefix], --skip-dedupe, --skip-import, --skip-compile, --skip-write-config-files, --add-missing-deps, --skip-unavailable, --add-missing-peers, --recurring-install, --no-optional [noOptional], --lockfile-only, --allow-scripts [pkgNames], --disallow-scripts [pkgNames]
 
+## bit internalize [component-pattern]
+
+mark components as internal to hide them by default in the UI
+
+marks components as internal locally, then after snap/tag and export they become internal in the remote scope. unlike "bit local-only", internal components are still versioned and exported - they are only hidden by default in the UI (workspace, scope and Bit Cloud). use --revert to remove the internal mark, or --list to show the components currently marked as internal.
+Flags: --revert, --list, --json
+
 ## bit lane [sub-command]
 
 manage lanes for parallel development
@@ -672,7 +679,7 @@ Flags: --dry-run, --force
 
 test and validate component patterns
 
-this command helps validating a pattern before using it in other commands. NOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes. a pattern can be a simple component-id or component-name. e.g. 'ui/button'. a pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes. to enter multiple patterns, separate them by a comma, e.g. 'ui/_, lib/_' to exclude, use '!'. e.g. 'ui/**, !ui/button' the matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch). to filter by a state or attribute, prefix the pattern with "$". e.g. '$deprecated', '$modified'. list of supported states: [new, modified, deprecated, deleted, snappedOnMain, softTagged, codeModified, localOnly]. to filter by multi-params state/attribute, separate the params with ":", e.g. '$env:teambit.react/react'. list of supported multi-params states: [env]. to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/\*\* AND $env:teambit.react/react'.
+this command helps validating a pattern before using it in other commands. NOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes. a pattern can be a simple component-id or component-name. e.g. 'ui/button'. a pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes. to enter multiple patterns, separate them by a comma, e.g. 'ui/_, lib/_' to exclude, use '!'. e.g. 'ui/**, !ui/button' the matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch). to filter by a state or attribute, prefix the pattern with "$". e.g. '$deprecated', '$modified'. list of supported states: [new, modified, deprecated, deleted, internal, snappedOnMain, softTagged, codeModified, localOnly]. to filter by multi-params state/attribute, separate the params with ":", e.g. '$env:teambit.react/react'. list of supported multi-params states: [env]. to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/\*\* AND $env:teambit.react/react'.
 Flags: --json, --remote
 
 ## bit recover <component-pattern>
