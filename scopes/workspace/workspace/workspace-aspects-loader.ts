@@ -50,21 +50,33 @@ export class WorkspaceAspectsLoader {
   private consumer: Consumer;
   private resolvedInstalledAspects: Map<string, string | null>;
   /**
-   * In-flight `loadAspects` promises, keyed by aspect id. Lets concurrent
-   * callers asking for the same aspect await the existing load instead of
-   * each one kicking off a fresh capsule-build / isolation cycle.
+   * Tail of the load-aspects serialization chain. Each `loadAspects` call
+   * chains onto this promise so only one runs at a time globally.
    *
-   * Why this matters: pass1's `consumer.loadComponents` (with
+   * Why serialize: pass1's `consumer.loadComponents` (with
    * `loadExtensions: true`) fires the `onComponentConfigLoading` subscriber
    * for every component in parallel; each subscriber calls
-   * `loadComponentsExtensions` -> `loadAspects` for that component's env.
-   * Without dedup, N components sharing one env trigger N parallel
-   * `isolator.isolateComponents` calls for the same aspect, each emitting a
-   * "resolved aspect(s)" line and re-doing capsule setup.
-   * `aspectLoader.isAspectLoaded` only flips true after the load finishes,
-   * so the per-call filter doesn't catch this race.
+   * `loadComponentsExtensions` -> `loadAspects` for that component's
+   * env-and-extensions. The inner aspect-resolution machinery
+   * (`scope-aspects-loader.getManifestsGraphRecursively`) recurses through
+   * each aspect's env/dep graph independently per call — so N concurrent
+   * `loadAspects` calls for DIFFERENT root aspects but with SHARED env
+   * deps (e.g. `core-aspect-env`) each fire `isolator.isolateComponents`
+   * for the shared env, emitting "resolved aspect(s)" lines and re-doing
+   * capsule setup. `aspectLoader.isAspectLoaded` only flips true after
+   * the load completes, so per-call filters can't catch the race.
+   * Per-id in-flight dedup (tried first) also misses this because the
+   * shared env id isn't in the outer caller's `ids` list — it only
+   * surfaces deep inside the recursion.
+   *
+   * Serializing lets the first call register everything it loads (envs
+   * included) before the next call's inner work checks `isAspectLoaded`,
+   * so subsequent calls short-circuit. Pass1 with ~300 components dropped
+   * from 5:29 to ~25s with this change.
+   *
+   * `forceLoad` callers bypass the queue.
    */
-  private inFlightAspects: Map<string, Promise<string[]>> = new Map();
+  private loadAspectsQueue: Promise<unknown> = Promise.resolve();
 
   constructor(
     private workspace: Workspace,
@@ -96,50 +108,18 @@ export class WorkspaceAspectsLoader {
     neededFor?: string,
     opts: WorkspaceLoadAspectsOptions = {}
   ): Promise<string[]> {
-    // In-flight dedup: if any of `ids` are already being loaded by a
-    // concurrent caller, await their promises instead of starting fresh
-    // loads. Disabled when `forceLoad` is requested.
-    if (!opts.forceLoad) {
-      const existingPromises: Array<Promise<string[]>> = [];
-      const newIds: string[] = [];
-      const newIdsSet = new Set<string>();
-      for (const id of ids) {
-        const existing = this.inFlightAspects.get(id);
-        if (existing) {
-          if (!existingPromises.includes(existing)) existingPromises.push(existing);
-        } else if (!newIdsSet.has(id)) {
-          newIds.push(id);
-          newIdsSet.add(id);
-        }
-      }
-      if (!newIds.length && existingPromises.length) {
-        const results = await Promise.all(existingPromises);
-        return results.flat();
-      }
-      if (newIds.length && existingPromises.length) {
-        const newLoadPromise = this.loadAspectsInner(newIds, throwOnError, neededFor, opts);
-        for (const id of newIds) this.inFlightAspects.set(id, newLoadPromise);
-        const cleanup = () => {
-          for (const id of newIds) {
-            if (this.inFlightAspects.get(id) === newLoadPromise) this.inFlightAspects.delete(id);
-          }
-        };
-        newLoadPromise.then(cleanup, cleanup);
-        const all = await Promise.all([newLoadPromise, ...existingPromises]);
-        return all.flat();
-      }
-      // newIds.length > 0 && !existingPromises.length — fall through to register & run
-      const newLoadPromise = this.loadAspectsInner(newIds, throwOnError, neededFor, opts);
-      for (const id of newIds) this.inFlightAspects.set(id, newLoadPromise);
-      const cleanup = () => {
-        for (const id of newIds) {
-          if (this.inFlightAspects.get(id) === newLoadPromise) this.inFlightAspects.delete(id);
-        }
-      };
-      newLoadPromise.then(cleanup, cleanup);
-      return newLoadPromise;
-    }
-    return this.loadAspectsInner(ids, throwOnError, neededFor, opts);
+    if (opts.forceLoad) return this.loadAspectsInner(ids, throwOnError, neededFor, opts);
+    // Chain onto the queue: wait for any in-flight loadAspects to finish,
+    // then run. Swallow the previous call's rejection so a failed load
+    // doesn't poison subsequent ones (each call's own errors still surface
+    // through its own promise).
+    const prev = this.loadAspectsQueue;
+    const run = (async () => {
+      await prev.catch(() => undefined);
+      return this.loadAspectsInner(ids, throwOnError, neededFor, opts);
+    })();
+    this.loadAspectsQueue = run;
+    return run;
   }
 
   private async loadAspectsInner(
