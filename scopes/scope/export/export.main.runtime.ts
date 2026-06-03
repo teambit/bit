@@ -407,15 +407,6 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       // missed and the export silently sends 0 versions, triggering a remote merge error.
       if (laneObject) await modelComponent.populateLocalAndRemoteHeads(scope.objects, laneObject);
       const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects, fromWorkspace, laneObject);
-      if (laneObject) {
-        // Ensure the lane's recorded head for this component is always part of the export refs.
-        // Without this, a fresh cross-scope fork (lane head == forkedFrom baseline → divergence
-        // returns []) would push nothing and the lane scope would reference an unresolvable hash.
-        const laneHead = laneObject.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId());
-        if (laneHead && !localTagsOrHashes.find((r) => r.isEqual(laneHead))) {
-          localTagsOrHashes.push(laneHead);
-        }
-      }
       if (!allVersions) {
         return localTagsOrHashes;
       }
