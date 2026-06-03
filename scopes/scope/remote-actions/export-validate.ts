@@ -85,17 +85,29 @@ export class ExportValidate implements Action<Options> {
     const incomingLane = bitObjectList.getLanes()[0];
 
     // Pre-index incoming Versions by their origin component so per-component lookup is O(1).
+    // Pre-0.2.22 Version objects may have `origin.id.scope === undefined`; key them by name
+    // only into a shared bucket that every component lookup includes. Extra entries in the
+    // ephemeral VH are harmless — `getAllHashesFrom(head)` only follows reachable parents, so
+    // unrelated hash→parents entries don't affect closure. Without this, those Versions are
+    // silently ignored and the closure check falsely flags the graph as incomplete.
     const versionsByComponent = new Map<string, Version[]>();
+    const versionsWithUnknownScope: Version[] = [];
     for (const v of bitObjectList.getVersions()) {
       const id = v.origin?.id;
       if (!id) continue;
+      if (!id.scope) {
+        versionsWithUnknownScope.push(v);
+        continue;
+      }
       const key = `${id.scope}/${id.name}`;
       const bucket = versionsByComponent.get(key);
       if (bucket) bucket.push(v);
       else versionsByComponent.set(key, [v]);
     }
-    const versionsFor = (modelComponent: ModelComponent): Version[] =>
-      versionsByComponent.get(`${modelComponent.scope}/${modelComponent.name}`) || [];
+    const versionsFor = (modelComponent: ModelComponent): Version[] => {
+      const matched = versionsByComponent.get(`${modelComponent.scope}/${modelComponent.name}`) || [];
+      return versionsWithUnknownScope.length ? [...matched, ...versionsWithUnknownScope] : matched;
+    };
 
     const incomplete = (
       await pMapPool(
