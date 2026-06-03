@@ -265,9 +265,10 @@ ensures components work independently before publishing, similar to how they'll 
 
 **Description**: list the capsules generated for this workspace
 
-| **Option** | **Option alias** | **Description** |
-| ---------- | :--------------: | --------------- |
-| `--json`   |       `-j`       | json format     |
+| **Option**     | **Option alias** | **Description**                                                                               |
+| -------------- | :--------------: | --------------------------------------------------------------------------------------------- |
+| `--json`       |       `-j`       | json format                                                                                   |
+| `--with-stats` |                  | include total cache size, orphan count, and stale aspect-version count (walks the full cache) |
 
 ### capsule create
 
@@ -298,6 +299,24 @@ with no args, only workspace's capsules are deleted
 | ----------------- | :--------------: | ------------------------------------------------- |
 | `--scope-aspects` |                  | delete scope-aspects capsules                     |
 | `--all`           |       `-a`       | delete all capsules for all workspaces and scopes |
+
+### capsule prune
+
+**Usage**: `capsule prune`
+
+**Description**: evict stale capsules from the global cache  
+workspace capsules are deleted unconditionally; aspect-version and scope capsules are deleted when their last-used marker is older than --older-than (default 30 days).  
+use --dry-run first to preview what would be removed.
+
+| **Option**              | **Option alias** | **Description**                                                                                                                                  |
+| ----------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--older-than <days>`   |                  | age threshold in days for aspect-version/scope capsule pruning (default 30)                                                                      |
+| `--keep-workspace-caps` |                  | skip workspace capsule deletion                                                                                                                  |
+| `--no-orphans`          |                  | don't delete capsules whose origin path no longer exists                                                                                         |
+| `--size-target <gb>`    |                  | after standard pruning, LRU-evict aspect-versions until total drops below this size (forces --with-sizes)                                        |
+| `--dry-run`             |                  | preview what would be removed without deleting                                                                                                   |
+| `--with-sizes`          |                  | compute byte sizes for the report (walks the full cache; slow on large caches). default: off — sizes shown as 0 but the prune itself is instant. |
+| `--json`                |       `-j`       | json format                                                                                                                                      |
 
 | **Option** | **Option alias** | **Description** |
 | ---------- | :--------------: | --------------- |
