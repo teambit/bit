@@ -92,7 +92,13 @@ export class TsserverClient {
       }
       this.logger.debug('TsserverClient.init completed');
     } catch (err) {
+      // Rethrow so callers know the server didn't come up. Swallowing here would leave
+      // `this.tsServer` set but unusable, and subsequent `request()` calls would silently
+      // return undefined via optional chaining — producing false-clean check-types runs.
       this.logger.error('TsserverClient.init failed', err);
+      this.tsServer = null;
+      this.serverRunning = false;
+      throw err;
     }
   }
 
