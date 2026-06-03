@@ -3,7 +3,7 @@ import { formatTitle, formatHint, joinSections } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import { timeFormat } from '@teambit/toolbox.time.time-format';
 import chalk from 'chalk';
-import type { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError, type Workspace } from '@teambit/workspace';
 import type { InstallMain, WorkspaceLinkOptions, WorkspaceLinkResults } from '../install.main.runtime';
 import { ComponentListLinks, packageListLinks } from './component-list-links';
 import { CoreAspectsLinks } from './core-aspects-links';
@@ -103,6 +103,7 @@ useful for development when components need to reference each other or when debu
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async json([ids]: [string[]], opts: LinkCommandOpts): Promise<WorkspaceLinkResults> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     this.logger.console(
       `Linking components and core aspects to node_modules for workspaces: '${chalk.cyan(this.workspace.name)}'`
     );

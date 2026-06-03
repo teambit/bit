@@ -140,7 +140,7 @@ Runs lint, build, and status checks to catch dependency drift or broken builds e
 Exports a feature lane to Bit Cloud when a Pull Request is opened or updated.
 
 Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. Cleans up by switching back to main. Use in pull-request CI pipelines after tests and before deploy.
-Flags: --message <message>, --lane <lane>, --build, --strict, --dry-run
+Flags: --message <message>, --lane <lane>, --build, --strict, --dry-run, --keep-lane
 
 ## bit ci merge
 
@@ -411,7 +411,7 @@ Flags: --internal
 bring components from remote scopes into your workspace
 
 brings component source files from remote scopes into your workspace and installs their dependencies as packages. supports pattern matching for bulk imports, merge strategies for handling conflicts, and various optimization options. without arguments, fetches all workspace components' latest versions from their remote scopes.
-Flags: --path <path>, --objects, --override, --verbose, --json, --skip-dependency-installation, --skip-write-config-files, --merge [strategy], --dependencies, --dependencies-head, --dependents, --dependents-via <string>, --dependents-all, --silent, --filter-envs <envs>, --save-in-lane, --all-history, --fetch-deps, --write-deps <target>, --track-only, --include-deprecated, --lane-only, --owner
+Flags: --path <path>, --objects, --override, --verbose, --json, --skip-dependency-installation, --skip-write-config-files, --merge [strategy], --dependencies, --dependencies-head, --dependencies-depth <n>, --dependents, --dependents-via <string>, --dependents-all, --silent, --filter-envs <envs>, --save-in-lane, --all-history, --fetch-deps, --write-deps <target>, --track-only, --include-deprecated, --lane-only, --owner
 
 ## bit init [path]
 
@@ -426,6 +426,13 @@ install workspace dependencies
 
 installs workspace dependencies and prepares the workspace for development. when packages are specified, adds them to workspace.jsonc policy and installs. when no packages specified, installs existing dependencies. automatically imports components, compiles components, links to node_modules, and writes config files.
 Flags: --type [lifecycleType], --update, --save-prefix [savePrefix], --skip-dedupe, --skip-import, --skip-compile, --skip-write-config-files, --add-missing-deps, --skip-unavailable, --add-missing-peers, --recurring-install, --no-optional [noOptional], --lockfile-only, --allow-scripts [pkgNames], --disallow-scripts [pkgNames]
+
+## bit internalize [component-pattern]
+
+mark components as internal to hide them by default in the UI
+
+marks components as internal locally, then after snap/tag and export they become internal in the remote scope. unlike "bit local-only", internal components are still versioned and exported - they are only hidden by default in the UI (workspace, scope and Bit Cloud). use --revert to remove the internal mark, or --list to show the components currently marked as internal.
+Flags: --revert, --list, --json
 
 ## bit lane [sub-command]
 
@@ -613,7 +620,7 @@ removes stored authentication tokens and signs out of Bit Cloud. clears local cr
 
 start Model Context Protocol server for AI assistants
 
-enables AI assistants and other tools to interact with Bit via the Model Context Protocol. provides a standardized interface for AI agents to execute Bit commands and access component information. allows writing custom instructions and rules to guide AI agents in their interactions with Bit.
+NOTE: this is the legacy local stdio MCP server. The recommended way to connect AI agents to Bit is now the hosted Cloud MCP at https://mcp.bit.cloud/mcp. see setup instructions for each agent at https://bit.cloud/docs/connect. enables AI assistants and other tools to interact with Bit via the Model Context Protocol. provides a standardized interface for AI agents to execute Bit commands and access component information. allows writing custom instructions and rules to guide AI agents in their interactions with Bit.
 Flags: --include-additional <commands>, --bit-bin <binary>, --consumer-project
 
 ## bit mcp-server start
@@ -672,7 +679,7 @@ Flags: --dry-run, --force
 
 test and validate component patterns
 
-this command helps validating a pattern before using it in other commands. NOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes. a pattern can be a simple component-id or component-name. e.g. 'ui/button'. a pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes. to enter multiple patterns, separate them by a comma, e.g. 'ui/_, lib/_' to exclude, use '!'. e.g. 'ui/**, !ui/button' the matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch). to filter by a state or attribute, prefix the pattern with "$". e.g. '$deprecated', '$modified'. list of supported states: [new, modified, deprecated, deleted, snappedOnMain, softTagged, codeModified, localOnly]. to filter by multi-params state/attribute, separate the params with ":", e.g. '$env:teambit.react/react'. list of supported multi-params states: [env]. to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/\*\* AND $env:teambit.react/react'.
+this command helps validating a pattern before using it in other commands. NOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes. a pattern can be a simple component-id or component-name. e.g. 'ui/button'. a pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes. to enter multiple patterns, separate them by a comma, e.g. 'ui/_, lib/_' to exclude, use '!'. e.g. 'ui/**, !ui/button' the matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch). to filter by a state or attribute, prefix the pattern with "$". e.g. '$deprecated', '$modified'. list of supported states: [new, modified, deprecated, deleted, internal, snappedOnMain, softTagged, codeModified, localOnly]. to filter by multi-params state/attribute, separate the params with ":", e.g. '$env:teambit.react/react'. list of supported multi-params states: [env]. to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/\*\* AND $env:teambit.react/react'.
 Flags: --json, --remote
 
 ## bit recover <component-pattern>
@@ -867,7 +874,7 @@ Flags: --json, --legacy, --remote, --browser, --compare
 create immutable component snapshots for development versions
 
 creates snapshots with hash-based versions for development and testing. snapshots are immutable and exportable. by default snaps only new and modified components. use for development iterations before creating semantic version tags. snapshots maintain component history and enable collaboration without formal releases.
-Flags: --message <message>, --unmodified, --unmerged, --build, --editor [editor], --skip-tests, --skip-tasks <string>, --skip-auto-snap, --disable-snap-pipeline, --ignore-build-errors, --loose, --rebuild-deps-graph, --ignore-issues <issues>, --fail-fast
+Flags: --message <message>, --unmodified, --unmerged, --build, --editor [editor], --skip-tests, --skip-tasks <string>, --skip-auto-snap, --disable-snap-pipeline, --ignore-build-errors, --loose, --rebuild-deps-graph, --no-lock-deps, --ignore-issues <issues>, --fail-fast
 
 ## bit start [component-pattern]
 
@@ -925,7 +932,7 @@ similar to linux "tail -f" command
 create immutable component snapshots with semantic version tags
 
 creates tagged versions using semantic versioning (semver) for component releases. tags are immutable and exportable. by default tags all new and modified components. supports version specification per pattern using "@" (e.g. foo@1.0.0, bar@minor). use for official releases. for development versions, use 'bit snap' instead.
-Flags: --message <message>, --unmodified, --editor [editor], --versions-file <path>, --ver <version>, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --snapped, --unmerged, --skip-tests, --skip-tasks <string>, --skip-auto-tag, --soft, --persist [skip-build], --disable-tag-pipeline, --ignore-build-errors, --rebuild-deps-graph, --increment-by <number>, --ignore-issues <issues>, --ignore-newest-version, --fail-fast, --build, --loose
+Flags: --message <message>, --unmodified, --editor [editor], --versions-file <path>, --ver <version>, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --snapped, --unmerged, --skip-tests, --skip-tasks <string>, --skip-auto-tag, --soft, --persist [skip-build], --disable-tag-pipeline, --ignore-build-errors, --rebuild-deps-graph, --no-lock-deps, --increment-by <number>, --ignore-issues <issues>, --ignore-newest-version, --fail-fast, --build, --loose
 
 ## bit templates
 

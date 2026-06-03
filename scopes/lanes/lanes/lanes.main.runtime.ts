@@ -104,7 +104,7 @@ export type CreateLaneOptions = {
 };
 
 export type SwitchLaneOptions = {
-  head?: boolean;
+  skipFetch?: boolean;
   alias?: string;
   merge?: MergeStrategy;
   forceOurs?: boolean;
@@ -590,12 +590,12 @@ please create a new lane instead, which will include all components of this lane
    * save the objects and the lane to the local scope.
    * this method doesn't change anything in the workspace.
    */
-  async fetchLaneWithItsComponents(laneId: LaneId, includeUpdateDependents = false): Promise<Lane> {
+  async fetchLaneWithItsComponents(laneId: LaneId): Promise<Lane> {
     this.logger.debug(`fetching lane ${laneId.toString()}`);
     const lane = await this.importer.importLaneObject(laneId);
     if (!lane) throw new Error(`unable to import lane ${laneId.toString()} from the remote`);
 
-    await this.importer.fetchLaneComponents(lane, includeUpdateDependents);
+    await this.importer.fetchLaneComponents(lane);
     this.logger.debug(`fetching lane ${laneId.toString()} done, fetched ${lane.components.length} components`);
     return lane;
   }
@@ -649,7 +649,7 @@ please create a new lane instead, which will include all components of this lane
       pattern,
       workspaceOnly,
       skipDependencyInstallation = false,
-      head,
+      skipFetch = false,
       branch = false,
     }: SwitchLaneOptions
   ) {
@@ -674,7 +674,7 @@ please create a new lane instead, which will include all components of this lane
       existingOnWorkspaceOnly: workspaceOnly,
       pattern,
       alias,
-      head,
+      skipFetch,
     };
     const checkoutProps = {
       mergeStrategy,
@@ -768,6 +768,25 @@ please create a new lane instead, which will include all components of this lane
       : laneComponents;
 
     return filteredComponentIds.map((laneComponent) => laneComponent.id.changeVersion(laneComponent.head));
+  }
+
+  /**
+   * hidden lane.updateDependents are intentionally excluded from `getLaneComponentIds` so the
+   * default GraphQL `Lane.components` field stays workspace-facing. Consumers that need the full
+   * lane graph (e.g. a CI dashboard surfacing cascade entries) opt in via this method or its
+   * `updateDependentIds` / `updateDependentComponents` GraphQL counterparts. No bitmap filter
+   * here — hidden entries by definition don't live in the bitmap.
+   */
+  async getLaneUpdateDependentIds(lane: LaneData): Promise<ComponentID[]> {
+    if (!lane?.updateDependents?.length) return [];
+    return lane.updateDependents.map((c) => c.id.changeVersion(c.head));
+  }
+
+  async getLaneUpdateDependentComponents(lane: LaneData): Promise<Component[]> {
+    const ids = await this.getLaneUpdateDependentIds(lane);
+    if (!ids.length) return [];
+    const host = this.componentAspect.getHost();
+    return host.getMany(ids);
   }
 
   async getLaneReadmeComponent(lane: LaneData): Promise<Component | undefined> {

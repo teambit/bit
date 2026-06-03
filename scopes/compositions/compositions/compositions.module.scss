@@ -146,20 +146,37 @@
   border-top: 1px solid var(--bit-border-color-lightest, #eaeaec);
   background: var(--bit-bg-color, #ffffff);
   overflow: hidden;
+  min-height: 0;
+  // Never overflow the previewArea: if the inline `height` (or a user-set
+  // resize) ends up taller than the parent allows (e.g. browser zoom shrinks
+  // available space, or there are many controls), `max-height` wins and the
+  // tray stays inside its container so `trayBody`'s `overflow-y: auto` keeps
+  // working instead of the bottom rows getting clipped off-screen.
+  max-height: calc(100% - 80px);
+  box-sizing: border-box;
 }
 
-.trayDragHandle {
+.controlsTrayCollapsed {
+  // when collapsed, only show the header bar
+  height: auto;
+}
+
+// ─── Two-zone header: resize strip on top, click-to-collapse below ─────
+// The two zones are visually separated by a divider so the boundary is
+// obvious: top = "grab to resize", bottom = "click to collapse".
+
+.trayResizeStrip {
+  position: relative;
   flex-shrink: 0;
-  height: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  height: 12px;
   cursor: ns-resize;
-  background: transparent;
-  transition: background 120ms ease;
+  user-select: none;
+  background: var(--surface01-color, rgba(0, 0, 0, 0.02));
+  border-bottom: 1px solid var(--bit-border-color-lightest, #eaeaec);
+  transition: background 140ms ease;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.03);
+    background: var(--surface-hover-color, rgba(0, 0, 0, 0.05));
   }
 
   &:hover .trayDragBar {
@@ -169,19 +186,36 @@
 }
 
 .trayDragBar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 32px;
   height: 3px;
   border-radius: 2px;
   background: var(--bit-border-color-lightest, #d0d0d3);
   transition: all 140ms ease;
+  pointer-events: none;
 }
 
-.trayHeader {
-  flex-shrink: 0;
+.trayHeaderInner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 14px 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  transition: background 140ms ease;
+
+  &:hover {
+    background: var(--surface-hover-color, rgba(0, 0, 0, 0.03));
+  }
+}
+
+// give the collapsed bar a bit more breathing room
+.controlsTrayCollapsed .trayHeaderInner {
+  padding: 10px 14px;
 }
 
 .trayTitleRow {
@@ -218,29 +252,31 @@
   line-height: 1;
 }
 
-.trayClose {
-  display: flex;
+.trayCollapseIcon {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  border: none;
-  background: transparent;
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
   color: var(--bit-text-color-light, #8b8d98);
-  cursor: pointer;
-  font-size: 12px;
-  padding: 0;
-  transition: all 120ms ease;
+  transform: rotate(90deg);
+  transform-origin: center;
+  transition: transform 200ms ease-in-out;
+  pointer-events: none;
+}
 
-  &:hover {
-    background: rgba(0, 0, 0, 0.06);
-    color: var(--bit-text-color-heavy, #1c2024);
-  }
+.trayCollapseIconCollapsed {
+  transform: rotate(-90deg);
 }
 
 .trayBody {
-  flex: 1;
+  // `flex-basis: auto` so the body contributes its natural content height to
+  // the tray's intrinsic size — without this, an auto-sized tray collapses to
+  // just the header. `min-height: 0` keeps `overflow-y: auto` working when
+  // the parent's `max-height` clamps the tray.
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
 }

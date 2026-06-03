@@ -5,6 +5,7 @@ import { ejectTemplate } from '@teambit/eject';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
 import { isEmpty } from 'lodash';
+import type { ComponentID } from '@teambit/component-id';
 import type { ExportMain, ExportResult } from './export.main.runtime';
 
 export class ExportCmd implements Command {
@@ -111,15 +112,38 @@ exporting is the final step after development and versioning to share components
         return formatSection('exported lane', '', [formatItem(chalk.bold(exportedLane))]);
       }
       const lanesOutput = exportedLanes.length ? ` the lane ${chalk.bold(exportedLanes[0].id())} and` : '';
-      const items = componentsIds.map((id) => {
+      // Split exported ids into "regular lane components" vs "updates" — match the UI's
+      // terminology (the 'Snap updates' button surfaces lane.updateDependents as updates rather
+      // than top-level components). Hidden cascade snaps land in the 'exported updates' section
+      // so users aren't told they exported components they don't have in the workspace.
+      // Precompute a Set keyed by `toStringWithoutVersion()` so the per-id classification is
+      // O(1) instead of an O(N·M) linear scan over `laneUpdateIds`.
+      const laneUpdateKeys = new Set((exportedLanes[0]?.updateDependents || []).map((u) => u.toStringWithoutVersion()));
+      const isUpdate = (id: ComponentID) => laneUpdateKeys.has(id.toStringWithoutVersion());
+      const renderItem = (id: ComponentID) => {
         if (!verbose) return formatItem(chalk.bold(id.toString()));
         const versions = newIdsOnRemote
           .filter((newId) => newId.isEqualWithoutVersion(id))
           .map((newId) => newId.version);
         return formatItem(`${chalk.bold(id.toString())} - ${versions.join(', ') || 'n/a'}`);
-      });
-      const desc = `exported${lanesOutput} the following component(s)`;
-      return formatSection('exported components', desc, items);
+      };
+      const regularIds = componentsIds.filter((id) => !isUpdate(id));
+      const updateIds = componentsIds.filter(isUpdate);
+      const componentsPart = regularIds.length
+        ? formatSection(
+            'exported components',
+            `exported${lanesOutput} the following component(s)`,
+            regularIds.map(renderItem)
+          )
+        : '';
+      const updatesPart = updateIds.length
+        ? formatSection(
+            'exported updates',
+            "impacted dependents pushed to keep the lane consistent (from a 'Snap updates' / local cascade)",
+            updateIds.map(renderItem)
+          )
+        : '';
+      return [componentsPart, updatesPart].filter(Boolean).join('\n');
     })();
 
     const nonExistOnBitMapSection = (() => {

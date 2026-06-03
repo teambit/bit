@@ -9,6 +9,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, getCloudDomain } from '@teambit/legacy.constants';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { BitMap } from '@teambit/legacy.bit-map';
+import type { ListScopeResult } from '@teambit/legacy.component-list';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import type { RemoveMain } from '@teambit/remove';
 import { RemoveAspect } from '@teambit/remove';
@@ -21,7 +22,8 @@ import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import type { Remotes, Remote } from '@teambit/scope.remotes';
-import { getScopeRemotes } from '@teambit/scope.remotes';
+import { getScopeRemotes, ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
+import { InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import type { EjectMain, EjectResults } from '@teambit/eject';
 import { EjectAspect } from '@teambit/eject';
 import type { ExportOrigin } from '@teambit/scope.network';
@@ -238,8 +240,16 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const removedIds = await this.getRemovedStagedBitIds();
     const workspaceIds = this.workspace.listIds();
+    // hidden updateDependents have no bitmap row by design — exclude them from the
+    // "files are not tracked" warning that would otherwise fire on every cascade export.
+    const laneUpdateDependents = laneObject?.updateDependents
+      ? ComponentIdList.fromArray(laneObject.updateDependents)
+      : undefined;
     const nonExistOnBitMap = exported.filter(
-      (id) => !workspaceIds.hasWithoutVersion(id) && !removedIds.hasWithoutVersion(id)
+      (id) =>
+        !workspaceIds.hasWithoutVersion(id) &&
+        !removedIds.hasWithoutVersion(id) &&
+        !laneUpdateDependents?.hasWithoutVersion(id)
     );
     const updatedIds = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
     // re-generate the package.json, this way, it has the correct data in the componentId prop.
@@ -307,6 +317,22 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
 
     const idsGroupedByScope = groupByScopeName(ids);
 
+    const resolveRemote = async (scopeName: string): Promise<Remote> => {
+      try {
+        return await scopeRemotes.resolve(scopeName);
+      } catch (err) {
+        if (err instanceof ScopeNotFoundOrDenied && Http.getToken()) {
+          const bitError = new BitError(
+            `unable to export to the remote scope "${scopeName}". the scope may not exist, or you don't have access to it.
+if the scope name is wrong and you've already snapped/tagged, run "bit reset" to undo, then run "bit scope rename ${scopeName} <new-scope>" and snap/tag again`
+          );
+          (bitError as Error).cause = err;
+          throw bitError;
+        }
+        throw err;
+      }
+    };
+
     /**
      * when a component is exported for the first time, and the lane-scope is not the same as the component-scope, it's
      * important to validate that there is no such component in the original scope. otherwise, later, it'll be impossible
@@ -323,9 +349,21 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           // this validation is redundant if the lane-component is in the same scope as the lane-object
           return;
         }
-        // by getting the remote we also validate that this scope actually exists.
-        const remote = await scopeRemotes.resolve(scopeName);
-        const list = await remote.list();
+        // this check guards against a same-named component already existing in the target scope
+        // (which would make the eventual lane-merge impossible — two components, same id, no shared
+        // snap history). if the scope doesn't exist on the hub yet, or the user lacks access to it,
+        // there's nothing there to conflict with, so skip the check. malformed scope names
+        // (InvalidScopeName) are intentionally still raised — those are a genuine user error.
+        let list: ListScopeResult[];
+        try {
+          const remote = await scopeRemotes.resolve(scopeName);
+          list = await remote.list();
+        } catch (err) {
+          if (err instanceof ScopeNotFoundOrDenied || err instanceof InvalidScopeNameFromRemote) {
+            return;
+          }
+          throw err;
+        }
         const listIds = ComponentIdList.fromArray(list.map((listItem) => listItem.id));
         newIdsGrouped[scopeName].forEach((id) => {
           if (listIds.hasWithoutVersion(id)) {
@@ -364,6 +402,10 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         return [head];
       }
       const fromWorkspace = this.workspace?.getIdIfExist(modelComponent.toComponentId());
+      // populate lane-aware heads so divergence is computed against the LANE remote head —
+      // hidden updateDependents have no bitmap row, so without this their cascade snap is
+      // missed and the export silently sends 0 versions, triggering a remote merge error.
+      if (laneObject) await modelComponent.populateLocalAndRemoteHeads(scope.objects, laneObject);
       const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects, fromWorkspace);
       if (!allVersions) {
         return localTagsOrHashes;
@@ -386,7 +428,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       lane?: Lane
     ): Promise<ObjectsPerRemoteExtended> => {
       bitIds.throwForDuplicationIgnoreVersion();
-      const remote: Remote = await scopeRemotes.resolve(remoteNameStr);
+      const remote: Remote = await resolveRemote(remoteNameStr);
       const idsToChangeLocally = ComponentIdList.fromArray(bitIds.filter((id) => !scope.isExported(id)));
       const componentsAndObjects: ModelComponentAndObjects[] = [];
       const objectList = new ObjectList();
@@ -619,6 +661,13 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const clientId = resumeExportId || Date.now().toString();
     await this.pushRemotesPendingDir(clientId, manyObjectsPerRemote, resumeExportId);
     await validateRemotes(remotes, clientId, Boolean(resumeExportId));
+    // Intentionally no cleanup on `persistRemotes` failure: pending dirs are the substrate for
+    // `bit export --resume <clientId>` AND act as a cross-client lock via `export-validate`'s
+    // waitIfNeeded queue (sorted by clientId). In a multi-scope persist with a partial-success
+    // failure (scopeA persisted, scopeB exhausted retries), removing the pending dirs would let
+    // another client race in against an inconsistent partial-commit state and would also strand
+    // the original user with no objects to resume from. Leave them in place; the user's recovery
+    // is `--resume` (or, on the server side, an explicit pending-dir cleanup tool).
     await persistRemotes(manyObjectsPerRemote, clientId);
   }
 

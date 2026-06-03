@@ -504,17 +504,23 @@ describe('env-jsonc-policies', function () {
       helper = new Helper();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       envId = 'react-based-env';
-      helper.env.setCustomNewEnv(undefined, undefined, {
-        policy: {
-          runtime: [
-            {
-              name: 'is-string',
-              version: '1.0.5',
-              force: true,
-            },
-          ],
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        {
+          policy: {
+            runtime: [
+              {
+                name: 'is-string',
+                version: '1.0.5',
+                force: true,
+              },
+            ],
+          },
         },
-      }, false, envId);
+        false,
+        envId
+      );
       helper.command.install();
     });
     after(() => {
@@ -534,17 +540,23 @@ describe('env-jsonc-policies', function () {
 
     it('should update supportedRange for peerDependencies when new version is outside existing range', () => {
       const envId2 = 'react-based-env-peers';
-      helper.env.setCustomNewEnv(undefined, undefined, {
-        policy: {
-          peers: [
-            {
-              name: 'react',
-              version: '16.8.0',
-              supportedRange: '^16.8.0',
-            },
-          ],
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        {
+          policy: {
+            peers: [
+              {
+                name: 'react',
+                version: '16.8.0',
+                supportedRange: '^16.8.0',
+              },
+            ],
+          },
         },
-      }, false, envId2);
+        false,
+        envId2
+      );
       helper.command.install();
 
       const envJsoncPath = path.join(helper.scopes.localPath, envId2, 'env.jsonc');
