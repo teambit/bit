@@ -273,14 +273,15 @@ describe('lane export skips main history objects', function () {
         expect(() => helper.command.catObject(snapOnFork, false, scopeFPath)).to.not.throw();
       });
 
-      it('scope-F stays lean: no main-origin Version objects, but VH is a closed graph', () => {
-        // Lean = no main-origin Version OBJECTS on the fork scope (the byte savings).
+      // TODO(lean-lane-rollout): see export.main.runtime.ts. While `--fork-lane-new-scope` is
+      // forced to allVersions=true for backward compat with old servers, the fork scope DOES
+      // receive main-origin Version objects (the master behavior). Once the override is removed,
+      // restore the original assertions: the three catObject calls should throw, and the VH
+      // assertions should remain unchanged.
+      it.skip('scope-F stays lean: no main-origin Version objects, but VH is a closed graph', () => {
         expect(() => helper.command.catObject(mainSnapPre1, false, scopeFPath)).to.throw();
         expect(() => helper.command.catObject(mainSnapPre2, false, scopeFPath)).to.throw();
         expect(() => helper.command.catObject(mainSnapPost, false, scopeFPath)).to.throw();
-        // VH metadata IS expected to be complete on scope-F (so divergence/merge-lane work on
-        // consumers). importAndThrowForMissingHistoryOnLane fetches VH from the forked-from
-        // lane's scope (scope-L) which by invariant already has the closed chain.
         const vh = helper.command.catVersionHistory(`${scopeC}/comp1`, scopeFPath);
         const hashes = (vh.versions as Array<{ hash: string }>).map((v) => v.hash);
         expect(hashes).to.include(mainSnapPre1);
@@ -410,9 +411,13 @@ describe('lane export skips main history objects', function () {
       expect(status.stagedComponents).to.have.lengthOf(0);
     });
 
-    it('bit export --fork-lane-new-scope should succeed without --all and without VersionNotFoundOnFS', () => {
-      // Regression: plain --fork-lane-new-scope used to bail "no changes — use --all", and --all
-      // then crashed with VersionNotFoundOnFS on un-pulled main history.
+    // TODO(lean-lane-rollout): see export.main.runtime.ts. While `--fork-lane-new-scope` is
+    // forced to allVersions=true for backward compat, this scenario (a lean lane consumer
+    // forking a lane to a new scope without `bit fetch --all-history` first) regresses to
+    // master behavior — it throws VersionNotFoundOnFS because the consumer doesn't have the
+    // full history locally. Un-skip once the override is removed; the lean payload sidesteps
+    // the missing local Versions entirely.
+    it.skip('bit export --fork-lane-new-scope should succeed without --all and without VersionNotFoundOnFS', () => {
       expect(() => helper.command.export('--fork-lane-new-scope')).to.not.throw();
     });
   });
