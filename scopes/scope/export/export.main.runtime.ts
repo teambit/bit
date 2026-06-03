@@ -406,9 +406,7 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       // hidden updateDependents have no bitmap row, so without this their cascade snap is
       // missed and the export silently sends 0 versions, triggering a remote merge error.
       if (laneObject) await modelComponent.populateLocalAndRemoteHeads(scope.objects, laneObject);
-      const localTagsOrHashes = laneObject
-        ? await modelComponent.getLocalHashesOnLane(scope.objects, laneObject, fromWorkspace)
-        : await modelComponent.getLocalHashes(scope.objects, fromWorkspace);
+      const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects, fromWorkspace, laneObject);
       if (laneObject) {
         // Ensure the lane's recorded head for this component is always part of the export refs.
         // Without this, a fresh cross-scope fork (lane head == forkedFrom baseline → divergence
@@ -524,7 +522,7 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       };
 
       // The lean-lane filter (drop main-origin refs belonging to foreign components) is now
-      // applied inside `getVersionsToExport` via `ModelComponent.getLocalHashesOnLane`, so
+      // applied inside `getVersionsToExport` via `ModelComponent.getLocalHashes(...lane)`, so
       // refsPerComp is already filtered. We just drop empty entries.
       const refsToExportPerComponent = (await getRefsToExportPerComp()).filter(({ refs }) => refs.length > 0);
       // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data

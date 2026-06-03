@@ -1279,13 +1279,25 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     return localVersions.includes(tag);
   }
 
-  async getLocalTagsOrHashes(repo: Repository, workspaceId?: ComponentID): Promise<string[]> {
-    const localHashes = await this.getLocalHashes(repo, workspaceId);
+  async getLocalTagsOrHashes(repo: Repository, workspaceId?: ComponentID, lane?: Lane): Promise<string[]> {
+    const localHashes = await this.getLocalHashes(repo, workspaceId, lane);
     if (!localHashes.length) return [];
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
-  async getLocalHashes(repo: Repository, workspaceId?: ComponentID): Promise<Ref[]> {
+  /**
+   * Raw divergence (`snapsOnSourceOnly`). When `lane` is provided, applies the lean-lane filter:
+   * drops refs whose Version is main-origin. Those refs already live on the component's home
+   * scope (and on the destination too in the same-scope case), so `bit export` shouldn't be
+   * re-pushing them. Pass `lane` from status/export/reset to share the same "what's actually
+   * local on this lane" view.
+   *
+   * The lane's recorded head for this component is always kept, even if it's main-origin — the
+   * lane object references it and the destination scope must be able to resolve the hash. Versions
+   * marked `squashed` or `unrelated` are kept as well — they're locally-mutated and the
+   * destination needs them to reconstruct the lane history.
+   */
+  async getLocalHashes(repo: Repository, workspaceId?: ComponentID, lane?: Lane): Promise<Ref[]> {
     await this.setDivergeData(repo, undefined, undefined, workspaceId);
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnSourceOnly;
@@ -1311,28 +1323,14 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     }
 
     if (!localHashes.length) return [];
-    return localHashes.reverse(); // reverse to get the older first
+    const filtered = lane ? await this.filterLeanLaneRefs(repo, lane, localHashes) : localHashes;
+    return filtered.reverse(); // reverse to get the older first
   }
 
-  /**
-   * Raw divergence (`getLocalHashes`) plus the lean-lane filter: drops refs whose Version is
-   * main-origin. Those refs already live on the component's home scope (and on the destination
-   * too in the same-scope case), so `bit export` shouldn't be re-pushing them. Callers that
-   * want "what's actually local on this lane" — status, export, reset — should use this
-   * rather than the raw divergence.
-   *
-   * The lane's recorded head for this component is always kept, even if it's main-origin —
-   * the lane object references it and the destination scope must be able to resolve the hash.
-   * Versions marked `squashed` or `unrelated` are kept as well — they're locally-mutated and
-   * the destination needs them to reconstruct the lane history.
-   */
-  async getLocalHashesOnLane(repo: Repository, lane: Lane, workspaceId?: ComponentID): Promise<Ref[]> {
-    const localHashes = await this.getLocalHashes(repo, workspaceId);
-    if (!localHashes.length) return [];
-
+  private async filterLeanLaneRefs(repo: Repository, lane: Lane, refs: Ref[]): Promise<Ref[]> {
     const laneHead = lane.getCompHeadIncludeUpdateDependents(this.toComponentId());
     const keptRefs = await pMapPool(
-      localHashes,
+      refs,
       async (ref) => {
         if (laneHead && ref.isEqual(laneHead)) return ref;
         const obj = (await ref.load(repo)) as Version | undefined;
@@ -1345,12 +1343,6 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       { concurrency: concurrentComponentsLimit() }
     );
     return keptRefs.filter((ref): ref is Ref => ref !== null);
-  }
-
-  async getLocalTagsOrHashesOnLane(repo: Repository, lane: Lane, workspaceId?: ComponentID): Promise<string[]> {
-    const localHashes = await this.getLocalHashesOnLane(repo, lane, workspaceId);
-    if (!localHashes.length) return [];
-    return this.switchHashesWithTagsIfExist(localHashes).reverse();
   }
 
   /**
