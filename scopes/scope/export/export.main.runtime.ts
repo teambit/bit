@@ -180,9 +180,15 @@ export class ExportMain {
   }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer: Consumer = this.workspace.consumer;
+    // `--fork-lane-new-scope`: after the `calculateRemote` fix, divergence baseline is the
+    // forked-from head, so components inherited unchanged from the original lane (e.g. comp2
+    // when only comp1 was snapped on the fork) are not staged. The fork still needs to push
+    // them — the new scope has no copy and would reject the lane object as referencing a
+    // missing component. Include non-staged to bring them into `idsToExport`; the laneHead
+    // push in `getVersionsToExport` then supplies their refs (divergence is empty for them).
     const { idsToExport, missingScope, laneObject } = await this.getComponentsToExport(
       ids,
-      includeNonStaged || headOnly
+      includeNonStaged || headOnly || params.forkLaneNewScope
     );
 
     if (!idsToExport.length && !laneObject) {
@@ -407,6 +413,17 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       // missed and the export silently sends 0 versions, triggering a remote merge error.
       if (laneObject) await modelComponent.populateLocalAndRemoteHeads(scope.objects, laneObject);
       const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects, fromWorkspace, laneObject);
+      if (laneObject) {
+        // Ensure the lane's recorded head for this component is always part of the export refs.
+        // Required for cross-scope forks (lane head == forkedFrom baseline → divergence returns []
+        // for components inherited unchanged from the original lane). Without this, those
+        // components would be exported with zero refs and the new scope would reference an
+        // unresolvable hash. The filter in `filterLeanLaneRefs` already keeps lane-head refs.
+        const laneHead = laneObject.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId());
+        if (laneHead && !localTagsOrHashes.find((r) => r.isEqual(laneHead))) {
+          localTagsOrHashes.push(laneHead);
+        }
+      }
       if (!allVersions) {
         return localTagsOrHashes;
       }
