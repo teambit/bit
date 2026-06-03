@@ -1346,7 +1346,11 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       }
       const isLaneOrigin = Boolean(obj.originLaneId);
       const isLocallyMutated = Boolean(obj.squashed) || Boolean(obj.unrelated);
-      const originScope = obj.originId?.scope || this.scope;
+      // Read the raw scope rather than via the `originId` getter — the getter calls
+      // `ComponentID.fromObject({scope, name})` which throws `MissingScope` for older Version
+      // objects where `origin.id.scope` is undefined (pre-0.2.22). That would break
+      // status/export/reset on lean lanes for repos that still hold those objects.
+      const originScope = obj.origin?.id?.scope || this.scope;
       const isForeignToDestination = originScope !== lane.scope;
       if (!isLaneOrigin && !isLocallyMutated && isForeignToDestination) continue;
       keptRefs.push(ref);
