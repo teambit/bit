@@ -10,6 +10,8 @@ import type { BitObjectList, ModelComponent } from '@teambit/objects';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
 import { ComponentIdList } from '@teambit/component-id';
 import type { LaneId } from '@teambit/lane-id';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 
 type Options = { clientId: string; isResumingExport: boolean };
 const NUM_OF_RETRIES = 60;
@@ -94,10 +96,10 @@ export class ExportValidate implements Action<Options> {
     if (!forkedFromFetched) {
       await this.scope.scopeImporter.importMissingVersionHistory(externalComponents);
     }
-    await Promise.all(
-      externalComponents.map((modelComponent) =>
-        getAllVersionHashes({ modelComponent, repo: this.scope.objects, throws: true })
-      )
+    await pMapPool(
+      externalComponents,
+      (modelComponent) => getAllVersionHashes({ modelComponent, repo: this.scope.objects, throws: true }),
+      { concurrency: concurrentComponentsLimit() }
     );
   }
 
