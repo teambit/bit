@@ -90,7 +90,7 @@ Flags: --json
 ## bit capsule list
 
 list the capsules generated for this workspace
-Flags: --json
+Flags: --json, --with-stats
 
 ## bit capsule create [component-id...]
 
@@ -103,6 +103,13 @@ delete capsules
 
 with no args, only workspace's capsules are deleted
 Flags: --scope-aspects, --all
+
+## bit capsule prune
+
+evict stale capsules from the global cache
+
+workspace capsules are deleted unconditionally; aspect-version and scope capsules are deleted when their last-used marker is older than --older-than (default 30 days). use --dry-run first to preview what would be removed.
+Flags: --older-than <days>, --keep-workspace-caps, --no-orphans, --size-target <gb>, --dry-run, --with-sizes, --json
 
 ## bit cat <component-id>
 

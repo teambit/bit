@@ -74,7 +74,7 @@ Subcommands: list, run
 
 Advanced/Debug
 capsule - manage isolated component environments
-Subcommands: list, create, delete
+Subcommands: list, create, delete, prune
 mcp-server [sub-command] - start Model Context Protocol server for AI assistants
 Subcommands: start, setup, rules
 
