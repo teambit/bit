@@ -180,12 +180,9 @@ export class ExportMain {
   }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer: Consumer = this.workspace.consumer;
-    // fork-lane-new-scope: a freshly-forked lane with no local snaps still needs to export the
-    // existing lane content under the new scope. Force `includeNonStaged` so the export picks
-    // up the staged components even when the "no changes" guard would otherwise short-circuit.
     const { idsToExport, missingScope, laneObject } = await this.getComponentsToExport(
       ids,
-      includeNonStaged || headOnly || params.forkLaneNewScope
+      includeNonStaged || headOnly
     );
 
     if (!idsToExport.length && !laneObject) {
@@ -230,25 +227,8 @@ otherwise, re-run the export with "--fork-lane-new-scope" flag.
 if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
     }
     const isOnMain = consumer.isOnMain();
-    // TODO(lean-lane-rollout): once Bit Cloud (and any self-hosted remotes users target) is
-    // running the strict-VH-fetch-from-forked-from code from this PR, REMOVE the `|| params.forkLaneNewScope`
-    // override below — fork-lane-new-scope can then use the lean payload like every other lane export.
-    //
-    // Why this temporary override exists: the lean payload for a first cross-scope fork omits
-    // lane-origin Versions from the forked-from lane's scope. The new server fetches those from
-    // the forked-from scope (see export-validate.ts::importAndThrowForMissingHistoryOnLane). Old
-    // servers don't — their `importMissingVersionHistory` only pulls from each component's home
-    // scope, which doesn't have lane-origin snaps — so mergeLane throws "unable to get the full
-    // history / missing snaps: ...". Forcing allVersions here matches master's old `--all`
-    // behavior for the fork-lane case and keeps it working against old servers. This is a rare
-    // path (forking a cross-scope lane to a new scope on first export); the common lean-lane
-    // benefit — lane-merge-main + re-export — is unaffected.
-    //
-    // After removing the override, also un-skip the two tests marked with this same TODO tag in
-    // e2e/harmony/lanes/lane-export-skip-main-history.e2e.ts.
     const { exported, updatedLocally, newIdsOnRemote, rippleJobs } = await this.pushToScopes({
       ...params,
-      allVersions: params.allVersions || params.forkLaneNewScope,
       exportHeadsOnly: headOnly,
       scope: consumer.scope,
       ids: idsToExport,
