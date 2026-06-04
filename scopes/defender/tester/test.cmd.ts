@@ -29,19 +29,20 @@ type TestFlags = {
 };
 
 export class TestCmd implements Command {
-  name = 'test [component-pattern...]';
+  name = 'test [pattern-or-test-file...]';
   description = 'run component tests';
   extendedDescription = `executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.).
 by default only runs tests for new and modified components. use --unmodified to test all components.
-to run specific test files only, pass paths to the files themselves, e.g. "bit test path/to/comp/my-comp.spec.ts".
-note the distinction: a directory path selects the component in that directory and runs all its tests, while a path
-to a test file runs only that file. multiple patterns or test-file paths can be provided, separated by spaces.
+to run specific test files only, pass their paths instead of a component pattern, e.g. "bit test path/to/comp/my-comp.spec.ts".
 supports watch mode, coverage reporting, and debug mode for development workflows.`;
   helpUrl = 'reference/testing/tester-overview';
   arguments = [
     {
-      name: 'component-pattern...',
-      description: `${COMPONENT_PATTERN_HELP}. alternatively, provide path(s) to test file(s) (not directories) to run only these files, e.g. "bit test path/to/comp/my-comp.spec.ts"`,
+      name: 'pattern-or-test-file...',
+      description: `one of two modes (multiple values are supported, separated by spaces):
+1) component pattern: ${COMPONENT_PATTERN_HELP}
+2) test-file path: a path to a test file, to run only this file, e.g. "bit test path/to/comp/my-comp.spec.ts".
+note that a directory path selects the component in that directory and runs all its tests, while a test-file path runs only that file`,
     },
   ];
   alias = 'at';
