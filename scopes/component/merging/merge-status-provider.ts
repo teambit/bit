@@ -61,8 +61,13 @@ export class MergeStatusProvider {
     );
     // whether or not we need to import the gap between the common-snap and the other lane.
     // the common-snap itself we need anyway in order to get the files hash/content for checking conflicts.
+    // when merging main into a lane there is no need for the gap: lane scopes are lean — export skips
+    // main-history objects — and the VersionHistory (imported during the pre-fetch) is enough for the
+    // divergence traversal. only the common-snap Version is needed as the merge base, imported below.
+    const isMergingMainIntoLane = Boolean(this.currentLane && !this.otherLane);
     const shouldImportHistoryOfOtherLane =
       !this.options?.shouldSquash && // when squashing, no need for all history, only the head is going to be pushed
+      !isMergingMainIntoLane &&
       (!this.currentLane || // on main. we need all history in order to push each component to its remote
         this.currentLane.scope !== this.otherLane?.scope); // on lane, but the other lane is from a different scope. we need all history in order to push to the current lane's scope
     const toImport = componentStatusBeforeMergeAttempt

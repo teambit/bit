@@ -211,4 +211,65 @@ describe('merge lanes - main lane operations', function () {
       expect(depsResolver.data.packageName).to.equal(`@${helper.scopes.remote}/comp1`);
     });
   });
+
+  describe('merging main into a lane when main has advanced since the lane forked', () => {
+    let headComp1OnLane: string;
+    let comp1Tag2: string;
+    let comp1Tag3: string;
+    let comp1Head: string;
+    let comp2Tag2: string;
+    let comp2Tag3: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild(); // 0.0.1 - the fork point of the lane
+      helper.command.export();
+      helper.command.createLane('dev');
+      // only comp1 is on the lane. comp2 stays a main component in the workspace
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+      headComp1OnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      const laneWs = helper.scopeHelper.cloneWorkspace();
+
+      // main advances by a few versions the lane never saw
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.2
+      comp1Tag2 = helper.command.getHead('comp1');
+      comp2Tag2 = helper.command.getHead('comp2');
+      helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.3
+      comp1Tag3 = helper.command.getHead('comp1');
+      comp2Tag3 = helper.command.getHead('comp2');
+      helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.4
+      comp1Head = helper.command.getHead('comp1');
+      helper.command.export();
+
+      helper.scopeHelper.getClonedWorkspace(laneWs);
+      helper.command.mergeLane('main', '-x');
+    });
+    it('should merge main into the lane and snap the lane component', () => {
+      const head = helper.command.getHeadOfLane('dev', 'comp1');
+      expect(head).to.not.equal(headComp1OnLane);
+    });
+    it('should import the head of main', () => {
+      expect(() => helper.command.catObject(comp1Head)).to.not.throw();
+    });
+    it('should not import the main-history gap between the common-snap and the head of main', () => {
+      // 0.0.2 and 0.0.3 are between the fork point (0.0.1) and the head of main (0.0.4). they are
+      // not needed locally: lane scopes are lean - export skips main-history objects - and the
+      // VersionHistory covers the divergence calculation
+      expect(() => helper.command.catObject(comp1Tag2)).to.throw();
+      expect(() => helper.command.catObject(comp1Tag3)).to.throw();
+    });
+    it('should not import the history of workspace components that are not on the lane', () => {
+      expect(() => helper.command.catObject(comp2Tag2)).to.throw();
+      expect(() => helper.command.catObject(comp2Tag3)).to.throw();
+    });
+    it('should still update non-lane components to the head of main in the .bitmap', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp2.version).to.equal('0.0.4');
+    });
+    it('should export the lane successfully after the merge', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+  });
 });
