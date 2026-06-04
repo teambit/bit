@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { HopeAiIcon } from '@teambit/hope.design.hope-icon';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
+import { HopeAiIcon } from './hope-ai-icon';
 import styles from './workspace-blank-state.module.scss';
 
 const DISCORD_URL = 'https://discord.bit.cloud/';

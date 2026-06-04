@@ -286,7 +286,6 @@
         "@teambit/gitconfig": "2.0.10",
         "@teambit/graph.cleargraph": "0.0.11",
         "@teambit/harmony": "0.4.7",
-        "@teambit/hope.design.hope-icon": "^0.0.16",
         "@teambit/html.modules.inject-html-element": "0.0.6",
         "@teambit/lane-id": "~0.0.312",
         "@teambit/lanes.ui.compare.lane-compare": "^0.0.206",
