@@ -21,8 +21,6 @@ export function WorkspaceOverview() {
   const workspace = useContext(WorkspaceContext);
   const { components, componentDescriptors } = workspace;
 
-  if (!components.length) return <WorkspaceBlankState />;
-
   const { isMinimal } = useWorkspaceMode();
   const uniqueScopes = [...new Set(components.map((c) => c.id.scope))];
   const { cloudScopes } = useCloudScopes(uniqueScopes);
@@ -67,6 +65,8 @@ export function WorkspaceOverview() {
     aggregation,
     filters
   );
+
+  if (!components.length) return <WorkspaceBlankState />;
 
   return (
     <div className={styles.container}>

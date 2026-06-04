@@ -211,65 +211,6 @@
   font-size: 13px;
 }
 
-/* ---- Contact CTA band ---- */
-
-.contactBand {
-  box-sizing: border-box;
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  width: calc(100% - 48px);
-  max-width: 720px;
-  margin: 24px auto 16px;
-  padding: 18px 24px;
-  border: 1px solid var(--border-primary-color, #6c5ce7);
-  border-radius: 14px;
-  background: var(--primary-surface-color, #f6f5fe);
-  text-decoration: none;
-  transition: box-shadow 0.14s ease;
-
-  &:hover {
-    box-shadow: 0 12px 30px -18px rgba(93, 72, 255, 0.5);
-  }
-}
-
-.contactText {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-}
-
-.contactTitle {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--on-background-high-color);
-  letter-spacing: -0.01em;
-}
-
-.contactSub {
-  margin-top: 2px;
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--on-background-medium-color);
-}
-
-.contactBtn {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  height: 36px;
-  padding: 0 18px;
-  border-radius: 9px;
-  background: var(--bit-accent-color, #6c5ce7);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
 /* ---- Footer ---- */
 
 .bottom {
@@ -289,6 +230,7 @@
   display: inline-flex;
   padding: 8px;
   border-radius: 10px;
+  text-decoration: none;
   transition: background 0.14s ease;
 
   &:hover {
@@ -300,4 +242,11 @@
   width: 28px;
   height: 28px;
   display: block;
+}
+
+.discordIcon {
+  display: block;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--on-background-medium-color);
 }
