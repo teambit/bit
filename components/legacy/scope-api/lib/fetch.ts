@@ -1,5 +1,6 @@
 import type { Readable } from 'stream';
 import Queue from 'p-queue';
+import { omit } from 'lodash';
 import { ComponentIdList } from '@teambit/component-id';
 import semver from 'semver';
 import { isHash } from '@teambit/component-version';
@@ -121,11 +122,13 @@ fetchOptions`,
     fetchOptions
   );
   const dateNow = new Date().toISOString().split('.')[0];
+  // Strip authorization/cookie before storing — this metadata gets serialized into trace logs.
+  const redactedHeaders = headers ? omit(headers, ['authorization', 'cookie']) : headers;
   openConnectionsMetadata[currentFetch] = {
     started: dateNow,
     ids,
     fetchOptions,
-    headers,
+    headers: redactedHeaders,
   };
   logger.trace(
     `DEBUG-CONNECTIONS: Date now: ${dateNow}. Connections:\n${JSON.stringify(openConnectionsMetadata, null, 2)}`
