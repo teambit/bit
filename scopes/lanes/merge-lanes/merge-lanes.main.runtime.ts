@@ -14,7 +14,7 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
-import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
+import { getLogForSquash } from '@teambit/harmony.modules.get-basic-log';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import type { Ref, Lane, Version, Log } from '@teambit/objects';
@@ -672,15 +672,6 @@ async function filterComponentsStatus(
     });
   }
   return filteredComponentStatus;
-}
-
-async function getLogForSquash(otherLaneId: LaneId) {
-  const basicLog = await getBasicLog();
-  const log = {
-    ...basicLog,
-    message: `squashed during merge from ${otherLaneId.toString()}`,
-  };
-  return log;
 }
 
 async function squashSnaps(

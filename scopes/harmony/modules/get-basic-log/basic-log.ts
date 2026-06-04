@@ -1,4 +1,5 @@
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY } from '@teambit/legacy.constants';
+import type { LaneId } from '@teambit/lane-id';
 import type { Log } from '@teambit/objects';
 import { getBitCloudUser } from '@teambit/cloud.modules.get-cloud-user';
 import { getConfig } from '@teambit/config-store';
@@ -11,6 +12,13 @@ export async function getBasicLog(): Promise<Log> {
     email,
     message: '',
     date: Date.now().toString(),
+  };
+}
+
+export async function getLogForSquash(otherLaneId: LaneId): Promise<Log> {
+  return {
+    ...(await getBasicLog()),
+    message: `squashed during merge from ${otherLaneId.toString()}`,
   };
 }
 

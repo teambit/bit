@@ -484,7 +484,7 @@ export class MergingMain {
       laneId: otherLaneId,
       // diverged components get squashed at snap-creation time (single-parent + squashed metadata)
       // when shouldSquash is set. fast-forward squash is handled separately by squashSnaps().
-      shouldSquash: shouldSquash && Boolean(mergeResults),
+      shouldSquash: Boolean(shouldSquash && mergeResults),
     };
     id = currentComponent ? currentComponent.id : id;
     const modelComponent = await legacyScope.getModelComponent(id);

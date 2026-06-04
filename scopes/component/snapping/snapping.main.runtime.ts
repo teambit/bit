@@ -28,7 +28,7 @@ import { BitError } from '@teambit/bit-error';
 import pMap from 'p-map';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
+import { getLogForSquash } from '@teambit/harmony.modules.get-basic-log';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 import type { ScopeMain } from '@teambit/scope';
@@ -1112,15 +1112,11 @@ another option, in case this dependency is not in main yet is to remove all refe
         // --squash on diverged components: record the dropped lane-b head in squashed metadata
         // and leave `version.parents` as the single current-lane head. lane-b's history remains
         // reachable only on its own scope; the merge snap chain stays self-contained on this lane.
-        const currentParent = version.parents[0];
-        const previousParents = currentParent ? [currentParent, unmergedComponent.head] : [unmergedComponent.head];
-        // Build a dedicated log entry — don't pass `version.log` by reference, since setSquashed
-        // appends it to `version.modified[]` and we mutate `version.log.message` a few lines down,
-        // which would corrupt the modified-log entry. Matches the pattern in merge-lanes.main.runtime.ts.
-        const squashLog: Log = {
-          ...(await getBasicLog()),
-          message: `squashed during merge from ${unmergedComponent.laneId.toString()}`,
-        };
+        // The diverged path always has a current-lane parent (that's what makes it diverged).
+        const previousParents = [version.parents[0], unmergedComponent.head];
+        // Fresh Log object — setSquashed retains it via version.modified[], and we mutate
+        // version.log.message below, which would corrupt the modified-log entry if shared.
+        const squashLog = await getLogForSquash(unmergedComponent.laneId);
         version.setSquashed({ previousParents, laneId: unmergedComponent.laneId }, squashLog);
         this.logger.debug(
           `sources.addSource, unmerged component "${component.name}". squash-on-diverged: dropping parent ${unmergedComponent.head.hash}`
