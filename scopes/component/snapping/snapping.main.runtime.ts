@@ -28,6 +28,7 @@ import { BitError } from '@teambit/bit-error';
 import pMap from 'p-map';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 import type { ScopeMain } from '@teambit/scope';
@@ -1113,7 +1114,14 @@ another option, in case this dependency is not in main yet is to remove all refe
         // reachable only on its own scope; the merge snap chain stays self-contained on this lane.
         const currentParent = version.parents[0];
         const previousParents = currentParent ? [currentParent, unmergedComponent.head] : [unmergedComponent.head];
-        version.setSquashed({ previousParents, laneId: unmergedComponent.laneId }, version.log);
+        // Build a dedicated log entry — don't pass `version.log` by reference, since setSquashed
+        // appends it to `version.modified[]` and we mutate `version.log.message` a few lines down,
+        // which would corrupt the modified-log entry. Matches the pattern in merge-lanes.main.runtime.ts.
+        const squashLog: Log = {
+          ...(await getBasicLog()),
+          message: `squashed during merge from ${unmergedComponent.laneId.toString()}`,
+        };
+        version.setSquashed({ previousParents, laneId: unmergedComponent.laneId }, squashLog);
         this.logger.debug(
           `sources.addSource, unmerged component "${component.name}". squash-on-diverged: dropping parent ${unmergedComponent.head.hash}`
         );
