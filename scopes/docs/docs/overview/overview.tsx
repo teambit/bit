@@ -7,7 +7,7 @@ import { flatten } from 'lodash';
 // import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
-import type { ComponentPreviewProps, PreviewIframeAttrs } from '@teambit/preview.ui.component-preview';
+import type { ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
 import {
   ComponentPreview,
   PreviewPropsAggregator,
@@ -84,7 +84,6 @@ export function Overview({
   const [isLoading, setLoading] = useState(defaultLoadingState);
   const previewSandboxHooks = usePreviewSandboxSlot?.values() ?? [];
   const previewPropsHooks = usePreviewPropsSlot?.values() ?? [];
-  const [previewAttrs, setPreviewAttrs] = useState<PreviewIframeAttrs>({});
   const [sandboxValue, setSandboxValue] = useState('');
   const iframeQueryParams = `onlyOverview=${component.preview?.onlyOverview || 'false'}&skipIncludes=${
     component.preview?.skipIncludes || component.preview?.onlyOverview
@@ -120,7 +119,6 @@ export function Overview({
         onSandboxChange={setSandboxValue}
         component={component}
       />
-      <PreviewPropsAggregator hooks={previewPropsHooks} onPreviewPropsChange={setPreviewAttrs} component={component} />
       {showHeader && (
         <ComponentOverview
           className={classNames(styles.componentOverviewBlock, !isScaling && styles.legacyPreview)}
@@ -142,48 +140,53 @@ export function Overview({
               <CompositionGallerySkeleton compositionsLength={Math.min(component.compositions.length, 3)} />
             </ReadmeSkeleton>
           )}
-          {!isMinimal && !renderCompositionsFirst ? (
-            <>
-              <ComponentPreview
-                {...previewAttrs}
-                onLoad={onPreviewLoad}
-                previewName="overview"
-                pubsub={true}
-                queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
-                viewport={null}
-                fullContentHeight
-                disableScroll={true}
-                sandbox={sandboxValue}
-                {...rest}
-                component={component}
-                style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
-              />
-              {component.preview?.onlyOverview && !isLoading && (
-                <CompositionGallery component={component} sandbox={sandboxValue} />
-              )}
-            </>
-          ) : (
-            <>
-              {component.preview?.onlyOverview && !isLoading && (
-                <CompositionGallery component={component} sandbox={sandboxValue} />
-              )}
-              <ComponentPreview
-                {...previewAttrs}
-                onLoad={onPreviewLoad}
-                previewName="overview"
-                pubsub={true}
-                queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
-                viewport={null}
-                fullContentHeight
-                disableScroll={true}
-                propagateError={isMinimal}
-                sandbox={sandboxValue}
-                {...rest}
-                component={component}
-                style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
-              />
-            </>
-          )}
+          <PreviewPropsAggregator hooks={previewPropsHooks} component={component}>
+            {(previewAttrs) =>
+              !isMinimal && !renderCompositionsFirst ? (
+                <>
+                  <ComponentPreview
+                    {...previewAttrs}
+                    onLoad={onPreviewLoad}
+                    previewName="overview"
+                    pubsub={true}
+                    queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
+                    viewport={null}
+                    fullContentHeight
+                    disableScroll={true}
+                    sandbox={sandboxValue}
+                    {...rest}
+                    component={component}
+                    style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
+                  />
+                  {component.preview?.onlyOverview && !isLoading && (
+                    <CompositionGallery component={component} sandbox={sandboxValue} />
+                  )}
+                </>
+              ) : (
+                <>
+                  {component.preview?.onlyOverview && !isLoading && (
+                    <CompositionGallery component={component} sandbox={sandboxValue} />
+                  )}
+                  <ComponentPreview
+                    {...previewAttrs}
+                    onLoad={onPreviewLoad}
+                    previewName="overview"
+                    pubsub={true}
+                    queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
+                    viewport={null}
+                    fullContentHeight
+                    disableScroll={true}
+                    propagateError={isMinimal}
+                    sandbox={sandboxValue}
+                    {...rest}
+                    component={component}
+                    style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
+                  />
+                </>
+              )
+            }
+          </PreviewPropsAggregator>
+
           {component.preview?.onlyOverview && !isLoading && TaggedAPI && (
             <TaggedAPI componentId={component.id.toString()} />
           )}

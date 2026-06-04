@@ -701,7 +701,7 @@ jobs:
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run:
           name: 'bit ci pr'
-          command: 'cd bit && bit ci pr --build'
+          command: 'cd bit && bit ci pr --build --keep-lane'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
