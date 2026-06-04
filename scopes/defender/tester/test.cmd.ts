@@ -9,6 +9,7 @@ import type { Logger } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import { Timer } from '@teambit/toolbox.time.timer';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { TesterMain, TestResults } from './tester.main.runtime';
 import { aggregateTestResults, formatTestReport } from './test-output-formatter';
@@ -299,7 +300,12 @@ supports watch mode, coverage reporting, and debug mode for development workflow
     if (!entries.length) return undefined;
     const isFile = (entry: string) => {
       const absPath = path.resolve(entry);
-      return fs.existsSync(absPath) && fs.statSync(absPath).isFile();
+      try {
+        return fs.statSync(absPath).isFile();
+      } catch {
+        // e.g. the file doesn't exist or permission issues. treat as a non-file so it goes through the pattern flow.
+        return false;
+      }
     };
     const fileEntries = entries.filter((entry) => isFile(entry));
     if (!fileEntries.length) return undefined;
@@ -325,7 +331,8 @@ supports watch mode, coverage reporting, and debug mode for development workflow
       }
       const component = componentsById[idStr];
       const testFilesOfComp = this.tester.getTestFiles(component);
-      if (!testFilesOfComp.some((file) => file.path === absPath)) {
+      const absPathLinux = pathNormalizeToLinux(absPath);
+      if (!testFilesOfComp.some((file) => pathNormalizeToLinux(file.path) === absPathLinux)) {
         const suggestion = testFilesOfComp.length
           ? `the test files of "${component.id.toStringWithoutVersion()}" are: ${testFilesOfComp
               .map((file) => file.relative)
