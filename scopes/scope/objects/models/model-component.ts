@@ -6,6 +6,8 @@ import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { BitId } from '@teambit/legacy-bit-id';
@@ -366,11 +368,27 @@ export default class Component extends BitObject {
 
     const calculateRemote = async () => {
       if (this.laneHeadRemote) return this.laneHeadRemote;
-      if (lane.isNew && lane.forkedFrom && lane.forkedFrom.scope === lane.scope) {
-        // the last check is to make sure that if this lane will be exported to a different scope than the original
-        // lane, all snaps of the original lane will be considered as local and will be exported later on.
+      if (lane.isNew && lane.forkedFrom) {
+        // For any forked lane — same-scope or cross-scope (e.g. after `bit lane change-scope`) — use
+        // the forked-from lane's head as the divergence baseline. The consumer has that ref locally
+        // from when they ran `bit lane import` on the original lane. This is correct for both:
+        //  - same-scope forks: identical to the previous behavior.
+        //  - cross-scope forks: previously fell through to `this.remoteHead || this.head`, which can
+        //    crash with `TargetHeadNotFound` when the component's main-head Version isn't local
+        //    (common after a lean-lane import since main history doesn't live on the lane scope).
+        //    Returning the fork's head instead reports only true local snaps as staged — not the
+        //    entire history — which also keeps `bit reset` from over-removing.
         const headFromFork = await repo.remoteLanes.getRef(lane.forkedFrom, this.toComponentId());
         if (headFromFork) return headFromFork;
+        if (lane.forkedFrom.scope !== lane.scope) {
+          // Cross-scope fork and the forked-from ref isn't local. Returning null over-reports
+          // the lane history as staged (divergence has no baseline), but falling through to
+          // `this.remoteHead || this.head` would crash with TargetHeadNotFound when the main-
+          // head Version is missing locally. The user can recover by running `bit lane fetch`
+          // on the forked-from lane to populate the ref.
+          return null;
+        }
+        // Same-scope fork without a fork ref — fall through to the standard fallback below.
       }
       // if no remote-ref was found, because it's checked out to a lane, it's safe to assume that
       // this.head should be on the original-remote. hence, FetchMissingHistory will retrieve it on lane-remote
@@ -562,6 +580,26 @@ export default class Component extends BitObject {
           }
         );
         versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+        // Lean-lane-scope fallback: if the lane is on a different scope from the component's
+        // home scope (e.g. a feature lane for a component that lives on main in another scope),
+        // older main snaps may not be on the lane scope. Re-fetch without lane so the fetcher
+        // routes to the component's home scope and brings in the missing main history.
+        if (
+          lane &&
+          lane.scope !== this.scope &&
+          versionsInfo.some((v) => v.error && errorIsTypeOfMissingObject(v.error))
+        ) {
+          await scope.scopeImporter.importWithoutDeps(
+            ComponentIdList.fromArray([this.toComponentId()]).toVersionLatest(),
+            {
+              cache: false,
+              includeVersionHistory: true,
+              collectParents: true,
+              reason: 'to collect logs from component home scope (lean-lane-scope fallback)',
+            }
+          );
+          versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+        }
       } catch (err) {
         logger.error(`collectLogs failed to import ${this.id()} history`, err);
       }
@@ -1241,13 +1279,25 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     return localVersions.includes(tag);
   }
 
-  async getLocalTagsOrHashes(repo: Repository, workspaceId?: ComponentID): Promise<string[]> {
-    const localHashes = await this.getLocalHashes(repo, workspaceId);
+  async getLocalTagsOrHashes(repo: Repository, workspaceId?: ComponentID, lane?: Lane): Promise<string[]> {
+    const localHashes = await this.getLocalHashes(repo, workspaceId, lane);
     if (!localHashes.length) return [];
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
-  async getLocalHashes(repo: Repository, workspaceId?: ComponentID): Promise<Ref[]> {
+  /**
+   * Raw divergence (`snapsOnSourceOnly`). When `lane` is provided, applies the lean-lane filter:
+   * drops refs whose Version is main-origin. Those refs already live on the component's home
+   * scope (and on the destination too in the same-scope case), so `bit export` shouldn't be
+   * re-pushing them. Pass `lane` from status/export/reset to share the same "what's actually
+   * local on this lane" view.
+   *
+   * The lane's recorded head for this component is always kept, even if it's main-origin — the
+   * lane object references it and the destination scope must be able to resolve the hash. Versions
+   * marked `squashed` or `unrelated` are kept as well — they're locally-mutated and the
+   * destination needs them to reconstruct the lane history.
+   */
+  async getLocalHashes(repo: Repository, workspaceId?: ComponentID, lane?: Lane): Promise<Ref[]> {
     await this.setDivergeData(repo, undefined, undefined, workspaceId);
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnSourceOnly;
@@ -1273,7 +1323,26 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     }
 
     if (!localHashes.length) return [];
-    return localHashes.reverse(); // reverse to get the older first
+    const filtered = lane ? await this.filterLeanLaneRefs(repo, lane, localHashes) : localHashes;
+    return filtered.reverse(); // reverse to get the older first
+  }
+
+  private async filterLeanLaneRefs(repo: Repository, lane: Lane, refs: Ref[]): Promise<Ref[]> {
+    const laneHead = lane.getCompHeadIncludeUpdateDependents(this.toComponentId());
+    const keptRefs = await pMapPool(
+      refs,
+      async (ref) => {
+        if (laneHead && ref.isEqual(laneHead)) return ref;
+        const obj = (await ref.load(repo)) as Version | undefined;
+        if (!obj) return null;
+        const isLaneOrigin = Boolean(obj.originLaneId);
+        const isLocallyMutated = Boolean(obj.squashed) || Boolean(obj.unrelated);
+        if (!isLaneOrigin && !isLocallyMutated) return null;
+        return ref;
+      },
+      { concurrency: concurrentComponentsLimit() }
+    );
+    return keptRefs.filter((ref): ref is Ref => ref !== null);
   }
 
   /**
