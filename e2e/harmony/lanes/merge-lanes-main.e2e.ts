@@ -272,4 +272,48 @@ describe('merge lanes - main lane operations', function () {
       expect(() => helper.command.export()).to.not.throw();
     });
   });
+
+  describe('bit merge on main when the remote main has advanced by multiple snaps (diverged)', () => {
+    let gapSnap: string;
+    let remoteHead: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      const wsBeforeDiverge = helper.scopeHelper.cloneWorkspace();
+
+      // remote main advances by two snaps the local never saw
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      gapSnap = helper.command.getHead('comp1');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      remoteHead = helper.command.getHead('comp1');
+      helper.command.export();
+
+      // diverge locally and merge the incoming changes
+      helper.scopeHelper.getClonedWorkspace(wsBeforeDiverge);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.importComponent('comp1 --objects');
+      helper.command.merge('comp1 --auto-merge-resolve theirs');
+    });
+    it('should generate a snap-merge snap with two parents, the local and the remote', () => {
+      const lastVersion = helper.command.catComponent(`comp1@latest`);
+      expect(lastVersion.parents).to.have.lengthOf(2);
+      expect(lastVersion.parents).to.include(remoteHead);
+    });
+    it('should not import the gap between the common-snap and the remote head', () => {
+      // the gap snap is main-history. it already exists on the remote, so it is never pushed from
+      // here and is not needed for the three-way merge (which needs only the common-snap and the head)
+      expect(() => helper.command.catObject(gapSnap)).to.throw();
+    });
+    it('should export the merge-snap successfully', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+    it('bit log should show the full history including the gap snap', () => {
+      const log = helper.command.logParsed('comp1');
+      const hashes = log.map((logEntry) => logEntry.hash);
+      expect(hashes).to.include(gapSnap);
+      expect(hashes).to.include(remoteHead);
+    });
+  });
 });
