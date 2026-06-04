@@ -139,17 +139,20 @@ export class ImporterMain {
    * fetch lane's components and save them in the local scope.
    * once done, merge the lane object and save it as well.
    */
-  async fetchLaneComponents(lane: Lane, includeUpdateDependents = false) {
+  async fetchLaneComponents(lane: Lane) {
     // hidden lane.updateDependents are part of the lane's graph and the merge engine needs
     // their Version objects available locally to do per-component diverge checks. We always
-    // fetch the full set; the `includeUpdateDependents` flag now only controls server-side
-    // semantics around how the remote handles the updateDependents array, not whether to fetch.
+    // fetch the full set, so we must also pass `includeUpdateDependents: true` to importMany:
+    // the fetcher's `groupByLanes` routing relies on this flag to send these ids to the lane's
+    // scope (where the cascade snaps live) instead of each component's origin scope (which only
+    // holds main, not the lane-only cascade hash). Without it, cross-scope updateDependents fail
+    // with "component not found" because their origin scope doesn't have the lane snap.
     const ids = lane.toComponentIdsIncludeUpdateDependents();
     await this.scope.legacyScope.scopeImporter.importMany({
       ids,
       lane,
       reason: `for fetching lane ${lane.id()}`,
-      includeUpdateDependents,
+      includeUpdateDependents: true,
     });
     const { mergeLane } = await this.scope.legacyScope.sources.mergeLane(lane, true);
     const isRemoteLaneEqualsToMergedLane = lane.isEqual(mergeLane);
@@ -271,6 +274,10 @@ export class ImporterMain {
         ids: lane.toComponentIdsIncludeUpdateDependents(),
         lane,
         reason: `for fetching lane ${lane.id()}`,
+        // route the hidden updateDependents to the lane's scope (where their cascade snaps live).
+        // see the note in `fetchLaneComponents` — without this flag `groupByLanes` sends them to
+        // each component's origin scope, which doesn't have the lane-only cascade hash.
+        includeUpdateDependents: true,
       });
       const { mergeLane } = await this.scope.legacyScope.sources.mergeLane(lane, true);
       const isRemoteLaneEqualsToMergedLane = lane.isEqual(mergeLane);

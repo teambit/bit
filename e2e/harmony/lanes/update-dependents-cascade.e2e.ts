@@ -1105,4 +1105,78 @@ describe('local snap cascades updateDependents on the lane', function () {
       });
     });
   });
+
+  // ---------------------------------------------------------------------------------------------
+  // Scenario 20: importing a lane whose hidden updateDependent originates from a DIFFERENT scope
+  // than the lane. The cascade snap of that updateDependent lives in the lane's scope (where the
+  // bare-scope producer pushed it), NOT on the component's origin-scope main. The fetcher's
+  // `groupByLanes` routing must therefore send updateDependents to the lane's scope — otherwise it
+  // asks the origin scope for a lane-only hash it never had and the import dies with
+  // "component <updateDependent> was not found". Single-scope scenarios above can't catch this
+  // because lane.scope === the component's origin scope, so the misroute resolves to the same place.
+  // ---------------------------------------------------------------------------------------------
+  describe('scenario 20: import a lane with a cross-scope updateDependent', () => {
+    let anotherRemote: string;
+    let anotherRemotePath: string;
+    let comp2InUpdDep: string;
+    // the whole flow (incl. the fresh-workspace import) runs in `before` so any one `it` can be
+    // run in isolation with `.only`. Without the fix the import throws ComponentNotFound for the
+    // cross-scope updateDependent, failing this hook and surfacing the regression for every `it`.
+    before(async () => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const newScope = helper.scopeHelper.getNewBareScope();
+      anotherRemote = newScope.scopeName;
+      anotherRemotePath = newScope.scopePath;
+      // wire every scope to know every other scope.
+      helper.scopeHelper.addRemoteScope(anotherRemotePath);
+      helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, anotherRemotePath);
+
+      // comp2 -> comp3. comp3 stays on the lane's scope (remote); comp2 lives on anotherRemote and
+      // is the cross-scope updateDependent.
+      helper.fixtures.populateComponents(3, false, '', false);
+      helper.command.setScope(anotherRemote, 'comp2');
+      helper.command.linkAndRewire();
+      helper.command.compile();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild('comp3', '--skip-auto-snap --unmodified');
+      helper.command.export();
+
+      // seed comp2 (from anotherRemote) into lane.updateDependents and push it to the lane's scope.
+      const bareSnap = helper.scopeHelper.getNewBareScope('-bare-seed-updep');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareSnap.scopePath);
+      helper.scopeHelper.addRemoteScope(anotherRemotePath, bareSnap.scopePath);
+      await helper.snapping.snapFromScope(
+        bareSnap.scopePath,
+        [{ componentId: `${anotherRemote}/comp2`, message: 'cross-scope update-dependent' }],
+        { lane: `${helper.scopes.remote}/dev`, updateDependents: true, push: true }
+      );
+      const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+      comp2InUpdDep = lane.updateDependents[0] || '';
+
+      // fresh workspace: import the lane. This is the line that regressed.
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(anotherRemotePath);
+      helper.command.importLane('dev', '-x');
+    });
+
+    it('seeds comp2 from the other scope as a hidden updateDependent (precondition)', () => {
+      expect(comp2InUpdDep).to.include(`${anotherRemote}/comp2`);
+    });
+
+    it('the cross-scope updateDependent`s lane-only cascade snap is fetched into the local scope', () => {
+      const hash = comp2InUpdDep.split('@')[1];
+      expect(() => helper.command.catObject(hash)).to.not.throw();
+    });
+
+    it('the updateDependent stays hidden — only comp3 is in the workspace bitmap', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('comp3');
+      expect(bitMap).to.not.have.property('comp2');
+    });
+  });
 });

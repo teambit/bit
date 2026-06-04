@@ -312,6 +312,16 @@ export class ComponentMap {
     if (!deprecationConf) return false;
     return deprecationConf !== '-' && deprecationConf.deprecate === false;
   }
+  isInternal() {
+    const internalizeConf = this.config?.[Extensions.internalize];
+    if (!internalizeConf) return false;
+    return internalizeConf !== '-' && internalizeConf.internal;
+  }
+  isUninternalized() {
+    const internalizeConf = this.config?.[Extensions.internalize];
+    if (!internalizeConf) return false;
+    return internalizeConf !== '-' && internalizeConf.internal === false;
+  }
 
   sort() {
     this.files = sortBy(this.files, 'relativePath');

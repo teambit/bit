@@ -327,6 +327,18 @@ export class ScopeComponentsImporter {
       includeVersionHistory: true,
       reason: 'for missing history from main to the scope-lane',
     });
+    // Verify the refetch actually closed the gap. The refetch routes to the COMPONENT'S home
+    // scope; if the missing parent originated on a foreign lane scope (chained cross-scope
+    // forks), the home scope won't have it and the gap persists silently. Surface that case
+    // in the log so we can spot it instead of leaving a quietly-broken scope.
+    const stillMissing = compact(await mapSeries(missingHistory, (id) => this.importMissingHistoryOne(id)));
+    if (stillMissing.length) {
+      logger.warn(
+        `importMissingHistory: ${stillMissing.length}/${missingHistory.length} component(s) still have missing history ` +
+          `after refetch from home scope. Likely a chained cross-scope lane fork — the missing parent lives on a ` +
+          `foreign lane scope, not the component's home scope. Components: ${stillMissing.map((id) => id.toString()).join(', ')}`
+      );
+    }
   }
 
   /**
@@ -337,7 +349,16 @@ export class ScopeComponentsImporter {
   private async importMissingHistoryOne(id: ComponentID) {
     const modelComponent = await this.scope.getModelComponent(id);
     if (!modelComponent.head) return null; // doesn't exist on the remote.
-    const verHistory = await modelComponent.getAndPopulateVersionHistory(this.scope.objects, modelComponent.head);
+    let verHistory: VersionHistory;
+    try {
+      verHistory = await modelComponent.getAndPopulateVersionHistory(this.scope.objects, modelComponent.head);
+    } catch (err: any) {
+      // Lean-lane-scope: the head/parent Version object may be missing locally because lane
+      // export no longer pre-pulls main history into the lane scope. Signal "needs fetching"
+      // so the caller imports it from the component's home scope.
+      if (errorIsTypeOfMissingObject(err)) return id;
+      throw err;
+    }
     const { found, missing } = verHistory.getAllHashesFrom(modelComponent.head);
     if (missing?.length) {
       return id;

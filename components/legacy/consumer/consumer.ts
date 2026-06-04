@@ -353,6 +353,13 @@ export default class Consumer {
       componentFromModel.devPackageDependencies = sortObjectByKeys(componentFromModel.devPackageDependencies);
       componentFromModel.peerPackageDependencies = sortObjectByKeys(componentFromModel.peerPackageDependencies);
       sortOverrides(componentFromModel.overrides);
+      // normalize the order of the extensions. `Version.id()` (used for the hash comparison) serializes
+      // `extensionDependencies` - a getter derived from the order of `extensions` (extensionsBitIds). unlike the
+      // `extensions` config field, which id() already sorts via sortById(), this derived list is not normalized.
+      // so a mere reordering of extensions (e.g. the env aspect moving position) would otherwise make the
+      // component appear modified while "bit diff" shows no diff (it compares deps by identity, ignoring order).
+      version.extensions = version.extensions.sortById();
+      componentFromModel.extensions = componentFromModel.extensions.sortById();
     }
     function sortOverrides(overrides) {
       if (!overrides) return;
