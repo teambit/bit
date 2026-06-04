@@ -265,9 +265,10 @@ ensures components work independently before publishing, similar to how they'll 
 
 **Description**: list the capsules generated for this workspace
 
-| **Option** | **Option alias** | **Description** |
-| ---------- | :--------------: | --------------- |
-| `--json`   |       `-j`       | json format     |
+| **Option**     | **Option alias** | **Description**                                                                               |
+| -------------- | :--------------: | --------------------------------------------------------------------------------------------- |
+| `--json`       |       `-j`       | json format                                                                                   |
+| `--with-stats` |                  | include total cache size, orphan count, and stale aspect-version count (walks the full cache) |
 
 ### capsule create
 
@@ -298,6 +299,24 @@ with no args, only workspace's capsules are deleted
 | ----------------- | :--------------: | ------------------------------------------------- |
 | `--scope-aspects` |                  | delete scope-aspects capsules                     |
 | `--all`           |       `-a`       | delete all capsules for all workspaces and scopes |
+
+### capsule prune
+
+**Usage**: `capsule prune`
+
+**Description**: evict stale capsules from the global cache  
+workspace capsules are deleted unconditionally; aspect-version and scope capsules are deleted when their last-used marker is older than --older-than (default 30 days).  
+use --dry-run first to preview what would be removed.
+
+| **Option**              | **Option alias** | **Description**                                                                                                                                  |
+| ----------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--older-than <days>`   |                  | age threshold in days for aspect-version/scope capsule pruning (default 30)                                                                      |
+| `--keep-workspace-caps` |                  | skip workspace capsule deletion                                                                                                                  |
+| `--no-orphans`          |                  | don't delete capsules whose origin path no longer exists                                                                                         |
+| `--size-target <gb>`    |                  | after standard pruning, LRU-evict aspect-versions until total drops below this size (forces --with-sizes)                                        |
+| `--dry-run`             |                  | preview what would be removed without deleting                                                                                                   |
+| `--with-sizes`          |                  | compute byte sizes for the report (walks the full cache; slow on large caches). default: off — sizes shown as 0 but the prune itself is instant. |
+| `--json`                |       `-j`       | json format                                                                                                                                      |
 
 | **Option** | **Option alias** | **Description** |
 | ---------- | :--------------: | --------------- |
@@ -403,13 +422,14 @@ Runs lint, build, and status checks to catch dependency drift or broken builds e
 **Description**: Exports a feature lane to Bit Cloud when a Pull Request is opened or updated.  
 Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. Cleans up by switching back to main. Use in pull-request CI pipelines after tests and before deploy.
 
-| **Option**            | **Option alias** | **Description**                                                                         |
-| --------------------- | :--------------: | --------------------------------------------------------------------------------------- |
-| `--message <message>` |       `-m`       | If set, set it as the snap message, if not, try and grab from git-commit-message        |
-| `--lane <lane>`       |       `-l`       | If set, use as the lane name, if not available, grab from git-branch name               |
-| `--build`             |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI           |
-| `--strict`            |       `-s`       | Set to true to fail on warnings as well as errors, false (default) only fails on errors |
-| `--dry-run`           |       `-d`       | Run the full pipeline but skip exporting to remote (build runs only if --build is set)  |
+| **Option**            | **Option alias** | **Description**                                                                                                                |
+| --------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------------------ |
+| `--message <message>` |       `-m`       | If set, set it as the snap message, if not, try and grab from git-commit-message                                               |
+| `--lane <lane>`       |       `-l`       | If set, use as the lane name, if not available, grab from git-branch name                                                      |
+| `--build`             |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI                                                  |
+| `--strict`            |       `-s`       | Set to true to fail on warnings as well as errors, false (default) only fails on errors                                        |
+| `--dry-run`           |       `-d`       | Run the full pipeline but skip exporting to remote (build runs only if --build is set)                                         |
+| `--keep-lane`         |                  | Reuse the same remote lane across PR commits (preserves lane history and cloud UI edits) instead of recreating it on every run |
 
 ### ci merge
 
@@ -1251,6 +1271,27 @@ automatically imports components, compiles components, links to node_modules, an
 
 ---
 
+## internalize
+
+**Description**: mark components as internal to hide them by default in the UI  
+marks components as internal locally, then after snap/tag and export they become internal in the remote scope.  
+unlike "bit local-only", internal components are still versioned and exported - they are only hidden by default in the UI (workspace, scope and Bit Cloud).  
+use --revert to remove the internal mark, or --list to show the components currently marked as internal.
+
+`bit internalize [component-pattern]`
+
+| **Arg**             |                                                                                                                                                                                                                             **Description**                                                                                                                                                                                                                              |
+| ------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| `component-pattern` | component name, component id, component pattern, or relative directory path. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
+
+| **Option** | **Option alias** | **Description**                                                                                       |
+| ---------- | :--------------: | ----------------------------------------------------------------------------------------------------- |
+| `--revert` |       `-r`       | remove the internal mark from the matching components                                                 |
+| `--list`   |       `-l`       | list the components currently marked as internal                                                      |
+| `--json`   |       `-j`       | return the output as json (the internal components with --list, otherwise the affected component-ids) |
+
+---
+
 ## lane
 
 **Alias**: `l`  
@@ -1990,7 +2031,7 @@ to exclude, use '!'. e.g. 'ui/**, !ui/button'
 the matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch).
 
 to filter by a state or attribute, prefix the pattern with "$". e.g. '$deprecated', '$modified'.  
-list of supported states: [new, modified, deprecated, deleted, snappedOnMain, softTagged, codeModified, localOnly].  
+list of supported states: [new, modified, deprecated, deleted, internal, snappedOnMain, softTagged, codeModified, localOnly].  
 to filter by multi-params state/attribute, separate the params with ":", e.g. '$env:teambit.react/react'.  
 list of supported multi-params states: [env].  
 to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/\*\* AND $env:teambit.react/react'.
