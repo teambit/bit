@@ -315,9 +315,7 @@ note that a directory path selects the component in that directory and runs all 
     if (fileEntries.length < entries.length) {
       const nonFiles = entries.filter((entry) => !fileEntries.includes(entry));
       throw new BitError(
-        `unable to mix test-file paths with component patterns. the following are not existing files: ${nonFiles.join(
-          ', '
-        )}`
+        `unable to mix test-file paths with component patterns. the following are not files: ${nonFiles.join(', ')}`
       );
     }
     const componentsById: { [idStr: string]: Component } = {};
