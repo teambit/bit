@@ -270,6 +270,71 @@ describe('merge lanes - squash on diverged', function () {
     });
   });
 
+  describe('lane into main, diverged, --squash', () => {
+    let commonAncestor: string;
+    let headOnMain: string;
+    let headOnLane: string;
+    let mergeSnap: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      commonAncestor = helper.command.getHead('comp1');
+      helper.command.export();
+
+      // advance the lane independently of main
+      helper.command.createLane('dev');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // L1
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // L2
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // L3
+      headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.export();
+
+      // advance main independently — now main and dev are diverged from commonAncestor
+      helper.command.switchLocalLane('main');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // M1
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // M2
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // M3
+      headOnMain = helper.command.getHead('comp1');
+      helper.command.export();
+
+      // merge dev into main with --squash on a diverged history (pre-PR this threw)
+      helper.command.mergeLane('dev', '--squash --auto-merge-resolve theirs');
+      mergeSnap = helper.command.getHead('comp1');
+    });
+
+    it('merge snap on main should have a single parent pointing to the previous main head', () => {
+      const snap = helper.command.catComponent(`comp1@${mergeSnap}`);
+      expect(snap.parents).to.have.lengthOf(1);
+      expect(snap.parents[0]).to.equal(headOnMain);
+    });
+
+    it('merge snap should record squash metadata with the dropped lane head', () => {
+      const snap = helper.command.catComponent(`comp1@${mergeSnap}`);
+      expect(snap).to.have.property('squashed');
+      const prevParents: string[] = snap.squashed.previousParents || snap.squashed.previousParentsRefs || [];
+      expect(prevParents).to.include(headOnLane);
+    });
+
+    it('bit log on main should not throw', () => {
+      expect(() => helper.command.logParsed('comp1')).to.not.throw();
+    });
+
+    it('bit log on main should show the main chain + merge snap, not the lane intermediates', () => {
+      const log = helper.command.logParsed('comp1');
+      const hashes = log.map((l: any) => l.hash);
+      expect(hashes).to.include(commonAncestor);
+      expect(hashes).to.include(headOnMain);
+      expect(hashes).to.include(mergeSnap);
+      // lane snaps must not be reachable from main head's parent chain
+      expect(hashes).to.not.include(headOnLane);
+    });
+
+    it('exporting main after the merge should succeed', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+  });
+
   describe('sanity: squash on non-diverged (fast-forward) lane-to-lane merge', () => {
     let commonHead: string;
     let mergeSnap: string;
