@@ -1,1 +1,1 @@
-export { getBasicLog } from './basic-log';
+export { getBasicLog, getLogForSquash } from './basic-log';
