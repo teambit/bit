@@ -335,6 +335,103 @@ describe('merge lanes - squash on diverged', function () {
     });
   });
 
+  describe('lane into main, cross-scope, diverged, --squash with fresh consumer', () => {
+    let scopeB: string;
+    let scopeBPath: string;
+    let commonAncestor: string;
+    let headOnMain: string;
+    let intermediateLaneSnap1: string;
+    let intermediateLaneSnap2: string;
+    let headOnLane: string;
+    let mergeSnap: string;
+    let compFullId: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const newScope = helper.scopeHelper.getNewBareScope();
+      scopeB = newScope.scopeName;
+      scopeBPath = newScope.scopePath;
+      helper.scopeHelper.addRemoteScope(scopeBPath);
+      helper.scopeHelper.addRemoteScope(scopeBPath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopeBPath);
+
+      compFullId = `${helper.scopes.remote}/comp1`;
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      commonAncestor = helper.command.getHead('comp1');
+      helper.command.export(); // main → scope-a (default remote)
+
+      // dev lane lives on scope-b; advance it by 3 snaps (Case B: lane progresses by multiple)
+      helper.command.createLane('dev', `--scope ${scopeB} --fork-lane-new-scope`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // L1
+      intermediateLaneSnap1 = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // L2
+      intermediateLaneSnap2 = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // L3
+      headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.export('--fork-lane-new-scope');
+
+      // advance main on scope-a — now main and dev are diverged from commonAncestor
+      helper.command.switchLocalLane('main');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // M1
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // M2
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // M3
+      headOnMain = helper.command.getHead('comp1');
+      helper.command.export();
+
+      // diverged squash from main side: dev lives on scope-b, main on scope-a
+      helper.command.mergeLane(`${scopeB}/dev`, '--squash --auto-merge-resolve theirs');
+      mergeSnap = helper.command.getHead('comp1');
+      helper.command.export(); // merge snap → scope-a (main's home)
+    });
+
+    it('merge snap on main should have a single parent pointing to the previous main head', () => {
+      const snap = helper.command.catComponent(`comp1@${mergeSnap}`);
+      expect(snap.parents).to.have.lengthOf(1);
+      expect(snap.parents[0]).to.equal(headOnMain);
+    });
+
+    it('merge snap should record squash metadata pointing at the dropped lane head (L3)', () => {
+      const snap = helper.command.catComponent(`comp1@${mergeSnap}`);
+      expect(snap).to.have.property('squashed');
+      const prevParents: string[] = snap.squashed.previousParents || snap.squashed.previousParentsRefs || [];
+      expect(prevParents).to.include(headOnLane);
+    });
+
+    describe('fresh consumer imports comp1 from scope-a (no scope-b in remotes)', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        // intentionally only add scope-a — verify the consumer doesn't need scope-b
+        // to read comp1's history (i.e. lane intermediates were not shipped to scope-a)
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('comp1');
+      });
+
+      it('bit status should not throw', () => {
+        expect(() => helper.command.status()).to.not.throw();
+      });
+
+      it('bit log should not throw', () => {
+        expect(() => helper.command.logParsed(compFullId)).to.not.throw();
+      });
+
+      it('bit log should show common ancestor + main chain + merge snap', () => {
+        const log = helper.command.logParsed(compFullId);
+        const hashes = log.map((l: any) => l.hash);
+        expect(hashes).to.include(commonAncestor);
+        expect(hashes).to.include(headOnMain);
+        expect(hashes).to.include(mergeSnap);
+      });
+
+      it('bit log should NOT include the dev lane intermediates (they live only on scope-b)', () => {
+        const log = helper.command.logParsed(compFullId);
+        const hashes = log.map((l: any) => l.hash);
+        expect(hashes).to.not.include(intermediateLaneSnap1);
+        expect(hashes).to.not.include(intermediateLaneSnap2);
+        expect(hashes).to.not.include(headOnLane);
+      });
+    });
+  });
+
   describe('sanity: squash on non-diverged (fast-forward) lane-to-lane merge', () => {
     let commonHead: string;
     let mergeSnap: string;
