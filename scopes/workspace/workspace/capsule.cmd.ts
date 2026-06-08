@@ -5,7 +5,7 @@ import type { CapsuleList, IsolateComponentsOptions, IsolatorMain, PruneCapsules
 import { CAPSULE_ORIGIN_FILE } from '@teambit/isolator';
 import type { ScopeMain } from '@teambit/scope';
 import type { ConfigStoreMain } from '@teambit/config-store';
-import { CFG_CAPSULES_MAX_AGE_DAYS, CFG_CAPSULES_MAX_SIZE_GB } from '@teambit/legacy.constants';
+import { CFG_CAPSULES_MAX_AGE_DAYS } from '@teambit/legacy.constants';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
@@ -288,7 +288,6 @@ type PruneOpts = {
   olderThan?: number;
   keepWorkspaceCaps?: boolean;
   noOrphans?: boolean;
-  sizeTarget?: number;
   dryRun?: boolean;
   withSizes?: boolean;
   json?: boolean;
@@ -305,11 +304,6 @@ use --dry-run first to preview what would be removed.`;
     ['', 'older-than <days>', 'age threshold in days for aspect-version/scope capsule pruning (default 30)'],
     ['', 'keep-workspace-caps', 'skip workspace capsule deletion'],
     ['', 'no-orphans', "don't delete capsules whose origin path no longer exists"],
-    [
-      '',
-      'size-target <gb>',
-      'after standard pruning, LRU-evict aspect-versions until total drops below this size (forces --with-sizes)',
-    ],
     ['', 'dry-run', 'preview what would be removed without deleting'],
     [
       '',
@@ -362,12 +356,10 @@ use --dry-run first to preview what would be removed.`;
     // CLI flags win; otherwise fall back to user config so manual and auto-prune
     // behave consistently. Final fallback to defaults happens in `pruneCapsules`.
     const olderThanFromConfig = this.configStore.getConfig(CFG_CAPSULES_MAX_AGE_DAYS);
-    const sizeTargetFromConfig = this.configStore.getConfig(CFG_CAPSULES_MAX_SIZE_GB);
     return this.isolator.pruneCapsules({
       olderThanDays: toFiniteNumber(opts.olderThan) ?? toFiniteNumber(olderThanFromConfig),
       keepWorkspaceCaps: opts.keepWorkspaceCaps === true,
       includeOrphans: opts.noOrphans !== true,
-      sizeTargetGb: toFiniteNumber(opts.sizeTarget) ?? toFiniteNumber(sizeTargetFromConfig),
       dryRun: opts.dryRun === true,
       withSizes: opts.withSizes === true,
     });

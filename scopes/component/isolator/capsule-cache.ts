@@ -21,7 +21,6 @@ import { isFeatureEnabled, CAPSULE_AUTO_PRUNE } from '@teambit/harmony.modules.f
 import {
   CFG_CAPSULES_AUTO_PRUNE,
   CFG_CAPSULES_MAX_AGE_DAYS,
-  CFG_CAPSULES_MAX_SIZE_GB,
   CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR,
 } from '@teambit/legacy.constants';
 import type CapsuleList from './capsule-list';
@@ -49,13 +48,12 @@ export type PruneCapsulesOptions = {
   olderThanDays?: number;
   includeOrphans?: boolean;
   keepWorkspaceCaps?: boolean;
-  sizeTargetGb?: number;
   dryRun?: boolean;
   /**
    * Compute byte sizes for every entry being considered. When false, all `sizeBytes`
    * in the report are 0 and the cache walk skips the expensive recursive `lstat` pass —
    * deletion (rename-to-trash) is O(1) and runs in milliseconds even on multi-GB caches.
-   * Forced on when `sizeTargetGb` is set because that path needs sizes to enforce.
+   * Opt-in (via `bit capsule prune --with-sizes`) since the walk is slow on large caches.
    */
   withSizes?: boolean;
 };
@@ -257,14 +255,11 @@ export class CapsuleCache {
       await fs.outputFile(stampPath, '');
 
       // Guard against non-numeric/empty config (NaN) and negative values (which would
-      // invert the age cutoff / size target and wipe the whole cache).
+      // invert the age cutoff and wipe the whole cache).
       const olderThanDays = Math.max(0, toFiniteNumber(this.configStore.getConfig(CFG_CAPSULES_MAX_AGE_DAYS)) ?? 30);
-      const sizeTargetGb = Math.max(0, toFiniteNumber(this.configStore.getConfig(CFG_CAPSULES_MAX_SIZE_GB)) ?? 10);
 
-      this.logger.debug(
-        `[auto-prune] spawning detached child. olderThanDays=${olderThanDays}, sizeTargetGb=${sizeTargetGb}`
-      );
-      this.spawnDetachedAutoPrune(olderThanDays, sizeTargetGb);
+      this.logger.debug(`[auto-prune] spawning detached child. olderThanDays=${olderThanDays}`);
+      this.spawnDetachedAutoPrune(olderThanDays);
     } finally {
       if (claimed) {
         try {
@@ -284,22 +279,18 @@ export class CapsuleCache {
    * Recursion guard: the child also runs onBeforeExit → maybeAutoPrune, but it reads the
    * stamp file that we just wrote and bails out before re-spawning.
    */
-  private spawnDetachedAutoPrune(olderThanDays: number, sizeTargetGb: number): void {
+  private spawnDetachedAutoPrune(olderThanDays: number): void {
     const bitEntry = process.argv[1];
     if (!bitEntry) {
       this.logger.debug('[auto-prune] cannot detach: process.argv[1] is empty');
       return;
     }
     try {
-      const child = spawn(
-        process.execPath,
-        [bitEntry, 'capsule', 'prune', '--older-than', String(olderThanDays), '--size-target', String(sizeTargetGb)],
-        {
-          detached: true,
-          stdio: 'ignore',
-          windowsHide: true,
-        }
-      );
+      const child = spawn(process.execPath, [bitEntry, 'capsule', 'prune', '--older-than', String(olderThanDays)], {
+        detached: true,
+        stdio: 'ignore',
+        windowsHide: true,
+      });
       child.unref();
     } catch (err: any) {
       this.logger.debug(`[auto-prune] failed to spawn detached child: ${err.message}`);
@@ -507,21 +498,18 @@ export class CapsuleCache {
    *   - scope-aspects-root: never deleted as a whole; per-aspect-version children pruned by age
    *   - scope caps and unmarked dirs older than threshold: deleted
    *   - orphans (marker says originPath gone): deleted
-   *   - after the above, if sizeTargetGb given and size still exceeds it, evict oldest-first
    */
   async pruneCapsules(opts: PruneCapsulesOptions = {}): Promise<PruneCapsulesReport> {
     // Clamp to >= 0: a negative age would put the cutoff in the future (everything looks
-    // "too old" → whole cache deleted); a negative size target would force evicting
-    // everything. Both are almost certainly user error, so floor them at 0.
+    // "too old" → whole cache deleted), almost certainly user error, so floor it at 0.
     const olderThanDays = Math.max(0, opts.olderThanDays ?? 30);
-    const sizeTargetGb = opts.sizeTargetGb === undefined ? undefined : Math.max(0, opts.sizeTargetGb);
     const includeOrphans = opts.includeOrphans !== false;
     const keepWorkspaceCaps = opts.keepWorkspaceCaps === true;
     const dryRun = opts.dryRun === true;
     // Size accounting requires an expensive recursive lstat across the whole cache. Skip
-    // it by default so the foreground command returns in ms (deletes are O(1) renames);
-    // force on for size-target enforcement and when the caller asks for byte accounting.
-    const computeSizes = opts.withSizes === true || sizeTargetGb !== undefined;
+    // it by default so the command returns in ms (deletes are O(1) renames); opt in via
+    // `--with-sizes` when you want byte totals in the report.
+    const computeSizes = opts.withSizes === true;
     const ageCutoffMs = Date.now() - olderThanDays * ONE_DAY_MS;
     const datedDirName = this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR) || 'dated-capsules';
 
@@ -566,10 +554,6 @@ export class CapsuleCache {
         await this.pruneAspectsRootChildren(root.path, ageCutoffMs, dryRun, computeSizes, removed);
         continue;
       }
-    }
-
-    if (sizeTargetGb !== undefined) {
-      await this.applySizeTarget(sizeTargetGb, removed, dryRun);
     }
 
     const totalRemovedBytes = removed.reduce((sum, r) => sum + r.sizeBytes, 0);
@@ -690,65 +674,6 @@ export class CapsuleCache {
           dryRun
         );
       }
-    }
-  }
-
-  /**
-   * After the standard prune, if total still exceeds the target, keep evicting the
-   * oldest remaining aspect-version subdirs until under the limit.
-   */
-  private async applySizeTarget(
-    sizeTargetGb: number,
-    removed: PruneCapsulesReport['removed'],
-    dryRun: boolean
-  ): Promise<void> {
-    const targetBytes = sizeTargetGb * 1024 * 1024 * 1024;
-    const removedPaths = new Set(removed.map((r) => r.path));
-    // Re-walk what's left (one pass, with sizes) to find both the current total and the
-    // oldest aspect-version children to evict.
-    const roots = await this.listAllCapsuleRoots();
-    const totalBytes = roots.reduce((sum, r) => sum + r.sizeBytes, 0);
-    const aspectChildren: Array<{ path: string; lastUsedMs: number; sizeBytes: number; originPath?: string }> = [];
-    for (const root of roots) {
-      if (
-        root.kind !== 'scope-aspects-root' &&
-        !(root.kind === 'unmarked' && (await this.looksLikeAspectsRoot(root.path)))
-      ) {
-        continue;
-      }
-      let entries: fs.Dirent[] = [];
-      try {
-        entries = await fs.readdir(root.path, { withFileTypes: true });
-      } catch {
-        continue;
-      }
-      for (const entry of entries) {
-        if (!this.isPrunableSubdir(entry)) continue;
-        const childPath = path.join(root.path, entry.name);
-        if (removedPaths.has(childPath)) continue;
-        const { marker, lastUsedMs } = await this.readMarkerInfo(childPath);
-        const sizeBytes = await this.computeDirSize(childPath);
-        aspectChildren.push({ path: childPath, lastUsedMs, sizeBytes, originPath: marker?.originPath });
-      }
-    }
-    aspectChildren.sort((a, b) => a.lastUsedMs - b.lastUsedMs);
-    // In dry-run the standard-prune entries are still on disk (counted in totalBytes), so
-    // subtract them; in a real run they were already moved to trash and excluded from the walk.
-    let remainingBytes = totalBytes - (dryRun ? removed.reduce((s, r) => s + r.sizeBytes, 0) : 0);
-    for (const child of aspectChildren) {
-      if (remainingBytes <= targetBytes) break;
-      await this.recordRemoval(
-        removed,
-        {
-          path: child.path,
-          kind: 'scope-aspect',
-          reason: `size-target-${sizeTargetGb}gb`,
-          sizeBytes: child.sizeBytes,
-          originPath: child.originPath,
-        },
-        dryRun
-      );
-      remainingBytes -= child.sizeBytes;
     }
   }
 }
