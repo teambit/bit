@@ -73,6 +73,33 @@ describe('Jest Tester', function () {
       expect(output).to.have.string('build succeeded');
     });
   });
+  (IS_WINDOWS ? describe.skip : describe)('test a single spec file', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fixtures.populateComponents(2);
+      helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
+      helper.fs.outputFile('comp1/foo.spec.ts', specFilePassingFixture('foo describe', 'foo it'));
+      helper.fs.outputFile('comp2/comp2.spec.ts', specFilePassingFixture('comp2 describe', 'comp2 it'));
+    });
+    it('should run only the tests of the given file', () => {
+      const output = helper.command.test('comp1/foo.spec.ts', true);
+      expect(output).to.have.string('foo it');
+      expect(output).to.not.have.string('should pass');
+      expect(output).to.not.have.string('comp2 it');
+    });
+    it('should test only the component that owns the given file', () => {
+      const output = helper.command.test('comp1/foo.spec.ts', true);
+      expect(output).to.have.string('testing total of 1 components');
+    });
+    it('should support multiple test-file paths', () => {
+      const output = helper.command.test('comp1/foo.spec.ts comp1/comp1.spec.ts', true);
+      // with multiple test suites, Jest prints a PASS line per file rather than the individual test names
+      expect(output).to.have.string('foo.spec.ts');
+      expect(output).to.have.string('comp1.spec.ts');
+      expect(output).to.not.have.string('comp2.spec.ts');
+      expect(output).to.have.string('Tests:       2 passed, 2 total');
+    });
+  });
   describe('component with an errored test', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
