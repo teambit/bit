@@ -39,7 +39,7 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { ExpressMain } from '@teambit/express';
 import { ExpressAspect } from '@teambit/express';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { cloudSchema } from './cloud.graphql';
@@ -123,7 +123,7 @@ export class CloudMain {
 
   getNpmConfig(): Record<string, string> {
     try {
-      const output = execSync(`npm config list --json`, { encoding: 'utf8' });
+      const output = execFileSync('npm', ['config', 'list', '--json'], { encoding: 'utf8' });
       return JSON.parse(output);
     } catch (error) {
       throw new Error(`failed to get npm config. error: ${error}`);
@@ -214,9 +214,17 @@ export class CloudMain {
       return { configUpdates };
     }
 
-    const configToUpdate = configUpdates.replace(/\n/g, ' ');
-
-    execSync(`npm config set ${configToUpdate}`, { stdio: 'ignore' });
+    // Pass each key=value as a separate argv element via execFileSync (no shell), so an
+    // attacker-controlled org/username (e.g. from the login callback's query string) can never
+    // be interpreted as shell syntax. The surrounding quotes used in `configUpdates` are only
+    // needed for shell parsing, so they are dropped here — npm receives the literal value.
+    const npmConfigArgs = [
+      'config',
+      'set',
+      ...allOrgs.map((org) => `@${org}:registry=${registryUrlStr}`),
+      `//${registryUrl.host}/:_authToken=${authToken}`,
+    ];
+    execFileSync('npm', npmConfigArgs, { stdio: 'ignore' });
 
     return { configUpdates };
   }
