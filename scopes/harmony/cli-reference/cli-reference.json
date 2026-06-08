@@ -1007,11 +1007,6 @@
           ],
           [
             "",
-            "size-target <gb>",
-            "after standard pruning, LRU-evict aspect-versions until total drops below this size (forces --with-sizes)"
-          ],
-          [
-            "",
             "dry-run",
             "preview what would be removed without deleting"
           ],
