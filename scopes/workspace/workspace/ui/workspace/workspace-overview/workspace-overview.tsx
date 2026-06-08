@@ -1,5 +1,7 @@
 import React, { useContext, useMemo } from 'react';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
+// Legacy empty state — kept around as a fallback while the new blank state rolls out.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { EmptyWorkspace } from '@teambit/workspace.ui.empty-workspace';
 import compact from 'lodash.compact';
 import { ScopeID } from '@teambit/scopes.scope-id';
@@ -12,13 +14,12 @@ import { NamespaceHeader } from './namespace-header';
 import { HopeComponentCard } from './hope-component-card';
 import type { AggregationType } from './workspace-overview.types';
 import { WorkspaceFilterPanel } from './workspace-filter-panel';
+import { WorkspaceBlankState } from './workspace-blank-state';
 import styles from './workspace-overview.module.scss';
 
 export function WorkspaceOverview() {
   const workspace = useContext(WorkspaceContext);
   const { components, componentDescriptors } = workspace;
-
-  if (!components.length) return <EmptyWorkspace name={workspace.name} />;
 
   const { isMinimal } = useWorkspaceMode();
   const uniqueScopes = [...new Set(components.map((c) => c.id.scope))];
@@ -65,6 +66,8 @@ export function WorkspaceOverview() {
     filters
   );
 
+  if (!components.length) return <WorkspaceBlankState />;
+
   return (
     <div className={styles.container}>
       <WorkspaceFilterPanel
@@ -79,7 +82,7 @@ export function WorkspaceOverview() {
       />
 
       <div className={styles.content}>
-        {filteredCount === 0 && <EmptyWorkspace name={workspace.name} />}
+        {filteredCount === 0 && <WorkspaceBlankState />}
 
         {groups.map((group) => (
           <section key={group.name} className={styles.section}>
