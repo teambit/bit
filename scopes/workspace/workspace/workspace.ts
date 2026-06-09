@@ -2179,7 +2179,14 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return cacheDir;
   }
 
+  // Cached per Workspace so per-instance state (loadAspectsQueue,
+  // resolvedInstalledAspects, ...) survives across getter calls. Without this,
+  // every callsite got a fresh loader and its queue, which broke the
+  // `loadAspects` serialization queue — concurrent callers each saw an empty
+  // queue and ran in parallel, re-isolating shared envs repeatedly.
+  private _workspaceAspectsLoader?: WorkspaceAspectsLoader;
   getWorkspaceAspectsLoader(): WorkspaceAspectsLoader {
+    if (this._workspaceAspectsLoader) return this._workspaceAspectsLoader;
     let resolveEnvsFromRoots = this.config.resolveEnvsFromRoots;
     if (resolveEnvsFromRoots === undefined) {
       const resolveEnvsFromRootsConfig = this.configStore.getConfig(CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS);
@@ -2189,7 +2196,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       resolveEnvsFromRoots = defaultResolveEnvsFromRoots;
     }
 
-    const workspaceAspectsLoader = new WorkspaceAspectsLoader(
+    this._workspaceAspectsLoader = new WorkspaceAspectsLoader(
       this,
       this.scope,
       this.aspectLoader,
@@ -2203,7 +2210,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       this.config.resolveAspectsFromNodeModules,
       resolveEnvsFromRoots
     );
-    return workspaceAspectsLoader;
+    return this._workspaceAspectsLoader;
   }
 
   getCapsulePath() {
