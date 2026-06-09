@@ -394,12 +394,6 @@ export const CFG_USE_DATED_CAPSULES = 'use_dated_capsules';
 export const CFG_CACHE_LOCK_ONLY_CAPSULES = 'cache_lock_only_capsules';
 
 /**
- * Soft size limit (in GB) for the global capsules dir. When exceeded, the auto-prune trigger
- * runs an LRU eviction of aspect-version subdirs until the cache drops below this size.
- */
-export const CFG_CAPSULES_MAX_SIZE_GB = 'capsules_max_size_gb';
-
-/**
  * Age threshold (in days) for aspect-version and scope capsule pruning. Capsules whose
  * last-used marker is older than this are considered stale and removed. Workspace capsules
  * are deleted regardless of age.

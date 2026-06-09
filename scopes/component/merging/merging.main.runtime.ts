@@ -198,6 +198,7 @@ export class MergingMain {
     skipDependencyInstallation,
     detachHead,
     loose,
+    shouldSquash,
   }: {
     mergeStrategy: MergeStrategy;
     allComponentsStatus: ComponentMergeStatus[];
@@ -211,6 +212,7 @@ export class MergingMain {
     skipDependencyInstallation?: boolean;
     detachHead?: boolean;
     loose?: boolean;
+    shouldSquash?: boolean;
   }): Promise<ApplyVersionResults> {
     const consumer = this.workspace?.consumer;
     const legacyScope = this.scope.legacyScope;
@@ -242,7 +244,8 @@ export class MergingMain {
       otherLaneId,
       mergeStrategy,
       currentLane,
-      detachHead
+      detachHead,
+      shouldSquash
     );
 
     const allConfigMerge = compact(succeededComponents.map((c) => c.configMergeResult));
@@ -401,7 +404,8 @@ export class MergingMain {
     otherLaneId: LaneId,
     mergeStrategy: MergeStrategy,
     currentLane?: Lane,
-    detachHead?: boolean
+    detachHead?: boolean,
+    shouldSquash?: boolean
   ): Promise<ApplyVersionWithComps[]> {
     const componentsResults = await mapSeries(
       succeededComponents,
@@ -419,6 +423,7 @@ export class MergingMain {
           resolvedUnrelated,
           configMergeResult,
           detachHead,
+          shouldSquash,
         });
       }
     );
@@ -457,6 +462,7 @@ export class MergingMain {
     resolvedUnrelated,
     configMergeResult,
     detachHead,
+    shouldSquash,
   }: {
     currentComponent: ConsumerComponent | null | undefined;
     id: ComponentID;
@@ -468,6 +474,7 @@ export class MergingMain {
     resolvedUnrelated?: ResolveUnrelatedData;
     configMergeResult?: ConfigMergeResult;
     detachHead?: boolean;
+    shouldSquash?: boolean;
   }): Promise<ApplyVersionWithComps> {
     const legacyScope = this.scope.legacyScope;
     let filesStatus = {};
@@ -475,6 +482,9 @@ export class MergingMain {
       id: { name: id.fullName, scope: id.scope },
       head: remoteHead,
       laneId: otherLaneId,
+      // diverged components get squashed at snap-creation time (single-parent + squashed metadata)
+      // when shouldSquash is set. fast-forward squash is handled separately by squashSnaps().
+      shouldSquash: Boolean(shouldSquash && mergeResults),
     };
     id = currentComponent ? currentComponent.id : id;
     const modelComponent = await legacyScope.getModelComponent(id);

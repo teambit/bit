@@ -113,7 +113,7 @@ init [path] - initialize a Bit workspace in an existing project
 
 Testing & Quality
 artifacts <component-pattern> - view and download build artifacts
-test [component-pattern] - run component tests
+test [pattern-or-test-file...] - run component tests
 check-types [component-pattern] - validate TypeScript type correctness
 lint [component-pattern] - analyze component code for issues and style violations
 validate [component-pattern] - run type-checking, linting, and testing in sequence

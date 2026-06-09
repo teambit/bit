@@ -506,7 +506,7 @@ export class PreviewMain {
    * This should be used only for calculating the value on load.
    * otherwise, use the isBundledWithEnv function
    * @param component
-   * @returns
+   * @returns boolean
    */
   async calcIsBundledWithEnv(component: Component): Promise<boolean> {
     const envPreviewData = await this.calcPreviewDataFromEnv(component);
@@ -809,6 +809,9 @@ export class PreviewMain {
     const targetPath = join(targetDir, `${prefix}-${this.timestamp}.js`);
     // write only if link has changed (prevents triggering fs watches)
     if (this.writeHash.get(targetPath) !== hash) {
+      // the target dir is normally the compiler's dist dir, which already exists. for envs without a
+      // compiler (the dist dir was never created), make sure the dir exists before writing the link.
+      ensureDirSync(targetDir);
       writeFileSync(targetPath, contents);
       this.writeHash.set(targetPath, hash);
     }
