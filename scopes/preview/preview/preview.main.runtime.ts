@@ -506,7 +506,7 @@ export class PreviewMain {
    * This should be used only for calculating the value on load.
    * otherwise, use the isBundledWithEnv function
    * @param component
-   * @returns
+   * @returns boolean
    */
   async calcIsBundledWithEnv(component: Component): Promise<boolean> {
     const envPreviewData = await this.calcPreviewDataFromEnv(component);
