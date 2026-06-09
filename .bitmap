@@ -229,7 +229,7 @@
                         "@yarnpkg/core": "3.5.2",
                         "@yarnpkg/plugin-pack": "3.2.0",
                         "@types/react": "^19.0.0",
-                        "@types/react-dom": "^19.0.0"
+                        "@types/react-dom": "^19.0.0",
                         "graphql": "15.8.0",
                         "browserslist": "4.23.3",
                         "reflect-metadata": "0.1.13",
