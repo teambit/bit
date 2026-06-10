@@ -10,26 +10,21 @@ import { glob } from 'glob';
 import type { LaneComponent, Lane, ModelComponent } from '@teambit/objects';
 import { Ref } from '@teambit/objects';
 import { BitError } from '@teambit/bit-error';
+import { isValidPath } from '@teambit/legacy.utils';
 import { logger } from '@teambit/legacy.logger';
 
 type Lanes = { [laneName: string]: LaneComponent[] };
 
 /**
  * A remote lane's `scope` and `name` originate from a Lane object served by a remote scope, i.e.
- * untrusted input. They are used as path segments when composing the remote-lane refs file path,
- * so a value containing a path separator or `..` could escape the scope's refs directory and let a
- * malicious/compromised remote write an arbitrary file on import. Reject anything that is not safe
- * as a single path segment.
+ * untrusted input, and are used as path segments when composing the remote-lane refs file path. A
+ * traversal shape there could escape the scope's refs directory and let a malicious/compromised
+ * remote write an arbitrary file on import. `isValidPath` blocks the traversal shapes (`..`/`.`,
+ * absolute, backslash, NUL); the extra `/` check enforces the single-segment invariant (isValidPath
+ * legitimately allows `/` for its nested-file-path callers). Mirrors `Scope.getPendingDirPath`.
  */
 function assertValidRemoteLaneSegment(value: string, kind: 'lane scope' | 'lane name'): void {
-  if (
-    typeof value !== 'string' ||
-    value === '..' ||
-    value.includes('/') ||
-    value.includes('\\') ||
-    value.includes('\0') ||
-    path.isAbsolute(value)
-  ) {
+  if (!isValidPath(value) || value.includes('/')) {
     throw new BitError(
       `invalid ${kind} "${value}" received from a remote; refusing to write the remote-lane ref outside the scope directory`
     );
