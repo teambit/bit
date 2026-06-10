@@ -63,7 +63,7 @@ export class MdxEnv implements Environment {
     const mdxDeps = {
       dependencies: {
         '@teambit/mdx.ui.mdx-scope-context': '1.0.0',
-        '@mdx-js/react': '1.6.22',
+        '@mdx-js/react': '^3.1.1',
       },
     };
     return merge(this.react.reactEnv.getDependencies(), mdxDeps);
