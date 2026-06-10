@@ -19,14 +19,16 @@ type Lanes = { [laneName: string]: LaneComponent[] };
  * A remote lane's `scope` and `name` originate from a Lane object served by a remote scope, i.e.
  * untrusted input, and are used as path segments when composing the remote-lane refs file path. A
  * traversal shape there could escape the scope's refs directory and let a malicious/compromised
- * remote write an arbitrary file on import. `isValidPath` blocks the traversal shapes (`..`/`.`,
- * absolute, backslash, NUL); the extra `/` check enforces the single-segment invariant (isValidPath
- * legitimately allows `/` for its nested-file-path callers). Mirrors `Scope.getPendingDirPath`.
+ * remote write an arbitrary file on import. `value` is typed `unknown` because it comes from a
+ * JSON-deserialized remote object and is not guaranteed to be a string at runtime. `isValidPath`
+ * blocks the traversal shapes (`..`/`.` segments, absolute, backslash, NUL, empty); the extra `/`
+ * check enforces the single-segment invariant (isValidPath legitimately allows `/` for its
+ * nested-file-path callers). Mirrors `Scope.getPendingDirPath`.
  */
-function assertValidRemoteLaneSegment(value: string, kind: 'lane scope' | 'lane name'): void {
-  if (!isValidPath(value) || value.includes('/')) {
+function assertValidRemoteLaneSegment(value: unknown, kind: 'lane scope' | 'lane name'): void {
+  if (typeof value !== 'string' || !isValidPath(value) || value.includes('/')) {
     throw new BitError(
-      `invalid ${kind} "${value}" received from a remote; refusing to write the remote-lane ref outside the scope directory`
+      `invalid ${kind} "${String(value)}" received from a remote; refusing to write the remote-lane ref outside the scope directory`
     );
   }
 }
