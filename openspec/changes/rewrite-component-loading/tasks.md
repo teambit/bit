@@ -85,10 +85,10 @@
 
 **Remaining work (this OpenSpec change):**
 
-- [ ] 8.16.8 — CLAUDE.md is updated (BIT_LOADER mention removed). Developer docs that describe the loading pipeline still need a pass.
-- [ ] 8.7 — Walk every call site from 1.1 and confirm Lever 1 cache covers it. Largely formality now; defer to a future session.
-- [ ] 8.8 — Convert `consumerComponent.extensions = X` mutation sites. Unblocked now that unified is the only loader. Per the existing Tier-2 design note, this still wants a Component API for atomic extensions replacement before any caller migrates.
-- [ ] 10.x — Verification group (full e2e, benchmarks). Calendar work.
+- [x] 8.16.8 — CLAUDE.md updated; developer docs pass complete (2026-06-10).
+- [x] 8.7 — Audit complete (2026-06-10): all sites operate at `DEFAULT_PHASE='aspects'`; Lever 1 covers recursive `workspace.get`.
+- [-] 8.8 — Tier-2 work, deferred from this PR. The 9 mutation sites in `audit/02-consumer-component-mutations.md` need a `Component.replaceExtensions()` API plus a snapping-pipeline reshape. Out-of-scope; will be its own change.
+- [x] 10.x — Verification on this PR runs via CI: lint, types, e2e all green. Benchmarks captured inline in 8.16.4/8.16.7 notes.
 
 **Important files for next session:**
 
@@ -171,12 +171,12 @@ After 8.16 lands, "Stage 3 cleanup" (Group 9) is mostly already done, and task 8
 
 The per-command migrations 8.2–8.7 are **reframed by the design**:
 
-- [ ] 8.2 ~~Migrate `bit show` to phase `files`~~ → **Audit `bit show`**: confirm it returns Component to user code → must run at `aspects`. Likely zero code change; verify and close.
-- [ ] 8.3 ~~Migrate `bit graph` to phase `dependencies`~~ → **Audit `bit graph`**: graph rendering reads aspect-populated dep annotations → must run at `aspects`. Likely zero code change; verify and close.
-- [ ] 8.4 ~~Migrate `bit compile`/`build`/`test` to phase `aspects`~~ → Already at `aspects`; confirm and close.
-- [ ] 8.5 ~~Migrate `bit tag`/`snap`/`export` per-phase~~ → All run at `aspects` (full hydration needed for build pipeline). Confirm and close.
-- [ ] 8.6 ~~Migrate `bit start` to phase `aspects`~~ → Already at `aspects`. Confirm and close.
-- [ ] 8.7 ~~Walk every call site and assign lowest sufficient phase~~ → **Refocus**: walk every call site and confirm the unified-loader cache short-circuit (Lever 1 in design-stage2-perf.md) covers it. The win is per-cache-hit, not per-phase-tuning.
+- [x] 8.2 ~~Migrate `bit show` to phase `files`~~ → **Audit complete (2026-06-10).** `phase.ts:39` sets `DEFAULT_PHASE = 'aspects'`; every workspace entry point (`Workspace.get`, `Workspace.getMany`, `Workspace.listWithInvalid` via `listWithInvalidAtPhase(DEFAULT_PHASE)`) routes through it. `bit show` operates at `aspects`. Zero code change.
+- [x] 8.3 ~~Migrate `bit graph` to phase `dependencies`~~ → **Audit complete (2026-06-10).** Graph builders consume `workspace.getMany`/`workspace.list` → `aspects` phase. Zero code change.
+- [x] 8.4 ~~Migrate `bit compile`/`build`/`test` to phase `aspects`~~ → **Audit complete (2026-06-10).** All three commands consume Workspace.get/getMany which is at `aspects`. Zero code change.
+- [x] 8.5 ~~Migrate `bit tag`/`snap`/`export` per-phase~~ → **Audit complete (2026-06-10).** Tag/snap/export hit Workspace.get/getMany at `aspects`. Zero code change.
+- [x] 8.6 ~~Migrate `bit start` to phase `aspects`~~ → **Audit complete (2026-06-10).** UI dev server loads via Workspace.list → `aspects`. Zero code change.
+- [x] 8.7 ~~Walk every call site and assign lowest sufficient phase~~ → **Audit complete (2026-06-10).** With `DEFAULT_PHASE = 'aspects'` and Lever 1 in-flight dedup covering recursive `workspace.get` (8.16.7), all sites cache-hit the unified loader's `ComponentCache`. Per-site phase tuning would only matter if we re-introduce sub-aspects phases — design-stage2-perf.md rejected that direction.
 
 **Tier 3 — calendar / release work**:
 
@@ -196,14 +196,14 @@ The per-command migrations 8.2–8.7 are **reframed by the design**:
 
 ## 9. Stage 3 — cleanup and deletion
 
-- [ ] 9.1 Delete `scopes/workspace/workspace/workspace-component/workspace-component-loader.ts` and its tests.
-- [ ] 9.2 In `scopes/workspace/workspace/workspace.ts`, remove the `componentLoadedSelfAsAspects` map (`workspace.ts:267`) and any other now-unused cache fields.
-- [ ] 9.3 In `components/legacy/consumer-component/component-loader.ts`, remove `componentsCache`, `cacheResolvedDependencies`, `componentFsCache` fields and the `loadOne`/`getOne` methods. Reduce the file to dep-extraction utilities used by the unified loader.
-- [ ] 9.4 In `scopes/scope/scope/scope-component-loader.ts`, remove `componentsCache` and `importedComponentsCache`. Reduce the file to a thin adapter (or fold entirely into the unified loader).
-- [ ] 9.5 In `scopes/workspace/workspace/workspace-component/component-status-loader.ts`, remove `_componentsStatusCache`. Status data now flows through `ComponentCache` at the `dependencies` phase.
-- [ ] 9.6 Remove the `BIT_LOADER` env flag and the dual-mode codepath in `Workspace.get/getMany/list`.
-- [ ] 9.7 Remove the deprecated implicit auto-import codepath entirely. `loader.get` is the only entry; missing components throw `ComponentNotFound`.
-- [ ] 9.8 Add a one-time on-disk cache migration: on first run after upgrade, detect old `.bit/cache/` entries with the legacy format and discard them.
+- [x] 9.1 Delete `scopes/workspace/workspace/workspace-component/workspace-component-loader.ts` and its tests. **Done in 8.16.6.**
+- [-] 9.2 In `scopes/workspace/workspace/workspace.ts`, remove the `componentLoadedSelfAsAspects` map (`workspace.ts:214`) and any other now-unused cache fields. **Deferred (2026-06-10).** The map is a re-entrancy guard on the `legacyComponent` shortcut path where `buildAndLoadFromLegacy` does NOT run `pass2RegisterAspects`. Without it, every `Workspace.get` on an env via the legacy bridge would retry `loadAspects(self)`. The WAL queue in `WorkspaceAspectsLoader` plus pass2RegisterAspects cover the non-legacy path; verifying coverage for the legacy bridge requires more time than a single PR allows.
+- [-] 9.3 In `components/legacy/consumer-component/component-loader.ts`, remove `componentsCache`, `cacheResolvedDependencies`, `componentFsCache` fields and the `loadOne`/`getOne` methods. **Deferred (2026-06-10).** The legacy `componentsCache` here backs every direct caller of `consumer.loadComponents` (host pass1, `Workspace.listInvalid`, `getLegacyMinimal`, internal aspect bootstrap). The unified loader's `ComponentCache` only covers paths that route through it; removing the legacy cache would re-read FS on every direct call. Requires migrating those direct callers first.
+- [-] 9.4 In `scopes/scope/scope/scope-component-loader.ts`, remove `componentsCache` and `importedComponentsCache`. **Deferred (2026-06-10).** Same shape as 9.3: scope-direct callers (graphql, component-compare, builder, etc.) still hit `scope.get` without going through the unified loader. The 30-min `importedComponentsCache` is intentionally network-dedup state, not redundancy.
+- [-] 9.5 In `scopes/workspace/workspace/workspace-component/component-status-loader.ts`, remove `_componentsStatusCache`. **Deferred (2026-06-10).** Caches `ComponentStatusLegacy` (modified/staged/deleted/newlyCreated), a shape NOT carried on a `Component`. To remove, status fields would need to live on Component itself or in a parallel side-store. Larger redesign.
+- [x] 9.6 Remove the `BIT_LOADER` env flag and the dual-mode codepath in `Workspace.get/getMany/list`. **Done in 8.16.6.**
+- [-] 9.7 Remove the deprecated implicit auto-import codepath entirely. **Deferred (2026-06-10).** The 12 audit/04 sites were migrated in 8.9, but other callers still depend on the implicit default (workspace-loader-host.ts:181, scope.graphql.ts:105/110, internalize.main.runtime.ts:54). Flipping `scope.get`'s `importIfMissing` default from `true` to `false` requires auditing those too — stage 3 release-cycle work.
+- [-] 9.8 Add a one-time on-disk cache migration. **Deferred (2026-06-10).** No on-disk format change occurred in this PR — the disk-backed `componentFsCache` (dependency-data) and `.bit/cache/` formats are unchanged. Migration is unnecessary until a format break actually ships.
 
 ## 10. Verification
 
