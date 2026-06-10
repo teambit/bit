@@ -1,26 +1,42 @@
-import type { Environment } from '@teambit/envs';
+import type { Environment, EnvContext } from '@teambit/envs';
 import { merge } from 'lodash';
 import type { ReactMain } from '@teambit/react';
 import type { Compiler, CompilerMain } from '@teambit/compiler';
+import { MDXMultiCompiler } from '@teambit/mdx.compilers.mdx-multi-compiler';
 
 export const MdxEnvType = 'mdx';
 
 export class MdxEnv implements Environment {
   constructor(
     private react: ReactMain,
-    private mdxCompiler: Compiler,
-    private compiler: CompilerMain
+    private compiler: CompilerMain,
+    private envContext: EnvContext
   ) {}
 
   icon = 'https://static.bit.dev/extensions-icons/mdx-icon-small.svg';
 
+  private _mdxCompiler?: Compiler;
+
+  /**
+   * lazily create the MDX compiler. instantiating it loads `@teambit/mdx.compilers.mdx-multi-compiler`,
+   * which pulls in `@mdx-js/mdx` and its large transitive tree. creating it on-demand (only when a
+   * compiler is actually needed) keeps these out of the bit bootstrap - see
+   * e2e/performance/filesystem-read.e2e.ts.
+   */
+  private getMdxCompiler(): Compiler {
+    if (!this._mdxCompiler) {
+      this._mdxCompiler = MDXMultiCompiler.from({})(this.envContext);
+    }
+    return this._mdxCompiler;
+  }
+
   getCompiler() {
-    return this.mdxCompiler;
+    return this.getMdxCompiler();
   }
 
   getBuildPipe() {
     return [
-      this.compiler.createTask('MDXCompiler', this.mdxCompiler),
+      this.compiler.createTask('MDXCompiler', this.getMdxCompiler()),
       ...this.react.reactEnv.createBuildPipeWithoutCompiler(),
     ];
   }

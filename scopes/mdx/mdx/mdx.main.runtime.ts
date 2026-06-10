@@ -17,7 +17,6 @@ import type { ReactEnv, ReactMain } from '@teambit/react';
 import { ReactAspect } from '@teambit/react';
 import type { GeneratorMain } from '@teambit/generator';
 import { GeneratorAspect } from '@teambit/generator';
-import { MDXMultiCompiler } from '@teambit/mdx.compilers.mdx-multi-compiler';
 import { MDXAspect } from './mdx.aspect';
 import { MDXDependencyDetector } from './mdx.detector';
 import { MDXDocReader } from './mdx.doc-reader';
@@ -79,9 +78,8 @@ export class MDXMain {
     const mdx = new MDXMain();
 
     const envContext = new EnvContext(ComponentID.fromString(MDXAspect.id), loggerAspect, workerMain, harmony);
-    const mdxCompiler = MDXMultiCompiler.from({})(envContext);
 
-    const mdxEnv = envs.merge<MdxEnv, ReactEnv>(new MdxEnv(react, mdxCompiler, compiler), react.reactEnv);
+    const mdxEnv = envs.merge<MdxEnv, ReactEnv>(new MdxEnv(react, compiler, envContext), react.reactEnv);
 
     envs.registerEnv(mdxEnv);
     depResolver.registerDetector(new MDXDependencyDetector(config.extensions, loggerAspect.createLogger(MDXAspect.id)));
