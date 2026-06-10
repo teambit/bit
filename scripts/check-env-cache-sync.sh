@@ -54,7 +54,10 @@ EXISTING_KEYS=$(grep -oE 'core-aspect-env-v[0-9.]+-v[0-9]+' "$CONFIG_FILE" | sor
 if [ "$FIX" = true ]; then
   # Rewrite only the version segment, keeping each key's -v{BUMP} suffix intact,
   # so the manual cache-bust counter can never be dropped by accident.
-  TMP=$(mktemp)
+  # Create the temp file next to the target (explicit template for BSD/macOS
+  # portability) so the final mv is an atomic same-filesystem rename.
+  TMP=$(mktemp "${CONFIG_FILE}.XXXXXX")
+  trap 'rm -f "$TMP"' EXIT
   sed -E "s/core-aspect-env-v[0-9.]+-v([0-9]+)/core-aspect-env-v${CORE_ASPECT_ENV_VERSION}-v\1/g" "$CONFIG_FILE" > "$TMP"
   mv "$TMP" "$CONFIG_FILE"
 
