@@ -55,6 +55,14 @@ type ConsumerProps = {
 const BITMAP_HISTORY_DIR_NAME = 'bitmap-history';
 const BITMAP_HISTORY_METADATA_FILE_NAME = 'bitmap-history-metadata.txt';
 
+function isDirectory(dirPath: string): boolean {
+  try {
+    return fs.statSync(dirPath).isDirectory();
+  } catch {
+    return false; // path doesn't exist (or isn't accessible)
+  }
+}
+
 export default class Consumer {
   projectPath: PathOsBasedAbsolute;
   created: boolean;
@@ -423,7 +431,10 @@ export default class Consumer {
   static _getScopePath(projectPath: PathOsBasedAbsolute, noGit: boolean): PathOsBasedAbsolute {
     const gitDirPath = path.join(projectPath, DOT_GIT_DIR);
     let resolvedScopePath = path.join(projectPath, BIT_HIDDEN_DIR);
-    if (!noGit && fs.existsSync(gitDirPath) && !fs.existsSync(resolvedScopePath)) {
+    // only a real ".git" directory hosts the embedded scope at ".git/bit". in a git worktree or
+    // submodule ".git" is a pointer FILE, so fall back to a standalone ".bit" inside the workspace
+    // (same as a non-git workspace) instead of composing an invalid ".git/bit" path.
+    if (!noGit && isDirectory(gitDirPath) && !fs.existsSync(resolvedScopePath)) {
       resolvedScopePath = path.join(gitDirPath, BIT_GIT_DIR);
     }
     return resolvedScopePath;
