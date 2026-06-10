@@ -28,7 +28,7 @@ type Lanes = { [laneName: string]: LaneComponent[] };
 function assertValidRemoteLaneSegment(value: unknown, kind: 'lane scope' | 'lane name'): void {
   if (typeof value !== 'string' || !isValidPath(value) || value.includes('/')) {
     throw new BitError(
-      `invalid ${kind} ${JSON.stringify(value)} received from a remote; refusing to write the remote-lane ref outside the scope directory`
+      `invalid ${kind} ${JSON.stringify(value)} received from a remote; refusing to use it as a remote-lane ref path outside the scope directory`
     );
   }
 }
