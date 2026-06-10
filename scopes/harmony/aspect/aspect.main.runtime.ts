@@ -89,7 +89,7 @@ export class AspectMain {
   }
 
   private async getAspectNamesForComponent(id: ComponentID): Promise<AspectSource[]> {
-    const componentFromScope = await this.workspace.scope.get(id);
+    const componentFromScope = await this.workspace.scope.getOrImport(id);
     const { beforeMerge } = await this.workspace.componentExtensions(id, componentFromScope);
     const aspectSources: AspectSource[] = [];
     beforeMerge.forEach((source) => {
@@ -168,7 +168,7 @@ export class AspectMain {
     if (typeof id === 'string') {
       id = await this.workspace.resolveComponentId(id);
     }
-    const componentFromScope = await this.workspace.scope.get(id);
+    const componentFromScope = await this.workspace.scope.getOrImport(id);
     const { extensions, beforeMerge } = await this.workspace.componentExtensions(id, componentFromScope);
     const component = await this.workspace.get(id);
     return {

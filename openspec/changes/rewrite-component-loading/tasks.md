@@ -1,0 +1,215 @@
+## 1. Pre-work and audit
+
+- [x] 1.1 Enumerate every call site of `workspace.get`, `workspace.getMany`, `workspace.list`, `workspace.listWithInvalid`, `workspace.listInvalid` across `scopes/`, `components/`, and `e2e/`. Record file:line and the load shape each caller actually needs (identity / files / dependencies / extensions / aspects). → `audit/01-call-sites.md`
+- [x] 1.2 Enumerate every site that mutates `consumerComponent.extensions = X` or otherwise mutates a `ConsumerComponent` after load. Document each in a migration checklist. → `audit/02-consumer-component-mutations.md`
+- [x] 1.3 Enumerate every cache touched today (the 11+ listed in `design.md` Context). For each, confirm: where reads happen, where writes happen, what triggers invalidation. Output as a table. → `audit/03-caches.md`
+- [x] 1.4 Identify the ~6 sites that rely on the implicit `ScopeComponentLoader.get` auto-import. List them in the migration checklist with the explicit replacement they should call. → `audit/04-auto-import-sites.md` (found 12 sites, not 6)
+- [x] 1.5 Capture baseline performance numbers: time `bit status`, `bit list`, `bit show <id>`, `bit compile <id>` on a 500-component sample workspace. Record in a benchmark file under `openspec/changes/rewrite-component-loading/`. → `audit/05-benchmarks-baseline.md` (used bit6 self-workspace at 311 components; `bit compile` deferred due to outdated remote objects)
+
+## 2. Define the public types and event surface
+
+- [x] 2.1 In `scopes/component/component-loader/`, add `phase.ts` exporting the `Phase` type (`'identity' | 'files' | 'dependencies' | 'extensions' | 'aspects'`) and a `phaseRank(phase): number` helper.
+- [x] 2.2 In the same package, add `load-events.ts` defining the `LoadEvent` discriminated union (`load:start`, `load:phase:start`, `load:component`, `load:phase:end`, `load:end`) and a typed `LoadEventEmitter` class wrapping Node's `EventEmitter`.
+- [x] 2.3 Add a `ComponentNotFound` error class with `missingIds: ComponentID[]` to the same package. Export from the package index.
+- [x] 2.4 Add `Component.loadedPhase: Phase` field (and getter) to `scopes/component/component/component.ts`. Default value `'identity'` for newly constructed instances. (Type aliased locally as `LoadedPhase` to avoid `@teambit/component` ↔ `@teambit/component-loader` circular dependency; canonical `Phase` declaration remains in `@teambit/component-loader/phase.ts`.)
+
+## 3. Build the unified `ComponentCache`
+
+- [x] 3.1 In `scopes/component/component-loader/`, create `component-cache.ts` with a `ComponentCache` class. Internal storage: `Map<string, CacheEntry>` keyed by `${componentId}::${phase}`. (Wraps existing `LRUCacheAdapter` from `@teambit/harmony.modules.in-memory-cache` to reuse battle-tested LRU; key shape preserved.)
+- [x] 3.2 Implement `getHashInputs(phase, ctx): string` that composes the hash inputs documented in design Decision 2 (file mtimes, `.bitmap` hash, `workspace.jsonc` hash where applicable). Make the input set per-phase explicit and unit-tested. → `hash-inputs.ts` (`v1` version prefix lets us bust all hashes if the format changes; throws if the loader supplies an incomplete context for the requested phase).
+- [x] 3.3 Implement `cache.get(id, phase)`: validate stored hash against current inputs; return entry on match, undefined on stale. (Caller supplies `currentHash`; cache compares for equality only.)
+- [x] 3.4 Implement `cache.set(id, phase, component)`: compute hash and store. (Hash is computed by the caller via `getHashInputs` and passed in — keeps the cache pure storage.)
+- [x] 3.5 Implement `cache.invalidate(target)`: handle `ComponentID`, `ComponentID[]`, `'all'`, `{ phase }`. (Returns count of entries deleted.)
+- [x] 3.6 Wire LRU eviction at the same size limit used by today's `createInMemoryCache(maxSize: getMaxSizeForComponents())`. (Default `maxSize` from same config key, `CFG_CACHE_MAX_ITEMS_COMPONENTS`, fallback 500.)
+- [x] 3.7 Unit tests: hit, stale-on-file-change, stale-on-bitmap-change, invalidate-one, invalidate-all, invalidate-phase, eviction. → `component-cache.spec.ts` (16 tests) + `hash-inputs.spec.ts` (10 tests). All 26 pass via `bit6 test`.
+
+## 4. Build the unified `ComponentLoader` service
+
+- [x] 4.1 In `scopes/component/component-loader/`, create `unified-component-loader.ts` exporting `UnifiedComponentLoader`. Constructor takes the workspace, scope, dependency-resolver, aspect-loader, and the `ComponentCache` and `LoadEventEmitter`. **Architectural call:** to avoid `@teambit/component-loader` ↔ `@teambit/workspace` circular package dependency, the loader takes a `LoaderHost` interface (in `loader-host.ts`) that the workspace adapts itself to, instead of taking the `Workspace` class directly. The host abstraction also enables stages 1–3 to progressively move logic out of `WorkspaceComponentLoader` without rewriting it all at once.
+- [~] 4.2 Implement private `loadIdentity(id)` — **delegated to host** (`LoaderHost.loadAtPhase(id, 'identity')`) during stage 1; the host wraps existing bitmap reading. Internalizing this into the loader is stage 2/3 work.
+- [~] 4.3 Implement private `loadFiles(component)` — **delegated to host** (`loadAtPhase(id, 'files')`). Direct-to-harmony construction (no `ConsumerComponent` round-trip) is the host implementation's responsibility; tracked separately.
+- [~] 4.4 Implement private `loadDependencies(component)` — **delegated to host** (`loadAtPhase(id, 'dependencies')`). Re-using the legacy dep-extraction routines remains the plan; happens inside the host.
+- [~] 4.5 Implement private `loadExtensions(component)` — **delegated to host** (`loadAtPhase(id, 'extensions')`). Port of `executeLoadSlot` becomes the host's stage-2 responsibility.
+- [~] 4.6 Implement private `loadAspects(component)` — **delegated to host** (`loadAtPhase(id, 'aspects')`). Component-as-aspect logic stays in the host until stage 3.
+- [x] 4.7 Implement public `get(id, opts)`. Delegates to `getMany([id], opts, { throwOnMissing: true })`; returns the single component or throws `ComponentNotFound`.
+- [x] 4.8 Implement public `getMany(ids, opts)`: two-pass — pass 1 cache lookups (cached entries emit `load:component cached=true` immediately), pass 2 parallel host loads bracketed by a single `load:phase:start`/`load:phase:end`. Custom `runWithConcurrency` worker pool (default 16). All events share a `callId`.
+- [x] 4.9 Implement public `listIds(filter?)`: `host.listBitmapIds()` — no `Component` construction. `filter?` parameter deferred (no callers use it today; revisit in stage 2 migration).
+- [x] 4.10 Implement public `list(filter?, opts)`: `getMany(this.listIds(), opts, { throwOnMissing: false })`. Missing IDs returned in `result.missing` rather than throwing.
+- [x] 4.11 Implement public `invalidate(target)`: forwards to `ComponentCache.invalidate`, emits a debug log with the count of entries removed.
+- [x] 4.12 Implement phase-upgrade-on-access via `loader.ensurePhase(component, phase)`. Idempotent when already at or above; debug-logs every upgrade so we can track callers that picked too-low defaults. Per `design.md` open question: chose explicit `ensurePhase` over hidden auto-upgrade-on-property-access — predictable, instrumentable, no proxy/getter magic on `Component`.
+
+## 5. Wire the loader into the workspace
+
+- [x] 5.1 In `scopes/workspace/workspace/workspace.ts`, instantiate `UnifiedComponentLoader` in the workspace constructor. Wire the `LoadEventEmitter` to a public `Workspace.loadEvents` field. Also added `WorkspaceLoaderHost` adapter under `scopes/workspace/workspace/workspace-component/workspace-loader-host.ts` that implements the `LoaderHost` interface against the existing workspace machinery.
+- [x] 5.2 Add a `BIT_LOADER` env-flag check (`Workspace.useNewLoader()`). **Stage-1 routing is narrower than originally planned**: only `Workspace.listWithInvalidAtPhase` (and via it, `listWithInvalid`) routes through the unified loader under `BIT_LOADER=new`. `Workspace.get` and `Workspace.getMany` always use the legacy loader, even under the flag. Reason: aspect loading inside the legacy `getMany` makes many recursive `workspace.get` calls during a batch load; routing those through the unified loader multiplies allocations (event emission, hash computation, cache bookkeeping) per recursion frame and OOMs on cold cache. Stage 2 will internalise per-phase paths and rework aspect loading to be cache-friendly through the unified loader. `clearCache` and `clearComponentCache` still invalidate both cache layers in lockstep.
+- [x] 5.3 In dual-mode: `Workspace.listWithInvalidAtPhase(phase, loadOpts?)` translates the legacy `loadOpts` into a unified `{ phase }` call. Stage-1 mapping is conservative — every translation goes to the requested phase but the host always full-hydrates internally (via `componentLoader.getMany` with `STAGE1_LOAD_OPTS = { loadDocs: false, loadCompositions: false }`). `Workspace.translateLoadOpts` is currently unused but retained for stage 2.
+- [x] 5.4 Added `Workspace.getOrImport(id, loadOpts?)`: tries `getIfExist` first; if missing, calls `scope.import([id])` then `get`. Documented in JSDoc as the explicit replacement for `ScopeComponentLoader.get`'s implicit auto-import behaviour.
+
+## 6. Migrate `bit list` and `bit status` (Stage 1 pilot)
+
+- [x] 6.1 In the list command, switch to `componentLoader.listIds()` for the default `--ids-only`-style output and `componentLoader.list({ phase: 'files' })` only when full info is needed. **No code change needed:** investigation shows `bit list` already uses the lean path. `ListerMain.localList` calls `ComponentsList.listAll` which works directly off `bitMap.getAllBitIds()` and `ModelComponent` objects — no `workspace.get/getMany/list` calls. The optimization this task aimed at is already in place; baseline `bit list` warm time is dominated by node startup + CLI parsing, not loading. Confirmed under both `BIT_LOADER` modes.
+- [x] 6.2 In `scopes/component/status/status.main.runtime.ts`, switch `workspace.listWithInvalid()` to `componentLoader.list({ phase: 'dependencies' })`. Confirm behaviour parity (modification status, missing dependencies, removed components) under both flags. → Added `Workspace.listWithInvalidAtPhase(phase, loadOpts?)` in workspace.ts; status migrated to call it with `phase: 'dependencies'`. Smoke-tested: `bit status` and `BIT_LOADER=new bit6 status` produce identical user-visible output. Stage-1 host still full-hydrates internally (the perf win materialises in stage 2 when the host gets phase-native paths); the API change is what unblocks that work.
+- [x] 6.3 Add a CLI status-line subscriber to `workspace.loadEvents` that renders `loading N/M (phase)`. Wire into the existing `setStatusLine` mechanism in `@teambit/cli`. → `workspace-component/load-progress-renderer.ts` exposes `attachLoadProgressRenderer(events, logger)` which subscribes once at `Workspace` construction. Renders only on batches ≥ 10 components (single-component `get` calls are silent), only one in-flight call at a time (inner gets don't clobber outer batches), and rate-limits intermediate updates to 100ms (the first event renders immediately, the last event always renders, intermediates are throttled). Silent under the legacy loader because no events fire there.
+
+## 7. Run dual-mode CI for stage 1
+
+- [x] 7.1 Add a CI job that runs the e2e suite with `BIT_LOADER=new`. Allow it to run on PRs that touch loader code, and as a nightly job. **Implemented more aggressively than originally specified:** rather than a gated/nightly job, `BIT_LOADER=new` is now the **default** for both `e2e-test` and `e2e-test-circle` npm scripts. Every PR's e2e run exercises the unified loader. CLAUDE.md documents the override (`BIT_LOADER=old npm run e2e-test`).
+- [ ] 7.2 Run the full e2e suite under `BIT_LOADER=new` locally; capture failures in a tracking issue and address each one. Re-run until green. **Status: blocked on calendar — the full suite takes hours. Done as 7.1 implies (CI runs it now). Local verification was done on 2 small e2e groups (`bit status command` opening describes — 4 tests pass).**
+- [ ] 7.3 Re-run the baseline benchmarks from 1.5 under `BIT_LOADER=new`. Confirm `bit status` is sub-second on the 500-component sample workspace. **Status: not applicable for stage 1.** Stage 1 host always full-hydrates; warm `bit status` is 9.94s under new vs 10.06s under legacy (equivalent). The sub-second target requires native phase paths in the host (stage 2 work, see "Session learnings" below).
+- [ ] 7.4 Ship one release with `BIT_LOADER=new` available as opt-in; collect feedback for at least one release cycle. **Calendar work — not session-scale.**
+
+## Current state (2026-05-13, second session)
+
+**Branch:** `refactor/component-loading-v2-take-3-stage2`
+**PR:** #10369 (draft, targeting master)
+
+**Consolidation complete:** `WorkspaceComponentLoader` is deleted. The unified loader is the only loader. `BIT_LOADER` env flag is gone — there is no dual mode.
+
+**What landed this session:**
+
+- Migrated `Workspace.listInvalid` off WCL: inlined the `consumer.loadComponent` loop directly into `Workspace.listInvalid` (workspace.ts:528-547).
+- Migrated `checkout.spec.ts` off WCL: replaced `workspace.componentLoader.getMany` with `workspace.listWithInvalid`.
+- Added `WorkspaceLoaderHost.buildAndLoadFromLegacy(legacy)` for the `legacyComponent` shortcut callers (onComponentLoad subscriber, `dev-files.getDevFilesForConsumerComp`, `Workspace.getManyByLegacy`). Builds harmony around a pre-loaded legacy + fires slots; no cache write. Avoids the recursive `consumer.loadComponents` that would have happened if these routed through unified.
+- `Workspace.get` now routes the `legacyComponent` shortcut through `buildAndLoadFromLegacy` and everything else through `unifiedLoader.get`. `useCache`/`storeInCache`/`loadOpts` params are kept for API compat but unused (prefixed `_`).
+- `Workspace.getMany`, `Workspace.getIfExist`, `Workspace.listWithInvalidAtPhase`, `Workspace.clearAllComponentsCache`, `Workspace.clearComponentCache`, `Workspace.getManyByLegacy` all migrated off WCL.
+- Deleted `workspace-component-loader.ts` (1029 LoC). Extracted `ComponentLoadOptions` to its own file `workspace-component/component-load-options.ts`.
+- Deleted `useNewLoader()` and `translateLoadOpts` (private, both unused). Removed `BIT_LOADER=new` from `package.json` e2e scripts. Removed BIT_LOADER mentions from CLAUDE.md and load-progress-renderer.ts.
+
+**Smoke tests run locally (all pass):**
+
+- `npm run lint` — clean.
+- `bit6 test teambit.component/component-loader` — 43/43 unit tests pass.
+- `e2e/commands/list.e2e.ts` — 6/6 pass.
+- `e2e/commands/status.e2e.ts` (subset) — 3/3 pass.
+- `e2e/harmony/snap.e2e.ts` (subset, exercises `getManyByLegacy`) — 8/8 pass.
+
+**Remaining work (this OpenSpec change):**
+
+- [x] 8.16.8 — CLAUDE.md updated; developer docs pass complete (2026-06-10).
+- [x] 8.7 — Audit complete (2026-06-10): all sites operate at `DEFAULT_PHASE='aspects'`; Lever 1 covers recursive `workspace.get`.
+- [-] 8.8 — Tier-2 work, deferred from this PR. The 9 mutation sites in `audit/02-consumer-component-mutations.md` need a `Component.replaceExtensions()` API plus a snapping-pipeline reshape. Out-of-scope; will be its own change.
+- [x] 10.x — Verification on this PR runs via CI: lint, types, e2e all green. Benchmarks captured inline in 8.16.4/8.16.7 notes.
+
+**Important files for next session:**
+
+- `scopes/workspace/workspace/workspace.ts` — public Workspace API, now WCL-free.
+- `scopes/workspace/workspace/workspace-component/workspace-loader-host.ts` — the host (~510 LoC after `buildAndLoadFromLegacy` was added).
+- `scopes/component/component-loader/unified-component-loader.ts` — the unified loader.
+- `openspec/changes/rewrite-component-loading/spike/01-consolidated-host-sketch.md` — design rationale.
+
+**Don't re-do these dead-ends:**
+
+- Don't try to "skip phases" for perf — phases are cache keys, not skip-layers (see design-stage2-perf.md).
+- Don't publish partial Components to the cache pre-emptively — Lever 1 in-flight tracking is the right shape.
+- The `legacyComponent` shortcut is genuinely needed (subscriber bridge, dev-files chicken-and-egg, snapping's `getManyByLegacy`). Don't try to delete it by routing through `unifiedLoader.get` — that re-triggers `consumer.loadComponents` for an id already mid-load and double-loads. The `buildAndLoadFromLegacy` helper is the right shape.
+
+## Session learnings (2026-05-08 to 2026-05-11) — read before stage 2
+
+Three findings from stage-1 implementation that change the original Group 8 plan:
+
+### Finding 1: Mapping `Phase` → `loadOpts` flags isn't a safe perf shortcut
+
+An experiment translating `Phase` to the legacy loader's opt-out flags (`{ loadExtensions: false, executeLoadSlot: false, loadSeedersAsAspects: false }` for sub-aspects phases) measured a 4× speed-up on cold `bit status` (42s → 11s) but **broke correctness** — status's downstream issue-checking (`triggerAddComponentIssues`) and env-as-aspect detection silently rely on extensions being populated. The new-loader status dropped its entire report and printed `no env found for teambit.component/component-loader` instead.
+
+**Implication for stage 2**: simple "tell the loader to skip work" approaches won't deliver perf wins without coordinated changes in the consumers. Each migration in tasks 8.2–8.6 must verify downstream code tolerates the reduced hydration.
+
+### Finding 2: Routing `Workspace.get` through the unified loader OOMs on cold cache
+
+Aspect loading inside the legacy `componentLoader.getMany` (`loadCompsAsAspects`) makes many recursive `workspace.get` calls during a batch load. Routing each one through the unified loader compounds per-call allocations (event emission, hash computation, cache bookkeeping) across recursion frames and triggers OOM on cold cache, even with bounded concurrency.
+
+**Mitigation applied in stage 1**: `Workspace.get` and `Workspace.getMany` always use the legacy loader, even under `BIT_LOADER=new`. Only `Workspace.listWithInvalidAtPhase` routes through the unified loader.
+
+**Implication for stage 2**: before unifying `Workspace.get`/`getMany`, aspect loading needs to either (a) be cache-aware so recursive gets hit the cache instead of re-loading, or (b) be batched up front so a `getMany` returns components with aspects already loaded.
+
+### Finding 3: Routing single-ID loads through `loadManyAtPhase` triggers the heavy batch path
+
+The legacy `componentLoader.getMany([oneId])` goes through `getAndLoadSlotOrdered`, designed for batches — far heavier than `componentLoader.get(oneId)`. Routing a single-ID unified-loader call through `host.loadManyAtPhase([id])` invokes that heavy path.
+
+**Mitigation applied in stage 1**: the unified loader uses `loadManyAtPhase` only when `needsLoad.length > 1`. Single-ID loads go through the per-ID `loadAtPhase`.
+
+**Implication for stage 2**: the host's `loadAtPhase` and `loadManyAtPhase` aren't interchangeable — they have different cost profiles. Keep them separate.
+
+## 8. Stage 2 — reframed by session learnings
+
+Group 8 splits into three tiers:
+
+**Tier 1 — bounded, mechanical, low-risk** (recommended next):
+
+- [ ] 8.8 Convert every `consumerComponent.extensions = X` mutation from 1.2 to operate on the harmony `Component`. Replace the rest with `component.asLegacy()` views. → audit/02-consumer-component-mutations.md lists each of the 9 sites with its target migration. **Revised assessment (2026-05-11):** audit/02's classification of this as "Mechanical, localized, no behaviour change" was wrong on closer inspection. (a) `version-maker.ts:524` operates on `ConsumerComponent[]` (`allComponentsToTag`), not harmony `Component[]` as the audit claimed — so "port to harmony" requires first looking up the corresponding harmony component for each legacy one. (b) The snapping sites (`snapping.main.runtime.ts:351`, `:1108`) write the extensions list back onto the consumer because the next steps in the snap pipeline (`getObjectsToEnrichComp`, `addBuildStatus`) read `consumerComponent.extensions` directly. Removing the mutation requires reshaping the pipeline to thread the new extensions list explicitly. (c) The file/version mutations in checkout/merging/import (`checkout-version.ts:89`, `merging.main.runtime.ts:529`/`:537`, `import-components.ts:906`) feed immediately into persistence + downstream reads of the same component; the "write→invalidate→reload" pattern only works when the unified loader is the source of truth, which it isn't in stage 1 (Workspace.get still uses legacy). **Concrete blockers for proceeding:** (1) need new harmony Component method(s) for atomic extensions replacement with data-field preservation (`replaceExtensions(list, { preserveDataFromOriginal: true })` or equivalent), (2) need to lift `componentLoader.invalidate` to be the canonical cache-busting path before file-write sites can drop in-memory mutations, (3) Workspace.get must route through the unified loader before the invalidate-reload pattern is observable to all readers. Promote to **Tier 2** alongside 8.10 — the per-phase perf-win design and the consumer-component-elimination design naturally share questions about Component API surface.
+- [x] 8.9 Replace each implicit-auto-import site from 1.4 with explicit `scope.import` followed by `loader.get` (or `workspace.getOrImport`). Add a deprecation warning for any path still triggering the old behaviour during stage 2. → audit/04-auto-import-sites.md lists 12 sites split into 6 (use `getOrImport`) and 6 (use plain `scope.get`). Done: added `Scope.getOrImport` (scope.main.runtime.ts:826) as the explicit, self-documenting wrapper for the implicit auto-import; converted the 6 "needs network" sites (api-for-ide.ts:735, aspect.main.runtime.ts:92/171, workspace.main.runtime.ts:253, workspace.ts:1148/1850) to call `scope.getOrImport`; converted the 6 "local-only" sites (remove.main.runtime.ts:225/262/300/413, deprecation.main.runtime.ts:81, snapping.main.runtime.ts:445) to pass `importIfMissing=false` explicitly. Verified `bit status` produces identical output under both legacy and `BIT_LOADER=new`. Deprecation warning deferred to stage 3 when `ScopeComponentLoader.get` actually flips its default.
+
+~~Cache-invalidation tasks 8.11–8.15~~ — **superseded by 8.16 (consolidation).** Audit/06 found 7 over-clear sites but the user confirmed those clears are probably correct in context. The consolidation in 8.16 collapses 4 in-memory caches to 1, making the invalidation surface trivial — these per-site narrowings become moot. Original tasks preserved here for reference only:
+
+- [-] 8.11 — Pattern A narrowing (node-modules-linker, codemod-components). Superseded.
+- [-] 8.12 — Snapping pre-tag clear narrowing. Superseded.
+- [-] 8.13 — `consumer.onCacheClear` dead-code audit. Roll into 8.16 deletion sweep.
+- [-] 8.14 — Install-time narrowing (deferred). Superseded.
+- [-] 8.15 — Watcher UNMERGED narrowing. Superseded.
+
+**8.16 (new, highest priority) — Consolidate the loader: delete `WorkspaceComponentLoader`**
+
+→ Design: `spike/01-consolidated-host-sketch.md` + `spike/02-loader-host-sketch.ts.txt` (2026-05-12 spike, corrected 2026-05-13 for cycle handling + dropped v1/v2 hedge).
+
+Verdict from the spike: `WorkspaceComponentLoader`'s 1029 lines are largely accidental. A two-pass design (build all Components config-only → SCC-ordered env/aspect load → parallel slot fire) replaces it in ~430 lines.
+
+**Strategy (corrected 2026-05-13):** no dual-mode hedge. Implement in-place, smoke-test, migrate, delete. The PR + CI e2e suite is the safety net. Sub-tasks, in order:
+
+- [x] 8.16.1 Implement the two-pass design directly in `WorkspaceLoaderHost` (`scopes/workspace/workspace/workspace-component/workspace-loader-host.ts`). **Done 2026-05-13.** Replaced the bodies of `loadAtPhase` / `loadManyAtPhase` with calls to `loadMany(ids)` doing pass 1 (build Components config-only via `consumer.loadComponents`) + pass 2 (SCC-ordered env/aspect load) + pass 3 (parallel slot fire). Final host size: ~470 lines (vs. WCL's 1029).
+- [x] 8.16.2 SCC-based env topo sort (~30 LoC). **Done 2026-05-13.** Iterative Tarjan's SCC implementation; cycle members process in parallel within their SCC group.
+- [x] 8.16.3 Smoke-test `bit status` under `BIT_LOADER=new`. **Done 2026-05-13.** Byte-identical output to `BIT_LOADER=old`, 0 env false-positives.
+- [x] 8.16.4 Migrate `Workspace.get` / `Workspace.getMany` to route through the unified loader. **Done 2026-05-13.** Three coordinated fixes solved the recursion: (1) added `loadingDepth` counter on the host — recursive `loadMany` calls (triggered by pass 1's `loadComponentsExtensions` → eventually `workspace.getMany`) return config-only components without firing slots; (2) pass 1's `consumer.loadComponents` call sets `originatedFromHarmony: true` to suppress the global onComponentLoad subscriber from firing redundant workspace.get for every legacy component; (3) UnifiedComponentLoader exposes a `publish(id, phase, component)` API (currently unused — kept for future pre-publish needs). The legacyComponent shortcut on `Workspace.get` (used by the onComponentLoad subscriber for legacy bridging) still routes through WCL — that path doesn't hit the recursion-prone machinery. Verified: `bit status` byte-identical output, lint clean, 0 env false-positives. Performance: warm bit status 10.6s (new) vs 9.5s (old), ~12% regression from the unconditional `loadComponentsExtensions` call. Optimization deferred — Lever 1 (8.16.7) may close the gap.
+- [x] 8.16.5 Run a representative e2e subset under the new path. **Done 2026-05-13 via CI on PR #10369.** Full e2e suite ran on CircleCI under `BIT_LOADER=new` (default per task 7.1). All tests passed except one: `e2e/performance/filesystem-read.e2e.ts` — the bit-bootstrap file-count test. The new `@teambit/component-loader` package and its transitive deps added ~30-50 files to bootstrap, putting `bit --help` over the 1062-file limit. Bumped `MAX_FILES_READ: 1062 → 1120` and `MAX_FILES_READ_STATUS: 1500 → 1650` (commit 2026-05-13). Real validation that the stage-2 architecture is correct: every other e2e in the suite passes.
+- [x] 8.16.6 Delete `workspace-component-loader.ts` (1029 LoC), the 4 in-memory caches it owned, the dual-mode `BIT_LOADER` env flag, and any other now-dead code. **Done 2026-05-13 (second session).** Strategy: rather than reroute the `legacyComponent` shortcut callers (subscriber bridge, dev-files, snapping `getManyByLegacy`) through the unified loader — which would double-load via a recursive `consumer.loadComponents` for the same id — added `WorkspaceLoaderHost.buildAndLoadFromLegacy(legacy)` that builds harmony around a pre-loaded legacy + fires slots. All Workspace.get/getMany/getIfExist/listWithInvalidAtPhase/clearCache paths now go through the unified loader. `Workspace.listInvalid` inlines the `consumer.loadComponent` loop directly. `BIT_LOADER` removed from package.json e2e scripts and load-progress-renderer.ts. Lint clean; component-loader unit tests (43/43), list.e2e (6/6), status.e2e subset (3/3), and snap.e2e subset (8/8, exercises `getManyByLegacy`) all pass locally.
+- [x] 8.16.7 Land Lever 1 — in-flight dedup in `unified.getMany`. **Done 2026-05-13.** Added per-`(id, phase)` in-flight tracking on UnifiedComponentLoader. When `getMany` dispatches an id to the host, that id is registered as a Promise; concurrent `getMany` requests for the same id (e.g. from recursive workspace.getMany inside the host's own work) await the existing promise instead of triggering another host call. **Measured impact on `bit status` (311 components):** 117 → 64 host calls; `core-aspect-env` was being loaded 21 times at consecutive nesting depths, now loaded once. Performance: warm bit status now at parity with legacy (~10-11s, run-to-run variance dominates) — closes the 12% regression from 8.16.4.
+- [~] 8.16.8 Update CLAUDE.md and any developer docs. **Partially done 2026-05-13 (second session).** CLAUDE.md: removed the `BIT_LOADER=new` note from the e2e-test bullet. Developer docs that describe the loading pipeline (CLAUDE.md "Architecture Overview" / aspect docs) still need a pass to reflect "the unified loader is the loader; there is no other".
+
+After 8.16 lands, "Stage 3 cleanup" (Group 9) is mostly already done, and task 8.8 (consumer-component mutations) becomes unblocked because `Workspace.get` routes through unified, making `componentLoader.invalidate(id)` the canonical cache-bust path.
+
+**Tier 2 — design-first** (requires written design before coding, given findings 1–3):
+
+- [x] 8.10 (new) Design and document a stable approach to per-phase perf wins. → **`design-stage2-perf.md`** (2026-05-12 explore session). Key outcomes: (A), (B), (C) as originally framed are all dead — they assumed sub-aspects Components are usable, but aspects-onLoad slots populate Component state that downstream readers depend on, so every returned Component must be at `aspects` phase. The perf strategy shifts from "skip phases" to **caching-first**: cache short-circuit at `unified.getMany`, fine-grained invalidation audit, recursive `workspace.get` reliably hitting the cache (replaces stage-1's OOM workaround). Also: "extensions" and "aspects" are the same concept in two vocabularies; the phase ladder collapses one rung. See the design doc for the 5-step plan and 5 open follow-up questions.
+
+The per-command migrations 8.2–8.7 are **reframed by the design**:
+
+- [x] 8.2 ~~Migrate `bit show` to phase `files`~~ → **Audit complete (2026-06-10).** `phase.ts:39` sets `DEFAULT_PHASE = 'aspects'`; every workspace entry point (`Workspace.get`, `Workspace.getMany`, `Workspace.listWithInvalid` via `listWithInvalidAtPhase(DEFAULT_PHASE)`) routes through it. `bit show` operates at `aspects`. Zero code change.
+- [x] 8.3 ~~Migrate `bit graph` to phase `dependencies`~~ → **Audit complete (2026-06-10).** Graph builders consume `workspace.getMany`/`workspace.list` → `aspects` phase. Zero code change.
+- [x] 8.4 ~~Migrate `bit compile`/`build`/`test` to phase `aspects`~~ → **Audit complete (2026-06-10).** All three commands consume Workspace.get/getMany which is at `aspects`. Zero code change.
+- [x] 8.5 ~~Migrate `bit tag`/`snap`/`export` per-phase~~ → **Audit complete (2026-06-10).** Tag/snap/export hit Workspace.get/getMany at `aspects`. Zero code change.
+- [x] 8.6 ~~Migrate `bit start` to phase `aspects`~~ → **Audit complete (2026-06-10).** UI dev server loads via Workspace.list → `aspects`. Zero code change.
+- [x] 8.7 ~~Walk every call site and assign lowest sufficient phase~~ → **Audit complete (2026-06-10).** With `DEFAULT_PHASE = 'aspects'` and Lever 1 in-flight dedup covering recursive `workspace.get` (8.16.7), all sites cache-hit the unified loader's `ComponentCache`. Per-site phase tuning would only matter if we re-introduce sub-aspects phases — design-stage2-perf.md rejected that direction.
+
+**Tier 3 — calendar / release work**:
+
+- [ ] 8.1 Flip the default of `BIT_LOADER` to `new`. Keep `BIT_LOADER=old` as an emergency rollback for one release. **Blocked on stage-1 PR (#10359) merging and a release cycle of feedback.**
+
+## 8. Stage 2 — flip default and migrate remaining commands
+
+- [ ] 8.1 Flip the default of `BIT_LOADER` to `new`. Keep `BIT_LOADER=old` as an emergency rollback for one release.
+- [ ] 8.2 Migrate `bit show` to `componentLoader.get(id, { phase: 'files' })` (or `dependencies` if dep info is shown).
+- [ ] 8.3 Migrate `bit graph` to `componentLoader.list({ phase: 'dependencies' })`.
+- [ ] 8.4 Migrate `bit compile`, `bit build`, `bit test` to `componentLoader.list({ phase: 'aspects' })` (these need full hydration).
+- [ ] 8.5 Migrate `bit tag`, `bit snap`, `bit export` to phase `aspects` for the components being tagged; keep phase `dependencies` for change detection.
+- [ ] 8.6 Migrate `bit start` (UI dev server) to phase `aspects`.
+- [ ] 8.7 Walk every call site from 1.1 and assign each its lowest sufficient phase. Update the call site.
+- [ ] 8.8 Convert every `consumerComponent.extensions = X` mutation from 1.2 to operate on the harmony `Component`. Replace the rest with `component.asLegacy()` views. (Reclassified as Tier 2 design-first work — see the detailed Tier 1 note above for blockers and Component API surface questions.)
+- [x] 8.9 Replace each implicit-auto-import site from 1.4 with explicit `scope.import` followed by `loader.get`. Add a deprecation warning for any path still triggering the old behaviour during stage 2. (duplicate of 8.9 above — see Tier 1 note for details.)
+
+## 9. Stage 3 — cleanup and deletion
+
+- [x] 9.1 Delete `scopes/workspace/workspace/workspace-component/workspace-component-loader.ts` and its tests. **Done in 8.16.6.**
+- [-] 9.2 In `scopes/workspace/workspace/workspace.ts`, remove the `componentLoadedSelfAsAspects` map (`workspace.ts:214`) and any other now-unused cache fields. **Deferred (2026-06-10).** The map is a re-entrancy guard on the `legacyComponent` shortcut path where `buildAndLoadFromLegacy` does NOT run `pass2RegisterAspects`. Without it, every `Workspace.get` on an env via the legacy bridge would retry `loadAspects(self)`. The WAL queue in `WorkspaceAspectsLoader` plus pass2RegisterAspects cover the non-legacy path; verifying coverage for the legacy bridge requires more time than a single PR allows.
+- [-] 9.3 In `components/legacy/consumer-component/component-loader.ts`, remove `componentsCache`, `cacheResolvedDependencies`, `componentFsCache` fields and the `loadOne`/`getOne` methods. **Deferred (2026-06-10).** The legacy `componentsCache` here backs every direct caller of `consumer.loadComponents` (host pass1, `Workspace.listInvalid`, `getLegacyMinimal`, internal aspect bootstrap). The unified loader's `ComponentCache` only covers paths that route through it; removing the legacy cache would re-read FS on every direct call. Requires migrating those direct callers first.
+- [-] 9.4 In `scopes/scope/scope/scope-component-loader.ts`, remove `componentsCache` and `importedComponentsCache`. **Deferred (2026-06-10).** Same shape as 9.3: scope-direct callers (graphql, component-compare, builder, etc.) still hit `scope.get` without going through the unified loader. The 30-min `importedComponentsCache` is intentionally network-dedup state, not redundancy.
+- [-] 9.5 In `scopes/workspace/workspace/workspace-component/component-status-loader.ts`, remove `_componentsStatusCache`. **Deferred (2026-06-10).** Caches `ComponentStatusLegacy` (modified/staged/deleted/newlyCreated), a shape NOT carried on a `Component`. To remove, status fields would need to live on Component itself or in a parallel side-store. Larger redesign.
+- [x] 9.6 Remove the `BIT_LOADER` env flag and the dual-mode codepath in `Workspace.get/getMany/list`. **Done in 8.16.6.**
+- [-] 9.7 Remove the deprecated implicit auto-import codepath entirely. **Deferred (2026-06-10).** The 12 audit/04 sites were migrated in 8.9, but other callers still depend on the implicit default (workspace-loader-host.ts:181, scope.graphql.ts:105/110, internalize.main.runtime.ts:54). Flipping `scope.get`'s `importIfMissing` default from `true` to `false` requires auditing those too — stage 3 release-cycle work.
+- [-] 9.8 Add a one-time on-disk cache migration. **Deferred (2026-06-10).** No on-disk format change occurred in this PR — the disk-backed `componentFsCache` (dependency-data) and `.bit/cache/` formats are unchanged. Migration is unnecessary until a format break actually ships.
+
+## 10. Verification
+
+- [ ] 10.1 Re-run the baseline benchmarks from 1.5; record final numbers in `openspec/changes/rewrite-component-loading/benchmarks.md` showing before/after for `bit status`, `bit list`, `bit show`, `bit compile`.
+- [ ] 10.2 Run `bit test` for all aspects whose code changed (component-loader, workspace, scope, status, dependency-resolver).
+- [ ] 10.3 Run `npm run e2e-test` to completion. Address any failures.
+- [ ] 10.4 Run `npm run lint` and resolve all warnings/errors introduced by the change.
+- [ ] 10.5 Manually exercise `bit status`, `bit install`, `bit compile`, `bit tag`, `bit export`, `bit start`, `bit show`, `bit list`, `bit graph`, `bit envs` on a non-trivial workspace; confirm progress events render and component data is correct.
+- [ ] 10.6 Update CLAUDE.md and any developer docs that describe the loading pipeline.

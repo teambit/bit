@@ -56,12 +56,16 @@ import { slice, isEmpty, merge, compact, uniqBy, uniq } from 'lodash';
 import { MergeConfigFilename, BIT_ROOTS_DIR, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy.constants';
 import path from 'path';
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent, ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 import type { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog, Lane } from '@teambit/objects';
 import type { JsonVinyl } from '@teambit/component.sources';
 import { SourceFile, DataToPersist, PackageJsonFile } from '@teambit/component.sources';
-import { ScopeComponentsImporter, VersionNotFoundOnFS } from '@teambit/legacy.scope';
+import {
+  ScopeComponentsImporter,
+  VersionNotFoundOnFS,
+  ComponentNotFound as LegacyComponentNotFound,
+} from '@teambit/legacy.scope';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { isHash } from '@teambit/component-version';
@@ -91,8 +95,11 @@ import type {
   OnRootAspectAdded,
   OnRootAspectAddedSlot,
 } from './workspace.main.runtime';
-import type { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
-import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
+import type { ComponentLoadOptions } from './workspace-component/component-load-options';
+import type { Phase } from './component-loader';
+import { ComponentCache, LoadEventEmitter, UnifiedComponentLoader, DEFAULT_PHASE } from './component-loader';
+import { WorkspaceLoaderHost } from './workspace-component/workspace-loader-host';
+import { attachLoadProgressRenderer } from './workspace-component/load-progress-renderer';
 import type { ShouldLoadFunc } from './build-graph-from-fs';
 import { GraphFromFsBuilder } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
@@ -178,7 +185,20 @@ export class Workspace implements ComponentFactory {
   priority = true;
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
-  componentLoader: WorkspaceComponentLoader;
+  /**
+   * Unified component loader (rewrite-component-loading change). Owns a single
+   * phase-keyed cache and a typed progress event stream (`loadEvents`), and
+   * delegates the actual load work to a `WorkspaceLoaderHost` adapter.
+   */
+  readonly unifiedLoader: UnifiedComponentLoader;
+  private readonly workspaceLoaderHost: WorkspaceLoaderHost;
+  /**
+   * Typed progress event stream surfaced by the unified loader. Subscribe with
+   * `workspace.loadEvents.on(event => ...)`. Emits `load:start`, `load:phase:start`,
+   * `load:component`, `load:phase:end`, `load:end`. With no subscribers the
+   * per-event cost is a single `EventEmitter.emit` returning false.
+   */
+  readonly loadEvents: LoadEventEmitter;
   private componentStatusLoader: ComponentStatusLoader;
   bitMap: BitMap;
   /**
@@ -265,7 +285,18 @@ export class Workspace implements ComponentFactory {
     private configStore: ConfigStoreMain
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-    this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
+    this.loadEvents = new LoadEventEmitter();
+    this.workspaceLoaderHost = new WorkspaceLoaderHost(this, logger, dependencyResolver, envs, aspectLoader);
+    this.unifiedLoader = new UnifiedComponentLoader(
+      this.workspaceLoaderHost,
+      new ComponentCache(),
+      this.loadEvents,
+      logger
+    );
+    // Back-wire so the host can pre-publish in-batch components to the cache
+    // (avoids recursion deadlock when pass 1 fires loadComponentsExtensions).
+    this.workspaceLoaderHost.attachUnifiedLoader(this.unifiedLoader);
+    attachLoadProgressRenderer(this.loadEvents, logger);
     this.validateConfig();
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
@@ -461,8 +492,32 @@ export class Workspace implements ComponentFactory {
   }
 
   async listWithInvalid(loadOpts?: ComponentLoadOptions) {
+    return this.listWithInvalidAtPhase(DEFAULT_PHASE, loadOpts);
+  }
+
+  /**
+   * Like `listWithInvalid` but lets the caller pin the load phase used by the
+   * unified loader. Use this for commands that need only a sub-aspect view of
+   * every component (e.g. `bit status` only needs `dependencies`). The host
+   * currently full-hydrates internally regardless of phase; phase-native paths
+   * are stage-2 perf work.
+   *
+   * The unified loader's `getMany` returns `{ components, missing }`. Here
+   * `missing` means components that couldn't be loaded at all; load errors
+   * surfaced inside the host (invalid by error type) are not yet routed back
+   * — that's stage-2 work on the host return shape.
+   */
+  async listWithInvalidAtPhase(phase: Phase, _loadOpts?: ComponentLoadOptions) {
     const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
-    return this.componentLoader.getMany(legacyIds, loadOpts, false);
+    const { components } = await this.unifiedLoader.getMany(legacyIds, { phase }, { throwOnMissing: false });
+    // The host detects invalid components in pass 1 (the legacy
+    // `consumer.loadComponents` surfaces them with their underlying error —
+    // e.g. `MainFileRemoved`, `ComponentNotFoundInPath`). The unified loader
+    // doesn't return invalid through `getMany` (its return shape is
+    // `{components, missing}`), so we read them off the host after the call.
+    // Without this, `bit status` and `bit diff` print a generic "Error"
+    // instead of the actual diagnostic.
+    return { components, invalidComponents: this.workspaceLoaderHost.getLastInvalid() };
   }
 
   /**
@@ -470,8 +525,22 @@ export class Workspace implements ComponentFactory {
    * (see the invalid criteria in ConsumerComponent.isComponentInvalidByErrorType())
    */
   async listInvalid(): Promise<InvalidComponent[]> {
-    const ids = this.consumer.bitMap.getAllIdsAvailableOnLane();
-    return this.componentLoader.getInvalid(ids);
+    const ids = compact(this.consumer.bitMap.getAllIdsAvailableOnLane());
+    const errors: InvalidComponent[] = [];
+    const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
+    await mapSeries(ids, async (id) => {
+      longProcessLogger.logProgress(id.toString());
+      try {
+        await this.consumer.loadComponent(id);
+      } catch (err: any) {
+        if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
+          errors.push({ id, err });
+          return;
+        }
+        throw err;
+      }
+    });
+    return errors;
   }
 
   /**
@@ -760,12 +829,44 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   async get(
     componentId: ComponentID,
     legacyComponent?: ConsumerComponent,
-    useCache = true,
-    storeInCache = true,
-    loadOpts?: ComponentLoadOptions
+    _useCache = true,
+    _storeInCache = true,
+    _loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
     this.logger.trace(`get ${componentId.toString()}`);
-    const component = await this.componentLoader.get(componentId, legacyComponent, useCache, storeInCache, loadOpts);
+    // legacyComponent shortcut: callers that already hold a mid-load
+    // `ConsumerComponent` (the `onComponentLoad` subscriber bridging legacy →
+    // harmony, and `dev-files.getDevFilesForConsumerComp` during dep loading)
+    // build the harmony view + fire slots directly off it. Routing through
+    // the unified loader would re-trigger `consumer.loadComponents` for the
+    // same id and recurse.
+    // Convert the unified loader's `ComponentNotFound` to the legacy
+    // `ComponentNotFound` so callers across the codebase (build-graph-ids,
+    // diff command, status command, etc.) that `instanceof`-check the
+    // legacy class for tolerance branches continue to work.
+    //
+    // If the requested id was detected as INVALID in the most recent pass1
+    // (e.g. missing main file, missing component path), the host stashed the
+    // underlying error in `getLastInvalid()`. Pre-rewrite WCL re-threw that
+    // error from `get` directly so callers like `bit tag`'s graph builder
+    // could detect "main file removed" specifically. Mirror that behaviour:
+    // a missing-but-invalid component throws its original diagnostic, while
+    // a missing-and-not-invalid component throws `LegacyComponentNotFound`.
+    let component: Component;
+    try {
+      component = legacyComponent
+        ? await this.workspaceLoaderHost.buildAndLoadFromLegacy(legacyComponent)
+        : await this.unifiedLoader.get(componentId, { phase: DEFAULT_PHASE });
+    } catch (err: any) {
+      if (err?.name === 'ComponentNotFound' && !(err instanceof LegacyComponentNotFound)) {
+        const invalid = this.workspaceLoaderHost
+          .getLastInvalid()
+          .find((ic) => ic.id.isEqual(componentId, { ignoreVersion: !componentId.hasVersion() }));
+        if (invalid) throw invalid.err;
+        throw new LegacyComponentNotFound(componentId.toString());
+      }
+      throw err;
+    }
     // When loading a component if it's an env make sure to load it as aspect as well
     // We only want to try load it as aspect if it's the first time we load the component
     const tryLoadAsAspect = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
@@ -774,9 +875,22 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     // We are loading the component as aspect if it's an env, in order to be able to run the env-preview-template task which run only on envs.
     // Without this loading we will have a problem in case the env is the only component in the workspace. in that case we will load it as component
     // then we don't run it's provider so it doesn't register to the env slot, so we don't know it's an env.
+    //
+    // `isUsingEnvEnv` reads `state.aspects.get(EnvsAspect.id)` and throws when
+    // the env descriptor isn't on the component. That happens for components
+    // loaded under recursion (host pass2/3 skipped) or for components whose
+    // env aspect couldn't be resolved. Treat the throw as "not an env env" so
+    // the rest of the load completes — the consumer here only wants a yes/no
+    // signal for self-aspect loading.
+    let usingEnvEnv = false;
+    try {
+      usingEnvEnv = this.envs.isUsingEnvEnv(component);
+    } catch {
+      usingEnvEnv = false;
+    }
     if (
       tryLoadAsAspect &&
-      this.envs.isUsingEnvEnv(component) &&
+      usingEnvEnv &&
       !this.aspectLoader.isCoreAspect(component.id.toStringWithoutVersion()) &&
       !this.aspectLoader.isAspectLoaded(component.id.toString()) &&
       this.hasId(component.id)
@@ -828,16 +942,18 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
    */
   clearAllComponentsCache() {
     this.logger.debug('clearing all components caches');
-    this.componentLoader.clearCache();
+    this.componentLoadedSelfAsAspects.deleteAll();
     this.consumer.componentLoader.clearComponentsCache();
     this.componentStatusLoader.clearCache();
+    this.unifiedLoader.invalidate('all');
     this._componentList = new ComponentsList(this);
   }
 
   clearComponentCache(id: ComponentID) {
-    this.componentLoader.clearComponentCache(id);
+    this.componentLoadedSelfAsAspects.delete(id.toString());
     this.componentStatusLoader.clearOneComponentCache(id);
     this.consumer.clearOneComponentCache(id);
+    this.unifiedLoader.invalidate(id);
     this._componentList = new ComponentsList(this);
   }
 
@@ -1068,7 +1184,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   async getExtensionsFromScopeAndSpecific(id: ComponentID, excludeComponentJson = false): Promise<ExtensionDataList> {
-    const componentFromScope = await this.scope.get(id);
+    const componentFromScope = await this.scope.getOrImport(id);
     const exclude: ExtensionsOrigin[] = ['WorkspaceVariants'];
     if (excludeComponentJson) exclude.push('ComponentJsonFile');
     const { extensions } = await this.componentExtensions(id, componentFromScope, exclude);
@@ -1182,17 +1298,26 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return foundComps;
   }
 
-  async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<Component[]> {
+  async getMany(
+    ids: Array<ComponentID>,
+    _loadOpts?: ComponentLoadOptions,
+    _throwOnFailure = true
+  ): Promise<Component[]> {
     this.logger.debug(`getMany, started. ${ids.length} components`);
-    const { components } = await this.componentLoader.getMany(ids, loadOpts, throwOnFailure);
+    // Pre-rewrite WCL.getMany silently dropped missing ids from the result
+    // (it threw only on invalid components, not on missing ones). Callers
+    // like `importAndGetMany` and `resolveEnvIdWithPotentialVersionForConfig`
+    // are written for that semantics — they check `comps[0]` and throw their
+    // own contextual error when it's undefined. The unified loader's
+    // `throwOnMissing` matches this by being `false`.
+    const { components } = await this.unifiedLoader.getMany(ids, { phase: DEFAULT_PHASE }, { throwOnMissing: false });
     this.logger.debug(`getMany, completed. ${components.length} components`);
     return components;
   }
 
-  getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
+  getManyByLegacy(components: ConsumerComponent[], _loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     return mapSeries(components, async (component) => {
-      const id = component.id;
-      return this.get(id, component, true, true, loadOpts);
+      return this.workspaceLoaderHost.buildAndLoadFromLegacy(component);
     });
   }
 
@@ -1200,7 +1325,44 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
    * don't throw an error if the component was not found, simply return undefined.
    */
   async getIfExist(componentId: ComponentID): Promise<Component | undefined> {
-    return this.componentLoader.getIfExist(componentId);
+    try {
+      return await this.get(componentId);
+    } catch (err: any) {
+      if (this.isComponentNotExistsError(err)) return undefined;
+      throw err;
+    }
+  }
+
+  private isComponentNotExistsError(err: any): boolean {
+    return (
+      err instanceof MissingBitMapComponent ||
+      err instanceof ComponentNotFoundInPath ||
+      err instanceof LegacyComponentNotFound ||
+      err?.name === 'ComponentNotFound'
+    );
+  }
+
+  /**
+   * Explicit replacement for the implicit auto-import behaviour that
+   * `ScopeComponentLoader.get` performs today (see
+   * `audit/04-auto-import-sites.md`). Tries to load the component locally;
+   * if it is not present in the workspace or local scope and is exported
+   * to a remote, fetches it via `scope.import` and then loads.
+   *
+   * Use this for callers that genuinely need the network round-trip (IDE
+   * server, lane head resolution, debug-aspects). Callers that only operate
+   * on local data should call `get` directly so that a missing component
+   * surfaces as `ComponentNotFound` rather than silently triggering a fetch.
+   *
+   * Stage 2 will deprecate the implicit auto-import in `ScopeComponentLoader`;
+   * any site still relying on it will emit a warning and should migrate to
+   * `getOrImport` (or to plain `get` if it never needed the network).
+   */
+  async getOrImport(componentId: ComponentID, loadOpts?: ComponentLoadOptions): Promise<Component> {
+    const existing = await this.getIfExist(componentId);
+    if (existing) return existing;
+    await this.scope.import([componentId], { reason: `${componentId.toString()} via workspace.getOrImport` });
+    return this.get(componentId, undefined, true, true, loadOpts);
   }
 
   /**
@@ -1741,7 +1903,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   async getUnmergedComponent(componentId: ComponentID): Promise<Component | undefined> {
     const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId);
     if (unmerged?.head) {
-      return this.scope.get(componentId.changeVersion(unmerged?.head.toString()));
+      return this.scope.getOrImport(componentId.changeVersion(unmerged?.head.toString()));
     }
     return undefined;
   }
@@ -2017,7 +2179,14 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return cacheDir;
   }
 
+  // Cached per Workspace so per-instance state (loadAspectsQueue,
+  // resolvedInstalledAspects, ...) survives across getter calls. Without this,
+  // every callsite got a fresh loader and its queue, which broke the
+  // `loadAspects` serialization queue — concurrent callers each saw an empty
+  // queue and ran in parallel, re-isolating shared envs repeatedly.
+  private _workspaceAspectsLoader?: WorkspaceAspectsLoader;
   getWorkspaceAspectsLoader(): WorkspaceAspectsLoader {
+    if (this._workspaceAspectsLoader) return this._workspaceAspectsLoader;
     let resolveEnvsFromRoots = this.config.resolveEnvsFromRoots;
     if (resolveEnvsFromRoots === undefined) {
       const resolveEnvsFromRootsConfig = this.configStore.getConfig(CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS);
@@ -2027,7 +2196,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       resolveEnvsFromRoots = defaultResolveEnvsFromRoots;
     }
 
-    const workspaceAspectsLoader = new WorkspaceAspectsLoader(
+    this._workspaceAspectsLoader = new WorkspaceAspectsLoader(
       this,
       this.scope,
       this.aspectLoader,
@@ -2041,7 +2210,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       this.config.resolveAspectsFromNodeModules,
       resolveEnvsFromRoots
     );
-    return workspaceAspectsLoader;
+    return this._workspaceAspectsLoader;
   }
 
   getCapsulePath() {
@@ -2349,7 +2518,15 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
    */
   async setEnvToComponents(envId: ComponentID, componentIds: ComponentID[], verifyEnv = true) {
     const envStrWithPossiblyVersion = await this.resolveEnvIdWithPotentialVersionForConfig(envId);
-    if (verifyEnv) {
+    // Core aspects are bundled with bit and not loadable via workspace.get (they
+    // live in aspect-loader's registry, not in the workspace bitmap or scope).
+    // Pre-rewrite WCL had them populated in its cache by bootstrap-time loads;
+    // the unified loader's cache isn't pre-populated. Since core aspects are
+    // known envs by definition, skip the verify step for them.
+    const isCoreAspect = this.aspectLoader.isCoreAspect(
+      ComponentID.fromString(envStrWithPossiblyVersion).toStringWithoutVersion()
+    );
+    if (verifyEnv && !isCoreAspect) {
       const envComp = await this.get(ComponentID.fromString(envStrWithPossiblyVersion));
       const isEnv = this.envs.isEnv(envComp);
       if (!isEnv) throw new BitError(`the component ${envComp.id.toString()} is not an env`);

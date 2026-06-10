@@ -32,7 +32,7 @@ Use the shared formatting toolkit from `@teambit/cli` (`scopes/harmony/cli/outpu
 
 - `bit test` - Run unit tests for components/aspects
 - `bit test --debug` - Run unit tests in debug mode (prints workspace location, keeps workspaces)
-- `npm run e2e-test` - Run end-to-end tests (can take hours, usually run on CI)
+- `npm run e2e-test` - Run end-to-end tests (can take hours, usually run on CI).
 - `npm run e2e-test:debug` - Run e2e tests in debug mode (keeps workspaces, prints output)
 - `npm run mocha-circleci` - Run mocha tests with CircleCI configuration
 
@@ -156,6 +156,15 @@ Each aspect follows a standard structure:
 
 - Workspace: Development environment with source code
 - Scope: Storage for versioned components (local: `.bit/`, remote: Bit Cloud)
+
+**Component Loading:**
+
+- `scopes/component/component-loader/` defines the `UnifiedComponentLoader` plus `ComponentCache`, `LoadEventEmitter`, and `LoaderHost` interface.
+- `Workspace.get/getMany/listWithInvalid` route through the unified loader. The loader does cache lookup (pass 1) + parallel host loads (pass 2) bracketed by `load:phase:start`/`load:phase:end` events.
+- `WorkspaceLoaderHost` (`scopes/workspace/workspace/workspace-component/workspace-loader-host.ts`) is the workspace's implementation of `LoaderHost`. It runs a two-pass internal load: pass 1 builds config-only Components via `consumer.loadComponents`, pass 2 fires `executeLoadSlot` in SCC order so envs' slots register before their consumers'.
+- Phases are `'identity' | 'files' | 'dependencies' | 'extensions' | 'aspects'`; `DEFAULT_PHASE = 'aspects'` (every caller today needs full hydration — design rationale in `openspec/changes/rewrite-component-loading/design-stage2-perf.md`).
+- Lever 1 (`UnifiedComponentLoader` per-`(id, phase)` in-flight dedup) prevents the recursive `workspace.get` calls that the host's own work triggers from re-entering the loader.
+- A `legacyComponent` shortcut path bridges callers that already hold a mid-load `ConsumerComponent` (the `onComponentLoad` subscriber, `dev-files`, `getManyByLegacy`) — these go through `WorkspaceLoaderHost.buildAndLoadFromLegacy` instead of `unifiedLoader.get` to avoid recursing into `consumer.loadComponents` for an id already mid-load.
 
 ## Development Notes
 

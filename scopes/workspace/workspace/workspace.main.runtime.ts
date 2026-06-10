@@ -247,10 +247,10 @@ export class WorkspaceMain {
 
     ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id, loadOpts: ComponentConfigLoadOptions) => {
       const componentId = await workspace.resolveComponentId(id);
-      // We call here directly workspace.scope.get instead of workspace.get because part of the workspace get is loading consumer component
+      // We call here directly workspace.scope.getOrImport instead of workspace.get because part of the workspace get is loading consumer component
       // which in turn run this event, which will make an infinite loop
       // This component from scope here are only used for merging the extensions with the workspace components
-      const componentFromScope = await workspace.scope.get(componentId);
+      const componentFromScope = await workspace.scope.getOrImport(componentId);
       const { extensions } = await workspace.componentExtensions(componentId, componentFromScope, undefined, loadOpts);
       const defaultScope = componentId.scope;
 

@@ -702,6 +702,12 @@
       "signal-exit@4": "^4.0.2",
       "@types/react": "^19.0.0",
       "@types/react-dom": "^19.0.0",
+      // Force React 19 everywhere to prevent pnpm from hoisting @teambit/logger
+      // (which has react as a peerDep with a wide range like ^17||^18||^19)
+      // with mixed React versions, producing TS errors in capsule builds where
+      // LoggerMain types from different hoisted react contexts are incompatible.
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0",
       // Older versions of cross-spawn have a reported security vulnerability.
       "cross-spawn@7": "^7.0.5",
       // react-animate-height < 2.1.2 reads this.state.animating after unmount,

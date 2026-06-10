@@ -823,6 +823,25 @@ export class ScopeMain implements ComponentFactory {
     return this.componentLoader.get(id, importIfMissing, useCache);
   }
 
+  /**
+   * Explicit, self-documenting replacement for `scope.get(id)` at call sites
+   * that genuinely need the implicit auto-import behaviour described in
+   * `openspec/changes/rewrite-component-loading/audit/04-auto-import-sites.md`.
+   *
+   * Today this is semantically identical to `scope.get(id, true, true)` — it
+   * keeps the 30-min `importedComponentsCache` dedup in `ScopeComponentLoader`
+   * intact. The point of the rename is to make the intent visible at the call
+   * site so that a future stage can remove the implicit auto-import from
+   * `scope.get`'s default arguments without touching every caller again:
+   * `scope.get` will become local-only, `getOrImport` keeps the fetch.
+   *
+   * Returns the scope's view of the component (not the workspace's). For the
+   * workspace view, use `workspace.getOrImport`.
+   */
+  async getOrImport(id: ComponentID): Promise<Component | undefined> {
+    return this.componentLoader.get(id, true, true);
+  }
+
   async getFromConsumerComponent(consumerComponent: ConsumerComponent): Promise<Component> {
     return this.componentLoader.getFromConsumerComponent(consumerComponent);
   }

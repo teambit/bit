@@ -732,7 +732,7 @@ export class APIForIDE {
       if (existsLocally) {
         return this.workspace.get(compId);
       }
-      const comp = await this.scope.get(compId);
+      const comp = await this.scope.getOrImport(compId);
       if (comp) return comp;
       throw new ComponentNotFound(compId);
     };

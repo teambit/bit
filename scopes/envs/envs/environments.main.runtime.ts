@@ -416,7 +416,16 @@ export class EnvsMain {
    * @param ignoreVersion
    */
   private getEnvIdFromEnvsData(component: Component, ignoreVersion = true): string | undefined {
-    const envsData = this.getEnvData(component);
+    // `getEnvData` throws when env descriptor isn't on the component (e.g. for
+    // components loaded under recursion where pass 2/3 was skipped). Treat
+    // missing descriptor as "no env id" — the callers (getEnvId,
+    // findFirstEnv, etc.) already handle the undefined branch.
+    let envsData;
+    try {
+      envsData = this.getEnvData(component);
+    } catch {
+      return undefined;
+    }
     if (!envsData) return undefined;
     const rawEnvId = envsData.id;
     if (!rawEnvId) return undefined;
@@ -946,7 +955,19 @@ if needed, use "bit env set" command to align the env id`;
         isFoundWithoutVersion = true;
         return true;
       }
-      const envComponent = await this.getEnvComponentByEnvId(id);
+      // getEnvComponentByEnvId calls workspace.get which throws
+      // ComponentNotFound when the id can't be resolved (typically in capsule
+      // contexts where the workspace's scope doesn't have it). The predicate
+      // here only needs a yes/no answer — treat a throw as "no" and continue
+      // checking the remaining candidates instead of bubbling up. The throw
+      // used to be swallowed pre-rewrite because WCL.get returned undefined
+      // for missing components; the unified loader throws by design.
+      let envComponent;
+      try {
+        envComponent = await this.getEnvComponentByEnvId(id);
+      } catch {
+        return false;
+      }
       const hasManifest = this.hasEnvManifest(envComponent);
       if (hasManifest) return true;
       const isUsingEnvEnv = this.isUsingEnvEnv(envComponent);
@@ -1025,13 +1046,30 @@ if needed, use "bit env set" command to align the env id`;
   }
 
   isUsingAspectEnv(component: Component): boolean {
-    const data = this.getEnvData(component);
+    // See isUsingEnvEnv for why this is wrapped — getEnvData throws when the
+    // env descriptor isn't on the component.
+    let data;
+    try {
+      data = this.getEnvData(component);
+    } catch {
+      return false;
+    }
     if (!data) return false;
     return data.type === 'aspect';
   }
 
   isUsingEnvEnv(component: Component): boolean {
-    const data = this.getEnvData(component);
+    // `getEnvData` throws when the env descriptor isn't on the component's
+    // aspect list (happens for components whose slots weren't fired — e.g.
+    // scope-only components or recursive loads where pass 2/3 was skipped).
+    // The callers of this method only need a yes/no signal, so treat a missing
+    // descriptor as "not an env env" rather than propagating the throw.
+    let data;
+    try {
+      data = this.getEnvData(component);
+    } catch {
+      return false;
+    }
     if (!data) return false;
     return data.type === 'env';
   }

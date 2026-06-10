@@ -30,7 +30,7 @@ import type {
   OnRootAspectAdded,
   OnRootAspectAddedSlot,
 } from './workspace.main.runtime';
-import type { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
+import type { ComponentLoadOptions } from './workspace-component/component-load-options';
 import type { ConfigStoreMain } from '@teambit/config-store';
 
 export type GetConfiguredUserAspectsPackagesOptions = {
@@ -49,6 +49,34 @@ export type AspectPackage = { packageName: string; version: string };
 export class WorkspaceAspectsLoader {
   private consumer: Consumer;
   private resolvedInstalledAspects: Map<string, string | null>;
+  /**
+   * Tail of the load-aspects serialization chain. Each `loadAspects` call
+   * chains onto this promise so only one runs at a time globally.
+   *
+   * Why serialize: pass1's `consumer.loadComponents` (with
+   * `loadExtensions: true`) fires the `onComponentConfigLoading` subscriber
+   * for every component in parallel; each subscriber calls
+   * `loadComponentsExtensions` -> `loadAspects` for that component's
+   * env-and-extensions. The inner aspect-resolution machinery
+   * (`scope-aspects-loader.getManifestsGraphRecursively`) recurses through
+   * each aspect's env/dep graph independently per call — so N concurrent
+   * `loadAspects` calls for DIFFERENT root aspects but with SHARED env
+   * deps (e.g. `core-aspect-env`) each fire `isolator.isolateComponents`
+   * for the shared env, emitting "resolved aspect(s)" lines and re-doing
+   * capsule setup. `aspectLoader.isAspectLoaded` only flips true after
+   * the load completes, so per-call filters can't catch the race.
+   * Per-id in-flight dedup (tried first) also misses this because the
+   * shared env id isn't in the outer caller's `ids` list — it only
+   * surfaces deep inside the recursion.
+   *
+   * Serializing lets the first call register everything it loads (envs
+   * included) before the next call's inner work checks `isAspectLoaded`,
+   * so subsequent calls short-circuit. Pass1 with ~300 components dropped
+   * from 5:29 to ~25s with this change.
+   *
+   * `forceLoad` callers bypass the queue.
+   */
+  private loadAspectsQueue: Promise<unknown> = Promise.resolve();
 
   constructor(
     private workspace: Workspace,
@@ -76,6 +104,26 @@ export class WorkspaceAspectsLoader {
    */
   async loadAspects(
     ids: string[] = [],
+    throwOnError?: boolean,
+    neededFor?: string,
+    opts: WorkspaceLoadAspectsOptions = {}
+  ): Promise<string[]> {
+    if (opts.forceLoad) return this.loadAspectsInner(ids, throwOnError, neededFor, opts);
+    // Chain onto the queue: wait for any in-flight loadAspects to finish,
+    // then run. Swallow the previous call's rejection so a failed load
+    // doesn't poison subsequent ones (each call's own errors still surface
+    // through its own promise).
+    const prev = this.loadAspectsQueue;
+    const run = (async () => {
+      await prev.catch(() => undefined);
+      return this.loadAspectsInner(ids, throwOnError, neededFor, opts);
+    })();
+    this.loadAspectsQueue = run;
+    return run;
+  }
+
+  private async loadAspectsInner(
+    ids: string[],
     throwOnError?: boolean,
     neededFor?: string,
     opts: WorkspaceLoadAspectsOptions = {}

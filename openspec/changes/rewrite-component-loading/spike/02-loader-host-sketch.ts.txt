@@ -1,0 +1,331 @@
+// SPIKE SKETCH — NOT FOR COMPILATION
+// ====================================
+//
+// This file shows the proposed shape of the consolidated `WorkspaceLoaderHost`
+// after absorbing the essential logic from `workspace-component-loader.ts`.
+//
+// Reference: openspec/changes/rewrite-component-loading/spike/01-consolidated-host-sketch.md
+//
+// The intent here is to make the line-count estimate concrete, not to be
+// directly compilable. Names, error handling, and edge-case code are sketched
+// at the level needed to see the shape. Implementation would fill in real
+// types and proper error handling.
+//
+// Approximate line count of the real implementation: ~400 lines (this sketch
+// stays slim by omitting boilerplate but shows every non-trivial code path).
+
+import type { Component, InvalidComponent } from '@teambit/component';
+import type { ComponentID } from '@teambit/component-id';
+import type { LoaderHost, Phase } from '@teambit/component-loader';
+import type { Workspace } from '../workspace';
+// ... other imports ...
+
+// -- types ----------------------------------------------------------
+// Slimmed from today's LoadGroup/LoadGroupMetadata/etc.
+
+type LoadResult = {
+  components: Component[];
+  invalid: InvalidComponent[];
+};
+
+// Per-call mutation flags. Vastly slimmer than today's ComponentLoadOptions
+// because stage-1 retracted the per-phase opt-outs.
+type LoadOpts = {
+  loadDocs?: boolean;       // false in stage-1 default
+  loadCompositions?: boolean; // false in stage-1 default
+};
+
+// -- the consolidated host ------------------------------------------
+
+export class WorkspaceLoaderHost implements LoaderHost {
+  private bitmapVersion = 0;
+  private workspaceConfigVersion = 0;
+  private aspectStateVersion = 0;
+
+  constructor(
+    private workspace: Workspace,
+    private logger: Logger,
+    private dependencyResolver: DependencyResolverMain,
+    private envs: EnvsMain,
+    private aspectLoader: AspectLoaderMain,
+  ) {
+    workspace.registerOnBitmapChange(async () => { this.bitmapVersion++; });
+    workspace.registerOnWorkspaceConfigChange(async () => { this.workspaceConfigVersion++; });
+  }
+
+  // === LoaderHost contract — hash inputs (stage 1, kept) ===========
+  listBitmapIds(): ComponentID[] { return this.workspace.consumer.bitMap.getAllIdsAvailableOnLane(); }
+  bitmapHash() { return `bm-${this.bitmapVersion}`; }
+  workspaceConfigHash() { return `wc-${this.workspaceConfigVersion}`; }
+  aspectStateHash() { return `as-${this.aspectStateVersion}`; }
+  fileSignature(id: ComponentID) { return `${id}@${this.bitmapVersion}`; }
+  componentConfigHash(id: ComponentID) { return `${id}@${this.bitmapVersion}-${this.workspaceConfigVersion}`; }
+
+  // === Single-ID load — the per-ID slow path ========================
+  async loadAtPhase(id: ComponentID, _phase: Phase): Promise<Component | undefined> {
+    // Single-ID load wraps loadMany with one element. Today's special-case at
+    // `componentLoader.get` exists because the legacy batch path is heavier
+    // than a single get; under the two-pass design they're the same code.
+    const { components } = await this.loadMany([id]);
+    return components[0];
+  }
+
+  // === Batch load — the consolidated two-pass design ===============
+  async loadManyAtPhase(ids: ComponentID[], _phase: Phase): Promise<Map<string, Component>> {
+    const result = await this.loadMany(ids);
+    return new Map(result.components.map(c => [c.id.toString(), c]));
+  }
+
+  // === The core: loadMany — replaces ~700 lines of group machinery ==
+  private async loadMany(ids: ComponentID[]): Promise<LoadResult> {
+    if (!ids.length) return { components: [], invalid: [] };
+
+    // --- Pass 0: split workspace vs scope, resolve versions ----------
+    // ~25 lines, lifted from groupAndUpdateIds + resolveVersion
+    const { workspaceIds, scopeIds } = await this.partitionIds(ids);
+
+    // --- Pass 1: build all Components with extensions, NO slots fired ---
+    // ~60 lines. Wraps consumer.loadComponents (FS reads + dep AST walk for ws)
+    // and scope.getMany (scope state). Merges extensions config-only.
+    // The "shouldRunInParallel" cold-cache gate inside consumer.loadComponents
+    // is preserved (the gate is per-batch, this is one batch).
+    const pass1 = await this.pass1_buildComponentsNoSlots(workspaceIds, scopeIds);
+
+    // --- Pass 2: identify env/aspect subset, load them in topo order ---
+    // ~50 lines. Includes recursive env-of-env-of-env topo sort.
+    // For each env (in order): executeLoadSlot, then loadAspect via aspectLoader.
+    // Bit6's "loadCompsAsAspects" logic ports here directly.
+    await this.pass2_loadEnvsAndAspectsInOrder(pass1.workspaceComponents);
+
+    // --- Pass 3: fire slots on remaining non-aspect components (parallel) ---
+    // ~25 lines. Bounded concurrency via concurrentComponentsLimit().
+    // Each call collects errors into a shared array; no ordering needed.
+    const pass3 = await this.pass3_fireSlotsParallel(pass1.workspaceComponents);
+
+    // --- Pass 4: warnings + multi-env issue detection (cheap) ---------
+    // ~15 lines. Lifts addMultipleEnvsIssueIfNeeded + warnAboutMisconfiguredEnvs.
+    await this.applyPostLoadIssuesAndWarnings(pass3.components);
+
+    return {
+      components: [...pass3.components, ...pass1.scopeComponents],
+      invalid: [...pass1.invalid, ...pass3.errors],
+    };
+  }
+
+  // --- Pass 0 helper: partition ids ---------------------------------------
+  // Lifted from groupAndUpdateIds + isInWsIncludeDeleted. ~25 lines.
+  private async partitionIds(ids: ComponentID[]) {
+    const wsIds = this.workspace.listIds();
+    const deletedIds = await this.workspace.locallyDeletedIds();
+    const all = wsIds.concat(deletedIds);
+    const workspaceIds: ComponentID[] = [];
+    const scopeIds: ComponentID[] = [];
+    for (const id of ids) {
+      const inWs = all.find(wid => wid.isEqual(id, { ignoreVersion: !id.hasVersion() }));
+      if (inWs) {
+        workspaceIds.push(this.resolveVersion(id));
+      } else {
+        scopeIds.push(id);
+      }
+    }
+    return { workspaceIds, scopeIds };
+  }
+
+  private resolveVersion(id: ComponentID): ComponentID {
+    const bitIds = this.workspace.consumer.bitmapIdsFromCurrentLaneIncludeRemoved;
+    const withVersion = getLatestVersionNumber(bitIds, id);
+    return withVersion.version ? id.changeVersion(withVersion.version) : id;
+  }
+
+  // --- Pass 1: build harmony Components with extensions config, no slots --
+  // Lifted+simplified from getComponentsWithoutLoadExtensions + loadOne. ~60 lines.
+  private async pass1_buildComponentsNoSlots(workspaceIds: ComponentID[], scopeIds: ComponentID[]) {
+    const invalid: InvalidComponent[] = [];
+
+    // -- workspace side: read files + parse deps --
+    // consumer.loadComponents batches ALL workspace ids. The legacy code's
+    // cold-cache sequential dep-extraction gate (shouldRunInParallel) fires
+    // inside this call when the FS dep cache is empty. We do NOT bypass it.
+    const { components: legacyComps, invalidComponents, removedComponents } =
+      await this.workspace.consumer.loadComponents(
+        ComponentIdList.fromArray(workspaceIds),
+        false,
+        { loadExtensions: false, executeLoadSlot: false },
+      );
+    for (const ic of invalidComponents) {
+      if (ConsumerComponent.isComponentInvalidByErrorType(ic.error)) {
+        invalid.push({ id: ic.id, err: ic.error });
+      }
+    }
+    const allLegacy = legacyComps.concat(removedComponents);
+
+    // -- scope side: needed for extension merging (provides "componentFromScope") --
+    const scopeWorkspace = await this.workspace.scope.getMany(workspaceIds); // for merging
+    const scopeOnly = await this.workspace.scope.getMany(scopeIds);
+
+    // -- build harmony Components with merged extensions, slots NOT fired --
+    const workspaceComponents = await pMapPool(allLegacy, async (legacyComp) => {
+      const id = legacyComp.id;
+      const fromScope = scopeWorkspace.find(c => c.id.isEqual(id, { ignoreVersion: true }));
+      const { extensions, errors } = await this.workspace.componentExtensions(
+        id, fromScope, undefined, { loadExtensions: false }
+      );
+      if (errors?.some(e => e instanceof MergeConfigConflict)) {
+        legacyComp.issues.getOrCreate(IssuesClasses.MergeConfigHasConflict).data = true;
+      }
+      // Build harmony Component from (legacy, extensions, fromScope).
+      // This is the only legitimate place ConsumerComponent.extensions = X
+      // still happens; survives until stage 3 direct-to-harmony build.
+      legacyComp.extensions = extensions;
+      const state = new State(
+        new Config(legacyComp),
+        await this.workspace.createAspectList(extensions),
+        ComponentFS.fromVinyls(legacyComp.files),
+        legacyComp.dependencies,
+        legacyComp,
+      );
+      return new WorkspaceComponent(id, fromScope?.head ?? null, state,
+                                    fromScope?.tags ?? new TagMap(), this.workspace);
+    }, { concurrency: concurrentComponentsLimit() });
+
+    return { workspaceComponents, scopeComponents: scopeOnly, invalid };
+  }
+
+  // --- Pass 2: identify env/aspect subset, topo-sort, load in order -------
+  // ~50 lines. Replaces buildLoadGroups + regroupEnvsIdsFromTheList +
+  // getAndLoadSlotOrdered + loadCompsAsAspects' enumeration loop.
+  private async pass2_loadEnvsAndAspectsInOrder(components: Component[]): Promise<void> {
+    // Detect which workspace components are envs/aspects/apps.
+    // Logic lifted from loadCompsAsAspects (lines 451–490 of old code).
+    const aspectCandidates = components.filter(c => {
+      const envsData = c.state.aspects.get(EnvsAspect.id);
+      const appData = c.state.aspects.get('teambit.harmony/application');
+      const isEnv = envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env';
+      const isAspect = envsData?.data?.type === 'aspect';
+      const isApp = appData?.data?.appName;
+      const isCore = this.aspectLoader.isCoreAspect(c.id.toStringWithoutVersion());
+      const alreadyLoaded = this.aspectLoader.isAspectLoaded(c.id.toString());
+      return (isEnv || isAspect || isApp) && !isCore && !alreadyLoaded;
+    });
+    if (!aspectCandidates.length) return;
+
+    // Topo-sort by env-of-env relation (recursive — handles A's env is B,
+    // B's env is C, etc.). Today's regroupEnvsIdsFromTheList is one-level;
+    // this is the proper recursive version.
+    const ordered = this.topoSortByEnv(aspectCandidates);
+
+    // Fire slots in topo order, then register as aspects.
+    // Sequential because each level depends on previous levels being aspects.
+    for (const comp of ordered) {
+      await this.executeLoadSlot(comp);
+    }
+    const aspectIds = ordered.map(c => c.id.toString());
+    try {
+      await this.workspace.loadAspects(aspectIds, true, 'self loading aspects',
+                                       { useScopeAspectsCapsule: true });
+    } catch (err) {
+      this.logger.warn(`failed loading components as aspects: ${aspectIds.join(', ')}`, err);
+    }
+  }
+
+  // ~25 lines — recursive env-of-env topo sort.
+  // Today's regroupEnvsIdsFromTheList is non-recursive (1 level). This is the
+  // generalized version. If empirically env chains never recurse, a 1-level
+  // version is sufficient (~10 lines).
+  private topoSortByEnv(candidates: Component[]): Component[] {
+    const byId = new Map(candidates.map(c => [c.id.toStringWithoutVersion(), c]));
+    const ordered: Component[] = [];
+    const visited = new Set<string>();
+    const visiting = new Set<string>();
+    const visit = (comp: Component) => {
+      const key = comp.id.toStringWithoutVersion();
+      if (visited.has(key)) return;
+      if (visiting.has(key)) return; // cycle — accept and proceed
+      visiting.add(key);
+      const envId = this.envs.getEnvId(comp);
+      const envWithoutVer = envId.split('@')[0];
+      const envComp = byId.get(envWithoutVer);
+      if (envComp) visit(envComp);
+      visiting.delete(key);
+      visited.add(key);
+      ordered.push(comp);
+    };
+    for (const c of candidates) visit(c);
+    return ordered;
+  }
+
+  // --- Pass 3: fire slots on remaining components in parallel -------------
+  // ~25 lines.
+  private async pass3_fireSlotsParallel(allComponents: Component[]) {
+    const errors: InvalidComponent[] = [];
+    const components = await pMapPool(allComponents, async (comp) => {
+      if (comp.loadedPhase === 'aspects') return comp;  // pass 2 already did these
+      try {
+        return await this.executeLoadSlot(comp);
+      } catch (err) {
+        if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
+          errors.push({ id: comp.id, err });
+          return comp;
+        }
+        throw err;
+      }
+    }, { concurrency: concurrentComponentsLimit() });
+    return { components, errors };
+  }
+
+  // --- executeLoadSlot — lifted from old loader, body unchanged -----------
+  // ~65 lines. Same as today's executeLoadSlot (lines 904–967).
+  // Mark component as `loadedPhase = 'aspects'` after firing.
+  private async executeLoadSlot(component: Component): Promise<Component> {
+    // ... body identical to old loader's executeLoadSlot ...
+    // (deps-policy merge → env calc → env+depResolver data upsert → fire slots)
+    component.loadedPhase = 'aspects';
+    return component;
+  }
+
+  // --- Post-load issues and warnings --------------------------------------
+  // ~15 lines.
+  private async applyPostLoadIssuesAndWarnings(components: Component[]) {
+    for (const c of components) {
+      const envs = this.envs.getAllEnvsConfiguredOnComponent(c);
+      const envIds = uniq(envs.map(e => e.id));
+      if (envIds.length >= 2) c.state.issues.getOrCreate(IssuesClasses.MultipleEnvs).data = envIds;
+    }
+    const allEnvIds = uniq(components.map(c => this.envs.getEnvId(c)));
+    await Promise.all(allEnvIds.map(envId => this.workspace.warnAboutMisconfiguredEnv(envId)));
+  }
+
+  // --- Small helpers ------------------------------------------------------
+  // upsertExtensionData, getDataEntry, isComponentNotExistsError, getInvalid,
+  // getIfExist, getConsumerComponent: ~50 lines combined, identical to today.
+}
+
+// ===========================================================================
+// LINE-COUNT BUDGET
+// ===========================================================================
+//
+//   Section                                  Lines
+//   ----------------------------------------------
+//   imports + types                            30
+//   constructor + hash inputs (stage 1)        40
+//   loadAtPhase / loadManyAtPhase wrappers     15
+//   loadMany top-level orchestration           30
+//   partitionIds + resolveVersion              25
+//   pass1_buildComponentsNoSlots               60
+//   pass2_loadEnvsAndAspectsInOrder            50
+//   topoSortByEnv                              25
+//   pass3_fireSlotsParallel                    25
+//   executeLoadSlot                            65
+//   applyPostLoadIssuesAndWarnings             15
+//   small helpers (errors, getIfExist, etc.)   50
+//                                          ─────────
+//                                          ~430 lines
+//
+// vs. today: WorkspaceComponentLoader 1029 + WorkspaceLoaderHost 150 = 1179.
+//
+// Net reduction:   ~750 lines (-64%) for equivalent behavior.
+// Cache count:     1029 has 4 in-memory caches; the consolidated host owns 0
+//                  (the unified ComponentCache from stage 1 is the only cache).
+//
+// The 430 estimate is the goal. Implementation might land at ~500 once real
+// error handling and edge-case branches are written. Still a massive reduction.
