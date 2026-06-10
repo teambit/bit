@@ -10,7 +10,7 @@ import type { ComponentCompareUI } from '@teambit/component-compare';
 import { ComponentCompareAspect } from '@teambit/component-compare';
 import { OverviewCompare } from '@teambit/docs.ui.overview-compare';
 import { OverviewCompareSection } from '@teambit/docs.ui.overview-compare-section';
-import type { UseSandboxPermission } from '@teambit/preview.ui.component-preview';
+import type { UsePreviewProps, UseSandboxPermission } from '@teambit/preview.ui.component-preview';
 import type { APIReferenceUI } from '@teambit/api-reference';
 import { APIReferenceAspect } from '@teambit/api-reference';
 import { DocsAspect } from './docs.aspect';
@@ -18,12 +18,14 @@ import { OverviewSection } from './overview.section';
 import type { TitleBadgeSlot, TitleBadge, OverviewOptionsSlot, OverviewOptions } from './overview';
 
 export type UsePreviewSandboxSlot = SlotRegistry<UseSandboxPermission>;
+export type UsePreviewPropsSlot = SlotRegistry<UsePreviewProps>;
 
 export class DocsUI {
   constructor(
     readonly titleBadgeSlot: TitleBadgeSlot,
     readonly overviewOptionsSlot: OverviewOptionsSlot,
-    private usePreviewSandboxSlot: UsePreviewSandboxSlot
+    private usePreviewSandboxSlot: UsePreviewSandboxSlot,
+    private usePreviewPropsSlot: UsePreviewPropsSlot
   ) {}
 
   /**
@@ -52,6 +54,15 @@ export class DocsUI {
     this.usePreviewSandboxSlot.register(useSandboxPermission);
   }
 
+  /**
+   * register a per-component resolver for iframe attributes on the overview preview
+   * (`allow`, `referrerPolicy`, ...). The resolver runs at render time with the current
+   * `ComponentModel`; results from multiple resolvers merge with later keys winning.
+   */
+  registerPreviewProps(usePreviewProps: UsePreviewProps) {
+    this.usePreviewPropsSlot.register(usePreviewProps);
+  }
+
   getEmptyState() {
     return this._emptyState;
   }
@@ -68,19 +79,32 @@ export class DocsUI {
 
   static runtime = UIRuntime;
 
-  static slots = [Slot.withType<TitleBadge>(), Slot.withType<OverviewOptions>(), Slot.withType<UseSandboxPermission>()];
+  static slots = [
+    Slot.withType<TitleBadge>(),
+    Slot.withType<OverviewOptions>(),
+    Slot.withType<UseSandboxPermission>(),
+    Slot.withType<UsePreviewProps>(),
+  ];
 
   static async provider(
     [component, componentCompare, apiRef]: [ComponentUI, ComponentCompareUI, APIReferenceUI],
-    config,
-    [titleBadgeSlot, overviewOptionsSlot, usePreviewSandboxSlot]: [
+    config: {},
+    [titleBadgeSlot, overviewOptionsSlot, usePreviewSandboxSlot, usePreviewPropsSlot]: [
       TitleBadgeSlot,
       OverviewOptionsSlot,
       UsePreviewSandboxSlot,
+      UsePreviewPropsSlot,
     ]
   ) {
-    const docs = new DocsUI(titleBadgeSlot, overviewOptionsSlot, usePreviewSandboxSlot);
-    const section = new OverviewSection(titleBadgeSlot, overviewOptionsSlot, docs, apiRef, usePreviewSandboxSlot);
+    const docs = new DocsUI(titleBadgeSlot, overviewOptionsSlot, usePreviewSandboxSlot, usePreviewPropsSlot);
+    const section = new OverviewSection(
+      titleBadgeSlot,
+      overviewOptionsSlot,
+      docs,
+      apiRef,
+      usePreviewSandboxSlot,
+      usePreviewPropsSlot
+    );
     const compareSection = new OverviewCompareSection(docs);
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink, section.order);
@@ -91,6 +115,11 @@ export class DocsUI {
         manager.add('allow-scripts');
         manager.add('allow-same-origin');
       }
+    });
+    // Default Permissions Policy: allow clipboard writes so copy-to-clipboard buttons in
+    // readme MDX work. Clipboard-read, camera, mic, geolocation, etc. remain denied.
+    docs.registerPreviewProps((manager) => {
+      manager.set('allow', 'clipboard-write');
     });
     return docs;
   }

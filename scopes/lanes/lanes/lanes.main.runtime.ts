@@ -57,6 +57,7 @@ import type { LaneCheckoutOpts } from './lane.cmd';
 import {
   LaneCmd,
   LaneCreateCmd,
+  LaneCurrentCmd,
   LaneImportCmd,
   LaneListCmd,
   LaneRemoveCmd,
@@ -103,7 +104,7 @@ export type CreateLaneOptions = {
 };
 
 export type SwitchLaneOptions = {
-  head?: boolean;
+  skipFetch?: boolean;
   alias?: string;
   merge?: MergeStrategy;
   forceOurs?: boolean;
@@ -589,12 +590,12 @@ please create a new lane instead, which will include all components of this lane
    * save the objects and the lane to the local scope.
    * this method doesn't change anything in the workspace.
    */
-  async fetchLaneWithItsComponents(laneId: LaneId, includeUpdateDependents = false): Promise<Lane> {
+  async fetchLaneWithItsComponents(laneId: LaneId): Promise<Lane> {
     this.logger.debug(`fetching lane ${laneId.toString()}`);
     const lane = await this.importer.importLaneObject(laneId);
     if (!lane) throw new Error(`unable to import lane ${laneId.toString()} from the remote`);
 
-    await this.importer.fetchLaneComponents(lane, includeUpdateDependents);
+    await this.importer.fetchLaneComponents(lane);
     this.logger.debug(`fetching lane ${laneId.toString()} done, fetched ${lane.components.length} components`);
     return lane;
   }
@@ -648,7 +649,7 @@ please create a new lane instead, which will include all components of this lane
       pattern,
       workspaceOnly,
       skipDependencyInstallation = false,
-      head,
+      skipFetch = false,
       branch = false,
     }: SwitchLaneOptions
   ) {
@@ -673,7 +674,7 @@ please create a new lane instead, which will include all components of this lane
       existingOnWorkspaceOnly: workspaceOnly,
       pattern,
       alias,
-      head,
+      skipFetch,
     };
     const checkoutProps = {
       mergeStrategy,
@@ -767,6 +768,25 @@ please create a new lane instead, which will include all components of this lane
       : laneComponents;
 
     return filteredComponentIds.map((laneComponent) => laneComponent.id.changeVersion(laneComponent.head));
+  }
+
+  /**
+   * hidden lane.updateDependents are intentionally excluded from `getLaneComponentIds` so the
+   * default GraphQL `Lane.components` field stays workspace-facing. Consumers that need the full
+   * lane graph (e.g. a CI dashboard surfacing cascade entries) opt in via this method or its
+   * `updateDependentIds` / `updateDependentComponents` GraphQL counterparts. No bitmap filter
+   * here — hidden entries by definition don't live in the bitmap.
+   */
+  async getLaneUpdateDependentIds(lane: LaneData): Promise<ComponentID[]> {
+    if (!lane?.updateDependents?.length) return [];
+    return lane.updateDependents.map((c) => c.id.changeVersion(c.head));
+  }
+
+  async getLaneUpdateDependentComponents(lane: LaneData): Promise<Component[]> {
+    const ids = await this.getLaneUpdateDependentIds(lane);
+    if (!ids.length) return [];
+    const host = this.componentAspect.getHost();
+    return host.getMany(ids);
   }
 
   async getLaneReadmeComponent(lane: LaneData): Promise<Component | undefined> {
@@ -989,38 +1009,9 @@ please create a new lane instead, which will include all components of this lane
 
     const commonSnap = snapsDistance?.commonSnapBeforeDiverge;
 
-    const getChanges = async (): Promise<ChangeType[]> => {
-      if (!commonSnap) return [ChangeType.NEW];
-
-      // import common snap before we compare
-      const compare = await this.componentCompare.compare(
-        componentId.changeVersion(commonSnap.hash).toString(),
-        componentId.changeVersion(sourceHead).toString()
-      );
-
-      if (!compare.fields.length && (!compare.code.length || !compare.code.some((c) => c.status !== 'UNCHANGED'))) {
-        return [ChangeType.NONE];
-      }
-
-      const changed: ChangeType[] = [];
-
-      if (compare.code.some((f) => f.status !== 'UNCHANGED')) {
-        changed.push(ChangeType.SOURCE_CODE);
-      }
-
-      if (compare.fields.length > 0) {
-        changed.push(ChangeType.ASPECTS);
-      }
-
-      const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
-      if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
-        changed.push(ChangeType.DEPENDENCY);
-      }
-
-      return changed;
-    };
-
-    const changes = !options?.skipChanges ? await getChanges() : undefined;
+    const changes = !options?.skipChanges
+      ? await this.deriveChangeTypes(commonSnap, componentId, sourceHead)
+      : undefined;
     const changeType = changes ? changes[0] : undefined;
 
     return {
@@ -1061,37 +1052,9 @@ please create a new lane instead, which will include all components of this lane
 
     const commonSnap = snapsDistance?.commonSnapBeforeDiverge;
 
-    const getChanges = async (): Promise<ChangeType[]> => {
-      if (!commonSnap) return [ChangeType.NEW];
-
-      const compare = await this.componentCompare.compare(
-        componentId.changeVersion(commonSnap.hash).toString(),
-        componentId.changeVersion(sourceHead).toString()
-      );
-
-      if (!compare.fields.length && (!compare.code.length || !compare.code.some((c) => c.status !== 'UNCHANGED'))) {
-        return [ChangeType.NONE];
-      }
-
-      const changed: ChangeType[] = [];
-
-      if (compare.code.some((f) => f.status !== 'UNCHANGED')) {
-        changed.push(ChangeType.SOURCE_CODE);
-      }
-
-      if (compare.fields.length > 0) {
-        changed.push(ChangeType.ASPECTS);
-      }
-
-      const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
-      if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
-        changed.push(ChangeType.DEPENDENCY);
-      }
-
-      return changed;
-    };
-
-    const changes = !options?.skipChanges ? await getChanges() : undefined;
+    const changes = !options?.skipChanges
+      ? await this.deriveChangeTypes(commonSnap, componentId, sourceHead)
+      : undefined;
     const changeType = changes ? changes[0] : undefined;
 
     return {
@@ -1107,6 +1070,50 @@ please create a new lane instead, which will include all components of this lane
         common: snapsDistance?.commonSnapBeforeDiverge?.hash,
       },
     };
+  }
+
+  private async deriveChangeTypes(
+    commonSnap: { hash: string } | null | undefined,
+    componentId: ComponentID,
+    sourceHead: string
+  ): Promise<ChangeType[]> {
+    if (!commonSnap) return [ChangeType.NEW];
+
+    const baseIdStr = componentId.changeVersion(commonSnap.hash).toString();
+    const compareIdStr = componentId.changeVersion(sourceHead).toString();
+    const [compare, apiDiff] = await Promise.all([
+      this.componentCompare.compare(baseIdStr, compareIdStr),
+      this.componentCompare.getAPIDiff(baseIdStr, compareIdStr),
+    ]);
+
+    const hasCodeChanges = compare.code.some((c) => c.status !== 'UNCHANGED');
+    const hasFieldChanges = compare.fields.length > 0;
+    const hasApiChanges = apiDiff?.hasChanges ?? false;
+
+    if (!hasFieldChanges && !hasCodeChanges && !hasApiChanges) {
+      return [ChangeType.NONE];
+    }
+
+    const changed: ChangeType[] = [];
+
+    if (hasCodeChanges) {
+      changed.push(ChangeType.SOURCE_CODE);
+    }
+
+    if (hasFieldChanges) {
+      changed.push(ChangeType.ASPECTS);
+    }
+
+    const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
+    if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
+      changed.push(ChangeType.DEPENDENCY);
+    }
+
+    if (hasApiChanges) {
+      changed.push(ChangeType.API);
+    }
+
+    return changed;
   }
 
   private async recreateNewLaneIfDeleted() {
@@ -1364,11 +1371,12 @@ please create a new lane instead, which will include all components of this lane
       new LaneRenameCmd(lanesMain),
       new LaneDiffCmd(workspace, scope, componentCompare),
       new LaneRemoveReadmeCmd(lanesMain),
-      new LaneImportCmd(switchCmd),
+      new LaneImportCmd(switchCmd, lanesMain),
       new LaneRemoveCompCmd(workspace, lanesMain),
       new LaneFetchCmd(fetchCmd, lanesMain),
       new LaneEjectCmd(lanesMain),
     ];
+    laneCmd.commands.push(new LaneCurrentCmd(lanesMain));
     laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
     laneCmd.commands.push(new LaneHistoryDiffCmd(lanesMain, workspace, scope, componentCompare));
     laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));

@@ -329,6 +329,15 @@ export default class CommandHelper {
   undeprecateComponent(id: string, flags = '') {
     return this.runCmd(`bit undeprecate ${id} ${flags}`);
   }
+  internalizeComponents(pattern: string, flags = '') {
+    return this.runCmd(`bit internalize "${pattern}" ${flags}`);
+  }
+  uninternalizeComponents(pattern: string, flags = '') {
+    return this.runCmd(`bit internalize "${pattern}" --revert ${flags}`);
+  }
+  internalizeListParsed(): string[] {
+    return JSON.parse(this.runCmd('bit internalize --list --json'));
+  }
   fork(sourceId: string, values = '') {
     return this.runCmd(`bit fork ${sourceId} ${values}`);
   }
@@ -852,8 +861,8 @@ export default class CommandHelper {
   mergeMoveLane(laneName: string, options = '') {
     return this.runCmd(`bit lane merge-move ${laneName} ${options}`);
   }
-  diff(id = '') {
-    const output = this.runCmd(`bit diff ${id}`);
+  diff(id = '', flags = '') {
+    const output = this.runCmd(`bit diff ${id} ${flags}`);
     return removeChalkCharacters(output);
   }
   log(id: string, flags = '') {
@@ -894,7 +903,14 @@ export default class CommandHelper {
     runCmdOpts?: { envVariables?: Record<string, string> }
   ) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit install ${packages} ${parsedOpts}`, cwd, 'pipe', undefined, false, runCmdOpts?.envVariables);
+    return this.runCmd(
+      `bit install ${packages} ${parsedOpts}`,
+      cwd,
+      'pipe',
+      undefined,
+      false,
+      runCmdOpts?.envVariables
+    );
   }
   update(flags?: string) {
     return this.runCmd(`bit update ${flags || ''}`);

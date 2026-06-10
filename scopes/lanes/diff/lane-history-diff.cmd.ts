@@ -2,15 +2,19 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import type { ScopeMain } from '@teambit/scope';
 import type { Workspace } from '@teambit/workspace';
 import type { ComponentCompareMain } from '@teambit/component-compare';
+import type { Lane, LaneHistory } from '@teambit/objects';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { LaneDiffGenerator } from './lane-diff-generator';
 import { BitError } from '@teambit/bit-error';
 import type { LanesMain } from '@teambit/lanes';
 
 export class LaneHistoryDiffCmd implements Command {
-  name = 'history-diff <from-history-id> <to-history-id>';
-  description = 'EXPERIMENTAL. show diff between two lane-history ids';
-  extendedDescription = 'run "bit lane history" to find these history-ids';
+  name = 'history-diff [history-id] [to-history-id]';
+  description = 'show diff between lane-history entries';
+  extendedDescription = `with no arguments - diff the latest history entry against its predecessor
+with one argument - diff the given history entry against its predecessor
+with two arguments - diff between two specific history entries (first=from, second=to), useful for comparing any two points in history
+run "bit lane history" to find history-ids`;
   alias = '';
   options = [
     ['l', 'lane <lane-name>', 'the name of the lane to diff. if not specified, the current lane is used'],
@@ -31,22 +35,71 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
   ) {}
 
   async report(
-    [fromHistoryId, toHistoryId]: [string, string],
+    [historyId, toHistoryId]: string[],
     { lane, pattern }: { lane?: string; pattern?: string }
   ): Promise<string> {
     const laneId = lane ? await this.lanes.parseLaneId(lane) : this.lanes.getCurrentLaneId();
     if (!laneId || laneId.isDefault()) throw new BitError(`unable to show diff-history of the default lane (main)`);
     await this.lanes.importLaneHistory(laneId);
     const laneHistory = await this.lanes.getLaneHistory(laneId);
-    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
+
+    let fromId: string;
+    let toId: string;
+    const historyIds = laneHistory.getHistoryIds();
     const laneObj = await this.lanes.loadLane(laneId);
-    const results = await laneDiffGenerator.generateDiffHistory(
-      laneObj!,
-      laneHistory,
-      fromHistoryId,
-      toHistoryId,
-      pattern
-    );
+    if (!laneObj) throw new BitError(`unable to load lane "${laneId.toString()}"`);
+
+    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
+
+    if (historyId && toHistoryId) {
+      // two args: explicit from and to — no fallback
+      fromId = historyId;
+      toId = toHistoryId;
+    } else if (historyId) {
+      // one arg: diff this entry against its nearest available predecessor
+      toId = historyId;
+      const toIndex = historyIds.indexOf(historyId);
+      if (toIndex < 0) throw new BitError(`history-id "${historyId}" was not found`);
+      if (toIndex === 0) throw new BitError(`history-id "${historyId}" is the first entry and has no predecessor`);
+      fromId = await this.findAvailableEntry(laneDiffGenerator, laneObj, laneHistory, historyIds, toIndex - 1);
+    } else {
+      // no args: find the latest available "to", then its nearest available predecessor
+      if (historyIds.length < 2)
+        throw new BitError(`need at least two history entries to diff, got ${historyIds.length}`);
+      toId = await this.findAvailableEntry(laneDiffGenerator, laneObj, laneHistory, historyIds, historyIds.length - 1, {
+        skipEmpty: true,
+      });
+      const toIndex = historyIds.indexOf(toId);
+      if (toIndex === 0)
+        throw new BitError(`the only available history entry is the first one, no predecessor to diff against`);
+      fromId = await this.findAvailableEntry(laneDiffGenerator, laneObj, laneHistory, historyIds, toIndex - 1);
+    }
+
+    const results = await laneDiffGenerator.generateDiffHistory(laneObj, laneHistory, fromId, toId, pattern);
     return laneDiffGenerator.laneDiffResultsToString(results);
+  }
+
+  /**
+   * Walk backwards from `startIndex` through `historyIds` to find the first entry
+   * whose version objects are available (exist on the remote / locally).
+   */
+  private async findAvailableEntry(
+    laneDiffGenerator: LaneDiffGenerator,
+    laneObj: Lane,
+    laneHistory: LaneHistory,
+    historyIds: string[],
+    startIndex: number,
+    { skipEmpty = false }: { skipEmpty?: boolean } = {}
+  ): Promise<string> {
+    for (let i = startIndex; i >= 0; i--) {
+      const available = await laneDiffGenerator.isHistoryEntryAvailable(laneObj, laneHistory, historyIds[i]);
+      if (available) {
+        if (skipEmpty && laneDiffGenerator.isHistoryEntryEmpty(laneHistory, historyIds[i])) continue;
+        return historyIds[i];
+      }
+    }
+    throw new BitError(
+      `unable to find an available history entry with version objects (searched from index ${startIndex} to 0)`
+    );
   }
 }

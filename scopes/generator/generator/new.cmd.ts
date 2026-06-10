@@ -1,4 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary } from '@teambit/cli';
 import chalk from 'chalk';
 import type { GeneratorMain } from './generator.main.runtime';
 import type { BaseWorkspaceOptions } from './workspace-template';
@@ -58,6 +59,7 @@ installs dependencies and configures the workspace for immediate development.`;
       'current-dir',
       'create the new workspace in current directory (default is to create a new directory, inside the current dir)',
     ],
+    ['', 'agent [type]', 'create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)'],
   ] as CommandOptions;
 
   constructor(private generator: GeneratorMain) {}
@@ -79,10 +81,8 @@ installs dependencies and configures the workspace for immediate development.`;
       templateName,
       options
     );
-    return chalk.white(
-      `${chalk.green(`
-
-Congrats! A new workspace has been created successfully at '${workspacePath}'`)}
+    return `
+${formatSuccessSummary(`A new workspace has been created at '${workspacePath}'`)}
 
 Inside the directory '${workspaceName}' you can run various commands including:
 
@@ -111,8 +111,7 @@ Inside the directory '${workspaceName}' you can run various commands including:
 ${chalk.green.bold("Let's get started!")}
 
       ${getBottomSection(workspaceName, appName)}
-      `
-    );
+      `;
   }
 }
 

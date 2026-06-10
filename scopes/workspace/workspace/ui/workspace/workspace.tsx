@@ -1,9 +1,11 @@
 import 'reset-css';
 import pluralize from 'pluralize';
 import React, { useState, useMemo, useEffect, useCallback, useLayoutEffect, useRef } from 'react';
-import { Route } from 'react-router-dom';
+import { Route, Link, useLocation, useSearchParams } from 'react-router-dom';
 import type { ComponentModel } from '@teambit/component';
+import { useIdFromLocation } from '@teambit/component';
 import type { ComponentID } from '@teambit/component-id';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { useNotifications } from '@teambit/ui-foundation.ui.notifications.notification-context';
 import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
@@ -29,7 +31,7 @@ import { ThemeFromUrlSync } from './theme-from-url';
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
   menuSlot: RouteSlot;
-  sidebar: JSX.Element;
+  sidebar: React.JSX.Element;
   workspaceUI: WorkspaceUI;
   onSidebarTogglerChange: (callback: () => void) => void;
 };
@@ -78,12 +80,16 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
     setSidebarOpen(!isMinimal);
   }, [isMinimal]);
 
+  const location = useLocation();
+
   if (!workspace) {
     return <div className={styles.emptyContainer}></div>;
   }
 
   workspaceUI.setComponents(workspace.components);
   const inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
+  const isOverview = location.pathname === '/' || location.pathname === '';
+  const showTopBar = !isMinimal || (isMinimal && !isOverview);
 
   return (
     <WorkspaceProvider workspace={workspace}>
@@ -92,25 +98,44 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
         <ThemeFromUrlSync />
         {isMinimal && inIframe && <MinimalModeUrlBroadcasterAndListener />}
         <div className={styles.workspaceWrapper}>
-          {
+          {showTopBar && (
             <TopBar
               className={classNames(styles.topbar, styles[themeName], isMinimal && styles.minimal)}
               Corner={() => (
-                <Corner
-                  className={classNames((isMinimal && styles.minimalCorner) || styles.corner, styles[themeName])}
-                  name={isMinimal ? '' : workspace.name}
-                  icon={isMinimal ? 'https://static.bit.dev/bit-icons/house.svg' : workspace.icon}
-                />
+                <div className={classNames(isMinimal && styles.cornerWithBreadcrumb)}>
+                  {isMinimal ? (
+                    <Link to="/" className={styles.backButton}>
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path
+                          d="M11.25 13.5L6.75 9L11.25 4.5"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </Link>
+                  ) : (
+                    <Corner
+                      className={classNames(styles.corner, styles[themeName])}
+                      name={workspace.name}
+                      icon={workspace.icon}
+                    />
+                  )}
+                  {isMinimal && <WorkspaceBreadcrumb />}
+                </div>
               )}
               // @ts-ignore - getting an error of "Types have separate declarations of a private property 'registerFn'." for some reason after upgrading teambit.harmony/harmony from 0.4.6 to 0.4.7
               menu={menuSlot}
             />
-          }
+          )}
           <SplitPane className={styles.main} size={246} layout={sidebarOpenness}>
             <Pane className={classNames(styles.sidebar, styles[themeName], !isSidebarOpen && styles.closed)}>
               {sidebar}
             </Pane>
-            <HoverSplitter className={styles.splitter}>
+            <HoverSplitter
+              className={classNames(styles.splitter, isMinimal && !isSidebarOpen && styles.splitterClosed)}
+            >
               <Collapser
                 isOpen={Boolean(isSidebarOpen)}
                 onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
@@ -171,4 +196,56 @@ export function MinimalModeUrlBroadcasterAndListener() {
   useUrlChangeBroadcaster();
   useNavigationMessageListener();
   return null;
+}
+
+/**
+ * Extracts the component fullName from the URL.
+ * For lane URLs (`/~lane/scope/lane/~component/...`), extracts the path after ~component/
+ * and passes it to useIdFromLocation. For regular URLs, useIdFromLocation handles it directly.
+ */
+function useComponentFullNameFromUrl(): string | undefined {
+  const { pathname } = useLocation();
+  const laneComponentUrl = useMemo(() => {
+    const marker = LanesModel.baseLaneComponentRoute.replace(/^\//, '') + '/';
+    const idx = pathname.indexOf(marker);
+    if (idx !== -1) return pathname.slice(idx + marker.length);
+    if (pathname.includes(LanesModel.lanesPrefix)) return ''; // lane page, no component
+    return undefined;
+  }, [pathname]);
+
+  return useIdFromLocation(laneComponentUrl || undefined);
+}
+
+function WorkspaceBreadcrumb() {
+  const fullName = useComponentFullNameFromUrl();
+  const [searchParams] = useSearchParams();
+  if (!fullName) return null;
+
+  const parts = fullName.split('/');
+  const isLast = (i: number) => i === parts.length - 1;
+
+  return (
+    <span className={styles.breadcrumb}>
+      {parts.map((part, i) => {
+        // build the namespace from all segments up to this one
+        const namespace = parts.slice(0, i + 1).join('/');
+        const overviewParams = new URLSearchParams(searchParams);
+        overviewParams.set('aggregation', 'none');
+        overviewParams.set('ns', namespace);
+
+        return (
+          <React.Fragment key={i}>
+            {i > 0 && <span className={styles.breadcrumbSeparator}>/</span>}
+            {isLast(i) ? (
+              <span className={styles.breadcrumbLast}>{part}</span>
+            ) : (
+              <Link to={`/?${overviewParams.toString()}`} className={styles.breadcrumbLink}>
+                {part}
+              </Link>
+            )}
+          </React.Fragment>
+        );
+      })}
+    </span>
+  );
 }

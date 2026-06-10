@@ -1,7 +1,8 @@
 import { gql } from 'graphql-tag';
+import type { Schema } from '@teambit/graphql';
 import type { ComponentCompareMain, ComponentCompareResult } from './component-compare.main.runtime';
 
-export function componentCompareSchema(componentCompareMain: ComponentCompareMain) {
+export function componentCompareSchema(componentCompareMain: ComponentCompareMain): Schema {
   return {
     typeDefs: gql`
       type FileCompareResult {
@@ -23,6 +24,7 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
         code(fileName: String): [FileCompareResult!]!
         aspects(aspectName: String): [FieldCompareResult!]!
         tests(fileName: String): [FileCompareResult!]
+        api: APIDiffResult
       }
 
       extend type ComponentHost {
@@ -70,6 +72,9 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
             return result.fields.filter((field) => field.fieldName === fieldName);
           }
           return result.fields;
+        },
+        api: async (result: ComponentCompareResult) => {
+          return (await componentCompareMain.getAPIDiff(result.baseId, result.compareId)) ?? null;
         },
       },
     },

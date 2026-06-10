@@ -131,4 +131,36 @@ describe('bit lane basic operations', function () {
       expect(() => helper.command.createLane('dev', '--scope some-scope')).to.not.throw();
     });
   });
+
+  describe('bit lane current', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+    });
+    describe('when on main', () => {
+      it('should print "main"', () => {
+        const output = helper.command.runCmd('bit lane current');
+        expect(output.trim()).to.equal('main');
+      });
+      it('--json should return isDefault true', () => {
+        const output = JSON.parse(helper.command.runCmd('bit lane current --json'));
+        expect(output.isDefault).to.be.true;
+        expect(output.name).to.equal('main');
+      });
+    });
+    describe('when on a lane', () => {
+      before(() => {
+        helper.command.createLane();
+      });
+      it('should print the full lane id', () => {
+        const output = helper.command.runCmd('bit lane current');
+        expect(output.trim()).to.include('/dev');
+      });
+      it('--json should return isDefault false with scope and name', () => {
+        const output = JSON.parse(helper.command.runCmd('bit lane current --json'));
+        expect(output.isDefault).to.be.false;
+        expect(output.name).to.equal('dev');
+        expect(output.scope).to.be.a('string');
+      });
+    });
+  });
 });

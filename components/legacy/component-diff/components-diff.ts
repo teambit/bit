@@ -107,13 +107,117 @@ export function outputDiffResults(diffResults: DiffResults[]): string {
         const titleStr = `showing diff for ${chalk.bold(diffResult.id.toStringWithoutVersion())}`;
         const titleSeparator = Array.from({ length: titleStr.length }).fill('-').join('');
         const title = chalk.cyan(`${titleSeparator}\n${titleStr}\n${titleSeparator}`);
-        // @ts-ignore since hasDiff is true, filesDiff must be set
-        const filesWithDiff = diffResult.filesDiff.filter((file) => file.diffOutput);
+        const filesWithDiff = (diffResult.filesDiff || []).filter((file) => file.diffOutput);
+        const hasFields = Boolean(diffResult.fieldsDiff && diffResult.fieldsDiff.length);
+        if (!filesWithDiff.length && !hasFields) {
+          return `${title}\n(no matching changes for the given filters)`;
+        }
         const files = filesWithDiff.map((fileDiff) => fileDiff.diffOutput).join('\n');
-        const fields = diffResult.fieldsDiff ? diffResult.fieldsDiff.map((field) => field.diffOutput).join('\n') : '';
+        const fields = hasFields ? diffResult.fieldsDiff!.map((field) => field.diffOutput).join('\n') : '';
         return `${title}\n${files}\n${fields}`;
       }
       return `no diff for ${chalk.bold(diffResult.id.toString())} (consider running with --verbose)`;
     })
     .join('\n\n');
+}
+
+export type DiffOutputOptions = {
+  /** show only file-content diffs, drop fieldsDiff (deps, configs, metadata) */
+  filesOnly?: boolean;
+  /** show only fieldsDiff, drop file-content diffs */
+  configsOnly?: boolean;
+  /** limit file diffs to these component-relative paths (exact match or suffix match) */
+  files?: string[];
+  /** summary: one line per changed file with status letter + path, one line per changed field */
+  nameOnly?: boolean;
+  /** like nameOnly but also shows +N -M line counts per file */
+  stat?: boolean;
+};
+
+function normalizeFileFilterPath(p: string): string {
+  return p.startsWith('./') ? p.slice(2) : p;
+}
+
+function matchesFileFilter(filePath: string, filters: string[]): boolean {
+  const normalizedPath = normalizeFileFilterPath(filePath);
+  return filters.some((f) => {
+    const normalizedFilter = normalizeFileFilterPath(f);
+    return normalizedPath === normalizedFilter || normalizedPath.endsWith(`/${normalizedFilter}`);
+  });
+}
+
+export function filterDiffResults(diffResults: DiffResults[], opts: DiffOutputOptions): DiffResults[] {
+  const { filesOnly, configsOnly, files } = opts;
+  const hasFileFilter = files && files.length > 0;
+  if (!filesOnly && !configsOnly && !hasFileFilter) return diffResults;
+
+  return diffResults.map((result) => {
+    if (!result.hasDiff) return result;
+    const filesDiff = configsOnly
+      ? []
+      : hasFileFilter
+        ? (result.filesDiff || []).filter((fd) => matchesFileFilter(fd.filePath, files as string[]))
+        : result.filesDiff;
+    const fieldsDiff = filesOnly || hasFileFilter ? null : result.fieldsDiff;
+    return { ...result, filesDiff, fieldsDiff };
+  });
+}
+
+const STATUS_LETTER: Record<DiffStatus, string> = {
+  MODIFIED: 'M',
+  NEW: 'A',
+  DELETED: 'D',
+  UNCHANGED: ' ',
+};
+
+export function countDiffLines(diffOutput: string): { additions: number; deletions: number } {
+  let additions = 0;
+  let deletions = 0;
+  for (const line of diffOutput.split('\n')) {
+    if (line.startsWith('+++ ') || line.startsWith('--- ')) continue;
+    if (line.startsWith('+')) additions += 1;
+    else if (line.startsWith('-')) deletions += 1;
+  }
+  return { additions, deletions };
+}
+
+function formatComponentHeader(diffResult: DiffResults): string {
+  return `showing diff for ${chalk.bold(diffResult.id.toStringWithoutVersion())}`;
+}
+
+function outputDiffResultsSummary(diffResults: DiffResults[], includeStats: boolean): string {
+  return diffResults
+    .map((diffResult) => {
+      if (!diffResult.hasDiff) {
+        return `no diff for ${chalk.bold(diffResult.id.toString())}`;
+      }
+      const header = formatComponentHeader(diffResult);
+      const filesWithDiff = (diffResult.filesDiff || []).filter((fd) => fd.diffOutput);
+      const pathWidth = includeStats ? filesWithDiff.reduce((max, fd) => Math.max(max, fd.filePath.length), 0) : 0;
+      const fileLines = filesWithDiff.map((fd) => {
+        if (!includeStats) return `${STATUS_LETTER[fd.status]} ${fd.filePath}`;
+        const { additions, deletions } = countDiffLines(fd.diffOutput);
+        return `${STATUS_LETTER[fd.status]} ${fd.filePath.padEnd(pathWidth)}  +${additions} -${deletions}`;
+      });
+      const fieldLines = (diffResult.fieldsDiff || []).map((fd) => `F ${fd.fieldName}`);
+      const lines = [...fileLines, ...fieldLines];
+      if (!lines.length) return `${header}\n(no matching changes)`;
+      return [header, ...lines].join('\n');
+    })
+    .join('\n\n');
+}
+
+export function outputDiffResultsNameOnly(diffResults: DiffResults[]): string {
+  return outputDiffResultsSummary(diffResults, false);
+}
+
+export function outputDiffResultsStat(diffResults: DiffResults[]): string {
+  return outputDiffResultsSummary(diffResults, true);
+}
+
+export function outputDiffResultsFormatted(diffResults: DiffResults[], opts: DiffOutputOptions = {}): string {
+  const filtered = filterDiffResults(diffResults, opts);
+  if (opts.nameOnly) return outputDiffResultsNameOnly(filtered);
+  if (opts.stat) return outputDiffResultsStat(filtered);
+  return outputDiffResults(filtered);
 }

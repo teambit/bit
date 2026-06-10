@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import type { Command } from '@teambit/cli';
+import { formatTitle, formatItem, joinSections } from '@teambit/cli';
 import type { PathChangeResult } from '@teambit/legacy.bit-map';
 import type { MoverMain } from './mover.main.runtime';
 
@@ -29,13 +30,13 @@ useful for reorganizing workspace structure or following new directory conventio
 
   async report([from, to]: [string, string]) {
     const componentsChanged: PathChangeResult[] = await this.mover.movePaths({ from, to });
-    const output = componentsChanged.map((component) => {
-      const title = chalk.green(`moved component ${component.id.toString()}:\n`);
-      const files = component.changes
-        .map((file) => `from ${chalk.bold(file.from)} to ${chalk.bold(file.to)}`)
-        .join('\n');
-      return title + files;
+    const sections = componentsChanged.map((component) => {
+      const title = formatTitle(`moved component ${component.id.toString()}`);
+      const files = component.changes.map((file) =>
+        formatItem(`from ${chalk.bold(file.from)} to ${chalk.bold(file.to)}`)
+      );
+      return `${title}\n${files.join('\n')}`;
     });
-    return output.join('\n');
+    return joinSections(sections);
   }
 }

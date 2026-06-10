@@ -6,6 +6,7 @@ import { compact } from 'lodash';
 import { connectToChild } from 'penpal';
 import { usePubSubIframe } from '@teambit/pubsub';
 import type { ComponentModel } from '@teambit/component';
+import { useThemePicker } from '@teambit/base-react.themes.theme-switcher';
 import { ERROR_EVENT, LOAD_EVENT } from '@teambit/ui-foundation.ui.rendering.html';
 import { toPreviewUrl } from './urls';
 import { computePreviewScale } from './compute-preview-scale';
@@ -183,12 +184,17 @@ export function ComponentPreview({
     });
   }, [iframeRef?.current]);
 
-  const params = Array.isArray(queryParams)
-    ? queryParams.concat(`viewport=${viewport}`)
-    : compact([queryParams, `viewport=${viewport}`]);
+  const theme = useThemePicker();
+  const themeParam = theme?.current?.themeName ? `theme=${theme.current.themeName}` : '';
 
-  const targetParams = viewport === null ? queryParams : params;
-  const url = toPreviewUrl(component, previewName, isScaling ? targetParams : queryParams, includeEnv);
+  const baseParams = Array.isArray(queryParams) ? queryParams.concat(themeParam) : compact([queryParams, themeParam]);
+
+  const paramsWithViewport = Array.isArray(baseParams)
+    ? baseParams.concat(`viewport=${viewport}`)
+    : compact([baseParams, `viewport=${viewport}`]);
+
+  const targetParams = viewport === null ? baseParams : paramsWithViewport;
+  const url = toPreviewUrl(component, previewName, isScaling ? targetParams : baseParams, includeEnv);
   // const currentHeight = fullContentHeight ? '100%' : height || 1024;
   const containerWidth = containerRef.current?.offsetWidth || 0;
   const containerHeight = containerRef.current?.offsetHeight || 0;

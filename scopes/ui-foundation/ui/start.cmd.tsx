@@ -6,6 +6,14 @@ import open from 'open';
 import chalk from 'chalk';
 import type { UiMain } from './ui.main.runtime';
 
+function openBrowser(url: string): Promise<void> {
+  const openUrl =
+    process.env.BIT_VSCODE_EXTENSION === 'true'
+      ? `vscode://bit.vscode-bit/open-browser?url=${encodeURIComponent(url)}`
+      : url;
+  return open(openUrl).then(() => undefined);
+}
+
 type StartArgs = [userPattern: string];
 type StartFlags = {
   dev: boolean;
@@ -17,6 +25,8 @@ type StartFlags = {
   skipCompilation: boolean;
   skipUiBuild: boolean;
   uiRootName: string;
+  useRootModules: boolean;
+  useSource: boolean;
 };
 
 export class StartCmd implements Command {
@@ -51,6 +61,16 @@ includes hot module reloading for development.`;
       'ui-root-name [type]',
       'name of the ui root to use, e.g. "teambit.scope/scope" or "teambit.workspace/workspace"',
     ],
+    [
+      '',
+      'use-root-modules',
+      'EXPERIMENTAL. resolve component previews from root node_modules instead of .bit_roots. mainly for internal usage, use with caution only if you understand the implications',
+    ],
+    [
+      '',
+      'use-source',
+      'EXPERIMENTAL. resolve local workspace component previews from source files instead of .bit_roots or package artifacts. intended for debugging and HMR investigations',
+    ],
   ] as CommandOptions;
 
   constructor(
@@ -74,6 +94,8 @@ includes hot module reloading for development.`;
       skipUiBuild,
       showInternalUrls,
       uiRootName: uiRootAspectIdOrName,
+      useRootModules,
+      useSource,
     }: StartFlags
   ) {
     const spinnies = this.logger.multiSpinner;
@@ -97,21 +119,22 @@ includes hot module reloading for development.`;
       rebuild,
       verbose,
       showInternalUrls,
+      useRootModules,
+      useSource,
     });
 
     uiServer
       .then(async (server) => {
         const url = this.ui.publicUrl || server.fullUrl;
-        spinnies.succeed('ui-server', { text: `UI server is ready at ${chalk.cyan(url)}` });
+        spinnies.succeed('ui-server', { text: `UI server ready ${chalk.dim('\u2192')} ${chalk.cyan(url)}` });
         if (!server.buildOptions?.launchBrowserOnStart) return undefined;
 
         await server.whenReady;
         const name = server.getName();
-        const message = chalk.green(`You can now view '${chalk.cyan(name)}' components in the browser.
-Bit server is running on ${chalk.cyan(url)}`);
+        const message = chalk.green(`\nView '${chalk.bold(name)}' components at ${chalk.cyan(url)}`);
         spinnies.add('summary', { text: message, status: 'non-spinnable' });
         if (!noBrowser) {
-          await open(url);
+          await openBrowser(url);
         }
         return undefined;
       })

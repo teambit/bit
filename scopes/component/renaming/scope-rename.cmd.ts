@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import chalk from 'chalk';
+import { formatTitle, formatItem, formatSuccessSummary, joinSections } from '@teambit/cli';
 import type { RenameResult, RenamingMain } from './renaming.main.runtime';
 
 export class ScopeRenameCmd implements Command {
@@ -21,36 +21,50 @@ as a result of this change`;
       'update the import statements in all dependent components to the new package name (i.e. with the new scope name)',
     ],
     ['', 'deprecate', 'for exported components, instead of deleting the original components, deprecating them'],
+    ['x', 'skip-dependency-installation', 'do not install dependencies after the rename'],
   ] as CommandOptions;
   group = 'component-config';
+  loader = true;
 
   constructor(private renaming: RenamingMain) {}
 
   async report(
     [oldName, newName]: [string, string],
-    { refactor, deprecate, preserve }: { refactor?: boolean; deprecate?: boolean; preserve?: boolean }
+    {
+      refactor,
+      deprecate,
+      preserve,
+      skipDependencyInstallation,
+    }: { refactor?: boolean; deprecate?: boolean; preserve?: boolean; skipDependencyInstallation?: boolean }
   ) {
-    const result = await this.renaming.renameScope(oldName, newName, { refactor, deprecate, preserve });
-    const title = chalk.green(`successfully replaced "${oldName}" scope with "${newName}"`);
+    const result = await this.renaming.renameScope(oldName, newName, {
+      refactor,
+      deprecate,
+      preserve,
+      skipDependencyInstallation,
+    });
     const renameOutput = renameScopeOutput(result);
-    return `${title}\n${renameOutput}`;
+    return joinSections([formatSuccessSummary(`replaced "${oldName}" scope with "${newName}"`), renameOutput]);
   }
 }
 
 export function renameScopeOutput(renameResult: RenameResult): string {
   const { renameData, refactoredIds } = renameResult;
-  const renamedIdsStr = renameData.length
-    ? `\n${chalk.bold('the following components were affected by this scope-name change:')}\n${renameData
-        .map(
-          (item) =>
-            `${item.sourceId.toStringWithoutVersion()} ${
-              item.isTagged ? '(deprecated) ' : ''
-            }-> ${item.targetId.toString()}`
-        )
-        .join('\n')}`
+  const renamedSection = renameData.length
+    ? [
+        formatTitle(`affected components (${renameData.length})`),
+        ...renameData.map((item) =>
+          formatItem(
+            `${item.sourceId.toStringWithoutVersion()} ${item.isTagged ? '(deprecated) ' : ''}-> ${item.targetId.toString()}`
+          )
+        ),
+      ].join('\n')
     : '';
-  const refactoredStr = refactoredIds.length
-    ? `\n\n${chalk.bold('the following components have been refactored:')}\n${refactoredIds.join('\n')}`
+  const refactoredSection = refactoredIds.length
+    ? [
+        formatTitle(`refactored components (${refactoredIds.length})`),
+        ...refactoredIds.map((id) => formatItem(id.toString())),
+      ].join('\n')
     : '';
-  return renamedIdsStr + refactoredStr;
+  return joinSections([renamedSection, refactoredSection]);
 }

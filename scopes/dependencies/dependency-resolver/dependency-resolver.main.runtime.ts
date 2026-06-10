@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import multimatch from 'multimatch';
 import { isSnap } from '@teambit/component-version';
 import { BitError } from '@teambit/bit-error';
@@ -37,7 +38,7 @@ import { Http } from '@teambit/scope.network';
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
 import fs from 'fs-extra';
-import { assign } from 'comment-json';
+import { assign, parse } from 'comment-json';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
 import { parseBareSpecifier } from '@pnpm/npm-resolver';
@@ -88,7 +89,7 @@ import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment
 import { dependencyResolverSchema } from './dependency-resolver.graphql';
 import type { DependencyDetector } from './detector-hook';
 import { DependenciesService } from './dependencies.service';
-import { EnvPolicy } from './policy/env-policy';
+import { EnvPolicy, type EnvJsoncPolicyEntry } from './policy/env-policy';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 
@@ -491,7 +492,16 @@ export class DependencyResolverMain {
       ...defaultCreateFromComponentsOptions,
       ...options,
     };
-    const workspaceManifestFactory = new WorkspaceManifestFactory(this, this.aspectLoader);
+    const resolveEnvPeersFromRoot = context?.inCapsule ? false : (this.config.resolveEnvPeersFromRoot ?? true);
+    const forceEnvPeersToRoot = this.config.forceEnvPeersToRoot ?? false;
+    const workspaceManifestFactory = new WorkspaceManifestFactory(
+      this,
+      this.aspectLoader,
+      this.logger,
+      resolveEnvPeersFromRoot,
+      forceEnvPeersToRoot
+    );
+
     const res = await workspaceManifestFactory.createFromComponents(
       name,
       version,
@@ -604,7 +614,7 @@ export class DependencyResolverMain {
     }
   ): Promise<void> {
     try {
-      let componentsForCalc = components.map(({ component, componentRelativeDir }) => ({
+      const componentsForCalc = components.map(({ component, componentRelativeDir }) => ({
         component,
         componentRootDir: options.rootComponentsPath
           ? this.getComponentDirInBitRoots(component, {
@@ -615,11 +625,7 @@ export class DependencyResolverMain {
         pkgName: this.getPackageName(component),
         componentRelativeDir,
       }));
-      if (!isFeatureEnabled(DEPS_GRAPH)) {
-        // We need to optimize the performance of dependency graph calculation.
-        // Temporarily we only calculate it for a limited number of components.
-        componentsForCalc = componentsForCalc.slice(0, 10);
-      }
+
       await this.getPackageManager()?.calcDependenciesGraph?.({
         components: componentsForCalc,
         rootDir: options.rootDir,
@@ -897,7 +903,7 @@ export class DependencyResolverMain {
     const packageManager = this.getPackageManager();
     let peerDependencyIssues!: PeerDependencyIssuesByProjects;
     const installer = this.getInstaller();
-    const manifests = await installer.getComponentManifests({
+    const { manifests } = await installer.getComponentManifests({
       ...options,
       componentDirectoryMap,
       rootPolicy,
@@ -1161,9 +1167,14 @@ export class DependencyResolverMain {
     }
     const policy = envManifest?.policy;
     if (!policy) return undefined;
-    const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policy, {
-      includeLegacyPeersInSelfPolicy: envComponent && this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()),
-    });
+    const envId = envComponent?.id.toStringWithoutVersion();
+    const allPoliciesFromEnv = EnvPolicy.fromConfigObject(
+      policy,
+      {
+        includeLegacyPeersInSelfPolicy: envComponent && this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()),
+      },
+      envId
+    );
     return allPoliciesFromEnv;
   }
 
@@ -1217,9 +1228,11 @@ export class DependencyResolverMain {
       const policiesFromEnvConfig = await env.getDependencies();
       if (policiesFromEnvConfig) {
         const idWithoutVersion = options.envId.split('@')[0];
-        const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policiesFromEnvConfig, {
-          includeLegacyPeersInSelfPolicy: this.envs.isCoreEnv(idWithoutVersion),
-        });
+        const allPoliciesFromEnv = EnvPolicy.fromConfigObject(
+          policiesFromEnvConfig,
+          { includeLegacyPeersInSelfPolicy: this.envs.isCoreEnv(idWithoutVersion) },
+          idWithoutVersion
+        );
         return allPoliciesFromEnv;
       }
     }
@@ -1493,6 +1506,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       variantPoliciesByPatterns,
       componentPolicies,
       components,
+      includeEnvJsoncDeps: true,
     });
     if (patterns?.length) {
       const selectedPkgNames = new Set(
@@ -1514,10 +1528,12 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     variantPoliciesByPatterns,
     componentPolicies,
     components,
+    includeEnvJsoncDeps = false,
   }: {
     variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
     componentPolicies: Array<{ componentId: ComponentID; policy: any }>;
     components: Component[];
+    includeEnvJsoncDeps?: boolean;
   }): CurrentPkg[] {
     const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
     const componentModelVersions: ComponentModelVersion[] = components
@@ -1542,12 +1558,55 @@ as an alternative, you can use "+" to keep the same version installed in the wor
           }));
       })
       .flat();
-    return getAllPolicyPkgs({
-      rootPolicy: this.getWorkspacePolicyFromConfig(),
-      variantPoliciesByPatterns,
-      componentPolicies,
-      componentModelVersions,
-    });
+    return [
+      ...getAllPolicyPkgs({
+        rootPolicy: this.getWorkspacePolicyFromConfig(),
+        variantPoliciesByPatterns,
+        componentPolicies,
+        componentModelVersions,
+      }),
+      ...(includeEnvJsoncDeps ? this.getEnvJsoncPolicyPkgs(components) : []),
+    ];
+  }
+
+  getEnvJsoncPolicyPkgs(components: Component[]): CurrentPkg[] {
+    const policies = [
+      { field: 'peers', targetField: 'peerDependencies' as const },
+      { field: 'dev', targetField: 'devDependencies' as const },
+      { field: 'runtime', targetField: 'dependencies' as const },
+    ];
+    const pkgs: CurrentPkg[] = [];
+    for (const component of components) {
+      const isEnv = this.envs.isEnv(component);
+      if (!isEnv) continue;
+
+      const envJsoncFile = component.filesystem.files.find((file) => file.relative === 'env.jsonc');
+      if (!envJsoncFile) continue;
+
+      let envJsonc: EnvJsonc;
+      try {
+        envJsonc = parse(envJsoncFile.contents.toString()) as EnvJsonc;
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`Failed to parse env.jsonc for component ${component.id.toString()}: ${errorMessage}`);
+        continue;
+      }
+      if (!envJsonc.policy) continue;
+
+      for (const { field, targetField } of policies) {
+        const deps: EnvJsoncPolicyEntry[] = envJsonc.policy?.[field] || [];
+        for (const dep of deps) {
+          pkgs.push({
+            name: dep.name,
+            currentRange: dep.version,
+            source: 'env-jsonc',
+            componentId: component.id,
+            targetField,
+          });
+        }
+      }
+    }
+    return pkgs;
   }
 
   getAllDedupedDirectDependencies(opts: {
@@ -1618,9 +1677,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       rootDir: string;
       forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible';
     },
-    pkgs: Array<
-      { name: string; currentRange: string; source: 'variants' | 'component' | 'rootPolicy' | 'component-model' } & T
-    >
+    pkgs: Array<{ name: string; currentRange: string; source: CurrentPkgSource } & T>
   ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
     this.logger.setStatusLine('checking the latest versions of dependencies');
     const resolver = await this.getVersionResolver();

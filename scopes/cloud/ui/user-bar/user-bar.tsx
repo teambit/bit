@@ -66,9 +66,9 @@ export function UserBar({ sections = [], items = [] }: UserBarProps) {
           link: href,
           component: Component ? <Component key={index} user={currentUser} /> : undefined,
         };
-      }),
+      }) as any,
     };
-  });
+  }) as unknown as MenuItemType[];
 
   const logoutItem: MenuItemType = {
     label: 'logout',
@@ -87,7 +87,7 @@ export function UserBar({ sections = [], items = [] }: UserBarProps) {
             });
         },
       },
-    ],
+    ] as any,
   };
 
   const userDetails: MenuItemType = {
@@ -110,6 +110,8 @@ export function UserBar({ sections = [], items = [] }: UserBarProps) {
       offsetY={10}
       position="anchor"
       align="end"
+      portal
+      menuStyle={{ zIndex: styles.menuZIndex }}
       onItemClick={(e) => {
         if (!e.value.link) return undefined;
         if (e.value.link.startsWith('http')) return window.open(e.value.link, '_blank');

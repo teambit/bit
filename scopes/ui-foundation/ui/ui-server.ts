@@ -9,9 +9,9 @@ import { stripTrailingChar } from '@teambit/toolbox.string.strip-trailing-char';
 import type { Server } from 'http';
 import httpProxy from 'http-proxy';
 import { join } from 'path';
-import webpack from 'webpack';
-import type { Configuration as WdsConfiguration } from 'webpack-dev-server';
-import WebpackDevServer from 'webpack-dev-server';
+import { rspack } from '@rspack/core';
+import type { Configuration as WdsConfiguration } from '@rspack/dev-server';
+import { RspackDevServer } from '@rspack/dev-server';
 import type { ComponentServer } from '@teambit/bundler';
 import { createSsrMiddleware } from './ssr-middleware';
 import type { StartPlugin } from './start-plugin';
@@ -19,7 +19,7 @@ import type { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import type { UiMain } from './ui.main.runtime';
 
-import { devConfig } from './webpack/webpack.dev.config';
+import { devConfig } from './rspack/rspack.dev.config';
 
 export type UIServerProps = {
   graphql: GraphqlMain;
@@ -47,6 +47,12 @@ export class UIServer {
   private _app: Express;
   private _server: Server;
   private _proxyRoutes = new Set<string>();
+  /**
+   * component dev servers that emitted their "started" event before this UI server
+   * finished `start()` (and thus before `_app`/`_server` were assigned). They are
+   * queued here and registered once the express app is ready. See `addComponentServerProxy`.
+   */
+  private _pendingProxyServers: ComponentServer[] = [];
 
   constructor(
     private graphql: GraphqlMain,
@@ -100,6 +106,16 @@ export class UIServer {
   }
 
   addComponentServerProxy(server: ComponentServer): void {
+    // `_app`/`_server` are only assigned during start() (in configureProxy). A component
+    // dev server can emit its "started" event before that happens, in which case
+    // `this._app.use(...)` below would throw "Cannot read properties of undefined (reading 'use')"
+    // and the env's /preview and /_hmr proxy routes would never be registered (blank previews).
+    // Defer registration until the app is ready; start() flushes the queue.
+    if (!this._app || !this._server) {
+      if (!this._pendingProxyServers.includes(server)) this._pendingProxyServers.push(server);
+      return;
+    }
+
     const envId = server.context.envRuntime.id;
     const previewRoute = `/preview/${envId}`;
     const hmrRoute = `/_hmr/${envId}`;
@@ -126,6 +142,15 @@ export class UIServer {
 
       dynamicProxy.on('error', (e) => {
         this.logger.error(e.message);
+      });
+
+      // Cache JS/CSS assets in the browser for 120s so subsequent preview iframes
+      // reuse the same bundle without re-downloading from the component dev server.
+      dynamicProxy.on('proxyRes', (proxyRes, req) => {
+        const url = req.url || '';
+        if (/\.(js|css)(\?.*)?$/.test(url)) {
+          proxyRes.headers['cache-control'] = 'public, max-age=120';
+        }
       });
 
       const wsHandler = (req, socket, head) => {
@@ -201,16 +226,27 @@ export class UIServer {
     }
   }
 
+  /**
+   * register component dev servers that started before `_app`/`_server` were ready.
+   */
+  private flushPendingProxyServers() {
+    if (!this._pendingProxyServers.length) return;
+    const pending = this._pendingProxyServers;
+    this._pendingProxyServers = [];
+    pending.forEach((server) => this.addComponentServerProxy(server));
+  }
+
   private async configureProxy(app: Express, server: Server) {
     const proxyServer = httpProxy.createProxyServer();
     proxyServer.on('error', (e) => {
       this.logger.error(e.message);
     });
 
+    const proxyEntries = this.getProxyFromPlugins();
+
     server.on('upgrade', (req, socket, head) => {
       const reqUrl = req.url?.replace(/\?.+$/, '') || '';
       const path = stripTrailingChar(reqUrl, '/');
-      const proxyEntries = this.getProxyFromPlugins();
       const entry = proxyEntries.find((proxy) => proxy.context.some((item) => item === stripTrailingChar(path, '/')));
       if (!entry) {
         return;
@@ -219,8 +255,6 @@ export class UIServer {
         target: entry.target,
       });
     });
-
-    const proxyEntries = this.getProxyFromPlugins();
     proxyEntries.forEach((entry) => {
       entry.context.forEach((route) => {
         this._proxyRoutes.add(route);
@@ -245,6 +279,9 @@ export class UIServer {
     this.logger.debug(`UiServer, start from ${root}`);
     const server = await this.graphql.createServer({ app });
     await this.configureProxy(app, server);
+    // `_app`/`_server` are now assigned — register any component dev servers that
+    // started before we were ready (otherwise their preview/hmr routes are lost).
+    this.flushPendingProxyServers();
     app.use(express.static(root, { index: false }));
     const port = await Port.getPortFromRange(portRange || [3100, 3200]);
     await this.setupServerSideRendering({ root, port, app });
@@ -282,15 +319,15 @@ export class UIServer {
   /**
    * start a UI dev server.
    */
-  async dev({ portRange }: StartOptions = {}) {
+  async dev({ portRange }: StartOptions = {}): Promise<RspackDevServer> {
     const devServerPort = await this.selectPort(portRange);
     await this.start({ portRange: [4100, 4200] });
     const expressAppPort = this._port;
 
     const config = await this.getDevConfig();
-    const compiler = webpack(config as any);
+    const compiler = rspack(config as any);
     const devServerConfig = await this.getDevServerConfig(devServerPort, expressAppPort, config.devServer);
-    const devServer = new WebpackDevServer(devServerConfig, compiler);
+    const devServer = new RspackDevServer(devServerConfig, compiler);
 
     await devServer.start();
     this._port = devServerPort;
@@ -339,7 +376,7 @@ export class UIServer {
     config?: WdsConfiguration
   ): Promise<WdsConfiguration> {
     const proxy = await this.getProxy(gqlPort);
-    const devServerConf = { ...config, proxy, port: appPort };
+    const devServerConf = { ...config, proxy: proxy as any, port: appPort };
 
     return devServerConf;
   }

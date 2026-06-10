@@ -36,6 +36,7 @@ export class PreviewStartPlugin implements StartPlugin {
   serversState: ServerStateMap = {};
   serversMap: Record<string, ComponentServer> = {};
   private pendingServers: Map<string, ComponentServer> = new Map();
+  private pendingPostInstallPublish = new Set<string>();
 
   constructor(
     private workspace: Workspace,
@@ -103,6 +104,9 @@ export class PreviewStartPlugin implements StartPlugin {
   async onNewDevServersCreated(servers: ComponentServer[]) {
     for (const server of servers) {
       const envId = server.context.envRuntime.id;
+      if (this.serversMap[envId]) {
+        continue;
+      }
       this.pendingServers.set(envId, server);
 
       this.serversState[envId] = {
@@ -113,12 +117,9 @@ export class PreviewStartPlugin implements StartPlugin {
         isPendingPublish: false,
       };
 
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        server.listen();
-      } catch (err) {
+      server.listen().catch((err) => {
         this.logger.error(`failed to start server for ${envId}`, err);
-      }
+      });
     }
   }
 
@@ -243,6 +244,16 @@ export class PreviewStartPlugin implements StartPlugin {
 
     const noneAreCompiling = Object.values(this.serversState).every((x) => !x.isCompiling);
     if (noneAreCompiling) this.setReady();
+    const compilationErrors = results.errors || [];
+    if (!compilationErrors.length && this.pendingPostInstallPublish.has(id)) {
+      this.pendingPostInstallPublish.delete(id);
+      const server = this.serversMap[id];
+      if (server) {
+        this.publishServerStarted(server).catch((err) => {
+          this.logger.error(`failed to publish post-install server event for ${id}`, err);
+        });
+      }
+    }
     if (this.serversState[id]?.isPendingPublish) {
       const server = this.serversMap[id];
       if (server) {
@@ -250,6 +261,35 @@ export class PreviewStartPlugin implements StartPlugin {
         this.publishServerStarted(server).catch((err) => {
           this.logger.error(`failed to publish server started event for ${server.context.envRuntime.id}`, err);
         });
+      }
+    }
+  }
+
+  markAllForPostInstallPublish() {
+    for (const envId of Object.keys(this.serversMap)) {
+      this.pendingPostInstallPublish.add(envId);
+    }
+  }
+
+  async restartExistingServers() {
+    for (const server of Object.values(this.serversMap)) {
+      const envId = server.context.envRuntime.id;
+      this.serversState[envId] = {
+        ...this.serversState[envId],
+        isCompiling: true,
+        isReady: false,
+        isStarted: false,
+        isCompilationDone: false,
+      };
+      await server.restart();
+    }
+  }
+
+  invalidateAllResolverCaches() {
+    for (const server of Object.values(this.serversMap)) {
+      const devServer = server.devServer as any;
+      if (typeof devServer._invalidateResolverCache === 'function') {
+        devServer._invalidateResolverCache();
       }
     }
   }
@@ -281,13 +321,12 @@ function getSpinnerId(envId: string) {
 }
 
 function getSpinnerCompilingMessage(server: ComponentServer, verbose = false) {
-  const prefix = 'COMPILING';
   const envId = chalk.cyan(server.context.envRuntime.id);
   let includedEnvs = '';
   if (server.context.relatedContexts && server.context.relatedContexts.length > 1) {
     includedEnvs = `on behalf of ${chalk.cyan(stringifyIncludedEnvs(server.context.relatedContexts, verbose))}`;
   }
-  return `${prefix} ${envId} ${includedEnvs}`;
+  return `${chalk.yellow('Compiling')} ${envId} ${includedEnvs}`;
 }
 
 function getSpinnerDoneMessage(
@@ -300,19 +339,21 @@ function getSpinnerDoneMessage(
 ) {
   const hasErrors = !!errors.length;
   const hasWarnings = !!warnings.length;
-  const prefix = hasErrors ? 'FAILED' : 'RUNNING';
   const envId = chalk.cyan(server.context.envRuntime.id);
   let includedEnvs = '';
   if (server.context.relatedContexts && server.context.relatedContexts.length > 1) {
-    includedEnvs = ` on behalf of ${chalk.cyan(stringifyIncludedEnvs(server.context.relatedContexts, verbose))}`;
+    includedEnvs = ` ${chalk.dim('via')} ${chalk.cyan(stringifyIncludedEnvs(server.context.relatedContexts, verbose))}`;
   }
   const errorsTxt = hasErrors ? errors.map((err) => err.message).join('\n') : '';
   const errorsTxtWithTitle = hasErrors ? chalk.red(`\nErrors:\n${errorsTxt}`) : '';
   const warningsTxt = hasWarnings ? warnings.map((warning) => warning.message).join('\n') : '';
   const warningsTxtWithTitle = hasWarnings ? chalk.yellow(`\nWarnings:\n${warningsTxt}`) : '';
 
+  if (hasErrors) {
+    return `${chalk.red('Failed')} ${envId}${includedEnvs}${errorsTxtWithTitle}${warningsTxtWithTitle}`;
+  }
   const urlMessage = hasErrors || !showInternalUrls ? '' : `at ${chalk.cyan(url)}`;
-  return `${prefix} ${envId}${includedEnvs} ${urlMessage} ${errorsTxtWithTitle} ${warningsTxtWithTitle}`;
+  return `${chalk.green('Ready')} ${envId}${includedEnvs} ${urlMessage}${warningsTxtWithTitle}`;
 }
 
 function stringifyIncludedEnvs(includedEnvs: string[] = [], verbose = false) {

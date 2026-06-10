@@ -10,10 +10,9 @@ import { Repository } from '@teambit/objects';
 import { isDirEmpty } from '@teambit/toolbox.fs.is-dir-empty';
 import type { WorkspaceExtensionProps } from '@teambit/config';
 import { WorkspaceConfig } from '@teambit/config';
-import type { SetupOptions, RulesOptions } from '@teambit/mcp.mcp-config-writer';
 import { McpConfigWriter } from '@teambit/mcp.mcp-config-writer';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime, formatSuccessSummary, formatHint, formatTitle } from '@teambit/cli';
 import { ObjectsWithoutConsumer } from './objects-without-consumer';
 import { HostInitializerAspect } from './host-initializer.aspect';
 import { InitCmd } from './init-cmd';
@@ -26,6 +25,8 @@ export interface InteractiveConfig {
   externalPackageManager: boolean;
   defaultDirectory: string;
   mcpEditor?: string;
+  /** Relative path of the agent instructions file written in the interactive flow. */
+  agentFileWritten?: string;
 }
 
 /**
@@ -62,8 +63,10 @@ export class HostInitializerMain {
     resetScope = false,
     force = false,
     workspaceConfigProps: WorkspaceExtensionProps = {},
-    generator?: string
-  ): Promise<{ created: boolean; consumer: Consumer }> {
+    generator?: string,
+    agent?: string,
+    options: { skipDefaultMcp?: boolean } = {}
+  ): Promise<{ created: boolean; consumer: Consumer; agentFileWritten?: string; mcpFileWritten?: string }> {
     const consumerInfo = await getWorkspaceInfo(absPath || process.cwd());
     // if "bit init" was running without any flags, the user is probably trying to init a new workspace but wasn't aware
     // that he's already in a workspace.
@@ -115,20 +118,184 @@ export class HostInitializerMain {
       await consumer.resetLaneNew();
     }
     const writtenConsumer = await consumer.write();
-    return { created: !consumerInfo?.path, consumer: writtenConsumer };
+    const created = !consumerInfo?.path;
+    let agentFileWritten: string | undefined;
+    let mcpFileWritten: string | undefined;
+    if (created) {
+      agentFileWritten = await HostInitializerMain.writeAgentInstructions(consumerPath, agent);
+      // Keep `.mcp.json` in sync with the agent template, which tells the
+      // agent that the workspace ships a Cloud MCP config. Skipped only when
+      // the caller (interactive init) knows the user explicitly opted out.
+      if (!options.skipDefaultMcp) {
+        mcpFileWritten = await HostInitializerMain.writeDefaultMcpConfig(consumerPath);
+      }
+    }
+    return { created, consumer: writtenConsumer, agentFileWritten, mcpFileWritten };
   }
 
   /**
-   * Check if the directory contains a .git folder
+   * Write a baseline `.mcp.json` at the workspace root containing the
+   * Bit Cloud MCP server entry. This file is picked up automatically by
+   * Claude Code and Visual Studio 2026; other agents (Cursor, Windsurf,
+   * Copilot, Codex) need their own per-tool config, which the interactive
+   * init flow writes when the user picks one of them.
+   *
+   * Idempotent — `setupCloudMcp` merges into any existing `.mcp.json`,
+   * preserving other server entries.
+   */
+  static async writeDefaultMcpConfig(projectPath: string): Promise<string | undefined> {
+    try {
+      await McpConfigWriter.setupCloudMcp('claude-code', projectPath);
+      return '.mcp.json';
+    } catch {
+      // Never fail init because of MCP file writing.
+      return undefined;
+    }
+  }
+
+  /**
+   * Supported agent targets and their output file paths (relative to workspace root).
+   */
+  static readonly AGENT_FILE_MAP: Record<string, string> = {
+    claude: 'CLAUDE.md',
+    cursor: '.cursor/rules/bit.mdc',
+    copilot: '.github/copilot-instructions.md',
+  };
+
+  /**
+   * Read the AGENTS.md template that ships with this aspect, picking the
+   * Git-integrated variant when the workspace has a `.git` directory.
+   * The Git variant tells the agent to use Git branches and to leave
+   * `bit snap`/`bit export` to CI — the Bit-lanes workflow only applies
+   * to non-Git workspaces.
+   */
+  private static async loadAgentsTemplate(projectPath: string): Promise<string> {
+    const isGit = await HostInitializerMain.hasGitDirectory(projectPath);
+    const templateName = isGit ? 'agents-template-git.md' : 'agents-template.md';
+    return fs.readFile(path.join(__dirname, templateName), 'utf8');
+  }
+
+  /**
+   * Write Cloud-MCP-compatible agent instructions for the selected editor.
+   * Body is the universal AGENTS.md template — not the CLI-MCP rules — so
+   * it doesn't reference tools that exist only on the local stdio server.
+   * Claude Code targets `.claude/rules/bit.md` (auto-loaded per its memory
+   * docs, no manual @-import needed). Cursor/Copilot reuse the existing
+   * per-editor rules paths with the Cloud content. Codex/Windsurf fall back
+   * to `AGENTS.md`.
+   */
+  static async writeMcpAgentRules(editor: string, projectPath: string): Promise<string | undefined> {
+    const content = await HostInitializerMain.loadAgentsTemplate(projectPath);
+    const editorLower = editor.toLowerCase();
+
+    if (editorLower === 'claude-code') {
+      const rel = path.join('.claude', 'rules', 'bit.md');
+      const abs = path.join(projectPath, rel);
+      await fs.ensureDir(path.dirname(abs));
+      await fs.writeFile(abs, content);
+      return rel;
+    }
+
+    // McpConfigWriter rules-file key for the small subset of Cloud editors
+    // whose existing rules paths already auto-load (Cursor via alwaysApply
+    // frontmatter, GitHub Copilot via applyTo).
+    const rulesEditor = { cursor: 'cursor', copilot: 'vscode' }[editorLower];
+    if (rulesEditor) {
+      const absPath = await McpConfigWriter.writeRulesFile(rulesEditor, {
+        isGlobal: false,
+        workspaceDir: projectPath,
+        content,
+      });
+      return path.relative(projectPath, absPath);
+    }
+
+    // Codex / Windsurf — write AGENTS.md. skipGitCheck=true bypasses the
+    // git-presence guard in writeAgentInstructions, since the interactive
+    // flow only runs in git repos.
+    return HostInitializerMain.writeAgentInstructions(projectPath, undefined, true);
+  }
+
+  /**
+   * All known agent instruction file paths. Used to detect whether a workspace
+   * already contains any agent configuration.
+   */
+  static readonly ALL_AGENT_FILES = [
+    'AGENTS.md',
+    'CLAUDE.md',
+    '.cursorrules',
+    '.cursor/rules',
+    '.github/copilot-instructions.md',
+  ];
+
+  /**
+   * Write AI agent instructions into the workspace.
+   *
+   * - Skips if .git exists (git repos use the interactive init flow).
+   * - Skips if any known agent instruction file already exists.
+   * - When `agent` is provided, writes to the tool-specific path (e.g. CLAUDE.md).
+   * - When `agent` is omitted, writes the universal AGENTS.md.
+   *
+   * Returns the relative path of the file written, or undefined if skipped.
+   */
+  static async writeAgentInstructions(
+    projectPath: string,
+    agent?: string,
+    skipGitCheck = false
+  ): Promise<string | undefined> {
+    if (agent && !HostInitializerMain.AGENT_FILE_MAP[agent]) {
+      const supported = Object.keys(HostInitializerMain.AGENT_FILE_MAP).join(', ');
+      throw new Error(`unknown --agent value "${agent}". supported values: ${supported}`);
+    }
+    try {
+      // Don't write in git repos — they use the interactive flow.
+      // Callers like `bit new` set skipGitCheck because they always create a fresh workspace.
+      if (!skipGitCheck && (await HostInitializerMain.hasGitDirectory(projectPath))) return undefined;
+
+      // Don't write if any agent file already exists.
+      if (await HostInitializerMain.hasExistingAgentFile(projectPath)) return undefined;
+
+      const targetFile = agent ? HostInitializerMain.AGENT_FILE_MAP[agent] : 'AGENTS.md';
+      const targetPath = path.join(projectPath, targetFile);
+
+      const content = await HostInitializerMain.loadAgentsTemplate(projectPath);
+      const finalContent = HostInitializerMain.wrapWithFrontmatter(targetFile, content);
+
+      await fs.ensureDir(path.dirname(targetPath));
+      await fs.writeFile(targetPath, finalContent);
+      return targetFile;
+    } catch {
+      // Don't fail initialization if the agent file cannot be written.
+      return undefined;
+    }
+  }
+
+  /**
+   * Check if any known agent instruction file or directory already exists.
+   */
+  static async hasExistingAgentFile(projectPath: string): Promise<boolean> {
+    for (const rel of HostInitializerMain.ALL_AGENT_FILES) {
+      if (await fs.pathExists(path.join(projectPath, rel))) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Wrap template content with tool-specific frontmatter where required.
+   */
+  static wrapWithFrontmatter(targetFile: string, content: string): string {
+    if (targetFile === '.cursor/rules/bit.mdc') {
+      return ['---', 'description: Bit workspace instructions', 'alwaysApply: true', '---', '', content].join('\n');
+    }
+    return content;
+  }
+
+  /**
+   * Check whether the directory is inside a Git workspace.
+   * Accepts both `.git` as a directory (standard checkout) and `.git` as a
+   * file (Git worktrees and submodules store a `gitdir:` pointer file there).
    */
   static async hasGitDirectory(projectPath: string): Promise<boolean> {
-    try {
-      const gitPath = path.join(projectPath, '.git');
-      const stat = await fs.stat(gitPath);
-      return stat.isDirectory();
-    } catch {
-      return false;
-    }
+    return fs.pathExists(path.join(projectPath, '.git'));
   }
 
   /**
@@ -178,10 +345,11 @@ export class HostInitializerMain {
   static async promptForPackageManager(): Promise<boolean> {
     try {
       const response = (await prompt({
-        type: 'confirm',
+        type: 'toggle',
         name: 'useExternalPackageManager',
         message: 'Would you like to use your own package manager (npm/yarn/pnpm) instead of Bit?',
-        initial: false,
+        enabled: 'Yes',
+        disabled: 'No',
         cancel: promptCancel,
       } as any)) as { useExternalPackageManager: boolean };
 
@@ -192,15 +360,18 @@ export class HostInitializerMain {
   }
 
   /**
-   * Prompt user for MCP server configuration
+   * Prompt user for Cloud MCP configuration. Bit Cloud hosts an HTTP MCP
+   * server at https://mcp.bit.cloud/mcp — agents connect to it directly,
+   * no local `bit` process needed. See https://bit.cloud/docs/connect.
    */
   static async promptForMcpServer(): Promise<string | null> {
     try {
       const setupMcp = (await prompt({
-        type: 'confirm',
+        type: 'toggle',
         name: 'setupMcp',
-        message: 'Would you like to set up the MCP server for AI-powered development?',
-        initial: false,
+        message: 'Would you like to connect Bit Cloud MCP to an AI coding agent?',
+        enabled: 'Yes',
+        disabled: 'No',
         cancel: promptCancel,
       } as any)) as { setupMcp: boolean };
 
@@ -209,20 +380,19 @@ export class HostInitializerMain {
       }
 
       const editorChoices = [
-        { name: 'vscode', message: 'VS Code' },
+        { name: 'claude-code', message: 'Claude Code' },
+        { name: 'codex', message: 'Codex' },
         { name: 'cursor', message: 'Cursor' },
         { name: 'windsurf', message: 'Windsurf' },
-        { name: 'roo', message: 'Roo Code' },
-        { name: 'cline', message: 'Cline' },
-        { name: 'claude-code', message: 'Claude Code' },
+        { name: 'copilot', message: 'GitHub Copilot' },
       ];
 
       const editorResponse = (await prompt({
         type: 'select',
         name: 'editor',
-        message: 'Which editor would you like to configure?',
+        message: 'Which agent would you like to configure?',
         choices: editorChoices,
-        initial: 0, // Default to VS Code
+        initial: 0,
         cancel: promptCancel,
       } as any)) as { editor: string };
 
@@ -266,40 +436,45 @@ node_modules
   }
 
   /**
-   * Set up MCP server configuration for the selected editor
+   * Write Bit Cloud MCP configuration for the selected agent.
+   * Cloud MCP is an HTTP server hosted by Bit, so no rules/instructions
+   * file is written — agents discover capabilities from the server itself.
    */
   static async setupMcpServer(editor: string, projectPath: string): Promise<void> {
-    // Set up MCP server configuration
-    const setupOptions: SetupOptions = {
-      isGlobal: false,
-      workspaceDir: projectPath,
-      consumerProject: false,
-    };
-
-    await McpConfigWriter.setupEditor(editor, setupOptions);
-
-    // Write rules file for the editor
-    const rulesOptions: RulesOptions = {
-      isGlobal: false,
-      workspaceDir: projectPath,
-      consumerProject: false,
-    };
-
-    await McpConfigWriter.writeRulesFile(editor, rulesOptions);
+    await McpConfigWriter.setupCloudMcp(editor, projectPath);
   }
 
   /**
-   * Run interactive mode for Git repositories
+   * Per-agent hint to verify the Cloud MCP connection and trigger the
+   * OAuth authentication flow. The MCP server requires auth via the
+   * `mcp:connect` scope — the agent surfaces the OAuth URL on first use.
+   */
+  static getMcpVerifyHint(editor: string): string {
+    switch (editor.toLowerCase()) {
+      case 'claude-code':
+        return `Run ${chalk.cyan('/mcp')} in Claude Code to verify the connection and authenticate`;
+      case 'cursor':
+        return `Open ${chalk.cyan('Cursor Settings → MCP')} to verify the connection and authenticate`;
+      case 'windsurf':
+        return `Open ${chalk.cyan('Windsurf Settings → MCP')} to verify the connection and authenticate`;
+      case 'copilot':
+        return `Run ${chalk.cyan('MCP: List Servers')} from the VS Code command palette to verify the connection`;
+      case 'codex':
+        return `Restart Codex to load the MCP server; it will prompt for authentication on first use`;
+      default:
+        return `Open your agent's MCP settings to verify the connection`;
+    }
+  }
+
+  /**
+   * Run interactive mode for Git repositories.
+   * The caller (InitCmd) is responsible for invoking setupMcpServer
+   * when `mcpEditor` is returned, so the user sees a status line.
    */
   static async runInteractiveMode(projectPath: string): Promise<InteractiveConfig> {
     const selectedEnv = await HostInitializerMain.promptForEnvironment();
     const useExternalPackageManager = await HostInitializerMain.promptForPackageManager();
     const mcpEditor = await HostInitializerMain.promptForMcpServer();
-
-    // Set up MCP server if user selected an editor
-    if (mcpEditor) {
-      await HostInitializerMain.setupMcpServer(mcpEditor, projectPath);
-    }
 
     await HostInitializerMain.updateGitignore(projectPath);
 
@@ -319,35 +494,54 @@ node_modules
     reset: boolean,
     resetHard: boolean,
     resetScope: boolean,
-    interactiveConfig: InteractiveConfig | null
+    interactiveConfig: InteractiveConfig | null,
+    agentFileWritten?: string,
+    mcpFileWritten?: string
   ): string {
-    let initMessage = `${chalk.green('successfully initialized a bit workspace.')}`;
+    let initMessage = formatSuccessSummary('initialized a bit workspace.');
 
-    if (!created) initMessage = `${chalk.grey('successfully re-initialized a bit workspace.')}`;
-    if (reset) initMessage = `${chalk.grey('your bit workspace has been reset successfully.')}`;
-    if (resetHard) initMessage = `${chalk.grey('your bit workspace has been hard-reset successfully.')}`;
-    if (resetScope) initMessage = `${chalk.grey('your local scope has been reset successfully.')}`;
+    if (!created) initMessage = formatHint('successfully re-initialized a bit workspace.');
+    if (reset) initMessage = formatHint('your bit workspace has been reset successfully.');
+    if (resetHard) initMessage = formatHint('your bit workspace has been hard-reset successfully.');
+    if (resetScope) initMessage = formatHint('your local scope has been reset successfully.');
+
+    if (agentFileWritten) {
+      initMessage += formatHint(
+        `\n  Created ${chalk.cyan(agentFileWritten)} — instructions for AI agents working in this workspace`
+      );
+    }
+
+    if (mcpFileWritten) {
+      initMessage += formatHint(
+        `\n  Created ${chalk.cyan(mcpFileWritten)} — Bit Cloud MCP for AI agents (picked up by Claude Code, Visual Studio)`
+      );
+    }
 
     // Add additional information for interactive mode
     if (interactiveConfig) {
-      initMessage += `\n\n${chalk.cyan('ℹ️  Additional Information:')}`;
+      initMessage += `\n\n${formatTitle('Additional Information')}`;
       const defaultDirectory = interactiveConfig?.defaultDirectory || 'bit-components/{scope}/{name}';
-      initMessage += `\n📁 Components will be created in: ${chalk.cyan(defaultDirectory)}`;
-      initMessage += `\n📖 For CI/CD setup, visit: ${chalk.underline('https://bit.dev/docs/getting-started/collaborate/exporting-components#custom-ci/cd-setup')}`;
+      initMessage += `\n  Components will be created in: ${chalk.cyan(defaultDirectory)}`;
+      initMessage += `\n  For CI/CD setup, visit: https://bit.dev/docs/getting-started/collaborate/exporting-components#custom-ci/cd-setup`;
 
       if (interactiveConfig.generator) {
-        initMessage += `\n🎯 Environment: ${chalk.cyan(interactiveConfig.generator)}`;
+        initMessage += `\n  Environment: ${chalk.cyan(interactiveConfig.generator)}`;
       }
 
       if (interactiveConfig.mcpEditor) {
-        initMessage += `\n🤖 MCP server configured for: ${chalk.cyan(interactiveConfig.mcpEditor)}`;
+        const displayName = McpConfigWriter.getEditorDisplayName(interactiveConfig.mcpEditor);
+        initMessage += `\n  Bit Cloud MCP connected to: ${chalk.cyan(displayName)}`;
+        const verifyHint = HostInitializerMain.getMcpVerifyHint(interactiveConfig.mcpEditor);
+        if (verifyHint) initMessage += formatHint(`\n  ${verifyHint}`);
       }
 
       if (interactiveConfig.externalPackageManager) {
-        initMessage += `\n📦 External package manager mode enabled`;
-        initMessage += `\n💡 Run ${chalk.cyan('pnpm install')} (or ${chalk.cyan('yarn install')}/${chalk.cyan('npm install')}) to install dependencies`;
+        initMessage += `\n  External package manager mode enabled`;
+        initMessage += formatHint(
+          `\n  Run ${chalk.cyan('pnpm install')} (or ${chalk.cyan('yarn install')}/${chalk.cyan('npm install')}) to install dependencies`
+        );
       } else if (interactiveConfig.generator) {
-        initMessage += `\n💡 Run ${chalk.cyan('bit install')} to install dependencies`;
+        initMessage += formatHint(`\n  Run ${chalk.cyan('bit install')} to install dependencies`);
       }
     }
 

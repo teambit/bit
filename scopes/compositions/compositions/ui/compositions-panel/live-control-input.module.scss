@@ -1,7 +1,149 @@
 @import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 .wrapper {
-  padding: 4px 0;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.wrapper > * {
+  width: 100%;
+  min-width: 0;
+}
+
+.fullWidthControl {
+  width: 100%;
+}
+
+.dropdownField {
+  display: block;
+  width: 100%;
+}
+
+.dropdownField :global([class*='dropdownPlaceholder']) {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.wrapper :global(textarea) {
+  min-height: 78px;
+  resize: vertical;
+  border-radius: 6px;
+  border: 1px solid var(--bit-border-color-lightest, #dcdde1);
+  font-size: 13px;
+  padding: 8px 10px;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--bit-accent-color, #6c5ce7);
+    box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.12);
+  }
+}
+
+.toggleWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 34px;
+}
+
+.toggleControl {
+  // Let the Toggle keep its native dimensions. The component sizes its
+  // knob travel in `em`, so stretching the wrapper width without scaling
+  // the font-size leaves the knob short of the right edge in the "on"
+  // state.
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.rangeWrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 0;
+}
+
+.rangeInput {
+  flex: 1;
+  margin: 0;
+  height: 4px;
+  accent-color: var(--bit-accent-color, #6c5ce7);
+  cursor: pointer;
+
+  &::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--bit-border-color-lightest, #dcdde1);
+  }
+
+  &::-webkit-slider-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--bit-accent-color, #6c5ce7);
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    margin-top: -5px;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition: transform 100ms ease;
+  }
+
+  &::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+}
+
+.rangeValue {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-background-color, #1c2024);
+  min-width: 32px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  background: var(--bit-border-color-lightest, rgba(0, 0, 0, 0.04));
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.multiSelect {
+  width: 100%;
+  min-height: 80px;
+  padding: 6px 8px;
+  border: 1px solid var(--bit-border-color-lightest, #dcdde1);
+  border-radius: 6px;
+  background: var(--surface-neutral-color, #ffffff);
+  color: var(--on-background-color, #1c2024);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  box-sizing: border-box;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.multiSelect:focus {
+  outline: none;
+  border-color: var(--bit-accent-color, #6c5ce7);
+  box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.12);
+}
+
+.multiSelect option {
+  padding: 4px 6px;
+  border-radius: 4px;
+  color: var(--on-background-color, #1c2024);
+}
+
+.multiSelect option:checked,
+.multiSelect option:hover {
+  background: rgba(108, 92, 231, 0.08);
+  color: var(--on-surface-color, #1c2024);
 }
 
 .portalMenu {
@@ -17,5 +159,19 @@
 
 .portalMenuItem {
   cursor: pointer;
-  font-family: 'CircularPro', 'Gill Sans', 'Gill Sans MT', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+}
+
+.inputText {
+  padding-top: 0px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease !important;
+
+  &:focus {
+    border-color: var(--bit-accent-color, #6c5ce7) !important;
+    box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.12) !important;
+  }
 }

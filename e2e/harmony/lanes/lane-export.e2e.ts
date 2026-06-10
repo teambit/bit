@@ -111,7 +111,7 @@ describe('bit lane export operations', function () {
       // another bug was that it had all versions included exported.
       const status = helper.command.status('--verbose');
       const hash = helper.command.getHeadOfLane('dev', 'comp1');
-      expect(status).to.have.string(`versions: ${hash} ...`);
+      expect(status).to.have.string(`versions: ${hash}`);
     });
   });
 

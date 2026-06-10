@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import chalk from 'chalk';
+import { formatSuccessSummary, formatHint } from '@teambit/cli';
 import type { Workspace } from './workspace';
 
 export class UnuseCmd implements Command {
@@ -17,7 +17,7 @@ export class UnuseCmd implements Command {
 
   async report([id]: [string]): Promise<any> {
     const result = await this.workspace.unuse(id);
-    if (!result) return chalk.yellow(`"${id}" was not found in the workspace.jsonc file.`);
-    return chalk.green(`workspace.jsonc updated successfully! the aspect "${id}" has been removed.`);
+    if (!result) return formatHint(`"${id}" was not found in the workspace.jsonc file.`);
+    return formatSuccessSummary(`workspace.jsonc updated! the aspect "${id}" has been removed.`);
   }
 }

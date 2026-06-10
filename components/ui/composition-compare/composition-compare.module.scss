@@ -1,0 +1,185 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+
+  &.isResizing {
+    cursor: ns-resize;
+
+    iframe {
+      pointer-events: none;
+    }
+  }
+}
+
+.toolbar {
+  display: flex;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.left,
+.right {
+  display: flex;
+  flex: 1;
+  padding: 4px;
+  background-color: var(--background-color);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.right {
+  justify-content: flex-end;
+}
+
+.subView {
+  height: 100%;
+  background-color: var(--background-color);
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.widgets {
+  display: flex;
+  padding: 4px;
+}
+
+.dropdown {
+  display: flex;
+}
+
+.compareLayout {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.compareMain {
+  flex: 1 1 auto;
+  min-height: 150px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.controlsPanel {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 36px;
+  overflow: hidden;
+  border-top: 1px solid var(--bit-border-color-lightest, #eaeaec);
+  contain: layout;
+}
+
+.controlsResizeHandle {
+  height: 8px;
+  cursor: ns-resize;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+  touch-action: none;
+  transition: background 120ms ease;
+
+  &::before {
+    content: '';
+    display: block;
+    width: 32px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--bit-border-color-lightest, #d0d0d3);
+    transition: all 140ms ease;
+  }
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  &:hover::before {
+    background: var(--bit-text-color-light, #8b8d98);
+    width: 48px;
+  }
+
+  &:active::before {
+    background: var(--bit-accent-color, #6c5ce7);
+  }
+}
+
+.controlsPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 14px 8px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  transition: background 120ms ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.025);
+  }
+}
+
+.controlsTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.controlsIcon {
+  font-size: 13px;
+  color: var(--bit-accent-color, #6c5ce7);
+}
+
+.controlsArrow {
+  font-size: 10px;
+  color: var(--bit-text-color-light, #8b8d98);
+}
+
+.controlsPanelTitle {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--bit-text-color-light, #8b8d98);
+}
+
+.controlsPanelContent {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 4px 16px 12px;
+  min-height: 0;
+}
+
+// ─── Empty / missing states ─────────────────────────────────────────────
+.missingComposition {
+  margin: 24px;
+  padding: 20px;
+  border: 1px dashed var(--bit-border-color-lightest, rgba(0, 0, 0, 0.1));
+  border-radius: 10px;
+  background: var(--background-color, #ffffff);
+  text-align: center;
+}
+
+.missingCompositionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--on-background-color, #1c2024);
+}
+
+.missingCompositionSubtitle {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--bit-text-color-light, #8b8d98);
+  line-height: 1.5;
+}

@@ -8,6 +8,8 @@ type Options = {
   build?: boolean;
   lane?: string;
   strict?: boolean;
+  dryRun?: boolean;
+  keepLane?: boolean;
 };
 
 export class CiPrCmd implements Command {
@@ -21,6 +23,12 @@ export class CiPrCmd implements Command {
     ['l', 'lane <lane>', 'If set, use as the lane name, if not available, grab from git-branch name'],
     ['b', 'build', 'Set to true to build the app locally, false (default) will build on Ripple CI'],
     ['s', 'strict', 'Set to true to fail on warnings as well as errors, false (default) only fails on errors'],
+    ['d', 'dry-run', 'Run the full pipeline but skip exporting to remote (build runs only if --build is set)'],
+    [
+      '',
+      'keep-lane',
+      'Reuse the same remote lane across PR commits (preserves lane history and cloud UI edits) instead of recreating it on every run',
+    ],
   ];
 
   constructor(
@@ -64,6 +72,8 @@ export class CiPrCmd implements Command {
       message,
       build: options.build,
       strict: options.strict,
+      dryRun: options.dryRun,
+      keepLane: options.keepLane,
     });
 
     if (results) {

@@ -243,11 +243,10 @@ export class DoctorMain {
     if (fileName === '.') {
       return this._getDefaultFileName();
     }
-    let finalFileName = fileName;
-    if (getExt(fileName) !== 'tar' && getExt(fileName) !== 'tar.gz') {
-      finalFileName = `${this.getWithoutExt(finalFileName)}.tar`;
+    if (fileName.endsWith('.tar') || fileName.endsWith('.tar.gz')) {
+      return fileName;
     }
-    return finalFileName;
+    return `${this.getWithoutExt(fileName)}.tar`;
   }
 
   private _getDefaultFileName() {
@@ -305,9 +304,11 @@ export class DoctorMain {
       return packExamineResults(pack);
     }
 
+    const doctorResultsRegex = /^doctor-results-\d+\.tar(\.gz)?$/;
     const ignore = (fileName: string) => {
-      if (fileName === tarFilePath) return true;
-      if (fileName === '.DS_Store') return true;
+      const baseName = path.basename(fileName);
+      if (baseName === '.DS_Store') return true;
+      if (doctorResultsRegex.test(baseName)) return true;
       if (
         !includeNodeModules &&
         (fileName.startsWith(`node_modules${path.sep}`) || fileName.includes(`${path.sep}node_modules${path.sep}`))
@@ -330,8 +331,16 @@ export class DoctorMain {
     };
 
     const workspaceRoot = consumerInfo?.path || '.';
+    const relativeTarFilePath = path.isAbsolute(tarFilePath) ? path.relative(workspaceRoot, tarFilePath) : tarFilePath;
+    const ignoreWithRelativePath = (fileName: string) => {
+      // tar-fs passes absolute paths when workspaceRoot is absolute, normalize to relative
+      const relativePath = path.isAbsolute(fileName) ? path.relative(workspaceRoot, fileName) : fileName;
+      // Check tarFilePath with both relative and original path to handle all cases
+      if (relativePath === relativeTarFilePath || fileName === tarFilePath) return true;
+      return ignore(relativePath);
+    };
     const myPack = tarFS.pack(workspaceRoot, {
-      ignore,
+      ignore: ignoreWithRelativePath,
       finalize: false,
       finish: packExamineResults,
     });

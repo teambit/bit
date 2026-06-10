@@ -1,6 +1,6 @@
 import type { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
-import { dirname, basename, join, sep } from 'path';
+import { dirname, basename, join, relative } from 'path';
 import { compact, difference, partition } from 'lodash';
 import type { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BIT_MAP, WORKSPACE_JSONC } from '@teambit/legacy.constants';
@@ -125,13 +125,8 @@ export class Watcher {
   }
 
   private getParcelIgnorePatterns(): string[] {
-    return [
-      '**/node_modules/**',
-      '**/package.json',
-      `**/${this.workspace.scope.path}/cache/**`,
-      `**/${this.workspace.scope.path}/tmp/**`,
-      `**/${this.workspace.scope.path}/objects/**`,
-    ];
+    const relScopePath = pathNormalizeToLinux(relative(this.workspace.path, this.workspace.scope.path));
+    return ['**/node_modules/**', '**/package.json', `**/${relScopePath}/**`];
   }
 
   /**
@@ -222,11 +217,45 @@ export class Watcher {
     }
   }
 
+  /**
+   * Watch all scope-internal files using a single chokidar watcher with polling.
+   * This includes scope cache files (index, refs, config) as well as IPC event files
+   * and unmerged.json. Using chokidar with polling avoids FSEvents/Watchman issues
+   * (e.g. Watchman's ignore_vcs silently ignoring all .bit/ changes).
+   * The main workspace watcher (Parcel/Chokidar) fully ignores .bit/.
+   */
+  private async watchScopeFiles(): Promise<void> {
+    await fs.ensureDir(this.ipcEventsDir);
+    const unmergedPath = join(this.workspace.scope.path, UNMERGED_FILENAME);
+    await this.watcherMain.watchScopeInternalFiles([this.ipcEventsDir, unmergedPath], async (filePath) => {
+      if (this.verbose && this.msgs?.onAll) {
+        this.msgs.onAll('change', filePath);
+      }
+      try {
+        if (dirname(filePath) === this.ipcEventsDir) {
+          const eventName = basename(filePath);
+          if (eventName === 'onNotifySSE') {
+            const content = await fs.readFile(filePath, 'utf8');
+            this.logger.debug(`Watcher, onNotifySSE ${content}`);
+            const parsed = JSON.parse(content);
+            sendEventsToClients(parsed.event, parsed);
+          } else {
+            await this.watcherMain.ipcEvents.triggerGotEvent(eventName as any);
+          }
+        } else if (filePath.endsWith(UNMERGED_FILENAME)) {
+          await this.workspace.clearCache();
+        }
+      } catch (err: any) {
+        this.logger.error(`failed to handle scope file change ${filePath}: ${err.message}`);
+      }
+    });
+  }
+
   async watch() {
     await this.setRootDirs();
     const componentIds = Object.values(this.rootDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, this.options);
-    await this.watcherMain.watchScopeInternalFiles();
+    await this.watchScopeFiles();
     this.watcherType === 'parcel' ? await this.watchParcel() : await this.watchChokidar();
   }
 
@@ -330,11 +359,9 @@ export class Watcher {
    * Handle Parcel watcher events when running as daemon
    */
   private async onParcelWatchAsDaemon(err: Error | null, allEvents: Event[]) {
-    const events = allEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
-
     // Broadcast events to all clients
-    if (events.length > 0) {
-      this.watcherDaemon?.broadcastEvents(events);
+    if (allEvents.length > 0) {
+      this.watcherDaemon?.broadcastEvents(allEvents);
     }
 
     // Also broadcast errors
@@ -357,10 +384,9 @@ export class Watcher {
 
     // Handle events from the daemon
     this.watcherClient.onEvents(async (events) => {
-      const filteredEvents = events.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
-      if (filteredEvents.length > 0) {
+      if (events.length > 0) {
         const startTime = Date.now();
-        await this.processEvents(filteredEvents, startTime);
+        await this.processEvents(events, startTime);
       }
     });
 
@@ -432,14 +458,16 @@ export class Watcher {
   /**
    * Setup graceful shutdown handlers for daemon mode.
    * When SIGINT/SIGTERM is received, we need to:
-   * 1. Stop the daemon (cleanup socket, notify clients)
-   * 2. Call process.exit() to actually terminate
+   * 1. Fire-and-forget best-effort cleanup (unsubscribe Parcel, stop daemon)
+   * 2. Call process.exit() immediately — the OS reliably closes sockets,
+   *    FSEvents streams, and file descriptors, and stale lock files are
+   *    detected and cleaned up by WatcherDaemon.isRunning().
    *
-   * Important: Once you add a handler for SIGINT, Node.js no longer exits automatically.
-   * You must call process.exit() explicitly.
+   * Awaiting watcherDaemon.stop() before exit caused hangs in practice:
+   * server.close() can wait indefinitely on sockets, and the unref'd
+   * fallback timer doesn't reliably fire once other handles clear.
    */
   private setupDaemonShutdown(): void {
-    // Remove old handlers to prevent accumulation when transitioning modes
     this.removeSignalHandlers();
 
     let isShuttingDown = false;
@@ -449,25 +477,10 @@ export class Watcher {
       isShuttingDown = true;
 
       this.logger.debug('Daemon shutting down...');
-      // Unsubscribe from Parcel watcher
-      this.parcelSubscription?.unsubscribe().catch((err) => {
-        this.logger.debug(`Error unsubscribing from Parcel watcher: ${err.message}`);
-      });
-      // Stop is async but we need to exit - start the cleanup and exit
-      // The socket will be cleaned up by the OS when the process exits
-      this.watcherDaemon
-        ?.stop()
-        .catch((err) => {
-          this.logger.error(`Error stopping daemon: ${err.message}`);
-        })
-        .finally(() => {
-          process.exit(0);
-        });
+      this.parcelSubscription?.unsubscribe().catch(() => {});
+      this.watcherDaemon?.stop().catch(() => {});
 
-      // Fallback: if stop() hangs, force exit after 1 second
-      setTimeout(() => {
-        process.exit(0);
-      }, 1000).unref();
+      process.exit(0);
     };
 
     this.signalCleanupHandler = cleanup;
@@ -592,24 +605,8 @@ export class Watcher {
       if (this.bitMapChangesInProgress) {
         await this.watchQueue.onIdle();
       }
-      if (dirname(filePath) === this.ipcEventsDir) {
-        const eventName = basename(filePath);
-        if (eventName === 'onNotifySSE') {
-          const content = await fs.readFile(filePath, 'utf8');
-          this.logger.debug(`Watcher, onNotifySSE ${content}`);
-          const parsed = JSON.parse(content);
-          sendEventsToClients(parsed.event, parsed);
-        } else {
-          await this.watcherMain.ipcEvents.triggerGotEvent(eventName as any);
-        }
-        return { results: [], files: [filePath] };
-      }
       if (filePath.endsWith(WORKSPACE_JSONC)) {
         await this.workspace.triggerOnWorkspaceConfigChange();
-        return { results: [], files: [filePath] };
-      }
-      if (filePath.endsWith(UNMERGED_FILENAME)) {
-        await this.workspace.clearCache();
         return { results: [], files: [filePath] };
       }
       const componentId = this.getComponentIdByPath(filePath);
@@ -848,26 +845,12 @@ export class Watcher {
     return this.findRootDirByFilePathRecursively(parentDir);
   }
 
-  private shouldIgnoreFromLocalScopeChokidar(pathToCheck: string) {
-    if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
-    const scopePathLinux = pathNormalizeToLinux(this.workspace.scope.path);
-    return pathToCheck.startsWith(`${scopePathLinux}/`);
-  }
-
-  private shouldIgnoreFromLocalScopeParcel(pathToCheck: string) {
-    if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
-    return pathToCheck.startsWith(this.workspace.scope.path + sep);
-  }
-
   private async createChokidarWatcher() {
     const chokidarOpts = await this.watcherMain.getChokidarWatchOptions();
     // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
     // (windows-style backslashes are converted to forward slashes)
-    chokidarOpts.ignored = [
-      '**/node_modules/**',
-      '**/package.json',
-      this.shouldIgnoreFromLocalScopeChokidar.bind(this),
-    ];
+    const relScopePath = pathNormalizeToLinux(relative(this.workspace.path, this.workspace.scope.path));
+    chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', `**/${relScopePath}/**`];
     this.chokidarWatcher = chokidar.watch(this.workspace.path, chokidarOpts);
     if (this.verbose) {
       logger.console(
@@ -876,13 +859,9 @@ export class Watcher {
     }
   }
 
-  private async onParcelWatch(err: Error | null, allEvents: Event[]) {
-    const events = allEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
-
+  private async onParcelWatch(err: Error | null, events: Event[]) {
     if (this.verbose) {
-      this.logger.debug(
-        `onParcelWatch: ${allEvents.length} events, ${events.length} after filtering, error: ${err?.message || 'none'}`
-      );
+      this.logger.debug(`onParcelWatch: ${events.length} events, error: ${err?.message || 'none'}`);
     }
 
     const msgs = this.msgs;
@@ -929,6 +908,7 @@ export class Watcher {
     await this.processEvents(events, startTime);
 
     // Write snapshot after successful processing (non-blocking)
+    // eslint-disable-next-line promise/no-promise-in-callback
     this.writeSnapshotIfNeeded().catch((writeErr) => {
       this.logger.debug(`Failed to write watcher snapshot: ${writeErr.message}`);
     });
@@ -1032,17 +1012,11 @@ export class Watcher {
       // Write new snapshot immediately after reading events to prevent re-processing same events
       await this.writeSnapshotIfNeeded();
 
-      const filteredEvents = missedEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
-
       if (this.verbose) {
-        this.logger.console(
-          chalk.green(
-            `Found ${filteredEvents.length} missed events (${missedEvents.length} total, ${missedEvents.length - filteredEvents.length} ignored)`
-          )
-        );
+        this.logger.console(chalk.green(`Found ${missedEvents.length} missed events`));
       }
 
-      if (filteredEvents.length === 0) {
+      if (missedEvents.length === 0) {
         if (this.verbose) {
           this.logger.console(chalk.green('No relevant missed events. Watcher state is consistent.'));
         }
@@ -1051,9 +1025,7 @@ export class Watcher {
 
       // Log critical files that were missed (for debugging)
       if (this.verbose) {
-        const criticalFiles = filteredEvents.filter(
-          (e) => e.path.endsWith(BIT_MAP) || e.path.endsWith(WORKSPACE_JSONC)
-        );
+        const criticalFiles = missedEvents.filter((e) => e.path.endsWith(BIT_MAP) || e.path.endsWith(WORKSPACE_JSONC));
         if (criticalFiles.length > 0) {
           this.logger.console(
             chalk.cyan(`Critical files in missed events: ${criticalFiles.map((e) => basename(e.path)).join(', ')}`)
@@ -1062,7 +1034,7 @@ export class Watcher {
       }
 
       // Process all missed events using shared helper
-      await this.processEvents(filteredEvents, startTime);
+      await this.processEvents(missedEvents, startTime);
 
       if (this.verbose) {
         const duration = new Date().getTime() - startTime;

@@ -27,7 +27,7 @@ export class CliGenerateCmd implements Command {
     [
       '',
       'skill <type>',
-      'generate output for Claude Code skill: "commands" (like bit --help) or "flags" (condensed flag reference)',
+      'generate output for Claude Code skill: "commands" (like bit --help) or "reference" (subcommands, args, and flags)',
     ],
   ] as CommandOptions;
   private = true;
@@ -46,10 +46,10 @@ labels: ['cli', 'mdx', 'docs']
       if (skill === 'commands') {
         return generator.generateSkillCommands();
       }
-      if (skill === 'flags') {
-        return generator.generateSkillFlags();
+      if (skill === 'reference') {
+        return generator.generateSkillReference();
       }
-      throw new Error(`Unknown skill type: "${skill}". Use "commands" or "flags".`);
+      throw new Error(`Unknown skill type: "${skill}". Use "commands" or "reference".`);
     }
     return generator.generate();
   }

@@ -198,6 +198,7 @@ export class MergingMain {
     skipDependencyInstallation,
     detachHead,
     loose,
+    shouldSquash,
   }: {
     mergeStrategy: MergeStrategy;
     allComponentsStatus: ComponentMergeStatus[];
@@ -211,6 +212,7 @@ export class MergingMain {
     skipDependencyInstallation?: boolean;
     detachHead?: boolean;
     loose?: boolean;
+    shouldSquash?: boolean;
   }): Promise<ApplyVersionResults> {
     const consumer = this.workspace?.consumer;
     const legacyScope = this.scope.legacyScope;
@@ -242,7 +244,8 @@ export class MergingMain {
       otherLaneId,
       mergeStrategy,
       currentLane,
-      detachHead
+      detachHead,
+      shouldSquash
     );
 
     const allConfigMerge = compact(succeededComponents.map((c) => c.configMergeResult));
@@ -401,7 +404,8 @@ export class MergingMain {
     otherLaneId: LaneId,
     mergeStrategy: MergeStrategy,
     currentLane?: Lane,
-    detachHead?: boolean
+    detachHead?: boolean,
+    shouldSquash?: boolean
   ): Promise<ApplyVersionWithComps[]> {
     const componentsResults = await mapSeries(
       succeededComponents,
@@ -419,12 +423,21 @@ export class MergingMain {
           resolvedUnrelated,
           configMergeResult,
           detachHead,
+          shouldSquash,
         });
       }
     );
 
     if (this.workspace) {
-      const compsToWrite = compact(componentsResults.map((c) => c.legacyCompToWrite));
+      // Hidden lane updateDependents live only on the lane and in the scope. Writing them to
+      // the workspace would (a) leak internal lane plumbing into bitmap/files, and (b) confuse
+      // downstream classifiers that key off bitmap-presence (the cascade-on-snap detector in
+      // version-maker treats "in bitmap" as "workspace tracked"). Filter them out here.
+      const hiddenIds = currentLane?.updateDependents || [];
+      const visibleResults = componentsResults.filter(
+        (c) => !hiddenIds.find((id) => id.isEqualWithoutVersion(c.applyVersionResult.id))
+      );
+      const compsToWrite = compact(visibleResults.map((c) => c.legacyCompToWrite));
       const manyComponentsWriterOpts = {
         consumer: this.workspace.consumer,
         components: compsToWrite,
@@ -449,6 +462,7 @@ export class MergingMain {
     resolvedUnrelated,
     configMergeResult,
     detachHead,
+    shouldSquash,
   }: {
     currentComponent: ConsumerComponent | null | undefined;
     id: ComponentID;
@@ -460,6 +474,7 @@ export class MergingMain {
     resolvedUnrelated?: ResolveUnrelatedData;
     configMergeResult?: ConfigMergeResult;
     detachHead?: boolean;
+    shouldSquash?: boolean;
   }): Promise<ApplyVersionWithComps> {
     const legacyScope = this.scope.legacyScope;
     let filesStatus = {};
@@ -467,17 +482,25 @@ export class MergingMain {
       id: { name: id.fullName, scope: id.scope },
       head: remoteHead,
       laneId: otherLaneId,
+      // diverged components get squashed at snap-creation time (single-parent + squashed metadata)
+      // when shouldSquash is set. fast-forward squash is handled separately by squashSnaps().
+      shouldSquash: Boolean(shouldSquash && mergeResults),
     };
     id = currentComponent ? currentComponent.id : id;
     const modelComponent = await legacyScope.getModelComponent(id);
 
     const addToCurrentLane = (head: Ref) => {
       if (!currentLane) throw new Error('currentLane must be defined when adding to the lane');
-      if (otherLaneId.isDefault()) {
-        const isPartOfLane = currentLane.components.find((c) => c.id.isEqualWithoutVersion(id));
-        if (!isPartOfLane) return;
+      const existingOnLane = currentLane.getComponent(id);
+      const existingInUpdateDependents = currentLane.findUpdateDependent(id);
+      if (otherLaneId.isDefault() && !existingOnLane && !existingInUpdateDependents) return;
+      // preserve the existing entry's bucket so a merge refreshing a hidden updateDependent
+      // doesn't accidentally promote it into the workspace-tracked bucket (and vice versa).
+      if (existingInUpdateDependents && !existingOnLane) {
+        currentLane.addComponentToUpdateDependents(id.changeVersion(head.toString()));
+      } else {
+        currentLane.addComponent({ id, head });
       }
-      currentLane.addComponent({ id, head });
     };
 
     const convertHashToTagIfPossible = (componentId: ComponentID): ComponentID => {
@@ -684,10 +707,28 @@ export class MergingMain {
       );
       return results;
     }
-    return this.snapping.snap({
-      legacyBitIds: ids,
-      build,
+    // Hidden lane updateDependents ride the same `makeVersion` batch as visible workspace
+    // components. version-maker's `isHiddenLaneEntry` detection (workspace flow: not-in-bitmap)
+    // routes each entry correctly. workspace.getMany picks up disk-merged files for visible; the
+    // in-memory merged ConsumerComponents from `applyVersion` are passed through for hidden
+    // (which have no disk state). Single pipeline → consistent log/buildStatus/
+    // flattenedDependencies/lane-history/stagedSnaps for all merge-cascade snaps.
+    const lane = await this.scope.legacyScope.getCurrentLaneObject();
+    const updateDependentsIds = lane?.updateDependents || [];
+    const hiddenIds = ComponentIdList.fromArray(
+      ids.filter((id) => updateDependentsIds.find((u) => u.isEqualWithoutVersion(id)))
+    );
+    const visibleIds = ComponentIdList.fromArray(
+      ids.filter((id) => !hiddenIds.find((h) => h.isEqualWithoutVersion(id)))
+    );
+    const hiddenLegacyComponents = updatedComponents.filter((c) =>
+      hiddenIds.find((h) => h.isEqualWithoutVersion(c.componentId))
+    );
+    return this.snapping.snapForMerge({
+      visibleIds,
+      hiddenLegacyComponents,
       message: snapMessage,
+      build,
       loose,
     });
   }

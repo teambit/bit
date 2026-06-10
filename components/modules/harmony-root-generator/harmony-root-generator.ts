@@ -112,7 +112,7 @@ export function createHarmonyImports(harmonyPackage = '@teambit/harmony') {
 
 function generateSlotsFn() {
   return `
-function generateSlot(length = 5) {
+function generateSlot(length = 20) {
   return Array.from(Array(length)).map(() => Slot.withType());
 }
 `;

@@ -135,6 +135,7 @@ export function SchemaNodesSummary({
                     headings={_headings}
                   />
                   {groupedMembersByType.map((member) => {
+                    // @ts-expect-error - version skew: local SchemaNode has diff() but npm-published version doesn't yet
                     return renderTable(type ?? '', member, _headings);
                   })}
                 </div>
@@ -145,6 +146,7 @@ export function SchemaNodesSummary({
                 {groupedMembersByType.map((member) => (
                   <SchemaMethodMember
                     key={`${member.__schema}-${member.name}`}
+                    // @ts-expect-error - version skew: local SchemaNode has diff() but npm-published version doesn't yet
                     member={member}
                     apiNodeRendererProps={apiNodeRendererProps}
                   />

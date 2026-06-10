@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import chalk from 'chalk';
+import { formatSuccessSummary, formatHint, errorSymbol } from '@teambit/cli';
 import type { CliMcpServerMain } from './cli-mcp-server.main.runtime';
 
 export type McpSetupCmdOptions = {
@@ -50,20 +50,20 @@ export class McpSetupCmd implements Command {
 
       // Special message for Claude Code to mention restart requirement
       if (editor.toLowerCase() === 'claude-code') {
-        return chalk.green(
-          `✓ Successfully configured ${editorName} MCP integration (${scope})\n` +
-            `  Configuration written to: ${chalk.cyan(configPath)}\n` +
-            `  ${chalk.yellow('Note:')} Restart Claude Code to use the Bit MCP tools.`
-        );
+        return [
+          formatSuccessSummary(`configured ${editorName} MCP integration (${scope})`),
+          `  Configuration written to: ${configPath}`,
+          formatHint(`  Restart Claude Code to use the Bit MCP tools.`),
+        ].join('\n');
       }
 
-      return chalk.green(
-        `✓ Successfully configured ${editorName} MCP integration (${scope})\n` +
-          `  Configuration written to: ${chalk.cyan(configPath)}`
-      );
+      return [
+        formatSuccessSummary(`configured ${editorName} MCP integration (${scope})`),
+        `  Configuration written to: ${configPath}`,
+      ].join('\n');
     } catch (error) {
       const editorName = this.mcpServerMain.getEditorDisplayName(editor);
-      return chalk.red(`Error setting up ${editorName} integration: ${(error as Error).message}`);
+      return `${errorSymbol} Error setting up ${editorName} integration: ${(error as Error).message}`;
     }
   }
 }

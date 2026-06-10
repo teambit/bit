@@ -81,7 +81,7 @@ describe('export functionality on Harmony', function () {
       exportOutput = helper.command.export();
     });
     it('should export them successfully with no errors', () => {
-      expect(exportOutput).to.have.string('exported the following 2 component');
+      expect(exportOutput).to.have.string('exported components (2)');
       const scope1 = helper.command.listRemoteScopeParsed();
       expect(scope1).to.have.lengthOf(1);
       const scope2 = helper.command.listRemoteScopeParsed(anotherRemote);
@@ -162,7 +162,7 @@ describe('export functionality on Harmony', function () {
           exportOutput = helper.command.export(`--resume ${exportId}`);
         });
         it('should resume the export and complete it successfully', () => {
-          expect(exportOutput).to.have.string('exported the following 2 component(s)');
+          expect(exportOutput).to.have.string('exported components (2)');
           expect(exportOutput).to.have.string('ovio1b1s-remote/bar1');
           expect(exportOutput).to.have.string('mjtjb8oh-remote2/bar2');
         });
@@ -193,7 +193,7 @@ describe('export functionality on Harmony', function () {
           exportOutput = helper.command.export(`--resume ${exportId}`);
         });
         it('should still be able to run export --resume to persist to other scopes', () => {
-          expect(exportOutput).to.have.string('exported the following 1 component(s)');
+          expect(exportOutput).to.have.string('exported components (1)');
           expect(exportOutput).to.have.string('mjtjb8oh-remote2/bar2');
         });
       });

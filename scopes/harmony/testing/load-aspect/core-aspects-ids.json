@@ -43,6 +43,7 @@
   "teambit.pipelines/builder",
   "teambit.workspace/variants",
   "teambit.component/deprecation",
+  "teambit.component/internalize",
   "teambit.harmony/express",
   "teambit.harmony/aspect",
   "teambit.webpack/webpack",
@@ -105,6 +106,7 @@
   "teambit.harmony/config-store",
   "teambit.mcp/cli-mcp-server",
   "teambit.git/ci",
+  "teambit.cloud/ripple",
   "teambit.workspace/scripts",
   "teambit.harmony/bit",
   "teambit.harmony/config"

@@ -1,4 +1,5 @@
 import type { Command } from '@teambit/cli';
+import { formatItem, formatSuccessSummary } from '@teambit/cli';
 import { PATTERN_HELP, COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
 import type { Workspace } from '../workspace';
@@ -27,13 +28,13 @@ ${PATTERN_HELP('scope set scope-name')}`;
     if (pattern) {
       const componentsIds = await this.workspace.idsByPattern(pattern);
       const changedIds = await this.workspace.setDefaultScopeToComponents(componentsIds, scopeName);
-      return chalk.green(`successfully set ${chalk.bold(scopeName)} as the default-scope for the following component(s):
-  ${chalk.reset(changedIds.map((id) => id.toString()).join('\n'))}`);
+      const items = changedIds.map((id) => formatItem(id.toString()));
+      return `${formatSuccessSummary(`set ${chalk.bold(scopeName)} as the default-scope for the following component(s)`)}\n${items.join('\n')}`;
     }
     const oldScope = this.workspace.defaultScope;
     await this.workspace.setDefaultScope(scopeName);
-    return chalk.green(
-      `successfully set the workspace's default-scope to ${chalk.bold(scopeName)}. (previous scope was "${oldScope}")`
+    return formatSuccessSummary(
+      `set the workspace's default-scope to ${chalk.bold(scopeName)}. (previous scope was "${oldScope}")`
     );
   }
 }

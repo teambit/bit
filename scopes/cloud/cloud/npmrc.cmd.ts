@@ -2,6 +2,7 @@
 import chalk from 'chalk';
 import yesno from 'yesno';
 import type { Command, CommandOptions, Flags } from '@teambit/cli';
+import { formatSuccessSummary } from '@teambit/cli';
 import type { CloudMain } from './cloud.main.runtime';
 
 export class NpmrcGenerateCmd implements Command {
@@ -52,7 +53,7 @@ export class NpmrcGenerateCmd implements Command {
     if (updateResult.conflicts && updateResult.conflicts.length > 0) {
       return this.handleNpmrcConflicts(updateResult.conflicts);
     }
-    return chalk.green('The .npmrc file has been updated successfully.');
+    return formatSuccessSummary('The .npmrc file has been updated successfully.');
   }
 
   async json() {
@@ -84,7 +85,7 @@ Modification: ${chalk.green(conflict.modifications)}`
       return chalk.red('Updating .npmrc was aborted due to conflicts.');
     }
     await this.cloud.generateNpmrc({ force: true });
-    return chalk.green('.npmrc has been updated successfully after resolving conflicts.');
+    return formatSuccessSummary('.npmrc has been updated after resolving conflicts.');
   }
 }
 

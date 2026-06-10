@@ -8,6 +8,7 @@ import type { Component } from '@teambit/component';
 import type { TrackerMain } from '@teambit/tracker';
 import { TrackerAspect } from '@teambit/tracker';
 import type { PathLinuxRelative, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { isDirEmpty } from '@teambit/toolbox.fs.is-dir-empty';
 import { ComponentID } from '@teambit/component-id';
 import type { Harmony } from '@teambit/harmony';
@@ -61,12 +62,12 @@ export class NewComponentHelperMain {
       const componentPath = componentId.fullName;
       const dirExists = fs.pathExistsSync(fullPath);
       if (componentsToCreate && componentsToCreate === 1) {
-        return dirExists ? path.join(pathFromUser, componentPath) : pathFromUser;
+        return pathNormalizeToLinux(dirExists ? path.join(pathFromUser, componentPath) : pathFromUser);
       }
       if (componentsToCreate && componentsToCreate > 1) {
-        return path.join(pathFromUser, componentPath);
+        return pathNormalizeToLinux(path.join(pathFromUser, componentPath));
       }
-      return pathFromUser;
+      return pathNormalizeToLinux(pathFromUser);
     }
 
     const generatedPath = this.workspace.consumer.composeRelativeComponentPath(

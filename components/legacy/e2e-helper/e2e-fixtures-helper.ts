@@ -44,18 +44,15 @@ export default class FixtureHelper {
     this.packageJson = packageJson;
     this.scopeHelper = scopeHelper;
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  createComponentBarFoo(impl?: string = fixtures.fooFixture) {
+  createComponentBarFoo(impl: string = fixtures.fooFixture) {
     this.fs.createFile('bar', 'foo.js', impl);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  createComponentUtilsIsType(impl?: string = fixtures.isType) {
+  createComponentUtilsIsType(impl: string = fixtures.isType) {
     this.fs.createFile('utils', 'is-type.js', impl);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  createComponentUtilsIsString(impl?: string = fixtures.isString) {
+  createComponentUtilsIsString(impl: string = fixtures.isString) {
     this.fs.createFile('utils', 'is-string.js', impl);
   }
   addComponentBarFoo() {

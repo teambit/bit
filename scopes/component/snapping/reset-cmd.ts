@@ -2,6 +2,7 @@ import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
 import yesno from 'yesno';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSection, formatItem, formatSuccessSummary, joinSections } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { SnappingMain } from './snapping.main.runtime';
 
@@ -49,7 +50,11 @@ useful for undoing mistakes before exporting. exported versions cannot be reset.
   ) {
     if (neverExported) {
       const compIds = await this.snapping.resetNeverExported();
-      return chalk.green(`successfully reset the following never-exported components:\n${compIds.join('\n')}`);
+      const items = compIds.map((id) => formatItem(id.toString()));
+      return joinSections([
+        formatSection('reset never-exported components', '', items),
+        formatSuccessSummary(`successfully reset ${compIds.length} never-exported component(s)`),
+      ]);
     }
     if (soft && head) {
       throw new BitError('please specify either --soft or --head flag, not both');
@@ -59,12 +64,15 @@ useful for undoing mistakes before exporting. exported versions cannot be reset.
       await this.promptForResetAll();
     }
     const { results, isSoftUntag } = await this.snapping.reset(pattern, head, force, soft);
-    const titleSuffix = isSoftUntag ? 'soft-untagged (are not candidates for tagging any more)' : 'reset';
-    const title = chalk.green(`${results.length} component(s) were ${titleSuffix}:\n`);
-    const components = results.map((result) => {
-      return `${chalk.cyan(result.id.toStringWithoutVersion())}. version(s): ${result.versions.join(', ')}`;
-    });
-    return title + components.join('\n');
+    const titleSuffix = isSoftUntag ? 'soft-untagged' : 'reset';
+    const description = isSoftUntag ? 'soft-untagged versions are no longer candidates for tagging' : '';
+    const items = results.map((result) =>
+      formatItem(`${chalk.cyan(result.id.toStringWithoutVersion())} - version(s): ${result.versions.join(', ')}`)
+    );
+    return joinSections([
+      formatSection(`${titleSuffix} components`, description, items),
+      formatSuccessSummary(`${results.length} component(s) ${titleSuffix} successfully`),
+    ]);
   }
 
   private async promptForResetAll() {

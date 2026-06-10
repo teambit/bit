@@ -1,0 +1,252 @@
+.container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-color);
+  overflow-y: auto;
+  position: relative;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 22%, var(--surface01-color, #f7f7f7) 0%, var(--background-color) 60%);
+}
+
+/* Centered in the space above the footer via auto margins. */
+.body {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 720px;
+  margin: auto;
+  padding: 48px 32px;
+  text-align: center;
+}
+
+.headline {
+  font-family: 'Instrument Serif', Georgia, serif;
+  margin: 0;
+  font-size: 44px;
+  line-height: 1.1;
+  font-weight: 400;
+  color: var(--on-background-high-color);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+
+  em {
+    color: var(--bit-accent-color, #6c5ce7);
+    font-style: italic;
+  }
+}
+
+.sub {
+  margin: 16px auto 40px;
+  max-width: 460px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--on-background-medium-color);
+}
+
+/* ---- Primary CTA — Hope callout ---- */
+
+.hopeCallout {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--primary-surface-color, #f6f5fe);
+  border: 1.5px solid var(--border-primary-color, #6c5ce7);
+  border-radius: 14px;
+  box-shadow:
+    0 1px 2px rgba(93, 72, 255, 0.06),
+    0 18px 40px -18px rgba(93, 72, 255, 0.4);
+  text-align: left;
+}
+
+.hopeIcon {
+  flex-shrink: 0;
+}
+
+.hopeText {
+  flex: 1;
+}
+
+.hopeTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--on-background-high-color);
+  letter-spacing: -0.01em;
+  margin-bottom: 3px;
+}
+
+.hopeHelp {
+  font-size: 13px;
+  color: var(--on-background-medium-color);
+  line-height: 1.5;
+}
+
+/* ---- Separator ---- */
+
+.sep {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 32px auto 20px;
+  max-width: 340px;
+}
+
+.sepLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border-medium-color);
+}
+
+.sepLabel {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  color: var(--on-background-low-color);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ---- DIY rows ---- */
+
+.diyGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.diyRow {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--surface-color);
+  border: 1px solid var(--border-medium-color);
+  border-radius: 12px;
+  text-align: left;
+}
+
+.diyTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--on-background-high-color);
+}
+
+.diyBody {
+  font-size: 13px;
+  color: var(--on-background-medium-color);
+  line-height: 1.45;
+  margin-top: 2px;
+}
+
+.diyCmdRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.diyCmd {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--surface01-color, #f7f7f7);
+  border: 1px solid var(--border-medium-color);
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 13px;
+  color: var(--on-background-color);
+  min-width: 0;
+}
+
+.diyPrompt {
+  color: var(--on-background-low-color);
+}
+
+.diyCmdText {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diyCopy {
+  height: 30px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid var(--border-medium-color);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--on-background-medium-color);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: var(--surface01-color, #f7f7f7);
+  }
+}
+
+/* ---- Docs links ---- */
+
+.docsLinks {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+}
+
+.link {
+  color: var(--bit-accent-color, #6c5ce7);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+/* ---- Footer ---- */
+
+.bottom {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-top: 1px solid var(--border-medium-color);
+  background: var(--surface-color);
+}
+
+.iconLink {
+  display: inline-flex;
+  padding: 8px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: background 0.14s ease;
+
+  &:hover {
+    background: var(--surface-hover-color, rgba(120, 120, 140, 0.12));
+  }
+}
+
+.logo {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.discordIcon {
+  display: block;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--on-background-medium-color);
+}
