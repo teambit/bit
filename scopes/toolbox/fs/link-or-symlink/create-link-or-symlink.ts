@@ -39,6 +39,12 @@ export function createLinkOrSymlink(
     if (avoidHardLink) symlink();
     else link();
   } catch (err: any) {
+    if (err.code === 'EEXIST' && isDestLinkedCorrectly(srcPath, destPath)) {
+      logger.trace(
+        `createLinkOrSymlink, EEXIST but destination already points to the correct source, skipping. dest: ${destPath}`
+      );
+      return;
+    }
     const winMsg = IS_WINDOWS ? ' (or maybe copy)' : '';
     const errorHeader = componentId ? `failed to link a component ${componentId}` : 'failed to generate a symlink';
     throw new BitError(`${errorHeader}.
@@ -124,6 +130,19 @@ Original error: ${err}`);
       }
     }
   }
+}
+
+function isDestLinkedCorrectly(src: string, dest: string): boolean {
+  try {
+    const srcStat = fs.statSync(src);
+    const destStat = fs.statSync(dest);
+    // covers both hard links (same inode) and symlinks (stat follows the symlink).
+    // guard against zero values — on Windows ino/dev can be 0, which would cause false positives.
+    if (srcStat.ino !== 0 && srcStat.ino === destStat.ino && srcStat.dev === destStat.dev) return true;
+  } catch {
+    // ignore
+  }
+  return linkPointsToPath(dest, src);
 }
 
 function linkPointsToPath(linkPath: string, expectedPath: string) {

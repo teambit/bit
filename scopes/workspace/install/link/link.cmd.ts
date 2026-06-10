@@ -1,9 +1,9 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatTitle, formatHint, joinSections } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import { timeFormat } from '@teambit/toolbox.time.time-format';
-import { compact } from 'lodash';
 import chalk from 'chalk';
-import type { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError, type Workspace } from '@teambit/workspace';
 import type { InstallMain, WorkspaceLinkOptions, WorkspaceLinkResults } from '../install.main.runtime';
 import { ComponentListLinks, packageListLinks } from './component-list-links';
 import { CoreAspectsLinks } from './core-aspects-links';
@@ -69,7 +69,9 @@ useful for development when components need to reference each other or when debu
     }
     const numOfCoreAspects = coreAspectsLinksWithMainAspect.length;
 
-    const title = `Linked ${numOfComponents} components and ${numOfCoreAspects} core aspects to node_modules for workspace: ${this.workspace.name}`;
+    const title = formatTitle(
+      `Linked ${numOfComponents} components and ${numOfCoreAspects} core aspects to node_modules for workspace: ${this.workspace.name}`
+    );
     const coreLinks = CoreAspectsLinks({
       coreAspectsLinks: coreAspectsLinksWithMainAspect,
       verbose: opts.verbose,
@@ -86,8 +88,8 @@ useful for development when components need to reference each other or when debu
       verbose: opts.verbose,
     });
     const targetLinks = linkToDir(linkResults.linkToDirResults);
-    const footer = `Finished. ${timeDiff}`;
-    return compact([
+    const footer = formatHint(`Finished. ${timeDiff}`);
+    return joinSections([
       title,
       coreLinks,
       nonCorePackagesLinks,
@@ -96,11 +98,12 @@ useful for development when components need to reference each other or when debu
       nestedLinks,
       targetLinks,
       footer,
-    ]).join('\n');
+    ]);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async json([ids]: [string[]], opts: LinkCommandOpts): Promise<WorkspaceLinkResults> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     this.logger.console(
       `Linking components and core aspects to node_modules for workspaces: '${chalk.cyan(this.workspace.name)}'`
     );

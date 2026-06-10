@@ -130,6 +130,16 @@ export type RuntimeOptions = {
    * Show the internal urls of the dev servers
    */
   showInternalUrls?: boolean;
+
+  /**
+   * resolve component previews from root node_modules instead of .bit_roots
+   */
+  useRootModules?: boolean;
+
+  /**
+   * resolve local workspace component previews from source files instead of dist artifacts.
+   */
+  useSource?: boolean;
 };
 
 export class UiMain {

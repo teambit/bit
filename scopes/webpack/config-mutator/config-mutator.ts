@@ -136,7 +136,7 @@ export class WebpackConfigMutator {
     if (!this.raw.module.rules) {
       this.raw.module.rules = [];
     }
-    const moduleWithOneOf = this.raw.module.rules.find((r) => !!(r as RuleSetRule).oneOf);
+    const moduleWithOneOf = this.raw.module.rules.find((r: RuleSetRule) => !!r.oneOf);
     if (!moduleWithOneOf) {
       this.raw.module.rules.unshift({ oneOf: [] });
     }
@@ -308,7 +308,7 @@ export class WebpackConfigMutator {
   addPostCssPlugins(plugins: Array<any>): WebpackConfigMutator {
     this.raw.module?.rules?.forEach((rule: any) => {
       if (rule.use) processUseArray(rule.use, plugins);
-      if (rule.oneOf) rule.oneOf.forEach((oneOfRule) => processUseArray(oneOfRule.use, plugins));
+      if (rule.oneOf) rule.oneOf.forEach((oneOfRule: RuleSetRule) => processUseArray(oneOfRule.use as any[], plugins));
     });
 
     return this;
@@ -328,7 +328,7 @@ export class WebpackConfigMutator {
     }
 
     const htmlPlugins = this.raw?.plugins?.filter(
-      (plugin) => plugin.constructor.name === 'HtmlWebpackPlugin'
+      (plugin: { constructor: Function }) => plugin.constructor.name === 'HtmlWebpackPlugin'
     ) as HtmlWebpackPlugin[];
 
     if (htmlPlugins) {
@@ -363,7 +363,7 @@ export class WebpackConfigMutator {
     }
 
     const htmlPlugin = this.raw?.plugins?.find(
-      (plugin) => plugin.constructor.name === 'HtmlWebpackPlugin'
+      (plugin: { constructor: Function }) => plugin.constructor.name === 'HtmlWebpackPlugin'
     ) as HtmlWebpackPlugin;
 
     if (htmlPlugin) {
@@ -374,7 +374,7 @@ export class WebpackConfigMutator {
 
       if (htmlPlugin.options) htmlPlugin.options.templateContent = (htmlContent as string).replace(element, '');
 
-      this.raw.plugins = this.raw.plugins.map((plugin) => {
+      this.raw.plugins = this.raw.plugins.map((plugin: { constructor: Function }) => {
         if (plugin.constructor.name === 'HtmlWebpackPlugin') {
           return htmlPlugin;
         }

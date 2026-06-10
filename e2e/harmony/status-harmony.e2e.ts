@@ -90,6 +90,28 @@ describe('status command on Harmony', function () {
       expect(show.dependencies).to.have.lengthOf(0);
     });
   });
+  describe('status --quick flag', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
+      helper.fixtures.populateComponents(3);
+      helper.command.tagWithoutBuild('comp3');
+      helper.fs.appendFile('comp3/index.js', '\n// modified');
+    });
+    it('should show new and modified components', () => {
+      const output = helper.command.runCmd('bit status --quick');
+      expect(output).to.have.string('modified components (files only)');
+      expect(output).to.have.string('comp3');
+      expect(output).to.have.string('new components');
+      expect(output).to.have.string('comp1');
+      expect(output).to.have.string('comp2');
+    });
+    it('should return new and modified in json format', () => {
+      const json = helper.command.statusJson(undefined, '--quick');
+      expect(json.modified).to.include('my-scope/comp3');
+      expect(json.newComponents).to.include('my-scope/comp1');
+      expect(json.newComponents).to.include('my-scope/comp2');
+    });
+  });
   describe('deleting a dependency from the filesystem when the record is still in bitmap', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();

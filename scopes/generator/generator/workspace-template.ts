@@ -43,6 +43,12 @@ export interface BaseWorkspaceOptions {
    * Useful during the development of a workspace-template.
    */
   loadFrom?: string;
+
+  /**
+   * AI agent target. When set, writes agent instructions to the tool-specific file
+   * (e.g. "claude" → CLAUDE.md). When omitted, writes the universal AGENTS.md.
+   */
+  agent?: string;
 }
 
 /**

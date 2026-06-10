@@ -1,6 +1,6 @@
-import chalk from 'chalk';
 import GraphLib from 'graphlib';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import type { GraphConfig } from '@teambit/legacy.dependency-graph';
 import { VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
@@ -81,7 +81,7 @@ by default shows only workspace components; use --include-dependencies for full 
     const visualDependencyGraph = await getVisualGraph();
     const result = await visualDependencyGraph.render(png ? 'png' : 'svg');
 
-    return chalk.green(`image created at ${result}`);
+    return formatSuccessSummary(`image created at ${result}`);
   }
 
   async json([id]: [string], graphOpts: GraphOpt) {

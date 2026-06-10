@@ -71,11 +71,15 @@ export default function (isEnvProduction = false): Configuration {
       // `web` extension prefixes have been added for better support
       // for React Native Web.
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
+      extensionAlias: {
+        '.js': ['.ts', '.tsx', '.js', '.jsx'],
+        '.mjs': ['.mts', '.mjs'],
+        '.cjs': ['.cts', '.cjs'],
+      },
 
       alias: {
         'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime'),
         'react/jsx-runtime': require.resolve('react/jsx-runtime'),
-        'react-dom/server': require.resolve('react-dom/server'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',
@@ -134,7 +138,11 @@ export default function (isEnvProduction = false): Configuration {
               options: {
                 babelrc: false,
                 configFile: false,
-                presets: [require.resolve('@babel/preset-env'), require.resolve('@babel/preset-react')],
+                presets: [
+                  require.resolve('@babel/preset-env'),
+                  require.resolve('@babel/preset-typescript'),
+                  [require.resolve('@babel/preset-react'), { runtime: 'automatic' }],
+                ],
                 // This is a feature of `babel-loader` for webpack (not Babel itself).
                 // It enables caching results in ./node_modules/.cache/babel-loader/
                 // directory for faster rebuilds.

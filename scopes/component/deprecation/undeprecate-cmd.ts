@@ -1,5 +1,5 @@
-import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary, formatHint } from '@teambit/cli';
 import type { DeprecationMain } from './deprecation.main.runtime';
 
 export class UndeprecateCmd implements Command {
@@ -18,8 +18,8 @@ export class UndeprecateCmd implements Command {
   async report([id]: [string]): Promise<string> {
     const result = await this.deprecation.unDeprecateByCLIValues(id);
     if (result) {
-      return chalk.green(`the component "${id}" has been undeprecated successfully`);
+      return formatSuccessSummary(`the component "${id}" has been undeprecated successfully`);
     }
-    return chalk.bold(`the component "${id}" is not currently deprecated. no changes have been made`);
+    return formatHint(`the component "${id}" is not currently deprecated. no changes have been made`);
   }
 }

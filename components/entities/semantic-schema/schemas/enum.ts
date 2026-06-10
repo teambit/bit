@@ -1,6 +1,8 @@
 import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
+import type { SchemaChangeFact } from '../schema-diff';
+import { deepEqualNoLocation, diffDoc } from '../schema-diff';
 import { DocSchema } from './docs';
 import { SchemaRegistry } from '..';
 
@@ -61,6 +63,50 @@ export class EnumSchema extends SchemaNode {
       doc: this.doc?.toObject(),
       signature: this.signature,
     };
+  }
+
+  diff(other: SchemaNode): SchemaChangeFact[] {
+    if (!(other instanceof EnumSchema)) return super.diff(other);
+    const facts: SchemaChangeFact[] = [];
+    const baseMembers: Record<string, any>[] = this.toObject().members || [];
+    const compareMembers: Record<string, any>[] = other.toObject().members || [];
+    const baseMap = new Map(baseMembers.map((m) => [m.name || '', m]));
+    const compareMap = new Map(compareMembers.map((m) => [m.name || '', m]));
+
+    for (const [name, member] of compareMap) {
+      if (!baseMap.has(name)) {
+        facts.push({
+          changeKind: 'enum-member-added',
+          description: `enum member '${name}' added`,
+          context: { memberName: name },
+          to: member.signature || name,
+        });
+      }
+    }
+    for (const [name, member] of baseMap) {
+      if (!compareMap.has(name)) {
+        facts.push({
+          changeKind: 'enum-member-removed',
+          description: `enum member '${name}' removed`,
+          context: { memberName: name },
+          from: member.signature || name,
+        });
+      }
+    }
+    for (const [name, bm] of baseMap) {
+      const cm = compareMap.get(name);
+      if (cm && !deepEqualNoLocation(bm, cm)) {
+        facts.push({
+          changeKind: 'enum-member-value-changed',
+          description: `enum member '${name}' value changed`,
+          context: { memberName: name },
+          from: bm.signature || name,
+          to: cm.signature || name,
+        });
+      }
+    }
+    facts.push(...diffDoc(this.doc?.toObject(), other.doc?.toObject()));
+    return facts;
   }
 
   static fromObject(obj: Record<string, any>): EnumSchema {

@@ -6,13 +6,23 @@ import { DEFAULT_LANE } from '@teambit/lane-id';
 import { checkoutOutput } from '@teambit/checkout';
 import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError } from '@teambit/workspace';
-import type { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions, Report } from '@teambit/cli';
+import {
+  formatTitle,
+  formatSection,
+  formatItem,
+  formatSuccessSummary,
+  formatHint,
+  warnSymbol,
+  joinSections,
+} from '@teambit/cli';
 import type { LaneData } from '@teambit/legacy.scope';
 import { serializeLaneData } from '@teambit/legacy.scope';
 import { BitError } from '@teambit/bit-error';
 import yesno from 'yesno';
 import { COMPONENT_PATTERN_HELP, DEFAULT_CLOUD_DOMAIN } from '@teambit/legacy.constants';
 import type { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import type { SwitchCmd } from './switch.cmd';
 import type { FetchCmd } from '@teambit/importer';
 
@@ -60,68 +70,65 @@ export class LaneListCmd implements Command {
     });
     if (merged) {
       const mergedLanes = lanes.filter((l) => l.isMerged);
-      if (!mergedLanes.length) return chalk.green('None of the lanes is merged');
-      return chalk.green(mergedLanes.map((m) => m.name).join('\n'));
+      if (!mergedLanes.length) return formatHint('none of the lanes is merged');
+      const items = mergedLanes.map((m) => formatItem(m.name));
+      return formatSection('merged lanes', '', items);
     }
     if (notMerged) {
       const unmergedLanes = lanes.filter((l) => !l.isMerged);
-      if (!unmergedLanes.length) return chalk.green('All lanes are merged');
-      return chalk.green(unmergedLanes.map((m) => m.name).join('\n'));
+      if (!unmergedLanes.length) return formatHint('all lanes are merged');
+      const items = unmergedLanes.map((m) => formatItem(m.name));
+      return formatSection('unmerged lanes', '', items);
     }
     const currentLane = this.lanes.getCurrentLaneId() || this.lanes.getDefaultLaneId();
     const laneDataOfCurrentLane = currentLane ? lanes.find((l) => currentLane.isEqual(l.id)) : undefined;
     const currentAlias = laneDataOfCurrentLane ? laneDataOfCurrentLane.alias : undefined;
     const currentLaneReadmeComponentStr = outputReadmeComponent(laneDataOfCurrentLane?.readmeComponent);
-    let currentLaneStr = remote
-      ? ''
-      : `current lane - ${chalk.green.green(laneIdStr(currentLane, currentAlias))}${currentLaneReadmeComponentStr}`;
 
-    if (details) {
-      const currentLaneComponents = laneDataOfCurrentLane ? outputComponents(laneDataOfCurrentLane.components) : '';
-      if (currentLaneStr) {
-        currentLaneStr += `\n${currentLaneComponents}`;
+    const getCurrentLaneOutput = () => {
+      if (remote) return '';
+      const currentLaneLabel = `current lane - ${chalk.green(laneIdStr(currentLane, currentAlias))}${currentLaneReadmeComponentStr}`;
+      if (details && laneDataOfCurrentLane) {
+        return `${currentLaneLabel}\n${outputComponents(laneDataOfCurrentLane.components)}`;
       }
-    }
-
-    const availableLanes = lanes
-      .filter((l) => !currentLane.isEqual(l.id))
-      .map((laneData) => {
-        const readmeComponentStr = outputReadmeComponent(laneData.readmeComponent);
-        if (details) {
-          const laneTitle = `> ${chalk.bold(laneIdStr(laneData.id, laneData.alias))}\n`;
-          const components = outputComponents(laneData.components);
-          return laneTitle + readmeComponentStr.concat('\n') + components;
-        }
-        return `    > ${chalk.green(laneIdStr(laneData.id, laneData.alias))} (${
-          laneData.components.length
-        } components)${readmeComponentStr}`;
-      })
-      .join('\n');
-
-    const outputFooter = () => {
-      let footer = '\n';
-      if (details) {
-        footer += 'You can use --merged and --not-merged to see which of the lanes is fully merged.';
-      } else {
-        footer +=
-          "to get more info on all lanes in local scope use 'bit lane list --details', or 'bit lane show <lane-name>' for a specific lane.";
-      }
-      if (!remote && this.workspace)
-        footer += `\nswitch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'.`;
-
-      return footer;
+      return currentLaneLabel;
     };
 
-    return outputCurrentLane() + outputAvailableLanes() + outputFooter();
+    const getAvailableLanesOutput = () => {
+      const otherLanes = lanes.filter((l) => !currentLane.isEqual(l.id));
+      if (!otherLanes.length) return '';
+      if (details) {
+        const items = otherLanes.map((laneData) => {
+          const readmeComponentStr = outputReadmeComponent(laneData.readmeComponent);
+          const laneTitle = `> ${chalk.bold(laneIdStr(laneData.id, laneData.alias))}`;
+          const components = outputComponents(laneData.components);
+          return `${laneTitle}${readmeComponentStr}\n${components}`;
+        });
+        return items.join('\n\n');
+      }
+      const items = otherLanes.map((laneData) => {
+        const readmeComponentStr = outputReadmeComponent(laneData.readmeComponent);
+        return formatItem(
+          `${chalk.green(laneIdStr(laneData.id, laneData.alias))} (${laneData.components.length} components)${readmeComponentStr}`
+        );
+      });
+      return formatSection('available lanes', '', items);
+    };
 
-    function outputCurrentLane() {
-      return currentLaneStr ? `${currentLaneStr}\n` : '';
-    }
+    const getFooter = () => {
+      const hints: string[] = [];
+      if (details) {
+        hints.push('use --merged and --not-merged to see which of the lanes is fully merged');
+      } else {
+        hints.push("use 'bit lane list --details' or 'bit lane show <lane-name>' for more info");
+      }
+      if (!remote && this.workspace) {
+        hints.push("switch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'");
+      }
+      return formatHint(hints.join('\n'));
+    };
 
-    function outputAvailableLanes() {
-      if (!availableLanes) return '';
-      return remote ? `${availableLanes}\n` : `\nAvailable lanes:\n${availableLanes}\n`;
-    }
+    return joinSections([getCurrentLaneOutput(), getAvailableLanesOutput(), getFooter()]);
   }
   async json(args, laneOptions: LaneOptions) {
     const { remote, merged = false, notMerged = false } = laneOptions;
@@ -135,6 +142,44 @@ export class LaneListCmd implements Command {
     const lanes = lanesData.map(serializeLaneData);
     const currentLane = this.lanes.getCurrentLaneNameOrAlias();
     return { lanes, currentLane };
+  }
+}
+
+export class LaneCurrentCmd implements Command {
+  name = 'current';
+  description = 'display the name of the current lane';
+  alias = '';
+  options = [['j', 'json', 'output in json format']] as CommandOptions;
+  loader = false;
+  skipWorkspace = false;
+
+  constructor(private lanes: LanesMain) {}
+
+  async report(): Promise<string> {
+    const currentLaneId = this.lanes.getCurrentLaneId();
+    if (!currentLaneId || currentLaneId.isDefault()) {
+      return DEFAULT_LANE;
+    }
+    const alias = this.lanes.getCurrentLaneNameOrAlias();
+    if (alias && alias !== currentLaneId.name) {
+      return `${currentLaneId.toString()} (${alias})`;
+    }
+    return currentLaneId.toString();
+  }
+
+  async json(): Promise<Record<string, unknown>> {
+    const currentLaneId = this.lanes.getCurrentLaneId();
+    if (!currentLaneId || currentLaneId.isDefault()) {
+      return { name: DEFAULT_LANE, scope: null, id: DEFAULT_LANE, isDefault: true, alias: null };
+    }
+    const alias = this.lanes.getCurrentLaneNameOrAlias();
+    return {
+      name: currentLaneId.name,
+      scope: currentLaneId.scope,
+      id: currentLaneId.toString(),
+      isDefault: false,
+      alias: alias !== currentLaneId.name ? alias : null,
+    };
   }
 }
 
@@ -161,13 +206,14 @@ export class LaneShowCmd implements Command {
     const onlyLane = lanes[0];
     const laneId = onlyLane.id;
     const laneIdStr = laneId.isDefault() ? DEFAULT_LANE : laneId.toString();
-    const title = `showing information for ${chalk.bold(laneIdStr)}\n`;
-    const author = onlyLane.log ? `author: ${onlyLane.log?.username || 'N/A'} <${onlyLane.log?.email || 'N/A'}>\n` : '';
-    const date = onlyLane.log?.date ? `created: ${new Date(parseInt(onlyLane.log.date)).toLocaleString()}\n` : '';
+    const title = formatTitle(laneIdStr);
+    const author = onlyLane.log ? `author: ${onlyLane.log?.username || 'N/A'} <${onlyLane.log?.email || 'N/A'}>` : '';
+    const date = onlyLane.log?.date ? `created: ${new Date(parseInt(onlyLane.log.date)).toLocaleString()}` : '';
     const link = laneId.isDefault()
       ? ''
-      : `link: https://${DEFAULT_CLOUD_DOMAIN}/${laneId.scope.replace('.', '/')}/~lane/${laneId.name}\n`;
-    return title + author + date + link + outputComponents(onlyLane.components);
+      : `link: https://${DEFAULT_CLOUD_DOMAIN}/${laneId.scope.replace('.', '/')}/~lane/${laneId.name}`;
+    const meta = [author, date, link].filter(Boolean).join('\n');
+    return joinSections([title, meta, outputComponents(onlyLane.components)]);
   }
 
   private async geLanesData([name]: [string], laneOptions: LaneOptions) {
@@ -240,13 +286,12 @@ a lane created from another lane contains all the components of the original lan
       : `the default-scope ${chalk.bold(
           result.laneId.scope
         )}. you can change the lane's scope, before it is exported, with the "bit lane change-scope" command`;
-    const title = chalk.green(
-      `successfully added and checked out to the new lane ${chalk.bold(result.alias || result.laneId.name)}
-      ${currentLane ? chalk.yellow(`\nnote - your new lane will be based on lane ${currentLane.name}`) : ''}
-      `
+    const summary = formatSuccessSummary(
+      `successfully created and checked out to lane ${chalk.bold(result.alias || result.laneId.name)}`
     );
-    const remoteScopeOutput = `this lane will be exported to ${remoteScopeOrDefaultScope}`;
-    return `${title}\n${remoteScopeOutput}`;
+    const note = currentLane ? formatHint(`note - your new lane will be based on lane ${currentLane.name}`) : '';
+    const scopeInfo = formatHint(`this lane will be exported to ${remoteScopeOrDefaultScope}`);
+    return joinSections([summary, note, scopeInfo]);
   }
 }
 
@@ -304,7 +349,7 @@ export class LaneCheckoutCmd implements Command {
 
   constructor(private lanes: LanesMain) {}
 
-  async report([historyId]: [string], opts: LaneCheckoutOpts): Promise<string> {
+  async report([historyId]: [string], opts: LaneCheckoutOpts): Promise<string | Report> {
     const result = await this.lanes.checkoutHistory(historyId, opts);
     return checkoutOutput(result, {}, `successfully checked out according to history-id: ${historyId}`);
   }
@@ -330,7 +375,7 @@ if you want to fork the lane from a certain point in history, use "lane checkout
 
   constructor(private lanes: LanesMain) {}
 
-  async report([historyId]: [string], opts: LaneCheckoutOpts): Promise<string> {
+  async report([historyId]: [string], opts: LaneCheckoutOpts): Promise<string | Report> {
     const result = await this.lanes.revertHistory(historyId, opts);
     return checkoutOutput(result, {}, `successfully reverted according to history-id: ${historyId}`);
   }
@@ -414,10 +459,10 @@ export class LaneHistoryCmd implements Command {
     if (id) {
       const historyItem = history[id];
       if (!historyItem) throw new Error(`history id ${id} was not found`);
-      return { historyItem, id, history, singleItem: true };
+      return { historyItem, id, history, singleItem: true as const };
     }
 
-    return { history, singleItem: false };
+    return { history, sortedIds: laneHistory.getHistoryIds(), singleItem: false as const };
   }
 
   private getDateString(date: string) {
@@ -425,15 +470,20 @@ export class LaneHistoryCmd implements Command {
   }
 
   async report([laneName]: [string], { id }: { id?: string }): Promise<string> {
-    const { history, historyItem, singleItem } = await this.getHistoryData(laneName, id);
+    const data = await this.getHistoryData(laneName, id);
 
-    if (singleItem && historyItem) {
+    if (data.singleItem) {
+      const { historyItem } = data;
       const date = this.getDateString(historyItem.log.date);
       const message = historyItem.log.message;
-      return `${id} ${date} ${historyItem.log.username} ${message}\n\n${historyItem.components.join('\n')}`;
+      const updateDependentsBlock = historyItem.updateDependents?.length
+        ? `\n\nupdateDependents:\n${historyItem.updateDependents.join('\n')}`
+        : '';
+      return `${id} ${date} ${historyItem.log.username} ${message}\n\n${historyItem.components.join('\n')}${updateDependentsBlock}`;
     }
 
-    const items = Object.keys(history).map((uuid) => {
+    const { history, sortedIds } = data;
+    const items = sortedIds.map((uuid) => {
       const item = history[uuid];
       const date = this.getDateString(item.log.date);
       const message = item.log.message;
@@ -443,19 +493,22 @@ export class LaneHistoryCmd implements Command {
   }
 
   async json([laneName]: [string], { id }: { id?: string }) {
-    const { history, historyItem, id: historyId, singleItem } = await this.getHistoryData(laneName, id);
+    const data = await this.getHistoryData(laneName, id);
 
-    if (singleItem && historyItem) {
+    if (data.singleItem) {
+      const { historyItem, id: historyId } = data;
       return {
         id: historyId,
         date: historyItem.log.date,
         username: historyItem.log.username,
         message: historyItem.log.message,
         components: historyItem.components,
+        ...(historyItem.updateDependents?.length && { updateDependents: historyItem.updateDependents }),
       };
     }
 
-    return Object.keys(history).map((uuid) => {
+    const { history, sortedIds } = data;
+    return sortedIds.map((uuid) => {
       const item = history[uuid];
       return {
         id: uuid,
@@ -463,6 +516,7 @@ export class LaneHistoryCmd implements Command {
         username: item.log.username,
         message: item.log.message,
         components: item.components,
+        ...(item.updateDependents?.length && { updateDependents: item.updateDependents }),
       };
     });
   }
@@ -618,7 +672,10 @@ export class LaneRemoveCompCmd implements Command {
 
 export class LaneImportCmd implements Command {
   name = 'import <lane>';
-  description = `import a remote lane to your workspace and switch to that lane`;
+  description = `import a remote lane to your workspace`;
+  extendedDescription = `when on the default lane, the workspace is switched to the imported lane.
+when already on the same lane, only the latest objects are fetched from the remote — run "bit checkout head" to update the workspace.
+when on a different lane, the lane is fetched locally without switching to avoid disrupting your work — run \`bit switch <lane>\` to switch.`;
   arguments = [{ name: 'lane', description: 'the remote lane name' }];
   alias = '';
   options = [
@@ -629,10 +686,20 @@ export class LaneImportCmd implements Command {
       'import only components from the lane that fit the specified component-pattern to the workspace. works only when the workspace is empty',
     ],
     ['', 'branch', 'create and checkout a new git branch named after the lane'],
+    [
+      'r',
+      'auto-merge-resolve <merge-strategy>',
+      'merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"',
+    ],
+    ['', 'force-ours', 'do not merge, preserve local files as is'],
+    ['', 'force-theirs', 'do not merge, just overwrite with incoming files'],
   ] as CommandOptions;
   loader = true;
 
-  constructor(private switchCmd: SwitchCmd) {}
+  constructor(
+    private switchCmd: SwitchCmd,
+    private lanes: LanesMain
+  ) {}
 
   async report(
     [lane]: [string],
@@ -640,13 +707,54 @@ export class LaneImportCmd implements Command {
       skipDependencyInstallation = false,
       pattern,
       branch = false,
+      autoMergeResolve,
+      forceOurs = false,
+      forceTheirs = false,
     }: {
       skipDependencyInstallation: boolean;
       pattern?: string;
       branch?: boolean;
+      autoMergeResolve?: MergeStrategy;
+      forceOurs?: boolean;
+      forceTheirs?: boolean;
     }
-  ): Promise<string> {
-    return this.switchCmd.report([lane], { skipDependencyInstallation, pattern, branch });
+  ): Promise<string | Report> {
+    if (forceOurs && forceTheirs) {
+      throw new BitError('please use either --force-ours or --force-theirs, not both');
+    }
+
+    const currentLaneId = this.lanes.getCurrentLaneId();
+    // when on the default lane (or outside a workspace), keep the original behavior: switch to the imported lane.
+    if (!currentLaneId || currentLaneId.isDefault()) {
+      return this.switchCmd.report([lane], {
+        skipDependencyInstallation,
+        pattern,
+        branch,
+        autoMergeResolve,
+        forceOurs,
+        forceTheirs,
+      });
+    }
+
+    // already on a (non-default) lane: do not auto-switch, only fetch the lane locally.
+    const targetLaneId = await this.lanes.parseLaneId(lane);
+    await this.lanes.fetchLaneWithItsComponents(targetLaneId);
+
+    if (currentLaneId.isEqual(targetLaneId)) {
+      return joinSections([
+        formatSuccessSummary(
+          `you are already on lane "${chalk.bold(targetLaneId.toString())}". the lane has been fetched from the remote, but your workspace files were ${chalk.bold('not')} updated.`
+        ),
+        `${chalk.yellow('to update your workspace files to the latest')}, run "${chalk.bold('bit checkout head')}".`,
+      ]);
+    }
+
+    return joinSections([
+      formatSuccessSummary(`imported lane "${chalk.bold(targetLaneId.toString())}" locally`),
+      formatHint(
+        `you are still on lane "${currentLaneId.toString()}". to switch to the imported lane, run "bit switch ${targetLaneId.toString()}"`
+      ),
+    ]);
   }
 }
 
@@ -738,15 +846,14 @@ export class LaneRemoveReadmeCmd implements Command {
 }
 
 function outputComponents(components: LaneData['components']): string {
-  const componentsTitle = `\t${chalk.bold(`components (${components.length})`)}\n`;
-  const componentsStr = components.map((c) => `\t  ${c.id.toString()} - ${c.head}`).join('\n');
-  return componentsTitle + componentsStr;
+  const items = components.map((c) => formatItem(`${c.id.toString()} - ${c.head}`));
+  return formatSection('components', '', items);
 }
 
 function outputReadmeComponent(component: LaneData['readmeComponent']): string {
   if (!component) return '';
-  return `\n\t${`${chalk.yellow('readme component')}\n\t  ${component.id} - ${
-    component.head ||
-    `(unsnapped)\n\t("use bit snap ${component.id.fullName}" to snap the readme component on the lane before exporting)`
-  }`}\n`;
+  const head = component.head || '(unsnapped)';
+  const hint = component.head ? '' : ` - use "bit snap ${component.id.fullName}" to snap before exporting`;
+  const prefix = component.head ? ' ' : ` ${warnSymbol} `;
+  return `${prefix}readme: ${component.id} - ${head}${hint}`;
 }

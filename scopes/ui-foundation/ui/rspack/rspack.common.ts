@@ -2,7 +2,8 @@ import type { RuleSetRule } from '@rspack/core';
 import { fallbacks } from '@teambit/webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 
-export { RspackManifestPlugin } from '@teambit/rspack.plugins.manifest-plugin';
+export { RspackManifestPlugin } from 'rspack-manifest-plugin';
+export { generateAssetManifest } from '@teambit/rspack.modules.generate-asset-manifest';
 
 export const moduleFileExtensions = [
   'web.mjs',
@@ -25,7 +26,6 @@ export function resolveAlias(opts?: { profile?: boolean }): Record<string, strin
   return {
     'react/jsx-runtime': require.resolve('react/jsx-runtime'),
     react: require.resolve('react'),
-    'react-dom/server': require.resolve('react-dom/server'),
     'react-dom': require.resolve('react-dom'),
     ...(opts?.profile && {
       'react-dom$': 'react-dom/profiling',
@@ -40,6 +40,7 @@ export function resolveAlias(opts?: { profile?: boolean }): Record<string, strin
     '@teambit/code.ui.code-editor': require.resolve('@teambit/code.ui.code-editor'),
     '@teambit/api-reference.hooks.use-api': require.resolve('@teambit/api-reference.hooks.use-api'),
     '@teambit/api-reference.hooks.use-api-renderers': require.resolve('@teambit/api-reference.hooks.use-api-renderers'),
+    '@teambit/lanes.hooks.use-lanes': require.resolve('@teambit/lanes.hooks.use-lanes'),
   };
 }
 

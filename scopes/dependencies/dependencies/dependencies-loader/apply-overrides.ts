@@ -304,6 +304,7 @@ export class ApplyOverrides {
     if (!overrides) return undefined;
     const components = {};
     const packages = {};
+    const missingPkgRemovals = new Set<string>();
     DEPENDENCIES_FIELDS.forEach((depField) => {
       if (!overrides[depField]) return;
       Object.keys(overrides[depField]).forEach((dependency) => {
@@ -336,9 +337,23 @@ export class ApplyOverrides {
           if (componentData && !componentData.packageName) {
             this.overridesDependencies.missingPackageDependencies.push(dependency);
           }
+        } else if (
+          // The "+" sentinel couldn't be resolved from workspace package.json
+          // (e.g. fresh workspace after bit new/fork), but the package was
+          // already resolved by applyAutoDetectedPeersFromEnvOnEnvItSelf().
+          // Remove it from missingPackageDependencies to avoid a false positive.
+          this.allPackagesDependencies.packageDependencies[dependency] ||
+          this.allPackagesDependencies.devPackageDependencies[dependency] ||
+          this.allPackagesDependencies.peerPackageDependencies[dependency]
+        ) {
+          missingPkgRemovals.add(dependency);
         }
       });
     });
+    if (missingPkgRemovals.size > 0) {
+      this.overridesDependencies.missingPackageDependencies =
+        this.overridesDependencies.missingPackageDependencies.filter((pkg) => !missingPkgRemovals.has(pkg));
+    }
     return { components, packages };
   }
 
@@ -670,6 +685,7 @@ export class ApplyOverrides {
     if (!envPolicyManifest || !Object.keys(envPolicyManifest).length) {
       return;
     }
+    this.overridesDependencies.envOwnPkgNames = new Set(Object.keys(envPolicyManifest));
     const deps = this.allPackagesDependencies.packageDependencies || {};
     // we are not iterate component deps since they are resolved from what actually installed
     // the policy used for installation only in that case

@@ -14,7 +14,7 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
-import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
+import { getLogForSquash } from '@teambit/harmony.modules.get-basic-log';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import type { Ref, Lane, Version, Log } from '@teambit/objects';
@@ -93,6 +93,14 @@ export class MergeLanesMain {
     }
     const currentLaneId = this.workspace.consumer.getCurrentLaneId();
     const otherLaneId = await this.workspace.consumer.getParsedLaneId(laneName);
+    // Hidden lane updateDependents must participate in every merge — otherwise main→lane refresh
+    // (`bit lane merge main`) leaves the lane's cascaded entries stuck on their old main-head
+    // base, and lane→main merge would push a partially-consistent lane state. The bare-scope
+    // counterpart (`bit _merge-lane`, used by Ripple / the UI's "update lane" button) already
+    // sets this; the workspace path was the missing leg.
+    if (options.shouldIncludeUpdateDependents === undefined) {
+      options.shouldIncludeUpdateDependents = true;
+    }
     return this.mergeLane(otherLaneId, currentLaneId, options);
   }
 
@@ -237,6 +245,7 @@ export class MergeLanesMain {
       skipDependencyInstallation,
       detachHead,
       loose,
+      shouldSquash,
     });
 
     if (snapshot) await lastMerged?.persistSnapshot(snapshot);
@@ -312,7 +321,10 @@ export class MergeLanesMain {
     const isDefaultLane = otherLaneId.isDefault();
     if (isDefaultLane) {
       if (!skipFetch) {
-        const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps);
+        // pass `shouldIncludeUpdateDependents` so the prefetch covers main objects for the
+        // lane's hidden entries too — the per-component merge engine needs main-side Version
+        // objects locally to compute divergence against the hidden cascade snaps.
+        const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps, shouldIncludeUpdateDependents);
         const compIdList = ComponentIdList.fromArray(ids).toVersionLatest();
         await this.importer.importObjectsFromMainIfExist(compIdList);
       }
@@ -323,7 +335,10 @@ export class MergeLanesMain {
       const shouldFetch = !lane || (!skipFetch && !lane.isNew);
       if (shouldFetch) {
         // don't assign `lane` to the result of this command. otherwise, if you have local snaps, it'll ignore them and use the remote-lane.
-        const otherLane = await this.lanes.fetchLaneWithItsComponents(otherLaneId, shouldIncludeUpdateDependents);
+        // note: fetching always includes the lane's hidden updateDependents (and routes them to the
+        // lane's scope); `shouldIncludeUpdateDependents` still governs whether they take part in the
+        // merge itself, via `idsToMerge` below.
+        const otherLane = await this.lanes.fetchLaneWithItsComponents(otherLaneId);
         laneToFetchArtifactsFrom = otherLane;
         lane = await legacyScope.loadLane(otherLaneId);
       }
@@ -659,15 +674,6 @@ async function filterComponentsStatus(
   return filteredComponentStatus;
 }
 
-async function getLogForSquash(otherLaneId: LaneId) {
-  const basicLog = await getBasicLog();
-  const log = {
-    ...basicLog,
-    message: `squashed during merge from ${otherLaneId.toString()}`,
-  };
-  return log;
-}
-
 async function squashSnaps(
   succeededComponents: ComponentMergeStatus[],
   currentLaneId: LaneId,
@@ -724,11 +730,10 @@ async function squashOneComp(
         // for detach head, it's ok to have it as diverged. as long as the target is ahead, we want to squash.
         return true;
       }
-      throw new BitError(`unable to squash because ${id.toString()} is diverged in history.
-  consider switching to "${
-    otherLaneId.name
-  }" first, merging "${currentLaneName}", then switching back to "${currentLaneName}" and merging "${otherLaneId.name}"
-  alternatively, use "--no-squash" flag to keep the entire history of "${otherLaneId.name}"`);
+      // diverged + --squash: skip the parent-rewrite path here. the merge snap will be created
+      // by snapForMerge with a single parent (and squashed metadata) because the corresponding
+      // UnmergedComponent entry has `shouldSquash: true`. see snapping.main.runtime.ts.
+      return false;
     }
     if (divergeData.isSourceAhead()) {
       // nothing to do. current is ahead, nothing to merge. (it was probably filtered out already as a "failedComponent")

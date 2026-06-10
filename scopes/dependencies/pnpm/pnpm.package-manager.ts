@@ -12,7 +12,6 @@ import type {
   CalcDepsGraphOptions,
 } from '@teambit/dependency-resolver';
 import { Registries, Registry } from '@teambit/pkg.entities.registry';
-import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import type { Logger } from '@teambit/logger';
 import { type LockfileFile } from '@pnpm/lockfile.types';
@@ -24,9 +23,9 @@ import type { Config } from '@pnpm/config';
 import { type ProjectId, type ProjectManifest, type DepPath } from '@pnpm/types';
 import type { Modules } from '@pnpm/modules-yaml';
 import { readModulesManifest } from '@pnpm/modules-yaml';
-import type { DependenciesHierarchy, PackageNode } from '@pnpm/reviewing.dependencies-hierarchy';
-import { buildDependenciesHierarchy, createPackagesSearcher } from '@pnpm/reviewing.dependencies-hierarchy';
-import { renderTree } from '@pnpm/list';
+import type { ImporterInfo } from '@pnpm/reviewing.dependencies-hierarchy';
+import { buildDependentsTree } from '@pnpm/reviewing.dependencies-hierarchy';
+import { renderDependentsTree } from '@pnpm/list';
 import {
   readWantedLockfile,
   writeLockfileFile,
@@ -92,17 +91,27 @@ export class PnpmPackageManager implements PackageManager {
       ...opts,
       registries,
     });
-    const lockfile: LockfileFile = await convertGraphToLockfile(dependenciesGraph, {
+    const graphLockfile: LockfileFile = await convertGraphToLockfile(dependenciesGraph, {
       ...opts,
       resolve,
     });
-    Object.assign(lockfile, {
+    // Merge the graph-derived subset into any existing wanted lockfile rather than
+    // overwriting. Only the importers, packages, and snapshots referenced by the
+    // imported components' subgraph are re-stated here; every other workspace dep's
+    // locked version must be preserved so pnpm doesn't re-resolve it to a newer
+    // registry version.
+    const existingLockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: true });
+    const mergedLockfile = existingLockfile
+      ? mergeGraphLockfileIntoExisting(convertLockfileObjectToLockfileFile(existingLockfile), graphLockfile)
+      : graphLockfile;
+    Object.assign(mergedLockfile, {
       bit: {
+        ...(mergedLockfile as LockfileFile & { bit?: Record<string, unknown> }).bit,
         restoredFromModel: true,
       },
     });
     const lockfilePath = join(opts.rootDir, 'pnpm-lock.yaml');
-    await writeLockfileFile(lockfilePath, lockfile);
+    await writeLockfileFile(lockfilePath, mergedLockfile);
     this.logger.debug(`generated a lockfile from dependencies graph at ${lockfilePath}`);
     if (process.env.DEPS_GRAPH_LOG) {
       // eslint-disable-next-line no-console
@@ -174,6 +183,7 @@ export class PnpmPackageManager implements PackageManager {
       networkConfig,
       {
         autoInstallPeers: installOptions.autoInstallPeers ?? true,
+        dedupePeers: installOptions.dedupePeers ?? true,
         enableModulesDir: installOptions.enableModulesDir,
         engineStrict: installOptions.engineStrict ?? config.engineStrict,
         excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
@@ -383,45 +393,41 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async findUsages(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string> {
-    const search = createPackagesSearcher([depName]);
     const lockfile = await readWantedLockfile(opts.lockfileDir, { ignoreIncompatible: false });
-    const projectPaths = Object.keys(lockfile?.importers ?? {})
-      .filter((id) => !id.includes(`${BIT_ROOTS_DIR}/`))
-      .map((id) => join(opts.lockfileDir, id));
-    const cache = new Map();
-    const modulesManifest = await this._readModulesManifest(opts.lockfileDir);
-    const isHoisted = modulesManifest?.nodeLinker === 'hoisted';
-    const getPkgLocation: GetPkgLocation = isHoisted
-      ? ({ name }) => join(opts.lockfileDir, 'node_modules', name)
-      : ({ path }) => path;
-    const results = Object.entries(
-      await buildDependenciesHierarchy(projectPaths, {
-        depth: opts.depth ?? Infinity,
-        include: {
-          dependencies: true,
-          devDependencies: true,
-          optionalDependencies: true,
-        },
-        lockfileDir: opts.lockfileDir,
-        registries: {
-          default: 'https://registry.npmjs.org',
-        },
-        search,
-        virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
-      })
-    ).map(([projectPath, builtDependenciesHierarchy]) => {
-      pkgNamesToComponentIds(builtDependenciesHierarchy, { cache, getPkgLocation });
-      return {
-        path: projectPath,
-        ...builtDependenciesHierarchy,
-      };
+    if (!lockfile) return '';
+    const importerIds = Object.keys(lockfile.importers ?? {}).filter((id) => !id.includes(`${BIT_ROOTS_DIR}/`));
+    const projectPaths = importerIds.map((id) => join(opts.lockfileDir, id));
+    const importerInfoMap = new Map<string, ImporterInfo>();
+    for (const importerId of importerIds) {
+      const pkgJson = tryReadPackageJson(join(opts.lockfileDir, importerId));
+      importerInfoMap.set(importerId, {
+        name: pkgJson?.name ?? importerId,
+        version: pkgJson?.version ?? '',
+      });
+    }
+    const trees = await buildDependentsTree([depName], projectPaths, {
+      include: {
+        dependencies: true,
+        devDependencies: true,
+        optionalDependencies: true,
+      },
+      lockfileDir: opts.lockfileDir,
+      registries: {
+        default: 'https://registry.npmjs.org',
+      },
+      importerInfoMap,
+      lockfile,
+      nameFormatter({ manifest }) {
+        if ('componentId' in manifest) {
+          const { scope, name } = manifest.componentId as { scope: string; name: string };
+          return `${scope}/${name}`;
+        }
+        return manifest.name;
+      },
     });
-    return renderTree(results, {
-      alwaysPrintRootPackage: false,
-      depth: Infinity,
-      search: true,
+    return renderDependentsTree(trees, {
+      depth: opts.depth ?? Infinity,
       long: false,
-      showExtraneous: false,
     });
   }
 
@@ -434,22 +440,30 @@ export class PnpmPackageManager implements PackageManager {
       return;
     }
     for (const { componentRootDir, componentRelativeDir, pkgName, component } of opts.components) {
-      const lockfile = structuredClone(originalLockfile);
       let compRootDir: string | undefined;
-      if (componentRootDir && !lockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
+      if (componentRootDir && !originalLockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
         compRootDir = componentRootDir.split('@')[0];
       } else {
         compRootDir = componentRootDir;
       }
-      if (!lockfile.importers[compRootDir as ProjectId]) {
-        // This will only happen if the env was not loaded correctly before install.
-        // But in this case we cannot calculate the dependency graph from the lockfile.
+      if (!originalLockfile.importers[compRootDir as ProjectId]) {
         continue;
       }
       const filterByImporterIds = [componentRelativeDir as ProjectId];
       if (compRootDir != null) {
         filterByImporterIds.push(compRootDir as ProjectId);
       }
+      // Only clone the importers that will be mutated, reuse the rest of the lockfile as-is
+      const clonedImporters: Record<string, any> = {};
+      for (const importerId of filterByImporterIds) {
+        if (originalLockfile.importers[importerId]) {
+          clonedImporters[importerId] = structuredClone(originalLockfile.importers[importerId]);
+        }
+      }
+      const lockfile = {
+        ...originalLockfile,
+        importers: { ...originalLockfile.importers, ...clonedImporters },
+      };
       for (const importerId of filterByImporterIds) {
         for (const depType of [
           'dependencies',
@@ -488,33 +502,79 @@ export class PnpmPackageManager implements PackageManager {
   }
 }
 
-type GetPkgLocation = (pkgNode: PackageNode) => string;
-
-function pkgNamesToComponentIds(
-  deps: DependenciesHierarchy,
-  { cache, getPkgLocation }: { cache: Map<string, string>; getPkgLocation: GetPkgLocation }
-) {
-  for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
-    if (deps[depType]) {
-      for (const dep of deps[depType]) {
-        if (!cache.has(dep.name)) {
-          const pkgJson = tryReadPackageJson(getPkgLocation(dep));
-          cache.set(
-            dep.name,
-            pkgJson?.componentId ? `${pkgJson.componentId.scope}/${pkgJson.componentId.name}` : dep.name
-          );
-        }
-        dep.name = cache.get(dep.name);
-        pkgNamesToComponentIds(dep, { cache, getPkgLocation });
-      }
-    }
-  }
-}
-
 function tryReadPackageJson(pkgDir: string) {
   try {
     return JSON.parse(fs.readFileSync(join(pkgDir, 'package.json'), 'utf8'));
   } catch {
     return undefined;
   }
+}
+
+// Merge a graph-derived lockfile into an existing wanted lockfile. The graph lockfile is
+// authoritative for keys it contains (a re-imported component can change the resolution
+// of its own deps), but must not erase packages, snapshots, or importer entries that are
+// only known to the existing lockfile. convertGraphToLockfile emits importer entries for
+// every workspace project, but only populates deps for manifests whose keys appear in the
+// graph's root edge — so per-importer overlay (instead of overwrite) is what keeps
+// unrelated workspace importers intact.
+//
+// Packages and snapshots are deep-merged per key so that pnpm-managed metadata the graph
+// doesn't round-trip (e.g. `optional`, `transitivePeerDependencies`, `dev`) survives on
+// entries the graph also knows about.
+function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: LockfileFile): LockfileFile {
+  const importers: NonNullable<LockfileFile['importers']> = { ...existing.importers };
+  for (const [importerId, graphImporter] of Object.entries(graph.importers ?? {})) {
+    const existingImporter = importers[importerId];
+    if (!existingImporter) {
+      importers[importerId] = graphImporter;
+      continue;
+    }
+    importers[importerId] = {
+      ...existingImporter,
+      dependencies: { ...existingImporter.dependencies, ...graphImporter.dependencies },
+      devDependencies: { ...existingImporter.devDependencies, ...graphImporter.devDependencies },
+      optionalDependencies: {
+        ...existingImporter.optionalDependencies,
+        ...graphImporter.optionalDependencies,
+      },
+    };
+  }
+  const existingBit = (existing as LockfileFile & { bit?: { depsRequiringBuild?: string[] } }).bit;
+  const graphBit = (graph as LockfileFile & { bit?: { depsRequiringBuild?: string[] } }).bit;
+  const mergedDepsRequiringBuild = Array.from(
+    new Set([...(existingBit?.depsRequiringBuild ?? []), ...(graphBit?.depsRequiringBuild ?? [])])
+  ).sort();
+  const merged = {
+    ...existing,
+    // Keep the existing lockfile's schema version. convertGraphToLockfile hardcodes
+    // lockfileVersion: '9.0', so preferring graph.lockfileVersion would silently
+    // downgrade workspaces whose pnpm already writes a newer schema and trigger a
+    // full rewrite on the next install.
+    lockfileVersion: existing.lockfileVersion ?? graph.lockfileVersion,
+    importers,
+    packages: mergeEntryRecords(existing.packages, graph.packages),
+    snapshots: mergeEntryRecords(existing.snapshots, graph.snapshots),
+  };
+  if (existingBit || graphBit) {
+    (merged as LockfileFile & { bit?: Record<string, unknown> }).bit = {
+      ...existingBit,
+      ...graphBit,
+      depsRequiringBuild: mergedDepsRequiringBuild,
+    };
+  }
+  return merged;
+}
+
+function mergeEntryRecords<T extends object>(
+  existing: Record<string, T> | undefined,
+  graph: Record<string, T> | undefined
+): Record<string, T> | undefined {
+  if (!existing) return graph;
+  if (!graph) return existing;
+  const merged: Record<string, T> = { ...existing };
+  for (const [key, graphEntry] of Object.entries(graph)) {
+    const existingEntry = merged[key];
+    merged[key] = existingEntry ? ({ ...existingEntry, ...graphEntry } as T) : graphEntry;
+  }
+  return merged;
 }

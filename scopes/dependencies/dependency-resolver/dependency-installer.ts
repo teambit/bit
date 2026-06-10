@@ -54,11 +54,17 @@ export type GetComponentManifestsOptions = {
   rootDir: string;
   resolveVersionsFromDependenciesOnly?: boolean;
   referenceLocalPackages?: boolean;
+  includeAllEnvPeers?: boolean;
   hasRootComponents?: boolean;
   excludeExtensionsDependencies?: boolean;
 } & Pick<
   PackageManagerInstallOptions,
-  'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents' | 'copyPeerToRuntimeOnRoot' | 'installPeersFromEnvs'
+  | 'dedupe'
+  | 'dependencyFilterFn'
+  | 'copyPeerToRuntimeOnComponents'
+  | 'copyPeerToRuntimeOnRoot'
+  | 'installPeersFromEnvs'
+  | 'resolveEnvPeersFromRoot'
 >;
 
 export type PreInstallSubscriber = (installer: DependencyInstaller, installArgs: InstallArgs) => Promise<void>;
@@ -126,13 +132,14 @@ export class DependencyInstaller {
     if (!finalRootDir) {
       throw new RootDirNotDefined();
     }
-    const manifests = await this.getComponentManifests({
+    const { manifests } = await this.getComponentManifests({
       ...packageManagerOptions,
       componentDirectoryMap,
       rootPolicy,
       rootDir: finalRootDir,
       resolveVersionsFromDependenciesOnly: options.resolveVersionsFromDependenciesOnly,
       referenceLocalPackages: packageManagerOptions.rootComponentsForCapsules,
+      includeAllEnvPeers: packageManagerOptions.rootComponentsForCapsules,
       excludeExtensionsDependencies: options.excludeExtensionsDependencies,
     });
     return this.installComponents(
@@ -299,11 +306,16 @@ export class DependencyInstaller {
     copyPeerToRuntimeOnComponents,
     copyPeerToRuntimeOnRoot,
     installPeersFromEnvs,
+    resolveEnvPeersFromRoot,
     resolveVersionsFromDependenciesOnly,
     referenceLocalPackages,
+    includeAllEnvPeers,
     hasRootComponents,
     excludeExtensionsDependencies,
-  }: GetComponentManifestsOptions) {
+  }: GetComponentManifestsOptions): Promise<{
+    manifests: Record<string, ProjectManifest>;
+    peerOverrides: Record<string, string>;
+  }> {
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
       createManifestForComponentsWithoutDependencies: true,
@@ -311,6 +323,7 @@ export class DependencyInstaller {
       dependencyFilterFn,
       resolveVersionsFromDependenciesOnly,
       referenceLocalPackages,
+      includeAllEnvPeers,
       hasRootComponents,
       excludeExtensionsDependencies,
     };
@@ -337,9 +350,10 @@ export class DependencyInstaller {
       manifests[rootDir] = workspaceManifest.toJson({
         copyPeerToRuntime: copyPeerToRuntimeOnRoot,
         installPeersFromEnvs,
+        resolveEnvPeersFromRoot,
       });
     }
-    return manifests;
+    return { manifests, peerOverrides: workspaceManifest.peerOverrides };
   }
 
   private async cleanCompsNodeModules(componentDirectoryMap: ComponentMap<string>) {

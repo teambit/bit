@@ -35,6 +35,7 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { ExpressMain } from '@teambit/express';
 import { ExpressAspect } from '@teambit/express';
 import { ArtifactFiles } from '@teambit/component.sources';
+import type { AbstractVinyl } from '@teambit/component.sources';
 import type { WatcherMain } from '@teambit/watcher';
 import { WatcherAspect } from '@teambit/watcher';
 import type { GraphqlMain } from '@teambit/graphql';
@@ -175,6 +176,13 @@ export type PreviewConfig = {
 export type EnvPreviewConfig = {
   strategyName?: PreviewStrategyName;
   splitComponentBundle?: boolean;
+  /**
+   * whether the env's preview pipeline can consume component source files directly
+   * (required when `bit start --use-source` is used).
+   * older envs without the matching preview/webpack config should leave this unset/false
+   * so bit falls back to the compiled dist paths for their components.
+   */
+  supportsUseSource?: boolean;
 };
 
 export type BundlingStrategySlot = SlotRegistry<BundlingStrategy>;
@@ -498,7 +506,7 @@ export class PreviewMain {
    * This should be used only for calculating the value on load.
    * otherwise, use the isBundledWithEnv function
    * @param component
-   * @returns
+   * @returns boolean
    */
   async calcIsBundledWithEnv(component: Component): Promise<boolean> {
     const envPreviewData = await this.calcPreviewDataFromEnv(component);
@@ -784,16 +792,26 @@ export class PreviewMain {
     isSplitComponentBundle: boolean
   ) {
     const tempPackageDir = this.ensureTempPackage();
-    const contents = generateLink(prefix, moduleMap, mainModulesMap, isSplitComponentBundle, tempPackageDir);
+    const contents = generateLink(
+      prefix,
+      moduleMap,
+      mainModulesMap,
+      isSplitComponentBundle,
+      tempPackageDir,
+      this.workspace?.path,
+      this._useSource
+    );
     return this.writeLinkContents(contents, dirName, prefix);
   }
 
   writeLinkContents(contents: string, targetDir: string, prefix: string) {
     const hash = objectHash(contents);
     const targetPath = join(targetDir, `${prefix}-${this.timestamp}.js`);
-
     // write only if link has changed (prevents triggering fs watches)
     if (this.writeHash.get(targetPath) !== hash) {
+      // the target dir is normally the compiler's dist dir, which already exists. for envs without a
+      // compiler (the dist dir was never created), make sure the dir exists before writing the link.
+      ensureDirSync(targetDir);
       writeFileSync(targetPath, contents);
       this.writeHash.set(targetPath, hash);
     }
@@ -802,6 +820,8 @@ export class PreviewMain {
   }
 
   private executionRefs = new Map<string, ExecutionRef>();
+  private _useRootModules = false;
+  private _useSource = false;
 
   private async getPreviewTarget(
     /** execution context (of the specific env) */
@@ -813,6 +833,11 @@ export class PreviewMain {
       this.executionRefs.set(ctxId, new ExecutionRef(context));
     });
 
+    // capture the flag once so subsequent updateLinkFiles calls (e.g. from
+    // component-change handlers) use the correct value even if runtimeOptions
+    // is not yet populated at that point.
+    this._useRootModules = !!this.ui.runtimeOptions?.useRootModules;
+    this._useSource = !!this.ui.runtimeOptions?.useSource;
     const previewRuntime = await this.writePreviewEntry(context);
     const previews = this.previewSlot.values();
     const linkFiles = await this.updateLinkFiles(previews, context.components, context);
@@ -879,17 +904,7 @@ export class PreviewMain {
           }
           visitedEnvs.add(envId);
         }
-        const compilerInstance = environment.getCompiler?.();
-        const modulePath =
-          compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getRuntimeModulePath(component);
-        return files.map((file) => {
-          if (!this.workspace || !compilerInstance) {
-            return file.path;
-          }
-          const distRelativePath = compilerInstance.getDistPathBySrcPath(file.relative);
-          return join(this.workspace.path, modulePath, distRelativePath);
-        });
-        // return files.map((file) => file.path);
+        return this.getComponentPreviewPaths(files, component, environment);
       });
       const withPaths = await withPathsP;
 
@@ -901,6 +916,26 @@ export class PreviewMain {
     });
 
     return Promise.all(paths);
+  }
+
+  private getComponentPreviewPaths(files: AbstractVinyl[], component: Component, environment: PreviewEnv): string[] {
+    const envSupportsUseSource = this.getEnvPreviewConfig(environment).supportsUseSource ?? false;
+    if (this._useSource && envSupportsUseSource) {
+      return files.map((file) => file.path);
+    }
+
+    const compilerInstance = environment.getCompiler?.();
+    const modulePath = this._useRootModules
+      ? this.pkg.getModulePath(component)
+      : compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getRuntimeModulePath(component);
+
+    return files.map((file) => {
+      if (!this.workspace || !compilerInstance) {
+        return file.path;
+      }
+      const distRelativePath = compilerInstance.getDistPathBySrcPath(file.relative);
+      return join(this.workspace.path, modulePath, distRelativePath);
+    });
   }
 
   /**
@@ -1177,7 +1212,6 @@ export class PreviewMain {
     preview.previewService = previewService;
 
     graphql.register(() => previewSchema(preview));
-
     return preview;
   }
 }

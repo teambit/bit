@@ -90,7 +90,7 @@ Flags: --json
 ## bit capsule list
 
 list the capsules generated for this workspace
-Flags: --json
+Flags: --json, --with-stats
 
 ## bit capsule create [component-id...]
 
@@ -104,6 +104,18 @@ delete capsules
 with no args, only workspace's capsules are deleted
 Flags: --scope-aspects, --all
 
+## bit capsule prune
+
+evict stale capsules from the global cache
+
+workspace capsules are deleted unconditionally; aspect-version and scope capsules are deleted when their last-used marker is older than --older-than (default 30 days). use --dry-run first to preview what would be removed.
+Flags: --older-than <days>, --keep-workspace-caps, --no-orphans, --dry-run, --with-sizes, --json
+
+## bit cat <component-id>
+
+print source files or config of a component at a specific version
+Flags: --file <path>, --config, --all, --json
+
 ## bit check-types [component-pattern]
 
 validate TypeScript type correctness
@@ -116,7 +128,7 @@ Flags: --unmodified, --strict, --json
 switch between component versions or remove local changes
 
 checkout components to specified versions or remove local changes. most commonly used as 'bit checkout head' to get latest versions. the `<to>` argument accepts these values: - head: checkout to last snap/tag (most common usage) - specific version: checkout to exact version (e.g. 'bit checkout 1.0.5 component-name') - head~x: go back x generations from head (e.g. 'head~2' for two versions back) - latest: checkout to latest semver tag - reset: remove local modifications and restore original files (also restores deleted component directories) when on lanes, 'checkout head' only affects lane components. to update main components, run 'bit lane merge main'.
-Flags: --interactive-merge, --auto-merge-resolve <merge-strategy>, --manual, --all, --workspace-only, --verbose, --skip-dependency-installation, --force-ours, --force-theirs
+Flags: --interactive-merge, --auto-merge-resolve <merge-strategy>, --manual, --all, --workspace-only, --verbose, --skip-dependency-installation, --force-ours, --force-theirs, --include-new-from-scope
 
 ## bit ci <sub-command>
 
@@ -135,14 +147,14 @@ Runs lint, build, and status checks to catch dependency drift or broken builds e
 Exports a feature lane to Bit Cloud when a Pull Request is opened or updated.
 
 Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. Cleans up by switching back to main. Use in pull-request CI pipelines after tests and before deploy.
-Flags: --message <message>, --lane <lane>, --build, --strict
+Flags: --message <message>, --lane <lane>, --build, --strict, --dry-run, --keep-lane
 
 ## bit ci merge
 
 Tags and exports new semantic versions after merging a PR to main.
 
 By default, bumps patch versions when merging to main. If specific configuration variables are set, it can use commit messages or explicit flags to determine the version bump. Runs install, tag, build, and export, then archives the remote lane and syncs lockfiles. Use in merge-to-main CI pipelines to publish releases.
-Flags: --message <message>, --build, --strict, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --increment-by <number>, --versions-file <path>, --verbose, --auto-merge-resolve <merge-strategy>, --force-theirs, --lane-name <name>, --skip-push
+Flags: --message <message>, --build, --strict, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --increment-by <number>, --versions-file <path>, --verbose, --auto-merge-resolve <merge-strategy>, --force-theirs, --lane-name <name>, --skip-push, --no-bitmap-commit
 
 ## bit clear-cache
 
@@ -271,19 +283,28 @@ Flags: --depth <number>
 analyze workspace dependencies for version spread, peer permutations, and bloat
 
 scans node_modules/.pnpm to report actual installed copies, identifies packages with multiple versions, and highlights peer dependencies causing permutation explosion. Use --package to drill down into a specific package.
-Flags: --package <string>
+Flags: --package <string>, --origins
+
+## bit deps circular
+
+find circular dependencies in the component graph
+Flags: --json, --include-deps
 
 ## bit deps write
 
 write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions
 Flags: --target <workspace.jsonc|package.json>
 
+## bit details
+
+show expanded details from the last command that provided them (e.g. tag, snap)
+
 ## bit diff [component-pattern] [version] [to-version]
 
 compare component changes between versions or against the current workspace
 
-shows a detailed diff of component files, dependencies, and configuration changes. by default, compares workspace changes against the latest version. specify versions to compare historical changes. supports pattern matching to filter components and various output formats for better readability.
-Flags: --parent, --verbose, --table
+shows a detailed diff of component files, dependencies, and configuration changes. by default, compares workspace changes against the latest version. specify versions to compare historical changes. supports pattern matching to filter components and various output formats for better readability. for ai-agent workflows, use --name-only to list what changed, --file to drill into a specific file, --files-only / --configs-only to focus on one diff category, or --json for machine-readable output.
+Flags: --parent, --verbose, --table, --file <paths>, --files-only, --configs-only, --name-only, --stat, --json
 
 ## bit doctor [diagnosis-name]
 
@@ -397,14 +418,14 @@ Flags: --internal
 bring components from remote scopes into your workspace
 
 brings component source files from remote scopes into your workspace and installs their dependencies as packages. supports pattern matching for bulk imports, merge strategies for handling conflicts, and various optimization options. without arguments, fetches all workspace components' latest versions from their remote scopes.
-Flags: --path <path>, --objects, --override, --verbose, --json, --skip-dependency-installation, --skip-write-config-files, --merge [strategy], --dependencies, --dependencies-head, --dependents, --dependents-via <string>, --dependents-all, --silent, --filter-envs <envs>, --save-in-lane, --all-history, --fetch-deps, --write-deps <target>, --track-only, --include-deprecated, --lane-only, --owner
+Flags: --path <path>, --objects, --override, --verbose, --json, --skip-dependency-installation, --skip-write-config-files, --merge [strategy], --dependencies, --dependencies-head, --dependencies-depth <n>, --dependents, --dependents-via <string>, --dependents-all, --silent, --filter-envs <envs>, --save-in-lane, --all-history, --fetch-deps, --write-deps <target>, --track-only, --include-deprecated, --lane-only, --owner
 
 ## bit init [path]
 
 initialize a Bit workspace in an existing project
 
 creates Bit configuration files in an existing project directory to start tracking components. if already a workspace, validates and repairs Bit files as needed. supports various reset options to recover from corrupted state or restart from scratch.
-Flags: --name <workspace-name>, --generator <env-id>, --standalone, --no-package-json, --reset, --reset-new, --reset-lane-new, --reset-hard, --reset-scope, --default-directory <default-directory>, --default-scope <default-scope>, --force, --bare [name], --shared <groupname>, --external-package-manager, --skip-interactive
+Flags: --name <workspace-name>, --generator <env-id>, --standalone, --no-package-json, --reset, --reset-new, --reset-lane-new, --reset-hard, --reset-scope, --default-directory <default-directory>, --default-scope <default-scope>, --force, --bare [name], --shared <groupname>, --external-package-manager, --skip-interactive, --agent [type]
 
 ## bit install [packages...]
 
@@ -412,6 +433,13 @@ install workspace dependencies
 
 installs workspace dependencies and prepares the workspace for development. when packages are specified, adds them to workspace.jsonc policy and installs. when no packages specified, installs existing dependencies. automatically imports components, compiles components, links to node_modules, and writes config files.
 Flags: --type [lifecycleType], --update, --save-prefix [savePrefix], --skip-dedupe, --skip-import, --skip-compile, --skip-write-config-files, --add-missing-deps, --skip-unavailable, --add-missing-peers, --recurring-install, --no-optional [noOptional], --lockfile-only, --allow-scripts [pkgNames], --disallow-scripts [pkgNames]
+
+## bit internalize [component-pattern]
+
+mark components as internal to hide them by default in the UI
+
+marks components as internal locally, then after snap/tag and export they become internal in the remote scope. unlike "bit local-only", internal components are still versioned and exported - they are only hidden by default in the UI (workspace, scope and Bit Cloud). use --revert to remove the internal mark, or --list to show the components currently marked as internal.
+Flags: --revert, --list, --json
 
 ## bit lane [sub-command]
 
@@ -468,8 +496,10 @@ DEPRECATED (only use it if you have used add-readme and want to undo it). remove
 
 ## bit lane import <lane>
 
-import a remote lane to your workspace and switch to that lane
-Flags: --skip-dependency-installation, --pattern <component-pattern>, --branch
+import a remote lane to your workspace
+
+when on the default lane, the workspace is switched to the imported lane. when already on the same lane, only the latest objects are fetched from the remote — run "bit checkout head" to update the workspace. when on a different lane, the lane is fetched locally without switching to avoid disrupting your work — run `bit switch <lane>` to switch.
+Flags: --skip-dependency-installation, --pattern <component-pattern>, --branch, --auto-merge-resolve <merge-strategy>, --force-ours, --force-theirs
 
 ## bit lane remove-comp <component-pattern>
 
@@ -488,6 +518,11 @@ Flags: --all
 delete a component from the lane and install it as a package from main
 
 NOTE: unlike "bit eject" on main, this command doesn't only remove the component from the workspace, but also mark it as deleted from the lane, so it won't be merged later on.
+
+## bit lane current
+
+display the name of the current lane
+Flags: --json
 
 ## bit lane history [lane-name]
 
@@ -592,7 +627,7 @@ removes stored authentication tokens and signs out of Bit Cloud. clears local cr
 
 start Model Context Protocol server for AI assistants
 
-enables AI assistants and other tools to interact with Bit via the Model Context Protocol. provides a standardized interface for AI agents to execute Bit commands and access component information. allows writing custom instructions and rules to guide AI agents in their interactions with Bit.
+NOTE: this is the legacy local stdio MCP server. The recommended way to connect AI agents to Bit is now the hosted Cloud MCP at https://mcp.bit.cloud/mcp. see setup instructions for each agent at https://bit.cloud/docs/connect. enables AI assistants and other tools to interact with Bit via the Model Context Protocol. provides a standardized interface for AI agents to execute Bit commands and access component information. allows writing custom instructions and rules to guide AI agents in their interactions with Bit.
 Flags: --include-additional <commands>, --bit-bin <binary>, --consumer-project
 
 ## bit mcp-server start
@@ -634,7 +669,7 @@ moves component files to a new location within the workspace and updates the .bi
 create a new Bit workspace from a template
 
 initializes a new Bit workspace with pre-configured settings, environments, and optionally starter components. templates provide different setups for React, Angular, Node.js, or custom development workflows. installs dependencies and configures the workspace for immediate development.
-Flags: --aspect <aspect-id>, --template <env-id>, --env <env-id>, --default-scope <scope-name>, --skip-git, --empty, --load-from <path-to-template>, --current-dir
+Flags: --aspect <aspect-id>, --template <env-id>, --env <env-id>, --default-scope <scope-name>, --skip-git, --empty, --load-from <path-to-template>, --current-dir, --agent [type]
 
 ## bit npmrc [sub-command]
 
@@ -651,7 +686,7 @@ Flags: --dry-run, --force
 
 test and validate component patterns
 
-this command helps validating a pattern before using it in other commands. NOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes. a pattern can be a simple component-id or component-name. e.g. 'ui/button'. a pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes. to enter multiple patterns, separate them by a comma, e.g. 'ui/_, lib/_' to exclude, use '!'. e.g. 'ui/**, !ui/button' the matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch). to filter by a state or attribute, prefix the pattern with "$". e.g. '$deprecated', '$modified'. list of supported states: [new, modified, deprecated, deleted, snappedOnMain, softTagged, codeModified, localOnly]. to filter by multi-params state/attribute, separate the params with ":", e.g. '$env:teambit.react/react'. list of supported multi-params states: [env]. to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/\*\* AND $env:teambit.react/react'.
+this command helps validating a pattern before using it in other commands. NOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes. a pattern can be a simple component-id or component-name. e.g. 'ui/button'. a pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes. to enter multiple patterns, separate them by a comma, e.g. 'ui/_, lib/_' to exclude, use '!'. e.g. 'ui/**, !ui/button' the matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch). to filter by a state or attribute, prefix the pattern with "$". e.g. '$deprecated', '$modified'. list of supported states: [new, modified, deprecated, deleted, internal, snappedOnMain, softTagged, codeModified, localOnly]. to filter by multi-params state/attribute, separate the params with ":", e.g. '$env:teambit.react/react'. list of supported multi-params states: [env]. to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/\*\* AND $env:teambit.react/react'.
 Flags: --json, --remote
 
 ## bit recover <component-pattern>
@@ -725,6 +760,37 @@ replace component files with specified version while preserving current version
 replaces component source files with files from the specified version but keeps the current component version. useful for reverting file changes without changing the component's version history. different from checkout which changes the version.
 Flags: --verbose, --skip-dependency-installation
 
+## bit ripple <sub-command>
+
+manage Ripple CI jobs on bit.cloud
+
+view, retry, and manage Ripple CI jobs that build your components in the cloud after export.
+
+## bit ripple list
+
+list recent Ripple CI jobs (filtered by workspace owner by default)
+Flags: --all, --owner <owner>, --scope <scope>, --lane <lane>, --user <user>, --status <status>, --limit <limit>, --json
+
+## bit ripple log [job-id]
+
+show job details and component build task summaries (auto-detects current lane, or your last export when on main)
+Flags: --lane <lane>, --component <component>, --json
+
+## bit ripple errors [job-id]
+
+show build errors for a Ripple CI job (auto-detects current lane, or your last export when on main)
+Flags: --lane <lane>, --log, --json
+
+## bit ripple retry [job-id]
+
+retry a failed Ripple CI job (auto-detects current lane when no job-id given)
+Flags: --lane <lane>, --json
+
+## bit ripple stop [job-id]
+
+stop a running Ripple CI job (auto-detects current lane when no job-id given)
+Flags: --lane <lane>, --json
+
 ## bit run [app-name]
 
 start an application component locally
@@ -739,6 +805,13 @@ display component API schema and type definitions
 extracts and displays the public API structure of components including types, functions, classes, and interfaces. shows detailed type information, function signatures, and JSDoc documentation for exported elements. useful for understanding component interfaces and generating documentation. you can use a `<pattern>` for multiple component ids, such as `bit schema "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
 Flags: --remote, --json
 
+## bit schema diff <component> <base-version> <compare-version>
+
+show API changes between two versions of a component
+
+compares the public API schema between two versions of a component. shows added, removed, and modified exports with semantic impact analysis. examples: bit schema diff my-component 0.0.1 0.0.2
+Flags: --json
+
 ## bit scope <sub-command>
 
 manage component scope names and assignments
@@ -751,12 +824,18 @@ Sets the scope for specified component/s. If no component is specified, sets the
 
 default scopes for components are set in the bitmap file. the default scope for a workspace is set in the workspace.jsonc. a component is set with a scope (as oppose to default scope) only once it is versioned.' you can use a `<pattern>` for multiple component ids, such as `bit scope set scope-name "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
 
+## bit scope trust [action] [pattern]
+
+manage which scopes are trusted to load aspects (envs, etc.) into the workspace's process
+
+scope-trust is opt-in. when off (the default), aspects from any scope load without a check. when on, aspects from a scope outside the trust list trigger a prompt (interactive shells) or an error (non-interactive). bit scope trust # same as "list" bit scope trust list # show status; if on, print the effective trust list bit scope trust enable # turn on (writes "trustedScopes": [] to workspace.jsonc) bit scope trust disable # turn off (removes "trustedScopes" from workspace.jsonc) bit scope trust add PATTERN # add a pattern (auto-enables if needed) bit scope trust remove PATTERN # remove a pattern (does NOT disable when list is empty) once on, the effective trust set is: builtin scopes (teambit._, bitdev._, and a few others — run "bit scope trust list" to see) + the owner of defaultScope + entries listed under "trustedScopes". patterns are exact ("acme.frontend") or owner wildcard ("acme.\*").
+
 ## bit scope rename <current-scope-name> <new-scope-name>
 
 rename the scope name for all components with the specified 'current scope name'. if exported, create new components and delete the original ones
 
 Note: if `<current-scope-name>` is also the defaultScope for the workspace, this command will set `<new-scope-name>` as the defaultScope instead, and that will then be set for all components by default. You may see updates in your .bitmap file as a result of this change
-Flags: --preserve, --refactor, --deprecate
+Flags: --preserve, --refactor, --deprecate, --skip-dependency-installation
 
 ## bit scope rename-owner <current-owner-name> <new-owner-name>
 
@@ -777,6 +856,13 @@ run a script defined by the environment
 executes custom scripts defined by component environments. scripts can be shell commands or JavaScript functions defined in env.scripts(). runs the script for all components grouped by their environment. use --list to see all available scripts.
 Flags: --list
 
+## bit search <query...>
+
+search for components by keyword in the local workspace and remote bit cloud
+
+runs the provided query terms in parallel against bit cloud and against the local workspace. multiple queries are unioned (deduplicated) in the output. by default, remote results are filtered by the owner extracted from the workspace's defaultScope; use --owners or --skip-auto-owner to change this.
+Flags: --owners <list>, --skip-auto-owner, --remote-only, --local-only, --json
+
 ## bit set-peer <component-id> <range>
 
 configure component to always be installed as peer dependency
@@ -795,14 +881,14 @@ Flags: --json, --legacy, --remote, --browser, --compare
 create immutable component snapshots for development versions
 
 creates snapshots with hash-based versions for development and testing. snapshots are immutable and exportable. by default snaps only new and modified components. use for development iterations before creating semantic version tags. snapshots maintain component history and enable collaboration without formal releases.
-Flags: --message <message>, --unmodified, --unmerged, --build, --editor [editor], --skip-tests, --skip-tasks <string>, --skip-auto-snap, --disable-snap-pipeline, --ignore-build-errors, --loose, --rebuild-deps-graph, --ignore-issues <issues>, --fail-fast
+Flags: --message <message>, --unmodified, --unmerged, --build, --editor [editor], --skip-tests, --skip-tasks <string>, --skip-auto-snap, --disable-snap-pipeline, --ignore-build-errors, --loose, --rebuild-deps-graph, --no-lock-deps, --ignore-issues <issues>, --fail-fast
 
 ## bit start [component-pattern]
 
 launch the Bit development server
 
 starts the local development server providing a UI to browse, preview, and interact with components. works in both workspaces and scopes. opens automatically in your browser at http://localhost:3000 (or specified port). includes hot module reloading for development.
-Flags: --dev, --port [port-number], --rebuild, --skip-ui-build, --verbose, --no-browser, --show-internal-urls, --skip-compilation, --ui-root-name [type]
+Flags: --dev, --port [port-number], --rebuild, --skip-ui-build, --verbose, --no-browser, --show-internal-urls, --skip-compilation, --ui-root-name [type], --use-root-modules, --use-source
 
 ## bit stash <sub-command>
 
@@ -829,8 +915,8 @@ list stash
 
 show workspace component status and issues
 
-displays the current state of all workspace components including new, modified, staged, and problematic components. identifies blocking issues that prevent tagging/snapping and provides warnings with --warnings flag. essential for understanding workspace health before versioning components.
-Flags: --json, --warnings, --verbose, --lanes, --strict, --fail-on-error, --ignore-circular-dependencies
+displays the current state of all workspace components including new, modified, staged, and problematic components. identifies blocking issues that prevent tagging/snapping and provides warnings with --warnings flag. essential for understanding workspace health before versioning components. use --quick for a faster check that only detects file-level changes (new/modified components). for maximum speed (skips aspect loading entirely), use "bit mini-status".
+Flags: --json, --warnings, --verbose, --lanes, --strict, --fail-on-error, --ignore-circular-dependencies, --quick, --expand
 
 ## bit system <sub-command>
 
@@ -853,7 +939,7 @@ similar to linux "tail -f" command
 create immutable component snapshots with semantic version tags
 
 creates tagged versions using semantic versioning (semver) for component releases. tags are immutable and exportable. by default tags all new and modified components. supports version specification per pattern using "@" (e.g. foo@1.0.0, bar@minor). use for official releases. for development versions, use 'bit snap' instead.
-Flags: --message <message>, --unmodified, --editor [editor], --versions-file <path>, --ver <version>, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --snapped, --unmerged, --skip-tests, --skip-tasks <string>, --skip-auto-tag, --soft, --persist [skip-build], --disable-tag-pipeline, --ignore-build-errors, --rebuild-deps-graph, --increment-by <number>, --ignore-issues <issues>, --ignore-newest-version, --fail-fast, --build, --loose
+Flags: --message <message>, --unmodified, --editor [editor], --versions-file <path>, --ver <version>, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --snapped, --unmerged, --skip-tests, --skip-tasks <string>, --skip-auto-tag, --soft, --persist [skip-build], --disable-tag-pipeline, --ignore-build-errors, --rebuild-deps-graph, --no-lock-deps, --increment-by <number>, --ignore-issues <issues>, --ignore-newest-version, --fail-fast, --build, --loose
 
 ## bit templates
 
@@ -862,12 +948,12 @@ list available templates for creating components and workspaces
 Lists available templates. Inside a workspace it shows component templates for 'bit create'; outside a workspace it shows workspace templates for 'bit new'.
 Flags: --show-all, --aspect <aspect-id>, --json
 
-## bit test [component-pattern]
+## bit test [pattern-or-test-file...]
 
 run component tests
 
-executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.). by default only runs tests for new and modified components. use --unmodified to test all components. supports watch mode, coverage reporting, and debug mode for development workflows.
-Flags: --watch, --debug, --unmodified, --junit <filepath>, --coverage, --env <id>, --update-snapshot, --json
+executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.). by default only runs tests for new and modified components. use --unmodified to test all components. to run specific test files only, pass their paths instead of a component pattern, e.g. "bit test path/to/comp/my-comp.spec.ts". supports watch mode, coverage reporting, and debug mode for development workflows.
+Flags: --watch, --debug, --unmodified, --junit <filepath>, --coverage, --env <id>, --update-snapshot, --json, --verbose, --summary
 
 ## bit undeprecate <id>
 
@@ -898,8 +984,8 @@ Flags: --yes, --patch, --minor, --major, --semver
 
 run type-checking, linting, and testing in sequence
 
-validates components by running check-types, lint, and test commands in sequence. stops at the first failure and returns a non-zero exit code. by default validates only new and modified components. use --all to validate all components.
-Flags: --all, --continue-on-error
+validates components by running check-types, lint, and test commands in sequence. by default runs all checks even when errors are found. use --fail-fast to stop at the first failure. by default validates only new and modified components. use --all to validate all components.
+Flags: --all, --fail-fast, --skip-tasks <string>
 
 ## bit version
 

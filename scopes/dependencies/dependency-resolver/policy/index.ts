@@ -9,10 +9,11 @@ export {
 } from './workspace-policy';
 export {
   VariantPolicy,
+  VariantPolicyConfigEntryValue,
   VariantPolicyEntryValue,
   VariantPolicyConfigObject,
   SerializedVariantPolicy,
   VariantPolicyConfigArr,
 } from './variant-policy';
 
-export { EnvPolicy, EnvPolicyConfigObject } from './env-policy';
+export { EnvPolicy, EnvPolicyConfigObject, EnvPolicyEnvJsoncConfigObject } from './env-policy';

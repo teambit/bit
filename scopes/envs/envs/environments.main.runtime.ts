@@ -347,7 +347,17 @@ export class EnvsMain {
 
     if (!envJson) return undefined;
 
-    const object: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
+    let object: EnvJsonc;
+    try {
+      object = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
+    } catch (err: any) {
+      const envName = envComponent?.id?.toString();
+      const filePath = envJson.path || envJson.relative;
+      const location = envName ? `"${envName}" (${filePath})` : filePath;
+      throw new BitError(
+        `Syntax error in env.jsonc for ${location}: ${err.message}. Please check the file for invalid JSONC syntax.`
+      );
+    }
     if (!object.extends) return object;
     const resolvedObject = await this.recursivelyMergeWithParentManifest(object, envExtendsDeps);
 

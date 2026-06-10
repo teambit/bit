@@ -70,13 +70,20 @@ export default class NodeModuleLinker {
       this.workspace.clearAllComponentsCache();
     }
 
-    await linkPkgsToRootComponents(
-      {
-        rootComponentsPath: this.workspace.rootComponentsPath,
-        workspacePath,
-      },
-      this.components.map((comp) => componentIdToPackageName(comp.state._consumer))
-    );
+    // Only update `.bit_roots` when root components are actually in use. Otherwise
+    // we'd be hard-linking into a stale tree left over from a previous install where
+    // rootComponents was enabled — pnpm no longer manages that subtree, so its layout
+    // can be inconsistent and `mkdir` may throw ENOTDIR/ENOENT through a broken
+    // ancestor inside `.bit_roots/<env>/node_modules/...`.
+    if (this.workspace.hasRootComponents()) {
+      await linkPkgsToRootComponents(
+        {
+          rootComponentsPath: this.workspace.rootComponentsPath,
+          workspacePath,
+        },
+        this.components.map((comp) => componentIdToPackageName(comp.state._consumer))
+      );
+    }
     return linksResults;
   }
   async getLinks(): Promise<DataToPersist> {
@@ -217,7 +224,8 @@ export default class NodeModuleLinker {
         id: legacyComp.id,
       })
     );
-    const packageJsonExist = await fs.pathExists(path.join(dest, 'package.json'));
+    const packageJsonPath = path.join(dest, 'package.json');
+    const packageJsonExist = await fs.pathExists(packageJsonPath);
     if (!packageJsonExist) {
       this.packageJsonCreated = true;
     }
@@ -264,6 +272,20 @@ export default class NodeModuleLinker {
 
     // don't delete the "version" prop, because in some scenarios, it's needed for the component to work properly.
     // an example is when developing a vscode extension, vscode expects to have a valid package.json during the development.
+
+    if (!this.packageJsonCreated && packageJsonExist) {
+      try {
+        const existingPkgJson = await fs.readJson(packageJsonPath);
+        const newPkgJsonStr = JSON.stringify(packageJson.packageJsonObject);
+        const existingPkgJsonStr = JSON.stringify(existingPkgJson);
+        if (newPkgJsonStr !== existingPkgJsonStr) {
+          this.packageJsonCreated = true;
+        }
+      } catch {
+        // if we can't read the existing package.json, treat it as changed
+        this.packageJsonCreated = true;
+      }
+    }
 
     this.dataToPersist.addFile(packageJson.toVinylFile());
     const injectedDirs = await this.workspace.getInjectedDirs(component);

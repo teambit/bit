@@ -28,6 +28,7 @@ import { BitError } from '@teambit/bit-error';
 import pMap from 'p-map';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { getLogForSquash } from '@teambit/harmony.modules.get-basic-log';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 import type { ScopeMain } from '@teambit/scope';
@@ -211,6 +212,7 @@ export class SnappingMain {
     persist = false,
     ignoreBuildErrors = false,
     rebuildDepsGraph,
+    noLockDeps = false,
     incrementBy = 1,
     disableTagAndSnapPipelines = false,
     failFast = false,
@@ -278,6 +280,7 @@ export class SnappingMain {
       disableTagAndSnapPipelines,
       ignoreBuildErrors,
       rebuildDepsGraph,
+      noLockDeps,
       incrementBy,
       packageManagerConfigRootDir: this.workspace.path,
       exitOnFirstFailedTask: failFast,
@@ -539,9 +542,15 @@ export class SnappingMain {
     let exportedIds: ComponentIdList | undefined;
     if (params.push) {
       const updatedLane = lane ? await this.scope.legacyScope.loadLane(lane.toLaneId()) : undefined;
+      // include auto-tagged ids in the export set. For the bare-scope reverse cascade
+      // (`snapFromScope({ updateDependents: true })`), `getLaneAutoTagIdsFromScope` re-snaps
+      // lane.components that depend on the new hidden entry, and those new snaps must be pushed
+      // alongside the explicit target.
+      const autoTaggedIds = (results.autoTaggedResults || []).map((r) => r.component.id);
+      const idsToExport = ComponentIdList.uniqFromArray([...ids, ...autoTaggedIds]);
       const { exported } = await this.exporter.pushToScopes({
         scope: this.scope.legacyScope,
-        ids,
+        ids: idsToExport,
         allVersions: false,
         laneObject: updatedLane,
         // no need other snaps. only the latest one. without this option, when snapping on lane from another-scope, it
@@ -578,6 +587,7 @@ export class SnappingMain {
     disableTagAndSnapPipelines = false,
     ignoreBuildErrors = false,
     rebuildDepsGraph,
+    noLockDeps = false,
     unmodified = false,
     exitOnFirstFailedTask = false,
     detachHead,
@@ -619,6 +629,7 @@ export class SnappingMain {
       disableTagAndSnapPipelines,
       ignoreBuildErrors,
       rebuildDepsGraph,
+      noLockDeps,
       packageManagerConfigRootDir: this.workspace.path,
       exitOnFirstFailedTask,
       detachHead,
@@ -677,6 +688,79 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
   }
 
   /**
+   * Workspace-side merge snap. Routes both visible workspace components AND hidden lane
+   * lane.updateDependents through the same `makeVersion` pipeline that
+   * `snap`/`snapFromScope` use, so cascade snaps get fresh log/buildStatus/flattenedDependencies/
+   * lane-history/stagedSnaps just like every other snap.
+   *
+   * Visible: workspace.getMany picks up files written to disk by `applyVersion`.
+   * Hidden: applyVersion's in-memory merged ConsumerComponents are passed in directly — they
+   * have no bitmap entry, so they can't go through `loadComponentsForTagOrSnap`.
+   *
+   * version-maker's `isHiddenLaneEntry` detection (workspace-flow: not-in-bitmap) routes the
+   * hidden ones to the right branches (no bitmap update, stagedSnaps tracking,
+   * `addToUpdateDependentsInLane`).
+   */
+  async snapForMerge({
+    visibleIds,
+    hiddenLegacyComponents,
+    message,
+    build,
+    loose,
+  }: {
+    visibleIds: ComponentIdList;
+    hiddenLegacyComponents: ConsumerComponent[];
+    message?: string;
+    build?: boolean;
+    loose?: boolean;
+  }): Promise<{
+    snappedComponents: ConsumerComponent[];
+    autoSnappedResults: AutoTagResult[];
+    removedComponents?: ComponentIdList;
+  } | null> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    if (!visibleIds.length && !hiddenLegacyComponents.length) return null;
+
+    this.logger.debug(`snapForMerge, visible: ${visibleIds.length}, hidden: ${hiddenLegacyComponents.length}`);
+    const visibleHarmony = visibleIds.length ? await this.loadComponentsForTagOrSnap(visibleIds) : [];
+    const hiddenHarmony = hiddenLegacyComponents.length ? await this.scope.getManyByLegacy(hiddenLegacyComponents) : [];
+    // issue checks are workspace-source-tree concerns — hidden entries are scope-only
+    if (visibleHarmony.length) await this.throwForVariousIssues(visibleHarmony);
+
+    const hiddenIds = ComponentIdList.fromArray(hiddenLegacyComponents.map((c) => c.componentId));
+    const allIds = ComponentIdList.uniqFromArray([...visibleIds, ...hiddenIds]);
+    const allComponents = [...visibleHarmony, ...hiddenHarmony];
+
+    const makeVersionParams = {
+      ignoreNewestVersion: false,
+      message: message || '',
+      skipTests: false,
+      skipAutoTag: false,
+      persist: true,
+      soft: false,
+      build,
+      isSnap: true,
+      packageManagerConfigRootDir: this.workspace.path,
+      loose,
+    };
+
+    const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await this.makeVersion(
+      allIds,
+      allComponents,
+      makeVersionParams
+    );
+
+    await this.workspace.consumer.onDestroy(`merge-snap (message: ${message || 'N/A'})`);
+    await stagedConfig?.write();
+
+    return {
+      snappedComponents: taggedComponents,
+      autoSnappedResults: autoTaggedResults,
+      removedComponents,
+    };
+  }
+
+  /**
    * remove tags/snaps that exist locally, which were not exported yet.
    * once a tag/snap is exported, it's impossible to delete it as other components may depend on it
    */
@@ -720,12 +804,29 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     const isRealUntag = !soft;
     if (isRealUntag) {
       results = await untag();
+
+      // Remove lane history entries that correspond to the reset snaps.
+      // Each snap uses its batchId as the lane history key, so we can match them.
+      if (currentLane) {
+        const allBatchIds = uniq(results.flatMap((r) => r.batchIds || []));
+        if (allBatchIds.length) {
+          const laneHistory = await consumer.scope.lanes.getOrCreateLaneHistory(currentLane);
+          laneHistory.removeHistoryEntries(allBatchIds);
+          consumer.scope.objects.add(laneHistory);
+        }
+      }
+
       await consumer.scope.objects.persist();
       const currentLaneId = consumer.getCurrentLaneId();
       const stagedConfig = await this.workspace.scope.getStagedConfig();
 
       await pMapSeries(results, async ({ component, versionToSetInBitmap }) => {
         if (!component) return;
+        // hidden lane entries (lane.updateDependents) are not in the workspace bitmap, so skip
+        // bitmap updates for them. A soft-deleted (visible) entry is also absent from bitmap but
+        // `updateVersions` knows how to restore it from stagedConfig.
+        const compId = component.toComponentId();
+        if (currentLane?.findUpdateDependent(compId)) return;
         await updateVersions(this.workspace, stagedConfig, currentLaneId, component, versionToSetInBitmap, false);
       });
       await this.workspace.scope.legacyScope.stagedSnaps.write();
@@ -970,17 +1071,22 @@ another option, in case this dependency is not in main yet is to remove all refe
     lane,
     shouldValidateVersion = false,
     addVersionOpts,
+    batchId,
   }: {
     source: ConsumerComponent;
     lane?: Lane;
     shouldValidateVersion?: boolean;
     addVersionOpts?: AddVersionOpts;
+    batchId?: string;
   }): Promise<{
     component: ModelComponent;
     version: Version;
     addedVersionStr: string;
   }> {
     const { addedVersionStr, component, version } = await this._addCompFromScopeToObjects(source, lane, addVersionOpts);
+    if (batchId) {
+      version.batchId = batchId;
+    }
     const unmergedComponent = this.scope.legacyScope.objects.unmergedComponents.getEntry(component.toComponentId());
     if (unmergedComponent) {
       if (unmergedComponent.unrelated) {
@@ -1002,6 +1108,20 @@ another option, in case this dependency is not in main yet is to remove all refe
           version.setUnrelated({ head: unrelated.unrelatedHead, laneId: unrelated.unrelatedLaneId });
           version.addAsOnlyParent(unrelated.headOnCurrentLane);
         }
+      } else if (unmergedComponent.shouldSquash) {
+        // --squash on diverged components: record the dropped lane-b head in squashed metadata
+        // and leave `version.parents` as the single current-lane head. lane-b's history remains
+        // reachable only on its own scope; the merge snap chain stays self-contained on this lane.
+        // The diverged path always has a current-lane parent (that's what makes it diverged).
+        const previousParents = [version.parents[0], unmergedComponent.head];
+        // Fresh Log object — setSquashed retains it via version.modified[], and we mutate
+        // version.log.message below, which would corrupt the modified-log entry if shared.
+        const squashLog = await getLogForSquash(unmergedComponent.laneId);
+        version.setSquashed({ previousParents, laneId: unmergedComponent.laneId }, squashLog);
+        this.logger.debug(
+          `sources.addSource, unmerged component "${component.name}". squash-on-diverged: dropping parent ${unmergedComponent.head.hash}`
+        );
+        version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
       } else {
         // this is adding a second parent to the version. the order is important. the first parent is coming from the current-lane.
         version.addParent(unmergedComponent.head);

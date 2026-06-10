@@ -1,21 +1,18 @@
-import chalk from 'chalk';
-import { Logger } from '@teambit/logger';
+import { errorSymbol, formatItem } from '@teambit/cli';
 import type { BuildResult } from './workspace-compiler';
 
-export const formatCompileResults = (compileResults: BuildResult[], verbose: boolean) =>
-  compileResults
-    .map((componentResult: BuildResult) => ({
-      componentId: componentResult.component,
-      files: componentResult.buildResults,
-      status: componentResult.errors.length ? 'FAILURE' : 'SUCCESS',
-      icon: componentResult.errors.length ? chalk.red('✗') : Logger.successSymbol(),
-    }))
-    .reduce((outputString, result) => {
-      outputString += `${result.icon} ${result.status}\t${result.componentId}`;
-      if (verbose) {
-        outputString += ':';
-        outputString += result?.files?.reduce((fileList, file) => `${fileList}\t\t - ${file}\n`, '\n');
+export const formatCompileResults = (compileResults: BuildResult[], verbose: boolean) => {
+  const lines = compileResults
+    .filter((result) => verbose || result.errors.length > 0)
+    .map((componentResult: BuildResult) => {
+      const failed = componentResult.errors.length > 0;
+      const symbol = failed ? errorSymbol : undefined;
+      const suffix = failed ? ' ... failed' : '';
+      let line = formatItem(`${componentResult.component}${suffix}`, symbol);
+      if (verbose && componentResult.buildResults?.length) {
+        line += '\n' + componentResult.buildResults.map((file) => `\t\t - ${file}`).join('\n');
       }
-      outputString += '\n';
-      return outputString;
-    }, '');
+      return line;
+    });
+  return lines.join(verbose ? '\n\n' : '\n');
+};

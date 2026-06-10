@@ -221,8 +221,10 @@ describe('bit lane multiple scopes', function () {
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
     });
-    it('bit export should throw an error saying the scope does not exist', () => {
-      expect(() => helper.command.export()).to.throw('cannot find scope');
+    // developers may iterate on a lane before the target scope is created; the lane export
+    // silently skips the conflict check for scopes that can't be resolved.
+    it('bit export should succeed', () => {
+      expect(() => helper.command.export()).to.not.throw();
     });
   });
 

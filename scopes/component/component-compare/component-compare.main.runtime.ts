@@ -23,6 +23,9 @@ import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
 import type { Component, ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
+import type { SchemaMain } from '@teambit/schema';
+import { SchemaAspect } from '@teambit/schema';
+
 import { componentCompareSchema } from './component-compare.graphql';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { DiffCmd } from './diff-cmd';
@@ -31,6 +34,8 @@ import { ImporterAspect } from '@teambit/importer';
 
 export type ComponentCompareResult = {
   id: string;
+  baseId: string;
+  compareId: string;
   code: FileDiff[];
   fields: FieldsDiff[];
   tests: FileDiff[];
@@ -50,6 +55,7 @@ export class ComponentCompareMain {
     private tester: TesterMain,
     private depResolver: DependencyResolverMain,
     private importer: ImporterMain,
+    private schema: SchemaMain,
     private workspace?: Workspace
   ) {}
 
@@ -99,14 +105,25 @@ export class ComponentCompareMain {
       (fileDiff: FileDiff) => allTestFiles.includes(fileDiff.filePath) && fileDiff.status !== 'UNCHANGED'
     );
 
-    const compareResult = {
+    return {
       id: `${baseCompId}-${compareCompId}`,
+      baseId: baseIdStr,
+      compareId: compareIdStr,
       code: diff.filesDiff || [],
       fields: diff.fieldsDiff || [],
       tests: testFilesDiff,
     };
+  }
 
-    return compareResult;
+  async getAPIDiff(baseIdStr: string, compareIdStr: string): Promise<Record<string, any> | null> {
+    const host = this.componentAspect.getHost();
+    const [baseCompId, compareCompId] = await host.resolveMultipleComponentIds([baseIdStr, compareIdStr]);
+    await this.importer.importObjectsFromMainIfExist([baseCompId, compareCompId], { cache: true });
+    const components = await host.getMany([baseCompId, compareCompId]);
+    const baseComponent = components?.[0];
+    const compareComponent = components?.[1];
+    if (!baseComponent || !compareComponent) return null;
+    return this.schema.computeAPIDiff(baseComponent, compareComponent);
   }
 
   async diffByCLIValues(
@@ -310,9 +327,21 @@ export class ComponentCompareMain {
     TesterAspect,
     DependencyResolverAspect,
     ImporterAspect,
+    SchemaAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([graphql, component, scope, loggerMain, cli, workspace, tester, depResolver, importer]: [
+  static async provider([
+    graphql,
+    component,
+    scope,
+    loggerMain,
+    cli,
+    workspace,
+    tester,
+    depResolver,
+    importer,
+    schema,
+  ]: [
     GraphqlMain,
     ComponentMain,
     ScopeMain,
@@ -322,6 +351,7 @@ export class ComponentCompareMain {
     TesterMain,
     DependencyResolverMain,
     ImporterMain,
+    SchemaMain,
   ]) {
     const logger = loggerMain.createLogger(ComponentCompareAspect.id);
     const componentCompareMain = new ComponentCompareMain(
@@ -331,6 +361,7 @@ export class ComponentCompareMain {
       tester,
       depResolver,
       importer,
+      schema,
       workspace
     );
     cli.register(new DiffCmd(componentCompareMain));

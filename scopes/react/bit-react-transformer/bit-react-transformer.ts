@@ -18,6 +18,28 @@ const PLUGIN_NAME = 'bit-react-transformer';
 
 type Api = { types: typeof Types };
 
+function metaToDeclaration(meta: ComponentMeta, types: typeof Types) {
+  const properties = [
+    // e.g. "id": "teambit.base-ui/input/button@0.6.10"
+    types.objectProperty(types.identifier(componentMetaProperties.componentId), types.stringLiteral(meta.id)),
+
+    // e.g. "homepage": "https://bit.dev/teambit/base-ui/input/button"
+    meta.homepage &&
+      types.objectProperty(types.identifier(componentMetaProperties.homepageUrl), types.stringLiteral(meta.homepage)),
+
+    // "exported": true / false
+    meta.exported &&
+      types.objectProperty(types.identifier(componentMetaProperties.isExported), types.booleanLiteral(meta.exported)),
+  ].filter((x) => x) as Types.ObjectProperty[];
+
+  // variable deceleration, e.g. `var __bit_component = { ... };`
+  const deceleration = types.variableDeclaration('var', [
+    types.variableDeclarator(types.identifier(componentMetaField), types.objectExpression(properties)),
+  ]);
+
+  return deceleration;
+}
+
 /**
  * the bit babel transformer adds a `componentId` property on React components
  * for showcase and debugging purposes.
@@ -147,26 +169,4 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
   };
 
   return Plugin;
-}
-
-function metaToDeclaration(meta: ComponentMeta, types: typeof Types) {
-  const properties = [
-    // e.g. "id": "teambit.base-ui/input/button@0.6.10"
-    types.objectProperty(types.identifier(componentMetaProperties.componentId), types.stringLiteral(meta.id)),
-
-    // e.g. "homepage": "https://bit.dev/teambit/base-ui/input/button"
-    meta.homepage &&
-      types.objectProperty(types.identifier(componentMetaProperties.homepageUrl), types.stringLiteral(meta.homepage)),
-
-    // "exported": true / false
-    meta.exported &&
-      types.objectProperty(types.identifier(componentMetaProperties.isExported), types.booleanLiteral(meta.exported)),
-  ].filter((x) => x) as Types.ObjectProperty[];
-
-  // variable deceleration, e.g. `var __bit_component = { ... };`
-  const deceleration = types.variableDeclaration('var', [
-    types.variableDeclarator(types.identifier(componentMetaField), types.objectExpression(properties)),
-  ]);
-
-  return deceleration;
 }

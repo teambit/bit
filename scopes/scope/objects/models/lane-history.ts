@@ -10,6 +10,10 @@ export type HistoryItem = {
   log: Log;
   components: string[];
   deleted?: string[];
+  // hidden lane.updateDependents at the time of the snapshot. Recorded in their own field so
+  // `historyItem.components` keeps its workspace-checkout/revert contract intact — those flows
+  // must not materialize hidden entries into the bitmap.
+  updateDependents?: string[];
 };
 
 type History = { [uuid: string]: HistoryItem };
@@ -76,14 +80,29 @@ export class LaneHistory extends BitObject {
       .map(([id]) => id);
   }
 
-  async addHistory(laneObj: Lane, msg?: string) {
+  async addHistory(laneObj: Lane, msg?: string, historyKey?: string) {
     const log: Log = await getBasicLog();
     if (msg) log.message = msg;
     const components = laneObj.toComponentIds().toStringArray();
     const deleted = laneObj.components
       .filter((c) => c.isDeleted)
       .map((c) => c.id.changeVersion(c.head.toString()).toString());
-    this.history[v4()] = { log, components, ...(deleted.length && { deleted }) };
+    // Always write `updateDependents` (even when empty) so checkout/revert can distinguish a
+    // post-PR entry that legitimately had no hidden entries (drop current hidden) from a legacy
+    // pre-PR entry that never recorded the field at all (leave current hidden alone).
+    const updateDependents = (laneObj.updateDependents || []).map((id) => id.toString());
+    this.history[historyKey || v4()] = {
+      log,
+      components,
+      ...(deleted.length && { deleted }),
+      updateDependents,
+    };
+  }
+
+  removeHistoryEntries(keys: string[]) {
+    for (const key of keys) {
+      delete this.history[key];
+    }
   }
 
   merge(laneHistory: LaneHistory) {

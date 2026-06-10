@@ -2,6 +2,7 @@ import type { TimerResponse } from '@teambit/toolbox.time.timer';
 import { Timer } from '@teambit/toolbox.time.timer';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatTitle, formatSuccessSummary, joinSections } from '@teambit/cli';
 import type { ComponentFactory, ComponentID } from '@teambit/component';
 import chalk from 'chalk';
 import type { EnvsExecutionResult } from '@teambit/envs';
@@ -65,10 +66,8 @@ supports automatic fixing of certain issues with --fix flag.`;
   async report([pattern]: [string], linterOptions: LintCmdOptions) {
     const { code, data } = await this.json([pattern], linterOptions);
     const { lintResults, componentsIdsToLint } = data;
-    const title = chalk.bold(
-      `linting total of ${chalk.cyan(componentsIdsToLint.length.toString())} component(s) in workspace '${chalk.cyan(
-        this.componentHost.name
-      )}'`
+    const title = formatTitle(
+      `linting total of ${componentsIdsToLint.length} component(s) in workspace '${this.componentHost.name}'`
     );
 
     const groupedByIsClean = groupBy(lintResults.results, (res) => {
@@ -90,20 +89,18 @@ supports automatic fixing of certain issues with --fix flag.`;
 
     const cleanComponentsCount = groupedByIsClean.true?.length || 0;
     const cleanComponentsOutput = cleanComponentsCount
-      ? `total of ${chalk.green(cleanComponentsCount.toString())} component(s) has no linting issues`
+      ? formatSuccessSummary(`${cleanComponentsCount} component(s) have no linting issues`)
       : '';
 
     const summary = this.getSummarySection(data);
-    const finalOutput = compact([title, dirtyComponentsOutputs, cleanComponentsOutput, summary]).join('\n\n');
+    const finalOutput = joinSections([title, dirtyComponentsOutputs, cleanComponentsOutput, summary]);
     return { code, data: finalOutput };
   }
 
   private getSummarySection(data: JsonLintResultsData) {
     const { duration, lintResults, componentsIdsToLint } = data;
     const { seconds } = duration;
-    const summaryTitle = `linted ${chalk.cyan(componentsIdsToLint.length.toString())} components in ${chalk.cyan(
-      seconds.toString()
-    )} seconds`;
+    const summaryTitle = `linted ${componentsIdsToLint.length} components in ${seconds} seconds`;
 
     const totalFieldsMap = [
       { itemsDataField: 'totalErrorCount', componentsDataField: 'totalComponentsWithErrorCount', label: 'Errors' },
@@ -141,9 +138,7 @@ supports automatic fixing of certain issues with --fix flag.`;
 
   private renderTotalLine(componentsCount: number, itemsCount: number, fieldLabel: string): string | undefined {
     if (itemsCount === 0) return undefined;
-    return `total of ${chalk.green(itemsCount.toString())} ${chalk.cyan(fieldLabel)} (from ${chalk.green(
-      componentsCount.toString()
-    )} components)`;
+    return `total of ${itemsCount} ${fieldLabel} (from ${componentsCount} components)`;
   }
 
   async json([pattern]: [string], linterOptions: LintCmdOptions): Promise<JsonLintResults> {

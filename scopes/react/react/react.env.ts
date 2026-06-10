@@ -172,7 +172,7 @@ export class ReactEnv
         jest: jestModulePath || require.resolve('jest'),
         config,
       },
-      { logger: this.logger, worker }
+      { logger: this.logger, worker, devFiles: this.devFiles }
     );
 
     return tester;
@@ -205,7 +205,7 @@ export class ReactEnv
         jest: jestModulePath || require.resolve('jest'),
         config,
       },
-      { logger: this.logger, worker }
+      { logger: this.logger, worker, devFiles: this.devFiles }
     );
   }
 
@@ -452,6 +452,7 @@ export class ReactEnv
       strategyName: COMPONENT_PREVIEW_STRATEGY_NAME as PreviewStrategyName,
       splitComponentBundle: true,
       isScaling: true,
+      supportsUseSource: true,
     };
   }
 
@@ -514,16 +515,16 @@ export class ReactEnv
         'react-dom': '-',
         '@types/mocha': '-',
         '@types/node': '12.20.4',
-        '@types/react': '^17.0.8',
-        '@types/react-dom': '^17.0.5',
+        '@types/react': '^19.0.0',
+        '@types/react-dom': '^19.0.0',
         '@types/jest': '^26.0.0',
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
         '@babel/runtime': '7.20.0',
         '@types/testing-library__jest-dom': '5.9.5',
       },
       peerDependencies: {
-        react: '^16.8.0 || ^17.0.0',
-        'react-dom': '^16.8.0 || ^17.0.0',
+        react: '^17.0.0 || ^18.0.0 || ^19.0.0',
+        'react-dom': '^17.0.0 || ^18.0.0 || ^19.0.0',
       },
     };
   }

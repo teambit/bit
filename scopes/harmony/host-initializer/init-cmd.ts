@@ -6,6 +6,8 @@ import { initScope } from '@teambit/legacy.scope-api';
 import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy.constants';
 import type { WorkspaceExtensionProps } from '@teambit/config';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary } from '@teambit/cli';
+import { McpConfigWriter } from '@teambit/mcp.mcp-config-writer';
 import type { InteractiveConfig } from './host-initializer.main.runtime';
 import { HostInitializerMain } from './host-initializer.main.runtime';
 import type { Logger } from '@teambit/logger';
@@ -62,6 +64,7 @@ supports various reset options to recover from corrupted state or restart from s
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
     ['', 'external-package-manager', 'enable external package manager mode (npm/yarn/pnpm)'],
     ['', 'skip-interactive', 'skip interactive mode for Git repositories'],
+    ['', 'agent [type]', 'create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)'],
   ] as CommandOptions;
 
   constructor(
@@ -106,11 +109,16 @@ supports various reset options to recover from corrupted state or restart from s
     try {
       const interactiveConfig = await HostInitializerMain.runInteractiveMode(projectPath);
 
-      // Set up MCP server if user selected an editor
       if (interactiveConfig.mcpEditor) {
-        this.logger.console(chalk.cyan(`\n🔧 Setting up MCP server for ${interactiveConfig.mcpEditor}...`));
+        const displayName = McpConfigWriter.getEditorDisplayName(interactiveConfig.mcpEditor);
+        this.logger.console(chalk.cyan(`\nConnecting Bit Cloud MCP to ${displayName}...`));
         await HostInitializerMain.setupMcpServer(interactiveConfig.mcpEditor, projectPath);
-        this.logger.console(chalk.green(`✅ MCP server configured for ${interactiveConfig.mcpEditor}`));
+        this.logger.console(formatSuccessSummary(`Bit Cloud MCP connected to ${displayName}`));
+
+        interactiveConfig.agentFileWritten = await HostInitializerMain.writeMcpAgentRules(
+          interactiveConfig.mcpEditor,
+          projectPath
+        );
       }
 
       return interactiveConfig;
@@ -137,6 +145,7 @@ supports various reset options to recover from corrupted state or restart from s
       defaultDirectory,
       defaultScope,
       externalPackageManager,
+      agent,
     } = flags;
 
     if (path) path = pathlib.resolve(path);
@@ -146,7 +155,7 @@ supports various reset options to recover from corrupted state or restart from s
       // Handle both cases init --bare and init --bare [scopeName]
       const bareVal = bare === true ? '' : bare;
       await initScope(path, bareVal, shared);
-      return `${chalk.green('successfully initialized an empty bare bit scope.')}`;
+      return formatSuccessSummary('initialized an empty bare bit scope.');
     }
 
     if (reset && resetHard) {
@@ -166,7 +175,16 @@ supports various reset options to recover from corrupted state or restart from s
       externalPackageManager: interactiveConfig?.externalPackageManager || externalPackageManager,
     };
 
-    const { created } = await HostInitializerMain.init(
+    // Resolve agent flag: true means no specific type (use default AGENTS.md), string means a specific tool.
+    const agentType = agent === true ? undefined : agent || undefined;
+
+    // Skip the baseline `.mcp.json` only when the user explicitly opted out
+    // of Cloud MCP in interactive mode. All other paths (non-interactive,
+    // skip-interactive, no .git) still write it so it stays consistent with
+    // the agent template that mentions a Cloud MCP config.
+    const userOptedOutOfMcp = interactiveConfig !== null && !interactiveConfig.mcpEditor;
+
+    const { created, agentFileWritten, mcpFileWritten } = await HostInitializerMain.init(
       path,
       standalone,
       noPackageJson,
@@ -177,9 +195,19 @@ supports various reset options to recover from corrupted state or restart from s
       resetScope,
       force,
       workspaceExtensionProps,
-      interactiveConfig?.generator || generator
+      interactiveConfig?.generator || generator,
+      agentType,
+      { skipDefaultMcp: userOptedOutOfMcp }
     );
 
-    return HostInitializerMain.generateInitMessage(created, reset, resetHard, resetScope, interactiveConfig);
+    return HostInitializerMain.generateInitMessage(
+      created,
+      reset,
+      resetHard,
+      resetScope,
+      interactiveConfig,
+      interactiveConfig?.agentFileWritten ?? agentFileWritten,
+      mcpFileWritten
+    );
   }
 }

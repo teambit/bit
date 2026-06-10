@@ -81,7 +81,7 @@ export class ComponentCompareUI {
     return this.navSlot.map;
   }
 
-  get tabs() {
+  get tabs(): TabItem[] {
     const getElement = (routeProps: RouteProps[], href?: string) => {
       if (routeProps.length === 1) return routeProps[0].element;
       if (!href) return undefined;

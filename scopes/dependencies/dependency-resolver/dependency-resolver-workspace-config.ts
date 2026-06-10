@@ -223,6 +223,31 @@ export interface DependencyResolverWorkspaceConfig {
   autoInstallPeers?: boolean;
 
   /**
+   * When true (default), pnpm will deduplicate peer dependencies.
+   * Set to false to disable peer dependency deduplication.
+   */
+  dedupePeers?: boolean;
+
+  /**
+   * When true (default), env peer dependencies defined in env.jsonc are resolved once and merged
+   * into the workspace root manifest as regular dependencies, instead of being injected into each
+   * component's manifest individually. Conflicts between envs are resolved by picking the version
+   * that satisfies the most envs, with a warning logged for any conflicts.
+   * Set to false to revert to the legacy per-component env peer injection behavior.
+   */
+  resolveEnvPeersFromRoot?: boolean;
+
+  /**
+   * When true, ALL env peer dependencies are forced to the workspace root manifest,
+   * even when different envs specify conflicting versions. The best version is chosen
+   * (satisfying the most envs) and a warning is logged for unsatisfied envs.
+   * When false (default), conflicting peers without `workspaceSingleton` are injected
+   * per-component, allowing different envs to use different versions.
+   * Only applies when resolveEnvPeersFromRoot is true.
+   */
+  forceEnvPeersToRoot?: boolean;
+
+  /**
    * By default, Bit saves component dependencies with exact versions (pinned) in the package.json,
    * even if the dependency-resolver policy specifies a version range.
    *

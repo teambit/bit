@@ -5,6 +5,7 @@ import Table from 'cli-table';
 import { forEach, isEmpty } from 'lodash';
 import { add, list, remove } from './remote';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary, formatHint } from '@teambit/cli';
 
 class RemoteAdd implements Command {
   name = 'add <url>';
@@ -17,7 +18,7 @@ for example: "http://localhost:3000", "file:///tmp/local-scope"`;
 
   async report([url]: [string], { global }: { global: boolean }) {
     const { name, host }: { name: string; host: string } = await add(url, global);
-    return chalk.green(`added remote scope '${chalk.bold(name)}' with host '${chalk.bold(host)}'`);
+    return formatSuccessSummary(`added remote scope '${chalk.bold(name)}' with host '${chalk.bold(host)}'`);
   }
 }
 
@@ -30,7 +31,7 @@ class RemoteRm implements Command {
 
   async report([name]: [string], { global }: { global: boolean }) {
     await remove(name, global);
-    return chalk.green(`successfully removed remote ${chalk.bold(name)}`);
+    return formatSuccessSummary(`removed remote ${chalk.bold(name)}`);
   }
 }
 
@@ -45,7 +46,7 @@ export class RemoteList implements Command {
 
   async report(args: string[], { global }: { global: boolean }) {
     const remotes: { [key: string]: string } = await list(global);
-    if (isEmpty(remotes)) return chalk.red('no configured remotes found in scope');
+    if (isEmpty(remotes)) return formatHint('no configured remotes found in scope');
 
     const table = new Table({ head: ['scope name', 'host'], style: { head: ['cyan'] } });
     forEach(remotes, (host, name) => {

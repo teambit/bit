@@ -7,6 +7,7 @@ import { Icon } from '@teambit/evangelist.elements.icon';
 import { TimeAgo } from '@teambit/design.ui.time-ago';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
+import { PillLabel } from '@teambit/design.ui.pill-label';
 import type { DropdownComponentVersion } from './version-dropdown';
 
 import styles from './version-dropdown-placeholder.module.scss';
@@ -34,7 +35,12 @@ export function SimpleVersion({
   ...rest
 }: VersionProps) {
   if (loading) return <WordSkeleton className={styles.loader} length={9} />;
+  const isNew = currentVersion === 'new' && !hasMoreVersions;
   const formattedVersion = showFullVersion || isTag(currentVersion) ? currentVersion : currentVersion?.slice(0, 6);
+
+  if (isNew) {
+    return <PillLabel className={classNames(styles.newLabel, className)}>{formattedVersion}</PillLabel>;
+  }
 
   return (
     <div {...rest} className={classNames(styles.simple, className, disabled && styles.disabled)}>
