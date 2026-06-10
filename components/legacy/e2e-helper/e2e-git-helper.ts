@@ -35,6 +35,18 @@ export default class GitHelper {
     return this.command.runCmd(`git config --${location} ${key} ${val}`);
   }
 
+  /**
+   * create a git worktree at the given path on a new branch. the worktree gets a `.git` pointer
+   * FILE (not a directory) referencing its private git dir inside the main repo.
+   */
+  addWorktree(worktreePath: string, branch: string) {
+    return this.command.runCmd(`git worktree add ${worktreePath} -b ${branch}`);
+  }
+
+  removeWorktree(worktreePath: string) {
+    return this.command.runCmd(`git worktree remove ${worktreePath} --force`);
+  }
+
   unsetGitConfig(key: string, location = 'local') {
     return this.command.runCmd(`git config --unset --${location} ${key}`);
   }
