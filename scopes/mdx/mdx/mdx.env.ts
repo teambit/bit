@@ -23,6 +23,12 @@ export class MdxEnv implements Environment {
     private compiler: CompilerMain,
     private docs: DocsMain
   ) {}
+
+  /**
+   * icon for the env. use this to build a more friendly env.
+   */
+  icon = 'https://static.bit.dev/extensions-icons/mdx-icon-small.svg';
+
   getCompiler() {
     const tsTransformer: TsConfigTransformer = (tsconfig: TypescriptConfigMutator) => {
       // set the shouldCopyNonSupportedFiles to false since we don't want ts to copy the .mdx file to the dist folder (it will conflict with the .mdx.js file created by the mdx compiler)
