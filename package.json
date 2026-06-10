@@ -46,8 +46,6 @@
     "full-setup:windows": "bit install && husky && bit compile",
     "full-setup:windows:bbit": "rm -rf node_modules/.bin && bbit install && npx husky && echo 'please run `bbit compile`'",
     "husky:install": "husky",
-    "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",
-    "build-debian-image": "docker build ./scripts/linux/debian -t debian-deb",
     "doc-gen": "node ./scripts/doc-generator.js",
     "assert:master": "node ./scripts/assert-master.js",
     "nightly": "npm run assert:master && git tag -d manual-nightly && git push --delete origin manual-nightly && git tag manual-nightly && git push origin manual-nightly",
