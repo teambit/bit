@@ -321,7 +321,49 @@ export class SchemaMain {
   /**
    * Compute the semantic API diff between two component versions.
    */
+  /**
+   * in-memory memo + single-flight for computed diffs. several consumers hit this for the
+   * same immutable version pair (lane-diff status via component-compare, the compare UI's
+   * apiDiff GraphQL field) — without this, a cold page load runs schema extraction twice
+   * per pair. transient failures (FAILED availability / null) are never memoized.
+   */
+  private apiDiffMemo = new Map<string, APIDiffResult>();
+  private apiDiffInflight = new Map<string, Promise<APIDiffResult | null>>();
+  private static API_DIFF_MEMO_MAX = 500;
+
   async computeAPIDiff(baseComp: Component, compareComp: Component): Promise<APIDiffResult | null> {
+    const memoKey = `${baseComp.id.toString()}|${compareComp.id.toString()}`;
+    const cached = this.apiDiffMemo.get(memoKey);
+    if (cached) return cached;
+    const pending = this.apiDiffInflight.get(memoKey);
+    if (pending) return pending;
+
+    // un-built workspace components extract their schema from live source — the same id can
+    // yield different schemas as the user edits, so those results must not be memoized.
+    const immutable = baseComp.buildStatus === BuildStatus.Succeed && compareComp.buildStatus === BuildStatus.Succeed;
+
+    const promise = this.doComputeAPIDiff(baseComp, compareComp)
+      .then((result) => {
+        const transient =
+          !result ||
+          (result.status !== 'COMPUTED' && (result.base.reason === 'FAILED' || result.compare.reason === 'FAILED'));
+        if (!transient && immutable) {
+          if (this.apiDiffMemo.size >= SchemaMain.API_DIFF_MEMO_MAX) {
+            const firstKey = this.apiDiffMemo.keys().next().value;
+            if (firstKey) this.apiDiffMemo.delete(firstKey);
+          }
+          this.apiDiffMemo.set(memoKey, result);
+        }
+        return result;
+      })
+      .finally(() => {
+        this.apiDiffInflight.delete(memoKey);
+      });
+    this.apiDiffInflight.set(memoKey, promise);
+    return promise;
+  }
+
+  private async doComputeAPIDiff(baseComp: Component, compareComp: Component): Promise<APIDiffResult | null> {
     try {
       // a side whose schema retrieval throws is reported as FAILED availability rather than
       // failing the whole diff — the result then carries an explicit status instead of null.

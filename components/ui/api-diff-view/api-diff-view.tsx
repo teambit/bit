@@ -41,12 +41,26 @@ export type ApiDiffLaneViewProps = {
 /** change types that can affect a component's API surface. config/docs-only changes can't. */
 const API_RELEVANT_CHANGES = new Set(['SOURCE_CODE', 'NEW', 'DEPENDENCY']);
 
-type EntryKind = 'query' | 'gated' | 'new';
+type EntryKind = 'query' | 'gated' | 'incomparable';
 
 function classifyEntry(entry: ComponentDiffEntry): EntryKind {
-  if (!entry.sourceHead || !entry.targetHead) return 'new';
-  if (entry.changes && !entry.changes.some((c) => API_RELEVANT_CHANGES.has(c))) return 'gated';
+  // missing targetHead: new on the lane OR unrelated histories; missing sourceHead: not on
+  // this lane. either way there's no base/compare pair to diff.
+  if (!entry.sourceHead || !entry.targetHead) return 'incomparable';
+  // same snap on both sides — identical API by definition, and useApiDiff would skip anyway.
+  if (entry.sourceHead === entry.targetHead) return 'gated';
+  // gate only on explicit evidence: an empty changes array is treated as unknown, not as
+  // "verified no changes".
+  if (entry.changes && entry.changes.length > 0 && !entry.changes.some((c) => API_RELEVANT_CHANGES.has(c))) {
+    return 'gated';
+  }
   return 'query';
+}
+
+/** copy for components without a comparable pair — new components are the common case */
+function incomparableCopy(entry: ComponentDiffEntry): { chip: string; detail: string } {
+  if (entry.changes?.includes('NEW')) return { chip: 'new component', detail: 'no base version to compare' };
+  return { chip: 'not comparable', detail: 'no common base version between these lanes' };
 }
 
 const REGISTRY_STATUS: Record<string, string> = { ADDED: 'NEW', REMOVED: 'DELETED', MODIFIED: 'MODIFIED' };
@@ -120,6 +134,9 @@ export function ApiDiffLaneView({ diffs, host, selectedId, selectedExport, insig
     });
   }, []);
 
+  // aggregate only over the CURRENT queried set — the results map is append-only, so if
+  // `diffs` changes while mounted, entries from a previous comparison must not leak into
+  // the totals or the progress count.
   const totals = useMemo(() => {
     let added = 0;
     let removed = 0;
@@ -129,8 +146,17 @@ export function ApiDiffLaneView({ diffs, host, selectedId, selectedExport, insig
     let withPublicChanges = 0;
     let withAnyChanges = 0;
     let unavailable = 0;
-    results.forEach((r) => {
-      if (!r) return;
+    let failed = 0;
+    let loaded = 0;
+    queried.forEach(({ entry }) => {
+      const idStr = entry.componentId.toStringWithoutVersion();
+      if (!results.has(idStr)) return;
+      loaded += 1;
+      const r = results.get(idStr);
+      if (!r) {
+        failed += 1;
+        return;
+      }
       if (r.status !== 'COMPUTED') {
         unavailable += 1;
         return;
@@ -144,10 +170,10 @@ export function ApiDiffLaneView({ diffs, host, selectedId, selectedExport, insig
       if (pub.length > 0) withPublicChanges += 1;
       if (r.hasChanges) withAnyChanges += 1;
     });
-    return { added, removed, modified, breaking, internal, withPublicChanges, withAnyChanges, unavailable };
-  }, [results]);
+    return { added, removed, modified, breaking, internal, withPublicChanges, withAnyChanges, unavailable, failed, loaded };
+  }, [results, queried]);
 
-  const loadedCount = results.size;
+  const loadedCount = totals.loaded;
   const allLoaded = loadedCount >= queried.length;
 
   if (entries.length === 0) {
@@ -163,24 +189,25 @@ export function ApiDiffLaneView({ diffs, host, selectedId, selectedExport, insig
     );
   }
 
-  const allNew = entries.every((e) => e.kind === 'new');
-  if (allNew) {
+  const allIncomparable = entries.every((e) => e.kind === 'incomparable');
+  if (allIncomparable) {
     return (
       <div className={styles.fullView}>
         <EmptyState
           icon="⊘"
           tone="neutral"
           title="Nothing to compare yet"
-          subtitle={`All ${entries.length} component${entries.length !== 1 ? 's' : ''} here are new on this lane — there's no base version to diff against. Their full API is on each component's API Reference tab.`}
+          subtitle={`None of the ${entries.length} component${entries.length !== 1 ? 's' : ''} here have a comparable base version — most are new on this lane. Their full API is on each component's API Reference tab.`}
         />
       </div>
     );
   }
 
-  const stable = allLoaded && totals.withAnyChanges === 0;
-  // gated entries were analyzed cheaply (no relevant changes → no query needed)
+  // gated entries were analyzed cheaply (no relevant changes → no query needed). failed
+  // queries are NOT analyzed — they must not inflate the stable hero's claim.
   const gatedCount = entries.filter((e) => e.kind === 'gated').length;
-  const analyzedCount = queried.length - totals.unavailable + gatedCount;
+  const analyzedCount = loadedCount - totals.unavailable - totals.failed + gatedCount;
+  const stable = allLoaded && totals.withAnyChanges === 0 && totals.failed === 0 && analyzedCount > 0;
 
   return (
     <ApiDiffInsightProvider insights={insights}>
@@ -239,40 +266,35 @@ export function ApiDiffLaneView({ diffs, host, selectedId, selectedExport, insig
           />
         )}
 
+        {/* every component always renders (sections or slim rows) — even in the stable
+            state — so the sidebar's data-component-id scroll anchors always exist. */}
         {entries.map(({ entry, kind }) => {
           const idStr = entry.componentId.toStringWithoutVersion();
-          if (kind === 'new') {
-            // hidden in the stable state — the hero already accounts for analyzed components,
-            // and new components carry no diffable API.
-            if (stable) return null;
+          if (kind === 'incomparable') {
+            const copy = incomparableCopy(entry);
             return (
               <ApiDiffSlimRow
                 key={idStr}
                 componentIdStr={idStr}
                 displayName={entry.componentId.fullName}
-                chip="new component"
-                detail="no base version to compare"
+                chip={copy.chip}
+                detail={copy.detail}
                 tone="ok"
               />
             );
           }
           if (kind === 'gated') {
-            if (stable) return null;
+            const sameVersion = entry.sourceHead === entry.targetHead;
             return (
               <ApiDiffSlimRow
                 key={idStr}
                 componentIdStr={idStr}
                 displayName={entry.componentId.fullName}
                 chip="✓ no API changes"
-                detail="no source or dependency changes"
+                detail={sameVersion ? 'same version on both sides' : 'no source or dependency changes'}
                 tone="ok"
               />
             );
-          }
-          // in the stable state only surface the rows that need attention (no data / errors)
-          if (stable) {
-            const r = results.get(idStr);
-            if (r && r.status === 'COMPUTED') return null;
           }
           return (
             <ComponentApiDiffContainer

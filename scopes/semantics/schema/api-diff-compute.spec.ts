@@ -7,6 +7,7 @@ import {
   ImpactAssessor,
   DEFAULT_IMPACT_RULES,
 } from '@teambit/semantics.entities.semantic-schema-diff';
+import { SchemaMain } from './schema.main.runtime';
 
 const loc: SchemaLocation = { filePath: 'index.ts', line: 0, character: 0 };
 const compId = ComponentID.fromString('org.scope/button');
@@ -96,5 +97,108 @@ describe('computeAPIDiff', () => {
       expect(result.impact).to.equal('BREAKING');
       expect(result.internalImpact).to.equal('PATCH');
     });
+  });
+});
+
+describe('computeAPIDiff visibility moves', () => {
+  it('should report a public→internal move as a public BREAKING change (drives impact, not internalImpact)', () => {
+    const base = makeSchema([makeVar('foo', 'string')], []);
+    const compare = makeSchema([], [makeVar('foo', 'string')]);
+    const result = computeAPIDiff(base, compare, makeAssessor());
+
+    expect(result.publicChanges).to.have.length(1);
+    expect(result.publicChanges[0].changes?.[0]?.changeKind).to.equal('visibility-public-to-internal');
+    expect(result.impact).to.equal('BREAKING');
+  });
+});
+
+describe('SchemaMain.getSchemaWithAvailability reason mapping', () => {
+  const succeedStatus = 'succeed';
+  const loggerStub = { warn: () => {}, debug: () => {}, error: () => {}, info: () => {} } as any;
+
+  function makeComponent(buildStatus = 'pending') {
+    return { id: ComponentID.fromString('org.scope/button'), buildStatus } as any;
+  }
+
+  function makeSchemaMain({
+    disabled = false,
+    workspace = {} as any,
+    env = {} as any,
+    artifacts = [] as any[],
+  } = {}): SchemaMain {
+    const envs = { getEnv: () => ({ env }) } as any;
+    const builder = { getArtifactsVinylByAspectAndTaskName: async () => artifacts } as any;
+    const config = { defaultParser: 'typescript', disabled } as any;
+    return new SchemaMain(
+      undefined as any,
+      undefined as any,
+      envs,
+      config,
+      builder,
+      workspace,
+      loggerStub,
+      new ImpactAssessor()
+    );
+  }
+
+  it('should report DISABLED when schema extraction is disabled by config', async () => {
+    const schemaMain = makeSchemaMain({ disabled: true });
+    const { availability } = await schemaMain.getSchemaWithAvailability(makeComponent());
+    expect(availability).to.deep.equal({ available: false, reason: 'DISABLED' });
+  });
+
+  it('should report NO_EXTRACTOR when the env has no schema extractor', async () => {
+    const schemaMain = makeSchemaMain({ env: { name: 'stub-env' } });
+    const { availability } = await schemaMain.getSchemaWithAvailability(makeComponent());
+    expect(availability).to.deep.equal({ available: false, reason: 'NO_EXTRACTOR' });
+  });
+
+  it('should report FAILED when extraction throws and no artifact exists', async () => {
+    const env = {
+      name: 'stub-env',
+      getSchemaExtractor: () => ({
+        extract: async () => {
+          throw new Error('boom');
+        },
+        dispose: () => {},
+      }),
+    };
+    const schemaMain = makeSchemaMain({ env });
+    const { availability } = await schemaMain.getSchemaWithAvailability(makeComponent());
+    expect(availability).to.deep.equal({ available: false, reason: 'FAILED' });
+  });
+
+  it('should report NOT_BUILT for a built/scope component without a schema artifact', async () => {
+    const schemaMain = makeSchemaMain({ workspace: undefined as any });
+    const { availability } = await schemaMain.getSchemaWithAvailability(makeComponent(succeedStatus));
+    expect(availability).to.deep.equal({ available: false, reason: 'NOT_BUILT' });
+  });
+
+  it('should report available when a schema artifact exists', async () => {
+    const schemaJson = APISchema.empty(ComponentID.fromString('org.scope/button')).toObject();
+    const artifacts = [{ contents: Buffer.from(JSON.stringify(schemaJson)) }];
+    const schemaMain = makeSchemaMain({ workspace: undefined as any, artifacts });
+    const { schema, availability } = await schemaMain.getSchemaWithAvailability(makeComponent(succeedStatus));
+    expect(availability).to.deep.equal({ available: true });
+    expect(schema.module.exports).to.have.length(0);
+  });
+
+  it('should rethrow extraction errors when alwaysRunExtractor is set', async () => {
+    const env = {
+      name: 'stub-env',
+      getSchemaExtractor: () => ({
+        extract: async () => {
+          throw new Error('boom');
+        },
+        dispose: () => {},
+      }),
+    };
+    const schemaMain = makeSchemaMain({ env });
+    try {
+      await schemaMain.getSchemaWithAvailability(makeComponent(), false, true);
+      expect.fail('expected getSchemaWithAvailability to rethrow');
+    } catch (err: any) {
+      expect(err.message).to.equal('boom');
+    }
   });
 });

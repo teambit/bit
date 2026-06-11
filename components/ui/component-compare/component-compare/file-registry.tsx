@@ -131,16 +131,6 @@ export function useAspectRegistryRegister(componentId: string | undefined, files
   }, [store, componentId, signature]);
 }
 
-export function useApiEntriesRegister(componentId: string | undefined, entries: FileInfo[] | undefined) {
-  const store = useContext(FileRegistryContext);
-  const signature = entries ? filesSignature(entries) : '';
-  useEffect(() => {
-    if (store && componentId && entries) {
-      store.registerApiEntries(componentId, entries);
-    }
-  }, [store, componentId, signature]);
-}
-
 export function useCompositionsRegistryRegister(componentId: string | undefined, hasCompositions: boolean | undefined) {
   const store = useContext(FileRegistryContext);
   useEffect(() => {

@@ -196,6 +196,10 @@ function LaneCompareInline({
     (v: ViewMode) => {
       setViewModeState(v);
       syncUrl('view', v === 'code' ? undefined : v);
+      // file/export selection is per-view (code files vs API exports share this state) —
+      // carrying it across modes would focus an unrelated item with the same name.
+      setSelectedFileState(undefined);
+      syncUrl('file', undefined);
     },
     [syncUrl]
   );
@@ -385,7 +389,10 @@ function LaneCompareInline({
       dependencies: allComponents.filter((c) => c.changes.some((ch) => ch === ChangeType.DEPENDENCY)).length,
       tests: allComponents.length,
       config: allComponents.filter((c) => c.changes.some((ch) => ch === ChangeType.ASPECTS)).length,
-      api: allComponents.filter((c) => c.baseId && c.compareId).length,
+      // the API view shows every component (sections or slim rows), matching matchesView('api').
+      // counting only diffable pairs would zero the tab on an all-new lane and make the
+      // auto-view-switch effect yank the user away from the view's own empty state.
+      api: allComponents.length,
     };
   }, [allComponents, compositionsMap]);
 

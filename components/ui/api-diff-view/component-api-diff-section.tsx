@@ -240,7 +240,20 @@ export function ComponentApiDiffSection({
     );
   }
 
-  if (!result) return null;
+  if (!result) {
+    // result === undefined with loading false means the query was skipped (same version on
+    // both sides / missing id). still render an anchored row so the component doesn't
+    // silently vanish from the pane and sidebar clicks have a scroll target.
+    return (
+      <ApiDiffSlimRow
+        componentIdStr={componentIdStr}
+        displayName={displayName}
+        chip="nothing to compare"
+        detail="no diffable version pair"
+        tone="ok"
+      />
+    );
+  }
 
   if (result.status !== 'COMPUTED') {
     return (

@@ -163,8 +163,12 @@ export function unavailableText(result: APIDiffResult, baseVersion?: string, com
       return `base version${ver(baseVersion)} ${REASON_TEXT[result.base.reason || 'FAILED']}`;
     case 'COMPARE_UNAVAILABLE':
       return `compare version${ver(compareVersion)} ${REASON_TEXT[result.compare.reason || 'FAILED']}`;
-    case 'UNAVAILABLE':
-      return `neither version has API data (${REASON_TEXT[result.base.reason || 'FAILED']})`;
+    case 'UNAVAILABLE': {
+      const baseReason = REASON_TEXT[result.base.reason || 'FAILED'];
+      const compareReason = REASON_TEXT[result.compare.reason || 'FAILED'];
+      if (baseReason === compareReason) return `neither version has API data (${baseReason})`;
+      return `neither version has API data — base ${baseReason}; compare ${compareReason}`;
+    }
     default:
       return undefined;
   }

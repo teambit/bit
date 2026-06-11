@@ -7,7 +7,6 @@ export {
   useFileRegistry,
   useFileRegistryRegister,
   useAspectRegistryRegister,
-  useApiEntriesRegister,
   useCompositionsRegistryRegister,
 } from './file-registry';
 export type { FileInfo } from './file-registry';

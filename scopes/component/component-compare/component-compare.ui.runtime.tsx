@@ -116,10 +116,23 @@ export class ComponentCompareUI {
     return this;
   }
 
+  private _resolvedApiDiffInsights?: ApiDiffInsight[];
+  private _resolvedApiDiffInsightsKey?: number;
+  /**
+   * Memoized by slot-entry count (mirroring `resolveCompareTabs`) so the returned array keeps a
+   * stable identity across renders — `LaneCompare` is React.memo'd, and a fresh array on every
+   * call would break its shallow compare and re-render the whole compare tree.
+   */
   getApiDiffInsights(): ApiDiffInsight[] {
-    return flatten(
-      this.apiDiffInsightSlot.toArray().map(([, value]) => value) as Array<ApiDiffInsight | ApiDiffInsight[]>
+    const slotEntries = this.apiDiffInsightSlot.toArray();
+    if (this._resolvedApiDiffInsights && this._resolvedApiDiffInsightsKey === slotEntries.length) {
+      return this._resolvedApiDiffInsights;
+    }
+    this._resolvedApiDiffInsights = flatten(
+      slotEntries.map(([, value]) => value) as Array<ApiDiffInsight | ApiDiffInsight[]>
     );
+    this._resolvedApiDiffInsightsKey = slotEntries.length;
+    return this._resolvedApiDiffInsights;
   }
 
   private _resolvedCompareTabs?: TabItem[];

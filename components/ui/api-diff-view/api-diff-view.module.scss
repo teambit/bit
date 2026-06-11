@@ -274,12 +274,14 @@ $focus-color: var(--focus-color, #0969da);
   color: $text-primary;
 }
 
+// derived from semantic vars the themes define, so the tint tracks light/dark themes
+// (hardcoded light pinks/greens would render unreadable on a dark surface)
 .signatureRemoved {
-  background: var(--diff-removed-bg, #ffebe9);
+  background: color-mix(in srgb, var(--on-surface-negative-bold, #cf222e) 12%, transparent);
 }
 
 .signatureAdded {
-  background: var(--diff-added-bg, #dafbe1);
+  background: color-mix(in srgb, var(--success-color, #1a7f37) 12%, transparent);
 }
 
 .causeList {

@@ -1,9 +1,15 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions, CLIArgs } from '@teambit/cli';
+import { warnSymbol } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import type { Logger } from '@teambit/logger';
 import { computeAPIDiff, APIDiffStatus } from '@teambit/semantics.entities.semantic-schema-diff';
-import type { APIDiffResult, APIDiffChange, ImpactLevel } from '@teambit/semantics.entities.semantic-schema-diff';
+import type {
+  APIDiffResult,
+  APIDiffChange,
+  ImpactLevel,
+  SchemaUnavailableReason,
+} from '@teambit/semantics.entities.semantic-schema-diff';
 import type { SchemaMain } from './schema.main.runtime';
 
 export class SchemaDiffCommand implements Command {
@@ -61,13 +67,18 @@ examples:
 
     this.logger.debug(`computing API diff: ${baseId.toString()} -> ${compareId.toString()}`);
 
-    const [baseSchema, compareSchema] = await Promise.all([
-      this.schema.getSchema(baseComponent),
-      this.schema.getSchema(compareComponent),
+    // availability-aware: a version without a schema (NOT_BUILT/NO_EXTRACTOR/DISABLED/FAILED)
+    // must short-circuit with an explicit status — never be diffed as an empty API.
+    const [base, compare] = await Promise.all([
+      this.schema.getSchemaWithAvailability(baseComponent),
+      this.schema.getSchemaWithAvailability(compareComponent),
     ]);
 
     const assessor = this.schema.getImpactAssessor();
-    const diff = computeAPIDiff(baseSchema, compareSchema, assessor);
+    const diff = computeAPIDiff(base.schema, compare.schema, assessor, {
+      base: base.availability,
+      compare: compare.availability,
+    });
     return { diff, componentId: componentId.toStringWithoutVersion() };
   }
 
@@ -102,6 +113,9 @@ examples:
       componentId,
       baseVersion,
       compareVersion,
+      status: diff.status,
+      base: diff.base,
+      compare: diff.compare,
       hasChanges: diff.hasChanges,
       impact: diff.impact,
       summary: {
@@ -117,7 +131,32 @@ examples:
     };
   }
 
+  private static REASON_TEXT: Record<SchemaUnavailableReason, string> = {
+    NOT_BUILT: 'was built before API extraction — no API snapshot exists',
+    NO_EXTRACTOR: "its env doesn't provide a schema extractor",
+    DISABLED: 'has schema extraction disabled',
+    FAILED: 'API data could not be loaded',
+  };
+
+  private formatUnavailable(diff: APIDiffResult, pattern: string): string {
+    const lines = ['', `  ${warnSymbol} ${chalk.bold('Unable to compute API diff')} for ${chalk.cyan(pattern)}`, ''];
+    if (!diff.base.available) {
+      lines.push(`  base version ${SchemaDiffCommand.REASON_TEXT[diff.base.reason || 'FAILED']}`);
+    }
+    if (!diff.compare.available) {
+      lines.push(`  compare version ${SchemaDiffCommand.REASON_TEXT[diff.compare.reason || 'FAILED']}`);
+    }
+    lines.push('');
+    return lines.join('\n');
+  }
+
   private formatDiffResult(diff: APIDiffResult, pattern: string): string {
+    // a missing schema is not an empty API — report which side lacks data instead of
+    // pretending "no changes" (or worse, a fabricated full-surface diff).
+    if (diff.status !== 'COMPUTED') {
+      return this.formatUnavailable(diff, pattern);
+    }
+
     if (!diff.hasChanges) {
       return chalk.green(`\n  No API changes detected for ${pattern}\n`);
     }

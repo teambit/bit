@@ -263,6 +263,11 @@ export class ComponentCompareMain {
     });
   }
 
+  private static isApiDiffCacheable(result: Record<string, any>): boolean {
+    if (result.status === 'COMPUTED') return true;
+    return result.base?.reason !== 'FAILED' && result.compare?.reason !== 'FAILED';
+  }
+
   async getAPIDiff(baseIdStr: string, compareIdStr: string): Promise<Record<string, any> | null> {
     const memoKey = `${baseIdStr}|${compareIdStr}`;
     if (this.apiDiffMemo.has(memoKey)) {
@@ -273,11 +278,15 @@ export class ComponentCompareMain {
 
     const promise = this.computeAPIDiff(baseIdStr, compareIdStr)
       .then((result) => {
-        // Avoid poisoning the cache with `null` from a transient failure. `null` here can mean
-        // "components couldn't be loaded right now" (e.g. snap not yet imported) — caching it
-        // permanently would lock the resolver to a wrong answer for these immutable ids until
-        // the disk file is deleted. Re-fetch on the next call instead.
-        if (result !== null) this.memoStoreApiDiff(memoKey, result);
+        // Avoid poisoning the cache with transient failures for these immutable ids. `null`
+        // means "components couldn't be loaded right now" (e.g. snap not yet imported), and a
+        // FAILED availability means schema retrieval threw (env not loaded, remote hiccup) —
+        // caching either permanently would lock the resolver to a wrong answer until the disk
+        // file is deleted. NOT_BUILT/NO_EXTRACTOR/DISABLED are stable properties of a version
+        // and are safe to memoize. Re-fetch transient cases on the next call instead.
+        if (result !== null && ComponentCompareMain.isApiDiffCacheable(result)) {
+          this.memoStoreApiDiff(memoKey, result);
+        }
         return result;
       })
       .finally(() => {

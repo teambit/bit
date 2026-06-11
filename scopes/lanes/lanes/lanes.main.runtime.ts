@@ -480,11 +480,20 @@ export class LanesMain {
   private static API_DIFF_MEMO_MAX = 5000;
   private static API_DIFF_MEMO_FILE = path.join(CACHE_ROOT, 'lane-diff-api-diff.json');
 
+  /**
+   * bumped when the meaning of the memoized booleans changes. v2: booleans derived from
+   * availability-aware diffs — pre-v2 entries came from fabricated diffs (a missing schema
+   * was diffed as an empty API) and must be discarded.
+   */
+  private static API_DIFF_MEMO_VERSION = 2;
+
   private async loadApiDiffMemoFromDisk() {
     try {
       const raw = await fs.readFile(LanesMain.API_DIFF_MEMO_FILE, 'utf8');
-      const parsed = JSON.parse(raw) as Record<string, boolean>;
-      for (const [k, v] of Object.entries(parsed)) this.apiDiffMemo.set(k, v);
+      const parsed = JSON.parse(raw) as { v?: number; entries?: Record<string, boolean> };
+      // legacy unversioned format (a plain key->boolean map) or an older version: discard.
+      if (parsed.v !== LanesMain.API_DIFF_MEMO_VERSION || !parsed.entries) return;
+      for (const [k, v] of Object.entries(parsed.entries)) this.apiDiffMemo.set(k, v);
       this.logger?.debug(`[lane-diff memo] loaded ${this.apiDiffMemo.size} api-diff entries`);
     } catch {
       // first run / corrupted file.
@@ -498,9 +507,12 @@ export class LanesMain {
       this.apiDiffMemoSaveTimer = undefined;
       if (!this.apiDiffMemoDirty) return;
       this.apiDiffMemoDirty = false;
-      const serialized: Record<string, boolean> = {};
-      for (const [k, v] of this.apiDiffMemo) serialized[k] = v;
-      fs.outputFile(LanesMain.API_DIFF_MEMO_FILE, JSON.stringify(serialized)).catch(() => {});
+      const entries: Record<string, boolean> = {};
+      for (const [k, v] of this.apiDiffMemo) entries[k] = v;
+      fs.outputFile(
+        LanesMain.API_DIFF_MEMO_FILE,
+        JSON.stringify({ v: LanesMain.API_DIFF_MEMO_VERSION, entries })
+      ).catch(() => {});
     }, 500);
   }
 
@@ -1613,7 +1625,15 @@ please create a new lane instead, which will include all components of this lane
             .getAPIDiff(baseIdStr, compareIdStr)
             .then((apiDiff) => {
               const result = apiDiff?.hasChanges ?? false;
-              this.memoStoreApiDiff(apiDiffKey, result);
+              // only memoize verdicts from an actually-computed diff. a transiently
+              // unavailable schema (FAILED) or a load failure (null) must not lock this
+              // immutable pair to `false` forever — recompute on the next call instead.
+              // stable unavailability (NOT_BUILT/NO_EXTRACTOR/DISABLED) is safe to keep.
+              const failed =
+                !apiDiff ||
+                (apiDiff.status !== 'COMPUTED' &&
+                  (apiDiff.base?.reason === 'FAILED' || apiDiff.compare?.reason === 'FAILED'));
+              if (!failed) this.memoStoreApiDiff(apiDiffKey, result);
               return result;
             })
             .finally(() => {

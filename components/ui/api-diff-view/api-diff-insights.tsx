@@ -22,10 +22,13 @@ export type ApiDiffInsight = {
   render: (change: APIDiffChange, ctx: ApiDiffInsightContext) => ReactNode;
 };
 
-const InsightsContext = createContext<ApiDiffInsight[]>([]);
+/** module-level constant so the no-insights context value keeps a stable identity across renders */
+const EMPTY_INSIGHTS: ApiDiffInsight[] = [];
+
+const InsightsContext = createContext<ApiDiffInsight[]>(EMPTY_INSIGHTS);
 
 export function ApiDiffInsightProvider({ insights, children }: { insights?: ApiDiffInsight[]; children: ReactNode }) {
-  return <InsightsContext.Provider value={insights || []}>{children}</InsightsContext.Provider>;
+  return <InsightsContext.Provider value={insights ?? EMPTY_INSIGHTS}>{children}</InsightsContext.Provider>;
 }
 
 export function useApiDiffInsights(): ApiDiffInsight[] {
