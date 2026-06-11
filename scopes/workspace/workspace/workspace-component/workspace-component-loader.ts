@@ -554,15 +554,20 @@ export class WorkspaceComponentLoader {
     const noVersion = (id: string) => id.split('@')[0];
     components.forEach((component) => {
       const componentIdStr = component.id.toString();
-      const extensionIds: string[] = component.state._consumer
+      const usedIds: string[] = component.state._consumer
         ? component.state._consumer.extensions.map((ext) => ext.stringId)
         : [];
+      // the env may be set via the EnvsAspect config rather than as a direct extension entry, in
+      // which case its id won't appear in the extensions list above. include it explicitly so a
+      // failure loading that env still gets aggregated to this component.
+      const envId = component.state.aspects.get(EnvsAspect.id)?.data?.id;
+      if (envId) usedIds.push(envId);
       failures.forEach((failure) => {
         if (noVersion(failure.failedId) === noVersion(componentIdStr)) {
           this.addLoadFailureIssue(component, failure.failedId, failure.phase, failure.error);
           return;
         }
-        if (extensionIds.some((extId) => noVersion(extId) === noVersion(failure.failedId))) {
+        if (usedIds.some((usedId) => noVersion(usedId) === noVersion(failure.failedId))) {
           this.workspace.registerAggregatedLoadFailure(failure, componentIdStr);
         }
       });

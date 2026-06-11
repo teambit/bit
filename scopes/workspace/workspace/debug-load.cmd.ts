@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatTitle, formatItem, joinSections } from '@teambit/cli';
+import { formatTitle, formatItem, formatHint, joinSections } from '@teambit/cli';
 import type { Component } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 import type { LoadTrace } from '@teambit/harmony.modules.load-trace';
@@ -78,7 +78,7 @@ the resolved env and which source determined it, and any load issues found.`;
     // the merge returns an envId only when set via the envs aspect config. when the env is set as
     // a direct extension (e.g. via variants) or not set at all, take it from the loaded
     // component's envs data, and attribute it by searching the merge sources for it.
-    const envFromLoad = component.state.aspects.get(EnvsAspect.id)?.data.id;
+    const envFromLoad = component.state.aspects.get(EnvsAspect.id)?.data?.id;
     const envId = mergeRes.envId || envFromLoad;
     const envOrigin = this.findEnvOrigin(mergeRes.beforeMerge, envId);
 
@@ -137,8 +137,8 @@ the resolved env and which source determined it, and any load issues found.`;
     if (!data.trace) return '';
     const lines: string[] = [];
     const renderSpan = (span: Record<string, any>, depth: number) => {
-      const duration = span.durationMs !== undefined ? chalk.cyan(`${span.durationMs}ms`) : chalk.dim('n/a');
-      const attrs = span.attributes ? chalk.dim(` ${JSON.stringify(span.attributes)}`) : '';
+      const duration = span.durationMs !== undefined ? chalk.cyan(`${span.durationMs}ms`) : formatHint('n/a');
+      const attrs = span.attributes ? formatHint(` ${JSON.stringify(span.attributes)}`) : '';
       lines.push(`   ${'  '.repeat(depth)}${span.name} ${duration}${attrs}`);
       (span.children || []).forEach((child: Record<string, any>) => renderSpan(child, depth + 1));
     };
@@ -149,8 +149,8 @@ the resolved env and which source determined it, and any load issues found.`;
   private renderExtensionSourcesSection(data: DebugLoadData): string {
     if (!data.extensionSources.length) return '';
     const items = data.extensionSources.map((row) => {
-      const alsoIn = row.alsoIn.length ? chalk.dim(` (also in: ${row.alsoIn.join(', ')})`) : '';
-      return formatItem(`${row.extensionId} ${chalk.dim('←')} ${chalk.green(row.winner)}${alsoIn}`);
+      const alsoIn = row.alsoIn.length ? formatHint(` (also in: ${row.alsoIn.join(', ')})`) : '';
+      return formatItem(`${row.extensionId} ${formatHint('from')} ${chalk.green(row.winner)}${alsoIn}`);
     });
     return [formatTitle(`extension sources (${items.length})`), ...items].join('\n');
   }
@@ -158,17 +158,17 @@ the resolved env and which source determined it, and any load issues found.`;
   private renderEnvSection(data: DebugLoadData): string {
     const origin = data.envOrigin || 'computed during load (not set in config)';
     const envLine = data.envId
-      ? formatItem(`${chalk.cyan(data.envId)} ${chalk.dim('determined by')} ${chalk.green(origin)}`)
-      : formatItem(chalk.dim('no env configured'));
+      ? formatItem(`${chalk.cyan(data.envId)} ${formatHint('determined by')} ${chalk.green(origin)}`)
+      : formatItem(formatHint('no env configured'));
     return [formatTitle('environment'), envLine].join('\n');
   }
 
   private renderIssuesSection(data: DebugLoadData): string {
     if (!data.issues.length) {
-      return [formatTitle('load issues'), formatItem(chalk.dim('none'))].join('\n');
+      return [formatTitle('load issues'), formatItem(formatHint('none'))].join('\n');
     }
     const items = data.issues.map((issue) =>
-      formatItem(`${chalk.yellow(issue.type)}: ${issue.description} ${chalk.dim(JSON.stringify(issue.data))}`)
+      formatItem(`${chalk.yellow(issue.type)}: ${issue.description} ${formatHint(JSON.stringify(issue.data))}`)
     );
     return [formatTitle(`load issues (${items.length})`), ...items].join('\n');
   }

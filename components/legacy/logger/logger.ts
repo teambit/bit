@@ -319,6 +319,9 @@ const logger = new BitLogger(pinoLogger);
 // async context has exited, so the message carries the trace-id and span path explicitly
 // (bypassing the prefix in BitLogger methods to avoid double-prefixing).
 setSpanEmitter((span, traceId) => {
+  // span collection is always-on, but emission is trace-level only. bail before doing any string
+  // work when trace output is disabled (the common case), so the load hot path pays nothing.
+  if (!logger.logger.isLevelEnabled('trace')) return;
   const attrs = Object.keys(span.attributes).length ? ` ${JSON.stringify(span.attributes)}` : '';
   const duration = span.durationMs !== undefined ? `${span.durationMs.toFixed(2)}ms` : 'n/a';
   logger.logger.trace(`load-trace [trace:${traceId}] ${span.path}: ${duration}${attrs}`);

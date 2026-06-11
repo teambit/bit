@@ -1717,7 +1717,15 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return { data, conflict };
   }
 
-  getWorkspaceIssues(): Error[] {
+  /**
+   * @param includeNonBlocking when true (default), also returns non-blocking issues (e.g. aggregated
+   * load failures) that should be shown in "bit status" but must not block tag/snap. The tag/snap
+   * gate (`builder.throwForComponentIssues`) passes `false` so previously-swallowed load failures
+   * stay best-effort — phase 1 of the loading redesign makes them visible without changing which
+   * operations succeed.
+   */
+  getWorkspaceIssues(opts?: { includeNonBlocking?: boolean }): Error[] {
+    const includeNonBlocking = opts?.includeNonBlocking ?? true;
     const errors: Error[] = [];
 
     // since PR #8393, the workspace.jsonc conflicts are not written to the config-merge file anymore.
@@ -1730,14 +1738,16 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
         errors.push(err);
       }
     }
-    this.aggregatedLoadFailures.forEach((failure) => {
-      const affected = failure.affected.size === 1 ? '1 component' : `${failure.affected.size} components`;
-      errors.push(
-        new Error(
-          `failed loading "${failure.failedId}" (during ${failure.phase}), affects ${affected}: ${failure.error}. the load continued without it, data computed by it may be missing`
-        )
-      );
-    });
+    if (includeNonBlocking) {
+      this.aggregatedLoadFailures.forEach((failure) => {
+        const affected = failure.affected.size === 1 ? '1 component' : `${failure.affected.size} components`;
+        errors.push(
+          new Error(
+            `failed loading "${failure.failedId}" (during ${failure.phase}), affects ${affected}: ${failure.error}. the load continued without it, data computed by it may be missing`
+          )
+        );
+      });
+    }
     return errors;
   }
 
