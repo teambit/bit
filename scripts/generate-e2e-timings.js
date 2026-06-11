@@ -146,7 +146,9 @@ async function main() {
     console.error('warning: prediction error is high; estimates may be stale or assignments lacked diversity');
   }
 
-  const manifest = Object.fromEntries(files.map((f, i) => [f, Math.round(estimate[i])]));
+  // floor at 15s: the solver can collapse under-identified files to 0, which makes the
+  // bin-packer treat them as free and pile dozens of them onto one node
+  const manifest = Object.fromEntries(files.map((f, i) => [f, Math.max(15, Math.round(estimate[i]))]));
   fs.writeFileSync(OUT_FILE, `${JSON.stringify(manifest, null, 2)}\n`);
   console.error(`wrote ${OUT_FILE}`);
 }

@@ -6,13 +6,6 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import chaiFs from 'chai-fs';
 import yaml from 'js-yaml';
-import { loadBit } from '@teambit/bit';
-import type { Workspace } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace';
-import type { IsolatorMain } from '@teambit/isolator';
-import { IsolatorAspect } from '@teambit/isolator';
-import type { SnappingMain } from '@teambit/snapping';
-import { SnappingAspect } from '@teambit/snapping';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(chaiFs);
