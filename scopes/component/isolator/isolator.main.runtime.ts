@@ -61,6 +61,8 @@ import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-
 import pMap from 'p-map';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
+import { CapsuleCache } from './capsule-cache';
+import type { CapsuleKind, PruneCapsulesOptions, PruneCapsulesReport } from './capsule-cache';
 import { IsolatorAspect } from './isolator.aspect';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
@@ -329,8 +331,12 @@ export class IsolatorMain {
       capsuleTransferSlot,
       configStore
     );
+    isolator.registerAutoPruneHook();
+    isolator.sweepTrashAsync();
     return isolator;
   }
+  private cache: CapsuleCache;
+
   constructor(
     private dependencyResolver: DependencyResolverMain,
     private logger: Logger,
@@ -341,7 +347,9 @@ export class IsolatorMain {
     private aspectLoader: AspectLoaderMain,
     private capsuleTransferSlot: CapsuleTransferSlot,
     private configStore: ConfigStoreMain
-  ) {}
+  ) {
+    this.cache = new CapsuleCache(logger, cli, configStore, () => this.getRootDirOfAllCapsules());
+  }
 
   // TODO: the legacy scope used for the component writer, which then decide if it need to write the artifacts and dists
   // TODO: we should think of another way to provide it (maybe a new opts) then take the scope internally from the host
@@ -660,9 +668,15 @@ export class IsolatorMain {
     }
     let capsules = await this.createCapsulesFromComponents(components, capsulesDir, config);
     this.writeRootPackageJson(capsulesDir, this.getCapsuleDirHash(opts.baseDir || ''));
+    const rootKind = this.deriveCapsuleKind(opts);
+    const rootOriginPath = opts.baseDir || '';
+    await this.cache.ensureOriginMarker(capsulesDir, rootKind, rootOriginPath);
     const allCapsuleList = CapsuleList.fromArray(capsules);
     let capsuleList = allCapsuleList;
     if (opts.getExistingAsIs) {
+      if (rootKind === 'scope-aspects-root') {
+        await this.cache.ensureAspectCapsuleMarkers(allCapsuleList, rootOriginPath);
+      }
       longProcessLogger?.end();
 
       return capsuleList;
@@ -675,6 +689,9 @@ export class IsolatorMain {
         );
 
         if (existingCapsules.length === capsuleList.length) {
+          if (rootKind === 'scope-aspects-root') {
+            await this.cache.ensureAspectCapsuleMarkers(existingCapsules, rootOriginPath);
+          }
           longProcessLogger?.end();
           return existingCapsules;
         }
@@ -736,6 +753,9 @@ export class IsolatorMain {
         const dependenciesGraph = opts.useDependenciesGraph
           ? await legacyScope?.getDependenciesGraphByComponentIds(capsuleList.getAllComponentIDs())
           : undefined;
+        const capsulesWithoutDependenciesGraph = opts.useDependenciesGraph
+          ? await this.getCapsulesWithoutDependenciesGraph(capsuleList, legacyScope)
+          : CapsuleList.fromArray([]);
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
@@ -744,10 +764,10 @@ export class IsolatorMain {
           packageManager: opts.packageManager,
           dependenciesGraph,
         });
-        if (opts.useDependenciesGraph && dependenciesGraph == null) {
-          // If the graph was not present in the model, we use the just created lockfile inside the capsules
-          // to populate the graph.
-          await this.addDependenciesGraphToComponents(capsuleList, components, capsulesDir);
+        if (capsulesWithoutDependenciesGraph.length) {
+          // If the graph was not present in the model, use the just-created lockfile inside the capsules
+          // to populate it only for the missing components.
+          await this.addDependenciesGraphToComponents(capsulesWithoutDependenciesGraph, components, capsulesDir);
         }
       }
       if (installLongProcessLogger) {
@@ -771,6 +791,9 @@ export class IsolatorMain {
       });
     }
     await this.markCapsulesAsReady(capsuleList);
+    if (rootKind === 'scope-aspects-root') {
+      await this.cache.ensureAspectCapsuleMarkers(allCapsuleList, rootOriginPath);
+    }
     if (longProcessLogger) {
       longProcessLogger.end();
     }
@@ -784,6 +807,22 @@ export class IsolatorMain {
     return allCapsuleList;
   }
   /* eslint-enable complexity */
+
+  private async getCapsulesWithoutDependenciesGraph(
+    capsuleList: CapsuleList,
+    legacyScope?: Scope
+  ): Promise<CapsuleList> {
+    if (!legacyScope) return capsuleList;
+    const capsules = await pMap(
+      capsuleList,
+      async (capsule) => {
+        const dependenciesGraph = await legacyScope.getDependenciesGraphByComponentId(capsule.component.id);
+        return dependenciesGraph == null || dependenciesGraph.isEmpty() ? capsule : undefined;
+      },
+      { concurrency: concurrentComponentsLimit() }
+    );
+    return CapsuleList.fromArray(compact(capsules));
+  }
 
   private async addDependenciesGraphToComponents(
     capsuleList: CapsuleList,
@@ -800,6 +839,14 @@ export class IsolatorMain {
       componentRelativeDir: path.relative(capsulesDir, capsule.path),
     }));
     await this.dependencyResolver.addDependenciesGraph(comps, opts);
+    const componentById = new Map(components.map((component) => [component.id.toString(), component]));
+    for (const capsule of capsuleList) {
+      const dependenciesGraph = capsule.component.state._consumer.dependenciesGraph;
+      if (!dependenciesGraph) continue;
+      // Graph calculation mutates capsule components; callers persist the original host components.
+      const component = componentById.get(capsule.component.id.toString());
+      if (component) component.state._consumer.dependenciesGraph = dependenciesGraph;
+    }
   }
 
   private async markCapsulesAsReady(capsuleList: CapsuleList): Promise<void> {
@@ -1087,9 +1134,7 @@ export class IsolatorMain {
     };
     const capsulesRootBaseDir = getCapsuleDirOptsWithDefaults.rootBaseDir || this.getRootDirOfAllCapsules();
     if (getCapsuleDirOptsWithDefaults.useDatedDirs) {
-      const date = new Date();
-      const month = date.getMonth() < 12 ? date.getMonth() + 1 : 1;
-      const dateDir = `${date.getFullYear()}-${month}-${date.getDate()}`;
+      const dateDir = this.cache.getDatedCapsuleDirName();
       const defaultDatedBaseDir = 'dated-capsules';
       const datedBaseDir = this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR) || defaultDatedBaseDir;
       let hashDir;
@@ -1111,10 +1156,29 @@ export class IsolatorMain {
     return path.join(capsulesRootBaseDir, dir);
   }
 
+  // --- Capsule-cache delegates ---------------------------------------------------------
+  // The actual cache management (origin markers, fast-delete + trash sweep, prune
+  // pipeline, auto-prune trigger) lives in `CapsuleCache`. These thin forwarders keep
+  // the externally-used isolator API stable.
+
   async deleteCapsules(rootDir?: string): Promise<string> {
-    const dirToDelete = rootDir || this.getRootDirOfAllCapsules();
-    await fs.remove(dirToDelete);
-    return dirToDelete;
+    return this.cache.deleteCapsules(rootDir);
+  }
+
+  async pruneCapsules(opts: PruneCapsulesOptions = {}): Promise<PruneCapsulesReport> {
+    return this.cache.pruneCapsules(opts);
+  }
+
+  async listAllCapsuleRoots(opts: { withSizes?: boolean } = {}) {
+    return this.cache.listAllCapsuleRoots(opts);
+  }
+
+  registerAutoPruneHook(): void {
+    this.cache.registerAutoPruneHook();
+  }
+
+  sweepTrashAsync(): void {
+    this.cache.sweepTrashAsync();
   }
 
   private writeRootPackageJson(capsulesDir: string, hashDir: string): void {
@@ -1146,6 +1210,20 @@ export class IsolatorMain {
 
   private getRootDirOfAllCapsules(): string {
     return this.globalConfig.getGlobalCapsulesBaseDir();
+  }
+
+  /**
+   * Derive the capsule kind from the isolation context. Aspect resolution sets
+   * `opts.context.aspects = true`. Otherwise, distinguish bare-scope isolations
+   * (host is ScopeMain) from workspace isolations (host is Workspace) by duck-typing
+   * on `bitMap`, which only Workspace exposes — this avoids a circular dep on the
+   * workspace aspect.
+   */
+  private deriveCapsuleKind(opts: IsolateComponentsOptions): CapsuleKind {
+    if (opts.context?.aspects) return 'scope-aspects-root';
+    const host = opts.host || this.componentAspect.getHost();
+    if (host && !('bitMap' in host)) return 'scope';
+    return 'workspace';
   }
 
   private wereDependenciesInPackageJsonChanged(capsuleWithPackageData: CapsulePackageJsonData): boolean {

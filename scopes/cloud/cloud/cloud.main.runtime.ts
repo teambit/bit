@@ -39,7 +39,7 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { ExpressMain } from '@teambit/express';
 import { ExpressAspect } from '@teambit/express';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { cloudSchema } from './cloud.graphql';
@@ -123,7 +123,7 @@ export class CloudMain {
 
   getNpmConfig(): Record<string, string> {
     try {
-      const output = execSync(`npm config list --json`, { encoding: 'utf8' });
+      const output = execFileSync('npm', ['config', 'list', '--json'], { encoding: 'utf8' });
       return JSON.parse(output);
     } catch (error) {
       throw new Error(`failed to get npm config. error: ${error}`);
@@ -195,9 +195,13 @@ export class CloudMain {
     const allOrgs = Array.from(new Set([...CloudMain.PRESET_ORGS, ...orgNames, username])).sort();
     const registryUrlStr = this.getRegistryUrl();
     const registryUrl = new URL(registryUrlStr);
-    const scopeConfig = allOrgs.map((org) => `@${org}:registry="${registryUrlStr}"`).join('\n');
-    const authConfig = `//${registryUrl.host}/:_authToken="${authToken}"`;
-    const configUpdates = `${scopeConfig}\n${authConfig}`;
+    // Single source of truth for the npm config entries, so conflict detection, the returned
+    // `configUpdates` string, and the actual `npm config set` argv can never drift apart.
+    const configEntries: [string, string][] = [
+      ...allOrgs.map((org): [string, string] => [`@${org}:registry`, registryUrlStr]),
+      [`//${registryUrl.host}/:_authToken`, authToken],
+    ];
+    const configUpdates = configEntries.map(([key, value]) => `${key}="${value}"`).join('\n');
 
     if (!force) {
       const conflicts = this.detectConfigConflicts({
@@ -214,9 +218,12 @@ export class CloudMain {
       return { configUpdates };
     }
 
-    const configToUpdate = configUpdates.replace(/\n/g, ' ');
-
-    execSync(`npm config set ${configToUpdate}`, { stdio: 'ignore' });
+    // Pass each key=value as a separate argv element via execFileSync (no shell), so an
+    // attacker-controlled org/username (e.g. from the login callback's query string) can never
+    // be interpreted as shell syntax. The quotes in `configUpdates` are only needed for shell
+    // parsing, so the argv values are unquoted — npm receives the literal value.
+    const npmConfigArgs = ['config', 'set', ...configEntries.map(([key, value]) => `${key}=${value}`)];
+    execFileSync('npm', npmConfigArgs, { stdio: 'ignore' });
 
     return { configUpdates };
   }

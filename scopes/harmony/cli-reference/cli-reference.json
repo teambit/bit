@@ -899,6 +899,11 @@
             "j",
             "json",
             "json format"
+          ],
+          [
+            "",
+            "with-stats",
+            "include total cache size, orphan count, and stale aspect-version count (walks the full cache)"
           ]
         ],
         "description": "list the capsules generated for this workspace",
@@ -980,6 +985,46 @@
         "extendedDescription": "with no args, only workspace's capsules are deleted",
         "group": "advanced",
         "private": false
+      },
+      {
+        "name": "prune",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "older-than <days>",
+            "age threshold in days for aspect-version/scope capsule pruning (default 30)"
+          ],
+          [
+            "",
+            "keep-workspace-caps",
+            "skip workspace capsule deletion"
+          ],
+          [
+            "",
+            "no-orphans",
+            "don't delete capsules whose origin path no longer exists"
+          ],
+          [
+            "",
+            "dry-run",
+            "preview what would be removed without deleting"
+          ],
+          [
+            "",
+            "with-sizes",
+            "compute byte sizes for the report (walks the full cache; slow on large caches). default: off — sizes shown as 0 but the prune itself is instant."
+          ],
+          [
+            "j",
+            "json",
+            "json format"
+          ]
+        ],
+        "description": "evict stale capsules from the global cache",
+        "extendedDescription": "workspace capsules are deleted unconditionally; aspect-version and scope capsules are deleted when their last-used marker is older than --older-than (default 30 days).\nuse --dry-run first to preview what would be removed.",
+        "group": "advanced",
+        "private": false
       }
     ]
   },
@@ -1031,7 +1076,7 @@
       ]
     ],
     "description": "test and validate component patterns",
-    "extendedDescription": "this command helps validating a pattern before using it in other commands.\nNOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes.\na pattern can be a simple component-id or component-name. e.g. 'ui/button'.\na pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes.\nto enter multiple patterns, separate them by a comma, e.g. 'ui/*, lib/*'\nto exclude, use '!'. e.g. 'ui/**, !ui/button'\nthe matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch).\n\nto filter by a state or attribute, prefix the pattern with \"$\". e.g. '$deprecated', '$modified'.\nlist of supported states: [new, modified, deprecated, deleted, snappedOnMain, softTagged, codeModified, localOnly].\nto filter by multi-params state/attribute, separate the params with \":\", e.g. '$env:teambit.react/react'.\nlist of supported multi-params states: [env].\nto match a state and another criteria, use \" AND \" keyword. e.g. '$modified AND teambit.workspace/** AND $env:teambit.react/react'.\n",
+    "extendedDescription": "this command helps validating a pattern before using it in other commands.\nNOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes.\na pattern can be a simple component-id or component-name. e.g. 'ui/button'.\na pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes.\nto enter multiple patterns, separate them by a comma, e.g. 'ui/*, lib/*'\nto exclude, use '!'. e.g. 'ui/**, !ui/button'\nthe matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch).\n\nto filter by a state or attribute, prefix the pattern with \"$\". e.g. '$deprecated', '$modified'.\nlist of supported states: [new, modified, deprecated, deleted, internal, snappedOnMain, softTagged, codeModified, localOnly].\nto filter by multi-params state/attribute, separate the params with \":\", e.g. '$env:teambit.react/react'.\nlist of supported multi-params states: [env].\nto match a state and another criteria, use \" AND \" keyword. e.g. '$modified AND teambit.workspace/** AND $env:teambit.react/react'.\n",
     "group": "info-analysis",
     "private": false,
     "remoteOp": true,
@@ -3694,7 +3739,7 @@
     ]
   },
   {
-    "name": "test [component-pattern]",
+    "name": "test [pattern-or-test-file...]",
     "alias": "at",
     "options": [
       [
@@ -3759,13 +3804,13 @@
       ]
     ],
     "description": "run component tests",
-    "extendedDescription": "executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.).\nby default only runs tests for new and modified components. use --unmodified to test all components.\nsupports watch mode, coverage reporting, and debug mode for development workflows.",
+    "extendedDescription": "executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.).\nby default only runs tests for new and modified components. use --unmodified to test all components.\nto run specific test files only, pass their paths instead of a component pattern, e.g. \"bit test path/to/comp/my-comp.spec.ts\".\nsupports watch mode, coverage reporting, and debug mode for development workflows.",
     "group": "testing",
     "private": false,
     "arguments": [
       {
-        "name": "component-pattern",
-        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "name": "pattern-or-test-file...",
+        "description": "one of two modes (multiple values are supported, separated by spaces):\n1) component pattern: component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n2) test-file path: a path to a test file, to run only this file, e.g. \"bit test path/to/comp/my-comp.spec.ts\".\nnote that a directory path selects the component in that directory and runs all its tests, while a test-file path runs only that file"
       }
     ]
   },
@@ -6011,6 +6056,39 @@
             "description": "update version of scope.org/aspect to version 2.0.0 for all components configured with that aspect."
           }
         ]
+      }
+    ]
+  },
+  {
+    "name": "internalize [component-pattern]",
+    "alias": "",
+    "options": [
+      [
+        "r",
+        "revert",
+        "remove the internal mark from the matching components"
+      ],
+      [
+        "l",
+        "list",
+        "list the components currently marked as internal"
+      ],
+      [
+        "j",
+        "json",
+        "return the output as json (the internal components with --list, otherwise the affected component-ids)"
+      ]
+    ],
+    "description": "mark components as internal to hide them by default in the UI",
+    "extendedDescription": "marks components as internal locally, then after snap/tag and export they become internal in the remote scope.\nunlike \"bit local-only\", internal components are still versioned and exported - they are only hidden by default in the UI (workspace, scope and Bit Cloud).\nuse --revert to remove the internal mark, or --list to show the components currently marked as internal.",
+    "group": "collaborate",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },

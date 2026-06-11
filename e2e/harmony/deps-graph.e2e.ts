@@ -6,6 +6,13 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import chaiFs from 'chai-fs';
 import yaml from 'js-yaml';
+import { loadBit } from '@teambit/bit';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { IsolatorMain } from '@teambit/isolator';
+import { IsolatorAspect } from '@teambit/isolator';
+import type { SnappingMain } from '@teambit/snapping';
+import { SnappingAspect } from '@teambit/snapping';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(chaiFs);
@@ -539,6 +546,94 @@ chai.use(chaiFs);
       expect(lockfile.bit.restoredFromModel).to.eq(true);
       expect(lockfile.packages).to.have.property('@pnpm.e2e/foo@100.0.0');
       expect(lockfile.packages).to.have.property('@pnpm.e2e/bar@100.0.0');
+    });
+  });
+  describe('isolating components when only some model graphs exist', function () {
+    let isolatedDepsGraph: any;
+    let enrichedVersionObj: any;
+    before(async () => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fs.createFile('comp1', 'comp1.js', 'require("is-odd"); // eslint-disable-line');
+      helper.fs.createFile(
+        'comp2',
+        'comp2.js',
+        `require("@${helper.scopes.remote}/comp1"); require("is-even"); // eslint-disable-line`
+      );
+      helper.command.addComponent('comp1');
+      helper.command.addComponent('comp2');
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
+        dependencies: {
+          'is-odd': '1.0.0',
+          'is-even': '1.0.0',
+        },
+      });
+      helper.command.install();
+      helper.command.tagWithoutBuild('comp1', '--skip-tests');
+      helper.command.snapComponentWithoutBuild('comp2', '--skip-tests --no-lock-deps');
+
+      const comp1VersionObj = helper.command.catComponent('comp1@latest');
+      const comp2VersionObj = helper.command.catComponent('comp2@latest');
+      expect(comp1VersionObj.dependenciesGraphRef).to.be.a('string');
+      expect(comp2VersionObj.dependenciesGraphRef).to.be.undefined;
+
+      const harmony = await loadBit(helper.scopes.localPath);
+      const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
+      const isolator = harmony.get<IsolatorMain>(IsolatorAspect.id);
+      const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
+      const comp1Id = await workspace.resolveComponentId('comp1@latest');
+      const comp2Id = await workspace.resolveComponentId('comp2@latest');
+      const componentsToIsolate = await workspace.getMany([comp1Id, comp2Id]);
+      const host = Object.create(workspace);
+      host.getMany = async (ids) =>
+        Promise.all(
+          ids.map(async (id) => {
+            const component = componentsToIsolate.find((comp) => comp.id.isEqual(id, { ignoreVersion: true }));
+            if (component) return component;
+            const loadedComponent = await workspace.get(id);
+            if (!loadedComponent) throw new Error(`unable to find ${id.toString()} in the test host`);
+            return loadedComponent;
+          })
+        );
+      host.get = async (id) => {
+        const component = componentsToIsolate.find((comp) => comp.id.isEqual(id, { ignoreVersion: true }));
+        return component || workspace.get(id);
+      };
+      const comp2Component = componentsToIsolate.find((component) =>
+        component.id.isEqual(comp2Id, { ignoreVersion: true })
+      );
+      if (!comp2Component) throw new Error(`unable to find ${comp2Id.toString()} in the test components`);
+      await isolator.isolateComponents(
+        [comp2Component.id],
+        {
+          alwaysNew: true,
+          baseDir: path.join(helper.scopes.localPath, 'deps-graph-capsules'),
+          host,
+          useDependenciesGraph: true,
+        },
+        workspace.scope.legacyScope
+      );
+      isolatedDepsGraph = comp2Component.state._consumer.dependenciesGraph;
+      await snapping.enrichComp(comp2Component);
+      await workspace.scope.legacyScope.objects.persist();
+      enrichedVersionObj = helper.command.catComponent('comp2@latest');
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('should populate missing component graphs from the capsule lockfile', () => {
+      expect(isolatedDepsGraph, 'comp2 should have a dependencies graph after isolation').to.exist;
+      const directDependencies = isolatedDepsGraph?.findRootEdge()?.neighbours;
+      expect(directDependencies).to.deep.include({
+        name: 'is-even',
+        specifier: '1.0.0',
+        id: 'is-even@1.0.0',
+        lifecycle: 'runtime',
+        optional: false,
+      });
+    });
+    it('should save the regenerated graph to the model when the original component is enriched', () => {
+      expect(enrichedVersionObj.dependenciesGraphRef).to.be.a('string');
     });
   });
   describe('snap/tag with --no-lock-deps', function () {

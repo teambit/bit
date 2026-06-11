@@ -11,11 +11,11 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const MAX_FILES_READ = 1062;
+const MAX_FILES_READ = 1066;
 const MAX_FILES_READ_STATUS = 1500;
 
 /**
- * as of now (2025/03/03) 1,030 files are loaded during bit-bootstrap.
+ * as of now (2026/05/27) ~1,063 files are loaded during bit-bootstrap.
  * for "bit status", around 1,433 files are loaded.
  *
  * two weeks ago we were at 2,964 files. a few PRs helped to reduce the number of files. among them:

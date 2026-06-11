@@ -1,15 +1,15 @@
 import React, { useContext } from 'react';
-import { EmptyWorkspace } from '@teambit/workspace.ui.empty-workspace';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 import { ComponentsOverview } from '@teambit/explorer.ui.components-overview';
 import { WorkspaceContext } from '../workspace-context';
+import { WorkspaceBlankState } from './workspace-blank-state';
 
 export function WorkspaceOverview() {
   const workspace = useContext(WorkspaceContext);
   const { components, componentDescriptors } = workspace;
   const { isMinimal } = useWorkspaceMode();
 
-  if (!components.length) return <EmptyWorkspace name={workspace.name} />;
+  if (!components.length) return <WorkspaceBlankState />;
 
   return (
     <ComponentsOverview
@@ -17,7 +17,7 @@ export function WorkspaceOverview() {
       componentDescriptors={componentDescriptors}
       showPreview={isMinimal}
       storageNamespace="workspace-overview"
-      emptyState={<EmptyWorkspace name={workspace.name} />}
+      emptyState={<WorkspaceBlankState />}
     />
   );
 }
