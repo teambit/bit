@@ -55,7 +55,8 @@ the resolved env and which source determined it, and any load issues found.`;
 
   private async gatherData(idStr: string): Promise<DebugLoadData> {
     const componentId = await this.workspace.resolveComponentId(idStr);
-    if (!this.workspace.hasId(componentId)) {
+    // ignoreVersion is needed because workspace ids carry versions while the resolved id may not
+    if (!this.workspace.hasId(componentId, { ignoreVersion: true })) {
       throw new BitError(`unable to find "${idStr}" in the workspace. debug-load works on workspace components only`);
     }
     // a debug command must not report a cache-hit no-op, so load fresh
