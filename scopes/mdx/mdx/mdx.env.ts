@@ -1,5 +1,5 @@
 import type { Environment, EnvContext } from '@teambit/envs';
-import { cloneDeep, merge } from 'lodash';
+import { merge } from 'lodash';
 import type { ReactMain } from '@teambit/react';
 import type { Compiler, CompilerMain } from '@teambit/compiler';
 import { MDXMultiCompiler } from '@teambit/mdx.compilers.mdx-multi-compiler';
@@ -25,18 +25,15 @@ export class MdxEnv implements Environment {
    */
   private getMdxCompiler(): Compiler {
     if (!this._mdxCompiler) {
-      // pass the react env's (self-contained) tsconfig compilerOptions explicitly. without this,
-      // MDXMultiCompiler falls back to its bundled config/tsconfig.json which `extends`
-      // '@teambit/react.react-env/config/tsconfig.json' - a package that is not a dependency here
-      // and is not resolvable in this workspace. TypescriptCompiler resolves the tsconfig `extends`
-      // chain eagerly on creation, so that fallback throws
-      // "File '@teambit/react.react-env/config/tsconfig.json' not found.". passing compilerOptions
-      // makes the compiler skip the tsconfig file/extends resolution entirely. cloneDeep avoids
-      // mutating the shared react env tsconfig (the compiler overrides outDir on its copy).
-      const reactCompilerOptions = cloneDeep((this.react.reactEnv.getTsConfig() as any).compilerOptions);
+      // pass an explicit, self-contained tsconfig (./typescript/tsconfig.json, inlined from the
+      // react env with no `extends`). without this, MDXMultiCompiler falls back to its bundled
+      // config/tsconfig.json which `extends` '@teambit/react.react-env/config/tsconfig.json' - a
+      // package that is not a dependency here and is not resolvable in this workspace.
+      // TypescriptCompiler resolves the tsconfig `extends` chain eagerly on creation, so that
+      // fallback throws "File '@teambit/react.react-env/config/tsconfig.json' not found.".
       this._mdxCompiler = MDXMultiCompiler.from({
         typescriptOptions: {
-          compilerOptions: reactCompilerOptions,
+          tsconfig: require.resolve('./typescript/tsconfig.json'),
           compileJs: false,
           compileJsx: false,
           shouldCopyNonSupportedFiles: false,
