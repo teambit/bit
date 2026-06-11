@@ -1,5 +1,5 @@
 import type { Environment, EnvContext } from '@teambit/envs';
-import { merge } from 'lodash';
+import { cloneDeep, merge } from 'lodash';
 import type { ReactMain } from '@teambit/react';
 import type { Compiler, CompilerMain } from '@teambit/compiler';
 import { MDXMultiCompiler } from '@teambit/mdx.compilers.mdx-multi-compiler';
@@ -25,7 +25,23 @@ export class MdxEnv implements Environment {
    */
   private getMdxCompiler(): Compiler {
     if (!this._mdxCompiler) {
-      this._mdxCompiler = MDXMultiCompiler.from({})(this.envContext);
+      // pass the react env's (self-contained) tsconfig compilerOptions explicitly. without this,
+      // MDXMultiCompiler falls back to its bundled config/tsconfig.json which `extends`
+      // '@teambit/react.react-env/config/tsconfig.json' - a package that is not a dependency here
+      // and is not resolvable in this workspace. TypescriptCompiler resolves the tsconfig `extends`
+      // chain eagerly on creation, so that fallback throws
+      // "File '@teambit/react.react-env/config/tsconfig.json' not found.". passing compilerOptions
+      // makes the compiler skip the tsconfig file/extends resolution entirely. cloneDeep avoids
+      // mutating the shared react env tsconfig (the compiler overrides outDir on its copy).
+      const reactCompilerOptions = cloneDeep((this.react.reactEnv.getTsConfig() as any).compilerOptions);
+      this._mdxCompiler = MDXMultiCompiler.from({
+        typescriptOptions: {
+          compilerOptions: reactCompilerOptions,
+          compileJs: false,
+          compileJsx: false,
+          shouldCopyNonSupportedFiles: false,
+        },
+      })(this.envContext);
     }
     return this._mdxCompiler;
   }
