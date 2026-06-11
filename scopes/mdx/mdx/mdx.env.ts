@@ -25,20 +25,7 @@ export class MdxEnv implements Environment {
    */
   private getMdxCompiler(): Compiler {
     if (!this._mdxCompiler) {
-      // pass an explicit, self-contained tsconfig (./typescript/tsconfig.json, inlined from the
-      // react env with no `extends`). without this, MDXMultiCompiler falls back to its bundled
-      // config/tsconfig.json which `extends` '@teambit/react.react-env/config/tsconfig.json' - a
-      // package that is not a dependency here and is not resolvable in this workspace.
-      // TypescriptCompiler resolves the tsconfig `extends` chain eagerly on creation, so that
-      // fallback throws "File '@teambit/react.react-env/config/tsconfig.json' not found.".
-      this._mdxCompiler = MDXMultiCompiler.from({
-        typescriptOptions: {
-          tsconfig: require.resolve('./typescript/tsconfig.json'),
-          compileJs: false,
-          compileJsx: false,
-          shouldCopyNonSupportedFiles: false,
-        },
-      })(this.envContext);
+      this._mdxCompiler = MDXMultiCompiler.from({})(this.envContext);
     }
     return this._mdxCompiler;
   }
