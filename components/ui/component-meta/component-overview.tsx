@@ -25,7 +25,6 @@ import styles from './component-overview.module.scss';
 export type ComponentOverviewProps = {
   displayName: string;
   abstract?: string;
-  version: string;
   labels: string[];
   packageName: string;
   elementsUrl?: string;

@@ -188,7 +188,7 @@ function CompareMenuTab({
 }) {
   const hasChanged = useMemo(
     () => changed?.some((change) => change !== ChangeType.NONE && change !== ChangeType.NEW),
-    [changeTypeCss]
+    [changed]
   );
 
   if (loading) return <TabLoader />;

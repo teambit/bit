@@ -387,13 +387,15 @@ export class LanesUI {
   private resolveCompareTabs(): TabItem[] {
     const fromComponentCompare = this.componentCompareUI.resolveCompareTabs();
     const slotEntries = this.compareTabSlot.toArray();
-    const cacheKey = `${fromComponentCompare.length}:${slotEntries.length}`;
-    if (this._resolvedCompareTabs && this._resolvedCompareTabsKey === cacheKey) {
-      return this._resolvedCompareTabs;
-    }
     const localRegistered = flatten(
       slotEntries.map(([, value]) => value).filter(Boolean) as Array<TabItem | TabItem[]>
     );
+    const cacheKey = `${fromComponentCompare.map((t) => `${t.id}:${t.order ?? 0}`).join(',')}|${localRegistered
+      .map((t) => `${t.id}:${t.order ?? 0}`)
+      .join(',')}`;
+    if (this._resolvedCompareTabs && this._resolvedCompareTabsKey === cacheKey) {
+      return this._resolvedCompareTabs;
+    }
     const localIds = new Set(localRegistered.map((t) => t.id));
     // local registrations take precedence over the component-compare list.
     const merged = [...localRegistered, ...fromComponentCompare.filter((t) => !localIds.has(t.id))].sort(

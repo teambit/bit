@@ -497,6 +497,7 @@ export function parseDiffOutput(diffOutput: string): DiffHunk[] {
       continue;
     }
     if (!currentHunk) continue;
+    if (line.startsWith('\\')) continue; // "\ No newline at end of file" marker, not a content line
     if (line.startsWith('+')) {
       currentHunk.lines.push({ type: 'added', content: line.slice(1), newLineNumber: newLine++ });
     } else if (line.startsWith('-')) {
@@ -516,19 +517,22 @@ export function computeDiffFromContent(base: string, compare: string): DiffHunk[
       newCounter = hunk.newStart;
     return {
       header: `@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@`,
-      lines: hunk.lines.map((line) => {
-        const type = line.startsWith('+')
-          ? ('added' as const)
-          : line.startsWith('-')
-            ? ('removed' as const)
-            : ('unchanged' as const);
-        const content = line.slice(1);
-        const oldLineNumber = type !== 'added' ? oldCounter : undefined;
-        const newLineNumber = type !== 'removed' ? newCounter : undefined;
-        if (type !== 'added') oldCounter++;
-        if (type !== 'removed') newCounter++;
-        return { type, content, oldLineNumber, newLineNumber };
-      }),
+      lines: hunk.lines
+        // drop "\ No newline at end of file" markers — they aren't content lines
+        .filter((line) => !line.startsWith('\\'))
+        .map((line) => {
+          const type = line.startsWith('+')
+            ? ('added' as const)
+            : line.startsWith('-')
+              ? ('removed' as const)
+              : ('unchanged' as const);
+          const content = line.slice(1);
+          const oldLineNumber = type !== 'added' ? oldCounter : undefined;
+          const newLineNumber = type !== 'removed' ? newCounter : undefined;
+          if (type !== 'added') oldCounter++;
+          if (type !== 'removed') newCounter++;
+          return { type, content, oldLineNumber, newLineNumber };
+        }),
     };
   });
 }

@@ -286,7 +286,7 @@ export class LanesMain {
   }
 
   private memoStoreChangeTypes(key: string, changes: ChangeType[]) {
-    if (this.changeTypesMemo.size >= LanesMain.CHANGE_TYPES_MEMO_MAX) {
+    if (!this.changeTypesMemo.has(key) && this.changeTypesMemo.size >= LanesMain.CHANGE_TYPES_MEMO_MAX) {
       const firstKey = this.changeTypesMemo.keys().next().value;
       if (firstKey) this.changeTypesMemo.delete(firstKey);
     }
@@ -336,7 +336,7 @@ export class LanesMain {
   }
 
   private memoStoreDiffStatus(key: string, statuses: LaneComponentDiffStatus[]) {
-    if (this.diffStatusResultMemo.size >= LanesMain.DIFF_STATUS_MEMO_MAX) {
+    if (!this.diffStatusResultMemo.has(key) && this.diffStatusResultMemo.size >= LanesMain.DIFF_STATUS_MEMO_MAX) {
       const firstKey = this.diffStatusResultMemo.keys().next().value;
       if (firstKey) this.diffStatusResultMemo.delete(firstKey);
     }
@@ -505,7 +505,7 @@ export class LanesMain {
   }
 
   private memoStoreApiDiff(key: string, hasChanges: boolean) {
-    if (this.apiDiffMemo.size >= LanesMain.API_DIFF_MEMO_MAX) {
+    if (!this.apiDiffMemo.has(key) && this.apiDiffMemo.size >= LanesMain.API_DIFF_MEMO_MAX) {
       const firstKey = this.apiDiffMemo.keys().next().value;
       if (firstKey) this.apiDiffMemo.delete(firstKey);
     }
@@ -548,7 +548,7 @@ export class LanesMain {
   }
 
   private memoStoreSnapsDistance(key: string, snapsDistance: SnapsDistance) {
-    if (this.snapsDistanceMemo.size >= LanesMain.SNAPS_DISTANCE_MEMO_MAX) {
+    if (!this.snapsDistanceMemo.has(key) && this.snapsDistanceMemo.size >= LanesMain.SNAPS_DISTANCE_MEMO_MAX) {
       const firstKey = this.snapsDistanceMemo.keys().next().value;
       if (firstKey) this.snapsDistanceMemo.delete(firstKey);
     }

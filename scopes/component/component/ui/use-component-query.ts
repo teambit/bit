@@ -11,12 +11,8 @@ import { ComponentError } from './component-error';
 /**
  * provides data to component ui page, making sure both variables and return value are safely typed and memoized.
  *
- * Logs are *not* fetched here — they're a separate, opt-in query via `useComponentLogs`. Earlier
- * versions used a merged `GET_COMPONENT_WITH_FIELDS_AND_LOGS` to halve the per-component op count
- * in batched fanouts, but the merged shape forced every consumer to pay for `logs` (a remote-fetch
- * field that's noticeably expensive in the lane-compare batched prefetch). Splitting it back keeps
- * the lightweight `GET_COMPONENT` query for views that don't need history while still letting
- * pages that show snap history fire `useComponentLogs` alongside.
+ * Logs are fetched separately and opt-in via `useComponentLogs` (gated by `filters.log`), so views
+ * that don't render snap history (lane-compare, bulk panels) don't pay for the expensive logs query.
  */
 export function useComponentQuery(
   componentId: string,

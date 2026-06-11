@@ -123,7 +123,8 @@ export function InlineConfigCompare({ diffMode: diffModeProp }: InlineConfigComp
     }
 
     return diffs;
-  }, [loading, baseAspects, compareAspects]);
+    // key on the stable Apollo data refs — baseAspects/compareAspects are re-derived (`|| []`) every render
+  }, [loading, baseData, compareData]);
 
   if (loading) {
     return <ConfigSkeleton />;

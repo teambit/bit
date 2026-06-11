@@ -347,7 +347,7 @@ function CompareView({
     if (loading) return;
     if ((counts[viewMode] ?? 0) === 0) {
       const first = COMPARE_VIEW_MODES.find((v) => (counts[v.id] ?? 0) > 0);
-      if (first) setViewModeState(first.id as ViewMode);
+      if (first) setViewMode(first.id as ViewMode);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [counts, viewMode, loading]);

@@ -126,47 +126,6 @@ export const GET_COMPONENT = gql`
   ${componentFields}
 `;
 
-/**
- * Combined fields-and-logs query. The lane-compare UI previously fired
- *   - GET_COMPONENT (componentFields)
- *   - GET_COMPONENT_WITH_LOGS (componentFieldWithLogs)
- * as two separate ops per component, doubling the batched-fanout count (10 components → 20 ops →
- * 20 host.get loads). Merging them into one op halves that fanout. The logs args are still optional
- * variables — pass-through to the same logs resolver as the standalone query.
- */
-export const GET_COMPONENT_WITH_FIELDS_AND_LOGS = gql`
-  query Component(
-    $extensionId: String!
-    $id: String!
-    ${COMPONENT_QUERY_LOG_FIELDS}
-  ) {
-    getHost(id: $extensionId) {
-      id # used for GQL caching
-      get(id: $id) {
-        ...componentFields
-        logs(
-          type: $logType
-          offset: $logOffset
-          limit: $logLimit
-          sort: $logSort
-          head: $logHead
-          takeHeadFromComponent: $logTakeHeadFromComponent
-        ) {
-          id
-          message
-          username
-          email
-          date
-          hash
-          tag
-          displayName
-        }
-      }
-    }
-  }
-  ${componentFields}
-`;
-
 export const GET_COMPONENT_WITH_LOGS = gql`
   query Component(
     $extensionId: String!
@@ -181,48 +140,6 @@ export const GET_COMPONENT_WITH_LOGS = gql`
     }
   }
   ${componentFieldsWithLogs}
-`;
-
-/**
- * Bulk variant of GET_COMPONENT_WITH_FIELDS_AND_LOGS — fetches N components in a single op via the
- * `ComponentHost.getMany` resolver. For consumers that already know the full list of ids up front
- * (the lane-compare panel, the cloud changes view, etc.), this replaces N concurrent batched ops
- * with one — collapsing all the per-op graphql parse/validate/dispatch overhead.
- *
- * Items in the response are aligned to input `ids` order; a failed lookup becomes a `null` slot
- * rather than failing the whole call.
- */
-export const GET_COMPONENTS_BULK = gql`
-  query ComponentsBulk(
-    $extensionId: String!
-    $ids: [String!]!
-    ${COMPONENT_QUERY_LOG_FIELDS}
-  ) {
-    getHost(id: $extensionId) {
-      id # used for GQL caching
-      getMany(ids: $ids) {
-        ...componentFields
-        logs(
-          type: $logType
-          offset: $logOffset
-          limit: $logLimit
-          sort: $logSort
-          head: $logHead
-          takeHeadFromComponent: $logTakeHeadFromComponent
-        ) {
-          id
-          message
-          username
-          email
-          date
-          hash
-          tag
-          displayName
-        }
-      }
-    }
-  }
-  ${componentFields}
 `;
 
 export const SUB_SUBSCRIPTION_ADDED = gql`

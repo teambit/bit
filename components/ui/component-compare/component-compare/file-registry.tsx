@@ -5,6 +5,10 @@ export type FileInfo = { name: string; status?: string };
 
 type Listener = () => void;
 
+function filesSignature(files: FileInfo[]) {
+  return files.map((f) => `${f.name}:${f.status ?? ''}`).join('|');
+}
+
 class ComponentRegistry {
   private files = new Map<string, FileInfo[]>();
 
@@ -16,7 +20,7 @@ class ComponentRegistry {
 
   register(componentId: string, files: FileInfo[]) {
     const existing = this.files.get(componentId);
-    if (existing && existing.length === files.length) return;
+    if (existing && filesSignature(existing) === filesSignature(files)) return;
     this.files.set(componentId, files);
     this.notify();
   }
@@ -27,7 +31,7 @@ class ComponentRegistry {
 
   registerAspects(componentId: string, files: FileInfo[]) {
     const existing = this.aspectFiles.get(componentId);
-    if (existing && existing.length === files.length) return;
+    if (existing && filesSignature(existing) === filesSignature(files)) return;
     this.aspectFiles.set(componentId, files);
     this.notify();
   }
@@ -95,20 +99,22 @@ export function useFileRegistry() {
 
 export function useFileRegistryRegister(componentId: string | undefined, files: FileInfo[] | undefined) {
   const store = useContext(FileRegistryContext);
+  const signature = files ? filesSignature(files) : '';
   useEffect(() => {
     if (store && componentId && files && files.length > 0) {
       store.register(componentId, files);
     }
-  }, [store, componentId, files?.length]);
+  }, [store, componentId, signature]);
 }
 
 export function useAspectRegistryRegister(componentId: string | undefined, files: FileInfo[] | undefined) {
   const store = useContext(FileRegistryContext);
+  const signature = files ? filesSignature(files) : '';
   useEffect(() => {
     if (store && componentId && files && files.length > 0) {
       store.registerAspects(componentId, files);
     }
-  }, [store, componentId, files?.length]);
+  }, [store, componentId, signature]);
 }
 
 export function useCompositionsRegistryRegister(componentId: string | undefined, hasCompositions: boolean | undefined) {
