@@ -26,5 +26,5 @@
 
 ## 4. Wrap-up
 
-- [ ] 4.1 Update `scopes/workspace/workspace/component-loading-redesign.md` Status table + log (Phase 1 done, PR links)
+- [x] 4.1 Update `scopes/workspace/workspace/component-loading-redesign.md` Status table + log (Phase 1 done, PR links)
 - [x] 4.2 Confirm Phase 2 groundwork: stage spans map 1:1 to the S0-S4 benchmark stages in the master doc

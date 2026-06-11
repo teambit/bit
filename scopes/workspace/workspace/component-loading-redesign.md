@@ -255,14 +255,14 @@ must explain why before merging.
 
 ## Status
 
-| Phase                   | State                    | OpenSpec change                | PRs |
-| ----------------------- | ------------------------ | ------------------------------ | --- |
-| 1 — Observability       | implemented (PR pending) | `component-load-observability` | —   |
-| 2 — Quick perf wins     | not started              | —                              | —   |
-| 3 — Cache consolidation | not started              | —                              | —   |
-| 4 — Staged pipeline     | not started              | —                              | —   |
-| 5 — Env planner         | not started              | —                              | —   |
-| 6 — Legacy inversion    | not started              | —                              | —   |
+| Phase                   | State       | OpenSpec change                | PRs                                                 |
+| ----------------------- | ----------- | ------------------------------ | --------------------------------------------------- |
+| 1 — Observability       | done        | `component-load-observability` | [#10418](https://github.com/teambit/bit/pull/10418) |
+| 2 — Quick perf wins     | not started | —                              | —                                                   |
+| 3 — Cache consolidation | not started | —                              | —                                                   |
+| 4 — Staged pipeline     | not started | —                              | —                                                   |
+| 5 — Env planner         | not started | —                              | —                                                   |
+| 6 — Legacy inversion    | not started | —                              | —                                                   |
 
 **Log:**
 
