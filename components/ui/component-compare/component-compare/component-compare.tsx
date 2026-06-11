@@ -30,8 +30,8 @@ import { sortByDateDsc } from '@teambit/component.ui.component-compare.utils.sor
 import { extractLazyLoadedData } from '@teambit/component.ui.component-compare.utils.lazy-loading';
 import { BlockSkeleton, WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql } from '@apollo/client';
+import { useApiDiff } from '@teambit/semantics.ui.api-diff-view';
+import type { APIDiffResult } from '@teambit/semantics.ui.api-diff-view';
 import type { ComponentComparePair, CompareComponentData } from './compare-data-context';
 import { useCompareData } from './compare-data-context';
 import { useFileRegistryRegister, useAspectRegistryRegister } from './file-registry';
@@ -41,113 +41,8 @@ import styles from './component-compare.module.scss';
 // Extend ChangeType with API (the external enum doesn't have it yet)
 const ChangeTypeAPI = 'API' as unknown as ChangeType;
 
-export type APIDiffDetail = {
-  changeKind: string;
-  description: string;
-  impact: string;
-  from?: string;
-  to?: string;
-};
-
-export type APIDiffChange = {
-  status: string;
-  visibility: string;
-  exportName: string;
-  schemaType: string;
-  schemaTypeRaw: string;
-  impact: string;
-  baseSignature?: string;
-  compareSignature?: string;
-  baseNode?: Record<string, any>;
-  compareNode?: Record<string, any>;
-  changes?: APIDiffDetail[];
-};
-
-export type APIDiffResult = {
-  hasChanges: boolean;
-  impact: string;
-  publicChanges: APIDiffChange[];
-  internalChanges: APIDiffChange[];
-  changes: APIDiffChange[];
-  added: number;
-  removed: number;
-  modified: number;
-  breaking: number;
-  nonBreaking: number;
-  patch: number;
-};
-
-const QUERY_API_DIFF = gql`
-  query ComponentCompareAPIDiff($baseId: String!, $compareId: String!) {
-    getHost {
-      id
-      apiDiff(baseId: $baseId, compareId: $compareId) {
-        hasChanges
-        impact
-        added
-        removed
-        modified
-        breaking
-        nonBreaking
-        patch
-        publicChanges {
-          status
-          visibility
-          exportName
-          schemaType
-          schemaTypeRaw
-          impact
-          baseSignature
-          compareSignature
-          baseNode
-          compareNode
-          changes {
-            changeKind
-            description
-            impact
-            from
-            to
-          }
-        }
-        internalChanges {
-          status
-          visibility
-          exportName
-          schemaType
-          schemaTypeRaw
-          impact
-          baseSignature
-          compareSignature
-          changes {
-            changeKind
-            description
-            impact
-            from
-            to
-          }
-        }
-      }
-    }
-  }
-`;
-
-function useAPIDiffQuery(
-  baseId?: string,
-  compareId?: string,
-  skip?: boolean
-): { loading?: boolean; apiDiffResult?: APIDiffResult | null } {
-  const { data, loading } = useDataQuery<{
-    getHost: { apiDiff: APIDiffResult | null };
-  }>(QUERY_API_DIFF, {
-    variables: { baseId, compareId },
-    skip: skip || !baseId || !compareId || baseId === compareId,
-  });
-
-  return {
-    loading,
-    apiDiffResult: data?.getHost?.apiDiff,
-  };
-}
+// single source of truth for the API diff model — see api-diff-view's api-diff-model.
+export type { APIDiffResult, APIDiffChange, APIDiffDetail } from '@teambit/semantics.ui.api-diff-view';
 
 const findPrevVersionFromCurrent = (compareVersion) => (_, index: number, logs: LegacyComponentLog[]) => {
   if (compareVersion === 'workspace' || logs.length === 1) return true;
@@ -487,11 +382,9 @@ export function ComponentCompare(props: ComponentCompareProps) {
     skipComponentCompareQuery
   );
 
-  const { loading: apiDiffLoading, apiDiffResult } = useAPIDiffQuery(
-    base?.id.toString(),
-    compare?.id.toString(),
-    hidden
-  );
+  const { loading: apiDiffLoading, result: apiDiffResult } = useApiDiff(base?.id.toString(), compare?.id.toString(), {
+    skip: hidden,
+  });
 
   const fileCompareDataByName = useMemo(() => {
     if (loading || compCompareLoading) return undefined;

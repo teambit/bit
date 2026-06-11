@@ -14,6 +14,9 @@ class ComponentRegistry {
 
   private aspectFiles = new Map<string, FileInfo[]>();
 
+  /** changed API exports per component — populates the sidebar tree in API view mode */
+  private apiEntries = new Map<string, FileInfo[]>();
+
   private compositions = new Map<string, boolean>();
 
   private listeners = new Set<Listener>();
@@ -38,6 +41,17 @@ class ComponentRegistry {
 
   getAspectFiles(componentId: string) {
     return this.aspectFiles.get(componentId);
+  }
+
+  registerApiEntries(componentId: string, entries: FileInfo[]) {
+    const existing = this.apiEntries.get(componentId);
+    if (existing && filesSignature(existing) === filesSignature(entries)) return;
+    this.apiEntries.set(componentId, entries);
+    this.notify();
+  }
+
+  getApiEntries(componentId: string) {
+    return this.apiEntries.get(componentId);
   }
 
   registerCompositions(componentId: string, hasCompositions: boolean) {
@@ -113,6 +127,16 @@ export function useAspectRegistryRegister(componentId: string | undefined, files
   useEffect(() => {
     if (store && componentId && files && files.length > 0) {
       store.registerAspects(componentId, files);
+    }
+  }, [store, componentId, signature]);
+}
+
+export function useApiEntriesRegister(componentId: string | undefined, entries: FileInfo[] | undefined) {
+  const store = useContext(FileRegistryContext);
+  const signature = entries ? filesSignature(entries) : '';
+  useEffect(() => {
+    if (store && componentId && entries) {
+      store.registerApiEntries(componentId, entries);
     }
   }, [store, componentId, signature]);
 }

@@ -18,6 +18,7 @@ import { InlinePreviewCompare } from '@teambit/preview.ui.inline-preview-compare
 import { InlineDepsCompare } from '@teambit/review.ui.inline-deps-compare';
 import { InlineTestsCompare } from '@teambit/review.ui.inline-tests-compare';
 import { InlineConfigCompare } from '@teambit/review.ui.inline-config-compare';
+import type { ApiDiffInsight } from '@teambit/semantics.ui.api-diff-view';
 import { AspectsCompareSection } from './component-compare-aspects.section';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { ComponentCompareSection } from './component-compare.section';
@@ -44,12 +45,15 @@ const FALLBACK_COMPARE_TABS: TabItem[] = [
 
 export type ComponentCompareTabSlot = SlotRegistry<TabItem | TabItem[]>;
 
+export type ApiDiffInsightSlot = SlotRegistry<ApiDiffInsight | ApiDiffInsight[]>;
+
 export class ComponentCompareUI {
   constructor(
     private host: string,
     private navSlot: ComponentCompareNavSlot,
     private routeSlot: RouteSlot,
     private compareTabSlot: ComponentCompareTabSlot,
+    private apiDiffInsightSlot: ApiDiffInsightSlot,
     private compUI: ComponentUI
   ) {}
 
@@ -59,6 +63,7 @@ export class ComponentCompareUI {
     Slot.withType<ComponentCompareNavSlot>(),
     Slot.withType<RouteSlot>(),
     Slot.withType<TabItem | TabItem[]>(),
+    Slot.withType<ApiDiffInsight | ApiDiffInsight[]>(),
   ];
 
   static dependencies = [ComponentAspect];
@@ -99,6 +104,22 @@ export class ComponentCompareUI {
   registerCompareTab(tab: TabItem | TabItem[]) {
     this.compareTabSlot.register(tab);
     return this;
+  }
+
+  /**
+   * contribute intelligence to the API diff view: per-change renderers for migration
+   * hints, affected dependents, codemods, etc. rendered in each change block's
+   * insights area (lane compare API view and the single-component API tab).
+   */
+  registerApiDiffInsight(insight: ApiDiffInsight | ApiDiffInsight[]) {
+    this.apiDiffInsightSlot.register(insight);
+    return this;
+  }
+
+  getApiDiffInsights(): ApiDiffInsight[] {
+    return flatten(
+      this.apiDiffInsightSlot.toArray().map(([, value]) => value) as Array<ApiDiffInsight | ApiDiffInsight[]>
+    );
   }
 
   private _resolvedCompareTabs?: TabItem[];
@@ -155,12 +176,24 @@ export class ComponentCompareUI {
   static async provider(
     [componentUi]: [ComponentUI],
     _,
-    [navSlot, routeSlot, compareTabSlot]: [ComponentCompareNavSlot, RouteSlot, ComponentCompareTabSlot],
+    [navSlot, routeSlot, compareTabSlot, apiDiffInsightSlot]: [
+      ComponentCompareNavSlot,
+      RouteSlot,
+      ComponentCompareTabSlot,
+      ApiDiffInsightSlot,
+    ],
     harmony: Harmony
   ) {
     const { config } = harmony;
     const host = String(config.get('teambit.harmony/bit'));
-    const componentCompareUI = new ComponentCompareUI(host, navSlot, routeSlot, compareTabSlot, componentUi);
+    const componentCompareUI = new ComponentCompareUI(
+      host,
+      navSlot,
+      routeSlot,
+      compareTabSlot,
+      apiDiffInsightSlot,
+      componentUi
+    );
     const componentCompareSection = new ComponentCompareSection(componentCompareUI, false);
     const pinnedComponentCompareSection = new ComponentCompareSection(componentCompareUI, true);
     componentUi.registerRoute([componentCompareSection.route]);

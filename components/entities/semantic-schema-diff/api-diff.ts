@@ -1,6 +1,6 @@
 import type { APISchema } from '@teambit/semantics.entities.semantic-schema';
 import { deepEqualNoLocation as deepEqual } from '@teambit/semantics.entities.semantic-schema';
-import type { APIDiffResult, APIDiffChange } from './api-diff-change';
+import type { APIDiffResult, APIDiffChange, SchemaAvailability, APIDiffComputeStatus } from './api-diff-change';
 import { APIDiffStatus } from './api-diff-change';
 import type { ImpactLevel } from './impact-rule';
 import type { ImpactAssessor, AssessedChange } from './impact-assessor';
@@ -191,7 +191,52 @@ function detectVisibilityChanges(
   return changes;
 }
 
-export function computeAPIDiff(base: APISchema, compare: APISchema, assessor: ImpactAssessor): APIDiffResult {
+export type APIDiffAvailability = {
+  base: SchemaAvailability;
+  compare: SchemaAvailability;
+};
+
+const AVAILABLE: SchemaAvailability = { available: true };
+
+function emptyResult(status: APIDiffComputeStatus, availability: APIDiffAvailability): APIDiffResult {
+  return {
+    status,
+    base: availability.base,
+    compare: availability.compare,
+    hasChanges: false,
+    impact: 'PATCH',
+    internalImpact: 'PATCH',
+    publicChanges: [],
+    internalChanges: [],
+    changes: [],
+    added: 0,
+    removed: 0,
+    modified: 0,
+    breaking: 0,
+    nonBreaking: 0,
+    patch: 0,
+  };
+}
+
+export function computeAPIDiff(
+  base: APISchema,
+  compare: APISchema,
+  assessor: ImpactAssessor,
+  availability: APIDiffAvailability = { base: AVAILABLE, compare: AVAILABLE }
+): APIDiffResult {
+  // A missing schema must never be diffed as if it were an empty API — one empty side
+  // would report the entire surface as added/removed, and two empty sides would be
+  // indistinguishable from "no changes". Short-circuit with an explicit status instead.
+  if (!availability.base.available || !availability.compare.available) {
+    const status: APIDiffComputeStatus =
+      !availability.base.available && !availability.compare.available
+        ? 'UNAVAILABLE'
+        : !availability.base.available
+          ? 'BASE_UNAVAILABLE'
+          : 'COMPARE_UNAVAILABLE';
+    return emptyResult(status, availability);
+  }
+
   const baseExports = buildExportMap(base.module.exports);
   const compareExports = buildExportMap(compare.module.exports);
 
@@ -222,11 +267,18 @@ export function computeAPIDiff(base: APISchema, compare: APISchema, assessor: Im
     else if (c.impact === 'PATCH') counts.patch++;
   }
 
-  const impact: ImpactLevel = allChanges.length > 0 ? worstImpact(allChanges) : 'PATCH';
+  // Consumer-facing impact comes from public changes only — an internal-only refactor
+  // must not stamp the component MAJOR. Internal severity is reported separately.
+  const impact: ImpactLevel = publicChanges.length > 0 ? worstImpact(publicChanges) : 'PATCH';
+  const internalImpact: ImpactLevel = internalChanges.length > 0 ? worstImpact(internalChanges) : 'PATCH';
 
   return {
+    status: 'COMPUTED',
+    base: availability.base,
+    compare: availability.compare,
     hasChanges: allChanges.length > 0,
     impact,
+    internalImpact,
     publicChanges,
     internalChanges,
     changes: allChanges,

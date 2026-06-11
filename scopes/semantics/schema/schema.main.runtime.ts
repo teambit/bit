@@ -23,7 +23,12 @@ import type { Formatter } from '@teambit/formatter';
 import type { SchemaNodeTransformer, SchemaTransformer } from '@teambit/typescript';
 import { BuildStatus, CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 import { Http } from '@teambit/scope.network';
-import type { ImpactRule, APIDiffResult } from '@teambit/semantics.entities.semantic-schema-diff';
+import type {
+  ImpactRule,
+  APIDiffResult,
+  SchemaAvailability,
+  SchemaUnavailableReason,
+} from '@teambit/semantics.entities.semantic-schema-diff';
 import { ImpactAssessor, DEFAULT_IMPACT_RULES, computeAPIDiff } from '@teambit/semantics.entities.semantic-schema-diff';
 import type { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
@@ -141,9 +146,43 @@ export class SchemaMain {
     apiTransformers?: SchemaNodeTransformer[],
     includeFiles?: string[]
   ): Promise<APISchema> {
+    const { schema } = await this.getSchemaWithAvailability(
+      component,
+      shouldDisposeResourcesOnceDone,
+      alwaysRunExtractor,
+      tsserverPath,
+      contextPath,
+      skipInternals,
+      schemaTransformers,
+      apiTransformers,
+      includeFiles
+    );
+    return schema;
+  }
+
+  /**
+   * like getSchema, but reports whether a real schema was obtained. an empty schema
+   * with `available: false` means "no schema data exists for this version" — callers
+   * (e.g. API diff) must not treat it as an empty API surface.
+   */
+  async getSchemaWithAvailability(
+    component: Component,
+    shouldDisposeResourcesOnceDone = false,
+    alwaysRunExtractor = false,
+    tsserverPath?: string,
+    contextPath?: string,
+    skipInternals?: boolean,
+    schemaTransformers?: SchemaTransformer[],
+    apiTransformers?: SchemaNodeTransformer[],
+    includeFiles?: string[]
+  ): Promise<{ schema: APISchema; availability: SchemaAvailability }> {
     if (this.config.disabled) {
-      return APISchema.empty(component.id as any);
+      return { schema: APISchema.empty(component.id as any), availability: { available: false, reason: 'DISABLED' } };
     }
+
+    // when extraction is attempted and fails, remember why so the artifact-fallback
+    // miss below reports the actual cause rather than a generic NOT_BUILT.
+    let extractionFailure: SchemaUnavailableReason | undefined;
 
     if (alwaysRunExtractor || (this.workspace && component.buildStatus !== BuildStatus.Succeed)) {
       try {
@@ -156,6 +195,7 @@ export class SchemaMain {
           },
         ]);
         if (typeof env.getSchemaExtractor === 'undefined') {
+          extractionFailure = 'NO_EXTRACTOR';
           throw new Error(`No SchemaExtractor defined for ${env.name}`);
         }
         const schemaExtractor: SchemaExtractor = env.getSchemaExtractor(
@@ -175,9 +215,10 @@ export class SchemaMain {
         });
         if (shouldDisposeResourcesOnceDone) schemaExtractor.dispose();
 
-        return result;
+        return { schema: result, availability: { available: true } };
       } catch (err) {
         if (alwaysRunExtractor) throw err;
+        extractionFailure = extractionFailure || 'FAILED';
         const message = err instanceof Error ? err.message : String(err);
         this.logger.warn(
           `failed extracting schema for ${component.id.toString()}, falling back to artifacts. extractor error: ${message}`,
@@ -201,14 +242,17 @@ export class SchemaMain {
        * when tag/snap without build
        * or backwards compatibility
        */
-      return APISchema.empty(component.id as any);
+      return {
+        schema: APISchema.empty(component.id as any),
+        availability: { available: false, reason: extractionFailure || 'NOT_BUILT' },
+      };
     }
 
     const schemaJsonStr = schemaArtifact[0].contents.toString('utf-8');
 
     try {
       const schemaJson = JSON.parse(schemaJsonStr);
-      return this.getSchemaFromObject(schemaJson);
+      return { schema: this.getSchemaFromObject(schemaJson), availability: { available: true } };
     } catch (e) {
       if (e instanceof SyntaxError) {
         this.logger.error(e.message);
@@ -279,9 +323,25 @@ export class SchemaMain {
    */
   async computeAPIDiff(baseComp: Component, compareComp: Component): Promise<APIDiffResult | null> {
     try {
-      const [baseSchema, compareSchema] = await Promise.all([this.getSchema(baseComp), this.getSchema(compareComp)]);
+      // a side whose schema retrieval throws is reported as FAILED availability rather than
+      // failing the whole diff — the result then carries an explicit status instead of null.
+      const getSide = async (comp: Component) => {
+        try {
+          return await this.getSchemaWithAvailability(comp);
+        } catch (err: any) {
+          this.logger.warn(`failed getting schema for ${comp.id.toString()}: ${err.message}`);
+          return {
+            schema: APISchema.empty(comp.id as any),
+            availability: { available: false, reason: 'FAILED' as SchemaUnavailableReason },
+          };
+        }
+      };
+      const [base, compare] = await Promise.all([getSide(baseComp), getSide(compareComp)]);
       const assessor = this.getImpactAssessor();
-      return computeAPIDiff(baseSchema, compareSchema, assessor);
+      return computeAPIDiff(base.schema, compare.schema, assessor, {
+        base: base.availability,
+        compare: compare.availability,
+      });
     } catch (err: any) {
       this.logger.warn(`failed computing API diff: ${err.message}`);
       return null;

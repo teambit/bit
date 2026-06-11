@@ -26,8 +26,8 @@ import type {
 import { InlineCompareEmpty } from '@teambit/component.ui.component-compare.context';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
-import { ApiDiffFullView } from '@teambit/semantics.ui.api-diff-view';
-import type { ComponentDiffEntry } from '@teambit/semantics.ui.api-diff-view';
+import { ApiDiffLaneView } from '@teambit/semantics.ui.api-diff-view';
+import type { ComponentDiffEntry, ApiDiffInsight, ApiEntry } from '@teambit/semantics.ui.api-diff-view';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import type { LaneCompareContextModel } from './lane-compare.context';
 import { useLaneCompareContext } from './lane-compare.context';
@@ -51,6 +51,8 @@ export type LaneCompareProps = {
   onStateChanged?: any;
   groupBy?: 'scope' | 'status';
   envIcons?: Map<string, string>;
+  /** slot-contributed API diff insight renderers (from componentCompareUI.registerApiDiffInsight) */
+  apiDiffInsights?: ApiDiffInsight[];
 } & HTMLAttributes<HTMLDivElement>;
 
 type ViewMode = 'code' | 'preview' | 'docs' | 'dependencies' | 'tests' | 'config' | 'api';
@@ -130,6 +132,7 @@ function LaneCompareInline({
   onStateChanged: _onStateChanged,
   groupBy: _groupByProp,
   envIcons,
+  apiDiffInsights,
   ...rest
 }: LaneCompareProps) {
   const { loadingLaneDiff, componentsToDiff, laneComponentDiffByCompId } =
@@ -412,6 +415,7 @@ function LaneCompareInline({
     const filesFor = (idStr: string) => {
       if (viewMode === 'code') return fileRegistry?.getFiles(idStr);
       if (viewMode === 'config') return fileRegistry?.getAspectFiles(idStr);
+      if (viewMode === 'api') return fileRegistry?.getApiEntries(idStr);
       return undefined;
     };
     return grouped.map(([key, comps]) => ({
@@ -428,15 +432,25 @@ function LaneCompareInline({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [grouped, groupBy, envIconsMap, fileRegistry?.getVersion(), viewMode]);
 
+  // every component participates: pairs get diffed (or pre-gated when no API-relevant
+  // change types exist), new components render as "no base to compare" rows.
   const apiDiffs: ComponentDiffEntry[] = useMemo(() => {
     const result: ComponentDiffEntry[] = [];
     laneComponentDiffByCompId.forEach((diff: any) => {
-      if (diff.sourceHead && diff.targetHead) {
-        result.push({ componentId: diff.componentId, sourceHead: diff.sourceHead, targetHead: diff.targetHead });
-      }
+      result.push({
+        componentId: diff.componentId,
+        sourceHead: diff.sourceHead,
+        targetHead: diff.targetHead,
+        changes: diff.changes,
+      });
     });
     return result;
   }, [laneComponentDiffByCompId]);
+
+  const registerApiEntries = useCallback(
+    (id: string, entries: ApiEntry[]) => fileRegistry?.registerApiEntries(id, entries),
+    [fileRegistry]
+  );
 
   // Distinguish "the lanes are identical / nothing changed" from "your filters hid everything",
   // so an empty comparison no longer reads as a blank pane.
@@ -505,7 +519,7 @@ function LaneCompareInline({
             groups={sidebarGroups}
             selectedId={selectedId}
             selectedFile={selectedFile}
-            defaultExpandFiles={viewMode === 'code' || viewMode === 'config'}
+            defaultExpandFiles={viewMode === 'code' || viewMode === 'config' || viewMode === 'api'}
             onSelect={(id, fileName) => {
               setSelectedFile(fileName);
               setSelectedId(selectedId === id && !fileName ? undefined : id || undefined);
@@ -522,7 +536,14 @@ function LaneCompareInline({
             className={styles.diffPane}
             style={isFullPaneView ? undefined : { display: 'none' }}
           >
-            <ApiDiffFullView diffs={apiDiffs} />
+            <ApiDiffLaneView
+              diffs={apiDiffs}
+              host="teambit.scope/scope"
+              selectedId={selectedId}
+              selectedExport={selectedFile}
+              insights={apiDiffInsights}
+              onApiEntries={registerApiEntries}
+            />
           </div>
 
           {/* Per-component diff pane */}

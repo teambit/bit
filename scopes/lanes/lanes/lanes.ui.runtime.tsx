@@ -416,6 +416,7 @@ export class LanesUI {
         compare={props.compare}
         host={props.host || this.host}
         tabs={props.tabs || this.resolveCompareTabs()}
+        apiDiffInsights={props.apiDiffInsights || this.componentCompareUI.getApiDiffInsights()}
       />
     );
   };

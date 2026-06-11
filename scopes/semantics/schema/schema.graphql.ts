@@ -32,9 +32,18 @@ export function schemaSchema(schema: SchemaMain): Schema {
         changes: [APIDiffDetail!]
       }
 
+      type SchemaSideAvailability {
+        available: Boolean!
+        reason: String
+      }
+
       type APIDiffResult {
+        status: String!
+        base: SchemaSideAvailability!
+        compare: SchemaSideAvailability!
         hasChanges: Boolean!
         impact: String!
+        internalImpact: String!
         publicChanges: [APIDiffChange!]!
         internalChanges: [APIDiffChange!]!
         changes: [APIDiffChange!]!

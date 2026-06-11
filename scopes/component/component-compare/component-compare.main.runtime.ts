@@ -128,7 +128,13 @@ export class ComponentCompareMain {
     try {
       const raw = await fs.readFile(ComponentCompareMain.API_DIFF_MEMO_FILE, 'utf8');
       const parsed = JSON.parse(raw) as Record<string, Record<string, any> | null>;
-      for (const [k, v] of Object.entries(parsed)) this.apiDiffMemo.set(k, v);
+      for (const [k, v] of Object.entries(parsed)) {
+        // entries persisted before availability-aware diffs lack `status` — drop them
+        // so they recompute with the new shape instead of reaching the UI stale.
+        // null entries are never persisted (see getAPIDiff), so skip those too.
+        if (!v || !v.status) continue;
+        this.apiDiffMemo.set(k, v);
+      }
       this.logger?.debug(`[component-compare memo] loaded ${this.apiDiffMemo.size} api-diff entries`);
     } catch {
       // first run / corrupted file.
