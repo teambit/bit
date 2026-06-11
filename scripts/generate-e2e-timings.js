@@ -24,7 +24,7 @@ const REPO_ROOT = path.join(__dirname, '..');
 const OUT_FILE = path.join(__dirname, 'e2e-test-timings.json');
 const PROJECT = 'gh/teambit/bit';
 const MAX_JOBS = 30;
-const RIDGE_LAMBDA = 3; // weight of the prior relative to one node observation
+const RIDGE_LAMBDA = 1; // weight of the prior relative to one node observation
 const ITERATIONS = 300;
 
 async function getJson(url) {
