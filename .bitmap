@@ -215,7 +215,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "1.13.219",
+        "version": "1.13.220",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -495,7 +495,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.1079",
+        "version": "2.0.1080",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
@@ -943,7 +943,7 @@
     "mdx": {
         "name": "mdx",
         "scope": "teambit.mdx",
-        "version": "1.0.1015",
+        "version": "1.0.1016",
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/mdx"
     },
@@ -1433,7 +1433,7 @@
     "readme": {
         "name": "readme",
         "scope": "teambit.mdx",
-        "version": "1.0.1015",
+        "version": "1.0.1016",
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/readme"
     },
