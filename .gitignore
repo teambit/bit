@@ -87,3 +87,6 @@ releases-docs/temp-files/
 # Anchored to repo root so it doesn't also match `scopes/docs/docs` (the docs aspect).
 /docs/
 
+
+# superpowers brainstorm artifacts
+.superpowers/
