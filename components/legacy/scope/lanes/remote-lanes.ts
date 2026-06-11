@@ -9,9 +9,29 @@ import { PREVIOUS_DEFAULT_LANE, REMOTE_REFS_DIR } from '@teambit/legacy.constant
 import { glob } from 'glob';
 import type { LaneComponent, Lane, ModelComponent } from '@teambit/objects';
 import { Ref } from '@teambit/objects';
+import { BitError } from '@teambit/bit-error';
+import { isValidPath } from '@teambit/legacy.utils';
 import { logger } from '@teambit/legacy.logger';
 
 type Lanes = { [laneName: string]: LaneComponent[] };
+
+/**
+ * A remote lane's `scope` and `name` originate from a Lane object served by a remote scope, i.e.
+ * untrusted input, and are used as path segments when composing the remote-lane refs file path. A
+ * traversal shape there could escape the scope's refs directory and let a malicious/compromised
+ * remote write an arbitrary file on import. `value` is typed `unknown` because it comes from a
+ * JSON-deserialized remote object and is not guaranteed to be a string at runtime. `isValidPath`
+ * blocks the traversal shapes (`..`/`.` segments, absolute, backslash, NUL, empty); the extra `/`
+ * check enforces the single-segment invariant (isValidPath legitimately allows `/` for its
+ * nested-file-path callers). Mirrors `Scope.getPendingDirPath`.
+ */
+function assertValidRemoteLaneSegment(value: unknown, kind: 'lane scope' | 'lane name'): void {
+  if (typeof value !== 'string' || !isValidPath(value) || value.includes('/')) {
+    throw new BitError(
+      `invalid ${kind} ${JSON.stringify(value)} received from a remote; refusing to use it as a remote-lane ref path outside the scope directory`
+    );
+  }
+}
 
 /**
  * each lane holds components and hashes, which are the heads of the remote
@@ -146,6 +166,8 @@ export class RemoteLanes {
   }
 
   async syncWithLaneObject(remoteName: string, lane: Lane) {
+    assertValidRemoteLaneSegment(remoteName, 'lane scope');
+    assertValidRemoteLaneSegment(lane.name, 'lane name');
     const remoteLaneId = LaneId.from(lane.name, remoteName);
     if (!this.remotes[remoteName] || !this.remotes[remoteName][lane.name]) {
       await this.loadRemoteLane(remoteLaneId);
@@ -163,6 +185,8 @@ export class RemoteLanes {
   }
 
   private composeRemoteLanePath(remoteName: string, laneName: string) {
+    assertValidRemoteLaneSegment(remoteName, 'lane scope');
+    assertValidRemoteLaneSegment(laneName, 'lane name');
     return path.join(this.basePath, remoteName, laneName);
   }
   private decomposeRemoteLanePath(filePath: string): { remoteName: string; laneName: string } {
