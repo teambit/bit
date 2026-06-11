@@ -75,6 +75,34 @@ test('copy symlinked files', async () => {
   expect(fs.lstatSync(path.join(dest2Dir, 'file.txt')).isSymbolicLink()).toBeFalsy();
 });
 
+test('fall back to copying when hard linking fails with EXDEV', async () => {
+  const tempDir = globalBitTempDir();
+  const srcDir = path.join(tempDir, 'source');
+  const dest1Dir = path.join(tempDir, 'dest1');
+  const dest2Dir = path.join(tempDir, 'dest2');
+
+  fs.mkdirpSync(srcDir);
+  fs.mkdirpSync(dest1Dir);
+  fs.mkdirpSync(dest2Dir);
+  fs.writeFileSync(path.join(srcDir, 'file.txt'), 'Hello World');
+
+  const linkSpy = jest.spyOn(fs, 'link').mockImplementation(() => {
+    const err = new Error('EXDEV: cross-device link not permitted');
+    (err as any).code = 'EXDEV';
+    return Promise.reject(err);
+  });
+  try {
+    await hardLinkDirectory(srcDir, [dest1Dir, dest2Dir]);
+  } finally {
+    linkSpy.mockRestore();
+  }
+
+  expect(fs.readFileSync(path.join(dest1Dir, 'file.txt'), 'utf8')).toBe('Hello World');
+  expect(fs.readFileSync(path.join(dest2Dir, 'file.txt'), 'utf8')).toBe('Hello World');
+  // the fallback copies the file, so it must not share an inode with the source
+  expect(fs.statSync(path.join(dest1Dir, 'file.txt')).ino).not.toBe(fs.statSync(path.join(srcDir, 'file.txt')).ino);
+});
+
 test('skip broken symlink', async () => {
   const tempDir = globalBitTempDir();
   const symlinkTargetDir = path.join(tempDir, 'symlink-target');
