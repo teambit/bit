@@ -35,6 +35,7 @@ the resolved env and which source determined it, and any load issues found.`;
   alias = '';
   options = [['j', 'json', 'return the load trace in json format']] as CommandOptions;
   loader = true;
+  private = true;
 
   constructor(private workspace: Workspace) {}
 

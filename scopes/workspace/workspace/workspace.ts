@@ -831,6 +831,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.componentLoader.clearCache();
     this.consumer.componentLoader.clearComponentsCache();
     this.componentStatusLoader.clearCache();
+    this.aggregatedLoadFailures.clear();
     this._componentList = new ComponentsList(this);
   }
 
@@ -1729,7 +1730,37 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
         errors.push(err);
       }
     }
+    this.aggregatedLoadFailures.forEach((failure) => {
+      const affected = failure.affected.size === 1 ? '1 component' : `${failure.affected.size} components`;
+      errors.push(
+        new Error(
+          `failed loading "${failure.failedId}" (during ${failure.phase}), affects ${affected}: ${failure.error}. the load continued without it, data computed by it may be missing`
+        )
+      );
+    });
     return errors;
+  }
+
+  /**
+   * load failures of aspects/envs that affect multiple components. aggregated here (instead of
+   * attaching an issue to every affected component) to keep "bit status" readable when e.g. one
+   * env used by 100 components fails to load. the failing component itself still gets a
+   * per-component LoadFailures issue.
+   */
+  private aggregatedLoadFailures: Map<
+    string,
+    { failedId: string; phase: string; error: string; affected: Set<string> }
+  > = new Map();
+
+  registerAggregatedLoadFailure(
+    failure: { failedId: string; phase: string; error: string },
+    affectedComponentId: string
+  ) {
+    // keyed by the failing id only: the same root cause may be reported from several load phases,
+    // and it should still render as a single workspace issue.
+    const existing = this.aggregatedLoadFailures.get(failure.failedId);
+    if (existing) existing.affected.add(affectedComponentId);
+    else this.aggregatedLoadFailures.set(failure.failedId, { ...failure, affected: new Set([affectedComponentId]) });
   }
 
   async listComponentsDuringMerge(): Promise<ComponentID[]> {

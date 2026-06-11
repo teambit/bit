@@ -541,9 +541,11 @@ export class WorkspaceComponentLoader {
   }
 
   /**
-   * attach load failures that were reported to the active trace by deep loader code (e.g. aspect
-   * require failures in the scope loader) to the components affected by them: a component is
-   * affected when the failed id is one of its extensions or the component itself.
+   * surface load failures that were reported to the active trace by deep loader code (e.g. aspect
+   * require failures in the scope loader). the failing component itself gets a per-component
+   * issue. components merely *using* the failed aspect/env are aggregated into a single
+   * workspace-level issue — one failing env may be used by 100 components, and attaching the
+   * issue to each of them would flood "bit status".
    */
   private attachReportedLoadFailures(components: Component[]) {
     if (this.workspace.inInstallContext) return;
@@ -551,13 +553,17 @@ export class WorkspaceComponentLoader {
     if (!failures?.length) return;
     const noVersion = (id: string) => id.split('@')[0];
     components.forEach((component) => {
+      const componentIdStr = component.id.toString();
       const extensionIds: string[] = component.state._consumer
         ? component.state._consumer.extensions.map((ext) => ext.stringId)
         : [];
-      const relevantIds = [...extensionIds, component.id.toString()].map(noVersion);
       failures.forEach((failure) => {
-        if (relevantIds.includes(noVersion(failure.failedId))) {
+        if (noVersion(failure.failedId) === noVersion(componentIdStr)) {
           this.addLoadFailureIssue(component, failure.failedId, failure.phase, failure.error);
+          return;
+        }
+        if (extensionIds.some((extId) => noVersion(extId) === noVersion(failure.failedId))) {
+          this.workspace.registerAggregatedLoadFailure(failure, componentIdStr);
         }
       });
     });

@@ -53,6 +53,7 @@ New issue class (e.g. `LoadFailure`) in `@teambit/component-issues`, carrying `{
 - `isTagBlocker = false` initially: this phase must not change which operations succeed. Promoting it to a blocker (or per-error-class severity) is a candidate for a later phase once we see real-world frequency.
 - Install-context suppression (`ignoreAspectLoadingError`, `workspace-aspects-loader.ts:915-922`) stays: mid-install ESM errors are expected noise, not issues.
 - Catch blocks keep their current control flow (log + continue); the only addition is issue attachment. Where the component object isn't in hand at the catch site, the trace context carries a per-component issue collector so deep aspect-loader code can report without new parameters.
+- **Noise control**: only the failing component itself gets a per-component issue. Components merely _using_ the failed aspect/env are aggregated into a single workspace-level issue (`workspace.getWorkspaceIssues()`, rendered in the "workspace issues" section of `bit status`) with an affected-components count — one broken env used by 100 components must not produce 100 status entries.
 
 ## Risks / Trade-offs
 

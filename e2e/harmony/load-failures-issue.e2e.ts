@@ -29,14 +29,25 @@ describe('surfacing swallowed load errors as component issues', function () {
     it('bit status should complete without throwing', () => {
       expect(statusJson).to.have.property('newComponents');
     });
-    it('the affected component should have a LoadFailures issue naming the failing aspect', () => {
+    it('the failing aspect component itself should have a LoadFailures issue', () => {
+      const componentsWithIssues = statusJson.componentsWithIssues || [];
+      const aspectComp = componentsWithIssues.find((comp) => comp.id.includes('non-requireable-aspect'));
+      expect(aspectComp, 'the failing aspect should be listed with issues').to.not.be.undefined;
+      const loadFailureIssue = aspectComp.issues.find((issue) => issue.type === 'LoadFailures');
+      expect(loadFailureIssue, 'the failing aspect should have a LoadFailures issue').to.not.be.undefined;
+    });
+    it('components using the failing aspect should NOT each carry the issue (avoid noise)', () => {
       const componentsWithIssues = statusJson.componentsWithIssues || [];
       const comp1 = componentsWithIssues.find((comp) => comp.id.includes('comp1'));
-      expect(comp1, 'comp1 should be listed with issues').to.not.be.undefined;
-      const loadFailureIssue = comp1.issues.find((issue) => issue.type === 'LoadFailures');
-      expect(loadFailureIssue, 'comp1 should have a LoadFailures issue').to.not.be.undefined;
-      expect(JSON.stringify(loadFailureIssue.data)).to.have.string('non-requireable-aspect');
-      expect(JSON.stringify(loadFailureIssue.data)).to.have.string('error by purpose');
+      const comp1LoadFailures = comp1?.issues.find((issue) => issue.type === 'LoadFailures');
+      expect(comp1LoadFailures).to.be.undefined;
+    });
+    it('instead, a single workspace-level issue should aggregate the affected components', () => {
+      const workspaceIssues = statusJson.workspaceIssues || [];
+      const aggregated = workspaceIssues.find((issue) => issue.includes('non-requireable-aspect'));
+      expect(aggregated, 'a workspace issue naming the failing aspect should exist').to.not.be.undefined;
+      expect(aggregated).to.have.string('error by purpose');
+      expect(aggregated).to.have.string('affects 1 component');
     });
     it('the LoadFailures issue should not block tagging', () => {
       // tag must not require --ignore-issues for the LoadFailures issue. tagging without build
