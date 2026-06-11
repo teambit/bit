@@ -9,6 +9,8 @@ import { VERSION_ZERO, Ref } from '@teambit/objects';
 import { BitError } from '@teambit/bit-error';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { LoadSpan } from '@teambit/harmony.modules.load-trace';
+import { startOrJoinLoadTrace, loadSpan } from '@teambit/harmony.modules.load-trace';
 import type { ScopeMain } from './scope.main.runtime';
 
 export class ScopeComponentLoader {
@@ -23,10 +25,23 @@ export class ScopeComponentLoader {
   }
 
   async get(id: ComponentID, importIfMissing = true, useCache = true): Promise<Component | undefined> {
+    return startOrJoinLoadTrace('scope.get', { id: id.toString() }, (span) =>
+      this.getWithSpan(id, span, importIfMissing, useCache)
+    );
+  }
+
+  private async getWithSpan(
+    id: ComponentID,
+    span: LoadSpan,
+    importIfMissing = true,
+    useCache = true
+  ): Promise<Component | undefined> {
     const fromCache = this.getFromCache(id);
     if (fromCache && useCache) {
+      span.setAttribute('componentsCache', 'hit');
       return fromCache;
     }
+    span.setAttribute('componentsCache', 'miss');
     const idStr = id.toString();
     this.logger.trace(`ScopeComponentLoader.get, loading ${idStr}`);
     const legacyId = id;
@@ -38,7 +53,9 @@ export class ScopeComponentLoader {
       this.scope.isExported(id) &&
       !this.importedComponentsCache.get(id.toString())
     ) {
-      await this.scope.import([id], { reason: `${id.toString()} because it's missing from the local scope` });
+      await loadSpan('scope-import', { id: id.toString() }, () =>
+        this.scope.import([id], { reason: `${id.toString()} because it's missing from the local scope` })
+      );
       this.importedComponentsCache.set(id.toString(), true);
       modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id);
     }
@@ -73,7 +90,7 @@ export class ScopeComponentLoader {
       );
     }
     const snap = await this.getHeadSnap(modelComponent);
-    const state = await this.createStateFromVersion(id, version);
+    const state = await loadSpan('state-from-version', { id: idStr }, () => this.createStateFromVersion(id, version));
     const tagMap = this.getTagMap(modelComponent);
 
     const component = new Component(newId, snap, state, tagMap, this.scope);

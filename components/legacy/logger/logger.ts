@@ -9,6 +9,7 @@ import yn from 'yn';
 import pMapSeries from 'p-map-series';
 
 import { Analytics } from '@teambit/legacy.analytics';
+import { getLoadTraceLogPrefix, setSpanEmitter } from '@teambit/harmony.modules.load-trace';
 import { getConfig } from '@teambit/config-store';
 import { defaultErrorHandler } from '@teambit/cli';
 import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS, DEBUG_LOG, GLOBAL_LOGS } from '@teambit/legacy.constants';
@@ -125,27 +126,27 @@ class BitLogger implements IBitLogger {
   }
 
   trace(message: string, ...meta: any[]) {
-    this.logger.trace(message, ...meta);
+    this.logger.trace(getLoadTraceLogPrefix() + message, ...meta);
   }
 
   debug(message: string, ...meta: any[]) {
-    this.logger.debug(message, ...meta);
+    this.logger.debug(getLoadTraceLogPrefix() + message, ...meta);
   }
 
   warn(message: string, ...meta: any[]) {
-    this.logger.warn(message, ...meta);
+    this.logger.warn(getLoadTraceLogPrefix() + message, ...meta);
   }
 
   info(message: string, ...meta: any[]) {
-    this.logger.info(message, ...meta);
+    this.logger.info(getLoadTraceLogPrefix() + message, ...meta);
   }
 
   error(message: string, ...meta: any[]) {
-    this.logger.error(message, ...meta);
+    this.logger.error(getLoadTraceLogPrefix() + message, ...meta);
   }
 
   fatal(message: string, ...meta: any[]) {
-    this.logger.fatal(message, ...meta);
+    this.logger.fatal(getLoadTraceLogPrefix() + message, ...meta);
   }
 
   get isJsonFormat() {
@@ -313,6 +314,15 @@ class BitLogger implements IBitLogger {
 }
 
 const logger = new BitLogger(pinoLogger);
+
+// emit closed load-trace spans to the log at trace level. the emitter fires after the span's
+// async context has exited, so the message carries the trace-id and span path explicitly
+// (bypassing the prefix in BitLogger methods to avoid double-prefixing).
+setSpanEmitter((span, traceId) => {
+  const attrs = Object.keys(span.attributes).length ? ` ${JSON.stringify(span.attributes)}` : '';
+  const duration = span.durationMs !== undefined ? `${span.durationMs.toFixed(2)}ms` : 'n/a';
+  logger.logger.trace(`load-trace [trace:${traceId}] ${span.path}: ${duration}${attrs}`);
+});
 
 export const printWarning = (msg: string) => {
   const cfgNoWarnings = getConfig(CFG_NO_WARNINGS);

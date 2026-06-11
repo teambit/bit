@@ -9,6 +9,8 @@ import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
 import fs from 'fs-extra';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
+import type { LoadSpan } from '@teambit/harmony.modules.load-trace';
+import { startOrJoinLoadTrace, reportLoadFailure } from '@teambit/harmony.modules.load-trace';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentNotFound } from '@teambit/legacy.scope';
@@ -80,6 +82,18 @@ export class WorkspaceAspectsLoader {
     neededFor?: string,
     opts: WorkspaceLoadAspectsOptions = {}
   ): Promise<string[]> {
+    return startOrJoinLoadTrace('workspace.loadAspects', { ids: ids.length, neededFor }, (span) =>
+      this.loadAspectsWithSpan(ids, span, throwOnError, neededFor, opts)
+    );
+  }
+
+  private async loadAspectsWithSpan(
+    ids: string[],
+    span: LoadSpan,
+    throwOnError?: boolean,
+    neededFor?: string,
+    opts: WorkspaceLoadAspectsOptions = {}
+  ): Promise<string[]> {
     const calculatedThrowOnError: boolean = throwOnError ?? false;
     const defaultOpts: Required<WorkspaceLoadAspectsOptions> = {
       useScopeAspectsCapsule: false,
@@ -94,10 +108,7 @@ export class WorkspaceAspectsLoader {
     };
     const mergedOpts: Required<WorkspaceLoadAspectsOptions> = { ...defaultOpts, ...opts };
 
-    // generate a random callId to be able to identify the call from the logs
-    const callId = Math.floor(Math.random() * 1000);
-    const loggerPrefix = `[${callId}] loadAspects,`;
-    this.logger.profileTrace(`[${callId}] workspace.loadAspects`);
+    const loggerPrefix = `loadAspects,`;
     this.logger.info(`${loggerPrefix} loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts, null, 2)}`);
@@ -110,7 +121,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       notLoadedIds = nonLocalAspects.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     }
     if (!notLoadedIds.length) {
-      this.logger.profileTrace(`[${callId}] workspace.loadAspects`);
+      span.setAttribute('alreadyLoaded', true);
       return [];
     }
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -176,7 +187,6 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, undefined, { throwOnError });
     const manifestIds = manifests.map((manifest) => manifest.id);
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
-    this.logger.profileTrace(`[${callId}] workspace.loadAspects`);
     return compact(manifestIds.concat(scopeAspectIds));
   }
 
@@ -678,6 +688,8 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       this.logger.consoleWarning(
         `failed resolving aspect ${aspectStringId} from ${parentPath}, error: ${error.message}`
       );
+      // record the swallowed failure on the active load-trace so it surfaces as a component issue
+      reportLoadFailure({ failedId: aspectStringId, phase: 'resolve-installed-aspect', error: error.message });
       return undefined;
     }
   }
