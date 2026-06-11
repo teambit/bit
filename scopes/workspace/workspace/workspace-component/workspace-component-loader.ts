@@ -213,14 +213,15 @@ export class WorkspaceComponentLoader {
     const groupsRes = compact(
       await mapSeries(groupsToHandle, async (group, index) => {
         const { scopeIds, workspaceIds, aspects, core, seeders, envs } = group;
-        const groupDesc = `getMany-${callId} group ${index + 1}/${groupsToHandle.length} - ${loadGroupToStr(group)}`;
+        const groupStr = loadGroupToStr(group);
+        const groupDesc = `getMany-${callId} group ${index + 1}/${groupsToHandle.length} - ${groupStr}`;
         this.logger.profileTrace(groupDesc);
         if (!workspaceIds.length && !scopeIds.length) {
           throw new Error('getAndLoadSlotOrdered - group has no ids to load');
         }
         const res = await loadSpan(
           'load-group',
-          { group: `${index + 1}/${groupsToHandle.length}`, desc: loadGroupToStr(group) },
+          { group: `${index + 1}/${groupsToHandle.length}`, desc: groupStr },
           () => this.getAndLoadSlot(workspaceIds, scopeIds, { ...loadOpts, core, seeders, aspects, envs })
         );
         this.logger.profileTrace(groupDesc);

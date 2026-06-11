@@ -11,6 +11,11 @@ export type SpanEmitter = (span: LoadSpan, traceId: string) => void;
 export class LoadSpan {
   readonly children: LoadSpan[] = [];
   readonly attributes: SpanAttributes;
+  /**
+   * span names from the root to this span, e.g. "getMany > load-one > extension-merge". computed
+   * once at construction (the parent chain is immutable) so reading it never re-walks the tree.
+   */
+  readonly path: string;
   durationMs?: number;
   private startTime: bigint;
 
@@ -20,15 +25,9 @@ export class LoadSpan {
     attributes?: SpanAttributes
   ) {
     this.attributes = attributes || {};
+    this.path = parent ? `${parent.path} > ${name}` : name;
     this.startTime = process.hrtime.bigint();
     if (parent) parent.children.push(this);
-  }
-
-  /**
-   * span names from the root to this span, e.g. "getMany > load-one > extension-merge".
-   */
-  get path(): string {
-    return this.parent ? `${this.parent.path} > ${this.name}` : this.name;
   }
 
   setAttribute(key: string, value: string | number | boolean | undefined) {
@@ -172,25 +171,6 @@ export async function loadSpan<T>(
       promise = fn(span);
     });
     return await promise;
-  } finally {
-    span.end();
-    if (spanEmitter) spanEmitter(span, store.trace.id);
-  }
-}
-
-/**
- * synchronous variant of loadSpan for cheap stages that must not introduce an await.
- */
-export function loadSpanSync<T>(name: string, attributes: SpanAttributes, fn: (span: LoadSpan) => T): T {
-  const store = traceStorage.getStore();
-  if (!store) return fn(new LoadSpan(name, undefined, attributes));
-  const span = new LoadSpan(name, store.span, attributes);
-  try {
-    let result!: T;
-    traceStorage.run({ trace: store.trace, span }, () => {
-      result = fn(span);
-    });
-    return result;
   } finally {
     span.end();
     if (spanEmitter) spanEmitter(span, store.trace.id);

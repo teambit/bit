@@ -9,6 +9,9 @@ import { EnvsAspect } from '@teambit/envs';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { ExtensionsOrigin, Workspace } from './workspace';
 
+/** strip the version suffix from a raw id string (ids here are raw `stringId`s, not ComponentIDs). */
+const noVersion = (id: string) => id.split('@')[0];
+
 type ExtensionSourceRow = {
   extensionId: string;
   winner: ExtensionsOrigin;
@@ -100,7 +103,6 @@ the resolved env and which source determined it, and any load issues found.`;
     merged: ExtensionDataList,
     beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>
   ): ExtensionSourceRow[] {
-    const noVersion = (id: string) => id.split('@')[0];
     return merged.map((mergedExt) => {
       const extId = mergedExt.stringId;
       const origins = beforeMerge
@@ -123,7 +125,6 @@ the resolved env and which source determined it, and any load issues found.`;
     envId?: string
   ): ExtensionsOrigin | undefined {
     if (!envId) return undefined;
-    const noVersion = (id: string) => id.split('@')[0];
     const found = beforeMerge.find((entry) => {
       const envsAspect = entry.extensions.findCoreExtension(EnvsAspect.id);
       if (envsAspect?.config.env && noVersion(envsAspect.config.env) === noVersion(envId)) return true;

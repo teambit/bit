@@ -125,28 +125,37 @@ class BitLogger implements IBitLogger {
     this.logger.trace(message, ...meta);
   }
 
+  /**
+   * prepend the active load-trace prefix, but only when the line will actually be emitted.
+   * building the prefix does an AsyncLocalStorage lookup + span-path walk — too costly to run on
+   * every discarded trace/debug line during component loading.
+   */
+  private withTracePrefix(level: Level, message: string): string {
+    return this.logger.isLevelEnabled(level) ? getLoadTraceLogPrefix() + message : message;
+  }
+
   trace(message: string, ...meta: any[]) {
-    this.logger.trace(getLoadTraceLogPrefix() + message, ...meta);
+    this.logger.trace(this.withTracePrefix('trace', message), ...meta);
   }
 
   debug(message: string, ...meta: any[]) {
-    this.logger.debug(getLoadTraceLogPrefix() + message, ...meta);
+    this.logger.debug(this.withTracePrefix('debug', message), ...meta);
   }
 
   warn(message: string, ...meta: any[]) {
-    this.logger.warn(getLoadTraceLogPrefix() + message, ...meta);
+    this.logger.warn(this.withTracePrefix('warn', message), ...meta);
   }
 
   info(message: string, ...meta: any[]) {
-    this.logger.info(getLoadTraceLogPrefix() + message, ...meta);
+    this.logger.info(this.withTracePrefix('info', message), ...meta);
   }
 
   error(message: string, ...meta: any[]) {
-    this.logger.error(getLoadTraceLogPrefix() + message, ...meta);
+    this.logger.error(this.withTracePrefix('error', message), ...meta);
   }
 
   fatal(message: string, ...meta: any[]) {
-    this.logger.fatal(getLoadTraceLogPrefix() + message, ...meta);
+    this.logger.fatal(this.withTracePrefix('fatal', message), ...meta);
   }
 
   get isJsonFormat() {

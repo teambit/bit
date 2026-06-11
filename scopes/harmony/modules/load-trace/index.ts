@@ -8,6 +8,5 @@ export {
   getLoadTraceLogPrefix,
   startOrJoinLoadTrace,
   loadSpan,
-  loadSpanSync,
   reportLoadFailure,
 } from './load-trace';

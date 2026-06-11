@@ -44,6 +44,7 @@ import type { GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { LoadFailure } from '@teambit/harmony.modules.load-trace';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import type { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { ExtensionDataList, REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy.extension-data';
@@ -1757,15 +1758,9 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
    * env used by 100 components fails to load. the failing component itself still gets a
    * per-component LoadFailures issue.
    */
-  private aggregatedLoadFailures: Map<
-    string,
-    { failedId: string; phase: string; error: string; affected: Set<string> }
-  > = new Map();
+  private aggregatedLoadFailures: Map<string, LoadFailure & { affected: Set<string> }> = new Map();
 
-  registerAggregatedLoadFailure(
-    failure: { failedId: string; phase: string; error: string },
-    affectedComponentId: string
-  ) {
+  registerAggregatedLoadFailure(failure: LoadFailure, affectedComponentId: string) {
     // keyed by the failing id only: the same root cause may be reported from several load phases,
     // and it should still render as a single workspace issue.
     const existing = this.aggregatedLoadFailures.get(failure.failedId);
