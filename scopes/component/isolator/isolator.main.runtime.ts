@@ -753,6 +753,9 @@ export class IsolatorMain {
         const dependenciesGraph = opts.useDependenciesGraph
           ? await legacyScope?.getDependenciesGraphByComponentIds(capsuleList.getAllComponentIDs())
           : undefined;
+        const capsulesWithoutDependenciesGraph = opts.useDependenciesGraph
+          ? await this.getCapsulesWithoutDependenciesGraph(capsuleList, legacyScope)
+          : CapsuleList.fromArray([]);
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
@@ -761,10 +764,10 @@ export class IsolatorMain {
           packageManager: opts.packageManager,
           dependenciesGraph,
         });
-        if (opts.useDependenciesGraph && dependenciesGraph == null) {
-          // If the graph was not present in the model, we use the just created lockfile inside the capsules
-          // to populate the graph.
-          await this.addDependenciesGraphToComponents(capsuleList, components, capsulesDir);
+        if (capsulesWithoutDependenciesGraph.length) {
+          // If the graph was not present in the model, use the just-created lockfile inside the capsules
+          // to populate it only for the missing components.
+          await this.addDependenciesGraphToComponents(capsulesWithoutDependenciesGraph, components, capsulesDir);
         }
       }
       if (installLongProcessLogger) {
@@ -805,6 +808,22 @@ export class IsolatorMain {
   }
   /* eslint-enable complexity */
 
+  private async getCapsulesWithoutDependenciesGraph(
+    capsuleList: CapsuleList,
+    legacyScope?: Scope
+  ): Promise<CapsuleList> {
+    if (!legacyScope) return capsuleList;
+    const capsules = await pMap(
+      capsuleList,
+      async (capsule) => {
+        const dependenciesGraph = await legacyScope.getDependenciesGraphByComponentId(capsule.component.id);
+        return dependenciesGraph == null || dependenciesGraph.isEmpty() ? capsule : undefined;
+      },
+      { concurrency: concurrentComponentsLimit() }
+    );
+    return CapsuleList.fromArray(compact(capsules));
+  }
+
   private async addDependenciesGraphToComponents(
     capsuleList: CapsuleList,
     components: Component[],
@@ -820,6 +839,14 @@ export class IsolatorMain {
       componentRelativeDir: path.relative(capsulesDir, capsule.path),
     }));
     await this.dependencyResolver.addDependenciesGraph(comps, opts);
+    const componentById = new Map(components.map((component) => [component.id.toString(), component]));
+    for (const capsule of capsuleList) {
+      const dependenciesGraph = capsule.component.state._consumer.dependenciesGraph;
+      if (!dependenciesGraph) continue;
+      // Graph calculation mutates capsule components; callers persist the original host components.
+      const component = componentById.get(capsule.component.id.toString());
+      if (component) component.state._consumer.dependenciesGraph = dependenciesGraph;
+    }
   }
 
   private async markCapsulesAsReady(capsuleList: CapsuleList): Promise<void> {
