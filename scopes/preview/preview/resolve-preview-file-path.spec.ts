@@ -1,4 +1,6 @@
+import os from 'os';
 import { join, sep } from 'path';
+import fs from 'fs-extra';
 import { expect } from 'chai';
 import { resolvePreviewFilePath } from './resolve-preview-file-path';
 
@@ -33,5 +35,40 @@ describe('resolvePreviewFilePath', () => {
 
   it('allows a file that resolves back to publicDir itself', () => {
     expect(resolvePreviewFilePath(publicDir, '.')).to.equal(publicDir);
+  });
+
+  // a symlink inside publicDir must not be allowed to redirect the served file outside it. these
+  // use a real temp tree because symlink resolution needs files on disk.
+  describe('symlink handling', () => {
+    let root: string;
+    let realPublicDir: string;
+
+    beforeEach(async () => {
+      root = await fs.mkdtemp(join(os.tmpdir(), 'preview-symlink-'));
+      realPublicDir = join(root, 'public');
+      await fs.ensureDir(join(realPublicDir, 'assets'));
+      await fs.writeFile(join(realPublicDir, 'assets', 'main.js'), 'ok');
+      await fs.writeFile(join(root, 'secret.txt'), 'SECRET'); // sibling of public, outside it
+    });
+
+    afterEach(async () => {
+      await fs.remove(root);
+    });
+
+    it('allows a real nested file', () => {
+      expect(resolvePreviewFilePath(realPublicDir, 'assets/main.js')).to.equal(
+        join(realPublicDir, 'assets', 'main.js')
+      );
+    });
+
+    it('rejects a symlink inside publicDir that points outside', async () => {
+      await fs.symlink(join(root, 'secret.txt'), join(realPublicDir, 'evil')); // public/evil -> ../secret.txt
+      expect(resolvePreviewFilePath(realPublicDir, 'evil')).to.equal(undefined);
+    });
+
+    it('allows a symlink inside publicDir that points to another file inside it', async () => {
+      await fs.symlink(join(realPublicDir, 'assets', 'main.js'), join(realPublicDir, 'link.js'));
+      expect(resolvePreviewFilePath(realPublicDir, 'link.js')).to.equal(join(realPublicDir, 'link.js'));
+    });
   });
 });
