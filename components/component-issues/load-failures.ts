@@ -6,7 +6,7 @@ export type LoadFailureEntry = {
    */
   failedId: string;
   /**
-   * the load phase where the failure happened (e.g. "require-aspects", "resolve-installed-aspect").
+   * the load phase where the failure happened (e.g. "load-comps-as-aspects", "require-aspects").
    */
   phase: string;
   error: string;

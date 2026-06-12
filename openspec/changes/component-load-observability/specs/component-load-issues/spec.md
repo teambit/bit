@@ -2,9 +2,7 @@
 
 ### Requirement: Swallowed load errors become component issues
 
-When a component's aspect, env, or extension fails to load _terminally_ (the loader continues best-effort and does not recover the aspect later in the same command), the loader SHALL attach a load-failure issue to the failing component itself (when it's a workspace component) carrying the failing id, the load phase, and the error message. Components merely _using_ the failed aspect/env SHALL NOT each carry the issue; they are aggregated into a workspace-level issue (see the aggregation requirement).
-
-Because Bit's load is intentionally multi-pass (an aspect may fail at one stage and load successfully at a later one, e.g. after on-the-fly compilation), failures SHALL only be reported from sites proven terminal-for-the-command — the `require-aspects` path in the aspect loader (reached only after the inline compile-and-reload retry is exhausted, and a failed aspect is never silently re-attempted) and installed-aspect resolution in the workspace aspects loader (a synchronous module-not-found on disk). Best-effort batch catch sites that a later pass can recover from (e.g. `loadCompsAsAspects`) SHALL NOT report, to avoid false positives.
+When a component's aspect, env, or extension fails to load and the loader continues best-effort (today's log-and-continue catch sites, including `loadCompsAsAspects` in the workspace component loader, the `requireAspects` error path in the scope aspects loader, and installed-aspect resolution in the workspace aspects loader), the loader SHALL attach a load-failure issue to the failing component itself (when it's a workspace component) carrying the failing id, the load phase, and the error message. Components merely _using_ the failed aspect/env SHALL NOT each carry the issue; they are aggregated into a workspace-level issue (see the aggregation requirement).
 
 #### Scenario: Env fails to load
 
