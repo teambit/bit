@@ -12,9 +12,13 @@
  *      overdetermined system, solved here with non-negative least squares (coordinate descent),
  *      lightly regularized toward a hook-count-based prior for files the data can't separate.
  *
- * Usage: node scripts/generate-e2e-timings.js
- * No auth token needed — the project is public on CircleCI. Run occasionally (e.g. monthly, or
- * when the predicted node loads from `split-e2e-tests.js --stats` drift from actual CI times).
+ * Usage: node scripts/generate-e2e-timings.js [--jobs=N] [--prior=hooks|manifest]
+ *   --jobs=N           how many recent successful e2e_test jobs to learn from (default 30)
+ *   --prior=manifest   regularize toward the existing manifest instead of hook counts.
+ *                      Preferred for routine refreshes (e.g. the scheduled CI job): combined with
+ *                      a small --jobs window it updates weights from recent runs only, so stale
+ *                      observations of files that were since split/renamed don't poison the solve.
+ * No auth token needed — the project is public on CircleCI.
  */
 
 const fs = require('fs');
@@ -23,7 +27,12 @@ const path = require('path');
 const REPO_ROOT = path.join(__dirname, '..');
 const OUT_FILE = path.join(__dirname, 'e2e-test-timings.json');
 const PROJECT = 'gh/teambit/bit';
-const MAX_JOBS = 30;
+const cliFlag = (name, def) => {
+  const match = process.argv.find((arg) => arg.startsWith(`--${name}=`));
+  return match ? match.split('=')[1] : def;
+};
+const MAX_JOBS = parseInt(cliFlag('jobs', '30'), 10);
+const PRIOR_MODE = cliFlag('prior', 'hooks');
 const RIDGE_LAMBDA = 1; // weight of the prior relative to one node observation
 const ITERATIONS = 300;
 
@@ -77,7 +86,7 @@ async function fetchNodeObservations(jobNumber) {
 }
 
 /** prior estimate per file from hook counts: hooks dominate e2e cost, ~12s per before-hook */
-function buildPrior(file) {
+function hookPrior(file) {
   try {
     const src = fs.readFileSync(path.join(REPO_ROOT, file), 'utf8');
     const hooks = (src.match(/\bbefore(Each)?\s*\(/g) || []).length;
@@ -85,6 +94,20 @@ function buildPrior(file) {
   } catch {
     return 60; // file no longer exists locally; keep a neutral prior
   }
+}
+
+const existingManifest = (() => {
+  if (PRIOR_MODE !== 'manifest') return {};
+  try {
+    return JSON.parse(fs.readFileSync(OUT_FILE, 'utf8'));
+  } catch {
+    console.error('warning: --prior=manifest but no existing manifest found, falling back to hook counts');
+    return {};
+  }
+})();
+
+function buildPrior(file) {
+  return existingManifest[file] ?? hookPrior(file);
 }
 
 function solve(observations, files) {
@@ -147,8 +170,13 @@ async function main() {
   }
 
   // floor at 15s: the solver can collapse under-identified files to 0, which makes the
-  // bin-packer treat them as free and pile dozens of them onto one node
-  const manifest = Object.fromEntries(files.map((f, i) => [f, Math.max(15, Math.round(estimate[i]))]));
+  // bin-packer treat them as free and pile dozens of them onto one node.
+  // Files that no longer exist locally (deleted/renamed since the observed runs) are dropped.
+  const manifest = Object.fromEntries(
+    files
+      .filter((f) => fs.existsSync(path.join(REPO_ROOT, f)))
+      .map((f) => [f, Math.max(15, Math.round(estimate[files.indexOf(f)]))])
+  );
   fs.writeFileSync(OUT_FILE, `${JSON.stringify(manifest, null, 2)}\n`);
   console.error(`wrote ${OUT_FILE}`);
 }
