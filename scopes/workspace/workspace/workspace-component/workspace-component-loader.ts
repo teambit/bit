@@ -22,12 +22,7 @@ import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import type { LoadSpan } from '@teambit/harmony.modules.load-trace';
-import {
-  startOrJoinLoadTrace,
-  loadSpan,
-  currentLoadTrace,
-  reportLoadFailure,
-} from '@teambit/harmony.modules.load-trace';
+import { startOrJoinLoadTrace, loadSpan, currentLoadTrace } from '@teambit/harmony.modules.load-trace';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import type { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
@@ -517,19 +512,14 @@ export class WorkspaceComponentLoader {
     try {
       await this.workspace.loadAspects(aspectIds, true, 'self loading aspects', { useScopeAspectsCapsule: true });
     } catch (err: any) {
+      // best-effort: components stay usable without their self-aspect. we deliberately do NOT surface
+      // this batch failure as a load-failure issue. this catch can fire for an aspect that loads fine
+      // on a later pass (clearComponentCache resets the self-load gate and the load retries, e.g. after
+      // on-the-fly compilation), so a "bit status" issue here would be a false positive; it also can't
+      // attribute the throw to a specific id in the batch. genuine, terminal require failures are
+      // surfaced per-aspect where they're proven final (aspect-loader handleExtensionLoadingError,
+      // phase "require-aspects", which never silently re-loads a failed aspect).
       this.logger.warn(`failed loading components as aspects for components ${aspectIds.join(', ')}`, err);
-      // the error is not thrown (best-effort loading), but it's surfaced as a component issue
-      // so it shows up in "bit status" instead of disappearing.
-      if (!this.workspace.inInstallContext) {
-        const errMsg = err.message || String(err);
-        aspectIds.forEach((aspectId) => {
-          reportLoadFailure({ failedId: aspectId, phase: 'load-comps-as-aspects', error: errMsg });
-        });
-        components.forEach((component) => {
-          if (!aspectIds.includes(component.id.toString())) return;
-          this.addLoadFailureIssue(component, component.id.toString(), 'load-comps-as-aspects', errMsg);
-        });
-      }
     }
   }
 
