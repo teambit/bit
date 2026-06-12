@@ -21,6 +21,7 @@ import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
+import { startOrJoinLoadTrace } from '@teambit/harmony.modules.load-trace';
 import type { IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import { IsolatorAspect } from '@teambit/isolator';
 import type { LoggerMain, Logger } from '@teambit/logger';
@@ -919,11 +920,14 @@ export class ScopeMain implements ComponentFactory {
 
   async getMany(ids: ComponentID[], throwIfNotExist = false): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
-    const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
-      return throwIfNotExist ? this.getOrThrow(id) : this.get(id);
+    if (!idsWithoutEmpty.length) return [];
+    return startOrJoinLoadTrace('scope.getMany', { ids: idsWithoutEmpty.length }, async () => {
+      const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
+        return throwIfNotExist ? this.getOrThrow(id) : this.get(id);
+      });
+      const components = await componentsP;
+      return compact(components);
     });
-    const components = await componentsP;
-    return compact(components);
   }
 
   /**

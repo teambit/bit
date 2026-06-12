@@ -1157,6 +1157,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/in-memory-cache"
     },
+    "modules/load-trace": {
+        "name": "modules/load-trace",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/modules/load-trace"
+    },
     "modules/match-pattern": {
         "name": "modules/match-pattern",
         "scope": "teambit.workspace",
