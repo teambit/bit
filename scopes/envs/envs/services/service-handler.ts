@@ -14,7 +14,7 @@ export interface ServiceHandler {
   /**
    * version of the service. optional.
    */
-  version?: () => string;
+  version?: () => string | Promise<string>;
 
   /**
    * config of the service. e.g. tsconfig.json
