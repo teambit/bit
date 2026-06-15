@@ -1179,4 +1179,71 @@ describe('local snap cascades updateDependents on the lane', function () {
       expect(bitMap).to.not.have.property('comp2');
     });
   });
+
+  // ---------------------------------------------------------------------------------------------
+  // Scenario 21: a visible workspace component depends on a hidden updateDependent whose build never
+  // succeeded (e.g. Ripple failed after "snap updates"), so it was never published to the registry.
+  // The updateDependent is not checked out, so it must be fetched from the registry as a package —
+  // but there is no package. `bit install` must fail early with an actionable error (and a `bit
+  // import` remediation) instead of letting pnpm error with the cryptic "No matching version found"
+  // for the unpublished `0.0.0-<hash>`.
+  // ---------------------------------------------------------------------------------------------
+  describe('scenario 21: install errors clearly when a workspace component depends on an unpublished updateDependent', () => {
+    let comp2UpdDepHash: string;
+    let comp1LaneHead: string;
+    before(async () => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(3); // comp1 -> comp2 -> comp3
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // comp1 is a visible lane component (it depends on comp2).
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+
+      // "snap updates": comp2 enters lane.updateDependents via the bare-scope cascade. build:false
+      // means the cascade snap is never built/published — the state Ripple leaves on a build failure.
+      // The cascade also re-snaps comp1 so its comp2 dep points at the new (unpublished) updateDependent.
+      const bareSnap = helper.scopeHelper.getNewBareScope('-bare-snap-updates');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareSnap.scopePath);
+      await helper.snapping.snapFromScope(
+        bareSnap.scopePath,
+        [{ componentId: `${helper.scopes.remote}/comp2`, message: 'snap updates' }],
+        { lane: `${helper.scopes.remote}/dev`, updateDependents: true, push: true }
+      );
+      const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+      comp2UpdDepHash = (lane.updateDependents[0] as string).split('@')[1];
+      comp1LaneHead = lane.components.find((c) => c.id.name === 'comp1').head;
+
+      // fresh workspace: importing the lane checks out the visible comp1 (comp2 stays hidden).
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+      helper.command.importLane('dev', '-x');
+    });
+
+    it('precondition: comp2 is hidden (not in bitmap) and the visible comp1 depends on its unpublished cascade snap', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('comp1');
+      expect(bitMap).to.not.have.property('comp2');
+      const comp1Obj = helper.command.catComponent(`${helper.scopes.remote}/comp1@${comp1LaneHead}`);
+      const comp2Dep = comp1Obj.dependencies.find((d) => d.id.name === 'comp2');
+      expect(comp2Dep, 'comp1 should depend on comp2').to.exist;
+      expect(comp2Dep.id.version, 'comp1 should depend on the unpublished updateDependent snap').to.equal(
+        comp2UpdDepHash
+      );
+    });
+
+    it('bit install fails with an actionable error naming the updateDependent and the bit import remediation', () => {
+      let output = '';
+      try {
+        helper.command.install();
+      } catch (err: any) {
+        output = `${err.message || ''}${err.stdout?.toString() || ''}${err.stderr?.toString() || ''}`;
+      }
+      expect(output, 'bit install should have failed').to.have.string('update-dependent');
+      expect(output, 'error should name the problematic component').to.have.string('comp2');
+      expect(output, 'error should suggest the bit import remediation').to.have.string('bit import');
+    });
+  });
 });
