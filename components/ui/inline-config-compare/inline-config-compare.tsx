@@ -5,11 +5,11 @@ import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { useDiffMode } from '@teambit/component.ui.component-compare.component-compare';
 import {
   DiffFileRenderer,
+  DiffLoadingSkeleton,
   computeDiffFromContent,
   type DiffHunk,
   type DiffDisplayMode,
 } from '@teambit/code.ui.inline-diff-viewer';
-import styles from './inline-config-compare.module.scss';
 
 export type InlineConfigCompareProps = {
   diffMode?: DiffDisplayMode;
@@ -127,7 +127,7 @@ export function InlineConfigCompare({ diffMode: diffModeProp }: InlineConfigComp
   }, [loading, baseData, compareData]);
 
   if (loading) {
-    return <ConfigSkeleton />;
+    return <DiffLoadingSkeleton sections={2} />;
   }
 
   if (aspectDiffs.length === 0) {
@@ -169,28 +169,4 @@ export function InlineConfigCompare({ diffMode: diffModeProp }: InlineConfigComp
 
 function ensureTrailingNewline(s: string): string {
   return s.endsWith('\n') ? s : s + '\n';
-}
-
-function ConfigSkeleton() {
-  return (
-    <div>
-      {Array.from({ length: 2 }).map((_, i) => (
-        <div key={i} className={styles.skeletonSection}>
-          <div className={styles.skeletonHeader}>
-            <div className={styles.skeleton} style={{ width: '30%', height: 14 }} />
-            <div className={styles.skeleton} style={{ width: 60, height: 14 }} />
-          </div>
-          <div className={styles.skeletonLines}>
-            {Array.from({ length: 4 }).map((_line, j) => (
-              <div key={j} className={styles.skeletonLine}>
-                <div className={styles.skeleton} style={{ width: 30, height: 12 }} />
-                <div className={styles.skeleton} style={{ width: 30, height: 12 }} />
-                <div className={styles.skeleton} style={{ width: `${40 + (j % 3) * 20}%`, height: 12 }} />
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
 }

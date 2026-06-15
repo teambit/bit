@@ -5,8 +5,9 @@ import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import {
   DiffFileRenderer,
   DiffFileHeader,
-  computeDiffFromContent,
-  type DiffHunk,
+  DiffLoadingSkeleton,
+  buildFileDiffsFromMap,
+  computeNewFileHunks,
   type DiffDisplayMode,
 } from '@teambit/code.ui.inline-diff-viewer';
 
@@ -24,89 +25,18 @@ export function InlineCodeCompare({ diffMode: diffModeProp }: InlineCodeCompareP
   const compareModel = componentCompare?.compare?.model;
   const baseModel = componentCompare?.base?.model;
   const componentIdStr = (compareModel?.id || baseModel?.id)?.toStringWithoutVersion?.() || '';
-  const _isNew = !baseModel && !!compareModel;
 
   const { fileDiffs, newFiles } = useMemo(() => {
     if (!fileCompareDataByName) return { fileDiffs: [], newFiles: [] };
-
-    const diffs: Array<{ fileName: string; hunks: DiffHunk[]; status: string; additions: number; deletions: number }> =
-      [];
+    // NEW files whose content hasn't arrived in the bulk payload are diverted to `newFiles`
+    // and fetched lazily by <NewFileDiff/> below.
     const pending: string[] = [];
-
-    for (const [fileName, fileData] of fileCompareDataByName.entries()) {
-      if (fileData.status === 'UNCHANGED') continue;
-
-      if (fileData.status === 'NEW' && fileData.compareContent === undefined) {
-        pending.push(fileName);
-        continue;
-      }
-
-      const baseContent = fileData.baseContent || '';
-      const compareContent = fileData.compareContent || '';
-
-      let hunks: DiffHunk[];
-
-      if (fileData.status === 'NEW') {
-        hunks = computeNewFileHunks(compareContent);
-      } else if (fileData.status === 'DELETED') {
-        hunks = computeDeletedFileHunks(baseContent);
-      } else {
-        hunks = computeDiffFromContent(baseContent, compareContent);
-      }
-
-      const additions = hunks.reduce((sum, h) => sum + h.lines.filter((l) => l.type === 'added').length, 0);
-      const deletions = hunks.reduce((sum, h) => sum + h.lines.filter((l) => l.type === 'removed').length, 0);
-
-      if (additions > 0 || deletions > 0) {
-        diffs.push({ fileName, hunks, status: fileData.status, additions, deletions });
-      }
-    }
-
+    const diffs = buildFileDiffsFromMap(fileCompareDataByName, (fileName) => pending.push(fileName));
     return { fileDiffs: diffs, newFiles: pending };
   }, [fileCompareDataByName]);
 
   if (!componentCompare || componentCompare.loading || fileCompareDataByName === undefined) {
-    return (
-      <div style={{ borderBottom: '1px solid var(--border-medium-color, #e8ecf0)' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '8px 16px',
-            background: 'var(--surface-neutral-color, #f8f9fb)',
-            borderBottom: '1px solid var(--border-medium-color, #e8ecf0)',
-          }}
-        >
-          <div
-            style={{ width: '30%', height: 14, borderRadius: 4, background: 'var(--surface-neutral-color, #f0f2f5)' }}
-          />
-          <div
-            style={{ width: 60, height: 14, borderRadius: 4, background: 'var(--surface-neutral-color, #f0f2f5)' }}
-          />
-        </div>
-        <div style={{ padding: '4px 0' }}>
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} style={{ display: 'flex', gap: 8, padding: '3px 12px', alignItems: 'center' }}>
-              <div
-                style={{ width: 30, height: 12, borderRadius: 4, background: 'var(--surface-neutral-color, #f0f2f5)' }}
-              />
-              <div
-                style={{ width: 30, height: 12, borderRadius: 4, background: 'var(--surface-neutral-color, #f0f2f5)' }}
-              />
-              <div
-                style={{
-                  width: `${40 + (i % 3) * 20}%`,
-                  height: 12,
-                  borderRadius: 4,
-                  background: 'var(--surface-neutral-color, #f0f2f5)',
-                }}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    return <DiffLoadingSkeleton />;
   }
 
   if (fileDiffs.length === 0 && newFiles.length === 0) {
@@ -163,26 +93,7 @@ function NewFileDiff({
     return (
       <div data-file-id={dataFileId}>
         <DiffFileHeader fileName={fileName} status="NEW" />
-        <div style={{ padding: '4px 0' }}>
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} style={{ display: 'flex', gap: 8, padding: '3px 12px', alignItems: 'center' }}>
-              <div
-                style={{ width: 30, height: 12, borderRadius: 4, background: 'var(--surface-neutral-color, #f0f2f5)' }}
-              />
-              <div
-                style={{ width: 30, height: 12, borderRadius: 4, background: 'var(--surface-neutral-color, #f0f2f5)' }}
-              />
-              <div
-                style={{
-                  width: `${40 + (i % 3) * 20}%`,
-                  height: 12,
-                  borderRadius: 4,
-                  background: 'var(--surface-neutral-color, #f0f2f5)',
-                }}
-              />
-            </div>
-          ))}
-        </div>
+        <DiffLoadingSkeleton header={false} />
       </div>
     );
   }
@@ -200,24 +111,4 @@ function NewFileDiff({
       dataFileId={dataFileId}
     />
   );
-}
-
-function computeNewFileHunks(content: string): DiffHunk[] {
-  const lines = content.split('\n');
-  return [
-    {
-      header: `@@ -0,0 +1,${lines.length} @@`,
-      lines: lines.map((line, i) => ({ type: 'added' as const, content: line, newLineNumber: i + 1 })),
-    },
-  ];
-}
-
-function computeDeletedFileHunks(content: string): DiffHunk[] {
-  const lines = content.split('\n');
-  return [
-    {
-      header: `@@ -1,${lines.length} +0,0 @@`,
-      lines: lines.map((line, i) => ({ type: 'removed' as const, content: line, oldLineNumber: i + 1 })),
-    },
-  ];
 }

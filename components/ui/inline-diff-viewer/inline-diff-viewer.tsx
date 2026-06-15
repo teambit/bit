@@ -510,6 +510,105 @@ export function parseDiffOutput(diffOutput: string): DiffHunk[] {
   return hunks;
 }
 
+/** A single full file rendered as one hunk where every line is `added`. */
+export function computeNewFileHunks(content: string): DiffHunk[] {
+  const lines = content.split('\n');
+  return [
+    {
+      header: `@@ -0,0 +1,${lines.length} @@`,
+      lines: lines.map((line, i) => ({ type: 'added' as const, content: line, newLineNumber: i + 1 })),
+    },
+  ];
+}
+
+/** A single full file rendered as one hunk where every line is `removed`. */
+export function computeDeletedFileHunks(content: string): DiffHunk[] {
+  const lines = content.split('\n');
+  return [
+    {
+      header: `@@ -1,${lines.length} +0,0 @@`,
+      lines: lines.map((line, i) => ({ type: 'removed' as const, content: line, oldLineNumber: i + 1 })),
+    },
+  ];
+}
+
+export type FileDiffEntry = {
+  fileName: string;
+  hunks: DiffHunk[];
+  status: string;
+  additions: number;
+  deletions: number;
+};
+
+type FileCompareData = { status: string; baseContent?: string; compareContent?: string };
+
+/**
+ * Turn a `fileName -> {status, baseContent, compareContent}` map into renderable file diffs,
+ * choosing the right hunk builder per status and dropping no-op (UNCHANGED / zero-change) entries.
+ * When `onPendingNew` is supplied, NEW files whose content hasn't arrived yet are diverted to it
+ * (so the caller can fetch them lazily) instead of being diffed against empty content.
+ */
+export function buildFileDiffsFromMap(
+  byName: Map<string, FileCompareData>,
+  onPendingNew?: (fileName: string) => void
+): FileDiffEntry[] {
+  const diffs: FileDiffEntry[] = [];
+  for (const [fileName, fileData] of byName.entries()) {
+    if (fileData.status === 'UNCHANGED') continue;
+    if (fileData.status === 'NEW' && fileData.compareContent === undefined && onPendingNew) {
+      onPendingNew(fileName);
+      continue;
+    }
+    const baseContent = fileData.baseContent || '';
+    const compareContent = fileData.compareContent || '';
+    let hunks: DiffHunk[];
+    if (fileData.status === 'NEW') hunks = computeNewFileHunks(compareContent);
+    else if (fileData.status === 'DELETED') hunks = computeDeletedFileHunks(baseContent);
+    else hunks = computeDiffFromContent(baseContent, compareContent);
+
+    const additions = hunks.reduce((sum, h) => sum + h.lines.filter((l) => l.type === 'added').length, 0);
+    const deletions = hunks.reduce((sum, h) => sum + h.lines.filter((l) => l.type === 'removed').length, 0);
+    if (additions > 0 || deletions > 0) diffs.push({ fileName, hunks, status: fileData.status, additions, deletions });
+  }
+  return diffs;
+}
+
+/** Shimmer placeholder shown while a diff tab's data loads. Mirrors the file-header + lines layout. */
+export function DiffLoadingSkeleton({
+  sections = 1,
+  lines = 4,
+  header = true,
+}: {
+  sections?: number;
+  lines?: number;
+  /** render the file-header bar above the lines (omit when a real header is already shown). */
+  header?: boolean;
+}) {
+  return (
+    <div>
+      {Array.from({ length: sections }).map((_, s) => (
+        <div key={s} className={styles.skeletonSection}>
+          {header && (
+            <div className={styles.skeletonHeader}>
+              <div className={styles.skeleton} style={{ width: '30%', height: 14 }} />
+              <div className={styles.skeleton} style={{ width: 60, height: 14 }} />
+            </div>
+          )}
+          <div className={styles.skeletonLines}>
+            {Array.from({ length: lines }).map((_l, i) => (
+              <div key={i} className={styles.skeletonLine}>
+                <div className={styles.skeleton} style={{ width: 30, height: 12 }} />
+                <div className={styles.skeleton} style={{ width: 30, height: 12 }} />
+                <div className={styles.skeleton} style={{ width: `${40 + (i % 3) * 20}%`, height: 12 }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function computeDiffFromContent(base: string, compare: string): DiffHunk[] {
   const patch = structuredPatch('', '', base, compare, '', '', { context: 3 });
   return patch.hunks.map((hunk) => {

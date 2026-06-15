@@ -8,6 +8,7 @@ import {
   type RawDep,
   type DepDiffEntry,
 } from '@teambit/dependencies.ui.deps-diff-table';
+import { DiffLoadingSkeleton } from '@teambit/code.ui.inline-diff-viewer';
 
 export type InlineDepsCompareProps = {};
 
@@ -59,9 +60,7 @@ export function InlineDepsCompare(_props: InlineDepsCompareProps) {
   ]);
 
   if (!componentCompare || componentCompare.loading) {
-    return (
-      <div style={{ padding: 16, color: 'var(--on-background-medium-color, #a0aec0)', fontSize: 12 }}>Loading...</div>
-    );
+    return <DiffLoadingSkeleton />;
   }
 
   return <DepsDiffTable entries={entries} baseLabel={baseLabel} compareLabel={compareLabel} />;
