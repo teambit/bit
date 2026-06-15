@@ -1,7 +1,7 @@
 # Component Loading Redesign
 
-**Status:** Proposal — under review
-**Last updated:** 2026-06-10 (code references are against `master` @ `59855b104`; line numbers will drift)
+**Status:** Phase 1 shipped; Phase 2 in progress
+**Last updated:** 2026-06-15 (code references are against `master` @ `59855b104`; line numbers will drift)
 
 This document is the source of truth for a multi-phase effort to simplify Bit's component-loading
 mechanism: fewer caches, a staged (lazy) loading pipeline, a single env/aspect load planner, and a
@@ -203,7 +203,7 @@ earlier ones teach us).
 
 ### Phase 2 — Quick perf wins on existing seams
 
-- [ ] Benchmark harness committed + baseline recorded (see §4) — **gate for the rest of the phase**
+- [x] Benchmark harness committed + baseline recorded (see §4) — **gate for the rest of the phase**
 - [ ] Lazy file contents in `ModelComponent.toConsumerComponent`
 - [ ] `bit deps usage`: ids + stored deps instead of full load
 - [ ] IDE metadata endpoint (`api-for-ide.ts`): S0-S2-level data only
@@ -239,17 +239,28 @@ earlier ones teach us).
 
 ## 4. Benchmarks
 
-Method: run on this repository's own workspace (large, real). Record wall-time (median of 3 warm
-runs) and peak RSS. Update this table at every phase boundary; any phase that regresses a number
-must explain why before merging.
+Method: `node scripts/bench-component-loading.js --bin=<bit>` runs the four commands below on this
+repository's own workspace (large, real — ~313 components), reporting wall-time (median of 3 warm
+runs, after a discarded warmup) and peak RSS (via `/usr/bin/time`). Run `bit import` first so the
+workspace isn't in a degraded "outdated objects" state. Absolute numbers are **machine-specific** —
+compare deltas on the same machine. Update this table at every phase boundary; any phase that
+regresses a number must explain why before merging.
 
-| Milestone              | `bit status` | `bit list` | `bit show <comp>` | `bit graph` | Peak RSS |
-| ---------------------- | ------------ | ---------- | ----------------- | ----------- | -------- |
-| Baseline (pre-Phase 2) | —            | —          | —                 | —           | —        |
-| After Phase 2          | —            | —          | —                 | —           | —        |
-| After Phase 3          | —            | —          | —                 | —           | —        |
-| After Phase 4          | —            | —          | —                 | —           | —        |
-| After Phase 5          | —            | —          | —                 | —           | —        |
+The `Peak RSS` column is the worst case across the four commands (`bit graph`). Wall-times are
+median seconds. Per-command peak RSS for the baseline: status 1237MB, list 425MB, show 253MB,
+graph 2013MB.
+
+| Milestone              | `bit status` | `bit list` | `bit show <comp>` | `bit graph --json` | Peak RSS |
+| ---------------------- | ------------ | ---------- | ----------------- | ------------------ | -------- |
+| Baseline (pre-Phase 2) | 11.24s       | 1.59s      | 1.73s             | 20.49s             | 2013MB   |
+| After Phase 2          | —            | —          | —                 | —                  | —        |
+| After Phase 3          | —            | —          | —                 | —                  | —        |
+| After Phase 4          | —            | —          | —                 | —                  | —        |
+| After Phase 5          | —            | —          | —                 | —                  | —        |
+
+Baseline measured 2026-06-15 on darwin (Apple silicon), `bit` @ 1.13.222, node v22.20.0,
+`bit show teambit.workspace/workspace`. The two clear hotspots are `bit status` (11s) and
+`bit graph` (20s, 2GB) — Phase 2's lazy-file-contents and partial-load changes target exactly these.
 
 ---
 
@@ -258,7 +269,7 @@ must explain why before merging.
 | Phase                   | State       | OpenSpec change                | PRs                                                 |
 | ----------------------- | ----------- | ------------------------------ | --------------------------------------------------- |
 | 1 — Observability       | done        | `component-load-observability` | [#10418](https://github.com/teambit/bit/pull/10418) |
-| 2 — Quick perf wins     | not started | —                              | —                                                   |
+| 2 — Quick perf wins     | in progress | —                              | —                                                   |
 | 3 — Cache consolidation | not started | —                              | —                                                   |
 | 4 — Staged pipeline     | not started | —                              | —                                                   |
 | 5 — Env planner         | not started | —                              | —                                                   |
@@ -277,3 +288,7 @@ must explain why before merging.
   Span-to-stage mapping for Phase 2 benchmarks: S0=`id-resolution`, S1=`scope-load`/
   `state-from-version`, S2=`extension-merge`+`env-calc`, S3=`consumer-fs-load`,
   S4=`dependency-resolution`+`execute-load-slot`/`on-load:*`.
+- 2026-06-15 — Phase 2 started. Benchmark harness committed (`scripts/bench-component-loading.js`)
+  and baseline recorded in §4 (after `bit import`): `bit status` 11.24s, `bit list` 1.59s,
+  `bit show` 1.73s, `bit graph --json` 20.49s; peak RSS 2.0GB on graph. `status` and `graph` are
+  the hotspots — next: lazy file contents in `toConsumerComponent`.
