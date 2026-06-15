@@ -5,6 +5,7 @@ import * as path from 'path';
 import type { ComponentIssue } from '@teambit/component-issues';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { currentLoadSpan, loadSpan } from '@teambit/harmony.modules.load-trace';
 import { BIT_MAP } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import type { ModelComponent } from '@teambit/objects';
@@ -148,6 +149,11 @@ export class ComponentLoader {
     logger.trace(
       `ComponentLoader, the following ${alreadyLoadedComponents.length} components have been already loaded, get them from the cache. ${alreadyLoadedComponents.map((c) => c.id.toString()).join(', ')}`
     );
+    const activeLoadSpan = currentLoadSpan();
+    if (activeLoadSpan) {
+      activeLoadSpan.setAttribute('legacyComponentsCache:hits', alreadyLoadedComponents.length);
+      activeLoadSpan.setAttribute('legacyComponentsCache:misses', idsToProcess.length);
+    }
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents, removedComponents };
     const storeInCache = loadOptsWithDefaults?.storeInCache ?? true;
     const allComponents: Component[] = [];
@@ -236,13 +242,15 @@ export class ComponentLoader {
     component.componentMap = this.consumer.bitMap.getComponent(updatedId);
 
     const loadDependencies = async () => {
-      await ComponentLoader.loadDeps(component, {
-        cacheResolvedDependencies: this.cacheResolvedDependencies,
-        cacheProjectAst: this.cacheProjectAst,
-        useDependenciesCache: component.issues.isEmpty(),
-        storeInFsCache: loadOpts?.storeDepsInFsCache,
-        resolveExtensionsVersions: loadOpts?.resolveExtensionsVersions,
-      });
+      await loadSpan('legacy-load-deps', { id: component.id.toString() }, () =>
+        ComponentLoader.loadDeps(component, {
+          cacheResolvedDependencies: this.cacheResolvedDependencies,
+          cacheProjectAst: this.cacheProjectAst,
+          useDependenciesCache: component.issues.isEmpty(),
+          storeInFsCache: loadOpts?.storeDepsInFsCache,
+          resolveExtensionsVersions: loadOpts?.resolveExtensionsVersions,
+        })
+      );
     };
 
     const runOnComponentLoadEvent = async () => {
