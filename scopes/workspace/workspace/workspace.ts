@@ -44,6 +44,7 @@ import type { GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { LoadFailure } from '@teambit/harmony.modules.load-trace';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import type { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { ExtensionDataList, REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy.extension-data';
@@ -831,6 +832,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.componentLoader.clearCache();
     this.consumer.componentLoader.clearComponentsCache();
     this.componentStatusLoader.clearCache();
+    this.aggregatedLoadFailures.clear();
     this._componentList = new ComponentsList(this);
   }
 
@@ -1716,7 +1718,15 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return { data, conflict };
   }
 
-  getWorkspaceIssues(): Error[] {
+  /**
+   * @param includeNonBlocking when true (default), also returns non-blocking issues (e.g. aggregated
+   * load failures) that should be shown in "bit status" but must not block tag/snap. The tag/snap
+   * gate (`builder.throwForComponentIssues`) passes `false` so previously-swallowed load failures
+   * stay best-effort — phase 1 of the loading redesign makes them visible without changing which
+   * operations succeed.
+   */
+  getWorkspaceIssues(opts?: { includeNonBlocking?: boolean }): Error[] {
+    const includeNonBlocking = opts?.includeNonBlocking ?? true;
     const errors: Error[] = [];
 
     // since PR #8393, the workspace.jsonc conflicts are not written to the config-merge file anymore.
@@ -1729,7 +1739,33 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
         errors.push(err);
       }
     }
+    if (includeNonBlocking) {
+      this.aggregatedLoadFailures.forEach((failure) => {
+        const affected = failure.affected.size === 1 ? '1 component' : `${failure.affected.size} components`;
+        errors.push(
+          new Error(
+            `failed loading "${failure.failedId}" (during ${failure.phase}), affects ${affected}: ${failure.error}. the load continued without it, data computed by it may be missing`
+          )
+        );
+      });
+    }
     return errors;
+  }
+
+  /**
+   * load failures of aspects/envs that affect multiple components. aggregated here (instead of
+   * attaching an issue to every affected component) to keep "bit status" readable when e.g. one
+   * env used by 100 components fails to load. the failing component itself still gets a
+   * per-component LoadFailures issue.
+   */
+  private aggregatedLoadFailures: Map<string, LoadFailure & { affected: Set<string> }> = new Map();
+
+  registerAggregatedLoadFailure(failure: LoadFailure, affectedComponentId: string) {
+    // keyed by the failing id only: the same root cause may be reported from several load phases,
+    // and it should still render as a single workspace issue.
+    const existing = this.aggregatedLoadFailures.get(failure.failedId);
+    if (existing) existing.affected.add(affectedComponentId);
+    else this.aggregatedLoadFailures.set(failure.failedId, { ...failure, affected: new Set([affectedComponentId]) });
   }
 
   async listComponentsDuringMerge(): Promise<ComponentID[]> {
