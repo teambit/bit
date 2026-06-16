@@ -549,10 +549,14 @@ export class InstallMain {
         return null;
       }
     };
+    // a package exists once the snap was built. `Succeed` and `Skipped` both count as "built" here, mirroring
+    // the rest of the scope (see `onlyIfBuilt` in scope-components-importer and `sources.get`); `null` means
+    // undeterminable (version object not local). anything else (failed / pending / not built) has no package.
+    const isBuilt = (status: BuildStatus | undefined | null): boolean =>
+      status === null || status === BuildStatus.Succeed || status === BuildStatus.Skipped;
 
     // collect update-dependent deps referenced by a checked-out component whose locally-known build status
-    // is not `succeed`. a successful build is the only state in which a package was published; anything else
-    // (failed / pending / not built) means there may be no package to install.
+    // is not "built" — those are the ones that might have no package to install.
     const candidates = new Map<string, { id: ComponentID; dependents: Set<string> }>();
     await Promise.all(
       components.map(async (component) => {
@@ -563,7 +567,7 @@ export class InstallMain {
             if (!depId.version || !isSnap(depId.version)) return;
             if (workspaceIds.hasWithoutVersion(depId)) return;
             if (!updateDependentsList.hasWithoutVersion(depId)) return;
-            if ((await readBuildStatus(depId)) === BuildStatus.Succeed) return;
+            if (isBuilt(await readBuildStatus(depId))) return;
             const key = depId.toString();
             const entry = candidates.get(key) ?? { id: depId, dependents: new Set<string>() };
             entry.dependents.add(component.id.toStringWithoutVersion());
@@ -592,9 +596,8 @@ export class InstallMain {
 
     const unpublished: { id: string; version: string; dependents: string[] }[] = [];
     for (const { id, dependents } of candidates.values()) {
-      const buildStatus = await readBuildStatus(id);
-      // skip when now known to be published (succeed) or undeterminable (version object not local).
-      if (buildStatus === null || buildStatus === BuildStatus.Succeed) continue;
+      // skip when now known to be built (the refetch may have picked up a remote build) or undeterminable.
+      if (isBuilt(await readBuildStatus(id))) continue;
       unpublished.push({ id: id.toStringWithoutVersion(), version: id.version as string, dependents: [...dependents] });
     }
     if (!unpublished.length) return;
