@@ -19,7 +19,6 @@
     "strictPropertyInitialization": false,
     "strict": true,
     "moduleResolution": "node",
-    "ignoreDeprecations": "6.0",
     "noImplicitAny": false,
     "preserveConstEnums": true,
     "resolveJsonModule": true

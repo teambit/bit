@@ -76,10 +76,6 @@ import type { WorkerMain } from '@teambit/worker';
 import type { DevFilesMain } from '@teambit/dev-files';
 
 export const ReactEnvType = 'react';
-// TODO(ts7): the loaded tsconfigs still use moduleResolution "node" (deprecated in TS 6,
-// removed in TS 7) with ignoreDeprecations: "6.0" as a bridge. Migrate to "node16"/"bundler"
-// before adopting TS 7. JSON comments are intentionally omitted since these files are loaded
-// via require(), which uses Node's JSON parser (no JSONC support).
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 const prettierConfig = require('./prettier/prettier.config');

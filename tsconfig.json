@@ -6,11 +6,8 @@
     "strict": true,
     "moduleResolution": "node",
     "module": "commonjs",
-    "noUncheckedSideEffectImports": false,
-    // TODO(ts7): moduleResolution "node" is deprecated in TS 6 and removed in TS 7.
-    // Migrate to "node16" or "bundler" (requires "module" change + fixing Bit-linked
-    // package resolution for components like @teambit/harmony.modules.load-trace).
     "ignoreDeprecations": "6.0",
+    "noUncheckedSideEffectImports": false,
     "types": ["node", "mocha", "chai", "jest"],
     "target": "es2015",
     "skipLibCheck": true,

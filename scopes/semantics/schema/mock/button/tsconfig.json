@@ -5,7 +5,6 @@
       "emitDecoratorMetadata": true,
       "strict": true,
       "moduleResolution": "node",
-      "ignoreDeprecations": "6.0",
       "module": "commonjs",
       "target": "es2015",
       "skipLibCheck": true,

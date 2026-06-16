@@ -14,7 +14,6 @@
     "experimentalDecorators": true,
     "outDir": "dist",
     "moduleResolution": "node",
-    "ignoreDeprecations": "6.0",
     "esModuleInterop": true,
     "rootDir": ".",
     "resolveJsonModule": true

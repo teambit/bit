@@ -133,14 +133,16 @@ export class TypescriptMain {
     // TS 6 flipped several defaults and turned legacy options into hard errors.
     // Shipped env tsconfigs must stay valid for TS 5.x consumers, so patch the raw tsconfig
     // at runtime when the loaded compiler is actually TS 6+ — preserving TS 5 behavior.
-    // Note: `ignoreDeprecations` is intentionally NOT auto-injected here. Auto-injecting it
-    // would silence the deprecation warnings TS 6 is specifically designed to surface as
-    // preparation for TS 7, defeating the purpose of the 5 → 6 → 7 migration path. Env
-    // tsconfigs that need the escape hatch should opt in explicitly per-file with a TODO.
     const tsMajor = parseInt(tsModule.version?.split('.')[0] || '0', 10);
     const tsconfig = afterMutation.raw.tsconfig;
     const compilerOptions = tsconfig?.compilerOptions;
     if (tsMajor >= 6 && compilerOptions) {
+      // TODO(ts7): `ignoreDeprecations: "6.0"` is a temporary bridge that silences the
+      // deprecation diagnostics TS 6 emits to prepare users for TS 7 (e.g., `moduleResolution: "node"`).
+      // It can't be hardcoded in the env tsconfig JSON files because TS 5.x consumers would
+      // reject the "6.0" value (TS5103), so we inject it conditionally here. Migrate env tsconfigs
+      // off the deprecated options (moduleResolution → node16/bundler) before adopting TS 7.
+      if (!compilerOptions.ignoreDeprecations) compilerOptions.ignoreDeprecations = '6.0';
       if (compilerOptions.noUncheckedSideEffectImports === undefined)
         compilerOptions.noUncheckedSideEffectImports = false;
       // strict and types: don't inject when the tsconfig extends a base — the base may

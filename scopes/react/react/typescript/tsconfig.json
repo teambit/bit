@@ -11,7 +11,6 @@
     "experimentalDecorators": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
-    "ignoreDeprecations": "6.0",
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "allowJs": true,
