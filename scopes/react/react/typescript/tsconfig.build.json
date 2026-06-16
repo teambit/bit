@@ -1,4 +1,6 @@
 {
+  // TODO(ts7): "moduleResolution: node" is deprecated in TS 6 and removed in TS 7.
+  // Migrate to "node16"/"bundler" before adopting TS 7. ignoreDeprecations is a bridge only.
   "compilerOptions": {
     "lib": [
       "es2019", "DOM", "ES6" ,"DOM.Iterable"
@@ -14,6 +16,7 @@
     "experimentalDecorators": true,
     "outDir": "dist",
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "esModuleInterop": true,
     "rootDir": ".",
     "resolveJsonModule": true
