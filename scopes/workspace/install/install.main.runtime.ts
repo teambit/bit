@@ -541,24 +541,19 @@ export class InstallMain {
     // fetched from the registry and can't trigger this failure even when they weren't built successfully.
     const workspaceIds = this.workspace.listIds();
     const legacyScope = this.workspace.scope.legacyScope;
-    // a successful build is the only state in which the package was published. anything else (failed / pending /
-    // not built) means there's no package. `null` means the version object isn't available locally, so we can't
-    // tell — in that case let the install proceed and surface the original error if there really is no package.
-    const buildStatusCache = new Map<string, BuildStatus | undefined | null>();
-    const getBuildStatus = async (id: ComponentID): Promise<BuildStatus | undefined | null> => {
-      const key = id.toString();
-      if (buildStatusCache.has(key)) return buildStatusCache.get(key);
-      let status: BuildStatus | undefined | null;
+    const readBuildStatus = async (id: ComponentID): Promise<BuildStatus | undefined | null> => {
+      // `null` means the version object isn't available locally, so we can't determine its build status.
       try {
-        status = (await legacyScope.getVersionInstance(id)).buildStatus;
+        return (await legacyScope.getVersionInstance(id)).buildStatus;
       } catch {
-        status = null;
+        return null;
       }
-      buildStatusCache.set(key, status);
-      return status;
     };
 
-    const unpublished = new Map<string, { id: ComponentID; dependents: Set<string> }>();
+    // collect update-dependent deps referenced by a checked-out component whose locally-known build status
+    // is not `succeed`. a successful build is the only state in which a package was published; anything else
+    // (failed / pending / not built) means there may be no package to install.
+    const candidates = new Map<string, { id: ComponentID; dependents: Set<string> }>();
     await Promise.all(
       components.map(async (component) => {
         const compDeps = this.dependencyResolver.getComponentDependencies(component);
@@ -568,25 +563,42 @@ export class InstallMain {
             if (!depId.version || !isSnap(depId.version)) return;
             if (workspaceIds.hasWithoutVersion(depId)) return;
             if (!updateDependentsList.hasWithoutVersion(depId)) return;
-            const buildStatus = await getBuildStatus(depId);
-            // skip when published (succeed) or undeterminable (version object not local)
-            if (buildStatus === null || buildStatus === BuildStatus.Succeed) return;
-            const key = depId.toStringWithoutVersion();
-            const entry = unpublished.get(key) ?? { id: depId, dependents: new Set<string>() };
+            if ((await readBuildStatus(depId)) === BuildStatus.Succeed) return;
+            const key = depId.toString();
+            const entry = candidates.get(key) ?? { id: depId, dependents: new Set<string>() };
             entry.dependents.add(component.id.toStringWithoutVersion());
-            unpublished.set(key, entry);
+            candidates.set(key, entry);
           })
         );
       })
     );
-    if (!unpublished.size) return;
-    throw new UpdateDependentBuildFailed(
-      [...unpublished.values()].map(({ id, dependents }) => ({
-        id: id.toStringWithoutVersion(),
-        version: id.version as string,
-        dependents: [...dependents],
-      }))
-    );
+    if (!candidates.size) return;
+
+    // a locally-stale `pending`/`failed` snap may have since been built and published on the remote. refresh
+    // these specific versions from the remote (this is exactly what `reFetchUnBuiltVersion` is for) before
+    // deciding they're unpublished, so we don't fail an install for a snap that is actually installable.
+    const candidateIds = [...candidates.values()].map((entry) => entry.id);
+    try {
+      await this.workspace.scope.import(candidateIds, {
+        reFetchUnBuiltVersion: true,
+        useCache: false,
+        lane,
+        includeUpdateDependents: true,
+        reason: 'to check whether unbuilt update-dependents were already published',
+      });
+    } catch {
+      // offline or remote unavailable — fall back to the locally-known build status.
+    }
+
+    const unpublished: { id: string; version: string; dependents: string[] }[] = [];
+    for (const { id, dependents } of candidates.values()) {
+      const buildStatus = await readBuildStatus(id);
+      // skip when now known to be published (succeed) or undeterminable (version object not local).
+      if (buildStatus === null || buildStatus === BuildStatus.Succeed) continue;
+      unpublished.push({ id: id.toStringWithoutVersion(), version: id.version as string, dependents: [...dependents] });
+    }
+    if (!unpublished.length) return;
+    throw new UpdateDependentBuildFailed(unpublished);
   }
 
   /**

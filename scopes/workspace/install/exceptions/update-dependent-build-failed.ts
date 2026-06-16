@@ -1,4 +1,5 @@
 import { BitError } from '@teambit/bit-error';
+import { errorSymbol, formatItem } from '@teambit/cli';
 
 export type FailedUpdateDependent = {
   /** the failed update-dependent component id (without version) */
@@ -25,7 +26,7 @@ export class UpdateDependentBuildFailed extends BitError {
       .map(({ id, version, dependents }) => {
         const shortVersion = version.substring(0, 9);
         const requiredBy = dependents.join(', ');
-        return `  ✖ ${id} (${shortVersion}) — required by: ${requiredBy}`;
+        return formatItem(`${id} (${shortVersion}) — required by: ${requiredBy}`, errorSymbol);
       })
       .join('\n');
     const importCommand = `bit import ${failed.map(({ id }) => id).join(' ')}`;
