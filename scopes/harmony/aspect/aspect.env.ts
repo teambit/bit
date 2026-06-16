@@ -36,6 +36,10 @@ import type { TesterTask } from '@teambit/defender.tester-task';
 
 import { babelConfig } from './babel/babel-config';
 
+// TODO(ts7): the loaded tsconfig still uses moduleResolution "node" (deprecated in TS 6,
+// removed in TS 7) with ignoreDeprecations: "6.0" as a bridge. Migrate to "node16"/"bundler"
+// before adopting TS 7. JSON comments are intentionally omitted since this file is loaded via
+// require(), which uses Node's JSON parser (no JSONC support).
 const tsconfig = require('./typescript/tsconfig.json');
 
 export const AspectEnvType = 'aspect';

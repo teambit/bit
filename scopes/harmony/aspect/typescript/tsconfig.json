@@ -1,6 +1,4 @@
 {
-  // TODO(ts7): "moduleResolution: node" is deprecated in TS 6 and removed in TS 7.
-  // Migrate to "node16"/"bundler" before adopting TS 7. ignoreDeprecations is a bridge only.
   "compilerOptions": {
     "lib": [
       "ES2022", "DOM" ,"DOM.Iterable", "ScriptHost"

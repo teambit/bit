@@ -1,7 +1,4 @@
 {
-  // TODO(ts7): "moduleResolution: node" is deprecated in TS 6 and removed in TS 7.
-  // Migrate to "node16" (with "module: node16") or "bundler" (with "module: esnext"/"preserve")
-  // before adopting TS 7. The ignoreDeprecations flag below is a temporary bridge only.
   "compilerOptions": {
     "target": "es2015",
     "module": "commonjs",
