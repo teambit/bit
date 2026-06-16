@@ -535,8 +535,9 @@ export class InstallMain {
    * package matches one of those deps, return an actionable error (pointing at `bit import`); otherwise return
    * the original error unchanged.
    *
-   * Note: we deliberately match against the package manager error rather than the lane's `updateDependents`,
-   * because the install's import phase may have already dropped the entry from the local lane object.
+   * Note: we match against the package manager error rather than the lane's `updateDependents` because the
+   * error pinpoints the exact failing version, and a consumer can keep pinning a never-published snap even after
+   * the entry was promoted out of `updateDependents` (e.g. the producer later re-snapped that component).
    */
   private enrichUnpublishedSnapDepError(err: Error, components: Component[]): Error {
     // checked-out components are linked from source, so they're never fetched from the registry.
