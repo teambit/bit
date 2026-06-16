@@ -899,6 +899,11 @@
             "j",
             "json",
             "json format"
+          ],
+          [
+            "",
+            "with-stats",
+            "include total cache size, orphan count, and stale aspect-version count (walks the full cache)"
           ]
         ],
         "description": "list the capsules generated for this workspace",
@@ -980,6 +985,46 @@
         "extendedDescription": "with no args, only workspace's capsules are deleted",
         "group": "advanced",
         "private": false
+      },
+      {
+        "name": "prune",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "older-than <days>",
+            "age threshold in days for aspect-version/scope capsule pruning (default 30)"
+          ],
+          [
+            "",
+            "keep-workspace-caps",
+            "skip workspace capsule deletion"
+          ],
+          [
+            "",
+            "no-orphans",
+            "don't delete capsules whose origin path no longer exists"
+          ],
+          [
+            "",
+            "dry-run",
+            "preview what would be removed without deleting"
+          ],
+          [
+            "",
+            "with-sizes",
+            "compute byte sizes for the report (walks the full cache; slow on large caches). default: off — sizes shown as 0 but the prune itself is instant."
+          ],
+          [
+            "j",
+            "json",
+            "json format"
+          ]
+        ],
+        "description": "evict stale capsules from the global cache",
+        "extendedDescription": "workspace capsules are deleted unconditionally; aspect-version and scope capsules are deleted when their last-used marker is older than --older-than (default 30 days).\nuse --dry-run first to preview what would be removed.",
+        "group": "advanced",
+        "private": false
       }
     ]
   },
@@ -1012,6 +1057,27 @@
       {
         "name": "component-id",
         "description": "the component ID of the aspect"
+      }
+    ]
+  },
+  {
+    "name": "debug-load <component-id>",
+    "alias": "",
+    "options": [
+      [
+        "j",
+        "json",
+        "return the load trace in json format"
+      ]
+    ],
+    "description": "EXPERIMENTAL. load a component with tracing enabled and explain how it was loaded",
+    "extendedDescription": "clears the component's caches and loads it fresh, then prints: the load stages with timings and\ncache hits/misses, the sources that contributed each extension (and which one won the merge),\nthe resolved env and which source determined it, and any load issues found.",
+    "group": "info-analysis",
+    "private": true,
+    "arguments": [
+      {
+        "name": "component-id",
+        "description": "the component id to load"
       }
     ]
   },
@@ -2033,7 +2099,7 @@
       [
         "i",
         "ignore-issues <issues>",
-        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
+        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
       ]
     ],
     "description": "run build pipeline tasks in isolated environments",
@@ -3459,7 +3525,7 @@
       [
         "i",
         "ignore-issues <issues>",
-        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
+        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
       ],
       [
         "I",
@@ -3577,7 +3643,7 @@
       [
         "i",
         "ignore-issues <issues>",
-        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
+        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
       ],
       [
         "",
@@ -3694,7 +3760,7 @@
     ]
   },
   {
-    "name": "test [component-pattern]",
+    "name": "test [pattern-or-test-file...]",
     "alias": "at",
     "options": [
       [
@@ -3759,13 +3825,13 @@
       ]
     ],
     "description": "run component tests",
-    "extendedDescription": "executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.).\nby default only runs tests for new and modified components. use --unmodified to test all components.\nsupports watch mode, coverage reporting, and debug mode for development workflows.",
+    "extendedDescription": "executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.).\nby default only runs tests for new and modified components. use --unmodified to test all components.\nto run specific test files only, pass their paths instead of a component pattern, e.g. \"bit test path/to/comp/my-comp.spec.ts\".\nsupports watch mode, coverage reporting, and debug mode for development workflows.",
     "group": "testing",
     "private": false,
     "arguments": [
       {
-        "name": "component-pattern",
-        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+        "name": "pattern-or-test-file...",
+        "description": "one of two modes (multiple values are supported, separated by spaces):\n1) component pattern: component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n2) test-file path: a path to a test file, to run only this file, e.g. \"bit test path/to/comp/my-comp.spec.ts\".\nnote that a directory path selects the component in that directory and runs all its tests, while a test-file path runs only that file"
       }
     ]
   },

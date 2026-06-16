@@ -42,7 +42,7 @@ fi
 #   1. Tracked changes (staged + unstaged) via `git diff HEAD`.
 #   2. Untracked new files (e.g. a bug-repro test Claude just created but
 #      hasn't `git add`'d yet) via `git ls-files --others --exclude-standard`.
-if git diff HEAD -- 'e2e/' 2>/dev/null | grep -qE '^\+[^+].*(describe|context|it)\.only\b'; then
+if git diff HEAD -- 'e2e/' 2>/dev/null | grep -vE '^\+\+\+ ' | grep -qE '^\+.*\b(describe|context|it)\.only\b'; then
   exit 0
 fi
 UNTRACKED=$(git ls-files --others --exclude-standard -- 'e2e/' 2>/dev/null)

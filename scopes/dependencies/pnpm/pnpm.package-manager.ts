@@ -440,17 +440,20 @@ export class PnpmPackageManager implements PackageManager {
       return;
     }
     for (const { componentRootDir, componentRelativeDir, pkgName, component } of opts.components) {
+      const componentImporterId = (componentRelativeDir || '.') as ProjectId;
       let compRootDir: string | undefined;
       if (componentRootDir && !originalLockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
         compRootDir = componentRootDir.split('@')[0];
       } else {
         compRootDir = componentRootDir;
       }
-      if (!originalLockfile.importers[compRootDir as ProjectId]) {
+      if (!originalLockfile.importers[componentImporterId]) {
         continue;
       }
-      const filterByImporterIds = [componentRelativeDir as ProjectId];
-      if (compRootDir != null) {
+      const hasComponentRootImporter =
+        compRootDir != null && Boolean(originalLockfile.importers[compRootDir as ProjectId]);
+      const filterByImporterIds = [componentImporterId];
+      if (hasComponentRootImporter && compRootDir !== componentImporterId) {
         filterByImporterIds.push(compRootDir as ProjectId);
       }
       // Only clone the importers that will be mutated, reuse the rest of the lockfile as-is
@@ -493,8 +496,8 @@ export class PnpmPackageManager implements PackageManager {
       );
       const graph = convertLockfileToGraph(partialLockfile, {
         ...opts,
-        componentRootDir: compRootDir,
-        componentRelativeDir,
+        componentRootDir: hasComponentRootImporter ? compRootDir : undefined,
+        componentRelativeDir: componentImporterId,
         pkgName,
       });
       component.state._consumer.dependenciesGraph = graph;

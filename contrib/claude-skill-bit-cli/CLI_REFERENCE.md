@@ -90,7 +90,7 @@ Flags: --json
 ## bit capsule list
 
 list the capsules generated for this workspace
-Flags: --json
+Flags: --json, --with-stats
 
 ## bit capsule create [component-id...]
 
@@ -103,6 +103,13 @@ delete capsules
 
 with no args, only workspace's capsules are deleted
 Flags: --scope-aspects, --all
+
+## bit capsule prune
+
+evict stale capsules from the global cache
+
+workspace capsules are deleted unconditionally; aspect-version and scope capsules are deleted when their last-used marker is older than --older-than (default 30 days). use --dry-run first to preview what would be removed.
+Flags: --older-than <days>, --keep-workspace-caps, --no-orphans, --dry-run, --with-sizes, --json
 
 ## bit cat <component-id>
 
@@ -941,11 +948,11 @@ list available templates for creating components and workspaces
 Lists available templates. Inside a workspace it shows component templates for 'bit create'; outside a workspace it shows workspace templates for 'bit new'.
 Flags: --show-all, --aspect <aspect-id>, --json
 
-## bit test [component-pattern]
+## bit test [pattern-or-test-file...]
 
 run component tests
 
-executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.). by default only runs tests for new and modified components. use --unmodified to test all components. supports watch mode, coverage reporting, and debug mode for development workflows.
+executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.). by default only runs tests for new and modified components. use --unmodified to test all components. to run specific test files only, pass their paths instead of a component pattern, e.g. "bit test path/to/comp/my-comp.spec.ts". supports watch mode, coverage reporting, and debug mode for development workflows.
 Flags: --watch, --debug, --unmodified, --junit <filepath>, --coverage, --env <id>, --update-snapshot, --json, --verbose, --summary
 
 ## bit undeprecate <id>

@@ -393,6 +393,19 @@ export const CFG_USE_DATED_CAPSULES = 'use_dated_capsules';
 
 export const CFG_CACHE_LOCK_ONLY_CAPSULES = 'cache_lock_only_capsules';
 
+/**
+ * Age threshold (in days) for aspect-version and scope capsule pruning. Capsules whose
+ * last-used marker is older than this are considered stale and removed. Workspace capsules
+ * are deleted regardless of age.
+ */
+export const CFG_CAPSULES_MAX_AGE_DAYS = 'capsules_max_age_days';
+
+/**
+ * Whether the lazy auto-prune trigger runs in the background once per ~24h.
+ * Set to "false" to disable.
+ */
+export const CFG_CAPSULES_AUTO_PRUNE = 'capsules_auto_prune';
+
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';
 export const CFG_PROXY_NO_PROXY = 'proxy.no_proxy';

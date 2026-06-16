@@ -393,7 +393,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.1.5-v1
+          key: core-aspect-env-v0.1.6-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -476,7 +476,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.1.5-v1
+          key: core-aspect-env-v0.1.6-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -489,11 +489,13 @@ commands:
       # - run: 'rm -rf bit/node_modules/.bin/bit'
       - run:
           name: 'Run e2e tests'
-          # I tried really hard to split by timing. but it didn't work.
-          # CircleCI’s “split by timings” relies on per-testcase durations, but in our suite most time happens in
-          # before/after hooks, so testcase times are near-zero while the suite shows the full wall time.
-          # With no meaningful per-test weights, the splitter can’t balance work across 25 machines, leading to uneven distribution
-          command: 'cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs npm run mocha-circleci << parameters.bit_bin >>'
+          # Files are split across nodes by measured per-file wall-clock times (bin-packing), see
+          # scripts/split-e2e-tests.js. CircleCI's "split by timings" can't work here: it relies on
+          # per-testcase durations from junit, but most of our e2e time is spent in before/after hooks,
+          # which mocha attributes to no testcase, so the splitter sees ~13% of the real cost.
+          # The timings manifest is derived from actual CI node run times; refresh it occasionally
+          # with: node scripts/generate-e2e-timings.js
+          command: 'cd bit && node scripts/split-e2e-tests.js | xargs npm run mocha-circleci << parameters.bit_bin >>'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
@@ -582,7 +584,7 @@ jobs:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.1.5-v1
+          key: core-aspect-env-v0.1.6-v1
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a107
       # - run: cd bit && bbit compile
@@ -632,7 +634,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.1.5-v1
+          key: core-aspect-env-v0.1.6-v1
       - run:
           name: 'check circular dependencies'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
@@ -640,11 +642,12 @@ jobs:
   check_env_cache_sync:
     <<: *defaults
     steps:
-      - attach_workspace:
-          at: ./
+      # Only needs .bitmap and .circleci/config.yml from a plain checkout, so it
+      # runs (and fails) in seconds without waiting for setup_harmony.
+      - checkout
       - run:
           name: 'check env cache synchronization'
-          command: 'cd bit && ./scripts/check-env-cache-sync.sh'
+          command: './scripts/check-env-cache-sync.sh'
 
   generate_and_check_types:
     <<: *defaults
@@ -765,7 +768,7 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
-    parallelism: 25
+    parallelism: 40
     steps:
       - e2e_test_cmd
 
@@ -775,7 +778,7 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
-    parallelism: 25
+    parallelism: 32
     steps:
       - attach_workspace:
           at: ./
@@ -816,7 +819,7 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
-    parallelism: 25
+    parallelism: 32
     steps:
       - attach_workspace:
           at: ./
@@ -837,6 +840,50 @@ jobs:
           command: source $BASH_ENV && bit-cleaned --version
       - e2e_test_cmd:
           bit_bin: "--bin_bit=bit-cleaned"
+
+  # Regenerates the e2e timings manifest (scripts/e2e-test-timings.json) from recent CI runs
+  # and opens a PR when the weights drifted meaningfully. Scheduled biweekly by the
+  # e2e_timings_refresh workflow.
+  update_e2e_timings:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: regenerate e2e timings manifest
+          command: node scripts/generate-e2e-timings.js --jobs=12 --prior=manifest
+      - run:
+          name: open a PR if weights changed meaningfully
+          command: |
+            if git diff --quiet scripts/e2e-test-timings.json; then
+              echo "manifest unchanged, nothing to do"; exit 0
+            fi
+            SIGNIFICANT=$(node -e '
+              const { execSync } = require("child_process");
+              const cur = require("./scripts/e2e-test-timings.json");
+              const old = JSON.parse(execSync("git show HEAD:scripts/e2e-test-timings.json", { encoding: "utf8" }));
+              let count = 0;
+              for (const [file, sec] of Object.entries(cur)) {
+                const prev = old[file];
+                if (prev === undefined || (Math.abs(sec - prev) > 45 && Math.abs(sec - prev) / Math.max(prev, 1) > 0.3)) count += 1;
+              }
+              for (const file of Object.keys(old)) if (!(file in cur)) count += 1;
+              console.log(count);
+            ')
+            echo "significantly changed entries: $SIGNIFICANT"
+            if [ "$SIGNIFICANT" -lt 3 ]; then
+              echo "drift too small, skipping PR"; exit 0
+            fi
+            BRANCH="update-e2e-timings-$(date +%Y-%m-%d)"
+            git config user.email "ci@bit.dev"
+            git config user.name "CircleCI"
+            git checkout -b "$BRANCH"
+            git commit -am "ci(e2e): refresh e2e timings manifest"
+            git push "https://davidfirst:${GH_RELEASE_GITHUB_API_TOKEN}@github.com/teambit/bit.git" "$BRANCH"
+            curl -sf -X POST \
+              -H "Authorization: token ${GH_RELEASE_GITHUB_API_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/teambit/bit/pulls \
+              -d "{\"title\":\"ci(e2e): refresh e2e timings manifest\",\"head\":\"$BRANCH\",\"base\":\"master\",\"body\":\"Automated biweekly refresh of scripts/e2e-test-timings.json from the last 12 e2e runs ($SIGNIFICANT entries drifted meaningfully). Generated by the e2e_timings_refresh scheduled workflow.\"}"
 
   # ========== Utility Jobs ==========
   harmony_deploy_approval_job:
@@ -1252,9 +1299,7 @@ workflows:
       - check_circular_dependencies:
           requires:
             - setup_harmony
-      - check_env_cache_sync:
-          requires:
-            - setup_harmony
+      - check_env_cache_sync
       - generate_and_check_types:
           requires:
             - setup_harmony
@@ -1356,6 +1401,19 @@ workflows:
           requires:
             - setup_harmony
             - harmony_publish_to_gcloud
+
+  # Biweekly refresh of the e2e timings manifest (1st and 15th of the month, 04:00 UTC).
+  # Opens a PR only when the measured per-file weights drifted meaningfully.
+  e2e_timings_refresh:
+    triggers:
+      - schedule:
+          cron: '0 4 1,15 * *'
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - update_e2e_timings
 
   # Windows nightly workflow
   # windows-nightly:

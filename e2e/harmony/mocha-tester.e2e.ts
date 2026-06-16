@@ -190,6 +190,37 @@ describe('second spec file', () => {
       expect(output).to.not.have.string('2 passing');
     });
   });
+  describe('testing a single spec file', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fixtures.populateComponents(2);
+      setupMochaEnv();
+      helper.command.setEnv('comp1', envId);
+      helper.command.setEnv('comp2', envId);
+      helper.command.install();
+      helper.fs.outputFile('comp1/first.spec.ts', specFileWithNamesFixture('first spec file', 'first-file test'));
+      helper.fs.outputFile('comp1/second.spec.ts', specFileWithNamesFixture('second spec file', 'second-file test'));
+      helper.fs.outputFile('comp2/comp2.spec.ts', specFileWithNamesFixture('comp2 spec file', 'comp2 test'));
+    });
+    it('should run only the tests of the given file', () => {
+      const output = helper.command.test('comp1/first.spec.ts', true);
+      expect(output).to.have.string('first-file test');
+      expect(output).to.not.have.string('second-file test');
+      expect(output).to.not.have.string('comp2 test');
+      expect(output).to.have.string('1 passing');
+    });
+    it('should test only the component that owns the given file', () => {
+      const output = helper.command.test('comp1/first.spec.ts', true);
+      expect(output).to.have.string('testing total of 1 components');
+    });
+    it('should support multiple test-file paths', () => {
+      const output = helper.command.test('comp1/first.spec.ts comp1/second.spec.ts', true);
+      expect(output).to.have.string('first-file test');
+      expect(output).to.have.string('second-file test');
+      expect(output).to.not.have.string('comp2 test');
+      expect(output).to.have.string('2 passing');
+    });
+  });
 });
 
 function shouldOutputTestPassed(output: string) {
@@ -202,6 +233,16 @@ function specFilePassingFixture() {
   return `import { expect } from 'chai';
 describe('test', () => {
   it('should pass', () => {
+    expect(true).to.be.true;
+  });
+});
+`;
+}
+
+function specFileWithNamesFixture(describeText: string, itText: string) {
+  return `import { expect } from 'chai';
+describe('${describeText}', () => {
+  it('${itText}', () => {
     expect(true).to.be.true;
   });
 });
