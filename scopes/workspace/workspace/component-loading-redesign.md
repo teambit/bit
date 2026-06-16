@@ -260,7 +260,48 @@ graph 2013MB.
 
 Baseline measured 2026-06-15 on darwin (Apple silicon), `bit` @ 1.13.222, node v22.20.0,
 `bit show teambit.workspace/workspace`. The two clear hotspots are `bit status` (11s) and
-`bit graph` (20s, 2GB) — Phase 2's lazy-file-contents and partial-load changes target exactly these.
+`bit graph` (20s, 2GB).
+
+### 4.1 Profiling findings (where the warm load time actually goes)
+
+Beyond wall-time, an opt-in aggregate profiler (`BIT_LOAD_PROFILE=1 bit <cmd>`, in
+`@teambit/harmony.modules.load-trace`) sums each load stage's self-time across the whole command.
+Numbers below are aggregate self-time across ~313 components at ~6× concurrency (so wall ≈ total/6).
+
+**`bit status` (warm, ~13s wall):**
+
+| stage                                                       | aggregate self-time | ~wall | note                                          |
+| ----------------------------------------------------------- | ------------------- | ----- | --------------------------------------------- |
+| `legacy-load-deps`                                          | 43s                 | ~7s   | dependency-object materialization (see below) |
+| `on-load` (slot handlers: docs, compositions, schema, pkg…) | 10s                 | ~1.7s | trimmable for non-UI flows                    |
+| `dependency-resolution` (Harmony resolver)                  | 7.7s                | ~1.3s |                                               |
+| `execute-load-slot` (own)                                   | 5.8s                | ~1s   |                                               |
+| `consumer-fs-load` (file content reads)                     | negligible          | —     | not a `status` cost                           |
+
+**`bit graph --json` (warm, ~20s wall; ~7.5s of it is loading):**
+
+| stage                                   | aggregate self-time | note                           |
+| --------------------------------------- | ------------------- | ------------------------------ |
+| `consumer-fs-load` (file content reads) | 5.8s                | dominant load cost for graph   |
+| `legacy-load-deps`                      | 1.2s                | graph uses a lighter load path |
+
+**Key conclusions (validated, not hypothesized):**
+
+- **The dependency FS cache works.** On a warm `bit status`, dep loading is **635 cache hits, 0
+  misses/recomputes**. `legacy-load-deps` is _not_ re-resolving dependencies.
+- **`status`'s dominant cost (~7s wall) is dependency-object _materialization on cache hit_** —
+  `DependenciesData.deserialize` + reconstructing full `Dependency`/`DependencyList` objects +
+  `applyOverrides`, for every component, even though `status` reads little of it. This is the
+  "all-or-nothing, always fully materialize" problem of §1.1 — **structural, not a cache bug.**
+  Reducing it needs the staged/lazy-loading work (defer dependency-object construction), **not a
+  Phase-2 quick fix.** Earlier framing of this as "39s" was aggregate-concurrent self-time, not
+  wall; wall is ~13s.
+- **`graph`'s dominant load cost is file-content reads (`consumer-fs-load`, 5.8s)** → this is what
+  **lazy file contents** (§2.1) targets; validated as a real win for `graph`/scope-side loads, but
+  it does **not** help `status` (whose file reads are negligible).
+- Implication for Phase-2 ordering: lazy file contents helps `graph`; per-command partial loads help
+  `deps usage`/IDE/`remove`/forking; `loadDocs/loadCompositions: false` trims `status`'s slot work
+  (~1.7s). The big `status` number is deferred to the staged-loading phase.
 
 ---
 
@@ -290,5 +331,12 @@ Baseline measured 2026-06-15 on darwin (Apple silicon), `bit` @ 1.13.222, node v
   S4=`dependency-resolution`+`execute-load-slot`/`on-load:*`.
 - 2026-06-15 — Phase 2 started. Benchmark harness committed (`scripts/bench-component-loading.js`)
   and baseline recorded in §4 (after `bit import`): `bit status` 11.24s, `bit list` 1.59s,
-  `bit show` 1.73s, `bit graph --json` 20.49s; peak RSS 2.0GB on graph. `status` and `graph` are
-  the hotspots — next: lazy file contents in `toConsumerComponent`.
+  `bit show` 1.73s, `bit graph --json` 20.49s; peak RSS 2.0GB on graph.
+- 2026-06-16 — Profiling done (see §4.1). Added an opt-in aggregate per-stage profiler
+  (`BIT_LOAD_PROFILE=1`) to `@teambit/harmony.modules.load-trace`. Findings: the dependency FS cache
+  works (warm `bit status` = 635 dep-cache hits, 0 misses). `status`'s dominant warm cost (~7s wall)
+  is dependency-_object materialization_ on cache hit (deserialize + reconstruct), not resolution —
+  structural, deferred to staged loading, not a Phase-2 quick win. `graph`'s dominant load cost is
+  file-content reads (`consumer-fs-load`, 5.8s) → the target for lazy file contents. (Correction: an
+  earlier "39s" figure was aggregate-concurrent self-time, not wall; warm wall is ~13s.) Direction
+  for the next Phase-2 PR intentionally left open.
