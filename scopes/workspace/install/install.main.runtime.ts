@@ -22,9 +22,7 @@ import type { VariantsMain } from '@teambit/variants';
 import { VariantsAspect } from '@teambit/variants';
 import type { Component } from '@teambit/component';
 import { ComponentID, ComponentMap } from '@teambit/component';
-import { ComponentIdList } from '@teambit/component-id';
 import { isSnap } from '@teambit/component-version';
-import { BuildStatus } from '@teambit/legacy.constants';
 import { PackageJsonFile } from '@teambit/component.sources';
 import { updateJsoncPreservingFormatting } from '@teambit/toolbox.json.jsonc-utils';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
@@ -395,11 +393,6 @@ export class InstallMain {
       }
     );
 
-    // a workspace component may depend on a hidden "update-dependent" of the current lane that was never
-    // published (its Ripple build failed or hasn't completed), so there is nothing for pnpm to install.
-    // fail early with an actionable message instead of letting pnpm error with "No matching version found".
-    await this.throwOnUnpublishedUpdateDependentDeps(current.componentDirectoryMap.components);
-
     const pmInstallOptions: PackageManagerInstallOptions = {
       ...calcManifestsOpts,
       autoInstallPeers: this.dependencyResolver.config.autoInstallPeers,
@@ -438,18 +431,28 @@ export class InstallMain {
       // are not added to the manifests.
       // This is an issue when installation is done using root components.
       hasMissingLocalComponents = hasRootComponents && hasComponentsFromWorkspaceInMissingDeps(current);
-      const { dependenciesChanged } = await installer.installComponents(
-        this.workspace.path,
-        current.manifests,
-        mergedRootPolicy,
-        current.componentDirectoryMap,
-        {
-          linkedDependencies,
-          installTeambitBit: false,
-          forcedHarmonyVersion,
-        },
-        pmInstallOptions
-      );
+      let installResult: { dependenciesChanged: boolean };
+      try {
+        installResult = await installer.installComponents(
+          this.workspace.path,
+          current.manifests,
+          mergedRootPolicy,
+          current.componentDirectoryMap,
+          {
+            linkedDependencies,
+            installTeambitBit: false,
+            forcedHarmonyVersion,
+          },
+          pmInstallOptions
+        );
+      } catch (err: any) {
+        // when the package manager can't find a version, the culprit is usually a component dependency that
+        // resolves to a snap which was never published (e.g. a hidden lane update-dependent whose Ripple build
+        // failed or hasn't completed). replace the cryptic "No matching version found" with an actionable
+        // message. re-throws the original error otherwise.
+        throw this.enrichUnpublishedSnapDepError(err, current.componentDirectoryMap.components);
+      }
+      const { dependenciesChanged } = installResult;
       this.workspace.inInstallAfterPmContext = true;
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
@@ -525,83 +528,44 @@ export class InstallMain {
   }
 
   /**
-   * "update-dependents" are hidden entries of the current lane (components that depend on the lane's visible
-   * components and get re-snapped against the lane heads by "snap updates" / Ripple CI). they are not checked out
-   * into the workspace, so a visible component that depends on one must fetch it from the registry as a package.
-   * a package only exists once Ripple built the entry successfully; if its build failed (or hasn't completed) the
-   * snap was never published and there is no package to install. detect this up-front and throw an actionable
-   * error instead of letting pnpm fail with the cryptic "No matching version found" for a `0.0.0-<hash>` version.
+   * Called only when the package manager install failed. A "No matching version found" failure usually points
+   * at a component dependency that resolves to a snap which was never published — typically a hidden lane
+   * "update-dependent" (re-snapped by "snap updates" / Ripple CI) whose build failed or hasn't completed. Such a
+   * dep isn't checked out, so it can't be linked from source and there's no package to fetch. When the failing
+   * package matches one of those deps, return an actionable error (pointing at `bit import`); otherwise return
+   * the original error unchanged.
+   *
+   * Note: we deliberately match against the package manager error rather than the lane's `updateDependents`,
+   * because the install's import phase may have already dropped the entry from the local lane object.
    */
-  private async throwOnUnpublishedUpdateDependentDeps(components: Component[]): Promise<void> {
-    const lane = await this.workspace.getCurrentLaneObject();
-    const updateDependents = lane?.updateDependents;
-    if (!updateDependents?.length) return;
-    const updateDependentsList = ComponentIdList.fromArray(updateDependents);
-    // checked-out components are linked from source (filtered out of the install manifest), so they're never
-    // fetched from the registry and can't trigger this failure even when they weren't built successfully.
+  private enrichUnpublishedSnapDepError(err: Error, components: Component[]): Error {
+    // checked-out components are linked from source, so they're never fetched from the registry.
     const workspaceIds = this.workspace.listIds();
-    const legacyScope = this.workspace.scope.legacyScope;
-    const readBuildStatus = async (id: ComponentID): Promise<BuildStatus | undefined | null> => {
-      // `null` means the version object isn't available locally, so we can't determine its build status.
-      try {
-        return (await legacyScope.getVersionInstance(id)).buildStatus;
-      } catch {
-        return null;
+    const errMessage = err.message || '';
+
+    const unpublished = new Map<string, { id: ComponentID; dependents: Set<string> }>();
+    for (const component of components) {
+      for (const dep of this.dependencyResolver.getComponentDependencies(component)) {
+        const depId = dep.componentId;
+        if (!depId.version || !isSnap(depId.version)) continue;
+        if (workspaceIds.hasWithoutVersion(depId)) continue;
+        // only the dependency the package manager actually failed on: its package + snap version appear in the
+        // error (the manifest version is `0.0.0-<hash>`, so the raw hash is a substring).
+        if (!errMessage.includes(dep.packageName) || !errMessage.includes(depId.version)) continue;
+        const key = depId.toStringWithoutVersion();
+        const entry = unpublished.get(key) ?? { id: depId, dependents: new Set<string>() };
+        entry.dependents.add(component.id.toStringWithoutVersion());
+        unpublished.set(key, entry);
       }
-    };
-    // a package exists once the snap was built. `Succeed` and `Skipped` both count as "built" here, mirroring
-    // the rest of the scope (see `onlyIfBuilt` in scope-components-importer and `sources.get`); `null` means
-    // undeterminable (version object not local). anything else (failed / pending / not built) has no package.
-    const isBuilt = (status: BuildStatus | undefined | null): boolean =>
-      status === null || status === BuildStatus.Succeed || status === BuildStatus.Skipped;
-
-    // collect update-dependent deps referenced by a checked-out component whose locally-known build status
-    // is not "built" — those are the ones that might have no package to install.
-    const candidates = new Map<string, { id: ComponentID; dependents: Set<string> }>();
-    await Promise.all(
-      components.map(async (component) => {
-        const compDeps = this.dependencyResolver.getComponentDependencies(component);
-        await Promise.all(
-          compDeps.map(async (dep) => {
-            const depId = dep.componentId;
-            if (!depId.version || !isSnap(depId.version)) return;
-            if (workspaceIds.hasWithoutVersion(depId)) return;
-            if (!updateDependentsList.hasWithoutVersion(depId)) return;
-            if (isBuilt(await readBuildStatus(depId))) return;
-            const key = depId.toString();
-            const entry = candidates.get(key) ?? { id: depId, dependents: new Set<string>() };
-            entry.dependents.add(component.id.toStringWithoutVersion());
-            candidates.set(key, entry);
-          })
-        );
-      })
+    }
+    if (!unpublished.size) return err;
+    return new UpdateDependentBuildFailed(
+      [...unpublished.values()].map(({ id, dependents }) => ({
+        id: id.toStringWithoutVersion(),
+        version: id.version as string,
+        dependents: [...dependents],
+      }))
     );
-    if (!candidates.size) return;
-
-    // a locally-stale `pending`/`failed` snap may have since been built and published on the remote. refresh
-    // these specific versions from the remote (this is exactly what `reFetchUnBuiltVersion` is for) before
-    // deciding they're unpublished, so we don't fail an install for a snap that is actually installable.
-    const candidateIds = [...candidates.values()].map((entry) => entry.id);
-    try {
-      await this.workspace.scope.import(candidateIds, {
-        reFetchUnBuiltVersion: true,
-        useCache: false,
-        lane,
-        includeUpdateDependents: true,
-        reason: 'to check whether unbuilt update-dependents were already published',
-      });
-    } catch {
-      // offline or remote unavailable — fall back to the locally-known build status.
-    }
-
-    const unpublished: { id: string; version: string; dependents: string[] }[] = [];
-    for (const { id, dependents } of candidates.values()) {
-      // skip when now known to be built (the refetch may have picked up a remote build) or undeterminable.
-      if (isBuilt(await readBuildStatus(id))) continue;
-      unpublished.push({ id: id.toStringWithoutVersion(), version: id.version as string, dependents: [...dependents] });
-    }
-    if (!unpublished.length) return;
-    throw new UpdateDependentBuildFailed(unpublished);
   }
 
   /**
