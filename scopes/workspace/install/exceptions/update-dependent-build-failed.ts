@@ -1,40 +1,40 @@
 import { BitError } from '@teambit/bit-error';
 import { errorSymbol, formatItem } from '@teambit/cli';
 
-export type FailedUpdateDependent = {
-  /** the failed update-dependent component id (without version) */
+export type UnpublishedSnapDependency = {
+  /** the depended-on component id (without version) */
   id: string;
-  /** the snap version (hash) that failed to build */
+  /** the snap version (hash) that has no published package */
   version: string;
-  /** workspace component ids that depend on this update-dependent */
+  /** workspace component ids that depend on it */
   dependents: string[];
 };
 
 /**
- * thrown during `bit install` when a workspace component depends on a hidden "update-dependent"
- * of the current lane that was never published — its Ripple build failed or hasn't completed
- * successfully. without a published package there is nothing to install and pnpm would otherwise
- * fail with a cryptic "No matching version found" error.
+ * thrown during `bit install` when a workspace component depends on another component pinned to a snap
+ * that was never published to the registry, so the package manager can't find it. the usual cause is a
+ * hidden lane "update-dependent" (created by "snap updates") whose build failed or hasn't completed, but
+ * it can also be any snap dependency that isn't checked out and was never published.
  */
 export class UpdateDependentBuildFailed extends BitError {
-  constructor(readonly failed: FailedUpdateDependent[]) {
-    super(UpdateDependentBuildFailed.formatMessage(failed));
+  constructor(readonly unpublished: UnpublishedSnapDependency[]) {
+    super(UpdateDependentBuildFailed.formatMessage(unpublished));
   }
 
-  private static formatMessage(failed: FailedUpdateDependent[]): string {
-    const list = failed
+  private static formatMessage(unpublished: UnpublishedSnapDependency[]): string {
+    const list = unpublished
       .map(({ id, version, dependents }) => {
         const shortVersion = version.substring(0, 9);
         const requiredBy = dependents.join(', ');
         return formatItem(`${id} (${shortVersion}) — required by: ${requiredBy}`, errorSymbol);
       })
       .join('\n');
-    const importCommand = `bit import ${failed.map(({ id }) => id).join(' ')}`;
-    return `unable to install the following update-dependent component(s) of the current lane.
-their build did not complete successfully (it failed, e.g. on Ripple after "snap updates", or is still pending), so they were never published to the registry and no package exists to install:
+    const importCommand = `bit import ${unpublished.map(({ id }) => id).join(' ')}`;
+    return `unable to install the following component(s) — they are pinned to a snap that was never published to the registry, so there is no package to install:
 
 ${list}
 
+this usually happens with a lane "update-dependent" (created by "snap updates") whose build failed or hasn't completed.
 to resolve, import the component(s) into your workspace so they are linked from source instead of fetched from the registry:
 
   ${importCommand}`;
