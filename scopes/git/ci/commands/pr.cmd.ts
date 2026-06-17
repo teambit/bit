@@ -16,7 +16,7 @@ type Options = {
 export class CiPrCmd implements Command {
   name = 'pr';
   description = 'Exports a feature lane to Bit Cloud when a Pull Request is opened or updated.';
-  extendedDescription = `Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. By default it then restores the workspace by switching back to main; this restore is skipped automatically in CI (or with --skip-cleanup) since the container is discarded right after. Use in pull-request CI pipelines after tests and before deploy.`;
+  extendedDescription = `Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. By default it then restores the workspace by switching back to main; pass --skip-cleanup to skip that restore when the workspace is about to be discarded (e.g. an ephemeral CI container). Use in pull-request CI pipelines after tests and before deploy.`;
   group = 'collaborate';
 
   options: CommandOptions = [
@@ -33,7 +33,7 @@ export class CiPrCmd implements Command {
     [
       '',
       'skip-cleanup',
-      'Skip restoring the workspace (switching back to main) after export. On by default in CI, where the container is discarded right away',
+      'Skip restoring the workspace (switching back to main) after export. Use when the workspace is discarded right after, e.g. an ephemeral CI container',
     ],
   ];
 

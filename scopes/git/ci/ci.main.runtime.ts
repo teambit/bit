@@ -558,10 +558,11 @@ export class CiMain {
     skipCleanup?: boolean;
   }) {
     // The post-export cleanup switches the workspace back to main, which re-checks-out main's HEAD
-    // and re-imports every workspace component. That restore is only useful for an interactive run;
-    // in CI the container is discarded immediately, so default to skipping it there. An explicit
-    // flag (true or, where the parser supports `--no-skip-cleanup`, false) always wins.
-    const resolvedSkipCleanup = skipCleanup ?? Boolean(process.env.CI);
+    // and re-imports every workspace component — pointless when the workspace is about to be
+    // discarded. It's opt-in via `--skip-cleanup` (the `bit_pr` CI job passes it) rather than
+    // auto-detected from `process.env.CI`: other CI contexts *reuse* the workspace after `bit ci pr`
+    // (e.g. the e2e suite, which then tags/asserts on main), and must keep restoring it.
+    const resolvedSkipCleanup = Boolean(skipCleanup);
     this.logger.console(chalk.blue(`Lane name: ${laneIdStr}`));
 
     const originalLane = await this.lanes.getCurrentLane();
@@ -619,7 +620,7 @@ export class CiMain {
     this.logger.console('🔄 Cleanup');
     if (skipCleanup) {
       this.logger.console(
-        chalk.yellow('Skipping workspace restore (CI or --skip-cleanup) — leaving the workspace on the PR lane')
+        chalk.yellow('Skipping workspace restore (--skip-cleanup) — leaving the workspace on the PR lane')
       );
       return false;
     }
@@ -629,17 +630,24 @@ export class CiMain {
     try {
       const currentLane = await this.lanes.getCurrentLane();
       if (currentLane) {
-        await this.switchToLane(targetLane);
+        // switchToLane catches its own errors and *returns* them (never throws), so a failed switch
+        // would otherwise slip through as a success. Treat a returned error as "did not switch" so
+        // callers don't run follow-up bookkeeping (e.g. temp-lane removal) while still on the lane.
+        const switchErr = await this.switchToLane(targetLane);
+        if (switchErr) {
+          this.logger.consoleWarning(`Cleanup after PR snap failed: ${switchErr.message}`);
+          return false;
+        }
       } else {
         this.logger.console(chalk.yellow('Already on main, checking out to head'));
         await this.lanes.checkout.checkout({ head: true, skipNpmInstall: true });
       }
-      longProcessLogger.end();
       return true;
     } catch (cleanupErr: any) {
-      longProcessLogger.end();
       this.logger.consoleWarning(`Cleanup after PR snap failed: ${cleanupErr.message}`);
-      return true;
+      return false;
+    } finally {
+      longProcessLogger.end();
     }
   }
 
