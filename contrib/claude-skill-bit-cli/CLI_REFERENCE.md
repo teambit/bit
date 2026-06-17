@@ -146,8 +146,8 @@ Runs lint, build, and status checks to catch dependency drift or broken builds e
 
 Exports a feature lane to Bit Cloud when a Pull Request is opened or updated.
 
-Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. Cleans up by switching back to main. Use in pull-request CI pipelines after tests and before deploy.
-Flags: --message <message>, --lane <lane>, --build, --strict, --dry-run, --keep-lane
+Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. By default it then restores the workspace by switching back to main; pass --skip-cleanup to skip that restore when the workspace is about to be discarded (e.g. an ephemeral CI container). Use in pull-request CI pipelines after tests and before deploy.
+Flags: --message <message>, --lane <lane>, --build, --strict, --dry-run, --keep-lane, --skip-cleanup
 
 ## bit ci merge
 
