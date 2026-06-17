@@ -204,7 +204,16 @@ export async function loadSpan<T>(
   fn: (span: LoadSpan) => Promise<T>
 ): Promise<T> {
   const store = traceStorage.getStore();
-  if (!store) return fn(new LoadSpan(name, undefined, attributes));
+  if (!store) {
+    // no active trace: still end the span so the aggregate profiler (BIT_LOAD_PROFILE) records this
+    // stage even on load paths that run outside startOrJoinLoadTrace.
+    const rootless = new LoadSpan(name, undefined, attributes);
+    try {
+      return await fn(rootless);
+    } finally {
+      rootless.end();
+    }
+  }
   const span = new LoadSpan(name, store.span, attributes);
   try {
     let promise!: Promise<T>;

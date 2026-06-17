@@ -124,6 +124,12 @@ function fmtRss(bytes) {
 function main() {
   const opts = parseArgs(process.argv.slice(2));
   const versionRes = spawnSync(opts.bin, ['--version'], { encoding: 'utf8' });
+  if (versionRes.error || versionRes.status !== 0) {
+    console.error(
+      `✖ cannot run "${opts.bin} --version" (${versionRes.error ? versionRes.error.message : `exit ${versionRes.status}`}). is the binary on PATH?`
+    );
+    process.exit(1);
+  }
   const binVersion = (versionRes.stdout || '').trim() || 'unknown';
 
   console.log('component-loading benchmark');
@@ -189,6 +195,16 @@ function main() {
       )
     );
     console.log(`\nwrote ${opts.json}`);
+  }
+
+  // fail the process when any command had a failing run, so CI / baseline-capture callers don't
+  // silently record numbers measured from a broken command.
+  const failedCommands = results.filter((r) => r.failed);
+  if (failedCommands.length) {
+    console.error(
+      `\n✖ ${failedCommands.length} command(s) had failing runs: ${failedCommands.map((r) => r.label).join(', ')}. the numbers above are unreliable.`
+    );
+    process.exitCode = 1;
   }
 }
 
