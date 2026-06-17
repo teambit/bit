@@ -26,7 +26,7 @@ export class UpdateDependentBuildFailed extends BitError {
       .map(({ id, version, dependents }) => {
         const shortVersion = version.substring(0, 9);
         const requiredBy = dependents.join(', ');
-        return formatItem(`${id} (${shortVersion}) — required by: ${requiredBy}`, errorSymbol);
+        return formatItem(`${id} (${shortVersion}) required by: ${requiredBy}`, errorSymbol);
       })
       .join('\n');
     const importCommand = `bit import ${unpublished.map(({ id }) => id).join(' ')}`;

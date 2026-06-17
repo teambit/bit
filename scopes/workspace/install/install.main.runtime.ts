@@ -540,9 +540,18 @@ export class InstallMain {
    * the entry was promoted out of `updateDependents` (e.g. the producer later re-snapped that component).
    */
   private enrichUnpublishedSnapDepError(err: Error, components: Component[]): Error {
+    // only act on the package manager's "no matching version" failure. other codes (auth, network, FETCH_404,
+    // registry outages) can mention the same package but signal a real problem we must not mask. the repo treats
+    // only ERR_PNPM_NO_MATCHING_VERSION as the "unpublished snap" signal (see lockfile-deps-graph-converter).
+    // pnpm errors are wrapped by pnpmErrorToBitError, which keeps the original error (with its code) on `cause`.
+    const pnpmCode = (err as any)?.cause?.code ?? (err as any)?.code;
+    const errMessage = err.message || '';
+    const isNoMatchingVersion =
+      pnpmCode === 'ERR_PNPM_NO_MATCHING_VERSION' || (!pnpmCode && errMessage.includes('No matching version found'));
+    if (!isNoMatchingVersion) return err;
+
     // checked-out components are linked from source, so they're never fetched from the registry.
     const workspaceIds = this.workspace.listIds();
-    const errMessage = err.message || '';
 
     const unpublished = new Map<string, { id: ComponentID; dependents: Set<string> }>();
     for (const component of components) {
