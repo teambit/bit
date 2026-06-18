@@ -758,6 +758,11 @@ jobs:
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
+            # Build environments concurrently (each env's tasks still run sequentially; cross-env
+            # task deps + start/middle/end barriers are honored — see tasks-parallel-scheduler.ts).
+            # 3 already captures most of the win (core-aspect-env is the long pole); raise once proven
+            # stable, watching memory (in-process webpack/tsc on this 2xlarge can OOM → "Killed").
+            BIT_BUILD_CONCURRENCY: '3'
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
