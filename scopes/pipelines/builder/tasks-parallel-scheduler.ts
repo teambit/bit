@@ -1,3 +1,23 @@
+/**
+ * Opt-in parallel build scheduler (enabled with `BIT_BUILD_CONCURRENCY` / the `build.concurrency`
+ * config; default 1 = the original serial `mapSeries` path). It runs environments concurrently while
+ * keeping each env's tasks sequential and honoring cross-env task dependencies + location barriers.
+ *
+ * WHY IT'S OFF BY DEFAULT — it did NOT help Bit's own build. Measured A/B on `bit_pr`, identical
+ * 97-component workload (CircleCI 2xlarge, 8 vCPU): serial build-pipeline wall ≈ 17m vs parallel
+ * (concurrency=3) ≈ 16m — a ~1m wash, with total `bit ci pr` essentially unchanged. The envs did
+ * overlap (parallel wall 16m vs its own task-time sum of 24m), but two effects cancelled the gain:
+ *   1. CPU contention. The tasks (tsc/webpack/babel) already saturate all cores on their own, so
+ *      running several at once just oversubscribes — per-task times ballooned (one BabelCompile went
+ *      19s → 300s) and the heaviest env's chain grew from ~9.7m to ~15.5m, giving back what the
+ *      overlap saved.
+ *   2. Single-env dominance. ~80% of the work is one env (`core-aspect-env`), a sequential chain
+ *      cross-env parallelism can't split — so even with zero contention the floor is ~its own length.
+ *
+ * It CAN help a workspace whose build is spread across several similarly-sized envs, or a machine
+ * with spare cores beyond what one task uses. For a CPU-bound, one-env-dominated build like Bit's,
+ * reducing work (e.g. skipping preview/schema on PR builds) beats adding concurrency.
+ */
 import type { EnvDefinition } from '@teambit/envs';
 import type { BuildTask } from './build-task';
 import { BuildTaskHelper } from './build-task';
