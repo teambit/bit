@@ -752,7 +752,9 @@ jobs:
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run:
           name: 'bit ci pr'
-          command: 'cd bit && bit ci pr --build --keep-lane'
+          # --skip-cleanup: this container is discarded right after, so don't waste time restoring
+          # the workspace to main (which re-checks-out main's HEAD and re-imports every component).
+          command: 'cd bit && bit ci pr --build --keep-lane --skip-cleanup'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
