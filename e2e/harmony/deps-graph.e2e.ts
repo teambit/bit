@@ -33,7 +33,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl(), '--local-track');
 
       helper.env.setCustomNewEnv(
         undefined,
@@ -99,7 +99,6 @@ chai.use(chaiFs);
     });
     after(() => {
       npmCiRegistry.destroy();
-      helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
     });
     it('should save dependencies graph to the model of comp1', () => {
@@ -175,7 +174,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl(), '--local-track');
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -234,7 +233,6 @@ chai.use(chaiFs);
     });
     after(() => {
       npmCiRegistry.destroy();
-      helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
     });
   });
@@ -254,7 +252,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl(), '--local-track');
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -291,7 +289,6 @@ chai.use(chaiFs);
     });
     after(() => {
       npmCiRegistry.destroy();
-      helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
     });
     it('first import should restore the lockfile from comp1 graph', () => {

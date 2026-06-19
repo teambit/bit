@@ -36,7 +36,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl(), '--local-track');
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -74,7 +74,6 @@ chai.use(chaiFs);
     });
     after(() => {
       npmCiRegistry.destroy();
-      helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
     });
     // Regression coverage: re-importing comp1 must not regenerate the lockfile from
@@ -95,7 +94,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl(), '--local-track');
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -157,7 +156,6 @@ chai.use(chaiFs);
     });
     after(() => {
       npmCiRegistry.destroy();
-      helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
     });
     it('should restore the lockfile from the merged graphs', () => {
