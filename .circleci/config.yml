@@ -393,7 +393,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.1.6-v1
+          key: core-aspect-env-v0.1.7-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -476,7 +476,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.1.6-v1
+          key: core-aspect-env-v0.1.7-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -584,7 +584,7 @@ jobs:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.1.6-v1
+          key: core-aspect-env-v0.1.7-v1
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a107
       # - run: cd bit && bbit compile
@@ -634,7 +634,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.1.6-v1
+          key: core-aspect-env-v0.1.7-v1
       - run:
           name: 'check circular dependencies'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
@@ -752,10 +752,15 @@ jobs:
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run:
           name: 'bit ci pr'
-          command: 'cd bit && bit ci pr --build --keep-lane'
+          # --skip-cleanup: this container is discarded right after, so don't waste time restoring
+          # the workspace to main (which re-checks-out main's HEAD and re-imports every component).
+          command: 'cd bit && bit ci pr --build --keep-lane --skip-cleanup'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
+            # NOTE: parallel builds (BIT_BUILD_CONCURRENCY>1) were measured here and did NOT help —
+            # this build is CPU-bound and dominated by one env, so concurrency only added contention.
+            # See tasks-parallel-scheduler.ts header for the numbers. Left serial on purpose.
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 

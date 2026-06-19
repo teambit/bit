@@ -10,12 +10,13 @@ type Options = {
   strict?: boolean;
   dryRun?: boolean;
   keepLane?: boolean;
+  skipCleanup?: boolean;
 };
 
 export class CiPrCmd implements Command {
   name = 'pr';
   description = 'Exports a feature lane to Bit Cloud when a Pull Request is opened or updated.';
-  extendedDescription = `Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. Cleans up by switching back to main. Use in pull-request CI pipelines after tests and before deploy.`;
+  extendedDescription = `Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. By default it then restores the workspace by switching back to main; pass --skip-cleanup to skip that restore when the workspace is about to be discarded (e.g. an ephemeral CI container). Use in pull-request CI pipelines after tests and before deploy.`;
   group = 'collaborate';
 
   options: CommandOptions = [
@@ -28,6 +29,11 @@ export class CiPrCmd implements Command {
       '',
       'keep-lane',
       'Reuse the same remote lane across PR commits (preserves lane history and cloud UI edits) instead of recreating it on every run',
+    ],
+    [
+      '',
+      'skip-cleanup',
+      'Skip restoring the workspace (switching back to main) after export. Use when the workspace is discarded right after, e.g. an ephemeral CI container',
     ],
   ];
 
@@ -74,6 +80,7 @@ export class CiPrCmd implements Command {
       strict: options.strict,
       dryRun: options.dryRun,
       keepLane: options.keepLane,
+      skipCleanup: options.skipCleanup,
     });
 
     if (results) {

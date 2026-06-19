@@ -116,6 +116,72 @@ describe('ci commands', function () {
   });
 
   /**
+   * The default flow restores the workspace to main after export (asserted in the "bit ci pr
+   * workflow" describe above). `--skip-cleanup` opts out of that restore — used by the throwaway
+   * `bit_pr` CI container, where re-checking-out main's HEAD just to discard it is wasted work.
+   * These two describes assert that, with the flag, the workspace is intentionally LEFT on the PR
+   * lane on both code paths (default/temp-lane and `--keep-lane`), so a future change that drops the
+   * flag from either path (or re-introduces a `process.env.CI` auto-skip that fires in unintended
+   * contexts) is caught here.
+   */
+  describe('bit ci pr --skip-cleanup leaves the workspace on the PR lane (default/temp-lane flow)', () => {
+    let prOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setupComponentsAndInitialCommit();
+
+      helper.command.runCmd('git checkout -b feature/skip-cleanup-temp');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("updated component");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: update component"');
+
+      prOutput = helper.command.runCmd('bit ci pr --skip-cleanup --message "skip cleanup pr"');
+    });
+    it('should complete successfully', () => {
+      expect(prOutput).to.include('PR command executed successfully');
+    });
+    it('should report that it skipped the workspace restore', () => {
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.include('Skipping workspace restore');
+    });
+    it('should leave the workspace on the PR lane instead of switching back to main', () => {
+      const lanes = helper.command.listLanesParsed();
+      expect(lanes.currentLane).to.equal('feature-skip-cleanup-temp');
+    });
+    it('should still export the lane to the remote', () => {
+      const remoteLanes = helper.command.listRemoteLanesParsed();
+      const laneNames = remoteLanes.lanes.map((lane) => lane.name);
+      expect(laneNames).to.include('feature-skip-cleanup-temp');
+    });
+  });
+
+  describe('bit ci pr --keep-lane --skip-cleanup leaves the workspace on the PR lane', () => {
+    let prOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setupComponentsAndInitialCommit();
+
+      helper.command.runCmd('git checkout -b feature/skip-cleanup-keep');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("updated component");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: update component"');
+
+      prOutput = helper.command.runCmd('bit ci pr --keep-lane --skip-cleanup --message "skip cleanup pr"');
+    });
+    it('should complete successfully and report skipping the restore', () => {
+      expect(prOutput).to.include('PR command executed successfully');
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.include('Skipping workspace restore');
+    });
+    it('should leave the workspace on the PR lane instead of switching back to main', () => {
+      const lanes = helper.command.listLanesParsed();
+      expect(lanes.currentLane).to.equal('feature-skip-cleanup-keep');
+    });
+  });
+
+  /**
    * Subsequent commits to the same PR branch should re-use the existing remote lane rather than
    * deleting and recreating it. This preserves the lane's history (cloud UI shows the snap
    * progression), keeps user-made edits on the lane, and prevents a pile of archived lanes from

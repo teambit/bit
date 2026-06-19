@@ -4,6 +4,46 @@ export type SpanAttributes = Record<string, string | number | boolean | undefine
 
 export type SpanEmitter = (span: LoadSpan, traceId: string) => void;
 
+// --- aggregate load profiler (opt-in via BIT_LOAD_PROFILE) ---------------------------------------
+// unlike the per-component `debug-load` trace, this accumulates every span's self-time (duration
+// minus children) into a process-wide per-stage table, dumped to stderr at process exit. that
+// aggregate — across the whole command and all its top-level loads — is what's needed to see where
+// e.g. a full `bit status` spends its time. zero cost when BIT_LOAD_PROFILE is unset.
+const LOAD_PROFILE_ENABLED = Boolean(process.env.BIT_LOAD_PROFILE);
+type LoadProfileEntry = { selfMs: number; totalMs: number; count: number };
+const loadProfileAcc = new Map<string, LoadProfileEntry>();
+let loadProfileHookInstalled = false;
+
+function accumulateLoadProfile(span: LoadSpan) {
+  const childMs = span.children.reduce((sum, child) => sum + (child.durationMs || 0), 0);
+  // clamp: children run concurrently, so their summed durations can exceed the parent's wall-clock.
+  // a pure-orchestration parent then lands near 0 self (correct), while leaf stages keep their cost.
+  const selfMs = Math.max(0, (span.durationMs || 0) - childMs);
+  const entry = loadProfileAcc.get(span.name) || { selfMs: 0, totalMs: 0, count: 0 };
+  entry.selfMs += selfMs;
+  entry.totalMs += span.durationMs || 0;
+  entry.count += 1;
+  loadProfileAcc.set(span.name, entry);
+  if (!loadProfileHookInstalled) {
+    loadProfileHookInstalled = true;
+    process.on('exit', dumpLoadProfile);
+  }
+}
+
+/** print the accumulated per-stage self-time table (sorted by self-time). no-op if nothing ran. */
+export function dumpLoadProfile() {
+  if (!loadProfileAcc.size) return;
+  const rows = [...loadProfileAcc.entries()].sort((a, b) => b[1].selfMs - a[1].selfMs);
+  const totalSelf = rows.reduce((sum, [, entry]) => sum + entry.selfMs, 0);
+  process.stderr.write(`\n=== load profile (self-time per stage, total ${Math.round(totalSelf)}ms) ===\n`);
+  rows.forEach(([name, entry]) => {
+    const self = Math.round(entry.selfMs).toString().padStart(8);
+    const total = Math.round(entry.totalMs).toString().padStart(8);
+    const count = entry.count.toString().padStart(6);
+    process.stderr.write(`${self}ms self  ${total}ms total  ${count}x  ${name}\n`);
+  });
+}
+
 /**
  * a single timed unit of work within a load trace, e.g. "extension-merge" of one component.
  * spans nest, forming a tree under the trace's root span.
@@ -37,6 +77,7 @@ export class LoadSpan {
   end() {
     if (this.durationMs !== undefined) return; // already ended
     this.durationMs = Number(process.hrtime.bigint() - this.startTime) / 1_000_000;
+    if (LOAD_PROFILE_ENABLED) accumulateLoadProfile(this);
   }
 
   toObject(): Record<string, any> {
@@ -163,7 +204,16 @@ export async function loadSpan<T>(
   fn: (span: LoadSpan) => Promise<T>
 ): Promise<T> {
   const store = traceStorage.getStore();
-  if (!store) return fn(new LoadSpan(name, undefined, attributes));
+  if (!store) {
+    // no active trace: still end the span so the aggregate profiler (BIT_LOAD_PROFILE) records this
+    // stage even on load paths that run outside startOrJoinLoadTrace.
+    const rootless = new LoadSpan(name, undefined, attributes);
+    try {
+      return await fn(rootless);
+    } finally {
+      rootless.end();
+    }
+  }
   const span = new LoadSpan(name, store.span, attributes);
   try {
     let promise!: Promise<T>;
