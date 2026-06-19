@@ -9,4 +9,5 @@ export {
   startOrJoinLoadTrace,
   loadSpan,
   reportLoadFailure,
+  dumpLoadProfile,
 } from './load-trace';
