@@ -794,16 +794,15 @@ jobs:
                 circleci-agent step halt
               fi
             fi
-      - run: cd bit && npm run generate-cli-reference
-      - run: cd bit && npm run generate-cli-reference-json
-      - run: cd bit && npm run generate-cli-reference-docs
-      - run: cd bit && npm run generate-cli-skill
-      - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
-      - run: cd bit && npm run generate-core-aspects-ids
+      # CLI-reference / core-aspects-ids files are verified and committed in the PR by the
+      # check_generated_reference job, so they are no longer regenerated here. Combined with
+      # --no-bitmap-commit below, bit ci merge no longer pushes any commit to the default
+      # branch: new versions live in the scope and are reconciled into each workspace's
+      # .bitmap via `bitmapAutoSync: true` (workspace.jsonc).
       - run:
           name: 'bit ci merge'
-          command: 'cd bit && bit ci merge --build --auto-merge-resolve manual ${BIT_CI_MERGE_EXTRA_FLAGS}'
-          # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 2 ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --no-bitmap-commit ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --no-bitmap-commit --increment-by 2 ${BIT_CI_MERGE_EXTRA_FLAGS}'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
