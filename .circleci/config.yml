@@ -393,7 +393,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.1.6-v1
+          key: core-aspect-env-v0.1.7-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -476,7 +476,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.1.6-v1
+          key: core-aspect-env-v0.1.7-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -584,7 +584,7 @@ jobs:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.1.6-v1
+          key: core-aspect-env-v0.1.7-v1
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a107
       # - run: cd bit && bbit compile
@@ -634,7 +634,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.1.6-v1
+          key: core-aspect-env-v0.1.7-v1
       - run:
           name: 'check circular dependencies'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
@@ -666,6 +666,54 @@ jobs:
       - run:
           name: 'make sure the packages used in legacy are specified in package.json'
           command: 'cd bit && node scripts/validate-pkg-exist-in-pkg-json.js'
+
+  # Verify the generated CLI-reference / core-aspects files are committed and up to date.
+  # These files (cli-reference.{mdx,json,docs.mdx}, the claude-skill docs, and
+  # core-aspects-ids.json) are component sources, so they belong in the PR rather than
+  # being regenerated and committed post-merge on master by bit_merge. This shifts that
+  # generation left: it regenerates the files and fails if the working tree differs,
+  # telling the author to run the generate-* scripts and commit the result. Mirrors the
+  # environment bit_merge already uses to run `bit cli generate`.
+  check_generated_reference:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ./
+      - bit_global_for_npm
+      - bit_config
+      - restore_common_caches
+      - run:
+          name: 'regenerate CLI-reference and core-aspects files'
+          command: |
+            cd bit
+            npm run generate-cli-reference
+            npm run generate-cli-reference-json
+            npm run generate-cli-reference-docs
+            npm run generate-cli-skill
+            npm run generate-core-aspects-ids
+      - run:
+          name: 'fail if any generated reference file is out of date'
+          command: |
+            cd bit
+            GENERATED="scopes/harmony/cli-reference/cli-reference.mdx \
+                       scopes/harmony/cli-reference/cli-reference.json \
+                       scopes/harmony/cli-reference/cli-reference.docs.mdx \
+                       contrib/claude-skill-bit-cli/SKILL.md \
+                       contrib/claude-skill-bit-cli/CLI_REFERENCE.md \
+                       scopes/harmony/testing/load-aspect/core-aspects-ids.json"
+            # cli-reference.docs.mdx embeds the running bit version in its frontmatter
+            # (cli.cmd.ts: "Bit version: ${getBitVersion()}"), which is a release-time
+            # value not knowable in a PR. Ignore hunks whose only change is that line so
+            # the check doesn't flap on every version bump.
+            DIFF=$(git diff -I'Bit version: [0-9]' -- $GENERATED)
+            if [ -z "$DIFF" ]; then
+              echo "✅ generated reference files are up to date"
+            else
+              echo "❌ generated reference files are out of date. Run locally and commit the result:"
+              echo "   npm run generate-cli-reference && npm run generate-cli-reference-json && npm run generate-cli-reference-docs && npm run generate-cli-skill && npm run generate-core-aspects-ids"
+              git --no-pager diff -I'Bit version: [0-9]' --stat -- $GENERATED
+              exit 1
+            fi
 
   # ========== Documentation & Notifications ==========
   generate_docs:
@@ -704,10 +752,15 @@ jobs:
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run:
           name: 'bit ci pr'
-          command: 'cd bit && bit ci pr --build --keep-lane'
+          # --skip-cleanup: this container is discarded right after, so don't waste time restoring
+          # the workspace to main (which re-checks-out main's HEAD and re-imports every component).
+          command: 'cd bit && bit ci pr --build --keep-lane --skip-cleanup'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
+            # NOTE: parallel builds (BIT_BUILD_CONCURRENCY>1) were measured here and did NOT help —
+            # this build is CPU-bound and dominated by one env, so concurrency only added contention.
+            # See tasks-parallel-scheduler.ts header for the numbers. Left serial on purpose.
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
@@ -1303,6 +1356,12 @@ workflows:
       - generate_and_check_types:
           requires:
             - setup_harmony
+      - check_generated_reference:
+          requires:
+            - setup_harmony
+          filters:
+            branches:
+              ignore: master
       - generate_docs:
           <<: *semver_tags_only_filters
           requires:
