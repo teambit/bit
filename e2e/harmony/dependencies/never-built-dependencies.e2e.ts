@@ -16,7 +16,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      npmCiRegistry.setRegistry();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('dangerouslyAllowAllScripts', true);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
         '@pnpm.e2e/pre-and-postinstall-scripts-example',
@@ -24,7 +24,6 @@ chai.use(chaiFs);
       helper.command.install('@pnpm.e2e/pre-and-postinstall-scripts-example');
     });
     after(() => {
-      helper.command.delConfig('registry');
       npmCiRegistry.destroy();
       helper.scopeHelper.destroy();
     });
@@ -56,14 +55,13 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      npmCiRegistry.setRegistry();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
         '@pnpm.e2e/pre-and-postinstall-scripts-example',
       ]);
       helper.command.install('@pnpm.e2e/pre-and-postinstall-scripts-example');
     });
     after(() => {
-      helper.command.delConfig('registry');
       npmCiRegistry.destroy();
       helper.scopeHelper.destroy();
     });
