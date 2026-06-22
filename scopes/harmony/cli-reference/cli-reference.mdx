@@ -627,21 +627,22 @@ shows both direct and transitive dependents organized by their origin (workspace
 ## deprecate
 
 **Alias**: `d`  
-**Description**: mark a component as deprecated to discourage its use  
-marks a component as deprecated locally, then after snap/tag and export it becomes deprecated in the remote scope.  
-optionally specify a replacement component or deprecate only specific version ranges.  
+**Description**: mark components as deprecated to discourage their use  
+marks components as deprecated locally, then after snap/tag and export they become deprecated in the remote scope.  
+the pattern can match multiple components, so several can be deprecated at once.  
+optionally specify a replacement component (single component only) or deprecate only specific version ranges.  
 deprecated components remain available but display warnings when installed or imported.
 
-`bit deprecate <component-name>`
+`bit deprecate <component-pattern>`
 
-| **Arg**          |        **Description**         |
-| ---------------- | :----------------------------: |
-| `component-name` | component name or component id |
+| **Arg**             |                                                                                                                                                                                                                             **Description**                                                                                                                                                                                                                              |
+| ------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| `component-pattern` | component name, component id, component pattern, or relative directory path. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
-| **Option**          | **Option alias** | **Description**                                                                                                                   |
-| ------------------- | :--------------: | --------------------------------------------------------------------------------------------------------------------------------- |
-| `--new-id <string>` |                  | if replaced by another component, enter the new component id. alternatively use "bit rename --deprecate" to do this automatically |
-| `--range <string>`  |                  | enter a Semver range to deprecate specific versions. see https://www.npmjs.com/package/semver#ranges for the range syntax         |
+| **Option**          | **Option alias** | **Description**                                                                                                                                                                           |
+| ------------------- | :--------------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--new-id <string>` |                  | if replaced by another component, enter the new component id. alternatively use "bit rename --deprecate" to do this automatically. only valid when the pattern matches a single component |
+| `--range <string>`  |                  | enter a Semver range to deprecate specific versions. see https://www.npmjs.com/package/semver#ranges for the range syntax                                                                 |
 
 ---
 
@@ -2812,10 +2813,15 @@ supports watch mode, coverage reporting, and debug mode for development workflow
 
 ## undeprecate
 
-**Description**: remove the deprecation status from a component  
-reverses the deprecation of a component, removing warnings and allowing normal use again.
+**Description**: remove the deprecation status from components  
+reverses the deprecation of components, removing warnings and allowing normal use again.  
+the pattern can match multiple components, so several can be undeprecated at once.
 
-`bit undeprecate <id>`
+`bit undeprecate <component-pattern>`
+
+| **Arg**             |                                                                                                                                                                                                                             **Description**                                                                                                                                                                                                                              |
+| ------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| `component-pattern` | component name, component id, component pattern, or relative directory path. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
 ---
 
