@@ -135,13 +135,15 @@ export class DeprecationMain {
    */
   async deprecateByPattern(pattern: string, newId?: string, range?: string): Promise<DeprecateByPatternResult> {
     const componentIds = await this.workspace.idsByPattern(pattern);
-    const newComponentId = newId ? await this.workspace.resolveComponentId(newId) : undefined;
-    if (newComponentId && componentIds.length > 1) {
+    // reject the invalid multi-match + --new-id combination before resolving newId, so we don't
+    // trigger registry/package-name resolution (which can fail) for a command that's already invalid.
+    if (newId && componentIds.length > 1) {
       throw new BitError(
         `--new-id sets a single replacement component, but the pattern "${pattern}" matched ${componentIds.length} components.
 run the command per-component to use --new-id, or remove it to deprecate them all`
       );
     }
+    const newComponentId = newId ? await this.workspace.resolveComponentId(newId) : undefined;
     const deprecated: ComponentID[] = [];
     const alreadyDeprecated: ComponentID[] = [];
     await pMapSeries(componentIds, async (componentId) => {
@@ -184,10 +186,11 @@ run the command per-component to use --new-id, or remove it to deprecate them al
     const undeprecated: ComponentID[] = [];
     const notDeprecated: ComponentID[] = [];
     await pMapSeries(componentIds, async (componentId) => {
-      // only undeprecate components that are actually deprecated. bucketing by the actual deprecated-state
-      // (bitmap + model) rather than by the bitmap config-diff avoids writing a redundant "deprecate: false"
-      // config (and marking the component as modified) for components that were never deprecated.
-      if (!(await this.isDeprecated(componentId))) {
+      // only undeprecate components that actually have a deprecation to clear (incl. range-deprecations,
+      // which are stored with deprecate:false). bucketing by the real state rather than the bitmap
+      // config-diff avoids writing a redundant "deprecate: false" config (and marking the component as
+      // modified) for components that were never deprecated.
+      if (!(await this.hasDeprecationToClear(componentId))) {
         notDeprecated.push(componentId);
         return;
       }
@@ -208,6 +211,18 @@ run the command per-component to use --new-id, or remove it to deprecate them al
   private async isDeprecated(componentId: ComponentID): Promise<boolean> {
     const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(componentId, { ignoreVersion: true });
     if (bitmapEntry?.isDeprecated()) return true;
+    if (bitmapEntry?.isUndeprecated()) return false;
+    return this.isDeprecatedByIdWithoutLoadingComponent(componentId);
+  }
+
+  /**
+   * whether the component has any deprecation that an undeprecate should clear. unlike isDeprecated(),
+   * this also treats a range-deprecation (stored locally with deprecate:false) as clearable, so
+   * "bit undeprecate" can revert a prior "bit deprecate --range".
+   */
+  private async hasDeprecationToClear(componentId: ComponentID): Promise<boolean> {
+    const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(componentId, { ignoreVersion: true });
+    if (bitmapEntry?.isDeprecated() || bitmapEntry?.isDeprecatedByRange()) return true;
     if (bitmapEntry?.isUndeprecated()) return false;
     return this.isDeprecatedByIdWithoutLoadingComponent(componentId);
   }

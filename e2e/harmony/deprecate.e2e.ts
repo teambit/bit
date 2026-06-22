@@ -175,6 +175,25 @@ describe('bit deprecate and undeprecate commands', function () {
       expect(status.modifiedComponents).to.have.lengthOf(0);
     });
   });
+  describe('undeprecating a range-deprecation by pattern', () => {
+    let output: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      // range-deprecations are stored with "deprecate: false", so undeprecate must still clear them
+      helper.command.deprecateComponent('comp1', '--range "<1.0.0"');
+      output = helper.command.undeprecateComponent('"**"');
+    });
+    it('should undeprecate the range-deprecated component (not bucket it as "not deprecated")', () => {
+      expect(output).to.have.string('undeprecated successfully');
+    });
+    it('should clear the range from the deprecation config', () => {
+      const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
+      expect(deprecationData.config.deprecate).to.be.false;
+      expect(deprecationData.config).to.not.have.property('range');
+    });
+  });
   describe('reverting the deprecation by "bit checkout reset"', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
