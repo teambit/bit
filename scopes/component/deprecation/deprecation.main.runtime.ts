@@ -144,10 +144,17 @@ run the command per-component to use --new-id, or remove it to deprecate them al
     }
     const deprecated: ComponentID[] = [];
     const alreadyDeprecated: ComponentID[] = [];
-    componentIds.forEach((componentId) => {
-      const changed = this.setDeprecateConfig(componentId, newComponentId, range);
-      if (changed) deprecated.push(componentId);
-      else alreadyDeprecated.push(componentId);
+    await pMapSeries(componentIds, async (componentId) => {
+      // when the component is already deprecated and there's no replacement/range to (re)set, there's
+      // nothing to change. bucketing by the actual deprecated-state (bitmap + model) rather than by the
+      // bitmap config-diff avoids re-writing redundant config (e.g. for "$deprecated" matches) and
+      // reporting already-deprecated components as newly deprecated.
+      if (!newComponentId && !range && (await this.isDeprecated(componentId))) {
+        alreadyDeprecated.push(componentId);
+        return;
+      }
+      this.setDeprecateConfig(componentId, newComponentId, range);
+      deprecated.push(componentId);
     });
     if (deprecated.length) {
       await this.workspace.bitMap.write(`deprecate ${pattern}`);
@@ -176,16 +183,33 @@ run the command per-component to use --new-id, or remove it to deprecate them al
     const componentIds = await this.workspace.idsByPattern(pattern);
     const undeprecated: ComponentID[] = [];
     const notDeprecated: ComponentID[] = [];
-    componentIds.forEach((componentId) => {
-      const changed = this.setUnDeprecateConfig(componentId);
-      if (changed) undeprecated.push(componentId);
-      else notDeprecated.push(componentId);
+    await pMapSeries(componentIds, async (componentId) => {
+      // only undeprecate components that are actually deprecated. bucketing by the actual deprecated-state
+      // (bitmap + model) rather than by the bitmap config-diff avoids writing a redundant "deprecate: false"
+      // config (and marking the component as modified) for components that were never deprecated.
+      if (!(await this.isDeprecated(componentId))) {
+        notDeprecated.push(componentId);
+        return;
+      }
+      this.setUnDeprecateConfig(componentId);
+      undeprecated.push(componentId);
     });
     if (undeprecated.length) {
       await this.workspace.bitMap.write(`undeprecate ${pattern}`);
     }
 
     return { undeprecated, notDeprecated };
+  }
+
+  /**
+   * whether the component is currently deprecated, considering both the pending local .bitmap config
+   * (authoritative when present) and the persisted model/scope state.
+   */
+  private async isDeprecated(componentId: ComponentID): Promise<boolean> {
+    const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(componentId, { ignoreVersion: true });
+    if (bitmapEntry?.isDeprecated()) return true;
+    if (bitmapEntry?.isUndeprecated()) return false;
+    return this.isDeprecatedByIdWithoutLoadingComponent(componentId);
   }
 
   private setDeprecateConfig(componentId: ComponentID, newId?: ComponentID, range?: string): boolean {

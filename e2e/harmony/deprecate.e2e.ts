@@ -159,6 +159,22 @@ describe('bit deprecate and undeprecate commands', function () {
       });
     });
   });
+  describe('undeprecating components that are not deprecated by pattern', () => {
+    let output: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      output = helper.command.undeprecateComponent('"**"');
+    });
+    it('should indicate that no changes were made', () => {
+      expect(output).to.have.string('no changes have been made');
+    });
+    it('should not write a deprecation config nor mark the components as modified', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(0);
+    });
+  });
   describe('reverting the deprecation by "bit checkout reset"', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
