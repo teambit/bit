@@ -160,11 +160,17 @@ const DEPENDENCY_RESOLVER_ASPECT_ID = 'teambit.dependencies/dependency-resolver'
 function getComponentPeerDepsIds(component: Component): ComponentIdList {
   const legacyPeerIds = component.depsIdsGroupedByType.peerDependencies;
   const depResolverData = component.extensions?.findCoreExtension(DEPENDENCY_RESOLVER_ASPECT_ID)?.data;
-  const serializedDeps: Array<{ id: string; __type?: string; lifecycle?: string }> =
+  const serializedDeps: Array<{ id: string; version?: string; __type?: string; lifecycle?: string }> =
     depResolverData?.dependencies || [];
   const peerComponentIds = serializedDeps
     .filter((dep) => dep.__type === 'component' && dep.lifecycle === 'peer')
-    .map((dep) => ComponentID.fromString(dep.id));
+    .map((dep) => {
+      // the `id` string may be versionless; `version` is the authoritative field. apply it so that
+      // peer version upgrades/downgrades are surfaced by the version comparison in
+      // `componentDependenciesOutput()`.
+      const componentId = ComponentID.fromString(dep.id);
+      return dep.version ? componentId.changeVersion(dep.version) : componentId;
+    });
   return ComponentIdList.uniqFromArray([...legacyPeerIds, ...peerComponentIds]);
 }
 
