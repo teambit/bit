@@ -45,7 +45,7 @@ chai.use(chaiFs);
         npmCiRegistry = new NpmCiRegistry(helper);
         npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
         await npmCiRegistry.init();
-        helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl(), '--local-track');
+        npmCiRegistry.setRegistry();
         helper.env.setCustomNewEnv(
           undefined,
           undefined,
@@ -80,6 +80,7 @@ chai.use(chaiFs);
 
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
+        npmCiRegistry.setRegistry();
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
         helper.command.import(`${helper.scopes.remote}/comp1@latest`);
         lockfile = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8'));
@@ -206,7 +207,7 @@ chai.use(chaiFs);
         npmCiRegistry = new NpmCiRegistry(helper);
         npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
         await npmCiRegistry.init();
-        helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl(), '--local-track');
+        npmCiRegistry.setRegistry();
         helper.fixtures.populateComponents(1);
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
         helper.command.install();

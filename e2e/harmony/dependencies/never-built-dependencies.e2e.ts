@@ -16,7 +16,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl(), '--local-track');
+      npmCiRegistry.setRegistry();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('dangerouslyAllowAllScripts', true);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
         '@pnpm.e2e/pre-and-postinstall-scripts-example',
@@ -55,7 +55,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl(), '--local-track');
+      npmCiRegistry.setRegistry();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
         '@pnpm.e2e/pre-and-postinstall-scripts-example',
       ]);

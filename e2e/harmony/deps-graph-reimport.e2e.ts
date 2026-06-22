@@ -36,7 +36,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl(), '--local-track');
+      npmCiRegistry.setRegistry();
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -64,6 +64,7 @@ chai.use(chaiFs);
 
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
+      npmCiRegistry.setRegistry();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.command.import(`${helper.scopes.remote}/comp1@0.0.1 ${helper.scopes.remote}/comp2@latest`);
 
@@ -94,7 +95,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl(), '--local-track');
+      npmCiRegistry.setRegistry();
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -126,6 +127,7 @@ chai.use(chaiFs);
       await addDistTag({ package: '@pnpm.e2e/peer-a', version: '1.0.1', distTag: 'latest' });
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
+      npmCiRegistry.setRegistry();
       helper.fs.createFile('foo', 'foo.js', `require("@pnpm.e2e/abc"); require("@ci/${randomStr}.bar");`);
       helper.command.addComponent('foo');
       helper.extensions.addExtensionToVariant('foo', `${helper.scopes.remote}/custom-env/env@0.0.1`, {});
@@ -140,6 +142,7 @@ chai.use(chaiFs);
       await addDistTag({ package: '@pnpm.e2e/peer-a', version: '1.0.0', distTag: 'latest' });
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
+      npmCiRegistry.setRegistry();
       helper.fs.createFile('baz', 'baz.js', `require("@pnpm.e2e/abc"); require("@ci/${randomStr}.bar");`);
       helper.command.addComponent('baz');
       helper.extensions.addExtensionToVariant('baz', `${helper.scopes.remote}/custom-env/env@0.0.1`, {});
@@ -149,6 +152,7 @@ chai.use(chaiFs);
 
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
+      npmCiRegistry.setRegistry();
       helper.command.import(
         `${helper.scopes.remote}/foo@latest ${helper.scopes.remote}/bar@latest ${helper.scopes.remote}/baz@latest`
       );

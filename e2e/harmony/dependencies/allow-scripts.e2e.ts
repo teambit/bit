@@ -16,7 +16,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl(), '--local-track');
+      npmCiRegistry.setRegistry();
       helper.command.install('@pnpm.e2e/pre-and-postinstall-scripts-example');
     });
     after(() => {
@@ -47,7 +47,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl(), '--local-track');
+      npmCiRegistry.setRegistry();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('allowScripts', {
         '@pnpm.e2e/failing-postinstall': false,
         '@pnpm.e2e/pre-and-postinstall-scripts-example': true,
@@ -85,7 +85,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl(), '--local-track');
+      npmCiRegistry.setRegistry();
       // The installation below would fail if we didn't explicitly disallow
       // @pnpm.e2e/failing-postinstall in allowScripts.
       helper.command.install(
@@ -128,7 +128,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl(), '--local-track');
+      npmCiRegistry.setRegistry();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('allowScripts', {
         '@pnpm.e2e/failing-postinstall': true,
         '@pnpm.e2e/pre-and-postinstall-scripts-example': false,
