@@ -182,9 +182,10 @@ describe('ci commands', function () {
   });
 
   /**
-   * `--skip-tasks` drops the named build/publish tasks from the snap pipeline. On the throwaway PR
-   * lane the schema/preview artifacts and the npm publish aren't needed (they're regenerated on the
-   * final export to main), so the `bit_pr` CI job skips them to save time. A control run (no flag)
+   * `--skip-tasks` drops the named build/publish tasks from the snap pipeline. The schema/preview
+   * artifacts and the npm publish are generally useful but not required on a throwaway PR validation
+   * lane (they're produced on the final export to main), so the `bit_pr` CI job trades them for speed.
+   * A control run (no flag)
    * proves these tasks DO run for these components, so the "skipped" assertions aren't vacuous, and
    * a non-skipped sibling task (PackComponents — only PublishComponents is skipped from pkg) proves
    * the pipeline still ran rather than being short-circuited.

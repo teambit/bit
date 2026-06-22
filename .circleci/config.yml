@@ -754,8 +754,10 @@ jobs:
           name: 'bit ci pr'
           # --skip-cleanup: this container is discarded right after, so don't waste time restoring
           # the workspace to main (which re-checks-out main's HEAD and re-imports every component).
-          # --skip-tasks: schema/preview artifacts and npm publish aren't needed on the throwaway PR
-          # lane (they're regenerated on the final export to main) — skipping them saves ~8-10m here.
+          # --skip-tasks: trade the schema/preview artifacts and npm publish for speed on the PR lane.
+          # They're generally useful (browsable preview / API schema / installable packages) but not
+          # required on this throwaway validation lane, and they're produced on the final export to
+          # main — so skipping them here saves ~8-10m.
           command: 'cd bit && bit ci pr --build --keep-lane --skip-cleanup --skip-tasks ExtractSchema,GeneratePreview,GenerateEnvTemplate,PublishComponents'
           no_output_timeout: '50m'
           environment:
