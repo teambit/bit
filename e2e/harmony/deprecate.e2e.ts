@@ -116,6 +116,49 @@ describe('bit deprecate and undeprecate commands', function () {
       });
     });
   });
+  describe('deprecate and undeprecate multiple components by pattern', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+    });
+    describe('deprecating all components with a wildcard pattern', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.deprecateComponent('"**"');
+      });
+      it('should indicate that multiple components were deprecated', () => {
+        expect(output).to.have.string('3 component');
+      });
+      it('should mark all matched components as deprecated', () => {
+        ['comp1', 'comp2', 'comp3'].forEach((id) => {
+          const deprecationData = helper.command.showAspectConfig(id, Extensions.deprecation);
+          expect(deprecationData.config.deprecate).to.be.true;
+        });
+      });
+    });
+    describe('undeprecating multiple components with a wildcard pattern', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.undeprecateComponent('"**"');
+      });
+      it('should indicate that multiple components were undeprecated', () => {
+        expect(output).to.have.string('3 component');
+      });
+      it('should remove the deprecation status from all of them', () => {
+        ['comp1', 'comp2', 'comp3'].forEach((id) => {
+          const deprecationData = helper.command.showAspectConfig(id, Extensions.deprecation);
+          expect(deprecationData.config.deprecate).to.be.false;
+        });
+      });
+    });
+    describe('using --new-id when the pattern matches more than one component', () => {
+      it('should throw an error', () => {
+        const cmd = () => helper.command.deprecateComponent('"**"', '--new-id comp1');
+        expect(cmd).to.throw();
+      });
+    });
+  });
   describe('reverting the deprecation by "bit checkout reset"', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();

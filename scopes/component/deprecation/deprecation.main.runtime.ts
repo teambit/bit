@@ -22,11 +22,34 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { compact } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
+import { BitError } from '@teambit/bit-error';
 
 export type DeprecationInfo = {
   isDeprecate: boolean;
   newId?: string;
   range?: string;
+};
+
+export type DeprecateByPatternResult = {
+  /**
+   * components that were deprecated as a result of this operation.
+   */
+  deprecated: ComponentID[];
+  /**
+   * components that matched the pattern but were already deprecated (no changes made).
+   */
+  alreadyDeprecated: ComponentID[];
+};
+
+export type UnDeprecateByPatternResult = {
+  /**
+   * components whose deprecation status was removed as a result of this operation.
+   */
+  undeprecated: ComponentID[];
+  /**
+   * components that matched the pattern but were not deprecated (no changes made).
+   */
+  notDeprecated: ComponentID[];
 };
 
 export type DeprecationMetadata = {
@@ -94,11 +117,7 @@ export class DeprecationMain {
    * @returns boolean whether or not the component has been deprecated
    */
   async deprecate(componentId: ComponentID, newId?: ComponentID, range?: string): Promise<boolean> {
-    const results = this.workspace.bitMap.addComponentConfig(componentId, DeprecationAspect.id, {
-      deprecate: !range,
-      newId: newId?.toObject(),
-      range,
-    });
+    const results = this.setDeprecateConfig(componentId, newId, range);
     await this.workspace.bitMap.write(`deprecate ${componentId.toString()}`);
 
     return results;
@@ -110,19 +129,78 @@ export class DeprecationMain {
     return this.deprecate(componentId, newComponentId, range);
   }
 
+  /**
+   * deprecate all components matching the given pattern. the pattern can match multiple components.
+   * see `COMPONENT_PATTERN_HELP` for the supported pattern syntax.
+   */
+  async deprecateByPattern(pattern: string, newId?: string, range?: string): Promise<DeprecateByPatternResult> {
+    const componentIds = await this.workspace.idsByPattern(pattern);
+    const newComponentId = newId ? await this.workspace.resolveComponentId(newId) : undefined;
+    if (newComponentId && componentIds.length > 1) {
+      throw new BitError(
+        `--new-id sets a single replacement component, but the pattern "${pattern}" matched ${componentIds.length} components.
+run the command per-component to use --new-id, or remove it to deprecate them all`
+      );
+    }
+    const deprecated: ComponentID[] = [];
+    const alreadyDeprecated: ComponentID[] = [];
+    componentIds.forEach((componentId) => {
+      const changed = this.setDeprecateConfig(componentId, newComponentId, range);
+      if (changed) deprecated.push(componentId);
+      else alreadyDeprecated.push(componentId);
+    });
+    if (deprecated.length) {
+      await this.workspace.bitMap.write(`deprecate ${pattern}`);
+    }
+
+    return { deprecated, alreadyDeprecated };
+  }
+
   async unDeprecateByCLIValues(id: string): Promise<boolean> {
     const componentId = await this.workspace.resolveComponentId(id);
     return this.unDeprecate(componentId);
   }
 
   async unDeprecate(componentId: ComponentID) {
-    const results = this.workspace.bitMap.addComponentConfig(componentId, DeprecationAspect.id, {
-      deprecate: false,
-      newId: '',
-    });
+    const results = this.setUnDeprecateConfig(componentId);
     await this.workspace.bitMap.write(`undeprecate ${componentId.toString()}`);
 
     return results;
+  }
+
+  /**
+   * remove the deprecation status from all components matching the given pattern.
+   * the pattern can match multiple components. see `COMPONENT_PATTERN_HELP` for the supported pattern syntax.
+   */
+  async unDeprecateByPattern(pattern: string): Promise<UnDeprecateByPatternResult> {
+    const componentIds = await this.workspace.idsByPattern(pattern);
+    const undeprecated: ComponentID[] = [];
+    const notDeprecated: ComponentID[] = [];
+    componentIds.forEach((componentId) => {
+      const changed = this.setUnDeprecateConfig(componentId);
+      if (changed) undeprecated.push(componentId);
+      else notDeprecated.push(componentId);
+    });
+    if (undeprecated.length) {
+      await this.workspace.bitMap.write(`undeprecate ${pattern}`);
+    }
+
+    return { undeprecated, notDeprecated };
+  }
+
+  private setDeprecateConfig(componentId: ComponentID, newId?: ComponentID, range?: string): boolean {
+    return this.workspace.bitMap.addComponentConfig(componentId, DeprecationAspect.id, {
+      deprecate: !range,
+      newId: newId?.toObject(),
+      range,
+    });
+  }
+
+  private setUnDeprecateConfig(componentId: ComponentID): boolean {
+    return this.workspace.bitMap.addComponentConfig(componentId, DeprecationAspect.id, {
+      deprecate: false,
+      newId: '',
+    });
   }
 
   async addDeprecatedDependenciesIssues(components: Component[]) {
