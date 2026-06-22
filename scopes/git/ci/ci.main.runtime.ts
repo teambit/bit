@@ -548,6 +548,7 @@ export class CiMain {
     dryRun,
     keepLane,
     skipCleanup,
+    skipTasks,
   }: {
     laneIdStr: string;
     message: string;
@@ -556,6 +557,7 @@ export class CiMain {
     dryRun?: boolean;
     keepLane?: boolean;
     skipCleanup?: boolean;
+    skipTasks?: string;
   }) {
     // The post-export cleanup switches the workspace back to main, which re-checks-out main's HEAD
     // and re-imports every workspace component — pointless when the workspace is about to be
@@ -595,6 +597,7 @@ export class CiMain {
         build,
         dryRun,
         skipCleanup: resolvedSkipCleanup,
+        skipTasks,
       });
     }
     return this.snapAndExportWithTempLane({
@@ -604,6 +607,7 @@ export class CiMain {
       build,
       dryRun,
       skipCleanup: resolvedSkipCleanup,
+      skipTasks,
     });
   }
 
@@ -664,6 +668,7 @@ export class CiMain {
     build,
     dryRun,
     skipCleanup,
+    skipTasks,
   }: {
     laneId: LaneId;
     originalLane: Lane | undefined;
@@ -671,6 +676,7 @@ export class CiMain {
     build: boolean | undefined;
     dryRun?: boolean;
     skipCleanup: boolean;
+    skipTasks?: string;
   }) {
     // Query the remote (by name, to avoid fetching all lanes) so we know whether to reuse or create
     const existingLanes = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name }).catch((e) => {
@@ -819,6 +825,7 @@ export class CiMain {
         message,
         build,
         exitOnFirstFailedTask: true,
+        skipTasks,
       });
 
       if (!results) {
@@ -864,6 +871,7 @@ export class CiMain {
     build,
     dryRun,
     skipCleanup,
+    skipTasks,
   }: {
     laneId: LaneId;
     originalLane: Lane | undefined;
@@ -871,6 +879,7 @@ export class CiMain {
     build: boolean | undefined;
     dryRun?: boolean;
     skipCleanup: boolean;
+    skipTasks?: string;
   }) {
     // Use unique temp lane name to avoid race conditions when multiple CI jobs run concurrently
     const tempLaneName = `${laneId.name}-${generateRandomStr(5)}`;
@@ -901,6 +910,7 @@ export class CiMain {
         message,
         build,
         exitOnFirstFailedTask: true,
+        skipTasks,
       });
 
       if (!results) {

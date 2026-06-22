@@ -182,6 +182,56 @@ describe('ci commands', function () {
   });
 
   /**
+   * `--skip-tasks` drops the named build/publish tasks from the snap pipeline. On the throwaway PR
+   * lane the schema/preview artifacts and the npm publish aren't needed (they're regenerated on the
+   * final export to main), so the `bit_pr` CI job skips them to save time. A control run (no flag)
+   * proves these tasks DO run for these components, so the "skipped" assertions aren't vacuous, and
+   * a non-skipped sibling task (PackComponents — only PublishComponents is skipped from pkg) proves
+   * the pipeline still ran rather than being short-circuited.
+   */
+  describe('bit ci pr --skip-tasks omits the named tasks from the snap pipeline', () => {
+    let controlOutput: string;
+    let skipOutput: string;
+    before(() => {
+      // Control: a normal --build PR run establishes that ExtractSchema and PublishComponents run.
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setupComponentsAndInitialCommit();
+      helper.command.runCmd('git checkout -b feature/skip-tasks-control');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("control");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: control"');
+      controlOutput = helper.command.runCmd('bit ci pr --build --keep-lane --message "control pr"');
+
+      // Skip: a fresh workspace runs the same flow but skips schema extraction and publishing.
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setupComponentsAndInitialCommit();
+      helper.command.runCmd('git checkout -b feature/skip-tasks-skip');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("skipped");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: skip"');
+      skipOutput = helper.command.runCmd(
+        'bit ci pr --build --keep-lane --skip-tasks ExtractSchema,PublishComponents --message "skip tasks pr"'
+      );
+    });
+    it('runs ExtractSchema and PublishComponents by default (control)', () => {
+      expect(controlOutput).to.include('ExtractSchema');
+      expect(controlOutput).to.include('PublishComponents');
+    });
+    it('completes successfully with --skip-tasks', () => {
+      expect(skipOutput).to.include('PR command executed successfully');
+    });
+    it('does not run the skipped tasks', () => {
+      expect(skipOutput).to.not.include('ExtractSchema');
+      expect(skipOutput).to.not.include('PublishComponents');
+    });
+    it('still runs the non-skipped pipeline tasks (e.g. PackComponents)', () => {
+      expect(skipOutput).to.include('PackComponents');
+    });
+  });
+
+  /**
    * Subsequent commits to the same PR branch should re-use the existing remote lane rather than
    * deleting and recreating it. This preserves the lane's history (cloud UI shows the snap
    * progression), keeps user-made edits on the lane, and prevents a pile of archived lanes from

@@ -11,6 +11,7 @@ type Options = {
   dryRun?: boolean;
   keepLane?: boolean;
   skipCleanup?: boolean;
+  skipTasks?: string;
 };
 
 export class CiPrCmd implements Command {
@@ -34,6 +35,11 @@ export class CiPrCmd implements Command {
       '',
       'skip-cleanup',
       'Skip restoring the workspace (switching back to main) after export. Use when the workspace is discarded right after, e.g. an ephemeral CI container',
+    ],
+    [
+      '',
+      'skip-tasks <tasks>',
+      `Comma-separated list of build/publish task names (or aspect-ids) to skip during snap, e.g. "ExtractSchema,GeneratePreview,GenerateEnvTemplate,PublishComponents". Useful to speed up PR builds by skipping artifacts (schema/preview) and publishing that the throwaway PR lane doesn't need; they are regenerated on the final export to main`,
     ],
   ];
 
@@ -81,6 +87,7 @@ export class CiPrCmd implements Command {
       dryRun: options.dryRun,
       keepLane: options.keepLane,
       skipCleanup: options.skipCleanup,
+      skipTasks: options.skipTasks,
     });
 
     if (results) {
