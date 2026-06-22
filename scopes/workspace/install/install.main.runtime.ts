@@ -68,7 +68,7 @@ import { BundlerAspect } from '@teambit/bundler';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { EXTERNAL_PM_POSTINSTALL_SCRIPT } from '@teambit/host-initializer';
-import { DependencyTypeNotSupportedInPolicy, UpdateDependentBuildFailed } from './exceptions';
+import { DependencyTypeNotSupportedInPolicy, UnpublishedComponentDependency } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
 import { LinkCommand } from './link';
@@ -529,15 +529,18 @@ export class InstallMain {
 
   /**
    * Called only when the package manager install failed. A "No matching version found" failure usually points
-   * at a component dependency that resolves to a snap which was never published — typically a hidden lane
-   * "update-dependent" (re-snapped by "snap updates" / Ripple CI) whose build failed or hasn't completed. Such a
-   * dep isn't checked out, so it can't be linked from source and there's no package to fetch. When the failing
-   * package matches one of those deps, return an actionable error (pointing at `bit import`); otherwise return
-   * the original error unchanged.
+   * at a component dependency that resolves to a snap which was never published — its build failed or hasn't
+   * completed yet (commonly a hidden lane "update-dependent" re-snapped by "snap updates" / Ripple CI, but not
+   * necessarily). Such a dep isn't checked out, so it can't be linked from source and there's no package to
+   * fetch. When the failing package matches one of those deps, return an actionable error (pointing at
+   * `bit import`); otherwise return the original error unchanged.
    *
-   * Note: we match against the package manager error rather than the lane's `updateDependents` because the
-   * error pinpoints the exact failing version, and a consumer can keep pinning a never-published snap even after
-   * the entry was promoted out of `updateDependents` (e.g. the producer later re-snapped that component).
+   * We resolve the culprit by matching the package manager error against the resolved component dependencies
+   * rather than the lane's `updateDependents`, for two reasons: (1) the failing dep is not a workspace component,
+   * so its component-id (needed for the `bit import` remediation) is only recoverable from the resolved deps of
+   * the checked-out components — there's no package-name→id map for it; (2) `updateDependents` is unreliable —
+   * forking a lane drops it and `reset` moves entries out of it, so a never-published snap can still be pinned
+   * while no longer tracked there. The scan reads already-loaded in-memory dep data (no fetch).
    */
   private enrichUnpublishedSnapDepError(err: Error, components: Component[]): Error {
     // only act on the package manager's "no matching version" failure. other codes (auth, network, FETCH_404,
@@ -569,7 +572,7 @@ export class InstallMain {
       }
     }
     if (!unpublished.size) return err;
-    return new UpdateDependentBuildFailed(
+    return new UnpublishedComponentDependency(
       [...unpublished.values()].map(({ id, dependents }) => ({
         id: id.toStringWithoutVersion(),
         version: id.version as string,

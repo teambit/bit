@@ -1243,14 +1243,14 @@ describe('local snap cascades updateDependents on the lane', function () {
         expect(bitMap).to.not.have.property('comp2');
       });
 
-      it('bit install fails with an actionable error naming the updateDependent and the bit import remediation', () => {
+      it('bit install fails with an actionable error naming the component and the bit import remediation', () => {
         let output = '';
         try {
           helper.command.install();
         } catch (err: any) {
           output = `${err.message || ''}${err.stdout?.toString() || ''}${err.stderr?.toString() || ''}`;
         }
-        expect(output, 'bit install should have failed').to.have.string('update-dependent');
+        expect(output, 'bit install should have failed').to.have.string('never published');
         expect(output, 'error should name the problematic component').to.have.string('comp2');
         expect(output, 'error should suggest the bit import remediation').to.have.string('bit import');
       });
