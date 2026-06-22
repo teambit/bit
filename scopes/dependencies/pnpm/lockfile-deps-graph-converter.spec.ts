@@ -837,8 +837,7 @@ describe('convertGraphToLockfile on invalid graph', () => {
     expect(lockfile.snapshots!['foo@1.0.0']).to.eql({});
   });
 
-  // Reported on att-bit/duc (bit 1.13.226, already carrying #10380): a
-  // workspace-component snap reaches lockfile validation with no resolution
+  // A workspace-component snap reaches lockfile validation with no resolution
   // even though resolve() never threw NO_MATCHING_VERSION, because
   // getPkgsToResolve skips any pkgId whose name+version matches a manifest in
   // the sign/capsule set. The snap is a seeder being signed, so it is in the
@@ -846,9 +845,9 @@ describe('convertGraphToLockfile on invalid graph', () => {
   // `packages['...button-base@0.0.0-<snap>'] entry doesn't have a "resolution"
   // field`. It must be scrubbed so pnpm links it from the manifest instead.
   it('should drop workspace-component snaps skipped by the resolver (seeder in manifests)', async () => {
-    const snapPkgId = '@att-bit/duc.components.button-base@0.0.0-e1613079b55eabc19ad484478b769d929986c124';
+    const snapPkgId = '@my-org/my-scope.components.button-base@0.0.0-e1613079b55eabc19ad484478b769d929986c124';
     const packages: PackagesMap = new Map([
-      [snapPkgId, { component: { scope: 'att-bit.duc', name: 'components/button-base' } } as any],
+      [snapPkgId, { component: { scope: 'my-org.my-scope', name: 'components/button-base' } } as any],
       ['foo@1.0.0', { resolution: { integrity: 'sha512-aaa' } } as any],
     ]);
     const edges: DependencyEdge[] = [
@@ -868,7 +867,7 @@ describe('convertGraphToLockfile on invalid graph', () => {
         // button-base is a seeder being signed, so it appears in the manifests
         // with its snap version — getPkgsToResolve skips it for that reason.
         [path.resolve('comps/button-base')]: {
-          name: '@att-bit/duc.components.button-base',
+          name: '@my-org/my-scope.components.button-base',
           version: '0.0.0-e1613079b55eabc19ad484478b769d929986c124',
         },
         [path.resolve('comps/comp1')]: { dependencies: { foo: '1.0.0' } },
@@ -890,9 +889,9 @@ describe('convertGraphToLockfile on invalid graph', () => {
   // integrity (e.g. a directory/git resolution). The pkg then stays
   // resolution-less and must be scrubbed rather than failing validation.
   it('should drop workspace-component pkgs whose resolution has no integrity', async () => {
-    const snapPkgId = '@att-bit/duc.components.button-base@0.0.0-e1613079';
+    const snapPkgId = '@my-org/my-scope.components.button-base@0.0.0-e1613079';
     const packages: PackagesMap = new Map([
-      [snapPkgId, { component: { scope: 'att-bit.duc', name: 'components/button-base' } } as any],
+      [snapPkgId, { component: { scope: 'my-org.my-scope', name: 'components/button-base' } } as any],
       ['foo@1.0.0', { resolution: { integrity: 'sha512-aaa' } } as any],
     ]);
     const edges: DependencyEdge[] = [
