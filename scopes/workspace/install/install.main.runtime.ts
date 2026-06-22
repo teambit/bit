@@ -69,6 +69,7 @@ import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { EXTERNAL_PM_POSTINSTALL_SCRIPT } from '@teambit/host-initializer';
 import { DependencyTypeNotSupportedInPolicy, UnpublishedComponentDependency } from './exceptions';
+import type { UnpublishedSnapDependency } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
 import { LinkCommand } from './link';
@@ -556,29 +557,24 @@ export class InstallMain {
     // checked-out components are linked from source, so they're never fetched from the registry.
     const workspaceIds = this.workspace.listIds();
 
-    const unpublished = new Map<string, { id: ComponentID; dependents: Set<string> }>();
+    const unpublished = new Map<string, UnpublishedSnapDependency>();
     for (const component of components) {
       for (const dep of this.dependencyResolver.getComponentDependencies(component)) {
         const depId = dep.componentId;
         if (!depId.version || !isSnap(depId.version)) continue;
         if (workspaceIds.hasWithoutVersion(depId)) continue;
-        // only the dependency the package manager actually failed on: its package + snap version appear in the
-        // error (the manifest version is `0.0.0-<hash>`, so the raw hash is a substring).
-        if (!errMessage.includes(dep.packageName) || !errMessage.includes(depId.version)) continue;
+        // pinpoint the exact dependency the package manager failed on: its snap hash (globally unique) appears
+        // verbatim in the error (the manifest pins `0.0.0-<hash>`, so the raw hash is a substring).
+        if (!errMessage.includes(depId.version)) continue;
         const key = depId.toStringWithoutVersion();
-        const entry = unpublished.get(key) ?? { id: depId, dependents: new Set<string>() };
-        entry.dependents.add(component.id.toStringWithoutVersion());
-        unpublished.set(key, entry);
+        const dependent = component.id.toStringWithoutVersion();
+        const entry = unpublished.get(key);
+        if (entry) entry.dependents.push(dependent);
+        else unpublished.set(key, { id: key, version: depId.version, dependents: [dependent] });
       }
     }
     if (!unpublished.size) return err;
-    return new UnpublishedComponentDependency(
-      [...unpublished.values()].map(({ id, dependents }) => ({
-        id: id.toStringWithoutVersion(),
-        version: id.version as string,
-        dependents: [...dependents],
-      }))
-    );
+    return new UnpublishedComponentDependency([...unpublished.values()]);
   }
 
   /**
