@@ -208,6 +208,16 @@ describe('bit deprecate and undeprecate commands', function () {
       });
     });
   });
+  describe('deprecate with an invalid --range', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+    });
+    it('should throw a clear error instead of persisting an invalid range', () => {
+      expect(() => helper.command.deprecateComponent('comp1', '--range "not-a-range"')).to.throw('invalid');
+    });
+  });
   describe('deprecating with --range when it overlaps the current version', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
