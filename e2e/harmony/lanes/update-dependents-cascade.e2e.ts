@@ -1179,4 +1179,81 @@ describe('local snap cascades updateDependents on the lane', function () {
       expect(bitMap).to.not.have.property('comp2');
     });
   });
+
+  // ---------------------------------------------------------------------------------------------
+  // Scenario 21: a visible workspace component depends on a hidden updateDependent whose build never
+  // succeeded (e.g. Ripple failed after "snap updates"), so it was never published to the registry.
+  // The updateDependent is not checked out, so the package manager must fetch it from the registry —
+  // but there is no package, so it fails with the cryptic "No matching version found". `bit install`
+  // should instead surface an actionable error pointing at the `bit import` remediation.
+  //
+  // Uses the npm CI registry so the unpublished `0.0.0-<hash>` genuinely 404s (with a local file
+  // remote the dep is filtered out of the install manifest and never fetched, so it can't reproduce).
+  // ---------------------------------------------------------------------------------------------
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'scenario 21: install errors clearly when a workspace component depends on an unpublished updateDependent',
+    () => {
+      let npmCiRegistry: NpmCiRegistry;
+      before(async () => {
+        helper.scopeHelper.destroy();
+        helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        npmCiRegistry = new NpmCiRegistry(helper);
+        await npmCiRegistry.init();
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        helper.fixtures.populateComponents(2); // comp1 -> comp2
+        helper.command.tagAllComponents(); // tag + publish comp1@0.0.1, comp2@0.0.1 to the registry
+        helper.command.export();
+
+        // comp1 becomes a visible lane component (it depends on comp2).
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+        npmCiRegistry.setResolver();
+        helper.command.createLane();
+        helper.command.importComponent('comp1');
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.export();
+
+        // "snap updates": comp2 enters lane.updateDependents via the bare-scope cascade. build:false
+        // means the cascade snap is never built/published — the state Ripple leaves on a build failure.
+        // The cascade also re-snaps comp1 so its comp2 dep points at the new (unpublished) updateDependent.
+        const bareSnap = helper.scopeHelper.getNewBareScope('-bare-snap-updates');
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareSnap.scopePath);
+        await helper.snapping.snapFromScope(
+          bareSnap.scopePath,
+          [{ componentId: `${helper.scopes.remote}/comp2`, message: 'snap updates' }],
+          { lane: `${helper.scopes.remote}/dev`, updateDependents: true, push: true }
+        );
+
+        // fresh workspace: importing the lane checks out the visible comp1 (comp2 stays hidden).
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+        npmCiRegistry.setResolver();
+        helper.command.importLane('dev', '-x');
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+        helper.scopeHelper.destroy();
+        helper = new Helper();
+      });
+
+      it('comp2 stays a hidden updateDependent — only comp1 is in the bitmap', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.have.property('comp1');
+        expect(bitMap).to.not.have.property('comp2');
+      });
+
+      it('bit install fails with an actionable error naming the component and the bit import remediation', () => {
+        let output = '';
+        try {
+          helper.command.install();
+        } catch (err: any) {
+          output = `${err.message || ''}${err.stdout?.toString() || ''}${err.stderr?.toString() || ''}`;
+        }
+        expect(output, 'bit install should have failed').to.have.string('never published');
+        expect(output, 'error should name the problematic component').to.have.string('comp2');
+        expect(output, 'error should suggest the bit import remediation').to.have.string('bit import');
+      });
+    }
+  );
 });
