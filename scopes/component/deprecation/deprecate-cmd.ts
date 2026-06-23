@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatSuccessSummary, formatHint, formatSection, formatItem, joinSections, successSymbol } from '@teambit/cli';
+import { formatSuccessSummary, formatHint, formatSection, formatItem, joinSections } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { DeprecationMain } from './deprecation.main.runtime';
 
@@ -56,7 +56,7 @@ deprecated components remain available but display warnings when installed or im
       formatSection(
         'deprecated',
         '',
-        deprecated.map((id) => formatItem(id.toString(), successSymbol()))
+        deprecated.map((id) => formatItem(id.toString()))
       ),
       formatSection(
         'already deprecated',

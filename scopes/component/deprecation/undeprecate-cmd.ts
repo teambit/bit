@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatSuccessSummary, formatHint, formatSection, formatItem, joinSections, successSymbol } from '@teambit/cli';
+import { formatSuccessSummary, formatHint, formatSection, formatItem, joinSections } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { DeprecationMain } from './deprecation.main.runtime';
 
@@ -42,7 +42,7 @@ the pattern can match multiple components, so several can be undeprecated at onc
       formatSection(
         'undeprecated',
         '',
-        undeprecated.map((id) => formatItem(id.toString(), successSymbol()))
+        undeprecated.map((id) => formatItem(id.toString()))
       ),
       formatSection(
         'not deprecated',
