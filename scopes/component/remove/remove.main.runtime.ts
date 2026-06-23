@@ -189,17 +189,17 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
     const isLaneSoftDelete = Boolean(currentLane) && !updateMain && !opts.range && !opts.snaps;
     // best-effort: never let this convenience break the actual deletion. on failure the user can still
     // recover via the manual "bit install <pkg>" workaround.
-    const depsToPinToMain = isLaneSoftDelete
-      ? await this.getDeletedDepsWithWorkspaceDependents(componentIds).catch((err) => {
-          this.logger.warn(`getDeletedDepsWithWorkspaceDependents failed: ${err.message}`);
+    const packagesToPinToMain = isLaneSoftDelete
+      ? await this.getDeletedPackagesWithWorkspaceDependents(componentIds).catch((err) => {
+          this.logger.warn(`getDeletedPackagesWithWorkspaceDependents failed: ${err.message}`);
           return [];
         })
       : [];
 
     const removedComps = await this.markRemoveComps(componentIds, opts);
 
-    if (depsToPinToMain.length) {
-      await this.pinDeletedDepsToMainInWorkspacePolicy(depsToPinToMain).catch((err) => {
+    if (packagesToPinToMain.length) {
+      await this.pinDeletedDepsToMainInWorkspacePolicy(packagesToPinToMain).catch((err) => {
         this.logger.warn(`pinDeletedDepsToMainInWorkspacePolicy failed: ${err.message}`);
       });
     }
@@ -208,12 +208,10 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
   }
 
   /**
-   * out of the given deleted ids, return those that still have at least one dependent in the workspace
-   * (excluding other components being deleted in the same operation), along with their package names.
+   * out of the given deleted ids, return the package names of those that still have at least one dependent
+   * in the workspace (excluding other components being deleted in the same operation).
    */
-  private async getDeletedDepsWithWorkspaceDependents(
-    deletedIds: ComponentID[]
-  ): Promise<Array<{ id: ComponentID; packageName: string }>> {
+  private async getDeletedPackagesWithWorkspaceDependents(deletedIds: ComponentID[]): Promise<string[]> {
     const graph = await this.workspace.getGraphIds(undefined, false);
     const deletedIdList = ComponentIdList.fromArray(deletedIds);
     const idsWithDependents = deletedIds.filter((id) => {
@@ -224,21 +222,19 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
     });
     if (!idsWithDependents.length) return [];
     const comps = await this.workspace.getMany(idsWithDependents);
-    return comps.map((comp) => ({ id: comp.id, packageName: this.depResolver.getPackageName(comp) }));
+    return comps.map((comp) => this.depResolver.getPackageName(comp));
   }
 
   /**
-   * pin the given (deleted-on-lane) components to their main/published version in the workspace policy, so their
-   * dependents install them from the registry instead of the non-published lane snap version. components that were
+   * pin the given (deleted-on-lane) packages to their main/published version in the workspace policy, so their
+   * dependents install them from the registry instead of the non-published lane snap version. packages that were
    * never published to the registry (e.g. they only ever existed on the lane) are skipped.
    */
-  private async pinDeletedDepsToMainInWorkspacePolicy(
-    deps: Array<{ id: ComponentID; packageName: string }>
-  ): Promise<void> {
+  private async pinDeletedDepsToMainInWorkspacePolicy(packageNames: string[]): Promise<void> {
     const resolver = await this.depResolver.getVersionResolver();
     const entries: WorkspacePolicyEntry[] = [];
     await Promise.all(
-      deps.map(async ({ packageName }) => {
+      packageNames.map(async (packageName) => {
         const resolved = await resolver
           .resolveRemoteVersion(packageName, { rootDir: this.workspace.path })
           .catch(() => undefined);
