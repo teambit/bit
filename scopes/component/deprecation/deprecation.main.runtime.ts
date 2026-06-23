@@ -30,6 +30,28 @@ export type DeprecationInfo = {
   range?: string;
 };
 
+export type DeprecateByPatternResult = {
+  /**
+   * components that were deprecated as a result of this operation.
+   */
+  deprecated: ComponentID[];
+  /**
+   * components that matched the pattern but were already deprecated (no changes made).
+   */
+  alreadyDeprecated: ComponentID[];
+};
+
+export type UnDeprecateByPatternResult = {
+  /**
+   * components whose deprecation status was removed as a result of this operation.
+   */
+  undeprecated: ComponentID[];
+  /**
+   * components that matched the pattern but were not deprecated (no changes made).
+   */
+  notDeprecated: ComponentID[];
+};
+
 export type DeprecationMetadata = {
   /**
    * whether the head is deprecated
@@ -95,16 +117,7 @@ export class DeprecationMain {
    * @returns boolean whether or not the component has been deprecated
    */
   async deprecate(componentId: ComponentID, newId?: ComponentID, range?: string): Promise<boolean> {
-    if (range && !semver.validRange(range)) {
-      throw new BitError(
-        `the range "${range}" is invalid. see https://www.npmjs.com/package/semver#ranges for the range syntax`
-      );
-    }
-    const results = this.workspace.bitMap.addComponentConfig(componentId, DeprecationAspect.id, {
-      deprecate: !range,
-      newId: newId?.toObject(),
-      range,
-    });
+    const results = this.setDeprecateConfig(componentId, newId, range);
     await this.workspace.bitMap.write(`deprecate ${componentId.toString()}`);
 
     return results;
@@ -116,19 +129,127 @@ export class DeprecationMain {
     return this.deprecate(componentId, newComponentId, range);
   }
 
+  /**
+   * deprecate all components matching the given pattern. the pattern can match multiple components.
+   * see `COMPONENT_PATTERN_HELP` for the supported pattern syntax.
+   */
+  async deprecateByPattern(pattern: string, newId?: string, range?: string): Promise<DeprecateByPatternResult> {
+    const componentIds = await this.workspace.idsByPattern(pattern);
+    // reject the invalid multi-match + --new-id combination before resolving newId, so we don't
+    // trigger registry/package-name resolution (which can fail) for a command that's already invalid.
+    if (newId && componentIds.length > 1) {
+      throw new BitError(
+        `--new-id sets a single replacement component, but the pattern "${pattern}" matched ${componentIds.length} components.
+run the command per-component to use --new-id, or remove it to deprecate them all`
+      );
+    }
+    const newComponentId = newId ? await this.workspace.resolveComponentId(newId) : undefined;
+    const deprecated: ComponentID[] = [];
+    const alreadyDeprecated: ComponentID[] = [];
+    await pMapSeries(componentIds, async (componentId) => {
+      // when the component is already deprecated and there's no replacement/range to (re)set, there's
+      // nothing to change. bucketing by the actual deprecated-state (bitmap + model) rather than by the
+      // bitmap config-diff avoids re-writing redundant config (e.g. for "$deprecated" matches) and
+      // reporting already-deprecated components as newly deprecated.
+      if (!newComponentId && !range && (await this.isDeprecated(componentId))) {
+        alreadyDeprecated.push(componentId);
+        return;
+      }
+      this.setDeprecateConfig(componentId, newComponentId, range);
+      deprecated.push(componentId);
+    });
+    if (deprecated.length) {
+      await this.workspace.bitMap.write(`deprecate ${pattern}`);
+    }
+
+    return { deprecated, alreadyDeprecated };
+  }
+
   async unDeprecateByCLIValues(id: string): Promise<boolean> {
     const componentId = await this.workspace.resolveComponentId(id);
     return this.unDeprecate(componentId);
   }
 
   async unDeprecate(componentId: ComponentID) {
-    const results = this.workspace.bitMap.addComponentConfig(componentId, DeprecationAspect.id, {
-      deprecate: false,
-      newId: '',
-    });
+    const results = this.setUnDeprecateConfig(componentId);
     await this.workspace.bitMap.write(`undeprecate ${componentId.toString()}`);
 
     return results;
+  }
+
+  /**
+   * remove the deprecation status from all components matching the given pattern.
+   * the pattern can match multiple components. see `COMPONENT_PATTERN_HELP` for the supported pattern syntax.
+   */
+  async unDeprecateByPattern(pattern: string): Promise<UnDeprecateByPatternResult> {
+    const componentIds = await this.workspace.idsByPattern(pattern);
+    const undeprecated: ComponentID[] = [];
+    const notDeprecated: ComponentID[] = [];
+    await pMapSeries(componentIds, async (componentId) => {
+      // only undeprecate components that actually have a deprecation to clear (incl. range-deprecations,
+      // which are stored with deprecate:false). bucketing by the real state rather than the bitmap
+      // config-diff avoids writing a redundant "deprecate: false" config (and marking the component as
+      // modified) for components that were never deprecated.
+      if (!(await this.hasDeprecationToClear(componentId))) {
+        notDeprecated.push(componentId);
+        return;
+      }
+      this.setUnDeprecateConfig(componentId);
+      undeprecated.push(componentId);
+    });
+    if (undeprecated.length) {
+      await this.workspace.bitMap.write(`undeprecate ${pattern}`);
+    }
+
+    return { undeprecated, notDeprecated };
+  }
+
+  /**
+   * whether the component is currently deprecated, considering both the pending local .bitmap config
+   * (authoritative when present) and the persisted model/scope state.
+   */
+  private async isDeprecated(componentId: ComponentID): Promise<boolean> {
+    const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(componentId, { ignoreVersion: true });
+    if (bitmapEntry?.isDeprecated()) return true;
+    if (bitmapEntry?.isUndeprecated()) return false;
+    return this.isDeprecatedByIdWithoutLoadingComponent(componentId);
+  }
+
+  /**
+   * whether the component has any deprecation that an undeprecate should clear. unlike isDeprecated(),
+   * this also treats a range-deprecation as clearable (whether it lives in the local .bitmap or is
+   * already baked into the model), so "bit undeprecate" can revert a prior "bit deprecate --range" even
+   * when the head version is outside the range and thus not "currently" deprecated.
+   */
+  private async hasDeprecationToClear(componentId: ComponentID): Promise<boolean> {
+    const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(componentId, { ignoreVersion: true });
+    if (bitmapEntry?.isDeprecated() || bitmapEntry?.isDeprecatedByRange()) return true;
+    if (bitmapEntry?.isUndeprecated()) return false;
+    // no decisive local config — consult the model. use getDeprecationInfo (which reports the configured
+    // range regardless of the head version) rather than the version-specific isDeprecated() check.
+    const component = await this.workspace.get(componentId);
+    const { isDeprecate, range } = await this.getDeprecationInfo(component);
+    return isDeprecate || Boolean(range);
+  }
+
+  private setDeprecateConfig(componentId: ComponentID, newId?: ComponentID, range?: string): boolean {
+    if (range && !semver.validRange(range)) {
+      throw new BitError(
+        `the range "${range}" is invalid. see https://www.npmjs.com/package/semver#ranges for the range syntax`
+      );
+    }
+    return this.workspace.bitMap.addComponentConfig(componentId, DeprecationAspect.id, {
+      deprecate: !range,
+      newId: newId?.toObject(),
+      range,
+    });
+  }
+
+  private setUnDeprecateConfig(componentId: ComponentID): boolean {
+    return this.workspace.bitMap.addComponentConfig(componentId, DeprecationAspect.id, {
+      deprecate: false,
+      newId: '',
+    });
   }
 
   async addDeprecatedDependenciesIssues(components: Component[]) {

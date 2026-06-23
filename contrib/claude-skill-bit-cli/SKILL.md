@@ -53,8 +53,8 @@ remote - manage remote scopes for self-hosted environments
 Subcommands: add, del, list
 ripple <sub-command> - manage Ripple CI jobs on bit.cloud
 Subcommands: list, log, errors, retry, stop
-deprecate <component-name> - mark a component as deprecated to discourage its use
-undeprecate <id> - remove the deprecation status from a component
+deprecate <component-pattern> - mark components as deprecated to discourage their use
+undeprecate <component-pattern> - remove the deprecation status from components
 import [component-patterns...] - bring components from remote scopes into your workspace
 delete <component-pattern> - soft-delete components from remote scopes
 recover <component-pattern> - restore soft-deleted components
