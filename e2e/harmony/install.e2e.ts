@@ -132,11 +132,10 @@ describe('install generator configured envs', function () {
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      npmCiRegistry.setRegistry();
       helper.command.install('@pnpm.e2e/pkg-with-good-optional --no-optional');
     });
     after(() => {
-      helper.command.delConfig('registry');
       npmCiRegistry.destroy();
       helper.scopeHelper.destroy();
     });
@@ -160,7 +159,7 @@ describe('install generator configured envs', function () {
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      npmCiRegistry.setRegistry();
       await addDistTag({ package: '@pnpm.e2e/pkg-with-1-dep', version: '100.0.0', distTag: 'latest' });
       await addDistTag({ package: '@pnpm.e2e/dep-of-pkg-with-1-dep', version: '100.0.0', distTag: 'latest' });
       helper.command.install('@pnpm.e2e/dep-of-pkg-with-1-dep @pnpm.e2e/parent-of-pkg-with-1-dep');
@@ -169,7 +168,6 @@ describe('install generator configured envs', function () {
       helper.command.install('--update');
     });
     after(() => {
-      helper.command.delConfig('registry');
       npmCiRegistry.destroy();
       helper.scopeHelper.destroy();
     });

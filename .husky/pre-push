@@ -1,0 +1,16 @@
+# Block direct pushes to master/main. All changes must go through a PR.
+# CI is exempt (release automation pushes version bumps to master).
+[ -n "$CI" ] && exit 0
+
+while read local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/master | refs/heads/main)
+      if [ "${ALLOW_MASTER_PUSH:-0}" != "1" ]; then
+        echo "✗ Direct push to ${remote_ref#refs/heads/} is blocked. Open a PR instead." >&2
+        echo "  Emergency override: ALLOW_MASTER_PUSH=1 git push" >&2
+        exit 1
+      fi
+      ;;
+  esac
+done
+exit 0

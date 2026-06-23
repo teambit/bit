@@ -547,6 +547,7 @@ export class CiMain {
     strict,
     dryRun,
     keepLane,
+    skipCleanup,
   }: {
     laneIdStr: string;
     message: string;
@@ -554,7 +555,14 @@ export class CiMain {
     strict: boolean | undefined;
     dryRun?: boolean;
     keepLane?: boolean;
+    skipCleanup?: boolean;
   }) {
+    // The post-export cleanup switches the workspace back to main, which re-checks-out main's HEAD
+    // and re-imports every workspace component — pointless when the workspace is about to be
+    // discarded. It's opt-in via `--skip-cleanup` (the `bit_pr` CI job passes it) rather than
+    // auto-detected from `process.env.CI`: other CI contexts *reuse* the workspace after `bit ci pr`
+    // (e.g. the e2e suite, which then tags/asserts on main), and must keep restoring it.
+    const resolvedSkipCleanup = Boolean(skipCleanup);
     this.logger.console(chalk.blue(`Lane name: ${laneIdStr}`));
 
     const originalLane = await this.lanes.getCurrentLane();
@@ -580,9 +588,67 @@ export class CiMain {
     // default, battle-tested flow: snap onto a throwaway temp lane and delete+recreate the final
     // lane at export time (the lane is recreated on every PR commit).
     if (keepLane) {
-      return this.snapAndExportReusingLane({ laneId, originalLane, message, build, dryRun });
+      return this.snapAndExportReusingLane({
+        laneId,
+        originalLane,
+        message,
+        build,
+        dryRun,
+        skipCleanup: resolvedSkipCleanup,
+      });
     }
-    return this.snapAndExportWithTempLane({ laneId, originalLane, message, build, dryRun });
+    return this.snapAndExportWithTempLane({
+      laneId,
+      originalLane,
+      message,
+      build,
+      dryRun,
+      skipCleanup: resolvedSkipCleanup,
+    });
+  }
+
+  /**
+   * Post-export cleanup: restore the workspace to the original lane / main so an interactive
+   * `bit ci pr` leaves you where you started. `switchToLane('main')` re-checks-out main's HEAD,
+   * which re-imports every workspace component — on a large monorepo that's minutes of work for a
+   * workspace that, in CI, is thrown away the moment the command exits. Hence `skipCleanup`.
+   * Wrapped so a restore failure only warns instead of throwing out of the caller's `finally` and
+   * masking the real error from snap/export. Returns whether the switch actually ran (callers use
+   * it to decide whether follow-up lane bookkeeping that assumes we left the lane is safe).
+   */
+  private async restoreWorkspaceAfterPr(originalLane: Lane | undefined, skipCleanup: boolean): Promise<boolean> {
+    this.logger.console('🔄 Cleanup');
+    if (skipCleanup) {
+      this.logger.console(
+        chalk.yellow('Skipping workspace restore (--skip-cleanup) — leaving the workspace on the PR lane')
+      );
+      return false;
+    }
+    const targetLane = originalLane?.name ?? 'main';
+    this.logger.console(chalk.blue(`Switching back to ${targetLane}`));
+    const longProcessLogger = this.logger.createLongProcessLogger(`restoring workspace to ${targetLane}`);
+    try {
+      const currentLane = await this.lanes.getCurrentLane();
+      if (currentLane) {
+        // switchToLane catches its own errors and *returns* them (never throws), so a failed switch
+        // would otherwise slip through as a success. Treat a returned error as "did not switch" so
+        // callers don't run follow-up bookkeeping (e.g. temp-lane removal) while still on the lane.
+        const switchErr = await this.switchToLane(targetLane);
+        if (switchErr) {
+          this.logger.consoleWarning(`Cleanup after PR snap failed: ${switchErr.message}`);
+          return false;
+        }
+      } else {
+        this.logger.console(chalk.yellow('Already on main, checking out to head'));
+        await this.lanes.checkout.checkout({ head: true, skipNpmInstall: true });
+      }
+      return true;
+    } catch (cleanupErr: any) {
+      this.logger.consoleWarning(`Cleanup after PR snap failed: ${cleanupErr.message}`);
+      return false;
+    } finally {
+      longProcessLogger.end();
+    }
   }
 
   /**
@@ -597,12 +663,14 @@ export class CiMain {
     message,
     build,
     dryRun,
+    skipCleanup,
   }: {
     laneId: LaneId;
     originalLane: Lane | undefined;
     message: string;
     build: boolean | undefined;
     dryRun?: boolean;
+    skipCleanup: boolean;
   }) {
     // Query the remote (by name, to avoid fetching all lanes) so we know whether to reuse or create
     const existingLanes = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name }).catch((e) => {
@@ -778,24 +846,7 @@ export class CiMain {
       if (foundErr) {
         this.logger.console(chalk.red(`Found error: ${foundErr.message}`));
       }
-      // Best-effort cleanup: switch back to the original lane/main. Wrap it so a cleanup
-      // failure (failed switch/checkout) only warns instead of throwing out of `finally` and
-      // masking the real error from snap/export above (also avoids no-unsafe-finally).
-      try {
-        this.logger.console('🔄 Cleanup');
-        const targetLane = originalLane?.name ?? 'main';
-        this.logger.console(chalk.blue(`Switching back to ${targetLane}`));
-
-        const currentLane = await this.lanes.getCurrentLane();
-        if (currentLane) {
-          await this.switchToLane(targetLane);
-        } else {
-          this.logger.console(chalk.yellow('Already on main, checking out to head'));
-          await this.lanes.checkout.checkout({ head: true, skipNpmInstall: true });
-        }
-      } catch (cleanupErr: any) {
-        this.logger.consoleWarning(`Cleanup after PR snap failed: ${cleanupErr.message}`);
-      }
+      await this.restoreWorkspaceAfterPr(originalLane, skipCleanup);
     }
   }
 
@@ -812,12 +863,14 @@ export class CiMain {
     message,
     build,
     dryRun,
+    skipCleanup,
   }: {
     laneId: LaneId;
     originalLane: Lane | undefined;
     message: string;
     build: boolean | undefined;
     dryRun?: boolean;
+    skipCleanup: boolean;
   }) {
     // Use unique temp lane name to avoid race conditions when multiple CI jobs run concurrently
     const tempLaneName = `${laneId.name}-${generateRandomStr(5)}`;
@@ -928,23 +981,14 @@ export class CiMain {
       if (foundErr) {
         this.logger.console(chalk.red(`Found error: ${foundErr.message}`));
       }
-      // Always switch back to the original lane
-      this.logger.console('🔄 Cleanup');
-      const targetLane = originalLane?.name ?? 'main';
-      this.logger.console(chalk.blue(`Switching back to ${targetLane}`));
-
-      const currentLane = await this.lanes.getCurrentLane();
-      if (currentLane) {
-        await this.switchToLane(targetLane);
-      } else {
-        this.logger.console(chalk.yellow('Already on main, checking out to head'));
-        await this.lanes.checkout.checkout({ head: true, skipNpmInstall: true });
-      }
+      const switchedBack = await this.restoreWorkspaceAfterPr(originalLane, skipCleanup);
 
       // Clean up orphaned temporary lane on error. Skip if the rename to the final name already
       // happened - in that case the temp name no longer exists locally, and the lane under the
       // final name may have been partially exported; leave it alone rather than wipe evidence.
-      if (foundErr && !renamedToFinalName) {
+      // Also requires having switched off the temp lane first — you can't remove the lane you're
+      // currently on, so when the restore was skipped, leave the (local, soon-discarded) temp lane.
+      if (switchedBack && foundErr && !renamedToFinalName) {
         const tempLaneFullName = `${laneId.scope}/${tempLaneName}`;
         this.logger.console(chalk.blue(`Cleaning up temporary lane ${tempLaneFullName}`));
         try {

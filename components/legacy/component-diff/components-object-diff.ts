@@ -1,7 +1,7 @@
 import arrayDifference from 'array-difference';
 import tempy from 'tempy';
 import chalk from 'chalk';
-import type { ComponentIdList } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import Table from 'cli-table';
 import normalize from 'normalize-path';
 import diff from 'object-diff';
@@ -143,6 +143,37 @@ function componentToPrintableForDiffCommand(component: Component, verbose = fals
   return comp;
 }
 
+const DEPENDENCY_RESOLVER_ASPECT_ID = 'teambit.dependencies/dependency-resolver';
+
+/**
+ * Component-level peer dependencies are not persisted in the legacy `peerDependencies` array of the
+ * Version model (`Version.fromComponent` doesn't serialize them) - they live only in the
+ * dependency-resolver aspect data. As a result, a component reconstructed from the model has an
+ * empty legacy peer array, while the same component loaded from the workspace has it populated by
+ * the dependencies-loader. Comparing the legacy arrays directly therefore produces a phantom
+ * "peer added" diff even when nothing actually changed (and `bit status` correctly shows no diff).
+ *
+ * To avoid that, derive the component peers from the authoritative dependency-resolver aspect data
+ * (present on both the model and the workspace component) and union it with the legacy array (still
+ * relevant for old components tagged before peers were moved to the aspect data).
+ */
+function getComponentPeerDepsIds(component: Component): ComponentIdList {
+  const legacyPeerIds = component.depsIdsGroupedByType.peerDependencies;
+  const depResolverData = component.extensions?.findCoreExtension(DEPENDENCY_RESOLVER_ASPECT_ID)?.data;
+  const serializedDeps: Array<{ id: string; version?: string; __type?: string; lifecycle?: string }> =
+    depResolverData?.dependencies || [];
+  const peerComponentIds = serializedDeps
+    .filter((dep) => dep.__type === 'component' && dep.lifecycle === 'peer')
+    .map((dep) => {
+      // the `id` string may be versionless; `version` is the authoritative field. apply it so that
+      // peer version upgrades/downgrades are surfaced by the version comparison in
+      // `componentDependenciesOutput()`.
+      const componentId = ComponentID.fromString(dep.id);
+      return dep.version ? componentId.changeVersion(dep.version) : componentId;
+    });
+  return ComponentIdList.uniqFromArray([...legacyPeerIds, ...peerComponentIds]);
+}
+
 export async function diffBetweenComponentsObjects(
   componentLeft: Component,
   componentRight: Component,
@@ -260,8 +291,14 @@ export async function diffBetweenComponentsObjects(
   };
 
   const componentDependenciesOutput = (fieldName: string): string | null => {
-    const dependenciesLeft: ComponentIdList = componentLeft.depsIdsGroupedByType[fieldName];
-    const dependenciesRight: ComponentIdList = componentRight.depsIdsGroupedByType[fieldName];
+    const dependenciesLeft: ComponentIdList =
+      fieldName === 'peerDependencies'
+        ? getComponentPeerDepsIds(componentLeft)
+        : componentLeft.depsIdsGroupedByType[fieldName];
+    const dependenciesRight: ComponentIdList =
+      fieldName === 'peerDependencies'
+        ? getComponentPeerDepsIds(componentRight)
+        : componentRight.depsIdsGroupedByType[fieldName];
     if (isEmpty(dependenciesLeft) && isEmpty(dependenciesRight)) return null;
     const diffsLeft = dependenciesLeft.reduce<DepDiff[]>((acc, dependencyLeft) => {
       const dependencyRight = dependenciesRight.searchWithoutVersion(dependencyLeft);

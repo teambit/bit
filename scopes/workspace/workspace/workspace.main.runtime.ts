@@ -49,6 +49,7 @@ import { EnvsReplaceCmd } from './envs-subcommands/envs-replace.cmd';
 import { ScopeSetCmd } from './scope-subcommands/scope-set.cmd';
 import { ScopeTrust, ScopeTrustCmd } from './scope-trust';
 import { UseCmd } from './use.cmd';
+import { DebugLoadCmd } from './debug-load.cmd';
 import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
 import { UnuseCmd } from './unuse.cmd';
 import { LocalOnlyCmd, LocalOnlyListCmd, LocalOnlySetCmd, LocalOnlyUnsetCmd } from './commands/local-only-cmd';
@@ -280,6 +281,7 @@ export class WorkspaceMain {
       capsuleCmd,
       new UseCmd(workspace),
       new UnuseCmd(workspace),
+      new DebugLoadCmd(workspace),
     ];
 
     commands.push(new PatternCommand(workspace));

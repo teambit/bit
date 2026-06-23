@@ -13,6 +13,7 @@ import type { ComponentResult } from './types';
 import type { TasksQueue } from './tasks-queue';
 import type { EnvsBuildContext } from './builder.service';
 import { TaskResultsList } from './task-results-list';
+import { executeTasksByLocationAndEnv } from './tasks-parallel-scheduler';
 
 export type TaskResults = {
   /**
@@ -51,6 +52,12 @@ type PipeOptions = {
   exitOnFirstFailedTask?: boolean; // by default it skips only when a dependent failed.
   showEnvNameInOutput?: boolean;
   showEnvVersionInOutput?: boolean; // in case it shows the env-name, whether should show also the version
+  /**
+   * number of environments whose task-chains may run concurrently. 1 (default) keeps the original
+   * fully-serial behavior. when > 1, environments are built in parallel (see
+   * `executeTasksByLocationAndEnv`).
+   */
+  concurrency?: number;
 };
 
 export class BuildPipe {
@@ -80,7 +87,12 @@ export class BuildPipe {
   async execute(): Promise<TaskResultsList> {
     await this.executePreBuild();
     this.longProcessLogger = this.logger.createLongProcessLogger('running tasks', this.tasksQueue.length);
-    await mapSeries(this.tasksQueue, async ({ task, env }) => this.executeTask(task, env));
+    const concurrency = this.options?.concurrency ?? 1;
+    if (concurrency > 1) {
+      await executeTasksByLocationAndEnv(this.tasksQueue, concurrency, ({ task, env }) => this.executeTask(task, env));
+    } else {
+      await mapSeries(this.tasksQueue, async ({ task, env }) => this.executeTask(task, env));
+    }
     this.longProcessLogger.end();
     const capsuleRootDir = Object.values(this.envsBuildContext)[0]?.capsuleNetwork.capsulesRootDir;
     const tasksResultsList = new TaskResultsList(this.tasksQueue, this.taskResults, capsuleRootDir, this.logger);

@@ -531,7 +531,10 @@ export class BuilderMain {
       throw new ComponentsHaveIssues(componentsWithBlockingIssues);
     }
 
-    const workspaceIssues = this.workspace.getWorkspaceIssues();
+    // only truly-blocking workspace issues (e.g. workspace.jsonc merge conflicts) should abort
+    // tag/snap. non-blocking issues such as aggregated load failures are shown in "bit status" but
+    // must not gate tagging, mirroring the per-component LoadFailures issue (isTagBlocker = false).
+    const workspaceIssues = this.workspace.getWorkspaceIssues({ includeNonBlocking: false });
     if (workspaceIssues.length) {
       const issuesStr = workspaceIssues.map((issueErr) => issueErr.message).join('\n');
       throw new BitError(`the workspace has the following issues:\n${issuesStr}`);
