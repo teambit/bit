@@ -206,7 +206,7 @@ earlier ones teach us).
 - [x] Benchmark harness committed + baseline recorded (see §4) — **gate for the rest of the phase**
 - [x] Batch the deps-cache invalidation scan: one `node_modules`-ignoring workspace scan shared via a
       command-scoped mtime index, replacing the per-component recursive `globby`. Cuts warm `bit
-    status` fs syscalls ~40% (74.3k→44.8k); warm-wall-neutral (I/O-wait), helps cold/CI (see §4.1).
+  status` fs syscalls ~40% (74.3k→44.8k); warm-wall-neutral (I/O-wait), helps cold/CI (see §4.1).
 - [ ] `on-load` slot-laziness (`loadDocs: false, loadCompositions: false` for non-UI flows) — the
       largest CPU-bound stage (9.2s) and the next **warm-wall** target
 - [ ] Lazy file contents in `ModelComponent.toConsumerComponent` (helps `graph`, not `status`)
@@ -326,7 +326,7 @@ hypothesis, which deeper sub-step instrumentation disproved):**
 | Phase                   | State       | OpenSpec change                | PRs                                                 |
 | ----------------------- | ----------- | ------------------------------ | --------------------------------------------------- |
 | 1 — Observability       | done        | `component-load-observability` | [#10418](https://github.com/teambit/bit/pull/10418) |
-| 2 — Quick perf wins     | in progress | —                              | —                                                   |
+| 2 — Quick perf wins     | in progress | —                              | [#10445](https://github.com/teambit/bit/pull/10445) |
 | 3 — Cache consolidation | not started | —                              | —                                                   |
 | 4 — Staged pipeline     | not started | —                              | —                                                   |
 | 5 — Env planner         | not started | —                              | —                                                   |
