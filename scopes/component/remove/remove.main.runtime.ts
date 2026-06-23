@@ -1,5 +1,5 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime, formatSection, formatItem } from '@teambit/cli';
 import semver from 'semver';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
@@ -263,9 +263,13 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
     // skipIfExisting so we never override a version the user already set explicitly in the workspace policy.
     this.depResolver.addToRootPolicy(entries, { skipIfExisting: true });
     await this.depResolver.persistConfig('delete (pin deleted-on-lane deps to main)');
+    const items = entries.map((entry) => formatItem(`${entry.dependencyId}@${entry.value.version}`));
     this.logger.console(
-      `the following deleted component(s) still have dependents in the workspace and were pinned to their main version in the workspace policy:
-${entries.map((entry) => `${entry.dependencyId}@${entry.value.version}`).join('\n')}`
+      formatSection(
+        'pinned deleted components to their main version',
+        'these components were deleted from the lane but still have dependents in the workspace, so they were added to the workspace policy to be installed from main',
+        items
+      )
     );
   }
 
