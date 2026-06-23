@@ -34,12 +34,18 @@ export class FsCache {
     if (this.componentsMtimeIndex) return this.componentsMtimeIndex;
     if (!this.componentsMtimeIndexBuilding) {
       const gen = this.componentsMtimeIndexGen;
-      this.componentsMtimeIndexBuilding = build().then((index) => {
-        // if the index was cleared while building, don't cache this now-stale result as canonical.
-        if (gen === this.componentsMtimeIndexGen) this.componentsMtimeIndex = index;
-        this.componentsMtimeIndexBuilding = undefined;
-        return index;
-      });
+      const building = build()
+        .then((index) => {
+          // if the index was cleared/invalidated while building, don't cache this stale result as canonical.
+          if (gen === this.componentsMtimeIndexGen) this.componentsMtimeIndex = index;
+          return index;
+        })
+        .finally(() => {
+          // clear on both success and failure so a transient build error doesn't poison future reads;
+          // guard against clobbering a newer build started after an invalidation.
+          if (this.componentsMtimeIndexBuilding === building) this.componentsMtimeIndexBuilding = undefined;
+        });
+      this.componentsMtimeIndexBuilding = building;
     }
     return this.componentsMtimeIndexBuilding;
   }
@@ -54,6 +60,9 @@ export class FsCache {
   /** drop a single component's entry so its next load recomputes it (e.g. on a watch file change). */
   deleteComponentMtimeIndexEntry(rootDir: string) {
     this.componentsMtimeIndex?.delete(rootDir);
+    // if a build is in flight it may already contain this now-stale entry; bump the generation so its
+    // result won't be cached as canonical, forcing the next read to rebuild (and re-stat this component).
+    if (this.componentsMtimeIndexBuilding) this.componentsMtimeIndexGen += 1;
   }
 
   async getDocsFromCache(filePath: string): Promise<{ timestamp: number; data: string } | null> {

@@ -152,18 +152,25 @@ export class DependenciesLoader {
    * single-component cache clear (watch) or for a component added since the scan.
    */
   private async getComponentLastModified(workspace: Workspace, rootDir: string): Promise<number> {
-    const index = await workspace.consumer.componentFsCache.getOrBuildComponentsMtimeIndex(() =>
-      buildDirsLastModifiedIndex(
-        workspace.path,
-        workspace.consumer.bitMap.getAllComponents().map((componentMap) => componentMap.getComponentDir())
-      )
-    );
-    const fromIndex = index.get(rootDir);
+    let index: Map<string, number> | undefined;
+    try {
+      index = await workspace.consumer.componentFsCache.getOrBuildComponentsMtimeIndex(() =>
+        buildDirsLastModifiedIndex(
+          workspace.path,
+          workspace.consumer.bitMap.getAllComponents().map((componentMap) => componentMap.getComponentDir())
+        )
+      );
+    } catch (err: any) {
+      // a centralized scan failure (e.g. a filesystem error on one dir) shouldn't fail every
+      // component's load — fall back to the per-component scan below, preserving fault isolation.
+      this.logger.debug(`dependencies-loader, failed building the components mtime index: ${err?.message || err}`);
+    }
+    const fromIndex = index?.get(rootDir);
     if (fromIndex !== undefined) return fromIndex;
     const filesPaths = this.component.files.map((file) => file.path);
     filesPaths.push(path.join(workspace.path, rootDir, COMPONENT_CONFIG_FILE_NAME));
     const lastModified = await getLastModifiedComponentTimestampMs(rootDir, filesPaths);
-    index.set(rootDir, lastModified);
+    index?.set(rootDir, lastModified);
     return lastModified;
   }
 
